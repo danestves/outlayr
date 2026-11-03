@@ -166,6 +166,7 @@ Before a `FIRST BUILD`, confirm each of these exists and name any that don't:
 ## Traps
 
 - Never run `eoas publish` from the laptop. Only the workflow sets `EAS_BUILD_PROFILE` and exports the GitHub environment, so a local publish lands under a runtime no binary has, or bundles the wrong backend URL.
+- The web app deploys itself when a PR merges, Convex doesn't. A merged web change that calls a new Convex function fails until the backend is deployed, so dispatch `deploy-backend.yml` for production right after merging it, without waiting for an app release.
 - Never deploy Convex from the laptop. The workflows take the target from the GitHub environment, and a local `.env.local` doesn't.
 - Compare against the last build, never the last OTA. An OTA inherits its build's runtime.
 - An OTA replaces the app's `Constants.expoConfig`, version included, so `update.yml` needs its build's version. Without it, Settings and the review prompt see whatever `app.config.ts` falls back to.
