@@ -253,8 +253,8 @@ const tools = {
                         })
                     ),
                     empty: t({
-                        en: "Add the cash price and each payment to see what the plan costs.",
-                        es: "Agrega el precio de contado y cada cuota para ver cuánto cuesta el plan.",
+                        en: "Add the list price and each payment to see what the plan costs.",
+                        es: "Agrega el precio de lista y cada cuota para ver cuánto cuesta el plan.",
                     }),
                     less: insert(
                         t({
@@ -278,16 +278,56 @@ const tools = {
                             es: "Pagas el precio de contado, sin costo extra. Terminas en {{end}}.",
                         })
                     ),
+                    verdict: {
+                        cash: insert(
+                            t({
+                                en: "Pay cash. The installments are worth {{present}} in today's money against {{cash}} in cash, {{amount}} more.",
+                                es: "Conviene pagar de contado. Las cuotas valen {{present}} en dinero de hoy contra {{cash}} de contado, {{amount}} más.",
+                            })
+                        ),
+                        installments: insert(
+                            t({
+                                en: "Pay in installments. They are worth {{present}} in today's money against {{cash}} in cash, {{amount}} less.",
+                                es: "Conviene pagar en cuotas. Valen {{present}} en dinero de hoy contra {{cash}} de contado, {{amount}} menos.",
+                            })
+                        ),
+                        same: insert(
+                            t({
+                                en: "About the same. The installments are worth {{present}} in today's money against {{cash}} in cash.",
+                                es: "Da casi lo mismo. Las cuotas valen {{present}} en dinero de hoy contra {{cash}} de contado.",
+                            })
+                        ),
+                    },
                 },
                 faq: [
                     {
                         answer: t({
-                            en: "If the payments add up to the cash price, yes, and the calculator says there is no extra cost. Check that the cash price is what you would pay without the plan.",
-                            es: "Si las cuotas suman el precio de contado, sí, y la calculadora te dice que no hay costo extra. Revisa que el precio de contado sea lo que pagarías sin el plan.",
+                            en: "Compare the installments, valued in today's money, with the cash price. Say a TV is listed at $1,200,000 pesos, payable in 6 monthly interest-free installments of $200,000, or $1,080,000 in cash after a 10% discount. With 1% monthly inflation the installments are worth about $1,159,000 today, so cash is cheaper. At 5% they are worth about $1,015,000, so installments win. The break-even is near 3% a month. Enter the list price, the cash discount, and the monthly inflation you expect, and the calculator does this for any plan.",
+                            es: "Compara las cuotas, valuadas en dinero de hoy, con el precio de contado. Por ejemplo, un televisor de $1,200,000 pesos de lista se paga en 6 cuotas mensuales sin interés de $200,000, o de contado a $1,080,000 con 10% de descuento. Con 1% de inflación mensual las cuotas valen hoy cerca de $1,159,000, así que conviene el contado. Con 5% valen cerca de $1,015,000 y ganan las cuotas. El punto de equilibrio está cerca de 3% al mes. Pon el precio de lista, el descuento por contado y la inflación mensual que esperas, y la calculadora hace esta cuenta con cualquier plan.",
+                        }),
+                        question: t({
+                            en: "Should I pay in installments or cash?",
+                            es: "¿Conviene pagar en cuotas o de contado?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "The monthly rise in prices you expect while you pay, for example the latest monthly figure from your country's statistics office. If your money would earn more than that in the meantime, enter that monthly rate instead, since it is what waiting is worth to you. A higher number favors installments.",
+                            es: "El aumento mensual de precios que esperas mientras pagas, por ejemplo la última cifra mensual del instituto de estadística de tu país. Si tu dinero rendiría más que eso en el tiempo que pagas, pon esa tasa mensual, porque es lo que vale esperar para ti. Un número más alto favorece las cuotas.",
+                        }),
+                        question: t({
+                            en: "What monthly inflation should I enter?",
+                            es: "¿Qué inflación mensual pongo?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Not always. Without interest the payments add up to the list price, so the plan costs nothing extra on paper. But if the store takes a discount off for cash, that discount is what you pay for the installments. With inflation, the later payments are also worth less than the first.",
+                            es: "No siempre. Sin interés las cuotas suman el precio de lista, así que en papel el plan no cuesta nada extra. Pero si la tienda te descuenta por pagar de contado, ese descuento es lo que pagas por las cuotas. Con inflación, además, las últimas cuotas valen menos que las primeras.",
                         }),
                         question: t({
                             en: "Is 0% interest really free?",
-                            es: "¿Los meses sin intereses son gratis de verdad?",
+                            es: "¿Las cuotas sin interés o los meses sin intereses son gratis de verdad?",
                         }),
                     },
                     {
@@ -314,18 +354,20 @@ const tools = {
                 ],
                 fields: {
                     count: t({ en: "Payments", es: "Cuotas" }),
+                    discount: t({ en: "Cash discount", es: "Descuento por contado" }),
                     down: t({ en: "Paid today", es: "Pagas hoy" }),
+                    inflation: t({ en: "Inflation a month", es: "Inflación al mes" }),
                     payment: t({ en: "Each payment", es: "Cada cuota" }),
-                    price: t({ en: "Cash price", es: "Precio de contado" }),
+                    price: t({ en: "List price", es: "Precio de lista" }),
                 },
                 lead: t({
-                    en: "What paying in installments really costs: the extra over the cash price, the yearly rate behind it, and when the last payment lands.",
-                    es: "Cuánto cuesta de verdad pagar en cuotas: lo que pagas de más sobre el precio de contado, la tasa anual detrás y cuándo llega el último pago.",
+                    en: "Installments or cash? See which costs less in today's money with inflation and a cash discount, plus the extra over the cash price and the yearly rate behind it.",
+                    es: "¿Cuotas o contado? Mira cuál conviene más con la inflación y el descuento por pagar de contado, y cuánto pagas de más y a qué tasa anual.",
                 }),
                 meta: {
                     title: t({
-                        en: "Installment Calculator: The Real Cost of Paying Later",
-                        es: "Calculadora de cuotas: cuánto cuesta pagar a plazos",
+                        en: "Installment Calculator: Installments or Cash? With Inflation",
+                        es: "Calculadora de cuotas: ¿cuotas o contado? Con inflación",
                     }),
                 },
                 method: [
@@ -342,6 +384,14 @@ const tools = {
                         es: "Como fórmula: busca la tasa r por período donde cada cuota × (1 − (1 + r)^−n) ÷ r = precio de contado − lo que pagas hoy, con n cuotas. La tasa anual es (1 + r)^k − 1, donde k es 52 si pagas cada semana, 26 si pagas cada 2 semanas y 12 si pagas cada mes. Con el ejemplo inicial, US$300 financiados en 3 cuotas de US$105 cada 2 semanas, r es cerca de 2.48%, y (1.0248)^26 − 1 da cerca de 89%.",
                     }),
                     t({
+                        en: "Many stores list one price and take a percentage off for paying cash. Enter the list price and that discount: the cash price is the list price minus the discount, and the extra, the yearly rate, and the verdict all compare against it.",
+                        es: "Muchas tiendas tienen un precio de lista y descuentan un porcentaje si pagas de contado. Pon el precio de lista y ese descuento: el precio de contado es el de lista menos el descuento, y lo que pagas de más, la tasa anual y el veredicto se comparan con él.",
+                    }),
+                    t({
+                        en: "To tell installments from cash when prices rise, each payment is valued in today's money: value today = paid today + the sum of each payment ÷ (1 + i)^t, where i is the monthly inflation and t is the months until that payment. A week counts as 12 ÷ 52 of a month, so with weekly payments the 4th one has t = 0.92, and with monthly ones the 4th has t = 4. Installments are cheaper if the sum is below the cash price, cash is cheaper if it is above, and a gap under 1% counts as about the same.",
+                        es: "Para distinguir cuotas de contado cuando suben los precios, cada cuota se valúa en dinero de hoy: valor hoy = lo que pagas hoy + la suma de cada cuota ÷ (1 + i)^t, donde i es la inflación mensual y t son los meses hasta esa cuota. Una semana cuenta como 12 ÷ 52 de mes, así que con cuotas semanales la cuarta tiene t = 0.92, y con cuotas mensuales la cuarta tiene t = 4. Conviene pagar en cuotas si la suma queda por debajo del precio de contado, conviene el contado si queda por encima, y una diferencia menor a 1% cuenta como casi igual.",
+                    }),
+                    t({
                         en: "Late fees are not included. Most plans charge one when a payment is late, which raises the real cost.",
                         es: "No incluye recargos por atraso. La mayoría de los planes cobra uno cuando una cuota se atrasa, y eso sube el costo real.",
                     }),
@@ -355,7 +405,10 @@ const tools = {
                     "/tools/50-30-20-budget-calculator",
                     "/tools/split-expenses-calculator",
                 ] satisfies PageRef[],
-                title: t({ en: "Installment calculator", es: "Calculadora de cuotas" }),
+                title: t({
+                    en: "Installment calculator: pay in installments or cash?",
+                    es: "Calculadora de cuotas: ¿cuotas o contado?",
+                }),
             },
             "split-expenses-calculator": {
                 add: t({ en: "Add person", es: "Agregar persona" }),

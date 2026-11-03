@@ -64,10 +64,27 @@ function periodRate(financed: number, payment: number, count: number): number | 
 
 export interface InstallmentPlan {
     cadence: Cadence;
+    cashDiscountPercent?: number;
     count: number;
     down: number;
+    monthlyInflationPercent?: number;
     payment: number;
     price: number;
+}
+
+const SAME_WITHIN = 0.01;
+const MONTHS_PER_YEAR = 12;
+
+function inflationPerPeriod(monthlyPercent: number, cadence: Cadence): number {
+    return Math.expm1((MONTHS_PER_YEAR / PER_YEAR[cadence]) * Math.log1p(monthlyPercent / 100));
+}
+
+function verdictFor(present: number, cash: number): "cash" | "installments" | "same" {
+    const gap = present - cash;
+    if (Math.abs(gap) <= cash * SAME_WITHIN) {
+        return "same";
+    }
+    return gap < 0 ? "installments" : "cash";
 }
 
 function answerFor(
@@ -87,16 +104,30 @@ function answerFor(
 }
 
 export function installmentCost(plan: InstallmentPlan) {
-    const { cadence, count, down, payment, price } = plan;
+    const { cadence, cashDiscountPercent = 0, count, down, monthlyInflationPercent = 0, payment, price } = plan;
+    const cash = price - Math.round((price * cashDiscountPercent) / 100);
     const total = down + payment * count;
-    const extra = total - price;
-    const rate = periodRate(price - down, payment, count);
+    const extra = total - cash;
+    const rate = periodRate(cash - down, payment, count);
+    const present = Math.round(
+        down + presentValue(payment, count, inflationPerPeriod(monthlyInflationPercent, cadence))
+    );
+    const answer = answerFor({ ...plan, price: cash }, extra);
+    const hasPlan = answer === "same" || answer === "more" || answer === "less";
     return {
         annualRate: rate === null ? null : Math.expm1(PER_YEAR[cadence] * Math.log1p(rate)),
-        answer: answerFor(plan, extra),
+        answer,
+        cash,
         extra,
+        present,
         total,
+        verdict: hasPlan ? verdictFor(present, cash) : null,
     };
+}
+
+export function parsePercent(text: string, max: number): number {
+    const percent = Number.parseFloat(text.replace(",", "."));
+    return Number.isFinite(percent) ? Math.min(max, Math.max(0, percent)) : 0;
 }
 
 export const BUDGET_SPLITS = {

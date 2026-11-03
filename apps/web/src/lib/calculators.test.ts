@@ -35,13 +35,108 @@ it("counts a weekly charge 52 times a year, not 48", () => {
 });
 
 describe(installmentCost, () => {
-    it("reads 0% when the installments add up to the cash price", () => {
+    it("reads 0% and a tie when the installments add up to the cash price and nothing else is set", () => {
         expect(installmentCost({ cadence: "month", count: 12, down: 0, payment: 10_000, price: 120_000 })).toEqual({
             annualRate: 0,
             answer: "same",
+            cash: 120_000,
             extra: 0,
+            present: 120_000,
             total: 120_000,
+            verdict: "same",
         });
+    });
+
+    it("lets inflation eat the later payments of cuotas sin interés", () => {
+        const { present, verdict } = installmentCost({
+            cadence: "month",
+            count: 6,
+            down: 0,
+            monthlyInflationPercent: 3,
+            payment: 20_000,
+            price: 120_000,
+        });
+        expect(present).toBe(108_344);
+        expect(verdict).toBe("installments");
+    });
+
+    it.each([
+        { inflation: 0, verdict: "cash" },
+        { inflation: 1, verdict: "cash" },
+        { inflation: 3, verdict: "same" },
+        { inflation: 5, verdict: "installments" },
+    ])("weighs a 10% cash discount against 6 cuotas sin interés at $inflation% inflation: $verdict", (row) => {
+        const { verdict } = installmentCost({
+            cadence: "month",
+            cashDiscountPercent: 10,
+            count: 6,
+            down: 0,
+            monthlyInflationPercent: row.inflation,
+            payment: 20_000,
+            price: 120_000,
+        });
+        expect(verdict).toBe(row.verdict);
+    });
+
+    it("compares extra, yearly rate and answer with the discounted cash price", () => {
+        const { annualRate, answer, cash, extra } = installmentCost({
+            cadence: "month",
+            cashDiscountPercent: 10,
+            count: 6,
+            down: 0,
+            payment: 20_000,
+            price: 120_000,
+        });
+        expect(cash).toBe(108_000);
+        expect(extra).toBe(12_000);
+        expect(answer).toBe("more");
+        expect(annualRate).toBeCloseTo(0.4418, 3);
+    });
+
+    it.each([
+        { cadence: "month", payment: 110_000, present: 100_000 },
+        { cadence: "twoWeeks", payment: 100_000, present: 95_696 },
+        { cadence: "week", payment: 100_000, present: 97_825 },
+    ] as const)(
+        "discounts one $cadence payment by the inflation of its own period",
+        ({ cadence, payment, present }) => {
+            const cost = installmentCost({
+                cadence,
+                count: 1,
+                down: 0,
+                monthlyInflationPercent: 10,
+                payment,
+                price: 100_000,
+            });
+            expect(cost.present).toBe(present);
+        }
+    );
+
+    it.each([
+        { cashDiscountPercent: 0, down: 0, payment: 0 },
+        { cashDiscountPercent: 100, down: 0, payment: 10_000 },
+        { cashDiscountPercent: 0, down: 100_000, payment: 0 },
+    ])("gives no verdict when there is nothing to finance: %o", (plan) => {
+        const cost = installmentCost({
+            cadence: "month",
+            count: 1,
+            monthlyInflationPercent: 5,
+            price: 100_000,
+            ...plan,
+        });
+        expect(cost.verdict).toBeNull();
+    });
+
+    it("counts the paid today part at face value", () => {
+        const { present } = installmentCost({
+            cadence: "month",
+            count: 1,
+            down: 50_000,
+            monthlyInflationPercent: 10,
+            payment: 55_000,
+            price: 100_000,
+        });
+        expect(present).toBe(100_000);
     });
 
     it("compounds the rate per period into an effective annual rate", () => {

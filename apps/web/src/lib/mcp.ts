@@ -45,6 +45,8 @@ const aboutOutlayr = toolDefinition({
 const toCents = (amount: number) => Math.round(amount * 100);
 const fromCents = (cents: number) => cents / 100;
 const Amount = Schema.Finite.check(Schema.isBetween({ maximum: 1e12, minimum: 0 }));
+const Discount = Schema.Finite.check(Schema.isBetween({ maximum: 100, minimum: 0 }));
+const Inflation = Schema.Finite.check(Schema.isBetween({ maximum: 1000, minimum: 0 }));
 const UNITS = "Amounts are in currency units and come back rounded to cents.";
 
 const withDefault = <A extends string | number>(schema: Schema.Codec<A>, value: A) =>
@@ -130,32 +132,49 @@ const CALCULATORS = [
     ),
     calculator(
         {
-            description: `The real cost of an installment or buy now, pay later plan: the total paid, the extra over the cash price, and the effective annual rate. Anything paid at checkout goes in paidToday; the payments start one period later. Late fees are not included. ${UNITS}`,
+            description: `The real cost of an installment or buy now, pay later plan: the total paid, the extra over the cash price (after any cash discount), and the effective annual rate. Set monthlyInflationPercent to also get the plan's total in today's money and whether installments or cash is cheaper; set cashDiscountPercent when the store takes a percentage off the list price for paying cash. Anything paid at checkout goes in paidToday; the payments start one period later. Late fees are not included. ${UNITS}`,
             name: "installment_cost",
             title: "Installment calculator",
         },
         Schema.Struct({
-            cashPrice: Amount.annotate({ description: "What the item costs paid in full today" }),
+            cashDiscountPercent: withDefault(
+                Discount.annotate({
+                    description: "Percent off cashPrice when paying in full today. 0 if there is none",
+                }),
+                0
+            ),
+            cashPrice: Amount.annotate({
+                description: "What the item costs paid in full today, before any cash discount: the list price",
+            }),
             eachPayment: Amount,
             every: withDefault(Schema.Literals(["week", "twoWeeks", "month"]), "month"),
+            monthlyInflationPercent: withDefault(
+                Inflation.annotate({ description: "Expected inflation per month, in percent. 0 to ignore inflation" }),
+                0
+            ),
             paidToday: withDefault(Amount, 0),
             payments: Schema.Int.check(Schema.isBetween({ maximum: 600, minimum: 1 })).annotate({
                 description: "Number of payments after today",
             }),
         }),
-        ({ cashPrice, eachPayment, every, paidToday, payments }) => {
+        ({ cashDiscountPercent, cashPrice, eachPayment, every, monthlyInflationPercent, paidToday, payments }) => {
             const cost = installmentCost({
                 cadence: every,
+                cashDiscountPercent,
                 count: payments,
                 down: toCents(paidToday),
+                monthlyInflationPercent,
                 payment: toCents(eachPayment),
                 price: toCents(cashPrice),
             });
             return {
+                cashPriceAfterDiscount: fromCents(cost.cash),
+                cheaper: cost.verdict,
                 effectiveAnnualRatePercent:
                     cost.annualRate === null ? null : Math.round(cost.annualRate * 10_000) / 100,
                 extraOverCash: fromCents(cost.extra),
                 total: fromCents(cost.total),
+                totalInTodaysMoney: fromCents(cost.present),
             };
         }
     ),
