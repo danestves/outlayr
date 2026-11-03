@@ -39,6 +39,7 @@ import type { BalancesViewToggleProps } from "./view-toggle";
 const ROW_REORDER = LinearTransition.duration(420).easing(Easing.out(Easing.cubic));
 const ROW_EXIT = FadeOut.duration(200);
 const FALLBACK_COLOR = "#767676";
+const UNCATEGORIZED_KEY = "uncategorized";
 
 interface BalancesCategoriesProps {
     addMenu: ReactNode;
@@ -177,7 +178,7 @@ export function BalancesCategories({
                 ) : (
                     <View className="pt-3">
                         <MonoLabel>{t("balances.spent")}</MonoLabel>
-                        <HeroNumber amount={spend.total} code={currency} showCents={showCents} />
+                        <HeroNumber amount={spend.total} code={currency} showCents={showCents} sign="" />
                     </View>
                 )}
 
@@ -260,15 +261,19 @@ export function BalancesCategories({
                         </View>
                         <View className="border-border divide-border divide-y border-t">
                             {spend.rows.map((row) => {
-                                const meta = categoryMeta.get(row.categoryId);
+                                const meta = row.categoryId === null ? undefined : categoryMeta.get(row.categoryId);
                                 return (
                                     <SpendRow
                                         color={meta?.color ?? FALLBACK_COLOR}
                                         currency={currency}
                                         emoji={meta?.emoji ?? null}
                                         icon={meta?.icon ?? null}
-                                        key={row.categoryId}
-                                        name={meta?.name ?? t("budgets.name.default")}
+                                        key={row.categoryId ?? UNCATEGORIZED_KEY}
+                                        name={
+                                            row.categoryId === null
+                                                ? t("budgets.plan.uncategorized")
+                                                : (meta?.name ?? t("budgets.name.default"))
+                                        }
                                         onPress={openCategory}
                                         row={row}
                                     />
@@ -299,14 +304,16 @@ function SpendRow({ color, currency, emoji, icon, name, onPress, row }: SpendRow
     const percent = Math.round(row.share * 100);
     const share = t("balances.share", { percent: percent === 0 ? "<1" : String(percent) });
     const amount = formatAmount(row.spent, currency, showCents, language);
+    const { categoryId } = row;
 
     return (
         <Pressable
             accessibilityLabel={name}
-            accessibilityRole="button"
+            accessibilityRole={categoryId === null ? "text" : "button"}
             accessibilityValue={{ text: `${amount}, ${share}` }}
             className="flex-row items-center gap-3 py-3 active:opacity-60"
-            onPress={() => onPress(row.categoryId)}
+            disabled={categoryId === null}
+            onPress={() => categoryId !== null && onPress(categoryId)}
         >
             <CategoryIconTile color={color} emoji={emoji} icon={icon} size={30} />
             <View className="flex-1 gap-0.5">

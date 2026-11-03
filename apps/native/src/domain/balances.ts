@@ -34,7 +34,7 @@ export function balancesViewFor({
 }
 
 export interface UnlimitedCategory {
-    categoryId: string;
+    categoryId: string | null;
     /** Of everything spent in the window, 0 to 1. */
     share: number;
     spent: number;
@@ -54,7 +54,7 @@ export function unlimitedSpend(
 ): UnlimitedSpend {
     const startMs = window.start.getTime();
     const endMs = window.end.getTime();
-    const byCategory = new Map<string, number>();
+    const byCategory = new Map<string | null, number>();
     let total = 0;
 
     for (const row of contributions) {
@@ -65,7 +65,7 @@ export function unlimitedSpend(
         total += row.amount;
         const key = row.parentId ?? row.categoryId;
         const covered = (row.categoryId && limitedIds.has(row.categoryId)) || (key && limitedIds.has(key));
-        if (key && !covered) {
+        if (!covered) {
             byCategory.set(key, (byCategory.get(key) ?? 0) + row.amount);
         }
     }
