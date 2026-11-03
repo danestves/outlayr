@@ -79,7 +79,8 @@ describe("askForReview", () => {
     it("asks once when a manual save and an auto-logged entry ask at the same moment", async () => {
         await writeEntries(db, [4, 3, 3]);
 
-        await Promise.all([askForReview(db), askForReview(db)]);
+        await markPending(db);
+        await Promise.all([askForReview(db), askForReviewIfPending(db)]);
 
         expect(mockStoreReview.requestReview).toHaveBeenCalledOnce();
     });
@@ -94,6 +95,16 @@ describe("askForReview", () => {
 
         expect(mockStoreReview.requestReview).toHaveBeenCalledOnce();
         await expect(pending(db)).resolves.toBe("0");
+    });
+
+    it("keeps the record for the next visit when the ask fails before reaching the store", async () => {
+        await writeEntries(db, [4, 3, 3]);
+        await markPending(db);
+        mockStoreReview.isAvailableAsync.mockRejectedValueOnce(new Error("store unavailable"));
+
+        await expect(askForReviewIfPending(db)).rejects.toThrow();
+
+        await expect(pending(db)).resolves.toBe("1");
     });
 
     it("does not ask on its own when no drain recorded an auto-logged expense", async () => {

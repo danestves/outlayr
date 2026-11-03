@@ -82,6 +82,7 @@ export function RecapCardPreview({ layout, width }: { layout: Required<DayCardLa
                     </View>
                     {layout.texts.map((text) => (
                         <Text
+                            allowFontScaling={false}
                             className={WEIGHT_CLASS[text.weight]}
                             key={`text-${text.y}-${text.align}`}
                             numberOfLines={1}

@@ -65,5 +65,5 @@ export const askForReviewIfPending = Effect.fn("ReviewPrompt.askIfPending")(func
         return;
     }
     yield* setMeta(db, META_KEYS.autologReviewPending, "0");
-    yield* askForReview(db);
+    yield* askForReview(db).pipe(Effect.tapError(() => setMeta(db, META_KEYS.autologReviewPending, "1")));
 });
