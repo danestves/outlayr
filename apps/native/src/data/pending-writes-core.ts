@@ -17,7 +17,8 @@ import { detectCurrency } from "@/domain/detect-currency";
 import type { CardAccountCandidate } from "@/domain/match-card-account";
 import { matchCardAccount } from "@/domain/match-card-account";
 import { DEFAULT_CURRENCY } from "@/domain/money";
-import { cleanMerchant, parseNotification } from "@/domain/parse-notification";
+import { cleanMerchant, mergeNotificationRead, parseNotification } from "@/domain/parse-notification";
+import type { NotificationReader, NotificationReads } from "@/lib/notification-read";
 import { autologSourceOf } from "@/lib/pending-writes-core";
 import type { ClaimedWrites, PendingWrite } from "@/lib/pending-writes-core";
 import { posthog } from "@/lib/posthog";
@@ -312,11 +313,11 @@ function sourceOf(job: PendingWrite): string | null {
     return kind ? `${kind}:${job.card?.trim().toLowerCase() ?? ""}` : null;
 }
 
-function readNotification(job: PendingWrite): PendingWrite | null {
+function readNotification(job: PendingWrite, reads: NotificationReads | undefined): PendingWrite | null {
     if (!job.text) {
         return job;
     }
-    const parsed = parseNotification(job.text);
+    const parsed = mergeNotificationRead(job.text, parseNotification(job.text), reads?.get(job.id) ?? null);
     if (!parsed) {
         return null;
     }
@@ -400,6 +401,27 @@ function alreadyApplied(ledger: LedgerEntry[], job: PendingWrite): LedgerEntry |
     );
 }
 
+// The pushes a drain would still write: a replayed claim, a repeat of a logged purchase, or a second copy of one in
+// the same batch would only be skipped.
+export const unloggedPushes = Effect.fn("PendingWrites.unloggedPushes")(function* unloggedPushes(
+    db: Database,
+    jobs: readonly PendingWrite[]
+) {
+    const ledger = yield* readLedger(db);
+    const kept: PendingWrite[] = [];
+    for (const job of jobs) {
+        const key = job.dedupeKey?.trim();
+        const copy = kept.some(
+            (other) =>
+                key && other.dedupeKey?.trim() === key && Math.abs(other.date - job.date) <= WALLET_DEDUPE_WINDOW_MS
+        );
+        if (!(copy || alreadyApplied(ledger, job))) {
+            kept.push(job);
+        }
+    }
+    return kept;
+});
+
 function settleRepeatOf(ledger: LedgerEntry[], job: PendingWrite): LedgerEntry | null {
     const key = job.dedupeKey?.trim();
     if (!key || !REPEATS_ON_SETTLE.test(job.card ?? "")) {
@@ -448,7 +470,8 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     db: Database,
     jobs: PendingWrite[],
     now: Date = new Date(),
-    knownAccess?: AutologAccess
+    knownAccess?: AutologAccess,
+    reads?: NotificationReads
 ) {
     if (jobs.length === 0) {
         return 0;
@@ -462,7 +485,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     // Exactly-once depends on this job seeing the ledger row the previous job's SQLite transaction committed, so the
     // jobs must land one at a time.
     for (const queued of jobs) {
-        const job = readNotification(queued);
+        const job = readNotification(queued, reads);
         if (queued.text) {
             yield* rememberNotification(db, {
                 amountText: job?.amountText ?? null,
@@ -885,7 +908,8 @@ let rerun = false;
 export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(function* drainPendingWrites(
     db: Database,
     claim: () => ClaimedWrites,
-    release: (claimed: ClaimedWrites) => void
+    release: (claimed: ClaimedWrites) => void,
+    reader?: NotificationReader
 ) {
     if (draining !== null) {
         rerun = true;
@@ -897,7 +921,7 @@ export const drainPendingWrites = Effect.fn("PendingWrites.drainPendingWrites")(
         let applied = 0;
         do {
             rerun = false;
-            applied += yield* runDrain(db, claim, release);
+            applied += yield* runDrain(db, claim, release, reader);
         } while (rerun);
         return applied;
     }).pipe(
@@ -916,7 +940,8 @@ type DrainFailure = Effect.Error<ReturnType<typeof runDrain>>;
 const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
     db: Database,
     claim: () => ClaimedWrites,
-    release: (claimed: ClaimedWrites) => void
+    release: (claimed: ClaimedWrites) => void,
+    reader?: NotificationReader
 ) {
     const claimed = yield* attemptSync("claim", claim);
     const access = yield* readAutologAccess(db);
@@ -924,7 +949,9 @@ const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
     if (claimed.names.length === 0 && waiting.length === 0) {
         return 0;
     }
-    const applied = yield* applyPendingWrites(db, [...waiting, ...claimed.jobs], new Date(), access);
+    const jobs = [...waiting, ...claimed.jobs];
+    const reads = reader ? yield* reader(db, jobs) : undefined;
+    const applied = yield* applyPendingWrites(db, jobs, new Date(), access, reads);
     if (waiting.length > 0) {
         yield* writeAutologWaiting(db, []);
     }

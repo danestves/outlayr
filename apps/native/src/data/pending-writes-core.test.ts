@@ -949,6 +949,34 @@ describe("drainPendingWrites", () => {
         expect(released).toBe(1);
     });
 
+    it("writes what the AI read from a push, and nothing for a push it reads as declined", async () => {
+        const push = (id: string, text: string) =>
+            walletWrite(id, { amount: 0, amountText: null, dedupeKey: `notification:expense:${id}`, note: "", text });
+        const jobs = [
+            push(
+                "site",
+                "Your transaction was successful\nPayment of USD 22.99 approved on the card ending with 7909."
+            ),
+            push("held", "Card alert\nA $40.00 charge at Hotel Sol could not be completed."),
+        ];
+        const claim = () => ({ jobs, names: ["claimed-1.jsonl"] });
+        const reader = () =>
+            Effect.succeed(
+                new Map([
+                    ["site", { amount: 22.99, currency: "USD", kind: "purchase" as const, merchant: "SiteGround" }],
+                    ["held", { amount: 40, currency: "USD", kind: "declined" as const, merchant: "Hotel Sol" }],
+                ])
+            );
+
+        await Effect.runPromise(drainPendingWrites(db, claim, () => undefined, reader));
+
+        await expect(
+            db
+                .select({ amount: transactions.amount, currency: transactions.currency, note: transactions.note })
+                .from(transactions)
+        ).resolves.toStrictEqual([{ amount: 22.99, currency: "USD", note: "SiteGround" }]);
+    });
+
     it("runs another pass for a drain that arrives mid-pass", async () => {
         const claim = vi
             .fn<() => { jobs: PendingWrite[]; names: string[] }>()

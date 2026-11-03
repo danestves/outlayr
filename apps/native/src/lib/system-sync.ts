@@ -32,6 +32,7 @@ import { ratesPuller, watchRecentRates } from "@/lib/cloud-rates";
 import { convex } from "@/lib/convex";
 import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
 import { armLogoBackfill, backfillLogos } from "@/lib/logo-backfill";
+import { readNotifications } from "@/lib/notification-read";
 import { notifyWarning } from "@/lib/notify";
 import { RevenueCat } from "@/lib/revenuecat-service";
 import { onWatchPendingWrite } from "@/lib/watch-link";
@@ -226,7 +227,7 @@ export const make = Effect.gen(function* make() {
             failedStep("wallet"),
             Effect.catchTags({ SystemSyncError: (error) => warn(error) })
         );
-        const drainRun = drainPendingWrites(db, claimPendingWrites, releasePendingWrites).pipe(
+        const drainRun = drainPendingWrites(db, claimPendingWrites, releasePendingWrites, readNotifications).pipe(
             failedStep("drain"),
             Effect.flatMap((applied) => publishIf(applied === 0)),
             Effect.catchTags({ SystemSyncError: (error) => warn(error).pipe(Effect.andThen(publishSoon)) }),
