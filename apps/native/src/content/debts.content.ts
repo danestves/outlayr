@@ -519,9 +519,10 @@ const debts = {
         }),
         "debts.plan.payOffBy": t({
             en: "Pay off by",
-            es: "Fecha de pago",
+            es: "Saldar antes del",
             fr: "Solder avant le",
-            pt: "Data de pagamento",
+            pt: "Quitar até",
+            "pt-PT": "Liquidar até",
         }),
         "debts.plan.perMonth": t({
             en: "{amount} a month until {date}",
