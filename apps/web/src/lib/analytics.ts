@@ -60,9 +60,9 @@ const ASK_FIRST = new Set([
     "YT",
 ]);
 
-// Browsers report this on window when a ResizeObserver callback changes layout. The spec calls it benign: the
-// notifications arrive next frame. The vendored Stageshow films trigger it, and they stay a copy of upstream.
-const RESIZE_OBSERVER_LOOP = /^ResizeObserver loop (completed with undelivered notifications|limit exceeded)/;
+// Benign by spec, the notifications arrive next frame. The vendored Stageshow films raise it, and that kit stays a
+// copy of upstream, so it is dropped here rather than patched there.
+const RESIZE_OBSERVER_LOOP = /^ResizeObserver loop completed with undelivered notifications/;
 
 function dropResizeObserverLoop(event: CaptureResult | null): CaptureResult | null {
     const exceptions: unknown = event?.event === "$exception" ? event.properties.$exception_list : undefined;
