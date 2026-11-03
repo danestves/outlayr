@@ -98,3 +98,17 @@ test("reads a purchase whose key a login code or a much earlier copy already use
 
     expect(sent).toHaveBeenCalledTimes(2);
 });
+
+test("hands back the read the server answered for each push", async () => {
+    const db = migratedDatabase();
+    await Effect.runPromise(setBoolSetting(db, "aiConsentV2", true));
+    await Effect.runPromise(setBoolSetting(db, "aiEnrichment", true));
+    const read = { amount: 22.99, currency: "USD", kind: "purchase", merchant: "SiteGround" } as const;
+    sent.mockResolvedValue({ read, status: "ok" });
+
+    const reads = await Effect.runPromise(
+        readNotifications(db, [push("site", "Your SiteGround transaction in the amount of USD 22.99 was approved")])
+    );
+
+    expect(reads.get("site")).toStrictEqual(read);
+});
