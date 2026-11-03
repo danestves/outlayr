@@ -1,15 +1,24 @@
 import * as Schema from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const RATE_MARKETS = {
     "dolar-bcv-hoy": {
+        buy: false,
         currency: "VES",
+        key: "fuente",
         kinds: [{ api: "oficial", dateOnly: true, kind: "bcv", source: "https://www.bcv.org.ve/" }],
+        maxAgeMs: 7 * DAY_MS,
         numberLocale: "es-VE",
+        prices: ["promedio"],
         timeZone: "America/Caracas",
         url: "https://ve.dolarapi.com/v1/dolares",
     },
     "dolar-hoy-argentina": {
+        buy: true,
         currency: "ARS",
+        key: "casa",
         kinds: [
             { api: "blue", dateOnly: false, kind: "blue", source: "https://dolarhoy.com/" },
             {
@@ -34,7 +43,9 @@ export const RATE_MARKETS = {
             },
             { api: "cripto", dateOnly: false, kind: "cripto", source: "https://dolarhoy.com/" },
         ],
+        maxAgeMs: 2 * DAY_MS,
         numberLocale: "es-AR",
+        prices: ["venta", "promedio"],
         timeZone: "America/Argentina/Buenos_Aires",
         url: "https://dolarapi.com/v1/dolares",
     },
@@ -52,37 +63,46 @@ export interface Rate {
     updatedAt: string;
 }
 
-const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-
 const Quote = Schema.Struct({
     casa: Schema.optional(Schema.String),
     compra: Schema.optional(Schema.NullOr(Schema.Number)),
     fechaActualizacion: Schema.String,
     fuente: Schema.optional(Schema.String),
+    moneda: Schema.Literal("USD"),
     promedio: Schema.optional(Schema.NullOr(Schema.Number)),
     venta: Schema.optional(Schema.NullOr(Schema.Number)),
 });
-export const decodeQuotes = Schema.decodeUnknownSync(Schema.Array(Quote));
+type Quote = typeof Quote.Type;
 
-type Quotes = ReturnType<typeof decodeQuotes>;
+const isQuote = Schema.is(Quote);
+
+const Quotes = Schema.Array(Schema.Unknown).pipe(
+    Schema.decodeTo(Schema.Array(Quote), {
+        decode: SchemaGetter.transform((rows) => rows.filter(isQuote)),
+        encode: SchemaGetter.transform((quotes) => quotes),
+    })
+);
+
+export const decodeQuotes = Schema.decodeUnknownSync(Quotes);
 
 const isPositive = (value: number | null | undefined): value is number =>
     typeof value === "number" && Number.isFinite(value) && value > 0;
 
-export function parseRates(slug: RateSlug, quotes: Quotes, now: number): Rate[] {
-    return RATE_MARKETS[slug].kinds.flatMap(({ api, dateOnly, kind, source }) => {
-        const quote = quotes.find((entry) => (entry.casa ?? entry.fuente) === api);
+export function parseRates(slug: RateSlug, quotes: readonly Quote[], now: number): Rate[] {
+    const market = RATE_MARKETS[slug];
+    return market.kinds.flatMap(({ api, dateOnly, kind, source }) => {
+        const quote = quotes.find((entry) => entry[market.key] === api);
         if (!quote) {
             return [];
         }
-        const rate = [quote.venta, quote.promedio].find(isPositive);
+        const rate = market.prices.map((field) => quote[field]).find(isPositive);
         const updated = Date.parse(quote.fechaActualizacion);
-        if (rate === undefined || Number.isNaN(updated) || now - updated > MAX_AGE_MS) {
+        if (rate === undefined || Number.isNaN(updated) || now - updated > market.maxAgeMs) {
             return [];
         }
         return [
             {
-                buy: isPositive(quote.compra) ? quote.compra : null,
+                buy: market.buy && isPositive(quote.compra) ? quote.compra : null,
                 dateOnly,
                 kind,
                 rate,

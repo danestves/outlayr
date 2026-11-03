@@ -581,8 +581,8 @@ const tools = {
                         es: "La calculadora multiplica los dólares por la tasa que elijas, o divide los bolívares entre ella, y redondea al centavo. Los bancos y las tiendas pueden darte otra tasa, así que úsala como referencia.",
                     }),
                     t({
-                        en: "This page asks DolarApi for the rates at most every 3 hours, so a rate can be a few hours old, and each row shows when its source last updated it. If DolarApi can't be reached, the page says so instead of showing an old number.",
-                        es: "Esta página le pide las tasas a DolarApi como máximo cada 3 horas, así que una tasa puede tener unas horas, y cada fila muestra cuándo la actualizó su fuente. Si no se puede llegar a DolarApi, la página lo dice en vez de mostrar un número viejo.",
+                        en: "This page refreshes the rates from DolarApi every few hours, so a rate can be a few hours old, and each row shows when its source last updated it. If DolarApi can't be reached, the page says so instead of showing an old number.",
+                        es: "Esta página actualiza las tasas desde DolarApi cada pocas horas, así que una tasa puede tener unas horas, y cada fila muestra cuándo la actualizó su fuente. Si no se puede llegar a DolarApi, la página lo dice en vez de mostrar un número viejo.",
                     }),
                 ],
                 related: [
@@ -660,8 +660,8 @@ const tools = {
                         es: "La mayoría de las filas tiene un precio de compra y uno de venta. La calculadora usa el de venta, que es lo que cuesta comprar un dólar. Si vas a vender dólares, el que te pagan es el de compra. Los montos se multiplican o se dividen por la tasa y se redondean al centavo.",
                     }),
                     t({
-                        en: "This page asks DolarApi for the rates at most every 3 hours, so a rate can be a few hours old, and each row shows when its source last updated it. If DolarApi can't be reached, the page says so instead of showing an old number.",
-                        es: "Esta página le pide las tasas a DolarApi como máximo cada 3 horas, así que una tasa puede tener unas horas, y cada fila muestra cuándo la actualizó su fuente. Si no se puede llegar a DolarApi, la página lo dice en vez de mostrar un número viejo.",
+                        en: "This page refreshes the rates from DolarApi every few hours, so a rate can be a few hours old, and each row shows when its source last updated it. If DolarApi can't be reached, the page says so instead of showing an old number.",
+                        es: "Esta página actualiza las tasas desde DolarApi cada pocas horas, así que una tasa puede tener unas horas, y cada fila muestra cuándo la actualizó su fuente. Si no se puede llegar a DolarApi, la página lo dice en vez de mostrar un número viejo.",
                     }),
                 ],
                 related: [
