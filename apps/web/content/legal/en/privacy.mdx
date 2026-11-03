@@ -1,16 +1,16 @@
 ---
 title: "Privacy Policy"
-description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 16 November 2026."
+description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 3 November 2026."
 intro: "This policy explains what Outlayr collects, where it goes, how long it stays, and what you can do about it."
 ---
 
 ## The short version
 
 - Your ledger is stored on your device. You can use Outlayr without an account, and then your entries, amounts, and notes never leave the phone.
-- An account (Sign in with Apple, Google, or an email and password) turns on merchant suggestions, voice entry, receipt scans, and installment plan imports. With Outlayr Pro it also turns on sync, which keeps a copy of your ledger and photos on our servers until you delete your account.
+- An account (Sign in with Apple, Google, or an email and password) turns on merchant suggestions, notification reading, voice entry, receipt scans, and installment plan imports. With Outlayr Pro it also turns on sync, which keeps a copy of your ledger and photos on our servers until you delete your account.
 - With an account, we email you a welcome note, a note when Pro starts, and notice before this policy or our Terms change. No newsletters or marketing.
-- Voice entries, receipt scans, installment plan imports, and merchant suggestions are processed by Anthropic, and ElevenLabs turns voice recordings into text. We don’t store your recordings, scanned photos, or screenshots, and we never send either company your name, email, or account ID.
-- Nothing goes to Anthropic or ElevenLabs until you allow it. The app asks during setup, or after you sign in, and Speak an entry and Scan a receipt ask again until you do. Import from a screenshot, for installment plans, asks the first time you use it, even if you allowed the others. Withdraw it any time in **Settings › Send data to AI providers**. Once allowed, merchant suggestions and web lookups are on, and both can be turned off in **Settings › Smart fill**. Turning Smart fill on also allows sending data to AI providers.
+- Voice entries, receipt scans, installment plan imports, merchant suggestions, and bank notifications that show an amount are processed by Anthropic, and ElevenLabs turns voice recordings into text. We don’t store your recordings, scanned photos, screenshots, or notifications, and we never send either company your name, email, or account ID.
+- Nothing goes to Anthropic or ElevenLabs until you allow it. The app asks during setup, or after you sign in, and Speak an entry and Scan a receipt ask again until you do. Import from a screenshot, for installment plans, asks the first time you use it, even if you allowed the others. Withdraw it any time in **Settings › Send data to AI providers**. Once allowed, merchant suggestions, notification reading, and web lookups are on, and all three can be turned off in **Settings › Smart fill**. Turning Smart fill on also allows sending data to AI providers.
 - The app sends usage analytics and crash reports to PostHog: which screens you open, which features you use, and errors. Never amounts, merchants, notes, or names. It starts off if your device’s region is in the EEA or UK, and on everywhere else. Change it in **Settings › Share analytics**. Our server also tells PostHog the size, cost, and speed of each request to Anthropic, never what it contained, and links it to your account only while Share analytics is on.
 - This website uses PostHog too, with a cookie. If you’re in the EEA or UK, it asks first. Change your answer in the footer under **Cookies**.
 - With Outlayr Pro you can connect Notion to import expenses from your Notion databases. We keep Notion’s access key encrypted on our servers so you can import again, until you disconnect Notion or delete your account. What we read from Notion passes through our server to your phone and isn’t stored.
@@ -31,13 +31,14 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Data | When | Where it goes | Kept |
 | --- | --- | --- | --- |
 | Your ledger and its photos | Always | Your device | Until you erase it |
-| Notification titles and text | Notification access on Android | Your device | Last one per app, up to 20 apps, and the last 5 logged |
+| Notification titles and text | Logging from notifications | Your device | On Android, the latest per app for up to 20 apps. The last 5 read, and any waiting past the free monthly auto-log limit |
 | Synced ledger, deleted entries, photos | Sync on (Pro) | Our servers | Until account deletion |
 | Email, name, provider ID, password hash | Sign-in | Our servers | Until account deletion |
 | Email address, 6-digit code | Email sign-in | Our servers, Cloudflare | Code: 10 minutes. Email: Cloudflare’s policy |
 | Email address, app language, which of our emails you got | Account emails | Our servers, Cloudflare | Until account deletion. Email: Cloudflare’s policy |
 | Sessions, IP address, device type | Sign-in | Our servers | Until sign-out or account deletion |
 | Merchant and category names | Smart fill | Our servers, Anthropic | Until answered |
+| Title and text of a notification that shows an amount | Logging from notifications, with Smart fill | Our servers, Anthropic | Not kept |
 | Voice recording | Voice entry | Our servers, ElevenLabs | Not kept |
 | Transcript and draft | Voice entry | Our servers, ElevenLabs, Anthropic | Until closed, or 1 hour idle |
 | Receipt photo | Receipt scan | Our servers, Anthropic | Not kept |
@@ -49,7 +50,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Purchase records, user ID, name, email | App opens, Pro | RevenueCat, Apple or Google, our servers | Until account deletion |
 | Install ID, app version, errors | Update checks | Expo | Expo’s policy |
 | Screens, features used, errors, install ID, device model | App use | PostHog | Until account deletion, or PostHog’s policy if you never sign in |
-| Feature, model, tokens, cost, speed, and errors of each AI request | Suggestions, voice, scans, imports | PostHog | With Share analytics on, until account deletion. Otherwise PostHog’s policy |
+| Feature, model, tokens, cost, speed, and errors of each AI request | Suggestions, notification reading, voice, scans, imports | PostHog | With Share analytics on, until account deletion. Otherwise PostHog’s policy |
 | Pages, clicks, scrolling, errors, page speed, visit recordings | Website visits | PostHog | PostHog’s policy |
 | Entries, balances, budgets, upcoming charges | AI assistant you approve | The assistant’s company | Their policies |
 | Assistant name and address, your approval, access keys | AI assistant you approve | Our servers | Until account deletion |
@@ -66,7 +67,7 @@ You don’t need an account to use Outlayr. Without one, none of your ledger is 
 - **Widgets** on iPhone show totals, budgets, and recent entries on your Home Screen and Lock Screen. They read from storage shared only between Outlayr and its own widgets.
 - **Search**: on iPhone, Outlayr adds your 500 most recent entries and your budgets to the on-device Spotlight index so you can find them from Search. To stop this, turn off Show Content in Search for Outlayr in the iOS Settings app.
 - **Reminders** (a daily nudge and upcoming subscription charges) are scheduled on your device. Outlayr never sends notifications from a server and doesn’t register for push notifications.
-- **Siri and Shortcuts actions** on iPhone (log a transaction, check a budget, get a spending summary) run on the device. Apple handles Siri requests under its own privacy policy.
+- **Siri and Shortcuts actions** on iPhone (log a transaction, check a budget, get a spending summary) run on the device. Apple handles Siri requests under its own privacy policy. Logging from a notification can also send its text to be [read by Anthropic](#reading-bank-notifications).
 - **App lock** (Settings › Authentication) puts Outlayr behind your device’s biometric lock (Face ID or Touch ID on iPhone). The system checks your face or fingerprint, and Outlayr only learns whether the check passed.
 
 ### What the app sends even without an account
@@ -148,6 +149,14 @@ Our server first checks a shared list of known merchants (below). If the merchan
 
 On once you allow sending data to AI providers. Turn it off in **Settings › Smart fill**.
 
+### Reading bank notifications
+
+When Outlayr logs a purchase from a notification, through the Shortcuts automation on iPhone or notification access on Android, the app sends our server the notification’s title and text exactly as the app that posted it wrote them, and your language. Anthropic’s Claude model reads whether it reports a purchase, money you received, a declined charge, or something else, and the amount, currency, and merchant. The text carries whatever that app put in it, such as the amount, a date, or the last digits of a card. The app’s name, the card and account names you set in Outlayr, and your other entries are not sent.
+
+Only notifications that show an amount are sent: login codes, promotions, and repeats of a notification Outlayr already logged stay on your phone. We don’t store the text. The answer goes straight back to your phone, which adds the entry: a declined charge isn’t logged, and anything else is logged, using the phone’s own reading wherever the model gave no answer or called it something other than a purchase or income. If Smart fill is off, you’re offline, or the answer takes longer than 8 seconds, the phone reads the notification on its own.
+
+On once you allow sending data to AI providers. Turn it off in **Settings › Smart fill**.
+
 ### Web lookup of new merchants
 
 If the model can’t place a merchant and you have Pro, our server may ask Anthropic to search the web for it. Anthropic’s model runs the searches, using the merchant name and sometimes a country or city. It receives the merchant name, expense or income, currency code, language, and region, and for background lookups, your category names too. A web lookup usually improves the answer for the next entry with that merchant rather than the one you’re typing.
@@ -180,17 +189,17 @@ The file is read on your device, and so is a Notion export: the zip is opened an
 
 Anthropic is the US company that makes the Claude AI models. ElevenLabs makes the speech-to-text models that write down voice entries. Both process these requests for us as service providers under their API terms. Anthropic doesn’t train its models on this data, and we’ve turned off ElevenLabs’ use of it for training. We don’t use your data to train AI models either.
 
-If a request to Anthropic fails, our server’s error log can include the merchant name involved, so we can find the problem.
+If a request to Anthropic fails, our server’s error log can include the merchant name involved, so we can find the problem. It never includes a notification’s text.
 
 ### Records of AI requests
 
-After each request to Anthropic, our server sends PostHog a record of it: the feature, the model, how many tokens it used and what it cost, how long it took, whether it failed, and the names of the model’s tools it used, such as web search. Voice entry records also carry an ID for the conversation, so its turns stay together. A record never includes what you said, the photo or screenshot, or any text sent to or received from Anthropic. If **Settings › Share analytics** is on for the device making the request, the record carries your account ID, so we can see what AI features cost for each account. If it’s off, the record carries a random ID that isn’t linked to you.
+After each request to Anthropic, our server sends PostHog a record of it: the feature, the model, how many tokens it used and what it cost, how long it took, whether it failed, and the names of the model’s tools it used, such as web search. Voice entry records also carry an ID for the conversation, so its turns stay together. A record never includes what you said, the photo or screenshot, a notification’s text, or any other text sent to or received from Anthropic. If **Settings › Share analytics** is on for the device making the request, the record carries your account ID, so we can see what AI features cost for each account. If it’s off, the record carries a random ID that isn’t linked to you.
 
 ## Apple Pay and Shortcuts
 
 On iPhone, Outlayr can log card purchases for you through Apple’s Shortcuts app. You install our shortcut from an iCloud link in **Settings › Apple Pay** and turn on the automation yourself.
 
-When the automation runs, Shortcuts gives Outlayr the amount, merchant, and card name of an Apple Pay purchase, or the title and text of a notification from an app you pick, such as your bank. Outlayr reads the amount and merchant on your phone, matches the card to one of your accounts by name, and adds the entry. Nothing from the automation is sent to us. The new entry is then like any other: it syncs if sync is on, and its merchant name can be used for a [merchant suggestion](#suggestions-voice-and-receipts).
+When the automation runs, Shortcuts gives Outlayr the amount, merchant, and card name of an Apple Pay purchase, or the title and text of a notification from an app you pick, such as your bank. Outlayr reads the amount and merchant, matches the card to one of your accounts by name, and adds the entry. An Apple Pay purchase is read on your phone and nothing from it is sent to us. A notification that shows an amount is also [read by Anthropic](#reading-bank-notifications) when Smart fill is on. The automation runs for every notification from the apps you pick in it, so pick only your bank and card apps. The new entry is then like any other: it syncs if sync is on, and its merchant name can be used for a [merchant suggestion](#suggestions-voice-and-receipts).
 
 ## Notification access on Android
 
@@ -198,7 +207,7 @@ On Android, Outlayr can log purchases from your notifications. Nothing is read u
 
 With access on, Android shows Outlayr every notification your phone receives. Outlayr checks each one on your phone for an amount and ignores the rest. For an app that sends one with an amount, it keeps the app’s name and the title and text of its latest such notification, for up to 20 apps, so it can list them under **Log from**. It logs purchases only from the apps you turn on there, and Google Wallet starts on. From those, it reads the amount, the merchant, and the card a Google Wallet notification names, matches the card or app to one of your accounts, adds the entry, and confirms it with a notification of its own. It also keeps the text of the last 5 notifications it logged.
 
-None of this is sent to us or to anyone else. The new entry is then like any other: it syncs if sync is on, and its merchant name can be used for a [merchant suggestion](#suggestions-voice-and-receipts). To stop, turn an app off under **Log from**, or turn off notification access for Outlayr in Android’s settings. Deleting the app removes what it kept.
+Notifications from apps you haven’t turned on are never sent to us or anyone else. When Smart fill is on, a notification that shows an amount from an app you turned on is also [read by Anthropic](#reading-bank-notifications) before the entry is added. The new entry is then like any other: it syncs if sync is on, and its merchant name can be used for a [merchant suggestion](#suggestions-voice-and-receipts). To stop, turn an app off under **Log from**, or turn off notification access for Outlayr in Android’s settings. Deleting the app removes what it kept.
 
 ## AI assistants
 
@@ -237,7 +246,7 @@ These companies help run Outlayr. Each receives only what its job needs.
 
 - **[Hetzner](https://www.hetzner.com/legal/privacy-policy)** hosts the servers in Helsinki, Finland, that run our database and server functions. They hold your account and synced data, and handle every request to our server.
 - **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** stores the photos you attach to entries and accounts (Cloudflare R2), when photo backup is on, and sends our emails (sign-in codes, the welcome and Pro notes, and notice of changes), for which it receives your email address and the email’s contents.
-- **[Anthropic](https://www.anthropic.com/legal/privacy)** provides the Claude AI models behind suggestions, voice entry, receipt scans, installment plan imports, CSV import, and web lookups. It receives the content described in [Suggestions, voice, and receipts](#suggestions-voice-and-receipts).
+- **[Anthropic](https://www.anthropic.com/legal/privacy)** provides the Claude AI models behind suggestions, notification reading, voice entry, receipt scans, installment plan imports, CSV import, and web lookups. It receives the content described in [Suggestions, voice, and receipts](#suggestions-voice-and-receipts).
 - **[ElevenLabs](https://elevenlabs.io/privacy-policy)** turns voice recordings into text. It receives the recording and your language.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** tracks subscription status. It receives an anonymous ID, or your account ID, name, and email once you sign in, and your purchase records.
 - **[Apple](https://www.apple.com/legal/privacy/)** provides Sign in with Apple, App Store payments, and iOS features such as Siri and Shortcuts, under its own policy.
@@ -276,8 +285,8 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 | --- | --- |
 | Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, the Notion connection, Pro, and AI assistant connections | Contract: we need this data to provide what you ask for. |
 | The welcome and Pro notes, and notice of changes to this policy or our Terms | Contract: they’re part of the account and subscription you asked for. |
-| Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
-| Merchant suggestions, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster to file. Suggestions and web lookups reach Anthropic only once you allow it, and turning off Smart fill is how you object. |
+| Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, notification text, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
+| Merchant suggestions, notification reading, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster and more accurate to file. Suggestions, notification reading, and web lookups reach Anthropic only once you allow it, and turning off Smart fill is how you object. |
 | Sessions, usage limits, error logs, update checks, and records of AI requests not linked to you | Legitimate interests: keeping Outlayr secure, working, and free of abuse. |
 | Usage analytics, crash reports, and records of AI requests linked to your account | Your consent. Share analytics starts off when your device’s region is in the EEA or UK. Turning it on gives consent, and turning it off withdraws it. |
 | Website analytics | Your consent for the cookie and visit recordings, asked on your first visit. Declining withdraws it. A declined visit is still counted without a cookie, under our legitimate interest in knowing how many people visit. |
@@ -292,12 +301,12 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 
 - Synced data, including deletion records for entries you deleted, and backed-up photos are kept until you delete your account.
 - Voice conversations are deleted when you close the voice screen, or one hour after your last message.
-- Recordings pass through our server to ElevenLabs, and receipt photos and installment plan screenshots to Anthropic. We don’t store any of them.
+- Recordings pass through our server to ElevenLabs, and receipt photos, installment plan screenshots, and notification text to Anthropic. We don’t store any of them.
 - The Notion access key and your Notion user ID are kept until you disconnect Notion or delete your account. Rows read from Notion aren’t kept on our servers.
 - AI assistant connections (the assistant’s name and address, your approval, and its access keys) are kept until you delete your account. Access keys stop working after an hour, or after 30 days without renewal.
 - Merchant suggestion requests aren’t kept once answered. Ones queued in the background wait on our server until your device collects the answer.
 - Your app language and the record of which welcome, Pro, and change notices you got are deleted with your account.
-- Usage counters that enforce limits on scans, voice entries, and suggestions hold counts only, keyed to your account ID, and are deleted with your account.
+- Usage counters that enforce limits on scans, voice entries, suggestions, and notification reading hold counts only, keyed to your account ID, and are deleted with your account.
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.
 - Analytics events linked to your account are deleted with it. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way.
 - Website events carry a random browser ID, or a code that changes daily if you declined cookies, and are kept under PostHog’s retention policy.

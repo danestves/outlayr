@@ -28,11 +28,11 @@ const settingsWallet = {
             pt: "Permitir acesso às notificações",
         }),
         "settings.wallet.allowAccessDetail": t({
-            en: "Android opens Settings. Outlayr only keeps notifications from apps you turn on here.",
-            es: "Android te lleva a Ajustes. Outlayr solo guarda las de apps que actives aquí.",
-            fr: "Android ouvre les Paramètres. Outlayr ne garde que les notifications des apps que vous activez ici.",
-            pt: "O Android abre as Configurações. O Outlayr só mantém notificações dos apps que você ativar aqui.",
-            "pt-PT": "O Android abre as Definições. O Outlayr só guarda notificações das apps que ativar aqui.",
+            en: "Android opens Settings. Outlayr logs only from apps you turn on here.",
+            es: "Android te lleva a Ajustes. Outlayr solo registra desde las apps que actives aquí.",
+            fr: "Android ouvre les Paramètres. Outlayr n'enregistre que depuis les apps que vous activez ici.",
+            pt: "O Android abre as Configurações. O Outlayr só registra a partir dos apps que você ativar aqui.",
+            "pt-PT": "O Android abre as Definições. O Outlayr só regista a partir das apps que ativar aqui.",
         }),
         "settings.wallet.androidLead": t({
             en: "Every Google Wallet payment and every purchase your bank notifies you of lands on the Log, filed under the account it matches.",

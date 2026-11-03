@@ -67,6 +67,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "With Share analytics on: budgets created, cards shared, imports, exports, setting changes and links that open the app. Never amounts, names or notes.",
                     label: "Which features you use",
                 },
+                {
+                    detail: "With Smart fill on, a notification Outlayr logs that shows an amount goes to our AI provider so it can read the merchant, amount, and currency. Its text isn't kept.",
+                    label: "Reading bank notifications",
+                },
             ],
             es: [
                 {
@@ -76,6 +80,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Con Compartir analíticas activado: presupuestos creados, tarjetas compartidas, importaciones, exportaciones, cambios de ajustes y enlaces que abren la app. Nunca montos, nombres ni notas.",
                     label: "Qué funciones usas",
+                },
+                {
+                    detail: "Con Autocompletado activado, una notificación que Outlayr registra y que muestra un monto va a nuestro proveedor de IA para leer el comercio, el monto y la moneda. No guardamos su texto.",
+                    label: "Lectura de notificaciones del banco",
                 },
             ],
             fr: [
@@ -87,6 +95,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Avec Partager les données d'analyse activé : budgets créés, cartes partagées, imports, exports, réglages modifiés et liens qui ouvrent l'app. Jamais de montants, de noms ni de notes.",
                     label: "Les fonctions que vous utilisez",
                 },
+                {
+                    detail: "Avec Remplissage intelligent activé, une notification enregistrée par Outlayr qui affiche un montant est envoyée à notre fournisseur d'IA pour lire le commerçant, le montant et la devise. Son texte n'est pas conservé.",
+                    label: "Lecture des notifications bancaires",
+                },
             ],
             pt: [
                 {
@@ -97,20 +109,32 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Com Compartilhar análises ativado: orçamentos criados, cartões compartilhados, importações, exportações, mudanças de ajustes e links que abrem o app. Nunca valores, nomes ou notas.",
                     label: "Quais recursos você usa",
                 },
+                {
+                    detail: "Com Preenchimento inteligente ativado, uma notificação que o Outlayr registra e que mostra um valor vai para o nosso provedor de IA para ler o estabelecimento, o valor e a moeda. O texto não é guardado.",
+                    label: "Leitura de notificações do banco",
+                },
             ],
         },
         document: "privacy",
-        effectiveAtMs: Date.UTC(2026, 10, 16),
+        effectiveAtMs: Date.UTC(2026, 10, 3),
     },
     {
         changes: {
             en: [
                 { detail: "Added to the plans, with how long a connection lasts.", label: "Notion connection in Pro" },
+                {
+                    detail: "Added to the AI features. Entries it logs are saved without a draft and marked for you to review.",
+                    label: "Notification reading",
+                },
             ],
             es: [
                 {
                     detail: "Se suma a los planes, junto con cuánto dura una conexión.",
                     label: "Conexión con Notion en Pro",
+                },
+                {
+                    detail: "Se suma a las funciones de IA. Las entradas que registra se guardan sin borrador y quedan marcadas para que las revises.",
+                    label: "Lectura de notificaciones",
                 },
             ],
             fr: [
@@ -118,16 +142,24 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Ajoutée aux formules, avec la durée d'une connexion.",
                     label: "Connexion à Notion dans Pro",
                 },
+                {
+                    detail: "Ajoutée aux fonctions d'IA. Les entrées qu'elle enregistre sont sauvegardées sans brouillon et signalées pour que vous les vérifiiez.",
+                    label: "Lecture des notifications",
+                },
             ],
             pt: [
                 {
                     detail: "Adicionada aos planos, com quanto tempo dura uma conexão.",
                     label: "Conexão com o Notion no Pro",
                 },
+                {
+                    detail: "Adicionada aos recursos de IA. Os lançamentos que ela registra são salvos sem rascunho e marcados para você revisar.",
+                    label: "Leitura de notificações",
+                },
             ],
         },
         document: "terms",
-        effectiveAtMs: Date.UTC(2026, 10, 16),
+        effectiveAtMs: Date.UTC(2026, 10, 3),
     },
 ];
 

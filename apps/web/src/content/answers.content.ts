@@ -2348,8 +2348,8 @@ const answers = {
                     },
                 ],
                 lead: t({
-                    en: "An AI expense tracker turns a purchase you describe in your own words into a saved entry. In Outlayr, AI reads the sentence you say and the receipt you photograph, then fills in the amount, merchant, category, account, date, and currency. Typing fills the same sentence with taps, on your phone, with no signal needed.",
-                    es: "Una app de gastos con IA convierte una compra que describes con tus palabras en un registro guardado. En Outlayr, la IA lee la oración que dictas y el recibo que fotografías, y llena el monto, el comercio, la categoría, la cuenta, la fecha y la moneda. Al escribir, llenas la misma oración con toques en tu celular, sin necesidad de señal.",
+                    en: "An AI expense tracker turns a purchase you describe in your own words into a saved entry. In Outlayr, AI reads the sentence you say, the receipt you photograph, and the bank notifications it logs, then fills in the amount, merchant, category, account, date, and currency. Typing fills the same sentence with taps, on your phone, with no signal needed.",
+                    es: "Una app de gastos con IA convierte una compra que describes con tus palabras en un registro guardado. En Outlayr, la IA lee la oración que dictas, el recibo que fotografías y las notificaciones del banco que registra, y llena el monto, el comercio, la categoría, la cuenta, la fecha y la moneda. Al escribir, llenas la misma oración con toques en tu celular, sin necesidad de señal.",
                 }),
                 meta: {
                     description: t({
@@ -2700,8 +2700,8 @@ const answers = {
                                 es: "Un segundo atajo, Outlayr - Bank Notifications, lee las notificaciones de compra que envía la app de tu banco. Obtén el atajo del banco desde la misma pantalla, toca App y elige tus bancos, y actívalo en Automatización. Elige solo apps de bancos y tarjetas.",
                             }),
                             t({
-                                en: "This covers cards you swipe or tap without Apple Pay, as long as your bank's app sends a notification with the amount; those apps show up in the same list. When you pay with Apple Pay and your bank also sends a notification, the tap and the notification land as one entry, not two.",
-                                es: "Así se registran las tarjetas que pasas o acercas sin Apple Pay, siempre que la app de tu banco envíe una notificación con el monto; esas apps aparecen en la misma lista. Cuando pagas con Apple Pay y tu banco también te envía una notificación, el pago y la notificación quedan en un solo registro, no en dos.",
+                                en: "This covers cards you swipe or tap without Apple Pay, as long as your bank's app sends a notification with the amount; those apps show up in the same list. When you pay with Apple Pay and your bank also sends a notification, the tap and the notification land as one entry, not two. With Smart fill on, a notification that shows an amount goes to Anthropic to read the merchant and amount, and its text isn't kept.",
+                                es: "Así se registran las tarjetas que pasas o acercas sin Apple Pay, siempre que la app de tu banco envíe una notificación con el monto; esas apps aparecen en la misma lista. Cuando pagas con Apple Pay y tu banco también te envía una notificación, el pago y la notificación quedan en un solo registro, no en dos. Con Autocompletado activado, una notificación que muestra un monto va a Anthropic para leer el comercio y el monto, y no guardamos su texto.",
                             }),
                         ],
                         id: "bank-apps",

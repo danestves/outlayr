@@ -19,22 +19,22 @@ const aiConsent = {
             "pt-PT": "Funcionalidades inteligentes",
         }),
         "aiConsent.fine": t({
-            en: "Suggestions never include amounts, dates, or accounts. We don't keep recordings, photos, or screenshots.",
-            es: "Las sugerencias nunca incluyen montos, fechas ni cuentas. No guardamos grabaciones, fotos ni capturas.",
+            en: "Category suggestions never include amounts, dates, or accounts. We don't keep recordings, photos, screenshots, or notifications.",
+            es: "Las sugerencias de categoría nunca incluyen montos, fechas ni cuentas. No guardamos grabaciones, fotos, capturas ni notificaciones.",
             "es-ES":
-                "Las sugerencias nunca incluyen importes, fechas ni cuentas. No guardamos grabaciones, fotos ni capturas.",
-            fr: "Les suggestions n'incluent jamais les montants, les dates ni les comptes. Nous ne conservons ni enregistrements, ni photos, ni captures d'écran.",
-            pt: "As sugestões nunca incluem valores, datas ou contas. Não armazenamos gravações, fotos nem capturas de tela.",
+                "Las sugerencias de categoría nunca incluyen importes, fechas ni cuentas. No guardamos grabaciones, fotos, capturas ni notificaciones.",
+            fr: "Les suggestions de catégorie n'incluent jamais les montants, les dates ni les comptes. Nous ne conservons ni enregistrements, ni photos, ni captures d'écran, ni notifications.",
+            pt: "As sugestões de categoria nunca incluem valores, datas ou contas. Não armazenamos gravações, fotos, capturas de tela nem notificações.",
             "pt-PT":
-                "As sugestões nunca incluem valores, datas ou contas. Não guardamos gravações, fotos nem capturas de ecrã.",
+                "As sugestões de categoria nunca incluem valores, datas ou contas. Não guardamos gravações, fotos, capturas de ecrã nem notificações.",
         }),
         "aiConsent.lead": t({
-            en: "These features need an account and go through our server to third-party AI providers, which turn recordings into text and suggest categories. They never get your name, email, or account ID.",
-            es: "Estas funciones necesitan una cuenta y pasan por nuestro servidor hacia proveedores de IA externos, que convierten las grabaciones en texto y sugieren categorías. Nunca reciben tu nombre, tu correo ni el ID de tu cuenta.",
-            fr: "Ces fonctions nécessitent un compte et passent par notre serveur vers des fournisseurs d'IA tiers, qui transcrivent les enregistrements et suggèrent des catégories. Ils ne reçoivent jamais votre nom, votre e-mail ni l'identifiant de votre compte.",
-            pt: "Estes recursos precisam de uma conta e passam pelo nosso servidor até provedores de IA terceiros, que transformam gravações em texto e sugerem categorias. Eles nunca recebem seu nome, e-mail ou ID da conta.",
+            en: "These features need an account and go through our server to third-party AI providers, which turn recordings into text, read receipts and bank notifications, and suggest categories. They never get your name, email, or account ID.",
+            es: "Estas funciones necesitan una cuenta y pasan por nuestro servidor hacia proveedores de IA externos, que convierten las grabaciones en texto, leen recibos y notificaciones del banco, y sugieren categorías. Nunca reciben tu nombre, tu correo ni el ID de tu cuenta.",
+            fr: "Ces fonctions nécessitent un compte et passent par notre serveur vers des fournisseurs d'IA tiers, qui transcrivent les enregistrements, lisent les tickets et les notifications bancaires, et suggèrent des catégories. Ils ne reçoivent jamais votre nom, votre e-mail ni l'identifiant de votre compte.",
+            pt: "Estes recursos precisam de uma conta e passam pelo nosso servidor até provedores de IA terceiros, que transformam gravações em texto, leem recibos e notificações do banco e sugerem categorias. Eles nunca recebem seu nome, e-mail ou ID da conta.",
             "pt-PT":
-                "Estas funcionalidades precisam de uma conta e passam pelo nosso servidor até fornecedores de IA terceiros, que transformam gravações em texto e sugerem categorias. Nunca recebem o seu nome, e-mail ou ID da conta.",
+                "Estas funcionalidades precisam de uma conta e passam pelo nosso servidor até fornecedores de IA terceiros, que transformam gravações em texto, leem talões e notificações do banco e sugerem categorias. Nunca recebem o seu nome, e-mail ou ID da conta.",
         }),
         "aiConsent.lookup": t({
             en: "Web lookup",
@@ -49,6 +49,20 @@ const aiConsent = {
             fr: "Le fournisseur d'IA peut rechercher le nom d'un commerçant sur le web",
             pt: "O provedor de IA pode buscar na web o nome de um estabelecimento",
             "pt-PT": "O fornecedor de IA pode pesquisar na web o nome de um estabelecimento",
+        }),
+        "aiConsent.notifications": t({
+            en: "Bank notifications",
+            es: "Notificaciones del banco",
+            fr: "Notifications bancaires",
+            pt: "Notificações do banco",
+        }),
+        "aiConsent.notificationsSends": t({
+            en: "The title and text of each notification that shows an amount, and your language",
+            es: "El título y el texto de cada notificación que muestra un monto, y tu idioma",
+            "es-ES": "El título y el texto de cada notificación que muestra un importe, y tu idioma",
+            fr: "Le titre et le texte de chaque notification qui affiche un montant, et votre langue",
+            pt: "O título e o texto de cada notificação que mostra um valor, e o seu idioma",
+            "pt-PT": "O título e o texto de cada notificação que mostra um valor, e o seu idioma",
         }),
         "aiConsent.notNow": t({
             en: "Not now",
