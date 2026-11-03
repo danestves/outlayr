@@ -1,0 +1,96 @@
+---
+title: Moving Outlayr to Effect in 50 pull requests
+description: How Outlayr's Expo app, Convex backend and website moved to Effect v4 in one stack of 50 PRs, the rules that keep it contained, and what it cost.
+lead: On 27 October I merged a stack of 50 pull requests that moved the app, the backend and the website onto Effect v4. Why, how it was staged, and what it cost.
+date: 2026-10-27
+published: 2026-11-03
+figure:
+    from:
+        value: "213"
+        label: react effects, 26 Oct
+    to:
+        value: "68"
+        label: react effects, 27 Oct
+shipped:
+    - pr: 95
+      title: Adopt Effect v4 in the money package
+      date: 2026-10-27
+    - pr: 98
+      title: Effect runtime and atoms for the app
+      date: 2026-10-27
+    - pr: 99
+      title: Move the backend into Confect
+      date: 2026-10-27
+    - pr: 104
+      title: Run the sync engine on Effect
+      date: 2026-10-27
+    - pr: 121
+      title: Add a budget for React effects
+      date: 2026-10-27
+    - pr: 162
+      title: Delete the promise bridges nothing calls
+      date: 2026-10-27
+---
+
+On 27 October I merged 50 pull requests in about a minute. Together they moved Outlayr's Expo app, its Convex backend and the website onto Effect v4. Here is why, how it was staged, and what it cost.
+
+## Why move at all
+
+The reasons were in the code. A few, from the PR descriptions:
+
+- The app opened its local database inside a `useEffect`, with a run-counter ref, `useCallback`, `useMemo` and a context provider around it ([#98](https://github.com/danestves/outlayr/pull/98)).
+- The sync loop was one `useEffect` of about 130 lines, with mutable flags and a hand-rolled debounce. The React Compiler skipped it, and pausing then resuming sync could start a second pass while one was still running ([#104](https://github.com/danestves/outlayr/pull/104)).
+- The backend's outbound `fetch` calls and `process.env` reads sat in promise helpers that could not be composed, timed out with the rest of an operation, or faked in tests ([#123](https://github.com/danestves/outlayr/pull/123)).
+- Library code failed with plain `Error`s or strings, so a caller could not tell a cancelled sign-in from a failed one without guessing ([#157](https://github.com/danestves/outlayr/pull/157)).
+
+Effect has one answer for all of these: typed errors, dependencies provided through layers, streams that clean up when interrupted, and timeouts and retries as values.
+
+## How it was staged
+
+[#95](https://github.com/danestves/outlayr/pull/95) went first and changed no callers. It added `effect` 4.0.6 and the language service plugin, and moved the smallest package, `packages/money`, onto it. Its `MoneyValidationError` became a `Schema.TaggedError`, which is still `instanceof Error` with the same message, so every existing `catch` kept working. That property is what let everything else move one piece at a time.
+
+[#96](https://github.com/danestves/outlayr/pull/96) added the guardrails before the bulk of the work. React Compiler lint rules became errors, and a test compiles every native file with the app's real Babel config and fails on any bailout outside a list of 12 files. A `no-manual-memo` rule came with 130 files allowed to keep their memoization for now. Both lists can only shrink.
+
+#98 created one atom registry and one runtime for the app, with the local database as the first service. [#99](https://github.com/danestves/outlayr/pull/99) moved the whole backend into Confect, which runs Convex functions as Effect programs, in one mechanical pass with no behavior change. That one could not be gradual, because `confect codegen` deletes every file in `convex/` it did not generate. The generated schema came out deep-equal to the old one, and a push to a local backend reported no table or index changes.
+
+After that, each PR converted one area: backend groups, the sync engine, app contexts as atoms, zod to Effect Schema, the data layer, library code, React effects, and the promise flows in UI handlers. The last one, [#162](https://github.com/danestves/outlayr/pull/162), deleted the promise bridges nothing called anymore.
+
+I opened the first PR on 25 October and the last about 34 hours later. Ten of the 50 were bug fixes and an env change that rode along in the stack. All 50 were made with Claude in Claude Code; in 31 of them, Sonnet 5.5 implemented and Opus 5.5 reviewed.
+
+## The rules that keep it contained
+
+The rules live in `CLAUDE.md` and `docs/internals/effect-services.md`, and lint enforces the mechanical ones.
+
+- **Import by subpath**, `effect/Effect`, never the `effect` root. The root re-exports all 143 modules and Metro does not tree-shake. A dependency can still break this: drizzle's `effect-schema` imports `Schema` from the root, so [#155](https://github.com/danestves/outlayr/pull/155) points Metro at an `effect/Schema` re-export for that import. That removed 73 Effect modules and took the Android bytecode from 17.27 MB to 16.45 MB.
+- **Errors are `Schema.TaggedError` classes**, with structured fields and the original error on `cause`:
+
+```ts
+export class LocalDatabaseError extends Schema.TaggedError<LocalDatabaseError>()("LocalDatabaseError", {
+    cause: Schema.Defect(),
+    stage: LocalDatabaseStage,
+}) {
+    override get message(): string {
+        return `Local data failed to ${this.stage}`;
+    }
+}
+```
+
+- **Enums are schemas**, `Schema.Literals([...])`, and the type comes from `typeof X.Type`, so there is no second union to keep in sync.
+- **Reusable operations are `Effect.fn("Module.operation")`**, which names the span. Lint flags a function that only returns `Effect.gen`.
+- **Effects run only at edges**: an atom, a command, a Convex handler, a test. Never `Effect.runPromise` inside a service or another effect. In the app, a write runs through a command that settles to a success or a failure and never rejects ([#122](https://github.com/danestves/outlayr/pull/122)).
+
+React gets its own ratchet. [#121](https://github.com/danestves/outlayr/pull/121) added `outlayr/react-effect-budget`: a file may hold at most as many `useEffect`, `useLayoutEffect` and `useInsertionEffect` calls as `scripts/effect-budget.json` gives it, and that number only goes down. An effect that really syncs with something outside React stays, with its reason on the line above:
+
+```ts
+// oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to the keyboard for the screen's lifetime
+```
+
+Before the stack, the app, the website and the shared packages had 213 effect hooks. After it, 68, each with a written reason, and the budget file is empty. The compiler's known-bailout list went from 12 files to none, and the memo allowlist from 130 files to 8.
+
+## What it cost
+
+- **Bundle size.** The runtime and atoms in #98 added 258 KB to the app bundle (60 KB gzipped), mostly `effect/reactivity` and the Stream modules atoms import.
+- **An upgrade I had not planned.** Effect row schemas need drizzle 1.0, and stock 1.0 cannot open a database written by 0.45's Expo migrator: 16 of our migrations share a second, so every existing install would have failed at launch. #155 backfills the migration log first, tested on a real 0.45 database on the Android emulator.
+- **A broken main.** #154 added a zod schema to `apps/web/src/lib/mcp.ts` while #114, in the stack, moved that file to Effect Schema. Both merged, and main failed to type-check until [#166](https://github.com/danestves/outlayr/pull/166).
+- **Gaps.** Some code stays on promises because a library demands it, like Better Auth's `fetchImpl`. Effect's language service diagnostics show only in the editor, not in `tsc`. Backend defects reach no reporter yet, because Confect has no place for an app-wide layer.
+- **Checks left open.** Several PRs merged with device checks still pending, like the sync paths in #104 and RevenueCat in #109.

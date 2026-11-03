@@ -1,0 +1,85 @@
+---
+title: Reading bank notifications with AI, and saying so
+description: Why the regex parser misread bank notifications, what the AI model reads instead, what leaves your phone, and why the privacy policy changed first.
+lead: 'A SiteGround charge was logged as "Spent $22.99 at Groceries". Fixing it meant sending notification text to a model, so the privacy policy had to change first.'
+date: 2026-11-03
+shipped:
+    - pr: 285
+      title: Read bank notifications with AI
+      date: 2026-11-03
+    - pr: 287
+      title: Disclose that bank notifications are read by AI
+      date: 2026-11-03
+    - pr: 288
+      title: File an unnamed notification under its app
+      date: 2026-11-03
+---
+
+Outlayr can log a purchase from your bank's notification, through a Shortcuts automation on iPhone or notification access on Android. Until now, the phone read each one with a regex parser.
+
+## What broke
+
+A Card Suite Lite push said: "Your SiteGround transaction in the amount of USD 22.99 … approved on the card ending with 7909". Outlayr logged it as "Spent $22.99 at Groceries".
+
+Three things went wrong in a row. The parser only looks for the merchant after the amount, and here the name came before it, so it found none. With no merchant, the entry fell back to the first category. And an entry with an empty note shows the category's name, so Groceries looked like the place I paid.
+
+I could teach the parser this one wording, and [#285](https://github.com/danestves/outlayr/pull/285) does: it now reads "Your X transaction". But every bank writes these differently, and a regex can't keep up.
+
+## What the model reads
+
+#285 adds a Convex action, `notificationRead.read`, that asks a fast Claude model what a notification reports. The answer has a fixed shape:
+
+```ts
+export const NotificationKind = Schema.Literals(["purchase", "income", "declined", "other"]);
+
+export const NotificationRead = Schema.Struct({
+    amount: Schema.NullOr(Schema.Finite),
+    currency: Schema.NullOr(Schema.String),
+    kind: NotificationKind,
+    merchant: Schema.NullOr(Schema.String),
+});
+```
+
+The prompt asks for the merchant as a short name a person would recognize: no card numbers, no city, no processor prefix like `SQ *`, and never the app that posted the notification or the card. Anything the text doesn't say comes back as null. A bare `$` comes back with no currency, because 22 currencies use it, and the card's account settles it as before.
+
+The server treats the model's output as untrusted and drops an amount that isn't positive, an unknown currency code, and an empty or overlong name.
+
+On the phone, the answer is merged with what the parser read:
+
+- A decline is dropped.
+- For a purchase or income, the model's fields win, and the parser fills whatever the model left null.
+- If the model calls it "other" (a statement, a reminder), the parser's result is still logged. A missing purchase is worse than a statement logged by mistake.
+
+The merchant then goes through the usual lookup, so the category and logo come from your own categories.
+
+The model is never required. The reads share one 8 second budget. Offline, signed out, Smart fill off, or a slow answer: the phone logs what the parser read, as before. The server checks that you are signed in and that your AI consent is current, and it rate limits each user and the app as a whole.
+
+Before merging, I ran the real prompt and schema over 7 real pushes, including this one, a decline, a statement, a Spanish transfer and a bolívar amount with comma decimals. All 7 came back right. That run used Grok, because I had no Anthropic key locally, so it did not exercise the production model.
+
+## What leaves the phone
+
+With Smart fill on, and once you have allowed sending data to AI providers:
+
+- **Sent:** the notification's title and text, exactly as the posting app wrote them, and your language. Only for a notification that shows an amount and isn't logged yet.
+- **Not sent:** login codes, promotions, and repeats of a notification Outlayr already logged. The app's name, your card and account names, and your other entries. On Android, nothing from an app you haven't turned on.
+- **Not kept:** our server does not store the text. The answer goes back to the phone, which adds the entry.
+- **Recorded:** for each request, our server sends PostHog the feature, model, tokens, cost, speed and errors, never the text. The record carries your account ID only if Share analytics is on, and a random ID otherwise.
+
+The action takes four arguments: the text, your language, your consent version and whether Share analytics is on. There is no field for anything else. The text itself still carries whatever the bank put in it, such as the amount, a date or the last digits of a card, and the policy says so.
+
+## Saying so before it shipped
+
+Before #285, the privacy policy said notifications from the Shortcuts automation and Android's notification access never leave the phone, and the consent sheet said we never send amounts. #285 made both false. [#287](https://github.com/danestves/outlayr/pull/287) changes what we say, and it ships in the same release.
+
+- The privacy policy has a new section, [Reading bank notifications](/privacy#reading-bank-notifications), and every section that said nothing is sent now says what is. The Terms now ask you to check entries logged from notifications, since they save without a draft.
+- The AI consent sheet has a "Bank notifications" row that lists what is sent.
+- The Android notification access line said Outlayr only keeps notifications from the apps you turn on. In fact it keeps the latest one with an amount from any app, to list them. It now says Outlayr logs only from those apps.
+- Policy notices go out in English, Spanish, French and Portuguese, effective 3 November.
+
+The order on launch day matters: merge, deploy the backend, email the privacy and terms notices, and only then publish the app update, so the notice reaches people before the app reads their notifications.
+
+I chose not to bump the AI consent version. People who already allowed AI learn about this from the notice instead of being asked again. Bumping it would re-ask everyone and need a new build.
+
+## The entries nothing could name
+
+#285 makes a missing merchant rarer, not impossible. When neither the parser nor the model finds one, the entry still read "at Groceries". [#288](https://github.com/danestves/outlayr/pull/288) files it under the app that posted it instead, "at Card Suite Lite". With no app name, or when the "app" is really a card the text names (Google Wallet's "Visa ••1234", which would put card digits in a synced note), it reads "Bank notification" in the app's language. That placeholder stays out of the merchant and logo lookups, so an app's name never gets a logo of its own.

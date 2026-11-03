@@ -1,0 +1,85 @@
+---
+title: Leer las notificaciones del banco con IA, y decirlo
+description: Por qué el parser con regex leía mal las notificaciones del banco, qué lee ahora la IA, qué sale de tu celular y por qué cambió antes la política.
+lead: Un cargo de SiteGround quedó registrado como un gasto en Supermercado. Arreglarlo implicaba enviar el texto a un modelo, así que antes tuvo que cambiar la política de privacidad.
+date: 2026-11-03
+shipped:
+    - pr: 285
+      title: Leer las notificaciones del banco con IA
+      date: 2026-11-03
+    - pr: 287
+      title: Avisar que la IA lee las notificaciones del banco
+      date: 2026-11-03
+    - pr: 288
+      title: Registrar una notificación sin nombre bajo su app
+      date: 2026-11-03
+---
+
+Outlayr puede registrar una compra desde la notificación de tu banco, con una automatización de Atajos en iPhone o con el acceso a notificaciones en Android. Hasta ahora, el celular las leía con un parser de regex.
+
+## Qué falló
+
+Una notificación de Card Suite Lite decía: "Your SiteGround transaction in the amount of USD 22.99 … approved on the card ending with 7909". Outlayr la registró como un gasto de $22.99 en Supermercado.
+
+Fallaron tres cosas seguidas. El parser solo busca el comercio después del monto, y aquí el nombre venía antes. Sin comercio, la entrada cayó en la primera categoría. Y una entrada con la nota vacía muestra el nombre de la categoría, así que Supermercado parecía el lugar donde pagué.
+
+Podía enseñarle al parser esta redacción, y [#285](https://github.com/danestves/outlayr/pull/285) lo hace: ahora entiende "Your X transaction". Pero cada banco escribe a su manera, y una regex no da abasto.
+
+## Qué lee el modelo
+
+#285 agrega una acción de Convex, `notificationRead.read`, que le pregunta a un modelo rápido de Claude qué informa una notificación. La respuesta tiene una forma fija:
+
+```ts
+export const NotificationKind = Schema.Literals(["purchase", "income", "declined", "other"]);
+
+export const NotificationRead = Schema.Struct({
+    amount: Schema.NullOr(Schema.Finite),
+    currency: Schema.NullOr(Schema.String),
+    kind: NotificationKind,
+    merchant: Schema.NullOr(Schema.String),
+});
+```
+
+El prompt pide el comercio como un nombre corto y reconocible: sin números de tarjeta, sin ciudad, sin prefijos de procesador como `SQ *`, y nunca la app que publicó la notificación ni la tarjeta. Lo que el texto no dice vuelve como null. Un `$` solo vuelve sin moneda, porque lo usan 22 monedas, y la cuenta de la tarjeta la decide como antes.
+
+El servidor no confía en la respuesta del modelo: descarta un monto que no sea positivo, un código de moneda desconocido y un nombre vacío o demasiado largo.
+
+En el celular, la respuesta se combina con lo que leyó el parser:
+
+- Un cargo rechazado se descarta.
+- En una compra o un ingreso, ganan los campos del modelo, y el parser completa los que quedaron en null.
+- Si el modelo dice que es "other" (un estado de cuenta, un recordatorio), igual se registra lo que leyó el parser. Perder una compra es peor que registrar un estado de cuenta por error.
+
+Luego el comercio pasa por la búsqueda de siempre, y la categoría y el logo salen de tus propias categorías.
+
+El modelo nunca es obligatorio. Las lecturas comparten un presupuesto de 8 segundos. Sin conexión, sin sesión, con Autocompletado desactivado o con una respuesta lenta, el celular registra lo que leyó el parser. El servidor exige sesión iniciada y consentimiento de IA al día, y limita la frecuencia por usuario y para toda la app.
+
+Antes del merge, probé el prompt y el esquema reales con 7 notificaciones reales, entre ellas esta, un cargo rechazado, un estado de cuenta, una transferencia en español y un monto en bolívares con coma decimal. Las 7 salieron bien. Esa prueba usó Grok, porque no tenía una clave de Anthropic en local, así que no tocó el modelo de producción.
+
+## Qué sale del celular
+
+Con Autocompletado activado y el envío de datos a proveedores de IA permitido:
+
+- **Se envía:** el título y el texto de la notificación, tal como los escribió la app, y tu idioma. Solo si muestra un monto y todavía no se registró.
+- **No se envía:** los códigos de acceso, las promociones ni las repeticiones de una notificación ya registrada. Tampoco el nombre de la app, los nombres de tus tarjetas y cuentas ni tus otras entradas. En Android, nada de una app que no activaste.
+- **No se guarda:** nuestro servidor no guarda el texto. La respuesta vuelve al celular, que agrega la entrada.
+- **Se registra:** por cada solicitud, nuestro servidor le envía a PostHog la función, el modelo, los tokens, el costo, la velocidad y los errores, nunca el texto. Lleva el ID de tu cuenta solo con Compartir analíticas activado, y si no, un ID aleatorio.
+
+La acción recibe cuatro argumentos: el texto, tu idioma, tu versión de consentimiento y si Compartir analíticas está activado. No hay campo para nada más. El texto en sí lleva lo que puso el banco, como el monto, una fecha o los últimos dígitos de una tarjeta, y la política lo dice.
+
+## Decirlo antes de lanzarlo
+
+Antes de #285, la política de privacidad decía que las notificaciones de Atajos y del acceso a notificaciones de Android nunca salen del celular, y la hoja de consentimiento, que nunca enviamos montos. #285 volvió falsas las dos cosas. [#287](https://github.com/danestves/outlayr/pull/287) corrige lo que decimos, y sale en la misma versión.
+
+- La política de privacidad tiene una sección nueva, [Leer notificaciones del banco](/privacy#leer-notificaciones-del-banco), y cada sección que decía que no se envía nada ahora dice qué sí. Los Términos ahora te piden revisar las entradas registradas desde notificaciones, porque se guardan sin borrador.
+- La hoja de consentimiento de IA tiene una fila "Notificaciones del banco" que dice qué se envía.
+- El texto del acceso a notificaciones en Android decía que Outlayr solo guarda notificaciones de las apps que activas. En realidad guarda la última con un monto de cualquier app, para listarlas. Ahora dice que solo registra desde esas apps.
+- Avisos de la política en inglés, español, francés y portugués, vigentes desde el 3 de noviembre.
+
+El orden del día del lanzamiento importa: merge, deploy del backend, correo con los avisos de privacidad y de términos, y solo entonces la actualización de la app, para que el aviso llegue antes de que la app lea una notificación.
+
+Decidí no subir la versión del consentimiento de IA. Quien ya permitió la IA se entera por el aviso, sin que se le pregunte de nuevo. Subirla le volvería a preguntar a todos y exigiría un build nuevo.
+
+## Las entradas sin nombre
+
+Con #285 falta el comercio con menos frecuencia, pero sigue pasando. Cuando ni el parser ni el modelo encuentran uno, la entrada seguía mostrando "Supermercado" como el lugar del pago. [#288](https://github.com/danestves/outlayr/pull/288) la registra bajo la app que publicó la notificación, "Card Suite Lite". Si no hay nombre de app, o si la "app" es en realidad una tarjeta que el texto nombra (el "Visa ••1234" de Google Wallet, que pondría dígitos de tarjeta en una nota sincronizada), dice "Notificación del banco" en el idioma de la app. Ese texto queda fuera de las búsquedas de comercio y de logo, así que el nombre de una app nunca recibe un logo propio.

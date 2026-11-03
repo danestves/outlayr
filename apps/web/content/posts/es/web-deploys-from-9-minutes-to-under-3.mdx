@@ -1,0 +1,95 @@
+---
+title: Los deploys de la web tardaban 9 minutos, ahora menos de 3
+description: Cómo agregar inicio de sesión llevó los deploys de la web de 2.5 a 9 minutos, por qué el build no era la causa y cómo lo arregló enviar solo el servidor.
+lead: Agregar inicio de sesión a tryoutlayr.com metió 1.8 GB de dependencias de la app nativa en cada deploy de la web. La solución fue dejar de enviarlas.
+date: 2026-11-03
+figure:
+    from:
+        value: 9m
+        label: deploy, 2 nov
+    to:
+        value: 2m 47s
+        label: deploy, 3 nov
+shipped:
+    - pr: 294
+      title: Enviar solo el servidor compilado en la imagen del deploy
+      date: 2026-11-03
+    - pr: 140
+      title: Iniciar sesión en tryoutlayr.com con la cuenta de la app
+      date: 2026-10-26
+---
+
+El 26 de octubre agregué inicio de sesión a tryoutlayr.com ([#140](https://github.com/danestves/outlayr/pull/140)). Desde ese día, cada deploy de la web tardó 9 minutos, a veces 10. Antes de ese cambio tardaban unos 2.5.
+
+## El build no era lo lento
+
+Lo primero que sospeché fue el build, así que lo medí. Una instalación limpia más el build de la web tardan menos de 40 segundos. El resto de esos 9 minutos no era compilar nada. Era copiar archivos a una imagen y mover sus capas de un lado a otro.
+
+El sitio se despliega en Coolify, que lo construye con Railpack. Por defecto, la imagen de deploy de Railpack conserva lo que tenía el paso de build: todo `node_modules` y el repo completo. El servidor no lee ninguno de los dos. Antes de #140 eso era un desperdicio pequeño. Después de #140 dejó de ser pequeño.
+
+## Por qué instalar la web traía React Native
+
+Outlayr es un solo workspace de pnpm: la app de Expo, el backend de Convex y el sitio web comparten un lockfile. El deploy instala solo la web y lo que esta necesita:
+
+```sh
+CI=1 pnpm install --frozen-lockfile --trust-lockfile --filter @outlayr/web...
+```
+
+Con #140, el sitio pasó a depender de `better-auth`, la librería de autenticación que ya usan la app y el backend. En el lockfile, las entradas de la web reutilizan la instancia de `better-auth` del backend, y esa instancia se resuelve con los peers de la app nativa. Así que la instalación filtrada la siguió hasta Expo, React Native y Next. En total, 1.8 GB de `node_modules` en cada imagen de deploy.
+
+Esa reutilización es a propósito. Mientras hacía #140, dejar que pnpm resolviera `better-auth` de nuevo para la web partía el grafo de peers de Expo en un segundo core de Babel. Así que dejé el lockfile como estaba y cambié lo que entra en la imagen.
+
+## Enviar solo el servidor compilado
+
+TanStack Start compila el servidor en `apps/web/.output`, y `node` lo arranca desde ahí. Railpack permite indicar en la configuración qué archivos de qué paso terminan en la imagen final, así que [#294](https://github.com/danestves/outlayr/pull/294) agrega un bloque `deploy.inputs` a `railpack.json`:
+
+```json
+"deploy": {
+    "inputs": [
+        {
+            "step": "packages:mise",
+            "include": [
+                "/mise/shims",
+                "/mise/installs",
+                "/usr/local/bin/mise",
+                "/etc/mise/config.toml",
+                "/root/.local/state/mise"
+            ]
+        },
+        { "step": "build", "include": ["apps/web/.output"] }
+    ],
+    "startCommand": "node apps/web/.output/server/index.mjs"
+}
+```
+
+La primera entrada es el toolchain de Node que Railpack instala con mise. La segunda es el servidor compilado. Nada más del repo entra en la imagen.
+
+Comparé las dos imágenes con builds locales de Railpack:
+
+| Build local de Railpack                     | Antes     | Después de #294 |
+| ------------------------------------------- | --------- | --------------- |
+| Copiar `node_modules` y el repo a la imagen | unos 60 s | nada            |
+| Exportar capas y enviar el tarball          | 144 s     | 30 s            |
+| Tamaño de la imagen                         | 3.68 GB   | 862 MB          |
+
+## Lo único que se rompió
+
+La web lee su entorno con varlock. Su plugin de Vite corría con `ssrInjectMode: "auto-load"`, que arranca el CLI de varlock cuando inicia el servidor. El CLI vive en `node_modules`, y `node_modules` ya no estaba en la imagen.
+
+El arreglo fue una línea en `apps/web/vite.config.ts`:
+
+```ts
+varlockVitePlugin({ ssrInjectMode: "resolved-env" }),
+```
+
+`resolved-env` mete los valores ya resueltos en el bundle del servidor durante el build. Aquí es seguro por dos razones. Todas las variables de la web son públicas y ya se incrustaban en el build. Y en producción, `auto-load` no encontraba ningún `.env` en `/app`, así que no tenía nada que cargar.
+
+Sí cambia dos cosas, y las dos quedaron escritas en `docs/internals/env.md`. Cambiar un valor ahora exige un nuevo deploy, porque nada lee el entorno al arrancar. Y una dependencia del servidor que el bundle deje fuera ahora falla en tiempo de ejecución, porque no hay `node_modules` de respaldo.
+
+## Cómo lo comprobé
+
+Antes de hacer merge, construí las dos imágenes con Railpack contra un BuildKit limpio. La nueva no tiene `node_modules` y sirve `/`, `/es`, `/es/about`, `/login`, `/guides`, `/robots.txt`, `/llms.txt`, `/mcp` y el 404 de un archivo que no existe. `/open` y `/api/auth/get-session` se comportan igual que en main con el mismo entorno de prueba, y los valores del entorno llegan tanto al bundle del cliente como al del servidor.
+
+Después del merge, un deploy tardó 2 minutos y 47 segundos. Es casi lo que tardaba antes de que el sitio tuviera inicio de sesión, y el inicio de sesión sigue ahí.
+
+La lección que me toca reaprender: medir cada paso antes de adivinar. De 9 minutos, la instalación y el build ocupaban menos de 40 segundos.

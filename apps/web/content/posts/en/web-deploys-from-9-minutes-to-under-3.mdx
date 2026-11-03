@@ -1,0 +1,95 @@
+---
+title: Our web deploys took 9 minutes, now they take under 3
+description: How adding sign-in took our web deploys from 2.5 to 9 minutes, why the build was not the cause, and how shipping only the built server fixed it.
+lead: Adding sign-in to tryoutlayr.com pulled 1.8 GB of the native app's dependencies into every web deploy. The fix was to stop shipping them.
+date: 2026-11-03
+figure:
+    from:
+        value: 9m
+        label: deploy, 2 Nov
+    to:
+        value: 2m 47s
+        label: deploy, 3 Nov
+shipped:
+    - pr: 294
+      title: Ship only the built server in the deploy image
+      date: 2026-11-03
+    - pr: 140
+      title: Sign in on tryoutlayr.com with the app's account
+      date: 2026-10-26
+---
+
+On 26 October I added sign-in to tryoutlayr.com ([#140](https://github.com/danestves/outlayr/pull/140)). From then on, every web deploy took 9 minutes, sometimes 10. Before that change they took about 2.5.
+
+## The build was not the slow part
+
+My first guess was the build, so I timed it. A clean install and build of the web app take under 40 seconds. The rest of those 9 minutes was not compiling anything. It was copying files into an image and moving its layers around.
+
+The site deploys on Coolify, which builds it with Railpack. By default, Railpack's deploy image keeps what the build step had: all of `node_modules` and the whole repo. The server reads neither. Before #140 that was wasteful but small. After #140 it was not small.
+
+## Why a web install pulled in React Native
+
+Outlayr is one pnpm workspace: the Expo app, the Convex backend and the website share a lockfile. The deploy installs only the web app and what it depends on:
+
+```sh
+CI=1 pnpm install --frozen-lockfile --trust-lockfile --filter @outlayr/web...
+```
+
+#140 made the website depend on `better-auth`, the auth library the app and the backend already use. In the lockfile, the web app's entries reuse the backend's `better-auth` instance, and that instance is resolved with the native app's peers. So the filtered install followed it into Expo, React Native and Next. That came to 1.8 GB of `node_modules` in every deploy image.
+
+The reuse is on purpose. While building #140, letting pnpm re-resolve `better-auth` for the web split the Expo peer graph onto a second Babel core. So I left the lockfile alone and changed what goes into the image instead.
+
+## Ship only the built server
+
+TanStack Start builds the server into `apps/web/.output`, and `node` starts it from there. Railpack lets the config say which files from which step end up in the final image, so [#294](https://github.com/danestves/outlayr/pull/294) adds a `deploy.inputs` block to `railpack.json`:
+
+```json
+"deploy": {
+    "inputs": [
+        {
+            "step": "packages:mise",
+            "include": [
+                "/mise/shims",
+                "/mise/installs",
+                "/usr/local/bin/mise",
+                "/etc/mise/config.toml",
+                "/root/.local/state/mise"
+            ]
+        },
+        { "step": "build", "include": ["apps/web/.output"] }
+    ],
+    "startCommand": "node apps/web/.output/server/index.mjs"
+}
+```
+
+The first input is the Node toolchain that Railpack installs through mise. The second is the built server. Nothing else from the repo goes in.
+
+I compared the two images with local Railpack builds:
+
+| Local Railpack build                            | Before     | After #294 |
+| ----------------------------------------------- | ---------- | ---------- |
+| Copy `node_modules` and the repo into the image | about 60 s | none       |
+| Export layers and send the tarball              | 144 s      | 30 s       |
+| Image size                                      | 3.68 GB    | 862 MB     |
+
+## The one thing that broke
+
+The web app reads its environment through varlock. Its Vite plugin ran with `ssrInjectMode: "auto-load"`, which starts the varlock CLI when the server boots. The CLI lives in `node_modules`, and `node_modules` was no longer in the image.
+
+The fix was one line in `apps/web/vite.config.ts`:
+
+```ts
+varlockVitePlugin({ ssrInjectMode: "resolved-env" }),
+```
+
+`resolved-env` bakes the resolved values into the server bundle at build time. That is safe here for two reasons. Every web variable is public and was already inlined at build. And in production, `auto-load` found no `.env` in `/app` anyway, so it had nothing to load.
+
+It does change two things, and both are now written down in `docs/internals/env.md`. A changed value needs a redeploy, since nothing reads the environment at startup anymore. And a server dependency that the bundle leaves out now crashes at runtime, because there is no `node_modules` to fall back on.
+
+## How I checked it
+
+Before merging, I built both images with Railpack against a clean BuildKit. The new image has no `node_modules` and serves `/`, `/es`, `/es/about`, `/login`, `/guides`, `/robots.txt`, `/llms.txt`, `/mcp` and the 404 for a missing asset. `/open` and `/api/auth/get-session` behave the same as on main with the same dummy env, and the env values reach both the client and the server bundles.
+
+After the merge, a deploy took 2 minutes 47 seconds. That is close to where it was before the site had sign-in, and sign-in is still there.
+
+The lesson I keep relearning: time each step before guessing. Out of 9 minutes, the install and build took under 40 seconds.

@@ -30,6 +30,9 @@ import { Route as Char123LocaleChar125SupportRouteImport } from './routes/{-$loc
 import { Route as Char123LocaleChar125TermsRouteImport } from './routes/{-$locale}/terms'
 import { Route as DotwellKnownMcpServerCardDotjsonRouteImport } from './routes/[.]well-known.mcp.server-card[.]json'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as Char123LocaleChar125BlogIndexRouteImport } from './routes/{-$locale}/blog.index'
+import { Route as Char123LocaleChar125BlogSlugRouteImport } from './routes/{-$locale}/blog.$slug'
+import { Route as Char123LocaleChar125BlogRssDotxmlRouteImport } from './routes/{-$locale}/blog.rss[.]xml'
 import { Route as Char123LocaleChar125CompareIndexRouteImport } from './routes/{-$locale}/compare.index'
 import { Route as Char123LocaleChar125CompareSlugRouteImport } from './routes/{-$locale}/compare.$slug'
 import { Route as Char123LocaleChar125GuidesIndexRouteImport } from './routes/{-$locale}/guides.index'
@@ -153,6 +156,24 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char123LocaleChar125BlogIndexRoute =
+  Char123LocaleChar125BlogIndexRouteImport.update({
+    id: '/blog/',
+    path: '/blog/',
+    getParentRoute: () => Char123LocaleChar125RouteRoute,
+  } as any)
+const Char123LocaleChar125BlogSlugRoute =
+  Char123LocaleChar125BlogSlugRouteImport.update({
+    id: '/blog/$slug',
+    path: '/blog/$slug',
+    getParentRoute: () => Char123LocaleChar125RouteRoute,
+  } as any)
+const Char123LocaleChar125BlogRssDotxmlRoute =
+  Char123LocaleChar125BlogRssDotxmlRouteImport.update({
+    id: '/blog/rss.xml',
+    path: '/blog/rss.xml',
+    getParentRoute: () => Char123LocaleChar125RouteRoute,
+  } as any)
 const Char123LocaleChar125CompareIndexRoute =
   Char123LocaleChar125CompareIndexRouteImport.update({
     id: '/compare/',
@@ -212,9 +233,12 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
+  '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
   '/{-$locale}/compare/$slug': typeof Char123LocaleChar125CompareSlugRoute
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
+  '/{-$locale}/blog/': typeof Char123LocaleChar125BlogIndexRoute
   '/{-$locale}/compare/': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides/': typeof Char123LocaleChar125GuidesIndexRoute
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
@@ -240,9 +264,12 @@ export interface FileRoutesByTo {
   '/{-$locale}': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
+  '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
   '/{-$locale}/compare/$slug': typeof Char123LocaleChar125CompareSlugRoute
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
+  '/{-$locale}/blog': typeof Char123LocaleChar125BlogIndexRoute
   '/{-$locale}/compare': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides': typeof Char123LocaleChar125GuidesIndexRoute
   '/{-$locale}/tools': typeof Char123LocaleChar125ToolsIndexRoute
@@ -270,9 +297,12 @@ export interface FileRoutesById {
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
+  '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
   '/{-$locale}/compare/$slug': typeof Char123LocaleChar125CompareSlugRoute
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
+  '/{-$locale}/blog/': typeof Char123LocaleChar125BlogIndexRoute
   '/{-$locale}/compare/': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides/': typeof Char123LocaleChar125GuidesIndexRoute
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
@@ -301,9 +331,12 @@ export interface FileRouteTypes {
     | '/{-$locale}/'
     | '/.well-known/mcp/server-card.json'
     | '/api/auth/$'
+    | '/{-$locale}/blog/$slug'
+    | '/{-$locale}/blog/rss.xml'
     | '/{-$locale}/compare/$slug'
     | '/{-$locale}/guides/$slug'
     | '/{-$locale}/tools/$slug'
+    | '/{-$locale}/blog/'
     | '/{-$locale}/compare/'
     | '/{-$locale}/guides/'
     | '/{-$locale}/tools/'
@@ -329,9 +362,12 @@ export interface FileRouteTypes {
     | '/{-$locale}'
     | '/.well-known/mcp/server-card.json'
     | '/api/auth/$'
+    | '/{-$locale}/blog/$slug'
+    | '/{-$locale}/blog/rss.xml'
     | '/{-$locale}/compare/$slug'
     | '/{-$locale}/guides/$slug'
     | '/{-$locale}/tools/$slug'
+    | '/{-$locale}/blog'
     | '/{-$locale}/compare'
     | '/{-$locale}/guides'
     | '/{-$locale}/tools'
@@ -358,9 +394,12 @@ export interface FileRouteTypes {
     | '/{-$locale}/'
     | '/.well-known/mcp/server-card.json'
     | '/api/auth/$'
+    | '/{-$locale}/blog/$slug'
+    | '/{-$locale}/blog/rss.xml'
     | '/{-$locale}/compare/$slug'
     | '/{-$locale}/guides/$slug'
     | '/{-$locale}/tools/$slug'
+    | '/{-$locale}/blog/'
     | '/{-$locale}/compare/'
     | '/{-$locale}/guides/'
     | '/{-$locale}/tools/'
@@ -529,6 +568,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/{-$locale}/blog/': {
+      id: '/{-$locale}/blog/'
+      path: '/blog'
+      fullPath: '/{-$locale}/blog/'
+      preLoaderRoute: typeof Char123LocaleChar125BlogIndexRouteImport
+      parentRoute: typeof Char123LocaleChar125RouteRoute
+    }
+    '/{-$locale}/blog/$slug': {
+      id: '/{-$locale}/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/{-$locale}/blog/$slug'
+      preLoaderRoute: typeof Char123LocaleChar125BlogSlugRouteImport
+      parentRoute: typeof Char123LocaleChar125RouteRoute
+    }
+    '/{-$locale}/blog/rss.xml': {
+      id: '/{-$locale}/blog/rss.xml'
+      path: '/blog/rss.xml'
+      fullPath: '/{-$locale}/blog/rss.xml'
+      preLoaderRoute: typeof Char123LocaleChar125BlogRssDotxmlRouteImport
+      parentRoute: typeof Char123LocaleChar125RouteRoute
+    }
     '/{-$locale}/compare/': {
       id: '/{-$locale}/compare/'
       path: '/compare'
@@ -583,9 +643,12 @@ interface Char123LocaleChar125RouteRouteChildren {
   Char123LocaleChar125SupportRoute: typeof Char123LocaleChar125SupportRoute
   Char123LocaleChar125TermsRoute: typeof Char123LocaleChar125TermsRoute
   Char123LocaleChar125IndexRoute: typeof Char123LocaleChar125IndexRoute
+  Char123LocaleChar125BlogSlugRoute: typeof Char123LocaleChar125BlogSlugRoute
+  Char123LocaleChar125BlogRssDotxmlRoute: typeof Char123LocaleChar125BlogRssDotxmlRoute
   Char123LocaleChar125CompareSlugRoute: typeof Char123LocaleChar125CompareSlugRoute
   Char123LocaleChar125GuidesSlugRoute: typeof Char123LocaleChar125GuidesSlugRoute
   Char123LocaleChar125ToolsSlugRoute: typeof Char123LocaleChar125ToolsSlugRoute
+  Char123LocaleChar125BlogIndexRoute: typeof Char123LocaleChar125BlogIndexRoute
   Char123LocaleChar125CompareIndexRoute: typeof Char123LocaleChar125CompareIndexRoute
   Char123LocaleChar125GuidesIndexRoute: typeof Char123LocaleChar125GuidesIndexRoute
   Char123LocaleChar125ToolsIndexRoute: typeof Char123LocaleChar125ToolsIndexRoute
@@ -602,9 +665,13 @@ const Char123LocaleChar125RouteRouteChildren: Char123LocaleChar125RouteRouteChil
     Char123LocaleChar125SupportRoute: Char123LocaleChar125SupportRoute,
     Char123LocaleChar125TermsRoute: Char123LocaleChar125TermsRoute,
     Char123LocaleChar125IndexRoute: Char123LocaleChar125IndexRoute,
+    Char123LocaleChar125BlogSlugRoute: Char123LocaleChar125BlogSlugRoute,
+    Char123LocaleChar125BlogRssDotxmlRoute:
+      Char123LocaleChar125BlogRssDotxmlRoute,
     Char123LocaleChar125CompareSlugRoute: Char123LocaleChar125CompareSlugRoute,
     Char123LocaleChar125GuidesSlugRoute: Char123LocaleChar125GuidesSlugRoute,
     Char123LocaleChar125ToolsSlugRoute: Char123LocaleChar125ToolsSlugRoute,
+    Char123LocaleChar125BlogIndexRoute: Char123LocaleChar125BlogIndexRoute,
     Char123LocaleChar125CompareIndexRoute:
       Char123LocaleChar125CompareIndexRoute,
     Char123LocaleChar125GuidesIndexRoute: Char123LocaleChar125GuidesIndexRoute,

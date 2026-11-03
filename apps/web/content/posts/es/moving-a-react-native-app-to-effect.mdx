@@ -1,0 +1,96 @@
+---
+title: Pasar Outlayr a Effect en 50 pull requests
+description: Cómo la app de Expo, el backend de Convex y la web de Outlayr pasaron a Effect v4 en un stack de 50 PRs, las reglas que lo contienen y lo que costó.
+lead: El 27 de octubre hice merge de un stack de 50 pull requests que pasó la app, el backend y la web a Effect v4. Por qué, cómo lo dividí y lo que costó.
+date: 2026-10-27
+published: 2026-11-03
+figure:
+    from:
+        value: "213"
+        label: efectos de react, 26 oct
+    to:
+        value: "68"
+        label: efectos de react, 27 oct
+shipped:
+    - pr: 95
+      title: Adoptar Effect v4 en el paquete money
+      date: 2026-10-27
+    - pr: 98
+      title: Runtime de Effect y átomos para la app
+      date: 2026-10-27
+    - pr: 99
+      title: Mover el backend a Confect
+      date: 2026-10-27
+    - pr: 104
+      title: Correr el motor de sincronización sobre Effect
+      date: 2026-10-27
+    - pr: 121
+      title: Un presupuesto para los efectos de React
+      date: 2026-10-27
+    - pr: 162
+      title: Borrar los puentes de promesas que nadie usa
+      date: 2026-10-27
+---
+
+El 27 de octubre hice merge de 50 pull requests en un minuto. Juntos pasaron la app de Expo de Outlayr, su backend de Convex y la web a Effect v4. Aquí va por qué, cómo lo dividí y lo que costó.
+
+## Por qué cambiar
+
+Las razones estaban en el código. Algunas, según los PRs:
+
+- La app abría su base de datos local dentro de un `useEffect`, rodeado de un ref contador, `useCallback`, `useMemo` y un context provider ([#98](https://github.com/danestves/outlayr/pull/98)).
+- El ciclo de sincronización era un solo `useEffect` de unas 130 líneas, con flags mutables y un debounce hecho a mano. El React Compiler lo saltaba, y pausar y reanudar podía arrancar una segunda pasada con otra todavía en curso ([#104](https://github.com/danestves/outlayr/pull/104)).
+- Las llamadas `fetch` del backend y sus lecturas de `process.env` vivían en helpers de promesas que no se podían componer, cortar por timeout con el resto de la operación ni reemplazar en tests ([#123](https://github.com/danestves/outlayr/pull/123)).
+- El código de las librerías fallaba con `Error`s simples o con strings, así que quien llamaba no distinguía un inicio de sesión cancelado de uno fallido sin adivinar ([#157](https://github.com/danestves/outlayr/pull/157)).
+
+Effect tiene una sola respuesta para todo eso: errores tipados, dependencias que llegan por capas, streams que se limpian solos al interrumpirse, y timeouts y reintentos como valores.
+
+## Cómo lo dividí
+
+[#95](https://github.com/danestves/outlayr/pull/95) fue el primero y no cambió a ningún caller. Agregó `effect` 4.0.6 y el plugin del language service, y pasó el paquete más chico, `packages/money`. Su `MoneyValidationError` se volvió un `Schema.TaggedError`, que sigue siendo `instanceof Error` con el mismo mensaje, así que todos los `catch` siguieron funcionando. Eso permitió mover lo demás pieza por pieza.
+
+[#96](https://github.com/danestves/outlayr/pull/96) puso las barreras antes del grueso. Las reglas de lint del React Compiler pasaron a ser errores, y un test compila cada archivo nativo con la configuración real de Babel de la app y falla ante cualquier bailout fuera de una lista de 12 archivos. Una regla `no-manual-memo` llegó con 130 archivos que podían conservar su memoización por un tiempo. Las dos listas solo pueden achicarse.
+
+#98 creó un solo registro de átomos y un solo runtime para la app, con la base de datos local como primer servicio. [#99](https://github.com/danestves/outlayr/pull/99) movió todo el backend a Confect, que corre las funciones de Convex como programas de Effect, en una pasada mecánica sin cambios de comportamiento. No podía ser gradual: `confect codegen` borra cualquier archivo de `convex/` que no generó. El esquema generado quedó igual al anterior salvo por el orden de las claves, y un push a un backend local no reportó cambios de tablas ni de índices.
+
+Después, cada PR pasó un área: los grupos del backend, el motor de sincronización, los contexts de la app como átomos, zod a Effect Schema, la capa de datos, el código de librerías, los efectos de React y los flujos con promesas de los handlers de la UI. El último, [#162](https://github.com/danestves/outlayr/pull/162), borró los puentes de promesas que ya nadie llamaba.
+
+Abrí el primer PR el 25 de octubre y el último unas 34 horas después. Diez de los 50 eran arreglos y un cambio de entorno que viajaron en el stack. Los 50 se hicieron con Claude en Claude Code; en 31 de ellos, Sonnet 5.5 implementó y Opus 5.5 revisó.
+
+## Las reglas que lo contienen
+
+Las reglas viven en `CLAUDE.md` y en `docs/internals/effect-services.md`, y el lint hace cumplir las mecánicas.
+
+- **Importar por subruta**, `effect/Effect`, nunca la raíz `effect`. La raíz reexporta los 143 módulos y Metro no hace tree-shaking. Una dependencia puede romperlo igual: el `effect-schema` de drizzle importa `Schema` desde la raíz, así que [#155](https://github.com/danestves/outlayr/pull/155) hace que Metro resuelva ese import a una reexportación de `effect/Schema`. Eso quitó 73 módulos de Effect y bajó el bytecode de Android de 17.27 MB a 16.45 MB.
+- **Los errores son clases `Schema.TaggedError`**, con campos estructurados y el error original en `cause`:
+
+```ts
+export class LocalDatabaseError extends Schema.TaggedError<LocalDatabaseError>()("LocalDatabaseError", {
+    cause: Schema.Defect(),
+    stage: LocalDatabaseStage,
+}) {
+    override get message(): string {
+        return `Local data failed to ${this.stage}`;
+    }
+}
+```
+
+- **Los enums son esquemas**, `Schema.Literals([...])`, y el tipo sale de `typeof X.Type`, sin una segunda unión que mantener.
+- **Las operaciones reutilizables son `Effect.fn("Module.operation")`**, que le pone nombre al span. El lint marca una función que solo devuelve `Effect.gen`.
+- **Los efectos solo corren en los bordes**: un átomo, un comando, un handler de Convex, un test. Nunca `Effect.runPromise` dentro de un servicio o de otro efecto. En la app, una escritura pasa por un comando que termina en un éxito o un fallo y nunca rechaza ([#122](https://github.com/danestves/outlayr/pull/122)).
+
+React tiene su propio trinquete. [#121](https://github.com/danestves/outlayr/pull/121) agregó `outlayr/react-effect-budget`: un archivo puede tener como máximo tantas llamadas a `useEffect`, `useLayoutEffect` y `useInsertionEffect` como le asigna `scripts/effect-budget.json`, y ese número solo baja. Un efecto que de verdad sincroniza con algo fuera de React se queda, con su razón en la línea de arriba:
+
+```ts
+// oxlint-disable-next-line outlayr/react-effect-budget -- subscribes to the keyboard for the screen's lifetime
+```
+
+Antes del stack, la app, la web y los paquetes compartidos tenían 213 hooks de efecto. Después, 68, cada uno con su razón escrita, y el archivo de presupuesto está vacío. La lista de bailouts conocidos del compilador pasó de 12 archivos a ninguno, y la de memoización permitida de 130 archivos a 8.
+
+## Lo que costó
+
+- **Tamaño del bundle.** El runtime y los átomos de #98 sumaron 258 KB al bundle de la app (60 KB con gzip), sobre todo `effect/reactivity` y los módulos de Stream que importan los átomos.
+- **Una actualización que no tenía planeada.** Los esquemas de filas con Effect necesitan drizzle 1.0, que tal cual no abre una base de datos escrita por el migrador de Expo de la 0.45: 16 de nuestras migraciones comparten segundo, así que toda instalación existente habría fallado al abrir. #155 completa antes el registro de migraciones, probado con una base real de la 0.45 en el emulador de Android.
+- **Un main roto.** #154 agregó un esquema de zod a `apps/web/src/lib/mcp.ts` mientras #114, dentro del stack, pasaba ese archivo a Effect Schema. Los dos entraron, y main dejó de pasar el chequeo de tipos hasta [#166](https://github.com/danestves/outlayr/pull/166).
+- **Huecos.** Algo de código sigue con promesas porque una librería lo exige, como el `fetchImpl` de Better Auth. Los diagnósticos del language service de Effect solo aparecen en el editor, no en `tsc`. Los defectos del backend aún no llegan a ningún reporter, porque Confect no tiene lugar para una capa global.
+- **Pruebas pendientes.** Varios PRs entraron con pruebas en dispositivo todavía pendientes, como las rutas de sincronización de #104 y RevenueCat en #109.
