@@ -80,3 +80,21 @@ test("sends nothing while Smart fill is off", async () => {
 
     expect(sent).not.toHaveBeenCalled();
 });
+
+test("reads a purchase whose key a login code or a much earlier copy already used", async () => {
+    const db = migratedDatabase();
+    await Effect.runPromise(setBoolSetting(db, "aiConsentV2", true));
+    await Effect.runPromise(setBoolSetting(db, "aiEnrichment", true));
+    const key = "notification:expense:shared";
+    const later = Date.UTC(2026, 10, 2) + 11 * 60 * 1000;
+
+    await Effect.runPromise(
+        readNotifications(db, [
+            { ...push("code", "Banco\nYour sign-in code is 482913"), dedupeKey: key },
+            { ...push("first", "Banco\nYou paid $3.50 at Blue Bottle"), dedupeKey: key },
+            { ...push("second", "Banco\nYou paid $3.50 at Blue Bottle"), date: later, dedupeKey: key },
+        ])
+    );
+
+    expect(sent).toHaveBeenCalledTimes(2);
+});

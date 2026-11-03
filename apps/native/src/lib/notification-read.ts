@@ -41,8 +41,8 @@ export const readNotifications: NotificationReader = Effect.fn("NotificationRead
         }
         // Only a push that shows an amount and is not logged yet leaves the device, so login codes, promotions and
         // repeats of a logged purchase never do.
-        const unlogged = yield* unloggedPushes(db, jobs).pipe(Effect.orElseSucceed((): PendingWrite[] => []));
-        const pushes = unlogged.filter((job) => job.text && NOTIFICATION_PATTERNS.money.test(job.text));
+        const priced = jobs.filter((job) => job.text && NOTIFICATION_PATTERNS.money.test(job.text));
+        const pushes = yield* unloggedPushes(db, priced).pipe(Effect.orElseSucceed((): PendingWrite[] => []));
         const language = firstLocale()?.languageTag?.trim() || undefined;
         yield* Effect.all(
             pushes.map((job) =>

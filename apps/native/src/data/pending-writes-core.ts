@@ -408,17 +408,18 @@ export const unloggedPushes = Effect.fn("PendingWrites.unloggedPushes")(function
     jobs: readonly PendingWrite[]
 ) {
     const ledger = yield* readLedger(db);
-    const seen = new Set<string>();
-    return jobs.filter((job) => {
+    const kept: PendingWrite[] = [];
+    for (const job of jobs) {
         const key = job.dedupeKey?.trim();
-        if (alreadyApplied(ledger, job) || (key && seen.has(key))) {
-            return false;
+        const copy = kept.some(
+            (other) =>
+                key && other.dedupeKey?.trim() === key && Math.abs(other.date - job.date) <= WALLET_DEDUPE_WINDOW_MS
+        );
+        if (!(copy || alreadyApplied(ledger, job))) {
+            kept.push(job);
         }
-        if (key) {
-            seen.add(key);
-        }
-        return true;
-    });
+    }
+    return kept;
 });
 
 function settleRepeatOf(ledger: LedgerEntry[], job: PendingWrite): LedgerEntry | null {

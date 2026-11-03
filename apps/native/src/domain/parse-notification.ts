@@ -26,6 +26,8 @@ const UNIT = `(?:${CODES}|${SYMBOLS})`;
 const NUMBER = String.raw`\d+(?:[.,]\d+)*`;
 const MONEY = new RegExp(String.raw`${UNIT}\s?${NUMBER}|${NUMBER}\s?${UNIT}`, "u");
 const DIGITS = new RegExp(NUMBER, "u");
+const EVERY_MONEY = new RegExp(MONEY.source, "gu");
+const SAME_AMOUNT = 0.005;
 const AFTER_NUMBER = /^\d|\s?\d/;
 
 /* oxlint-disable prefer-regex-literals -- LogNotificationIntent reads these sources with ICU, and Babel rewrites a u-flag literal into surrogate classes ICU matches differently */
@@ -128,7 +130,7 @@ export function mergeNotificationRead(
     }
     return {
         amount,
-        amountText: readCurrency(text, parsed, read.currency, amount) ?? sameAmountText(parsed, amount),
+        amountText: readCurrency(text, read.currency, amount) ?? sameAmountText(parsed, amount),
         income: read.kind === "income",
         merchant: cleanMerchant(read.merchant) ?? parsed?.merchant ?? null,
     };
@@ -140,20 +142,18 @@ function sameAmountText(parsed: ParsedNotification | null, amount: number): stri
     return parsed !== null && parsed.amount === amount ? parsed.amountText : String(amount);
 }
 
-// A bare "$" belongs to 22 currencies and the card's account settles it, so the model's guess counts only when
-// the text names the code or the parser read the same currency.
-function readCurrency(
-    text: string,
-    parsed: ParsedNotification | null,
-    code: string | null,
-    amount: number
-): string | null {
+// The model's currency counts only when the figure it read shows that currency in the text: a bare "$" belongs to
+// 22 currencies and the card's account settles it, and a push with two amounts must not lend one's code to the other.
+function readCurrency(text: string, code: string | null, amount: number): string | null {
     if (code === null) {
         return null;
     }
-    const named = new RegExp(String.raw`(?<![A-Za-z])${escape(code)}(?![A-Za-z])`, "iu").test(text);
-    const agreed = parsed !== null && detectCurrency(parsed.amountText) === code;
-    return named || agreed ? `${code} ${amount}` : null;
+    const shown = (text.match(EVERY_MONEY) ?? []).some((token) => {
+        const digits = DIGITS.exec(token)?.[0] ?? "";
+        const value = parseCsvAmount(digits, detectDecimalSeparator([digits]));
+        return value !== null && Math.abs(value - amount) < SAME_AMOUNT && detectCurrency(token) === code;
+    });
+    return shown ? `${code} ${amount}` : null;
 }
 
 export function cleanMerchant(raw: string | null): string | null {

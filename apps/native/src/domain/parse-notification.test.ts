@@ -220,7 +220,7 @@ describe("mergeNotificationRead", () => {
 
     it("logs a transfer the parser missed, with the currency the text names", () => {
         expect(
-            mergeNotificationRead("Juan te envió 1500 pesos ARS", null, {
+            mergeNotificationRead("Juan te envió 1500 ARS", null, {
                 amount: 1500,
                 currency: "ARS",
                 kind: "income",
@@ -239,6 +239,18 @@ describe("mergeNotificationRead", () => {
                 merchant: null,
             })
         ).toMatchObject({ amount: 108.4, amountText: "108.4" });
+    });
+
+    it("keeps the AI's currency off an amount that shows another one", () => {
+        const text = "Purchase of EUR 100.00 approved. Charged USD 108.40 to your card";
+        expect(
+            mergeNotificationRead(text, parseNotification(text), {
+                amount: 100,
+                currency: "USD",
+                kind: "purchase",
+                merchant: null,
+            })
+        ).toMatchObject({ amount: 100, amountText: "EUR 100.00" });
     });
 
     it("leaves a bare $ for the card's account to settle, whatever currency the AI guessed", () => {
