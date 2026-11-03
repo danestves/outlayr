@@ -5573,8 +5573,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "If the money goes to an account of yours that you also track in Outlayr, like a bolívar or peso account, log it as a transfer. The sentence reads like Move $300 from your dollar account to your bolívar account today. Pick the rate source or type your own, and Outlayr shows what arrives in the other currency. Between dollars and bolívares the list also offers USDT (Binance), which is saved as your own rate.",
-                                es: "Si el dinero va a una cuenta tuya que también llevas en Outlayr, como una cuenta en bolívares o en pesos, regístralo como transferencia. La oración dice algo como Mueve US$300 de tu cuenta en dólares a tu cuenta en bolívares hoy. Elige la fuente de la tasa o escribe la tuya, y Outlayr te muestra cuánto llega en la otra moneda. Entre dólares y bolívares la lista también te ofrece USDT (Binance), que se guarda como tu propia tasa.",
+                                en: "If the money goes to an account of yours that you also track in Outlayr, like a bolívar or peso account, log it as a transfer. The sentence reads like Move $300 from your dollar account to your bolívar account today. Pick the rate source or type your own, and Outlayr shows what arrives in the other currency.",
+                                es: "Si el dinero va a una cuenta tuya que también llevas en Outlayr, como una cuenta en bolívares o en pesos, regístralo como transferencia. La oración dice algo como Mueve US$300 de tu cuenta en dólares a tu cuenta en bolívares hoy. Elige la fuente de la tasa o escribe la tuya, y Outlayr te muestra cuánto llega en la otra moneda.",
                             }),
                             t({
                                 en: "If a fee was charged, add it on the side that paid it, included in the amount or on top. The fee counts as spending. The transfer itself doesn't, so it doesn't count against a budget.",
