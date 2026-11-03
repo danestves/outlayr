@@ -60,6 +60,7 @@ export function SiteHeader() {
         { hash: "features", label: nav.features, to: "/" },
         { hash: "pricing", label: nav.pricing, to: "/" },
         { label: footer.guides, to: "/guides" },
+        { label: footer.blog, to: "/blog" },
         { label: footer.support, to: "/support" },
     ] as const;
 

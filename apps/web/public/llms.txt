@@ -75,6 +75,10 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - [Expense tracker template](https://tryoutlayr.com/guides/expense-tracker-template): a free Excel workbook (Transactions, a Summary with income, spending, and net for the month and currency you pick, spending against a budget per category, and a chart, and How to import) and a plain CSV, both with the columns Outlayr's CSV import reads; rows whose category matches one of yours by name import on any plan, and Outlayr Pro matches the rest with AI, up to 5,000 rows and 2 MB a file. The Spanish page offers a Spanish file: https://tryoutlayr.com/es/guides/expense-tracker-template
 - [Voice expense tracker](https://tryoutlayr.com/guides/voice-expense-tracker): saying a purchase in English, Spanish, Portuguese, or French, what voice entry fills in, how spoken corrections work, and the 20 free captures every 30 days
 
+## Build log
+
+- [Build log](https://tryoutlayr.com/blog): posts by Daniel Esteves on how Outlayr is built, each listing the pull requests behind it. RSS feed at https://tryoutlayr.com/blog/rss.xml. Every post is also in Spanish at https://tryoutlayr.com/es/blog
+
 ## Comparisons
 
 - [All comparisons](https://tryoutlayr.com/compare): every comparison in one list, with a one-line summary of each app

@@ -65,6 +65,7 @@ const site = {
         },
         footer: {
             about: t({ en: "About", es: "Acerca de" }),
+            blog: "Blog",
             company: t({ en: "Company", es: "Empresa" }),
             product: t({ en: "Product", es: "Producto" }),
             resources: t({ en: "Resources", es: "Recursos" }),

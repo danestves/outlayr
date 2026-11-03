@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { defaultLocale, getIntlayer, locales } from "intlayer";
 
 import { LANGUAGES, pageUrl } from "@/lib/i18n";
+import { postDay, postsIn } from "@/lib/posts";
 import { LEGAL_DAYS, compareUpdated, guideUpdated } from "@/lib/site";
 
 function pages(): [path: string, updated: Date | null][] {
@@ -9,6 +10,10 @@ function pages(): [path: string, updated: Date | null][] {
     const { pages: tools } = getIntlayer("tools");
     const rivals = Object.keys(compare).map((slug): [string, Date] => [`/compare/${slug}`, compareUpdated(slug)]);
     const answers = Object.keys(guides).map((slug): [string, Date] => [`/guides/${slug}`, guideUpdated(slug)]);
+    const posts = postsIn(defaultLocale).map((post): [string, Date] => [
+        `/blog/${post.slug}`,
+        postDay(post.published ?? post.date),
+    ]);
     return [
         ["/", null],
         ["/support", null],
@@ -20,7 +25,9 @@ function pages(): [path: string, updated: Date | null][] {
         ["/guides", new Date(Math.max(...answers.map(([, updated]) => updated.getTime())))],
         ["/compare", new Date(Math.max(...rivals.map(([, checked]) => checked.getTime())))],
         ["/tools", null],
+        ["/blog", posts.length > 0 ? new Date(Math.max(...posts.map(([, updated]) => updated.getTime()))) : null],
         ...answers,
+        ...posts,
         ...Object.keys(tools).map((slug): [string, null] => [`/tools/${slug}`, null]),
         ...rivals,
     ];

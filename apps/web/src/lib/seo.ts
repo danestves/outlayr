@@ -44,7 +44,7 @@ export function ldJson(data: Json) {
 
 const TRAILING_PERIOD = /\.$/u;
 
-export function answerTrail(locale: Locale, hub: "compare" | "guides" | "tools", slug: string, title: string) {
+export function answerTrail(locale: Locale, hub: "blog" | "compare" | "guides" | "tools", slug: string, title: string) {
     const crumbs = [
         { name: "Outlayr", url: pageUrl("/", locale) },
         { name: getIntlayer("site", locale).footer[hub], url: pageUrl(`/${hub}`, locale) },
@@ -135,7 +135,7 @@ export function webPage(locale: Locale, path: string, fields: { readonly [key: s
     };
 }
 
-export function hubTrail(locale: Locale, hub: "compare" | "guides" | "tools") {
+export function hubTrail(locale: Locale, hub: "blog" | "compare" | "guides" | "tools") {
     const crumbs = [
         { name: "Outlayr", url: pageUrl("/", locale) },
         { name: getIntlayer("site", locale).footer[hub], url: pageUrl(`/${hub}`, locale) },
@@ -155,7 +155,12 @@ export function hubTrail(locale: Locale, hub: "compare" | "guides" | "tools") {
 export function article(
     locale: Locale,
     path: string,
-    { dateModified, description, headline }: { dateModified: Date; description: string; headline: string }
+    {
+        dateModified,
+        datePublished,
+        description,
+        headline,
+    }: { dateModified: Date; datePublished?: Date; description: string; headline: string }
 ) {
     const url = pageUrl(path, locale);
     return {
@@ -164,6 +169,7 @@ export function article(
         "@type": "Article",
         author: { "@id": FOUNDER_ID },
         dateModified: dateModified.toISOString().slice(0, 10),
+        datePublished: datePublished?.toISOString().slice(0, 10),
         description,
         headline: headline.replace(TRAILING_PERIOD, ""),
         image: `${SITE_URL}${LANGUAGES[locale].image}`,
