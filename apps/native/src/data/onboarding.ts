@@ -23,6 +23,10 @@ export function useAccountDeferred(db: Database): boolean {
     return useGateFlag(db, META_KEYS.accountDeferred, isAccountDeferred);
 }
 
+export function useFirstEntryOfferShown(db: Database): boolean {
+    return useGateFlag(db, META_KEYS.firstEntryOfferShown, (value) => value === "true");
+}
+
 export function useReminderChosen(db: Database): boolean {
     return useGateFlag(db, META_KEYS.reminderChosen, isReminderChosen);
 }

@@ -1,7 +1,7 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useEffect, useEffectEvent, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
@@ -14,6 +14,7 @@ import { useAuthSession } from "@/lib/auth-session";
 import { paywallPlansAtom } from "@/lib/paywall-plans";
 import { posthog } from "@/lib/posthog";
 import type { PaywallVariant } from "@/lib/posthog";
+import { purchaseIntent } from "@/lib/purchase-intent";
 import { SILENT } from "@/state/atom-command";
 import { buyPlanCommand, confirmEntitlementCommand, restorePlanCommand } from "@/state/settings-flow-commands";
 import { useAtomAction } from "@/state/use-atom-action";
@@ -37,11 +38,19 @@ function purchaseProperties(plan: Plan | null, variant: typeof PaywallVariant.Ty
     };
 }
 
-function selectedKind(pick: PlanPick | null, plans: readonly Plan[] | null): PlanKind | null {
+function selectedKind(
+    pick: PlanPick | null,
+    plans: readonly Plan[] | null,
+    preferred: string | undefined
+): PlanKind | null {
     if (pick !== null && pick.plans === plans) {
         return pick.kind;
     }
-    return plans?.find((candidate) => candidate.kind === "annual")?.kind ?? plans?.[0]?.kind ?? null;
+    const fallback =
+        plans?.find((candidate) => candidate.kind === preferred) ??
+        plans?.find((candidate) => candidate.kind === "annual") ??
+        plans?.[0];
+    return fallback?.kind ?? null;
 }
 
 /** Plans, purchase, restore and the entitlement states both paywall variants render. */
@@ -52,7 +61,10 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const isPro = entitlement.kind === "pro";
     const isMirrored = isPro && entitlement.mirrored;
     const { accountId } = useAuthSession();
-    const { trigger: triggerParam } = useLocalSearchParams<{ trigger?: string }>();
+    const { resume: resumeParam, trigger: triggerParam } = useLocalSearchParams<{
+        resume?: string;
+        trigger?: string;
+    }>();
     const autolog = useAutologUsage(useDatabase());
     const trigger = paywallTriggerOf(triggerParam);
     const block = topBlockOf(trigger, autolog.used);
@@ -62,7 +74,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const plans = AsyncResult.isSuccess(loaded) ? loaded.value : null;
     const failed = AsyncResult.isFailure(loaded);
     const [pick, setPick] = useState<PlanPick | null>(null);
-    const selected = selectedKind(pick, plans);
+    const selected = selectedKind(pick, plans, resumeParam);
     const plan = plans?.find((candidate) => candidate.kind === selected) ?? null;
     const [failure, setFailure] = useState<TranslationKey | null>(null);
 
@@ -144,14 +156,23 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         confirmEntitlement(accountId);
     };
 
+    const startPurchase = (target: Plan) => {
+        posthog?.capture("purchase_started", { ...purchaseProperties(target, variant), trial_days: target.trialDays });
+        buyPlan({ accountId, offer: target.offer });
+    };
+
     const buy = () => {
         if (plan === null) {
             return;
         }
+        if (accountId === null) {
+            purchaseIntent.set({ kind: plan.kind, trigger });
+            router.push("/settings/account");
+            return;
+        }
         setBusy("buy");
         setFailure(null);
-        posthog?.capture("purchase_started", { ...purchaseProperties(plan, variant), trial_days: plan.trialDays });
-        buyPlan({ accountId, offer: plan.offer });
+        startPurchase(plan);
     };
 
     const restore = () => {
@@ -165,7 +186,21 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const noCloud = !proSellable();
     const needsAccount = !noCloud && accountId === null;
     const pitches = !(isPro || noCloud);
-    const canBuy = pitches && !needsAccount;
+    const canBuy = pitches;
+    const resuming =
+        resumeParam !== undefined && accountId !== null && entitlement.kind === "free" && !entitlement.pending;
+    const resumeTarget = resuming ? (plans?.find((candidate) => candidate.kind === resumeParam) ?? null) : null;
+    const resumeStarted = useRef(false);
+    const startResumed = useEffectEvent((target: Plan) => startPurchase(target));
+
+    // oxlint-disable-next-line outlayr/react-effect-budget -- the sign-in lands before the plans do
+    useEffect(() => {
+        if (resumeTarget === null || resumeStarted.current) {
+            return;
+        }
+        resumeStarted.current = true;
+        startResumed(resumeTarget);
+    }, [resumeTarget]);
 
     const reportDismissed = useEffectEvent(() => {
         const saleState = saleStateOf({ failed, isPro, needsAccount, noCloud, plans });
@@ -179,7 +214,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     return {
         autolog,
         block,
-        busy,
+        busy: busy ?? (resuming && plans === null && !failed ? "buy" : null),
         buy,
         canBuy,
         confirm,

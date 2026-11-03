@@ -1,5 +1,3 @@
-import { useRouter } from "expo-router";
-import { Button } from "panelui-native/components/button";
 import { Pressable, View } from "react-native";
 
 import { BusyText } from "@/components/busy-text";
@@ -11,22 +9,11 @@ import { useColors } from "@/theme/use-colors";
 /** Why nothing is for sale: no account to attach Pro to, or a build with no backend to deliver it. */
 export function SaleBlockers({ needsAccount, noCloud }: { needsAccount: boolean; noCloud: boolean }) {
     const t = useTranslation();
-    const router = useRouter();
     return (
         <>
             {needsAccount ? (
-                <View className="gap-4 px-5 pt-5">
+                <View className="px-5 pt-5">
                     <Text className="text-muted text-subtitle text-center">{t("pro.needsAccount")}</Text>
-                    <Button
-                        className="rounded-full"
-                        fullWidth
-                        onPress={() => router.push("/settings/account")}
-                        size="md"
-                        testID="paywall-sign-in"
-                        variant="primary"
-                    >
-                        {t("settings.account.signIn")}
-                    </Button>
                 </View>
             ) : null}
             {noCloud ? (

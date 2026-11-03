@@ -8,6 +8,7 @@ export const PaywallTrigger = Schema.Literals([
     "budgets",
     "captures",
     "currencies",
+    "first_entry",
     "import",
     "installment_apps",
     "payoff_plans",

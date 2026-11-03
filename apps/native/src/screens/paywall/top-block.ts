@@ -1,6 +1,6 @@
 import type { PaywallTrigger } from "@/domain/paywall-trigger";
 
-export type TopBlock = "accounts" | "autolog" | "currencies" | "generic" | "installment_apps";
+export type TopBlock = "accounts" | "autolog" | "currencies" | "first_entry" | "generic" | "installment_apps";
 
 export type AlsoRow = "autolog" | "currencies" | "installments" | "sync";
 
@@ -17,6 +17,7 @@ export function topBlockOf(trigger: typeof PaywallTrigger.Type, autologUsed: num
         }
         case "accounts":
         case "currencies":
+        case "first_entry":
         case "installment_apps": {
             return trigger;
         }
@@ -30,6 +31,7 @@ const COVERED = {
     accounts: null,
     autolog: "autolog",
     currencies: "currencies",
+    first_entry: null,
     generic: null,
     installment_apps: "installments",
 } as const satisfies Record<TopBlock, AlsoRow | null>;
