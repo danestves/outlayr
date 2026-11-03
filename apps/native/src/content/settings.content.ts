@@ -587,14 +587,14 @@ const settings = {
             "pt-PT": "Controle o seu dinheiro com o Outlayr: {url}",
         }),
         "settings.smartFill.note": t({
-            en: "Sends merchant and category names to a third-party AI provider, never amounts, dates or accounts, and the text of bank notifications Outlayr logs so it can read them. Turning it on also turns on Send data to AI providers.",
-            es: "Envía nombres de comercios y categorías a un proveedor de IA externo, nunca montos, fechas ni cuentas, y el texto de las notificaciones del banco que Outlayr registra para leerlas. Activarlo también activa Enviar datos a proveedores de IA.",
+            en: "Sends merchant and category names to a third-party AI provider, never amounts, dates or accounts. It also sends bank notifications that show an amount, as written, so it can read them. Turning it on also turns on Send data to AI providers.",
+            es: "Envía nombres de comercios y categorías a un proveedor de IA externo, nunca montos, fechas ni cuentas. También envía las notificaciones del banco que muestran un monto, tal como llegan, para leerlas. Activarlo también activa Enviar datos a proveedores de IA.",
             "es-ES":
-                "Envía nombres de comercios y categorías a un proveedor de IA externo, nunca importes, fechas ni cuentas, y el texto de las notificaciones del banco que Outlayr registra para leerlas. Activarlo también activa Enviar datos a proveedores de IA.",
-            fr: "Envoie les noms des commerçants et des catégories à un fournisseur d'IA tiers, jamais les montants, les dates ni les comptes, ainsi que le texte des notifications bancaires qu'Outlayr enregistre pour les lire. L'activer active aussi Envoyer les données aux fournisseurs d'IA.",
-            pt: "Envia nomes de estabelecimentos e categorias a um provedor de IA terceiro, nunca valores, datas ou contas, e o texto das notificações do banco que o Outlayr registra para lê-las. Ativar também ativa Enviar dados a provedores de IA.",
+                "Envía nombres de comercios y categorías a un proveedor de IA externo, nunca importes, fechas ni cuentas. También envía las notificaciones del banco que muestran un importe, tal como llegan, para leerlas. Activarlo también activa Enviar datos a proveedores de IA.",
+            fr: "Envoie les noms des commerçants et des catégories à un fournisseur d'IA tiers, jamais les montants, les dates ni les comptes. Envoie aussi les notifications bancaires qui affichent un montant, telles quelles, pour les lire. L'activer active aussi Envoyer les données aux fournisseurs d'IA.",
+            pt: "Envia nomes de estabelecimentos e categorias a um provedor de IA terceiro, nunca valores, datas ou contas. Também envia as notificações do banco que mostram um valor, como chegaram, para lê-las. Ativar também ativa Enviar dados a provedores de IA.",
             "pt-PT":
-                "Envia nomes de estabelecimentos e categorias a um fornecedor de IA terceiro, nunca valores, datas ou contas, e o texto das notificações do banco que o Outlayr regista para as ler. Ativar também ativa Enviar dados a fornecedores de IA.",
+                "Envia nomes de estabelecimentos e categorias a um fornecedor de IA terceiro, nunca valores, datas ou contas. Também envia as notificações do banco que mostram um valor, como chegaram, para as ler. Ativar também ativa Enviar dados a fornecedores de IA.",
         }),
         "settings.smartFill.learnMore": t({
             en: "Learn more",

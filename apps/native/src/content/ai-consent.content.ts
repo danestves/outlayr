@@ -57,12 +57,12 @@ const aiConsent = {
             pt: "Notificações do banco",
         }),
         "aiConsent.notificationsSends": t({
-            en: "The title and text of each notification Outlayr logs, amount included, and your language",
-            es: "El título y el texto de cada notificación que Outlayr registra, con el monto, y tu idioma",
-            "es-ES": "El título y el texto de cada notificación que Outlayr registra, con el importe, y tu idioma",
-            fr: "Le titre et le texte de chaque notification qu'Outlayr enregistre, montant compris, et votre langue",
-            pt: "O título e o texto de cada notificação que o Outlayr registra, com o valor, e o seu idioma",
-            "pt-PT": "O título e o texto de cada notificação que o Outlayr regista, com o valor, e o seu idioma",
+            en: "The title and text of each notification that shows an amount, and your language",
+            es: "El título y el texto de cada notificación que muestra un monto, y tu idioma",
+            "es-ES": "El título y el texto de cada notificación que muestra un importe, y tu idioma",
+            fr: "Le titre et le texte de chaque notification qui affiche un montant, et votre langue",
+            pt: "O título e o texto de cada notificação que mostra um valor, e o seu idioma",
+            "pt-PT": "O título e o texto de cada notificação que mostra um valor, e o seu idioma",
         }),
         "aiConsent.notNow": t({
             en: "Not now",
