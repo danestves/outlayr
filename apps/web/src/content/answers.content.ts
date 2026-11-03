@@ -5454,6 +5454,208 @@ const answers = {
                     es: "Controla tus gastos en cualquier moneda, en casa o de viaje",
                 }),
             },
+            "track-money-sent-home": {
+                facts: [
+                    {
+                        label: t({ en: "Main currency", es: "Moneda principal" }),
+                        text: t({
+                            en: "The one you are paid in. Totals, budgets, and insights read in it",
+                            es: "La que cobras. Los totales, los presupuestos y las estadísticas se leen en ella",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Currencies", es: "Monedas" }),
+                        text: t({
+                            en: "165, from dollars and euros to bolívares and pesos",
+                            es: "165, de dólares y euros a bolívares y pesos",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Rate", es: "Tasa" }),
+                        text: t({
+                            en: "From the day, or the one you got",
+                            es: "La del día, o la que te dieron",
+                        }),
+                    },
+                    {
+                        label: t({ en: "What you send", es: "Lo que envías" }),
+                        text: t({
+                            en: "A transfer between your accounts, or an expense in a category like Family",
+                            es: "Una transferencia entre tus cuentas, o un gasto en una categoría como Familia",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Fees", es: "Comisiones" }),
+                        text: t({
+                            en: "A fee on a transfer counts as spending. The transfer itself does not",
+                            es: "La comisión de una transferencia cuenta como gasto. La transferencia no",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Free plan", es: "Plan gratis" }),
+                        text: t({
+                            en: "Log in any currency. Accounts in one currency, more with Pro",
+                            es: "Registra en cualquier moneda. Cuentas en una moneda, más con Pro",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "No. Outlayr doesn't send or receive money. It records what you send, so you can see it next to the rest of your spending.",
+                            es: "No. Outlayr no envía ni recibe dinero. Registra lo que envías para que lo veas junto al resto de tus gastos.",
+                        }),
+                        question: t({
+                            en: "Can Outlayr send money home for me?",
+                            es: "¿Outlayr envía dinero a mi familia?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "As a transfer when it goes to another account of yours that you track in Outlayr, like your own bolívar or peso account. As an expense when it leaves your accounts for someone else, in a category like Family. A transfer between your own accounts doesn't count as spending or against a budget. An expense does.",
+                            es: "Como transferencia si va a otra cuenta tuya que llevas en Outlayr, como tu propia cuenta en bolívares o en pesos. Como gasto si sale de tus cuentas hacia otra persona, en una categoría como Familia. Una transferencia entre tus cuentas no cuenta como gasto ni contra un presupuesto. Un gasto sí.",
+                        }),
+                        question: t({
+                            en: "Should I log what I send as a transfer or an expense?",
+                            es: "¿Registro lo que envío como transferencia o como gasto?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes for logging: you can enter an expense in any of the 165 currencies, at the rate from that day or your own. The free plan holds accounts in one currency, so a transfer between a dollar account and a bolívar account needs Outlayr Pro.",
+                            es: "Sí para registrar: puedes anotar un gasto en cualquiera de las 165 monedas, con la tasa del día o la tuya. El plan gratis permite cuentas en una moneda, así que una transferencia entre una cuenta en dólares y otra en bolívares necesita Outlayr Pro.",
+                        }),
+                        question: t({
+                            en: "Does this work on the free plan?",
+                            es: "¿Sirve con el plan gratis?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "The rate from the day of the entry. For bolívares you can pick USD (BCV) or EUR (BCV), from the central bank's published rates. For other currencies, like pesos, Outlayr offers the Official rate, from Open Exchange Rates. You can always type My rate, the one you actually got.",
+                            es: "La del día del registro. Para bolívares puedes elegir USD (BCV) o EUR (BCV), de las tasas que publica el banco central. Para otras monedas, como el peso argentino, Outlayr te ofrece la Oficial, de Open Exchange Rates. Siempre puedes escribir Mi tasa, la que de verdad te dieron.",
+                        }),
+                        question: t({
+                            en: "Which exchange rate does Outlayr use?",
+                            es: "¿Qué tasa de cambio usa Outlayr?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "If you're paid in dollars or euros and part of it reaches home as bolívares or pesos, Outlayr lets you see it all in one place. Pick the currency you earn in, log what you send as a transfer between your accounts or as an expense, and budget in that currency. Outlayr keeps the record. It doesn't send the money.",
+                    es: "Si cobras en dólares o euros y una parte llega a casa como bolívares o pesos, Outlayr te deja verlo todo en un solo lugar. Elige la moneda en que cobras, registra lo que envías como transferencia entre tus cuentas o como gasto, y haz tu presupuesto en esa moneda. Outlayr lleva el registro. No envía el dinero.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Paid in dollars or euros and sending money home? Budget in the currency you earn and log what you send as a transfer or an expense in Outlayr, in 165 currencies.",
+                        es: "¿Cobras en dólares o euros y envías dinero a tu familia? Haz tu presupuesto en la moneda en que cobras y registra lo que envías como transferencia o gasto en Outlayr, en 165 monedas.",
+                    }),
+                    title: t({
+                        en: "Budget and Track the Money You Send Home · Outlayr",
+                        es: "Presupuesto y control del dinero que envías a tu familia · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "In Settings, set Currency to the one your pay arrives in. Every total, budget, and chart reads in it. Anything you log in another currency, like bolívares or Argentine pesos, converts at the rate from that day and keeps it, so last month's entries don't move when the market does.",
+                                es: "En Configuración, pon en Moneda la moneda en que te llega el pago. Todos los totales, presupuestos y gráficos se leen en ella. Lo que registres en otra moneda, como bolívares o pesos argentinos, se convierte con la tasa de ese día y se queda con ella, así que los registros del mes pasado no cambian cuando se mueve el mercado.",
+                            }),
+                            t({
+                                en: "For a bolívar amount, Outlayr offers USD (BCV) and EUR (BCV), from the central bank's published rates. For other currencies, like pesos, it offers the Official rate, from Open Exchange Rates. My rate is always there, for the rate you actually got when you changed the money.",
+                                es: "Para un monto en bolívares, Outlayr te ofrece USD (BCV) y EUR (BCV), de las tasas que publica el banco central. Para otras monedas, como el peso argentino, te ofrece la Oficial, de Open Exchange Rates. Mi tasa siempre está ahí, para la que de verdad te dieron cuando cambiaste el dinero.",
+                            }),
+                        ],
+                        id: "one-currency",
+                        title: t({ en: "One currency to read everything in", es: "Una moneda para leerlo todo" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "If the money goes to an account of yours that you also track in Outlayr, like a bolívar or peso account, log it as a transfer. The sentence reads like Move $300 from your dollar account to your bolívar account today. Pick the rate source or type your own, and Outlayr shows what arrives in the other currency. Between dollars and bolívares the list also offers USDT (Binance), which is saved as your own rate.",
+                                es: "Si el dinero va a una cuenta tuya que también llevas en Outlayr, como una cuenta en bolívares o en pesos, regístralo como transferencia. La oración dice algo como Mueve US$300 de tu cuenta en dólares a tu cuenta en bolívares hoy. Elige la fuente de la tasa o escribe la tuya, y Outlayr te muestra cuánto llega en la otra moneda. Entre dólares y bolívares la lista también te ofrece USDT (Binance), que se guarda como tu propia tasa.",
+                            }),
+                            t({
+                                en: "If a fee was charged, add it on the side that paid it, included in the amount or on top. The fee counts as spending. The transfer itself doesn't, so it doesn't count against a budget.",
+                                es: "Si te cobraron una comisión, agrégala del lado que la pagó, incluida en el monto o aparte. La comisión cuenta como gasto. La transferencia no, así que no cuenta contra un presupuesto.",
+                            }),
+                            t({
+                                en: "A transfer between two currencies needs accounts in two currencies. The free plan holds accounts in one, and Outlayr Pro in as many as you need.",
+                                es: "Una transferencia entre dos monedas necesita cuentas en dos monedas. El plan gratis permite cuentas en una, y Outlayr Pro en las que necesites.",
+                            }),
+                        ],
+                        id: "as-a-transfer",
+                        title: t({
+                            en: "As a transfer, when the money stays yours",
+                            es: "Como transferencia, si el dinero sigue siendo tuyo",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "If the money goes to someone else's account, log it as an expense in the currency you paid, in a category like Family. Add Family from the suggested categories, or name your own.",
+                                es: "Si el dinero va a la cuenta de otra persona, regístralo como gasto en la moneda en que pagaste, en una categoría como Familia. Agrega Familia desde las categorías sugeridas, o ponle el nombre que quieras.",
+                            }),
+                            t({
+                                en: "An expense counts in your totals and in the budget on its category, which makes it the one to use for a monthly limit on what you send home.",
+                                es: "Un gasto cuenta en tus totales y en el presupuesto de su categoría, así que es el que conviene si quieres un límite mensual para lo que envías a tu familia.",
+                            }),
+                        ],
+                        id: "as-an-expense",
+                        title: t({
+                            en: "As an expense, when it goes to someone else",
+                            es: "Como gasto, si va a otra persona",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Log your pay as income, in the Paycheck category. Then set budgets in your currency: a monthly one on Family for what you send home, and others for rent, groceries, and whatever else you spend on. Budgets can run by day, week, month, or year, and what you log in another currency counts at the rate from its day.",
+                                es: "Registra lo que cobras como ingreso, en la categoría Sueldo. Después haz tus presupuestos en tu moneda: uno mensual en Familia para lo que envías, y otros para el alquiler, el supermercado y lo demás que gastes. Los presupuestos pueden ser por día, semana, mes o año, y lo que registres en otra moneda cuenta con la tasa de su día.",
+                            }),
+                            t({
+                                en: "If you're paid on the 15th, set your month to start on the 15th in Settings, under Time frames, and budgets and insights run from payday to payday. The free plan includes 2 category budgets plus the overall one; Outlayr Pro has no limit.",
+                                es: "Si te pagan el 15, pon que tu mes empiece el 15 en Configuración, en Períodos de tiempo, y los presupuestos y las estadísticas corren de un día de pago al siguiente. El plan gratis incluye 2 presupuestos por categoría además del general; Outlayr Pro no tiene límite.",
+                            }),
+                        ],
+                        id: "budget-in-what-you-earn",
+                        title: t({ en: "Budget in what you earn", es: "Presupuesto en lo que cobras" }),
+                    },
+                ],
+                related: [
+                    "/guides/multi-currency-expense-tracker",
+                    "/guides/budget-planner",
+                    "/guides/best-expense-tracker-apps-latin-america",
+                ] satisfies PageRef[],
+                steps: [
+                    {
+                        text: t({
+                            en: "Totals, budgets, and charts read in it.",
+                            es: "Los totales, los presupuestos y los gráficos se leen en ella.",
+                        }),
+                        title: t({ en: "Pick the currency you earn in", es: "Elige la moneda en que cobras" }),
+                    },
+                    {
+                        text: t({
+                            en: "A transfer between your accounts, or an expense in a category like Family.",
+                            es: "Una transferencia entre tus cuentas, o un gasto en una categoría como Familia.",
+                        }),
+                        title: t({ en: "Log what you send", es: "Registra lo que envías" }),
+                    },
+                    {
+                        text: t({
+                            en: "A monthly budget on Family, and others for the rest.",
+                            es: "Un presupuesto mensual en Familia, y otros para el resto.",
+                        }),
+                        title: t({ en: "Budget in the same currency", es: "Haz tu presupuesto en la misma moneda" }),
+                    },
+                ],
+                title: t({
+                    en: "Budget in the currency you earn and track what you send home",
+                    es: "Presupuesto en la moneda en que cobras y control de lo que envías a casa",
+                }),
+            },
             "receipt-scanner": {
                 facts: [
                     {

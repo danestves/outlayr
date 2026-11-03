@@ -31,6 +31,7 @@ const PLATES = {
     "multi-currency-expense-tracker": "06",
     "receipt-scanner": "scan",
     "subscription-tracker": "10",
+    "track-money-sent-home": null,
     "voice-expense-tracker": "say",
     "ynab-alternatives": null,
 } as const satisfies Record<GuideSlug, string | null>;
