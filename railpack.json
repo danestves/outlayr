@@ -13,6 +13,19 @@
         }
     },
     "deploy": {
+        "inputs": [
+            {
+                "step": "packages:mise",
+                "include": [
+                    "/mise/shims",
+                    "/mise/installs",
+                    "/usr/local/bin/mise",
+                    "/etc/mise/config.toml",
+                    "/root/.local/state/mise"
+                ]
+            },
+            { "step": "build", "include": ["apps/web/.output"] }
+        ],
         "startCommand": "node apps/web/.output/server/index.mjs"
     }
 }
