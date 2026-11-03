@@ -13,6 +13,7 @@ import { dieAsConvexError } from "./lib/convexError";
 import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
 import { incomingWins, SYNCED_TABLES } from "./lib/syncTables";
 import type { SyncedTable } from "./lib/syncTables";
+import { noteLoggedDay } from "./referrals";
 import { requirePro } from "./revenuecat";
 import {
     PULL_PAGE_LIMIT,
@@ -174,6 +175,7 @@ const push = FunctionImpl.make(
             let { nextSeq } = counter;
             let accepted = 0;
             let skipped = 0;
+            let loggedEntry = false;
             const reEmittedPolicyWinners = new Set<string>();
 
             // Rows are applied in order: `seq` is handed out one per accepted row, and two rows for the same localId
@@ -213,9 +215,13 @@ const push = FunctionImpl.make(
                 });
                 nextSeq += 1;
                 accepted += 1;
+                loggedEntry ||= row.table === "transactions" && existing === null && row.deletedAt === null;
             }
 
             yield* counter.advanceTo(nextSeq);
+            if (loggedEntry) {
+                yield* noteLoggedDay(userId);
+            }
 
             return { accepted, nextSeq, skipped };
         },

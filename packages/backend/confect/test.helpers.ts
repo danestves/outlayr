@@ -16,7 +16,7 @@ import { createAuth } from "./lib/betterAuth";
 
 // `safeGetAuthUser` needs both an unexpired `session` row (`identity.sessionId`) and a `user` row (`identity.subject`).
 
-const SESSION_TTL_MS = 86_400_000;
+const SESSION_TTL_MS = 30 * 86_400_000;
 
 const silentRevenuecat = new RevenueCat(components.revenuecat);
 
@@ -30,6 +30,7 @@ export interface SeededIdentity {
 }
 
 interface SeedOptions {
+    createdAt?: number;
     email?: string;
     name?: string;
 }
@@ -54,12 +55,13 @@ export async function seedAuthUser(t: AnyTestConvex, options?: SeedOptions): Pro
     const email = options?.email ?? `user-${uniqueSuffix}@example.com`;
     const name = options?.name ?? `Test User ${seedCounter}`;
     const now = Date.now();
+    const createdAt = options?.createdAt ?? now;
 
     const { userId, sessionId } = await t.run(async (ctx) => {
         const user = (await ctx.runMutation(components.betterAuth.adapter.create, {
             input: {
                 data: {
-                    createdAt: now,
+                    createdAt,
                     email,
                     emailVerified: true,
                     name,

@@ -16,6 +16,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [App icon bundles pinned to the Xcode 26 schema](./internals/app-icon.md)
 - [Identity fly-up and Apple Zoom](./internals/identity-fly-up.md)
 - [Add button beside the tab bar (parked)](./internals/add-button-beside-tab-bar.md)
+- [Referrals](./internals/referrals.md)
 
 ### Runbooks
 
