@@ -41,7 +41,6 @@ function showSupportAddress(): void {
     });
 }
 
-/** Without a mail app the mailto rejects, so the address goes on screen instead of nowhere. */
 export function emailSupport(subject: string): void {
     expectHandoff();
     fireAtomCommand(
