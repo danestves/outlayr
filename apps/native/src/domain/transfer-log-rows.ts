@@ -37,6 +37,7 @@ export interface TransferMove {
 }
 
 export interface TransferLogRow {
+    adjustment?: boolean;
     amount: number;
     amountUsd: number | null;
     categoryColor: null;

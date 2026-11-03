@@ -165,6 +165,7 @@ export function useLogOverviewIn(
 function accountOutsideMovesQuery(db: Database, accountId: string) {
     return db
         .select({
+            adjustment: outsideMoves.adjustment,
             amount: outsideMoves.amount,
             amountUsd: outsideMoves.amountUsd,
             date: outsideMoves.date,
@@ -187,6 +188,7 @@ export function useOutsideMoveRows(
         const amount = Math.abs(row.amount);
         const route = into ? `${outside} → ${account.name}` : `${account.name} → ${outside}`;
         return {
+            adjustment: row.adjustment,
             amount,
             amountUsd: row.amountUsd === null ? null : Math.abs(row.amountUsd),
             categoryColor: null,
@@ -202,7 +204,7 @@ export function useOutsideMoveRows(
             ends: null,
             exchangeRate: null,
             exchangeRateType: null,
-            excludedFromTotals: false,
+            excludedFromTotals: row.adjustment,
             feeForId: null,
             icon: null,
             id: row.id,

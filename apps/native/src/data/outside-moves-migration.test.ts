@@ -35,3 +35,31 @@ describe("the migration that adds outside moves", () => {
         ]);
     });
 });
+
+const ADJUSTMENT = "0047_outside_move_adjustment";
+
+describe("the migration that marks balance adjustments", () => {
+    it("flags the checks' notes on accounts, not a person's move that shares the words, and queues them", () => {
+        const sqlite = new BetterSqlite3(":memory:");
+        applyMigrations(sqlite, (file) => file < ADJUSTMENT);
+        sqlite.exec(`
+            INSERT INTO appMeta (key, value) VALUES ('syncEnabled', '1');
+            INSERT INTO accounts (id, name, currency, kind, dateCreated, initialBalanceDate, updatedAt)
+                VALUES ('bank', 'Banesco', 'VES', 'asset', 1, 1, 1), ('ana', 'Ana', 'VES', 'person', 1, 1, 1);
+            INSERT INTO outsideMoves (id, accountId, amount, date, note, updatedAt) VALUES
+                ('checked', 'bank', -5, 1, 'Ajuste de saldo', 1),
+                ('typed', 'ana', -5, 1, 'Ajuste de saldo', 1),
+                ('paid', 'bank', -5, 1, '', 1);
+            DELETE FROM outbox;
+        `);
+
+        applyMigrations(sqlite, (file) => file >= ADJUSTMENT);
+
+        expect(sqlite.prepare("SELECT id, adjustment FROM outsideMoves ORDER BY id").all()).toStrictEqual([
+            { adjustment: 1, id: "checked" },
+            { adjustment: 0, id: "paid" },
+            { adjustment: 0, id: "typed" },
+        ]);
+        expect(sqlite.prepare("SELECT localId FROM outbox").all()).toStrictEqual([{ localId: "checked" }]);
+    });
+});

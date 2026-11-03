@@ -576,8 +576,11 @@ describe("accountsRepo.markChecked", () => {
 
         expect(db.select().from(transactions).all()).toStrictEqual([]);
         expect(
-            db.select({ amount: outsideMoves.amount, note: outsideMoves.note }).from(outsideMoves).all()
-        ).toStrictEqual([{ amount: -34, note: "Balance adjustment" }]);
+            db
+                .select({ adjustment: outsideMoves.adjustment, amount: outsideMoves.amount, note: outsideMoves.note })
+                .from(outsideMoves)
+                .all()
+        ).toStrictEqual([{ adjustment: true, amount: -34, note: "Balance adjustment" }]);
         expect(getAccountById(db, id)?.checkedAt).toStrictEqual(JAN_5);
     });
 });
