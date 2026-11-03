@@ -42,8 +42,8 @@ const about = {
             {
                 label: t({ en: "Debts", es: "Deudas" }),
                 text: t({
-                    en: "Money you lent or borrowed, a sale on credit, or a job or purchase you will pay later, each with its person and an optional payoff plan. One Accounts screen shows what you have and what you owe.",
-                    es: "Lo que prestaste o te prestaron, una venta a crédito o un trabajo o una compra que pagarás después, cada uno con su persona y un plan de pago opcional. Una sola pantalla de Cuentas muestra lo que tienes y lo que debes.",
+                    en: "Money you lent or borrowed, a sale on credit, or a job or purchase you will pay later, each with its person and an optional payoff plan. One Accounts screen shows what you have and what you owe. A credit card keeps its limit and its statement and payment days, shows what the last statement asks for, and reminds you the day before it is due.",
+                    es: "Lo que prestaste o te prestaron, una venta a crédito o un trabajo o una compra que pagarás después, cada uno con su persona y un plan de pago opcional. Una sola pantalla de Cuentas muestra lo que tienes y lo que debes. Una tarjeta de crédito guarda su límite y sus fechas de corte y de pago, muestra cuánto pide el último corte y te avisa el día antes de pagar.",
                 }),
             },
             {

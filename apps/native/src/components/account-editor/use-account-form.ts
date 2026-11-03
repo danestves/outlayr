@@ -33,11 +33,26 @@ import { useHaptics } from "@/lib/use-haptics";
 import { personDeleteNotice } from "@/screens/debts/debts-wording";
 import { saveAccountCommand } from "@/state/accounts-commands";
 import { runAtomCommand, SILENT } from "@/state/atom-command";
+import { askForInstallmentReminders, rearmInstallmentReminders } from "@/state/surfaces-commands";
 import { useColors } from "@/theme/use-colors";
 
 import { accountIdentityLookup, accountIdentitySeed, draftHasIdentity, logoMayReplaceIdentity } from "./identity-seed";
 
 export type AccountEditorProps = { mode: "create"; liability?: boolean } | { mode: "edit"; id: string };
+
+export interface CardFields {
+    dayLabel: (day: number) => string;
+    limitLabel: string;
+    limitValue: string | null;
+    notSetLabel: string;
+    onLimitPress: () => void;
+    onPaymentDayChange: (day: number | null) => void;
+    onStatementDayChange: (day: number | null) => void;
+    paymentDay: number | null;
+    paymentDayLabel: string;
+    statementDay: number | null;
+    statementDayLabel: string;
+}
 
 export interface AccountFields {
     balanceEditA11y: string;
@@ -45,6 +60,7 @@ export interface AccountFields {
     balanceSignA11y: string;
     /** Already formatted for the active language and currency, without its sign. */
     balanceValue: string;
+    card: CardFields | null;
     currencyCode: string;
     currencyLabel: string;
     kindLabel: string;
@@ -102,6 +118,7 @@ export function useAccountForm(props: AccountEditorProps) {
 
     const currencySheetRef = useRef<BottomSheetModal>(null);
     const balanceSheetRef = useRef<BottomSheetModal>(null);
+    const limitSheetRef = useRef<BottomSheetModal>(null);
 
     const startingCurrency = loaded?.currency ?? globalCurrency;
     const [balanceAt] = useState(Date.now);
@@ -122,8 +139,12 @@ export function useAccountForm(props: AccountEditorProps) {
             balanceText: numberToNumpad(Math.abs(startingBalance), minorUnitsFor(startingCurrency)),
             currency: startingCurrency,
             liability: toAccountKind(loaded?.kind) === "liability" || newLiability,
+            limitText:
+                loaded?.creditLimit == null ? "" : numberToNumpad(loaded.creditLimit, minorUnitsFor(startingCurrency)),
             name: loaded?.name ?? "",
             negative: startingBalance < 0 || newLiability,
+            paymentDay: loaded?.paymentDay ?? null,
+            statementDay: loaded?.statementDay ?? null,
         };
     });
     const form = useForm({
@@ -137,7 +158,10 @@ export function useAccountForm(props: AccountEditorProps) {
                 value.balanceText !== initialValues.balanceText ||
                 value.negative !== initialValues.negative ||
                 value.currency !== initialValues.currency;
+            const limit = roundToMinorUnits(numpadToNumber(value.limitText), value.currency);
+            const card = value.liability && !person;
             const input = {
+                creditLimit: card && limit > 0 ? limit : null,
                 currency: value.currency,
                 customColor: draft.color ?? null,
                 emoji: draft.emoji ?? null,
@@ -146,6 +170,8 @@ export function useAccountForm(props: AccountEditorProps) {
                 imageUri: draft.photoUri ?? null,
                 kind: formKind(person, value.liability),
                 name: value.name.trim(),
+                paymentDay: card ? value.paymentDay : null,
+                statementDay: card ? value.statementDay : null,
             };
             if (mode === "edit" && loaded == null) {
                 return;
@@ -174,6 +200,10 @@ export function useAccountForm(props: AccountEditorProps) {
                             posthog?.capture("account_saved", { account_kind: input.kind, mode });
                             haptics("success");
                             router.back();
+                            if (input.paymentDay !== null && input.statementDay !== null) {
+                                askForInstallmentReminders(db, "debts.reminder.ask");
+                            }
+                            rearmInstallmentReminders(db);
                         },
                         target:
                             loaded == null
@@ -190,7 +220,10 @@ export function useAccountForm(props: AccountEditorProps) {
             );
         },
     });
-    const { name, currency, balanceText, negative, liability } = useSelector(form.store, (s) => s.values);
+    const { name, currency, balanceText, negative, liability, limitText, paymentDay, statementDay } = useSelector(
+        form.store,
+        (s) => s.values
+    );
     const isSubmitting = useSelector(form.store, (s) => s.isSubmitting);
 
     const [identitySource, setIdentitySource] = useState<IdentitySource>("initial");
@@ -241,6 +274,28 @@ export function useAccountForm(props: AccountEditorProps) {
         balanceLabel: t("accounts.field.balance"),
         balanceSignA11y: t("accounts.a11y.balanceSign"),
         balanceValue: formatAmount(numpadToNumber(balanceText), currency, true, language),
+        card:
+            liability && !person
+                ? {
+                      dayLabel: (day) => t("accounts.field.day", { day }),
+                      limitLabel: t("accounts.field.creditLimit"),
+                      limitValue:
+                          numpadToNumber(limitText) > 0
+                              ? formatAmount(numpadToNumber(limitText), currency, true, language)
+                              : null,
+                      notSetLabel: t("accounts.field.notSet"),
+                      onLimitPress: () => {
+                          Keyboard.dismiss();
+                          limitSheetRef.current?.present();
+                      },
+                      onPaymentDayChange: (day) => form.setFieldValue("paymentDay", day),
+                      onStatementDayChange: (day) => form.setFieldValue("statementDay", day),
+                      paymentDay,
+                      paymentDayLabel: t("accounts.field.paymentDay"),
+                      statementDay,
+                      statementDayLabel: t("accounts.field.statementDay"),
+                  }
+                : null,
         currencyCode: currency,
         currencyLabel: t("accounts.field.currency"),
         kindLabel: t("accounts.field.kind"),
@@ -288,6 +343,14 @@ export function useAccountForm(props: AccountEditorProps) {
             value: balanceText,
         },
         canSave: name.trim() !== "" && !isSubmitting,
+        limitSheet: {
+            code: currency,
+            minorUnits: minorUnitsFor(currency),
+            onChange: (next: string) => form.setFieldValue("limitText", next),
+            onDone: () => limitSheetRef.current?.dismiss(),
+            ref: limitSheetRef,
+            value: limitText,
+        },
         currencySheet: {
             onSelect: (code: string) => {
                 currencySheetRef.current?.dismiss();

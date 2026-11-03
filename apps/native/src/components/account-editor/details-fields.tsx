@@ -2,16 +2,19 @@ import type { Ref } from "react";
 import { Pressable, View } from "react-native";
 import type { TextInputInstance } from "react-native";
 
+import { OutlinedDropdownField } from "@/components/material/outlined-dropdown-field";
 import { OutlinedSelectField, OutlinedTextField } from "@/components/material/outlined-field";
 import { SwitchRow } from "@/components/material/switch-row";
 import { Text } from "@/components/text";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
-import type { AccountFields } from "./use-account-form";
+import type { AccountFields, CardFields } from "./use-account-form";
 
 const SIGN_TARGET = 48;
 const PRESSED_ALPHA = 0.1;
+const MONTH_DAYS = Array.from({ length: 31 }, (_, index) => index + 1);
+const UNSET = "unset";
 
 interface AccountDetailsFieldsProps extends AccountFields {
     name: string;
@@ -23,6 +26,7 @@ export function AccountDetailsFields({
     balanceLabel,
     balanceSignA11y,
     balanceValue,
+    card,
     currencyCode,
     currencyLabel,
     kindLabel,
@@ -96,6 +100,48 @@ export function AccountDetailsFields({
                     </Text>
                 }
             />
+
+            {card ? <CardFieldsGroup card={card} /> : null}
         </View>
+    );
+}
+
+function CardFieldsGroup({ card }: { card: CardFields }) {
+    const m3 = useMaterialColors();
+    const dayOptions = [
+        { label: card.notSetLabel, value: UNSET },
+        ...MONTH_DAYS.map((day) => ({ label: card.dayLabel(day), value: String(day) })),
+    ];
+    const toDay = (next: string) => (next === UNSET ? null : Number(next));
+    return (
+        <>
+            <OutlinedSelectField
+                accessibilityValue={card.limitValue ?? card.notSetLabel}
+                dropdown={false}
+                label={card.limitLabel}
+                onPress={card.onLimitPress}
+                value={
+                    <Text
+                        className="text-body font-mono"
+                        numberOfLines={1}
+                        style={{ color: card.limitValue ? m3.onSurface : m3.onSurfaceVariant }}
+                    >
+                        {card.limitValue ?? card.notSetLabel}
+                    </Text>
+                }
+            />
+            <OutlinedDropdownField
+                label={card.statementDayLabel}
+                onChange={(next) => card.onStatementDayChange(toDay(next))}
+                options={dayOptions}
+                value={card.statementDay === null ? UNSET : String(card.statementDay)}
+            />
+            <OutlinedDropdownField
+                label={card.paymentDayLabel}
+                onChange={(next) => card.onPaymentDayChange(toDay(next))}
+                options={dayOptions}
+                value={card.paymentDay === null ? UNSET : String(card.paymentDay)}
+            />
+        </>
     );
 }

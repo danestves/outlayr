@@ -6,6 +6,7 @@ import { translate } from "@/i18n/translate";
 import type { TranslationParams } from "@/i18n/translate";
 import type { DatedReminder } from "@/lib/reminders";
 
+import { formatSentenceDate } from "./dates";
 import { formatAmount } from "./money";
 import type { TimeOfDay } from "./reminder";
 import { reminderFireAt } from "./subscription-reminder";
@@ -16,7 +17,9 @@ export const INSTALLMENT_REMINDER_PREFIX = "outlayr.cuota-due.";
 
 export const DEBT_REMINDER_PREFIX = "outlayr.debt-due.";
 
-const OWN_PREFIXES = [INSTALLMENT_REMINDER_PREFIX, DEBT_REMINDER_PREFIX] as const;
+export const CARD_REMINDER_PREFIX = "outlayr.card-due.";
+
+const OWN_PREFIXES = [INSTALLMENT_REMINDER_PREFIX, DEBT_REMINDER_PREFIX, CARD_REMINDER_PREFIX] as const;
 
 const isOwn = (id: string) => OWN_PREFIXES.some((prefix) => id.startsWith(prefix));
 
@@ -128,5 +131,36 @@ export function debtNotice(
         fireAt: debt.fireAt,
         id: debt.id,
         title: say("debts.reminder.title", { person: debt.person }),
+    };
+}
+
+export interface CardNoticeInput {
+    accountId: string;
+    amount: number;
+    card: string;
+    closedOn: Date;
+    currency: string;
+    fireAt: Date;
+}
+
+export function cardNotice(
+    notice: CardNoticeInput,
+    hideAmounts: boolean,
+    language: Language = runtimeLanguage()
+): DatedReminder {
+    const say = (key: TranslatableKey, params: TranslationParams) =>
+        translate(key, { catalog: CATALOGS[language], fallback: EN, params });
+    const date = formatSentenceDate(notice.closedOn, language);
+    return {
+        body: hideAmounts
+            ? say("accounts.reminder.bodyHidden", { date })
+            : say("accounts.reminder.body", {
+                  amount: formatAmount(notice.amount, notice.currency, true, language),
+                  date,
+              }),
+        data: { account: notice.accountId, open: "account" },
+        fireAt: notice.fireAt,
+        id: `${CARD_REMINDER_PREFIX}${notice.accountId}`,
+        title: say("accounts.reminder.title", { card: notice.card }),
     };
 }

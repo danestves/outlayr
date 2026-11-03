@@ -38,6 +38,7 @@ import { PersonHero, PersonToolbar } from "@/screens/debts/person-header";
 import { usePayoffPlan } from "@/screens/debts/use-payoff-plan";
 
 import { AccountBalanceChart } from "./components/account-balance-chart";
+import { CardLines, hasCardLines } from "./components/card-lines";
 import { CheckBalanceCard } from "./components/check-balance-card";
 import { CheckBalanceSheet } from "./components/check-balance-sheet";
 import { InstallmentSections } from "./components/installment-sections";
@@ -222,7 +223,18 @@ function DetailBody({
                                     </View>
                                 )}
                             </View>
-                            <Text className="font-sans-medium text-muted text-subtitle">{startedAt}</Text>
+                            {toAccountKind(account.kind) === "liability" && hasCardLines(account) ? (
+                                <CardLines
+                                    account={account}
+                                    balance={balance.total}
+                                    cells={cells}
+                                    db={db}
+                                    nowMs={nowMs}
+                                    rates={rates}
+                                />
+                            ) : (
+                                <Text className="font-sans-medium text-muted text-subtitle">{startedAt}</Text>
+                            )}
                             {summary}
                             <View className="w-full pt-3">
                                 <CheckBalanceCard

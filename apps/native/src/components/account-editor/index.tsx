@@ -64,6 +64,7 @@ export default function AccountEditor(props: AccountEditorProps) {
         fields,
         floatProgress,
         isSubmitting,
+        limitSheet,
         name,
         openPicker,
         person,
@@ -196,6 +197,7 @@ export default function AccountEditor(props: AccountEditorProps) {
             <CurrencyPickerSheet {...currencySheet} />
 
             <AmountEntrySheet {...balanceSheet} />
+            <AmountEntrySheet {...limitSheet} />
 
             <IdentityFlyUpLayer
                 color={tint}
