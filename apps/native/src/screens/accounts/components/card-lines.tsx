@@ -35,7 +35,8 @@ export function CardLines({ account, balance, cells, db, nowMs, rates }: CardLin
     const statement = cardStatement(account, cells, rates, plans, nowMs);
     const money = (amount: number) => formatAmount(amount, account.currency, showCents, language);
     const date = (day: Date) => formatSentenceDate(day, language);
-    const overdue = statement !== null && statement.due > 0 && statement.cycle.dueOn.getTime() < startOfLocalDay(nowMs);
+    const overdue =
+        statement?.due != null && statement.due > 0 && statement.cycle.dueOn.getTime() < startOfLocalDay(nowMs);
     return (
         <>
             {statement === null ? null : (
@@ -63,15 +64,15 @@ function statementWording(
     money: (amount: number) => string,
     date: (day: Date) => string
 ): string {
-    if (overdue) {
+    if (overdue && due !== null) {
         return t("accounts.card.overdue", { amount: money(due), date: date(cycle.dueOn) });
     }
     const upcoming = cycle.dueOn.getTime() >= startOfLocalDay(nowMs);
-    if (due > 0) {
+    if (due !== null && due > 0) {
         const closed = t("accounts.card.closed", { date: date(cycle.closedOn) });
         return `${t("accounts.card.due", { amount: money(due), date: date(cycle.dueOn) })} · ${closed}`;
     }
-    return upcoming
+    return upcoming && due !== null
         ? t("accounts.card.nothingDue", { date: date(cycle.dueOn) })
         : t("accounts.card.nextClose", { date: date(cycle.nextCloseOn) });
 }

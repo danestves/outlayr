@@ -101,7 +101,7 @@ const cardNotices = Effect.fn("InstallmentReminderSync.cardNotices")(function* c
         );
         const own = plans.filter(({ plan }) => plan.accountId === card.id);
         const statement = cardStatement(card, cells, rates, own, now.getTime());
-        if (statement === null || statement.due <= 0) {
+        if (statement?.due == null || statement.due <= 0) {
             continue;
         }
         const fireAt = reminderFireAt(statement.cycle.dueOn, 1, time);
