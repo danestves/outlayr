@@ -27,9 +27,10 @@ export function usePaywallOpeners(db: Database, ready: boolean): void {
     const intent = usePurchaseIntent();
     const locked = useProLocked();
     const savedThisSession = useSyncExternalStore(freshEntries.subscribe, freshEntries.marked);
+    const arriving = useSyncExternalStore(freshEntries.subscribe, freshEntries.arriving);
     const shown = useFirstEntryOfferShown(db);
     const transactions = useTransactionCount(db);
-    const offerDue = onTabs && locked && savedThisSession && !shown && transactions === 1;
+    const offerDue = onTabs && locked && savedThisSession && !arriving && !shown && transactions === 1;
     const resume = purchaseResume({ accountId, entitlement, intent, onTabs, pathname });
 
     // oxlint-disable-next-line outlayr/react-effect-budget -- waits out the OS reminder prompt
