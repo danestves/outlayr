@@ -37,6 +37,61 @@ const support = {
             },
             {
                 answer: t({
+                    en: "Open Settings, then Invite friends, and share your code or link. A friend who claims it gets a month of Pro. You get a month once they have logged entries on three separate days.",
+                    es: "Abre Configuración, luego Invitar amigos, y comparte tu código o enlace. Un amigo que lo reclama recibe un mes de Pro. Tú recibes un mes cuando registra entradas en tres días distintos.",
+                }),
+                question: t({ en: "How do invites work?", es: "¿Cómo funcionan las invitaciones?" }),
+            },
+            {
+                answer: t({
+                    en: "Someone with an account under 7 days old who has never had Pro. Each person can claim one code, ever, and not their own.",
+                    es: "Alguien con una cuenta de menos de 7 días que nunca tuvo Pro. Cada persona puede reclamar un código en total, y no el suyo.",
+                }),
+                question: t({ en: "Who can claim an invite?", es: "¿Quién puede reclamar una invitación?" }),
+            },
+            {
+                answer: t({
+                    en: "On the third day your friend logs an entry. A day counts once the entry syncs. Days are counted by UTC date and at least 20 hours apart, so three entries in one evening count as one day.",
+                    es: "El tercer día en que tu amigo registra una entrada. Un día cuenta cuando la entrada se sincroniza. Los días se cuentan por fecha UTC y con al menos 20 horas entre uno y otro, así que tres entradas en una misma noche cuentan como un día.",
+                }),
+                question: t({ en: "When do I get my month?", es: "¿Cuándo recibo mi mes?" }),
+            },
+            {
+                answer: t({
+                    en: "Yes: 12 months in any 365 days. An invite that finishes after that earns no month, and lifetime owners don’t earn months. If you pay for Pro, a month you earn waits and starts when your paid plan ends.",
+                    es: "Sí: 12 meses en cualquier período de 365 días. Una invitación que termina después de eso no da mes, y quienes tienen Pro de por vida no ganan meses. Si pagas Pro, el mes que ganas espera y empieza cuando termina tu plan pagado.",
+                }),
+                question: t({
+                    en: "Is there a limit on invite months?",
+                    es: "¿Hay un límite de meses por invitaciones?",
+                }),
+            },
+            {
+                answer: t({
+                    en: "Your invite shows your first name. You see each friend’s first name, how many days they have logged up to three, and the date of the third. Never their entries or amounts.",
+                    es: "Tu invitación muestra tu nombre de pila. Tú ves el nombre de pila de cada amigo, cuántos días ha registrado hasta tres y la fecha del tercero. Nunca sus entradas ni sus montos.",
+                }),
+                question: t({ en: "What do invites show about me?", es: "¿Qué muestran las invitaciones sobre mí?" }),
+            },
+            {
+                answer: t({
+                    en: "Your invite code, the invites you sent, and any months waiting for your paid plan to end are deleted. If you claimed an invite that already earned your friend a month, it stays on their list without your name and still counts toward their 12 a year. Any other invite you claimed is deleted too.",
+                    es: "Se eliminan tu código de invitación, las invitaciones que enviaste y los meses que esperan a que termine tu plan pagado. Si reclamaste una invitación que ya le dio un mes a tu amigo, queda en su lista sin tu nombre y sigue contando para sus 12 al año. Cualquier otra invitación que reclamaste también se elimina.",
+                }),
+                question: t({
+                    en: "What happens to invites if I delete my account?",
+                    es: "¿Qué pasa con las invitaciones si elimino mi cuenta?",
+                }),
+            },
+            {
+                answer: t({
+                    en: "No. A month from an invite is a one-time gift of Pro. When it ends, Pro ends unless you subscribe or buy it yourself, and nothing charges you.",
+                    es: "No. Un mes por invitación es un regalo único de Pro. Cuando termina, Pro termina, a menos que te suscribas o lo compres tú, y no se te cobra nada.",
+                }),
+                question: t({ en: "Do invite months renew?", es: "¿Los meses por invitaciones se renuevan?" }),
+            },
+            {
+                answer: t({
                     en: "Open Settings, then Export data. Choose Export CSV for a spreadsheet, or Export a full archive for a file that carries every entry, category, and budget.",
                     es: "Abre Configuración y luego Exportar datos. Elige Exportar CSV para una hoja de cálculo, o Exportar un archivo completo para guardar cada registro, categoría y presupuesto.",
                 }),
