@@ -155,6 +155,7 @@ export const CASTS = {
             },
         ],
         knownMerchants: new Map([
+            ["blue bottle", "Coffee"],
             ["costco", "Groceries"],
             ["figma", "Subscriptions"],
             ["github", "Subscriptions"],
@@ -214,6 +215,7 @@ export const CASTS = {
         ],
         knownMerchants: new Map([
             ["didi", "Transport"],
+            ["juan valdez", "Coffee"],
             ["farmatodo", "Shopping"],
             ["mercado libre", "Shopping"],
             ["netflix", "Subscriptions"],
