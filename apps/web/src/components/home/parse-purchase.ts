@@ -3,12 +3,12 @@ import type { Locale } from "@/lib/i18n";
 import type { Currency } from "../demo/money";
 import { CASTS } from "../demo/sentence-model";
 
-const AMOUNT = /(?:^|\s)((?:US\$|[$€])?\s*(\d+(?:[.,]\d{1,2})?))(?:[.!?,;:])?(?=\s|$)/gi;
+const AMOUNT = /(?:^|\s)((?:(USD|EUR|US\$|[$€])\s*)?(\d+(?:[.,]\d{1,2})?)(?:\s*(USD|EUR))?)(?:[.!?,;:])?(?=\s|$)/gi;
 const CONNECTOR_SUFFIX = {
     en: /\s+for$/i,
     es: /\s+por$/i,
 } as const satisfies Record<Locale, RegExp>;
-const PREFERRED_AMOUNT = /(?:US\$|[$€]|[.,]\d)/i;
+const PREFERRED_AMOUNT = /(?:USD|EUR|US\$|[$€]|[.,]\d)/i;
 const WHITESPACE = /\s+/g;
 const WORD = /(^|\s)\S/g;
 
@@ -30,7 +30,7 @@ function findAmount(text: string): AmountCandidate | null {
     let fallback: AmountCandidate | null = null;
 
     for (const match of text.matchAll(AMOUNT)) {
-        const [matchedText, token, numberText] = match;
+        const [matchedText, token, leadingCurrency, numberText, trailingCurrency] = match;
         if (token === undefined || numberText === undefined || match.index === undefined) {
             continue;
         }
@@ -40,9 +40,10 @@ function findAmount(text: string): AmountCandidate | null {
             continue;
         }
 
+        const currencyMarker = leadingCurrency ?? trailingCurrency;
         const candidate = {
             amount,
-            currency: token.includes("€") ? "EUR" : "USD",
+            currency: currencyMarker === "€" || currencyMarker?.toUpperCase() === "EUR" ? "EUR" : "USD",
             end: match.index + matchedText.length,
             start: match.index,
         } satisfies AmountCandidate;

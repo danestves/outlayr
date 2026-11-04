@@ -48,6 +48,21 @@ describe("parsePurchase", () => {
         });
     });
 
+    it("consumes currency codes on either side of the amount", () => {
+        expect(parsePurchase("blue bottle USD 4.50", "en")).toStrictEqual({
+            amount: 4.5,
+            category: "Coffee",
+            currency: "USD",
+            merchant: "Blue Bottle",
+        });
+        expect(parsePurchase("zara 4,50 EUR", "es")).toStrictEqual({
+            amount: 4.5,
+            category: "Fashion",
+            currency: "EUR",
+            merchant: "Zara",
+        });
+    });
+
     it("normalizes natural spacing and punctuation around a known merchant", () => {
         expect(parsePurchase("blue  bottle for $4.50.", "en")).toStrictEqual({
             amount: 4.5,
