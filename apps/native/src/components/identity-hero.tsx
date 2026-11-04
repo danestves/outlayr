@@ -16,6 +16,7 @@ import type { SharedValue } from "react-native-reanimated";
 import Svg, { Defs, RadialGradient, Rect, Stop } from "react-native-svg";
 
 import { LAUNCH_SPRING, useIdentityFlyUp } from "@/contexts/identity-draft-context";
+import { LARGEST_STANDARD_FONT_SCALE } from "@/hooks/use-accessibility-text-size";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { withAlpha } from "@/theme/shade";
@@ -74,6 +75,8 @@ const A11Y = {
         readonly reset: TranslationKey;
     }
 >;
+
+const CATEGORY_CAPTION = { maxFontSizeMultiplier: LARGEST_STANDARD_FONT_SCALE, numberOfLines: 1 } as const;
 
 const EMPTY_CAPTION = {
     category: "transaction.identity.hero.chooseIcon",
@@ -268,6 +271,7 @@ export function IdentityHero({
             {isFloat || (variant === "category" && !isEmpty) ? null : (
                 <Text
                     className="font-sans-medium text-footnote text-muted"
+                    {...(variant === "category" ? CATEGORY_CAPTION : {})}
                     style={
                         variant === "category" && {
                             alignSelf: "center",
