@@ -23,6 +23,7 @@ import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
+import { LARGEST_STANDARD_FONT_SCALE } from "@/hooks/use-accessibility-text-size";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { posthog } from "@/lib/posthog";
@@ -162,14 +163,30 @@ export function OnboardingCurrency() {
                 className="border-fr-rule bg-fr-card flex-row items-center gap-3 rounded-2xl border px-4 py-3.5 active:opacity-60"
                 onPress={() => sheet.current?.present()}
             >
-                <Text className="text-fr-muted text-headline w-8 text-center">{display.symbol}</Text>
+                <Text
+                    className="text-fr-muted text-headline w-8 text-center"
+                    maxFontSizeMultiplier={LARGEST_STANDARD_FONT_SCALE}
+                >
+                    {display.symbol}
+                </Text>
                 <View className="flex-1 gap-0.5">
-                    <Text className="font-sans-semibold text-body text-fr-ink">{code}</Text>
-                    <Text className="text-footnote text-fr-muted" numberOfLines={1}>
+                    <Text
+                        className="font-sans-semibold text-body text-fr-ink"
+                        maxFontSizeMultiplier={LARGEST_STANDARD_FONT_SCALE}
+                    >
+                        {code}
+                    </Text>
+                    <Text
+                        className="text-footnote text-fr-muted"
+                        maxFontSizeMultiplier={LARGEST_STANDARD_FONT_SCALE}
+                        numberOfLines={1}
+                    >
                         {display.name}
                     </Text>
                 </View>
-                <MonoLabel className="text-fr-muted">{t("onboarding.currency.change")}</MonoLabel>
+                <MonoLabel className="text-fr-muted" maxFontSizeMultiplier={LARGEST_STANDARD_FONT_SCALE}>
+                    {t("onboarding.currency.change")}
+                </MonoLabel>
             </Pressable>
 
             <CurrencyPickerSheet

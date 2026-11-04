@@ -1,5 +1,5 @@
 import { Button } from "panelui-native/components/button";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 
 import { CTA_HEIGHT } from "@/components/editor-style";
 
@@ -11,10 +11,11 @@ interface EditorCtaProps {
     busy?: boolean;
     canSave: boolean;
     label: string;
+    maxFontSizeMultiplier?: number;
     onPress: () => void;
 }
 
-export function EditorCta({ label, canSave, busy = false, onPress }: EditorCtaProps) {
+export function EditorCta({ label, canSave, busy = false, maxFontSizeMultiplier, onPress }: EditorCtaProps) {
     return (
         <View style={{ minHeight: CTA_HEIGHT, opacity: canSave || busy ? 1 : DISABLED_OPACITY }} testID="editor-cta">
             <Button
@@ -25,7 +26,16 @@ export function EditorCta({ label, canSave, busy = false, onPress }: EditorCtaPr
                 size="md"
                 variant="primary"
             >
-                {label}
+                {maxFontSizeMultiplier === undefined ? (
+                    label
+                ) : (
+                    <Text
+                        className="text-primary-foreground min-w-0 shrink text-center text-[16px] font-medium"
+                        maxFontSizeMultiplier={maxFontSizeMultiplier}
+                    >
+                        {label}
+                    </Text>
+                )}
             </Button>
         </View>
     );

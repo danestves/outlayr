@@ -26,6 +26,7 @@ import {
 import { IdentityCurtain } from "@/components/identity-curtain";
 import { HERO_RING, IdentityFlyUpLayer } from "@/components/identity-fly-up";
 import { Text } from "@/components/text";
+import { LARGEST_STANDARD_FONT_SCALE } from "@/hooks/use-accessibility-text-size";
 import { useTranslation } from "@/i18n/context";
 import { CATEGORY_DETENT, LARGE_ONLY, SUBCATEGORY_DETENT } from "@/lib/sheet-detents";
 import { glowFromEmoji } from "@/theme/glow";
@@ -157,7 +158,13 @@ export default function CategoryEditor(props: CategoryEditorProps) {
                 style={{ opacity: pickerOpen ? 0 : 1 }}
             >
                 <View onLayout={(event) => setCtaHeight(event.nativeEvent.layout.height)}>
-                    <EditorCta busy={isSubmitting} canSave={canSave} label={ctaLabel} onPress={submit} />
+                    <EditorCta
+                        busy={isSubmitting}
+                        canSave={canSave}
+                        label={ctaLabel}
+                        maxFontSizeMultiplier={LARGEST_STANDARD_FONT_SCALE}
+                        onPress={submit}
+                    />
                 </View>
             </View>
 

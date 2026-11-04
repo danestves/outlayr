@@ -2,6 +2,7 @@ import { Divider, HStack, Picker, Spacer, Text as SwiftText, TextField, VStack }
 import type { TextFieldRef, useNativeState } from "@expo/ui/swift-ui";
 import type { ViewModifier } from "@expo/ui/swift-ui/modifiers";
 import {
+    dynamicTypeSize,
     foregroundStyle,
     multilineTextAlignment,
     onSubmit,
@@ -81,7 +82,11 @@ export function CategoryEditorDetailsSection({
                         <Spacer />
                         <Picker
                             label=""
-                            modifiers={[pickerStyle("menu"), tintModifier(tintColor)]}
+                            modifiers={[
+                                dynamicTypeSize({ max: "xxxLarge" }),
+                                pickerStyle("menu"),
+                                tintModifier(tintColor),
+                            ]}
                             onSelectionChange={(value) => onIncomeChange(value === "income")}
                             selection={income ? "income" : "expense"}
                         >
