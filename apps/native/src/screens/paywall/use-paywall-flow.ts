@@ -1,7 +1,7 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
@@ -19,11 +19,22 @@ import { buyPlanCommand, confirmEntitlementCommand, restorePlanCommand } from "@
 import { useAtomAction } from "@/state/use-atom-action";
 
 import { purchaseNext, restoreNext } from "./purchase-result";
+import { saleStateOf } from "./sale-state";
 import { topBlockOf } from "./top-block";
 
 interface PlanPick {
     kind: PlanKind;
     plans: readonly Plan[];
+}
+
+function purchaseProperties(plan: Plan | null, variant: typeof PaywallVariant.Type) {
+    const product = plan?.offer.product;
+    return {
+        period: product?.subscriptionPeriod ?? null,
+        plan: plan?.kind ?? null,
+        product_id: product?.identifier ?? null,
+        variant,
+    };
 }
 
 function selectedKind(pick: PlanPick | null, plans: readonly Plan[] | null): PlanKind | null {
@@ -43,7 +54,8 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const { accountId } = useAuthSession();
     const { trigger: triggerParam } = useLocalSearchParams<{ trigger?: string }>();
     const autolog = useAutologUsage(useDatabase());
-    const block = topBlockOf(paywallTriggerOf(triggerParam), autolog.used);
+    const trigger = paywallTriggerOf(triggerParam);
+    const block = topBlockOf(trigger, autolog.used);
     const [busy, setBusy] = useState<"buy" | "confirm" | "restore" | null>(null);
     const [attempt, setAttempt] = useState(0);
     const loaded = useAtomValue(paywallPlansAtom({ accountId, attempt }));
@@ -87,12 +99,16 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         buyPlanCommand,
         {
             onFailure: () => {
-                posthog?.capture("purchase_finished", { outcome: "failed", plan: plan?.kind ?? null, variant });
+                posthog?.capture("purchase_finished", {
+                    ...purchaseProperties(plan, variant),
+                    outcome: "failed",
+                    trial: false,
+                });
                 setFailure("pro.failedBody");
             },
             onSettled: () => setBusy(null),
-            onSuccess: ({ mirrored, outcome }) => {
-                posthog?.capture("purchase_finished", { outcome, plan: plan?.kind ?? null, variant });
+            onSuccess: ({ mirrored, outcome, trial }) => {
+                posthog?.capture("purchase_finished", { ...purchaseProperties(plan, variant), outcome, trial });
                 const next = purchaseNext(outcome, mirrored);
                 if (next.failure !== null) {
                     setFailure(next.failure);
@@ -134,7 +150,7 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         }
         setBusy("buy");
         setFailure(null);
-        posthog?.capture("purchase_started", { plan: plan.kind, variant });
+        posthog?.capture("purchase_started", { ...purchaseProperties(plan, variant), trial_days: plan.trialDays });
         buyPlan({ accountId, offer: plan.offer });
     };
 
@@ -150,6 +166,15 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const needsAccount = !noCloud && accountId === null;
     const pitches = !(isPro || noCloud);
     const canBuy = pitches && !needsAccount;
+
+    const reportDismissed = useEffectEvent(() => {
+        const saleState = saleStateOf({ failed, isPro, needsAccount, noCloud, plans });
+        if (saleState !== "pro") {
+            posthog?.capture("paywall_dismissed", { sale_state: saleState, trigger, variant });
+        }
+    });
+    // oxlint-disable-next-line outlayr/react-effect-budget -- reports the paywall closing, however it was dismissed
+    useEffect(() => () => reportDismissed(), []);
 
     return {
         autolog,

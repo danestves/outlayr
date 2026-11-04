@@ -19,6 +19,7 @@ import { shareFile } from "@/lib/data-transfer";
 import { armLogoBackfill, cancelLogoBackfill } from "@/lib/logo-backfill";
 import { posthog } from "@/lib/posthog";
 import { Reminders } from "@/lib/reminders";
+import { proTerm } from "@/lib/revenuecat";
 import { RevenueCat } from "@/lib/revenuecat-service";
 import { appRuntime } from "@/lib/runtime";
 import { syncTrialReminder } from "@/lib/trial-reminder";
@@ -162,7 +163,13 @@ export const buyPlanCommand = revenueCatFlow(
             yield* Effect.forkDetach(syncTrialReminder(true));
         }
         const mirrored = outcome !== "pro" || (yield* revenueCat.mirror(input.accountId));
-        return { mirrored, outcome };
+        const trial =
+            outcome === "pro" &&
+            (yield* proTerm().pipe(
+                Effect.map(({ status }) => status?.kind === "trial"),
+                Effect.orElseSucceed(() => false)
+            ));
+        return { mirrored, outcome, trial };
     })
 );
 
