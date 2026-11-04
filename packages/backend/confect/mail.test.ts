@@ -59,7 +59,6 @@ describe("the Pro email", () => {
 
     it("is skipped, not crashed, when the RevenueCat app user ID is not an auth user ID", async () => {
         const t = convexTest(schema, modules);
-        // convex-test reads an undecodable ID as missing; production's db.get throws instead.
         vi.spyOn(authComponent, "getAnyUserById").mockRejectedValue(
             new Error("Unable to decode ID: Invalid ID length 39")
         );

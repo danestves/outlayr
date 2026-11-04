@@ -51,7 +51,6 @@ const saveState = Effect.fn("Mail.saveState")(function* saveState(
 
 const verifiedUser = Effect.fn("Mail.verifiedUser")(function* verifiedUser(userId: string) {
     const ctx = yield* QueryCtx;
-    // A RevenueCat app user ID need not be a Convex ID, and the lookup throws on one it cannot decode.
     const user = yield* Effect.tryPromise(() => authComponent.getAnyUserById(ctx, userId)).pipe(
         Effect.tapError(() => Console.warn("[mail] no auth user for", userId)),
         Effect.option
