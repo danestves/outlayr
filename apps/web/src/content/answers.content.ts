@@ -5360,8 +5360,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Outlayr is a multi-currency expense tracker that keeps the rate it used next to every entry. Rates for its 165 currencies come from Open Exchange Rates and refresh every hour. The Banco Central de Venezuela (BCV) rates for the dollar and the euro come from Cotizave, and the USDT rate in bolívares comes from Binance P2P and refreshes every 30 minutes.",
-                                es: "Outlayr es una app para controlar gastos en varias monedas que guarda la tasa que usó junto a cada registro. Las tasas de sus 165 monedas vienen de Open Exchange Rates y se actualizan cada hora. Las tasas del Banco Central de Venezuela (BCV) para el dólar y el euro vienen de Cotizave, y la del USDT en bolívares viene de Binance P2P y se actualiza cada 30 minutos.",
+                                en: "Outlayr is a multi-currency expense tracker that keeps the rate it used next to every entry. Rates for its 165 currencies come from Open Exchange Rates and refresh every hour. The Banco Central de Venezuela (BCV) rates for the dollar and the euro come from Cotizave.",
+                                es: "Outlayr es una app para controlar gastos en varias monedas que guarda la tasa que usó junto a cada registro. Las tasas de sus 165 monedas vienen de Open Exchange Rates y se actualizan cada hora. Las tasas del Banco Central de Venezuela (BCV) para el dólar y el euro vienen de Cotizave.",
                             }),
                             t({
                                 en: "Each rate shows how fresh it is, like As of 09:05 for one fetched today, or 3 days old when the newest rate is older than the day of the entry. If there is no rate yet for that day, Outlayr says so, and the entry counts in dollars once it has one.",
@@ -5391,12 +5391,12 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "In Venezuela, the official BCV rate and the rate people actually pay can be far apart. For a purchase in bolívares, Outlayr offers USD (BCV) and EUR (BCV), both from the central bank's published rates, and My rate for anything else, such as the parallel rate you paid.",
-                                es: "En Venezuela, la tasa oficial del BCV y la que de verdad pagas pueden estar muy lejos. Para una compra en bolívares, Outlayr te ofrece USD (BCV) y EUR (BCV), las dos de las tasas que publica el banco central, y Mi tasa para cualquier otra, como la tasa paralela que pagaste.",
+                                en: "For a purchase in bolívares, Outlayr offers USD (BCV) and EUR (BCV), both from the central bank's published rates, and My rate for the rate you actually paid.",
+                                es: "Para una compra en bolívares, Outlayr te ofrece USD (BCV) y EUR (BCV), las dos de las tasas que publica el banco central, y Mi tasa para la que de verdad pagaste.",
                             }),
                             t({
-                                en: "If a shop priced something in dollars and charged you in bolívares, log the bolívar amount, tap the dollar amount, and type the dollar price; the rate comes out of the two. Changing dollars into bolívares between your own accounts is a transfer, not spending, and there the rate list also offers USDT (Binance), which is saved as your own rate.",
-                                es: "Si una tienda puso el precio en dólares y te cobró en bolívares, registra el monto en bolívares, toca el monto en dólares y escribe el precio en dólares; la tasa sale de los dos. Cambiar dólares a bolívares entre tus propias cuentas es una transferencia, no un gasto, y ahí la lista de tasas también te ofrece USDT (Binance), que se guarda como tu propia tasa.",
+                                en: "If a shop priced something in dollars and charged you in bolívares, log the bolívar amount, tap the dollar amount, and type the dollar price; the rate comes out of the two. Changing dollars into bolívares between your own accounts is a transfer, not spending.",
+                                es: "Si una tienda puso el precio en dólares y te cobró en bolívares, registra el monto en bolívares, toca el monto en dólares y escribe el precio en dólares; la tasa sale de los dos. Cambiar dólares a bolívares entre tus propias cuentas es una transferencia, no un gasto.",
                             }),
                         ],
                         id: "bolivares",
