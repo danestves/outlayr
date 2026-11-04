@@ -10,7 +10,7 @@ import Animated, {
     withTiming,
 } from "react-native-reanimated";
 
-import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
+import { LARGEST_STANDARD_FONT_SCALE, useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 
 import { MonoLabel } from "./mono-label";
 import { Text } from "./text";
@@ -196,7 +196,10 @@ export function FirstRun({
                     </View>
                     <Animated.View className="items-center gap-2.5" style={textStyle}>
                         {eyebrow ? <MonoLabel className="text-fr-vermilion text-center">{eyebrow}</MonoLabel> : null}
-                        <Text className="font-sans-semibold text-fr-ink text-center text-[28px] leading-[33px] tracking-[-0.5px]">
+                        <Text
+                            className="font-sans-semibold text-fr-ink text-center text-[28px] leading-[33px] tracking-[-0.5px]"
+                            maxFontSizeMultiplier={LARGEST_STANDARD_FONT_SCALE}
+                        >
                             {title}
                         </Text>
                         {body ? (
