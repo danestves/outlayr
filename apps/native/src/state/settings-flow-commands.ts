@@ -5,7 +5,7 @@ import { checkForUpdateAsync, fetchUpdateAsync, reloadAsync } from "expo-updates
 import type { PurchasesPackage } from "react-native-purchases";
 
 import { META_KEYS, setMeta } from "@/data/app-meta-core";
-import { finishOnboarding, markReminderChosen } from "@/data/onboarding-core";
+import { clearReminderChosen, finishOnboarding, markReminderChosen } from "@/data/onboarding-core";
 import type { PhotoFiles } from "@/data/photo-store-core";
 import { setBoolSetting, setCurrency, setNumberSetting } from "@/data/settings-core";
 import { exportTransactionsCsv } from "@/data/transfer-core";
@@ -99,8 +99,10 @@ const bothSettled = <E1, E2>(first: Effect.Effect<unknown, E1>, second: Effect.E
     );
 
 export const chooseFirstRunReminderCommand = createCommand({
-    execute: (input: { db: Database; option: number }) =>
-        bothSettled(setNumberSetting(input.db, "notificationOption", input.option), markReminderChosen(input.db)),
+    execute: (input: { db: Database; option: number | null }) =>
+        input.option === null
+            ? clearReminderChosen(input.db)
+            : bothSettled(setNumberSetting(input.db, "notificationOption", input.option), markReminderChosen(input.db)),
     label: "onboarding:choose-reminder",
 });
 

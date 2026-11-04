@@ -48,6 +48,7 @@ export function OnboardingRhythm() {
     );
 
     const remind = () => chooseReminder({ db, option: REMINDER_EVENING });
+    const skip = () => chooseReminder({ db, option: null });
 
     return (
         <FirstRun
@@ -65,7 +66,7 @@ export function OnboardingRhythm() {
                     <MockNotification body={t("onboarding.rhythm.notifToday")} />
                 </View>
             }
-            skip={{ label: t("onboarding.rhythm.none"), onPress: next }}
+            skip={{ label: t("onboarding.rhythm.none"), onPress: skip }}
             title={t("onboarding.rhythm.title")}
         />
     );

@@ -107,7 +107,7 @@ describe("daily reminder sync", () => {
         expect(syncs).toHaveBeenCalledTimes(2);
     });
 
-    it("arms the onboarding reminder on the user's own save, not on any write to the ledger", async () => {
+    it("arms the onboarding reminder once the user's own save lands on the Log, not on any write to the ledger", async () => {
         await start();
 
         tableWrites.emit("transactions");
@@ -116,6 +116,10 @@ describe("daily reminder sync", () => {
         expect(arms).not.toHaveBeenCalled();
 
         freshEntries.mark("t1");
+        await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
+        expect(arms).not.toHaveBeenCalled();
+
+        freshEntries.settle("t1");
         await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
         expect(arms).toHaveBeenCalledOnce();
     });

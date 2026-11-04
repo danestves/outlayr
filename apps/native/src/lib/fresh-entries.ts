@@ -8,6 +8,7 @@ function emit() {
 }
 
 export const freshEntries = {
+    arriving: () => fresh.size > 0,
     has: (id: string) => fresh.has(id),
     mark(id: string) {
         fresh.add(id);

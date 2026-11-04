@@ -35,6 +35,12 @@ export const markReminderChosen = Effect.fn("Onboarding.markReminderChosen")(fun
     yield* setMeta(db, META_KEYS.reminderChosen, "true");
 });
 
+export const clearReminderChosen = Effect.fn("Onboarding.clearReminderChosen")(function* clearReminderChosen(
+    db: Database
+) {
+    yield* setMeta(db, META_KEYS.reminderChosen, "false");
+});
+
 export function isAccountDeferred(deferred: string | null): boolean {
     return deferred === "true";
 }

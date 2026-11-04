@@ -19,6 +19,12 @@ describe("adoption plan", () => {
         expect(adoptionPlan("populated", "populated")).toBe("ask");
     });
 
+    it("keeps both when the only local row is the onboarding entry", () => {
+        expect(adoptionPlan("first-entry", "populated")).toBe("adopt");
+        expect(adoptionPlan("first-entry", "empty")).toBe("adopt");
+        expect(adoptionPlan("first-entry", "unknown")).toBe("defer");
+    });
+
     it("defers while the account's ledger cannot be read", () => {
         expect(adoptionPlan("empty", "unknown")).toBe("defer");
         expect(adoptionPlan("populated", "unknown")).toBe("defer");

@@ -70,6 +70,21 @@ describe("local ledger state", () => {
         await expect(Effect.runPromise(localLedgerState(bare))).resolves.toBe("populated");
     });
 
+    it("reads a ledger holding only the onboarding entry as its own state, and any second row as populated", async () => {
+        await addTransaction(db, "t1");
+        await Effect.runPromise(setMeta(db, META_KEYS.firstEntryId, "t1"));
+        await expect(Effect.runPromise(localLedgerState(db))).resolves.toBe("first-entry");
+
+        await addTransaction(db, "t2");
+        await expect(Effect.runPromise(localLedgerState(db))).resolves.toBe("populated");
+    });
+
+    it("reads one entry the onboarding step did not write as populated", async () => {
+        await addTransaction(db, "t1");
+        await Effect.runPromise(setMeta(db, META_KEYS.firstEntryId, "t0"));
+        await expect(Effect.runPromise(localLedgerState(db))).resolves.toBe("populated");
+    });
+
     it("reads a transaction deleted offline as populated", async () => {
         await addTransaction(db, "t1", new Date());
         await expect(Effect.runPromise(localLedgerState(db))).resolves.toBe("populated");
