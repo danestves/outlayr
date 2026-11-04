@@ -47,7 +47,11 @@ const claimInvite = Effect.fn("Referrals.claim")(function* claimInvite(code: str
         Effect.catchTags({ CloudError: () => Effect.succeed("offline" as const) })
     );
     if (outcome === "claimed") {
-        yield* reloadProEntitlement().pipe(Effect.ignore);
+        yield* reloadProEntitlement().pipe(
+            Effect.catchTags({
+                PurchasesError: (error) => Effect.logWarning("[referrals] Pro refresh after claim failed", error.cause),
+            })
+        );
     }
     return outcome;
 });

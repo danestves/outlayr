@@ -25,7 +25,6 @@ import { useTickingNow } from "@/hooks/use-usage-limits";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useAuthSession } from "@/lib/auth-session";
 import { markRewardsSeenCommand } from "@/lib/referrals";
-import { SILENT } from "@/state/atom-command";
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
@@ -69,7 +68,7 @@ function RewardLanded({ overview }: { overview: ReferralOverview }) {
     const focused = useIsFocused();
     const lockOpen = useAppLockOpen();
     const covered = useAuthCovered();
-    const markSeen = useAtomAction(markRewardsSeenCommand, {}, SILENT);
+    const markSeen = useAtomAction(markRewardsSeenCommand, {});
     const now = useTickingNow(false);
     const fresh = rewardsToAnnounce(overview.friends, seenAt, now);
     const latest = Math.max(0, ...fresh.map((friend) => friend.rewardedAt ?? 0));
