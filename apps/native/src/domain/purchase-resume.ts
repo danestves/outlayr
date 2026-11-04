@@ -11,14 +11,17 @@ export function purchaseResume(state: {
     pathname: string;
 }): "drop" | "open" | null {
     const { accountId, entitlement, intent, onTabs, pathname } = state;
-    if (intent === null) {
+    if (intent === null || intent.handed) {
         return null;
     }
     if (accountId === null) {
         return SIGN_IN_ROUTES.has(pathname) ? null : "drop";
     }
-    if (pathname === "/paywall" || entitlement.kind === "pro" || entitlement.kind === "unconfigured") {
+    if (pathname === "/paywall") {
         return "drop";
     }
-    return onTabs && entitlement.kind === "free" && !entitlement.pending ? "open" : null;
+    if (!onTabs || ("pending" in entitlement && entitlement.pending)) {
+        return null;
+    }
+    return entitlement.kind === "free" ? "open" : "drop";
 }

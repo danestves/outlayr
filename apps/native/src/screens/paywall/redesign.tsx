@@ -115,7 +115,7 @@ export function PaywallRedesign() {
 
     const purchaseFooter = (
         <>
-            <SaleBlockers needsAccount={flow.needsAccount} noCloud={flow.noCloud} />
+            <SaleBlockers empty={flow.empty} needsAccount={flow.needsAccount} noCloud={flow.noCloud} />
             {flow.canBuy ? (
                 <View className="px-5">
                     <PlanPicker

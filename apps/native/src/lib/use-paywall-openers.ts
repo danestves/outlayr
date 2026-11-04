@@ -2,10 +2,13 @@ import * as Cause from "effect/Cause";
 import { usePathname, useRouter, useSegments } from "expo-router";
 import { useEffect, useSyncExternalStore } from "react";
 
+import { useUpdateWaiting } from "@/components/update-sheet";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 import { useFirstEntryOfferShown } from "@/data/onboarding";
+import { useAiConsent } from "@/data/settings";
 import { useTransactionCount } from "@/data/transactions";
 import type { Database } from "@/db/client";
+import { firstEntryOfferDue } from "@/domain/first-entry-offer";
 import { paywallHref } from "@/domain/paywall-trigger";
 import { purchaseResume } from "@/domain/purchase-resume";
 import { useProLocked } from "@/hooks/use-pro-locked";
@@ -17,12 +20,16 @@ import { appAtomRegistry } from "@/state/atom-registry";
 import { awaitReminderPromptCommand, markFirstEntryOfferCommand } from "@/state/onboarding-commands";
 import { fireAtomCommand } from "@/state/use-atom-action";
 
+let offered = false;
+
 export function usePaywallOpeners(db: Database, ready: boolean): void {
     const router = useRouter();
     const pathname = usePathname();
-    const [segment] = useSegments();
-    const onTabs = ready && segment === "(tabs)";
-    const { accountId } = useAuthSession();
+    const segments: readonly string[] = useSegments();
+    const onTabs = ready && segments[0] === "(tabs)";
+    const { accountId, gate } = useAuthSession();
+    const consent = useAiConsent(db);
+    const updateDue = useUpdateWaiting();
     const entitlement = useRevenueCat();
     const intent = usePurchaseIntent();
     const locked = useProLocked();
@@ -30,12 +37,22 @@ export function usePaywallOpeners(db: Database, ready: boolean): void {
     const arriving = useSyncExternalStore(freshEntries.subscribe, freshEntries.arriving);
     const shown = useFirstEntryOfferShown(db);
     const transactions = useTransactionCount(db);
-    const offerDue = onTabs && locked && savedThisSession && !arriving && !shown && transactions === 1;
+    const offerDue = firstEntryOfferDue({
+        arriving,
+        consentDue: gate === "signed-in" && consent === "unanswered",
+        locked,
+        onLog: segments[1] === "(transactions)",
+        onTabs,
+        savedThisSession,
+        shown,
+        transactions,
+        updateDue,
+    });
     const resume = purchaseResume({ accountId, entitlement, intent, onTabs, pathname });
 
     // oxlint-disable-next-line outlayr/react-effect-budget -- waits out the OS reminder prompt
     useEffect(() => {
-        if (!offerDue) {
+        if (!offerDue || offered) {
             return;
         }
         let live = true;
@@ -47,9 +64,10 @@ export function usePaywallOpeners(db: Database, ready: boolean): void {
                 onFailure: (cause) =>
                     console.warn("[outlayr] reminder prompt before the Pro offer failed", Cause.squash(cause)),
                 onSettled: () => {
-                    if (!live) {
+                    if (!live || offered) {
                         return;
                     }
+                    offered = true;
                     router.push(paywallHref("first_entry"));
                     fireAtomCommand(
                         appAtomRegistry,
@@ -76,9 +94,11 @@ export function usePaywallOpeners(db: Database, ready: boolean): void {
         if (resume === null || taken === null) {
             return;
         }
-        purchaseIntent.clear();
-        if (resume === "open") {
-            router.push({ params: { resume: taken.kind, trigger: taken.trigger }, pathname: "/paywall" });
+        if (resume === "drop") {
+            purchaseIntent.clear();
+            return;
         }
+        purchaseIntent.hand();
+        router.push(paywallHref(taken.trigger));
     }, [resume, router]);
 }

@@ -41,7 +41,7 @@ function purchaseProperties(plan: Plan | null, variant: typeof PaywallVariant.Ty
 function selectedKind(
     pick: PlanPick | null,
     plans: readonly Plan[] | null,
-    preferred: string | undefined
+    preferred: PlanKind | undefined
 ): PlanKind | null {
     if (pick !== null && pick.plans === plans) {
         return pick.kind;
@@ -61,10 +61,11 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const isPro = entitlement.kind === "pro";
     const isMirrored = isPro && entitlement.mirrored;
     const { accountId } = useAuthSession();
-    const { resume: resumeParam, trigger: triggerParam } = useLocalSearchParams<{
-        resume?: string;
-        trigger?: string;
-    }>();
+    const { trigger: triggerParam } = useLocalSearchParams<{ trigger?: string }>();
+    const [resumed] = useState(() => {
+        const handed = purchaseIntent.get();
+        return handed?.handed ? handed : null;
+    });
     const autolog = useAutologUsage(useDatabase());
     const trigger = paywallTriggerOf(triggerParam);
     const block = topBlockOf(trigger, autolog.used);
@@ -74,9 +75,10 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const plans = AsyncResult.isSuccess(loaded) ? loaded.value : null;
     const failed = AsyncResult.isFailure(loaded);
     const [pick, setPick] = useState<PlanPick | null>(null);
-    const selected = selectedKind(pick, plans, resumeParam);
+    const selected = selectedKind(pick, plans, resumed?.kind);
     const plan = plans?.find((candidate) => candidate.kind === selected) ?? null;
     const [failure, setFailure] = useState<TranslationKey | null>(null);
+    const sale = useRef(purchaseProperties(null, variant));
 
     const retry = () => {
         setAttempt((count) => count + 1);
@@ -111,16 +113,12 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         buyPlanCommand,
         {
             onFailure: () => {
-                posthog?.capture("purchase_finished", {
-                    ...purchaseProperties(plan, variant),
-                    outcome: "failed",
-                    trial: false,
-                });
+                posthog?.capture("purchase_finished", { ...sale.current, outcome: "failed", trial: false });
                 setFailure("pro.failedBody");
             },
             onSettled: () => setBusy(null),
             onSuccess: ({ mirrored, outcome, trial }) => {
-                posthog?.capture("purchase_finished", { ...purchaseProperties(plan, variant), outcome, trial });
+                posthog?.capture("purchase_finished", { ...sale.current, outcome, trial });
                 const next = purchaseNext(outcome, mirrored);
                 if (next.failure !== null) {
                     setFailure(next.failure);
@@ -156,8 +154,11 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
         confirmEntitlement(accountId);
     };
 
-    const startPurchase = (target: Plan) => {
-        posthog?.capture("purchase_started", { ...purchaseProperties(target, variant), trial_days: target.trialDays });
+    const startPurchase = (target: Plan, soldBy: typeof PaywallVariant.Type) => {
+        setBusy("buy");
+        setFailure(null);
+        sale.current = purchaseProperties(target, soldBy);
+        posthog?.capture("purchase_started", { ...sale.current, trial_days: target.trialDays });
         buyPlan({ accountId, offer: target.offer });
     };
 
@@ -166,13 +167,11 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
             return;
         }
         if (accountId === null) {
-            purchaseIntent.set({ kind: plan.kind, trigger });
-            router.push("/settings/account");
+            purchaseIntent.set({ kind: plan.kind, trigger, variant });
+            router.navigate("/settings/account");
             return;
         }
-        setBusy("buy");
-        setFailure(null);
-        startPurchase(plan);
+        startPurchase(plan, variant);
     };
 
     const restore = () => {
@@ -187,11 +186,10 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     const needsAccount = !noCloud && accountId === null;
     const pitches = !(isPro || noCloud);
     const canBuy = pitches;
-    const resuming =
-        resumeParam !== undefined && accountId !== null && entitlement.kind === "free" && !entitlement.pending;
-    const resumeTarget = resuming ? (plans?.find((candidate) => candidate.kind === resumeParam) ?? null) : null;
+    const resuming = resumed !== null && accountId !== null && entitlement.kind === "free" && !entitlement.pending;
+    const resumeTarget = resuming ? (plans?.find((candidate) => candidate.kind === resumed.kind) ?? null) : null;
     const resumeStarted = useRef(false);
-    const startResumed = useEffectEvent((target: Plan) => startPurchase(target));
+    const startResumed = useEffectEvent((target: Plan) => startPurchase(target, resumed?.variant ?? variant));
 
     // oxlint-disable-next-line outlayr/react-effect-budget -- the sign-in lands before the plans do
     useEffect(() => {
@@ -203,6 +201,12 @@ export function usePaywallFlow(variant: typeof PaywallVariant.Type) {
     }, [resumeTarget]);
 
     const reportDismissed = useEffectEvent(() => {
+        const pending = purchaseIntent.get();
+        if (pending?.handed) {
+            purchaseIntent.clear();
+        } else if (pending !== null) {
+            return;
+        }
         const saleState = saleStateOf({ failed, isPro, needsAccount, noCloud, plans });
         if (saleState !== "pro") {
             posthog?.capture("paywall_dismissed", { sale_state: saleState, trigger, variant });

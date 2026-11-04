@@ -163,7 +163,7 @@ export function Paywall() {
 
     const footer = (
         <>
-            <SaleBlockers needsAccount={needsAccount} noCloud={noCloud} />
+            <SaleBlockers empty={empty} needsAccount={needsAccount} noCloud={noCloud} />
             {canBuy ? (
                 <View className="px-5">
                     <PlanPicker
