@@ -7,4 +7,6 @@ export default Table.make(() =>
         promoEndsAt: Schema.NullOr(Schema.Number),
         userId: Schema.String,
     })
-).index("by_userId", ["userId"]);
+)
+    .index("by_userId", ["userId"])
+    .index("by_promoEndsAt", ["promoEndsAt"]);

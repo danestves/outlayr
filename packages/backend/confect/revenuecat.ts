@@ -106,20 +106,24 @@ export const grantPromotional = Effect.fn("RevenueCat.grantPromotional")(functio
     if (Option.isNone(secretKey)) {
         return yield* new RevenueCatError({ operation: "grantPromotional", reason: "unconfigured" });
     }
-    const response = yield* HttpClient.execute(
-        HttpClientRequest.post(`${subscriberUrl(appUserId)}/entitlements/${PRO_ENTITLEMENT_ID}/promotional`).pipe(
-            HttpClientRequest.bearerToken(secretKey.value),
-            HttpClientRequest.bodyJsonUnsafe({ end_time_ms: Math.round(endsAtMs) })
-        )
-    ).pipe(
+    const { subscriber } = yield* Effect.gen(function* promotionalGrant() {
+        const response = yield* HttpClient.execute(
+            HttpClientRequest.post(`${subscriberUrl(appUserId)}/entitlements/${PRO_ENTITLEMENT_ID}/promotional`).pipe(
+                HttpClientRequest.bearerToken(secretKey.value),
+                HttpClientRequest.bodyJsonUnsafe({ end_time_ms: Math.round(endsAtMs) })
+            )
+        );
+        if (!isOk(response.status)) {
+            return yield* new RevenueCatError({
+                operation: "grantPromotional",
+                reason: "status",
+                status: response.status,
+            });
+        }
+        return yield* decodeSubscriberResponse(response);
+    }).pipe(
         Effect.timeout(REVENUECAT_TIMEOUT),
-        Effect.catchTags({ HttpClientError: grantTransport, TimeoutError: grantTransport })
-    );
-    if (!isOk(response.status)) {
-        return yield* new RevenueCatError({ operation: "grantPromotional", reason: "status", status: response.status });
-    }
-    const { subscriber } = yield* decodeSubscriberResponse(response).pipe(
-        Effect.catchTags({ HttpClientError: grantTransport, SchemaError: grantTransport })
+        Effect.catchTags({ HttpClientError: grantTransport, SchemaError: grantTransport, TimeoutError: grantTransport })
     );
     return subscriber;
 });

@@ -79,6 +79,20 @@ export default GroupSpec.make()
         })
     )
     .addFunction(
+        FunctionSpec.internalQuery({
+            name: "bankedMonths",
+            args: () => ({ userId: Schema.String }),
+            returns: () => Schema.Number,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            name: "sweepGrants",
+            args: () => ({ cursor: Schema.NullOr(Schema.String) }),
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
         FunctionSpec.internalMutation({
             name: "creditBanked",
             args: () => ({ userId: Schema.String }),

@@ -7,7 +7,7 @@ export default Table.make(() =>
     Schema.Struct({
         claimedAt: Schema.Number,
         daysLogged: Schema.Number,
-        lastLoggedDay: Schema.NullOr(Schema.Number),
+        lastCountedAt: Schema.NullOr(Schema.Number),
         referredId: Schema.String,
         referredName: Schema.NullOr(Schema.String),
         referrerId: Schema.String,

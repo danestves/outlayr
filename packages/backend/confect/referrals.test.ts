@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 
+import { HOUR } from "@convex-dev/rate-limiter";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import { normalizeReferralCode } from "@outlayr/money/contract";
 import revenuecatTest from "convex-revenuecat/test";
@@ -8,11 +9,20 @@ import type { TestConvex } from "convex-test";
 import type { FunctionArgs } from "convex/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { api } from "../convex/_generated/api";
+import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { runEdge } from "./lib/runEdge";
 import { DAY_MS } from "./mcpLedger";
-import { addMonthsUtc, codeFromBytes, countDay, NEW_ACCOUNT_MS, rewardFor, stackedEnd } from "./referrals";
+import {
+    addMonthsUtc,
+    codeFromBytes,
+    countDay,
+    grantOwed,
+    ineligibility,
+    NEW_ACCOUNT_MS,
+    rewardFor,
+    stackedEnd,
+} from "./referrals";
 import { isPro } from "./revenuecat";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 import type { SeededIdentity } from "./test.helpers";
@@ -103,6 +113,7 @@ beforeEach(() => {
 afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
     vi.restoreAllMocks();
 });
 
@@ -193,7 +204,7 @@ async function onLastDay(t: TestClient, friend: SeededIdentity) {
         throw new Error("friend has no referral");
     }
     await t.run(async (ctx) => {
-        await ctx.db.patch(referral._id, { daysLogged: 2, lastLoggedDay: Math.floor(Date.now() / DAY_MS) - 1 });
+        await ctx.db.patch(referral._id, { daysLogged: 2, lastCountedAt: Date.now() - DAY_MS });
     });
 }
 
@@ -216,19 +227,30 @@ describe("month stacking", () => {
     });
 });
 
-describe("days logged", () => {
-    it("counts a new UTC day once and ignores a clock that went backwards", () => {
-        const today = Math.floor(START / DAY_MS);
+describe("granting a reserved month", () => {
+    it("owes a grant unless Pro already runs to the month's end", () => {
+        const endsAt = START + 30 * DAY_MS;
 
-        expect(countDay({ daysLogged: 0, lastLoggedDay: null }, START)).toStrictEqual({
-            daysLogged: 1,
-            lastLoggedDay: today,
-        });
-        expect(countDay({ daysLogged: 1, lastLoggedDay: today }, START + 60_000)).toBeNull();
-        expect(countDay({ daysLogged: 1, lastLoggedDay: today }, START - DAY_MS)).toBeNull();
-        expect(countDay({ daysLogged: 1, lastLoggedDay: today }, START + DAY_MS)).toStrictEqual({
+        expect(grantOwed(null, endsAt)).toBeTruthy();
+        expect(grantOwed({ expiresAtMs: endsAt - 3 * HOUR }, endsAt)).toBeTruthy();
+        expect(grantOwed({ expiresAtMs: endsAt }, endsAt)).toBeFalsy();
+        expect(grantOwed({ expiresAtMs: endsAt + DAY_MS }, endsAt)).toBeFalsy();
+        expect(grantOwed({}, endsAt)).toBeFalsy();
+    });
+});
+
+describe("days logged", () => {
+    it("counts a new UTC day only 20 hours after the last one, and ignores a clock that went backwards", () => {
+        const lateNight = Date.UTC(2026, 10, 3, 23);
+        const counted = { daysLogged: 1, lastCountedAt: lateNight };
+
+        expect(countDay({ daysLogged: 0, lastCountedAt: null }, lateNight)).toStrictEqual(counted);
+        expect(countDay(counted, lateNight + 60_000)).toBeNull();
+        expect(countDay(counted, lateNight + 2 * HOUR)).toBeNull();
+        expect(countDay(counted, lateNight - DAY_MS)).toBeNull();
+        expect(countDay(counted, lateNight + 20 * HOUR)).toStrictEqual({
             daysLogged: 2,
-            lastLoggedDay: today + 1,
+            lastCountedAt: lateNight + 20 * HOUR,
         });
     });
 
@@ -292,6 +314,13 @@ describe("redeeming an invite", () => {
         expect(rc.grants.map(({ userId }) => userId)).toStrictEqual([friend.userId]);
     });
 
+    it("stops counting an account as new the moment it turns seven days old", () => {
+        const claimant = { alreadyRedeemed: false, hadPro: false, now: START };
+
+        expect(ineligibility({ ...claimant, accountCreatedAt: START - NEW_ACCOUNT_MS })).toBe("notNew");
+        expect(ineligibility({ ...claimant, accountCreatedAt: START - NEW_ACCOUNT_MS + 1 })).toBeNull();
+    });
+
     it("rate-limits guesses, wrong codes included", async () => {
         const t = harness();
         const { code } = await inviterWithCode(t);
@@ -335,7 +364,7 @@ describe("the yearly cap", () => {
                 await ctx.db.insert("referrals", {
                     claimedAt: at,
                     daysLogged: 3,
-                    lastLoggedDay: null,
+                    lastCountedAt: at,
                     referredId: `earlier-${index}`,
                     referredName: null,
                     referrerId: inviter.userId,
@@ -432,5 +461,89 @@ describe("granting through RevenueCat", () => {
 
         const claimedAt = (await referralOf(t, friend))?.claimedAt ?? 0;
         expect(rc.grants).toStrictEqual([{ endsAt: addMonthsUtc(claimedAt, 1), userId: friend.userId }]);
+    });
+
+    it("resends a grant the retries gave up on with the daily sweep, and never sends one twice", async () => {
+        const t = harness();
+        const { code } = await inviterWithCode(t);
+        const outageEnds = new Map<string, number>();
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+                const request = new Request(input, init);
+                const userId = decodeURIComponent(SUBSCRIBER_PATH.exec(new URL(request.url).pathname)?.[1] ?? "");
+                return request.method === "POST" && Date.now() < (outageEnds.get(userId) ?? 0)
+                    ? new Response("{}", { status: 503 })
+                    : rc.respond(input, init);
+            })
+        );
+        const recovers = await seedAuthUser(t);
+        const stranded = await seedAuthUser(t);
+        outageEnds.set(recovers.userId, START + 20 * HOUR);
+        outageEnds.set(stranded.userId, Number.POSITIVE_INFINITY);
+        await expect(redeem(t, recovers, code)).resolves.toBe("claimed");
+        await expect(redeem(t, stranded, code)).resolves.toBe("claimed");
+        await t.finishAllScheduledFunctions(vi.runAllTimers);
+        expect(rc.grants).toStrictEqual([]);
+
+        for (const day of [1, 2]) {
+            vi.setSystemTime(START + day * DAY_MS);
+            await t.mutation(internal.referrals.sweepGrants, { cursor: null });
+            await t.finishAllScheduledFunctions(vi.runAllTimers);
+        }
+
+        const claimedAt = (await referralOf(t, recovers))?.claimedAt ?? 0;
+        expect(rc.grants).toStrictEqual([{ endsAt: addMonthsUtc(claimedAt, 1), userId: recovers.userId }]);
+    });
+
+    it("gives up on a grant whose answer stalls, so the retry can send it again", async () => {
+        const t = harness();
+        const { code } = await inviterWithCode(t);
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(async (input: RequestInfo | URL, init?: RequestInit) =>
+                new Request(input, init).method === "POST"
+                    ? new Response(new ReadableStream(), { status: 201 })
+                    : rc.respond(input, init)
+            )
+        );
+        const friend = await seedAuthUser(t);
+
+        const claiming = redeem(t, friend, code);
+        await vi.advanceTimersByTimeAsync(30_000);
+
+        await expect(claiming).resolves.toBe("claimed");
+    });
+
+    it("leaves RevenueCat alone when no banked month is left, as after the account is deleted", async () => {
+        const t = harness();
+        const gone = await seedAuthUser(t);
+
+        await t.action(internal.referrals.releaseBanked, { userId: gone.userId });
+
+        expect(vi.mocked(fetch)).not.toHaveBeenCalled();
+    });
+
+    it("holds a banked month until RevenueCat is set up, rather than spending it on a grant that cannot go out", async () => {
+        vi.stubEnv("REVENUECAT_SECRET_KEY", "");
+        const t = harness();
+        const owner = await seedAuthUser(t);
+        await t.run(async (ctx) => {
+            await ctx.db.insert("referralRewards", { bankedMonths: 1, promoEndsAt: null, userId: owner.userId });
+        });
+
+        await t.action(internal.referrals.releaseBanked, { userId: owner.userId });
+
+        await expect(rewardsOf(t, owner)).resolves.toMatchObject({ bankedMonths: 1, promoEndsAt: null });
+    });
+
+    it("keeps the friend's one invite when RevenueCat is not set up", async () => {
+        vi.stubEnv("REVENUECAT_SECRET_KEY", "");
+        const t = harness();
+        const { code } = await inviterWithCode(t);
+        const friend = await seedAuthUser(t);
+
+        await expect(redeem(t, friend, code)).resolves.toBe("unavailable");
+        await expect(referralOf(t, friend)).resolves.toBeNull();
     });
 });

@@ -165,26 +165,30 @@ describe("purging an account", () => {
         expect(leftovers.objects).toStrictEqual([]);
     });
 
-    it("forgets the account's invite code, the friends it invited, its own invite and its banked months", async () => {
+    it("forgets the account's invite code, the friends it invited, its banked months and its name on an invite", async () => {
         const t = harness();
         const owner = await seedProUser(t);
+        const quitter = await seedProUser(t);
         const referral = {
             claimedAt: 1,
             daysLogged: 0,
-            lastLoggedDay: null,
+            lastCountedAt: null,
             referredName: "Mariana",
             rewardedAt: null,
             status: "counting" as const,
         };
-        await t.run(async (ctx) => {
+        const earned = { ...referral, daysLogged: 3, lastCountedAt: 2, rewardedAt: 2, status: "rewarded" as const };
+        const ownInvite = await t.run(async (ctx) => {
             await ctx.db.insert("referralCodes", { code: "7Q4KM9TX", userId: owner.userId });
             await ctx.db.insert("referralRewards", { bankedMonths: 1, promoEndsAt: null, userId: owner.userId });
             await ctx.db.insert("referrals", { ...referral, referredId: "friend", referrerId: owner.userId });
-            await ctx.db.insert("referrals", { ...referral, referredId: owner.userId, referrerId: "someone" });
+            await ctx.db.insert("referrals", { ...referral, referredId: quitter.userId, referrerId: "someone" });
             await ctx.db.insert("referrals", { ...referral, referredId: "bystander", referrerId: "someone" });
+            return await ctx.db.insert("referrals", { ...earned, referredId: owner.userId, referrerId: "someone" });
         });
 
         await purgeAll(t, owner.userId);
+        await purgeAll(t, quitter.userId);
 
         const left = await t.run(async (ctx) => ({
             codes: await ctx.db.query("referralCodes").collect(),
@@ -193,7 +197,10 @@ describe("purging an account", () => {
         }));
         expect(left.codes).toStrictEqual([]);
         expect(left.rewards).toStrictEqual([]);
-        expect(left.referrals.map(({ referredId }) => referredId)).toStrictEqual(["bystander"]);
+        expect(left.referrals).toMatchObject([
+            { referredId: "bystander", referredName: "Mariana" },
+            { referredId: `deleted:${ownInvite}`, referredName: null, referrerId: "someone", rewardedAt: 2 },
+        ]);
     });
 
     it("is safe to run again on an account already purged", async () => {

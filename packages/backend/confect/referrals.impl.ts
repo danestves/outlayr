@@ -5,7 +5,6 @@ import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Option from "effect/Option";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -21,13 +20,13 @@ import {
 } from "./_generated/services";
 import { optionalUserId, requireUserId } from "./lib/auth";
 import { authComponent } from "./lib/betterAuth";
-import { revenueCatSecretKey } from "./lib/config";
 import { dieAsConvexError } from "./lib/convexError";
 import { outboundHttp } from "./lib/http";
 import {
     creditMonths,
     firstName,
     GRANT_RETRY_MINUTES,
+    grantOwed,
     grantWorthRetrying,
     ineligibility,
     mirroredPro,
@@ -45,7 +44,7 @@ import type { RevenueCatError } from "./revenuecat";
 const FRIENDS_LIMIT = 100;
 const GRANT_SAFETY_NET = Duration.minutes(1);
 const STORE_RETRY = Duration.hours(1);
-const SAME_GRANT = Duration.hours(2);
+const SWEEP_PAGE = 100;
 
 const codeOwner = Effect.fn("Referrals.codeOwner")(function* codeOwner(code: string) {
     const reader = yield* DatabaseReader;
@@ -176,7 +175,7 @@ const claim = FunctionImpl.make(
         yield* (yield* DatabaseWriter).table("referrals").insert({
             claimedAt: now,
             daysLogged: 0,
-            lastLoggedDay: null,
+            lastCountedAt: null,
             referredId: userId,
             referredName: firstName(user?.name),
             referrerId: owner.userId,
@@ -203,13 +202,7 @@ const promoEnd = FunctionImpl.make(
         if (endsAt === null) {
             return null;
         }
-        const ctx = yield* QueryCtx;
-        const active = yield* Effect.promise(() =>
-            revenuecat.getEntitlement(ctx, { appUserId: userId, entitlementId: PRO_ENTITLEMENT_ID })
-        );
-        const alreadyGranted =
-            active?.store === "PROMOTIONAL" && (active.expiresAtMs ?? 0) >= endsAt - Duration.toMillis(SAME_GRANT);
-        return alreadyGranted ? null : endsAt;
+        return grantOwed(yield* mirroredPro(yield* QueryCtx, userId), endsAt) ? endsAt : null;
     }, Effect.orDie)
 );
 
@@ -218,9 +211,13 @@ const retryGrant = Effect.fn("Referrals.retryGrant")(function* retryGrant(
     attempt: number,
     error: RevenueCatError
 ) {
+    if (!grantWorthRetrying(error)) {
+        yield* Console.error("[referrals] promotional grant refused", error);
+        return null;
+    }
     yield* Console.warn("[referrals] promotional grant failed", error);
     const minutes = GRANT_RETRY_MINUTES[attempt];
-    if (!grantWorthRetrying(error) || minutes === undefined) {
+    if (minutes === undefined) {
         return null;
     }
     const scheduler = yield* Scheduler;
@@ -276,15 +273,14 @@ const redeem = FunctionImpl.make(
         if (code === null) {
             return "invalid" as const;
         }
-        const configured = Option.isSome(yield* revenueCatSecretKey);
-        const subscriber = configured ? yield* storeSubscriber(userId).pipe(Effect.provide(outboundHttp)) : null;
-        if (configured && subscriber === null) {
+        const subscriber = yield* storeSubscriber(userId).pipe(Effect.provide(outboundHttp));
+        if (subscriber === null) {
             return "unavailable" as const;
         }
         const { runMutation } = yield* MutationRunner;
         const status = yield* runMutation(refs.internal.referrals.claim, {
             code,
-            hadPro: subscriber !== null && listsPro(subscriber),
+            hadPro: listsPro(subscriber),
             userId,
         });
         if (status === "claimed") {
@@ -301,21 +297,62 @@ const releaseBanked = FunctionImpl.make(
     spec,
     "releaseBanked",
     Effect.fn("Referrals.releaseBanked")(function* releaseBanked({ userId }) {
-        const configured = Option.isSome(yield* revenueCatSecretKey);
-        const subscriber = configured ? yield* storeSubscriber(userId).pipe(Effect.provide(outboundHttp)) : null;
-        if (configured && subscriber === null) {
+        const { runQuery } = yield* QueryRunner;
+        if ((yield* runQuery(refs.internal.referrals.bankedMonths, { userId })) === 0) {
+            return null;
+        }
+        const subscriber = yield* storeSubscriber(userId).pipe(Effect.provide(outboundHttp));
+        if (subscriber === null) {
             const scheduler = yield* Scheduler;
             yield* scheduler.runAfter(STORE_RETRY, refs.internal.referrals.releaseBanked, { userId });
             return null;
         }
         const { runMutation } = yield* MutationRunner;
-        if (subscriber !== null) {
-            yield* runMutation(refs.internal.revenuecat.mirrorSubscriber, {
-                appUserId: userId,
-                subscriber: JSON.stringify(subscriber),
+        yield* runMutation(refs.internal.revenuecat.mirrorSubscriber, {
+            appUserId: userId,
+            subscriber: JSON.stringify(subscriber),
+        });
+        yield* runMutation(refs.internal.referrals.creditBanked, { userId });
+        return null;
+    }, Effect.orDie)
+);
+
+const bankedMonths = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "bankedMonths",
+    Effect.fn("Referrals.bankedMonths")(function* bankedMonths({ userId }) {
+        const reader = yield* DatabaseReader;
+        const row = yield* reader
+            .table("referralRewards")
+            .get("by_userId", userId)
+            .pipe(Effect.catchTags(nullOnMissing));
+        return row?.bankedMonths ?? 0;
+    }, Effect.orDie)
+);
+
+const sweepGrants = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "sweepGrants",
+    Effect.fn("Referrals.sweepGrants")(function* sweepGrants({ cursor }) {
+        const ctx = yield* MutationCtx;
+        const now = yield* Clock.currentTimeMillis;
+        const page = yield* (yield* DatabaseReader)
+            .table("referralRewards")
+            .index("by_promoEndsAt", (q) => q.gt("promoEndsAt", now))
+            .paginate({ cursor, numItems: SWEEP_PAGE });
+        for (const row of page.page) {
+            if (row.promoEndsAt !== null && grantOwed(yield* mirroredPro(ctx, row.userId), row.promoEndsAt)) {
+                yield* scheduleGrant(row.userId);
+            }
+        }
+        if (!page.isDone) {
+            const scheduler = yield* Scheduler;
+            yield* scheduler.runAfter(Duration.zero, refs.internal.referrals.sweepGrants, {
+                cursor: page.continueCursor,
             });
         }
-        yield* runMutation(refs.internal.referrals.creditBanked, { userId });
         return null;
     }, Effect.orDie)
 );
@@ -350,6 +387,8 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(grant),
     Layer.provide(redeem),
     Layer.provide(releaseBanked),
+    Layer.provide(bankedMonths),
+    Layer.provide(sweepGrants),
     Layer.provide(creditBanked),
     GroupImpl.finalize
 );

@@ -79,7 +79,7 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
         return { done: false, removed: invites.length };
     }
 
-    const referralRows = yield* Effect.promise(() =>
+    const [asFriend, ...owned] = yield* Effect.promise(() =>
         Promise.all([
             ctx.db
                 .query("referrals")
@@ -95,7 +95,13 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
                 .unique(),
         ])
     );
-    const referralDocs = referralRows.filter((row) => row !== null);
+    const countsTowardCap = asFriend !== null && asFriend.rewardedAt !== null;
+    if (countsTowardCap) {
+        yield* Effect.promise(() =>
+            ctx.db.patch(asFriend._id, { referredId: `deleted:${asFriend._id}`, referredName: null })
+        );
+    }
+    const referralDocs = [...owned, countsTowardCap ? null : asFriend].filter((row) => row !== null);
     yield* Effect.all(
         referralDocs.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
         { concurrency: "unbounded", discard: true }

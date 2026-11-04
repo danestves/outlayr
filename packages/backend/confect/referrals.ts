@@ -66,6 +66,12 @@ export function stackedEnd(now: number, currentEnd: number | null, months: numbe
     return addMonthsUtc(Math.max(now, currentEnd ?? now), months);
 }
 
+const SAME_GRANT_MS = 2 * HOUR;
+
+export function grantOwed(active: { readonly expiresAtMs?: number } | null, endsAt: number) {
+    return active === null || (active.expiresAtMs !== undefined && active.expiresAtMs < endsAt - SAME_GRANT_MS);
+}
+
 export type Reward = "bank" | "grant" | "none";
 
 export function rewardFor(active: { readonly expiresAtMs?: number; readonly store?: string } | null): Reward {
@@ -78,15 +84,17 @@ export function rewardFor(active: { readonly expiresAtMs?: number; readonly stor
     return active.store === "PROMOTIONAL" ? "grant" : "bank";
 }
 
+const MIN_GAP_BETWEEN_DAYS = 20 * HOUR;
+
 export function countDay(
-    referral: Pick<Referral, "daysLogged" | "lastLoggedDay">,
+    referral: Pick<Referral, "daysLogged" | "lastCountedAt">,
     now: number
-): Pick<Referral, "daysLogged" | "lastLoggedDay"> | null {
-    const day = Math.floor(now / DAY_MS);
-    if (referral.lastLoggedDay !== null && day <= referral.lastLoggedDay) {
+): Pick<Referral, "daysLogged" | "lastCountedAt"> | null {
+    const last = referral.lastCountedAt;
+    if (last !== null && (Math.floor(now / DAY_MS) <= Math.floor(last / DAY_MS) || now - last < MIN_GAP_BETWEEN_DAYS)) {
         return null;
     }
-    return { daysLogged: referral.daysLogged + 1, lastLoggedDay: day };
+    return { daysLogged: referral.daysLogged + 1, lastCountedAt: now };
 }
 
 export function yearStart(now: number): number {
@@ -112,7 +120,7 @@ export function ineligibility(claimant: Omit<Claimant, "referrerId" | "userId">)
     if (claimant.alreadyRedeemed) {
         return "used";
     }
-    if (claimant.accountCreatedAt === null || claimant.now - claimant.accountCreatedAt > NEW_ACCOUNT_MS) {
+    if (claimant.accountCreatedAt === null || claimant.now - claimant.accountCreatedAt >= NEW_ACCOUNT_MS) {
         return "notNew";
     }
     return claimant.hadPro ? "hadPro" : null;
