@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import Animated, {
     Easing,
     useAnimatedReaction,
@@ -9,6 +9,8 @@ import Animated, {
     withDelay,
     withTiming,
 } from "react-native-reanimated";
+
+import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 
 import { MonoLabel } from "./mono-label";
 import { Text } from "./text";
@@ -118,6 +120,18 @@ function StageObject({ children, cover }: { children: ReactNode; cover: boolean 
     return <Animated.View style={style}>{children}</Animated.View>;
 }
 
+const FRAME = "bg-fr-ground pt-safe-offset-14 android:pt-safe-offset-19 pb-safe-offset-5 px-6";
+
+function Frame({ children, scrolls }: { children: ReactNode; scrolls: boolean }) {
+    return scrolls ? (
+        <ScrollView className="bg-fr-ground flex-1" contentContainerClassName={`${FRAME} grow`}>
+            {children}
+        </ScrollView>
+    ) : (
+        <View className={`${FRAME} flex-1`}>{children}</View>
+    );
+}
+
 interface FirstRunAction {
     disabled?: boolean;
     label: string;
@@ -159,11 +173,12 @@ export function FirstRun({
     const timing = cover ? ENTRANCE.cover : ENTRANCE.step;
     const textStyle = useRise(object !== undefined, timing.text);
     const dockStyle = useRise(object !== undefined, timing.dock, 0);
+    const largeText = useAccessibilityTextSize();
 
     return (
         // One top offset for every screen: the steps carry a transparent OS header (44pt, 64dp on Android), and the
         // cover and the gate match it so the stage does not jump between them.
-        <View className="bg-fr-ground pt-safe-offset-14 android:pt-safe-offset-19 pb-safe-offset-5 flex-1 px-6">
+        <Frame scrolls={largeText}>
             {object === undefined ? (
                 <>
                     <View className="gap-2">
@@ -232,6 +247,6 @@ export function FirstRun({
                     ) : null}
                 </View>
             )}
-        </View>
+        </Frame>
     );
 }

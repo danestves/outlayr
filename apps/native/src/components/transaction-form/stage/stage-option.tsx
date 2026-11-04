@@ -65,6 +65,7 @@ export function StageOption({
             accessibilityLabel={accessibilityLabel ?? label}
             accessibilityRole="button"
             accessibilityState={{ selected }}
+            className="max-w-full"
             hitSlop={HIT_SLOP}
             onPress={onPress}
         >
@@ -73,7 +74,7 @@ export function StageOption({
                 style={fill}
             >
                 {leading}
-                <Text className="text-foreground text-subtitle">{label}</Text>
+                <Text className="text-foreground text-subtitle shrink">{label}</Text>
                 {trailing}
             </Animated.View>
         </Pressable>
