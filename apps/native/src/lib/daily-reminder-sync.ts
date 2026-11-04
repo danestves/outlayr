@@ -76,8 +76,8 @@ export const make = Effect.gen(function* make() {
 
         // Arms once an in-app create lands on the Log, so the OS prompt never shows over onboarding or sign-in.
         const arms = signals(freshEntries.subscribe).pipe(
-            Stream.filter(() => !freshEntries.arriving()),
             Stream.debounce(RESYNC_DEBOUNCE),
+            Stream.filter(() => !freshEntries.arriving()),
             Stream.runForEach(() => attempt("arm"))
         );
 

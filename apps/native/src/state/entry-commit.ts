@@ -230,7 +230,7 @@ export const commitEntry = Effect.fn("EntryCommit.commit")(function* commitEntry
     const { db, draft } = commit;
     const mode = commit.initial === undefined ? "create" : "edit";
     if (mode === "create") {
-        freshEntries.mark(id);
+        freshEntries.mark(id, draft.date);
     }
     posthog?.capture("transaction_saved", {
         has_split: (commit.splits?.allocations.length ?? 0) > 0,

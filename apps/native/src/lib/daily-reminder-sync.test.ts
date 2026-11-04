@@ -92,6 +92,7 @@ describe("daily reminder sync", () => {
     afterEach(() => {
         registry.dispose();
         freshEntries.settle("t1");
+        freshEntries.settle("t2");
         vi.useRealTimers();
     });
 
@@ -115,11 +116,26 @@ describe("daily reminder sync", () => {
         expect(syncs).toHaveBeenCalledTimes(2);
         expect(arms).not.toHaveBeenCalled();
 
-        freshEntries.mark("t1");
+        freshEntries.mark("t1", new Date());
         await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
         expect(arms).not.toHaveBeenCalled();
 
         freshEntries.settle("t1");
+        await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
+        expect(arms).toHaveBeenCalledOnce();
+    });
+
+    it("waits for an entry saved while the previous one's arm is still debouncing", async () => {
+        await start();
+
+        freshEntries.mark("t1", new Date());
+        freshEntries.settle("t1");
+        await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS / 2);
+        freshEntries.mark("t2", new Date());
+        await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
+        expect(arms).not.toHaveBeenCalled();
+
+        freshEntries.settle("t2");
         await vi.advanceTimersByTimeAsync(PUBLISH_DEBOUNCE_MS);
         expect(arms).toHaveBeenCalledOnce();
     });

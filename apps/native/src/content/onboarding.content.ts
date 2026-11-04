@@ -128,6 +128,12 @@ const onboarding = {
             fr: "Première ligne",
             pt: "Primeira linha",
         }),
+        "onboarding.firstEntry.finishFailed": t({
+            en: "Setup didn't finish. Try again.",
+            es: "La configuración no terminó. Inténtalo de nuevo.",
+            fr: "La configuration n'a pas abouti. Réessayez.",
+            pt: "A configuração não terminou. Tente de novo.",
+        }),
         "onboarding.firstEntry.later": t({
             en: "Later",
             es: "Más tarde",

@@ -15,6 +15,7 @@ import { useNow } from "@/data/use-now";
 import { firstEntryCategory } from "@/domain/first-entry-category";
 import { formatAmount, minorUnitsFor, roundToMinorUnits } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
+import type { TranslationKey } from "@/i18n/catalog";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
@@ -23,6 +24,11 @@ import { finishOnboardingCommand } from "@/state/lifecycle-commands";
 import { saveFirstEntryCommand } from "@/state/onboarding-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
+
+const FAILURE_COPY = {
+    finish: "onboarding.firstEntry.finishFailed",
+    save: "transaction.save.failedBody",
+} as const satisfies Record<string, TranslationKey>;
 
 export function OnboardingFirstEntry() {
     const db = useDatabase();
@@ -38,15 +44,24 @@ export function OnboardingFirstEntry() {
     const [step, setStep] = useState<"amount" | "category">("amount");
     const [saving, setSaving] = useState(false);
     const [saved, setSaved] = useState(false);
-    const [failed, setFailed] = useState(false);
+    const [failed, setFailed] = useState<keyof typeof FAILURE_COPY | null>(null);
 
     const picked = categories.flatMap((parent) => [parent, ...parent.children]).find((row) => row.id === pickedId);
     const category = picked ?? firstEntryCategory(categories, new Date(nowMs).getHours());
     const figure = numpadToNumber(amount);
 
-    const finishOnboarding = useAtomAction(
+    const finishFailed = (cause: Cause.Cause<unknown>) => {
+        console.error("Finishing onboarding failed", Cause.squash(cause));
+        haptics("error");
+        setFailed("finish");
+    };
+    const finishOnboarding = useAtomAction(finishOnboardingCommand, { onFailure: finishFailed }, SILENT);
+    const skipOnboarding = useAtomAction(
         finishOnboardingCommand,
-        { onFailure: (cause) => console.error("Finishing onboarding failed", Cause.squash(cause)) },
+        {
+            onFailure: finishFailed,
+            onSuccess: () => posthog?.capture("onboarding_first_entry", { outcome: "skipped" }),
+        },
         SILENT
     );
     const saveFirstEntry = useAtomAction(
@@ -55,12 +70,12 @@ export function OnboardingFirstEntry() {
             onFailure: (cause) => {
                 console.error("Saving the first entry failed", Cause.squash(cause));
                 haptics("error");
-                setFailed(true);
+                setFailed("save");
             },
             onSettled: () => setSaving(false),
             onSuccess: (written) => {
                 haptics(written ? "success" : "error");
-                setFailed(!written);
+                setFailed(written ? null : "save");
                 setSaved(written);
                 if (written) {
                     finishOnboarding(db);
@@ -75,7 +90,7 @@ export function OnboardingFirstEntry() {
             return;
         }
         setSaving(true);
-        setFailed(false);
+        setFailed(null);
         saveFirstEntry({
             db,
             draft: {
@@ -95,10 +110,8 @@ export function OnboardingFirstEntry() {
         if (saving) {
             return;
         }
-        if (!saved) {
-            posthog?.capture("onboarding_first_entry", { outcome: "skipped" });
-        }
-        finishOnboarding(db);
+        setFailed(null);
+        (saved ? finishOnboarding : skipOnboarding)(db);
     };
 
     return (
@@ -108,7 +121,7 @@ export function OnboardingFirstEntry() {
                 label: t("common.save"),
                 onPress: save,
             }}
-            error={failed ? t("transaction.save.failedBody") : null}
+            error={failed === null ? null : t(FAILURE_COPY[failed])}
             eyebrow={t("onboarding.firstEntry.eyebrow")}
             skip={{ label: t("onboarding.firstEntry.later"), onPress: later }}
             title={t("onboarding.firstEntry.title")}
