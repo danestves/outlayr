@@ -166,6 +166,8 @@ const home = {
         faqTitle: t({ en: "Questions, answered", es: "Preguntas y respuestas" }),
         hero: {
             title: t({ en: "Track every expense in one sentence", es: "Registra cada gasto en una oración" }),
+            tryLabel: t({ en: "Try it live", es: "Pruébalo en vivo" }),
+            tryPlaceholder: t({ en: "blue bottle 4.50", es: "juan valdez 4,50" }),
             videoLabel: t({
                 en: "Logging a $42.00 grocery purchase at Costco in Outlayr, from the add menu to the Log.",
                 es: "Cómo se registra en Outlayr una compra de súper de $42.00 en Costco, desde el menú para agregar hasta el Registro.",
