@@ -53,6 +53,22 @@ const referrals = {
             pt: "Entre para resgatar",
             "pt-PT": "Inicie sessão para resgatar",
         }),
+        "referrals.claim.shared": t({
+            en: "{name} sees your first name and when you've logged {days} days.",
+            es: "{name} ve tu primer nombre y cuándo registraste {days} días.",
+            "es-ES": "{name} ve tu nombre y cuándo has registrado {days} días.",
+            fr: "{name} voit votre prénom et quand vous avez saisi {days} jours.",
+            pt: "{name} vê seu primeiro nome e quando você registrou {days} dias.",
+            "pt-PT": "{name} vê o seu primeiro nome e quando registou {days} dias.",
+        }),
+        "referrals.claim.sharedFriend": t({
+            en: "Your friend sees your first name and when you've logged {days} days.",
+            es: "Tu amigo ve tu primer nombre y cuándo registraste {days} días.",
+            "es-ES": "Tu amigo ve tu nombre y cuándo has registrado {days} días.",
+            fr: "Votre ami voit votre prénom et quand vous avez saisi {days} jours.",
+            pt: "Seu amigo vê seu primeiro nome e quando você registrou {days} dias.",
+            "pt-PT": "O seu amigo vê o seu primeiro nome e quando registou {days} dias.",
+        }),
         "referrals.claim.startsAtSignIn": t({
             en: "Starts when you sign in. Nothing renews.",
             es: "Empieza cuando inicias sesión. No se renueva.",

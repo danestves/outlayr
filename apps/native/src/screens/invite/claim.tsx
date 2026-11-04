@@ -1,9 +1,9 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import GiftIcon from "@hugeicons-pro/core-stroke-rounded/GiftIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { formatReferralCode, normalizeReferralCode } from "@outlayr/money/contract";
+import { formatReferralCode, normalizeReferralCode, REFERRAL_DAYS_TO_EARN } from "@outlayr/money/contract";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -86,7 +86,7 @@ function Invite({ code }: { code: string }) {
     }
     const name = known?.name ?? null;
     return (
-        <Layout footer={<ClaimActions code={code} />}>
+        <Layout footer={<ClaimActions code={code} name={name} />}>
             <Text accessibilityRole="header" className="text-foreground font-sans-bold text-[34px] leading-[41px]">
                 {name ? t("referrals.claim.title", { name }) : t("referrals.claim.titleFriend")}
             </Text>
@@ -110,7 +110,7 @@ function Invite({ code }: { code: string }) {
     );
 }
 
-function ClaimActions({ code }: { code: string }) {
+function ClaimActions({ code, name }: { code: string; name: string | null }) {
     const t = useTranslation();
     const router = useRouter();
     const leave = useLeave();
@@ -137,13 +137,25 @@ function ClaimActions({ code }: { code: string }) {
         SILENT
     );
     const signedIn = accountId !== null;
+    useFocusEffect(() => {
+        if (!signedIn) {
+            cancelPendingClaim();
+        }
+    });
 
     return (
         <>
             <InlineFailure message={refusal === null ? null : t(REFUSAL_COPY[refusal])} />
-            <Text className="text-muted text-subtitle pb-3 text-center">
-                {signedIn ? t("referrals.claim.startsNow") : t("referrals.claim.startsAtSignIn")}
-            </Text>
+            <View className="gap-1 pb-3">
+                <Text className="text-muted text-subtitle text-center">
+                    {signedIn ? t("referrals.claim.startsNow") : t("referrals.claim.startsAtSignIn")}
+                </Text>
+                <Text className="text-muted text-caption text-center">
+                    {name
+                        ? t("referrals.claim.shared", { days: REFERRAL_DAYS_TO_EARN, name })
+                        : t("referrals.claim.sharedFriend", { days: REFERRAL_DAYS_TO_EARN })}
+                </Text>
+            </View>
             <StepCta
                 busy={busy}
                 busyLabel={t("referrals.claim.claiming")}
