@@ -30,7 +30,7 @@ export const REFUSAL_COPY = {
     own: "referrals.refusal.own",
     rateLimited: "referrals.refusal.rateLimited",
     signedOut: "referrals.refusal.offline",
-    unavailable: "referrals.refusal.offline",
+    unavailable: "referrals.refusal.unavailable",
     used: "referrals.refusal.used",
 } as const satisfies Record<Exclude<ClaimOutcome, "claimed">, TranslationKey>;
 
@@ -75,6 +75,22 @@ export function cancelPendingClaim(): void {
     stopWaiting = null;
 }
 
+function claimInBackground(code: string): void {
+    fireAtomCommand(appAtomRegistry, claimInviteCommand, code, {
+        onSuccess: (outcome) => {
+            if (outcome === "offline" || outcome === "signedOut" || outcome === "unavailable") {
+                notifyFailure({
+                    actionLabel: translateNow("common.retry"),
+                    onActionPress: () => claimInBackground(code),
+                    title: translateNow(REFUSAL_COPY[outcome]),
+                });
+                return;
+            }
+            announceClaim(outcome);
+        },
+    });
+}
+
 export function claimOnceSignedIn(code: string): void {
     cancelPendingClaim();
     const unsubscribe = subscribeCloudAuthenticated(() => {
@@ -83,7 +99,7 @@ export function claimOnceSignedIn(code: string): void {
         }
         unsubscribe();
         stopWaiting = null;
-        fireAtomCommand(appAtomRegistry, claimInviteCommand, code, { onSuccess: announceClaim });
+        claimInBackground(code);
     });
     stopWaiting = unsubscribe;
 }

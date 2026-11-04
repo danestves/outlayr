@@ -313,6 +313,13 @@ const referrals = {
             pt: "Muitas tentativas. Tente de novo em uma hora.",
             "pt-PT": "Demasiadas tentativas. Tente novamente dentro de uma hora.",
         }),
+        "referrals.refusal.unavailable": t({
+            en: "Couldn't check your subscription. Try again in a few minutes.",
+            es: "No pudimos revisar tu suscripción. Inténtalo de nuevo en unos minutos.",
+            fr: "Impossible de vérifier votre abonnement. Réessayez dans quelques minutes.",
+            pt: "Não foi possível verificar sua assinatura. Tente de novo em alguns minutos.",
+            "pt-PT": "Não foi possível verificar a sua subscrição. Tente novamente dentro de alguns minutos.",
+        }),
         "referrals.refusal.used": t({
             en: "You've already used an invite.",
             es: "Ya usaste una invitación.",
