@@ -1,4 +1,4 @@
-export type LocalLedger = "empty" | "first-entry" | "populated";
+export type LocalLedger = "empty" | "populated";
 
 // Its own value so no call site mistakes a build with no sync engine for `empty` and wipes a ledger over it.
 export type RemoteLedger = "empty" | "populated" | "unknown";
@@ -22,9 +22,6 @@ export function adoptionPlan(local: LocalLedger, remote: RemoteLedger): Adoption
     }
     if (local === "empty") {
         return remote === "empty" ? "fresh" : "replace";
-    }
-    if (local === "first-entry") {
-        return "adopt";
     }
     return remote === "empty" ? "adopt" : "ask";
 }

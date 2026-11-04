@@ -21,7 +21,6 @@ export const META_KEYS = {
     currencyChosen: "currencyChosen",
     enrichmentOutbox: "enrichmentOutbox",
     favouriteCurrencies: "favouriteCurrencies",
-    firstEntryId: "firstEntryId",
     firstLaunch: "firstLaunch",
     lastTransactionAccount: "lastTransactionAccount",
     lastTransferFeeCategory: "lastTransferFeeCategory",

@@ -54,24 +54,12 @@ export interface AdoptionEngine {
 // uncertainty resolves toward `populated`: wrong that way asks a question, wrong the other way destroys a ledger.
 export const localLedgerState = Effect.fn("LedgerAdoption.localLedgerState")(function* localLedgerState(db: Database) {
     const moneyTables = [transactions, budgets, mainBudget, accounts, transfers];
-    const [transactionTotal = 0, ...otherTotals] = yield* Effect.all(
-        moneyTables.map((table) =>
-            query(() => db.select({ total: count() }).from(table)).pipe(Effect.map((rows) => rows[0]?.total ?? 0))
-        ),
+    const moneyCounts = yield* Effect.all(
+        moneyTables.map((table) => query(() => db.select({ total: count() }).from(table))),
         { concurrency: "unbounded" }
     );
-    if (transactionTotal > 1 || otherTotals.some((total) => total > 0)) {
+    if (moneyCounts.some((rows) => (rows[0]?.total ?? 0) > 0)) {
         return "populated";
-    }
-    const onlyFirstEntry = transactionTotal === 1;
-    if (onlyFirstEntry) {
-        const [firstEntryId, [row]] = yield* Effect.all(
-            [getMeta(db, META_KEYS.firstEntryId), query(() => db.select({ id: transactions.id }).from(transactions))],
-            { concurrency: "unbounded" }
-        );
-        if (row?.id !== firstEntryId) {
-            return "populated";
-        }
     }
 
     const [all] = yield* query(() => db.select({ total: count() }).from(categories));
@@ -90,10 +78,7 @@ export const localLedgerState = Effect.fn("LedgerAdoption.localLedgerState")(fun
                 )
             )
     );
-    if ((touched?.total ?? 0) > 0) {
-        return "populated";
-    }
-    return onlyFirstEntry ? "first-entry" : "empty";
+    return (touched?.total ?? 0) > 0 ? "populated" : "empty";
 });
 
 export const adoptedAccount = Effect.fn("LedgerAdoption.adoptedAccount")(function* adoptedAccount(db: Database) {

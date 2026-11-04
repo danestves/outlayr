@@ -1,5 +1,5 @@
 import * as Cause from "effect/Cause";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { View } from "react-native";
 
 import { AmountNumpad } from "@/components/amount-numpad";
@@ -43,6 +43,7 @@ export function OnboardingFirstEntry() {
     const [pickedId, setPickedId] = useState<string | null>(null);
     const [step, setStep] = useState<"amount" | "category">("amount");
     const [saving, setSaving] = useState(false);
+    const savingRef = useRef(false);
     const [saved, setSaved] = useState(false);
     const [failed, setFailed] = useState<keyof typeof FAILURE_COPY | null>(null);
 
@@ -69,11 +70,13 @@ export function OnboardingFirstEntry() {
         {
             onFailure: (cause) => {
                 console.error("Saving the first entry failed", Cause.squash(cause));
+                savingRef.current = false;
                 haptics("error");
                 setFailed("save");
             },
             onSettled: () => setSaving(false),
             onSuccess: (written) => {
+                savingRef.current = written;
                 haptics(written ? "success" : "error");
                 setFailed(written ? null : "save");
                 setSaved(written);
@@ -86,9 +89,10 @@ export function OnboardingFirstEntry() {
     );
 
     const save = () => {
-        if (category === null) {
+        if (category === null || savingRef.current) {
             return;
         }
+        savingRef.current = true;
         setSaving(true);
         setFailed(null);
         saveFirstEntry({
