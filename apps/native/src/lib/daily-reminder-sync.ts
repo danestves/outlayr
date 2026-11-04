@@ -74,10 +74,10 @@ export const make = Effect.gen(function* make() {
             Stream.runForEach(() => sync)
         );
 
-        // Only an in-app create marks `freshEntries` (never a sync pull, adoption or backfill), so the reminder
-        // prompt cannot land mid-sign-in.
+        // Arms once an in-app create lands on the Log, so the OS prompt never shows over onboarding or sign-in.
         const arms = signals(freshEntries.subscribe).pipe(
             Stream.debounce(RESYNC_DEBOUNCE),
+            Stream.filter(() => !freshEntries.arriving()),
             Stream.runForEach(() => attempt("arm"))
         );
 

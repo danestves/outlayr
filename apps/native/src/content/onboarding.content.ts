@@ -122,6 +122,38 @@ const onboarding = {
             pt: "Em qual moeda você controla seu dinheiro?",
             "pt-PT": "Em que moeda controla o seu dinheiro?",
         }),
+        "onboarding.firstEntry.eyebrow": t({
+            en: "First line",
+            es: "Primera línea",
+            fr: "Première ligne",
+            pt: "Primeira linha",
+        }),
+        "onboarding.firstEntry.finishFailed": t({
+            en: "Setup didn't finish. Try again.",
+            es: "La configuración no terminó. Inténtalo de nuevo.",
+            fr: "La configuration n'a pas abouti. Réessayez.",
+            pt: "A configuração não terminou. Tente de novo.",
+        }),
+        "onboarding.firstEntry.later": t({
+            en: "Later",
+            es: "Más tarde",
+            fr: "Plus tard",
+            pt: "Depois",
+            "pt-PT": "Mais tarde",
+        }),
+        "onboarding.firstEntry.sentence": t({
+            en: "Spent {amount} on {category} today.",
+            es: "Gasté {amount} en {category} hoy.",
+            fr: "J'ai dépensé {amount} pour {category} aujourd'hui.",
+            pt: "Gastei {amount} em {category} hoje.",
+        }),
+        "onboarding.firstEntry.title": t({
+            en: "What did you last pay for?",
+            es: "¿Qué fue lo último que pagaste?",
+            fr: "Qu'avez-vous payé en dernier ?",
+            pt: "Qual foi a última coisa que você pagou?",
+            "pt-PT": "Qual foi a última coisa que pagou?",
+        }),
         "onboarding.rhythm.body": t({
             en: "One quiet nudge each evening. iOS isn't asked for permission until your first entry is saved.",
             es: "Un aviso discreto cada noche. iOS no te pide permiso hasta que guardes tu primera entrada.",

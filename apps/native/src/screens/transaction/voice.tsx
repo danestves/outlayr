@@ -622,7 +622,7 @@ const writeTransfer = Effect.fn("VoiceThread.writeTransfer")(function* writeTran
         done.onFailed();
         return;
     }
-    freshEntries.mark(created.value);
+    freshEntries.mark(created.value, draft.date);
     posthog?.capture("transfer_saved", {
         cross_currency: false,
         has_fee: false,

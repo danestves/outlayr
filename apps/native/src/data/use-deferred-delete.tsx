@@ -7,6 +7,7 @@ import { useSyncExternalStore } from "react";
 
 import { localDataAtom, localDataState } from "@/contexts/local-data-context";
 import { listen, WatchAppState } from "@/lib/app-events";
+import { freshEntries } from "@/lib/fresh-entries";
 import { appRuntime } from "@/lib/runtime";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { launchDeferredDeleteCommand } from "@/state/deferred-delete-commands";
@@ -54,6 +55,9 @@ export function useDeferredDelete(kind: DeferredDeleteKind): DeferredDelete {
     );
 
     const requestDelete = (id: string, notice?: UndoNotice) => {
+        if (kind === "row") {
+            freshEntries.settle(id);
+        }
         registry.requestDelete(kind, id, notice);
     };
 

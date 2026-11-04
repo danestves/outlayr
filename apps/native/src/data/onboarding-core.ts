@@ -20,7 +20,7 @@ export function isOnboardingSettled(completed: string | null): boolean {
     return completed === "true";
 }
 
-// The sole writer of `onboardingComplete`: the rhythm step, or the currency step's "I already have an account".
+// The sole writer of `onboardingComplete`: the first-entry step, or the currency step's "I already have an account".
 export const finishOnboarding = Effect.fn("Onboarding.finishOnboarding")(function* finishOnboarding(db: Database) {
     yield* setMeta(db, META_KEYS.onboardingComplete, "true");
 });
@@ -33,6 +33,12 @@ export const markReminderChosen = Effect.fn("Onboarding.markReminderChosen")(fun
     db: Database
 ) {
     yield* setMeta(db, META_KEYS.reminderChosen, "true");
+});
+
+export const clearReminderChosen = Effect.fn("Onboarding.clearReminderChosen")(function* clearReminderChosen(
+    db: Database
+) {
+    yield* setMeta(db, META_KEYS.reminderChosen, "false");
 });
 
 export function isAccountDeferred(deferred: string | null): boolean {

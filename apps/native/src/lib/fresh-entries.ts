@@ -8,8 +8,12 @@ function emit() {
 }
 
 export const freshEntries = {
+    arriving: () => fresh.size > 0,
     has: (id: string) => fresh.has(id),
-    mark(id: string) {
+    mark(id: string, date: Date) {
+        if (date.getTime() > Date.now()) {
+            return;
+        }
         fresh.add(id);
         emit();
     },

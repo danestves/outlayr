@@ -352,7 +352,7 @@ export default function TransferEditor({
                 },
                 onSuccess: (id) => {
                     if (!saved) {
-                        freshEntries.mark(id);
+                        freshEntries.mark(id, date);
                         notifySaved({
                             actionLabel: t("transfers.saved.another"),
                             amount: {
