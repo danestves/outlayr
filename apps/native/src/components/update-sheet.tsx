@@ -1,4 +1,6 @@
+import { useAtom, useAtomValue } from "@effect/atom-react/Hooks";
 import * as Cause from "effect/Cause";
+import * as Atom from "effect/reactivity/Atom";
 import { useSegments } from "expo-router";
 import { isEnabled, useUpdates } from "expo-updates";
 import { BottomSheet } from "panelui-native/components/bottom-sheet";
@@ -25,6 +27,18 @@ import { useColors } from "@/theme/use-colors";
 
 const CHECKS_UPDATES = isEnabled && !__DEV__;
 
+const dismissedUpdateAtom = Atom.make<string | null>(null).pipe(
+    Atom.keepAlive,
+    Atom.withLabel("update-sheet:dismissed")
+);
+
+export function useUpdateWaiting(): boolean {
+    const { language } = useLanguage();
+    const update = describeUpdate(useUpdates().availableUpdate, language);
+    const dismissedId = useAtomValue(dismissedUpdateAtom);
+    return update !== null && update.id !== dismissedId;
+}
+
 function updateFailure(cause: Cause.Cause<AppUpdateError>) {
     const failure = Cause.squash(cause);
     return failure instanceof AppUpdateError ? failure.cause : failure;
@@ -42,7 +56,7 @@ export function UpdateSheet() {
     const onTabs = useSegments()[0] === "(tabs)";
     const lockOpen = useAppLockOpen();
     const covered = useAuthCovered();
-    const [dismissedId, setDismissedId] = useState<string | null>(null);
+    const [dismissedId, setDismissedId] = useAtom(dismissedUpdateAtom);
     const [state, setState] = useState<"idle" | "busy" | "failed">("idle");
     const busy = state === "busy";
 
@@ -75,7 +89,7 @@ export function UpdateSheet() {
                 onFailure: (cause) => console.warn("[outlayr] update check failed", updateFailure(cause)),
             });
         });
-    }, []);
+    }, [setDismissedId]);
 
     if (!shown) {
         return null;

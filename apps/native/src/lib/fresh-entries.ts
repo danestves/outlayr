@@ -1,4 +1,5 @@
 const fresh = new Set<string>();
+let marked = false;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -15,8 +16,10 @@ export const freshEntries = {
             return;
         }
         fresh.add(id);
+        marked = true;
         emit();
     },
+    marked: () => marked,
     settle(id: string) {
         if (fresh.delete(id)) {
             emit();

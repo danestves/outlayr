@@ -125,7 +125,7 @@ function TopBlockView({ autolog, block }: { autolog: ReturnType<typeof useAutolo
                 <View className="pt-2">
                     <MonoLabel>{t("pro.eyebrow")}</MonoLabel>
                     <Text className="text-foreground text-title font-sans-semibold pt-2 tracking-tight">
-                        {t("pro.top.generic")}
+                        {block === "first_entry" ? t("pro.top.firstEntry") : t("pro.top.generic")}
                     </Text>
                 </View>
             );
@@ -163,7 +163,7 @@ export function Paywall() {
 
     const footer = (
         <>
-            <SaleBlockers needsAccount={needsAccount} noCloud={noCloud} />
+            <SaleBlockers empty={empty} needsAccount={needsAccount} noCloud={noCloud} />
             {canBuy ? (
                 <View className="px-5">
                     <PlanPicker
@@ -202,7 +202,7 @@ export function Paywall() {
                     {then === null ? null : (
                         <Text className="text-muted text-micro pt-2 text-center font-mono">{then}</Text>
                     )}
-                    {block === "autolog" ? (
+                    {block === "autolog" || block === "first_entry" ? (
                         <Pressable accessibilityRole="button" className="items-center pt-4" onPress={leave}>
                             <MonoLabel className="text-foreground">{t("pro.cta.notNow")}</MonoLabel>
                         </Pressable>

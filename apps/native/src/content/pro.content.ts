@@ -689,6 +689,13 @@ const pro = {
             fr: "Suivez toutes vos devises ensemble",
             pt: "Acompanhe todas as moedas juntas",
         }),
+        "pro.top.firstEntry": t({
+            en: "You typed this one. Pro logs the rest.",
+            es: "Esta la escribiste tú. Pro registra el resto.",
+            fr: "Celle-ci, vous l'avez saisie. Pro saisit le reste.",
+            pt: "Essa você digitou. O Pro registra o resto.",
+            "pt-PT": "Esta foi escrita por si. O Pro regista o resto.",
+        }),
         "pro.top.generic": t({
             en: "Logs itself. Every currency. Every installment.",
             es: "Se registra solo. Todas las monedas. Todas las cuotas.",

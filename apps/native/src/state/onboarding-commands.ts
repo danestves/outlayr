@@ -1,6 +1,8 @@
 import * as Effect from "effect/Effect";
 
+import { META_KEYS, setMeta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
+import { armChosenReminder } from "@/lib/chosen-reminder";
 import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
 
@@ -25,4 +27,14 @@ export const saveFirstEntryCommand = createRuntimeCommand(appRuntime, {
         return true;
     }),
     label: "onboarding:save-first-entry",
+});
+
+export const awaitReminderPromptCommand = createRuntimeCommand(appRuntime, {
+    execute: (db: Database) => armChosenReminder(db),
+    label: "onboarding:await-reminder-prompt",
+});
+
+export const markFirstEntryOfferCommand = createRuntimeCommand(appRuntime, {
+    execute: (db: Database) => setMeta(db, META_KEYS.firstEntryOfferShown, "true"),
+    label: "onboarding:mark-first-entry-offer",
 });

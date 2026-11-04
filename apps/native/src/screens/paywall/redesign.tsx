@@ -69,6 +69,9 @@ function PitchHeader({ autologUsed, block }: { autologUsed: number; block: TopBl
         case "installment_apps": {
             return <AccountHeader trigger={block} />;
         }
+        case "first_entry": {
+            return <Header subtitle={t("pro.top.firstEntry")} />;
+        }
         default: {
             return <Header subtitle={t("pro.subtitle")} />;
         }
@@ -112,7 +115,7 @@ export function PaywallRedesign() {
 
     const purchaseFooter = (
         <>
-            <SaleBlockers needsAccount={flow.needsAccount} noCloud={flow.noCloud} />
+            <SaleBlockers empty={flow.empty} needsAccount={flow.needsAccount} noCloud={flow.noCloud} />
             {flow.canBuy ? (
                 <View className="px-5">
                     <PlanPicker
@@ -145,7 +148,7 @@ export function PaywallRedesign() {
                     {then === null ? null : (
                         <MonoLabel className="pt-2 text-center">{`${then} · ${t("pro.cta.cancelAnytime")}`}</MonoLabel>
                     )}
-                    {flow.block === "autolog" ? (
+                    {flow.block === "autolog" || flow.block === "first_entry" ? (
                         <Pressable accessibilityRole="button" className="items-center pt-4" onPress={flow.leave}>
                             <MonoLabel className="text-foreground">{t("pro.cta.notNow")}</MonoLabel>
                         </Pressable>

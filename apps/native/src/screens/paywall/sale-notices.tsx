@@ -9,7 +9,15 @@ import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
 /** Why nothing is for sale: no account to attach Pro to, or a build with no backend to deliver it. */
-export function SaleBlockers({ needsAccount, noCloud }: { needsAccount: boolean; noCloud: boolean }) {
+export function SaleBlockers({
+    empty,
+    needsAccount,
+    noCloud,
+}: {
+    empty: boolean;
+    needsAccount: boolean;
+    noCloud: boolean;
+}) {
     const t = useTranslation();
     const router = useRouter();
     return (
@@ -17,16 +25,18 @@ export function SaleBlockers({ needsAccount, noCloud }: { needsAccount: boolean;
             {needsAccount ? (
                 <View className="gap-4 px-5 pt-5">
                     <Text className="text-muted text-subtitle text-center">{t("pro.needsAccount")}</Text>
-                    <Button
-                        className="rounded-full"
-                        fullWidth
-                        onPress={() => router.push("/settings/account")}
-                        size="md"
-                        testID="paywall-sign-in"
-                        variant="primary"
-                    >
-                        {t("settings.account.signIn")}
-                    </Button>
+                    {empty ? (
+                        <Button
+                            className="rounded-full"
+                            fullWidth
+                            onPress={() => router.push("/settings/account")}
+                            size="md"
+                            testID="paywall-sign-in"
+                            variant="primary"
+                        >
+                            {t("settings.account.signIn")}
+                        </Button>
+                    ) : null}
                 </View>
             ) : null}
             {noCloud ? (
