@@ -6,7 +6,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
 import { capture } from "@/lib/analytics";
-import { formatAmount } from "@/lib/calculators";
+import { formatAmount, formatCodeAmount } from "@/lib/calculators";
 import type { Cadence } from "@/lib/calculators";
 
 export const LABEL = "text-muted font-mono text-xs";
@@ -17,10 +17,20 @@ const CURRENCIES = PICKABLE_CURRENCY_CODES.map((code) => ({ label: code, value: 
 
 const TONES = { income: "text-income", spend: "text-spend" } as const;
 
-export function Figure({ minor, code, tone }: { code: string; minor: number; tone?: keyof typeof TONES }) {
+export function Figure({
+    code,
+    lang,
+    minor,
+    tone,
+}: {
+    code: string;
+    lang?: string;
+    minor: number;
+    tone?: keyof typeof TONES;
+}) {
     return (
         <span className={`font-mono font-medium whitespace-nowrap ${tone ? TONES[tone] : ""}`}>
-            {formatAmount(minor, code)}
+            {lang ? formatCodeAmount(minor, code, lang) : formatAmount(minor, code)}
         </span>
     );
 }

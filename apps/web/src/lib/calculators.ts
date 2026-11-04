@@ -23,6 +23,16 @@ export function formatAmount(minor: number, code: string): string {
     return `${minor < 0 ? "-" : ""}${symbol === code ? `${code} ` : symbol}${number}`;
 }
 
+export function formatCodeAmount(minor: number, code: string, lang: string): string {
+    const decimals = decimalsFor(code);
+    const number = new Intl.NumberFormat(lang, { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
+    return `${number.format(minor / 10 ** decimals)} ${code}`;
+}
+
+export function convertAtRate(minor: number, rate: number, from: "local" | "usd"): number {
+    return Math.round(from === "usd" ? minor * rate : minor / rate);
+}
+
 export const PER_YEAR = { month: 12, quarter: 4, twoWeeks: 26, week: 52, year: 1 } as const;
 
 export type Cadence = keyof typeof PER_YEAR;

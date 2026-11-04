@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { formatAmount, installmentCost, parseAmount, settleUp, splitBudget, subscriptionCost } from "./calculators";
+import {
+    convertAtRate,
+    formatAmount,
+    installmentCost,
+    parseAmount,
+    settleUp,
+    splitBudget,
+    subscriptionCost,
+} from "./calculators";
 
 it.each([
     { code: "USD", minor: 123_456, text: "1,234.56" },
@@ -21,6 +29,16 @@ it.each([
     { code: "PEN", minor: -400, text: "-PEN 4.00" },
 ])("formats $minor in $code as $text", ({ code, minor, text }) => {
     expect(formatAmount(minor, code)).toBe(text);
+});
+
+it.each([
+    { expected: 8_911_054, from: "usd", minor: 10_000, rate: 891.1054 },
+    { expected: 10_000, from: "local", minor: 8_911_054, rate: 891.1054 },
+    { expected: 159_750, from: "usd", minor: 100, rate: 1597.5 },
+    { expected: 0, from: "local", minor: 100, rate: 1570 },
+    { expected: 1, from: "local", minor: 785, rate: 1570 },
+] as const)("converts $minor from $from at $rate to $expected", ({ expected, from, minor, rate }) => {
+    expect(convertAtRate(minor, rate, from)).toBe(expected);
 });
 
 it("counts a weekly charge 52 times a year, not 48", () => {

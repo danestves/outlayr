@@ -6,10 +6,14 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { Article, Prose, Questions } from "@/components/answers/article";
 import { BudgetTool } from "@/components/tools/budget-tool";
 import { InstallmentTool } from "@/components/tools/installment-tool";
+import { RateTool } from "@/components/tools/rate-tool";
 import { SplitTool } from "@/components/tools/split-tool";
 import { SubscriptionTool } from "@/components/tools/subscription-tool";
+import { getRates } from "@/lib/get-rates";
 import { hasKey } from "@/lib/has-key";
 import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
+import { RATE_MARKETS } from "@/lib/rates";
+import type { Rate, RateSlug } from "@/lib/rates";
 import { ORGANIZATION_ID, answerTrail, faqPage, ldJson, pageMeta } from "@/lib/seo";
 
 type ToolSlug = keyof ReturnType<typeof getIntlayer<"tools">>["pages"];
@@ -19,22 +23,24 @@ const CALCULATORS = {
     "installment-calculator": InstallmentTool,
     "split-expenses-calculator": SplitTool,
     "subscription-cost-calculator": SubscriptionTool,
-} satisfies Record<ToolSlug, ComponentType>;
+} satisfies Record<Exclude<ToolSlug, RateSlug>, ComponentType>;
 
 export const Route = createFileRoute("/{-$locale}/tools/$slug")({
     component: Tool,
-    loader: ({ params }) => {
-        if (!hasKey(getIntlayer("tools").pages, params.slug)) {
+    loader: async ({ params }) => {
+        const { slug } = params;
+        if (!hasKey(getIntlayer("tools").pages, slug)) {
             throw notFound({ routeId: rootRouteId });
         }
-        return params.slug;
+        return { rates: hasKey(RATE_MARKETS, slug) ? await getRates({ data: slug }) : null, slug };
     },
     head: ({ loaderData, params }) => {
         if (!loaderData) {
             return {};
         }
+        const { slug } = loaderData;
         const locale = localeFromParam(params.locale);
-        const page = getIntlayer("tools", locale).pages[loaderData];
+        const page = getIntlayer("tools", locale).pages[slug];
         return {
             meta: pageMeta(page.meta.title, page.lead),
             scripts: [
@@ -50,22 +56,29 @@ export const Route = createFileRoute("/{-$locale}/tools/$slug")({
                     offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
                     operatingSystem: "Any",
                     publisher: { "@id": ORGANIZATION_ID },
-                    url: pageUrl(`/tools/${loaderData}`, locale),
+                    url: pageUrl(`/tools/${slug}`, locale),
                 }),
                 ldJson(faqPage(page.faq, LANGUAGES[locale].lang)),
-                ldJson(answerTrail(locale, "tools", loaderData, page.title)),
+                ldJson(answerTrail(locale, "tools", slug, page.title)),
             ],
         };
     },
 });
 
+function Calculator({ rates, slug }: { rates: readonly Rate[] | null; slug: ToolSlug }) {
+    if (hasKey(RATE_MARKETS, slug)) {
+        return <RateTool rates={rates} slug={slug} />;
+    }
+    const Current = CALCULATORS[slug];
+    return <Current />;
+}
+
 function Tool() {
-    const slug = Route.useLoaderData();
+    const { rates, slug } = Route.useLoaderData();
     const { labels, pages } = useIntlayer("tools");
     const answers = useIntlayer("answers");
     const { locale } = useLocale();
     const page = pages[slug];
-    const Calculator = CALCULATORS[slug];
     return (
         <Article
             badges={false}
@@ -83,7 +96,7 @@ function Tool() {
             title={page.title}
         >
             <div className="ph-no-capture">
-                <Calculator key={locale} />
+                <Calculator key={locale} rates={rates} slug={slug} />
             </div>
         </Article>
     );
