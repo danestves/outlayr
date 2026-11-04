@@ -44,6 +44,7 @@ const site = {
                 "multi-currency-expense-tracker": t({ en: "Multi-currency", es: "Varias monedas" }),
                 "receipt-scanner": t({ en: "Receipt scanner", es: "Escáner de recibos" }),
                 "subscription-tracker": t({ en: "Subscriptions", es: "Suscripciones" }),
+                "track-money-sent-home": t({ en: "Money sent home", es: "Dinero que envías a casa" }),
                 "voice-expense-tracker": t({ en: "Voice entry", es: "Registro por voz" }),
                 "ynab-alternatives": t({ en: "YNAB alternatives", es: "Alternativas a YNAB" }),
             } satisfies Record<keyof typeof answers.content.guides, ReturnType<typeof t<string>>>,
