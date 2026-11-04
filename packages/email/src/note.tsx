@@ -1,4 +1,5 @@
 import { render } from "@react-email/render";
+import { Fragment } from "react";
 import type { CSSProperties, ReactElement, ReactNode } from "react";
 
 import type { Language } from "./language";
@@ -35,19 +36,24 @@ export interface NoteItem {
     label: string;
 }
 
+export interface NoteSection {
+    intro: string;
+    items: readonly NoteItem[];
+    link?: { href: string; label: string };
+}
+
 export interface NoteProps {
     after: string;
     facts: readonly (readonly [string, string])[];
     footer: string;
-    intro: string;
-    items: readonly NoteItem[];
     language: Language;
     lead: string;
-    link?: { href: string; label: string };
     preview: string;
+    sections: readonly NoteSection[];
 }
 
-export function Note({ after, facts, footer, intro, items, language, lead, link, preview }: NoteProps) {
+export function Note({ after, facts, footer, language, lead, preview, sections }: NoteProps) {
+    const endsWithLink = sections.at(-1)?.link !== undefined;
     const previewText = preview.slice(0, PREVIEW_LENGTH);
     return (
         <html dir="ltr" lang={language}>
@@ -111,28 +117,32 @@ export function Note({ after, facts, footer, intro, items, language, lead, link,
                                         </tbody>
                                     </table>
                                 ) : null}
-                                <Text>{intro}</Text>
-                                {items.map((item) => (
-                                    <Text
-                                        key={item.label}
-                                        style={{ margin: "0 0 6px", paddingLeft: 16, textIndent: -16 }}
-                                    >
-                                        •&nbsp;&nbsp;<strong>{item.label}</strong>
-                                        {item.detail ? `${COLON[language]}${item.detail}` : null}
-                                    </Text>
+                                {sections.map(({ intro, items, link }) => (
+                                    <Fragment key={intro}>
+                                        <Text>{intro}</Text>
+                                        {items.map((item) => (
+                                            <Text
+                                                key={item.label}
+                                                style={{ margin: "0 0 6px", paddingLeft: 16, textIndent: -16 }}
+                                            >
+                                                •&nbsp;&nbsp;<strong>{item.label}</strong>
+                                                {item.detail ? `${COLON[language]}${item.detail}` : null}
+                                            </Text>
+                                        ))}
+                                        {link ? (
+                                            <Text style={{ margin: "16px 0" }}>
+                                                <a
+                                                    href={link.href}
+                                                    style={{ color: TINT, textDecoration: "underline" }}
+                                                    target="_blank"
+                                                >
+                                                    {link.label}
+                                                </a>
+                                            </Text>
+                                        ) : null}
+                                    </Fragment>
                                 ))}
-                                {link ? (
-                                    <Text style={{ margin: "16px 0" }}>
-                                        <a
-                                            href={link.href}
-                                            style={{ color: TINT, textDecoration: "underline" }}
-                                            target="_blank"
-                                        >
-                                            {link.label}
-                                        </a>
-                                    </Text>
-                                ) : null}
-                                <Text style={{ marginTop: link ? 0 : 16 }}>{after}</Text>
+                                <Text style={{ marginTop: endsWithLink ? 0 : 16 }}>{after}</Text>
                                 <Text style={{ margin: "24px 0 0" }}>Daniel</Text>
                                 <Text style={{ color: MUTED, margin: "0 0 28px" }}>Outlayr</Text>
                                 <Text style={{ color: MUTED, fontSize: 12, lineHeight: "18px", margin: 0 }}>

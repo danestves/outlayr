@@ -1,4 +1,6 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
+import { noticeKey } from "@outlayr/backend/confect/legal";
+import type { PolicyNotice } from "@outlayr/backend/confect/legal";
 import { utcDateString } from "@outlayr/money/dates";
 import * as Cause from "effect/Cause";
 import { useSegments } from "expo-router";
@@ -17,7 +19,7 @@ import { useSheetInsets } from "@/components/use-sheet-insets";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useNumberSetting } from "@/data/settings";
 import { formatTargetDate } from "@/domain/dates";
-import { pendingNotice } from "@/domain/policy-notice";
+import { pendingNotices } from "@/domain/policy-notice";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { languageSubtag } from "@/i18n/languages";
 import type { Language } from "@/i18n/languages";
@@ -34,6 +36,8 @@ const noticeLanguage = (language: Language) => {
     return subtag === "es" || subtag === "fr" || subtag === "pt" ? subtag : "en";
 };
 
+const pendingKey = (notices: readonly PolicyNotice[]) => notices.map(noticeKey).join(",");
+
 export function PolicyNoticeSheet() {
     const t = useTranslation();
     const { language } = useLanguage();
@@ -43,13 +47,13 @@ export function PolicyNoticeSheet() {
     const onTabs = useSegments()[0] === "(tabs)";
     const lockOpen = useAppLockOpen();
     const covered = useAuthCovered();
-    const notice = pendingNotice(useAtomValue(policyNoticesAtom), {
-        privacy: useNumberSetting(db, "privacyNoticeSeen"),
-        terms: useNumberSetting(db, "termsNoticeSeen"),
-    });
-    const [shown, setShown] = useState(notice);
-    if (notice && notice !== shown) {
-        setShown(notice);
+    const notices = useAtomValue(policyNoticesAtom);
+    const privacySeen = useNumberSetting(db, "privacyNoticeSeen");
+    const termsSeen = useNumberSetting(db, "termsNoticeSeen");
+    const pending = pendingNotices(notices, { privacy: privacySeen, terms: termsSeen });
+    const [shown, setShown] = useState(pending);
+    if (pending.length > 0 && pendingKey(pending) !== pendingKey(shown)) {
+        setShown(pending);
     }
     const setSeen = useAtomAction(
         setNumberSettingCommand,
@@ -57,13 +61,20 @@ export function PolicyNoticeSheet() {
         SILENT
     );
 
-    if (!shown) {
+    const [only] = shown;
+    if (!only) {
         return null;
     }
 
-    const acknowledge = () => setSeen({ db, key: `${shown.document}NoticeSeen`, value: shown.effectiveAtMs });
-    const changes = shown.changes[noticeLanguage(language)];
-    const open = notice !== null && onTabs && lockOpen && !covered;
+    const acknowledge = () => {
+        for (const { document, effectiveAtMs } of shown) {
+            setSeen({ db, key: `${document}NoticeSeen`, value: effectiveAtMs });
+        }
+    };
+    const single = shown.length === 1;
+    const documentName = (document: PolicyNotice["document"]) =>
+        t(document === "privacy" ? "policyNotice.privacyName" : "policyNotice.termsName");
+    const open = pending.length > 0 && onTabs && lockOpen && !covered;
 
     return (
         <BottomSheet
@@ -80,45 +91,61 @@ export function PolicyNoticeSheet() {
                 <BottomSheet.Content size="auto">
                     <View className="gap-1 pb-4">
                         <Text accessibilityRole="header" className="text-foreground font-sans-semibold text-title">
-                            {t(shown.document === "privacy" ? "policyNotice.privacy" : "policyNotice.terms")}
+                            {single
+                                ? t(only.document === "privacy" ? "policyNotice.privacy" : "policyNotice.terms")
+                                : t("policyNotice.both")}
                         </Text>
                         <MonoLabel>
                             {t("policyNotice.meta", {
                                 date: formatTargetDate(
-                                    new Date(`${utcDateString(shown.effectiveAtMs)}T12:00:00`),
+                                    new Date(`${utcDateString(only.effectiveAtMs)}T12:00:00`),
                                     language
                                 ),
                             })}
                         </MonoLabel>
                     </View>
-                    <View>
-                        {changes.map((change, index) => (
-                            <View
-                                className={cn(
-                                    "border-border border-t py-2.5",
-                                    index === changes.length - 1 && "border-b"
+                    {shown.map(({ changes: byLanguage, document }, section) => {
+                        const changes = byLanguage[noticeLanguage(language)];
+                        return (
+                            <View className={cn(section > 0 && "pt-4")} key={document}>
+                                {single ? null : (
+                                    <MonoLabel accessibilityRole="header" className="pb-1.5">
+                                        {documentName(document)}
+                                    </MonoLabel>
                                 )}
-                                key={change.label}
-                            >
-                                <Text className="text-body text-foreground">{change.label}</Text>
-                                {change.detail ? (
-                                    <Text className="text-footnote text-muted pt-0.5 leading-snug">
-                                        {change.detail}
-                                    </Text>
-                                ) : null}
+                                {changes.map((change, index) => (
+                                    <View
+                                        className={cn(
+                                            "border-border border-t py-2.5",
+                                            index === changes.length - 1 && "border-b"
+                                        )}
+                                        key={change.label}
+                                    >
+                                        <Text className="text-body text-foreground">{change.label}</Text>
+                                        {change.detail ? (
+                                            <Text className="text-footnote text-muted pt-0.5 leading-snug">
+                                                {change.detail}
+                                            </Text>
+                                        ) : null}
+                                    </View>
+                                ))}
                             </View>
+                        );
+                    })}
+                    <Text className="text-footnote text-muted pt-3 pb-5 leading-snug">{t("policyNotice.accept")}</Text>
+                    <View className="flex-row gap-2.5">
+                        {shown.map(({ document }) => (
+                            <Button
+                                className="flex-1 rounded-full"
+                                key={document}
+                                onPress={() => openInAppBrowser(legalUrl(document, language))}
+                                size="md"
+                                variant="primary"
+                            >
+                                {single ? t("policyNotice.read") : documentName(document)}
+                            </Button>
                         ))}
                     </View>
-                    <Text className="text-footnote text-muted pt-3 pb-5 leading-snug">{t("policyNotice.accept")}</Text>
-                    <Button
-                        className="rounded-full"
-                        fullWidth
-                        onPress={() => openInAppBrowser(legalUrl(shown.document, language))}
-                        size="md"
-                        variant="primary"
-                    >
-                        {t("policyNotice.read")}
-                    </Button>
                     <Button className="mt-2.5 rounded-full" fullWidth onPress={acknowledge} size="md" variant="ghost">
                         {t("policyNotice.ok")}
                     </Button>

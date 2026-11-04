@@ -16,11 +16,13 @@ sheet show nothing until they update.
 4. Email the account holders, from `packages/backend`:
 
    ```sh
-   vp exec convex run --prod mailDelivery:notifyPolicy '{"document":"privacy"}'
+   vp exec convex run --prod mailDelivery:notifyPolicy '{}'
    ```
 
-   Use `"document":"terms"` for the Terms of Use. It sends 50 at a time and schedules the next
-   page itself; the counts it prints cover the first page only. Running it again sends only to accounts that have not received this notice,
-   so a rerun retries the failures. Rerun only once no `notifyPolicy` is left under Schedules in the
+   It sends the notices with the latest `effectiveAtMs`: when both documents change that day, each
+   account gets one email covering both, and the app shows them in one sheet. Someone behind on
+   several days gets one sheet per day, oldest first. It sends 50 at a time and schedules the next page itself; the counts it prints cover the
+   first page only. Running it again sends only what an account has not received, so a rerun
+   retries the failures. Rerun only once no `notifyPolicy` is left under Schedules in the
    dashboard, or two runs can email the same account twice. Follow the rest in the Convex logs
    (`[mail] not sent`).

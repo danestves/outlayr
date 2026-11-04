@@ -3,7 +3,7 @@ import type { Billing, Entitlement, StoreName } from "../billing";
 import { formatDate } from "../language";
 import type { Language } from "../language";
 import { Note, renderEmail } from "../note";
-import type { NoteItem, NoteProps } from "../note";
+import type { NoteItem, NoteProps, NoteSection } from "../note";
 
 interface ProEmailProps extends Entitlement {
     email: string;
@@ -145,7 +145,7 @@ const COPY = {
     },
 } satisfies Record<Language, ProCopy>;
 
-type Details = Pick<NoteProps, "after" | "facts" | "link">;
+type Details = Pick<NoteProps, "after" | "facts"> & Pick<NoteSection, "link">;
 
 function details(plan: Billing, copy: ProCopy, date: (ms: number) => string): Details {
     switch (plan.kind) {
@@ -186,15 +186,15 @@ function details(plan: Billing, copy: ProCopy, date: (ms: number) => string): De
 
 export default function ProEmail({ email, language, timeZone, ...entitlement }: ProEmailProps) {
     const copy = COPY[language];
+    const { link, ...rest } = details(billing(entitlement), copy, (ms) => formatDate(ms, language, timeZone));
     return (
         <Note
-            {...details(billing(entitlement), copy, (ms) => formatDate(ms, language, timeZone))}
+            {...rest}
             footer={copy.footer(email)}
-            intro={copy.intro}
-            items={copy.items}
             language={language}
             lead={copy.lead}
             preview={copy.preview}
+            sections={[{ intro: copy.intro, items: copy.items, link }]}
         />
     );
 }

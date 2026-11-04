@@ -78,19 +78,21 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.internalQuery({
             name: "noticeRecipients",
-            args: () => ({ cursor: Schema.NullOr(Schema.String), key: Schema.String }),
+            args: () => ({ cursor: Schema.NullOr(Schema.String), keys: Schema.Array(Schema.String) }),
             returns: () =>
                 Schema.Struct({
                     continueCursor: Schema.String,
                     isDone: Schema.Boolean,
-                    recipients: Schema.Array(Recipient),
+                    recipients: Schema.Array(
+                        Schema.Struct({ ...Recipient.fields, pending: Schema.Array(Schema.String) })
+                    ),
                 }),
         })
     )
     .addFunction(
         FunctionSpec.internalMutation({
             name: "recordNotice",
-            args: () => ({ key: Schema.String, language: Language, userId: Schema.String }),
+            args: () => ({ keys: Schema.Array(Schema.String), language: Language, userId: Schema.String }),
             returns: () => Schema.Null,
         })
     );

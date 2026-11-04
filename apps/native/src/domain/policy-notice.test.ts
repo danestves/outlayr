@@ -1,7 +1,7 @@
 import type { PolicyNotice } from "@outlayr/backend/confect/legal";
 import { expect, test } from "vite-plus/test";
 
-import { pendingNotice } from "./policy-notice";
+import { pendingNotices } from "./policy-notice";
 
 const notice = (effectiveAtMs: number, document: PolicyNotice["document"] = "privacy"): PolicyNotice => ({
     changes: { en: [], es: [], fr: [], pt: [] },
@@ -9,22 +9,21 @@ const notice = (effectiveAtMs: number, document: PolicyNotice["document"] = "pri
     effectiveAtMs,
 });
 
-test("shows each notice once, oldest first, and none that took effect before the install", () => {
+test("shows one day at a time, oldest first, with every document changing that day", () => {
     const november = notice(Date.UTC(2026, 10, 2));
-    const december = notice(Date.UTC(2026, 11, 1));
-    const notices = [december, november];
-    const seen = (privacy: number) => ({ privacy, terms: 0 });
+    const decemberPrivacy = notice(Date.UTC(2026, 11, 1));
+    const decemberTerms = notice(Date.UTC(2026, 11, 1), "terms");
+    const notices = [decemberTerms, decemberPrivacy, november];
 
-    expect(pendingNotice(notices, seen(0))).toBe(november);
-    expect(pendingNotice(notices, seen(november.effectiveAtMs))).toBe(december);
-    expect(pendingNotice(notices, seen(december.effectiveAtMs))).toBeNull();
-    expect(pendingNotice(notices, seen(Date.UTC(2026, 10, 20)))).toBe(december);
-});
-
-test("a privacy and a terms notice on the same day each show", () => {
-    const day = Date.UTC(2026, 10, 2);
-    const privacy = notice(day);
-    const terms = notice(day, "terms");
-
-    expect(pendingNotice([privacy, terms], { privacy: day, terms: 0 })).toBe(terms);
+    expect(pendingNotices(notices, { privacy: 0, terms: 0 })).toStrictEqual([november]);
+    expect(pendingNotices(notices, { privacy: november.effectiveAtMs, terms: 0 })).toStrictEqual([
+        decemberPrivacy,
+        decemberTerms,
+    ]);
+    expect(pendingNotices(notices, { privacy: decemberPrivacy.effectiveAtMs, terms: 0 })).toStrictEqual([
+        decemberTerms,
+    ]);
+    expect(
+        pendingNotices(notices, { privacy: decemberPrivacy.effectiveAtMs, terms: decemberTerms.effectiveAtMs })
+    ).toStrictEqual([]);
 });

@@ -63,34 +63,33 @@ const notifyPolicy = FunctionImpl.make(
     databaseSchema,
     spec,
     "notifyPolicy",
-    Effect.fn("Mail.notifyPolicy")(function* notifyPolicy({ cursor, document }) {
-        const notice = POLICY_NOTICES.toSorted((a, b) => b.effectiveAtMs - a.effectiveAtMs).find(
-            (candidate) => candidate.document === document
-        );
-        if (notice === undefined) {
-            return yield* Effect.die(new Error(`There is no ${document} notice in POLICY_NOTICES`));
-        }
+    Effect.fn("Mail.notifyPolicy")(function* notifyPolicy({ cursor }) {
+        const latestMs = Math.max(...POLICY_NOTICES.map((notice) => notice.effectiveAtMs));
+        const batch = POLICY_NOTICES.filter((notice) => notice.effectiveAtMs === latestMs);
         if (Option.isNone(yield* emailConfig)) {
             return yield* new EmailError({ reason: "unconfigured" });
         }
         const { runQuery } = yield* QueryRunner;
         const { runMutation } = yield* MutationRunner;
-        const key = noticeKey(notice);
-        const page = yield* runQuery(refs.internal.mail.noticeRecipients, { cursor: cursor ?? null, key });
+        const page = yield* runQuery(refs.internal.mail.noticeRecipients, {
+            cursor: cursor ?? null,
+            keys: batch.map(noticeKey),
+        });
 
         const delivered = yield* Effect.all(
-            page.recipients.map(({ email, language, userId }) =>
+            page.recipients.map(({ email, language, pending, userId }) =>
                 Effect.promise(() =>
                     policyChangeEmail({
-                        changes: notice.changes[language],
-                        document,
-                        effectiveAtMs: notice.effectiveAtMs,
+                        documents: batch
+                            .filter((notice) => pending.includes(noticeKey(notice)))
+                            .map(({ changes, document }) => ({ changes: changes[language], document })),
+                        effectiveAtMs: latestMs,
                         email,
                         language,
                     })
                 ).pipe(
                     Effect.flatMap((message) => sendEmail(email, message)),
-                    Effect.andThen(runMutation(refs.internal.mail.recordNotice, { key, language, userId })),
+                    Effect.andThen(runMutation(refs.internal.mail.recordNotice, { keys: pending, language, userId })),
                     Effect.as(true),
                     Effect.catchTags({ EmailError: (error) => unsent(error).pipe(Effect.as(false)) })
                 )
@@ -102,7 +101,6 @@ const notifyPolicy = FunctionImpl.make(
             const scheduler = yield* Scheduler;
             yield* scheduler.runAfter(Duration.zero, refs.internal.mailDelivery.notifyPolicy, {
                 cursor: page.continueCursor,
-                document,
             });
         }
         const sent = delivered.filter(Boolean).length;
