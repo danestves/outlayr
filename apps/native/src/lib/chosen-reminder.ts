@@ -6,6 +6,7 @@ import { isReminderChosen } from "@/data/onboarding-core";
 import { setBoolSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 
+import { freshEntries } from "./fresh-entries";
 import { Reminders } from "./reminders";
 
 const arm = Effect.fn("ChosenReminder.arm")(function* arm(db: Database) {
@@ -23,8 +24,8 @@ const arm = Effect.fn("ChosenReminder.arm")(function* arm(db: Database) {
         return;
     }
     const existing = yield* reminders.permission();
-    if (existing === "unknown") {
-        // The read failed; the next save tries again rather than spending the ask.
+    if (existing === "unknown" || freshEntries.arriving()) {
+        // The read failed or a row is still arriving; the next save tries again rather than spending the ask.
         return;
     }
     yield* setMeta(db, META_KEYS.reminderAsked, "true");

@@ -9,6 +9,7 @@ import { migratedDatabase } from "@/db/test-database";
 import type { ReminderPermission } from "@/domain/reminder";
 
 import { armChosenReminder as arm } from "./chosen-reminder";
+import { freshEntries } from "./fresh-entries";
 import { Reminders } from "./reminders";
 
 vi.mock("expo-notifications", () => ({}));
@@ -68,6 +69,19 @@ describe("armChosenReminder", () => {
         await armChosenReminder(db);
 
         expect(mockRequest).toHaveBeenCalledOnce();
+    });
+
+    it("keeps the ask when an entry starts arriving during the permission read", async () => {
+        mockPermission.mockImplementationOnce(async () => {
+            freshEntries.mark("arriving", new Date());
+            return "undetermined";
+        });
+
+        await armChosenReminder(db);
+
+        expect(mockRequest).not.toHaveBeenCalled();
+        await expect(Effect.runPromise(getMeta(db, META_KEYS.reminderAsked))).resolves.toBeNull();
+        freshEntries.settle("arriving");
     });
 
     it("does not ask again after a refusal", async () => {

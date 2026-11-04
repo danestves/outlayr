@@ -1,6 +1,6 @@
 import * as Cause from "effect/Cause";
 import { useRef, useState } from "react";
-import { View } from "react-native";
+import { ScrollView } from "react-native";
 
 import { AmountNumpad } from "@/components/amount-numpad";
 import { CategoryIcon } from "@/components/category-icon";
@@ -130,7 +130,7 @@ export function OnboardingFirstEntry() {
             skip={{ label: t("onboarding.firstEntry.later"), onPress: later }}
             title={t("onboarding.firstEntry.title")}
         >
-            <View className="gap-5">
+            <ScrollView className="shrink grow-0" contentContainerClassName="gap-5">
                 <Sentence<"amount" | "category">
                     slots={{
                         amount: (
@@ -179,7 +179,7 @@ export function OnboardingFirstEntry() {
                         value={amount}
                     />
                 )}
-            </View>
+            </ScrollView>
         </FirstRun>
     );
 }
