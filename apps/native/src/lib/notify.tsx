@@ -54,6 +54,10 @@ export function notifyFailure(notice: Notice): void {
     show({ ...notice, tone: { kind: "failure" } });
 }
 
+export function notifyGift(notice: Notice): void {
+    show({ ...notice, tone: { kind: "gift" } });
+}
+
 export function notifyWarning(notice: Notice): void {
     show({ ...notice, tone: { kind: "warning" } });
 }

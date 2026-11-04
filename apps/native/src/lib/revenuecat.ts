@@ -59,6 +59,11 @@ export const refreshProEntitlement = Effect.fn("RevenueCat.refreshProEntitlement
     return hasProEntitlement(yield* sdkCall(() => Purchases.getCustomerInfo()));
 });
 
+export const reloadProEntitlement = Effect.fn("RevenueCat.reloadProEntitlement")(function* reloadProEntitlement() {
+    yield* sdkCall(() => Purchases.invalidateCustomerInfoCache());
+    return yield* refreshProEntitlement();
+});
+
 /** Null with no active subscription, which includes the one-time lifetime purchase. */
 export const managementUrl = Effect.fn("RevenueCat.managementUrl")(function* managementUrl() {
     const customerInfo = yield* sdkCall(() => Purchases.getCustomerInfo());

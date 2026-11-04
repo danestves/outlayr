@@ -37,6 +37,7 @@ const LEGACY_HOSTS = new Map<string, string>([
 
 const HOSTS = new Map<string, string>([
     ["budgets", BUDGETS_HOME],
+    ["i", "/i"],
     ["insights", "/insights"],
     ["log", "/"],
     ["new", "/transactions/create"],
@@ -46,10 +47,13 @@ const HOSTS = new Map<string, string>([
     ["voice", "/transactions/voice"],
 ]);
 
-const ID_HOSTS = new Set(["budgets", "transaction"]);
+const ID_HOSTS = new Set(["budgets", "i", "transaction"]);
 
 /** `/transactions/[id]` has no index, so a bare `outlayr://transaction` would otherwise reach `+not-found`. */
-const ID_HOST_SECTION = new Map<string, string>([["transaction", "/"]]);
+const ID_HOST_SECTION = new Map<string, string>([
+    ["i", "/"],
+    ["transaction", "/"],
+]);
 
 const SCHEME_PREFIX = /^[a-zA-Z][\w+.-]*:\/\//;
 

@@ -1,5 +1,6 @@
 import Alert02Icon from "@hugeicons-pro/core-solid-rounded/Alert02Icon";
 import Delete02Icon from "@hugeicons-pro/core-solid-rounded/Delete02Icon";
+import GiftIcon from "@hugeicons-pro/core-solid-rounded/GiftIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import type { IconSvgElement } from "@hugeicons/react-native";
 import { GlassContainer, GlassView, isLiquidGlassAvailable } from "expo-glass-effect";
@@ -24,6 +25,7 @@ const WASH_ALPHA = 0.14;
 
 const SIGNALS = {
     failure: { color: "danger", glyph: Alert02Icon },
+    gift: { color: "income", glyph: GiftIcon },
     removed: { color: null, glyph: Delete02Icon },
     warning: { color: "warning", glyph: Alert02Icon },
 } as const;

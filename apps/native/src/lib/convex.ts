@@ -33,7 +33,7 @@ export function isCloudAuthenticated(): boolean {
     return authenticated;
 }
 
-function subscribeCloudAuthenticated(listener: () => void): () => void {
+export function subscribeCloudAuthenticated(listener: () => void): () => void {
     authListeners.add(listener);
     return () => {
         authListeners.delete(listener);
