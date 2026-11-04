@@ -129,7 +129,7 @@ internal object PurchaseListenerStore {
       val preferences = prefs(context)
       val current = snapshot(preferences)
       val money = current?.pattern("money")
-      val matched = money?.matcher(text)?.find() == true
+      val matched = current != null && charge(current, text) != null
       if (matched) {
         remember(preferences, sbn.packageName, label, text, sbn.postTime)
       }
@@ -182,16 +182,37 @@ internal object PurchaseListenerStore {
 
   private class Purchase(val amountText: String, val income: Boolean, val merchant: String?)
 
+  // "$10 off" and "available credit" are not charges; the cues sit right against the number, mirroring
+  // chargeMoney in src/domain/parse-notification.ts so the confirm and the ledger agree.
+  private fun charge(snapshot: Snapshot, text: String): Pair<Int, Int>? {
+    val matcher = snapshot.pattern("money")?.matcher(text) ?: return null
+    while (matcher.find()) {
+      if (!notACharge(snapshot, text, matcher.start(), matcher.end())) {
+        return matcher.start() to matcher.end()
+      }
+    }
+    return null
+  }
+
+  private fun notACharge(snapshot: Snapshot, text: String, start: Int, end: Int): Boolean {
+    val before = text.substring(0, start)
+    val after = text.substring(end)
+    return snapshot.found("promoBefore", before) ||
+      snapshot.found("promoAfter", after) ||
+      snapshot.found("balanceBefore", before) ||
+      snapshot.found("balanceAfter", after)
+  }
+
   private fun read(snapshot: Snapshot, text: String): Purchase? {
-    val money = snapshot.pattern("money")?.matcher(text) ?: return null
-    if (!money.find() || snapshot.found("declined", text)) return null
-    val amountText = money.group().trim()
+    val (start, end) = charge(snapshot, text) ?: return null
+    if (snapshot.found("declined", text)) return null
+    val amountText = text.substring(start, end).trim()
     if (amountText.none { it in '1'..'9' }) return null
     val income = snapshot.found("incoming", text)
-    val tail = text.substring(money.end())
+    val tail = text.substring(end)
     val named = snapshot.group(if (income) "receivedFrom" else "paidTo", tail)?.trim()?.takeIf { it.isNotEmpty() }
     val raw = when {
-      named == null -> lineBefore(snapshot, text.substring(0, money.start()))
+      named == null -> lineBefore(snapshot, text.substring(0, start))
       snapshot.found("cardReference", named) -> snapshot.group("parenthesized", tail)
       else -> named
     }

@@ -8,7 +8,7 @@ import * as Schema from "effect/Schema";
 import { unloggedPushes } from "@/data/pending-writes-core";
 import { readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
-import { NOTIFICATION_PATTERNS } from "@/domain/parse-notification";
+import { hasChargeAmount } from "@/domain/parse-notification";
 import { firstLocale } from "@/i18n/device-language";
 
 import { aiConsentArgs, cloudAction, isCloudAuthenticated } from "./convex";
@@ -41,7 +41,7 @@ export const readNotifications: NotificationReader = Effect.fn("NotificationRead
         }
         // Only a push that shows an amount and is not logged yet leaves the device, so login codes, promotions and
         // repeats of a logged purchase never do.
-        const priced = jobs.filter((job) => job.text && NOTIFICATION_PATTERNS.money.test(job.text));
+        const priced = jobs.filter((job) => job.text && hasChargeAmount(job.text));
         const pushes = yield* unloggedPushes(db, priced).pipe(Effect.orElseSucceed((): PendingWrite[] => []));
         const language = firstLocale()?.languageTag?.trim() || undefined;
         yield* Effect.all(

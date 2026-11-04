@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { mergeNotificationRead, NOTIFICATION_PATTERNS, parseNotification } from "./parse-notification";
+import { hasChargeAmount, mergeNotificationRead, NOTIFICATION_PATTERNS, parseNotification } from "./parse-notification";
 
 describe("parseNotification", () => {
     it("reads Wallet's own notification: card, then merchant with its place, then the amount", () => {
@@ -136,6 +136,71 @@ describe("parseNotification", () => {
     it("does not read a card's last digits or a word as a currency", () => {
         expect(parseNotification("Your card ending in 4321 was used")).toBeNull();
         expect(parseNotification("Purchase alert\nYou spent 12 at the pen shop")).toBeNull();
+    });
+
+    it("does not read a sender code or a distance as a single-letter currency", () => {
+        expect(parseNotification("7L\n¿Qué cuenta es Messages? Toca para elegir.")).toBeNull();
+        expect(parseNotification("Your driver is 12KM away and arriving")).toBeNull();
+        expect(parseNotification("Step 3P of the setup is done")).toBeNull();
+    });
+
+    it("still reads a single-letter currency when the number is written as an amount", () => {
+        expect(parseNotification("Compra aprobada por L 1,250.00 en FARMATODO")).toMatchObject({
+            amount: 1250,
+            amountText: "L 1,250.00",
+        });
+        expect(parseNotification("Compra aprobada por L1,250.00 en FARMATODO")).toMatchObject({ amount: 1250 });
+        expect(parseNotification("Card payment\nR 120,00 at Woolworths")).toMatchObject({
+            amount: 120,
+            merchant: "Woolworths",
+        });
+        expect(parseNotification("Pagaste Q150.00 en La Torre")).toMatchObject({ amount: 150, merchant: "La Torre" });
+    });
+
+    it("does not read a discount or a balance reminder as a charge", () => {
+        for (const text of [
+            "Get $10 off your next purchase",
+            "Use code SAVE10 for $10 off",
+            "Save $10 on your next order",
+            "10 € de réduction sur votre prochaine commande",
+            "10 € de descuento en tu próxima compra",
+            "You have $1,000 available credit on your card",
+            "Tu saldo disponible: Bs. 1.250,00",
+            "Your balance is $180.00",
+            "Card ending 7909: $1,234.00 balance",
+            "Discount: $10.00",
+            "Discount of $10.00",
+            "Available credit: $1,000.00",
+            "Crédito disponible: $1.000,00",
+            "Você tem R$ 1.000,00 disponível",
+        ]) {
+            expect(parseNotification(text)).toBeNull();
+            expect(hasChargeAmount(text)).toBe(false);
+        }
+    });
+
+    it("keeps a purchase that a discount or a balance shares the text with", () => {
+        expect(parseNotification("Purchase of $20.00 at STARBUCKS. Available balance $180.00")).toMatchObject({
+            amount: 20,
+            merchant: "STARBUCKS",
+        });
+        expect(parseNotification("Get $10 off your next order. You spent $25.00 at OXXO")).toMatchObject({
+            amount: 25,
+            merchant: "OXXO",
+        });
+        expect(parseNotification("You spent $25 at Save Mart")).toMatchObject({ amount: 25, merchant: "Save Mart" });
+        expect(parseNotification("Discount: $10.00. You spent $25.00 at OXXO")).toMatchObject({
+            amount: 25,
+            merchant: "OXXO",
+        });
+        expect(parseNotification("Available credit: $1,000.00. You spent $25.00 at OXXO")).toMatchObject({
+            amount: 25,
+            merchant: "OXXO",
+        });
+        expect(parseNotification("Blue Bottle Coffee\n$6.40\nAvailable credit: $1,000.00")).toMatchObject({
+            amount: 6.4,
+            merchant: "Blue Bottle Coffee",
+        });
     });
 
     it("stops the amount at a line break", () => {
