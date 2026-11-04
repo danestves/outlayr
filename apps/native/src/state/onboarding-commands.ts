@@ -1,5 +1,6 @@
 import * as Effect from "effect/Effect";
 
+import { META_KEYS, setMeta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 import { armChosenReminder } from "@/lib/chosen-reminder";
 import { posthog } from "@/lib/posthog";

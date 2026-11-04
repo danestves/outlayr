@@ -251,12 +251,12 @@ function RouteGate({
     return children;
 }
 
-// Split out so `useDatabase` is only called below the splash gate, where the database is guaranteed open.
 function PaywallOpeners({ db, ready }: { db: Database; ready: boolean }) {
     usePaywallOpeners(db, ready);
     return null;
 }
 
+// Split out so `useDatabase` is only called below the splash gate, where the database is guaranteed open.
 function RootStack() {
     const db = useDatabase();
     const t = useTranslation();

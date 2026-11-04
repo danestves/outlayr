@@ -14,6 +14,7 @@ import { purchaseResume } from "@/domain/purchase-resume";
 import { useProLocked } from "@/hooks/use-pro-locked";
 import { useAuthSession } from "@/lib/auth-session";
 import { freshEntries } from "@/lib/fresh-entries";
+import { posthog } from "@/lib/posthog";
 import { purchaseIntent, usePurchaseIntent } from "@/lib/purchase-intent";
 import { SILENT } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
@@ -96,9 +97,16 @@ export function usePaywallOpeners(db: Database, ready: boolean): void {
         }
         if (resume === "drop") {
             purchaseIntent.clear();
+            if (accountId === null) {
+                posthog?.capture("paywall_dismissed", {
+                    sale_state: "needs_account",
+                    trigger: taken.trigger,
+                    variant: taken.variant,
+                });
+            }
             return;
         }
         purchaseIntent.hand();
         router.push(paywallHref(taken.trigger));
-    }, [resume, router]);
+    }, [accountId, resume, router]);
 }
