@@ -16,4 +16,9 @@ export default CronJobs.make()
     .add(CronJob.make("refresh binance ves rate", Duration.minutes(30), refs.internal.binance.fetchRates))
     .add(CronJob.make("prune stale exchange rates", Duration.hours(24), refs.internal.exchangeRates.pruneStale, {}))
     .add(CronJob.make("drop expired deletion jobs", Duration.hours(24), refs.internal.accountDeletion.cleanupExpired))
-    .add(CronJob.make("refresh open stats", Cron.parseUnsafe("10 0 * * *"), refs.internal.openStats.refresh));
+    .add(CronJob.make("refresh open stats", Cron.parseUnsafe("10 0 * * *"), refs.internal.openStats.refresh))
+    .add(
+        CronJob.make("resend open referral grants", Duration.hours(24), refs.internal.referrals.sweepGrants, {
+            cursor: null,
+        })
+    );

@@ -19,6 +19,9 @@ import outsideMoves from "./tables/outsideMoves";
 import outsidePayments from "./tables/outsidePayments";
 import photoObjects from "./tables/photoObjects";
 import photoSizes from "./tables/photoSizes";
+import referralCodes from "./tables/referralCodes";
+import referralRewards from "./tables/referralRewards";
+import referrals from "./tables/referrals";
 import savingsGoals from "./tables/savingsGoals";
 import syncState from "./tables/syncState";
 import tags from "./tables/tags";
@@ -49,6 +52,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly outsidePayments: typeof outsidePayments;
   readonly photoObjects: typeof photoObjects;
   readonly photoSizes: typeof photoSizes;
+  readonly referralCodes: typeof referralCodes;
+  readonly referralRewards: typeof referralRewards;
+  readonly referrals: typeof referrals;
   readonly savingsGoals: typeof savingsGoals;
   readonly syncState: typeof syncState;
   readonly tags: typeof tags;
@@ -78,6 +84,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   outsidePayments,
   photoObjects,
   photoSizes,
+  referralCodes,
+  referralRewards,
+  referrals,
   savingsGoals,
   syncState,
   tags,

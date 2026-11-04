@@ -20,6 +20,9 @@ export type OutsideMovesDoc = Document.Document<typeof schemaDefinition, "outsid
 export type OutsidePaymentsDoc = Document.Document<typeof schemaDefinition, "outsidePayments">;
 export type PhotoObjectsDoc = Document.Document<typeof schemaDefinition, "photoObjects">;
 export type PhotoSizesDoc = Document.Document<typeof schemaDefinition, "photoSizes">;
+export type ReferralCodesDoc = Document.Document<typeof schemaDefinition, "referralCodes">;
+export type ReferralRewardsDoc = Document.Document<typeof schemaDefinition, "referralRewards">;
+export type ReferralsDoc = Document.Document<typeof schemaDefinition, "referrals">;
 export type SavingsGoalsDoc = Document.Document<typeof schemaDefinition, "savingsGoals">;
 export type SyncStateDoc = Document.Document<typeof schemaDefinition, "syncState">;
 export type TagsDoc = Document.Document<typeof schemaDefinition, "tags">;
@@ -50,6 +53,9 @@ export interface Docs {
   outsidePayments: OutsidePaymentsDoc;
   photoObjects: PhotoObjectsDoc;
   photoSizes: PhotoSizesDoc;
+  referralCodes: ReferralCodesDoc;
+  referralRewards: ReferralRewardsDoc;
+  referrals: ReferralsDoc;
   savingsGoals: SavingsGoalsDoc;
   syncState: SyncStateDoc;
   tags: TagsDoc;

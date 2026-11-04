@@ -28,16 +28,21 @@ export class ProRequired extends Schema.TaggedError<ProRequired>()("ProRequired"
 
 export class RevenueCatError extends Schema.TaggedError<RevenueCatError>()("RevenueCatError", {
     cause: Schema.optional(Schema.Defect()),
-    operation: Schema.Literals(["eraseCustomer", "readSubscriber"]),
+    operation: Schema.Literals(["eraseCustomer", "grantPromotional", "readSubscriber"]),
     reason: Schema.Literals(["unconfigured", "status", "transport"]),
     status: Schema.optional(Schema.Number),
 }) {
     override get message(): string {
         if (this.reason === "unconfigured") {
-            return "REVENUECAT_SECRET_KEY is not set; the upstream customer cannot be erased";
+            const consequence =
+                this.operation === "grantPromotional"
+                    ? "a promotional month cannot be granted"
+                    : "the upstream customer cannot be erased";
+            return `REVENUECAT_SECRET_KEY is not set; ${consequence}`;
         }
         if (this.reason === "status") {
-            return `RevenueCat customer erase failed with ${this.status}`;
+            const action = this.operation === "grantPromotional" ? "promotional grant" : "customer erase";
+            return `RevenueCat ${action} failed with ${this.status}`;
         }
         return `RevenueCat request failed during ${this.operation}`;
     }
@@ -89,6 +94,39 @@ export const eraseUpstreamCustomer = Effect.fn("RevenueCat.eraseUpstreamCustomer
 const SubscriberResponse = Schema.Struct({ subscriber: Schema.Record(Schema.String, Schema.Unknown) });
 
 const decodeSubscriberResponse = HttpIncomingMessage.schemaBodyJson(SubscriberResponse);
+
+const grantTransport = (cause: unknown) =>
+    new RevenueCatError({ cause, operation: "grantPromotional", reason: "transport" });
+
+export const grantPromotional = Effect.fn("RevenueCat.grantPromotional")(function* grantPromotional(
+    appUserId: string,
+    endsAtMs: number
+) {
+    const secretKey = yield* revenueCatSecretKey;
+    if (Option.isNone(secretKey)) {
+        return yield* new RevenueCatError({ operation: "grantPromotional", reason: "unconfigured" });
+    }
+    const { subscriber } = yield* Effect.gen(function* promotionalGrant() {
+        const response = yield* HttpClient.execute(
+            HttpClientRequest.post(`${subscriberUrl(appUserId)}/entitlements/${PRO_ENTITLEMENT_ID}/promotional`).pipe(
+                HttpClientRequest.bearerToken(secretKey.value),
+                HttpClientRequest.bodyJsonUnsafe({ end_time_ms: Math.round(endsAtMs) })
+            )
+        );
+        if (!isOk(response.status)) {
+            return yield* new RevenueCatError({
+                operation: "grantPromotional",
+                reason: "status",
+                status: response.status,
+            });
+        }
+        return yield* decodeSubscriberResponse(response);
+    }).pipe(
+        Effect.timeout(REVENUECAT_TIMEOUT),
+        Effect.catchTags({ HttpClientError: grantTransport, SchemaError: grantTransport, TimeoutError: grantTransport })
+    );
+    return subscriber;
+});
 
 /** Whether an authoritative payload still lists Pro at all, expired or not. */
 export const listsPro = Schema.is(

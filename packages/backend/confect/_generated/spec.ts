@@ -24,6 +24,7 @@ import openStats from "../openStats.spec";
 import openexchangerates from "../openexchangerates.spec";
 import photos from "../photos.spec";
 import receiptScan from "../receiptScan.spec";
+import referrals from "../referrals.spec";
 import revenuecat from "../revenuecat.spec";
 import sync from "../sync.spec";
 import voiceEntry from "../voiceEntry.spec";
@@ -54,6 +55,7 @@ const spec: Spec.Spec<{
   readonly openexchangerates: GroupSpec.NamedAt<typeof openexchangerates, "openexchangerates">;
   readonly photos: GroupSpec.NamedAt<typeof photos, "photos">;
   readonly receiptScan: GroupSpec.NamedAt<typeof receiptScan, "receiptScan">;
+  readonly referrals: GroupSpec.NamedAt<typeof referrals, "referrals">;
   readonly revenuecat: GroupSpec.NamedAt<typeof revenuecat, "revenuecat">;
   readonly sync: GroupSpec.NamedAt<typeof sync, "sync">;
   readonly voiceEntry: GroupSpec.NamedAt<typeof voiceEntry, "voiceEntry">;
@@ -83,6 +85,7 @@ const spec: Spec.Spec<{
   ["openexchangerates"]: openexchangerates,
   ["photos"]: photos,
   ["receiptScan"]: receiptScan,
+  ["referrals"]: referrals,
   ["revenuecat"]: revenuecat,
   ["sync"]: sync,
   ["voiceEntry"]: voiceEntry,

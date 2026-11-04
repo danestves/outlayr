@@ -35,6 +35,7 @@ import type * as openStats from "../openStats.js";
 import type * as openexchangerates from "../openexchangerates.js";
 import type * as photos from "../photos.js";
 import type * as receiptScan from "../receiptScan.js";
+import type * as referrals from "../referrals.js";
 import type * as revenuecat from "../revenuecat.js";
 import type * as sync from "../sync.js";
 import type * as voiceEntry from "../voiceEntry.js";
@@ -73,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   openexchangerates: typeof openexchangerates;
   photos: typeof photos;
   receiptScan: typeof receiptScan;
+  referrals: typeof referrals;
   revenuecat: typeof revenuecat;
   sync: typeof sync;
   voiceEntry: typeof voiceEntry;

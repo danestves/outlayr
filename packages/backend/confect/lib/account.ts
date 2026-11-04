@@ -65,6 +65,48 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
         return { done: false, removed: rows.length };
     }
 
+    const invites = yield* Effect.promise(() =>
+        ctx.db
+            .query("referrals")
+            .withIndex("by_referrerId_and_rewardedAt", (q) => q.eq("referrerId", userId))
+            .take(PURGE_BATCH)
+    );
+    if (invites.length > 0) {
+        yield* Effect.all(
+            invites.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
+            { concurrency: "unbounded", discard: true }
+        );
+        return { done: false, removed: invites.length };
+    }
+
+    const [asFriend, ...owned] = yield* Effect.promise(() =>
+        Promise.all([
+            ctx.db
+                .query("referrals")
+                .withIndex("by_referredId", (q) => q.eq("referredId", userId))
+                .unique(),
+            ctx.db
+                .query("referralCodes")
+                .withIndex("by_userId", (q) => q.eq("userId", userId))
+                .unique(),
+            ctx.db
+                .query("referralRewards")
+                .withIndex("by_userId", (q) => q.eq("userId", userId))
+                .unique(),
+        ])
+    );
+    const countsTowardCap = asFriend !== null && asFriend.rewardedAt !== null;
+    if (countsTowardCap) {
+        yield* Effect.promise(() =>
+            ctx.db.patch(asFriend._id, { referredId: `deleted:${asFriend._id}`, referredName: null })
+        );
+    }
+    const referralDocs = [...owned, countsTowardCap ? null : asFriend].filter((row) => row !== null);
+    yield* Effect.all(
+        referralDocs.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
+        { concurrency: "unbounded", discard: true }
+    );
+
     const mail = yield* Effect.promise(() =>
         ctx.db
             .query("mailState")
@@ -74,7 +116,7 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
     if (mail) {
         yield* Effect.promise(() => ctx.db.delete(mail._id));
     }
-    const mailRemoved = mail ? 1 : 0;
+    const mailRemoved = (mail ? 1 : 0) + referralDocs.length;
 
     // Last: it stamps `seq`, so removing it early restarts numbering under higher seqs.
     const state = yield* Effect.promise(() =>
