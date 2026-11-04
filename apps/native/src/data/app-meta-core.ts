@@ -11,6 +11,7 @@ import type { SpendDb } from "./budget-spent";
 export const META_KEYS = {
     accountDeferred: "accountDeferred",
     autologAccess: "autologAccess",
+    autologReviewPending: "autologReviewPending",
     autologUsage: "autologUsage",
     autologWaiting: "autologWaiting",
     categoryLanguage: "categoryLanguage",

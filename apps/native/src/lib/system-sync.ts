@@ -229,7 +229,7 @@ export const make = Effect.gen(function* make() {
         );
         const drainRun = drainPendingWrites(db, claimPendingWrites, releasePendingWrites, readNotifications).pipe(
             failedStep("drain"),
-            Effect.flatMap((applied) => publishIf(applied === 0)),
+            Effect.flatMap(({ applied }) => publishIf(applied === 0)),
             Effect.catchTags({ SystemSyncError: (error) => warn(error).pipe(Effect.andThen(publishSoon)) }),
             Effect.andThen(
                 sendEnrichmentQueue(db).pipe(

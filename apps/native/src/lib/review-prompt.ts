@@ -2,9 +2,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { count, countDistinct, isNull, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import { isAvailableAsync, requestReview } from "expo-store-review";
 import { AppState } from "react-native";
 
+import { getMeta, META_KEYS, setMeta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 
@@ -13,6 +15,7 @@ import { APP_VERSION } from "./app-version";
 const ASKED_VERSION_KEY = "outlayr.review-asked-version";
 const MIN_ENTRIES = 10;
 const MIN_DAYS = 3;
+const asking = Semaphore.makeUnsafe(1);
 
 const ReviewPromptOperation = Schema.Literals(["ledger", "store", "version"]);
 
@@ -53,4 +56,14 @@ export const askForReview = Effect.fn("ReviewPrompt.ask")(function* askForReview
     }
     yield* attempt("version", () => AsyncStorage.setItem(ASKED_VERSION_KEY, APP_VERSION));
     yield* attempt("store", requestReview);
+}, asking.withPermits(1));
+
+export const askForReviewIfPending = Effect.fn("ReviewPrompt.askIfPending")(function* askForReviewIfPending(
+    db: Database
+) {
+    if (AppState.currentState !== "active" || (yield* getMeta(db, META_KEYS.autologReviewPending)) !== "1") {
+        return;
+    }
+    yield* setMeta(db, META_KEYS.autologReviewPending, "0");
+    yield* askForReview(db).pipe(Effect.tapError(() => setMeta(db, META_KEYS.autologReviewPending, "1")));
 });

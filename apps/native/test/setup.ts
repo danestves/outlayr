@@ -14,6 +14,11 @@ vi.mock("@/i18n/context", () => ({
     useTranslation: () => (key: string) => key,
 }));
 
+vi.mock("@react-native-async-storage/async-storage", async () => {
+    vi.stubGlobal("jest", vi);
+    return import("@react-native-async-storage/async-storage/jest/async-storage-mock");
+});
+
 vi.mock("@/lib/posthog", () => ({ posthog: null, useScreenTracking: () => undefined }));
 
 Object.assign(globalThis, { __DEV__: true });

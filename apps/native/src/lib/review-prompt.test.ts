@@ -5,14 +5,18 @@ import * as StoreReview from "expo-store-review";
 import { AppState } from "react-native";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
+import { getMeta, META_KEYS, setMeta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
 import { APP_VERSION } from "./app-version";
-import { askForReview as ask } from "./review-prompt";
+import { askForReview as ask, askForReviewIfPending as askIfPending } from "./review-prompt";
 
 const askForReview = (db: Database) => Effect.runPromise(ask(db));
+const askForReviewIfPending = (db: Database) => Effect.runPromise(askIfPending(db));
+const markPending = (db: Database) => Effect.runPromise(setMeta(db, META_KEYS.autologReviewPending, "1"));
+const pending = (db: Database) => Effect.runPromise(getMeta(db, META_KEYS.autologReviewPending));
 
 vi.mock("@react-native-async-storage/async-storage", async () => {
     vi.stubGlobal("jest", vi);
@@ -70,6 +74,56 @@ describe("askForReview", () => {
         await askForReview(db);
 
         expect(mockStoreReview.requestReview).toHaveBeenCalledTimes(2);
+    });
+
+    it("asks once when a manual save and an auto-logged entry ask at the same moment", async () => {
+        await writeEntries(db, [4, 3, 3]);
+
+        await markPending(db);
+        await Promise.all([askForReview(db), askForReviewIfPending(db)]);
+
+        expect(mockStoreReview.requestReview).toHaveBeenCalledOnce();
+    });
+
+    it("asks for the auto-logged expense a drain recorded, once, and not again without a new one", async () => {
+        await writeEntries(db, [4, 3, 3]);
+        await markPending(db);
+
+        await askForReviewIfPending(db);
+        await AsyncStorage.removeItem(ASKED_VERSION_KEY);
+        await askForReviewIfPending(db);
+
+        expect(mockStoreReview.requestReview).toHaveBeenCalledOnce();
+        await expect(pending(db)).resolves.toBe("0");
+    });
+
+    it("keeps the record for the next visit when the ask fails before reaching the store", async () => {
+        await writeEntries(db, [4, 3, 3]);
+        await markPending(db);
+        mockStoreReview.isAvailableAsync.mockRejectedValueOnce(new Error("store unavailable"));
+
+        await expect(askForReviewIfPending(db)).rejects.toThrow();
+
+        await expect(pending(db)).resolves.toBe("1");
+    });
+
+    it("does not ask on its own when no drain recorded an auto-logged expense", async () => {
+        await writeEntries(db, [4, 3, 3]);
+
+        await askForReviewIfPending(db);
+
+        expect(mockStoreReview.requestReview).not.toHaveBeenCalled();
+    });
+
+    it("keeps the record for the next time the Log is on screen when the app is in the background", async () => {
+        await writeEntries(db, [4, 3, 3]);
+        await markPending(db);
+        AppState.currentState = "background";
+
+        await askForReviewIfPending(db);
+
+        expect(mockStoreReview.requestReview).not.toHaveBeenCalled();
+        await expect(pending(db)).resolves.toBe("1");
     });
 
     it("waits for a third day, which a deleted entry does not supply", async () => {

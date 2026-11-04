@@ -49,6 +49,10 @@ export function countsAsAutolog(source: AutologSource): boolean {
     return source === "wallet" || source === "notification";
 }
 
+export function autologExpenseCount(source: AutologSource, income: boolean): number {
+    return countsAsAutolog(source) && !income ? 1 : 0;
+}
+
 export function holdsAutolog(usage: AutologUsage, access: AutologAccess, source: AutologSource, at: number): boolean {
     return access === "free" && countsAsAutolog(source) && monthUsage(usage, at).used >= FREE_AUTOLOG_PER_MONTH;
 }
