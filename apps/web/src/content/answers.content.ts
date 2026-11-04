@@ -4530,8 +4530,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Bobby, Monarch, Outlayr, PocketGuard, and Rocket Money compared on price, how subscriptions get in, and where each works. Outlayr is ours; the rest are not.",
-                        es: "Bobby, Monarch, Outlayr, PocketGuard y Rocket Money comparadas en precio, cómo entran las suscripciones y dónde funcionan. Outlayr es nuestra.",
+                        en: "Bobby, Monarch, Outlayr, PocketGuard, and Rocket Money compared on price, which are free, how subscriptions get in, and where each works. Outlayr is ours; the rest are not.",
+                        es: "Bobby, Monarch, Outlayr, PocketGuard y Rocket Money comparadas en precio, cuáles son gratis, cómo entran las suscripciones y dónde funcionan. Outlayr es nuestra.",
                     }),
                     title: t({
                         en: "Best Subscription Tracker Apps, Compared (2026) · Outlayr",

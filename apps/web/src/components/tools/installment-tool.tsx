@@ -81,14 +81,15 @@ export function InstallmentTool() {
     const end = every === "month" ? labels.at.month({ n: plan.count }) : labels.at.week({ n: plan.count * weeks });
 
     const amount = <Figure code={code} minor={Math.abs(extra)} tone={extra > 0 ? "spend" : "income"} />;
-    let answer: ReactNode = page.answer.same({ end });
+    const totalPrice = <Figure code={code} minor={total} />;
+    let answer: ReactNode = page.answer.same({ end, total: totalPrice });
     if (kind === "more") {
         const rate = <span className="font-mono font-medium">{formatRate(annualRate ?? 0)}</span>;
-        answer = page.answer.more({ amount, end, rate });
+        answer = page.answer.more({ amount, end, rate, total: totalPrice });
     } else if (kind === "covered") {
         answer = page.answer.covered({ amount });
     } else if (kind === "less") {
-        answer = page.answer.less({ amount, end });
+        answer = page.answer.less({ amount, end, total: totalPrice });
     } else if (kind !== "same") {
         answer = page.answer[kind];
     }

@@ -200,7 +200,7 @@ const tools = {
                     t({ en: "Streaming", es: "Streaming" }),
                     t({ en: "Music", es: "Música" }),
                     t({ en: "Cloud storage", es: "Almacenamiento en la nube" }),
-                    t({ en: "Gym", es: "Gimnasio" }),
+                    t({ en: "Gym membership", es: "Membresía del gimnasio" }),
                     t({ en: "News", es: "Noticias" }),
                 ],
                 faq: [
@@ -239,13 +239,13 @@ const tools = {
                     year: t({ en: "A year", es: "Al año" }),
                 },
                 lead: t({
-                    en: "Add up what your subscriptions cost a month and a year, whether they charge weekly, monthly, every 3 months, or once a year.",
-                    es: "Suma lo que te cuestan tus suscripciones al mes y al año, ya cobren cada semana, cada mes, cada 3 meses o una vez al año.",
+                    en: "Add up what your subscriptions and memberships cost a month and a year, whether they charge weekly, monthly, every 3 months, or once a year.",
+                    es: "Suma lo que te cuestan tus suscripciones y membresías al mes y al año, ya cobren cada semana, cada mes, cada 3 meses o una vez al año.",
                 }),
                 meta: {
                     title: t({
-                        en: "Subscription Cost Calculator · Outlayr",
-                        es: "Calculadora de suscripciones · Outlayr",
+                        en: "Subscription & Membership Cost Calculator · Outlayr",
+                        es: "Calculadora de suscripciones y membresías · Outlayr",
                     }),
                 },
                 method: [
@@ -291,14 +291,14 @@ const tools = {
                     }),
                     less: insert(
                         t({
-                            en: "You pay {{amount}} less than cash. Done by {{end}}.",
-                            es: "Pagas {{amount}} menos que de contado. Terminas en {{end}}.",
+                            en: "You pay {{total}} in total, {{amount}} less than cash. Done by {{end}}.",
+                            es: "Pagas {{total}} en total, {{amount}} menos que de contado. Terminas en {{end}}.",
                         })
                     ),
                     more: insert(
                         t({
-                            en: "You pay {{amount}} more than cash, a yearly rate of {{rate}}. Done by {{end}}.",
-                            es: "Pagas {{amount}} más que de contado, una tasa anual de {{rate}}. Terminas en {{end}}.",
+                            en: "You pay {{total}} in total, {{amount}} more than cash, a yearly rate of {{rate}}. Done by {{end}}.",
+                            es: "Pagas {{total}} en total, {{amount}} más que de contado, una tasa anual de {{rate}}. Terminas en {{end}}.",
                         })
                     ),
                     paid: t({
@@ -307,8 +307,8 @@ const tools = {
                     }),
                     same: insert(
                         t({
-                            en: "You pay the cash price, with no extra cost. Done by {{end}}.",
-                            es: "Pagas el precio de contado, sin costo extra. Terminas en {{end}}.",
+                            en: "You pay {{total}} in total, the cash price, with no extra cost. Done by {{end}}.",
+                            es: "Pagas {{total}} en total, el precio de contado, sin costo extra. Terminas en {{end}}.",
                         })
                     ),
                     verdict: {
@@ -394,8 +394,8 @@ const tools = {
                     price: t({ en: "List price", es: "Precio de lista" }),
                 },
                 lead: t({
-                    en: "Installments or cash? See which costs less in today's money with inflation and a cash discount, plus the extra over the cash price and the yearly rate behind it.",
-                    es: "¿Cuotas o contado? Mira cuál conviene más con la inflación y el descuento por pagar de contado, y cuánto pagas de más y a qué tasa anual.",
+                    en: "Installments or cash? See the total installment price, which costs less in today's money with inflation and a cash discount, and the yearly rate behind the extra over the cash price.",
+                    es: "¿Cuotas o contado? Mira el precio total en cuotas, cuál conviene más con la inflación y el descuento por pagar de contado, y a qué tasa anual pagas de más.",
                 }),
                 meta: {
                     title: t({
