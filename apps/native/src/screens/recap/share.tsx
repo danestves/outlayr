@@ -62,8 +62,8 @@ export function RecapShare({ month: monthKey }: { month: string | undefined }) {
                     showsVerticalScrollIndicator={false}
                 >
                     <RecapCardPreview layout={layout} width={width - GUTTER * 2} />
-                    <View className="flex-row items-center justify-between pt-5">
-                        <Text className="text-body text-foreground">{t("insights.recap.showAmounts")}</Text>
+                    <View className="flex-row items-center gap-3 pt-5">
+                        <Text className="text-body text-foreground flex-1">{t("insights.recap.showAmounts")}</Text>
                         <EditorSwitch
                             accessibilityLabel={t("insights.recap.showAmounts")}
                             onValueChange={setShowAmounts}
