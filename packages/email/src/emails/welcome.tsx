@@ -107,11 +107,10 @@ export default function WelcomeEmail({ email, language, provider }: WelcomeEmail
                 [copy.signedInWith, providerName(provider, copy)],
             ]}
             footer={copy.footer(email)}
-            intro={copy.intro}
-            items={copy.items}
             language={language}
             lead={copy.lead}
             preview={copy.preview}
+            sections={[{ intro: copy.intro, items: copy.items }]}
         />
     );
 }

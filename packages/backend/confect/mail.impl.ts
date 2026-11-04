@@ -161,7 +161,7 @@ const noticeRecipients = FunctionImpl.make(
     databaseSchema,
     spec,
     "noticeRecipients",
-    Effect.fn("Mail.noticeRecipients")(function* noticeRecipients({ cursor, key }) {
+    Effect.fn("Mail.noticeRecipients")(function* noticeRecipients({ cursor, keys }) {
         const ctx = yield* QueryCtx;
         const users = yield* Effect.promise(() =>
             ctx.runQuery(components.betterAuth.adapter.findMany, {
@@ -169,12 +169,13 @@ const noticeRecipients = FunctionImpl.make(
                 paginationOpts: { cursor, numItems: NOTICE_PAGE },
             })
         );
-        const recipients: { email: string; language: Language; userId: string }[] = [];
+        const recipients: { email: string; language: Language; pending: string[]; userId: string }[] = [];
         for (const user of users.page.map(decodeAuthUser).filter(Option.isSome)) {
             const { _id: userId, email, emailVerified } = user.value;
             const state = yield* stateOf(userId);
-            if (emailVerified && !state?.notices.includes(key)) {
-                recipients.push({ email, language: state?.language ?? "en", userId });
+            const pending = keys.filter((key) => !state?.notices.includes(key));
+            if (emailVerified && pending.length > 0) {
+                recipients.push({ email, language: state?.language ?? "en", pending, userId });
             }
         }
         return { continueCursor: users.continueCursor, isDone: users.isDone, recipients };
@@ -185,10 +186,11 @@ const recordNotice = FunctionImpl.make(
     databaseSchema,
     spec,
     "recordNotice",
-    Effect.fn("Mail.recordNotice")(function* recordNotice({ key, language, userId }) {
+    Effect.fn("Mail.recordNotice")(function* recordNotice({ keys, language, userId }) {
         const state = yield* stateOf(userId);
-        if (!state?.notices.includes(key)) {
-            yield* saveState(userId, state, { language, notices: [...(state?.notices ?? []), key] });
+        const added = keys.filter((key) => !state?.notices.includes(key));
+        if (added.length > 0) {
+            yield* saveState(userId, state, { language, notices: [...(state?.notices ?? []), ...added] });
         }
         return null;
     }, Effect.orDie)
