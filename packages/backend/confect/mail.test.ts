@@ -6,11 +6,13 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { components, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
+import { authComponent } from "./lib/betterAuth";
 import { seedAuthUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
 afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
     vi.useRealTimers();
 });
@@ -53,6 +55,19 @@ describe("the Pro email", () => {
         await t.finishAllScheduledFunctions(vi.runAllTimers);
 
         expect(sent).toStrictEqual([{ subject: "Outlayr Pro is on", to: owner.email }]);
+    });
+
+    it("is skipped, not crashed, when the RevenueCat app user ID is not an auth user ID", async () => {
+        const t = convexTest(schema, modules);
+        // convex-test reads an undecodable ID as missing; production's db.get throws instead.
+        vi.spyOn(authComponent, "getAnyUserById").mockRejectedValue(
+            new Error("Unable to decode ID: Invalid ID length 39")
+        );
+        vi.spyOn(console, "warn").mockReturnValue(undefined);
+
+        await expect(
+            t.query(internal.mail.recipient, { userId: "not-a-convex-id-but-a-revenuecat-alias" })
+        ).resolves.toBeNull();
     });
 });
 

@@ -2,6 +2,7 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Language } from "@outlayr/email/language";
 import { PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
 import * as Clock from "effect/Clock";
+import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -50,8 +51,15 @@ const saveState = Effect.fn("Mail.saveState")(function* saveState(
 
 const verifiedUser = Effect.fn("Mail.verifiedUser")(function* verifiedUser(userId: string) {
     const ctx = yield* QueryCtx;
-    const user = yield* Effect.promise(() => authComponent.getAnyUserById(ctx, userId));
-    return decodeAuthUser(user).pipe(Option.filter(({ emailVerified }) => emailVerified));
+    // A RevenueCat app user ID need not be a Convex ID, and the lookup throws on one it cannot decode.
+    const user = yield* Effect.tryPromise(() => authComponent.getAnyUserById(ctx, userId)).pipe(
+        Effect.tapError(() => Console.warn("[mail] no auth user for", userId)),
+        Effect.option
+    );
+    return user.pipe(
+        Option.flatMap(decodeAuthUser),
+        Option.filter(({ emailVerified }) => emailVerified)
+    );
 });
 
 const claimWelcome = FunctionImpl.make(
