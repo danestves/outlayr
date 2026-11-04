@@ -15,3 +15,9 @@ Give a friend a month of Pro, get one back. The backend is `packages/backend/con
 - **`onEntitlementDeactivated` misses natural expiry.** convex-revenuecat 0.3.2 fires it only for an entitlement the mirror still counted active before the event. When an EXPIRATION lands, its `expiresAtMs` has already passed. Banked months wait on `releaseBanked` instead, scheduled an hour after the plan's end; a renewed plan banks them again from the new end.
 - **Deleting an account forgets its invites.** `purgeUserBatch` removes the code, the invites both ways and the banked months, and RevenueCat erases the customer. A new account from the same person counts as new. A friend's invite that already earned a month stays without their id or name, so it still counts toward the inviter's 12.
 - **The daily sweep resends any reserved month the mirror does not show as covered.** To revoke a referral month from the RevenueCat dashboard, also clear that user's `referralRewards.promoEndsAt`, or the sweep grants it again.
+
+## Testing locally
+
+- Redeem answers `unavailable` while `REVENUECAT_SECRET_KEY` is unset on the deployment: it cannot ask RevenueCat whether the friend ever had Pro, and a grant has nowhere to go.
+- To run a claim end to end, set the key on the local deployment only, from `packages/backend`: `vp exec convex env set REVENUECAT_SECRET_KEY <key>`. The deployment is the one `.env.local` names; never pass `--prod`.
+- Grants and customer erasure then reach that RevenueCat project, so use throwaway accounts and delete them when done.
