@@ -1,6 +1,6 @@
 ---
 title: "Política de privacidad"
-description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 3 de noviembre de 2026."
+description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 10 de noviembre de 2026."
 intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo se conserva y qué puedes hacer al respecto. Esta traducción se ofrece para tu comodidad. Si hay alguna diferencia con la versión en inglés, prevalece la versión en inglés."
 ---
 
@@ -15,6 +15,7 @@ intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo
 - Este sitio web también usa PostHog, con una cookie. Si estás en el EEE o el Reino Unido, te pregunta primero. Cambia tu respuesta en el pie de página, en **Cookies**.
 - Con Outlayr Pro puedes conectar Notion para importar gastos de tus bases de datos de Notion. Guardamos cifrada en nuestros servidores la clave de acceso de Notion para que puedas volver a importar, hasta que desconectes Notion o elimines tu cuenta. Lo que leemos de Notion pasa por nuestro servidor hacia tu celular y no se guarda.
 - Puedes conectar a tu cuenta un asistente de IA como Claude. Una vez que lo apruebas, puede leer lo que tus dispositivos sincronizaron y, con Outlayr Pro, agregar entradas. Lo que lee se rige por la política de privacidad de ese asistente.
+- Si invitas amigos, cada uno ve tu nombre de pila en tu invitación, y tú ves su nombre de pila, cuántos días han registrado hasta tres y la fecha del tercero. Nunca lo que registraron.
 - Sin anuncios y sin rastreo en apps de otras empresas. No vendemos ni compartimos tu información personal.
 - Puedes eliminar tu cuenta y todo lo que está sincronizado con ella desde la app en cualquier momento: **Configuración › Cuenta › Eliminar cuenta**.
 
@@ -48,6 +49,7 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | Nombres, columnas y filas de las bases de datos de Notion que elijas | Importación desde Notion (Pro) | Notion, nuestros servidores, tu dispositivo | No se conservan en nuestros servidores |
 | Dirección web, dirección IP | Logos | Logo.dev, Google | Según sus políticas |
 | Registros de compra, ID de usuario, nombre, correo electrónico | Al abrir la app, Pro | RevenueCat, Apple o Google, nuestros servidores | Hasta la eliminación de la cuenta |
+| Código de invitación, quién invitó a quién, nombres de pila, días registrados hasta tres y la fecha del tercero, meses ganados | Invitaciones | Nuestros servidores, RevenueCat | Hasta la eliminación de la cuenta |
 | ID de instalación, versión de la app, errores | Búsqueda de actualizaciones | Expo | Según la política de Expo |
 | Pantallas, funciones usadas, errores, ID de instalación, modelo del dispositivo | Uso de la app | PostHog | Hasta la eliminación de la cuenta, o según la política de PostHog si nunca inicias sesión |
 | Función, modelo, tokens, costo, velocidad y errores de cada solicitud de IA | Sugerencias, lectura de notificaciones, voz, escaneos, importaciones | PostHog | Con Compartir analíticas activado, hasta la eliminación de la cuenta. Si no, según la política de PostHog |
@@ -227,6 +229,14 @@ RevenueCat administra el estado de las suscripciones en nuestro nombre. Cuando s
 
 Nuestro servidor consulta a RevenueCat con tu ID de cuenta para confirmar Pro, y RevenueCat le avisa a nuestro servidor cuando tu suscripción cambia. Guardamos una copia de tus registros de suscripción, como el producto, las fechas, el precio y el país de la tienda, y la eliminamos junto con tu cuenta.
 
+## Invitaciones
+
+Con sesión iniciada, tienes un código de invitación. Quien abra tu código o tu enlace en la app ve tu nombre de pila.
+
+Cuando un amigo lo reclama, registramos quién invitó a quién, su nombre de pila, en cuántos días distintos sincronizó una entrada nueva, hasta tres, y cuándo llegó el tercero. Tu página de invitaciones muestra el nombre de pila de cada amigo, esa cuenta y esa fecha, nunca sus entradas ni sus montos. Para comprobar que la cuenta de un amigo es nueva y nunca tuvo Pro, nuestro servidor se lo consulta a RevenueCat.
+
+Los meses de Pro por invitaciones se otorgan a través de RevenueCat. Tu código de invitación, las invitaciones que enviaste, la que reclamaste y los meses que esperan a que termine tu plan pagado se eliminan con tu cuenta, y tu nombre sale de las listas de tus amigos. Si la invitación que reclamaste ya le dio un mes a tu amigo, queda en su lista sin tu nombre, para que siga contando en su límite anual.
+
 ## Permisos del dispositivo
 
 La app pide cada permiso la primera vez que una función lo necesita. Puedes cambiarlos en la app Configuración de tu celular.
@@ -283,7 +293,7 @@ Si estás en el Espacio Económico Europeo o en el Reino Unido, estas son las ba
 
 | Finalidad | Base legal |
 | --- | --- |
-| Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, la conexión con Notion, Pro y las conexiones con asistentes de IA | Contrato: necesitamos estos datos para darte lo que pides. |
+| Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, la conexión con Notion, Pro, las invitaciones y las conexiones con asistentes de IA | Contrato: necesitamos estos datos para darte lo que pides. |
 | Las notas de bienvenida y de Pro, y los avisos de cambios en esta política o nuestros Términos | Contrato: son parte de la cuenta y la suscripción que pediste. |
 | El envío a Anthropic y ElevenLabs de entradas por voz, fotos de recibos, capturas de planes de cuotas, descripciones de CSV, texto de notificaciones y nombres de comercios | Tu consentimiento, dado con Permitir cuando la app lo pregunta y retirado en **Configuración › Enviar datos a proveedores de IA**. |
 | Las sugerencias de comercios, la lectura de notificaciones, las búsquedas web, la lista compartida de comercios y los logos | Intereses legítimos: agilizar el registro de entradas y hacerlo más preciso. Las sugerencias, la lectura de notificaciones y las búsquedas web solo llegan a Anthropic una vez que lo permites, y desactivar Autocompletado es la forma de oponerte. |
@@ -307,6 +317,7 @@ La [tabla de arriba](#datos-de-un-vistazo) indica cuánto tiempo se conserva cad
 - Las solicitudes de sugerencias de comercios no se conservan una vez respondidas. Las que quedan en cola en segundo plano esperan en nuestro servidor hasta que tu dispositivo recoja la respuesta.
 - El idioma de tu app y el registro de qué correos de bienvenida, de Pro y de cambios recibiste se eliminan con tu cuenta.
 - Los contadores de uso que aplican los límites de escaneos, entradas por voz, sugerencias y lectura de notificaciones guardan solo cantidades, asociadas a tu ID de cuenta, y se eliminan con tu cuenta.
+- Los registros de invitaciones (tu código, quién invitó a quién, los nombres de pila, los días registrados y los meses ganados o en espera) se eliminan con la cuenta a la que pertenecen. Una invitación que ya dio un mes pierde el nombre del amigo cuando se elimina su cuenta, y se queda hasta que se elimina la de quien invitó.
 - Los elementos de la lista compartida de comercios no están vinculados a nadie. Se actualizan después de 30 o 90 días.
 - Los eventos de analíticas vinculados a tu cuenta se eliminan con ella. Los eventos de una instalación que nunca inició sesión llevan solo un ID de instalación aleatorio y se conservan según la política de conservación de PostHog. Los registros de solicitudes de IA enviados con Compartir analíticas desactivado llevan un ID aleatorio en lugar de tu ID de cuenta, más el ID de la conversación en la entrada por voz, y se conservan de la misma forma.
 - Los eventos del sitio web llevan un ID aleatorio del navegador, o un código que cambia cada día si rechazaste las cookies, y se conservan según la política de conservación de PostHog.
@@ -323,7 +334,7 @@ Abre **Configuración › Cuenta › Eliminar cuenta**. Es posible que se te pid
 - Tu registro sincronizado, los registros de eliminación, las fotos respaldadas y las solicitudes de sugerencia pendientes se eliminan de nuestros servidores.
 - Se eliminan tu registro de cliente en RevenueCat y nuestra copia del estado de tu suscripción.
 - Se eliminan tu perfil en PostHog y todos los eventos de analíticas vinculados a él.
-- Se eliminan tus contadores de uso, tus conversaciones de voz abiertas, tus sesiones, el acceso de los asistentes de IA, tus enlaces de inicio de sesión, la clave de acceso de Notion y tu cuenta.
+- Se eliminan tus contadores de uso, tus conversaciones de voz abiertas, tus sesiones, el acceso de los asistentes de IA, tus enlaces de inicio de sesión, la clave de acceso de Notion, tu código de invitación y tus invitaciones, y tu cuenta. Si la invitación que reclamaste ya le dio un mes a tu amigo, queda en su lista sin tu nombre.
 
 Empieza de inmediato y se ejecuta desde tu dispositivo. Si se interrumpe, abre de nuevo Configuración › Cuenta y la app continúa donde se detuvo. Si no puedes usar la app, escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com). [Elimina tu cuenta](/es/delete-account) reúne estos pasos en una sola página.
 
