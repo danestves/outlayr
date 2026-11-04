@@ -19,6 +19,9 @@ struct NotificationPatterns: Codable {
     }
 
     let afterNumber: Pattern
+    /// Optional so a snapshot written before the discount and balance cues existed still decodes.
+    let balanceAfter: Pattern?
+    let balanceBefore: Pattern?
     let cardReference: Pattern
     let declined: Pattern
     let incoming: Pattern
@@ -26,6 +29,8 @@ struct NotificationPatterns: Codable {
     let paidTo: Pattern
     let parenthesized: Pattern
     let posPrefix: Pattern
+    let promoAfter: Pattern?
+    let promoBefore: Pattern?
     let receivedFrom: Pattern
 }
 
@@ -35,7 +40,7 @@ struct NotificationPurchase {
     let merchant: String?
 
     init?(_ text: String, patterns: NotificationPatterns) {
-        guard let money = patterns.money.range(in: text), !patterns.declined.matches(text) else {
+        guard let money = Self.charge(in: text, patterns: patterns), !patterns.declined.matches(text) else {
             return nil
         }
         let amountText = text[money].trimmingCharacters(in: .whitespacesAndNewlines)
@@ -56,6 +61,37 @@ struct NotificationPurchase {
         self.amountText = amountText
         self.income = income
         merchant = raw.flatMap { Self.clean($0, patterns: patterns) }
+    }
+
+    /// The first amount that is not a discount or a balance, matching `chargeMoney` in
+    /// `src/domain/parse-notification.ts` so the push and the ledger agree on what was read.
+    private static func charge(in text: String, patterns: NotificationPatterns) -> Range<String.Index>? {
+        guard let regex = try? NSRegularExpression(
+            pattern: patterns.money.source,
+            options: patterns.money.ignoreCase ? .caseInsensitive : []
+        ) else {
+            return nil
+        }
+        for match in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+            guard let money = Range(match.range, in: text) else { continue }
+            if !notACharge(text, money, patterns: patterns) {
+                return money
+            }
+        }
+        return nil
+    }
+
+    private static func notACharge(
+        _ text: String,
+        _ money: Range<String.Index>,
+        patterns: NotificationPatterns
+    ) -> Bool {
+        let before = String(text[..<money.lowerBound])
+        let after = String(text[money.upperBound...])
+        return patterns.promoBefore?.matches(before) == true
+            || patterns.promoAfter?.matches(after) == true
+            || patterns.balanceBefore?.matches(before) == true
+            || patterns.balanceAfter?.matches(after) == true
     }
 
     private static func clean(_ raw: String, patterns: NotificationPatterns) -> String? {
