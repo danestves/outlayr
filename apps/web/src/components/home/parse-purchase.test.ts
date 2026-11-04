@@ -7,6 +7,7 @@ describe("parsePurchase", () => {
         expect(parsePurchase("blue bottle 4.50", "en")).toStrictEqual({
             amount: 4.5,
             category: "Coffee",
+            currency: "USD",
             merchant: "Blue Bottle",
         });
     });
@@ -15,6 +16,7 @@ describe("parsePurchase", () => {
         expect(parsePurchase("juan valdez 4,50", "es")).toStrictEqual({
             amount: 4.5,
             category: "Coffee",
+            currency: "USD",
             merchant: "Juan Valdez",
         });
     });
@@ -23,7 +25,40 @@ describe("parsePurchase", () => {
         expect(parsePurchase("corner shop", "en")).toStrictEqual({
             amount: null,
             category: null,
+            currency: "USD",
             merchant: "Corner Shop",
         });
+    });
+
+    it("keeps digits in a merchant name when a decimal amount follows", () => {
+        expect(parsePurchase("7 Eleven 4.50", "en")).toStrictEqual({
+            amount: 4.5,
+            category: null,
+            currency: "USD",
+            merchant: "7 Eleven",
+        });
+    });
+
+    it("uses the currency symbol from the amount", () => {
+        expect(parsePurchase("nike €4.50", "en")).toStrictEqual({
+            amount: 4.5,
+            category: "Fashion",
+            currency: "EUR",
+            merchant: "Nike",
+        });
+    });
+
+    it("normalizes natural spacing and punctuation around a known merchant", () => {
+        expect(parsePurchase("blue  bottle for $4.50.", "en")).toStrictEqual({
+            amount: 4.5,
+            category: "Coffee",
+            currency: "USD",
+            merchant: "Blue Bottle",
+        });
+    });
+
+    it("preserves the cast spelling of known merchants", () => {
+        expect(parsePurchase("github 9", "en").merchant).toBe("GitHub");
+        expect(parsePurchase("didi 9", "es").merchant).toBe("DiDi");
     });
 });

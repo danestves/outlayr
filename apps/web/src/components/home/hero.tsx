@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { COFFEE_SHOP } from "@/components/demo/capture-panels";
@@ -56,6 +56,7 @@ export function Hero() {
 }
 
 function LivePurchase({ locale }: { locale: Locale }) {
+    const inputId = useId();
     const { hero } = useIntlayer("home");
     const { day, voiceAt } = useIntlayer("demo");
     const nameOf = useNames();
@@ -66,7 +67,10 @@ function LivePurchase({ locale }: { locale: Locale }) {
     return (
         <div className="mt-8 grid max-w-[680px] items-center gap-4 sm:grid-cols-[auto_1fr] sm:gap-8">
             <div className="sm:min-w-60" data-reveal>
-                <label className="text-muted mb-1 block font-mono text-xs tracking-widest uppercase delay-200">
+                <label
+                    className="text-muted mb-1 block font-mono text-xs tracking-widest uppercase delay-200"
+                    htmlFor={inputId}
+                >
                     {hero.tryLabel}
                 </label>
                 <div className="border-foreground focus-within:border-tint flex items-center justify-between gap-4 border-b py-3 text-xl delay-200">
@@ -74,6 +78,7 @@ function LivePurchase({ locale }: { locale: Locale }) {
                         aria-label={hero.tryLabel.value}
                         autoComplete="off"
                         className="placeholder:text-muted min-w-0 flex-1 bg-transparent outline-none"
+                        id={inputId}
                         maxLength={80}
                         onChange={(event) => setText(event.target.value)}
                         placeholder={hero.tryPlaceholder.value}
@@ -91,7 +96,7 @@ function LivePurchase({ locale }: { locale: Locale }) {
                 data-reveal
             >
                 <p className="min-h-10 text-4xl font-semibold tracking-tight tabular-nums">
-                    {parsed.amount === null ? null : formatMoney(parsed.amount, "USD")}
+                    {parsed.amount === null ? null : formatMoney(parsed.amount, parsed.currency)}
                 </p>
                 <p className="mt-1 min-h-7 text-lg">
                     {parsed.merchant === "" ? null : (
