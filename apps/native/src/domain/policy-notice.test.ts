@@ -1,7 +1,7 @@
 import type { PolicyNotice } from "@outlayr/backend/confect/legal";
 import { expect, test } from "vite-plus/test";
 
-import { pendingDocuments } from "./policy-notice";
+import { pendingNotices } from "./policy-notice";
 
 const notice = (effectiveAtMs: number, document: PolicyNotice["document"] = "privacy"): PolicyNotice => ({
     changes: { en: [], es: [], fr: [], pt: [] },
@@ -9,20 +9,21 @@ const notice = (effectiveAtMs: number, document: PolicyNotice["document"] = "pri
     effectiveAtMs,
 });
 
-test("groups every unseen notice by document, oldest first, and skips ones already seen", () => {
+test("shows one day at a time, oldest first, with every document changing that day", () => {
     const november = notice(Date.UTC(2026, 10, 2));
-    const december = notice(Date.UTC(2026, 11, 1));
-    const terms = notice(Date.UTC(2026, 11, 1), "terms");
-    const notices = [december, terms, november];
+    const decemberPrivacy = notice(Date.UTC(2026, 11, 1));
+    const decemberTerms = notice(Date.UTC(2026, 11, 1), "terms");
+    const notices = [decemberTerms, decemberPrivacy, november];
 
-    expect(pendingDocuments(notices, { privacy: 0, terms: 0 })).toStrictEqual([
-        { document: "privacy", effectiveAtMs: december.effectiveAtMs, notices: [november, december] },
-        { document: "terms", effectiveAtMs: terms.effectiveAtMs, notices: [terms] },
+    expect(pendingNotices(notices, { privacy: 0, terms: 0 })).toStrictEqual([november]);
+    expect(pendingNotices(notices, { privacy: november.effectiveAtMs, terms: 0 })).toStrictEqual([
+        decemberPrivacy,
+        decemberTerms,
     ]);
-    expect(pendingDocuments(notices, { privacy: Date.UTC(2026, 10, 20), terms: terms.effectiveAtMs })).toStrictEqual([
-        { document: "privacy", effectiveAtMs: december.effectiveAtMs, notices: [december] },
+    expect(pendingNotices(notices, { privacy: decemberPrivacy.effectiveAtMs, terms: 0 })).toStrictEqual([
+        decemberTerms,
     ]);
-    expect(pendingDocuments(notices, { privacy: december.effectiveAtMs, terms: terms.effectiveAtMs })).toStrictEqual(
-        []
-    );
+    expect(
+        pendingNotices(notices, { privacy: decemberPrivacy.effectiveAtMs, terms: decemberTerms.effectiveAtMs })
+    ).toStrictEqual([]);
 });

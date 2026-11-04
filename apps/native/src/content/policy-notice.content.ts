@@ -47,18 +47,6 @@ const policyNotice = {
             fr: "Lire la nouvelle version",
             pt: "Ler a nova versão",
         }),
-        "policyNotice.readPrivacy": t({
-            en: "Read the Privacy Policy",
-            es: "Leer la Política de privacidad",
-            fr: "Lire la politique de confidentialité",
-            pt: "Ler a Política de Privacidade",
-        }),
-        "policyNotice.readTerms": t({
-            en: "Read the Terms of Use",
-            es: "Leer los Términos de uso",
-            fr: "Lire les conditions d'utilisation",
-            pt: "Ler os Termos de Uso",
-        }),
         "policyNotice.terms": t({
             en: "Updates to our Terms of Use",
             es: "Cambios en nuestros Términos de uso",
