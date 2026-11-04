@@ -161,6 +161,66 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 3),
     },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "Friends you invite see your first name. You see theirs and how many days they logged, up to three, never what.",
+                    label: "Invites",
+                },
+            ],
+            es: [
+                {
+                    detail: "Los amigos que invitas ven tu nombre de pila. Tú ves el suyo y cuántos días registraron, hasta tres, nunca qué.",
+                    label: "Invitaciones",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Les amis que vous invitez voient votre prénom. Vous voyez le leur et combien de jours ils ont saisi, jusqu'à trois, jamais quoi.",
+                    label: "Invitations",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Os amigos que você convida veem seu primeiro nome. Você vê o deles e em quantos dias registraram, até três, nunca o quê.",
+                    label: "Convites",
+                },
+            ],
+        },
+        document: "privacy",
+        effectiveAtMs: Date.UTC(2026, 10, 10),
+    },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "A friend gets a month of Pro, and you get one when they log three days. Up to 12 a year, no cash value.",
+                    label: "Invites",
+                },
+            ],
+            es: [
+                {
+                    detail: "Un amigo recibe un mes de Pro, y tú recibes uno cuando registra tres días. Hasta 12 al año, sin valor en efectivo.",
+                    label: "Invitaciones",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Un ami reçoit un mois de Pro, et vous en recevez un quand il saisit trois jours. Jusqu'à 12 par an, sans valeur monétaire.",
+                    label: "Invitations",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Um amigo ganha um mês de Pro, e você ganha um quando ele registra três dias. Até 12 por ano, sem valor em dinheiro.",
+                    label: "Convites",
+                },
+            ],
+        },
+        document: "terms",
+        effectiveAtMs: Date.UTC(2026, 10, 10),
+    },
 ];
 
 export const noticeKey = ({ document, effectiveAtMs }: typeof PolicyNotice.Type) => `${document}:${effectiveAtMs}`;
