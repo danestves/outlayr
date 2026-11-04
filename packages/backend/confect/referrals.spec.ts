@@ -88,7 +88,7 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.internalMutation({
             name: "sweepGrants",
-            args: () => ({ cursor: Schema.NullOr(Schema.String) }),
+            args: () => ({ cursor: Schema.NullOr(Schema.String), since: Schema.optional(Schema.Number) }),
             returns: () => Schema.Null,
         })
     )

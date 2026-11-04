@@ -335,12 +335,12 @@ const sweepGrants = FunctionImpl.make(
     databaseSchema,
     spec,
     "sweepGrants",
-    Effect.fn("Referrals.sweepGrants")(function* sweepGrants({ cursor }) {
+    Effect.fn("Referrals.sweepGrants")(function* sweepGrants({ cursor, since }) {
         const ctx = yield* MutationCtx;
-        const now = yield* Clock.currentTimeMillis;
+        const from = since ?? (yield* Clock.currentTimeMillis);
         const page = yield* (yield* DatabaseReader)
             .table("referralRewards")
-            .index("by_promoEndsAt", (q) => q.gt("promoEndsAt", now))
+            .index("by_promoEndsAt", (q) => q.gt("promoEndsAt", from))
             .paginate({ cursor, numItems: SWEEP_PAGE });
         for (const row of page.page) {
             if (row.promoEndsAt !== null && grantOwed(yield* mirroredPro(ctx, row.userId), row.promoEndsAt)) {
@@ -351,6 +351,7 @@ const sweepGrants = FunctionImpl.make(
             const scheduler = yield* Scheduler;
             yield* scheduler.runAfter(Duration.zero, refs.internal.referrals.sweepGrants, {
                 cursor: page.continueCursor,
+                since: from,
             });
         }
         return null;
