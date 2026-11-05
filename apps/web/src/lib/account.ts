@@ -2,7 +2,24 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 export function safeRedirect(target: string | undefined): string {
-    return target?.startsWith("/") && !target.startsWith("//") && !target.startsWith("/\\") ? target : "/";
+    return target?.startsWith("/") && !target.startsWith("//") && !target.startsWith("/\\") ? target : "/app";
+}
+
+// The backend's crossDomain plugin adds `ott` for cross-origin clients; this proxy already forwards the session
+// cookie, and redeeming the token on the page would sign in a second time.
+export function withoutOneTimeToken(response: Response): Response {
+    const location = response.headers.get("location");
+    if (!location || !URL.canParse(location)) {
+        return response;
+    }
+    const url = new URL(location);
+    if (!url.searchParams.has("ott")) {
+        return response;
+    }
+    url.searchParams.delete("ott");
+    const headers = new Headers(response.headers);
+    headers.set("location", url.toString());
+    return new Response(response.body, { headers, status: response.status, statusText: response.statusText });
 }
 
 const RATE_LIMITED = 429;
