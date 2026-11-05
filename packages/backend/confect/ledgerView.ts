@@ -490,12 +490,17 @@ function ledgerUpcoming(
 }
 
 export function nextChangeAt(
-    books: { transactions: readonly Transaction[]; transfers: readonly Transfer[] },
+    books: {
+        outsideMoves: readonly Doc<"outsideMoves">[];
+        outsidePayments: readonly Doc<"outsidePayments">[];
+        transactions: readonly Transaction[];
+        transfers: readonly Transfer[];
+    },
     { now, offsetAt }: LedgerClock
 ) {
     const tomorrow = Date.parse(`${localDate(now, offsetAt(now))}T00:00:00Z`) + DAY_MS;
     let next = fromWall(tomorrow, offsetAt);
-    for (const row of [...books.transactions, ...books.transfers]) {
+    for (const row of [...books.transactions, ...books.transfers, ...books.outsidePayments, ...books.outsideMoves]) {
         if (row.deletedAt === null && row.date > now && row.date < next) {
             next = row.date;
         }

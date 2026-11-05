@@ -3,7 +3,7 @@ import { api } from "@outlayr/backend/convex/_generated/api";
 import { convexCollectionOptions, convexPaginatedCollectionOptions } from "@tanstack/convex-db-collection";
 import type { ConvexCollectionClient } from "@tanstack/convex-db-collection";
 import { collectionOptions, useLiveQuery } from "@tanstack/react-db";
-import type { DbClient } from "@tanstack/react-db";
+import type { Collection, DbClient } from "@tanstack/react-db";
 import { useMemo } from "react";
 
 import { CONVEX } from "./db";
@@ -119,19 +119,22 @@ export const ledgerCollections = {
     ),
 };
 
+const load = (collection: Pick<Collection, "preload" | "reload" | "status">) =>
+    collection.status === "error" ? collection.reload() : collection.preload();
+
 export const preloadLedger = (db: DbClient) =>
     Promise.all([
-        db.collection(ledgerCollections.accounts).preload(),
-        db.collection(ledgerCollections.appMeta).preload(),
-        db.collection(ledgerCollections.budgets).preload(),
-        db.collection(ledgerCollections.categories).preload(),
-        db.collection(ledgerCollections.exchangeRates).preload(),
-        db.collection(ledgerCollections.installmentPlans).preload(),
-        db.collection(ledgerCollections.mainBudget).preload(),
-        db.collection(ledgerCollections.outsideMoves).preload(),
-        db.collection(ledgerCollections.outsidePayments).preload(),
-        db.collection(ledgerCollections.transactions).preload(),
-        db.collection(ledgerCollections.transfers).preload(),
+        load(db.collection(ledgerCollections.accounts)),
+        load(db.collection(ledgerCollections.appMeta)),
+        load(db.collection(ledgerCollections.budgets)),
+        load(db.collection(ledgerCollections.categories)),
+        load(db.collection(ledgerCollections.exchangeRates)),
+        load(db.collection(ledgerCollections.installmentPlans)),
+        load(db.collection(ledgerCollections.mainBudget)),
+        load(db.collection(ledgerCollections.outsideMoves)),
+        load(db.collection(ledgerCollections.outsidePayments)),
+        load(db.collection(ledgerCollections.transactions)),
+        load(db.collection(ledgerCollections.transfers)),
     ]);
 
 export const ledgerBooks = (db: DbClient): LedgerBooks => ({

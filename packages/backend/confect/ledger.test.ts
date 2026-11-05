@@ -237,4 +237,20 @@ describe("ledgerOverview", () => {
             ).nextChangeAt
         ).toBe(Date.UTC(2026, 9, 10, 1));
     });
+
+    it("turns over when a balance adjustment comes due", () => {
+        const now = Date.UTC(2026, 9, 9, 15);
+        const due = now + 60_000;
+
+        expect(
+            ledgerOverview(
+                {
+                    ...NO_BOOKS,
+                    appMeta: zone("America/Caracas"),
+                    outsideMoves: [{ date: due, deletedAt: null } as Doc<"outsideMoves">],
+                },
+                now
+            ).nextChangeAt
+        ).toBe(due);
+    });
 });
