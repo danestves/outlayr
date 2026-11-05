@@ -230,7 +230,8 @@ export function budgetStanding(
     const window = advanceBudgetWindow(
         budget.startDate === null ? clock.now : wall(budget.startDate, clock.offsetAt(budget.startDate)),
         budget.type,
-        clock.now
+        clock.now,
+        true
     );
     const spent = spentThrough(window.start, new Date(windowEndMs(window, clock.now.getTime())));
     const limit = limitIn(
@@ -249,6 +250,7 @@ export function budgetStanding(
               limit,
               spentIn: (start, end) => spentThrough(start, lastMsBefore(end)),
               type: budget.type,
+              wall: true,
           }).credit
         : 0;
     const amount = effectiveLimit(limit, carry);

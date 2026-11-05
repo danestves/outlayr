@@ -20,14 +20,15 @@ export interface CarryInput {
     /** Half-open: `[start, end)`. */
     spentIn: (start: Date, end: Date) => number;
     type: number;
+    wall?: boolean;
 }
 
 /** Newest first. */
-export function carryWindows({ anchor, current, type }: Omit<CarryInput, "limit" | "spentIn">) {
+export function carryWindows({ anchor, current, type, wall = false }: Omit<CarryInput, "limit" | "spentIn">) {
     const windows: BudgetWindow[] = [];
     let end = current.start;
     while (windows.length < MAX_CARRY_PERIODS) {
-        const start = previousPeriodStart(end, type);
+        const start = previousPeriodStart(end, type, wall);
         // A type whose period cannot step backwards would loop forever.
         if (start.getTime() >= end.getTime() || end.getTime() <= anchor.getTime()) {
             return { clamped: false, windows };

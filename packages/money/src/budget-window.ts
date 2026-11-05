@@ -15,19 +15,48 @@ export interface BudgetWindow {
     start: Date;
 }
 
-export function periodEnd(start: Date, type: number): Date {
+const stepDays = (date: Date, n: number, wall: boolean) => {
+    if (!wall) {
+        return addDays(date, n);
+    }
+    const d = new Date(date);
+    d.setUTCDate(d.getUTCDate() + n);
+    return d;
+};
+
+const stepMonths = (date: Date, n: number, wall: boolean) => {
+    if (!wall) {
+        return addMonths(date, n, date.getDate());
+    }
+    const d = new Date(
+        Date.UTC(
+            date.getUTCFullYear(),
+            date.getUTCMonth() + n,
+            1,
+            date.getUTCHours(),
+            date.getUTCMinutes(),
+            date.getUTCSeconds(),
+            date.getUTCMilliseconds()
+        )
+    );
+    const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+    d.setUTCDate(Math.min(date.getUTCDate(), lastDay));
+    return d;
+};
+
+export function periodEnd(start: Date, type: number, wall = false): Date {
     switch (type) {
         case BUDGET_TYPE.day: {
-            return addDays(start, 1);
+            return stepDays(start, 1, wall);
         }
         case BUDGET_TYPE.week: {
-            return addDays(start, 7);
+            return stepDays(start, 7, wall);
         }
         case BUDGET_TYPE.month: {
-            return addMonths(start, 1, start.getDate());
+            return stepMonths(start, 1, wall);
         }
         case BUDGET_TYPE.year: {
-            return addMonths(start, 12, start.getDate());
+            return stepMonths(start, 12, wall);
         }
         default: {
             return new Date(start);
@@ -56,29 +85,29 @@ export function startOfPeriod(now: Date, type: number, calendar: CalendarSetting
 }
 
 // The `end > start` guard stops an unknown or zero-length type from looping forever.
-export function advanceBudgetWindow(startDate: Date, type: number, now: Date): BudgetWindow {
+export function advanceBudgetWindow(startDate: Date, type: number, now: Date, wall = false): BudgetWindow {
     let start = new Date(startDate);
-    let end = periodEnd(start, type);
+    let end = periodEnd(start, type, wall);
     while (end.getTime() <= now.getTime() && end.getTime() > start.getTime()) {
         start = end;
-        end = periodEnd(start, type);
+        end = periodEnd(start, type, wall);
     }
     return { end, start };
 }
 
-export function previousPeriodStart(start: Date, type: number): Date {
+export function previousPeriodStart(start: Date, type: number, wall = false): Date {
     switch (type) {
         case BUDGET_TYPE.day: {
-            return addDays(start, -1);
+            return stepDays(start, -1, wall);
         }
         case BUDGET_TYPE.week: {
-            return addDays(start, -7);
+            return stepDays(start, -7, wall);
         }
         case BUDGET_TYPE.month: {
-            return addMonths(start, -1, start.getDate());
+            return stepMonths(start, -1, wall);
         }
         case BUDGET_TYPE.year: {
-            return addMonths(start, -12, start.getDate());
+            return stepMonths(start, -12, wall);
         }
         default: {
             return new Date(start);
