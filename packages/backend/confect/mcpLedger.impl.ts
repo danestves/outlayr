@@ -196,7 +196,8 @@ export const spendingSummaryOf = Effect.fn("McpLedger.spendingSummary")(function
             continue;
         }
         spent += value;
-        const day = localDate(row.date, offsetAt(row.date));
+        // The saved day, as the log reads it, so a bar and its entry never land on different days.
+        const day = localDate(row.day, utcOffsetOf(row.day, offsetAt(row.day)));
         byDay.set(day, (byDay.get(day) ?? 0) + value);
         const category = row.categoryId ? categories.get(row.categoryId) : undefined;
         const top = category?.parentId ? categories.get(category.parentId) : category;

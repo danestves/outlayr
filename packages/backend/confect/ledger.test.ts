@@ -166,4 +166,33 @@ describe("ledger", () => {
 
         expect(summary.today).toBe("2026-10-09");
     });
+
+    it("puts an entry's daily bar on the day the log shows it", async () => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        vi.setSystemTime(Date.UTC(2026, 9, 20, 12));
+        const t = setup();
+        const owner = await seedProUser(t);
+        await t.run(async (ctx) => {
+            await ctx.db.insert("appMeta", {
+                deviceId: "device",
+                key: "timeZone",
+                seq: 0,
+                updatedAt: 0,
+                userId: owner.userId,
+                value: "America/Caracas",
+            });
+            // Saved on 9 Oct in Madrid at 01:30, before the owner moved to Caracas, where that instant is 8 Oct.
+            await ctx.db.insert("transactions", {
+                ...entryOf(owner.userId, "late taxi"),
+                date: Date.UTC(2026, 9, 8, 23, 30),
+                day: Date.UTC(2026, 9, 8, 22),
+            });
+        });
+        const asOwner = authenticatedAs(t, owner);
+
+        const [entry] = await asOwner.query(api.ledger.recentTransactions, {});
+        const summary = await asOwner.query(api.ledger.spendingSummary, {});
+
+        expect(summary.spentByDay.map((bar) => bar.date)).toStrictEqual([entry?.date]);
+    });
 });
