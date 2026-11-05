@@ -97,6 +97,7 @@ export const ANDROID_PLACEHOLDERS = {
         },
         today: { label: "Today", spent: ZERO },
     })),
+    QuickAdd: envelope(() => ({ icon: "widget_add", label: "Add a transaction", url: DEEP_LINKS.newExpense })),
     Today: envelope(() => ({ actions, count: "0 entries", label: "Spent today", spent: ZERO })),
     Trends: envelope(() => ({
         defaultPeriod: "week" as const,

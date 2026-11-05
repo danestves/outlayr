@@ -92,11 +92,12 @@ describe("buildAndroidWidgetProps", () => {
 
 describe("androidWidgetProps", () => {
     it("words each language on its own", () => {
-        const { Overview, Today } = androidWidgetProps(figures);
+        const { Overview, QuickAdd, Today } = androidWidgetProps(figures);
 
         expect(Overview.locales.es.actions[0]?.label).toBe("Monto");
         expect(Overview.locales["es-ES"].actions[0]?.label).toBe("Importe");
         expect(Today.locales["pt-PT"].count).toBe("1 registo");
+        expect(QuickAdd.locales.fr.label).toBe("Ajouter une opération");
     });
 
     it("words an overspent budget as over, with the overspend as the figure", () => {

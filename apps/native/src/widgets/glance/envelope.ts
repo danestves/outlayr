@@ -47,6 +47,8 @@ export type OverviewCopy = BalanceCopy & {
     today: { label: string; spent: string };
 };
 
+export type QuickAddCopy = WidgetAction;
+
 export interface WidgetSettingsCopy {
     close: string;
     done: string;
@@ -107,6 +109,7 @@ export interface TrendsCopy {
 export interface AndroidWidgetProps {
     Entries: WidgetEnvelope<EntriesCopy>;
     Overview: WidgetEnvelope<OverviewCopy>;
+    QuickAdd: WidgetEnvelope<QuickAddCopy>;
     Today: WidgetEnvelope<TodayCopy>;
     Trends: WidgetEnvelope<TrendsCopy>;
     Wallet: WidgetEnvelope<WalletCopy>;

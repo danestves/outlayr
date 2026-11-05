@@ -110,7 +110,7 @@ const withAndroidWidgets: ConfigPlugin<Options> = (config, { widgets }) =>
     ]);
 
 function previewLayoutName(name: string): string {
-    return `widget_${resourceName(name)}_preview`;
+    return `widget_${name.toLowerCase()}_preview`;
 }
 
 const ACTION_ICONS = ["widget_amount", "widget_voice", "widget_scan"] as const;
@@ -308,6 +308,27 @@ ${pills}
 ${[14, 30, 9, 44, 20, 3, 3].map(column).join("\n")}
     </LinearLayout>
 </LinearLayout>
+`,
+    ],
+    [
+        "QuickAdd",
+        `<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <FrameLayout
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:background="@drawable/widget_preview_circle">
+        <ImageView
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:layout_gravity="center"
+            android:src="@drawable/widget_add"
+            android:tint="@color/outlayr_widget_background" />
+    </FrameLayout>
+</FrameLayout>
 `,
     ],
     [
