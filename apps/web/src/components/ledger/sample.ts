@@ -1,16 +1,33 @@
 import type { Overview } from "./overview";
 
-const entry = (note: string, category: string, account: string, amount: number, date: string, time: string) => ({
+const look = { color: null, emoji: null, icon: null, imageKey: null };
+
+const entry = (note: string, account: string, amount: number, time: string) => ({
     account,
-    amount,
-    category,
+    amount: Math.abs(amount),
+    category: null,
     currency: "USD",
-    date,
-    emoji: null,
-    imageKey: null,
+    fee: null,
+    id: `${note}-${time}`,
+    isFee: false,
     kind: amount < 0 ? ("expense" as const) : ("income" as const),
+    look,
     note,
+    recurring: false,
     time,
+    type: "entry" as const,
+    valued: null,
+});
+
+const day = (date: string, rows: ReturnType<typeof entry>[]) => ({
+    date,
+    rows,
+    totals: [
+        {
+            amount: rows.reduce((sum, row) => sum + (row.kind === "income" ? row.amount : -row.amount), 0),
+            currency: "USD",
+        },
+    ],
 });
 
 const budget = (category: string, limit: number, spent: number) => ({
@@ -33,10 +50,9 @@ const account = (name: string, balance: number) => ({
     balance,
     balanceInMainCurrency: balance,
     currency: "USD",
-    emoji: null,
     exact: true,
-    imageKey: null,
     kind: balance < 0 ? "liability" : "asset",
+    look: { ...look, name, person: false },
     name,
 });
 
@@ -58,13 +74,14 @@ export const SAMPLE_OVERVIEW: Overview = {
         currency: "USD",
         overall: { ...budget("Overall", 3900, 1222.79), name: null },
     },
-    entries: [
-        entry("Salary", "Salary", "Checking", 2400, "2026-11-05", "09:00"),
-        entry("Coffee", "Dining out", "Wallet", -5.25, "2026-11-05", "08:00"),
-        entry("Software", "Software", "Card", -4.8, "2026-11-04", "14:00"),
-        entry("Groceries", "Groceries", "Checking", -112.06, "2026-11-03", "11:00"),
-        entry("Taxi", "Transport", "Checking", -14.6, "2026-11-03", "18:30"),
-        entry("Sneakers", "Shopping", "Card", -89, "2026-11-02", "12:15"),
+    log: [
+        day("2026-11-05", [entry("Salary", "Checking", 2400, "09:00"), entry("Coffee", "Wallet", -5.25, "08:00")]),
+        day("2026-11-04", [entry("Software", "Card", -4.8, "14:00")]),
+        day("2026-11-03", [
+            entry("Taxi", "Checking", -14.6, "18:30"),
+            entry("Groceries", "Checking", -112.06, "11:00"),
+        ]),
+        day("2026-11-02", [entry("Sneakers", "Card", -89, "12:15")]),
     ],
     nextChangeAt: 0,
     summary: {
@@ -85,14 +102,17 @@ export const SAMPLE_OVERVIEW: Overview = {
     upcoming: {
         charges: [
             {
-                amount: -1850,
-                category: "Rent",
+                amount: 1850,
+                cadence: "monthly",
                 currency: "USD",
-                endsOn: null,
+                every: 1,
+                fee: null,
+                id: "rent",
                 kind: "expense",
+                look,
                 nextCharge: "2026-12-01",
                 note: "Rent",
-                repeats: { cadence: "monthly", every: 1 },
+                valued: null,
             },
         ],
         currency: "USD",
