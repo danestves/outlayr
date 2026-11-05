@@ -1,9 +1,9 @@
-import { addMonths } from "@outlayr/money/calendar";
+import { addMonths, firstOfMonth } from "@outlayr/money/calendar";
 import { and, count, getTableColumns, gte, isNull, lt } from "drizzle-orm";
 
 import type { Database } from "@/db/client";
 import { budgets, mainBudget, transactions } from "@/db/schema";
-import { monthSavings, yearSavings } from "@/domain/month-savings";
+import { monthSavings, savingsReadStart, YEAR_MONTHS, yearSavings } from "@/domain/month-savings";
 import type { MonthSavings, MonthSavingsInput, SavingsBudget, YearSavings } from "@/domain/month-savings";
 import { translateNow } from "@/i18n/runtime";
 
@@ -12,8 +12,8 @@ import { useCategoryMeta } from "./categories";
 import { useLiveQuery, useLiveValue } from "./live-query";
 import { useValuation } from "./use-valuation";
 
-function useSavingsInput(db: Database, nowMs: number): Omit<MonthSavingsInput, "month"> {
-    const contributions = useExpenseContributions(db, nowMs);
+function useSavingsInput(db: Database, nowMs: number, firstMonth: Date): Omit<MonthSavingsInput, "month"> {
+    const contributions = useExpenseContributions(db, nowMs, savingsReadStart(firstMonth).getTime());
     const categoryMeta = useCategoryMeta(db);
     const valuation = useValuation(db);
     const categoryRows = useLiveQuery(budgets, () =>
@@ -52,7 +52,7 @@ function useSavingsInput(db: Database, nowMs: number): Omit<MonthSavingsInput, "
 }
 
 export function useMonthSavings(db: Database, nowMs: number, month: Date): MonthSavings {
-    return monthSavings({ ...useSavingsInput(db, nowMs), month });
+    return monthSavings({ ...useSavingsInput(db, nowMs, month), month });
 }
 
 export interface YearSummary extends YearSavings {
@@ -60,7 +60,7 @@ export interface YearSummary extends YearSavings {
 }
 
 export function useYearSavings(db: Database, nowMs: number): YearSummary {
-    const year = yearSavings(useSavingsInput(db, nowMs));
+    const year = yearSavings(useSavingsInput(db, nowMs, addMonths(firstOfMonth(new Date(nowMs)), -YEAR_MONTHS)));
     const fromMs = year.from.getTime();
     const untilMs = addMonths(year.to, 1).getTime();
     const entries = useLiveValue(

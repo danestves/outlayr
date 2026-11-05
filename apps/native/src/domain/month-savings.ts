@@ -171,6 +171,8 @@ export function proRowCost(kept: number, cost: ProCost | null, displayCurrency: 
     return cost !== null && cost.currency === displayCurrency && kept > cost.monthly ? cost.monthly : null;
 }
 
+export const savingsReadStart = (firstMonth: Date): Date => addMonths(firstOfMonth(firstMonth), -PRIOR_MONTHS);
+
 export interface YearSavings {
     belowAverage: number;
     belowNames: string[];
