@@ -1,7 +1,13 @@
+import FALLBACK_ICON from "@hugeicons/core-free-icons/MoreHorizontalCircle01Icon";
+import FEE_ICON from "@hugeicons/core-free-icons/PercentCircleIcon";
+import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { IconSvgElement } from "@hugeicons/react";
 import type { api } from "@outlayr/backend/convex/_generated/api";
 import type { FunctionReturnType } from "convex/server";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
+import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -18,7 +24,12 @@ import {
 import { cn } from "@/lib/utils";
 
 export type Overview = FunctionReturnType<typeof api.ledger.overview>;
-type Entries = Overview["entries"];
+type LogDay = Overview["log"][number];
+type LogRow = LogDay["rows"][number];
+type EntryRow = Extract<LogRow, { type: "entry" }>;
+type TransferRow = Extract<LogRow, { type: "transfer" }>;
+type Look = EntryRow["look"];
+type AccountLook = NonNullable<TransferRow["from"]>;
 type Summary = Overview["summary"];
 type Balances = Overview["balances"];
 type Budgets = Overview["budgets"];
@@ -39,33 +50,148 @@ export function MonoLabel({ children, className }: { children: ReactNode; classN
     );
 }
 
+const FALLBACK_COLOR = "#767676";
+
+const TILE = { badge: "size-5 rounded-[6px]", row: "size-9 rounded-[9px]" } as const;
+
+/** The app's wash-and-glyph tile: a 22% tint behind the glyph, dashed and faded when the money has not moved yet. */
 function Tile({
-    emoji,
-    imageKey,
-    name,
-    photos,
-    size = "md",
+    children,
+    color,
+    future = false,
+    imageUrl,
+    size = "row",
 }: {
-    emoji: string | null;
-    imageKey: string | null;
-    name: string;
-    photos: PhotoUrls;
-    size?: "md" | "sm";
+    children?: ReactNode;
+    color: string;
+    future?: boolean;
+    imageUrl?: string;
+    size?: keyof typeof TILE;
 }) {
-    const url = imageKey ? photos.get(imageKey) : undefined;
-    const box = size === "md" ? "size-9 rounded-[10px] text-lg" : "size-7 rounded-lg text-sm";
-    if (url) {
-        return <img alt="" className={cn(box, "ring-border shrink-0 object-cover ring-1")} src={url} />;
+    const style: CSSProperties & Record<"--tile", string> = { "--tile": color };
+    if (imageUrl) {
+        return (
+            <img
+                alt=""
+                className={cn(
+                    TILE[size],
+                    "shrink-0 border border-[color-mix(in_srgb,var(--tile)_20%,transparent)] object-cover",
+                    future && "border-2 border-dashed opacity-60"
+                )}
+                src={imageUrl}
+                style={style}
+            />
+        );
     }
     return (
         <span
             aria-hidden
             className={cn(
-                box,
-                "bg-secondary text-muted-foreground flex shrink-0 items-center justify-center font-bold"
+                TILE[size],
+                "flex shrink-0 items-center justify-center text-[color-mix(in_oklab,var(--tile)_78%,var(--color-foreground))]",
+                future
+                    ? "border-2 border-dashed border-[color-mix(in_srgb,var(--tile)_73%,transparent)] opacity-60"
+                    : "bg-[color-mix(in_srgb,var(--tile)_22%,transparent)]"
             )}
+            style={style}
         >
-            {emoji ?? name.slice(0, 1).toUpperCase()}
+            {children}
+        </span>
+    );
+}
+
+function Glyph({ icon, size }: { icon: IconSvgElement; size: keyof typeof TILE }) {
+    return <HugeiconsIcon icon={icon} size={size === "row" ? 20 : 12} strokeWidth={size === "row" ? 1.9 : 2.2} />;
+}
+
+function LookTile({
+    fee = false,
+    future,
+    look,
+    photos,
+}: {
+    fee?: boolean;
+    future?: boolean;
+    look: Look;
+    photos: PhotoUrls;
+}) {
+    const imageUrl = look.imageKey ? photos.get(look.imageKey) : undefined;
+    let glyph: ReactNode;
+    if (fee) {
+        glyph = <Glyph icon={FEE_ICON} size="row" />;
+    } else if (!look.icon && look.emoji) {
+        glyph = <span className="text-lg leading-none">{look.emoji}</span>;
+    } else {
+        glyph = <Glyph icon={(look.icon && CATEGORY_ICONS.get(look.icon)) || FALLBACK_ICON} size="row" />;
+    }
+    return (
+        <Tile color={fee ? FALLBACK_COLOR : (look.color ?? FALLBACK_COLOR)} future={future} imageUrl={imageUrl}>
+            {glyph}
+        </Tile>
+    );
+}
+
+const WORDS = /[^\p{L}\p{N}]+/u;
+
+function initials(name: string) {
+    const words = name.trim().split(WORDS).filter(Boolean);
+    return [words[0], words.length > 1 ? words.at(-1) : undefined]
+        .map((word) => [...(word ?? "")][0] ?? "")
+        .join("")
+        .toLocaleUpperCase();
+}
+
+function AccountTile({
+    account,
+    photos,
+    size = "row",
+}: {
+    account: AccountLook;
+    photos: PhotoUrls;
+    size?: keyof typeof TILE;
+}) {
+    const imageUrl = account.imageKey ? photos.get(account.imageKey) : undefined;
+    let glyph: ReactNode;
+    if (account.person) {
+        glyph = (
+            <span className={cn("font-semibold", size === "row" ? "text-[15px]" : "text-[9px]")}>
+                {initials(account.name)}
+            </span>
+        );
+    } else if (!account.icon && account.emoji) {
+        glyph = (
+            <span className={size === "row" ? "text-lg leading-none" : "text-[11px] leading-none"}>
+                {account.emoji}
+            </span>
+        );
+    } else {
+        glyph = <Glyph icon={(account.icon && CATEGORY_ICONS.get(account.icon)) || FALLBACK_ICON} size={size} />;
+    }
+    return (
+        <Tile color={account.color ?? "var(--color-foreground)"} imageUrl={imageUrl} size={size}>
+            {glyph}
+        </Tile>
+    );
+}
+
+function TransferTile({ from, photos, to }: { from: AccountLook; photos: PhotoUrls; to: AccountLook }) {
+    return (
+        <span className="relative shrink-0">
+            <AccountTile account={from} photos={photos} />
+            <span className="bg-background absolute -right-[7px] -bottom-[7px] rounded-[8px] p-0.5">
+                <AccountTile account={to} photos={photos} size="badge" />
+            </span>
+        </span>
+    );
+}
+
+function Recurring({ children }: { children: ReactNode }) {
+    return (
+        <span className="relative shrink-0">
+            {children}
+            <span className="bg-muted absolute -right-[5px] -bottom-[5px] rounded-md p-[3px]">
+                <HugeiconsIcon icon={RefreshIcon} size={12} strokeWidth={2} />
+            </span>
         </span>
     );
 }
@@ -161,82 +287,180 @@ function DailyBars({ summary, today }: { summary: Summary; today: string }) {
 const signed = (row: { amount: number; kind: "expense" | "income" }) =>
     row.kind === "income" ? row.amount : -row.amount;
 
+type Money = NonNullable<EntryRow["fee"]>;
+
+const inList = (figure: Money, currency: string) =>
+    figure.valued === null ? { amount: figure.amount, currency: figure.currency } : { amount: figure.valued, currency };
+
+/** Ports the app's `rowFigure`: a fee in the shown currency is taken in, so a day's rows add up to its header. */
+function entryFigure(row: Pick<EntryRow, "amount" | "currency" | "fee" | "kind" | "valued">, currency: string) {
+    const shown = inList(row, currency);
+    const fee = row.fee ? inList(row.fee, currency) : null;
+    if (fee?.currency === shown.currency) {
+        const total = shown.amount + (row.kind === "income" ? -fee.amount : fee.amount);
+        return { apart: null, currency: shown.currency, feeIn: true, total };
+    }
+    return { apart: fee, currency: shown.currency, feeIn: false, total: shown.amount };
+}
+
+const SUB = "text-muted-foreground truncate text-sm leading-5 font-medium tabular-nums";
+
+function FeeMark() {
+    return (
+        <HugeiconsIcon aria-label="Fee included" className="text-muted-foreground shrink-0" icon={FEE_ICON} size={14} />
+    );
+}
+
+function CodeMark({ code }: { code: string }) {
+    return (
+        <span className="border-border text-muted-foreground rounded-[3px] border px-[3px] font-mono text-[10px] leading-[14px] tracking-[0.08em]">
+            {code}
+        </span>
+    );
+}
+
+function Row({
+    amount,
+    detail,
+    tile,
+    title,
+    under,
+}: {
+    amount: ReactNode;
+    detail: ReactNode;
+    tile: ReactNode;
+    title: string;
+    under?: ReactNode;
+}) {
+    return (
+        <li className="flex min-h-[60px] items-center gap-3 py-2">
+            {tile}
+            <div className="min-w-0 flex-1">
+                <p className="truncate text-base leading-[22px] font-medium">{title}</p>
+                <div className="flex min-w-0 items-center gap-1.5">{detail}</div>
+            </div>
+            <div className="flex shrink-0 flex-col items-end">
+                {amount}
+                {under}
+            </div>
+        </li>
+    );
+}
+
+function EntryLine({ currency, photos, row }: { currency: string; photos: PhotoUrls; row: EntryRow }) {
+    const figure = entryFigure(row, currency);
+    const original = row.valued === null ? null : money(row.amount, row.currency);
+    const tile = <LookTile fee={row.isFee} look={row.look} photos={photos} />;
+    return (
+        <Row
+            amount={
+                <span
+                    className={cn(
+                        "text-lg leading-6 font-medium tabular-nums",
+                        row.kind === "income" && "text-app-income"
+                    )}
+                >
+                    {money(signed({ amount: figure.total, kind: row.kind }), figure.currency, "always")}
+                </span>
+            }
+            detail={
+                <>
+                    <span className={SUB}>{[row.account, clockTime(row.time)].filter(Boolean).join(" · ")}</span>
+                    {figure.feeIn ? <FeeMark /> : null}
+                    {row.currency !== currency && original === null ? <CodeMark code={row.currency} /> : null}
+                </>
+            }
+            tile={row.recurring ? <Recurring>{tile}</Recurring> : tile}
+            title={row.note || row.category || "Entry"}
+            under={
+                <>
+                    {original ? <span className={SUB}>{original}</span> : null}
+                    {figure.apart ? (
+                        <span className={SUB}>Fee {money(figure.apart.amount, figure.apart.currency)}</span>
+                    ) : null}
+                </>
+            }
+        />
+    );
+}
+
+function TransferLine({ photos, row }: { photos: PhotoUrls; row: TransferRow }) {
+    const moved = row.fees.length > 0 || row.arrivedCurrency !== row.sentCurrency;
+    const { from, to } = row;
+    return (
+        <Row
+            amount={
+                <span className="text-lg leading-6 font-medium tabular-nums">{money(row.sent, row.sentCurrency)}</span>
+            }
+            detail={
+                <>
+                    <span className={SUB}>{clockTime(row.time)}</span>
+                    {row.fees.length > 0 ? <FeeMark /> : null}
+                </>
+            }
+            tile={
+                from && to ? (
+                    <TransferTile from={from} photos={photos} to={to} />
+                ) : (
+                    <LookTile look={{ color: null, emoji: null, icon: "Exchange01", imageKey: null }} photos={photos} />
+                )
+            }
+            title={row.note}
+            under={moved ? <span className={SUB}>→ {money(row.arrived, row.arrivedCurrency)}</span> : null}
+        />
+    );
+}
+
+function DayTotals({ totals }: { totals: LogDay["totals"] }) {
+    return (
+        <span className="text-muted-foreground flex items-baseline gap-1.5 text-[13px] font-semibold tabular-nums">
+            {totals.map((bucket, index) => (
+                <span className="flex items-baseline gap-1.5" key={bucket.currency}>
+                    {index > 0 ? <span className="opacity-70">/</span> : null}
+                    {money(bucket.amount, bucket.currency, "always")}
+                </span>
+            ))}
+        </span>
+    );
+}
+
 export function EntryLog({
     currency,
-    entries,
-    mayCutLastDay,
+    log,
     photos,
     today,
 }: {
     currency: string;
-    entries: Entries;
-    mayCutLastDay: boolean;
+    log: Overview["log"];
     photos: PhotoUrls;
     today: string;
 }) {
-    if (entries.length === 0) {
+    if (log.length === 0) {
         return (
             <p className="text-muted-foreground mt-8 text-sm">
                 No entries yet. Add one on your phone and it shows up here.
             </p>
         );
     }
-    const days = Map.groupBy(entries, (row) => row.date);
     return (
         <section aria-label="Entries" className="pb-10">
-            {[...days].map(([day, rows], dayIndex) => {
-                const [first] = rows;
-                const dayCurrency = rows.every((row) => row.currency === first?.currency)
-                    ? (first?.currency ?? currency)
-                    : null;
-                const total = rows.reduce((sum, row) => sum + signed(row), 0);
-                return (
-                    <div key={day}>
-                        <div className="border-border mt-6 flex items-baseline justify-between border-b-[1.3px] pb-1.5">
-                            <MonoLabel>{dayLabel(day, today)}</MonoLabel>
-                            <span className="text-muted-foreground font-mono text-[13px]">
-                                {dayCurrency && !(mayCutLastDay && dayIndex === days.size - 1)
-                                    ? money(total, dayCurrency, "always")
-                                    : null}
-                            </span>
-                        </div>
-                        <ul>
-                            {rows.map((row, index) => {
-                                const name = row.note || row.category || "Entry";
-                                const detail = [
-                                    row.kind === "income" && !row.category ? "Income" : row.category,
-                                    row.account,
-                                    clockTime(row.time),
-                                ]
-                                    .filter(Boolean)
-                                    .join(" · ");
-                                return (
-                                    <li
-                                        className="flex h-[60px] items-center gap-3"
-                                        key={`${day}-${row.time}-${index}`}
-                                    >
-                                        <Tile emoji={row.emoji} imageKey={row.imageKey} name={name} photos={photos} />
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-base leading-[22px] font-semibold">{name}</p>
-                                            <p className="text-muted-foreground truncate text-sm font-medium">
-                                                {detail}
-                                            </p>
-                                        </div>
-                                        <span
-                                            className={cn(
-                                                "text-[19px] leading-[25px] font-medium tabular-nums",
-                                                row.kind === "income" && "text-app-income"
-                                            )}
-                                        >
-                                            {money(signed(row), row.currency ?? currency, "always")}
-                                        </span>
-                                    </li>
-                                );
-                            })}
-                        </ul>
+            {log.map((day) => (
+                <div key={day.date}>
+                    <div className="border-border mt-7 flex items-baseline justify-between gap-2 border-b-[1.3px] pb-1.5">
+                        <MonoLabel>{dayLabel(day.date, today)}</MonoLabel>
+                        <DayTotals totals={day.totals} />
                     </div>
-                );
-            })}
+                    <ul>
+                        {day.rows.map((row) =>
+                            row.type === "transfer" ? (
+                                <TransferLine key={row.id} photos={photos} row={row} />
+                            ) : (
+                                <EntryLine currency={currency} key={row.id} photos={photos} row={row} />
+                            )
+                        )}
+                    </ul>
+                </div>
+            ))}
         </section>
     );
 }
@@ -253,7 +477,7 @@ function RailSection({ aside, children, title }: { aside?: ReactNode; children: 
     );
 }
 
-const ACCOUNTS_SHOWN = 4;
+const ACCOUNTS_SHOWN = 6;
 
 export function AccountsCard({ balances, photos }: { balances: Balances; photos: PhotoUrls }) {
     return (
@@ -275,25 +499,25 @@ export function AccountsCard({ balances, photos }: { balances: Balances; photos:
                     </strong>
                 </div>
             </div>
-            <ul className="mt-2">
-                {balances.accounts.slice(0, ACCOUNTS_SHOWN).map((account, index) => (
-                    <li
-                        className="border-secondary flex h-10 items-center gap-2.5 border-b last:border-0"
-                        key={`${index}-${account.name}`}
-                    >
-                        <Tile
-                            emoji={account.emoji}
-                            imageKey={account.imageKey}
-                            name={account.name}
-                            photos={photos}
-                            size="sm"
-                        />
-                        <span className="flex-1 truncate text-[15px] font-semibold">{account.name}</span>
-                        <span className="text-[15px] font-medium tabular-nums">
-                            {money(account.balance, account.currency)}
-                        </span>
-                    </li>
-                ))}
+            <ul className="mt-1">
+                {balances.accounts.slice(0, ACCOUNTS_SHOWN).map((account, index) => {
+                    const foreign = account.currency !== balances.currency;
+                    return (
+                        <li className="flex min-h-[52px] items-center gap-3 py-1.5" key={`${index}-${account.name}`}>
+                            <AccountTile account={account.look} photos={photos} />
+                            <div className="min-w-0 flex-1">
+                                <p className="truncate text-[15px] leading-5 font-medium">{account.name}</p>
+                                {foreign ? <p className={SUB}>{money(account.balance, account.currency)}</p> : null}
+                            </div>
+                            <span className="flex shrink-0 items-baseline gap-1.5">
+                                {account.exact ? null : <CodeMark code={`${balances.currency}?`} />}
+                                <span className="text-[15px] font-medium tabular-nums">
+                                    {money(account.balanceInMainCurrency, balances.currency)}
+                                </span>
+                            </span>
+                        </li>
+                    );
+                })}
             </ul>
         </RailSection>
     );
@@ -359,9 +583,32 @@ export function BudgetsCard({ budgets }: { budgets: Budgets }) {
     );
 }
 
-const CHARGES_SHOWN = 3;
+const CHARGES_SHOWN = 4;
 
-export function UpcomingCard({ upcoming }: { upcoming: Upcoming }) {
+const CADENCES = new Map([
+    ["daily", { label: "Daily", unit: "days" }],
+    ["weekly", { label: "Weekly", unit: "weeks" }],
+    ["monthly", { label: "Monthly", unit: "months" }],
+    ["yearly", { label: "Yearly", unit: "years" }],
+]);
+
+function cadenceLabel(cadence: string | null, every: number) {
+    const known = cadence === null ? undefined : CADENCES.get(cadence);
+    if (!known) {
+        return null;
+    }
+    return every > 1 ? `Every ${every} ${known.unit}` : known.label;
+}
+
+export function UpcomingCard({
+    currency,
+    photos,
+    upcoming,
+}: {
+    currency: string;
+    photos: PhotoUrls;
+    upcoming: Upcoming;
+}) {
     if (upcoming.charges.length === 0) {
         return null;
     }
@@ -371,28 +618,32 @@ export function UpcomingCard({ upcoming }: { upcoming: Upcoming }) {
             aside={monthly ? `${money(monthly.amount, monthly.currency).replace(/\.00$/, "")} a month` : undefined}
             title="Upcoming"
         >
-            <ul>
-                {upcoming.charges.slice(0, CHARGES_SHOWN).map((charge, index) => (
-                    <li
-                        className="border-secondary flex h-[52px] items-center justify-between border-b last:border-0"
-                        key={`${charge.nextCharge}-${index}`}
-                    >
-                        <div className="min-w-0">
-                            <p className="truncate text-[15px] font-semibold">
-                                {charge.note || charge.category || "Scheduled"}
-                            </p>
-                            <MonoLabel className="tracking-[0.08em]">{longDay(charge.nextCharge)}</MonoLabel>
-                        </div>
-                        <span
-                            className={cn(
-                                "text-[15px] font-medium tabular-nums",
-                                charge.kind === "income" && "text-app-income"
-                            )}
-                        >
-                            {money(signed(charge), charge.currency ?? upcoming.currency, "always")}
-                        </span>
-                    </li>
-                ))}
+            <ul className="mt-1">
+                {upcoming.charges.slice(0, CHARGES_SHOWN).map((charge) => {
+                    const figure = entryFigure(charge, currency);
+                    const cadence = cadenceLabel(charge.cadence, charge.every);
+                    return (
+                        <li className="flex min-h-[52px] items-center gap-3 py-1.5" key={charge.id}>
+                            <LookTile future look={charge.look} photos={photos} />
+                            <div className="min-w-0 flex-1">
+                                <p className="text-muted-foreground truncate text-[15px] leading-5 font-medium">
+                                    {charge.note || "Scheduled"}
+                                </p>
+                                <p className={SUB}>
+                                    {[longDay(charge.nextCharge), cadence].filter(Boolean).join(" · ")}
+                                </p>
+                            </div>
+                            <span
+                                className={cn(
+                                    "text-muted-foreground shrink-0 text-[15px] font-medium tabular-nums",
+                                    charge.kind === "income" && "text-app-income"
+                                )}
+                            >
+                                {money(signed({ amount: figure.total, kind: charge.kind }), figure.currency, "always")}
+                            </span>
+                        </li>
+                    );
+                })}
             </ul>
         </RailSection>
     );

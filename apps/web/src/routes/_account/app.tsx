@@ -202,6 +202,15 @@ function useTurnover(nextChangeAt: number | undefined, advance: (asOf: number) =
     }, [advance, nextChangeAt]);
 }
 
+function photoKeys({ balances, log, upcoming }: Overview) {
+    const looks = [
+        ...log.flatMap((day) => day.rows.flatMap((row) => (row.type === "entry" ? [row.look] : [row.from, row.to]))),
+        ...balances.accounts.map((account) => account.look),
+        ...upcoming.charges.map((charge) => charge.look),
+    ];
+    return looks.flatMap((look) => (look?.imageKey ? [look.imageKey] : []));
+}
+
 function LiveOverview() {
     const loaded = Route.useLoaderData();
     const [asOf, setAsOf] = useState(loaded.asOf);
@@ -211,11 +220,7 @@ function LiveOverview() {
         throwOnError: true,
     });
     useTurnover(overview?.nextChangeAt, setAsOf);
-    const photos = usePhotoUrls(
-        [...(overview?.entries ?? []), ...(overview?.balances.accounts ?? [])].flatMap((row) =>
-            row.imageKey ? [row.imageKey] : []
-        )
-    );
+    const photos = usePhotoUrls(overview ? photoKeys(overview) : []);
     return <OverviewView overview={overview} photos={photos} />;
 }
 
@@ -228,27 +233,21 @@ function OverviewView({ overview, photos }: { overview: Overview | undefined; ph
                     <h1 className="text-[28px] leading-[34px] font-extrabold tracking-[-0.01em]">Log</h1>
                 </header>
                 <Skeleton data={overview} id="ledger-log" label="Loading your ledger" sample={SAMPLE_OVERVIEW}>
-                    {({ entries, budgets, summary }) => (
+                    {({ budgets, log, summary }) => (
                         <>
                             <MonthHero budgets={budgets} summary={summary} today={summary.today} />
-                            <EntryLog
-                                currency={summary.currency}
-                                entries={entries}
-                                mayCutLastDay={entries.length === ENTRY_LIMIT}
-                                photos={photos}
-                                today={summary.today}
-                            />
+                            <EntryLog currency={summary.currency} log={log} photos={photos} today={summary.today} />
                         </>
                     )}
                 </Skeleton>
             </main>
             <aside className="border-border px-5 pt-7 pb-10 md:px-10 xl:border-l xl:px-7">
                 <Skeleton data={overview} id="ledger-rail" sample={SAMPLE_OVERVIEW}>
-                    {({ balances, budgets, upcoming }) => (
+                    {({ balances, budgets, summary, upcoming }) => (
                         <div className="flex flex-col gap-6">
                             <AccountsCard balances={balances} photos={photos} />
                             <BudgetsCard budgets={budgets} />
-                            <UpcomingCard upcoming={upcoming} />
+                            <UpcomingCard currency={summary.currency} photos={photos} upcoming={upcoming} />
                         </div>
                     )}
                 </Skeleton>

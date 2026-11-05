@@ -1,4 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { utcDateString } from "@outlayr/money/dates";
+import { isExact, valueDatedRowsIn } from "@outlayr/money/valuation";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -9,13 +11,19 @@ import { DatabaseReader, QueryCtx } from "./_generated/services";
 import spec from "./ledger.spec";
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
-import { DAY_MS, fromWall, localDate } from "./mcpLedger";
+import { accountLook, buildLog, entryLook } from "./lib/ledgerLog";
+import type { EntrySource } from "./lib/ledgerLog";
+import { DAY_MS, fromWall, localDate, MAX_ENTRIES, utcOffsetOf, wallDay } from "./mcpLedger";
 import {
     accountBalancesOf,
     budgetStatusOf,
-    recentTransactionsOf,
+    cadenceOf,
+    liveCategories,
+    ratesIn,
+    scheduleOf,
+    setting,
     spendingSummaryOf,
-    upcomingChargesOf,
+    storedZone,
     zoneOffset,
 } from "./mcpLedger.impl";
 import { requirePro } from "./revenuecat";
@@ -60,17 +68,123 @@ const nextChangeAt = Effect.fn("Ledger.nextChangeAt")(function* nextChangeAt(use
     );
 }, Effect.orDie);
 
+const LOG_SCAN = 300;
+
+const logOf = Effect.fn("Ledger.log")(function* log(userId: string, limit: number) {
+    const reader = yield* DatabaseReader;
+    const now = yield* Clock.currentTimeMillis;
+    const currency = (yield* setting(userId, "currency")) ?? "USD";
+    const [entries, transfers, accountRows, categories, rates, zone] = yield* Effect.all(
+        [
+            reader
+                .table("transactions")
+                .index(
+                    "by_user_and_deletedAt_and_date",
+                    (q) => q.eq("userId", userId).eq("deletedAt", null).lte("date", now),
+                    "desc"
+                )
+                .take(LOG_SCAN),
+            reader
+                .table("transfers")
+                .index(
+                    "by_user_and_deletedAt_and_date",
+                    (q) => q.eq("userId", userId).eq("deletedAt", null).lte("date", now),
+                    "desc"
+                )
+                .take(LOG_SCAN),
+            reader
+                .table("accounts")
+                .index("by_user_and_seq", (q) => q.eq("userId", userId))
+                .collect(),
+            liveCategories(userId),
+            ratesIn(currency),
+            storedZone(userId),
+        ],
+        { concurrency: "unbounded" }
+    );
+    return buildLog({
+        accounts: new Map(accountRows.map((row) => [row.localId, row])),
+        categories,
+        // Same reading as `recentTransactionsOf`: the stored day is a local midnight, the instant reads on the zone.
+        clock: {
+            dayOf: (row) => localDate(row.day, utcOffsetOf(row.day, zone?.(row.day))),
+            timeOf: (row) =>
+                new Date(row.date + (zone?.(row.date) ?? utcOffsetOf(row.day, zone?.(row.day))))
+                    .toISOString()
+                    .slice(11, 16),
+        },
+        currency,
+        entries,
+        entriesFull: entries.length === LOG_SCAN,
+        limit: Math.min(Math.max(limit, 1), MAX_ENTRIES),
+        rates,
+        transfers,
+        transfersFull: transfers.length === LOG_SCAN,
+    });
+}, Effect.orDie);
+
+const upcomingOf = Effect.fn("Ledger.upcoming")(function* upcoming(userId: string) {
+    const { categories, charges, currency, monthlyCost, rates } = yield* scheduleOf(userId);
+    const valuedIn = (row: EntrySource, landsOn: Date) => {
+        const code = row.currency ?? currency;
+        if (code === currency) {
+            return { amount: row.amount, currency: code, valued: null };
+        }
+        // Valued at the coming charge: a renewal's saved date can predate every held rate.
+        const [value] = valueDatedRowsIn([{ ...row, date: landsOn }], currency, rates);
+        const exact = isExact({ ...row, dateKey: utcDateString(landsOn.getTime()) }, currency, rates);
+        return { amount: row.amount, currency: code, valued: exact ? (value ?? null) : null };
+    };
+    const ids = new Set(charges.map(({ row }) => row.localId));
+    const feeOf = new Map(
+        charges.flatMap(({ landsOn, row }) =>
+            row.feeForId && ids.has(row.feeForId) ? [[row.feeForId, valuedIn(row, landsOn)] as const] : []
+        )
+    );
+    return {
+        charges: charges
+            .filter(({ row }) => !(row.feeForId && ids.has(row.feeForId)))
+            .map(({ landsOn, row }) => {
+                const category = row.categoryId ? categories.get(row.categoryId) : undefined;
+                return {
+                    ...valuedIn(row, landsOn),
+                    cadence: cadenceOf(row.recurringType),
+                    every: row.recurringCoefficient,
+                    fee: feeOf.get(row.localId) ?? null,
+                    id: row.localId,
+                    kind: row.income ? ("income" as const) : ("expense" as const),
+                    look: entryLook(row, category),
+                    nextCharge: wallDay(landsOn),
+                    note: row.note || category?.name || "",
+                };
+            }),
+        currency,
+        monthlyCost,
+    };
+}, Effect.orDie);
+
+const balancesOf = Effect.fn("Ledger.balances")(function* balances(userId: string) {
+    const { accounts, ...rest } = yield* accountBalancesOf(userId);
+    return {
+        ...rest,
+        accounts: accounts.map((account) => ({
+            ...account,
+            look: accountLook(account),
+        })),
+    };
+});
+
 const overview = FunctionImpl.make(databaseSchema, spec, "overview", ({ limit }) =>
     syncedUser().pipe(
         Effect.flatMap((userId) =>
             Effect.all(
                 {
-                    balances: accountBalancesOf(userId),
+                    balances: balancesOf(userId),
                     budgets: budgetStatusOf(userId),
-                    entries: recentTransactionsOf(userId, { limit }),
+                    log: logOf(userId, limit ?? MAX_ENTRIES),
                     nextChangeAt: nextChangeAt(userId),
                     summary: spendingSummaryOf(userId),
-                    upcoming: upcomingChargesOf(userId),
+                    upcoming: upcomingOf(userId),
                 },
                 { concurrency: "unbounded" }
             )

@@ -67,7 +67,7 @@ export const zoneOffset = Effect.fn("McpLedger.zoneOffset")(function* zoneOffset
     return fixedOffset(Option.match(latest, { onNone: () => 0, onSome: (row) => utcOffsetOf(row.day) }));
 });
 
-const ratesIn = Effect.fn("McpLedger.ratesIn")(function* ratesIn(...codes: string[]) {
+export const ratesIn = Effect.fn("McpLedger.ratesIn")(function* ratesIn(...codes: string[]) {
     const reader = yield* DatabaseReader;
     const quotes = [...new Set(codes)].filter((code) => code !== "USD");
     const rows = yield* Effect.all(
@@ -82,7 +82,7 @@ const ratesIn = Effect.fn("McpLedger.ratesIn")(function* ratesIn(...codes: strin
     return buildRateTable(rows.flat());
 });
 
-const liveCategories = Effect.fn("McpLedger.liveCategories")(function* liveCategories(userId: string) {
+export const liveCategories = Effect.fn("McpLedger.liveCategories")(function* liveCategories(userId: string) {
     const reader = yield* DatabaseReader;
     const rows = yield* reader
         .table("categories")
@@ -352,8 +352,11 @@ export const accountBalancesOf = Effect.fn("McpLedger.accountBalances")(function
                     balance: roundMoney(own.total, decimalsFor(account.currency)),
                     balanceInMainCurrency: roundMoney(row.balance, decimals),
                     currency: account.currency,
+                    customColor: account.customColor,
                     emoji: account.emoji,
                     exact: own.exact && row.exact,
+                    icon: account.icon,
+                    imageColor: account.imageColor,
                     imageKey: account.imageKey,
                     kind: row.kind,
                     name: account.name,
@@ -443,7 +446,7 @@ export const budgetStatusOf = Effect.fn("McpLedger.budgetStatus")(function* budg
     };
 }, Effect.orDie);
 
-export const upcomingChargesOf = Effect.fn("McpLedger.upcomingCharges")(function* upcomingCharges(userId: string) {
+export const scheduleOf = Effect.fn("McpLedger.schedule")(function* schedule(userId: string) {
     const reader = yield* DatabaseReader;
     const now = yield* Clock.currentTimeMillis;
     const currency = (yield* setting(userId, "currency")) ?? "USD";
@@ -481,8 +484,8 @@ export const upcomingChargesOf = Effect.fn("McpLedger.upcomingCharges")(function
         rates,
         today
     );
-    const cadences = new Map<number, string>(Object.entries(RECURRING_TYPE).map(([name, code]) => [code, name]));
     return {
+        categories,
         charges: scheduled
             .map((row) => ({
                 landsOn: landingDate(
@@ -496,23 +499,7 @@ export const upcomingChargesOf = Effect.fn("McpLedger.upcomingCharges")(function
                 ),
                 row,
             }))
-            .sort((a, b) => a.landsOn.getTime() - b.landsOn.getTime())
-            .map(({ landsOn, row }) => ({
-                amount: row.amount,
-                category: row.categoryId ? (categories.get(row.categoryId)?.name ?? null) : null,
-                currency: row.currency,
-                endsOn:
-                    row.recurringEndDate === null
-                        ? null
-                        : localDate(row.recurringEndDate, offsetAt(row.recurringEndDate)),
-                kind: entryKind(row.income),
-                nextCharge: wallDay(landsOn),
-                note: row.note,
-                repeats:
-                    row.recurringType === RECURRING_TYPE.none
-                        ? null
-                        : { cadence: cadences.get(row.recurringType) ?? null, every: row.recurringCoefficient },
-            })),
+            .sort((a, b) => a.landsOn.getTime() - b.landsOn.getTime()),
         currency,
         monthlyCost: perMonth
             .filter((bucket) => bucket.transactionCount > 0)
@@ -521,6 +508,35 @@ export const upcomingChargesOf = Effect.fn("McpLedger.upcomingCharges")(function
                 currency: bucket.currencyCode,
                 schedules: bucket.transactionCount,
             })),
+        offsetAt,
+        rates,
+    };
+});
+
+const CADENCES = new Map<number, string>(Object.entries(RECURRING_TYPE).map(([name, code]) => [code, name]));
+
+export const cadenceOf = (recurringType: number) =>
+    recurringType === RECURRING_TYPE.none ? null : (CADENCES.get(recurringType) ?? null);
+
+export const upcomingChargesOf = Effect.fn("McpLedger.upcomingCharges")(function* upcomingCharges(userId: string) {
+    const { categories, charges, currency, monthlyCost, offsetAt } = yield* scheduleOf(userId);
+    return {
+        charges: charges.map(({ landsOn, row }) => ({
+            amount: row.amount,
+            category: row.categoryId ? (categories.get(row.categoryId)?.name ?? null) : null,
+            currency: row.currency,
+            endsOn:
+                row.recurringEndDate === null ? null : localDate(row.recurringEndDate, offsetAt(row.recurringEndDate)),
+            kind: entryKind(row.income),
+            nextCharge: wallDay(landsOn),
+            note: row.note,
+            repeats:
+                row.recurringType === RECURRING_TYPE.none
+                    ? null
+                    : { cadence: cadenceOf(row.recurringType), every: row.recurringCoefficient },
+        })),
+        currency,
+        monthlyCost,
     };
 }, Effect.orDie);
 

@@ -75,9 +75,9 @@ describe("ledger", () => {
             await ctx.db.insert("transactions", { ...entryOf(owner.userId, "rent"), date: Date.now() + 86_400_000 });
         });
 
-        const { entries } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
+        const { log } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
 
-        expect(entries.map((row) => row.note)).toStrictEqual(["mine"]);
+        expect(log.flatMap((day) => day.rows.map((row) => row.note))).toStrictEqual(["mine"]);
     });
 
     it("dates an entry on the owner's wall clock, with its account", async () => {
@@ -121,10 +121,10 @@ describe("ledger", () => {
         });
 
         const {
-            entries: [entry],
+            log: [day],
         } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
 
-        expect(entry).toMatchObject({ account: "Chase", date: "2026-10-08", time: "22:30" });
+        expect(day).toMatchObject({ date: "2026-10-08", rows: [{ account: "Chase", time: "22:30" }] });
     });
 
     it("reads an entry's time at its own offset on the day the clocks go back", async () => {
@@ -147,10 +147,10 @@ describe("ledger", () => {
         });
 
         const {
-            entries: [entry],
+            log: [day],
         } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
 
-        expect(entry).toMatchObject({ date: "2026-11-01", time: "12:00" });
+        expect(day).toMatchObject({ date: "2026-11-01", rows: [{ time: "12:00" }] });
     });
 
     it("reads today at the offset it dates entries with when no zone is stored", async () => {
@@ -188,11 +188,11 @@ describe("ledger", () => {
             });
         });
         const {
-            entries: [entry],
+            log: [day],
             summary,
         } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
 
-        expect(summary.spentByDay.map((bar) => bar.date)).toStrictEqual([entry?.date]);
+        expect(summary.spentByDay.map((bar) => bar.date)).toStrictEqual([day?.date]);
     });
 
     it("turns over at the owner's midnight unless an entry lands first", async () => {
