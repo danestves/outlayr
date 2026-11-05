@@ -30,7 +30,8 @@ export function photoNameFromKey(key: string): string | null {
     if (segments.length !== 3 || segments[0] !== PHOTO_KEY_PREFIX) {
         return null;
     }
-    return isPhotoName(segments[2]) ? segments[2] : null;
+    const name = segments.at(-1);
+    return name !== undefined && isPhotoName(name) ? name : null;
 }
 
 // Bookkeeping on an already trusted key only. Never authorize with this; `ownsPhotoKey` checks the session's owner.
@@ -40,5 +41,5 @@ export function photoOwnerFromKey(key: string): string | null {
     if (name === null) {
         return null;
     }
-    return userId !== "" && photoKeyFor(userId, name) === key ? userId : null;
+    return userId !== undefined && userId !== "" && photoKeyFor(userId, name) === key ? userId : null;
 }

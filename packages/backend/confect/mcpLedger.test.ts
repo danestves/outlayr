@@ -566,7 +566,7 @@ describe("budget_status", () => {
 });
 
 describe("recent_transactions", () => {
-    const niueDate = at("2026-10-09T20:00:00Z");
+    const niueDate = at("2026-10-09T12:00:00Z");
     const niueEntry = () => entry("niue", { amount: 12, date: niueDate, day: midnightOf(niueDate, -11 * HOUR) });
 
     it("dates a Niue entry by the stored zone, where the fold alone reads Tonga", async () => {

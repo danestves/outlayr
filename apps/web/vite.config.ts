@@ -38,7 +38,9 @@ export default defineConfig({
                 "/login": UNFRAMEABLE,
                 // Every file under /assets is content-hashed by Vite, so a URL never changes meaning.
                 "/assets/**": { headers: { "cache-control": "public, max-age=31536000, immutable" } },
-                "/app/**": A_DAY,
+                "/app/iphone.webp": A_DAY,
+                "/app/iphone-500.webp": A_DAY,
+                "/app/logos/**": A_DAY,
                 "/apple-touch-icon.png": A_DAY,
                 "/badges/**": A_DAY,
                 "/favicon-dark.png": A_DAY,

@@ -74,7 +74,7 @@ export const mcp: McpServer = new McpServer(components.mcp, {
             annotations: { readOnlyHint: true },
             args: SchemaToValidator.compileSchema(Schema.Struct(RecentTransactionsInput)).fields,
             description:
-                "The signed-in user's most recent Outlayr entries, newest first: date, amount, currency, category, note, and whether each is an expense or income. Reads what the user's devices last synced. `limit` defaults to 20, at most 50.",
+                "The signed-in user's most recent Outlayr entries, newest first: date, amount, currency, category, note, and whether each is an expense or income. Reads what the user's devices last synced; scheduled entries that have not happened yet are in upcoming_charges instead. `limit` defaults to 20, at most 50.",
             handler: (ctx, args, user) => ctx.runQuery(internal.mcpLedger.recentTransactions, { user, ...args }),
             returns: SchemaToValidator.compileSchema(RecentTransactions),
             scope: READ,

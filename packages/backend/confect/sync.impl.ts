@@ -256,13 +256,12 @@ const pullSince = FunctionImpl.make(
                         .table(table)
                         .index("by_user_and_seq", (q) => q.eq("userId", userId).gt("seq", args.cursor))
                         .take(limit)
+                        .pipe(Effect.map((docs) => docs.map((doc) => toWire(table, doc))))
                 ),
                 { concurrency: "unbounded" }
             );
 
-            const merged = pages
-                .flatMap((docs, index) => docs.map((doc) => toWire(tables[index], doc)))
-                .sort((a, b) => a.seq - b.seq);
+            const merged = pages.flat().sort((a, b) => a.seq - b.seq);
 
             const rows = merged.slice(0, limit);
             const last = rows[rows.length - 1];
