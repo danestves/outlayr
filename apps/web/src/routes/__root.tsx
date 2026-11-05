@@ -1,5 +1,6 @@
 import type { ConvexQueryClient } from "@convex-dev/react-query";
 import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
+import type { DbClient } from "@tanstack/react-db";
 import type { QueryClient } from "@tanstack/react-query";
 import { HeadContent, Scripts, createRootRouteWithContext, useMatches, useParams } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -102,6 +103,7 @@ function siteGraph(locale: Locale) {
 
 export const Route = createRootRouteWithContext<{
     convexQueryClient: ConvexQueryClient | undefined;
+    dbClient: DbClient;
     queryClient: QueryClient;
 }>()({
     head: ({ matches }) => {
