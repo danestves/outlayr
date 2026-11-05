@@ -20,18 +20,16 @@ export const EntryKind = Schema.Literals(["expense", "income"]);
 
 export const RecentTransactionsInput = { limit: Schema.optional(Schema.Number) };
 
-export const RecentTransactions = Schema.mutable(
-    Schema.Array(
-        Schema.Struct({
-            amount: Schema.Number,
-            category: Schema.NullOr(Schema.String),
-            currency: Schema.NullOr(Schema.String),
-            date: Schema.String,
-            kind: EntryKind,
-            note: Schema.String,
-        })
-    )
-);
+export const RecentTransaction = Schema.Struct({
+    amount: Schema.Number,
+    category: Schema.NullOr(Schema.String),
+    currency: Schema.NullOr(Schema.String),
+    date: Schema.String,
+    kind: EntryKind,
+    note: Schema.String,
+});
+
+export const RecentTransactions = Schema.mutable(Schema.Array(RecentTransaction));
 
 export const SpendingSummaryInput = { monthsAgo: Schema.optional(Schema.Number) };
 
@@ -44,19 +42,17 @@ export const SpendingSummary = Schema.Struct({
     to: Schema.String,
 });
 
+export const AccountBalance = Schema.Struct({
+    balance: Schema.Number,
+    balanceInMainCurrency: Schema.Number,
+    currency: Schema.String,
+    exact: Schema.Boolean,
+    kind: Schema.String,
+    name: Schema.String,
+});
+
 export const AccountBalances = Schema.Struct({
-    accounts: Schema.mutable(
-        Schema.Array(
-            Schema.Struct({
-                balance: Schema.Number,
-                balanceInMainCurrency: Schema.Number,
-                currency: Schema.String,
-                exact: Schema.Boolean,
-                kind: Schema.String,
-                name: Schema.String,
-            })
-        )
-    ),
+    accounts: Schema.mutable(Schema.Array(AccountBalance)),
     currency: Schema.String,
     net: Schema.Number,
     owed: Schema.Number,

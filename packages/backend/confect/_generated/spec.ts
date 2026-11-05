@@ -10,6 +10,7 @@ import featureRequests from "../featureRequests.spec";
 import groundedLookup from "../groundedLookup.spec";
 import groundedSpend from "../groundedSpend.spec";
 import installmentScan from "../installmentScan.spec";
+import ledger from "../ledger.spec";
 import legal from "../legal.spec";
 import limits from "../limits.spec";
 import mail from "../mail.spec";
@@ -41,6 +42,7 @@ const spec: Spec.Spec<{
   readonly groundedLookup: GroupSpec.NamedAt<typeof groundedLookup, "groundedLookup">;
   readonly groundedSpend: GroupSpec.NamedAt<typeof groundedSpend, "groundedSpend">;
   readonly installmentScan: GroupSpec.NamedAt<typeof installmentScan, "installmentScan">;
+  readonly ledger: GroupSpec.NamedAt<typeof ledger, "ledger">;
   readonly legal: GroupSpec.NamedAt<typeof legal, "legal">;
   readonly limits: GroupSpec.NamedAt<typeof limits, "limits">;
   readonly mail: GroupSpec.NamedAt<typeof mail, "mail">;
@@ -71,6 +73,7 @@ const spec: Spec.Spec<{
   ["groundedLookup"]: groundedLookup,
   ["groundedSpend"]: groundedSpend,
   ["installmentScan"]: installmentScan,
+  ["ledger"]: ledger,
   ["legal"]: legal,
   ["limits"]: limits,
   ["mail"]: mail,

@@ -1,8 +1,18 @@
 @import "tailwindcss";
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/nunito";
+@import "tw-animate-css";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Base UI marks state with presence attributes, and React writes `data-active="false"`, so these read both. */
+@custom-variant data-open (&:where([data-open]:not([data-open="false"])));
+@custom-variant data-closed (&:where([data-closed]:not([data-closed="false"])));
+@custom-variant data-active (&:where([data-active]:not([data-active="false"])));
+@custom-variant data-disabled (&:where([data-disabled]:not([data-disabled="false"])));
+@custom-variant data-horizontal (&:where([data-orientation="horizontal"]));
+@custom-variant data-vertical (&:where([data-orientation="vertical"]));
 
 @theme {
     --color-*: initial;
@@ -965,5 +975,51 @@
         .legal-body a[href^="http"]::after {
             content: " (" attr(href) ")";
         }
+    }
+}
+
+/* shadcn tokens for the web app. They follow the app palette, so they flip with data-theme. */
+@theme inline {
+    --font-app: "Nunito Variable", ui-sans-serif, system-ui, sans-serif;
+    --color-card: var(--color-app-group);
+    --color-card-foreground: var(--color-app-ink);
+    --color-popover: var(--color-app-group);
+    --color-popover-foreground: var(--color-app-ink);
+    --color-primary: var(--color-app-ink);
+    --color-primary-foreground: var(--color-app-bg);
+    --color-secondary: var(--color-app-fill);
+    --color-secondary-foreground: var(--color-app-ink);
+    --color-accent: var(--color-app-fill);
+    --color-accent-foreground: var(--color-app-ink);
+    --color-muted-foreground: var(--color-app-muted);
+    --color-destructive: var(--color-app-spend);
+    --color-input: var(--color-app-rule);
+    --color-ring: var(--color-app-muted);
+    --color-sidebar: var(--color-app-bg);
+    --color-sidebar-foreground: var(--color-app-ink);
+    --color-sidebar-primary: var(--color-app-tint);
+    --color-sidebar-primary-foreground: var(--color-white);
+    --color-sidebar-accent: color-mix(in oklab, var(--color-app-ink) 6%, var(--color-app-bg));
+    --color-sidebar-accent-foreground: var(--color-app-ink);
+    --color-sidebar-border: var(--color-app-rule);
+    --color-sidebar-ring: var(--color-app-muted);
+}
+
+/* The marketing site already owns these four names with other meanings, so the app redefines them in its subtree. */
+.app-shell {
+    --color-background: var(--color-app-bg);
+    --color-foreground: var(--color-app-ink);
+    --color-border: var(--color-app-rule);
+    --color-muted: var(--color-app-fill);
+    background-color: var(--color-app-bg);
+    color: var(--color-app-ink);
+    font-family: var(--font-app);
+}
+
+/* Tailwind 4 borders default to currentColor; shadcn components expect the theme border. */
+@layer base {
+    .app-shell,
+    .app-shell * {
+        border-color: var(--color-border);
     }
 }

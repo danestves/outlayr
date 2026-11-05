@@ -131,7 +131,7 @@ const results = FunctionImpl.make(
             return [];
         }
         const reader = yield* DatabaseReader;
-        const [done, failed] = yield* Effect.all(
+        const jobs = yield* Effect.all(
             (["done", "failed"] as const).map((status) =>
                 reader
                     .table("enrichmentJobs")
@@ -140,7 +140,7 @@ const results = FunctionImpl.make(
             ),
             { concurrency: "unbounded" }
         );
-        return [...done, ...failed].map((row) => ({
+        return jobs.flat().map((row) => ({
             localId: row.localId,
             name: row.name,
             result: row.result ?? null,
