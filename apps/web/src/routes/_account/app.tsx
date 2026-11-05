@@ -3,19 +3,15 @@ import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ChevronsUpDownIcon, LogOutIcon, ReceiptTextIcon } from "lucide-react";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
+import * as Skullet from "skullet";
+import { Skeleton } from "skullet/react";
 
 import { LINE_PILL, Muted, SOLID_PILL, Screen } from "@/components/account/parts";
-import {
-    AccountsCard,
-    BudgetsCard,
-    EntryLog,
-    MonthHero,
-    OverviewSkeleton,
-    UpcomingCard,
-} from "@/components/ledger/overview";
+import { AccountsCard, BudgetsCard, EntryLog, MonthHero, UpcomingCard } from "@/components/ledger/overview";
 import type { PhotoUrls } from "@/components/ledger/overview";
+import { SAMPLE_OVERVIEW } from "@/components/ledger/sample";
 import { LogoMark } from "@/components/logo-mark";
 import {
     DropdownMenu,
@@ -93,6 +89,8 @@ function AppSidebar() {
 
 // A full load drops the session the router context and the Convex client still hold.
 async function signOut() {
+    // Remembered skeleton shapes hold layout only, but they still describe this ledger.
+    Skullet.forgetShapes();
     await authClient.signOut();
     window.location.assign("/login");
 }
@@ -153,15 +151,48 @@ function usePhotoUrls(keys: readonly string[]): PhotoUrls {
 
 const ENTRY_LIMIT = 30;
 
-// Every UTC offset is a whole number of quarter hours, so each zone's midnight lands on one of these steps.
-const CLOCK_STEP_MS = 5 * 60_000;
-const readClock = () => Math.floor(Date.now() / CLOCK_STEP_MS) * CLOCK_STEP_MS;
-const watchClock = (onChange: () => void) => {
-    const timer = setInterval(onChange, 30_000);
-    return () => clearInterval(timer);
-};
+// A browser clock ahead of the server's would ask again before the change has happened; this bounds the retries.
+const MIN_WAIT_MS = 15_000;
 
-// A new asOf reloads every query; keep the last answer on screen instead of the skeleton.
+/**
+ * The asOf to query with. It moves when the clock passes nextChangeAt, since Convex re-runs a query when its data
+ * changes and not when time passes.
+ */
+function useAsOf(nextChangeAt: number | undefined) {
+    const [asOf, setAsOf] = useState(() => Date.now());
+    // oxlint-disable-next-line outlayr/react-effect-budget -- the clock is an external system.
+    useEffect(() => {
+        if (nextChangeAt === undefined) {
+            return;
+        }
+        let timer: ReturnType<typeof setTimeout>;
+        // Until the answer moves nextChangeAt on, keep asking: a run can land just before the server's clock passes it.
+        const arm = () => {
+            timer = setTimeout(
+                () => {
+                    setAsOf(Date.now());
+                    arm();
+                },
+                Math.max(nextChangeAt - Date.now(), MIN_WAIT_MS)
+            );
+        };
+        arm();
+        // Timers stall while a laptop sleeps, so a page coming back into view checks the clock itself.
+        const onVisible = () => {
+            if (document.visibilityState === "visible" && Date.now() >= nextChangeAt) {
+                setAsOf(Date.now());
+            }
+        };
+        document.addEventListener("visibilitychange", onVisible);
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener("visibilitychange", onVisible);
+        };
+    }, [nextChangeAt]);
+    return asOf;
+}
+
+// A new asOf reloads the query; keep the last answer on screen instead of the skeleton.
 function useLatest<T>(value: T | undefined) {
     const [kept, setKept] = useState(value);
     if (value !== undefined && value !== kept) {
@@ -171,19 +202,18 @@ function useLatest<T>(value: T | undefined) {
 }
 
 function Overview() {
-    // Before the client holds the token these would throw Unauthenticated and land on the error screen.
+    // Before the client holds the token this would throw Unauthenticated and land on the error screen.
     const { isAuthenticated } = useConvexAuth();
-    // Convex re-runs a query when its data changes, not when time passes: a new asOf starts a fresh run.
-    const asOf = useSyncExternalStore(watchClock, readClock, readClock);
-    const entries = useLatest(
-        useQuery(api.ledger.recentTransactions, isAuthenticated ? { asOf, limit: ENTRY_LIMIT } : "skip")
-    );
-    const summary = useLatest(useQuery(api.ledger.spendingSummary, isAuthenticated ? { asOf } : "skip"));
-    const balances = useLatest(useQuery(api.ledger.accountBalances, isAuthenticated ? { asOf } : "skip"));
-    const budgets = useLatest(useQuery(api.ledger.budgetStatus, isAuthenticated ? { asOf } : "skip"));
-    const upcoming = useLatest(useQuery(api.ledger.upcomingCharges, isAuthenticated ? { asOf } : "skip"));
+    const [nextChangeAt, setNextChangeAt] = useState<number>();
+    const asOf = useAsOf(nextChangeAt);
+    const overview = useLatest(useQuery(api.ledger.overview, isAuthenticated ? { asOf, limit: ENTRY_LIMIT } : "skip"));
+    if (overview && overview.nextChangeAt !== nextChangeAt) {
+        setNextChangeAt(overview.nextChangeAt);
+    }
     const photos = usePhotoUrls(
-        [...(entries ?? []), ...(balances?.accounts ?? [])].flatMap((row) => (row.imageKey ? [row.imageKey] : []))
+        [...(overview?.entries ?? []), ...(overview?.balances.accounts ?? [])].flatMap((row) =>
+            row.imageKey ? [row.imageKey] : []
+        )
     );
     return (
         <div className="grid min-h-dvh xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -192,25 +222,31 @@ function Overview() {
                     <SidebarTrigger className="md:hidden" />
                     <h1 className="text-[28px] leading-[34px] font-extrabold tracking-[-0.01em]">Log</h1>
                 </header>
-                {entries && summary && budgets ? (
-                    <>
-                        <MonthHero budgets={budgets} summary={summary} today={summary.today} />
-                        <EntryLog
-                            currency={summary.currency}
-                            entries={entries}
-                            mayCutLastDay={entries.length === ENTRY_LIMIT}
-                            photos={photos}
-                            today={summary.today}
-                        />
-                    </>
-                ) : (
-                    <OverviewSkeleton />
-                )}
+                <Skeleton data={overview} id="ledger-log" label="Loading your ledger" sample={SAMPLE_OVERVIEW}>
+                    {({ entries, budgets, summary }) => (
+                        <>
+                            <MonthHero budgets={budgets} summary={summary} today={summary.today} />
+                            <EntryLog
+                                currency={summary.currency}
+                                entries={entries}
+                                mayCutLastDay={entries.length === ENTRY_LIMIT}
+                                photos={photos}
+                                today={summary.today}
+                            />
+                        </>
+                    )}
+                </Skeleton>
             </main>
-            <aside className="border-border flex flex-col gap-6 px-5 pt-7 pb-10 md:px-10 xl:border-l xl:px-7">
-                {balances ? <AccountsCard balances={balances} photos={photos} /> : null}
-                {budgets ? <BudgetsCard budgets={budgets} /> : null}
-                {upcoming ? <UpcomingCard upcoming={upcoming} /> : null}
+            <aside className="border-border px-5 pt-7 pb-10 md:px-10 xl:border-l xl:px-7">
+                <Skeleton data={overview} id="ledger-rail" sample={SAMPLE_OVERVIEW}>
+                    {({ balances, budgets, upcoming }) => (
+                        <div className="flex flex-col gap-6">
+                            <AccountsCard balances={balances} photos={photos} />
+                            <BudgetsCard budgets={budgets} />
+                            <UpcomingCard upcoming={upcoming} />
+                        </div>
+                    )}
+                </Skeleton>
             </aside>
         </div>
     );

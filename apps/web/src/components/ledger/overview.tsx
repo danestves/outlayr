@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
     addDays,
     budgetPace,
@@ -18,11 +17,12 @@ import {
 } from "@/lib/ledger";
 import { cn } from "@/lib/utils";
 
-type Entries = FunctionReturnType<typeof api.ledger.recentTransactions>;
-type Summary = FunctionReturnType<typeof api.ledger.spendingSummary>;
-type Balances = FunctionReturnType<typeof api.ledger.accountBalances>;
-type Budgets = FunctionReturnType<typeof api.ledger.budgetStatus>;
-type Upcoming = FunctionReturnType<typeof api.ledger.upcomingCharges>;
+export type Overview = FunctionReturnType<typeof api.ledger.overview>;
+type Entries = Overview["entries"];
+type Summary = Overview["summary"];
+type Balances = Overview["balances"];
+type Budgets = Overview["budgets"];
+type Upcoming = Overview["upcoming"];
 
 /** Signed photo urls by key, minted once the keys are known. */
 export type PhotoUrls = ReadonlyMap<string, string>;
@@ -399,16 +399,5 @@ export function UpcomingCard({ upcoming }: { upcoming: Upcoming }) {
                 ))}
             </ul>
         </RailSection>
-    );
-}
-
-export function OverviewSkeleton() {
-    return (
-        <div aria-busy className="flex flex-col gap-4 pt-6">
-            <Skeleton className="h-4 w-40" />
-            <Skeleton className="h-14 w-64" />
-            <Skeleton className="h-16 w-full" />
-            <Skeleton className="h-60 w-full" />
-        </div>
     );
 }

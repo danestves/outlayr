@@ -56,13 +56,13 @@ describe("ledger", () => {
         const t = setup();
         const asFree = authenticatedAs(t, await seedAuthUser(t));
 
-        await expect(asFree.query(api.ledger.recentTransactions, {})).rejects.toThrow(/Pro is required/);
+        await expect(asFree.query(api.ledger.overview, {})).rejects.toThrow(/Pro is required/);
     });
 
     it("refuses an anonymous caller", async () => {
         const t = setup();
 
-        await expect(t.query(api.ledger.accountBalances, {})).rejects.toThrow(/sign in/);
+        await expect(t.query(api.ledger.overview, {})).rejects.toThrow(/sign in/);
     });
 
     it("reads only the caller's own entries that already happened", async () => {
@@ -75,7 +75,7 @@ describe("ledger", () => {
             await ctx.db.insert("transactions", { ...entryOf(owner.userId, "rent"), date: Date.now() + 86_400_000 });
         });
 
-        const entries = await authenticatedAs(t, owner).query(api.ledger.recentTransactions, {});
+        const { entries } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
 
         expect(entries.map((row) => row.note)).toStrictEqual(["mine"]);
     });
@@ -121,7 +121,9 @@ describe("ledger", () => {
             });
         });
 
-        const [entry] = await authenticatedAs(t, owner).query(api.ledger.recentTransactions, {});
+        const {
+            entries: [entry],
+        } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
 
         expect(entry).toMatchObject({ account: "Chase", date: "2026-10-08", time: "22:30" });
     });
@@ -146,7 +148,9 @@ describe("ledger", () => {
             });
         });
 
-        const [entry] = await authenticatedAs(t, owner).query(api.ledger.recentTransactions, {});
+        const {
+            entries: [entry],
+        } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
 
         expect(entry).toMatchObject({ date: "2026-11-01", time: "12:00" });
     });
@@ -162,7 +166,7 @@ describe("ledger", () => {
             await ctx.db.insert("transactions", { ...entryOf(owner.userId, "taxi"), day: Date.UTC(2026, 9, 8, 4) });
         });
 
-        const summary = await authenticatedAs(t, owner).query(api.ledger.spendingSummary, {});
+        const { summary } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
 
         expect(summary.today).toBe("2026-10-09");
     });
@@ -188,11 +192,42 @@ describe("ledger", () => {
                 day: Date.UTC(2026, 9, 8, 22),
             });
         });
-        const asOwner = authenticatedAs(t, owner);
-
-        const [entry] = await asOwner.query(api.ledger.recentTransactions, {});
-        const summary = await asOwner.query(api.ledger.spendingSummary, {});
+        const {
+            entries: [entry],
+            summary,
+        } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
 
         expect(summary.spentByDay.map((bar) => bar.date)).toStrictEqual([entry?.date]);
+    });
+
+    it("turns over at the owner's midnight unless an entry lands first", async () => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        vi.setSystemTime(Date.UTC(2026, 9, 9, 15));
+        const t = setup();
+        const owner = await seedProUser(t);
+        await t.run(async (ctx) => {
+            await ctx.db.insert("appMeta", {
+                deviceId: "device",
+                key: "timeZone",
+                seq: 0,
+                updatedAt: 0,
+                userId: owner.userId,
+                value: "America/Caracas",
+            });
+        });
+        const asOwner = authenticatedAs(t, owner);
+
+        // Midnight on 10 Oct in Caracas is 04:00 UTC.
+        expect((await asOwner.query(api.ledger.overview, {})).nextChangeAt).toBe(Date.UTC(2026, 9, 10, 4));
+
+        await t.run(async (ctx) => {
+            await ctx.db.insert("transactions", {
+                ...entryOf(owner.userId, "late dinner"),
+                date: Date.UTC(2026, 9, 10, 1),
+                day: Date.UTC(2026, 9, 9, 4),
+            });
+        });
+
+        expect((await asOwner.query(api.ledger.overview, {})).nextChangeAt).toBe(Date.UTC(2026, 9, 10, 1));
     });
 });

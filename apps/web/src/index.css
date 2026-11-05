@@ -1014,6 +1014,9 @@
     background-color: var(--color-app-bg);
     color: var(--color-app-ink);
     font-family: var(--font-app);
+    /* Skullet draws its bars in a shadow root, which these custom properties reach. Held still: no shimmer. */
+    --skullet-base: var(--color-app-fill);
+    --skullet-animation: none;
 }
 
 /* Tailwind 4 borders default to currentColor; shadcn components expect the theme border. */

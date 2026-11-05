@@ -50,7 +50,7 @@ export const storedZone = Effect.fn("McpLedger.storedZone")(function* storedZone
     return timeZone === null ? null : zoneOffsets(timeZone);
 });
 
-const zoneOffset = Effect.fn("McpLedger.zoneOffset")(function* zoneOffset(userId: string, now: number) {
+export const zoneOffset = Effect.fn("McpLedger.zoneOffset")(function* zoneOffset(userId: string, now: number) {
     const zone = yield* storedZone(userId);
     if (zone !== null) {
         return zone;

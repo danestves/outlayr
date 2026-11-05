@@ -6,15 +6,9 @@ import {
     AccountBalances,
     BudgetStatus,
     RecentTransaction,
-    RecentTransactionsInput,
     SpendingSummary,
-    SpendingSummaryInput,
     UpcomingCharges,
 } from "./mcpLedger";
-
-// Convex does not re-run a query as time passes, so the web passes a coarse clock to start a fresh one. The
-// handlers still read the server clock; asOf only keys the subscription.
-const AsOf = { asOf: Schema.optional(Schema.Number) };
 
 // The MCP schemas leave these fields out, so encoding drops them there: an agent has no use for a photo key.
 const Look = { emoji: Schema.NullOr(Schema.String), imageKey: Schema.NullOr(Schema.String) };
@@ -41,23 +35,22 @@ const LedgerAccounts = Schema.Struct({
     accounts: Schema.mutable(Schema.Array(Schema.Struct({ ...AccountBalance.fields, ...Look }))),
 });
 
-export default GroupSpec.make()
-    .addFunction(
-        FunctionSpec.publicQuery({
-            name: "recentTransactions",
-            args: () => ({ ...RecentTransactionsInput, ...AsOf }),
-            returns: () => LedgerEntries,
-        })
-    )
-    .addFunction(
-        FunctionSpec.publicQuery({
-            name: "spendingSummary",
-            args: () => ({ ...SpendingSummaryInput, ...AsOf }),
-            returns: () => LedgerSummary,
-        })
-    )
-    .addFunction(FunctionSpec.publicQuery({ name: "accountBalances", args: () => AsOf, returns: () => LedgerAccounts }))
-    .addFunction(FunctionSpec.publicQuery({ name: "budgetStatus", args: () => AsOf, returns: () => BudgetStatus }))
-    .addFunction(
-        FunctionSpec.publicQuery({ name: "upcomingCharges", args: () => AsOf, returns: () => UpcomingCharges })
-    );
+const Overview = Schema.Struct({
+    balances: LedgerAccounts,
+    budgets: BudgetStatus,
+    entries: LedgerEntries,
+    // The first instant at which the passing of time alone changes this answer.
+    nextChangeAt: Schema.Number,
+    summary: LedgerSummary,
+    upcoming: UpcomingCharges,
+});
+
+export default GroupSpec.make().addFunction(
+    FunctionSpec.publicQuery({
+        name: "overview",
+        // Convex re-runs a query when its data changes, not when time passes, so the web moves asOf to nextChangeAt
+        // to start a fresh run. The handler still reads the server clock; asOf only keys the subscription.
+        args: () => ({ asOf: Schema.optional(Schema.Number), limit: Schema.optional(Schema.Number) }),
+        returns: () => Overview,
+    })
+);
