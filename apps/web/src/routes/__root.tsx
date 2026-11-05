@@ -1,5 +1,7 @@
+import type { ConvexQueryClient } from "@convex-dev/react-query";
 import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
-import { HeadContent, Scripts, createRootRoute, useMatches, useParams } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
+import { HeadContent, Scripts, createRootRouteWithContext, useMatches, useParams } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import * as Effect from "effect/Effect";
@@ -98,7 +100,10 @@ function siteGraph(locale: Locale) {
     };
 }
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<{
+    convexQueryClient: ConvexQueryClient | undefined;
+    queryClient: QueryClient;
+}>()({
     head: ({ matches }) => {
         const leaf = matches.at(-1);
         const params: { locale?: string } = leaf?.params ?? {};
@@ -151,7 +156,10 @@ export const Route = createRootRoute({
                 { content: LANGUAGES[locale].og, property: "og:locale" },
                 ...locales
                     .filter((alternate) => alternate !== locale)
-                    .map((alternate) => ({ content: LANGUAGES[alternate].og, property: "og:locale:alternate" })),
+                    .map((alternate) => ({
+                        content: LANGUAGES[alternate].og,
+                        property: "og:locale:alternate",
+                    })),
                 { content: meta.title, property: "og:title" },
                 { content: meta.description, property: "og:description" },
                 { content: pageUrl(path, locale), property: "og:url" },
@@ -175,7 +183,9 @@ export const Route = createRootRoute({
 function RootDocument({ children }: { children: ReactNode }) {
     const locale = localeFromParam(useParams({ strict: false }).locale);
     const country = Route.useLoaderData();
-    const inAccount = useMatches({ select: (matches) => matches.some((match) => match.routeId === "/_account") });
+    const inAccount = useMatches({
+        select: (matches) => matches.some((match) => match.routeId === "/_account"),
+    });
     // oxlint-disable-next-line outlayr/react-effect-budget -- starts the analytics SDK once after hydration, with the visitor's country
     useEffect(() => {
         Effect.runFork(startAnalytics(country).pipe(Effect.ignoreCause));

@@ -9,7 +9,13 @@ import { convexClient } from "@/lib/convex";
 const sessionToken = createServerFn({ method: "GET" }).handler(async () => (await authServer().getToken()) ?? null);
 
 export const Route = createFileRoute("/_account")({
-    beforeLoad: async () => ({ token: await sessionToken() }),
+    beforeLoad: async ({ context }) => {
+        const token = await sessionToken();
+        if (token) {
+            context.convexQueryClient?.serverHttpClient?.setAuth(token);
+        }
+        return { token };
+    },
     component: Account,
     head: () => ({ meta: [{ content: "noindex", name: "robots" }] }),
 });

@@ -1,16 +1,18 @@
+import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@outlayr/backend/convex/_generated/api";
-import { Link, createFileRoute, redirect } from "@tanstack/react-router";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { Link, createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvex } from "convex/react";
 import { ChevronsUpDownIcon, LogOutIcon, ReceiptTextIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import * as Skullet from "skullet";
 import { Skeleton } from "skullet/react";
 
 import { LINE_PILL, Muted, SOLID_PILL, Screen } from "@/components/account/parts";
 import { AccountsCard, BudgetsCard, EntryLog, MonthHero, UpcomingCard } from "@/components/ledger/overview";
-import type { PhotoUrls } from "@/components/ledger/overview";
+import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 import { SAMPLE_OVERVIEW } from "@/components/ledger/sample";
 import { LogoMark } from "@/components/logo-mark";
 import {
@@ -33,6 +35,10 @@ import {
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 
+const ENTRY_LIMIT = 30;
+
+const overviewQuery = (asOf: number) => convexQuery(api.ledger.overview, { asOf, limit: ENTRY_LIMIT });
+
 export const Route = createFileRoute("/_account/app")({
     beforeLoad: ({ context, location }) => {
         if (!context.token) {
@@ -41,19 +47,51 @@ export const Route = createFileRoute("/_account/app")({
     },
     component: App,
     errorComponent: NotSynced,
+    loader: async ({ context }) => {
+        const asOf = Date.now();
+        try {
+            await context.queryClient.ensureQueryData(overviewQuery(asOf));
+        } catch (error) {
+            if (error instanceof Error && proRequired(error)) {
+                return { asOf, synced: false };
+            }
+            throw error;
+        }
+        return { asOf, synced: true };
+    },
+    pendingComponent: Pending,
     head: () => ({ meta: [{ title: "Outlayr" }] }),
 });
 
 const SIDEBAR_WIDTH: CSSProperties & Record<"--sidebar-width", string> = { "--sidebar-width": "14rem" };
 
-function App() {
+function Shell({ children }: { children: ReactNode }) {
     return (
         <SidebarProvider className="app-shell ph-no-capture" style={SIDEBAR_WIDTH}>
             <AppSidebar />
-            <SidebarInset className="bg-background">
-                <Overview />
-            </SidebarInset>
+            <SidebarInset className="bg-background">{children}</SidebarInset>
         </SidebarProvider>
+    );
+}
+
+function App() {
+    const { synced } = Route.useLoaderData();
+    const router = useRouter();
+    if (!synced) {
+        return <TurnOnSync retry={() => router.invalidate()} />;
+    }
+    return (
+        <Shell>
+            <LiveOverview />
+        </Shell>
+    );
+}
+
+function Pending() {
+    return (
+        <Shell>
+            <OverviewView overview={undefined} photos={NO_PHOTOS} />
+        </Shell>
     );
 }
 
@@ -117,59 +155,43 @@ function AccountMenu() {
 
 const PHOTO_REMINT_MS = 50 * 60_000;
 
-function usePhotoUrls(keys: readonly string[]): PhotoUrls {
-    const readUrls = useMutation(api.photos.readUrls);
-    const [urls, setUrls] = useState<PhotoUrls>(new Map());
-    const wanted = [...new Set(keys)].toSorted().join("\n");
-    // oxlint-disable-next-line outlayr/react-effect-budget -- signed urls come from a mutation, an external system.
-    useEffect(() => {
-        if (wanted === "") {
-            return;
-        }
-        let live = true;
-        const mint = () =>
-            readUrls({ keys: wanted.split("\n") })
-                .then((minted) => {
-                    if (live) {
-                        setUrls(new Map(minted.map((photo) => [photo.key, photo.url])));
-                    }
-                })
-                .catch(() => undefined);
-        void mint();
-        const timer = setInterval(mint, PHOTO_REMINT_MS);
-        return () => {
-            live = false;
-            clearInterval(timer);
-        };
-    }, [readUrls, wanted]);
-    return urls;
-}
+const NO_PHOTOS: PhotoUrls = new Map();
 
-const ENTRY_LIMIT = 30;
+function usePhotoUrls(keys: readonly string[]): PhotoUrls {
+    const convex = useConvex();
+    const wanted = [...new Set(keys)].toSorted();
+    const { data } = useQuery({
+        enabled: wanted.length > 0,
+        queryFn: async (): Promise<PhotoUrls> => {
+            const minted = await convex.mutation(api.photos.readUrls, { keys: wanted });
+            return new Map(minted.map((photo) => [photo.key, photo.url]));
+        },
+        queryKey: ["photoUrls", wanted],
+        refetchInterval: PHOTO_REMINT_MS,
+        staleTime: PHOTO_REMINT_MS,
+    });
+    return data ?? NO_PHOTOS;
+}
 
 const MIN_WAIT_MS = 15_000;
 
-function useAsOf(nextChangeAt: number | undefined) {
-    const [asOf, setAsOf] = useState(() => Date.now());
+function useTurnover(nextChangeAt: number | undefined, advance: (asOf: number) => void) {
     // oxlint-disable-next-line outlayr/react-effect-budget -- the clock is an external system.
     useEffect(() => {
         if (nextChangeAt === undefined) {
             return;
         }
         let timer: ReturnType<typeof setTimeout>;
-        const arm = () => {
-            timer = setTimeout(
-                () => {
-                    setAsOf(Date.now());
-                    arm();
-                },
-                Math.max(nextChangeAt - Date.now(), MIN_WAIT_MS)
-            );
+        const arm = (delay: number) => {
+            timer = setTimeout(() => {
+                advance(Date.now());
+                arm(MIN_WAIT_MS);
+            }, delay);
         };
-        arm();
+        arm(Math.max(nextChangeAt - Date.now(), 0));
         const onVisible = () => {
             if (document.visibilityState === "visible" && Date.now() >= nextChangeAt) {
-                setAsOf(Date.now());
+                advance(Date.now());
             }
         };
         document.addEventListener("visibilitychange", onVisible);
@@ -177,31 +199,27 @@ function useAsOf(nextChangeAt: number | undefined) {
             clearTimeout(timer);
             document.removeEventListener("visibilitychange", onVisible);
         };
-    }, [nextChangeAt]);
-    return asOf;
+    }, [advance, nextChangeAt]);
 }
 
-function useLatest<T>(value: T | undefined) {
-    const [kept, setKept] = useState(value);
-    if (value !== undefined && value !== kept) {
-        setKept(value);
-    }
-    return value ?? kept;
-}
-
-function Overview() {
-    const { isAuthenticated } = useConvexAuth();
-    const [nextChangeAt, setNextChangeAt] = useState<number>();
-    const asOf = useAsOf(nextChangeAt);
-    const overview = useLatest(useQuery(api.ledger.overview, isAuthenticated ? { asOf, limit: ENTRY_LIMIT } : "skip"));
-    if (overview && overview.nextChangeAt !== nextChangeAt) {
-        setNextChangeAt(overview.nextChangeAt);
-    }
+function LiveOverview() {
+    const loaded = Route.useLoaderData();
+    const [asOf, setAsOf] = useState(loaded.asOf);
+    const { data: overview } = useQuery({
+        ...overviewQuery(asOf),
+        placeholderData: keepPreviousData,
+        throwOnError: true,
+    });
+    useTurnover(overview?.nextChangeAt, setAsOf);
     const photos = usePhotoUrls(
         [...(overview?.entries ?? []), ...(overview?.balances.accounts ?? [])].flatMap((row) =>
             row.imageKey ? [row.imageKey] : []
         )
     );
+    return <OverviewView overview={overview} photos={photos} />;
+}
+
+function OverviewView({ overview, photos }: { overview: Overview | undefined; photos: PhotoUrls }) {
     return (
         <div className="grid min-h-dvh xl:grid-cols-[minmax(0,1fr)_22rem]">
             <main className="min-w-0 px-5 pt-7 md:px-10">
@@ -239,17 +257,25 @@ function Overview() {
     );
 }
 
-function NotSynced({ error, reset }: ErrorComponentProps) {
-    if (!(error instanceof Error && error.message.includes("Pro is required"))) {
-        return (
-            <Screen title="Could not load your ledger">
-                <Muted>Try again in a moment.</Muted>
-                <button className={SOLID_PILL} onClick={reset} type="button">
-                    Try again
-                </button>
-            </Screen>
-        );
+const proRequired = (error: Error) => error.message.includes("Pro is required");
+
+function NotSynced({ error }: ErrorComponentProps) {
+    const router = useRouter();
+    const retry = () => router.invalidate();
+    if (error instanceof Error && proRequired(error)) {
+        return <TurnOnSync retry={retry} />;
     }
+    return (
+        <Screen title="Could not load your ledger">
+            <Muted>Try again in a moment.</Muted>
+            <button className={SOLID_PILL} onClick={retry} type="button">
+                Try again
+            </button>
+        </Screen>
+    );
+}
+
+function TurnOnSync({ retry }: { retry: () => Promise<void> }) {
     return (
         <Screen title="Turn on sync">
             <Muted>Your web ledger shows what Outlayr Pro syncs from your phone.</Muted>
@@ -258,7 +284,7 @@ function NotSynced({ error, reset }: ErrorComponentProps) {
                 <li>2 · Settings · Sync and backup</li>
                 <li>3 · Turn on Sync this device</li>
             </ol>
-            <button className={SOLID_PILL} onClick={reset} type="button">
+            <button className={SOLID_PILL} onClick={retry} type="button">
                 Check again
             </button>
             <button className={`${LINE_PILL} mt-2.5`} onClick={signOut} type="button">
