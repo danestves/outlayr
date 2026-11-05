@@ -221,6 +221,31 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 4),
     },
+    {
+        changes: {
+            en: [{ detail: "Cash, a bank account and a card now fit without Pro.", label: "3 free accounts" }],
+            es: [
+                {
+                    detail: "El efectivo, una cuenta bancaria y una tarjeta ahora caben sin Pro.",
+                    label: "3 cuentas gratis",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Les espèces, un compte bancaire et une carte tiennent désormais sans Pro.",
+                    label: "3 comptes gratuits",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Dinheiro, uma conta bancária e um cartão agora cabem sem o Pro.",
+                    label: "3 contas grátis",
+                },
+            ],
+        },
+        document: "terms",
+        effectiveAtMs: Date.UTC(2026, 10, 6),
+    },
 ];
 
 export const noticeKey = ({ document, effectiveAtMs }: typeof PolicyNotice.Type) => `${document}:${effectiveAtMs}`;

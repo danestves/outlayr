@@ -2,7 +2,7 @@ import { isPerson } from "@outlayr/money/account-kind";
 
 import { isInstallmentAppAccount } from "./institution-map";
 
-export const FREE_ACCOUNTS = 2;
+export const FREE_ACCOUNTS = 3;
 export const FREE_BUDGETS = 2;
 export const FREE_CURRENCIES = 1;
 /** People sit outside every other cap: they never count as accounts, installment apps or currencies. */

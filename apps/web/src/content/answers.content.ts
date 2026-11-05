@@ -124,8 +124,8 @@ const LICENSE_ROW = {
 
 const COST_FAQ = {
     answer: t({
-        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 2 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
-        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 2 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
+        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
     }),
     question: t({ en: "How much does Outlayr cost?", es: "¿Cuánto cuesta Outlayr?" }),
 };
@@ -156,8 +156,8 @@ const SYNC_ACCOUNTS = t({
 });
 
 const OUTLAYR_FREE = t({
-    en: "2 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in one currency",
-    es: "2 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en una moneda",
+    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in one currency",
+    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en una moneda",
 });
 
 const LIST_SOURCES = t({
@@ -1406,8 +1406,8 @@ const answers = {
                     {
                         label: MOVING.lost,
                         text: t({
-                            en: "Accounts. On the free plan, Outlayr holds 2 accounts in one currency, and Pro allows any number of both.",
-                            es: "Las cuentas. En el plan gratis, Outlayr permite 2 cuentas en una moneda, y Pro permite las que quieras de ambas.",
+                            en: "Accounts. On the free plan, Outlayr holds 3 accounts in one currency, and Pro allows any number of both.",
+                            es: "Las cuentas. En el plan gratis, Outlayr permite 3 cuentas en una moneda, y Pro permite las que quieras de ambas.",
                         }),
                     },
                 ],
@@ -2887,8 +2887,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Actual Budget is free software, with a server needed to sync devices. Goodbudget's free plan has 20 envelopes, 1 account, and 1 year of history. Spendee Basic has 1 wallet and 1 budget. EveryDollar has a free version, web only outside the US. Outlayr's free plan has 2 category budgets plus one for the month, and 2 accounts. Monarch, PocketGuard, and YNAB are paid after a trial.",
-                            es: "Actual Budget es software gratis, con un servidor necesario para sincronizar dispositivos. El plan gratis de Goodbudget tiene 20 sobres, 1 cuenta y 1 año de historial. Spendee Basic tiene 1 billetera y 1 presupuesto. EveryDollar tiene una versión gratis, solo en la web fuera de EE. UU. El plan gratis de Outlayr tiene 2 presupuestos por categoría más uno para el mes, y 2 cuentas. Monarch, PocketGuard y YNAB son de pago después de una prueba.",
+                            en: "Actual Budget is free software, with a server needed to sync devices. Goodbudget's free plan has 20 envelopes, 1 account, and 1 year of history. Spendee Basic has 1 wallet and 1 budget. EveryDollar has a free version, web only outside the US. Outlayr's free plan has 2 category budgets plus one for the month, and 3 accounts. Monarch, PocketGuard, and YNAB are paid after a trial.",
+                            es: "Actual Budget es software gratis, con un servidor necesario para sincronizar dispositivos. El plan gratis de Goodbudget tiene 20 sobres, 1 cuenta y 1 año de historial. Spendee Basic tiene 1 billetera y 1 presupuesto. EveryDollar tiene una versión gratis, solo en la web fuera de EE. UU. El plan gratis de Outlayr tiene 2 presupuestos por categoría más uno para el mes, y 3 cuentas. Monarch, PocketGuard y YNAB son de pago después de una prueba.",
                         }),
                         question: t({
                             en: "What is the best free budget app?",
@@ -3087,8 +3087,8 @@ const answers = {
                             {
                                 label: t({ en: "Free plan", es: "Plan gratis" }),
                                 text: t({
-                                    en: "20 voice or receipt captures every 30 days, 2 accounts, 2 category budgets, and accounts in one currency",
-                                    es: "20 capturas de voz o de recibos cada 30 días, 2 cuentas, 2 presupuestos por categoría y cuentas en una moneda",
+                                    en: "20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in one currency",
+                                    es: "20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en una moneda",
                                 }),
                             },
                             { label: LABELS.watch, text: OUTLAYR_WATCH },
@@ -6453,8 +6453,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Actual Budget is free software, though syncing devices needs a server. EveryDollar has a free version, Goodbudget a free plan with 20 envelopes, 1 account, and 1 year of history, and Outlayr a free plan with 2 accounts and 2 category budgets. Copilot, Monarch, and PocketGuard are paid after a trial.",
-                            es: "Sí. Actual Budget es software gratis, aunque sincronizar dispositivos requiere un servidor. EveryDollar tiene una versión gratis, Goodbudget un plan gratis con 20 sobres, 1 cuenta y 1 año de historial, y Outlayr un plan gratis con 2 cuentas y 2 presupuestos por categoría. Copilot, Monarch y PocketGuard son de pago después de una prueba.",
+                            en: "Yes. Actual Budget is free software, though syncing devices needs a server. EveryDollar has a free version, Goodbudget a free plan with 20 envelopes, 1 account, and 1 year of history, and Outlayr a free plan with 3 accounts and 2 category budgets. Copilot, Monarch, and PocketGuard are paid after a trial.",
+                            es: "Sí. Actual Budget es software gratis, aunque sincronizar dispositivos requiere un servidor. EveryDollar tiene una versión gratis, Goodbudget un plan gratis con 20 sobres, 1 cuenta y 1 año de historial, y Outlayr un plan gratis con 3 cuentas y 2 presupuestos por categoría. Copilot, Monarch y PocketGuard son de pago después de una prueba.",
                         }),
                         question: t({
                             en: "Is there a free YNAB alternative?",

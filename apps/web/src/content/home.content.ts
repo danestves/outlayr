@@ -94,8 +94,8 @@ const home = {
             },
             {
                 answer: t({
-                    en: "Yes. Logging, budgets, goals, insights, subscriptions, and widgets are free. The free plan includes 20 voice or receipt captures every 30 days, 2 accounts, and 2 category budgets. Outlayr Pro raises those limits and adds sync across devices and receipt photo backup.",
-                    es: "Sí. Registrar gastos es gratis, igual que los presupuestos, las metas, las estadísticas, las suscripciones y los widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 2 cuentas y 2 presupuestos por categoría. Outlayr Pro sube esos límites y agrega la sincronización entre dispositivos y el respaldo de las fotos de tus recibos.",
+                    en: "Yes. Logging, budgets, goals, insights, subscriptions, and widgets are free. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, and 2 category budgets. Outlayr Pro raises those limits and adds sync across devices and receipt photo backup.",
+                    es: "Sí. Registrar gastos es gratis, igual que los presupuestos, las metas, las estadísticas, las suscripciones y los widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas y 2 presupuestos por categoría. Outlayr Pro sube esos límites y agrega la sincronización entre dispositivos y el respaldo de las fotos de tus recibos.",
                 }),
                 question: t({ en: "Is Outlayr free?", es: "¿Outlayr es gratis?" }),
             },
@@ -176,7 +176,7 @@ const home = {
         limits: [
             { free: "20", label: t({ en: "Captures every 30 days", es: "Capturas cada 30 días" }), pro: "500" },
             {
-                free: "2",
+                free: "3",
                 label: t({ en: "Accounts", es: "Cuentas" }),
                 pro: t({ en: "unlimited", es: "sin límite" }),
             },
