@@ -165,11 +165,14 @@ const signed = (row: { amount: number; kind: "expense" | "income" }) =>
 export function EntryLog({
     currency,
     entries,
+    mayCutLastDay,
     photos,
     today,
 }: {
     currency: string;
     entries: Entries;
+    /** The query hit its row limit, so the oldest day shown may be missing entries. */
+    mayCutLastDay: boolean;
     photos: PhotoUrls;
     today: string;
 }) {
@@ -183,7 +186,7 @@ export function EntryLog({
     const days = Map.groupBy(entries, (row) => row.date);
     return (
         <section aria-label="Entries" className="pb-10">
-            {[...days].map(([day, rows]) => {
+            {[...days].map(([day, rows], dayIndex) => {
                 const [first] = rows;
                 // A day in several currencies has no honest total without rates, so it shows none.
                 const dayCurrency = rows.every((row) => row.currency === first?.currency)
@@ -195,7 +198,9 @@ export function EntryLog({
                         <div className="border-border mt-6 flex items-baseline justify-between border-b-[1.3px] pb-1.5">
                             <MonoLabel>{dayLabel(day, today)}</MonoLabel>
                             <span className="text-muted-foreground font-mono text-[13px]">
-                                {dayCurrency ? money(total, dayCurrency, "always") : null}
+                                {dayCurrency && !(mayCutLastDay && dayIndex === days.size - 1)
+                                    ? money(total, dayCurrency, "always")
+                                    : null}
                             </span>
                         </div>
                         <ul>
@@ -274,10 +279,11 @@ export function AccountsCard({ balances, photos }: { balances: Balances; photos:
                 </div>
             </div>
             <ul className="mt-2">
-                {balances.accounts.slice(0, ACCOUNTS_SHOWN).map((account) => (
+                {balances.accounts.slice(0, ACCOUNTS_SHOWN).map((account, index) => (
                     <li
                         className="border-secondary flex h-10 items-center gap-2.5 border-b last:border-0"
-                        key={account.name}
+                        // Names can repeat, and the query returns no id.
+                        key={`${index}-${account.name}`}
                     >
                         <Tile
                             emoji={account.emoji}

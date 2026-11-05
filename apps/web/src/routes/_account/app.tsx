@@ -1,7 +1,7 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ChevronsUpDownIcon, LogOutIcon, ReceiptTextIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
@@ -53,7 +53,7 @@ const SIDEBAR_WIDTH: CSSProperties & Record<"--sidebar-width", string> = { "--si
 
 function App() {
     return (
-        <SidebarProvider className="app-shell" style={SIDEBAR_WIDTH}>
+        <SidebarProvider className="app-shell ph-no-capture" style={SIDEBAR_WIDTH}>
             <AppSidebar />
             <SidebarInset className="bg-background">
                 <Overview />
@@ -64,7 +64,7 @@ function App() {
 
 function AppSidebar() {
     return (
-        <Sidebar className="app-shell">
+        <Sidebar className="app-shell ph-no-capture">
             <SidebarHeader className="px-4 pt-7 pb-5">
                 <Link className="flex items-center gap-2.5 px-2 text-[19px] font-extrabold tracking-[-0.015em]" to="/">
                     <LogoMark className="size-6" />
@@ -110,7 +110,7 @@ function AccountMenu() {
                 <span className="flex-1 truncate">{session?.user.email ?? "Account"}</span>
                 <ChevronsUpDownIcon />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="app-shell w-52" side="top">
+            <DropdownMenuContent align="start" className="app-shell ph-no-capture w-52" side="top">
                 <DropdownMenuItem onClick={signOut}>
                     <LogOutIcon />
                     Sign out
@@ -131,11 +131,14 @@ function usePhotoUrls(keys: readonly string[]): PhotoUrls {
             return;
         }
         let live = true;
-        void readUrls({ keys: wanted.split("\n") }).then((minted) => {
-            if (live) {
-                setUrls(new Map(minted.map((photo) => [photo.key, photo.url])));
-            }
-        });
+        readUrls({ keys: wanted.split("\n") })
+            .then((minted) => {
+                if (live) {
+                    setUrls(new Map(minted.map((photo) => [photo.key, photo.url])));
+                }
+            })
+            // A failed mint leaves the emoji and initial tiles in place.
+            .catch(() => undefined);
         return () => {
             live = false;
         };
@@ -143,12 +146,16 @@ function usePhotoUrls(keys: readonly string[]): PhotoUrls {
     return urls;
 }
 
+const ENTRY_LIMIT = 30;
+
 function Overview() {
-    const entries = useQuery(api.ledger.recentTransactions, { limit: 30 });
-    const summary = useQuery(api.ledger.spendingSummary, {});
-    const balances = useQuery(api.ledger.accountBalances);
-    const budgets = useQuery(api.ledger.budgetStatus);
-    const upcoming = useQuery(api.ledger.upcomingCharges);
+    // Before the client holds the token these would throw Unauthenticated and land on the error screen.
+    const { isAuthenticated } = useConvexAuth();
+    const entries = useQuery(api.ledger.recentTransactions, isAuthenticated ? { limit: ENTRY_LIMIT } : "skip");
+    const summary = useQuery(api.ledger.spendingSummary, isAuthenticated ? {} : "skip");
+    const balances = useQuery(api.ledger.accountBalances, isAuthenticated ? {} : "skip");
+    const budgets = useQuery(api.ledger.budgetStatus, isAuthenticated ? {} : "skip");
+    const upcoming = useQuery(api.ledger.upcomingCharges, isAuthenticated ? {} : "skip");
     const photos = usePhotoUrls(
         [...(entries ?? []), ...(balances?.accounts ?? [])].flatMap((row) => (row.imageKey ? [row.imageKey] : []))
     );
@@ -163,7 +170,13 @@ function Overview() {
                 {entries && summary && budgets ? (
                     <>
                         <MonthHero budgets={budgets} summary={summary} today={today} />
-                        <EntryLog currency={summary.currency} entries={entries} photos={photos} today={today} />
+                        <EntryLog
+                            currency={summary.currency}
+                            entries={entries}
+                            mayCutLastDay={entries.length === ENTRY_LIMIT}
+                            photos={photos}
+                            today={today}
+                        />
                     </>
                 ) : (
                     <OverviewSkeleton />
