@@ -127,6 +127,35 @@ describe("ledger", () => {
         expect(day).toMatchObject({ date: "2026-10-08", rows: [{ account: "Chase", time: "22:30" }] });
     });
 
+    it("keeps one day together when its entries were saved in different zones", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        await t.run(async (ctx) => {
+            await ctx.db.insert("appMeta", {
+                deviceId: "device",
+                key: "timeZone",
+                seq: 0,
+                updatedAt: 0,
+                userId: owner.userId,
+                value: "America/Caracas",
+            });
+            await ctx.db.insert("transactions", {
+                ...entryOf(owner.userId, "lunch"),
+                date: Date.UTC(2026, 9, 8, 16),
+                day: Date.UTC(2026, 9, 8, 4),
+            });
+            await ctx.db.insert("transactions", {
+                ...entryOf(owner.userId, "saved in Paris"),
+                date: Date.UTC(2026, 9, 8, 23),
+                day: Date.UTC(2026, 9, 8, 22),
+            });
+        });
+
+        const { log } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
+
+        expect(log.map((day) => [day.date, day.rows.length])).toStrictEqual([["2026-10-08", 2]]);
+    });
+
     it("reads an entry's time at its own offset on the day the clocks go back", async () => {
         const t = setup();
         const owner = await seedProUser(t);

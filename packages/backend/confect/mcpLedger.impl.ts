@@ -195,7 +195,7 @@ export const spendingSummaryOf = Effect.fn("McpLedger.spendingSummary")(function
             continue;
         }
         spent += value;
-        const day = localDate(row.day, utcOffsetOf(row.day, offsetAt(row.day)));
+        const day = localDate(row.date, offsetAt(row.date));
         byDay.set(day, (byDay.get(day) ?? 0) + value);
         const category = row.categoryId ? categories.get(row.categoryId) : undefined;
         const top = category?.parentId ? categories.get(category.parentId) : category;

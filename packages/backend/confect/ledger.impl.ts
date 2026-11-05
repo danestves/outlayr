@@ -11,9 +11,9 @@ import { DatabaseReader, QueryCtx } from "./_generated/services";
 import spec from "./ledger.spec";
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
-import { accountLook, buildLog, entryLook } from "./lib/ledgerLog";
+import { accountLook, buildLog, entryLook, placed } from "./lib/ledgerLog";
 import type { EntrySource } from "./lib/ledgerLog";
-import { DAY_MS, fromWall, localDate, MAX_ENTRIES, utcOffsetOf, wallDay } from "./mcpLedger";
+import { DAY_MS, fromWall, localDate, MAX_ENTRIES, wallDay } from "./mcpLedger";
 import {
     accountBalancesOf,
     budgetStatusOf,
@@ -23,7 +23,6 @@ import {
     scheduleOf,
     setting,
     spendingSummaryOf,
-    storedZone,
     zoneOffset,
 } from "./mcpLedger.impl";
 import { requirePro } from "./revenuecat";
@@ -74,7 +73,7 @@ const logOf = Effect.fn("Ledger.log")(function* log(userId: string, limit: numbe
     const reader = yield* DatabaseReader;
     const now = yield* Clock.currentTimeMillis;
     const currency = (yield* setting(userId, "currency")) ?? "USD";
-    const [entries, transfers, accountRows, categories, rates, zone] = yield* Effect.all(
+    const [entries, transfers, accountRows, categories, rates, offsetAt] = yield* Effect.all(
         [
             reader
                 .table("transactions")
@@ -98,20 +97,17 @@ const logOf = Effect.fn("Ledger.log")(function* log(userId: string, limit: numbe
                 .collect(),
             liveCategories(userId),
             ratesIn(currency),
-            storedZone(userId),
+            zoneOffset(userId, now),
         ],
         { concurrency: "unbounded" }
     );
     return buildLog({
         accounts: new Map(accountRows.map((row) => [row.localId, row])),
         categories,
-        // Same reading as `recentTransactionsOf`: the stored day is a local midnight, the instant reads on the zone.
+        // The instant, not the stored `day`: that is midnight in the zone the row was saved in, which can split a day.
         clock: {
-            dayOf: (row) => localDate(row.day, utcOffsetOf(row.day, zone?.(row.day))),
-            timeOf: (row) =>
-                new Date(row.date + (zone?.(row.date) ?? utcOffsetOf(row.day, zone?.(row.day))))
-                    .toISOString()
-                    .slice(11, 16),
+            dayOf: (row) => localDate(row.date, offsetAt(row.date)),
+            timeOf: (row) => new Date(row.date + offsetAt(row.date)).toISOString().slice(11, 16),
         },
         currency,
         entries,
@@ -126,14 +122,13 @@ const logOf = Effect.fn("Ledger.log")(function* log(userId: string, limit: numbe
 const upcomingOf = Effect.fn("Ledger.upcoming")(function* upcoming(userId: string) {
     const { categories, charges, currency, monthlyCost, rates } = yield* scheduleOf(userId);
     const valuedIn = (row: EntrySource, landsOn: Date) => {
-        const code = row.currency ?? currency;
-        if (code === currency) {
-            return { amount: row.amount, currency: code, valued: null };
+        if (row.currency === currency) {
+            return { amount: row.amount, currency, valued: null };
         }
         // Valued at the coming charge: a renewal's saved date can predate every held rate.
         const [value] = valueDatedRowsIn([{ ...row, date: landsOn }], currency, rates);
         const exact = isExact({ ...row, dateKey: utcDateString(landsOn.getTime()) }, currency, rates);
-        return { amount: row.amount, currency: code, valued: exact ? (value ?? null) : null };
+        return placed(row, currency, exact ? (value ?? null) : null);
     };
     const ids = new Set(charges.map(({ row }) => row.localId));
     const feeOf = new Map(

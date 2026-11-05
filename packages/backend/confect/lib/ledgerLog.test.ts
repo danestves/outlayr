@@ -110,6 +110,13 @@ describe("buildLog", () => {
         ]);
     });
 
+    it("shows a row saved without a currency at its exact value, as its day counts it", () => {
+        const [day] = logOf([entry("legacy", { amount: 4000, amountUsd: 10, currency: null })]);
+
+        expect(day?.rows).toMatchObject([{ amount: 10, currency: "USD", valued: null }]);
+        expect(day?.totals).toStrictEqual([{ amount: -10, currency: "USD" }]);
+    });
+
     it("runs the last shown day to its end instead of cutting it", () => {
         const rows = [
             entry("a", { day: DAY + 86_400_000 }),

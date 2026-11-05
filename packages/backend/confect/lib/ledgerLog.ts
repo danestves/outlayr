@@ -97,8 +97,16 @@ export function accountLook(account: Omit<AccountSource, "localId">) {
     };
 }
 
+// A row with no currency was written in its day's ledger currency, so only its exact value says what it is now.
+export function placed(row: Pick<EntrySource, "amount" | "currency">, currency: string, valued: number | null) {
+    if (row.currency === null) {
+        return { amount: valued ?? row.amount, currency, valued: null };
+    }
+    return { amount: row.amount, currency: row.currency, valued };
+}
+
 export interface Clock {
-    dayOf: (row: { day: number }) => string;
+    dayOf: (row: { date: number; day: number }) => string;
     timeOf: (row: { date: number; day: number }) => string;
 }
 
@@ -182,14 +190,10 @@ export function buildLog(input: LogInput) {
             isExact(valuable(row), currency, rates) ? (values[index] ?? null) : null,
         ])
     );
-    const money = (row: EntrySource) => {
-        const code = row.currency ?? currency;
-        return {
-            amount: row.amount,
-            currency: code,
-            valued: code === currency ? null : (valued.get(row.localId) ?? null),
-        };
-    };
+    const money = (row: EntrySource) =>
+        row.currency === currency
+            ? { amount: row.amount, currency, valued: null }
+            : placed(row, currency, valued.get(row.localId) ?? null);
 
     const floors = [
         input.entriesFull ? entries.at(-1) : undefined,
