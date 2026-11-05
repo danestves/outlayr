@@ -6,11 +6,11 @@ import { onCustomerInfoUpdated, proTerm } from "@/lib/revenuecat";
 
 interface ProTermView {
     readonly manageUrl: string | null;
-    readonly productId: string | null;
+    readonly paidProductId: string | null;
     readonly status: ProStatus | null;
 }
 
-export const UNKNOWN_PRO_TERM: ProTermView = { manageUrl: null, productId: null, status: null };
+export const UNKNOWN_PRO_TERM: ProTermView = { manageUrl: null, paidProductId: null, status: null };
 
 export const proTermAtom = Atom.family((configured: boolean) =>
     Atom.make((get) => {

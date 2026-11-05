@@ -18,12 +18,12 @@ export interface HeldSubscription {
 export function useHeldSubscription(): HeldSubscription | null {
     const { accountId } = useAuthSession();
     const configured = useRevenueCat().kind !== "unconfigured";
-    const { manageUrl, productId, status } = AsyncResult.getOrElse(
+    const { manageUrl, paidProductId, status } = AsyncResult.getOrElse(
         useAtomValue(proTermAtom(configured)),
         () => UNKNOWN_PRO_TERM
     );
     const held = status?.kind === "renews" || status?.kind === "ends";
     const plans = useAtomValue(heldPlansAtom({ accountId, held }));
-    const plan = held && AsyncResult.isSuccess(plans) ? heldPlan(plans.value, productId) : null;
+    const plan = held && AsyncResult.isSuccess(plans) ? heldPlan(plans.value, paidProductId) : null;
     return plan === null || status === null ? null : { manageUrl, plan, status };
 }

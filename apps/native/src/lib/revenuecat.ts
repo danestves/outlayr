@@ -75,7 +75,7 @@ export const proTerm = Effect.fn("RevenueCat.proTerm")(function* proTerm() {
     const term = customerInfo.entitlements.active[PRO_ENTITLEMENT_ID];
     return {
         manageUrl: customerInfo.managementURL,
-        productId: term?.productIdentifier ?? null,
+        paidProductId: term?.periodType === "TRIAL" ? null : (term?.productIdentifier ?? null),
         status: proStatusOf(term),
     };
 });
