@@ -142,7 +142,7 @@ export const recentTransactionsOf = Effect.fn("McpLedger.recentTransactions")(fu
             imageKey: row.imageKey,
             kind: entryKind(row.income),
             note: row.note,
-            time: new Date(row.date + offsetMs).toISOString().slice(11, 16),
+            time: new Date(row.date + (zone?.(row.date) ?? offsetMs)).toISOString().slice(11, 16),
         };
     });
 }, Effect.orDie);
@@ -155,7 +155,8 @@ export const spendingSummaryOf = Effect.fn("McpLedger.spendingSummary")(function
     const currency = (yield* setting(userId, "currency")) ?? "USD";
     const firstDayOfMonth = Number(yield* setting(userId, "firstDayOfMonth")) || 1;
     const now = yield* Clock.currentTimeMillis;
-    const offsetMs = (yield* zoneOffset(userId, now))(now);
+    const offsetAt = yield* zoneOffset(userId, now);
+    const offsetMs = offsetAt(now);
     const window = monthWindow(now, offsetMs, firstDayOfMonth, Math.max(0, Math.trunc(monthsAgo)));
     // Whole UTC days around the window: a valuation cell is one UTC day, and a cell cut at the edge values
     // differently.
@@ -195,7 +196,7 @@ export const spendingSummaryOf = Effect.fn("McpLedger.spendingSummary")(function
             continue;
         }
         spent += value;
-        const day = localDate(row.date, offsetMs);
+        const day = localDate(row.date, offsetAt(row.date));
         byDay.set(day, (byDay.get(day) ?? 0) + value);
         const category = row.categoryId ? categories.get(row.categoryId) : undefined;
         const top = category?.parentId ? categories.get(category.parentId) : category;

@@ -121,4 +121,29 @@ describe("ledger", () => {
 
         expect(entry).toMatchObject({ account: "Chase", date: "2026-10-08", time: "22:30" });
     });
+
+    it("reads an entry's time at its own offset on the day the clocks go back", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        await t.run(async (ctx) => {
+            await ctx.db.insert("appMeta", {
+                deviceId: "device",
+                key: "timeZone",
+                seq: 0,
+                updatedAt: 0,
+                userId: owner.userId,
+                value: "America/New_York",
+            });
+            // New York's 1 Nov 2026 starts on EDT (-4) and reaches noon on EST (-5).
+            await ctx.db.insert("transactions", {
+                ...entryOf(owner.userId, "lunch"),
+                date: Date.UTC(2026, 10, 1, 17),
+                day: Date.UTC(2026, 10, 1, 4),
+            });
+        });
+
+        const [entry] = await authenticatedAs(t, owner).query(api.ledger.recentTransactions, {});
+
+        expect(entry).toMatchObject({ date: "2026-11-01", time: "12:00" });
+    });
 });

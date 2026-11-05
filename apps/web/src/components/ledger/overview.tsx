@@ -97,8 +97,7 @@ export function MonthHero({ budgets, summary, today }: { budgets: Budgets; summa
                     <div className="relative mt-2">
                         <Progress
                             aria-label="Spent of the limit"
-                            className="[&_[data-slot=progress-indicator]]:data-[over]:bg-destructive"
-                            data-over={overall.overBudget || undefined}
+                            className={cn(overall.overBudget && "[&_[data-slot=progress-indicator]]:bg-destructive")}
                             value={pace.spentShare * 100}
                         />
                         <span
