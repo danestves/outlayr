@@ -4,11 +4,11 @@ import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { LedgerOverview } from "@outlayr/backend/confect/ledgerView";
+import { Badge } from "panelui-web/badge";
+import { RangeMeter } from "panelui-web/range-meter";
 import type { CSSProperties, ReactNode } from "react";
 
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
     addDays,
     budgetPace,
@@ -21,6 +21,13 @@ import {
     shortDay,
 } from "@/lib/ledger";
 import { cn } from "@/lib/utils";
+
+const percent = (value: number) => `${Math.round(value)}%`;
+
+const meterTone = (over: boolean) =>
+    over
+        ? ({ className: "mt-2 [--pu-on-color:var(--color-app-bg)]", color: "destructive" } as const)
+        : ({ className: "mt-2", color: "primary" } as const);
 
 export type Overview = LedgerOverview;
 type LogDay = Overview["log"][number];
@@ -218,18 +225,13 @@ export function MonthHero({ budgets, summary, today }: { budgets: Budgets; summa
                     <MonoLabel>
                         {overall.name ?? "Monthly limit"} · {money(overall.effectiveLimit, budgets.currency)}
                     </MonoLabel>
-                    <div className="relative mt-2">
-                        <Progress
-                            aria-label="Spent of the limit"
-                            className={cn(overall.overBudget && "[&_[data-slot=progress-indicator]]:bg-destructive")}
-                            value={pace.spentShare * 100}
-                        />
-                        <span
-                            aria-hidden
-                            className="bg-muted-foreground absolute -top-[3px] h-2.5 w-px"
-                            style={{ left: `${pace.elapsedShare * 100}%` }}
-                        />
-                    </div>
+                    <RangeMeter
+                        {...meterTone(overall.overBudget)}
+                        formatValue={percent}
+                        label="Spent of the limit"
+                        marker={pace.elapsedShare * 100}
+                        value={Math.min(pace.spentShare * 100, 100)}
+                    />
                     <div className="text-muted-foreground mt-1.5 flex justify-between font-mono text-xs">
                         <span>
                             {overall.overBudget
@@ -566,12 +568,10 @@ export function BudgetsCard({ budgets }: { budgets: Budgets }) {
                                     </small>
                                 </span>
                             </div>
-                            <Progress
-                                aria-label={`${name} spent`}
-                                className={cn(
-                                    "mt-2",
-                                    budget.overBudget && "[&_[data-slot=progress-indicator]]:bg-destructive"
-                                )}
+                            <RangeMeter
+                                {...meterTone(budget.overBudget)}
+                                formatValue={percent}
+                                label={`${name} spent`}
                                 value={share * 100}
                             />
                         </li>

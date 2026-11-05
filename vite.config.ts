@@ -14,8 +14,6 @@ const projectIgnores = [
     ".impeccable",
     "apps/screenshots/*",
     "apps/web/src/stageshow",
-    "apps/web/src/components/ui",
-    "apps/web/src/hooks",
     "!apps/screenshots/scripts",
     "**/.expo",
     "**/.vscode",

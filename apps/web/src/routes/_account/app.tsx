@@ -4,35 +4,20 @@ import { api } from "@outlayr/backend/convex/_generated/api";
 import { keepPreviousData, queryOptions, useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { ChevronsUpDownIcon, LogOutIcon, ReceiptTextIcon } from "lucide-react";
+import { Button, buttonVariants } from "panelui-web/button";
+import { Menu } from "panelui-web/menu";
+import { Sheet } from "panelui-web/sheet";
 import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import * as Skullet from "skullet";
 import { Skeleton } from "skullet/react";
 
 import { LINE_PILL, Muted, SOLID_PILL, Screen } from "@/components/account/parts";
+import { Icon } from "@/components/icon";
 import { AccountsCard, BudgetsCard, EntryLog, MonthHero, UpcomingCard } from "@/components/ledger/overview";
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 import { SAMPLE_OVERVIEW } from "@/components/ledger/sample";
 import { LogoMark } from "@/components/logo-mark";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarHeader,
-    SidebarInset,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    SidebarProvider,
-    SidebarTrigger,
-} from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
 import { ledgerBooks, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
 
@@ -91,14 +76,14 @@ export const Route = createFileRoute("/_account/app")({
     head: () => ({ meta: [{ title: "Outlayr" }] }),
 });
 
-const SIDEBAR_WIDTH: CSSProperties & Record<"--sidebar-width", string> = { "--sidebar-width": "14rem" };
-
 function Shell({ children }: { children: ReactNode }) {
     return (
-        <SidebarProvider className="app-shell ph-no-capture" style={SIDEBAR_WIDTH}>
-            <AppSidebar />
-            <SidebarInset className="bg-background">{children}</SidebarInset>
-        </SidebarProvider>
+        <div className="app-shell ph-no-capture flex min-h-dvh">
+            <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 border-r md:block">
+                <AppNav />
+            </aside>
+            <div className="min-w-0 flex-1">{children}</div>
+        </div>
     );
 }
 
@@ -123,33 +108,41 @@ function Pending() {
     );
 }
 
-function AppSidebar() {
+function AppNav() {
     return (
-        <Sidebar className="app-shell ph-no-capture">
-            <SidebarHeader className="px-4 pt-7 pb-5">
-                <Link className="flex items-center gap-2.5 px-2 text-[19px] font-extrabold tracking-[-0.015em]" to="/">
-                    <LogoMark className="size-6" />
-                    Outlayr
-                </Link>
-            </SidebarHeader>
-            <SidebarContent className="px-4">
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            className="h-10 gap-3 rounded-xl px-2.5 text-[15px] font-semibold"
-                            isActive
-                            render={<Link to="/app" />}
-                        >
-                            <ReceiptTextIcon />
-                            Log
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarContent>
-            <SidebarFooter className="px-4 pb-6">
-                <AccountMenu />
-            </SidebarFooter>
-        </Sidebar>
+        <nav className="flex h-full flex-col gap-5 px-4 pt-7 pb-6">
+            <Link className="flex items-center gap-2.5 px-2 text-[19px] font-extrabold tracking-[-0.015em]" to="/">
+                <LogoMark className="size-6" />
+                Outlayr
+            </Link>
+            <Link
+                className={buttonVariants({
+                    className: "justify-start gap-3 rounded-xl px-2.5 text-[15px] font-semibold",
+                    variant: "secondary",
+                })}
+                to="/app"
+            >
+                <Icon className="size-4" name="receipt" />
+                Log
+            </Link>
+            <AccountMenu />
+        </nav>
+    );
+}
+
+function MobileNav() {
+    return (
+        <Sheet side="left">
+            <Sheet.Trigger
+                render={<Button aria-label="Open menu" className="-ml-2 md:hidden" size="icon" variant="ghost" />}
+            >
+                <Icon className="size-5" name="list" />
+            </Sheet.Trigger>
+            <Sheet.Content className="app-shell ph-no-capture w-72">
+                <Sheet.Title className="sr-only">Menu</Sheet.Title>
+                <AppNav />
+            </Sheet.Content>
+        </Sheet>
     );
 }
 
@@ -162,22 +155,25 @@ async function signOut() {
 function AccountMenu() {
     const { data: session } = authClient.useSession();
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger
+        <Menu>
+            <Menu.Trigger
                 render={
-                    <SidebarMenuButton className="text-muted-foreground h-10 rounded-xl px-2.5 text-sm font-medium" />
+                    <Button
+                        className="text-muted-foreground mt-auto w-full justify-start rounded-xl px-2.5 font-medium"
+                        variant="ghost"
+                    />
                 }
             >
-                <span className="flex-1 truncate">{session?.user.email ?? "Account"}</span>
-                <ChevronsUpDownIcon />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="app-shell ph-no-capture w-52" side="top">
-                <DropdownMenuItem onClick={signOut}>
-                    <LogOutIcon />
+                <span className="flex-1 truncate text-left">{session?.user.email ?? "Account"}</span>
+                <Icon className="size-4" name="caret-up-down" />
+            </Menu.Trigger>
+            <Menu.Content className="app-shell ph-no-capture" side="top">
+                <Menu.Item onClick={signOut}>
+                    <Icon name="sign-out" />
                     Sign out
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+                </Menu.Item>
+            </Menu.Content>
+        </Menu>
     );
 }
 
@@ -234,7 +230,7 @@ function OverviewView({ overview, photos }: { overview: Overview | undefined; ph
         <div className="grid min-h-dvh xl:grid-cols-[minmax(0,1fr)_22rem]">
             <main className="min-w-0 px-5 pt-7 md:px-10">
                 <header className="flex h-11 items-center gap-2">
-                    <SidebarTrigger className="md:hidden" />
+                    <MobileNav />
                     <h1 className="text-[28px] leading-[34px] font-extrabold tracking-[-0.01em]">Log</h1>
                 </header>
                 <Skeleton data={overview} id="ledger-log" label="Loading your ledger" sample={SAMPLE_OVERVIEW}>
