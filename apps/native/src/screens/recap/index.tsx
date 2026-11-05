@@ -20,6 +20,8 @@ import { recapMonth, recapMonthKey } from "@/domain/recap-month";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { InsightsMovers } from "@/screens/insights/components/insights-movers";
 
+import { SavingsBlock } from "./savings-block";
+
 function changeTone(change: number | null): string {
     if (change === null || change === 0) {
         return "text-foreground";
@@ -123,6 +125,8 @@ export function Recap({ month: monthKey }: { month: string | undefined }) {
                             </Text>
                         </View>
                     </View>
+
+                    <SavingsBlock month={month} nowMs={nowMs} />
 
                     <View className="pt-6">
                         <InsightsMovers

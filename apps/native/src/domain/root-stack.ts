@@ -84,6 +84,7 @@ export const MODAL_SCREENS: readonly {
     { name: "recap/share", titleKey: "insights.recap.title" },
     { name: "transactions/create", titleKey: "nav.newTransaction" },
     { name: "transactions/transfers/create", titleKey: "transfers.title" },
+    { name: "year", titleKey: "pro.year.title" },
 ];
 
 /**

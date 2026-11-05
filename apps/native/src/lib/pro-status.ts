@@ -6,21 +6,22 @@ import { onCustomerInfoUpdated, proTerm } from "@/lib/revenuecat";
 
 interface ProTermView {
     readonly manageUrl: string | null;
+    readonly paidProductId: string | null;
     readonly status: ProStatus | null;
 }
 
-const UNKNOWN: ProTermView = { manageUrl: null, status: null };
+export const UNKNOWN_PRO_TERM: ProTermView = { manageUrl: null, paidProductId: null, status: null };
 
 export const proTermAtom = Atom.family((configured: boolean) =>
     Atom.make((get) => {
         if (!configured) {
-            return Effect.succeed(UNKNOWN);
+            return Effect.succeed(UNKNOWN_PRO_TERM);
         }
         get.addFinalizer(
             onCustomerInfoUpdated(() => {
                 get.refreshSelf();
             })
         );
-        return proTerm().pipe(Effect.orElseSucceed(() => UNKNOWN));
+        return proTerm().pipe(Effect.orElseSucceed(() => UNKNOWN_PRO_TERM));
     }).pipe(Atom.withLabel("revenuecat:pro-term"))
 );

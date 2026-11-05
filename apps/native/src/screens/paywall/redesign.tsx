@@ -17,7 +17,7 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 import { expectHandoff } from "@/lib/app-handoff";
-import { proTermAtom } from "@/lib/pro-status";
+import { proTermAtom, UNKNOWN_PRO_TERM } from "@/lib/pro-status";
 import { useColors } from "@/theme/use-colors";
 
 import { useAccountLimit } from "./account-top";
@@ -90,7 +90,7 @@ function statusLine(status: ProStatus | null, now: Date, t: TranslateFn, languag
 
 function useProTerm() {
     const configured = useRevenueCat().kind !== "unconfigured";
-    return AsyncResult.getOrElse(useAtomValue(proTermAtom(configured)), () => ({ manageUrl: null, status: null }));
+    return AsyncResult.getOrElse(useAtomValue(proTermAtom(configured)), () => UNKNOWN_PRO_TERM);
 }
 
 function ProHeader({ confirmed, status }: { confirmed: boolean; status: ProStatus | null }) {

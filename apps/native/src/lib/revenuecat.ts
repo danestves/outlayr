@@ -72,9 +72,13 @@ export const managementUrl = Effect.fn("RevenueCat.managementUrl")(function* man
 
 export const proTerm = Effect.fn("RevenueCat.proTerm")(function* proTerm() {
     const customerInfo = yield* sdkCall(() => Purchases.getCustomerInfo());
+    const term = customerInfo.entitlements.active[PRO_ENTITLEMENT_ID];
+    const paid = term !== undefined && term.periodType !== "TRIAL";
+    const basePlan = term?.productPlanIdentifier ? `:${term.productPlanIdentifier}` : "";
     return {
         manageUrl: customerInfo.managementURL,
-        status: proStatusOf(customerInfo.entitlements.active[PRO_ENTITLEMENT_ID]),
+        paidProductId: paid ? `${term.productIdentifier}${basePlan}` : null,
+        status: proStatusOf(term),
     };
 });
 
