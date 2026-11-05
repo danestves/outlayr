@@ -7,6 +7,7 @@ import { migratedDatabase } from "@/db/test-database";
 
 import { WIDGET_PALETTE } from "../palette";
 import { NIGHT_COLORS } from "./envelope";
+import { ANDROID_PLACEHOLDERS } from "./placeholders";
 import { androidWidgetProps, buildAndroidWidgetProps } from "./props";
 import type { AndroidWidgetFigures } from "./props";
 
@@ -98,6 +99,13 @@ describe("androidWidgetProps", () => {
         expect(Overview.locales["es-ES"].actions[0]?.label).toBe("Importe");
         expect(Today.locales["pt-PT"].count).toBe("1 registo");
         expect(QuickAdd.locales.fr.label).toBe("Ajouter une opération");
+    });
+
+    it("labels the quick add placeholder the way the published widget is labelled", () => {
+        const placeholders = Object.values(ANDROID_PLACEHOLDERS.QuickAdd.locales).map((copy) => copy.label);
+        const published = Object.values(androidWidgetProps(figures).QuickAdd.locales).map((copy) => copy.label);
+
+        expect(placeholders).toStrictEqual(published);
     });
 
     it("words an overspent budget as over, with the overspend as the figure", () => {
