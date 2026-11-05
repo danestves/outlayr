@@ -1,3 +1,4 @@
+import type { Language } from "../../i18n/languages";
 import { DEEP_LINKS } from "../../lib/deep-links";
 import { envelope } from "./envelope";
 import type { AndroidWidgetProps } from "./envelope";
@@ -42,6 +43,15 @@ const trendWindow = (caption: string) => ({
     slices: [],
     spent: ZERO,
 });
+
+const QUICK_ADD_LABELS: Record<Language, string> = {
+    en: "Add a transaction",
+    es: "Agregar una transacción",
+    "es-ES": "Añadir una transacción",
+    fr: "Ajouter une opération",
+    pt: "Adicionar um lançamento",
+    "pt-PT": "Adicionar um registo",
+};
 
 export const ANDROID_PLACEHOLDERS = {
     Entries: envelope(() => ({
@@ -96,6 +106,11 @@ export const ANDROID_PLACEHOLDERS = {
             timeLeft: "",
         },
         today: { label: "Today", spent: ZERO },
+    })),
+    QuickAdd: envelope((language) => ({
+        icon: "widget_add",
+        label: QUICK_ADD_LABELS[language],
+        url: DEEP_LINKS.newExpense,
     })),
     Today: envelope(() => ({ actions, count: "0 entries", label: "Spent today", spent: ZERO })),
     Trends: envelope(() => ({

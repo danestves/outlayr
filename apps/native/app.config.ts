@@ -221,6 +221,17 @@ const ANDROID_WIDGETS = [
         name: "Trends",
         size: { minHeight: 110, minWidth: 110, targetCellHeight: 2, targetCellWidth: 2 },
     },
+    {
+        description: {
+            en: "One tap opens a new expense.",
+            es: "Un toque abre un gasto nuevo.",
+            fr: "Une touche ouvre une nouvelle dépense.",
+            pt: "Um toque abre uma nova despesa.",
+        },
+        displayName: { en: "Quick Add", es: "Registro rápido", fr: "Ajout rapide", pt: "Adicionar rápido" },
+        name: "QuickAdd",
+        size: { minHeight: 40, minWidth: 40, targetCellHeight: 1, targetCellWidth: 1 },
+    },
 ] satisfies (AndroidWidgetCopy & { configurable?: boolean; size: object })[];
 
 type QuickAction = AndroidShortcut & { readonly iosIcon: string };

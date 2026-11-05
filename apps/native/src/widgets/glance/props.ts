@@ -224,6 +224,7 @@ export function androidWidgetProps(figures: AndroidWidgetFigures): AndroidWidget
                   },
             count: t("log.widget.entries", { count: figures.todayCount }),
             entries,
+            quickAdd: { icon: "widget_add", label: t("log.add.transaction"), url: DEEP_LINKS.newExpense },
             spent: money(figures.todaySpent),
             spentLabel: t("log.widget.spentToday"),
             todayLabel: t("common.today"),
@@ -240,6 +241,7 @@ export function androidWidgetProps(figures: AndroidWidgetFigures): AndroidWidget
             const { actions, balance, budget: budgetCopy, spent, todayLabel } = copyIn(language);
             return { ...balance, actions, budget: budgetCopy, today: { label: todayLabel, spent } };
         }),
+        QuickAdd: envelope((language) => copyIn(language).quickAdd),
         Today: envelope((language) => {
             const { actions, count, spent, spentLabel } = copyIn(language);
             return { actions, count, label: spentLabel, spent };
