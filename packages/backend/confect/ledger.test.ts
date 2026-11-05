@@ -2,7 +2,7 @@
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vite-plus/test";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
@@ -48,6 +48,10 @@ const entryOf = (userId: string, note: string) => ({
 });
 
 describe("ledger", () => {
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     it("refuses a signed-in user without Pro", async () => {
         const t = setup();
         const asFree = authenticatedAs(t, await seedAuthUser(t));
@@ -145,5 +149,21 @@ describe("ledger", () => {
         const [entry] = await authenticatedAs(t, owner).query(api.ledger.recentTransactions, {});
 
         expect(entry).toMatchObject({ date: "2026-11-01", time: "12:00" });
+    });
+
+    it("reads today at the offset it dates entries with when no zone is stored", async () => {
+        // 02:30 UTC on 10 Oct is still 9 Oct at UTC-4, whatever zone the browser runs in.
+        vi.useFakeTimers({ toFake: ["Date"] });
+        vi.setSystemTime(Date.UTC(2026, 9, 10, 2, 30));
+        const t = setup();
+        const owner = await seedProUser(t);
+        await t.run(async (ctx) => {
+            // Its local midnight at 04:00 UTC puts the ledger at UTC-4.
+            await ctx.db.insert("transactions", { ...entryOf(owner.userId, "taxi"), day: Date.UTC(2026, 9, 8, 4) });
+        });
+
+        const summary = await authenticatedAs(t, owner).query(api.ledger.spendingSummary, {});
+
+        expect(summary.today).toBe("2026-10-09");
     });
 });

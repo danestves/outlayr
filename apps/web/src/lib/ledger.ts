@@ -9,12 +9,6 @@ export function addDays(day: string, days: number) {
     return new Date(dayMs(day) + days * DAY_MS).toISOString().slice(0, 10);
 }
 
-export function todayIn(timeZone?: string) {
-    return new Intl.DateTimeFormat("en-CA", { day: "2-digit", month: "2-digit", timeZone, year: "numeric" }).format(
-        new Date()
-    );
-}
-
 export function dayLabel(day: string, today: string) {
     const gap = daysBetween(day, today);
     if (gap === 0) {

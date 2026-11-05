@@ -12,6 +12,10 @@ import {
     UpcomingCharges,
 } from "./mcpLedger";
 
+// Convex does not re-run a query as time passes, so the web passes a coarse clock to start a fresh one. The
+// handlers still read the server clock; asOf only keys the subscription.
+const AsOf = { asOf: Schema.optional(Schema.Number) };
+
 // The MCP schemas leave these fields out, so encoding drops them there: an agent has no use for a photo key.
 const Look = { emoji: Schema.NullOr(Schema.String), imageKey: Schema.NullOr(Schema.String) };
 
@@ -29,7 +33,7 @@ const LedgerEntries = Schema.mutable(
 const LedgerSummary = Schema.Struct({
     ...SpendingSummary.fields,
     spentByDay: Schema.mutable(Schema.Array(Schema.Struct({ amount: Schema.Number, date: Schema.String }))),
-    timeZone: Schema.NullOr(Schema.String),
+    today: Schema.String,
 });
 
 const LedgerAccounts = Schema.Struct({
@@ -41,19 +45,19 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.publicQuery({
             name: "recentTransactions",
-            args: () => RecentTransactionsInput,
+            args: () => ({ ...RecentTransactionsInput, ...AsOf }),
             returns: () => LedgerEntries,
         })
     )
     .addFunction(
         FunctionSpec.publicQuery({
             name: "spendingSummary",
-            args: () => SpendingSummaryInput,
+            args: () => ({ ...SpendingSummaryInput, ...AsOf }),
             returns: () => LedgerSummary,
         })
     )
-    .addFunction(FunctionSpec.publicQuery({ name: "accountBalances", args: () => ({}), returns: () => LedgerAccounts }))
-    .addFunction(FunctionSpec.publicQuery({ name: "budgetStatus", args: () => ({}), returns: () => BudgetStatus }))
+    .addFunction(FunctionSpec.publicQuery({ name: "accountBalances", args: () => AsOf, returns: () => LedgerAccounts }))
+    .addFunction(FunctionSpec.publicQuery({ name: "budgetStatus", args: () => AsOf, returns: () => BudgetStatus }))
     .addFunction(
-        FunctionSpec.publicQuery({ name: "upcomingCharges", args: () => ({}), returns: () => UpcomingCharges })
+        FunctionSpec.publicQuery({ name: "upcomingCharges", args: () => AsOf, returns: () => UpcomingCharges })
     );

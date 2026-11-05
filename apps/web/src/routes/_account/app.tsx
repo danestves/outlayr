@@ -3,7 +3,7 @@ import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ChevronsUpDownIcon, LogOutIcon, ReceiptTextIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
 
 import { LINE_PILL, Muted, SOLID_PILL, Screen } from "@/components/account/parts";
@@ -36,7 +36,6 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
-import { todayIn } from "@/lib/ledger";
 
 export const Route = createFileRoute("/_account/app")({
     beforeLoad: ({ context, location }) => {
@@ -154,18 +153,38 @@ function usePhotoUrls(keys: readonly string[]): PhotoUrls {
 
 const ENTRY_LIMIT = 30;
 
+// Every UTC offset is a whole number of quarter hours, so each zone's midnight lands on one of these steps.
+const CLOCK_STEP_MS = 5 * 60_000;
+const readClock = () => Math.floor(Date.now() / CLOCK_STEP_MS) * CLOCK_STEP_MS;
+const watchClock = (onChange: () => void) => {
+    const timer = setInterval(onChange, 30_000);
+    return () => clearInterval(timer);
+};
+
+// A new asOf reloads every query; keep the last answer on screen instead of the skeleton.
+function useLatest<T>(value: T | undefined) {
+    const [kept, setKept] = useState(value);
+    if (value !== undefined && value !== kept) {
+        setKept(value);
+    }
+    return value ?? kept;
+}
+
 function Overview() {
     // Before the client holds the token these would throw Unauthenticated and land on the error screen.
     const { isAuthenticated } = useConvexAuth();
-    const entries = useQuery(api.ledger.recentTransactions, isAuthenticated ? { limit: ENTRY_LIMIT } : "skip");
-    const summary = useQuery(api.ledger.spendingSummary, isAuthenticated ? {} : "skip");
-    const balances = useQuery(api.ledger.accountBalances, isAuthenticated ? {} : "skip");
-    const budgets = useQuery(api.ledger.budgetStatus, isAuthenticated ? {} : "skip");
-    const upcoming = useQuery(api.ledger.upcomingCharges, isAuthenticated ? {} : "skip");
+    // Convex re-runs a query when its data changes, not when time passes: a new asOf starts a fresh run.
+    const asOf = useSyncExternalStore(watchClock, readClock, readClock);
+    const entries = useLatest(
+        useQuery(api.ledger.recentTransactions, isAuthenticated ? { asOf, limit: ENTRY_LIMIT } : "skip")
+    );
+    const summary = useLatest(useQuery(api.ledger.spendingSummary, isAuthenticated ? { asOf } : "skip"));
+    const balances = useLatest(useQuery(api.ledger.accountBalances, isAuthenticated ? { asOf } : "skip"));
+    const budgets = useLatest(useQuery(api.ledger.budgetStatus, isAuthenticated ? { asOf } : "skip"));
+    const upcoming = useLatest(useQuery(api.ledger.upcomingCharges, isAuthenticated ? { asOf } : "skip"));
     const photos = usePhotoUrls(
         [...(entries ?? []), ...(balances?.accounts ?? [])].flatMap((row) => (row.imageKey ? [row.imageKey] : []))
     );
-    const today = todayIn(summary?.timeZone ?? undefined);
     return (
         <div className="grid min-h-dvh xl:grid-cols-[minmax(0,1fr)_22rem]">
             <main className="min-w-0 px-5 pt-7 md:px-10">
@@ -175,13 +194,13 @@ function Overview() {
                 </header>
                 {entries && summary && budgets ? (
                     <>
-                        <MonthHero budgets={budgets} summary={summary} today={today} />
+                        <MonthHero budgets={budgets} summary={summary} today={summary.today} />
                         <EntryLog
                             currency={summary.currency}
                             entries={entries}
                             mayCutLastDay={entries.length === ENTRY_LIMIT}
                             photos={photos}
-                            today={today}
+                            today={summary.today}
                         />
                     </>
                 ) : (
