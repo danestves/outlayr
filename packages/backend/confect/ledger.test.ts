@@ -112,7 +112,6 @@ describe("ledger", () => {
                 updatedAt: 0,
                 userId: owner.userId,
             });
-            // 02:30 UTC on 9 Oct is 22:30 on 8 Oct in Caracas.
             await ctx.db.insert("transactions", {
                 ...entryOf(owner.userId, "late dinner"),
                 accountId: "chase",
@@ -140,7 +139,6 @@ describe("ledger", () => {
                 userId: owner.userId,
                 value: "America/New_York",
             });
-            // New York's 1 Nov 2026 starts on EDT (-4) and reaches noon on EST (-5).
             await ctx.db.insert("transactions", {
                 ...entryOf(owner.userId, "lunch"),
                 date: Date.UTC(2026, 10, 1, 17),
@@ -156,13 +154,11 @@ describe("ledger", () => {
     });
 
     it("reads today at the offset it dates entries with when no zone is stored", async () => {
-        // 02:30 UTC on 10 Oct is still 9 Oct at UTC-4, whatever zone the browser runs in.
         vi.useFakeTimers({ toFake: ["Date"] });
         vi.setSystemTime(Date.UTC(2026, 9, 10, 2, 30));
         const t = setup();
         const owner = await seedProUser(t);
         await t.run(async (ctx) => {
-            // Its local midnight at 04:00 UTC puts the ledger at UTC-4.
             await ctx.db.insert("transactions", { ...entryOf(owner.userId, "taxi"), day: Date.UTC(2026, 9, 8, 4) });
         });
 
@@ -185,7 +181,6 @@ describe("ledger", () => {
                 userId: owner.userId,
                 value: "America/Caracas",
             });
-            // Saved on 9 Oct in Madrid at 01:30, before the owner moved to Caracas, where that instant is 8 Oct.
             await ctx.db.insert("transactions", {
                 ...entryOf(owner.userId, "late taxi"),
                 date: Date.UTC(2026, 9, 8, 23, 30),
@@ -217,7 +212,6 @@ describe("ledger", () => {
         });
         const asOwner = authenticatedAs(t, owner);
 
-        // Midnight on 10 Oct in Caracas is 04:00 UTC.
         expect((await asOwner.query(api.ledger.overview, {})).nextChangeAt).toBe(Date.UTC(2026, 9, 10, 4));
 
         await t.run(async (ctx) => {

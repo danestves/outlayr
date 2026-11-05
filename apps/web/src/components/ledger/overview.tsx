@@ -24,7 +24,6 @@ type Balances = Overview["balances"];
 type Budgets = Overview["budgets"];
 type Upcoming = Overview["upcoming"];
 
-/** Signed photo urls by key, minted once the keys are known. */
 export type PhotoUrls = ReadonlyMap<string, string>;
 
 export function MonoLabel({ children, className }: { children: ReactNode; className?: string }) {
@@ -171,7 +170,6 @@ export function EntryLog({
 }: {
     currency: string;
     entries: Entries;
-    /** The query hit its row limit, so the oldest day shown may be missing entries. */
     mayCutLastDay: boolean;
     photos: PhotoUrls;
     today: string;
@@ -188,7 +186,6 @@ export function EntryLog({
         <section aria-label="Entries" className="pb-10">
             {[...days].map(([day, rows], dayIndex) => {
                 const [first] = rows;
-                // A day in several currencies has no honest total without rates, so it shows none.
                 const dayCurrency = rows.every((row) => row.currency === first?.currency)
                     ? (first?.currency ?? currency)
                     : null;
@@ -282,7 +279,6 @@ export function AccountsCard({ balances, photos }: { balances: Balances; photos:
                 {balances.accounts.slice(0, ACCOUNTS_SHOWN).map((account, index) => (
                     <li
                         className="border-secondary flex h-10 items-center gap-2.5 border-b last:border-0"
-                        // Names can repeat, and the query returns no id.
                         key={`${index}-${account.name}`}
                     >
                         <Tile

@@ -10,7 +10,6 @@ import {
     UpcomingCharges,
 } from "./mcpLedger";
 
-// The MCP schemas leave these fields out, so encoding drops them there: an agent has no use for a photo key.
 const Look = { emoji: Schema.NullOr(Schema.String), imageKey: Schema.NullOr(Schema.String) };
 
 const LedgerEntries = Schema.mutable(
@@ -39,7 +38,6 @@ const Overview = Schema.Struct({
     balances: LedgerAccounts,
     budgets: BudgetStatus,
     entries: LedgerEntries,
-    // The first instant at which the passing of time alone changes this answer.
     nextChangeAt: Schema.Number,
     summary: LedgerSummary,
     upcoming: UpcomingCharges,
@@ -48,8 +46,6 @@ const Overview = Schema.Struct({
 export default GroupSpec.make().addFunction(
     FunctionSpec.publicQuery({
         name: "overview",
-        // Convex re-runs a query when its data changes, not when time passes, so the web moves asOf to nextChangeAt
-        // to start a fresh run. The handler still reads the server clock; asOf only keys the subscription.
         args: () => ({ asOf: Schema.optional(Schema.Number), limit: Schema.optional(Schema.Number) }),
         returns: () => Overview,
     })

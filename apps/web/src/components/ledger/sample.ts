@@ -40,7 +40,6 @@ const account = (name: string, balance: number) => ({
     name,
 });
 
-/** A typical month, laid out unseen so the loading skeleton takes the shape the ledger will. */
 export const SAMPLE_OVERVIEW: Overview = {
     balances: {
         accounts: [

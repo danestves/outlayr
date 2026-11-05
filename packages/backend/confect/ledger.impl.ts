@@ -20,7 +20,6 @@ import {
 } from "./mcpLedger.impl";
 import { requirePro } from "./revenuecat";
 
-// Server data only exists for synced ledgers, and sync is Pro, so this gates the same way pullSince does.
 const syncedUser = Effect.fn("Ledger.syncedUser")(
     function* syncedUser() {
         const ctx = yield* QueryCtx;
@@ -31,10 +30,6 @@ const syncedUser = Effect.fn("Ledger.syncedUser")(
     Effect.catchTags({ ProRequired: dieAsConvexError, Unauthenticated: dieAsConvexError })
 );
 
-/**
- * The next local midnight or the next dated entry or transfer, whichever comes first. Budget windows and upcoming
- * charges turn over at midnight; an entry or transfer joins the ledger at its own instant.
- */
 const nextChangeAt = Effect.fn("Ledger.nextChangeAt")(function* nextChangeAt(userId: string) {
     const reader = yield* DatabaseReader;
     const now = yield* Clock.currentTimeMillis;
@@ -65,7 +60,6 @@ const nextChangeAt = Effect.fn("Ledger.nextChangeAt")(function* nextChangeAt(use
     );
 }, Effect.orDie);
 
-// One query, so every part of the page is read at the same instant from the same snapshot.
 const overview = FunctionImpl.make(databaseSchema, spec, "overview", ({ limit }) =>
     syncedUser().pipe(
         Effect.flatMap((userId) =>

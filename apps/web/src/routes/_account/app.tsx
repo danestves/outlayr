@@ -87,9 +87,7 @@ function AppSidebar() {
     );
 }
 
-// A full load drops the session the router context and the Convex client still hold.
 async function signOut() {
-    // Remembered skeleton shapes hold layout only, but they still describe this ledger.
     Skullet.forgetShapes();
     await authClient.signOut();
     window.location.assign("/login");
@@ -117,7 +115,6 @@ function AccountMenu() {
     );
 }
 
-// The server signs photo urls for an hour (PHOTO_URL_TTL_SECONDS); mint again well before they lapse.
 const PHOTO_REMINT_MS = 50 * 60_000;
 
 function usePhotoUrls(keys: readonly string[]): PhotoUrls {
@@ -137,7 +134,6 @@ function usePhotoUrls(keys: readonly string[]): PhotoUrls {
                         setUrls(new Map(minted.map((photo) => [photo.key, photo.url])));
                     }
                 })
-                // A failed mint leaves the emoji and initial tiles in place.
                 .catch(() => undefined);
         void mint();
         const timer = setInterval(mint, PHOTO_REMINT_MS);
@@ -151,13 +147,8 @@ function usePhotoUrls(keys: readonly string[]): PhotoUrls {
 
 const ENTRY_LIMIT = 30;
 
-// A browser clock ahead of the server's would ask again before the change has happened; this bounds the retries.
 const MIN_WAIT_MS = 15_000;
 
-/**
- * The asOf to query with. It moves when the clock passes nextChangeAt, since Convex re-runs a query when its data
- * changes and not when time passes.
- */
 function useAsOf(nextChangeAt: number | undefined) {
     const [asOf, setAsOf] = useState(() => Date.now());
     // oxlint-disable-next-line outlayr/react-effect-budget -- the clock is an external system.
@@ -166,7 +157,6 @@ function useAsOf(nextChangeAt: number | undefined) {
             return;
         }
         let timer: ReturnType<typeof setTimeout>;
-        // Until the answer moves nextChangeAt on, keep asking: a run can land just before the server's clock passes it.
         const arm = () => {
             timer = setTimeout(
                 () => {
@@ -177,7 +167,6 @@ function useAsOf(nextChangeAt: number | undefined) {
             );
         };
         arm();
-        // Timers stall while a laptop sleeps, so a page coming back into view checks the clock itself.
         const onVisible = () => {
             if (document.visibilityState === "visible" && Date.now() >= nextChangeAt) {
                 setAsOf(Date.now());
@@ -192,7 +181,6 @@ function useAsOf(nextChangeAt: number | undefined) {
     return asOf;
 }
 
-// A new asOf reloads the query; keep the last answer on screen instead of the skeleton.
 function useLatest<T>(value: T | undefined) {
     const [kept, setKept] = useState(value);
     if (value !== undefined && value !== kept) {
@@ -202,7 +190,6 @@ function useLatest<T>(value: T | undefined) {
 }
 
 function Overview() {
-    // Before the client holds the token this would throw Unauthenticated and land on the error screen.
     const { isAuthenticated } = useConvexAuth();
     const [nextChangeAt, setNextChangeAt] = useState<number>();
     const asOf = useAsOf(nextChangeAt);

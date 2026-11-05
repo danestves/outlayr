@@ -1,6 +1,5 @@
 const DAY_MS = 86_400_000;
 
-/** Calendar days arrive as `YYYY-MM-DD` on the owner's wall clock; read them at UTC noon so no zone shifts the day. */
 const dayMs = (day: string) => Date.parse(`${day}T12:00:00Z`);
 
 export const daysBetween = (from: string, to: string) => Math.round((dayMs(to) - dayMs(from)) / DAY_MS);
@@ -45,7 +44,6 @@ export function money(amount: number, currency: string, sign: "always" | "auto" 
     }).format(amount);
 }
 
-/** Splits a figure so the whole units can be drawn larger than the symbol and the cents. */
 export function moneyParts(amount: number, currency: string) {
     const parts = new Intl.NumberFormat("en-US", {
         currency,
@@ -64,10 +62,6 @@ export function moneyParts(amount: number, currency: string) {
     };
 }
 
-/**
- * Where a budget stands against an even spend across its window, counting today as spent.
- * `underPace` is positive when spending trails that line.
- */
 export function budgetPace(
     budget: { readonly effectiveLimit: number; readonly from: string; readonly spent: number; readonly to: string },
     today: string

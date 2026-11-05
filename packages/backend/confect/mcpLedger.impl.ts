@@ -103,7 +103,6 @@ export const recentTransactionsOf = Effect.fn("McpLedger.recentTransactions")(fu
         .index("by_user_and_seq", (q) => q.eq("userId", userId), "desc")
         .take(SCAN_WINDOW);
     const entries = rows
-        // A scheduled entry has not happened yet; upcomingCharges lists it.
         .filter((row) => row.deletedAt === null && row.date <= now)
         .sort((a, b) => b.date - a.date)
         .slice(0, Math.min(Math.max(limit, 1), MAX_ENTRIES));
@@ -196,7 +195,6 @@ export const spendingSummaryOf = Effect.fn("McpLedger.spendingSummary")(function
             continue;
         }
         spent += value;
-        // The saved day, as the log reads it, so a bar and its entry never land on different days.
         const day = localDate(row.day, utcOffsetOf(row.day, offsetAt(row.day)));
         byDay.set(day, (byDay.get(day) ?? 0) + value);
         const category = row.categoryId ? categories.get(row.categoryId) : undefined;
