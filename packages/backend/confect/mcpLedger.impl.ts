@@ -157,6 +157,7 @@ export const spendingSummaryOf = Effect.fn("McpLedger.spendingSummary")(function
     const now = yield* Clock.currentTimeMillis;
     const offsetAt = yield* zoneOffset(userId, now);
     const offsetMs = offsetAt(now);
+    const timeZone = yield* setting(userId, "timeZone");
     const window = monthWindow(now, offsetMs, firstDayOfMonth, Math.max(0, Math.trunc(monthsAgo)));
     // Whole UTC days around the window: a valuation cell is one UTC day, and a cell cut at the edge values
     // differently.
@@ -214,6 +215,8 @@ export const spendingSummaryOf = Effect.fn("McpLedger.spendingSummary")(function
         spentByDay: [...byDay]
             .map(([date, amount]) => ({ amount: roundMoney(amount, decimals), date }))
             .sort((a, b) => a.date.localeCompare(b.date)),
+        // Only a zone Intl can read: the web derives today from it.
+        timeZone: timeZone !== null && zoneOffsets(timeZone) !== null ? timeZone : null,
         to: localDate(window.end - 1, offsetMs),
     };
 }, Effect.orDie);

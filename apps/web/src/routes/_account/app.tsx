@@ -120,7 +120,9 @@ function AccountMenu() {
     );
 }
 
-// shortcut: minted once per key set and signed for an hour, so a tab left open longer loses its logos until reload.
+// The server signs photo urls for an hour (PHOTO_URL_TTL_SECONDS); mint again well before they lapse.
+const PHOTO_REMINT_MS = 50 * 60_000;
+
 function usePhotoUrls(keys: readonly string[]): PhotoUrls {
     const readUrls = useMutation(api.photos.readUrls);
     const [urls, setUrls] = useState<PhotoUrls>(new Map());
@@ -131,16 +133,20 @@ function usePhotoUrls(keys: readonly string[]): PhotoUrls {
             return;
         }
         let live = true;
-        readUrls({ keys: wanted.split("\n") })
-            .then((minted) => {
-                if (live) {
-                    setUrls(new Map(minted.map((photo) => [photo.key, photo.url])));
-                }
-            })
-            // A failed mint leaves the emoji and initial tiles in place.
-            .catch(() => undefined);
+        const mint = () =>
+            readUrls({ keys: wanted.split("\n") })
+                .then((minted) => {
+                    if (live) {
+                        setUrls(new Map(minted.map((photo) => [photo.key, photo.url])));
+                    }
+                })
+                // A failed mint leaves the emoji and initial tiles in place.
+                .catch(() => undefined);
+        void mint();
+        const timer = setInterval(mint, PHOTO_REMINT_MS);
         return () => {
             live = false;
+            clearInterval(timer);
         };
     }, [readUrls, wanted]);
     return urls;
@@ -159,7 +165,7 @@ function Overview() {
     const photos = usePhotoUrls(
         [...(entries ?? []), ...(balances?.accounts ?? [])].flatMap((row) => (row.imageKey ? [row.imageKey] : []))
     );
-    const today = todayIn();
+    const today = todayIn(summary?.timeZone ?? undefined);
     return (
         <div className="grid min-h-dvh xl:grid-cols-[minmax(0,1fr)_22rem]">
             <main className="min-w-0 px-5 pt-7 md:px-10">

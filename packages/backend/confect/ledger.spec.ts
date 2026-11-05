@@ -29,6 +29,7 @@ const LedgerEntries = Schema.mutable(
 const LedgerSummary = Schema.Struct({
     ...SpendingSummary.fields,
     spentByDay: Schema.mutable(Schema.Array(Schema.Struct({ amount: Schema.Number, date: Schema.String }))),
+    timeZone: Schema.NullOr(Schema.String),
 });
 
 const LedgerAccounts = Schema.Struct({
