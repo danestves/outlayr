@@ -59,7 +59,7 @@ function PeriodChip({ filters, ledger, setFilters }: Dashboard) {
                     value={filters.period.key}
                 >
                     {keys.map((key) => (
-                        <Menu.RadioItem key={key} value={key}>
+                        <Menu.RadioItem closeOnClick key={key} value={key}>
                             {label({ ...filters.period, from: `${key}-01`, key })}
                         </Menu.RadioItem>
                     ))}
@@ -138,7 +138,7 @@ function FilterBar() {
 export function TopBar({ children, title }: { children?: ReactNode; title: ReactNode }) {
     const { add } = useIntlayer("dashboard");
     return (
-        <header className="border-border flex h-[52px] shrink-0 items-center gap-2 overflow-x-auto border-b px-5">
+        <header className="border-border flex min-h-[52px] shrink-0 flex-wrap items-center gap-2 border-b px-5 py-2">
             <h1 className="mr-1 text-[15px] font-semibold">{title}</h1>
             <FilterBar />
             {children}
