@@ -27,6 +27,7 @@ import { LocalDataError } from "@/components/local-data-error";
 import { PolicyNoticeSheet } from "@/components/policy-notice-sheet";
 import { Text } from "@/components/text";
 import { UpdateSheet } from "@/components/update-sheet";
+import { YearSheetOpener } from "@/components/year-sheet-opener";
 import { useDatabase, useLocalData } from "@/contexts/local-data-context";
 import { RevenueCatSession } from "@/contexts/revenuecat-context";
 import { BackgroundWork } from "@/data/background-work";
@@ -290,6 +291,7 @@ function RootStack() {
     return (
         <>
             <PaywallOpeners db={db} ready={tapsReady} />
+            <YearSheetOpener db={db} ready={tapsReady} />
             <Stack>
                 <Stack.Protected guard={group === "onboarding"} redirectTo={GROUP_ENTRY[group]}>
                     <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />

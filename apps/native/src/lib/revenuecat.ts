@@ -72,9 +72,11 @@ export const managementUrl = Effect.fn("RevenueCat.managementUrl")(function* man
 
 export const proTerm = Effect.fn("RevenueCat.proTerm")(function* proTerm() {
     const customerInfo = yield* sdkCall(() => Purchases.getCustomerInfo());
+    const term = customerInfo.entitlements.active[PRO_ENTITLEMENT_ID];
     return {
         manageUrl: customerInfo.managementURL,
-        status: proStatusOf(customerInfo.entitlements.active[PRO_ENTITLEMENT_ID]),
+        productId: term?.productIdentifier ?? null,
+        status: proStatusOf(term),
     };
 });
 

@@ -1,3 +1,5 @@
+import { decimalsFor } from "@outlayr/money/currency";
+import { roundMoney } from "@outlayr/money/round";
 import type { PurchasesPackage } from "react-native-purchases";
 
 import { trialEligible } from "@/lib/trial-eligibility";
@@ -75,4 +77,30 @@ export function readPlans(
             },
         ];
     });
+}
+
+export interface ProCost {
+    currency: string;
+    monthly: number;
+}
+
+const baseProduct = (identifier: string) => identifier.split(":")[0];
+
+export function heldPlan(plans: readonly Plan[], productId: string | null): Plan | null {
+    if (productId === null) {
+        return null;
+    }
+    return (
+        plans.find(
+            (plan) => plan.kind !== "lifetime" && baseProduct(plan.offer.product.identifier) === baseProduct(productId)
+        ) ?? null
+    );
+}
+
+export function monthlyCost({ kind, offer }: Plan): ProCost {
+    const { currencyCode, price } = offer.product;
+    return {
+        currency: currencyCode,
+        monthly: kind === "annual" ? roundMoney(price / 12, decimalsFor(currencyCode)) : price,
+    };
 }

@@ -10,6 +10,8 @@ const isBalancesView = Schema.is(BalancesView);
 /** Where links to the retired Accounts screen land. */
 export const BALANCES_ACCOUNTS = "/balances?view=accounts";
 
+export const BALANCES_CATEGORIES = "/balances?view=categories";
+
 /** The `balancesView` setting's values; 0 is a person who never picked one. */
 const STORED_VIEWS = [null, "accounts", "categories"] as const;
 

@@ -50,7 +50,8 @@ export type NumberSettingKey =
     | "notificationHour"
     | "notificationMinute"
     | "privacyNoticeSeen"
-    | "termsNoticeSeen";
+    | "termsNoticeSeen"
+    | "yearSheetSeen";
 
 export const SETTING_DEFAULTS = {
     accentColor: DEFAULT_ACCENT_VALUE,
@@ -92,6 +93,7 @@ export const SETTING_DEFAULTS = {
     swapTimeLabel: false,
     termsNoticeSeen: 0,
     use24HourClock: false,
+    yearSheetSeen: 0,
 } as const satisfies Record<BoolSettingKey | NumberSettingKey, boolean | number>;
 
 /** Keys a person chooses, not app bookkeeping. `walletCards` maps each Apple Pay card to an account. */

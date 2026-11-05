@@ -2,6 +2,7 @@ import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
 
 import { readPlans } from "@/domain/pro-plans";
+import type { Plan } from "@/domain/pro-plans";
 import { RevenueCat } from "@/lib/revenuecat-service";
 import { appRuntime } from "@/lib/runtime";
 
@@ -19,4 +20,10 @@ const loadPlans = Effect.fn("Paywall.loadPlans")(function* loadPlans(accountId: 
 
 export const paywallPlansAtom = Atom.family((key: { readonly accountId: string | null; readonly attempt: number }) =>
     appRuntime.atom(loadPlans(key.accountId)).pipe(Atom.withLabel("paywall:plans"))
+);
+
+export const heldPlansAtom = Atom.family((key: { readonly accountId: string | null; readonly held: boolean }) =>
+    appRuntime
+        .atom(key.held ? loadPlans(key.accountId) : Effect.succeed<Plan[]>([]))
+        .pipe(Atom.withLabel("paywall:held-plans"))
 );
