@@ -36,8 +36,8 @@ const home = {
             {
                 label: t({ en: "Widgets", es: "Widgets" }),
                 text: t({
-                    en: "Four for the iPhone Home Screen and Lock Screen: today’s spending, budget left, recent entries, insights.",
-                    es: "Cuatro para la pantalla de inicio y la pantalla bloqueada del iPhone: el gasto de hoy, el presupuesto disponible, los registros recientes y tus estadísticas.",
+                    en: "Four for the iPhone Home Screen and Lock Screen, and six for the Android home screen, including a 1×1 + that opens a new expense.",
+                    es: "Cuatro para la pantalla de inicio y la pantalla bloqueada del iPhone, y seis para la de Android, incluido un + de 1×1 que abre un gasto nuevo.",
                 }),
             },
             {

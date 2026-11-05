@@ -25,7 +25,7 @@ Prices vary by country. Google Play and the App Store show your price before you
 
 ## Included in every plan
 
-Logging by sentence, voice, or receipt, budgets, savings goals, insights, subscriptions, debts, installments, CSV import and export, and iPhone widgets.
+Logging by sentence, voice, or receipt, budgets, savings goals, insights, subscriptions, debts, installments, CSV import and export, and widgets.
 
 ## Only in Pro
 

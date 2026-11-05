@@ -20,12 +20,13 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - Insights: opens with a plain sentence on whether you are spending faster or slower than usual, with the pace chart and a few cards behind it. Spending by day and by category, income against spending, and net worth over time are one tap down. The month can start on payday.
 - App lock with Face ID or Touch ID on iPhone, or a fingerprint or face on Android.
 - On iPhone: Home Screen and Lock Screen widgets, Spotlight search, and Apple Pay logging through a Shortcuts automation.
+- On Android: home screen widgets for your balance, today's spending, an overview, recent entries, and insights, plus a 1×1 + that opens a new expense.
 - CSV export and full archive export.
 - Entries are stored on the phone first and work offline.
 
 ## Plans
 
-- Free: logging, budgets, goals, insights, subscriptions, debts, installments, and iPhone widgets. 20 voice, receipt, or payment plan captures every 30 days, 3 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, and 1 account currency.
+- Free: logging, budgets, goals, insights, subscriptions, debts, installments, and widgets. 20 voice, receipt, or payment plan captures every 30 days, 3 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, and 1 account currency.
 - Outlayr Pro: 500 captures every 30 days, unlimited accounts, installment apps, people, payoff plans, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, web merchant lookup, and 5 app icons on iPhone.
 - Pro is billed monthly or yearly, or bought once. US prices: $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Prices vary by country and the app store shows yours before purchase.
 
