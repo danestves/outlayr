@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { budgetPace, dayLabel, moneyParts } from "./ledger";
+import { budgetPace, clockTime, dayLabel, money, moneyParts } from "./ledger";
 
 describe("budgetPace", () => {
     it("counts today as spent and leaves the days after it", () => {
@@ -32,5 +32,28 @@ describe("moneyParts", () => {
     it("keeps the sign with the symbol and the cents apart", () => {
         expect(moneyParts(1214.6, "USD")).toStrictEqual({ fraction: ".60", lead: "+$", whole: "1,214" });
         expect(moneyParts(-12, "USD")).toStrictEqual({ fraction: ".00", lead: "-$", whole: "12" });
+    });
+});
+
+describe("clockTime", () => {
+    it("reads the 12-hour clock by default and the 24-hour one when the phone does", () => {
+        expect(clockTime("14:05")).toBe("2:05 PM");
+        expect(clockTime("14:05", true)).toBe("14:05");
+    });
+
+    it("keeps midnight at 00 on the 24-hour clock", () => {
+        expect(clockTime("00:30", true)).toBe("00:30");
+        expect(clockTime("00:30")).toBe("12:30 AM");
+    });
+});
+
+describe("showCents off", () => {
+    it("rounds to whole units, in the figure and in its parts", () => {
+        expect(money(1214.6, "USD", "auto", false)).toBe("$1,215");
+        expect(moneyParts(1214.6, "USD", false)).toStrictEqual({ fraction: "", lead: "+$", whole: "1,215" });
+    });
+
+    it("keeps the cents of an amount that would round to nothing", () => {
+        expect(money(0.3, "USD", "auto", false)).toBe("$0.30");
     });
 });

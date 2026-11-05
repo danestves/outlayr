@@ -9,17 +9,8 @@ import { RangeMeter } from "panelui-web/range-meter";
 import type { CSSProperties, ReactNode } from "react";
 
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
-import {
-    addDays,
-    budgetPace,
-    clockTime,
-    dayLabel,
-    daysBetween,
-    longDay,
-    money,
-    moneyParts,
-    shortDay,
-} from "@/lib/ledger";
+import { addDays, budgetPace, dayLabel, daysBetween, longDay, shortDay } from "@/lib/ledger";
+import { useDisplayFormat } from "@/lib/ledger-settings";
 import { cn } from "@/lib/utils";
 
 const percent = (value: number) => `${Math.round(value)}%`;
@@ -203,6 +194,7 @@ function Recurring({ children }: { children: ReactNode }) {
 }
 
 function Figure({ amount, currency }: { amount: number; currency: string }) {
+    const { moneyParts } = useDisplayFormat();
     const { fraction, lead, whole } = moneyParts(amount, currency);
     return (
         <p className="mt-1 flex items-baseline text-[52px] leading-[58px] font-normal tracking-[-0.02em] tabular-nums">
@@ -214,6 +206,7 @@ function Figure({ amount, currency }: { amount: number; currency: string }) {
 }
 
 export function MonthHero({ budgets, summary, today }: { budgets: Budgets; summary: Summary; today: string }) {
+    const { money } = useDisplayFormat();
     const { overall } = budgets;
     const pace = overall ? budgetPace(overall, today) : null;
     return (
@@ -252,6 +245,7 @@ export function MonthHero({ budgets, summary, today }: { budgets: Budgets; summa
 }
 
 function DailyBars({ summary, today }: { summary: Summary; today: string }) {
+    const { money } = useDisplayFormat();
     const spentOn = new Map(summary.spentByDay.map((day) => [day.date, day.amount]));
     const days = Array.from({ length: daysBetween(summary.from, summary.to) + 1 }, (_, index) =>
         addDays(summary.from, index)
@@ -349,6 +343,7 @@ function Row({
 }
 
 function EntryLine({ currency, photos, row }: { currency: string; photos: PhotoUrls; row: EntryRow }) {
+    const { clockTime, money } = useDisplayFormat();
     const figure = entryFigure(row, currency);
     const original = row.valued === null ? null : money(row.amount, row.currency);
     const tile = <LookTile fee={row.isFee} look={row.look} photos={photos} />;
@@ -386,6 +381,7 @@ function EntryLine({ currency, photos, row }: { currency: string; photos: PhotoU
 }
 
 function TransferLine({ photos, row }: { photos: PhotoUrls; row: TransferRow }) {
+    const { clockTime, money } = useDisplayFormat();
     const moved = row.fees.length > 0 || row.arrivedCurrency !== row.sentCurrency;
     const { from, to } = row;
     return (
@@ -413,6 +409,7 @@ function TransferLine({ photos, row }: { photos: PhotoUrls; row: TransferRow }) 
 }
 
 function DayTotals({ totals }: { totals: LogDay["totals"] }) {
+    const { money } = useDisplayFormat();
     return (
         <span className="text-muted-foreground flex items-baseline gap-1.5 text-[13px] font-semibold tabular-nums">
             {totals.map((bucket, index) => (
@@ -481,6 +478,7 @@ function RailSection({ aside, children, title }: { aside?: ReactNode; children: 
 const ACCOUNTS_SHOWN = 6;
 
 export function AccountsCard({ balances, photos }: { balances: Balances; photos: PhotoUrls }) {
+    const { money } = useDisplayFormat();
     return (
         <RailSection
             aside={balances.accounts.length > ACCOUNTS_SHOWN ? `${balances.accounts.length} in all` : undefined}
@@ -527,6 +525,7 @@ export function AccountsCard({ balances, photos }: { balances: Balances; photos:
 const BUDGETS_SHOWN = 3;
 
 export function BudgetsCard({ budgets }: { budgets: Budgets }) {
+    const { money } = useDisplayFormat();
     if (budgets.categories.length === 0) {
         return null;
     }
@@ -608,6 +607,7 @@ export function UpcomingCard({
     photos: PhotoUrls;
     upcoming: Upcoming;
 }) {
+    const { money } = useDisplayFormat();
     if (upcoming.charges.length === 0) {
         return null;
     }
