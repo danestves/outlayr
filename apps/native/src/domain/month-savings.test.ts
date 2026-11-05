@@ -193,6 +193,14 @@ describe("monthSavings below the usual", () => {
         expect(result.kept).toBe(50);
     });
 
+    it("leaves out a category whose budget went over, so it is not both over budget and a saving", () => {
+        const rows = [...priorMonths([300, 300, 300]), inOctober(150)];
+        const result = savings([budget({ amount: 100 })], rows);
+
+        expect(result.drop).toBeNull();
+        expect(result.kept).toBe(0);
+    });
+
     it("adds the drop to the budgets' total", () => {
         const rows = [...priorMonths([300, 300, 300], "travel"), inOctober(60, "dining"), inOctober(100, "travel")];
 

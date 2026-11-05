@@ -1,7 +1,8 @@
 import type { PurchasesPackage } from "react-native-purchases";
 import { describe, expect, it } from "vite-plus/test";
 
-import { readPlans } from "./pro-plans";
+import { heldPlan, readPlans } from "./pro-plans";
+import type { Plan } from "./pro-plans";
 
 interface FakeOffer {
     intro?: { price: number; periodNumberOfUnits: number; periodUnit: string };
@@ -97,5 +98,16 @@ describe("readPlans", () => {
             type: "ANNUAL",
         });
         expect(readPlans([discounted], new Set(["ANNUAL"]))[0]?.trialDays).toBeNull();
+    });
+});
+
+describe("heldPlan", () => {
+    const plan = (kind: Plan["kind"], identifier: string) =>
+        // SAFETY: `heldPlan` reads only `kind` and the product identifier.
+        ({ kind, offer: { product: { identifier } } }) as unknown as Plan;
+    const playPlans = [plan("annual", "outlayr_pro:yearly"), plan("monthly", "outlayr_pro:monthly")];
+
+    it("tells apart Play base plans that share one subscription", () => {
+        expect(heldPlan(playPlans, "outlayr_pro:monthly")?.kind).toBe("monthly");
     });
 });

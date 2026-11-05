@@ -150,7 +150,7 @@ export function monthSavings(input: MonthSavingsInput): MonthSavings {
         decimals
     );
     const skipped = new Set(
-        kept
+        counted
             .flatMap(({ budget }) => (budget.overall ? [] : [budget.categoryId, budget.parentId]))
             .filter((id) => id !== null)
     );

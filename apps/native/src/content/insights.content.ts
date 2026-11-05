@@ -820,10 +820,10 @@ const insights = {
             pt: "Abaixo do habitual em {category}",
         }),
         "insights.savings.footnoteNone": t({
-            en: "No savings figure this month. It comes back after a month under your budgets.",
-            es: "Este mes no hay cifra de ahorro. Vuelve después de un mes dentro de tus presupuestos.",
-            fr: "Pas de chiffre d'économies ce mois-ci. Il revient après un mois sous vos budgets.",
-            pt: "Sem valor poupado neste mês. Ele volta depois de um mês dentro dos seus orçamentos.",
+            en: "No savings figure this month. It comes back after a month under your budgets or below your usual spending.",
+            es: "Este mes no hay cifra de ahorro. Vuelve después de un mes dentro de tus presupuestos o por debajo de tu gasto habitual.",
+            fr: "Pas de chiffre d'économies ce mois-ci. Il revient après un mois sous vos budgets ou sous vos dépenses habituelles.",
+            pt: "Sem valor poupado neste mês. Ele volta depois de um mês dentro dos seus orçamentos ou abaixo dos seus gastos habituais.",
         }),
         "insights.savings.listMore": t({
             en: "{first}, {second} and {count} more",

@@ -84,17 +84,11 @@ export interface ProCost {
     monthly: number;
 }
 
-const baseProduct = (identifier: string) => identifier.split(":")[0];
-
 export function heldPlan(plans: readonly Plan[], productId: string | null): Plan | null {
     if (productId === null) {
         return null;
     }
-    return (
-        plans.find(
-            (plan) => plan.kind !== "lifetime" && baseProduct(plan.offer.product.identifier) === baseProduct(productId)
-        ) ?? null
-    );
+    return plans.find((plan) => plan.kind !== "lifetime" && plan.offer.product.identifier === productId) ?? null;
 }
 
 export function monthlyCost({ kind, offer }: Plan): ProCost {
