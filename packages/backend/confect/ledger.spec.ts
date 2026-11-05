@@ -1,109 +1,61 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import * as Schema from "effect/Schema";
 
-import {
-    AccountBalance,
-    AccountBalances,
-    BudgetStatus,
-    EntryKind,
-    SpendingSummary,
-    UpcomingCharges,
-} from "./mcpLedger";
+import accounts from "./_generated/tables/accounts";
+import appMeta from "./_generated/tables/appMeta";
+import budgets from "./_generated/tables/budgets";
+import categories from "./_generated/tables/categories";
+import exchangeRates from "./_generated/tables/exchangeRates";
+import installmentPlans from "./_generated/tables/installmentPlans";
+import mainBudget from "./_generated/tables/mainBudget";
+import outsideMoves from "./_generated/tables/outsideMoves";
+import outsidePayments from "./_generated/tables/outsidePayments";
+import transactions from "./_generated/tables/transactions";
+import transfers from "./_generated/tables/transfers";
 
-const Look = Schema.Struct({
-    color: Schema.NullOr(Schema.String),
-    emoji: Schema.NullOr(Schema.String),
-    icon: Schema.NullOr(Schema.String),
-    imageKey: Schema.NullOr(Schema.String),
-});
-
-const AccountLook = Schema.Struct({ ...Look.fields, name: Schema.String, person: Schema.Boolean });
-
-/** `valued` restates a foreign amount in the ledger currency; null when it is already in it or no rate places it. */
-const Money = Schema.Struct({ amount: Schema.Number, currency: Schema.String, valued: Schema.NullOr(Schema.Number) });
-
-const Figure = Schema.Struct({ amount: Schema.Number, currency: Schema.String });
-
-const LogEntry = Schema.Struct({
-    ...Money.fields,
-    account: Schema.NullOr(Schema.String),
-    category: Schema.NullOr(Schema.String),
-    fee: Schema.NullOr(Money),
-    id: Schema.String,
-    isFee: Schema.Boolean,
-    kind: EntryKind,
-    look: Look,
-    note: Schema.String,
-    recurring: Schema.Boolean,
-    time: Schema.String,
-    type: Schema.Literal("entry"),
-});
-
-const LogTransfer = Schema.Struct({
-    arrived: Schema.Number,
-    arrivedCurrency: Schema.String,
-    fees: Schema.mutable(Schema.Array(Figure)),
-    from: Schema.NullOr(AccountLook),
-    id: Schema.String,
-    note: Schema.String,
-    sent: Schema.Number,
-    sentCurrency: Schema.String,
-    time: Schema.String,
-    to: Schema.NullOr(AccountLook),
-    type: Schema.Literal("transfer"),
-});
-
-const LogDay = Schema.Struct({
-    date: Schema.String,
-    rows: Schema.mutable(Schema.Array(Schema.Union([LogEntry, LogTransfer]))),
-    /** Signed, one per currency no rate could fold into the ledger's. */
-    totals: Schema.mutable(Schema.Array(Figure)),
-});
-
-const LedgerSummary = Schema.Struct({
-    ...SpendingSummary.fields,
-    spentByDay: Schema.mutable(Schema.Array(Schema.Struct({ amount: Schema.Number, date: Schema.String }))),
-    today: Schema.String,
-});
-
-const LedgerAccounts = Schema.Struct({
-    ...AccountBalances.fields,
-    accounts: Schema.mutable(Schema.Array(Schema.Struct({ ...AccountBalance.fields, look: AccountLook }))),
-});
-
-const LedgerUpcoming = Schema.Struct({
-    charges: Schema.mutable(
-        Schema.Array(
-            Schema.Struct({
-                ...Money.fields,
-                cadence: Schema.NullOr(Schema.String),
-                every: Schema.Number,
-                fee: Schema.NullOr(Money),
-                id: Schema.String,
-                kind: EntryKind,
-                look: Look,
-                nextCharge: Schema.String,
-                note: Schema.String,
-            })
-        )
-    ),
-    currency: Schema.String,
-    monthlyCost: UpcomingCharges.fields.monthlyCost,
-});
-
-const Overview = Schema.Struct({
-    balances: LedgerAccounts,
-    budgets: BudgetStatus,
-    log: Schema.mutable(Schema.Array(LogDay)),
-    nextChangeAt: Schema.Number,
-    summary: LedgerSummary,
-    upcoming: LedgerUpcoming,
-});
-
-export default GroupSpec.make().addFunction(
-    FunctionSpec.publicQuery({
-        name: "overview",
-        args: () => ({ asOf: Schema.optional(Schema.Number), limit: Schema.optional(Schema.Number) }),
-        returns: () => Overview,
-    })
-);
+export default GroupSpec.make()
+    .addFunction(FunctionSpec.publicPaginatedQuery({ item: () => transactions.Doc, name: "transactions" }))
+    .addFunction(FunctionSpec.publicPaginatedQuery({ item: () => transfers.Doc, name: "transfers" }))
+    .addFunction(
+        FunctionSpec.publicQuery({ args: () => ({}), name: "accounts", returns: () => Schema.Array(accounts.Doc) })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({ args: () => ({}), name: "appMeta", returns: () => Schema.Array(appMeta.Doc) })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({ args: () => ({}), name: "budgets", returns: () => Schema.Array(budgets.Doc) })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({ args: () => ({}), name: "categories", returns: () => Schema.Array(categories.Doc) })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({
+            args: () => ({}),
+            name: "exchangeRates",
+            returns: () => Schema.Array(exchangeRates.Doc),
+        })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({
+            args: () => ({}),
+            name: "installmentPlans",
+            returns: () => Schema.Array(installmentPlans.Doc),
+        })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({ args: () => ({}), name: "mainBudget", returns: () => Schema.Array(mainBudget.Doc) })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({
+            args: () => ({}),
+            name: "outsideMoves",
+            returns: () => Schema.Array(outsideMoves.Doc),
+        })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({
+            args: () => ({}),
+            name: "outsidePayments",
+            returns: () => Schema.Array(outsidePayments.Doc),
+        })
+    );

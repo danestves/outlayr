@@ -1,0 +1,560 @@
+import { accountBalance } from "@outlayr/money/account-balance";
+import { accountsOverview } from "@outlayr/money/account-overview";
+import { spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
+import type { ExpenseContribution } from "@outlayr/money/budget-spent";
+import { decimalsFor } from "@outlayr/money/currency";
+import { utcDateString } from "@outlayr/money/dates";
+import { landingDate, RECURRING_TYPE } from "@outlayr/money/recurrence";
+import { roundMoney } from "@outlayr/money/round";
+import { monthlySubscriptionCost } from "@outlayr/money/subscription-cost";
+import { buildRateTable, isExact, valueDatedRowsIn } from "@outlayr/money/valuation";
+import type { RateTable } from "@outlayr/money/valuation";
+
+import type { Doc } from "../convex/_generated/dataModel";
+import { accountLook, buildLog, entryLook, placed } from "./lib/ledgerLog";
+import type { EntrySource } from "./lib/ledgerLog";
+import {
+    budgetStanding,
+    bySeq,
+    customName,
+    DAY_MS,
+    entryKind,
+    fixedOffset,
+    fromWall,
+    groupCells,
+    localDate,
+    MAX_ENTRIES,
+    monthWindow,
+    utcDayStart,
+    utcOffsetOf,
+    wall,
+    wallDay,
+    zoneOffsets,
+} from "./mcpLedger";
+import type { LegEntry, OffsetAt } from "./mcpLedger";
+
+type Transaction = Doc<"transactions">;
+type Transfer = Doc<"transfers">;
+type Account = Doc<"accounts">;
+type Category = Doc<"categories">;
+
+export interface LedgerClock {
+    now: number;
+    offsetAt: OffsetAt;
+}
+
+export interface LedgerSettings {
+    currency: string;
+    firstDayOfMonth: number;
+    timeZone: string | null;
+}
+
+export function settingsOf(rows: readonly Pick<Doc<"appMeta">, "key" | "value">[]): LedgerSettings {
+    const value = (key: string) => rows.find((row) => row.key === key)?.value ?? null;
+    return {
+        currency: value("currency") ?? "USD",
+        firstDayOfMonth: Number(value("firstDayOfMonth")) || 1,
+        timeZone: value("timeZone"),
+    };
+}
+
+export const storedZoneOf = (timeZone: string | null) => (timeZone === null ? null : zoneOffsets(timeZone));
+
+const live = <Row extends { deletedAt: number | null }>(rows: readonly Row[]) =>
+    rows.filter((row) => row.deletedAt === null);
+
+const happened = <Row extends { date: number; deletedAt: number | null }>(rows: readonly Row[], now: number) =>
+    rows.filter((row) => row.deletedAt === null && row.date <= now);
+
+export function zoneOf(timeZone: string | null, transactions: readonly Transaction[], now: number): OffsetAt {
+    const zone = storedZoneOf(timeZone);
+    if (zone !== null) {
+        return zone;
+    }
+    let latest: Transaction | undefined;
+    for (const row of happened(transactions, now)) {
+        if (latest === undefined || row.date > latest.date) {
+            latest = row;
+        }
+    }
+    return fixedOffset(latest === undefined ? 0 : utcOffsetOf(latest.day));
+}
+
+export const rateTableOf = (rows: readonly Doc<"exchangeRates">[]): RateTable => buildRateTable(rows);
+
+export function recentTransactions(
+    {
+        accounts,
+        categories,
+        transactions,
+    }: { accounts: readonly Account[]; categories: readonly Category[]; transactions: readonly Transaction[] },
+    { limit = 20, now, timeZone }: { limit?: number | undefined; now: number; timeZone: string | null }
+) {
+    const zone = storedZoneOf(timeZone);
+    const categoryById = new Map(categories.map((row) => [row.localId, row]));
+    const accountNames = new Map(accounts.map((row) => [row.localId, row.name]));
+    return happened(transactions, now)
+        .sort((a, b) => b.date - a.date)
+        .slice(0, Math.min(Math.max(limit, 1), MAX_ENTRIES))
+        .map((row) => {
+            const category = row.categoryId ? categoryById.get(row.categoryId) : undefined;
+            const offsetMs = utcOffsetOf(row.day, zone?.(row.day));
+            return {
+                account: row.accountId ? (accountNames.get(row.accountId) ?? null) : null,
+                amount: row.amount,
+                category: category?.name ?? null,
+                currency: row.currency,
+                date: localDate(row.day, offsetMs),
+                emoji: row.emoji ?? category?.emoji ?? null,
+                id: row.localId,
+                imageKey: row.imageKey,
+                kind: entryKind(row.income),
+                note: row.note,
+                time: new Date(row.date + (zone?.(row.date) ?? offsetMs)).toISOString().slice(11, 16),
+            };
+        });
+}
+
+export function spendingSummary(
+    { categories, transactions }: { categories: readonly Category[]; transactions: readonly Transaction[] },
+    settings: LedgerSettings,
+    rates: RateTable,
+    { now, offsetAt }: LedgerClock,
+    monthsAgo = 0
+) {
+    const { currency } = settings;
+    const offsetMs = offsetAt(now);
+    const window = monthWindow(now, offsetMs, settings.firstDayOfMonth, Math.max(0, Math.trunc(monthsAgo)));
+    // Whole UTC days around the window: a valuation cell is one UTC day, and a cell cut at the edge values
+    // differently.
+    const from = utcDayStart(window.start);
+    const to = utcDayStart(window.end - 1) + DAY_MS;
+    const rows = happened(transactions, now)
+        .filter((row) => row.date >= from && row.date < to)
+        .sort(bySeq);
+    const values = valueDatedRowsIn(
+        rows.map((row) => ({ ...row, date: new Date(row.date) })),
+        currency,
+        rates
+    );
+    const categoryById = new Map(categories.map((row) => [row.localId, row]));
+    const decimals = decimalsFor(currency);
+    let spent = 0;
+    let income = 0;
+    const byCategory = new Map<string, number>();
+    const byDay = new Map<string, number>();
+    for (const [index, row] of rows.entries()) {
+        if (row.date < window.start || row.date >= window.end) {
+            continue;
+        }
+        const value = values[index] ?? 0;
+        if (row.income) {
+            income += value;
+            continue;
+        }
+        spent += value;
+        const day = localDate(row.date, offsetAt(row.date));
+        byDay.set(day, (byDay.get(day) ?? 0) + value);
+        const category = row.categoryId ? categoryById.get(row.categoryId) : undefined;
+        const top = category?.parentId ? categoryById.get(category.parentId) : category;
+        const name = top?.name ?? "Uncategorized";
+        byCategory.set(name, (byCategory.get(name) ?? 0) + value);
+    }
+    return {
+        currency,
+        from: localDate(window.start, offsetMs),
+        income: roundMoney(income, decimals),
+        spent: roundMoney(spent, decimals),
+        spentByCategory: [...byCategory]
+            .map(([category, amount]) => ({ amount: roundMoney(amount, decimals), category }))
+            .sort((a, b) => b.amount - a.amount),
+        spentByDay: [...byDay]
+            .map(([date, amount]) => ({ amount: roundMoney(amount, decimals), date }))
+            .sort((a, b) => a.date.localeCompare(b.date)),
+        to: localDate(window.end - 1, offsetMs),
+        today: localDate(now, offsetMs),
+    };
+}
+
+export function accountBalances(
+    books: {
+        accounts: readonly Account[];
+        installmentPlans: readonly Doc<"installmentPlans">[];
+        outsideMoves: readonly Doc<"outsideMoves">[];
+        outsidePayments: readonly Doc<"outsidePayments">[];
+        transactions: readonly Transaction[];
+        transfers: readonly Transfer[];
+    },
+    currency: string,
+    rates: RateTable,
+    { now, offsetAt }: LedgerClock
+) {
+    const accounts = live(books.accounts).sort((a, b) => a.sortOrder - b.sortOrder);
+    const ledger = new Map<string, LegEntry[]>(accounts.map((account) => [account.localId, []]));
+    for (const row of happened(books.transactions, now).sort(bySeq)) {
+        if (row.accountId) {
+            ledger.get(row.accountId)?.push({ ...row, date: new Date(row.date), leg: "flow" });
+        }
+    }
+    for (const row of happened(books.transfers, now).sort(bySeq)) {
+        const date = new Date(row.date);
+        ledger.get(row.fromAccountId)?.push({
+            amount: row.fromAmount,
+            amountUsd: row.fromAmountUsd,
+            currency: row.fromCurrency,
+            date,
+            income: false,
+            leg: "outbound",
+        });
+        ledger.get(row.toAccountId)?.push({
+            amount: row.toAmount,
+            amountUsd: row.toAmountUsd,
+            currency: row.toCurrency,
+            date,
+            income: true,
+            leg: "inbound",
+        });
+    }
+    // A payment made outside Outlayr arrives on its order's account from nowhere.
+    const planAccount = new Map(live(books.installmentPlans).map((row) => [row.localId, row.accountId]));
+    const currencyOf = new Map(accounts.map((account) => [account.localId, account.currency]));
+    for (const row of books.outsidePayments.toSorted(bySeq)) {
+        const accountId = planAccount.get(row.planId);
+        const accountCurrency = accountId === undefined ? undefined : currencyOf.get(accountId);
+        if (row.deletedAt !== null || row.date > now || accountId === undefined || accountCurrency === undefined) {
+            continue;
+        }
+        ledger.get(accountId)?.push({
+            amount: row.amount,
+            amountUsd: row.amountUsd,
+            currency: accountCurrency,
+            date: new Date(row.date),
+            income: true,
+            leg: "inbound",
+        });
+    }
+    for (const row of books.outsideMoves.toSorted(bySeq)) {
+        const accountCurrency = currencyOf.get(row.accountId);
+        if (row.deletedAt !== null || row.date > now || accountCurrency === undefined) {
+            continue;
+        }
+        ledger.get(row.accountId)?.push({
+            amount: row.amount,
+            amountUsd: row.amountUsd,
+            currency: accountCurrency,
+            date: new Date(row.date),
+            income: true,
+            leg: "inbound",
+        });
+    }
+    const overview = accountsOverview(
+        accounts.map((row) => ({ ...row, id: row.localId })),
+        accounts.flatMap((account) =>
+            groupCells(ledger.get(account.localId) ?? [], (entry) => entry.leg).map((cell) => ({
+                ...cell,
+                accountId: account.localId,
+            }))
+        ),
+        currency,
+        rates,
+        new Date(now)
+    );
+    const decimals = decimalsFor(currency);
+    if (overview === null) {
+        return { accounts: [], currency, net: 0, owed: 0, owned: 0 };
+    }
+    return {
+        accounts: accounts.flatMap((account, index) => {
+            const row = overview.rows[index];
+            if (row === undefined) {
+                return [];
+            }
+            const own = accountBalance(
+                account,
+                groupCells(
+                    ledger.get(account.localId) ?? [],
+                    (entry) => `${entry.leg}|${localDate(entry.date.getTime(), offsetAt(entry.date.getTime()))}`
+                ),
+                rates
+            );
+            return [
+                {
+                    balance: roundMoney(own.total, decimalsFor(account.currency)),
+                    balanceInMainCurrency: roundMoney(row.balance, decimals),
+                    currency: account.currency,
+                    customColor: account.customColor,
+                    emoji: account.emoji,
+                    exact: own.exact && row.exact,
+                    icon: account.icon,
+                    imageColor: account.imageColor,
+                    imageKey: account.imageKey,
+                    kind: row.kind,
+                    name: account.name,
+                },
+            ];
+        }),
+        currency,
+        net: roundMoney(overview.total, decimals),
+        owed: roundMoney(overview.owe, decimals),
+        owned: roundMoney(overview.own, decimals),
+    };
+}
+
+export function budgetStatus(
+    books: {
+        budgets: readonly Doc<"budgets">[];
+        categories: readonly Category[];
+        mainBudget: readonly Doc<"mainBudget">[];
+        transactions: readonly Transaction[];
+    },
+    currency: string,
+    rates: RateTable,
+    { now, offsetAt }: LedgerClock
+) {
+    const categories = new Map(live(books.categories).map((row) => [row.localId, row]));
+    const expenses = happened(books.transactions, now)
+        .filter((row) => !row.income)
+        .sort(bySeq);
+    const values = valueDatedRowsIn(
+        expenses.map((row) => ({ ...row, date: new Date(row.date) })),
+        currency,
+        rates
+    );
+    const contributions: ExpenseContribution[] = expenses.map((row, index) => ({
+        amount: values[index] ?? 0,
+        categoryId: row.categoryId,
+        date: wall(row.date, offsetAt(row.date)),
+        parentId: row.categoryId ? (categories.get(row.categoryId)?.parentId ?? null) : null,
+    }));
+    const clock = { currency, now: wall(now, offsetAt(now)), offsetAt, rates };
+    const main = books.mainBudget.find((row) => row.deletedAt === null);
+    return {
+        categories: live(books.budgets)
+            .sort((a, b) => (a.dateCreated ?? 0) - (b.dateCreated ?? 0))
+            .map((row) => {
+                const { categoryId } = row;
+                return {
+                    ...budgetStanding(
+                        row,
+                        row.rollover && categoryId !== null,
+                        (start, last) =>
+                            categoryId === null ? 0 : spentForCategory(contributions, categoryId, start, last),
+                        clock
+                    ),
+                    category: categoryId ? (categories.get(categoryId)?.name ?? null) : null,
+                    name: customName(row.name),
+                    subcategories: [...categories.values()].flatMap((child) =>
+                        categoryId !== null && child.parentId === categoryId && child.name ? [child.name] : []
+                    ),
+                };
+            }),
+        currency,
+        overall: main
+            ? {
+                  ...budgetStanding(
+                      main,
+                      main.rollover,
+                      (start, last) => spentForMain(contributions, start, last),
+                      clock
+                  ),
+                  name: customName(main.name),
+              }
+            : null,
+    };
+}
+
+function scheduleOf(
+    books: { categories: readonly Category[]; transactions: readonly Transaction[] },
+    currency: string,
+    rates: RateTable,
+    { now, offsetAt }: LedgerClock
+) {
+    const categories = new Map(live(books.categories).map((row) => [row.localId, row]));
+    const today = wall(now, offsetAt(now));
+    const scheduled = live(books.transactions)
+        .filter((row) => row.recurringType > RECURRING_TYPE.none || row.date > now)
+        .sort(bySeq);
+    const perMonth = monthlySubscriptionCost(
+        scheduled.map((row) => ({
+            ...row,
+            date: new Date(row.date),
+            recurringEndDate:
+                row.recurringEndDate === null ? null : wall(row.recurringEndDate, offsetAt(row.recurringEndDate)),
+        })),
+        currency,
+        rates,
+        today
+    );
+    return {
+        categories,
+        charges: scheduled
+            .map((row) => ({
+                landsOn: landingDate(
+                    {
+                        date: wall(row.date, offsetAt(row.date)),
+                        recurringAnchorDay: row.recurringAnchorDay ?? null,
+                        recurringCoefficient: row.recurringCoefficient,
+                        recurringType: row.recurringType,
+                    },
+                    today
+                ),
+                row,
+            }))
+            .sort((a, b) => a.landsOn.getTime() - b.landsOn.getTime()),
+        currency,
+        monthlyCost: perMonth
+            .filter((bucket) => bucket.transactionCount > 0)
+            .map((bucket) => ({
+                amount: roundMoney(-bucket.amount, decimalsFor(bucket.currencyCode)),
+                currency: bucket.currencyCode,
+                schedules: bucket.transactionCount,
+            })),
+    };
+}
+
+const CADENCES = new Map<number, string>(Object.entries(RECURRING_TYPE).map(([name, code]) => [code, name]));
+
+const cadenceOf = (recurringType: number) =>
+    recurringType === RECURRING_TYPE.none ? null : (CADENCES.get(recurringType) ?? null);
+
+export function upcomingCharges(
+    books: { categories: readonly Category[]; transactions: readonly Transaction[] },
+    currency: string,
+    rates: RateTable,
+    clock: LedgerClock
+) {
+    const { categories, charges, monthlyCost } = scheduleOf(books, currency, rates, clock);
+    const { offsetAt } = clock;
+    return {
+        charges: charges.map(({ landsOn, row }) => ({
+            amount: row.amount,
+            category: row.categoryId ? (categories.get(row.categoryId)?.name ?? null) : null,
+            currency: row.currency,
+            endsOn:
+                row.recurringEndDate === null ? null : localDate(row.recurringEndDate, offsetAt(row.recurringEndDate)),
+            kind: entryKind(row.income),
+            nextCharge: wallDay(landsOn),
+            note: row.note,
+            repeats:
+                row.recurringType === RECURRING_TYPE.none
+                    ? null
+                    : { cadence: cadenceOf(row.recurringType), every: row.recurringCoefficient },
+        })),
+        currency,
+        monthlyCost,
+    };
+}
+
+function ledgerUpcoming(
+    books: { categories: readonly Category[]; transactions: readonly Transaction[] },
+    currency: string,
+    rates: RateTable,
+    clock: LedgerClock
+) {
+    const { categories, charges, monthlyCost } = scheduleOf(books, currency, rates, clock);
+    const valuedIn = (row: EntrySource, landsOn: Date) => {
+        if (row.currency === currency) {
+            return { amount: row.amount, currency, valued: null };
+        }
+        // Valued at the coming charge: a renewal's saved date can predate every held rate.
+        const [value] = valueDatedRowsIn([{ ...row, date: landsOn }], currency, rates);
+        const exact = isExact({ ...row, dateKey: utcDateString(landsOn.getTime()) }, currency, rates);
+        return placed(row, currency, exact ? (value ?? null) : null);
+    };
+    const ids = new Set(charges.map(({ row }) => row.localId));
+    const feeOf = new Map(
+        charges.flatMap(({ landsOn, row }) =>
+            row.feeForId && ids.has(row.feeForId) ? [[row.feeForId, valuedIn(row, landsOn)] as const] : []
+        )
+    );
+    return {
+        charges: charges
+            .filter(({ row }) => !(row.feeForId && ids.has(row.feeForId)))
+            .map(({ landsOn, row }) => {
+                const category = row.categoryId ? categories.get(row.categoryId) : undefined;
+                return {
+                    ...valuedIn(row, landsOn),
+                    cadence: cadenceOf(row.recurringType),
+                    every: row.recurringCoefficient,
+                    fee: feeOf.get(row.localId) ?? null,
+                    id: row.localId,
+                    kind: entryKind(row.income),
+                    look: entryLook(row, category),
+                    nextCharge: wallDay(landsOn),
+                    note: row.note || category?.name || "",
+                };
+            }),
+        currency,
+        monthlyCost,
+    };
+}
+
+export function nextChangeAt(
+    books: {
+        outsideMoves: readonly Doc<"outsideMoves">[];
+        outsidePayments: readonly Doc<"outsidePayments">[];
+        transactions: readonly Transaction[];
+        transfers: readonly Transfer[];
+    },
+    { now, offsetAt }: LedgerClock
+) {
+    const tomorrow = Date.parse(`${localDate(now, offsetAt(now))}T00:00:00Z`) + DAY_MS;
+    let next = fromWall(tomorrow, offsetAt);
+    for (const row of [...books.transactions, ...books.transfers, ...books.outsidePayments, ...books.outsideMoves]) {
+        if (row.deletedAt === null && row.date > now && row.date < next) {
+            next = row.date;
+        }
+    }
+    return next;
+}
+
+export interface LedgerBooks {
+    accounts: readonly Account[];
+    appMeta: readonly Pick<Doc<"appMeta">, "key" | "value">[];
+    budgets: readonly Doc<"budgets">[];
+    categories: readonly Category[];
+    exchangeRates: readonly Doc<"exchangeRates">[];
+    installmentPlans: readonly Doc<"installmentPlans">[];
+    mainBudget: readonly Doc<"mainBudget">[];
+    outsideMoves: readonly Doc<"outsideMoves">[];
+    outsidePayments: readonly Doc<"outsidePayments">[];
+    transactions: readonly Transaction[];
+    transfers: readonly Transfer[];
+}
+
+export function ledgerOverview(books: LedgerBooks, now: number) {
+    const settings = settingsOf(books.appMeta);
+    const { currency } = settings;
+    const offsetAt = zoneOf(settings.timeZone, books.transactions, now);
+    const clock = { now, offsetAt };
+    const rates = rateTableOf(books.exchangeRates);
+    const balances = accountBalances(books, currency, rates, clock);
+    return {
+        balances: {
+            ...balances,
+            accounts: balances.accounts.map((account) => ({ ...account, look: accountLook(account) })),
+        },
+        budgets: budgetStatus(books, currency, rates, clock),
+        log: buildLog({
+            accounts: new Map(books.accounts.map((row) => [row.localId, row])),
+            categories: new Map(live(books.categories).map((row) => [row.localId, row])),
+            // Not the stored `day`: that is midnight in the zone the row was saved in, which can split a day.
+            clock: {
+                dayOf: (row) => localDate(row.date, offsetAt(row.date)),
+                timeOf: (row) => new Date(row.date + offsetAt(row.date)).toISOString().slice(11, 16),
+            },
+            currency,
+            entries: happened(books.transactions, now),
+            entriesFull: false,
+            limit: MAX_ENTRIES,
+            rates,
+            transfers: happened(books.transfers, now),
+            transfersFull: false,
+        }),
+        nextChangeAt: nextChangeAt(books, clock),
+        summary: spendingSummary(books, settings, rates, clock),
+        upcoming: ledgerUpcoming(books, currency, rates, clock),
+    };
+}
+
+export type LedgerOverview = ReturnType<typeof ledgerOverview>;

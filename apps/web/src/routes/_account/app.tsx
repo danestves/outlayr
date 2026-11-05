@@ -1,11 +1,11 @@
-import { convexQuery } from "@convex-dev/react-query";
+import type { ConvexQueryClient } from "@convex-dev/react-query";
+import { ledgerOverview } from "@outlayr/backend/confect/ledgerView";
 import { api } from "@outlayr/backend/convex/_generated/api";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions, useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute, redirect, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { useConvex } from "convex/react";
 import { ChevronsUpDownIcon, LogOutIcon, ReceiptTextIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import * as Skullet from "skullet";
 import { Skeleton } from "skullet/react";
@@ -34,10 +34,36 @@ import {
     SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
+import { ledgerBooks, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
 
-const ENTRY_LIMIT = 30;
+const PHOTO_REMINT_MS = 50 * 60_000;
 
-const overviewQuery = (asOf: number) => convexQuery(api.ledger.overview, { asOf, limit: ENTRY_LIMIT });
+function photoKeys({ balances, log, upcoming }: Overview) {
+    const looks = [
+        ...log.flatMap((day) => day.rows.flatMap((row) => (row.type === "entry" ? [row.look] : [row.from, row.to]))),
+        ...balances.accounts.map((account) => account.look),
+        ...upcoming.charges.map((charge) => charge.look),
+    ];
+    return [...new Set(looks.flatMap((look) => (look?.imageKey ? [look.imageKey] : [])))].toSorted();
+}
+
+const photoUrlsQuery = (convex: ConvexQueryClient | undefined, keys: readonly string[]) =>
+    queryOptions({
+        enabled: Boolean(convex) && keys.length > 0,
+        queryFn: async () => {
+            const client = convex?.serverHttpClient ?? convex?.convexClient;
+            if (!client) {
+                return [];
+            }
+            return client.mutation(api.photos.readUrls, { keys: [...keys] });
+        },
+        queryKey: ["photoUrls", keys],
+        refetchInterval: PHOTO_REMINT_MS,
+        staleTime: PHOTO_REMINT_MS,
+    });
+
+const toPhotoUrls = (minted: readonly { key: string; url: string }[]): PhotoUrls =>
+    new Map(minted.map((photo) => [photo.key, photo.url]));
 
 export const Route = createFileRoute("/_account/app")({
     beforeLoad: ({ context, location }) => {
@@ -50,7 +76,9 @@ export const Route = createFileRoute("/_account/app")({
     loader: async ({ context }) => {
         const asOf = Date.now();
         try {
-            await context.queryClient.ensureQueryData(overviewQuery(asOf));
+            await preloadLedger(context.dbClient);
+            const overview = ledgerOverview(ledgerBooks(context.dbClient), asOf);
+            await context.queryClient.prefetchQuery(photoUrlsQuery(context.convexQueryClient, photoKeys(overview)));
         } catch (error) {
             if (error instanceof Error && proRequired(error)) {
                 return { asOf, synced: false };
@@ -153,34 +181,23 @@ function AccountMenu() {
     );
 }
 
-const PHOTO_REMINT_MS = 50 * 60_000;
-
 const NO_PHOTOS: PhotoUrls = new Map();
 
-function usePhotoUrls(keys: readonly string[]): PhotoUrls {
-    const convex = useConvex();
-    const wanted = [...new Set(keys)].toSorted();
+function usePhotoUrls(overview: Overview): PhotoUrls {
+    const { convexQueryClient } = Route.useRouteContext();
     const { data } = useQuery({
-        enabled: wanted.length > 0,
-        queryFn: async (): Promise<PhotoUrls> => {
-            const minted = await convex.mutation(api.photos.readUrls, { keys: wanted });
-            return new Map(minted.map((photo) => [photo.key, photo.url]));
-        },
-        queryKey: ["photoUrls", wanted],
-        refetchInterval: PHOTO_REMINT_MS,
-        staleTime: PHOTO_REMINT_MS,
+        ...photoUrlsQuery(convexQueryClient, photoKeys(overview)),
+        placeholderData: keepPreviousData,
+        select: toPhotoUrls,
     });
     return data ?? NO_PHOTOS;
 }
 
 const MIN_WAIT_MS = 15_000;
 
-function useTurnover(nextChangeAt: number | undefined, advance: (asOf: number) => void) {
+function useTurnover(nextChangeAt: number, advance: (asOf: number) => void) {
     // oxlint-disable-next-line outlayr/react-effect-budget -- the clock is an external system.
     useEffect(() => {
-        if (nextChangeAt === undefined) {
-            return;
-        }
         let timer: ReturnType<typeof setTimeout>;
         const arm = (delay: number) => {
             timer = setTimeout(() => {
@@ -202,25 +219,13 @@ function useTurnover(nextChangeAt: number | undefined, advance: (asOf: number) =
     }, [advance, nextChangeAt]);
 }
 
-function photoKeys({ balances, log, upcoming }: Overview) {
-    const looks = [
-        ...log.flatMap((day) => day.rows.flatMap((row) => (row.type === "entry" ? [row.look] : [row.from, row.to]))),
-        ...balances.accounts.map((account) => account.look),
-        ...upcoming.charges.map((charge) => charge.look),
-    ];
-    return looks.flatMap((look) => (look?.imageKey ? [look.imageKey] : []));
-}
-
 function LiveOverview() {
     const loaded = Route.useLoaderData();
     const [asOf, setAsOf] = useState(loaded.asOf);
-    const { data: overview } = useQuery({
-        ...overviewQuery(asOf),
-        placeholderData: keepPreviousData,
-        throwOnError: true,
-    });
-    useTurnover(overview?.nextChangeAt, setAsOf);
-    const photos = usePhotoUrls(overview ? photoKeys(overview) : []);
+    const books = useLedgerBooks();
+    const overview = useMemo(() => ledgerOverview(books, asOf), [books, asOf]);
+    useTurnover(overview.nextChangeAt, setAsOf);
+    const photos = usePhotoUrls(overview);
     return <OverviewView overview={overview} photos={photos} />;
 }
 

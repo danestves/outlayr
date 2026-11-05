@@ -3,8 +3,7 @@ import FEE_ICON from "@hugeicons/core-free-icons/PercentCircleIcon";
 import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
-import type { api } from "@outlayr/backend/convex/_generated/api";
-import type { FunctionReturnType } from "convex/server";
+import type { LedgerOverview } from "@outlayr/backend/confect/ledgerView";
 import type { CSSProperties, ReactNode } from "react";
 
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
@@ -23,7 +22,7 @@ import {
 } from "@/lib/ledger";
 import { cn } from "@/lib/utils";
 
-export type Overview = FunctionReturnType<typeof api.ledger.overview>;
+export type Overview = LedgerOverview;
 type LogDay = Overview["log"][number];
 type LogRow = LogDay["rows"][number];
 type EntryRow = Extract<LogRow, { type: "entry" }>;

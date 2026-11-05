@@ -2,10 +2,13 @@
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { describe, expect, it } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
+import type { Doc } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
+import { ledgerOverview } from "./ledgerView";
+import type { LedgerBooks } from "./ledgerView";
 import { authenticatedAs, seedAuthUser, seedProUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");
@@ -47,210 +50,207 @@ const entryOf = (userId: string, note: string) => ({
     userId,
 });
 
-describe("ledger", () => {
-    afterEach(() => {
-        vi.useRealTimers();
-    });
+const NO_BOOKS: LedgerBooks = {
+    accounts: [],
+    appMeta: [],
+    budgets: [],
+    categories: [],
+    exchangeRates: [],
+    installmentPlans: [],
+    mainBudget: [],
+    outsideMoves: [],
+    outsidePayments: [],
+    transactions: [],
+    transfers: [],
+};
 
+const docOf = <Table extends "accounts" | "transactions">(
+    table: Table,
+    row: Omit<Doc<Table>, "_creationTime" | "_id">
+) => ({ _creationTime: 0, _id: `${table}:${JSON.stringify(row).length}`, ...row }) as unknown as Doc<Table>;
+
+const entry = (note: string, row: Partial<Doc<"transactions">> = {}) =>
+    docOf("transactions", { ...entryOf("owner", note), ...row });
+
+const zone = (value: string) => [{ key: "timeZone", value }];
+
+const chase = docOf("accounts", {
+    currency: "USD",
+    customColor: null,
+    dateCreated: 0,
+    deletedAt: null,
+    deviceId: "device",
+    emoji: null,
+    icon: null,
+    imageColor: null,
+    imageKey: "photos/chase.webp",
+    initialBalance: 0,
+    initialBalanceDate: 0,
+    initialBalanceUsd: 0,
+    localId: "chase",
+    name: "Chase",
+    seq: 1,
+    sortOrder: 0,
+    updatedAt: 0,
+    userId: "owner",
+});
+
+describe("ledger queries", () => {
     it("refuses a signed-in user without Pro", async () => {
         const t = setup();
         const asFree = authenticatedAs(t, await seedAuthUser(t));
 
-        await expect(asFree.query(api.ledger.overview, {})).rejects.toThrow(/Pro is required/);
+        await expect(asFree.query(api.ledger.accounts, {})).rejects.toThrow(/Pro is required/);
     });
 
     it("refuses an anonymous caller", async () => {
         const t = setup();
 
-        await expect(t.query(api.ledger.overview, {})).rejects.toThrow(/sign in/);
+        await expect(
+            t.query(api.ledger.transactions, { paginationOpts: { cursor: null, numItems: 10 } })
+        ).rejects.toThrow(/sign in/);
     });
 
-    it("reads only the caller's own entries that already happened", async () => {
+    it("reads only the caller's own live entries", async () => {
         const t = setup();
         const owner = await seedProUser(t);
         const other = await seedProUser(t);
         await t.run(async (ctx) => {
             await ctx.db.insert("transactions", entryOf(owner.userId, "mine"));
             await ctx.db.insert("transactions", entryOf(other.userId, "theirs"));
-            await ctx.db.insert("transactions", { ...entryOf(owner.userId, "rent"), date: Date.now() + 86_400_000 });
+            await ctx.db.insert("transactions", { ...entryOf(owner.userId, "gone"), deletedAt: 1 });
         });
 
-        const { log } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
+        const { page } = await authenticatedAs(t, owner).query(api.ledger.transactions, {
+            paginationOpts: { cursor: null, numItems: 10 },
+        });
+
+        expect(page.map((row) => row.note)).toStrictEqual(["mine"]);
+    });
+});
+
+describe("ledgerOverview", () => {
+    it("leaves entries that have not happened yet out of the log", () => {
+        const now = Date.UTC(2026, 9, 10);
+        const { log } = ledgerOverview(
+            { ...NO_BOOKS, transactions: [entry("mine"), entry("rent", { date: now + 86_400_000 })] },
+            now
+        );
 
         expect(log.flatMap((day) => day.rows.map((row) => row.note))).toStrictEqual(["mine"]);
     });
 
-    it("dates an entry on the owner's wall clock, with its account", async () => {
-        const t = setup();
-        const owner = await seedProUser(t);
-        await t.run(async (ctx) => {
-            await ctx.db.insert("appMeta", {
-                deviceId: "device",
-                key: "timeZone",
-                seq: 0,
-                updatedAt: 0,
-                userId: owner.userId,
-                value: "America/Caracas",
-            });
-            await ctx.db.insert("accounts", {
-                currency: "USD",
-                customColor: null,
-                dateCreated: 0,
-                deletedAt: null,
-                deviceId: "device",
-                emoji: null,
-                icon: null,
-                imageColor: null,
-                imageKey: "photos/chase.webp",
-                initialBalance: 0,
-                initialBalanceDate: 0,
-                initialBalanceUsd: 0,
-                localId: "chase",
-                name: "Chase",
-                seq: 1,
-                sortOrder: 0,
-                updatedAt: 0,
-                userId: owner.userId,
-            });
-            await ctx.db.insert("transactions", {
-                ...entryOf(owner.userId, "late dinner"),
-                accountId: "chase",
-                date: Date.UTC(2026, 9, 9, 2, 30),
-                day: Date.UTC(2026, 9, 8, 4),
-            });
-        });
-
+    it("dates an entry on the owner's wall clock, with its account", () => {
         const {
-            log: [day],
-        } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
+            log: [first],
+        } = ledgerOverview(
+            {
+                ...NO_BOOKS,
+                accounts: [chase],
+                appMeta: zone("America/Caracas"),
+                transactions: [
+                    entry("late dinner", {
+                        accountId: "chase",
+                        date: Date.UTC(2026, 9, 9, 2, 30),
+                        day: Date.UTC(2026, 9, 8, 4),
+                    }),
+                ],
+            },
+            Date.UTC(2026, 9, 10)
+        );
 
-        expect(day).toMatchObject({ date: "2026-10-08", rows: [{ account: "Chase", time: "22:30" }] });
+        expect(first).toMatchObject({ date: "2026-10-08", rows: [{ account: "Chase", time: "22:30" }] });
     });
 
-    it("keeps one day together when its entries were saved in different zones", async () => {
-        const t = setup();
-        const owner = await seedProUser(t);
-        await t.run(async (ctx) => {
-            await ctx.db.insert("appMeta", {
-                deviceId: "device",
-                key: "timeZone",
-                seq: 0,
-                updatedAt: 0,
-                userId: owner.userId,
-                value: "America/Caracas",
-            });
-            await ctx.db.insert("transactions", {
-                ...entryOf(owner.userId, "lunch"),
-                date: Date.UTC(2026, 9, 8, 16),
-                day: Date.UTC(2026, 9, 8, 4),
-            });
-            await ctx.db.insert("transactions", {
-                ...entryOf(owner.userId, "saved in Paris"),
-                date: Date.UTC(2026, 9, 8, 23),
-                day: Date.UTC(2026, 9, 8, 22),
-            });
-        });
-
-        const { log } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
+    it("keeps one day together when its entries were saved in different zones", () => {
+        const { log } = ledgerOverview(
+            {
+                ...NO_BOOKS,
+                appMeta: zone("America/Caracas"),
+                transactions: [
+                    entry("lunch", { date: Date.UTC(2026, 9, 8, 16), day: Date.UTC(2026, 9, 8, 4) }),
+                    entry("saved in Paris", { date: Date.UTC(2026, 9, 8, 23), day: Date.UTC(2026, 9, 8, 22) }),
+                ],
+            },
+            Date.UTC(2026, 9, 10)
+        );
 
         expect(log.map((day) => [day.date, day.rows.length])).toStrictEqual([["2026-10-08", 2]]);
     });
 
-    it("reads an entry's time at its own offset on the day the clocks go back", async () => {
-        const t = setup();
-        const owner = await seedProUser(t);
-        await t.run(async (ctx) => {
-            await ctx.db.insert("appMeta", {
-                deviceId: "device",
-                key: "timeZone",
-                seq: 0,
-                updatedAt: 0,
-                userId: owner.userId,
-                value: "America/New_York",
-            });
-            await ctx.db.insert("transactions", {
-                ...entryOf(owner.userId, "lunch"),
-                date: Date.UTC(2026, 10, 1, 17),
-                day: Date.UTC(2026, 10, 1, 4),
-            });
-        });
-
+    it("reads an entry's time at its own offset on the day the clocks go back", () => {
         const {
-            log: [day],
-        } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
+            log: [first],
+        } = ledgerOverview(
+            {
+                ...NO_BOOKS,
+                appMeta: zone("America/New_York"),
+                transactions: [entry("lunch", { date: Date.UTC(2026, 10, 1, 17), day: Date.UTC(2026, 10, 1, 4) })],
+            },
+            Date.UTC(2026, 10, 2)
+        );
 
-        expect(day).toMatchObject({ date: "2026-11-01", rows: [{ time: "12:00" }] });
+        expect(first).toMatchObject({ date: "2026-11-01", rows: [{ time: "12:00" }] });
     });
 
-    it("reads today at the offset it dates entries with when no zone is stored", async () => {
-        vi.useFakeTimers({ toFake: ["Date"] });
-        vi.setSystemTime(Date.UTC(2026, 9, 10, 2, 30));
-        const t = setup();
-        const owner = await seedProUser(t);
-        await t.run(async (ctx) => {
-            await ctx.db.insert("transactions", { ...entryOf(owner.userId, "taxi"), day: Date.UTC(2026, 9, 8, 4) });
-        });
-
-        const { summary } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
+    it("reads today at the offset it dates entries with when no zone is stored", () => {
+        const { summary } = ledgerOverview(
+            { ...NO_BOOKS, transactions: [entry("taxi", { day: Date.UTC(2026, 9, 8, 4) })] },
+            Date.UTC(2026, 9, 10, 2, 30)
+        );
 
         expect(summary.today).toBe("2026-10-09");
     });
 
-    it("puts an entry's daily bar on the day the log shows it", async () => {
-        vi.useFakeTimers({ toFake: ["Date"] });
-        vi.setSystemTime(Date.UTC(2026, 9, 20, 12));
-        const t = setup();
-        const owner = await seedProUser(t);
-        await t.run(async (ctx) => {
-            await ctx.db.insert("appMeta", {
-                deviceId: "device",
-                key: "timeZone",
-                seq: 0,
-                updatedAt: 0,
-                userId: owner.userId,
-                value: "America/Caracas",
-            });
-            await ctx.db.insert("transactions", {
-                ...entryOf(owner.userId, "late taxi"),
-                date: Date.UTC(2026, 9, 8, 23, 30),
-                day: Date.UTC(2026, 9, 8, 22),
-            });
-        });
+    it("puts an entry's daily bar on the day the log shows it", () => {
         const {
-            log: [day],
+            log: [first],
             summary,
-        } = await authenticatedAs(t, owner).query(api.ledger.overview, {});
+        } = ledgerOverview(
+            {
+                ...NO_BOOKS,
+                appMeta: zone("America/Caracas"),
+                transactions: [
+                    entry("late taxi", { date: Date.UTC(2026, 9, 8, 23, 30), day: Date.UTC(2026, 9, 8, 22) }),
+                ],
+            },
+            Date.UTC(2026, 9, 20, 12)
+        );
 
-        expect(summary.spentByDay.map((bar) => bar.date)).toStrictEqual([day?.date]);
+        expect(summary.spentByDay.map((bar) => bar.date)).toStrictEqual([first?.date]);
     });
 
-    it("turns over at the owner's midnight unless an entry lands first", async () => {
-        vi.useFakeTimers({ toFake: ["Date"] });
-        vi.setSystemTime(Date.UTC(2026, 9, 9, 15));
-        const t = setup();
-        const owner = await seedProUser(t);
-        await t.run(async (ctx) => {
-            await ctx.db.insert("appMeta", {
-                deviceId: "device",
-                key: "timeZone",
-                seq: 0,
-                updatedAt: 0,
-                userId: owner.userId,
-                value: "America/Caracas",
-            });
-        });
-        const asOwner = authenticatedAs(t, owner);
+    it("turns over at the owner's midnight unless an entry lands first", () => {
+        const now = Date.UTC(2026, 9, 9, 15);
+        const books = { ...NO_BOOKS, appMeta: zone("America/Caracas") };
 
-        expect((await asOwner.query(api.ledger.overview, {})).nextChangeAt).toBe(Date.UTC(2026, 9, 10, 4));
+        expect(ledgerOverview(books, now).nextChangeAt).toBe(Date.UTC(2026, 9, 10, 4));
+        expect(
+            ledgerOverview(
+                {
+                    ...books,
+                    transactions: [
+                        entry("late dinner", { date: Date.UTC(2026, 9, 10, 1), day: Date.UTC(2026, 9, 9, 4) }),
+                    ],
+                },
+                now
+            ).nextChangeAt
+        ).toBe(Date.UTC(2026, 9, 10, 1));
+    });
 
-        await t.run(async (ctx) => {
-            await ctx.db.insert("transactions", {
-                ...entryOf(owner.userId, "late dinner"),
-                date: Date.UTC(2026, 9, 10, 1),
-                day: Date.UTC(2026, 9, 9, 4),
-            });
-        });
+    it("turns over when a balance adjustment comes due", () => {
+        const now = Date.UTC(2026, 9, 9, 15);
+        const due = now + 60_000;
 
-        expect((await asOwner.query(api.ledger.overview, {})).nextChangeAt).toBe(Date.UTC(2026, 9, 10, 1));
+        expect(
+            ledgerOverview(
+                {
+                    ...NO_BOOKS,
+                    appMeta: zone("America/Caracas"),
+                    outsideMoves: [{ date: due, deletedAt: null } as Doc<"outsideMoves">],
+                },
+                now
+            ).nextChangeAt
+        ).toBe(due);
     });
 });
