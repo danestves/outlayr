@@ -84,8 +84,8 @@ const about = {
             {
                 label: t({ en: "Free plan", es: "Plan gratis" }),
                 text: t({
-                    en: "Logging, budgets, goals, insights, subscriptions, debts, installments, and widgets, with 20 voice, receipt, or payment plan captures every 30 days, 2 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, 1 account currency, and 1 app icon.",
-                    es: "Registros, presupuestos, metas, estadísticas, suscripciones, deudas, cuotas y widgets, con 20 capturas de voz, de recibos o de planes de pago cada 30 días, 2 cuentas, 2 apps de cuotas, 3 personas, 2 planes de pago, 2 presupuestos por categoría, 1 moneda para tus cuentas y 1 ícono de la app.",
+                    en: "Logging, budgets, goals, insights, subscriptions, debts, installments, and widgets, with 20 voice, receipt, or payment plan captures every 30 days, 3 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, 1 account currency, and 1 app icon.",
+                    es: "Registros, presupuestos, metas, estadísticas, suscripciones, deudas, cuotas y widgets, con 20 capturas de voz, de recibos o de planes de pago cada 30 días, 3 cuentas, 2 apps de cuotas, 3 personas, 2 planes de pago, 2 presupuestos por categoría, 1 moneda para tus cuentas y 1 ícono de la app.",
                 }),
             },
             {

@@ -70,9 +70,9 @@ describe("fullAccountCaps", () => {
         expect(fullAccountCaps([app("Cashea"), app("Krece")], true).installmentApps).toBe(true);
     });
 
-    it("keeps installment apps out of the two free accounts", () => {
-        expect(fullAccountCaps([app("Cashea"), app("Krece"), bank("VES")], true).accounts).toBe(false);
-        expect(fullAccountCaps([bank("VES"), app("Visa")], true)).toStrictEqual({
+    it("keeps installment apps out of the three free accounts", () => {
+        expect(fullAccountCaps([app("Cashea"), app("Krece"), bank("VES"), bank("USD")], true).accounts).toBe(false);
+        expect(fullAccountCaps([bank("VES"), bank("USD"), app("Visa")], true)).toStrictEqual({
             accounts: true,
             installmentApps: false,
         });
@@ -88,7 +88,13 @@ describe("fullAccountCaps", () => {
 
 const visa = { kind: "liability", name: "Visa" };
 const bothFull = fullAccountCaps(
-    [{ kind: "asset", name: "Checking" }, visa, cashea, { kind: "liability", name: "Klarna" }],
+    [
+        { kind: "asset", name: "Checking" },
+        { kind: "asset", name: "Cash" },
+        visa,
+        cashea,
+        { kind: "liability", name: "Klarna" },
+    ],
     true
 );
 

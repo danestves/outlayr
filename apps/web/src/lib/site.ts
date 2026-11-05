@@ -78,7 +78,7 @@ export function guideUpdated(slug: string): Date {
 export const LEGAL_DAYS = {
     "delete-account": new Date(Date.UTC(2026, 10, 16)),
     privacy: new Date(Date.UTC(2026, 10, 4)),
-    terms: new Date(Date.UTC(2026, 10, 4)),
+    terms: new Date(Date.UTC(2026, 10, 6)),
 } as const;
 
 export function legalDate(document: keyof typeof LEGAL_DAYS, dateLocale: string): string {
