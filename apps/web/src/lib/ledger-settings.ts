@@ -3,7 +3,7 @@ import type { LedgerSettings } from "@outlayr/backend/confect/ledgerView";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createContext, useContext, useMemo } from "react";
 
-import { clockTime, money, moneyParts } from "./ledger";
+import { clockTime, money } from "./ledger";
 import { ledgerCollections } from "./ledger-db";
 
 export const LedgerSettingsContext = createContext<LedgerSettings>(settingsOf([]));
@@ -23,7 +23,6 @@ export function useDisplayFormat() {
             clockTime: (time: string) => clockTime(time, use24HourClock),
             money: (amount: number, currency: string, sign?: "always" | "auto") =>
                 money(amount, currency, sign, showCents),
-            moneyParts: (amount: number, currency: string) => moneyParts(amount, currency, showCents),
         }),
         [showCents, use24HourClock]
     );

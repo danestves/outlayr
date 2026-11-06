@@ -6,12 +6,12 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { LINE_PILL, Muted, SOLID_PILL, Screen } from "@/components/account/parts";
+import { HomePanelPending, HomePending } from "@/components/dashboard/home/home-pending";
 import { signOut } from "@/components/dashboard/shell/account-menu";
 import { DashboardContext, resolveFilters } from "@/components/dashboard/shell/dashboard";
 import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filters";
 import type { FilterPatch } from "@/components/dashboard/shell/filters";
-import { OverviewMain, OverviewPanel } from "@/components/dashboard/shell/overview-screen";
-import { NO_PHOTOS, photoKeys, photoUrlsQuery, usePhotoUrls } from "@/components/dashboard/shell/photos";
+import { photoKeys, photoUrlsQuery, usePhotoUrls } from "@/components/dashboard/shell/photos";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 import { Workspace } from "@/components/dashboard/shell/workspace";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
@@ -63,11 +63,7 @@ function Pending() {
     const { nav } = useIntlayer("dashboard");
     return (
         <DashboardShell>
-            <Workspace
-                main={<OverviewMain overview={undefined} photos={NO_PHOTOS} />}
-                panel={<OverviewPanel overview={undefined} photos={NO_PHOTOS} />}
-                title={nav.dashboard}
-            />
+            <Workspace main={<HomePending />} panel={<HomePanelPending />} title={nav.dashboard} />
         </DashboardShell>
     );
 }

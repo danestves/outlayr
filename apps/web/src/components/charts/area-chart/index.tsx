@@ -71,6 +71,7 @@ export interface AreaChartProps {
     data: readonly ChartDatum[];
     height?: number;
     initialWidth?: number;
+    onSelect?: (key: string) => void;
     surfaceColor?: string;
     xDataKey?: string;
     yDomain?: readonly [number, number];
@@ -101,6 +102,7 @@ function AreaChartRoot({
     data,
     height = 328,
     initialWidth = 640,
+    onSelect,
     surfaceColor = "var(--color-background)",
     xDataKey = "date",
     yDomain,
@@ -259,25 +261,45 @@ function AreaChartRoot({
                     definition={definition}
                     height={height}
                     initialWidth={initialWidth}
+                    onSelect={onSelect ? (point) => point && onSelect(point.datum.key) : undefined}
                 />
             </div>
             {labels ? (
                 <ol className="m-0 mt-2 flex list-none flex-wrap gap-x-3 gap-y-1 p-0 text-xs leading-[15px] @lg:absolute @lg:inset-y-0 @lg:right-0 @lg:mt-0 @lg:block @lg:w-[146px]">
-                    {labelRows.map((row) => (
-                        <li
-                            className="flex items-center gap-1.5 whitespace-nowrap @lg:absolute @lg:inset-x-0 @lg:-translate-y-1/2"
-                            key={row.key}
-                            style={{ opacity: row.opacity, top: row.y }}
-                        >
-                            <span
-                                aria-hidden
-                                className={`w-2 flex-none ${row.kind === "line" ? "h-0.5" : "h-2 rounded-[2px]"}`}
-                                style={{ backgroundColor: row.color }}
-                            />
-                            <span className="min-w-0 flex-1 truncate font-medium">{row.label}</span>
-                            <span className="text-muted-foreground font-mono">{formatLabel(row.value, row.key)}</span>
-                        </li>
-                    ))}
+                    {labelRows.map((row) => {
+                        const content = (
+                            <>
+                                <span
+                                    aria-hidden
+                                    className={`w-2 flex-none ${row.kind === "line" ? "h-0.5" : "h-2 rounded-[2px]"}`}
+                                    style={{ backgroundColor: row.color }}
+                                />
+                                <span className="min-w-0 flex-1 truncate font-medium">{row.label}</span>
+                                <span className="text-muted-foreground font-mono">
+                                    {formatLabel(row.value, row.key)}
+                                </span>
+                            </>
+                        );
+                        return (
+                            <li
+                                className="whitespace-nowrap @lg:absolute @lg:inset-x-0 @lg:-translate-y-1/2"
+                                key={row.key}
+                                style={{ opacity: row.opacity, top: row.y }}
+                            >
+                                {onSelect && row.kind === "area" ? (
+                                    <button
+                                        className="flex w-full cursor-pointer items-center gap-1.5 text-left"
+                                        onClick={() => onSelect(row.key)}
+                                        type="button"
+                                    >
+                                        {content}
+                                    </button>
+                                ) : (
+                                    <div className="flex items-center gap-1.5">{content}</div>
+                                )}
+                            </li>
+                        );
+                    })}
                 </ol>
             ) : null}
             <ChartDataTable
