@@ -5,10 +5,14 @@ import * as Skullet from "skullet";
 
 import { Icon } from "@/components/icon";
 import { authClient } from "@/lib/auth-client";
+import { forgetLedger } from "@/lib/ledger-cache";
+import { announceSessionChange } from "@/lib/session";
 
 export async function signOut() {
     Skullet.forgetShapes();
     await authClient.signOut();
+    announceSessionChange();
+    await forgetLedger();
     window.location.assign("/login");
 }
 

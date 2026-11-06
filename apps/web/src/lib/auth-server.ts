@@ -5,6 +5,9 @@ import { convexUrls } from "./convex";
 let server: ReturnType<typeof convexBetterAuthReactStart> | undefined;
 
 export function authServer() {
-    server ??= convexBetterAuthReactStart(convexUrls());
+    server ??= convexBetterAuthReactStart({
+        ...convexUrls(),
+        jwtCache: { enabled: true, isAuthError: () => false },
+    });
     return server;
 }

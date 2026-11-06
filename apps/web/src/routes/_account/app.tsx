@@ -1,5 +1,5 @@
 import { ledgerGlance } from "@outlayr/backend/confect/ledgerView";
-import { Outlet, createFileRoute, redirect, useNavigate, useRouter } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -11,36 +11,45 @@ import { signOut } from "@/components/dashboard/shell/account-menu";
 import { DashboardContext, useFilters } from "@/components/dashboard/shell/dashboard";
 import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filters";
 import type { FilterPatch } from "@/components/dashboard/shell/filters";
-import { photoKeys, photoUrlsQuery, usePhotoUrls } from "@/components/dashboard/shell/photos";
+import { mintedPhotos, photoKeys, seedPhotos, usePhotoUrls } from "@/components/dashboard/shell/photos";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 import { Workspace } from "@/components/dashboard/shell/workspace";
+import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
-import { ledgerBooks, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
+import { dropLedger, restoreLedger, saveLedger } from "@/lib/ledger-cache";
+import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
+import { onSessionChange, userOf } from "@/lib/session";
 
 export const Route = createFileRoute("/_account/app")({
-    beforeLoad: ({ context, location }) => {
-        if (!context.token) {
-            throw redirect({ search: { redirect: location.href }, to: "/login" });
-        }
-    },
     component: App,
     errorComponent: NotSynced,
     validateSearch: dashboardSearch,
+    ssr: false,
+    staleTime: Number.POSITIVE_INFINITY,
     loader: async ({ context }) => {
         const asOf = Date.now();
+        context.session.token = context.token;
+        const userId = context.token ? userOf(context.token) : undefined;
+        const idle = context.dbClient.collection(ledgerCollections.transactions).status === "idle";
+        const restored = idle && userId !== undefined ? await restoreLedger(context.dbClient, userId) : undefined;
+        const settled = preloadLedger(context.dbClient).then(() => true);
+        if (restored) {
+            seedPhotos(context.queryClient, restored.photos);
+            return { asOf, settled, synced: true, userId };
+        }
         try {
-            await preloadLedger(context.dbClient);
-            const overview = ledgerGlance(ledgerBooks(context.dbClient), asOf);
-            await context.queryClient.prefetchQuery(photoUrlsQuery(context.convexQueryClient, photoKeys(overview)));
+            await settled;
         } catch (error) {
             if (error instanceof Error && proRequired(error)) {
-                return { asOf, synced: false };
+                return { asOf, settled, synced: false, userId };
             }
             throw error;
         }
-        return { asOf, synced: true };
+        return { asOf, settled, synced: true, userId };
     },
     pendingComponent: Pending,
+    pendingMinMs: 0,
+    pendingMs: 0,
     head: () => ({ meta: [{ title: "Outlayr" }] }),
 });
 
@@ -61,9 +70,14 @@ function App() {
 
 function Pending() {
     const { nav } = useIntlayer("dashboard");
+    const onInsights = useLocation({ select: (location) => location.pathname.endsWith("/insights") });
     return (
         <DashboardShell>
-            <Workspace main={<HomePending />} panel={<HomePanelPending />} title={nav.dashboard} />
+            <Workspace
+                main={<HomePending />}
+                panel={<HomePanelPending />}
+                title={onInsights ? nav.insights : nav.dashboard}
+            />
         </DashboardShell>
     );
 }
@@ -94,6 +108,33 @@ function useTurnover(nextChangeAt: number, advance: (asOf: number) => void) {
     }, [advance, nextChangeAt]);
 }
 
+const SAVE_DELAY_MS = 1000;
+
+function useLedgerCopy(overview: Overview, photos: PhotoUrls, settled: Promise<boolean>, userId: string | undefined) {
+    const { dbClient, queryClient } = Route.useRouteContext();
+    const router = useRouter();
+    const [synced, setSynced] = useState(false);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- other tabs are an external system.
+    useEffect(() => onSessionChange(() => window.location.reload()), []);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- the restored copy shows before Convex answers, so a refusal arrives after the first paint.
+    useEffect(() => {
+        settled.then(setSynced).catch(async () => {
+            await dropLedger();
+            await router.invalidate();
+        });
+    }, [router, settled]);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- IndexedDB is an external system.
+    useEffect(() => {
+        if (!synced || userId === undefined) {
+            return;
+        }
+        const save = () => saveLedger(dbClient, mintedPhotos(queryClient, photoKeys(overview)), userId);
+        const timer = setTimeout(save, SAVE_DELAY_MS);
+        return () => clearTimeout(timer);
+        // oxlint-disable-next-line react/exhaustive-effect-dependencies -- newly minted photos re-arm the save.
+    }, [dbClient, overview, photos, queryClient, synced, userId]);
+}
+
 function LiveDashboard({ children }: { children: ReactNode }) {
     const loaded = Route.useLoaderData();
     const search = Route.useSearch();
@@ -104,6 +145,7 @@ function LiveDashboard({ children }: { children: ReactNode }) {
     useTurnover(overview.nextChangeAt, setAsOf);
     const ledger = useMemo(() => prepareLedger(books, asOf), [books, asOf]);
     const photos = usePhotoUrls(overview);
+    useLedgerCopy(overview, photos, loaded.settled, loaded.userId);
     const filters = useFilters(search, ledger);
     const dashboard = useMemo(
         () => ({
@@ -121,16 +163,20 @@ function LiveDashboard({ children }: { children: ReactNode }) {
 
 const proRequired = (error: Error) => error.message.includes("Pro is required");
 
+async function startOver() {
+    await dropLedger();
+    window.location.reload();
+}
+
 function NotSynced({ error }: ErrorComponentProps) {
     const router = useRouter();
-    const retry = () => router.invalidate();
     if (error instanceof Error && proRequired(error)) {
-        return <TurnOnSync retry={retry} />;
+        return <TurnOnSync retry={() => router.invalidate()} />;
     }
     return (
         <Screen title="Could not load your ledger">
             <Muted>Try again in a moment.</Muted>
-            <button className={SOLID_PILL} onClick={retry} type="button">
+            <button className={SOLID_PILL} onClick={startOver} type="button">
                 Try again
             </button>
         </Screen>

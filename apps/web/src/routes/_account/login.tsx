@@ -3,6 +3,7 @@ import * as Schema from "effect/Schema";
 
 import { SignInFlow } from "@/components/account/sign-in-flow";
 import { safeRedirect } from "@/lib/account";
+import { announceSessionChange } from "@/lib/session";
 
 export const Route = createFileRoute("/_account/login")({
     beforeLoad: ({ context, search }) => {
@@ -17,5 +18,9 @@ export const Route = createFileRoute("/_account/login")({
 
 function Login() {
     const target = safeRedirect(Route.useSearch().redirect);
-    return <SignInFlow onDone={() => window.location.assign(target)} target={target} />;
+    const finish = () => {
+        announceSessionChange();
+        window.location.assign(target);
+    };
+    return <SignInFlow onDone={finish} target={target} />;
 }
