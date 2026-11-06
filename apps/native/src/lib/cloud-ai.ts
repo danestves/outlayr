@@ -2,6 +2,8 @@ import { CsvImportResult } from "@outlayr/backend/confect/csvImport.spec";
 import type { CsvImportStatus, LabelSuggestion } from "@outlayr/backend/confect/csvImport.spec";
 import { InstallmentScanResult } from "@outlayr/backend/confect/installmentScan.spec";
 import type { InstallmentPlanDraft as InstallmentPlanDraftSchema } from "@outlayr/backend/confect/installmentScan.spec";
+import { PDF_CONTENT_TYPE, PdfImportResult, UploadTicket } from "@outlayr/backend/confect/pdfImport.spec";
+import type { PdfImportStatus, StatementRow } from "@outlayr/backend/confect/pdfImport.spec";
 import { ScanResult } from "@outlayr/backend/confect/receiptScan.spec";
 import type {
     ReceiptDraft as ReceiptDraftSchema,
@@ -13,10 +15,13 @@ import { SpeakResult, StartThreadResult } from "@outlayr/backend/confect/voiceEn
 import type { SpeakStatus } from "@outlayr/backend/confect/voiceEntry.spec";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import type { CloudError } from "./cloud-error";
+import { CloudError } from "./cloud-error";
 import { aiConsentArgs, cloudAction, cloudMutation } from "./convex";
 import type { CategoryBranch } from "./convex";
 
@@ -124,6 +129,71 @@ export function csvImportTransport(): CsvImportFn {
             )
         );
 }
+
+export type { StatementRow } from "@outlayr/backend/confect/pdfImport.spec";
+
+export interface PdfImportRequest {
+    bytes: Uint8Array;
+    categoryTree: CategoryBranch[];
+    groundedLookup: boolean;
+    regionCode?: string;
+    today: string;
+}
+
+export type PdfImportRefusal = Exclude<PdfImportStatus, "ok">;
+
+export type PdfImportOutcome =
+    | {
+          readonly complete: boolean;
+          readonly ok: true;
+          readonly rows: readonly StatementRow[];
+          readonly suggestions: readonly LabelSuggestion[];
+      }
+    | { readonly ok: false; readonly reason: PdfImportRefusal };
+
+const decodeUploadTicket = Schema.decodeUnknownOption(UploadTicket);
+const decodePdfImportResult = Schema.decodeUnknownOption(PdfImportResult);
+const decodeStorageReceipt = HttpIncomingMessage.schemaBodyJson(Schema.Struct({ storageId: Schema.String }));
+
+const uploadFailed = (cause: Error) => new CloudError({ cause, kind: "upload", path: "pdfImport" });
+
+function pdfImportOutcome({ degraded, rows, status, suggestions }: PdfImportResult): PdfImportOutcome {
+    if (status !== "ok") {
+        return { ok: false, reason: status };
+    }
+    return rows === null
+        ? INVALID_RESPONSE
+        : { complete: degraded !== true, ok: true, rows, suggestions: suggestions ?? [] };
+}
+
+export const pdfImport = Effect.fn("Cloud.pdfImport")(function* pdfImport({ bytes, ...args }: PdfImportRequest) {
+    const client = yield* HttpClient.HttpClient;
+    const ticket = Option.getOrNull(decodeUploadTicket(yield* cloudMutation(api.pdfImport.requestUpload, {})));
+    if (ticket === null) {
+        return INVALID_RESPONSE;
+    }
+    if (ticket.status !== "ok") {
+        return { ok: false, reason: ticket.status } as const;
+    }
+    if (ticket.url === null) {
+        return INVALID_RESPONSE;
+    }
+    const uploaded = yield* client
+        .execute(HttpClientRequest.post(ticket.url).pipe(HttpClientRequest.bodyUint8Array(bytes, PDF_CONTENT_TYPE)))
+        .pipe(
+            Effect.flatMap(decodeStorageReceipt),
+            Effect.catchTags({
+                HttpClientError: (cause) => Effect.fail(uploadFailed(cause)),
+                SchemaError: (cause) => Effect.fail(uploadFailed(cause)),
+            })
+        );
+    const reply = yield* cloudAction<unknown, unknown>("pdfImport:extract", {
+        ...args,
+        ...aiConsentArgs(),
+        storageId: uploaded.storageId,
+    });
+    return Option.match(decodePdfImportResult(reply), { onNone: () => INVALID_RESPONSE, onSome: pdfImportOutcome });
+});
 
 export const VOICE_TURNS_QUERY = api.voiceEntry.listTurns;
 

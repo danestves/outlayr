@@ -30,6 +30,7 @@
         "convex-revenuecat": "^0.3.2",
         "effect": "catalog:",
         "jose": "^6.2.13",
+        "unpdf": "1.9.1",
         "zod": "catalog:"
     },
     "devDependencies": {

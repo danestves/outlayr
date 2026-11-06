@@ -104,6 +104,23 @@ const aiConsent = {
             fr: "La photo, plus les mêmes données que la saisie vocale et votre région",
             pt: "A foto, mais os mesmos dados do ditado e a sua região",
         }),
+        "aiConsent.statement": t({
+            en: "Bank statements",
+            es: "Estados de cuenta",
+            "es-ES": "Extractos bancarios",
+            fr: "Relevés bancaires",
+            pt: "Extratos bancários",
+        }),
+        "aiConsent.statementSends": t({
+            en: "The text of a PDF statement you choose to import, with long account and card numbers masked. We delete the file after reading it",
+            es: "El texto del PDF de estado de cuenta que elijas importar, con los números largos de cuenta y tarjeta ocultos. Borramos el archivo después de leerlo",
+            "es-ES":
+                "El texto del extracto en PDF que elijas importar, con los números largos de cuenta y tarjeta ocultos. Borramos el archivo después de leerlo",
+            fr: "Le texte du relevé PDF que vous choisissez d'importer, avec les longs numéros de compte et de carte masqués. Nous supprimons le fichier après lecture",
+            pt: "O texto do extrato em PDF que você escolher importar, com os números longos de conta e cartão ocultos. Apagamos o arquivo depois de ler",
+            "pt-PT":
+                "O texto do extrato em PDF que escolher importar, com os números longos de conta e cartão ocultos. Apagamos o ficheiro depois de o ler",
+        }),
         "aiConsent.suggestions": t({
             en: "Category suggestions",
             es: "Sugerencias de categoría",

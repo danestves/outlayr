@@ -22,10 +22,10 @@ import {
     exportFileName,
     exportTransactionsCsv,
     guessMapping,
-    lastCsvImport,
+    lastFileImport,
     parseImportFile,
     splitHeaderAndRows,
-    undoCsvImport,
+    undoFileImport,
     uniqueCategoryValues,
 } from "./transfer-core";
 
@@ -936,7 +936,7 @@ describe("applyImport", () => {
     });
 });
 
-describe("undoCsvImport", () => {
+describe("undoFileImport", () => {
     let db: Database;
     beforeEach(async () => {
         db = transactionalDatabase();
@@ -956,15 +956,40 @@ describe("undoCsvImport", () => {
     const liveNotes = async () =>
         (await db.select().from(transactions).where(isNull(transactions.deletedAt))).map((row) => row.note).toSorted();
 
+    it("keeps a statement's undo apart from a CSV's, so each takes back only its own entries", async () => {
+        await importRows();
+        await Effect.runPromise(
+            applyImport(
+                db,
+                buildImportPlan(
+                    [["Food", "Statement row", "2026-07-25", "9"]],
+                    MAPPING,
+                    "yyyy-MM-dd",
+                    ".",
+                    links,
+                    income,
+                    true
+                ),
+                "pdf"
+            )
+        );
+
+        await Effect.runPromise(undoFileImport(db, "pdf"));
+
+        const notes = await liveNotes();
+        expect(notes).not.toContain("Statement row");
+        expect(notes).toContain("Bakery");
+    });
+
     it("removes the imported entries and the categories it created, and nothing that was already there", async () => {
         await importRows();
-        const counts = await Effect.runPromise(undoCsvImport(db));
+        const counts = await Effect.runPromise(undoFileImport(db));
 
         expect(counts).toMatchObject({ categories: 1, transactions: 3 });
         await expect(liveNotes()).resolves.toStrictEqual(["Bakery, twice", "Salary"]);
         const live = await db.select().from(categories).where(isNull(categories.deletedAt));
         expect(live.map((row) => row.name).toSorted()).toStrictEqual(["Groceries", "Paycheck"]);
-        await expect(Effect.runPromise(lastCsvImport(db))).resolves.toBeNull();
+        await expect(Effect.runPromise(lastFileImport(db))).resolves.toBeNull();
     });
 
     it("keeps a created category the user has since logged an entry in", async () => {
@@ -982,7 +1007,7 @@ describe("undoCsvImport", () => {
             })
         );
 
-        const counts = await Effect.runPromise(undoCsvImport(db));
+        const counts = await Effect.runPromise(undoFileImport(db));
 
         expect(counts).toMatchObject({ categories: 0, transactions: 3 });
         await expect(liveNotes()).resolves.toStrictEqual(["Bakery, twice", "Salary", "Taxi"]);
@@ -1001,14 +1026,14 @@ describe("undoCsvImport", () => {
             budgetsRepo.createBudget(db, { amount: 200, categoryId: travel?.id ?? "", type: BUDGET_TYPE.month })
         );
 
-        const counts = await Effect.runPromise(undoCsvImport(db));
+        const counts = await Effect.runPromise(undoFileImport(db));
 
         expect(counts).toMatchObject({ categories: 0 });
     });
 
     it("does nothing once the import has been undone", async () => {
         await importRows();
-        await Effect.runPromise(undoCsvImport(db));
-        await expect(Effect.runPromise(undoCsvImport(db))).resolves.toMatchObject({ categories: 0, transactions: 0 });
+        await Effect.runPromise(undoFileImport(db));
+        await expect(Effect.runPromise(undoFileImport(db))).resolves.toMatchObject({ categories: 0, transactions: 0 });
     });
 });

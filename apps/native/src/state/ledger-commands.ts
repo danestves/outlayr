@@ -3,8 +3,8 @@ import * as Effect from "effect/Effect";
 import type { LastImport } from "@/data/last-import";
 import { undoMoneyManagerImport } from "@/data/money-manager-import-core";
 import { transactionsRepo } from "@/data/transactions-core";
-import { applyImport, undoCsvImport } from "@/data/transfer-core";
-import type { ImportPlan } from "@/data/transfer-core";
+import { applyImport, undoFileImport } from "@/data/transfer-core";
+import type { FileImportKind, ImportPlan } from "@/data/transfer-core";
 import type { Database } from "@/db/client";
 import { countBucket } from "@/domain/count-bucket";
 import { attachImportLogos } from "@/lib/import-logo-attach";
@@ -20,19 +20,25 @@ export const restoreTransactionCommand = ledgerCommand("restore-transaction", (i
     transactionsRepo.restore(input.db, input.id)
 );
 
-export const importWithLogosCommand = ledgerCommand("import-with-logos", (input: { db: Database; plan: ImportPlan }) =>
-    attachImportLogos(input.plan.entries).pipe(
-        Effect.catchCause(() => Effect.succeed(input.plan.entries)),
-        Effect.flatMap((entries) => applyImport(input.db, { ...input.plan, entries })),
-        Effect.tap((count) =>
-            Effect.sync(() => posthog?.capture("import_finished", { rows: countBucket(count), source: "csv" }))
+export const importWithLogosCommand = ledgerCommand(
+    "import-with-logos",
+    (input: { db: Database; kind?: FileImportKind; plan: ImportPlan }) =>
+        attachImportLogos(input.plan.entries).pipe(
+            Effect.catchCause(() => Effect.succeed(input.plan.entries)),
+            Effect.flatMap((entries) => applyImport(input.db, { ...input.plan, entries }, input.kind)),
+            Effect.tap((count) =>
+                Effect.sync(() =>
+                    posthog?.capture("import_finished", { rows: countBucket(count), source: input.kind ?? "csv" })
+                )
+            )
         )
-    )
 );
 
 export const undoImportCommand = ledgerCommand(
     "undo-import",
     Effect.fn("Ledger.undoImport")(function* undoImport(input: { db: Database; kind: LastImport["kind"] }) {
-        return input.kind === "csv" ? yield* undoCsvImport(input.db) : yield* undoMoneyManagerImport(input.db);
+        return input.kind === "moneyManager"
+            ? yield* undoMoneyManagerImport(input.db)
+            : yield* undoFileImport(input.db, input.kind);
     })
 );

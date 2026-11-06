@@ -126,6 +126,7 @@ import PaintBoardSolid from "@hugeicons-pro/core-solid-rounded/PaintBoardIcon";
 import PaintBrush01Solid from "@hugeicons-pro/core-solid-rounded/PaintBrush01Icon";
 import ParkingAreaSquareSolid from "@hugeicons-pro/core-solid-rounded/ParkingAreaSquareIcon";
 import PartySolid from "@hugeicons-pro/core-solid-rounded/PartyIcon";
+import Pdf01Solid from "@hugeicons-pro/core-solid-rounded/Pdf01Icon";
 import PencilEdit01Solid from "@hugeicons-pro/core-solid-rounded/PencilEdit01Icon";
 import PercentCircleSolid from "@hugeicons-pro/core-solid-rounded/PercentCircleIcon";
 import PerfumeSolid from "@hugeicons-pro/core-solid-rounded/PerfumeIcon";
@@ -311,6 +312,7 @@ import PaintBoardIcon from "@hugeicons-pro/core-stroke-rounded/PaintBoardIcon";
 import PaintBrush01Icon from "@hugeicons-pro/core-stroke-rounded/PaintBrush01Icon";
 import ParkingAreaSquareIcon from "@hugeicons-pro/core-stroke-rounded/ParkingAreaSquareIcon";
 import PartyIcon from "@hugeicons-pro/core-stroke-rounded/PartyIcon";
+import Pdf01Icon from "@hugeicons-pro/core-stroke-rounded/Pdf01Icon";
 import PencilEdit01Icon from "@hugeicons-pro/core-stroke-rounded/PencilEdit01Icon";
 import PercentCircleIcon from "@hugeicons-pro/core-stroke-rounded/PercentCircleIcon";
 import PerfumeIcon from "@hugeicons-pro/core-stroke-rounded/PerfumeIcon";
@@ -480,6 +482,7 @@ const REGISTRY = new Map<string, IconPair>([
     ["Injection", { solid: InjectionSolid, stroke: InjectionIcon }],
     ["Invoice01", { solid: Invoice01Solid, stroke: Invoice01Icon }],
     ["Invoice03", { solid: Invoice03Solid, stroke: Invoice03Icon }],
+    ["Pdf01", { solid: Pdf01Solid, stroke: Pdf01Icon }],
     ["Joystick01", { solid: Joystick01Solid, stroke: Joystick01Icon }],
     ["Key01", { solid: Key01Solid, stroke: Key01Icon }],
     ["Kid", { solid: KidSolid, stroke: KidIcon }],

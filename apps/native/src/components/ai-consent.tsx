@@ -29,6 +29,7 @@ const FEATURES = [
     { sends: "aiConsent.voiceSends", title: "aiConsent.voice" },
     { sends: "aiConsent.scanSends", title: "aiConsent.scan" },
     { sends: "aiConsent.planScanSends", title: "aiConsent.planScan" },
+    { sends: "aiConsent.statementSends", title: "aiConsent.statement" },
     { sends: "aiConsent.suggestionsSends", title: "aiConsent.suggestions" },
     { sends: "aiConsent.notificationsSends", title: "aiConsent.notifications" },
     { sends: "aiConsent.lookupSends", title: "aiConsent.lookup" },

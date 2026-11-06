@@ -51,6 +51,7 @@ export const META_KEYS = {
     syncRestoresReread: "syncRestoresReread",
     /** Breaks same-millisecond write ties, so it must stay device-local or every device gets the same one. */
     syncDeviceId: "syncDeviceId",
+    pdfImport: "pdfImport",
     /** Comma-separated table names; deleted when the re-read completes. */
     syncReread: "syncReread",
     /** The outbox triggers read it, so a ledger that never syncs never queues a row. */

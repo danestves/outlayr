@@ -4,6 +4,7 @@ import type { CategoryOverride, ParsedImportFile } from "@/data/transfer-core";
 
 import type { MappingDraft, MappingGap, ResolvedMapping } from "./import-mapping";
 import type { ImportSourceId } from "./import-sources";
+import type { StatementSuggestions } from "./import-statement";
 
 export type ImportStep = "source" | "file" | "resolve" | "review" | "done";
 export type ResolutionOutcome = "applied" | "unavailable" | "declined";
@@ -48,6 +49,8 @@ export interface ImportFlowState {
     resolution: ImportResolution | null;
     resolved: ResolvedMapping | null;
     sourceId: ImportSourceId | null;
+    /** What the server already classified while reading a PDF statement; null for every other source. */
+    statement: StatementSuggestions | null;
 }
 
 export const INITIAL_IMPORT_FLOW_STATE: ImportFlowState = {
@@ -62,6 +65,7 @@ export const INITIAL_IMPORT_FLOW_STATE: ImportFlowState = {
     resolution: null,
     resolved: null,
     sourceId: null,
+    statement: null,
 };
 
 export type ImportFlowEvent =
@@ -73,6 +77,7 @@ export type ImportFlowEvent =
           draft: MappingDraft;
           resolved: ResolvedMapping | null;
           gaps: readonly MappingGap[];
+          statement?: StatementSuggestions;
       }
     | {
           type: "resolutionSettled";
@@ -118,6 +123,7 @@ export function importFlowReducer(state: ImportFlowState, event: ImportFlowEvent
                 parsed: event.parsed,
                 resolution: null,
                 resolved: event.resolved,
+                statement: event.statement ?? null,
             };
         }
 

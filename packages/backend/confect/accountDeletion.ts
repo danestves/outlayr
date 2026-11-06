@@ -24,6 +24,7 @@ export const USAGE_BY_TOKEN = [
     "enrichmentPerUser",
     "groundedPerUser",
     "notificationReadPerUser",
+    "pdfImportPerUser",
     "receiptScanPerUser",
     "revenuecatSync",
     "voiceEntryPerUser",

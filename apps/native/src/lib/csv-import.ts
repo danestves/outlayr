@@ -14,6 +14,7 @@ import { buildClassificationPayload, scrubLabel } from "@/domain/import-ai-paylo
 import type { ResolutionOutcome, UnavailableReason } from "@/domain/import-flow";
 import type { MappingDraft } from "@/domain/import-mapping";
 import { cachedLabelEnrichment } from "@/domain/import-review-identity";
+import type { StatementSuggestions } from "@/domain/import-statement";
 import { resolveMerchant } from "@/domain/merchant-resolver";
 import { csvImportTransport } from "@/lib/cloud-ai";
 import type { CsvImportFn, CsvImportRefusal, LabelSuggestion } from "@/lib/cloud-ai";
@@ -48,6 +49,7 @@ export interface ResolveRequest {
     labels: readonly string[];
     parsed: ParsedImportFile;
     regionCode: string | undefined;
+    statement?: StatementSuggestions | null;
 }
 
 export type CsvImportStage = "idle" | "matching" | "asking" | "settled";
@@ -253,7 +255,16 @@ const resolveImport = Effect.fn("CsvImport.resolve")(function* resolveImport(
         type: "matched",
     });
 
-    const stillUnresolved = linkCachedLabels(unresolved, request.categoryIdByKey, resolvedLinks, fromModelSet);
+    const uncached = linkCachedLabels(unresolved, request.categoryIdByKey, resolvedLinks, fromModelSet);
+    if (request.statement != null) {
+        const asPrinted = new Map(uncached.map((label) => [label, [label]]));
+        linkSuggestions(request.statement.suggestions, request.categoryIdByKey, asPrinted, resolvedLinks, fromModelSet);
+        // The server asked about every label already, so what it left unlinked is not worth a second model call.
+        if (request.statement.complete) {
+            return settleWith(resolvedLinks, fromModelSet, "applied", null);
+        }
+    }
+    const stillUnresolved = uncached.filter((label) => !resolvedLinks.has(categoryKey(label)));
     const rawByScrubbed = groupByScrubbedLabel(stillUnresolved);
 
     const domainUnknown = domainless.filter((label) => {
