@@ -12,6 +12,8 @@ import { NO_PHOTOS } from "./photos";
 const HOUR_MS = 3_600_000;
 const MONTH_MS = 30 * 24 * HOUR_MS;
 const RECENT_ENTRIES = 25;
+// Tight enough that every recent entry stays in the current period, even just after a month turns.
+const RECENT_GAP_MS = 1000;
 const PAST_MONTHS = 5;
 
 const envelope = <Table extends TableNames>(localId: string, seq: number) => ({
@@ -80,15 +82,16 @@ const entry = (date: number, seq: number, fields: { amount: number; income?: boo
 
 function sampleBooks(now: number): LedgerBooks {
     const recent = Array.from({ length: RECENT_ENTRIES }, (_, index) =>
-        entry(now - (index + 1) * HOUR_MS, index, { amount: 40 + index * 3 })
+        entry(now - index * RECENT_GAP_MS, index, { amount: 40 + index * 3 })
     );
     const past = Array.from({ length: PAST_MONTHS }, (_, index) =>
         entry(now - (index + 1) * MONTH_MS, RECENT_ENTRIES + index, { amount: 600 })
     );
-    const income = entry(now - HOUR_MS, RECENT_ENTRIES + PAST_MONTHS, { amount: 3000, income: true });
+    const income = entry(now, RECENT_ENTRIES + PAST_MONTHS, { amount: 3000, income: true });
     return {
         accounts: ACCOUNTS,
-        appMeta: [],
+        // Without a stored zone the ledger infers one from each row's `day`, which these rows do not model.
+        appMeta: [{ key: "timeZone", value: "UTC" }],
         budgets: [],
         categories: CATEGORIES,
         exchangeRates: [],

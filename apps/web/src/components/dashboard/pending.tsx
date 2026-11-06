@@ -1,6 +1,8 @@
 import { useLocation } from "@tanstack/react-router";
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { useIntlayer } from "react-intlayer";
+
+import { useTimeout } from "@/lib/timeout";
 
 import { Workspace } from "./shell/workspace";
 
@@ -18,11 +20,7 @@ const InsightsPending = lazy(async () => {
 // A restored ledger lands inside the hold, so a reload never loads, renders or measures the skeleton.
 function useHeld() {
     const [held, setHeld] = useState(true);
-    // oxlint-disable-next-line outlayr/react-effect-budget -- the clock is an external system.
-    useEffect(() => {
-        const timer = setTimeout(() => setHeld(false), SKELETON_HOLD_MS);
-        return () => clearTimeout(timer);
-    }, []);
+    useTimeout(() => setHeld(false), SKELETON_HOLD_MS, undefined);
     return held;
 }
 
