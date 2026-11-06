@@ -162,5 +162,9 @@ export function netWorthHistory(ledger: Ledger, period: Period, scope: Scope, mo
         scope,
         periods.map((each) => Math.min(ledger.now, endOfDay(ledger, each.to)))
     );
-    return periods.map((each, index) => ({ date: lastDayOf(ledger, each), netWorth: worth[index] ?? 0 }));
+    return periods.map((each, index) => ({
+        date: lastDayOf(ledger, each),
+        key: each.key,
+        netWorth: worth[index] ?? 0,
+    }));
 }

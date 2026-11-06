@@ -302,6 +302,18 @@ describe("budgets on any category", () => {
     });
 });
 
+describe("net worth history labels", () => {
+    it("names each point by the period it closes, as the monthly bars do when the month starts on the 25th", () => {
+        const payday = prepareLedger(books({ appMeta: [...caracas, { key: "firstDayOfMonth", value: "25" }] }), NOW);
+        const history = netWorthHistory(payday, periodOf("2026-09", 25), ALL);
+
+        expect(history.slice(-2).map(({ date, key }) => [date, key])).toStrictEqual([
+            ["2026-09-24", "2026-08"],
+            ["2026-10-20", "2026-09"],
+        ]);
+    });
+});
+
 describe("deleted categories", () => {
     const filed = (deleted: string) =>
         prepareLedger(

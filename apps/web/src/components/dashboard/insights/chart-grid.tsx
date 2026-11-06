@@ -181,7 +181,7 @@ export function ChartGrid({ model }: { model: InsightsModel }) {
                     />
                     <LineChart.Grid {...GRID} />
                     <LineChart.Tooltip formatValue={fmt.amount} formatX={(datum) => fmt.day(String(datum.date))} />
-                    <LineChart.XAxis format={(datum) => fmt.month(String(datum.date).slice(0, 7))} ticks={X_TICKS} />
+                    <LineChart.XAxis format={(datum) => fmt.month(String(datum.key))} ticks={X_TICKS} />
                     <LineChart.YAxis format={fmt.compact} ticks={4} />
                 </LineChart>
             </Cell>
