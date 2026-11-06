@@ -1,18 +1,18 @@
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
-import { Outlet, createFileRoute } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
+import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 
 import { authClient } from "@/lib/auth-client";
-import { authServer } from "@/lib/auth-server";
 import { convexClient } from "@/lib/convex";
+import { currentToken } from "@/lib/session";
 
-const sessionToken = createServerFn({ method: "GET" }).handler(async () => (await authServer().getToken()) ?? null);
+const IN_APP = /^\/app(?:\/|$)/u;
 
 export const Route = createFileRoute("/_account")({
-    beforeLoad: async ({ context }) => {
-        const token = await sessionToken();
-        if (token) {
-            context.convexQueryClient?.serverHttpClient?.setAuth(token);
+    beforeLoad: async ({ context, location }) => {
+        const token = await currentToken(context.session);
+        // Here and not on /app, which never runs on the server: a signed-out visitor gets a real redirect.
+        if (!token && IN_APP.test(location.pathname)) {
+            throw redirect({ search: { redirect: location.href }, to: "/login" });
         }
         return { token };
     },

@@ -21,6 +21,7 @@ import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
 import { startMotion } from "@/lib/motion";
 import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } from "@/lib/seo";
+import type { Session } from "@/lib/session";
 import { COMPANY, FOUNDER, SITE_URL, SOURCE_URL, SUPPORT_EMAIL, X_URL } from "@/lib/site";
 import { THEME_SCRIPT } from "@/lib/theme";
 
@@ -105,6 +106,7 @@ export const Route = createRootRouteWithContext<{
     convexQueryClient: ConvexQueryClient | undefined;
     dbClient: DbClient;
     queryClient: QueryClient;
+    session: Session;
 }>()({
     head: ({ matches }) => {
         const leaf = matches.at(-1);

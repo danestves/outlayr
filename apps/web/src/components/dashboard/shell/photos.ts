@@ -1,11 +1,13 @@
 import type { ConvexQueryClient } from "@convex-dev/react-query";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { keepPreviousData, queryOptions, useQuery } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
 import { useRouteContext } from "@tanstack/react-router";
 
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 
 const PHOTO_REMINT_MS = 50 * 60_000;
+const PHOTO_URLS = "photoUrls";
 
 export const NO_PHOTOS: PhotoUrls = new Map();
 
@@ -21,16 +23,35 @@ export const photoUrlsQuery = (convex: ConvexQueryClient | undefined, keys: read
     queryOptions({
         enabled: Boolean(convex) && keys.length > 0,
         queryFn: async () => {
-            const client = convex?.serverHttpClient ?? convex?.convexClient;
-            if (!client) {
+            if (!convex) {
                 return [];
             }
-            return client.mutation(api.photos.readUrls, { keys: [...keys] });
+            return convex.convexClient.mutation(api.photos.readUrls, { keys: [...keys] });
         },
-        queryKey: ["photoUrls", keys],
+        queryKey: [PHOTO_URLS, keys],
         refetchInterval: PHOTO_REMINT_MS,
         staleTime: PHOTO_REMINT_MS,
     });
+
+export interface MintedPhotos {
+    keys: readonly string[];
+    minted: readonly { key: string; url: string }[];
+    mintedAt: number;
+}
+
+export function mintedPhotos(client: QueryClient, keys: readonly string[]): MintedPhotos | undefined {
+    const { queryKey } = photoUrlsQuery(undefined, keys);
+    const minted = client.getQueryData(queryKey);
+    return minted && { keys, minted, mintedAt: client.getQueryState(queryKey)?.dataUpdatedAt ?? 0 };
+}
+
+export function seedPhotos(client: QueryClient, photos: MintedPhotos | undefined) {
+    if (photos && Date.now() - photos.mintedAt < PHOTO_REMINT_MS) {
+        client.setQueryData(photoUrlsQuery(undefined, photos.keys).queryKey, [...photos.minted], {
+            updatedAt: photos.mintedAt,
+        });
+    }
+}
 
 export const toPhotoUrls = (minted: readonly { key: string; url: string }[]): PhotoUrls =>
     new Map(minted.map((photo) => [photo.key, photo.url]));

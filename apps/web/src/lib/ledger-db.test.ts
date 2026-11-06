@@ -1,17 +1,18 @@
+import type { ConvexCollectionClient } from "@tanstack/convex-db-collection";
 import { DbClient } from "@tanstack/react-db";
-import type { ConvexHttpClient } from "convex/browser";
 import { getFunctionName } from "convex/server";
 import { describe, expect, it } from "vite-plus/test";
 
-import { ledgerDependencies, snapshotClient } from "./db";
+import { ledgerDependencies } from "./db";
+import { LEDGER_CACHE_VERSION, snapshotOf, usableSnapshot } from "./ledger-cache";
 import { ledgerBooks, preloadLedger } from "./ledger-db";
 
+const row = (id: string) => ({ _id: id, note: `entry ${id}` });
 const ROWS = 2500;
 
-const entries = Array.from({ length: ROWS }, (_, index) => ({ _id: `t${index}`, note: `entry ${index}` }));
+type Reply = (name: string, args: Record<string, unknown>) => unknown;
 
-const consistentQuery = async (query: Parameters<typeof getFunctionName>[0], args: Record<string, unknown>) => {
-    const name = getFunctionName(query);
+const pagesOf = (rows: readonly ReturnType<typeof row>[]) => (name: string, args: Record<string, unknown>) => {
     if (name !== "ledger:transactions") {
         return name === "ledger:transfers" ? { continueCursor: "", isDone: true, page: [] } : [];
     }
@@ -21,42 +22,66 @@ const consistentQuery = async (query: Parameters<typeof getFunctionName>[0], arg
         numItems: number;
     };
     const start = Number(cursor ?? 0);
-    const end = endCursor === undefined ? Math.min(start + numItems, ROWS) : Number(endCursor);
-    return { continueCursor: String(end), isDone: end >= ROWS, page: entries.slice(start, end) };
+    const end = endCursor === undefined ? Math.min(start + numItems, rows.length) : Number(endCursor);
+    return { continueCursor: String(end), isDone: end >= rows.length, page: rows.slice(start, end) };
 };
 
-const fakeHttp = { consistentQuery } as unknown as ConvexHttpClient;
+const fakeConvex = (reply: Reply) =>
+    ({
+        onUpdate: (query, args, callback) => {
+            let current: unknown;
+            queueMicrotask(() => {
+                current = reply(getFunctionName(query), args as Record<string, unknown>);
+                callback(current as never);
+            });
+            return Object.assign(() => undefined, {
+                getCurrentValue: () => current as never,
+                unsubscribe: () => undefined,
+            });
+        },
+    }) satisfies ConvexCollectionClient;
 
-describe("snapshotClient", () => {
-    it("loads every page of a paginated ledger table for the server render", async () => {
-        const db = new DbClient(ledgerDependencies(snapshotClient(fakeHttp)));
+const silentConvex = {
+    onUpdate: () => Object.assign(() => undefined, { getCurrentValue: () => undefined, unsubscribe: () => undefined }),
+} satisfies ConvexCollectionClient;
 
-        await preloadLedger(db);
+const hydrated = async (rows: readonly ReturnType<typeof row>[]) => {
+    const source = new DbClient(ledgerDependencies(fakeConvex(pagesOf(rows))));
+    await preloadLedger(source);
+    return snapshotOf(source, undefined, "owner");
+};
 
-        expect(new Set(ledgerBooks(db).transactions.map((row) => row._id))).toStrictEqual(
-            new Set(entries.map((row) => row._id))
+describe("ledger snapshot", () => {
+    it("keeps every page of a paginated table", async () => {
+        const rows = Array.from({ length: ROWS }, (_, index) => row(`t${index}`));
+        const snapshot = await hydrated(rows);
+        const restored = new DbClient(ledgerDependencies(silentConvex));
+
+        restored.hydrate({ collections: snapshot.collections });
+        void preloadLedger(restored);
+
+        expect(new Set(ledgerBooks(restored).transactions.map((entry) => entry._id))).toStrictEqual(
+            new Set(rows.map((entry) => entry._id))
         );
     });
 
-    it("queries again when a load that failed is retried", async () => {
-        let proRequired = true;
-        const db = new DbClient(
-            ledgerDependencies(
-                snapshotClient({
-                    consistentQuery: async (...args: Parameters<typeof consistentQuery>) => {
-                        if (proRequired) {
-                            throw new Error("ProRequired");
-                        }
-                        return consistentQuery(...args);
-                    },
-                } as unknown as ConvexHttpClient)
-            )
+    it("gives way to Convex, so a row deleted while the page was closed disappears", async () => {
+        const snapshot = await hydrated([row("kept"), row("deleted")]);
+        const restored = new DbClient(ledgerDependencies(fakeConvex(pagesOf([row("kept"), row("added")]))));
+
+        restored.hydrate({ collections: snapshot.collections });
+        await preloadLedger(restored);
+
+        expect(new Set(ledgerBooks(restored).transactions.map((entry) => entry._id))).toStrictEqual(
+            new Set(["added", "kept"])
         );
+    });
 
-        await expect(preloadLedger(db)).rejects.toThrow("ProRequired");
-        proRequired = false;
-        await preloadLedger(db);
+    it("is never handed to another user or to code that reads a newer shape", () => {
+        const snapshot = { collections: [], photos: undefined, userId: "owner", version: LEDGER_CACHE_VERSION };
 
-        expect(ledgerBooks(db).transactions).toHaveLength(ROWS);
+        expect(usableSnapshot(snapshot, "owner")).toBe(snapshot);
+        expect(usableSnapshot(snapshot, "someone-else")).toBeUndefined();
+        expect(usableSnapshot({ ...snapshot, version: LEDGER_CACHE_VERSION - 1 }, "owner")).toBeUndefined();
     });
 });

@@ -5,9 +5,11 @@ import * as Skullet from "skullet";
 
 import { Icon } from "@/components/icon";
 import { authClient } from "@/lib/auth-client";
+import { forgetLedger } from "@/lib/ledger-cache";
 
 export async function signOut() {
     Skullet.forgetShapes();
+    await forgetLedger();
     await authClient.signOut();
     window.location.assign("/login");
 }

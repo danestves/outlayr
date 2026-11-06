@@ -105,6 +105,10 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 
 - Use ref as a prop instead of `React.forwardRef`
 
+**Web app (`/app`):**
+
+- Local first: a reload paints from the browser's copy of the ledger and a click never waits on the network. Read `docs/internals/web-local-first.md` before adding a route, a loader, or a data source under `/app`
+
 **Effect (v4):**
 
 - Import modules by subpath (`import * as Schema from "effect/Schema"`), never from `"effect"`: its root entry re-exports all 143 modules and Metro does not tree-shake
