@@ -21,7 +21,7 @@ function RailLink({ exact = false, icon, label, to }: RailLinkProps) {
         <Link
             activeOptions={{ exact }}
             aria-label={label}
-            className="text-muted-foreground hover:text-foreground data-[status=active]:bg-muted data-[status=active]:text-foreground grid size-9 place-items-center rounded-[10px]"
+            className="text-muted-foreground hover:text-foreground data-[status=active]:bg-muted data-[status=active]:text-foreground grid size-9 place-items-center rounded-lg transition-colors"
             title={label}
             to={to}
         >
@@ -35,9 +35,9 @@ export function Rail() {
     return (
         <nav
             aria-label={nav.label.value}
-            className="border-border sticky top-0 flex h-dvh w-[60px] shrink-0 flex-col items-center gap-2 border-r py-3.5"
+            className="border-border sticky top-0 flex h-dvh w-[60px] shrink-0 flex-col items-center gap-2 border-r py-2"
         >
-            <Link aria-label={nav.home.value} className="mb-3 grid size-9 place-items-center" to="/">
+            <Link aria-label={nav.home.value} className="mb-2 grid size-9 place-items-center" to="/">
                 <LogoMark className="size-6" />
             </Link>
             <RailLink exact icon={DashboardIcon} label={nav.dashboard.value} to="/app" />

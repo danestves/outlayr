@@ -104,11 +104,7 @@ function KeptRow({ fmt, model, row }: Pick<TableProps, "fmt" | "model"> & { row:
                 scope="row"
             >
                 <div className="flex items-center gap-2">
-                    <span
-                        aria-hidden
-                        className="size-5 shrink-0 rounded-[6px]"
-                        style={{ backgroundColor: KEPT_COLOR }}
-                    />
+                    <span aria-hidden className="size-5 shrink-0 rounded-md" style={{ backgroundColor: KEPT_COLOR }} />
                     <span className="truncate font-medium">{measures.kept}</span>
                 </div>
             </th>
@@ -124,12 +120,12 @@ function KeptRow({ fmt, model, row }: Pick<TableProps, "fmt" | "model"> & { row:
 function FlowTable(props: TableProps) {
     const { table } = useIntlayer("dashboard-insights");
     return (
-        <table className="w-full table-fixed border-separate border-spacing-0 text-[13px]">
+        <table className="w-full table-fixed border-separate border-spacing-0 text-sm">
             <colgroup>
                 <col />
-                <col className="w-[86px]" />
-                <col className="w-0 sm:w-[108px]" />
-                <col className="w-[88px]" />
+                <col className="w-22" />
+                <col className="w-0 sm:w-28" />
+                <col className="w-22" />
             </colgroup>
             <thead>
                 <tr className="text-muted-foreground text-xs" style={{ height: HEAD_HEIGHT }}>
@@ -171,10 +167,10 @@ export function CashFlowSection({ model }: { model: InsightsModel }) {
     });
     const empty = model.flow.income === 0 && model.flow.spent === 0;
     return (
-        <section className="border-border border-b px-5 pt-3.5 pb-4" id="cash-flow">
-            <h2 className="text-[13px] font-semibold">{copy.cashFlow.title}</h2>
+        <section className="border-border border-b px-5 pt-4 pb-4" id="cash-flow">
+            <h2 className="text-sm font-medium">{copy.cashFlow.title}</h2>
             {empty ? (
-                <p className="text-muted-foreground mt-3 text-[13px]">{copy.empty.cashFlow}</p>
+                <p className="text-muted-foreground mt-3 text-sm">{copy.empty.cashFlow}</p>
             ) : (
                 <div
                     className="mt-1 grid items-start gap-x-3"

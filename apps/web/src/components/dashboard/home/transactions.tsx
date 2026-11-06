@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { AccountTile, LookTile, MerchantTile } from "@/components/ledger/tiles";
+import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { cn } from "@/lib/utils";
 
@@ -55,8 +55,8 @@ export function Transactions() {
     const { columns } = copy.transactions;
     return (
         <section aria-labelledby="transactions-title" className="border-border border-t">
-            <div className="flex min-h-[42px] items-center gap-2 px-5 pt-1">
-                <h2 className="text-[13px] font-semibold" id="transactions-title">
+            <div className="flex min-h-11 items-center gap-2 px-5 pt-1">
+                <h2 className="text-sm font-medium" id="transactions-title">
                     {copy.transactions.title}
                 </h2>
                 <span className="text-muted-foreground truncate text-xs">
@@ -147,7 +147,13 @@ export function Transactions() {
                                     {selected ? null : (
                                         <Table.Cell className={CELL}>
                                             <span className="flex items-center gap-2">
-                                                <LookTile look={catalog.category(row.topId)} size="sm" />
+                                                <span
+                                                    aria-hidden
+                                                    className="size-2 shrink-0 rounded-full"
+                                                    style={{
+                                                        backgroundColor: catalog.category(row.topId).color ?? undefined,
+                                                    }}
+                                                />
                                                 <span className="truncate">{top ? categoryName(top) : ""}</span>
                                             </span>
                                         </Table.Cell>

@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 
 export function PanelHeader({ children }: { children: ReactNode }) {
-    return <div className="border-border flex h-[52px] items-center gap-2.5 border-b px-4">{children}</div>;
+    return <div className="border-border flex h-13 items-center gap-2 border-b px-5">{children}</div>;
 }
 
 export function PanelSection({ aside, children, title }: { aside?: ReactNode; children: ReactNode; title: ReactNode }) {
     return (
-        <section className="border-border border-b px-4 py-3.5 last:border-b-0">
-            <div className="text-muted-foreground mb-2.5 flex items-baseline justify-between gap-2 text-xs leading-4">
+        <section className="border-border border-b px-5 py-4 last:border-b-0">
+            <div className="text-muted-foreground mb-2 flex items-baseline justify-between gap-2 text-xs leading-4">
                 <h3 className="font-normal">{title}</h3>
                 {aside ? <span className="truncate">{aside}</span> : null}
             </div>

@@ -61,12 +61,10 @@ function StandoutCard({ card, model }: { card: Standout; model: InsightsModel })
         >
             <span className="flex items-center gap-2">
                 <CategoryTile color={category?.color ?? KEPT_COLOR} look={model.looks.get(card.categoryId)} />
-                <span className="text-[13px] font-semibold">{category?.name}</span>
+                <span className="text-sm font-medium">{category?.name}</span>
             </span>
-            <span className="mt-2 block font-mono text-[22px] leading-7 font-semibold">
-                {figureOf(card, copy, fmt)}
-            </span>
-            <span className="text-muted-foreground mt-1 block text-[13px] leading-[18px]">
+            <span className="mt-2 block font-mono text-2xl leading-8 font-medium">{figureOf(card, copy, fmt)}</span>
+            <span className="text-muted-foreground mt-1 block text-sm leading-5">
                 {sentenceOf(card, copy, fmt, model.closed)}
             </span>
         </Link>
@@ -76,7 +74,7 @@ function StandoutCard({ card, model }: { card: Standout; model: InsightsModel })
 function EverythingRow({ children, hash, value }: { children: ReactNode; hash?: string; value?: string }) {
     return (
         <Link
-            className="border-border hover:bg-muted flex h-9 items-center justify-between gap-3 border-b px-5 text-[13px]"
+            className="border-border hover:bg-muted flex h-9 items-center justify-between gap-3 border-b px-5 text-sm"
             hash={hash}
             search={(previous) => ({ ...previous, category: undefined })}
             to={hash ? "." : "/app"}
@@ -98,13 +96,11 @@ export function InsightsPanel({ model }: { model: InsightsModel }) {
     const { cards, daily, flow, spend } = model;
     return (
         <div>
-            <h2 className="border-border flex h-[52px] items-center border-b px-5 text-[15px] font-semibold">
+            <h2 className="border-border flex h-13 items-center border-b px-5 text-sm font-medium">
                 {copy.standsOut.title}
             </h2>
             {cards.length === 0 ? (
-                <p className="text-muted-foreground border-border border-b px-5 py-4 text-[13px]">
-                    {copy.standsOut.empty}
-                </p>
+                <p className="text-muted-foreground border-border border-b px-5 py-4 text-sm">{copy.standsOut.empty}</p>
             ) : (
                 cards.map((card) => <StandoutCard card={card} key={`${card.kind}:${card.categoryId}`} model={model} />)
             )}

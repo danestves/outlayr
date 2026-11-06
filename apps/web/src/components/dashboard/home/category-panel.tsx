@@ -51,13 +51,13 @@ function Standing({ budget, detail, selected }: Selection) {
         }
     }
     return (
-        <section className="border-border border-b px-4 py-3.5">
-            <p className="font-mono text-[28px] leading-[34px] font-medium tracking-[-0.04em] tabular-nums">
+        <section className="border-border border-b px-5 py-4">
+            <p className="font-mono text-3xl leading-9 font-medium tabular-nums">
                 {money(detail.spent, ledger.currency)}
             </p>
             {budget ? (
                 <>
-                    <p className="text-muted-foreground mt-0.5 text-[13px]">
+                    <p className="text-muted-foreground mt-1 text-sm">
                         {over
                             ? copy.overBudget({ amount: money(-budget.remaining, ledger.currency) })
                             : copy.left({ amount: money(budget.remaining, ledger.currency) })}
@@ -65,14 +65,14 @@ function Standing({ budget, detail, selected }: Selection) {
                     <div className="mt-3">
                         <Meter color={over ? "var(--color-destructive)" : selected.color} ratio={ratio} />
                     </div>
-                    <div className="text-muted-foreground mt-1.5 flex justify-between font-mono text-xs tabular-nums">
+                    <div className="text-muted-foreground mt-2 flex justify-between font-mono text-xs tabular-nums">
                         <span>
                             {money(budget.spent, ledger.currency)} {copy.of}{" "}
                             {money(budget.effectiveLimit, ledger.currency)}
                         </span>
                         <span className={over ? "text-destructive" : undefined}>{Math.round(ratio * PERCENT)}%</span>
                     </div>
-                    <p className="text-muted-foreground mt-2.5 text-[13px]">{ranOut}</p>
+                    <p className="text-muted-foreground mt-2 text-sm">{ranOut}</p>
                     {budget.from === period.from && budget.to === period.to ? null : (
                         <p className="text-muted-foreground mt-1 font-mono text-xs tabular-nums">
                             {date.day(budget.from)} - {date.day(budget.to)}
@@ -146,7 +146,7 @@ function Shares({ detail, selected }: Selection) {
                     {detail.merchants.map((merchant) => {
                         const image = imageKeys.get(merchantKey(merchant.name));
                         return (
-                            <li className="flex items-center gap-2.5 py-1.5 text-[13px]" key={merchant.name}>
+                            <li className="flex items-center gap-2 py-2 text-sm" key={merchant.name}>
                                 <MerchantTile
                                     imageUrl={image ? photos?.get(image) : undefined}
                                     name={merchant.name}
@@ -156,7 +156,7 @@ function Shares({ detail, selected }: Selection) {
                                 <span className="font-mono text-xs tabular-nums">
                                     {money(merchant.amount, ledger.currency)}
                                 </span>
-                                <span className="text-muted-foreground w-8 text-right font-mono text-[11px]">
+                                <span className="text-muted-foreground w-8 text-right font-mono text-xs">
                                     {Math.round(merchant.share * PERCENT)}%
                                 </span>
                             </li>
@@ -170,15 +170,15 @@ function Shares({ detail, selected }: Selection) {
                         {detail.byAccount.map((entry) => {
                             const account = catalog.account(entry.id);
                             return (
-                                <li className="flex items-center gap-2.5 py-1.5 text-[13px]" key={entry.id ?? "none"}>
+                                <li className="flex items-center gap-2 py-2 text-sm" key={entry.id ?? "none"}>
                                     {account ? (
-                                        <AccountTile account={account} photos={accountPhotos} size="md" />
+                                        <AccountTile account={account} photos={accountPhotos} size="sm" />
                                     ) : null}
                                     <span className="min-w-0 flex-1 truncate font-medium">{entry.name}</span>
                                     <span className="font-mono text-xs tabular-nums">
                                         {money(entry.amount, ledger.currency)}
                                     </span>
-                                    <span className="text-muted-foreground w-8 text-right font-mono text-[11px]">
+                                    <span className="text-muted-foreground w-8 text-right font-mono text-xs">
                                         {Math.round(entry.share * PERCENT)}%
                                     </span>
                                 </li>
@@ -257,10 +257,10 @@ export function CategoryPanel() {
             <PanelHeader>
                 <span
                     aria-hidden
-                    className="size-2.5 shrink-0 rounded-[3px]"
+                    className="size-2 shrink-0 rounded-full"
                     style={{ backgroundColor: selected.color }}
                 />
-                <h2 className="min-w-0 flex-1 truncate text-sm font-semibold">{categoryName(selected)}</h2>
+                <h2 className="min-w-0 flex-1 truncate text-sm font-medium">{categoryName(selected)}</h2>
                 <Button
                     aria-label={copy.clearCategory({ name: categoryName(selected) }).value}
                     className="text-muted-foreground"

@@ -67,6 +67,9 @@ Backgrounds are flat, with no gradients and no texture layer.
 
 - `/app` controls: `panelui-web`, imported by subpath (`panelui-web/button`) and styled with `className`.
   Its tokens are set on `.app-shell`, which any portaled popup also needs in its `className`.
+- `/app` chrome: `text-xs`, `text-sm` and `text-base` at weights 400 and 500, mono only on figures. Row tiles are `sm`.
+  Category color belongs to charts and meters; a table row gets a small dot. Disabled actions stay `outline`, the accent
+  never fills one. A change states what it compares to, on the line under its figure.
 - Nav: the floating glass island (`site-header.tsx`), a morphing hamburger and a full-screen
   blurred menu on phones. No store badge in the nav.
 - Store CTAs: `StoreBadges`, the official Google Play and App Store badges and nothing else.

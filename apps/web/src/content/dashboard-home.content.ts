@@ -23,6 +23,7 @@ const dashboardHome = {
             income: t({ en: "Income", es: "Ingresos" }),
             kept: t({ en: "Kept", es: "Ahorrado" }),
             netWorth: t({ en: "Net worth", es: "Patrimonio" }),
+            share: insert(t({ en: "{{percent}}% of income", es: "{{percent}}% de los ingresos" })),
             since: insert(t({ en: "since {{day}}", es: "desde el {{day}}" })),
             spent: t({ en: "Spent", es: "Gastado" }),
             versus: insert(t({ en: "vs {{range}}", es: "vs {{range}}" })),
