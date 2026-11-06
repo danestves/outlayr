@@ -18,6 +18,7 @@ import { Route as Char123LocaleChar125RouteRouteImport } from './routes/{-$local
 import { Route as DotwellKnownAiCatalogDotjsonRouteImport } from './routes/[.]well-known.ai-catalog[.]json'
 import { Route as DotwellKnownApiCatalogRouteImport } from './routes/[.]well-known.api-catalog'
 import { Route as DotwellKnownHttpMessageSignaturesDirectoryRouteImport } from './routes/[.]well-known.http-message-signatures-directory'
+import { Route as DotwellKnownOauthAuthorizationServerRouteImport } from './routes/[.]well-known.oauth-authorization-server'
 import { Route as DotwellKnownOauthProtectedResourceRouteImport } from './routes/[.]well-known.oauth-protected-resource'
 import { Route as AccountAppRouteImport } from './routes/_account/app'
 import { Route as AccountConnectRouteImport } from './routes/_account/connect'
@@ -90,6 +91,12 @@ const DotwellKnownHttpMessageSignaturesDirectoryRoute =
   DotwellKnownHttpMessageSignaturesDirectoryRouteImport.update({
     id: '/.well-known/http-message-signatures-directory',
     path: '/.well-known/http-message-signatures-directory',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotwellKnownOauthAuthorizationServerRoute =
+  DotwellKnownOauthAuthorizationServerRouteImport.update({
+    id: '/.well-known/oauth-authorization-server',
+    path: '/.well-known/oauth-authorization-server',
     getParentRoute: () => rootRouteImport,
   } as any)
 const DotwellKnownOauthProtectedResourceRoute =
@@ -253,6 +260,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
+  '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRoute
   '/app': typeof AccountAppRouteWithChildren
   '/connect': typeof AccountConnectRoute
@@ -289,6 +297,7 @@ export interface FileRoutesByTo {
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
+  '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRoute
   '/connect': typeof AccountConnectRoute
   '/login': typeof AccountLoginRoute
@@ -326,6 +335,7 @@ export interface FileRoutesById {
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
+  '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRoute
   '/_account/app': typeof AccountAppRouteWithChildren
   '/_account/connect': typeof AccountConnectRoute
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/.well-known/ai-catalog.json'
     | '/.well-known/api-catalog'
     | '/.well-known/http-message-signatures-directory'
+    | '/.well-known/oauth-authorization-server'
     | '/.well-known/oauth-protected-resource'
     | '/app'
     | '/connect'
@@ -401,6 +412,7 @@ export interface FileRouteTypes {
     | '/.well-known/ai-catalog.json'
     | '/.well-known/api-catalog'
     | '/.well-known/http-message-signatures-directory'
+    | '/.well-known/oauth-authorization-server'
     | '/.well-known/oauth-protected-resource'
     | '/connect'
     | '/login'
@@ -437,6 +449,7 @@ export interface FileRouteTypes {
     | '/.well-known/ai-catalog.json'
     | '/.well-known/api-catalog'
     | '/.well-known/http-message-signatures-directory'
+    | '/.well-known/oauth-authorization-server'
     | '/.well-known/oauth-protected-resource'
     | '/_account/app'
     | '/_account/connect'
@@ -475,6 +488,7 @@ export interface RootRouteChildren {
   DotwellKnownAiCatalogDotjsonRoute: typeof DotwellKnownAiCatalogDotjsonRoute
   DotwellKnownApiCatalogRoute: typeof DotwellKnownApiCatalogRoute
   DotwellKnownHttpMessageSignaturesDirectoryRoute: typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
+  DotwellKnownOauthAuthorizationServerRoute: typeof DotwellKnownOauthAuthorizationServerRoute
   DotwellKnownOauthProtectedResourceRoute: typeof DotwellKnownOauthProtectedResourceRoute
   DotwellKnownMcpServerCardDotjsonRoute: typeof DotwellKnownMcpServerCardDotjsonRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -543,6 +557,13 @@ declare module '@tanstack/react-router' {
       path: '/.well-known/http-message-signatures-directory'
       fullPath: '/.well-known/http-message-signatures-directory'
       preLoaderRoute: typeof DotwellKnownHttpMessageSignaturesDirectoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-authorization-server': {
+      id: '/.well-known/oauth-authorization-server'
+      path: '/.well-known/oauth-authorization-server'
+      fullPath: '/.well-known/oauth-authorization-server'
+      preLoaderRoute: typeof DotwellKnownOauthAuthorizationServerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.well-known/oauth-protected-resource': {
@@ -821,6 +842,8 @@ const rootRouteChildren: RootRouteChildren = {
   DotwellKnownApiCatalogRoute: DotwellKnownApiCatalogRoute,
   DotwellKnownHttpMessageSignaturesDirectoryRoute:
     DotwellKnownHttpMessageSignaturesDirectoryRoute,
+  DotwellKnownOauthAuthorizationServerRoute:
+    DotwellKnownOauthAuthorizationServerRoute,
   DotwellKnownOauthProtectedResourceRoute:
     DotwellKnownOauthProtectedResourceRoute,
   DotwellKnownMcpServerCardDotjsonRoute: DotwellKnownMcpServerCardDotjsonRoute,
