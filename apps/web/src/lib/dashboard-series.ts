@@ -1,6 +1,6 @@
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
-import { budgetStanding, wall, wallDay } from "@outlayr/backend/confect/mcpLedger";
-import { contributesTo, spentForCategory } from "@outlayr/money/budget-spent";
+import { budgetStanding, wall } from "@outlayr/backend/confect/mcpLedger";
+import { spentForCategory } from "@outlayr/money/budget-spent";
 import { merchantKey } from "@outlayr/money/merchant-key";
 
 import type { ChartDatum } from "@/components/charts/shared";
@@ -216,18 +216,17 @@ function standingOf(ledger: Ledger, budget: Budget, categoryId: string, period: 
         offsetAt: ledger.offsetAt,
         rates: ledger.rates,
     };
+    const filed = ledger.expensesByCategory.get(categoryId) ?? [];
     const standing = budgetStanding(
         budget,
         budget.rollover,
-        (start, last) => spentForCategory(ledger.expenses, categoryId, start, last),
+        (start, last) => spentForCategory(filed, categoryId, start, last),
         clock
     );
     const byDay = new Map<string, number>();
-    for (const expense of ledger.expenses) {
-        const day = wallDay(expense.date);
-        const inWindow = day >= standing.from && day <= standing.to && expense.date.getTime() <= clock.now.getTime();
-        if (inWindow && contributesTo(expense, categoryId)) {
-            byDay.set(day, (byDay.get(day) ?? 0) + expense.amount);
+    for (const { amount, date, day } of filed) {
+        if (day >= standing.from && day <= standing.to && date.getTime() <= clock.now.getTime()) {
+            byDay.set(day, (byDay.get(day) ?? 0) + amount);
         }
     }
     let spent = 0;

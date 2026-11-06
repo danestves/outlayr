@@ -29,12 +29,16 @@ export interface LedgerCategory {
     name: string;
 }
 
+export interface Expense extends ExpenseContribution {
+    day: string;
+}
+
 export interface Ledger {
     accounts: ReadonlyMap<string, { currency: string; name: string }>;
     books: LedgerBooks;
     categories: ReadonlyMap<string, LedgerCategory>;
     currency: string;
-    expenses: readonly ExpenseContribution[];
+    expensesByCategory: ReadonlyMap<string, readonly Expense[]>;
     firstDayOfMonth: number;
     now: number;
     offsetAt: (instant: number) => number;
@@ -87,19 +91,35 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
             topId: top?.localId ?? UNCATEGORIZED_ID,
         };
     });
+    const expensesByCategory = new Map<string, Expense[]>();
+    for (const row of rows) {
+        if (row.income) {
+            continue;
+        }
+        const expense: Expense = {
+            amount: row.amount,
+            categoryId: row.categoryId,
+            date: wall(row.at, offsetAt(row.at)),
+            day: row.day,
+            parentId: row.parentId,
+        };
+        for (const id of new Set([row.categoryId, row.parentId])) {
+            if (id !== null) {
+                const same = expensesByCategory.get(id);
+                if (same) {
+                    same.push(expense);
+                } else {
+                    expensesByCategory.set(id, [expense]);
+                }
+            }
+        }
+    }
     return {
         accounts: new Map(books.accounts.map((row) => [row.localId, { currency: row.currency, name: row.name }])),
         books,
         categories,
         currency,
-        expenses: rows
-            .filter((row) => !row.income)
-            .map((row) => ({
-                amount: row.amount,
-                categoryId: row.categoryId,
-                date: wall(row.at, offsetAt(row.at)),
-                parentId: row.parentId,
-            })),
+        expensesByCategory,
         firstDayOfMonth: settings.firstDayOfMonth,
         now,
         offsetAt,
@@ -118,9 +138,20 @@ export const inScope = (scope: Scope) => {
     return (row: LedgerRow) => chosen.size === 0 || (row.accountId !== null && chosen.has(row.accountId));
 };
 
-export const rowsOf = (ledger: Ledger, scope: Scope, income: boolean) => {
+const rowsMemo = new WeakMap<Ledger, Map<string, readonly LedgerRow[]>>();
+
+export const rowsOf = (ledger: Ledger, scope: Scope, income: boolean): readonly LedgerRow[] => {
+    const memo = rowsMemo.get(ledger) ?? new Map<string, readonly LedgerRow[]>();
+    rowsMemo.set(ledger, memo);
+    const key = `${income}|${scope.accounts.join(",")}`;
+    const kept = memo.get(key);
+    if (kept) {
+        return kept;
+    }
     const wanted = inScope(scope);
-    return ledger.rows.filter((row) => row.income === income && wanted(row));
+    const rows = ledger.rows.filter((row) => row.income === income && wanted(row));
+    memo.set(key, rows);
+    return rows;
 };
 
 export const rowsBetween = (ledger: Ledger, scope: Scope, from: string, to: string, income: boolean) =>
