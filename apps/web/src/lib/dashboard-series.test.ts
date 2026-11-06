@@ -302,6 +302,34 @@ describe("budgets on any category", () => {
     });
 });
 
+describe("an account opened partway through the history", () => {
+    const opened = prepareLedger(
+        books({
+            accounts: [
+                account("chase", "Chase"),
+                account("new", "New", { initialBalance: 10_000, initialBalanceDate: at("2026-09-15T16:00:00Z") }),
+                account("zero", "Zero", { initialBalanceDate: at("2026-09-20T16:00:00Z") }),
+            ],
+            transactions: [entry("early", "2026-08-10T16:00:00Z", 500, { accountId: "zero", income: true })],
+        }),
+        NOW
+    );
+    const worth = (key: string) => netWorthHistory(opened, oct, ALL).find((row) => row.key === key)?.netWorth;
+
+    it("joins net worth on the day it opened, and an account without a balance counts from its first entry", () => {
+        expect([worth("2026-07"), worth("2026-08"), worth("2026-09")]).toStrictEqual([0, 500, 10_500]);
+    });
+
+    it("counts every account today, so the figure matches the accounts list", () => {
+        expect(worth("2026-10")).toBe(10_500);
+        expect(kpis(opened, oct, ALL).netWorth.value).toBe(10_500);
+    });
+
+    it("starts a month's change from the accounts that existed before it", () => {
+        expect(kpis(opened, periodOf("2026-09", 1), ALL).netWorth).toMatchObject({ prior: 500, value: 10_500 });
+    });
+});
+
 describe("net worth history labels", () => {
     it("names each point by the period it closes, as the monthly bars do when the month starts on the 25th", () => {
         const payday = prepareLedger(books({ appMeta: [...caracas, { key: "firstDayOfMonth", value: "25" }] }), NOW);

@@ -1,3 +1,4 @@
+import { localDate } from "@outlayr/backend/confect/mcpLedger";
 import { netWorth, toAccountKind } from "@outlayr/money/account-kind";
 import type { AccountKind } from "@outlayr/money/account-kind";
 import { restate } from "@outlayr/money/account-overview";
@@ -21,6 +22,7 @@ interface Holder {
     id: string;
     initialBalance: number;
     kind: AccountKind;
+    opened: string | null;
 }
 
 interface Movements {
@@ -100,6 +102,10 @@ function movementsOf(ledger: Ledger): Movements {
             id: row.localId,
             initialBalance: row.initialBalance,
             kind: toAccountKind(row.kind),
+            opened:
+                row.initialBalance === 0
+                    ? null
+                    : localDate(row.initialBalanceDate, ledger.offsetAt(row.initialBalanceDate)),
         })),
         list: list.toSorted((a, b) => a.at - b.at),
     };
@@ -113,7 +119,11 @@ interface Pile {
     value: number;
 }
 
-/** Net worth at each instant, from one pass over the ledger instead of one `accountBalances` replay per instant. */
+/**
+ * Net worth at each instant, from one pass over the ledger instead of one `accountBalances` replay per instant.
+ * An account opened with a balance counts from the local day it opened, as the mobile chart does; at `ledger.now`
+ * every account counts, so today's figure is the accounts list's.
+ */
 export function netWorthSeries(ledger: Ledger, scope: Scope, instants: readonly number[]): number[] {
     const { holders, list } = movementsOf(ledger);
     const chosen = new Set(scope.accounts);
@@ -149,13 +159,17 @@ export function netWorthSeries(ledger: Ledger, scope: Scope, instants: readonly 
         }
         touched.clear();
         const rateDay = utcDateString(instant);
-        const balances = [...accounts.values()].map(({ holder, piles }) => {
+        const day = localDate(instant, ledger.offsetAt(instant));
+        const balances = [...accounts.values()].flatMap(({ holder, piles }) => {
+            if (holder.opened !== null && holder.opened > day && instant < ledger.now) {
+                return [];
+            }
             let total = holder.initialBalance;
             for (const pile of piles.values()) {
                 total += pile.value;
             }
             const { value } = restate(total, holder.currency, ledger.currency, rateDay, ledger.rates);
-            return { balance: value, kind: holder.kind };
+            return [{ balance: value, kind: holder.kind }];
         });
         results[index] = roundMoney(netWorth(balances).net, decimals);
     }
