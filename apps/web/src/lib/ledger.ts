@@ -8,23 +8,6 @@ export function addDays(day: string, days: number) {
     return new Date(dayMs(day) + days * DAY_MS).toISOString().slice(0, 10);
 }
 
-export function dayLabel(day: string, today: string) {
-    const gap = daysBetween(day, today);
-    if (gap === 0) {
-        return "Today";
-    }
-    if (gap === 1) {
-        return "Yesterday";
-    }
-    return longDay(day);
-}
-
-export function longDay(day: string) {
-    return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC", weekday: "short" })
-        .format(dayMs(day))
-        .replace(/^(\w+)/, "$1,");
-}
-
 export function shortDay(day: string) {
     return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }).format(dayMs(day));
 }
@@ -49,38 +32,4 @@ export function money(amount: number, currency: string, sign: "always" | "auto" 
         style: "currency",
         ...wholeUnits(amount, showCents),
     }).format(amount);
-}
-
-export function moneyParts(amount: number, currency: string, showCents = true) {
-    const parts = new Intl.NumberFormat("en-US", {
-        currency,
-        signDisplay: "exceptZero",
-        style: "currency",
-        ...wholeUnits(amount, showCents),
-    }).formatToParts(amount);
-    const pick = (types: Intl.NumberFormatPartTypes[]) =>
-        parts
-            .filter((part) => types.includes(part.type))
-            .map((part) => part.value)
-            .join("");
-    return {
-        fraction: pick(["decimal", "fraction"]),
-        lead: pick(["minusSign", "plusSign", "currency", "literal"]),
-        whole: pick(["integer", "group"]),
-    };
-}
-
-export function budgetPace(
-    budget: { readonly effectiveLimit: number; readonly from: string; readonly spent: number; readonly to: string },
-    today: string
-) {
-    const length = daysBetween(budget.from, budget.to) + 1;
-    const elapsed = Math.min(Math.max(daysBetween(budget.from, today) + 1, 0), length);
-    const expected = (budget.effectiveLimit * elapsed) / length;
-    return {
-        daysLeft: Math.max(daysBetween(today, budget.to), 0),
-        elapsedShare: elapsed / length,
-        spentShare: budget.effectiveLimit > 0 ? Math.min(budget.spent / budget.effectiveLimit, 1) : 1,
-        underPace: expected - budget.spent,
-    };
 }

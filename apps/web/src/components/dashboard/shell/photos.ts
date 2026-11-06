@@ -33,7 +33,7 @@ export const photoUrlsQuery = (convex: ConvexQueryClient | undefined, keys: read
         staleTime: PHOTO_REMINT_MS,
     });
 
-const toPhotoUrls = (minted: readonly { key: string; url: string }[]): PhotoUrls =>
+export const toPhotoUrls = (minted: readonly { key: string; url: string }[]): PhotoUrls =>
     new Map(minted.map((photo) => [photo.key, photo.url]));
 
 export function usePhotoUrls(overview: Overview): PhotoUrls {

@@ -8,6 +8,7 @@ import { useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { useCategoryName } from "@/components/dashboard/home/format";
 import { periodKeyOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
@@ -105,6 +106,7 @@ function AccountsChip({ filters, ledger, setFilters }: Dashboard) {
 
 function CategoryChip({ filters, ledger, setFilters }: Dashboard) {
     const { filters: copy } = useIntlayer("dashboard");
+    const categoryName = useCategoryName();
     const category = filters.category === null ? undefined : ledger.categories.get(filters.category);
     if (!category) {
         return null;
@@ -113,10 +115,10 @@ function CategoryChip({ filters, ledger, setFilters }: Dashboard) {
         <Chip
             className="h-8 text-[13px] font-medium"
             onRemove={() => setFilters({ category: null })}
-            removeLabel={copy.removeCategory({ name: category.name }).value}
+            removeLabel={copy.removeCategory({ name: categoryName(category) }).value}
             style={{ backgroundColor: `color-mix(in srgb, ${category.color} 18%, transparent)` }}
         >
-            {category.name}
+            {categoryName(category)}
         </Chip>
     );
 }
