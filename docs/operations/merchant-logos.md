@@ -2,7 +2,7 @@
 
 The app reads logos from `https://logos.tryoutlayr.com/merchants/<domain>`, a Worker in `apps/logos`. It serves only the `merchants/` folder of the `outlayr-files` bucket, because that bucket also holds users' private photos, so never turn on public access for the bucket.
 
-A stored logo answers with an `ETag` and a 30 day `max-age`. A missing logo is looked up once, stored, and served from R2 from then on. Lookups try Google and DuckDuckGo, then the merchant's site, then Wikidata.
+A stored logo answers with an `ETag` and a 30 day `max-age`. A missing logo is looked up once, stored, and served from R2 from then on. Lookups try Google and DuckDuckGo, then the merchant's site, and Wikidata only when none of them has an icon.
 
 Deploy the Worker before shipping an app version that reads from it:
 
