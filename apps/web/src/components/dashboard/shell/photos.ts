@@ -7,6 +7,7 @@ import { useRouteContext } from "@tanstack/react-router";
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 
 const PHOTO_REMINT_MS = 50 * 60_000;
+const MIN_REMINT_WAIT_MS = 60_000;
 const PHOTO_URLS = "photoUrls";
 
 export const NO_PHOTOS: PhotoUrls = new Map();
@@ -29,7 +30,9 @@ export const photoUrlsQuery = (convex: ConvexQueryClient | undefined, keys: read
             return convex.convexClient.mutation(api.photos.readUrls, { keys: [...keys] });
         },
         queryKey: [PHOTO_URLS, keys],
-        refetchInterval: PHOTO_REMINT_MS,
+        // Counted from the mint, not the mount: a URL restored from the copy is already part way through its life.
+        refetchInterval: (query) =>
+            Math.max(query.state.dataUpdatedAt + PHOTO_REMINT_MS - Date.now(), MIN_REMINT_WAIT_MS),
         staleTime: PHOTO_REMINT_MS,
     });
 

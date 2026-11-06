@@ -38,3 +38,20 @@ export async function currentToken(session: Session) {
     session.token = await readToken();
     return session.token;
 }
+
+let channel: BroadcastChannel | undefined;
+const sessionChannel = () => {
+    channel ??= new BroadcastChannel("outlayr-session");
+    return channel;
+};
+
+export const announceSessionChange = () => {
+    // oxlint-disable-next-line unicorn/require-post-message-target-origin -- a BroadcastChannel has no target origin.
+    sessionChannel().postMessage("changed");
+};
+
+// Another tab signing out or in must not leave this one showing, or saving, the previous account's ledger.
+export function onSessionChange(listener: () => void) {
+    sessionChannel().addEventListener("message", listener);
+    return () => sessionChannel().removeEventListener("message", listener);
+}

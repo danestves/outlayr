@@ -18,7 +18,7 @@ import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { dropLedger, restoreLedger, saveLedger } from "@/lib/ledger-cache";
 import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
-import { userOf } from "@/lib/session";
+import { onSessionChange, userOf } from "@/lib/session";
 
 export const Route = createFileRoute("/_account/app")({
     component: App,
@@ -116,6 +116,8 @@ function useLedgerCopy(overview: Overview, photos: PhotoUrls, settled: Promise<b
     const { dbClient, queryClient } = Route.useRouteContext();
     const router = useRouter();
     const [synced, setSynced] = useState(false);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- other tabs are an external system.
+    useEffect(() => onSessionChange(() => window.location.reload()), []);
     // oxlint-disable-next-line outlayr/react-effect-budget -- the restored copy shows before Convex answers, so a refusal arrives after the first paint.
     useEffect(() => {
         settled.then(setSynced).catch(async () => {
