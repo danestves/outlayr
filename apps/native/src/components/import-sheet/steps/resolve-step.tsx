@@ -160,6 +160,7 @@ export function ResolveStep({ review, onOpenFeatureLab, onSeePro }: ResolveStepP
     }
 
     const rowCount = flow.parsed?.rows.length ?? 0;
+    const statement = flow.sourceId === "pdf";
     const settledStage: CsvImportStage = outcome == null ? stage : "settled";
 
     return (
@@ -186,12 +187,14 @@ export function ResolveStep({ review, onOpenFeatureLab, onSeePro }: ResolveStepP
                         <StageDetail>
                             {tier2Sent > 0
                                 ? t("import.resolveDetailSent", { count: tier2Sent })
-                                : t("import.resolveDetailNothingSent")}
+                                : t(statement ? "import.resolveDetailStatement" : "import.resolveDetailNothingSent")}
                         </StageDetail>
                     </Task.Item>
                 </StageTask>
             </View>
-            <Text className="text-footnote text-muted leading-snug">{t("import.resolveFootnote")}</Text>
+            <Text className="text-footnote text-muted leading-snug">
+                {t(statement ? "import.resolveFootnoteStatement" : "import.resolveFootnote")}
+            </Text>
 
             {outcome === "applied" ? reviewCta : null}
         </View>

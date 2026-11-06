@@ -14,7 +14,7 @@ import type { PdfImportResult, PdfImportStatus, StatementRow } from "./pdfImport
 export const MAX_PDF_PAGES = 100;
 /** Under this there is no text layer worth reading, which in practice means a scan. */
 export const MIN_TEXT_CHARS = 200;
-const MAX_STATEMENT_CHARS = 150_000;
+const MAX_STATEMENT_CHARS = 400_000;
 const CHUNK_CHARS = 12_000;
 const HEADER_CHARS = 800;
 const MAX_ROWS = 2000;
@@ -26,6 +26,8 @@ const CHUNK_TIMEOUT_MS = 90_000;
 
 const LINE_TOLERANCE = 2;
 const WORD_GAP = 1;
+const COLUMN_GAP = 8;
+const POINTS_PER_CHAR = 6;
 
 export function failure(status: Exclude<PdfImportStatus, "ok">): PdfImportResult {
     return { rows: null, status, suggestions: null };
@@ -44,13 +46,19 @@ const GROUPED_DIGITS = /\b\d{4}(?:[ -]\d{4}){2,3}(?:[ -]\d{1,4})?|\b\d{4}[ -]\d{
 const LONG_DIGITS = /\d{9,}(?!\d|[.,]\d{1,2}(?!\d))/g;
 const NON_DIGIT = /\D/g;
 const MIN_IBAN_DIGITS = 10;
+const AFTER_LAST_DIGIT = /\D*$/;
 
 function maskKeepingLastFour(match: string): string {
     return `${MASK}${match.replaceAll(/[ -]/g, "").slice(-4)}`;
 }
 
 function maskIban(match: string): string {
-    return match.replaceAll(NON_DIGIT, "").length < MIN_IBAN_DIGITS ? match : maskKeepingLastFour(match);
+    if (match.replaceAll(NON_DIGIT, "").length < MIN_IBAN_DIGITS) {
+        return match;
+    }
+    // The match runs on through uppercase words, which are the row's text and not the account.
+    const end = match.search(AFTER_LAST_DIGIT);
+    return `${maskKeepingLastFour(match.slice(0, end))}${match.slice(end)}`;
 }
 
 export function redactStatementText(text: string): string {
@@ -84,13 +92,19 @@ export function joinPageLines(items: readonly PositionedText[]): string {
             let text = "";
             let end = Number.NEGATIVE_INFINITY;
             for (const item of [...line].sort((a, b) => a.x - b.x)) {
-                // Overlap counts as a gap too: a long cell can run past where the next column starts.
-                text += Math.abs(item.x - end) > WORD_GAP && text !== "" ? ` ${item.str}` : item.str;
+                const gap = item.x - end;
+                if (gap > COLUMN_GAP || text === "") {
+                    // Positional padding: debits and credits in separate columns read the same without it.
+                    text = `${text} `.padEnd(Math.round(item.x / POINTS_PER_CHAR));
+                } else if (Math.abs(gap) > WORD_GAP) {
+                    text += " ";
+                }
+                text += item.str;
                 end = item.x + item.width;
             }
-            return text.trim();
+            return text.trimEnd();
         })
-        .filter((line) => line !== "")
+        .filter((line) => line.trim() !== "")
         .join("\n");
 }
 
@@ -200,7 +214,7 @@ function buildPrompt(chunk: string, header: string | null, context: StatementCon
         "Return rows of { date, label, amount, currency }, one per transaction, keeping statement order. Do not merge, summarize or invent rows. If a row is unreadable, leave it out.",
         `date: YYYY-MM-DD. Take a missing year from the statement period. Today is ${context.today} and no transaction is later than today.${context.regionCode === undefined ? "" : ` When day and month order is ambiguous, follow the statement's own dates and the region ${context.regionCode}.`}`,
         "label: the merchant or counterparty as printed, without card numbers, reference numbers or dates.",
-        "amount: a decimal number. Negative for money leaving the account (purchases, withdrawals, fees, transfers out), positive for money coming in (deposits, refunds, a payment received on a card).",
+        "amount: a decimal number. Negative for money leaving the account (purchases, withdrawals, fees, transfers out), positive for money coming in (deposits, refunds, a payment received on a card). Spacing keeps the page's columns: when debits and credits have separate columns, read the direction from the column an amount sits under, and check it against any running balance.",
         "currency: the ISO 4217 code when the statement prints one, otherwise null.",
         ...(header === null
             ? []
@@ -279,7 +293,8 @@ export const readStatement = Effect.fn("PdfImport.readStatement")(
         const pages = yield* extractPdfPages(bytes);
         const redacted = pages.map(redactStatementText);
         const chars = redacted.reduce((total, page) => total + page.length, 0);
-        if (chars < MIN_TEXT_CHARS) {
+        const printed = redacted.reduce((total, page) => total + page.replaceAll(/\s/g, "").length, 0);
+        if (printed < MIN_TEXT_CHARS) {
             return { status: "extractionFailed" };
         }
         if (chars > MAX_STATEMENT_CHARS) {

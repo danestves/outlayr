@@ -19,7 +19,7 @@ import { sanitizeRegionCode } from "./enrichment";
 import { traced } from "./lib/aiTracing";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
-import { perUserBurst } from "./lib/limits";
+import { fixedBurst, perUserBurst } from "./lib/limits";
 import { failure, isIsoDay, rateLimiter, readStatement } from "./pdfImport";
 import spec, { MAX_PDF_BYTES, PDF_CONTENT_TYPE } from "./pdfImport.spec";
 import { isPro } from "./revenuecat";
@@ -43,6 +43,16 @@ const requestUpload = FunctionImpl.make(
         const ctx = yield* MutationCtx;
         if (!(yield* isPro(ctx, identity.subject))) {
             return { status: "notEntitled" as const, url: null };
+        }
+        // An abandoned non-PDF escapes the sweep, so this bounds what a client can store without ever extracting.
+        const uploads = yield* Effect.promise(() =>
+            rateLimiter.limit(ctx, "pdfUploadPerUser", {
+                config: fixedBurst("pdfUpload", true),
+                key: identity.tokenIdentifier,
+            })
+        );
+        if (!uploads.ok) {
+            return { status: "rateLimited" as const, url: null };
         }
         const burst = yield* perUserBurst("pdfImport", true);
         // Only a look: the token is spent by the extraction, so a failed upload costs nothing.
@@ -181,14 +191,18 @@ const extract = FunctionImpl.make(
         }
 
         const burst = yield* perUserBurst("pdfImport", true);
-        const perUser = yield* Effect.promise(() =>
-            rateLimiter.limit(ctx, "pdfImportPerUser", { config: burst, key: identity.tokenIdentifier })
-        );
-        if (!perUser.ok) {
+        const quota = { config: burst, key: identity.tokenIdentifier };
+        const allowance = yield* Effect.promise(() => rateLimiter.check(ctx, "pdfImportPerUser", quota));
+        if (!allowance.ok) {
             return failure("rateLimited");
         }
+        // Before the per-user token: a month's token must not go on a read the global window refuses.
         const global = yield* Effect.promise(() => rateLimiter.limit(ctx, "pdfImportGlobal"));
         if (!global.ok) {
+            return failure("rateLimited");
+        }
+        const perUser = yield* Effect.promise(() => rateLimiter.limit(ctx, "pdfImportPerUser", quota));
+        if (!perUser.ok) {
             return failure("rateLimited");
         }
 
@@ -214,6 +228,7 @@ const extract = FunctionImpl.make(
             if (statement.status !== "ok") {
                 return failure(statement.status);
             }
+            // The file is about to go, so losing the rows to a failed lookup would cost a re-upload and a token.
             const { degraded, suggestions } = yield* suggestCategories({
                 categoryTree: args.categoryTree,
                 distinctId,
@@ -222,7 +237,7 @@ const extract = FunctionImpl.make(
                 model,
                 regionCode,
                 tokenIdentifier: identity.tokenIdentifier,
-            });
+            }).pipe(Effect.catchCause(() => Effect.succeed({ degraded: true, suggestions: [] })));
             const read = { rows: statement.rows, status: "ok" as const, suggestions };
             return degraded ? { ...read, degraded } : read;
         }).pipe(Effect.ensuring(Effect.promise(() => ctx.storage.delete(args.storageId))));

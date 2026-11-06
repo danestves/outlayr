@@ -23,6 +23,7 @@ const BURSTS = {
     notificationRead: { base: { capacity: 30, rate: 120 } },
     // A statement costs several model calls, so this refills over a month: 10 a month, written in tokens an hour.
     pdfImport: { base: { capacity: 10, rate: 10 / (30 * 24) }, env: "PDF_IMPORT_CAPACITY" },
+    pdfUpload: { base: { capacity: 30, rate: 30 } },
     receiptScan: { base: { capacity: 10, rate: 30 }, env: "RECEIPT_SCAN_CAPACITY", pro: { capacity: 50, rate: 200 } },
     voiceEntry: { base: { capacity: 10, rate: 40 }, env: "VOICE_ENTRY_CAPACITY", pro: { capacity: 60, rate: 240 } },
     voiceThread: { base: { capacity: 10, rate: 20 }, pro: { capacity: 30, rate: 60 } },

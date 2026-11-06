@@ -55,7 +55,19 @@ export function useChooseImportFile() {
         },
     };
     const pickFile = useAtomAction(chooseImportFileCommand, handlers, SILENT);
-    const pickStatement = useAtomAction(chooseStatementCommand, handlers, SILENT);
+    const pickStatement = useAtomAction(
+        chooseStatementCommand,
+        {
+            ...handlers,
+            // A statement takes up to minutes, and the person may have moved to another source by the time it lands.
+            onSuccess: (chosen) => {
+                if (importDraftStore.getSnapshot().flow.sourceId === "pdf") {
+                    handlers.onSuccess(chosen);
+                }
+            },
+        },
+        SILENT
+    );
 
     const chooseStatement = () => {
         if (!remoteEnrichmentOn(settings.bool)) {

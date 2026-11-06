@@ -1,5 +1,3 @@
-/// <reference types="vite/client" />
-
 /** Opt-in (RUN_LIVE_MODEL_TESTS=1, ANTHROPIC_API_KEY): spends tokens. */
 
 import { createAnthropic } from "@ai-sdk/anthropic";

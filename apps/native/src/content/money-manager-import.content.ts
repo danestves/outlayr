@@ -996,11 +996,12 @@ const moneyManagerImport = {
             "pt-PT": "De um ficheiro",
         }),
         "mmImport.sources.footer": t({
-            en: "CSV files are read on this device. PDF statements go to our AI provider.",
-            es: "Los CSV se leen en este dispositivo. Los PDF van a nuestro proveedor de IA.",
-            fr: "Les CSV sont lus sur cet appareil. Les relevés PDF vont à notre fournisseur d'IA.",
-            pt: "CSVs são lidos neste dispositivo. Extratos em PDF vão para o nosso provedor de IA.",
-            "pt-PT": "Os CSV são lidos neste dispositivo. Os extratos em PDF vão para o nosso fornecedor de IA.",
+            en: "CSV files are read on this device. A PDF statement's text goes to our AI provider.",
+            es: "Los CSV se leen en este dispositivo. El texto de los PDF va a nuestro proveedor de IA.",
+            fr: "Les CSV sont lus sur cet appareil. Le texte des relevés PDF va à notre fournisseur d'IA.",
+            pt: "CSVs são lidos neste dispositivo. O texto dos extratos em PDF vai para o nosso provedor de IA.",
+            "pt-PT":
+                "Os CSV são lidos neste dispositivo. O texto dos extratos em PDF vai para o nosso fornecedor de IA.",
         }),
         "mmImport.sources.pdf": t({
             en: "Bank statement PDF",

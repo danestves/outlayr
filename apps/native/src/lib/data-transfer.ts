@@ -92,10 +92,14 @@ export const pickImportFile = Effect.fn("DataTransfer.pickImportFile")(function*
     return { name: asset.name, text } satisfies PickedFile;
 });
 
-export const pickPdfFile = Effect.fn("DataTransfer.pickPdfFile")(function* pickPdfFile() {
+export const pickPdfFile = Effect.fn("DataTransfer.pickPdfFile")(function* pickPdfFile(maxBytes: number) {
     const asset = yield* pickDocument(PDF_TYPES);
     if (asset == null) {
         return null;
+    }
+    // Before the read, as `bytes()` holds the whole file in memory.
+    if ((asset.size ?? 0) > maxBytes) {
+        return "tooLarge" as const;
     }
     const bytes = yield* Effect.tryPromise({
         catch: (cause) => new TransferError({ cause, key: "alerts.transfer.unreadableFile" }),

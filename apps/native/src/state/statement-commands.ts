@@ -50,11 +50,11 @@ export const chooseStatementCommand = createRuntimeCommand(appRuntime, {
     execute: Effect.fn("Statement.choose")(function* choose(
         input: Omit<PdfImportRequest, "bytes">
     ): Effect.fn.Return<ChosenImportFile | null, TransferError | TransferFailedError, HttpClient.HttpClient> {
-        const picked = yield* pickPdfFile();
+        const picked = yield* pickPdfFile(MAX_PDF_BYTES);
         if (picked == null) {
             return null;
         }
-        if (picked.bytes.length > MAX_PDF_BYTES) {
+        if (picked === "tooLarge" || picked.bytes.length > MAX_PDF_BYTES) {
             return { error: { cause: "tooLarge" } };
         }
         const answer = yield* pdfImport({ ...input, bytes: picked.bytes }).pipe(
@@ -80,7 +80,8 @@ export const chooseStatementCommand = createRuntimeCommand(appRuntime, {
         const resolution = resolveImportMapping(STATEMENT_DRAFT);
         const event: ImportFlowEvent = {
             draft: STATEMENT_DRAFT,
-            file: { chars: picked.bytes.length, name: picked.name },
+            // The rows, not the PDF: this guards the CSV fallback's cap on what it would read.
+            file: { chars: parsed.rows.flat().join("").length, name: picked.name },
             gaps: resolution.ok ? [] : resolution.gaps,
             parsed,
             resolved: resolution.ok ? resolution.value : null,

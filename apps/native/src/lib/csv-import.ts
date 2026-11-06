@@ -257,7 +257,11 @@ const resolveImport = Effect.fn("CsvImport.resolve")(function* resolveImport(
 
     const uncached = linkCachedLabels(unresolved, request.categoryIdByKey, resolvedLinks, fromModelSet);
     if (request.statement != null) {
-        const asPrinted = new Map(uncached.map((label) => [label, [label]]));
+        const asPrinted = new Map(
+            request.statement.suggestions
+                .filter(({ label }) => !resolvedLinks.has(categoryKey(label)))
+                .map(({ label }) => [label, [label]])
+        );
         linkSuggestions(request.statement.suggestions, request.categoryIdByKey, asPrinted, resolvedLinks, fromModelSet);
         // The server asked about every label already, so what it left unlinked is not worth a second model call.
         if (request.statement.complete) {

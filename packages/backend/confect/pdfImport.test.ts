@@ -69,6 +69,7 @@ describe(redactStatementText, () => {
         ["an IBAN", "IBAN ES91 2100 0418 4502 0005 1332 titular", "IBAN ****1332 titular"],
         ["a compact IBAN", "DE89370400440532013000", "****3000"],
         ["an IBAN with text glued to it", "ES91 2100 0418 4502 0005 1332Tarjeta", "****1332Tarjeta"],
+        ["an IBAN followed by a word", "ES91 2100 0418 4502 0005 1332 COMPRA", "****1332 COMPRA"],
         ["a card with text glued to it", "4111 1111 1111 1234Visa", "****1234Visa"],
         ["a card", "Tarjeta 4111 1111 1111 1234", "Tarjeta ****1234"],
         ["a dashed card", "4111-1111-1111-1234", "****1234"],
@@ -93,15 +94,31 @@ describe(redactStatementText, () => {
 
 describe(joinPageLines, () => {
     it("rebuilds table rows from separately positioned cells, top to bottom", () => {
-        expect(
+        const lines = joinPageLines([
+            { str: "NOMINA", width: 30, x: 100, y: 680 },
+            { str: "-12,50", width: 20, x: 300, y: 700 },
+            { str: "03/03", width: 20, x: 40, y: 700.5 },
+            { str: "STARBUCKS", width: 50, x: 100, y: 700 },
+            { str: "Banco", width: 30, x: 40, y: 760 },
+        ]).split("\n");
+
+        expect(lines.map((line) => line.trim().split(/\s+/).join(" "))).toStrictEqual([
+            "Banco",
+            "03/03 STARBUCKS -12,50",
+            "NOMINA",
+        ]);
+    });
+
+    it("keeps an amount under its column, so a debit and a credit read differently", () => {
+        const row = (column: number) =>
             joinPageLines([
-                { str: "-12,50", width: 20, x: 300, y: 700 },
-                { str: "03/03", width: 20, x: 40, y: 700.5 },
-                { str: "STARBUCKS", width: 50, x: 100, y: 700 },
-                { str: "NOMINA", width: 30, x: 100, y: 680 },
-                { str: "Banco", width: 30, x: 40, y: 760 },
-            ])
-        ).toBe("Banco\n03/03 STARBUCKS -12,50\nNOMINA");
+                { str: "03/03", width: 20, x: 40, y: 700 },
+                { str: "12,50", width: 20, x: column, y: 700 },
+            ]);
+        const debitAt = 300;
+        const creditAt = 400;
+
+        expect(row(debitAt).indexOf("12,50")).toBeLessThan(row(creditAt).indexOf("12,50"));
     });
 
     it("keeps a word whose glyphs were drawn in two runs whole", () => {
@@ -109,7 +126,7 @@ describe(joinPageLines, () => {
             joinPageLines([
                 { str: "STAR", width: 20, x: 100, y: 700 },
                 { str: "BUCKS", width: 20, x: 120, y: 700 },
-            ])
+            ]).trim()
         ).toBe("STARBUCKS");
     });
 });
@@ -130,7 +147,7 @@ describe(readStatement, () => {
         await read(model);
 
         const prompt = promptOf(model);
-        expect(prompt).toContain("03/03 STARBUCKS CENTRO REF ****5544 -12,50");
+        expect(prompt).toMatch(/03\/03\s+STARBUCKS CENTRO REF \*{4}5544\s+-12,50/);
         expect(prompt).toContain("****1332");
         expect(prompt).toContain("****1234");
         for (const leak of ["2100 0418", "4111 1111", "998877665544"]) {
@@ -424,13 +441,16 @@ describe("pdfImport.extract", () => {
 
     it("stops at the global window", async () => {
         const { args, asUser, upload } = await setup();
-        vi.spyOn(rateLimiter, "limit").mockImplementation(async (_ctx, name) =>
-            name === "pdfImportGlobal" ? { ok: false, retryAfter: 1000 } : { ok: true, retryAfter: undefined }
-        );
+        const limitSpy = vi
+            .spyOn(rateLimiter, "limit")
+            .mockImplementation(async (_ctx, name) =>
+                name === "pdfImportGlobal" ? { ok: false, retryAfter: 1000 } : { ok: true, retryAfter: undefined }
+            );
 
         await expect(asUser.action(api.pdfImport.extract, args(await upload()))).resolves.toMatchObject({
             status: "rateLimited",
         });
+        expect(limitSpy).not.toHaveBeenCalledWith(expect.anything(), "pdfImportPerUser", expect.anything());
     });
 });
 
@@ -442,6 +462,20 @@ describe("pdfImport.requestUpload", () => {
 
         const scheduled = await t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect());
         expect(scheduled.filter((row) => row.name.includes("sweepUploads"))).toHaveLength(1);
+    });
+
+    it("stops minting urls for a client that keeps uploading without extracting", async () => {
+        const { asUser } = await setup();
+
+        for (let index = 0; index < 30; index += 1) {
+            const ticket = await asUser.mutation(api.pdfImport.requestUpload, {});
+            expect(ticket.status).toBe("ok");
+        }
+
+        await expect(asUser.mutation(api.pdfImport.requestUpload, {})).resolves.toStrictEqual({
+            status: "rateLimited",
+            url: null,
+        });
     });
 
     it("refuses a free user before anything can be uploaded", async () => {

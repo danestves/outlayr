@@ -60,11 +60,11 @@ const importSheet = {
             pt: "Não conseguimos ler este extrato",
         }),
         "import.fileAiNote": t({
-            en: "Sent to our AI provider, then deleted.",
-            es: "Se envía a nuestro proveedor de IA y luego se borra.",
-            fr: "Envoyé à notre fournisseur d'IA, puis supprimé.",
-            pt: "Enviado ao nosso provedor de IA e depois apagado.",
-            "pt-PT": "Enviado ao nosso fornecedor de IA e depois apagado.",
+            en: "Its text goes to our AI provider. The file is deleted.",
+            es: "Su texto va a nuestro proveedor de IA. El archivo se borra.",
+            fr: "Son texte va à notre fournisseur d'IA. Le fichier est supprimé.",
+            pt: "O texto vai para o nosso provedor de IA. O arquivo é apagado.",
+            "pt-PT": "O texto vai para o nosso fornecedor de IA. O ficheiro é apagado.",
         }),
         "import.fileReadByAi": t({
             en: "Read by our AI provider",
@@ -82,12 +82,12 @@ const importSheet = {
             "pt-PT": "A ler o extrato…",
         }),
         "import.statementPrivacy": t({
-            en: "The file goes to our server, which deletes it after reading it. Its text goes to Anthropic with long account and card numbers masked. It needs selectable text, so scans won't work.",
-            es: "El archivo va a nuestro servidor, que lo borra después de leerlo. Su texto va a Anthropic con los números largos de cuenta y tarjeta ocultos. Necesita texto seleccionable, así que los escaneos no funcionan.",
-            fr: "Le fichier va sur notre serveur, qui le supprime après lecture. Son texte va à Anthropic, avec les longs numéros de compte et de carte masqués. Il doit contenir du texte sélectionnable : les scans ne fonctionnent pas.",
-            pt: "O arquivo vai para o nosso servidor, que o apaga depois de ler. O texto vai para a Anthropic com os números longos de conta e cartão ocultos. Ele precisa ter texto selecionável, então digitalizações não funcionam.",
+            en: "The file goes to our server, which deletes it after reading it. Its text goes to Anthropic with long account and card numbers masked, including your name and address if printed. It needs selectable text, so scans won't work.",
+            es: "El archivo va a nuestro servidor, que lo borra después de leerlo. Su texto va a Anthropic con los números largos de cuenta y tarjeta ocultos, e incluye tu nombre y dirección si aparecen. Necesita texto seleccionable, así que los escaneos no funcionan.",
+            fr: "Le fichier va sur notre serveur, qui le supprime après lecture. Son texte va à Anthropic, avec les longs numéros de compte et de carte masqués, y compris votre nom et votre adresse s'ils y figurent. Il doit contenir du texte sélectionnable : les scans ne fonctionnent pas.",
+            pt: "O arquivo vai para o nosso servidor, que o apaga depois de ler. O texto vai para a Anthropic com os números longos de conta e cartão ocultos, incluindo seu nome e endereço se aparecerem. Ele precisa ter texto selecionável, então digitalizações não funcionam.",
             "pt-PT":
-                "O ficheiro vai para o nosso servidor, que o apaga depois de o ler. O texto vai para a Anthropic com os números longos de conta e cartão ocultos. Tem de ter texto selecionável, por isso as digitalizações não funcionam.",
+                "O ficheiro vai para o nosso servidor, que o apaga depois de o ler. O texto vai para a Anthropic com os números longos de conta e cartão ocultos, incluindo o seu nome e morada se aparecerem. Tem de ter texto selecionável, por isso as digitalizações não funcionam.",
         }),
         "import.statementRateLimited": t({
             en: "You've reached this month's statement imports.",
@@ -347,6 +347,23 @@ const importSheet = {
             fr: "{count} noms de commerçants envoyés",
             pt: "{count} nomes de estabelecimentos enviados",
         }),
+        "import.resolveFootnoteStatement": t({
+            en: "Your statement's text went to our AI provider, and the file has been deleted. You choose what to import next.",
+            es: "El texto de tu estado de cuenta fue a nuestro proveedor de IA y el archivo ya se borró. Tú eliges qué importar a continuación.",
+            "es-ES":
+                "El texto de tu extracto fue a nuestro proveedor de IA y el archivo ya se borró. Tú eliges qué importar a continuación.",
+            fr: "Le texte de votre relevé est allé à notre fournisseur d'IA et le fichier a été supprimé. Vous choisissez ensuite quoi importer.",
+            pt: "O texto do seu extrato foi para o nosso provedor de IA e o arquivo já foi apagado. Você escolhe o que importar a seguir.",
+            "pt-PT":
+                "O texto do seu extrato foi para o nosso fornecedor de IA e o ficheiro já foi apagado. Escolhe o que importar a seguir.",
+        }),
+        "import.resolveDetailStatement": t({
+            en: "Asked when we read the statement.",
+            es: "Se preguntó al leer el estado de cuenta.",
+            "es-ES": "Se preguntó al leer el extracto.",
+            fr: "Demandé à la lecture du relevé.",
+            pt: "Perguntado ao ler o extrato.",
+        }),
         "import.resolveFootnote": t({
             en: "Only unmatched merchant names and your category names are sent. Never your amounts, dates, or the file itself.",
             es: "Solo se envían los nombres de comercios sin coincidencia y los de tus categorías. Nunca tus montos, fechas ni el archivo.",
@@ -579,12 +596,12 @@ const importSheet = {
             "pt-PT": "Traga os seus dados",
         }),
         "import.sourceLede": t({
-            en: "Bring transactions in from a file. CSV files are read on your device; PDF statements go to our AI provider.",
-            es: "Trae transacciones desde un archivo. Los CSV se leen en tu dispositivo; los PDF van a nuestro proveedor de IA.",
-            fr: "Importez des opérations depuis un fichier. Les CSV sont lus sur votre appareil ; les relevés PDF vont à notre fournisseur d'IA.",
-            pt: "Traga lançamentos de um arquivo. CSVs são lidos no seu dispositivo; extratos em PDF vão para o nosso provedor de IA.",
+            en: "Bring transactions in from a file. CSV files are read on your device; a PDF statement's text goes to our AI provider.",
+            es: "Trae transacciones desde un archivo. Los CSV se leen en tu dispositivo; el texto de los PDF va a nuestro proveedor de IA.",
+            fr: "Importez des opérations depuis un fichier. Les CSV sont lus sur votre appareil ; le texte des relevés PDF va à notre fournisseur d'IA.",
+            pt: "Traga lançamentos de um arquivo. CSVs são lidos no seu dispositivo; o texto dos extratos em PDF vai para o nosso provedor de IA.",
             "pt-PT":
-                "Traga registos de um ficheiro. Os CSV são lidos no seu dispositivo; os extratos em PDF vão para o nosso fornecedor de IA.",
+                "Traga registos de um ficheiro. Os CSV são lidos no seu dispositivo; o texto dos extratos em PDF vai para o nosso fornecedor de IA.",
         }),
         "import.startOver": t({
             en: "Start over",

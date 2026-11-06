@@ -25,6 +25,7 @@ export const USAGE_BY_TOKEN = [
     "groundedPerUser",
     "notificationReadPerUser",
     "pdfImportPerUser",
+    "pdfUploadPerUser",
     "receiptScanPerUser",
     "revenuecatSync",
     "voiceEntryPerUser",
