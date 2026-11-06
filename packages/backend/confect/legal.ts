@@ -257,6 +257,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "The app now asks our own server for logos. Logo.dev and Google no longer see your IP address.",
                     label: "Where logos come from",
                 },
+                {
+                    detail: "With Pro, opening your ledger on the website saves an unencrypted copy in your browser so it loads faster. Signing out deletes it.",
+                    label: "Website ledger",
+                },
             ],
             es: [
                 {
@@ -266,6 +270,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "La app ahora le pide los logos a nuestro propio servidor. Logo.dev y Google ya no ven tu dirección IP.",
                     label: "De dónde vienen los logos",
+                },
+                {
+                    detail: "Con Pro, al abrir tu registro en el sitio web se guarda una copia sin cifrar en tu navegador para que cargue más rápido. Al cerrar sesión se borra.",
+                    label: "Registro en el sitio web",
                 },
             ],
             fr: [
@@ -277,6 +285,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "L'app demande désormais les logos à notre propre serveur. Logo.dev et Google ne voient plus votre adresse IP.",
                     label: "D'où viennent les logos",
                 },
+                {
+                    detail: "Avec Pro, ouvrir votre registre sur le site enregistre une copie non chiffrée dans votre navigateur pour charger plus vite. La déconnexion la supprime.",
+                    label: "Registre sur le site",
+                },
             ],
             pt: [
                 {
@@ -286,6 +298,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "O app agora pede os logos ao nosso próprio servidor. A Logo.dev e o Google não veem mais o seu endereço IP.",
                     label: "De onde vêm os logos",
+                },
+                {
+                    detail: "Com o Pro, abrir seu registro no site salva uma cópia sem criptografia no navegador para carregar mais rápido. Sair da conta a apaga.",
+                    label: "Registro no site",
                 },
             ],
         },

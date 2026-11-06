@@ -5,7 +5,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import schema from "../../convex/schema";
 import { authenticatedAs, seedAuthUser } from "../test.helpers";
-import { optionalUserId, requireUserId, Unauthenticated } from "./auth";
+import { liveIdentity, optionalUserId, requireUserId, Unauthenticated } from "./auth";
 import { runEdge } from "./runEdge";
 
 const modules = import.meta.glob("../../convex/**/*.ts");
@@ -65,5 +65,24 @@ describe(optionalUserId, () => {
         });
 
         await expect(stale.run((ctx) => runEdge(optionalUserId(ctx)))).resolves.toBeNull();
+    });
+});
+
+describe(liveIdentity, () => {
+    it("returns the identity while its session is live", async () => {
+        const t = convexTest(schema, modules);
+        const identity = await seedAuthUser(t);
+
+        const resolved = await authenticatedAs(t, identity).run((ctx) => runEdge(liveIdentity(ctx)));
+
+        expect(resolved?.subject).toBe(identity.userId);
+    });
+
+    it("rejects a token that outlived its revoked session", async () => {
+        const t = convexTest(schema, modules);
+        const identity = await seedAuthUser(t);
+        const retained = t.withIdentity({ sessionId: "session-that-was-revoked", subject: identity.subject });
+
+        await expect(retained.run((ctx) => runEdge(liveIdentity(ctx)))).resolves.toBeNull();
     });
 });

@@ -1,5 +1,7 @@
 import { deleteByKey, executeTransaction, getByKey, openDatabase, put } from "@tanstack/react-db";
 import type { DbClient, DehydratedDbState } from "@tanstack/react-db";
+import { createIsomorphicFn } from "@tanstack/react-start";
+import { getCookie } from "@tanstack/react-start/server";
 
 import type { MintedPhotos } from "@/components/dashboard/shell/photos";
 
@@ -16,6 +18,13 @@ export interface LedgerSnapshot {
 }
 
 let forgotten = false;
+
+const COPY_COOKIE = "ledger_copy";
+const A_YEAR_MS = 31_536_000_000;
+
+export const hasLedgerCopy = createIsomorphicFn()
+    .server(() => getCookie(COPY_COOKIE) !== undefined)
+    .client(() => document.cookie.includes(`${COPY_COOKIE}=`));
 
 const dropLatest = (store: IDBObjectStore) => deleteByKey(store, LATEST);
 
@@ -71,11 +80,22 @@ export async function saveLedger(db: DbClient, photos: MintedPhotos | undefined,
     if (forgotten) {
         return;
     }
-    await inStore("readwrite", (store) => put(store, snapshotOf(db, photos, userId), LATEST)).catch(() => undefined);
+    await inStore("readwrite", (store) => put(store, snapshotOf(db, photos, userId), LATEST))
+        .then(() =>
+            window.cookieStore?.set({
+                expires: Date.now() + A_YEAR_MS,
+                name: COPY_COOKIE,
+                path: "/",
+                sameSite: "lax",
+                value: "1",
+            })
+        )
+        .catch(() => undefined);
 }
 
 export async function dropLedger() {
     await inStore("readwrite", dropLatest).catch(() => undefined);
+    await window.cookieStore?.delete({ name: COPY_COOKIE, path: "/" }).catch(() => undefined);
 }
 
 export async function forgetLedger() {

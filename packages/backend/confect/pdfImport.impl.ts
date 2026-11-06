@@ -12,11 +12,12 @@ import * as Redacted from "effect/Redacted";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { ActionCtx, Auth, MutationCtx, QueryCtx, QueryRunner, Scheduler } from "./_generated/services";
+import { ActionCtx, MutationCtx, QueryCtx, QueryRunner, Scheduler } from "./_generated/services";
 import { classify, MAX_LABELS, scheduleImportGrounded } from "./csvImport";
 import type { LabelSuggestion } from "./csvImport.spec";
 import { sanitizeRegionCode } from "./enrichment";
 import { traced } from "./lib/aiTracing";
+import { liveIdentity } from "./lib/auth";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst, perUserBurst } from "./lib/limits";
@@ -33,10 +34,7 @@ const requestUpload = FunctionImpl.make(
     spec,
     "requestUpload",
     Effect.fn("PdfImport.requestUpload")(function* requestUpload() {
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(yield* MutationCtx);
         if (identity === null) {
             return { status: "unauthenticated" as const, url: null };
         }
@@ -169,10 +167,7 @@ const extract = FunctionImpl.make(
     spec,
     "extract",
     Effect.fn("PdfImport.extract")(function* extract(args) {
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(yield* ActionCtx);
         if (identity === null) {
             return failure("unauthenticated");
         }

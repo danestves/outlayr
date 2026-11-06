@@ -30,6 +30,7 @@ function allowedHosts(siteUrl: string, convexSiteUrl: Option.Option<string>) {
 }
 
 const LONGEST_COOKIE_MAX_AGE_SECONDS = 400 * 24 * 60 * 60;
+const CONVEX_JWT_SECONDS = 24 * 60 * 60;
 
 /** Better Auth limits per IP; these are per address, so one inbox cannot be guessed or flooded from many IPs. */
 const EMAIL_LIMITED_PATHS = new Set([
@@ -231,6 +232,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
             convex({
                 authConfig,
                 jwksRotateOnTokenGenerationError: true,
+                jwt: { expirationSeconds: CONVEX_JWT_SECONDS },
             }),
         ],
         session: {

@@ -15,8 +15,9 @@ import * as Schema from "effect/Schema";
 import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { ActionCtx, Auth, MutationCtx, MutationRunner, Scheduler } from "./_generated/services";
+import { ActionCtx, MutationCtx, MutationRunner, Scheduler } from "./_generated/services";
 import { traced } from "./lib/aiTracing";
+import { liveIdentity } from "./lib/auth";
 import { admitCapture } from "./lib/captures";
 import { anthropicApiKey, claudeModelId, elevenLabsApiKey } from "./lib/config";
 import type { LedgerContext } from "./lib/ledgerPrompt";
@@ -45,10 +46,7 @@ const startThread = FunctionImpl.make(
     spec,
     "startThread",
     Effect.fn("VoiceEntry.startThread")(function* startThread() {
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(yield* MutationCtx);
         if (identity === null) {
             return { status: "unauthenticated" as const, threadId: null };
         }
@@ -130,10 +128,7 @@ const admit = FunctionImpl.make(
     spec,
     "admit",
     Effect.fn("VoiceEntry.admit")(function* admit() {
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(yield* MutationCtx);
         if (identity === null) {
             return "notEntitled" as const;
         }
@@ -151,10 +146,7 @@ const speak = FunctionImpl.make(
     spec,
     "speak",
     Effect.fn("VoiceEntry.speak")(function* speak(args) {
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(yield* ActionCtx);
         if (identity === null) {
             return failure("unauthenticated");
         }

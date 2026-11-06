@@ -1,5 +1,5 @@
 import { ledgerGlance } from "@outlayr/backend/confect/ledgerView";
-import { Outlet, createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect, useNavigate, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
@@ -14,9 +14,9 @@ import { mintedPhotos, photoKeys, seedPhotos, usePhotoUrls } from "@/components/
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
-import { dropLedger, restoreLedger, saveLedger } from "@/lib/ledger-cache";
+import { dropLedger, hasLedgerCopy, restoreLedger, saveLedger } from "@/lib/ledger-cache";
 import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
-import { onSessionChange, userOf } from "@/lib/session";
+import { currentToken, onSessionChange, userOf } from "@/lib/session";
 
 export const Route = createFileRoute("/_account/app")({
     component: App,
@@ -24,10 +24,14 @@ export const Route = createFileRoute("/_account/app")({
     validateSearch: dashboardSearch,
     ssr: false,
     staleTime: Number.POSITIVE_INFINITY,
-    loader: async ({ context }) => {
+    loader: async ({ context, location }) => {
         const asOf = Date.now();
-        context.session.token = context.token;
-        const userId = context.token ? userOf(context.token) : undefined;
+        const token = context.token ?? (await currentToken(context.session));
+        if (!token) {
+            throw redirect({ search: { redirect: location.href }, to: "/login" });
+        }
+        context.session.token = token;
+        const userId = userOf(token);
         const idle = context.dbClient.collection(ledgerCollections.transactions).status === "idle";
         const restored = idle && userId !== undefined ? await restoreLedger(context.dbClient, userId) : undefined;
         const settled = preloadLedger(context.dbClient).then(() => true);
@@ -67,6 +71,9 @@ function App() {
 }
 
 function Pending() {
+    if (!hasLedgerCopy()) {
+        return null;
+    }
     return (
         <DashboardShell>
             <DashboardPending />

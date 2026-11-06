@@ -379,7 +379,11 @@ describe("voice thread + speak guard ladder", () => {
             throw new Error("Expected a thread for a signed-in caller");
         }
         const page = { cursor: null, numItems: 10 };
-        const impostor = t.withIdentity({ issuer: "https://elsewhere.example", subject: identity.subject });
+        const impostor = t.withIdentity({
+            issuer: "https://elsewhere.example",
+            sessionId: identity.sessionId,
+            subject: identity.subject,
+        });
         await expect(
             impostor.query(api.voiceEntry.listTurns, { paginationOpts: page, threadId })
         ).resolves.toMatchObject({ isDone: true, page: [] });

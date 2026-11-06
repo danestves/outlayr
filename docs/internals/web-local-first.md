@@ -4,7 +4,7 @@
 
 ## How a reload works
 
-1. The server sends the shell only (`ssr: false` on `/_account/app`). `_account` reads the session from the `convex_jwt` cookie (`jwtCache`), so the response makes no Convex call. A signed-out visitor still gets a real 307, because the gate lives in `_account`.
+1. The server sends the shell only (`ssr: false` on `/_account/app`), and never waits on Convex for it. A live `convex_jwt` cookie (`jwtCache`) is the session. With no JWT but a session cookie, which is every return after the JWT's 24 hours, the `/app` loader fetches the token in the browser, and redirects if none comes back. With neither, the visitor gets a real 307, because the gate lives in `_account`.
 2. The loader restores the last copy of the ledger from IndexedDB (`lib/ledger-cache.ts`) into the same TanStack DB collections with `DbClient.hydrate`, and returns without waiting for Convex.
 3. The collections subscribe in the background. Their first result replaces the restored rows, so a row added or deleted elsewhere appears or disappears on its own.
 4. Once synced, the copy is saved again, a second after the last change.
@@ -17,7 +17,8 @@
 - Set `pendingMs: 0` and `pendingMinMs: 0` on a route with a pending component: the router's default holds it on screen for 500 ms, whatever the data does.
 - Restore only into idle collections: a second load, after a hover preload or a retry, must not seed older rows under a running sync.
 - Count a restored photo URL's remint from its mint, not the mount: it is already part way through its life.
-- A screen's pending state is that same screen inside skullet's `<Skeleton loading>`, fed by `sampleDashboard`, so it cannot drift from the real layout. It is lazy and waits 150 ms: rendered on the server it nearly doubled the reload, and a restored copy lands before the wait ends. Leave the live screens unwrapped: remembered shapes add nothing over the copy, and their `MutationObserver` serializes the DOM after every chart hover.
+- A screen's pending state is that same screen inside skullet's `<Skeleton loading>`, fed by `sampleDashboard`, so it cannot drift from the real layout. Leave the live screens unwrapped: remembered shapes add nothing over the copy, and their `MutationObserver` serializes the DOM after every chart hover.
+- The `ledger_copy` cookie tells the server a copy exists. Without it, `_account` renders the skeleton on the server, so a first visit paints it long before the JavaScript arrives. It lives in `_account` because the router remounts an `ssr: false` route's pending component while hydrating, and each mount renders and measures the sample again. With the cookie, the skeleton is lazy and waits 150 ms: on the server it nearly doubled the reload, and a restored copy lands before the wait ends.
 - Bump `LEDGER_CACHE_VERSION` when a ledger row loses or retypes a field the web reads. Adding a field needs no bump, but the code must tolerate its absence until the first sync.
 
 ## The copy is the user's financial data

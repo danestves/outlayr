@@ -8,8 +8,9 @@ import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import databaseSchema from "./_generated/schema";
-import { Auth, MutationCtx } from "./_generated/services";
+import { ActionCtx, MutationCtx } from "./_generated/services";
 import { traced } from "./lib/aiTracing";
+import { liveIdentity } from "./lib/auth";
 import { admitCapture } from "./lib/captures";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
 import { admitScan, failure, rateLimiter, readReceipt } from "./receiptScan";
@@ -22,10 +23,7 @@ const admit = FunctionImpl.make(
     spec,
     "admit",
     Effect.fn("ReceiptScan.admit")(function* admit() {
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(yield* MutationCtx);
         if (identity === null) {
             return "notEntitled" as const;
         }
@@ -43,10 +41,7 @@ const scan = FunctionImpl.make(
     spec,
     "scan",
     Effect.fn("ReceiptScan.scan")(function* scan(args) {
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(yield* ActionCtx);
         if (identity === null) {
             return failure("unauthenticated");
         }
