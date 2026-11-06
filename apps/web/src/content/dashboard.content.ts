@@ -14,6 +14,7 @@ const dashboard = {
             }),
             label: t({ en: "Add", es: "Añadir" }),
         },
+        loadingLabel: t({ en: "Loading your ledger", es: "Cargando tus movimientos" }),
         filters: {
             accounts: t({ en: "accounts", es: "cuentas" }),
             allAccounts: t({ en: "All accounts", es: "Todas las cuentas" }),
