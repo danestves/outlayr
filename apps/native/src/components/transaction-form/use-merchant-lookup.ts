@@ -314,6 +314,9 @@ export function useMerchantLookup({
         }));
     };
 
+    const readCarried = () =>
+        carriedSlots(guard(), { categorySource, identitySource, tagsSource }, suggestedDomainRef.current);
+
     const carry = (savedId: string, saved: SavedEntry, entryCurrency: string) => {
         const website = websiteRef.current;
         if (website?.key === merchantKey(saved.merchant) && website.photoUri === identityReads.draft().photoUri) {
@@ -326,6 +329,7 @@ export function useMerchantLookup({
                 globalCurrency,
                 locale,
                 merchant: saved.merchant,
+                read: () => ({ ...readCarried(), domain: website.domain }),
                 savedId,
             });
         }
@@ -341,8 +345,7 @@ export function useMerchantLookup({
                   forIncome: saved.income,
                   globalCurrency,
                   merchant: saved.merchant,
-                  read: () =>
-                      carriedSlots(guard(), { categorySource, identitySource, tagsSource }, suggestedDomainRef.current),
+                  read: readCarried,
                   savedId,
               })
             : null;

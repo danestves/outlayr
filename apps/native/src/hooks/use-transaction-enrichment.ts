@@ -243,8 +243,8 @@ function emitDomainResult(
 function emitRemoteResult(ports: EnrichmentPorts, key: string, result: RemoteEnrichmentResult | null) {
     const fallback = ports.curatedFallbackRef.current;
     if (fallback != null && fallback.key === key) {
-        if (result?.domain != null) {
-            emit(ports, { ...fallback.suggestion, domain: result.domain });
+        if (result != null) {
+            emit(ports, { ...fallback.suggestion, domain: result.domain, lookedUp: true });
         }
         return;
     }

@@ -5,6 +5,8 @@ import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -33,6 +35,7 @@ import { isForbiddenLogoOrigin } from "./groundedLookup";
 import { traced } from "./lib/aiTracing";
 import { liveIdentity, optionalUserId } from "./lib/auth";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
+import { outboundHttp } from "./lib/http";
 import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
 import { isPro } from "./revenuecat";
 
@@ -41,14 +44,11 @@ const LOGO_CHECK_TIMEOUT_MS = 6000;
 const USER_SUBMITTED_MODEL_ID = "user";
 
 const logoExists = (domain: string) =>
-    Effect.tryPromise(() =>
-        fetch(`${MERCHANT_LOGOS_ORIGIN}/${encodeURIComponent(domain)}`, {
-            method: "HEAD",
-            signal: AbortSignal.timeout(LOGO_CHECK_TIMEOUT_MS),
-        })
-    ).pipe(
-        Effect.map((response) => response.ok),
-        Effect.orElseSucceed(() => false)
+    HttpClient.execute(HttpClientRequest.head(`${MERCHANT_LOGOS_ORIGIN}/${encodeURIComponent(domain)}`)).pipe(
+        Effect.timeout(LOGO_CHECK_TIMEOUT_MS),
+        Effect.map((response) => response.status >= 200 && response.status < 300),
+        Effect.orElseSucceed(() => false),
+        Effect.provide(outboundHttp)
     );
 
 const sharedCategory = Effect.fn("Enrichment.sharedCategory")(function* sharedCategory(
@@ -68,6 +68,11 @@ const sharedCategory = Effect.fn("Enrichment.sharedCategory")(function* sharedCa
     }
     const apiKey = yield* anthropicApiKey;
     if (Option.isNone(apiKey) || args.aiConsent !== AI_CONSENT_VERSION) {
+        return null;
+    }
+    const ctx = yield* ActionCtx;
+    const global = yield* Effect.promise(() => rateLimiter.limit(ctx, "enrichmentGlobal"));
+    if (!global.ok) {
         return null;
     }
     const modelId = yield* claudeFastModelId;

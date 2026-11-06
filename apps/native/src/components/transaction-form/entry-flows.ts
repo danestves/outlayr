@@ -130,6 +130,7 @@ export interface ShareWebsiteInput {
     globalCurrency: string;
     locale: string | undefined;
     merchant: string;
+    read: () => { carryCategory: boolean; carryTags: boolean; domain: string | null };
     savedId: string;
 }
 
@@ -138,50 +139,6 @@ const sharedCategoryName = (db: Database, savedId: string) => {
     const category = categoryId === null ? null : getCategoryById(db, categoryId);
     return category?.preset ?? null;
 };
-
-export const shareMerchantWebsite = Effect.fn("TransactionForm.shareWebsite")(function* shareMerchantWebsite(
-    input: ShareWebsiteInput
-) {
-    const { currency, db, domain, forIncome, merchant, savedId } = input;
-    const key = merchantKey(merchant);
-    const categoryName = sharedCategoryName(db, savedId);
-    const answer = {
-        categoryName,
-        domain,
-        emoji: null,
-        grounding: false,
-        isNewCategory: false,
-        merchantName: merchant,
-        parentCategoryName: null,
-        tags: [],
-    };
-    const cached = getCachedEnrichment(key, currency);
-    setCachedEnrichment(key, { ...answer, ...(cached.hit ? cached.value : null), domain }, currency);
-    const remembered = yield* recallMerchant(db, merchant, currency);
-    yield* rememberMerchant(db, merchant, currency, { ...answer, ...remembered, domain });
-    yield* applyMerchantToSiblings(db, {
-        categoryId: null,
-        currency: input.forCurrency,
-        defaultCurrency: input.globalCurrency,
-        discard: discardStoredPhoto,
-        excludeId: savedId,
-        income: forIncome,
-        key,
-        persistLogo: carriedLogo(domain, merchant).pipe(
-            Effect.map((imageUri) => ({
-                imageColor: getTransactionById(db, savedId)?.imageColor ?? null,
-                imageUri,
-            })),
-            Effect.provide(outboundHttp),
-            Effect.catchCause((cause) => Effect.fail(Cause.squash(cause)))
-        ),
-        tagIds: [],
-    });
-    const submit = merchantWebsiteTransport();
-    if (submit !== null) {
-        yield* submit({ categoryName, currency, domain, income: forIncome, locale: input.locale, name: merchant });
-    }
-});
 
 export interface CarryInput {
     db: Database;
@@ -217,6 +174,45 @@ export const carryLookup = Effect.fn("TransactionForm.carryLookup")(function* ca
         persistLogo,
         tagIds: carriedTags.map((row) => row.tagId),
     });
+});
+
+export const shareMerchantWebsite = Effect.fn("TransactionForm.shareWebsite")(function* shareMerchantWebsite(
+    input: ShareWebsiteInput
+) {
+    const { currency, db, domain, forIncome, merchant, savedId } = input;
+    const key = merchantKey(merchant);
+    const categoryName = sharedCategoryName(db, savedId);
+    const answer = {
+        categoryName,
+        domain,
+        emoji: null,
+        grounding: false,
+        isNewCategory: false,
+        merchantName: merchant,
+        parentCategoryName: null,
+        tags: [],
+    };
+    const cached = getCachedEnrichment(key, currency);
+    setCachedEnrichment(key, { ...answer, ...(cached.hit ? cached.value : null), domain }, currency);
+    const remembered = yield* recallMerchant(db, merchant, currency);
+    yield* rememberMerchant(db, merchant, currency, { ...answer, ...remembered, domain });
+    const submit = merchantWebsiteTransport();
+    yield* Effect.all(
+        [
+            carryLookup(input),
+            submit === null
+                ? Effect.void
+                : submit({
+                      categoryName,
+                      currency,
+                      domain,
+                      income: forIncome,
+                      locale: input.locale,
+                      name: merchant,
+                  }).pipe(Effect.ignore({ log: true })),
+        ],
+        { concurrency: "unbounded", discard: true }
+    );
 });
 
 export const createTagEntry = Effect.fn("TransactionForm.createTag")(function* createTagEntry(

@@ -920,6 +920,24 @@ describe("submitWebsite", () => {
         });
     });
 
+    it("stops sharing after ten submissions from one person in a day", async () => {
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(() => Promise.resolve(new Response(null, { status: 200 })))
+        );
+        const t = convexTest(schema, modules);
+        rateLimiterTest.register(t);
+        const identity = await seedAuthUser(t);
+        const names = Array.from({ length: 11 }, (_, index) => `merchant ${String.fromCodePoint(97 + index)}`);
+
+        for (const name of names) {
+            await authenticatedAs(t, identity).action(api.enrichment.submitWebsite, { ...SUBMISSION, name });
+        }
+
+        await expect(shared(t, "merchant j|usd")).resolves.toMatchObject({ source: "user" });
+        await expect(shared(t, "merchant k|usd")).resolves.toBeNull();
+    });
+
     it("never replaces a merchant already on the list", async () => {
         vi.stubGlobal(
             "fetch",
