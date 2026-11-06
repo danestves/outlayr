@@ -11,7 +11,6 @@ import type { SpendDb } from "./budget-spent";
 export const META_KEYS = {
     accountDeferred: "accountDeferred",
     autologAccess: "autologAccess",
-    autologReviewPending: "autologReviewPending",
     autologUsage: "autologUsage",
     autologWaiting: "autologWaiting",
     categoryLanguage: "categoryLanguage",
@@ -46,6 +45,7 @@ export const META_KEYS = {
     referralRewardSeen: "referralRewardSeen",
     reminderAsked: "reminderAsked",
     reminderChosen: "reminderChosen",
+    reviewPending: "reviewPending",
     syncAccountSubject: "syncAccountSubject",
     syncCursor: "syncCursor",
     syncRestoresReread: "syncRestoresReread",

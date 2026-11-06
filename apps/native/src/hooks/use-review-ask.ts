@@ -28,10 +28,10 @@ const askSoon = (db: Database) => {
     return () => clearTimeout(timer);
 };
 
-export function useAutologReview(db: Database): void {
+export function useReviewAsk(db: Database): void {
     const pending = useLiveValue(
         appMeta,
-        () => db.select().from(appMeta).where(eq(appMeta.key, META_KEYS.autologReviewPending)),
+        () => db.select().from(appMeta).where(eq(appMeta.key, META_KEYS.reviewPending)),
         (rows) => rows[0]?.value === "1"
     );
     const lockOpen = useAppLockOpen();

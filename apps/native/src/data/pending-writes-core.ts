@@ -985,7 +985,7 @@ const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
         yield* writeAutologWaiting(db, []);
     }
     if (fresh.autologged > 0) {
-        yield* setMeta(db, META_KEYS.autologReviewPending, "1");
+        yield* setMeta(db, META_KEYS.reviewPending, "1");
     }
     yield* attemptSync("release", () => {
         release(claimed);

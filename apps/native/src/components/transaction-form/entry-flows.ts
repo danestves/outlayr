@@ -2,6 +2,7 @@ import { merchantKey } from "@outlayr/money/merchant-key";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 
+import { META_KEYS, setMeta } from "@/data/app-meta-core";
 import { applyMerchantToSiblings } from "@/data/merchant-siblings-core";
 import { setBoolSetting } from "@/data/settings-core";
 import { tagIdsForQuery, tagsRepo } from "@/data/tags-core";
@@ -11,7 +12,6 @@ import { enableReminderStep } from "@/domain/reminder";
 import { outboundHttp } from "@/lib/http";
 import { fetchMerchantImage } from "@/lib/logo-fetch";
 import { Reminders } from "@/lib/reminders";
-import { askForReview } from "@/lib/review-prompt";
 import { carriedLogo, discardStoredPhoto, entryMedia } from "@/state/entry-commands";
 import { commitEntry } from "@/state/entry-commit";
 import type { EntryCommit } from "@/state/entry-commit";
@@ -40,7 +40,7 @@ export const saveEntry = Effect.fn("TransactionForm.saveEntry")(function* saveEn
         return true;
     }
     if (input.onSaved()) {
-        yield* Effect.forkDetach(logged("Failed to ask for a review")(askForReview(input.commit.db)));
+        yield* logged("Failed to flag a review ask")(setMeta(input.commit.db, META_KEYS.reviewPending, "1"));
     }
     return true;
 });
