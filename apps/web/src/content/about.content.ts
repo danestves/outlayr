@@ -70,8 +70,8 @@ const about = {
             {
                 label: t({ en: "Account", es: "Cuenta" }),
                 text: t({
-                    en: "Optional. Signing in with Apple or Google is needed for sync, voice entry, receipt scanning, and to buy Pro.",
-                    es: "Opcional. Necesitas iniciar sesión con Apple o Google para sincronizar, dictar registros, escanear recibos y comprar Pro.",
+                    en: "Optional. Signing in with Apple, Google, or email and password is needed for sync, voice entry, receipt scanning, and to buy Pro.",
+                    es: "Opcional. Necesitas iniciar sesión con Apple, con Google, o con un correo electrónico y una contraseña para sincronizar, dictar registros, escanear recibos y comprar Pro.",
                 }),
             },
             {

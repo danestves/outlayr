@@ -120,6 +120,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 
 ## Links
 
+- App Store: https://apps.apple.com/app/id6801652978
 - Google Play: https://play.google.com/store/apps/details?id=com.tryoutlayr.app
 - Source code: https://github.com/danestves/outlayr
 - X: https://x.com/tryoutlayr
