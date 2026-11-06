@@ -29,7 +29,10 @@ interface Selection {
 }
 
 function Standing({ budget, detail, selected }: Selection) {
-    const { ledger } = useDashboard();
+    const {
+        filters: { period },
+        ledger,
+    } = useDashboard();
     const copy = useIntlayer("dashboard-home").panel;
     const date = useDateFormat();
     const { money } = useDisplayFormat();
@@ -70,6 +73,11 @@ function Standing({ budget, detail, selected }: Selection) {
                         <span className={over ? "text-destructive" : undefined}>{Math.round(ratio * PERCENT)}%</span>
                     </div>
                     <p className="text-muted-foreground mt-2.5 text-[13px]">{ranOut}</p>
+                    {budget.from === period.from && budget.to === period.to ? null : (
+                        <p className="text-muted-foreground mt-1 font-mono text-xs tabular-nums">
+                            {date.day(budget.from)} - {date.day(budget.to)}
+                        </p>
+                    )}
                 </>
             ) : null}
         </section>
@@ -111,7 +119,7 @@ function ByDay({ detail, selected }: Selection) {
 }
 
 function Shares({ detail, selected }: Selection) {
-    const { ledger } = useDashboard();
+    const { ledger, photos: accountPhotos } = useDashboard();
     const copy = useIntlayer("dashboard-home").panel;
     const { money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
@@ -163,7 +171,9 @@ function Shares({ detail, selected }: Selection) {
                             const account = catalog.account(entry.id);
                             return (
                                 <li className="flex items-center gap-2.5 py-1.5 text-[13px]" key={entry.id ?? "none"}>
-                                    {account ? <AccountTile account={account} size="md" /> : null}
+                                    {account ? (
+                                        <AccountTile account={account} photos={accountPhotos} size="md" />
+                                    ) : null}
                                     <span className="min-w-0 flex-1 truncate font-medium">{entry.name}</span>
                                     <span className="font-mono text-xs tabular-nums">
                                         {money(entry.amount, ledger.currency)}
@@ -231,8 +241,8 @@ export function CategoryPanel() {
     const { category, period } = filters;
     const selected = category === null ? undefined : ledger.categories.get(category);
     const budget = useMemo(
-        () => (category === null ? null : categoryBudget(ledger, category, period)),
-        [category, ledger, period]
+        () => (category === null || filters.accounts.length > 0 ? null : categoryBudget(ledger, category, period)),
+        [category, filters.accounts, ledger, period]
     );
     const detail = useMemo(
         () => (category === null ? null : categoryDetail(ledger, category, period, { accounts: filters.accounts })),

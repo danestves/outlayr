@@ -18,7 +18,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 import { internal } from "../convex/_generated/api";
 import type { Doc } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
-import { monthWindow, utcOffsetOf } from "./mcpLedger";
+import { monthWindow, utcOffsetOf, zoneOffsets } from "./mcpLedger";
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
@@ -43,6 +43,79 @@ describe("utcOffsetOf", () => {
     ])("tells $west from $east at $midnight by the zone's offset", ({ east, midnight, west }) => {
         expect(utcOffsetOf(at(midnight), west)).toBe(west);
         expect(utcOffsetOf(at(midnight), east)).toBe(east);
+    });
+});
+
+const GMT_OFFSET = /GMT(?:([+-])(\d{2}):(\d{2}))?/;
+
+function zoneRules(timeZone: string) {
+    const format = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "longOffset" });
+    return (instant: number) => {
+        const name = format.formatToParts(instant).find((part) => part.type === "timeZoneName")?.value ?? "";
+        const [, sign, hours = "0", minutes = "0"] = GMT_OFFSET.exec(name) ?? [];
+        return (sign === "-" ? -1 : 1) * (Number(hours) * 60 + Number(minutes)) * 60_000;
+    };
+}
+
+describe("zoneOffsets", () => {
+    const SECOND = 1000;
+    const MINUTE = 60 * SECOND;
+    const DAY = 24 * HOUR;
+    const from = at("2010-01-01T00:00:00Z");
+    const to = at("2027-01-01T00:00:00Z");
+
+    it.each([
+        { moves: true, timeZone: "America/New_York" },
+        { moves: true, timeZone: "Europe/London" },
+        { moves: true, timeZone: "Australia/Lord_Howe" },
+        { moves: true, timeZone: "America/Caracas" },
+        { moves: true, timeZone: "Pacific/Apia" },
+        { moves: true, timeZone: "Africa/Casablanca" },
+        { moves: false, timeZone: "Asia/Kathmandu" },
+    ])(
+        "reads what the zone's own rules say at every instant, across its changes ($timeZone)",
+        ({ moves, timeZone }) => {
+            const offsetAt = zoneOffsets(timeZone);
+            const rules = zoneRules(timeZone);
+            const wrong: string[] = [];
+            const check = (instant: number) => {
+                if (offsetAt?.(instant) !== rules(instant)) {
+                    wrong.push(new Date(instant).toISOString());
+                }
+            };
+            for (let instant = from; instant < to; instant += 5.5 * HOUR) {
+                check(instant);
+            }
+            let changes = 0;
+            for (let day = from; day < to; day += DAY) {
+                if (rules(day) === rules(day + DAY - 1)) {
+                    continue;
+                }
+                changes += 1;
+                let low = day;
+                let high = day + DAY - 1;
+                while (high - low > SECOND) {
+                    const middle = low + Math.floor((high - low) / (2 * SECOND)) * SECOND;
+                    if (rules(middle) === rules(low)) {
+                        low = middle;
+                    } else {
+                        high = middle;
+                    }
+                }
+                for (let instant = high - 3 * SECOND; instant <= high + 3 * SECOND; instant += SECOND / 4) {
+                    check(instant);
+                }
+                for (let instant = day - DAY; instant < day + 2 * DAY; instant += 7 * MINUTE) {
+                    check(instant);
+                }
+            }
+            expect(changes > 0).toBe(moves);
+            expect(wrong).toStrictEqual([]);
+        }
+    );
+
+    it("rejects a zone it does not know", () => {
+        expect(zoneOffsets("Mars/Olympus")).toBeNull();
     });
 });
 

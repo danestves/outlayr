@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useCategoryName } from "@/components/dashboard/home/format";
-import { periodKeyOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
+import { periodKeyOf, periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { shortDay } from "@/lib/ledger";
@@ -61,7 +61,7 @@ function PeriodChip({ filters, ledger, setFilters }: Dashboard) {
                 >
                     {keys.map((key) => (
                         <Menu.RadioItem closeOnClick key={key} value={key}>
-                            {label({ ...filters.period, from: `${key}-01`, key })}
+                            {label(periodOf(key, ledger.firstDayOfMonth))}
                         </Menu.RadioItem>
                     ))}
                 </Menu.RadioGroup>

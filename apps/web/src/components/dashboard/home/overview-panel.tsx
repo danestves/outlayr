@@ -4,6 +4,8 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile, LookTile } from "@/components/ledger/tiles";
 import { categoryBudgets, spendSeries } from "@/lib/dashboard-series";
+import { endOfDay } from "@/lib/dashboard-series-ledger";
+import { netWorthPoints } from "@/lib/dashboard-series-net-worth";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { cn } from "@/lib/utils";
@@ -28,7 +30,7 @@ function Budgets() {
         const standings = categoryBudgets(ledger, period);
         const spent = spendSeries(ledger, period, { accounts: filters.accounts, category: null }).categories;
         const budgeted = [...standings].flatMap(([id, standing]) => {
-            const category = ledger.categories.get(id);
+            const category = ledger.budgetTargets.get(id);
             return category ? [{ category, standing }] : [];
         });
         const unbudgeted = spent.filter((each) => !standings.has(each.id) && each.total > 0);
@@ -38,7 +40,7 @@ function Budgets() {
             unbudgeted: unbudgeted.toSorted((a, b) => b.total - a.total),
         };
     }, [filters.accounts, ledger, period]);
-    if (rows.budgeted.length === 0 && rows.unbudgeted.length === 0) {
+    if (filters.accounts.length > 0 || (rows.budgeted.length === 0 && rows.unbudgeted.length === 0)) {
         return null;
     }
     return (
@@ -51,11 +53,11 @@ function Budgets() {
             title={copy.budgets}
         >
             <ul>
-                {rows.budgeted.slice(0, BUDGET_ROWS).map(({ category, standing }) => (
+                {rows.budgeted.map(({ category, standing }) => (
                     <li key={category.id}>
                         <button
                             className="block w-full cursor-pointer py-2 text-left"
-                            onClick={() => setFilters({ category: category.id })}
+                            onClick={() => setFilters({ category: category.topId })}
                             type="button"
                         >
                             <span className="flex items-center gap-2 text-[13px]">
@@ -108,29 +110,61 @@ function Budgets() {
 }
 
 function Accounts() {
-    const { overview, photos } = useDashboard();
+    const { filters, ledger, overview, photos } = useDashboard();
     const copy = useIntlayer("dashboard-home").panel;
+    const date = useDateFormat();
     const { money } = useDisplayFormat();
-    const { accounts, currency, net } = overview.balances;
-    if (accounts.length === 0) {
+    const catalog = useCatalog(ledger);
+    const { period } = filters;
+    const closed = period.to < ledger.today;
+    const shown = useMemo(() => {
+        if (!closed) {
+            const { accounts, net } = overview.balances;
+            return {
+                net,
+                rows: accounts.map((account, index) => ({
+                    balance: account.balanceInMainCurrency,
+                    key: `${index}-${account.name}`,
+                    look: account.look,
+                    name: account.name,
+                })),
+            };
+        }
+        const [end] = netWorthPoints(ledger, { accounts: [] }, [endOfDay(ledger, period.to)]);
+        return {
+            net: end?.net ?? 0,
+            rows: (end?.accounts ?? []).flatMap(({ balance, id }) => {
+                const look = catalog.account(id);
+                return look ? [{ balance, key: id, look, name: ledger.accounts.get(id)?.name ?? "" }] : [];
+            }),
+        };
+    }, [catalog, closed, ledger, overview.balances, period.to]);
+    if (shown.rows.length === 0) {
         return null;
     }
     return (
-        <PanelSection aside={copy.net({ amount: money(net, currency) })} title={copy.accounts}>
+        <PanelSection
+            aside={
+                closed
+                    ? copy.netOn({ amount: money(shown.net, ledger.currency), day: date.day(period.to) })
+                    : copy.net({ amount: money(shown.net, ledger.currency) })
+            }
+            title={copy.accounts}
+        >
             <ul>
-                {accounts.slice(0, ACCOUNT_ROWS).map((account, index) => (
-                    <li className="flex items-center gap-2.5 py-1.5 text-[13px]" key={`${index}-${account.name}`}>
+                {shown.rows.slice(0, ACCOUNT_ROWS).map((account) => (
+                    <li className="flex items-center gap-2.5 py-1.5 text-[13px]" key={account.key}>
                         <AccountTile account={account.look} photos={photos} />
                         <span className="min-w-0 flex-1 truncate font-medium">{account.name}</span>
                         <span className="font-mono text-[13px] tabular-nums">
-                            {money(account.balanceInMainCurrency, currency)}
+                            {money(account.balance, ledger.currency)}
                         </span>
                     </li>
                 ))}
             </ul>
-            {accounts.length > ACCOUNT_ROWS ? (
+            {shown.rows.length > ACCOUNT_ROWS ? (
                 <p className="text-muted-foreground pt-1.5 text-xs">
-                    {copy.moreAccounts({ count: accounts.length - ACCOUNT_ROWS })}
+                    {copy.moreAccounts({ count: shown.rows.length - ACCOUNT_ROWS })}
                 </p>
             ) : null}
         </PanelSection>

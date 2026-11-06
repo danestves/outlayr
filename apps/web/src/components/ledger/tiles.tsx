@@ -2,7 +2,9 @@ import FALLBACK_ICON from "@hugeicons/core-free-icons/MoreHorizontalCircle01Icon
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { useState } from "react";
 import type { ReactNode } from "react";
+import { useLocale } from "react-intlayer";
 
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
 import type { PhotoUrls } from "@/components/ledger/overview";
@@ -37,8 +39,16 @@ interface TileProps {
 }
 
 function Tile({ children, color, imageUrl, ink, size }: TileProps) {
-    if (imageUrl) {
-        return <img alt="" className={cn(SIZES[size].box, "shrink-0 bg-white object-cover")} src={imageUrl} />;
+    const [failedUrl, setFailedUrl] = useState<string>();
+    if (imageUrl && imageUrl !== failedUrl) {
+        return (
+            <img
+                alt=""
+                className={cn(SIZES[size].box, "shrink-0 bg-white object-cover")}
+                onError={() => setFailedUrl(imageUrl)}
+                src={imageUrl}
+            />
+        );
     }
     return (
         <span
@@ -79,12 +89,12 @@ export function LookTile({ look, photos, size = "md" }: LookTileProps) {
 
 const WORDS = /[^\p{L}\p{N}]+/u;
 
-function initialsOf(name: string) {
+function initialsOf(name: string, locale: string) {
     const words = name.trim().split(WORDS).filter(Boolean);
     return [words[0], words.length > 1 ? words.at(-1) : undefined]
         .map((word) => [...(word ?? "")][0] ?? "")
         .join("")
-        .toLocaleUpperCase();
+        .toLocaleUpperCase(locale);
 }
 
 export function AccountTile({
@@ -96,6 +106,7 @@ export function AccountTile({
     photos?: PhotoUrls;
     size?: TileSize;
 }) {
+    const { locale } = useLocale();
     const imageUrl = account.imageKey ? photos?.get(account.imageKey) : undefined;
     return (
         <Tile
@@ -105,7 +116,7 @@ export function AccountTile({
             size={size}
         >
             {account.person ? (
-                <span className={cn("font-semibold", SIZES[size].initial)}>{initialsOf(account.name)}</span>
+                <span className={cn("font-semibold", SIZES[size].initial)}>{initialsOf(account.name, locale)}</span>
             ) : (
                 <SymbolGlyph look={account} size={size} />
             )}
@@ -114,9 +125,12 @@ export function AccountTile({
 }
 
 export function MerchantTile({ imageUrl, name, size = "sm" }: { imageUrl?: string; name: string; size?: TileSize }) {
+    const { locale } = useLocale();
     return (
         <Tile color="var(--color-muted)" imageUrl={imageUrl} ink="plain" size={size}>
-            <span className={cn("font-semibold", SIZES[size].initial)}>{[...name.trim()][0]?.toLocaleUpperCase()}</span>
+            <span className={cn("font-semibold", SIZES[size].initial)}>
+                {[...name.trim()][0]?.toLocaleUpperCase(locale)}
+            </span>
         </Tile>
     );
 }

@@ -51,11 +51,12 @@ function StandoutCard({ card, model }: { card: Standout; model: InsightsModel })
     const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-insights");
     const fmt = useInsightsFormat(ledger);
-    const category = ledger.categories.get(card.categoryId);
+    const target = ledger.budgetTargets.get(card.categoryId);
+    const category = target ?? ledger.categories.get(card.categoryId);
     return (
         <Link
             className="border-border hover:bg-muted block border-b px-5 py-4"
-            search={(previous) => ({ ...previous, category: card.categoryId })}
+            search={(previous) => ({ ...previous, category: target?.topId ?? card.categoryId })}
             to="/app"
         >
             <span className="flex items-center gap-2">

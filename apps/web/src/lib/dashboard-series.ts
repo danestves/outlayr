@@ -1,13 +1,13 @@
-import { accountBalances } from "@outlayr/backend/confect/ledgerView";
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
-import { budgetStanding, wall, wallDay } from "@outlayr/backend/confect/mcpLedger";
-import { contributesTo, spentForCategory } from "@outlayr/money/budget-spent";
+import { budgetStanding, wall } from "@outlayr/backend/confect/mcpLedger";
+import { spentForCategory } from "@outlayr/money/budget-spent";
 import { merchantKey } from "@outlayr/money/merchant-key";
 
 import type { ChartDatum } from "@/components/charts/shared";
 
 import { endOfDay, round, rowsBetween, rowsOf, startOfDay, total } from "./dashboard-series-ledger";
 import type { Ledger, LedgerRow, Scope } from "./dashboard-series-ledger";
+import { netWorthPoints } from "./dashboard-series-net-worth";
 import { daysFrom, priorSlice, periodOf, shiftPeriodKey } from "./dashboard-series-period";
 import type { Period } from "./dashboard-series-period";
 import { daysBetween } from "./ledger";
@@ -98,11 +98,11 @@ export function categoriesOf(ledger: Ledger, rows: readonly LedgerRow[], base: s
     );
 }
 
-export interface DashboardScope extends Scope {
+interface DashboardScope extends Scope {
     category: string | null;
 }
 
-export interface SpendSeries {
+interface SpendSeries {
     categories: readonly SeriesCategory[];
     data: readonly ChartDatum[];
     income: number;
@@ -151,7 +151,7 @@ export interface Kpi {
     value: number;
 }
 
-export interface Kpis {
+interface Kpis {
     income: Kpi;
     kept: Kpi & { share: number | null };
     netWorth: Kpi;
@@ -159,15 +159,6 @@ export interface Kpis {
 }
 
 const change = (value: number, prior: number) => (prior === 0 ? null : (value - prior) / Math.abs(prior));
-
-export function netWorthAt(ledger: Ledger, scope: Scope, instant: number) {
-    const chosen = new Set(scope.accounts);
-    const books: LedgerBooks =
-        chosen.size === 0
-            ? ledger.books
-            : { ...ledger.books, accounts: ledger.books.accounts.filter((row) => chosen.has(row.localId)) };
-    return accountBalances(books, ledger.currency, ledger.rates, { now: instant, offsetAt: ledger.offsetAt }).net;
-}
 
 export function kpis(ledger: Ledger, period: Period, scope: Scope): Kpis {
     const through = ledger.today < period.to ? ledger.today : period.to;
@@ -181,8 +172,9 @@ export function kpis(ledger: Ledger, period: Period, scope: Scope): Kpis {
     const keptNow = round(ledger, incomeNow - spentNow);
     const keptBefore = round(ledger, incomeBefore - spentBefore);
     const asOf = Math.min(ledger.now, endOfDay(ledger, period.to));
-    const netNow = netWorthAt(ledger, scope, asOf);
-    const netBefore = netWorthAt(ledger, scope, Math.min(startOfDay(ledger, period.from) - 1, asOf));
+    const [before, now] = netWorthPoints(ledger, scope, [Math.min(startOfDay(ledger, period.from) - 1, asOf), asOf]);
+    const netBefore = before?.net ?? 0;
+    const netNow = now?.net ?? 0;
     return {
         income: { delta: change(incomeNow, incomeBefore), prior: incomeBefore, value: incomeNow },
         kept: {
@@ -223,18 +215,17 @@ function standingOf(ledger: Ledger, budget: Budget, categoryId: string, period: 
         offsetAt: ledger.offsetAt,
         rates: ledger.rates,
     };
+    const filed = ledger.expensesByCategory.get(categoryId) ?? [];
     const standing = budgetStanding(
         budget,
         budget.rollover,
-        (start, last) => spentForCategory(ledger.expenses, categoryId, start, last),
+        (start, last) => spentForCategory(filed, categoryId, start, last),
         clock
     );
     const byDay = new Map<string, number>();
-    for (const expense of ledger.expenses) {
-        const day = wallDay(expense.date);
-        const inWindow = day >= standing.from && day <= standing.to && expense.date.getTime() <= clock.now.getTime();
-        if (inWindow && contributesTo(expense, categoryId)) {
-            byDay.set(day, (byDay.get(day) ?? 0) + expense.amount);
+    for (const { amount, date, day } of filed) {
+        if (day >= standing.from && day <= standing.to && date.getTime() <= clock.now.getTime()) {
+            byDay.set(day, (byDay.get(day) ?? 0) + amount);
         }
     }
     let spent = 0;
@@ -274,14 +265,14 @@ export function categoryBudgets(ledger: Ledger, period: Period) {
     return standings;
 }
 
-export interface ShareRow {
+interface ShareRow {
     amount: number;
     id: string | null;
     name: string;
     share: number;
 }
 
-export interface MerchantRow {
+interface MerchantRow {
     amount: number;
     count: number;
     name: string;

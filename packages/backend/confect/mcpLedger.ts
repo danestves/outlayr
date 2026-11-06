@@ -124,6 +124,9 @@ export const fixedOffset =
     () =>
         offsetMs;
 
+const OFFSET_BUCKET_MS = DAY_MS;
+const CACHED_RANGE_MS = 8_000_000_000_000_000;
+
 export function zoneOffsets(timeZone: string): OffsetAt | null {
     let format: Intl.DateTimeFormat;
     try {
@@ -140,7 +143,7 @@ export function zoneOffsets(timeZone: string): OffsetAt | null {
     } catch {
         return null;
     }
-    return (instant) => {
+    const exact = (instant: number) => {
         const parts = new Map(format.formatToParts(instant).map((part) => [part.type, Number(part.value)]));
         const part = (type: Intl.DateTimeFormatPartTypes) => parts.get(type) ?? 0;
         const wallMs = Date.UTC(
@@ -152,6 +155,20 @@ export function zoneOffsets(timeZone: string): OffsetAt | null {
             part("second")
         );
         return wallMs - Math.floor(instant / 1000) * 1000;
+    };
+    const steady = new Map<number, number | null>();
+    return (instant) => {
+        if (!(Math.abs(instant) <= CACHED_RANGE_MS)) {
+            return exact(instant);
+        }
+        const bucket = Math.floor(instant / OFFSET_BUCKET_MS);
+        let offset = steady.get(bucket);
+        if (offset === undefined) {
+            const first = exact(bucket * OFFSET_BUCKET_MS);
+            offset = first === exact((bucket + 1) * OFFSET_BUCKET_MS - 1) ? first : null;
+            steady.set(bucket, offset);
+        }
+        return offset ?? exact(instant);
     };
 }
 

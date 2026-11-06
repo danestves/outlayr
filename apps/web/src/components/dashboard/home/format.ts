@@ -30,18 +30,22 @@ export function useDateFormat() {
     }, [date]);
 }
 
-export const titled = (name: string) => `${name.charAt(0).toLocaleUpperCase()}${name.slice(1)}`;
+export const titled = (name: string, locale: string) => `${name.charAt(0).toLocaleUpperCase(locale)}${name.slice(1)}`;
 
 export function useCategoryName() {
     const { uncategorized } = useIntlayer("dashboard-home");
+    const { locale } = useLocale();
     return (category: Pick<LedgerCategory, "id" | "name">) =>
-        category.id === UNCATEGORIZED_ID ? uncategorized.value : titled(category.name);
+        category.id === UNCATEGORIZED_ID ? uncategorized.value : titled(category.name, locale);
 }
 
 export function usePeriodTitle(firstDayOfMonth: number) {
     const date = useDateFormat();
+    const { locale } = useLocale();
     return (period: Period) =>
-        firstDayOfMonth === 1 ? titled(date.month(period.key)) : `${date.day(period.from)} - ${date.day(period.to)}`;
+        firstDayOfMonth === 1
+            ? titled(date.month(period.key), locale)
+            : `${date.day(period.from)} - ${date.day(period.to)}`;
 }
 
 export function useWholeMoney(currency: string) {

@@ -1,4 +1,4 @@
-import { ledgerOverview } from "@outlayr/backend/confect/ledgerView";
+import { ledgerGlance } from "@outlayr/backend/confect/ledgerView";
 import { Outlet, createFileRoute, redirect, useNavigate, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
@@ -8,7 +8,7 @@ import { useIntlayer } from "react-intlayer";
 import { LINE_PILL, Muted, SOLID_PILL, Screen } from "@/components/account/parts";
 import { HomePanelPending, HomePending } from "@/components/dashboard/home/home-pending";
 import { signOut } from "@/components/dashboard/shell/account-menu";
-import { DashboardContext, resolveFilters } from "@/components/dashboard/shell/dashboard";
+import { DashboardContext, useFilters } from "@/components/dashboard/shell/dashboard";
 import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filters";
 import type { FilterPatch } from "@/components/dashboard/shell/filters";
 import { photoKeys, photoUrlsQuery, usePhotoUrls } from "@/components/dashboard/shell/photos";
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_account/app")({
         const asOf = Date.now();
         try {
             await preloadLedger(context.dbClient);
-            const overview = ledgerOverview(ledgerBooks(context.dbClient), asOf);
+            const overview = ledgerGlance(ledgerBooks(context.dbClient), asOf);
             await context.queryClient.prefetchQuery(photoUrlsQuery(context.convexQueryClient, photoKeys(overview)));
         } catch (error) {
             if (error instanceof Error && proRequired(error)) {
@@ -100,11 +100,11 @@ function LiveDashboard({ children }: { children: ReactNode }) {
     const navigate = useNavigate();
     const [asOf, setAsOf] = useState(loaded.asOf);
     const books = useLedgerBooks();
-    const overview = useMemo(() => ledgerOverview(books, asOf), [books, asOf]);
+    const overview = useMemo(() => ledgerGlance(books, asOf), [books, asOf]);
     useTurnover(overview.nextChangeAt, setAsOf);
     const ledger = useMemo(() => prepareLedger(books, asOf), [books, asOf]);
     const photos = usePhotoUrls(overview);
-    const filters = useMemo(() => resolveFilters(search, ledger), [search, ledger]);
+    const filters = useFilters(search, ledger);
     const dashboard = useMemo(
         () => ({
             filters,

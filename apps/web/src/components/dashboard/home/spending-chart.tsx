@@ -32,8 +32,8 @@ export function SpendingChart() {
         [category, filters.accounts, ledger, period]
     );
     const budget = useMemo(
-        () => (category === null ? null : categoryBudget(ledger, category, period)),
-        [category, ledger, period]
+        () => (category === null || filters.accounts.length > 0 ? null : categoryBudget(ledger, category, period)),
+        [category, filters.accounts, ledger, period]
     );
     const aligned = budget !== null && budget.from === period.from && budget.to === period.to;
     const runOutIndex = aligned && budget.runOut ? series.data.findIndex((row) => row.date === budget.runOut?.day) : -1;

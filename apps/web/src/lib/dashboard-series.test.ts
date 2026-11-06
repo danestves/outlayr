@@ -1,13 +1,15 @@
-import { ledgerOverview } from "@outlayr/backend/confect/ledgerView";
+import { accountBalances, ledgerOverview } from "@outlayr/backend/confect/ledgerView";
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import type { Doc, TableNames } from "@outlayr/backend/convex/_generated/dataModel";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
-import { categoryBudget, categoryDetail, kpis, spendSeries, stackOrder } from "./dashboard-series";
+import { categoryBudget, categoryBudgets, categoryDetail, kpis, spendSeries, stackOrder } from "./dashboard-series";
 import { cashFlow, categorySpend, dailySpend, monthlyByCategory, netWorthHistory } from "./dashboard-series-insights";
-import { prepareLedger } from "./dashboard-series-ledger";
+import { endOfDay, prepareLedger } from "./dashboard-series-ledger";
+import type { Ledger } from "./dashboard-series-ledger";
+import { netWorthPoints } from "./dashboard-series-net-worth";
 import { periodOf } from "./dashboard-series-period";
 
 const at = (iso: string) => Date.parse(iso);
@@ -38,7 +40,7 @@ const category = (
         ...fields,
     });
 
-const account = (localId: string, name: string) =>
+const account = (localId: string, name: string, fields: Partial<Doc<"accounts">> = {}) =>
     docOf<"accounts">({
         ...envelope(localId),
         currency: "USD",
@@ -53,6 +55,7 @@ const account = (localId: string, name: string) =>
         initialBalanceUsd: 0,
         name,
         sortOrder: 0,
+        ...fields,
     });
 
 interface EntryFields {
@@ -271,6 +274,128 @@ describe("what counts", () => {
     });
 });
 
+describe("budgets on any category", () => {
+    const ledger = prepareLedger(
+        books({
+            budgets: [budget("costco", 50), budget("rent", 2000)],
+            transactions: [entry("a", "2026-10-03T16:00:00Z", 80, { categoryId: "costco" })],
+        }),
+        NOW
+    );
+
+    it("reads a subcategory's budget from its own spending and a budget with no spending", () => {
+        const standings = categoryBudgets(ledger, oct);
+
+        expect(standings.get("costco")).toMatchObject({ overBudget: true, spent: 80 });
+        expect(standings.get("rent")).toMatchObject({ overBudget: false, spent: 0 });
+    });
+
+    it("lets the dashboard name and open each one, a subcategory under its parent", () => {
+        expect(ledger.budgetTargets.get("costco")).toStrictEqual({
+            color: "#4f9d69",
+            id: "costco",
+            name: "Costco",
+            topId: "groceries",
+        });
+        expect(ledger.budgetTargets.get("rent")?.topId).toBe("rent");
+        expect(ledger.categories.has("rent")).toBe(true);
+    });
+});
+
+describe("an account opened partway through the history", () => {
+    const opened = prepareLedger(
+        books({
+            accounts: [
+                account("chase", "Chase"),
+                account("new", "New", { initialBalance: 10_000, initialBalanceDate: at("2026-09-15T16:00:00Z") }),
+                account("zero", "Zero", { initialBalanceDate: at("2026-09-20T16:00:00Z") }),
+            ],
+            transactions: [entry("early", "2026-08-10T16:00:00Z", 500, { accountId: "zero", income: true })],
+        }),
+        NOW
+    );
+    const worth = (key: string) => netWorthHistory(opened, oct, ALL).find((row) => row.key === key)?.netWorth;
+
+    it("joins net worth on the day it opened, and an account without a balance counts from its first entry", () => {
+        expect([worth("2026-07"), worth("2026-08"), worth("2026-09")]).toStrictEqual([0, 500, 10_500]);
+    });
+
+    it("counts every account today, so the figure matches the accounts list", () => {
+        expect(worth("2026-10")).toBe(10_500);
+        expect(kpis(opened, oct, ALL).netWorth.value).toBe(10_500);
+    });
+
+    it("starts a month's change from the accounts that existed before it", () => {
+        expect(kpis(opened, periodOf("2026-09", 1), ALL).netWorth).toMatchObject({ prior: 500, value: 10_500 });
+    });
+});
+
+describe("net worth history labels", () => {
+    it("names each point by the period it closes, as the monthly bars do when the month starts on the 25th", () => {
+        const payday = prepareLedger(books({ appMeta: [...caracas, { key: "firstDayOfMonth", value: "25" }] }), NOW);
+        const history = netWorthHistory(payday, periodOf("2026-09", 25), ALL);
+
+        expect(history.slice(-2).map(({ date, key }) => [date, key])).toStrictEqual([
+            ["2026-09-24", "2026-08"],
+            ["2026-10-20", "2026-09"],
+        ]);
+    });
+});
+
+describe("deleted categories", () => {
+    const filed = (deleted: string) =>
+        prepareLedger(
+            books({
+                categories: [
+                    category("groceries", { color: "#4f9d69", name: "Groceries" }),
+                    category("costco", { color: null, name: "Costco", parentId: "groceries" }),
+                    category("rent", { color: "#e2643f", name: "Rent" }),
+                ].map((row) => (row.localId === deleted ? { ...row, deletedAt: 1 } : row)),
+                transactions: [
+                    entry("a", "2026-10-03T16:00:00Z", 100, { categoryId: "costco" }),
+                    entry("b", "2026-10-04T16:00:00Z", 30, { categoryId: "rent" }),
+                ],
+            }),
+            NOW
+        );
+    const labels = (deleted: string) =>
+        categorySpend(filed(deleted), oct, ALL).map(({ label, value }) => [label, value]);
+
+    it("files a subcategory under its parent while the parent lives", () => {
+        expect(labels("none")).toStrictEqual([
+            ["Groceries", 100],
+            ["Rent", 30],
+        ]);
+    });
+
+    it("reads entries of a deleted category, and subcategories of a deleted parent, as uncategorized", () => {
+        expect(labels("rent")).toStrictEqual([
+            ["Groceries", 100],
+            ["Uncategorized", 30],
+        ]);
+        expect(labels("groceries")).toStrictEqual([
+            ["Uncategorized", 100],
+            ["Rent", 30],
+        ]);
+    });
+
+    it("opens a budget on a subcategory of a deleted parent where its entries are", () => {
+        const ledger = prepareLedger(
+            books({
+                budgets: [budget("costco", 50)],
+                categories: [
+                    { ...category("groceries", { color: "#4f9d69", name: "Groceries" }), deletedAt: 1 },
+                    category("costco", { color: null, name: "Costco", parentId: "groceries" }),
+                ],
+                transactions: [entry("a", "2026-10-03T16:00:00Z", 100, { categoryId: "costco" })],
+            }),
+            NOW
+        );
+
+        expect(ledger.budgetTargets.get("costco")?.topId).toBe(ledger.rows[0]?.topId);
+    });
+});
+
 describe("days and months", () => {
     const lateOctober = at("2026-11-02T15:00:00Z");
     const night = books({ transactions: [entry("late", "2026-11-01T02:00:00Z", 30)] });
@@ -399,4 +524,149 @@ describe("stack order", () => {
     it("puts the selected category at the base", () => {
         expect(stackOrder([orange, amber, blue], "dining")[0]?.id).toBe("dining");
     });
+});
+
+describe("net worth over time", () => {
+    const rate = (quote: string, date: string, value: number) =>
+        docOf<"exchangeRates">({
+            date,
+            fetchedAt: 0,
+            quote,
+            rate: value,
+            rateType: "official",
+            source: "openexchangerates",
+        });
+    const replayed = (ledger: Ledger, accounts: readonly string[], instant: number) =>
+        accountBalances(
+            accounts.length === 0
+                ? ledger.books
+                : { ...ledger.books, accounts: ledger.books.accounts.filter((row) => accounts.includes(row.localId)) },
+            ledger.currency,
+            ledger.rates,
+            { now: instant, offsetAt: ledger.offsetAt }
+        );
+    it("keeps a row with no currency apart from one with an empty code", () => {
+        const on = "2026-10-03T16:00:00Z";
+        const ledger = prepareLedger(
+            books({
+                transactions: [
+                    { ...entry("none", on, 10, { accountId: "chase" }), currency: null },
+                    { ...entry("empty", on, 7, { accountId: "chase" }), currency: "" },
+                ],
+            }),
+            NOW
+        );
+        const [point] = netWorthPoints(ledger, { accounts: [] }, [NOW]);
+
+        expect(point?.net).toBe(replayed(ledger, [], NOW).net);
+    });
+
+    const newYork = [{ key: "timeZone", value: "America/New_York" }];
+    const world = (currency: string) =>
+        books({
+            accounts: [
+                account("chase", "Chase", { initialBalance: 1200.5, sortOrder: 0 }),
+                account("euro", "Euro", { currency: "EUR", initialBalance: 800, sortOrder: 1 }),
+                account("card", "Card", { initialBalance: -150, sortOrder: 2 }),
+            ],
+            appMeta: [...newYork, { key: "currency", value: currency }],
+            exchangeRates: [
+                rate("EUR", "2026-01-01", 0.9),
+                rate("EUR", "2026-06-01", 0.95),
+                rate("EUR", "2026-10-15", 0.88),
+                rate("MXN", "2026-01-01", 18),
+            ],
+            installmentPlans: [
+                docOf<"installmentPlans">({
+                    ...envelope("plan"),
+                    accountId: "card",
+                    dateCreated: 0,
+                    transactionId: "t",
+                }),
+            ],
+            outsideMoves: [
+                docOf<"outsideMoves">({
+                    ...envelope("move"),
+                    accountId: "euro",
+                    amount: 40.25,
+                    amountUsd: 44,
+                    date: at("2026-11-01T05:30:00Z"),
+                    note: "",
+                }),
+            ],
+            outsidePayments: [
+                docOf<"outsidePayments">({
+                    ...envelope("paid"),
+                    amount: 33.33,
+                    amountUsd: 33.33,
+                    date: at("2026-03-08T07:00:00Z"),
+                    planId: "plan",
+                }),
+            ],
+            transactions: [
+                entry("a", "2026-03-08T06:59:00Z", 19.99, { accountId: "chase" }),
+                entry("b", "2026-03-08T07:00:00Z", 1500, { accountId: "chase", income: true }),
+                entry("c", "2026-03-09T03:59:59Z", 7.1, { accountId: "euro", amountUsd: 7.9, currency: "EUR" }),
+                entry("d", "2026-03-09T04:00:00Z", 12.34, { accountId: "card" }),
+                entry("e", "2026-10-31T23:00:00Z", 64.2, { accountId: "euro", amountUsd: 71, currency: "EUR" }),
+                entry("f", "2026-11-01T05:30:00Z", 410, { accountId: "chase", amountUsd: 22, currency: "MXN" }),
+                entry("g", "2026-11-01T06:30:00Z", 88.88, { accountId: "chase", income: true }),
+                entry("h", "2026-11-02T04:59:59Z", 3.5, { accountId: "chase", amountUsd: null, currency: "MXN" }),
+                entry("i", "2026-11-02T05:00:00Z", 45, {
+                    accountId: "euro",
+                    amountUsd: 49,
+                    currency: "EUR",
+                    income: true,
+                }),
+                ...[0, 1, 2, 3, 4].map((minute) =>
+                    entry(`cent-${minute}`, `2026-10-20T10:0${minute}:00Z`, 0.01, {
+                        accountId: "euro",
+                        amountUsd: 0.01,
+                    })
+                ),
+                entry("gone", "2026-11-01T12:00:00Z", 999, { accountId: "chase", deletedAt: 1 }),
+                entry("loose", "2026-11-01T12:00:00Z", 10, { accountId: undefined }),
+            ],
+            transfers: [
+                {
+                    ...transfer("swap", "2026-03-08T07:00:00Z", 100),
+                    fromAccountId: "chase",
+                    toAccountId: "euro",
+                    toAmount: 91,
+                    toAmountUsd: 100,
+                    toCurrency: "EUR",
+                },
+                { ...transfer("pay-card", "2026-11-01T06:00:00Z", 60.6), fromAccountId: "chase", toAccountId: "card" },
+            ],
+        });
+    const days = ["2026-03-07", "2026-03-08", "2026-03-09", "2026-10-31", "2026-11-01", "2026-11-02", "2026-11-03"];
+    const instantsOf = (ledger: Ledger) => [
+        ...days.map((day) => endOfDay(ledger, day)),
+        ledger.now,
+        endOfDay(ledger, days[0] ?? "") - 1,
+    ];
+
+    it.each([
+        { accounts: [], currency: "USD" },
+        { accounts: [], currency: "EUR" },
+        { accounts: ["chase", "euro"], currency: "USD" },
+        { accounts: ["card"], currency: "EUR" },
+    ])(
+        "matches replaying the balances at each date, in $currency for $accounts across both DST changes",
+        ({ accounts, currency }) => {
+            const ledger = prepareLedger(world(currency), NOW);
+            const instants = instantsOf(ledger).toReversed();
+
+            const points = netWorthPoints(ledger, { accounts }, instants);
+
+            expect(points.map((point) => point.net)).toStrictEqual(
+                instants.map((instant) => replayed(ledger, accounts, instant).net)
+            );
+            expect(points.map((point) => point.accounts.map((each) => each.balance))).toStrictEqual(
+                instants.map((instant) =>
+                    replayed(ledger, accounts, instant).accounts.map((each) => each.balanceInMainCurrency)
+                )
+            );
+        }
+    );
 });

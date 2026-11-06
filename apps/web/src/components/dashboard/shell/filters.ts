@@ -1,11 +1,17 @@
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import { isPeriodKey } from "../../../lib/dashboard-series-period";
 
+const Param = Schema.UndefinedOr(Schema.String).pipe(
+    Schema.catchDecoding(() => Effect.succeed(Option.some(undefined)))
+);
+
 const Search = Schema.Struct({
-    accounts: Schema.optional(Schema.String),
-    category: Schema.optional(Schema.String),
-    period: Schema.optional(Schema.String),
+    accounts: Schema.optional(Param),
+    category: Schema.optional(Param),
+    period: Schema.optional(Param),
 });
 
 export const dashboardSearch = Schema.toStandardSchemaV1(Search);

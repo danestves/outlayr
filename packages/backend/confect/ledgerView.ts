@@ -552,18 +552,39 @@ export interface LedgerBooks {
     transfers: readonly Transfer[];
 }
 
-export function ledgerOverview(books: LedgerBooks, now: number) {
+function viewOf(books: LedgerBooks, now: number) {
     const settings = settingsOf(books.appMeta);
-    const { currency } = settings;
     const offsetAt = zoneOf(settings.timeZone, books.transactions, now);
-    const clock = { now, offsetAt };
-    const rates = rateTableOf(books.exchangeRates);
+    return {
+        clock: { now, offsetAt },
+        currency: settings.currency,
+        rates: rateTableOf(books.exchangeRates),
+        settings,
+    };
+}
+
+function glanceOf(books: LedgerBooks, { clock, currency, rates }: ReturnType<typeof viewOf>) {
     const balances = accountBalances(books, currency, rates, clock);
     return {
         balances: {
             ...balances,
             accounts: balances.accounts.map((account) => ({ ...account, look: accountLook(account) })),
         },
+        nextChangeAt: nextChangeAt(books, clock),
+        upcoming: ledgerUpcoming(books, currency, rates, clock),
+    };
+}
+
+export function ledgerGlance(books: LedgerBooks, now: number) {
+    return glanceOf(books, viewOf(books, now));
+}
+
+export function ledgerOverview(books: LedgerBooks, now: number) {
+    const view = viewOf(books, now);
+    const { clock, currency, rates, settings } = view;
+    const { offsetAt } = clock;
+    return {
+        ...glanceOf(books, view),
         budgets: budgetStatus(books, currency, rates, clock),
         log: buildLog({
             accounts: new Map(books.accounts.map((row) => [row.localId, row])),
@@ -581,10 +602,8 @@ export function ledgerOverview(books: LedgerBooks, now: number) {
             transfers: happened(books.transfers, now),
             transfersFull: false,
         }),
-        nextChangeAt: nextChangeAt(books, clock),
         summary: spendingSummary(books, settings, rates, clock),
-        upcoming: ledgerUpcoming(books, currency, rates, clock),
     };
 }
 
-export type LedgerOverview = ReturnType<typeof ledgerOverview>;
+export type LedgerGlance = ReturnType<typeof ledgerGlance>;

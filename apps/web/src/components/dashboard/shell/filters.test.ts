@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { accountIdsOf, periodKeyOr, searchPatch } from "./filters";
+import { accountIdsOf, dashboardSearch, periodKeyOr, searchPatch } from "./filters";
 
 describe("periodKeyOr", () => {
     it("keeps an earlier month", () => {
@@ -34,5 +34,21 @@ describe("searchPatch", () => {
             accounts: undefined,
             category: undefined,
         });
+    });
+});
+
+describe("dashboardSearch", () => {
+    const read = (input: unknown) => dashboardSearch["~standard"].validate(input);
+
+    it("keeps text filters", async () => {
+        const result = await read({ accounts: "a,b", category: "rent", period: "2026-03" });
+
+        expect(result).toStrictEqual({ value: { accounts: "a,b", category: "rent", period: "2026-03" } });
+    });
+
+    it("drops a filter the address parsed into a number or a flag instead of failing the screen", async () => {
+        const result = await read({ accounts: 123, category: true, period: 2026 });
+
+        expect(result).toStrictEqual({ value: { accounts: undefined, category: undefined, period: undefined } });
     });
 });

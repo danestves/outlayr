@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
@@ -33,12 +33,17 @@ export function useDashboard() {
     return dashboard;
 }
 
-export function resolveFilters(search: DashboardSearch, ledger: Ledger): DashboardFilters {
-    const currentKey = periodKeyOf(ledger.today, ledger.firstDayOfMonth);
-    return {
-        accounts: accountIdsOf(search.accounts).filter((id) => ledger.accounts.has(id)),
-        category: search.category !== undefined && ledger.categories.has(search.category) ? search.category : null,
-        currentKey,
-        period: periodOf(periodKeyOr(search.period, currentKey), ledger.firstDayOfMonth),
-    };
+const NO_ACCOUNTS: readonly string[] = [];
+
+export function useFilters(search: DashboardSearch, ledger: Ledger): DashboardFilters {
+    const { firstDayOfMonth } = ledger;
+    const currentKey = periodKeyOf(ledger.today, firstDayOfMonth);
+    const accountKey = accountIdsOf(search.accounts)
+        .filter((id) => ledger.accounts.has(id))
+        .join(",");
+    const periodKey = periodKeyOr(search.period, currentKey);
+    const category = search.category !== undefined && ledger.categories.has(search.category) ? search.category : null;
+    const accounts = useMemo(() => (accountKey === "" ? NO_ACCOUNTS : accountKey.split(",")), [accountKey]);
+    const period = useMemo(() => periodOf(periodKey, firstDayOfMonth), [firstDayOfMonth, periodKey]);
+    return useMemo(() => ({ accounts, category, currentKey, period }), [accounts, category, currentKey, period]);
 }
