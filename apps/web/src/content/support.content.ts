@@ -6,8 +6,8 @@ const support = {
         answers: [
             {
                 answer: t({
-                    en: "No. Outlayr works without an account. Signing in with Apple or Google is needed for sync, voice entry, receipt scanning, and to buy Pro.",
-                    es: "No. Outlayr funciona sin cuenta. Necesitas iniciar sesión con Apple o Google para sincronizar, dictar registros, escanear recibos y comprar Pro.",
+                    en: "No. Outlayr works without an account. Signing in with Apple, Google, or email and password is needed for sync, voice entry, receipt scanning, and to buy Pro.",
+                    es: "No. Outlayr funciona sin cuenta. Necesitas iniciar sesión con Apple, con Google, o con un correo electrónico y una contraseña para sincronizar, dictar registros, escanear recibos y comprar Pro.",
                 }),
                 question: t({ en: "Do I need an account?", es: "¿Necesito una cuenta?" }),
             },
