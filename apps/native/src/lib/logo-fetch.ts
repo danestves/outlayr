@@ -2,13 +2,14 @@ import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
 
 import { isRealLogo } from "@/domain/logo-acceptance";
-import { ENV } from "@/env";
 
-const REQUEST_TIMEOUT = Duration.seconds(3);
+const MERCHANT_LOGOS_ORIGIN = "https://logos.tryoutlayr.com";
+const REQUEST_TIMEOUT = Duration.seconds(6);
 /** A cold TLS handshake can alone exceed the budget; the retry reuses the connection. */
 const TIMEOUT_ATTEMPTS = 2;
 
@@ -16,13 +17,17 @@ export type LogoOutcome = { kind: "logo"; bytes: Uint8Array } | { kind: "none" }
 
 const NONE: LogoOutcome = { kind: "none" };
 
-/** A non-definitive "none" (timeout, rate limit, server error) must never be cached as a miss. */
-type TierOutcome = { kind: "logo"; bytes: Uint8Array } | { definitive: boolean; kind: "none" };
+type Fetched =
+    | { etag: string | null; kind: "logo"; bytes: Uint8Array }
+    | { kind: "unchanged" }
+    /** A non-definitive "none" (timeout, rate limit, server error) must never be cached as a miss. */
+    | { definitive: boolean; kind: "none" };
 
-const INDETERMINATE: TierOutcome = { definitive: false, kind: "none" };
-const REFUSED: TierOutcome = { definitive: true, kind: "none" };
+const INDETERMINATE: Fetched = { definitive: false, kind: "none" };
+const REFUSED: Fetched = { definitive: true, kind: "none" };
 
 const NOT_FOUND = 404;
+const NOT_MODIFIED = 304;
 const OK_MIN = 200;
 const OK_MAX = 299;
 
@@ -31,13 +36,8 @@ function refused(status: number): boolean {
     return status === NOT_FOUND || (status >= OK_MIN && status <= OK_MAX);
 }
 
-/** `fallback=404` is load-bearing: the default `monogram` answers 200 with a generic letter tile. */
-export function logoDevUrl(domain: string, token: string): string {
-    return `https://img.logo.dev/${encodeURIComponent(domain)}?token=${encodeURIComponent(token)}&size=512&format=png&fallback=404`;
-}
-
-export function faviconUrl(domain: string): string {
-    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128`;
+export function merchantLogoUrl(domain: string): string {
+    return `${MERCHANT_LOGOS_ORIGIN}/merchants/${encodeURIComponent(domain)}`;
 }
 
 const LogoResponse = Schema.Struct({
@@ -47,8 +47,16 @@ const LogoResponse = Schema.Struct({
 });
 const decodeLogoResponse = Schema.decodeUnknownEffect(LogoResponse);
 
-const fetchOnce = Effect.fn("LogoFetch.fetchOnce")(function* fetchOnce(url: string) {
-    const response = yield* HttpClient.get(url);
+const fetchOnce = Effect.fn("LogoFetch.fetchOnce")(function* fetchOnce(url: string, etag: string | null) {
+    const response = yield* HttpClient.execute(
+        etag === null
+            ? HttpClientRequest.get(url)
+            : HttpClientRequest.get(url).pipe(HttpClientRequest.setHeader("if-none-match", etag))
+    );
+    if (response.status === NOT_MODIFIED) {
+        const unchanged: Fetched = { kind: "unchanged" };
+        return unchanged;
+    }
     const { bytes, contentType, status } = yield* decodeLogoResponse({
         bytes: new Uint8Array(yield* response.arrayBuffer),
         contentType: response.headers["content-type"] ?? null,
@@ -56,14 +64,14 @@ const fetchOnce = Effect.fn("LogoFetch.fetchOnce")(function* fetchOnce(url: stri
     });
     const verdict = isRealLogo(status, contentType, bytes);
     if (verdict.ok) {
-        const logo: TierOutcome = { bytes, kind: "logo" };
+        const logo: Fetched = { bytes, etag: response.headers.etag ?? null, kind: "logo" };
         return logo;
     }
     return refused(status) ? REFUSED : INDETERMINATE;
 });
 
-const fetchAccepted = (url: string) =>
-    fetchOnce(url).pipe(
+const fetchLogo = (domain: string, etag: string | null) =>
+    fetchOnce(merchantLogoUrl(domain), etag).pipe(
         Effect.timeout(REQUEST_TIMEOUT),
         Effect.retry({ schedule: Schedule.recurs(TIMEOUT_ATTEMPTS - 1), while: Cause.isTimeoutError }),
         Effect.catchTags({
@@ -79,40 +87,31 @@ export interface MerchantImageRequest {
     refresh?: boolean;
 }
 
-/** No App Store tier: Apple's Search API terms allow app icons only on pages promoting that store content. */
-const resolveMerchantImage = Effect.fn("LogoFetch.resolveMerchantImage")(function* resolveMerchantImage(
-    request: MerchantImageRequest
-) {
-    const { domain } = request;
-    if (domain == null || domain.length === 0) {
-        return INDETERMINATE;
-    }
-
-    let definitive = true;
-    const token = ENV.EXPO_PUBLIC_LOGO_DEV_TOKEN;
-    if (token) {
-        const branded = yield* fetchAccepted(logoDevUrl(domain, token));
-        if (branded.kind === "logo") {
-            return branded;
-        }
-        ({ definitive } = branded);
-    }
-
-    const favicon = yield* fetchAccepted(faviconUrl(domain));
-    if (favicon.kind === "logo") {
-        return favicon;
-    }
-    return definitive && favicon.definitive ? REFUSED : INDETERMINATE;
-});
-
 export const fetchMerchantImage = Effect.fn("LogoFetch.fetchMerchantImage")(function* fetchMerchantImage(
     request: MerchantImageRequest
 ) {
     // Required lazily so importing this module does not pull expo-file-system into every consumer's graph.
     const cache = yield* Effect.tryPromise(() => import("@/lib/logo-cache")).pipe(Effect.orElseSucceed(() => null));
     const key = cache?.logoCacheKey(request.name.trim(), request.domain) ?? "";
+    const { domain } = request;
     const cached = cache === null ? { kind: "unknown" as const } : yield* cache.readCachedLogo(key);
     if (cached.kind === "logo") {
+        const stale = domain == null || domain.length === 0 ? null : (cache?.staleLogo(key) ?? null);
+        if (stale !== null && domain != null) {
+            yield* Effect.forkDetach(
+                fetchLogo(domain, stale.etag).pipe(
+                    Effect.tap((fresh) =>
+                        Effect.sync(() => {
+                            if (fresh.kind === "logo") {
+                                cache?.writeCachedLogo(key, fresh.bytes, fresh.etag);
+                            } else if (fresh.kind === "unchanged") {
+                                cache?.writeCachedLogo(key, cached.bytes, stale.etag);
+                            }
+                        })
+                    )
+                )
+            );
+        }
         return { bytes: cached.bytes, kind: "logo" } satisfies LogoOutcome;
     }
     if (cached.kind === "miss" && request.refresh !== true) {
@@ -121,15 +120,15 @@ export const fetchMerchantImage = Effect.fn("LogoFetch.fetchMerchantImage")(func
 
     // Never cache a no-domain miss: enrichment calls this for partial spellings and the key is folded when the
     // call resolves, so a half-typed name could file a permanent miss under the finished one.
-    if (request.domain == null || request.domain.length === 0) {
+    if (domain == null || domain.length === 0) {
         return NONE;
     }
-    const outcome = yield* resolveMerchantImage(request);
+    const outcome = yield* fetchLogo(domain, null);
     if (outcome.kind === "logo") {
-        cache?.writeCachedLogo(key, outcome.bytes);
-        return outcome satisfies LogoOutcome;
+        cache?.writeCachedLogo(key, outcome.bytes, outcome.etag);
+        return { bytes: outcome.bytes, kind: "logo" } satisfies LogoOutcome;
     }
-    if (outcome.definitive) {
+    if (outcome.kind === "none" && outcome.definitive) {
         cache?.writeCachedLogo(key, null);
     }
     return NONE;

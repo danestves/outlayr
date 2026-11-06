@@ -58,7 +58,7 @@ const addInstallmentApp = Effect.fn("StepAccountInstallments.add")(function* add
         // Fetched before the account exists, since the entry holds the account as picked. Named by its domain, as
         // the mark is, so both read the same cache entry.
         const outcome = yield* fetchMerchantImage({ domain: app.domain, name: app.domain });
-        const logo = outcome.kind === "logo" ? yield* persistLogo(outcome.bytes) : null;
+        const logo = outcome.kind === "logo" ? yield* persistLogo(outcome.bytes, app.domain) : null;
         const id = yield* accountsRepo.create(db, {
             currency: app.currency,
             kind: "liability",

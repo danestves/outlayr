@@ -51,7 +51,10 @@ export interface LogoBackfillDeps {
     discard?: (imageUri: string) => void;
     fetchImage: (request: MerchantImageRequest) => Effect.Effect<LogoOutcome>;
     now?: number;
-    persist: (bytes: Uint8Array) => Effect.Effect<{ imageColor: string | null; imageUri: string }, unknown>;
+    persist: (
+        bytes: Uint8Array,
+        domain: string
+    ) => Effect.Effect<{ imageColor: string | null; imageUri: string }, unknown>;
 }
 
 interface PendingRow {
@@ -321,7 +324,7 @@ export const attachMissingLogos = Effect.fn("LogoBackfill.attachMissingLogos")(f
             if (deps.cancelled?.()) {
                 break;
             }
-            const logo = yield* deps.persist(outcome.bytes).pipe(
+            const logo = yield* deps.persist(outcome.bytes, domain).pipe(
                 Effect.mapError((cause) => new LogoBackfillError({ cause, operation: "persist" })),
                 Effect.catchTags({ LogoBackfillError: () => Effect.succeed(null) })
             );

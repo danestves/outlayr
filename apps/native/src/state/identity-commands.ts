@@ -88,7 +88,7 @@ export const attachAccountLogoCommand = createRuntimeCommand(appRuntime, {
         if (outcome.kind !== "logo") {
             return { kind: "clear" } satisfies AttachedLogo;
         }
-        return yield* persistLogo(outcome.bytes).pipe(
+        return yield* persistLogo(outcome.bytes, input.domain).pipe(
             Effect.map((logo): AttachedLogo => ({ kind: "logo", logo })),
             Effect.catchCause((): Effect.Effect<AttachedLogo> => Effect.succeed({ kind: "skip" }))
         );

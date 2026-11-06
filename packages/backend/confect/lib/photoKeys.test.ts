@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { isPhotoName, ownsPhotoKey, PHOTO_KEY_PREFIX, photoKeyFor, photoNameFromKey } from "./photoKeys";
+import {
+    isPhotoName,
+    ownsPhotoKey,
+    PHOTO_KEY_PREFIX,
+    photoKeyFor,
+    photoNameFromKey,
+    merchantLogoUrl,
+} from "./photoKeys";
 
 const USER = "user-aaaa";
 const OTHER = "user-bbbb";
@@ -57,5 +64,20 @@ describe(photoNameFromKey, () => {
     it("answers null for a malformed key", () => {
         expect(photoNameFromKey("a.jpg")).toBeNull();
         expect(photoNameFromKey(`${PHOTO_KEY_PREFIX}/${USER}/a/b.jpg`)).toBeNull();
+    });
+});
+
+describe(merchantLogoUrl, () => {
+    it("points a shared key at the public logo host", () => {
+        expect(merchantLogoUrl("merchants/netflix.com")).toBe("https://logos.tryoutlayr.com/merchants/netflix.com");
+    });
+
+    it("never mints a url for a photo or a path outside the folder", () => {
+        expect(merchantLogoUrl(photoKeyFor(USER, "a.jpg"))).toBeNull();
+        expect(merchantLogoUrl("merchants/../transaction-photos/a.jpg")).toBeNull();
+    });
+
+    it("never lets a shared key pass as an owned photo", () => {
+        expect(ownsPhotoKey(USER, "merchants/netflix.com")).toBeFalsy();
     });
 });

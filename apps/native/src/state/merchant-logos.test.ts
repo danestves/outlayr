@@ -8,6 +8,7 @@ const mockFiles = new Map<string, string>();
 
 vi.mock("@/lib/logo-cache", () => ({
     cachedLogoUri: (key: string) => mockFiles.get(key) ?? null,
+    staleLogo: () => null,
     logoCacheKey: (name: string) => name,
     readCachedLogo: () => Effect.succeed({ kind: "unknown" }),
     writeCachedLogo: (key: string, bytes: Uint8Array | null) => {
@@ -15,10 +16,6 @@ vi.mock("@/lib/logo-cache", () => ({
             mockFiles.set(key, `file:///${key}`);
         }
     },
-}));
-
-vi.mock<Partial<typeof import("@/env")>>(import("@/env"), () => ({
-    ENV: { EXPO_PUBLIC_LOGO_DEV_TOKEN: "pk_test" },
 }));
 
 const LOGO_BYTES = new Uint8Array(1024)

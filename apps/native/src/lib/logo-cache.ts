@@ -3,8 +3,11 @@ import { Directory, File, Paths } from "expo-file-system";
 
 const CACHE_DIRECTORY = "merchant-logos";
 const MISS_MARKER = ".miss";
+const ETAG_MARKER = ".etag";
 /** A merchant can gain a logo, and a miss from a bad day must not brand a name forever. */
 const MISS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+// Matches the Worker's `max-age`.
+const LOGO_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 function currentMiss(dir: Directory, key: string, now: number): File | null {
     const miss = new File(dir, `${key}${MISS_MARKER}`);
@@ -79,7 +82,25 @@ export function cachedLogoUri(key: string, now = Date.now()): string | null {
     }
 }
 
-export function writeCachedLogo(key: string, bytes: Uint8Array | null): void {
+export function staleLogo(key: string, now = Date.now()): { etag: string | null } | null {
+    if (key.length === 0) {
+        return null;
+    }
+    try {
+        const dir = directory();
+        const hit = new File(dir, key);
+        const { modificationTime } = hit;
+        if (!hit.exists || modificationTime == null || now - modificationTime <= LOGO_TTL_MS) {
+            return null;
+        }
+        const marker = new File(dir, `${key}${ETAG_MARKER}`);
+        return { etag: marker.exists ? marker.textSync() : null };
+    } catch {
+        return null;
+    }
+}
+
+export function writeCachedLogo(key: string, bytes: Uint8Array | null, etag: string | null = null): void {
     if (key.length === 0) {
         return;
     }
@@ -94,6 +115,15 @@ export function writeCachedLogo(key: string, bytes: Uint8Array | null): void {
             if (stale.exists) {
                 stale.delete();
             }
+            const marker = new File(dir, `${key}${ETAG_MARKER}`);
+            if (etag === null) {
+                if (marker.exists) {
+                    marker.delete();
+                }
+            } else {
+                marker.create({ overwrite: true });
+                marker.write(etag);
+            }
         }
     } catch {
         // A cache that cannot be written is still a working feature.
@@ -104,7 +134,10 @@ export function listCachedLogos(): File[] {
     try {
         return directory()
             .list()
-            .filter((entry): entry is File => entry instanceof File && !entry.name.endsWith(MISS_MARKER));
+            .filter(
+                (entry): entry is File =>
+                    entry instanceof File && !entry.name.endsWith(MISS_MARKER) && !entry.name.endsWith(ETAG_MARKER)
+            );
     } catch {
         return [];
     }

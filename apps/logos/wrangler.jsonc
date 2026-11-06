@@ -1,0 +1,8 @@
+{
+    "name": "outlayr-logos",
+    "main": "src/index.ts",
+    "compatibility_date": "2026-10-01",
+    "routes": [{ "pattern": "logos.tryoutlayr.com", "custom_domain": true }],
+    "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "outlayr-files" }],
+    "ratelimits": [{ "name": "FILL_LIMIT", "namespace_id": "1001", "simple": { "limit": 30, "period": 60 } }],
+}

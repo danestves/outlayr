@@ -358,6 +358,32 @@ describe("uploadPhotos", () => {
         expect((await readRow(db, "t1")).imageKey).toBe(`transaction-photos/${USER}/new.jpg`);
     });
 
+    it("points a merchant logo at the shared folder without uploading a copy", async () => {
+        const db = makeDb();
+        const name = "logo.netflix.com.1f3a-9c.jpg";
+        const { bucket, transport } = fakeTransport();
+        await insert(db, "t1", { imageUri: `${DIRECTORY}/${name}` });
+
+        const result = await Effect.runPromise(
+            uploadPhotos(db, new FakeFiles(DIRECTORY, [[name, "LOGO"]]), transport, NOW)
+        );
+
+        expect((await readRow(db, "t1")).imageKey).toBe("merchants/netflix.com");
+        expect(result.uploaded).toBe(0);
+        expect(bucket.objects.size).toBe(0);
+    });
+
+    it("never asks the server to delete a shared logo when a photo replaces it", async () => {
+        const db = makeDb();
+        const { bucket, transport } = fakeTransport();
+        await insert(db, "t1", { imageKey: "merchants/netflix.com", imageUri: `${DIRECTORY}/a.jpg` });
+
+        await Effect.runPromise(uploadPhotos(db, new FakeFiles(DIRECTORY, [["a.jpg", "PHOTO"]]), transport, NOW));
+
+        expect((await readRow(db, "t1")).imageKey).toBe(`transaction-photos/${USER}/a.jpg`);
+        expect(bucket.released).toStrictEqual([]);
+    });
+
     it("skips a row whose file the reconciliation has yet to repair", async () => {
         const db = makeDb();
         const files = new FakeFiles();

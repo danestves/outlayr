@@ -2,7 +2,7 @@ import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
 import * as Stream from "effect/Stream";
 
-import { cachedLogoUri, logoCacheKey } from "@/lib/logo-cache";
+import { cachedLogoUri, logoCacheKey, staleLogo } from "@/lib/logo-cache";
 import { fetchMerchantImage } from "@/lib/logo-fetch";
 import { appRuntime } from "@/lib/runtime";
 
@@ -21,7 +21,10 @@ export const fetchedLogosAtom = Atom.family((domains: string) =>
     appRuntime
         .atom(
             Stream.fromIterable(domains === "" ? [] : domains.split(DOMAIN_SEPARATOR)).pipe(
-                Stream.filter((domain) => cachedLogoUri(logoCacheKey(domain, domain)) === null),
+                Stream.filter((domain) => {
+                    const key = logoCacheKey(domain, domain);
+                    return cachedLogoUri(key) === null || staleLogo(key) !== null;
+                }),
                 Stream.mapEffect(
                     (domain) =>
                         fetchMerchantImage({ domain, name: domain }).pipe(

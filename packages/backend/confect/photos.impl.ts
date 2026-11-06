@@ -19,7 +19,7 @@ import {
 } from "./_generated/services";
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
-import { isPhotoName, ownsPhotoKey, photoKeyFor, photoOwnerFromKey } from "./lib/photoKeys";
+import { isPhotoName, merchantLogoUrl, ownsPhotoKey, photoKeyFor, photoOwnerFromKey } from "./lib/photoKeys";
 import { IMAGE_KEY_TABLES } from "./lib/syncTables";
 import {
     NotAPhotoName,
@@ -284,7 +284,11 @@ const readUrls = FunctionImpl.make(
                 owned.map((key) => photoUrl(key).pipe(Effect.map((url) => (url === null ? null : { key, url })))),
                 { concurrency: "unbounded" }
             );
-            return minted.filter((entry): entry is { key: string; url: string } => Boolean(entry));
+            const merchants = args.keys.flatMap((key) => {
+                const url = merchantLogoUrl(key);
+                return url === null ? [] : [{ key, url }];
+            });
+            return [...merchants, ...minted.filter((entry): entry is { key: string; url: string } => Boolean(entry))];
         },
         Effect.catchTags({ PhotoReadTooLarge: dieAsConvexError, Unauthenticated: dieAsConvexError }),
         Effect.orDie

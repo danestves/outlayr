@@ -3,19 +3,20 @@ import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { fetchMerchantImage, logoDevUrl } from "./logo-fetch";
+import { fetchMerchantImage, merchantLogoUrl } from "./logo-fetch";
 import type { MerchantImageRequest } from "./logo-fetch";
 
-const mockWriteCachedLogo = vi.hoisted(() => vi.fn());
+const cacheMock = vi.hoisted(() => ({
+    read: { kind: "unknown" } as { bytes?: Uint8Array; kind: string },
+    stale: null as { etag: string | null } | null,
+    write: vi.fn(),
+}));
 
 vi.mock("@/lib/logo-cache", () => ({
     logoCacheKey: () => "test-key",
-    readCachedLogo: () => Effect.succeed({ kind: "unknown" }),
-    writeCachedLogo: (...args: unknown[]) => mockWriteCachedLogo(...args),
-}));
-
-vi.mock<Partial<typeof import("@/env")>>(import("@/env"), () => ({
-    ENV: { EXPO_PUBLIC_LOGO_DEV_TOKEN: "pk_test" },
+    readCachedLogo: () => Effect.succeed(cacheMock.read),
+    staleLogo: () => cacheMock.stale,
+    writeCachedLogo: (...args: unknown[]) => cacheMock.write(...args),
 }));
 
 function png(length = 1024): Uint8Array<ArrayBuffer> {
@@ -24,13 +25,11 @@ function png(length = 1024): Uint8Array<ArrayBuffer> {
     return bytes;
 }
 
-function imageResponse(status: number, bytes: Uint8Array<ArrayBuffer>): Response {
-    return new Response(bytes, { headers: { "content-type": "image/png" }, status });
+function imageResponse(status: number, bytes: Uint8Array<ArrayBuffer>, etag = '"etag"'): Response {
+    return new Response(bytes, { headers: { "content-type": "image/png", etag }, status });
 }
 
-function notFound(): Response {
-    return new Response(null, { headers: { "content-type": "application/json" }, status: 404 });
-}
+const notFound = () => new Response(null, { status: 404 });
 
 type Handler = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -41,94 +40,47 @@ function run(request: MerchantImageRequest, handler: Handler) {
     return Effect.runPromise(fetchMerchantImage(request).pipe(Effect.provide(http)));
 }
 
-describe("url builders", () => {
-    it("asks logo.dev for a 404 rather than its monogram fallback", () => {
-        expect(logoDevUrl("netflix.com", "pk_test")).toContain("fallback=404");
-        expect(logoDevUrl("netflix.com", "pk_test")).toContain("size=512");
-    });
+beforeEach(() => {
+    cacheMock.read = { kind: "unknown" };
+    cacheMock.stale = null;
+    cacheMock.write.mockClear();
 });
 
 describe("fetchMerchantImage", () => {
-    it("tries logo.dev before the favicon, with no shared-cache tier ahead of it", async () => {
-        const branded = png(900);
+    it("asks only our own logo host, so no outside service sees the person's IP", async () => {
+        const logo = png(900);
         const calls: string[] = [];
-        const result = await run({ domain: "zzqq-nothing.example", name: "zzqq nothing" }, async (url) => {
+        const result = await run({ domain: "netflix.com", name: "Netflix" }, async (url) => {
             calls.push(url);
-            return url.includes("img.logo.dev") ? imageResponse(200, branded) : notFound();
+            return imageResponse(200, logo, '"abc"');
         });
 
-        expect(result).toStrictEqual({ bytes: branded, kind: "logo" });
-        expect(calls).toHaveLength(1);
-        expect(calls[0]).toContain("img.logo.dev");
-    });
-
-    it("falls through to the favicon tier when logo.dev refuses", async () => {
-        const favicon = png(1200);
-        const calls: string[] = [];
-        const result = await run({ domain: "zzqq-nothing.example", name: "zzqq nothing" }, async (url) => {
-            calls.push(url);
-            return url.includes("img.logo.dev") ? notFound() : imageResponse(200, favicon);
-        });
-
-        expect(result).toStrictEqual({ bytes: favicon, kind: "logo" });
-        expect(calls[0]).toContain("img.logo.dev");
-        expect(calls[1]).toContain("s2/favicons");
-    });
-
-    it("skips straight to the favicon when no logo.dev token is configured", async () => {
-        vi.resetModules();
-        vi.doMock<Partial<typeof import("@/env")>>(import("@/env"), () => ({
-            ENV: { EXPO_PUBLIC_LOGO_DEV_TOKEN: undefined },
-        }));
-        const { fetchMerchantImage: fetchWithNoToken } = await import("./logo-fetch");
-
-        const favicon = png(1300);
-        const calls: string[] = [];
-        const http = FetchHttpClient.layer.pipe(
-            Layer.provide(
-                Layer.succeed(FetchHttpClient.Fetch, async (input) => {
-                    calls.push(String(input));
-                    return imageResponse(200, favicon);
-                })
-            )
-        );
-        const result = await Effect.runPromise(
-            fetchWithNoToken({ domain: "zzqq-nothing.example", name: "zzqq nothing" }).pipe(Effect.provide(http))
-        );
-
-        expect(result).toStrictEqual({ bytes: favicon, kind: "logo" });
-        expect(calls).toHaveLength(1);
-        expect(calls[0]).toContain("s2/favicons");
-        vi.doUnmock("@/env");
+        expect(result).toStrictEqual({ bytes: logo, kind: "logo" });
+        expect(calls).toStrictEqual([merchantLogoUrl("netflix.com")]);
+        expect(cacheMock.write).toHaveBeenCalledWith("test-key", logo, '"abc"');
     });
 
     it("does not remember a miss for a request that queried nothing", async () => {
-        mockWriteCachedLogo.mockClear();
         const handler = vi.fn<Handler>();
-
         const outcome = await run({ domain: null, name: "Netflix" }, handler);
 
         expect(outcome.kind).toBe("none");
         expect(handler).not.toHaveBeenCalled();
-        expect(mockWriteCachedLogo).not.toHaveBeenCalled();
+        expect(cacheMock.write).not.toHaveBeenCalled();
     });
 });
 
 describe("what a miss remembers", () => {
-    beforeEach(() => {
-        mockWriteCachedLogo.mockClear();
-    });
-
-    it("remembers a miss when logo.dev served a placeholder and the favicon was not found", async () => {
-        await run({ domain: "zzqq-nothing.example", name: "zzqq nothing" }, async (url) =>
-            url.includes("img.logo.dev") ? imageResponse(200, new Uint8Array(16)) : notFound()
-        );
-        expect(mockWriteCachedLogo).toHaveBeenCalledWith("test-key", null);
-    });
-
-    it("remembers a miss when every tier answered and refused", async () => {
+    it("remembers a miss when the Worker has no logo", async () => {
         await run({ domain: "zzqq-nothing.example", name: "zzqq nothing" }, async () => notFound());
-        expect(mockWriteCachedLogo).toHaveBeenCalledWith("test-key", null);
+        expect(cacheMock.write).toHaveBeenCalledWith("test-key", null);
+    });
+
+    it("remembers a miss when a placeholder is served", async () => {
+        await run({ domain: "zzqq-nothing.example", name: "zzqq nothing" }, async () =>
+            imageResponse(200, new Uint8Array(16))
+        );
+        expect(cacheMock.write).toHaveBeenCalledWith("test-key", null);
     });
 
     it("does not remember a miss for a thrown request", async () => {
@@ -136,31 +88,54 @@ describe("what a miss remembers", () => {
             throw new Error("offline");
         });
         expect(result).toStrictEqual({ kind: "none" });
-        expect(mockWriteCachedLogo).not.toHaveBeenCalled();
+        expect(cacheMock.write).not.toHaveBeenCalled();
     });
 
-    it("does not remember a miss for an auth, timeout, rate-limit or server status", async () => {
+    it("does not remember a miss while the Worker is still looking or rate limited", async () => {
         for (const status of [401, 403, 408, 429, 503]) {
-            await run({ domain: "zinli.com", name: "Zinli" }, async () => imageResponse(status, new Uint8Array(0)));
+            await run({ domain: "zinli.com", name: "Zinli" }, async () => imageResponse(status, new Uint8Array(16)));
         }
-        expect(mockWriteCachedLogo).not.toHaveBeenCalled();
+        expect(cacheMock.write).not.toHaveBeenCalled();
+    });
+});
+
+describe("a cached logo past its time-to-live", () => {
+    const cachedBytes = png(700);
+
+    it("shows the cached file now and stores a newer one for next time", async () => {
+        cacheMock.read = { bytes: cachedBytes, kind: "logo" };
+        cacheMock.stale = { etag: '"old"' };
+        const newer = png(800);
+        const seen: (string | null)[] = [];
+        const result = await run({ domain: "netflix.com", name: "Netflix" }, async (_url, init) => {
+            seen.push(new Headers(init?.headers).get("if-none-match"));
+            return imageResponse(200, newer, '"new"');
+        });
+
+        expect(result).toStrictEqual({ bytes: cachedBytes, kind: "logo" });
+        await vi.waitFor(() => expect(cacheMock.write).toHaveBeenCalledWith("test-key", newer, '"new"'));
+        expect(seen).toStrictEqual(['"old"']);
     });
 
-    it("does not remember a miss when logo.dev refused but the favicon never answered", async () => {
-        await run({ domain: "zinli.com", name: "Zinli" }, async (url) => {
-            if (url.includes("img.logo.dev")) {
-                return notFound();
-            }
-            throw new Error("offline");
-        });
-        expect(mockWriteCachedLogo).not.toHaveBeenCalled();
+    it("restarts the clock on the same file when nothing changed", async () => {
+        cacheMock.read = { bytes: cachedBytes, kind: "logo" };
+        cacheMock.stale = { etag: '"same"' };
+        await run({ domain: "netflix.com", name: "Netflix" }, async () => new Response(null, { status: 304 }));
+
+        await vi.waitFor(() => expect(cacheMock.write).toHaveBeenCalledWith("test-key", cachedBytes, '"same"'));
+    });
+
+    it("sends nothing while the cached logo is fresh", async () => {
+        cacheMock.read = { bytes: cachedBytes, kind: "logo" };
+        const handler = vi.fn<Handler>();
+        await run({ domain: "netflix.com", name: "Netflix" }, handler);
+        expect(handler).not.toHaveBeenCalled();
     });
 });
 
 describe("timeouts", () => {
     beforeEach(() => {
         vi.useFakeTimers();
-        mockWriteCachedLogo.mockClear();
     });
 
     afterEach(() => {
@@ -173,18 +148,15 @@ describe("timeouts", () => {
         });
     }
 
-    it("tries logo.dev once more after a timeout, then takes the logo", async () => {
-        const branded = png(900);
+    it("tries once more after a timeout, then takes the logo", async () => {
+        const logo = png(900);
         let attempts = 0;
-        const pending = run({ domain: "zinli.com", name: "Zinli" }, async (url, init) => {
+        const pending = run({ domain: "zinli.com", name: "Zinli" }, async (_url, init) => {
             attempts += 1;
-            if (attempts === 1) {
-                return stalled(init?.signal);
-            }
-            return url.includes("img.logo.dev") ? imageResponse(200, branded) : notFound();
+            return attempts === 1 ? stalled(init?.signal) : imageResponse(200, logo);
         });
         await vi.runAllTimersAsync();
-        await expect(pending).resolves.toStrictEqual({ bytes: branded, kind: "logo" });
+        await expect(pending).resolves.toStrictEqual({ bytes: logo, kind: "logo" });
         expect(attempts).toBe(2);
     });
 
@@ -196,7 +168,7 @@ describe("timeouts", () => {
         });
         await vi.runAllTimersAsync();
         await expect(pending).resolves.toStrictEqual({ kind: "none" });
-        expect(attempts).toBe(4);
-        expect(mockWriteCachedLogo).not.toHaveBeenCalled();
+        expect(attempts).toBe(2);
+        expect(cacheMock.write).not.toHaveBeenCalled();
     });
 });

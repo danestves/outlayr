@@ -1,6 +1,6 @@
 ---
 title: "Política de privacidad"
-description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 9 de noviembre de 2026."
+description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 6 de noviembre de 2026."
 intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo se conserva y qué puedes hacer al respecto. Esta traducción se ofrece para tu comodidad. Si hay alguna diferencia con la versión en inglés, prevalece la versión en inglés."
 ---
 
@@ -48,7 +48,7 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | El PDF de estado de cuenta que elijas y su texto | Importación de estados de cuenta en PDF | Nuestros servidores, Anthropic (Pro) | Se borra después de leerlo, a lo sumo unos 75 minutos si la importación no termina |
 | Clave de acceso de Notion (cifrada), ID de usuario de Notion | Conectar Notion (Pro) | Nuestros servidores | Hasta que desconectes Notion o elimines tu cuenta |
 | Nombres, columnas y filas de las bases de datos de Notion que elijas | Importación desde Notion (Pro) | Notion, nuestros servidores, tu dispositivo | No se conservan en nuestros servidores |
-| Dirección web, dirección IP | Logos | Logo.dev, Google | Según sus políticas |
+| Dirección web, dirección IP | Logos | Nuestros servidores (Cloudflare) | La dirección web se guarda con el logo; la dirección IP no se conserva |
 | Registros de compra, ID de usuario, nombre, correo electrónico | Al abrir la app, Pro | RevenueCat, Apple o Google, nuestros servidores | Hasta la eliminación de la cuenta |
 | Código de invitación, quién invitó a quién, nombres de pila, días registrados hasta tres y la fecha del tercero, meses ganados | Invitaciones | Nuestros servidores, RevenueCat | Hasta la eliminación de la cuenta |
 | ID de instalación, versión de la app, errores | Búsqueda de actualizaciones | Expo | Según la política de Expo |
@@ -76,7 +76,7 @@ No necesitas una cuenta para usar Outlayr. Sin una, no se nos envía nada de tu 
 ### Lo que la app envía incluso sin cuenta
 
 - **Tasas de cambio.** La app descarga las tasas de cambio del mercado desde nuestro servidor. La solicitud no requiere cuenta y no lleva datos de tu registro. Nuestro servidor obtiene las tasas de cambio de Open Exchange Rates, CotizaVE y Binance, que no reciben nada sobre ti.
-- **Logos.** Para mostrar el logo de un comercio o de un banco, la app se lo pide a Logo.dev por su dirección web (por ejemplo, netflix.com), y al servicio de favicons de Google si Logo.dev no lo tiene. La solicitud sale de tu dispositivo, así que esos servicios ven tu dirección IP. Nunca incluye montos, notas ni quién eres. Después, los logos se guardan en caché en el celular.
+- **Logos.** Para mostrar el logo de un comercio o de un banco, la app se lo pide a nuestro servidor de logos por su dirección web (por ejemplo, netflix.com). Nunca incluye montos, notas ni quién eres. Si todavía no tenemos ese logo, nuestro servidor lo busca en los servicios de íconos de Google y DuckDuckGo, en el sitio web del comercio y en Wikidata, y guarda una copia para todos. Esos servicios ven la dirección web y nuestro servidor, no a ti. Después, los logos se guardan en caché en el celular.
 - **Actualizaciones de la app.** Cuando la app se inicia, le pregunta a Expo, la plataforma que usamos para publicar actualizaciones, si hay una versión más reciente del código de la app. La solicitud incluye un ID aleatorio creado para esta instalación (no vinculado a tu cuenta), la versión de la app y tu dirección IP. Si una actualización no pudo iniciarse la última vez, también incluye un breve mensaje de error.
 - **Estado de compra.** La app consulta con RevenueCat si tienes Outlayr Pro, usando un ID anónimo aleatorio hasta que inicies sesión, y después tu ID de cuenta, nombre y correo electrónico. Consulta [Outlayr Pro](#outlayr-pro).
 - **Analíticas y reportes de fallas.** La app le avisa a PostHog, el servicio de analíticas que usamos, cuando se instala, se actualiza, se abre o se cierra, qué tipo de pantalla abres (por ejemplo, la pantalla de una cuenta, nunca cuál cuenta) y cuándo guardas una entrada, una transferencia, una cuenta, una categoría o un presupuesto, compartes una tarjeta, importas o exportas datos, cambias un ajuste, abres Outlayr Pro o abres la app desde un widget, un atajo o un enlace. Estos eventos llevan detalles como si es un gasto o un ingreso, si una entrada vino de un escaneo o de tu voz, si es nueva o una edición, qué ajuste cambió y si quedó activado, y cuántas filas trajo una importación, redondeado a un rango como de 10 a 99. Si la app tiene un error, envía el mensaje de error y el lugar del código donde ocurrió. Cada evento lleva un ID aleatorio creado para esta instalación, la versión de la app, el modelo de tu dispositivo, el sistema operativo, el idioma, la zona horaria y el tamaño de la pantalla. Nunca incluye montos, comercios, notas, nombres de cuentas o categorías ni tu correo electrónico. PostHog descarta tu dirección IP. Cuando inicias sesión, estos eventos quedan vinculados a tu ID de cuenta de Outlayr. Si la región de tu dispositivo es un país del EEE o el Reino Unido, **Configuración › Compartir analíticas** empieza desactivado y no se envía nada de esto hasta que lo actives. Desactivarlo detiene todo esto en ese dispositivo.
@@ -265,8 +265,7 @@ Estas empresas nos ayudan a operar Outlayr. Cada una recibe solo lo que su funci
 - **[ElevenLabs](https://elevenlabs.io/privacy-policy)** convierte las grabaciones de voz en texto. Recibe la grabación y tu idioma.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** lleva el control del estado de las suscripciones. Recibe un ID anónimo, o tu ID de cuenta, nombre y correo electrónico una vez que inicias sesión, y tus registros de compra.
 - **[Apple](https://www.apple.com/legal/privacy/)** proporciona Iniciar sesión con Apple, los pagos del App Store y funciones de iOS como Siri y Atajos, según su propia política.
-- **[Google](https://policies.google.com/privacy)** proporciona Acceder con Google y los pagos de Google Play, según su propia política, y es una fuente alternativa de logos, para lo cual recibe una dirección web y tu dirección IP.
-- **Logo.dev** proporciona logos de comercios y bancos. Recibe una dirección web y tu dirección IP.
+- **[Google](https://policies.google.com/privacy)** proporciona Acceder con Google y los pagos de Google Play, según su propia política.
 - **[Expo](https://expo.dev/privacy)** distribuye las actualizaciones de la app. Recibe un ID de instalación aleatorio, la versión de la app, tu dirección IP y los mensajes de error de las actualizaciones.
 - **[PostHog](https://posthog.com/privacy)** proporciona las analíticas de uso y los reportes de fallas, desde servidores en Estados Unidos. Recibe los eventos descritos en [Lo que la app envía incluso sin cuenta](#lo-que-la-app-envía-incluso-sin-cuenta), un ID de instalación aleatorio y tu ID de cuenta cuando inicias sesión, además de los [registros de solicitudes de IA](#registros-de-solicitudes-de-ia) que envía nuestro servidor. También recibe las analíticas de este sitio web, descritas en [Este sitio web](#este-sitio-web).
 
@@ -380,7 +379,7 @@ Si vives en California o en otro estado de EE. UU. con una ley de privacidad, es
 
 | Categoría y ejemplos | Recibida por |
 | --- | --- |
-| **Identificadores:** nombre, correo electrónico, ID de cuenta, ID de instalación, dirección IP | Hetzner, RevenueCat, Expo, PostHog, Logo.dev, Google, Cloudflare (correo) |
+| **Identificadores:** nombre, correo electrónico, ID de cuenta, ID de instalación, dirección IP | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (correo, logos) |
 | **Información comercial:** registros de suscripciones y compras | Apple, Google, RevenueCat, Hetzner |
 | **Información de audio y visual:** clips de voz, escaneos de recibos, capturas de planes de cuotas, fotos adjuntas | ElevenLabs (clips), Anthropic (escaneos), Cloudflare (fotos) |
 | **Actividad en internet u otras redes:** dirección IP, agente de usuario, registros de solicitudes, uso de la app y del sitio web, reportes de fallas | Hetzner, Expo, PostHog, el proveedor que aloja nuestro sitio web |
@@ -406,7 +405,7 @@ Ningún sistema es perfectamente seguro. Si encuentras un problema de seguridad,
 
 ## Transferencias internacionales
 
-Nuestros servidores están en Helsinki, Finlandia, en la Unión Europea. danestves LLC es una empresa estadounidense, y Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Logo.dev, Apple, Google y Notion tratan los datos que reciben principalmente en Estados Unidos, cuyas leyes pueden protegerlos de forma distinta a las de tu país. Escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com) para conocer los detalles de las garantías que se aplican.
+Nuestros servidores están en Helsinki, Finlandia, en la Unión Europea. danestves LLC es una empresa estadounidense, y Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Apple, Google y Notion tratan los datos que reciben principalmente en Estados Unidos, cuyas leyes pueden protegerlos de forma distinta a las de tu país. Escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com) para conocer los detalles de las garantías que se aplican.
 
 ## Menores
 
