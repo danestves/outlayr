@@ -231,8 +231,8 @@ export function CategoryPanel() {
     const { category, period } = filters;
     const selected = category === null ? undefined : ledger.categories.get(category);
     const budget = useMemo(
-        () => (category === null ? null : categoryBudget(ledger, category, period)),
-        [category, ledger, period]
+        () => (category === null || filters.accounts.length > 0 ? null : categoryBudget(ledger, category, period)),
+        [category, filters.accounts, ledger, period]
     );
     const detail = useMemo(
         () => (category === null ? null : categoryDetail(ledger, category, period, { accounts: filters.accounts })),

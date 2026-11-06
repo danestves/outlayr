@@ -38,7 +38,7 @@ function Budgets() {
             unbudgeted: unbudgeted.toSorted((a, b) => b.total - a.total),
         };
     }, [filters.accounts, ledger, period]);
-    if (rows.budgeted.length === 0 && rows.unbudgeted.length === 0) {
+    if (filters.accounts.length > 0 || (rows.budgeted.length === 0 && rows.unbudgeted.length === 0)) {
         return null;
     }
     return (
