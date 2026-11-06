@@ -2,10 +2,11 @@ import type { SankeyLink, SankeyNode } from "@/components/charts/sankey-chart";
 import type { ChartDatum } from "@/components/charts/shared";
 import type { TreemapDatum } from "@/components/charts/treemap-chart";
 
-import { categoriesOf, netWorthAt } from "./dashboard-series";
+import { categoriesOf } from "./dashboard-series";
 import type { SeriesCategory } from "./dashboard-series";
 import { endOfDay, round, rowsBetween, total } from "./dashboard-series-ledger";
 import type { Ledger, Scope } from "./dashboard-series-ledger";
+import { netWorthSeries } from "./dashboard-series-net-worth";
 import { daysFrom, periodOf, shiftPeriodKey } from "./dashboard-series-period";
 import type { Period } from "./dashboard-series-period";
 
@@ -153,9 +154,13 @@ export function dailySpend(ledger: Ledger, period: Period, scope: Scope): DailyS
 }
 
 export function netWorthHistory(ledger: Ledger, period: Period, scope: Scope, months = 12): ChartDatum[] {
-    return Array.from({ length: months }, (_, index) => {
-        const each = periodOf(shiftPeriodKey(period.key, index + 1 - months), ledger.firstDayOfMonth);
-        const instant = Math.min(ledger.now, endOfDay(ledger, each.to));
-        return { date: lastDayOf(ledger, each), netWorth: netWorthAt(ledger, scope, instant) };
-    });
+    const periods = Array.from({ length: months }, (_, index) =>
+        periodOf(shiftPeriodKey(period.key, index + 1 - months), ledger.firstDayOfMonth)
+    );
+    const worth = netWorthSeries(
+        ledger,
+        scope,
+        periods.map((each) => Math.min(ledger.now, endOfDay(ledger, each.to)))
+    );
+    return periods.map((each, index) => ({ date: lastDayOf(ledger, each), netWorth: worth[index] ?? 0 }));
 }

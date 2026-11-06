@@ -1,4 +1,3 @@
-import { accountBalances } from "@outlayr/backend/confect/ledgerView";
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { budgetStanding, wall, wallDay } from "@outlayr/backend/confect/mcpLedger";
 import { contributesTo, spentForCategory } from "@outlayr/money/budget-spent";
@@ -8,6 +7,7 @@ import type { ChartDatum } from "@/components/charts/shared";
 
 import { endOfDay, round, rowsBetween, rowsOf, startOfDay, total } from "./dashboard-series-ledger";
 import type { Ledger, LedgerRow, Scope } from "./dashboard-series-ledger";
+import { netWorthSeries } from "./dashboard-series-net-worth";
 import { daysFrom, priorSlice, periodOf, shiftPeriodKey } from "./dashboard-series-period";
 import type { Period } from "./dashboard-series-period";
 import { daysBetween } from "./ledger";
@@ -160,15 +160,6 @@ export interface Kpis {
 
 const change = (value: number, prior: number) => (prior === 0 ? null : (value - prior) / Math.abs(prior));
 
-export function netWorthAt(ledger: Ledger, scope: Scope, instant: number) {
-    const chosen = new Set(scope.accounts);
-    const books: LedgerBooks =
-        chosen.size === 0
-            ? ledger.books
-            : { ...ledger.books, accounts: ledger.books.accounts.filter((row) => chosen.has(row.localId)) };
-    return accountBalances(books, ledger.currency, ledger.rates, { now: instant, offsetAt: ledger.offsetAt }).net;
-}
-
 export function kpis(ledger: Ledger, period: Period, scope: Scope): Kpis {
     const through = ledger.today < period.to ? ledger.today : period.to;
     const prior = priorSlice(period, ledger.today, ledger.firstDayOfMonth);
@@ -181,8 +172,10 @@ export function kpis(ledger: Ledger, period: Period, scope: Scope): Kpis {
     const keptNow = round(ledger, incomeNow - spentNow);
     const keptBefore = round(ledger, incomeBefore - spentBefore);
     const asOf = Math.min(ledger.now, endOfDay(ledger, period.to));
-    const netNow = netWorthAt(ledger, scope, asOf);
-    const netBefore = netWorthAt(ledger, scope, Math.min(startOfDay(ledger, period.from) - 1, asOf));
+    const [netBefore = 0, netNow = 0] = netWorthSeries(ledger, scope, [
+        Math.min(startOfDay(ledger, period.from) - 1, asOf),
+        asOf,
+    ]);
     return {
         income: { delta: change(incomeNow, incomeBefore), prior: incomeBefore, value: incomeNow },
         kept: {

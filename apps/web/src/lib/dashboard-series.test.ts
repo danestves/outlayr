@@ -1,4 +1,4 @@
-import { ledgerOverview } from "@outlayr/backend/confect/ledgerView";
+import { accountBalances, ledgerOverview } from "@outlayr/backend/confect/ledgerView";
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import type { Doc, TableNames } from "@outlayr/backend/convex/_generated/dataModel";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
@@ -7,7 +7,9 @@ import { describe, expect, it } from "vite-plus/test";
 
 import { categoryBudget, categoryDetail, kpis, spendSeries, stackOrder } from "./dashboard-series";
 import { cashFlow, categorySpend, dailySpend, monthlyByCategory, netWorthHistory } from "./dashboard-series-insights";
-import { prepareLedger } from "./dashboard-series-ledger";
+import { endOfDay, prepareLedger } from "./dashboard-series-ledger";
+import type { Ledger } from "./dashboard-series-ledger";
+import { netWorthSeries } from "./dashboard-series-net-worth";
 import { periodOf } from "./dashboard-series-period";
 
 const at = (iso: string) => Date.parse(iso);
@@ -38,7 +40,7 @@ const category = (
         ...fields,
     });
 
-const account = (localId: string, name: string) =>
+const account = (localId: string, name: string, fields: Partial<Doc<"accounts">> = {}) =>
     docOf<"accounts">({
         ...envelope(localId),
         currency: "USD",
@@ -53,6 +55,7 @@ const account = (localId: string, name: string) =>
         initialBalanceUsd: 0,
         name,
         sortOrder: 0,
+        ...fields,
     });
 
 interface EntryFields {
@@ -399,4 +402,126 @@ describe("stack order", () => {
     it("puts the selected category at the base", () => {
         expect(stackOrder([orange, amber, blue], "dining")[0]?.id).toBe("dining");
     });
+});
+
+describe("net worth over time", () => {
+    const rate = (quote: string, date: string, value: number) =>
+        docOf<"exchangeRates">({
+            date,
+            fetchedAt: 0,
+            quote,
+            rate: value,
+            rateType: "official",
+            source: "openexchangerates",
+        });
+    const replayed = (ledger: Ledger, accounts: readonly string[], instant: number) =>
+        accountBalances(
+            accounts.length === 0
+                ? ledger.books
+                : { ...ledger.books, accounts: ledger.books.accounts.filter((row) => accounts.includes(row.localId)) },
+            ledger.currency,
+            ledger.rates,
+            { now: instant, offsetAt: ledger.offsetAt }
+        ).net;
+    const newYork = [{ key: "timeZone", value: "America/New_York" }];
+    const world = (currency: string) =>
+        books({
+            accounts: [
+                account("chase", "Chase", { initialBalance: 1200.5, sortOrder: 0 }),
+                account("euro", "Euro", { currency: "EUR", initialBalance: 800, sortOrder: 1 }),
+                account("card", "Card", { initialBalance: -150, sortOrder: 2 }),
+            ],
+            appMeta: [...newYork, { key: "currency", value: currency }],
+            exchangeRates: [
+                rate("EUR", "2026-01-01", 0.9),
+                rate("EUR", "2026-06-01", 0.95),
+                rate("EUR", "2026-10-15", 0.88),
+                rate("MXN", "2026-01-01", 18),
+            ],
+            installmentPlans: [
+                docOf<"installmentPlans">({
+                    ...envelope("plan"),
+                    accountId: "card",
+                    dateCreated: 0,
+                    transactionId: "t",
+                }),
+            ],
+            outsideMoves: [
+                docOf<"outsideMoves">({
+                    ...envelope("move"),
+                    accountId: "euro",
+                    amount: 40.25,
+                    amountUsd: 44,
+                    date: at("2026-11-01T05:30:00Z"),
+                    note: "",
+                }),
+            ],
+            outsidePayments: [
+                docOf<"outsidePayments">({
+                    ...envelope("paid"),
+                    amount: 33.33,
+                    amountUsd: 33.33,
+                    date: at("2026-03-08T07:00:00Z"),
+                    planId: "plan",
+                }),
+            ],
+            transactions: [
+                entry("a", "2026-03-08T06:59:00Z", 19.99, { accountId: "chase" }),
+                entry("b", "2026-03-08T07:00:00Z", 1500, { accountId: "chase", income: true }),
+                entry("c", "2026-03-09T03:59:59Z", 7.1, { accountId: "euro", amountUsd: 7.9, currency: "EUR" }),
+                entry("d", "2026-03-09T04:00:00Z", 12.34, { accountId: "card" }),
+                entry("e", "2026-10-31T23:00:00Z", 64.2, { accountId: "euro", amountUsd: 71, currency: "EUR" }),
+                entry("f", "2026-11-01T05:30:00Z", 410, { accountId: "chase", amountUsd: 22, currency: "MXN" }),
+                entry("g", "2026-11-01T06:30:00Z", 88.88, { accountId: "chase", income: true }),
+                entry("h", "2026-11-02T04:59:59Z", 3.5, { accountId: "chase", amountUsd: null, currency: "MXN" }),
+                entry("i", "2026-11-02T05:00:00Z", 45, {
+                    accountId: "euro",
+                    amountUsd: 49,
+                    currency: "EUR",
+                    income: true,
+                }),
+                ...[0, 1, 2, 3, 4].map((minute) =>
+                    entry(`cent-${minute}`, `2026-10-20T10:0${minute}:00Z`, 0.01, {
+                        accountId: "euro",
+                        amountUsd: 0.01,
+                    })
+                ),
+                entry("gone", "2026-11-01T12:00:00Z", 999, { accountId: "chase", deletedAt: 1 }),
+                entry("loose", "2026-11-01T12:00:00Z", 10, { accountId: undefined }),
+            ],
+            transfers: [
+                {
+                    ...transfer("swap", "2026-03-08T07:00:00Z", 100),
+                    fromAccountId: "chase",
+                    toAccountId: "euro",
+                    toAmount: 91,
+                    toAmountUsd: 100,
+                    toCurrency: "EUR",
+                },
+                { ...transfer("pay-card", "2026-11-01T06:00:00Z", 60.6), fromAccountId: "chase", toAccountId: "card" },
+            ],
+        });
+    const days = ["2026-03-07", "2026-03-08", "2026-03-09", "2026-10-31", "2026-11-01", "2026-11-02", "2026-11-03"];
+    const instantsOf = (ledger: Ledger) => [
+        ...days.map((day) => endOfDay(ledger, day)),
+        ledger.now,
+        endOfDay(ledger, days[0] ?? "") - 1,
+    ];
+
+    it.each([
+        { accounts: [], currency: "USD" },
+        { accounts: [], currency: "EUR" },
+        { accounts: ["chase", "euro"], currency: "USD" },
+        { accounts: ["card"], currency: "EUR" },
+    ])(
+        "matches replaying the balances at each date, in $currency for $accounts across both DST changes",
+        ({ accounts, currency }) => {
+            const ledger = prepareLedger(world(currency), NOW);
+            const instants = instantsOf(ledger).toReversed();
+
+            expect(netWorthSeries(ledger, { accounts }, instants)).toStrictEqual(
+                instants.map((instant) => replayed(ledger, accounts, instant))
+            );
+        }
+    );
 });
