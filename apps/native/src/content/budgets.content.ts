@@ -615,6 +615,12 @@ const budgets = {
             fr: "clos",
             pt: "fechado",
         }),
+        "budgets.plan.editor.amountA11y": t({
+            en: "Amount for {month}",
+            es: "Monto de {month}",
+            fr: "Montant pour {month}",
+            pt: "Valor de {month}",
+        }),
         "budgets.plan.editor.aboveTypical": t({
             en: "{month} is {amount} above typical.",
             es: "{month} está {amount} por encima de lo normal.",
@@ -668,6 +674,12 @@ const budgets = {
             es: "NORMALMENTE {amount}/MES",
             fr: "HABITUELLEMENT {amount}/MOIS",
             pt: "NORMALMENTE {amount}/MÊS",
+        }),
+        "budgets.plan.editor.typeA11y": t({
+            en: "Type a month's amount",
+            es: "Escribir el monto de un mes",
+            fr: "Saisir le montant d’un mois",
+            pt: "Digitar o valor de um mês",
         }),
         "budgets.plan.editor.yearA11y": t({
             en: "Plan year, {year}",
