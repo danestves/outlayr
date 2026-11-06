@@ -41,8 +41,8 @@ export function SpendingChart() {
     const lastDay = series.data.at(-1)?.date;
     return (
         <section aria-labelledby="spending-title">
-            <div className="flex min-h-[42px] items-center gap-2 px-5 pt-2">
-                <h2 className="text-[13px] font-semibold" id="spending-title">
+            <div className="flex min-h-11 items-center gap-2 px-5 pt-2">
+                <h2 className="text-sm font-medium" id="spending-title">
                     {incomeTracking ? copy.title : copy.titleSpendOnly}
                 </h2>
                 <Link
@@ -80,10 +80,11 @@ export function SpendingChart() {
                     ))}
                     {incomeTracking ? (
                         <AreaChart.Line
-                            color="var(--color-foreground)"
+                            color="var(--muted-foreground)"
                             curve="step"
                             dataKey="income"
                             label={copy.income.value}
+                            strokeWidth={1.5}
                         />
                     ) : null}
                     <AreaChart.Labels

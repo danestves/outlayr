@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { AccountTile, LookTile, MerchantTile } from "@/components/ledger/tiles";
+import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { cn } from "@/lib/utils";
 
@@ -55,8 +55,8 @@ export function Transactions() {
     const { columns } = copy.transactions;
     return (
         <section aria-labelledby="transactions-title" className="border-border border-t">
-            <div className="flex min-h-[42px] items-center gap-2 px-5 pt-1">
-                <h2 className="text-[13px] font-semibold" id="transactions-title">
+            <div className="flex min-h-11 items-center gap-2 px-5 pt-1">
+                <h2 className="shrink-0 text-sm font-medium" id="transactions-title">
                     {copy.transactions.title}
                 </h2>
                 <span className="text-muted-foreground truncate text-xs">
@@ -93,9 +93,11 @@ export function Transactions() {
                     <Table.Header>
                         <Table.Row>
                             <Table.Head>{columns.merchant}</Table.Head>
-                            {selected ? null : <Table.Head>{columns.category}</Table.Head>}
-                            <Table.Head className="hidden md:table-cell">{columns.account}</Table.Head>
-                            <Table.Head>{columns.date}</Table.Head>
+                            {selected ? null : (
+                                <Table.Head className="hidden sm:table-cell">{columns.category}</Table.Head>
+                            )}
+                            <Table.Head className="hidden lg:table-cell">{columns.account}</Table.Head>
+                            <Table.Head className="hidden md:table-cell">{columns.date}</Table.Head>
                             {selected ? <Table.Head className="hidden lg:table-cell">{columns.note}</Table.Head> : null}
                             <Table.Head align="end">{columns.amount}</Table.Head>
                         </Table.Row>
@@ -103,7 +105,7 @@ export function Transactions() {
                     <Table.Body>
                         {view.rows.map((row) => {
                             const when = (
-                                <Table.Cell className={cn(CELL, "whitespace-nowrap")}>
+                                <Table.Cell className={cn(CELL, "hidden whitespace-nowrap md:table-cell")}>
                                     {date.weekday(row.day)} · {clockTime(timeOfDay(row.at, ledger.offsetAt(row.at)))}
                                 </Table.Cell>
                             );
@@ -113,15 +115,17 @@ export function Transactions() {
                                 return (
                                     <Table.Row key={row.id}>
                                         <Table.Cell>
-                                            <span className="flex items-center gap-2 font-medium">
+                                            <span className="flex max-w-48 items-center gap-2 font-medium">
                                                 {from ? (
                                                     <AccountTile account={from} photos={accountPhotos} size="sm" />
                                                 ) : null}
                                                 <span className="truncate">{names.join(" → ")}</span>
                                             </span>
                                         </Table.Cell>
-                                        <Table.Cell className={CELL}>{copy.transactions.transfer}</Table.Cell>
-                                        <Table.Cell className="hidden md:table-cell" />
+                                        <Table.Cell className={cn(CELL, "hidden sm:table-cell")}>
+                                            {copy.transactions.transfer}
+                                        </Table.Cell>
+                                        <Table.Cell className="hidden lg:table-cell" />
                                         {when}
                                         <Table.Cell align="end" className={cn(CELL, "font-mono whitespace-nowrap")}>
                                             {money(row.amount, ledger.currency)}
@@ -136,7 +140,7 @@ export function Transactions() {
                             return (
                                 <Table.Row key={row.id}>
                                     <Table.Cell>
-                                        <span className="flex items-center gap-2 font-medium">
+                                        <span className="flex max-w-48 items-center gap-2 font-medium">
                                             <MerchantTile
                                                 imageUrl={imageKey ? photos?.get(imageKey) : undefined}
                                                 name={merchant}
@@ -145,14 +149,20 @@ export function Transactions() {
                                         </span>
                                     </Table.Cell>
                                     {selected ? null : (
-                                        <Table.Cell className={CELL}>
-                                            <span className="flex items-center gap-2">
-                                                <LookTile look={catalog.category(row.topId)} size="sm" />
+                                        <Table.Cell className={cn(CELL, "hidden sm:table-cell")}>
+                                            <span className="flex max-w-48 items-center gap-2">
+                                                <span
+                                                    aria-hidden
+                                                    className="size-2 shrink-0 rounded-full"
+                                                    style={{
+                                                        backgroundColor: catalog.category(row.topId).color ?? undefined,
+                                                    }}
+                                                />
                                                 <span className="truncate">{top ? categoryName(top) : ""}</span>
                                             </span>
                                         </Table.Cell>
                                     )}
-                                    <Table.Cell className={cn(CELL, "hidden md:table-cell")}>
+                                    <Table.Cell className={cn(CELL, "hidden max-w-48 truncate lg:table-cell")}>
                                         {row.accountId ? (ledger.accounts.get(row.accountId)?.name ?? "") : ""}
                                     </Table.Cell>
                                     {when}

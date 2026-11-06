@@ -54,13 +54,13 @@ function Budgets() {
         >
             <ul>
                 {rows.budgeted.map(({ category, standing }) => (
-                    <li key={category.id}>
+                    <li className="-mx-2" key={category.id}>
                         <button
-                            className="block w-full cursor-pointer py-2 text-left"
+                            className="hover:bg-muted block w-full cursor-pointer rounded-lg px-2 py-2 text-left transition-colors"
                             onClick={() => setFilters({ category: category.topId })}
                             type="button"
                         >
-                            <span className="flex items-center gap-2 text-[13px]">
+                            <span className="flex items-center gap-2 text-sm">
                                 <LookTile look={catalog.category(category.id)} size="sm" />
                                 <span className="min-w-0 flex-1 truncate font-medium">{categoryName(category)}</span>
                                 <span className="font-mono text-xs tabular-nums">
@@ -78,7 +78,7 @@ function Budgets() {
                                     )}
                                 </span>
                             </span>
-                            <span className="mt-1.5 block pl-7">
+                            <span className="mt-2 block pl-7">
                                 <Meter
                                     color={category.color}
                                     ratio={standing.effectiveLimit > 0 ? standing.spent / standing.effectiveLimit : 1}
@@ -89,9 +89,9 @@ function Budgets() {
                     </li>
                 ))}
                 {rows.unbudgeted.slice(0, Math.max(BUDGET_ROWS - rows.budgeted.length, 0)).map((each) => (
-                    <li key={each.id}>
+                    <li className="-mx-2" key={each.id}>
                         <button
-                            className="flex w-full cursor-pointer items-center gap-2 py-2 text-left text-[13px]"
+                            className="hover:bg-muted flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors"
                             onClick={() => setFilters({ category: each.id })}
                             type="button"
                         >
@@ -153,17 +153,17 @@ function Accounts() {
         >
             <ul>
                 {shown.rows.slice(0, ACCOUNT_ROWS).map((account) => (
-                    <li className="flex items-center gap-2.5 py-1.5 text-[13px]" key={account.key}>
-                        <AccountTile account={account.look} photos={photos} />
+                    <li className="flex items-center gap-2 py-2 text-sm" key={account.key}>
+                        <AccountTile account={account.look} photos={photos} size="sm" />
                         <span className="min-w-0 flex-1 truncate font-medium">{account.name}</span>
-                        <span className="font-mono text-[13px] tabular-nums">
+                        <span className="font-mono text-sm tabular-nums">
                             {money(account.balance, ledger.currency)}
                         </span>
                     </li>
                 ))}
             </ul>
             {shown.rows.length > ACCOUNT_ROWS ? (
-                <p className="text-muted-foreground pt-1.5 text-xs">
+                <p className="text-muted-foreground pt-2 text-xs">
                     {copy.moreAccounts({ count: shown.rows.length - ACCOUNT_ROWS })}
                 </p>
             ) : null}
@@ -190,12 +190,12 @@ function Upcoming() {
                             ? { amount: charge.amount, currency: charge.currency }
                             : { amount: charge.valued, currency: overview.upcoming.currency };
                     return (
-                        <li className="flex items-center gap-2.5 py-1.5 text-[13px]" key={charge.id}>
-                            <LookTile look={charge.look} photos={photos} />
+                        <li className="flex items-center gap-2 py-2 text-sm" key={charge.id}>
+                            <LookTile look={charge.look} photos={photos} size="sm" />
                             <span className="min-w-0 flex-1 truncate font-medium">{charge.note}</span>
                             <span
                                 className={cn(
-                                    "font-mono text-[13px] tabular-nums",
+                                    "font-mono text-sm tabular-nums",
                                     charge.kind === "income" && "text-app-income"
                                 )}
                             >
@@ -205,7 +205,7 @@ function Upcoming() {
                                     "always"
                                 )}
                             </span>
-                            <span className="text-muted-foreground w-12 text-right font-mono text-[11px]">
+                            <span className="text-muted-foreground w-12 text-right font-mono text-xs">
                                 {date.day(charge.nextCharge)}
                             </span>
                         </li>
@@ -222,7 +222,7 @@ export function OverviewPanel() {
     return (
         <>
             <PanelHeader>
-                <h2 className="text-sm font-semibold">{title(filters.period)}</h2>
+                <h2 className="text-sm font-medium">{title(filters.period)}</h2>
             </PanelHeader>
             <Budgets />
             <Accounts />

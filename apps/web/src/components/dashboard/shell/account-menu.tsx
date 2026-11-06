@@ -1,9 +1,10 @@
+import Logout from "@hugeicons/core-free-icons/Logout01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "panelui-web/button";
 import { Menu } from "panelui-web/menu";
 import { useIntlayer } from "react-intlayer";
 import * as Skullet from "skullet";
 
-import { Icon } from "@/components/icon";
 import { authClient } from "@/lib/auth-client";
 import { forgetLedger } from "@/lib/ledger-cache";
 import { announceSessionChange } from "@/lib/session";
@@ -36,7 +37,7 @@ export function AccountMenu() {
                 render={
                     <Button
                         aria-label={account.label.value}
-                        className="text-muted-foreground size-9 rounded-full text-[11px] font-semibold"
+                        className="text-muted-foreground size-9 rounded-full text-xs font-medium"
                         size="icon"
                         variant="secondary"
                     />
@@ -46,7 +47,7 @@ export function AccountMenu() {
             </Menu.Trigger>
             <Menu.Content align="end" className="app-shell ph-no-capture" side="right">
                 <Menu.Item onClick={signOut}>
-                    <Icon name="sign-out" />
+                    <HugeiconsIcon className="size-4" icon={Logout} />
                     {account.signOut}
                 </Menu.Item>
             </Menu.Content>

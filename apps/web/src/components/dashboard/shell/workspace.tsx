@@ -11,7 +11,7 @@ interface WorkspaceProps {
 
 export function Workspace({ bar, main, panel, title }: WorkspaceProps) {
     return (
-        <div className="grid min-h-dvh xl:grid-cols-[minmax(0,1fr)_356px]">
+        <div className="grid min-h-dvh grid-cols-[minmax(0,1fr)] xl:grid-cols-[minmax(0,1fr)_356px]">
             <div className="flex min-w-0 flex-col">
                 <TopBar title={title}>{bar}</TopBar>
                 <div className="flex-1">{main}</div>

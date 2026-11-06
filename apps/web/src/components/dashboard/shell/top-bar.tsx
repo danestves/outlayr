@@ -36,7 +36,7 @@ function usePeriodLabel(firstDayOfMonth: number) {
             : `${shortDay(period.from)} - ${shortDay(period.to)}`;
 }
 
-const CHIP_BUTTON = "h-8 gap-1.5 px-2.5 text-[13px] font-medium";
+const CHIP_BUTTON = "h-8 max-w-64 min-w-0 gap-1.5 px-2.5 text-sm font-medium";
 
 function PeriodChip({ filters, ledger, setFilters }: Dashboard) {
     const label = usePeriodLabel(ledger.firstDayOfMonth);
@@ -84,7 +84,9 @@ function AccountsChip({ filters, ledger, setFilters }: Dashboard) {
     return (
         <Menu>
             <Menu.Trigger render={<Button className={CHIP_BUTTON} size="sm" variant="outline" />}>
-                {chosen.size === 0 ? copy.allAccounts : (only ?? `${chosen.size} ${copy.accounts.value}`)}
+                <span className="truncate">
+                    {chosen.size === 0 ? copy.allAccounts : (only ?? `${chosen.size} ${copy.accounts.value}`)}
+                </span>
                 <HugeiconsIcon className="size-3.5" icon={Caret} />
             </Menu.Trigger>
             <Menu.Content align="start" className="app-shell ph-no-capture">
@@ -113,12 +115,12 @@ function CategoryChip({ filters, ledger, setFilters }: Dashboard) {
     }
     return (
         <Chip
-            className="h-8 text-[13px] font-medium"
+            className="h-8 max-w-64 min-w-0 shrink text-sm font-medium"
             onRemove={() => setFilters({ category: null })}
             removeLabel={copy.removeCategory({ name: categoryName(category) }).value}
             style={{ backgroundColor: `color-mix(in srgb, ${category.color} 18%, transparent)` }}
         >
-            {categoryName(category)}
+            <span className="truncate">{categoryName(category)}</span>
         </Chip>
     );
 }
@@ -140,11 +142,17 @@ function FilterBar() {
 export function TopBar({ children, title }: { children?: ReactNode; title: ReactNode }) {
     const { add } = useIntlayer("dashboard");
     return (
-        <header className="border-border flex min-h-[52px] shrink-0 flex-wrap items-center gap-2 border-b px-5 py-2">
-            <h1 className="mr-1 text-[15px] font-semibold">{title}</h1>
+        <header className="border-border flex min-h-13 shrink-0 flex-wrap items-center gap-2 border-b px-5 py-2">
+            <h1 className="mr-1 text-base font-medium">{title}</h1>
             <FilterBar />
             {children}
-            <Button className="ml-auto h-8 gap-1.5 px-3 text-[13px]" disabled size="sm" title={add.hint.value}>
+            <Button
+                className="ml-auto h-8 gap-1.5 px-3 text-sm"
+                disabled
+                size="sm"
+                title={add.hint.value}
+                variant="outline"
+            >
                 <HugeiconsIcon className="size-3.5" icon={Add} />
                 {add.label}
             </Button>

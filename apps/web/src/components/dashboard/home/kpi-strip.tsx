@@ -25,23 +25,23 @@ function Cell({ badGoesUp = false, figure, label, note, share }: CellProps) {
     const { money } = useDisplayFormat();
     const { ledger } = useDashboard();
     return (
-        <div className="bg-background min-w-0 px-5 py-3">
-            <div className="text-muted-foreground flex flex-wrap items-baseline justify-between gap-x-2 text-xs leading-4">
-                <span>{label}</span>
-                {figure.delta === null || share ? null : <span>{note}</span>}
+        <div className="bg-background min-w-0 px-5 py-4">
+            <div className="text-muted-foreground text-xs leading-4">{label}</div>
+            <div className="mt-1 font-mono text-xl leading-7 font-medium tabular-nums">
+                {money(figure.value, ledger.currency)}
             </div>
-            <div className="flex flex-wrap items-baseline gap-x-2">
-                <span className="font-mono text-xl leading-7 font-medium tracking-[-0.03em] tabular-nums">
-                    {money(figure.value, ledger.currency)}
-                </span>
-                {share ?? null}
-                {figure.delta !== null && !share ? (
-                    <Kpi.Trend
-                        className="font-mono text-xs"
-                        goodDirection={badGoesUp ? "down" : "up"}
-                        value={figure.delta * PERCENT_PER_RATIO}
-                    />
-                ) : null}
+            <div className="text-muted-foreground mt-1 flex min-h-4 flex-wrap items-baseline gap-x-2 text-xs leading-4">
+                {share ??
+                    (figure.delta === null ? null : (
+                        <>
+                            <Kpi.Trend
+                                className="font-mono text-xs"
+                                goodDirection={badGoesUp ? "down" : "up"}
+                                value={figure.delta * PERCENT_PER_RATIO}
+                            />
+                            {note}
+                        </>
+                    ))}
             </div>
         </div>
     );
@@ -70,11 +70,11 @@ export function KpiStrip() {
                         figure={figures.kept}
                         label={copy.kpi.kept}
                         share={
-                            figures.kept.share === null ? null : (
-                                <span className="text-muted-foreground font-mono text-xs">
-                                    {Math.round(figures.kept.share * PERCENT_PER_RATIO)}%
-                                </span>
-                            )
+                            figures.kept.share === null
+                                ? undefined
+                                : copy.kpi.share({
+                                      percent: Math.round(figures.kept.share * PERCENT_PER_RATIO),
+                                  })
                         }
                     />
                 ) : null}

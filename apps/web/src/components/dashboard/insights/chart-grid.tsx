@@ -29,10 +29,10 @@ interface CellProps {
 
 function Cell({ aside, children, className, id, title }: CellProps) {
     return (
-        <section className={cn("border-border min-w-0 border-b px-5 pt-3.5 pb-4", className)} id={id}>
+        <section className={cn("border-border min-w-0 border-b px-5 pt-4 pb-4", className)} id={id}>
             <div className="mb-2 flex items-baseline justify-between gap-3">
-                <h2 className="text-[13px] font-semibold">{title}</h2>
-                {aside ? <span className="text-muted-foreground font-mono text-xs">{aside}</span> : null}
+                <h2 className="text-sm font-medium">{title}</h2>
+                {aside ? <span className="text-muted-foreground text-xs">{aside}</span> : null}
             </div>
             {children}
         </section>
@@ -42,7 +42,7 @@ function Cell({ aside, children, className, id, title }: CellProps) {
 function Nothing({ height }: { height: number }) {
     const { empty } = useIntlayer("dashboard-insights");
     return (
-        <p className="text-muted-foreground text-[13px]" style={{ minHeight: height }}>
+        <p className="text-muted-foreground text-sm" style={{ minHeight: height }}>
             {empty.spending}
         </p>
     );

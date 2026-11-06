@@ -179,7 +179,7 @@ function TurnOnSync({ retry }: { retry: () => Promise<void> }) {
     return (
         <Screen title="Turn on sync">
             <Muted>Your web ledger shows what Outlayr Pro syncs from your phone.</Muted>
-            <ol className="text-app-muted mb-6 flex flex-col gap-2 text-left font-mono text-xs tracking-[0.08em] uppercase">
+            <ol className="text-app-muted mb-6 flex flex-col gap-2 text-left text-sm">
                 <li>1 · Open Outlayr on your phone</li>
                 <li>2 · Settings · Sync and backup</li>
                 <li>3 · Turn on Sync this device</li>

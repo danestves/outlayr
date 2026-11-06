@@ -23,7 +23,7 @@ export function CategoryTile({ className, color, look }: CategoryTileProps) {
         <span
             aria-hidden
             className={cn(
-                "flex size-5 shrink-0 items-center justify-center rounded-[6px] bg-[color-mix(in_srgb,var(--tile)_22%,transparent)] text-[color-mix(in_oklab,var(--tile)_78%,var(--color-foreground))]",
+                "flex size-5 shrink-0 items-center justify-center rounded-md bg-[color-mix(in_srgb,var(--tile)_22%,transparent)] text-[color-mix(in_oklab,var(--tile)_78%,var(--color-foreground))]",
                 className
             )}
             style={style}

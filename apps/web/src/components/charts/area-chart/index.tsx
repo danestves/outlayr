@@ -283,7 +283,7 @@ function AreaChartRoot({
                         );
                         return (
                             <li
-                                className="whitespace-nowrap @lg:absolute @lg:inset-x-0 @lg:-translate-y-1/2"
+                                className="max-w-full whitespace-nowrap @lg:absolute @lg:inset-x-0 @lg:-translate-y-1/2"
                                 key={row.key}
                                 style={{ opacity: row.opacity, top: row.y }}
                             >
