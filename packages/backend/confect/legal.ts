@@ -308,6 +308,66 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         document: "privacy",
         effectiveAtMs: Date.UTC(2026, 10, 6),
     },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "A website you add for a merchant, with its name and a general category, joins our shared merchant list so others see the logo. It isn't linked to you.",
+                    label: "Adding a merchant's website",
+                },
+            ],
+            es: [
+                {
+                    detail: "El sitio web que agregues para un comercio, con su nombre y una categoría general, entra en nuestra lista compartida para que otros vean el logo. No está vinculado a ti.",
+                    label: "Agregar el sitio web de un comercio",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Le site que vous ajoutez pour un commerçant, avec son nom et une catégorie générale, rejoint notre liste partagée pour que d'autres voient le logo. Il n'est pas lié à vous.",
+                    label: "Ajouter le site d'un commerçant",
+                },
+            ],
+            pt: [
+                {
+                    detail: "O site que você adicionar para um comerciante, com o nome e uma categoria geral, entra na nossa lista compartilhada para que outros vejam o logo. Ele não fica vinculado a você.",
+                    label: "Adicionar o site de um comerciante",
+                },
+            ],
+        },
+        document: "privacy",
+        effectiveAtMs: Date.UTC(2026, 10, 7),
+    },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "A website you add for a merchant can be shared with everyone and stays on the shared list after you delete your account, until it expires.",
+                    label: "Adding a merchant's website",
+                },
+            ],
+            es: [
+                {
+                    detail: "El sitio web que agregues para un comercio se puede compartir con todos y sigue en la lista compartida después de que elimines tu cuenta, hasta que caduque.",
+                    label: "Agregar el sitio web de un comercio",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Le site que vous ajoutez pour un commerçant peut être partagé avec tous et reste sur la liste partagée après la suppression de votre compte, jusqu'à son expiration.",
+                    label: "Ajouter le site d'un commerçant",
+                },
+            ],
+            pt: [
+                {
+                    detail: "O site que você adicionar para um comerciante pode ser compartilhado com todos e fica na lista compartilhada depois que você excluir sua conta, até expirar.",
+                    label: "Adicionar o site de um comerciante",
+                },
+            ],
+        },
+        document: "terms",
+        effectiveAtMs: Date.UTC(2026, 10, 7),
+    },
 ];
 
 export const noticeKey = ({ document, effectiveAtMs }: typeof PolicyNotice.Type) => `${document}:${effectiveAtMs}`;

@@ -19,7 +19,8 @@ import type { EnrichmentSuggestion } from "@/hooks/use-transaction-enrichment";
 import { voidAppFlowCommand } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
-import { attachMerchantLogo, carryLookup } from "./entry-flows";
+import { attachMerchantLogo, carryLookup, shareMerchantWebsite } from "./entry-flows";
+import type { MerchantWebsiteLogo } from "./entry-flows";
 import type { EntryForm } from "./form-values";
 import { carriedSlots, logoBlocked, replacesSlot, suggestionWrites } from "./merchant-lookup";
 import type { FieldSource, LookupGuard, LookupSlot, LookupSources } from "./merchant-lookup";
@@ -93,6 +94,8 @@ export function useMerchantLookup({
     const touchedSinceLookupRef = useRef<Set<LookupSlot>>(new Set());
     const suggestedDomainRef = useRef<string | null>(null);
     const logoRequestRef = useRef(0);
+    const [unfoundKey, setUnfoundKey] = useState<string | null>(null);
+    const websiteRef = useRef<(MerchantWebsiteLogo & { key: string }) | null>(null);
 
     // Shape only: the names and what sits under what. No figures leave here.
     const categoryTree = categories.flatMap((parent) =>
@@ -205,6 +208,7 @@ export function useMerchantLookup({
             suggestion.tagIds.length > 0 ||
             suggestion.pendingTagNames.length > 0;
         const answer = { currency, key: merchantKey(form.state.values.merchant) };
+        setUnfoundKey(suggestion.lookedUp && suggestion.domain == null ? answer.key : null);
         // A domain alone is an answer only once its logo is on the row, or the save would carry a logo this row lacks.
         if (asked && answeredWithoutDomain) {
             recordLookupAnswer(answer);
@@ -296,7 +300,35 @@ export function useMerchantLookup({
 
     // Read back from the saved row: a pending category only gets an id at save. `forCurrency` is the row's own column
     // (null in the default currency), so siblings stored the same way match.
+    const applyWebsite = (logo: MerchantWebsiteLogo) => {
+        logoRequestRef.current += 1;
+        websiteRef.current = { ...logo, key: merchantKey(form.state.values.merchant) };
+        claim("identity");
+        setIdentity((previous) => ({
+            ...previous,
+            color: null,
+            emoji: null,
+            icon: null,
+            photoColor: logo.hue,
+            photoUri: logo.photoUri,
+        }));
+    };
+
     const carry = (savedId: string, saved: SavedEntry, entryCurrency: string) => {
+        const website = websiteRef.current;
+        if (website?.key === merchantKey(saved.merchant) && website.photoUri === identityReads.draft().photoUri) {
+            return shareMerchantWebsite({
+                currency: entryCurrency,
+                db,
+                domain: website.domain,
+                forCurrency: saved.txCurrency,
+                forIncome: saved.income,
+                globalCurrency,
+                locale,
+                merchant: saved.merchant,
+                savedId,
+            });
+        }
         const answered = lookupAnsweredRef.current;
         const carriesLookup =
             enrichment.userAsked() &&
@@ -326,5 +358,7 @@ export function useMerchantLookup({
         queueable: (merchant: string) => remoteEnrichment && merchant.trim() !== "",
         releaseCategory: () => setCategorySource("initial"),
         sources: { categorySource, identitySource, tagsSource } satisfies LookupSources,
+        unfoundMerchant: (merchant: string) => remoteEnrichment && unfoundKey === merchantKey(merchant),
+        applyWebsite,
     };
 }

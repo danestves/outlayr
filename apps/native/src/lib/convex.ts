@@ -128,6 +128,21 @@ export type EnrichmentFn = (args: EnrichmentRequest) => Effect.Effect<RemoteEnri
 
 const decodeSuggestion = Schema.decodeUnknownEffect(Suggestion);
 
+export function merchantWebsiteTransport() {
+    if (!authenticated) {
+        return null;
+    }
+    const { submitWebsite } = api.enrichment;
+    return (args: {
+        categoryName: string | null;
+        currency: string;
+        domain: string;
+        income: boolean;
+        locale: string | undefined;
+        name: string;
+    }) => cloudAction(submitWebsite, { ...args, ...aiConsentArgs() });
+}
+
 /** Names only: `packages/backend/confect/enrichment.test.ts` asserts the action's validator against this field set. */
 export function enrichmentTransport(): EnrichmentFn | null {
     if (!authenticated) {

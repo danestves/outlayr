@@ -13,7 +13,7 @@ export default Table.make(() =>
         modelId: Schema.String,
         parentCategoryName: Schema.NullOr(Schema.String),
         resolvedAt: Schema.Number,
-        source: Schema.optional(Schema.Literals(["model", "web"])),
+        source: Schema.optional(Schema.Literals(["model", "user", "web"])),
         tags: Schema.Array(Schema.String),
     })
 ).index("by_key", ["key"]);

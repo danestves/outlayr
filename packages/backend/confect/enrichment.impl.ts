@@ -1,6 +1,6 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
+import { AI_CONSENT_VERSION, CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
@@ -11,7 +11,7 @@ import * as Redacted from "effect/Redacted";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { ActionCtx, DatabaseReader, QueryCtx, QueryRunner } from "./_generated/services";
+import { ActionCtx, DatabaseReader, MutationRunner, QueryCtx, QueryRunner } from "./_generated/services";
 import {
     applyToTree,
     EMPTY,
@@ -23,14 +23,72 @@ import {
     rateLimiter,
     runSuggest,
     sanitizeCurrencyCode,
+    sanitizeDomain,
     sanitizeLocale,
+    sanitizeMerchantName,
     sanitizeRegionCode,
 } from "./enrichment";
 import spec from "./enrichment.spec";
+import { isForbiddenLogoOrigin } from "./groundedLookup";
 import { traced } from "./lib/aiTracing";
 import { liveIdentity, optionalUserId } from "./lib/auth";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
+import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
 import { isPro } from "./revenuecat";
+
+const MERCHANT_LOGOS_ORIGIN = "https://logos.tryoutlayr.com/merchants";
+const LOGO_CHECK_TIMEOUT_MS = 6000;
+const USER_SUBMITTED_MODEL_ID = "user";
+
+const logoExists = (domain: string) =>
+    Effect.tryPromise(() =>
+        fetch(`${MERCHANT_LOGOS_ORIGIN}/${encodeURIComponent(domain)}`, {
+            method: "HEAD",
+            signal: AbortSignal.timeout(LOGO_CHECK_TIMEOUT_MS),
+        })
+    ).pipe(
+        Effect.map((response) => response.ok),
+        Effect.orElseSucceed(() => false)
+    );
+
+const sharedCategory = Effect.fn("Enrichment.sharedCategory")(function* sharedCategory(
+    args: {
+        readonly aiConsent?: number | undefined;
+        readonly categoryName: string | null;
+        readonly income: boolean;
+        readonly name: string;
+        readonly shareAnalytics?: boolean | undefined;
+    },
+    currency: string | undefined,
+    locale: string | undefined,
+    subject: string
+) {
+    if (args.categoryName !== null && CANONICAL_CATEGORIES.has(args.categoryName)) {
+        return args.categoryName;
+    }
+    const apiKey = yield* anthropicApiKey;
+    if (Option.isNone(apiKey) || args.aiConsent !== AI_CONSENT_VERSION) {
+        return null;
+    }
+    const modelId = yield* claudeFastModelId;
+    const classified = yield* runSuggest(
+        traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "category_suggest", {
+            distinctId: args.shareAnalytics === true ? subject : undefined,
+        }),
+        {
+            categoryTree: CANONICAL_CATEGORY_NAMES[args.income ? "income" : "expense"].map((name) => ({
+                children: [],
+                name,
+            })),
+            currency,
+            income: args.income,
+            locale,
+            name: args.name,
+        }
+    ).pipe(Effect.catchTags({ ModelCallError: () => Effect.succeed(null) }));
+    const categoryName = classified?.categoryName ?? null;
+    return categoryName !== null && CANONICAL_CATEGORIES.has(categoryName) ? categoryName : null;
+});
 
 /**
  * Keyed by the Better Auth user id, as `sync.ts` writes it. An absent row means consented; a lost session answers
@@ -164,8 +222,59 @@ const suggest = FunctionImpl.make(
     }, Effect.orDie)
 );
 
+const submitWebsite = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "submitWebsite",
+    Effect.fn("Enrichment.submitWebsite")(function* submitWebsite(args) {
+        const ctx = yield* ActionCtx;
+        const identity = yield* liveIdentity(ctx);
+        const domain = sanitizeDomain(args.domain);
+        const name = args.name.trim();
+        if (
+            identity === null ||
+            domain === null ||
+            isForbiddenLogoOrigin(domain) ||
+            name.length < MIN_NAME_LENGTH ||
+            name.length > MAX_NAME_LENGTH
+        ) {
+            return null;
+        }
+        const currency = sanitizeCurrencyCode(args.currency);
+        const keys = knowledgeKeys(name, currency).filter((key) => KEY_PATTERN.test(key));
+        if (keys.length === 0) {
+            return null;
+        }
+        const allowed = yield* Effect.promise(() =>
+            rateLimiter.limit(ctx, "merchantWebsitePerUser", { key: identity.tokenIdentifier })
+        );
+        if (!allowed.ok || !(yield* logoExists(domain))) {
+            return null;
+        }
+        const categoryName = yield* sharedCategory(args, currency, sanitizeLocale(args.locale), identity.subject);
+        if (categoryName === null) {
+            return null;
+        }
+        const { runMutation } = yield* MutationRunner;
+        yield* runMutation(refs.internal.merchantKnowledge.record, {
+            categoryName,
+            domain,
+            emoji: null,
+            keys,
+            merchantName: sanitizeMerchantName(name) ?? undefined,
+            modelId: USER_SUBMITTED_MODEL_ID,
+            parentCategoryName: null,
+            resolvedAt: yield* Clock.currentTimeMillis,
+            source: "user",
+            tags: [],
+        });
+        return null;
+    }, Effect.orDie)
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(groundedConsent),
     Layer.provide(suggest),
+    Layer.provide(submitWebsite),
     GroupImpl.finalize
 );

@@ -9,7 +9,7 @@ import { convexTest } from "convex-test";
 import * as Effect from "effect/Effect";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { api } from "../convex/_generated/api";
+import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import {
     EMPTY,
@@ -887,5 +887,98 @@ describe(sanitizeRegionCode, () => {
 
     it("passes undefined through unchanged", () => {
         expect(sanitizeRegionCode(undefined)).toBeUndefined();
+    });
+});
+
+describe("submitWebsite", () => {
+    const SUBMISSION = {
+        categoryName: "Dining Out",
+        currency: "USD",
+        domain: "latentacion.wuplify.com",
+        income: false,
+        name: "La Tentación",
+    };
+
+    const shared = (t: ReturnType<typeof convexTest>, key: string) =>
+        t.query(internal.merchantKnowledge.lookup, { keys: [key], now: Date.now() });
+
+    it("shares a website whose logo exists, under the merchant and its currency", async () => {
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(() => Promise.resolve(new Response(null, { status: 200 })))
+        );
+        const t = convexTest(schema, modules);
+        rateLimiterTest.register(t);
+        const identity = await seedAuthUser(t);
+
+        await authenticatedAs(t, identity).action(api.enrichment.submitWebsite, SUBMISSION);
+
+        await expect(shared(t, "la tentacion|usd")).resolves.toMatchObject({
+            categoryName: "Dining Out",
+            domain: "latentacion.wuplify.com",
+            source: "user",
+        });
+    });
+
+    it("never replaces a merchant already on the list", async () => {
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(() => Promise.resolve(new Response(null, { status: 200 })))
+        );
+        const t = convexTest(schema, modules);
+        rateLimiterTest.register(t);
+        const identity = await seedAuthUser(t);
+        await t.mutation(internal.merchantKnowledge.record, {
+            categoryName: "Subscriptions",
+            domain: "netflix.com",
+            emoji: null,
+            keys: ["netflix|usd"],
+            modelId: "test-model",
+            parentCategoryName: null,
+            resolvedAt: Date.now(),
+            source: "model",
+            tags: [],
+        });
+
+        await authenticatedAs(t, identity).action(api.enrichment.submitWebsite, {
+            ...SUBMISSION,
+            categoryName: "Subscriptions",
+            domain: "evil.example.com",
+            name: "Netflix",
+        });
+
+        await expect(shared(t, "netflix|usd")).resolves.toMatchObject({ domain: "netflix.com" });
+    });
+
+    it("refuses a website with no logo", async () => {
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(() => Promise.resolve(new Response(null, { status: 404 })))
+        );
+        const t = convexTest(schema, modules);
+        rateLimiterTest.register(t);
+        const identity = await seedAuthUser(t);
+
+        await authenticatedAs(t, identity).action(api.enrichment.submitWebsite, SUBMISSION);
+
+        await expect(shared(t, "la tentacion|usd")).resolves.toBeNull();
+    });
+
+    it("keeps a private category name out of the shared list", async () => {
+        vi.stubEnv("ANTHROPIC_API_KEY", "");
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(() => Promise.resolve(new Response(null, { status: 200 })))
+        );
+        const t = convexTest(schema, modules);
+        rateLimiterTest.register(t);
+        const identity = await seedAuthUser(t);
+
+        await authenticatedAs(t, identity).action(api.enrichment.submitWebsite, {
+            ...SUBMISSION,
+            categoryName: "Date nights with Ana",
+        });
+
+        await expect(shared(t, "la tentacion|usd")).resolves.toBeNull();
     });
 });

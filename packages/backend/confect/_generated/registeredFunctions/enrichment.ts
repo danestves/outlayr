@@ -8,5 +8,6 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 
 export default {
 ["groundedConsent"]: RegisteredConvexFunction.register({ ...definitions["groundedConsent"], handler: forward(definitions["groundedConsent"].handler) }),
+["submitWebsite"]: RegisteredConvexFunction.register({ ...definitions["submitWebsite"], handler: forward(definitions["submitWebsite"].handler) }),
 ["suggest"]: RegisteredConvexFunction.register({ ...definitions["suggest"], handler: forward(definitions["suggest"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../enrichment.spec")["default"]>;

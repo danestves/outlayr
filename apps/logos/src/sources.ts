@@ -93,23 +93,25 @@ export function siteIconUrls(html: string, base: string): string[] {
     return [...new Set(urls)].filter((url) => url.startsWith("https://")).slice(0, MAX_SITE_ICONS);
 }
 
-async function ownSite(fetcher: Fetcher, domain: string): Promise<Attempt> {
-    let page: string;
-    let base: string;
+async function homePage(fetcher: Fetcher, url: string): Promise<{ base: string; page: string } | null> {
     try {
-        const response = await fetcher(`https://www.${domain}/`, {
+        const response = await fetcher(url, {
             headers: { "user-agent": BROWSER_AGENT },
             redirect: "follow",
             signal: AbortSignal.timeout(SOURCE_TIMEOUT_MS),
         });
-        if (!response.ok) {
-            return { kind: "missing" };
-        }
-        page = await response.text();
-        base = response.url || `https://www.${domain}/`;
+        return response.ok ? { base: response.url || url, page: await response.text() } : null;
     } catch {
+        return null;
+    }
+}
+
+async function ownSite(fetcher: Fetcher, domain: string): Promise<Attempt> {
+    const home = (await homePage(fetcher, `https://www.${domain}/`)) ?? (await homePage(fetcher, `https://${domain}/`));
+    if (home === null) {
         return { kind: "missing" };
     }
+    const { base, page } = home;
     const attempts = await Promise.all(siteIconUrls(page, base).map((url) => attempt(fetcher, url, "site")));
     const best = attempts.reduce<FoundLogo | null>(
         (found, a) => (a.kind === "found" ? larger(found, a.logo) : found),

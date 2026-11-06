@@ -80,6 +80,12 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
         period: DAY,
         rate: 1,
     },
+    merchantWebsitePerUser: {
+        capacity: 10,
+        kind: "token bucket",
+        period: DAY,
+        rate: 10,
+    },
     // Anti-abuse, not cost control: `groundedBudgetMicros` is the backstop.
     groundedPerUser: {
         capacity: 20,

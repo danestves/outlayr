@@ -22,6 +22,20 @@ const fetcher =
         Promise.resolve(route(url));
 
 describe("findLogo", () => {
+    it("reads a site that only answers without www", async () => {
+        const home = '<link rel="icon" href="https://shop.example.com/logo.png">';
+        const result = await findLogo(
+            fetcher((url) => {
+                if (url === "https://shop.example.com/") {
+                    return new Response(home);
+                }
+                return url === "https://shop.example.com/logo.png" ? image(192) : notFound();
+            }),
+            "shop.example.com"
+        );
+        expect(result.kind === "found" && result.logo.source).toBe("site");
+    });
+
     it("keeps DuckDuckGo's file when it is larger than Google's", async () => {
         const result = await findLogo(
             fetcher((url) => (url.includes("duckduckgo") ? image(256) : image(128))),

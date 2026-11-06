@@ -20,6 +20,17 @@ export const suggestArgs = {
     shareAnalytics: Schema.optional(Schema.Boolean),
 };
 
+export const submitWebsiteArgs = {
+    aiConsent: Schema.optional(Schema.Number),
+    categoryName: Schema.NullOr(Schema.String),
+    currency: Schema.optional(Schema.String),
+    domain: Schema.String,
+    income: Schema.Boolean,
+    locale: Schema.optional(Schema.String),
+    name: Schema.String,
+    shareAnalytics: Schema.optional(Schema.Boolean),
+};
+
 export const Suggestion = Schema.Struct({
     categoryName: Schema.NullOr(Schema.String),
     domain: Schema.NullOr(Schema.String),
@@ -39,4 +50,7 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.internalQuery({ args: () => ({}), name: "groundedConsent", returns: () => Schema.Boolean })
     )
-    .addFunction(FunctionSpec.publicAction({ args: () => suggestArgs, name: "suggest", returns: () => Suggestion }));
+    .addFunction(FunctionSpec.publicAction({ args: () => suggestArgs, name: "suggest", returns: () => Suggestion }))
+    .addFunction(
+        FunctionSpec.publicAction({ args: () => submitWebsiteArgs, name: "submitWebsite", returns: () => Schema.Null })
+    );
