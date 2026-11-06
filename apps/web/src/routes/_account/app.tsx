@@ -1,19 +1,17 @@
 import { ledgerGlance } from "@outlayr/backend/confect/ledgerView";
-import { Outlet, createFileRoute, useLocation, useNavigate, useRouter } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { useIntlayer } from "react-intlayer";
 
 import { LINE_PILL, Muted, SOLID_PILL, Screen } from "@/components/account/parts";
-import { HomePanelPending, HomePending } from "@/components/dashboard/home/home-pending";
+import { DashboardPending } from "@/components/dashboard/pending";
 import { signOut } from "@/components/dashboard/shell/account-menu";
 import { DashboardContext, useFilters } from "@/components/dashboard/shell/dashboard";
 import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filters";
 import type { FilterPatch } from "@/components/dashboard/shell/filters";
 import { mintedPhotos, photoKeys, seedPhotos, usePhotoUrls } from "@/components/dashboard/shell/photos";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
-import { Workspace } from "@/components/dashboard/shell/workspace";
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { dropLedger, restoreLedger, saveLedger } from "@/lib/ledger-cache";
@@ -69,15 +67,9 @@ function App() {
 }
 
 function Pending() {
-    const { nav } = useIntlayer("dashboard");
-    const onInsights = useLocation({ select: (location) => location.pathname.endsWith("/insights") });
     return (
         <DashboardShell>
-            <Workspace
-                main={<HomePending />}
-                panel={<HomePanelPending />}
-                title={onInsights ? nav.insights : nav.dashboard}
-            />
+            <DashboardPending />
         </DashboardShell>
     );
 }
