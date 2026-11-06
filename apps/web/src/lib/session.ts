@@ -30,7 +30,6 @@ export const userOf = (token: string) => Option.getOrUndefined(claimsOf(token))?
 
 const isLive = (token: string) => Option.exists(claimsOf(token), (claims) => claims.exp * MS_PER_SECOND > Date.now());
 
-// A filter click navigates, so asking the server here would put a round trip in front of every click.
 export async function currentToken(session: Session) {
     if (session.token && isLive(session.token)) {
         return session.token;
@@ -50,7 +49,6 @@ export const announceSessionChange = () => {
     sessionChannel().postMessage("changed");
 };
 
-// Another tab signing out or in must not leave this one showing, or saving, the previous account's ledger.
 export function onSessionChange(listener: () => void) {
     sessionChannel().addEventListener("message", listener);
     return () => sessionChannel().removeEventListener("message", listener);

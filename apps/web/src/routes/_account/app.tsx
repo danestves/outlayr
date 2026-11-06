@@ -24,14 +24,12 @@ export const Route = createFileRoute("/_account/app")({
     component: App,
     errorComponent: NotSynced,
     validateSearch: dashboardSearch,
-    // The ledger lives in the browser, so the server only sends the shell and a reload never waits on Convex.
     ssr: false,
     staleTime: Number.POSITIVE_INFINITY,
     loader: async ({ context }) => {
         const asOf = Date.now();
         context.session.token = context.token;
         const userId = context.token ? userOf(context.token) : undefined;
-        // A second load, after a hover preload or a retry, must not seed older rows under a running sync.
         const idle = context.dbClient.collection(ledgerCollections.transactions).status === "idle";
         const restored = idle && userId !== undefined ? await restoreLedger(context.dbClient, userId) : undefined;
         const settled = preloadLedger(context.dbClient).then(() => true);

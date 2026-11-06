@@ -6,7 +6,6 @@ import type { MintedPhotos } from "@/components/dashboard/shell/photos";
 const DATABASE = "outlayr-ledger";
 const STORE = "snapshots";
 const LATEST = "latest";
-// Bump when a ledger row loses or retypes a field the web reads, so an older copy never reaches the new code.
 export const LEDGER_CACHE_VERSION = 1;
 
 export interface LedgerSnapshot {
@@ -51,8 +50,6 @@ export function snapshotOf(db: DbClient, photos: MintedPhotos | undefined, userI
     return { collections, photos, userId, version: LEDGER_CACHE_VERSION };
 }
 
-// Storage can be absent or refuse (a private window, a full disk). The ledger then loads from Convex as it would
-// on a first visit, so a failure here costs speed and nothing else.
 export async function restoreLedger(db: DbClient, userId: string) {
     try {
         const stored = await inStore("readonly", (store) => getByKey<LedgerSnapshot>(store, LATEST));
@@ -74,23 +71,13 @@ export async function saveLedger(db: DbClient, photos: MintedPhotos | undefined,
     if (forgotten) {
         return;
     }
-    try {
-        await inStore("readwrite", (store) => put(store, snapshotOf(db, photos, userId), LATEST));
-    } catch {
-        // Unsaved only means the next load starts from Convex.
-    }
+    await inStore("readwrite", (store) => put(store, snapshotOf(db, photos, userId), LATEST)).catch(() => undefined);
 }
 
-// A subscription Convex refuses ends here: the copy must not outlive the right to read it.
 export async function dropLedger() {
-    try {
-        await inStore("readwrite", dropLatest);
-    } catch {
-        // No store means no copy to drop.
-    }
+    await inStore("readwrite", dropLatest).catch(() => undefined);
 }
 
-// Sign-out also stops the save still waiting on its timer, which would bring the copy back.
 export async function forgetLedger() {
     forgotten = true;
     await dropLedger();

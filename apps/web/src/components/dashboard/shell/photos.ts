@@ -30,7 +30,6 @@ export const photoUrlsQuery = (convex: ConvexQueryClient | undefined, keys: read
             return convex.convexClient.mutation(api.photos.readUrls, { keys: [...keys] });
         },
         queryKey: [PHOTO_URLS, keys],
-        // Counted from the mint, not the mount: a URL restored from the copy is already part way through its life.
         refetchInterval: (query) =>
             Math.max(query.state.dataUpdatedAt + PHOTO_REMINT_MS - Date.now(), MIN_REMINT_WAIT_MS),
         staleTime: PHOTO_REMINT_MS,
