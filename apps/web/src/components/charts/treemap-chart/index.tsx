@@ -39,6 +39,7 @@ export interface TreemapChartProps {
     gap?: number;
     height?: number;
     initialWidth?: number;
+    onSelect?: (tile: TreemapDatum) => void;
     sort?: boolean;
 }
 
@@ -102,6 +103,7 @@ function TreemapChartRoot({
     gap = 2,
     height = 178,
     initialWidth = 472,
+    onSelect,
     sort = true,
 }: TreemapChartProps) {
     const hasTiles = partsOf(children, Tiles).length > 0;
@@ -203,7 +205,7 @@ function TreemapChartRoot({
     );
 
     return (
-        <figure className={`relative m-0 ${className ?? ""}`}>
+        <figure className={`relative m-0 ${onSelect ? "cursor-pointer" : ""} ${className ?? ""}`}>
             <Chart
                 ariaDescription={ariaDescription}
                 ariaLabel={ariaLabel}
@@ -211,6 +213,15 @@ function TreemapChartRoot({
                 definition={definition}
                 height={height}
                 initialWidth={initialWidth}
+                onSelect={
+                    onSelect
+                        ? (point) => {
+                              if (point) {
+                                  onSelect(point.datum.tile);
+                              }
+                          }
+                        : undefined
+                }
             />
             {legend ? (
                 <ChartLegend

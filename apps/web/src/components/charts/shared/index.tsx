@@ -311,31 +311,33 @@ export function ChartDataTable({
     rows: readonly ChartDatum[];
 }) {
     return (
-        <table className="sr-only">
-            <caption>{caption}</caption>
-            <thead>
-                <tr>
-                    <td aria-label={caption} />
-                    {columns.map((column) => (
-                        <th key={column.key} scope="col">
-                            {column.label}
-                        </th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody>
-                {rows.map((row, index) => {
-                    const heading = formatX(row, index);
-                    return (
-                        <tr key={`${heading}-${index}`}>
-                            <th scope="row">{heading}</th>
-                            {columns.map((column) => (
-                                <td key={column.key}>{formatValue(column.value(row), column.key)}</td>
-                            ))}
-                        </tr>
-                    );
-                })}
-            </tbody>
-        </table>
+        <div className="sr-only">
+            <table>
+                <caption>{caption}</caption>
+                <thead>
+                    <tr>
+                        <td aria-label={caption} />
+                        {columns.map((column) => (
+                            <th key={column.key} scope="col">
+                                {column.label}
+                            </th>
+                        ))}
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map((row, index) => {
+                        const heading = formatX(row, index);
+                        return (
+                            <tr key={`${heading}-${index}`}>
+                                <th scope="row">{heading}</th>
+                                {columns.map((column) => (
+                                    <td key={column.key}>{formatValue(column.value(row), column.key)}</td>
+                                ))}
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+        </div>
     );
 }
