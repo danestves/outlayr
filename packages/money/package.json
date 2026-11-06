@@ -4,6 +4,7 @@
     "private": true,
     "type": "module",
     "exports": {
+        "./accent": "./src/accent.ts",
         "./account-balance": "./src/account-balance.ts",
         "./account-kind": "./src/account-kind.ts",
         "./account-overview": "./src/account-overview.ts",

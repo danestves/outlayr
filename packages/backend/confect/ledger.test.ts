@@ -7,7 +7,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { api } from "../convex/_generated/api";
 import type { Doc } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
-import { ledgerOverview } from "./ledgerView";
+import { ledgerOverview, settingsOf } from "./ledgerView";
 import type { LedgerBooks } from "./ledgerView";
 import { authenticatedAs, seedAuthUser, seedProUser } from "./test.helpers";
 
@@ -126,6 +126,61 @@ describe("ledger queries", () => {
         });
 
         expect(page.map((row) => row.note)).toStrictEqual(["mine"]);
+    });
+
+    it("hands over the display settings, not the ones that stay on a device", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        const other = await seedProUser(t);
+        const setting = (userId: string, key: string, value: string) => ({
+            deviceId: "device",
+            key,
+            seq: 1,
+            updatedAt: 0,
+            userId,
+            value,
+        });
+        await t.run(async (ctx) => {
+            await ctx.db.insert("appMeta", setting(owner.userId, "accentColor", "3"));
+            await ctx.db.insert("appMeta", setting(owner.userId, "use24HourClock", "true"));
+            await ctx.db.insert("appMeta", setting(owner.userId, "biometricLock", "true"));
+            await ctx.db.insert("appMeta", setting(other.userId, "firstWeekday", "2"));
+        });
+
+        const rows = await authenticatedAs(t, owner).query(api.ledger.appMeta, {});
+
+        expect(rows.map((row) => row.key).toSorted()).toStrictEqual(["accentColor", "use24HourClock"]);
+    });
+});
+
+describe("settingsOf", () => {
+    it("reads what the phone stored", () => {
+        const stored = (key: string, value: string) => ({ key, value });
+        const settings = settingsOf([
+            stored("accentColor", "3"),
+            stored("firstWeekday", "2"),
+            stored("showCents", "false"),
+            stored("use24HourClock", "true"),
+        ]);
+
+        expect(settings).toMatchObject({
+            accent: { key: "prussian" },
+            firstWeekday: 2,
+            showCents: false,
+            use24HourClock: true,
+        });
+    });
+
+    it("falls back to the phone's own defaults when nothing is stored", () => {
+        expect(settingsOf([])).toMatchObject({
+            accent: { key: "vermilion" },
+            animatedCharts: true,
+            firstDayOfMonth: 1,
+            firstWeekday: 1,
+            incomeTracking: true,
+            showCents: true,
+            use24HourClock: false,
+        });
     });
 });
 

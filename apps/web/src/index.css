@@ -983,8 +983,8 @@
     --color-card-foreground: var(--color-app-ink);
     --color-popover: var(--color-app-group);
     --color-popover-foreground: var(--color-app-ink);
-    --color-primary: var(--color-app-ink);
-    --color-primary-foreground: var(--color-app-bg);
+    --color-primary: var(--color-app-tint);
+    --color-primary-foreground: var(--color-app-on-tint);
     --color-secondary: var(--color-app-fill);
     --color-secondary-foreground: var(--color-app-ink);
     --color-accent: var(--color-app-fill);
@@ -992,7 +992,7 @@
     --color-muted-foreground: var(--color-app-muted);
     --color-destructive: var(--color-app-spend);
     --color-input: var(--color-app-rule);
-    --color-ring: var(--color-app-muted);
+    --color-ring: var(--color-app-tint);
     --color-success: var(--color-app-income);
     --color-info: #2f6d99;
     --color-warning: #fdcc41;
@@ -1009,8 +1009,8 @@
     --muted: var(--color-app-fill);
     --muted-foreground: var(--color-app-muted);
     --popover: var(--color-app-group);
-    --primary: var(--color-app-ink);
-    --primary-foreground: var(--color-app-bg);
+    --primary: var(--color-app-tint);
+    --primary-foreground: var(--color-app-on-tint);
     --destructive: var(--color-app-spend);
     --success: var(--color-success);
     --info: var(--color-info);

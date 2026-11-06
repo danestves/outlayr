@@ -18,8 +18,10 @@ import { AccountsCard, BudgetsCard, EntryLog, MonthHero, UpcomingCard } from "@/
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 import { SAMPLE_OVERVIEW } from "@/components/ledger/sample";
 import { LogoMark } from "@/components/logo-mark";
+import { accentCss } from "@/lib/accent";
 import { authClient } from "@/lib/auth-client";
 import { ledgerBooks, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
+import { LedgerSettingsContext, useLedgerSettings } from "@/lib/ledger-settings";
 
 const PHOTO_REMINT_MS = 50 * 60_000;
 
@@ -77,13 +79,17 @@ export const Route = createFileRoute("/_account/app")({
 });
 
 function Shell({ children }: { children: ReactNode }) {
+    const settings = useLedgerSettings();
     return (
-        <div className="app-shell ph-no-capture flex min-h-dvh">
-            <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 border-r md:block">
-                <AppNav />
-            </aside>
-            <div className="min-w-0 flex-1">{children}</div>
-        </div>
+        <LedgerSettingsContext value={settings}>
+            <style>{accentCss(settings.accent)}</style>
+            <div className="app-shell ph-no-capture flex min-h-dvh">
+                <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 border-r md:block">
+                    <AppNav />
+                </aside>
+                <div className="min-w-0 flex-1">{children}</div>
+            </div>
+        </LedgerSettingsContext>
     );
 }
 

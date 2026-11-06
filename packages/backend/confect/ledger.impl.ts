@@ -5,11 +5,10 @@ import * as Layer from "effect/Layer";
 import databaseSchema from "./_generated/schema";
 import { DatabaseReader, QueryCtx } from "./_generated/services";
 import spec from "./ledger.spec";
+import { LEDGER_SETTING_KEYS } from "./ledgerView";
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { requirePro } from "./revenuecat";
-
-const LEDGER_SETTINGS = ["currency", "firstDayOfMonth", "timeZone"] as const;
 
 const syncedUser = Effect.fn("Ledger.syncedUser")(
     function* syncedUser() {
@@ -125,7 +124,7 @@ const appMetaQuery = FunctionImpl.make(databaseSchema, spec, "appMeta", () =>
         const userId = yield* syncedUser();
         const reader = yield* DatabaseReader;
         const rows = yield* Effect.all(
-            LEDGER_SETTINGS.map((key) =>
+            LEDGER_SETTING_KEYS.map((key) =>
                 reader
                     .table("appMeta")
                     .get("by_user_and_key", userId, key)

@@ -1,3 +1,5 @@
+import { accentOf } from "@outlayr/money/accent";
+import type { AccentColors } from "@outlayr/money/accent";
 import { accountBalance } from "@outlayr/money/account-balance";
 import { accountsOverview } from "@outlayr/money/account-overview";
 import { spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
@@ -43,18 +45,46 @@ export interface LedgerClock {
     offsetAt: OffsetAt;
 }
 
+export const LEDGER_SETTING_KEYS = [
+    "accentColor",
+    "animatedCharts",
+    "currency",
+    "firstDayOfMonth",
+    "firstWeekday",
+    "incomeTracking",
+    "showCents",
+    "timeZone",
+    "use24HourClock",
+] as const;
+
 export interface LedgerSettings {
+    accent: AccentColors;
+    animatedCharts: boolean;
     currency: string;
     firstDayOfMonth: number;
+    firstWeekday: number;
+    incomeTracking: boolean;
+    showCents: boolean;
     timeZone: string | null;
+    use24HourClock: boolean;
 }
 
 export function settingsOf(rows: readonly Pick<Doc<"appMeta">, "key" | "value">[]): LedgerSettings {
-    const value = (key: string) => rows.find((row) => row.key === key)?.value ?? null;
+    const value = (key: (typeof LEDGER_SETTING_KEYS)[number]) => rows.find((row) => row.key === key)?.value ?? null;
+    const flag = (key: (typeof LEDGER_SETTING_KEYS)[number], fallback: boolean) => {
+        const raw = value(key);
+        return raw === null ? fallback : raw === "true";
+    };
     return {
+        accent: accentOf(value("accentColor")),
+        animatedCharts: flag("animatedCharts", true),
         currency: value("currency") ?? "USD",
         firstDayOfMonth: Number(value("firstDayOfMonth")) || 1,
+        firstWeekday: Number.parseInt(value("firstWeekday") ?? "", 10) || 1,
+        incomeTracking: flag("incomeTracking", true),
+        showCents: flag("showCents", true),
         timeZone: value("timeZone"),
+        use24HourClock: flag("use24HourClock", false),
     };
 }
 
@@ -117,7 +147,7 @@ export function recentTransactions(
 
 export function spendingSummary(
     { categories, transactions }: { categories: readonly Category[]; transactions: readonly Transaction[] },
-    settings: LedgerSettings,
+    settings: Pick<LedgerSettings, "currency" | "firstDayOfMonth" | "timeZone">,
     rates: RateTable,
     { now, offsetAt }: LedgerClock,
     monthsAgo = 0
