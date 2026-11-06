@@ -1261,7 +1261,7 @@ describe("the free auto-log cap", () => {
         const fresh = fare("w2", "Philz", 1);
         const claimsFresh = () => ({ jobs: [fresh], names: ["claimed-1.jsonl"] });
 
-        const pending = () => Effect.runPromise(getMeta(db, META_KEYS.autologReviewPending));
+        const pending = () => Effect.runPromise(getMeta(db, META_KEYS.reviewPending));
 
         const released = await Effect.runPromise(drainPendingWrites(db, nothingClaimed, () => undefined));
         expect(released).toStrictEqual({ applied: 1, autologged: 0 });
