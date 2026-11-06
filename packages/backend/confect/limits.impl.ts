@@ -4,7 +4,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import databaseSchema from "./_generated/schema";
-import { Auth, QueryCtx } from "./_generated/services";
+import { QueryCtx } from "./_generated/services";
+import { liveIdentity } from "./lib/auth";
 import { FREE_CAPTURE_CONFIG, PRO_CAPTURE_CONFIG } from "./lib/captures";
 import { fixedBurst, perUserBurst } from "./lib/limits";
 import { reader } from "./limits";
@@ -16,11 +17,8 @@ const mine = FunctionImpl.make(
     spec,
     "mine",
     Effect.fn("Limits.mine")(function* mine() {
-        const auth = yield* Auth;
         const ctx = yield* QueryCtx;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(ctx);
         if (identity === null) {
             return null;
         }

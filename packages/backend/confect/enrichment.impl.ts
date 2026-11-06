@@ -11,7 +11,7 @@ import * as Redacted from "effect/Redacted";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { ActionCtx, Auth, DatabaseReader, QueryCtx, QueryRunner } from "./_generated/services";
+import { ActionCtx, DatabaseReader, QueryCtx, QueryRunner } from "./_generated/services";
 import {
     applyToTree,
     EMPTY,
@@ -28,7 +28,7 @@ import {
 } from "./enrichment";
 import spec from "./enrichment.spec";
 import { traced } from "./lib/aiTracing";
-import { optionalUserId } from "./lib/auth";
+import { liveIdentity, optionalUserId } from "./lib/auth";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
 import { isPro } from "./revenuecat";
 
@@ -61,10 +61,7 @@ const suggest = FunctionImpl.make(
     spec,
     "suggest",
     Effect.fn("Enrichment.suggest")(function* suggest(args) {
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(yield* ActionCtx);
         if (identity === null) {
             return EMPTY;
         }

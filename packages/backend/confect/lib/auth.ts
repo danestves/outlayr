@@ -18,6 +18,16 @@ export const optionalUserId = Effect.fn("Auth.optionalUserId")(function* optiona
     return user ? user._id : null;
 });
 
+export const liveIdentity = Effect.fn("Auth.liveIdentity")(function* liveIdentity(
+    ctx: ActionCtx | MutationCtx | QueryCtx
+) {
+    const identity = yield* Effect.promise(() => ctx.auth.getUserIdentity());
+    if (identity === null) {
+        return null;
+    }
+    return (yield* optionalUserId(ctx)) === null ? null : identity;
+});
+
 // The returned id is what gets stored as `userId`; never accept one as a function argument.
 export const requireUserId = Effect.fn("Auth.requireUserId")(function* requireUserId(ctx: MutationCtx | QueryCtx) {
     const userId = yield* optionalUserId(ctx);

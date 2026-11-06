@@ -19,6 +19,7 @@ import * as Schema from "effect/Schema";
 import { components } from "../convex/_generated/api";
 import { query } from "../convex/_generated/server";
 import type { ActionCtx, MutationCtx, QueryCtx } from "../convex/_generated/server";
+import { liveIdentity } from "./lib/auth";
 import {
     clampDate,
     describeTree,
@@ -288,7 +289,7 @@ export const ownsThread = Effect.fn("VoiceEntry.ownsThread")(function* ownsThrea
     ctx: QueryCtx | MutationCtx | ActionCtx,
     threadId: string
 ) {
-    const identity = yield* Effect.promise(() => ctx.auth.getUserIdentity());
+    const identity = yield* liveIdentity(ctx);
     if (identity === null) {
         return null;
     }

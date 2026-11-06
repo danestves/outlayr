@@ -7,9 +7,10 @@ import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
 
 import databaseSchema from "./_generated/schema";
-import { ActionCtx, Auth } from "./_generated/services";
+import { ActionCtx } from "./_generated/services";
 import { sanitizeLocale } from "./enrichment";
 import { traced } from "./lib/aiTracing";
+import { liveIdentity } from "./lib/auth";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
 import { fixedBurst } from "./lib/limits";
 import { failure, MAX_TEXT_LENGTH, rateLimiter, readNotification } from "./notificationRead";
@@ -21,10 +22,7 @@ const read = FunctionImpl.make(
     spec,
     "read",
     Effect.fn("NotificationRead.read")(function* read(args) {
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(yield* ActionCtx);
         if (identity === null) {
             return failure("unauthenticated");
         }

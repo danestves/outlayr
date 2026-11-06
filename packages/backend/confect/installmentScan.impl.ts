@@ -8,10 +8,11 @@ import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import databaseSchema from "./_generated/schema";
-import { Auth } from "./_generated/services";
+import { ActionCtx } from "./_generated/services";
 import { failure, readInstallmentPlan } from "./installmentScan";
 import spec, { InstallmentScanInput } from "./installmentScan.spec";
 import { traced } from "./lib/aiTracing";
+import { liveIdentity } from "./lib/auth";
 import { anthropicApiKey, claudeModelId } from "./lib/config";
 import { admitScan } from "./receiptScan";
 
@@ -22,10 +23,7 @@ const scan = FunctionImpl.make(
     spec,
     "scan",
     Effect.fn("InstallmentScan.scan")(function* scan(args) {
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(yield* ActionCtx);
         if (identity === null) {
             return failure("unauthenticated");
         }

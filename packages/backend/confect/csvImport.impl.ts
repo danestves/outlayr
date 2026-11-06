@@ -10,12 +10,13 @@ import * as Redacted from "effect/Redacted";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { ActionCtx, Auth, QueryRunner } from "./_generated/services";
+import { ActionCtx, QueryRunner } from "./_generated/services";
 import { classify, failure, MAX_LABELS, rateLimiter, scheduleImportGrounded } from "./csvImport";
 import spec from "./csvImport.spec";
 import type { LabelSuggestion } from "./csvImport.spec";
 import { sanitizeRegionCode } from "./enrichment";
 import { traced } from "./lib/aiTracing";
+import { liveIdentity } from "./lib/auth";
 import { anthropicApiKey, claudeFastModelId } from "./lib/config";
 import { perUserBurst } from "./lib/limits";
 import { isPro } from "./revenuecat";
@@ -26,10 +27,7 @@ const csvImport = FunctionImpl.make(
     spec,
     "csvImport",
     Effect.fn("CsvImport.csvImport")(function* csvImport(args) {
-        const auth = yield* Auth;
-        const identity = yield* auth.getUserIdentity.pipe(
-            Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-        );
+        const identity = yield* liveIdentity(yield* ActionCtx);
         if (identity === null) {
             return failure("unauthenticated");
         }

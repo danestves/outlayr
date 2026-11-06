@@ -194,7 +194,7 @@ describe("csvImport guard ladder", () => {
         expect(limitSpy).toHaveBeenCalledWith(expect.anything(), "csvImportGlobal");
     });
 
-    it("a revoked session skips the grounded tier and never rejects the action", async () => {
+    it("a token that outlived its revoked session is refused, and the action never rejects", async () => {
         vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
         const t = convexTest(schema, modules);
         rateLimiterTest.register(t);
@@ -226,16 +226,7 @@ describe("csvImport guard ladder", () => {
                 groundedLookup: true,
                 labels: ["FARMACIA SAAS"],
             })
-        ).resolves.toStrictEqual({
-            status: "ok",
-            suggestions: [
-                {
-                    categoryName: "Healthcare",
-                    domain: "farmaciasaas.com",
-                    label: "FARMACIA SAAS",
-                },
-            ],
-        });
+        ).resolves.toMatchObject({ status: "unauthenticated" });
         await expect(scheduledGroundedRuns(t)).resolves.toHaveLength(0);
     });
 });
