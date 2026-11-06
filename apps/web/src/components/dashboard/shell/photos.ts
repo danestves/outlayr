@@ -9,9 +9,8 @@ const PHOTO_REMINT_MS = 50 * 60_000;
 
 export const NO_PHOTOS: PhotoUrls = new Map();
 
-export function photoKeys({ balances, log, upcoming }: Overview) {
+export function photoKeys({ balances, upcoming }: Overview) {
     const looks = [
-        ...log.flatMap((day) => day.rows.flatMap((row) => (row.type === "entry" ? [row.look] : [row.from, row.to]))),
         ...balances.accounts.map((account) => account.look),
         ...upcoming.charges.map((charge) => charge.look),
     ];
