@@ -84,15 +84,15 @@ const about = {
             {
                 label: t({ en: "Free plan", es: "Plan gratis" }),
                 text: t({
-                    en: "Logging, budgets, goals, insights, subscriptions, debts, installments, and widgets, with 20 voice, receipt, or payment plan captures every 30 days, 3 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, 1 account currency, and 1 app icon.",
-                    es: "Registros, presupuestos, metas, estadísticas, suscripciones, deudas, cuotas y widgets, con 20 capturas de voz, de recibos o de planes de pago cada 30 días, 3 cuentas, 2 apps de cuotas, 3 personas, 2 planes de pago, 2 presupuestos por categoría, 1 moneda para tus cuentas y 1 ícono de la app.",
+                    en: "Logging, budgets, goals, insights, subscriptions, debts, installments, and widgets, with 20 voice, receipt, or payment plan captures every 30 days, 30 auto-logged expenses a month, 3 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, 1 account currency, and 1 app icon.",
+                    es: "Registros, presupuestos, metas, estadísticas, suscripciones, deudas, cuotas y widgets, con 20 capturas de voz, de recibos o de planes de pago cada 30 días, 30 gastos registrados automáticamente al mes, 3 cuentas, 2 apps de cuotas, 3 personas, 2 planes de pago, 2 presupuestos por categoría, 1 moneda para tus cuentas y 1 ícono de la app.",
                 }),
             },
             {
                 label: "Outlayr Pro",
                 text: t({
-                    en: "500 captures every 30 days, unlimited accounts, installment apps, people, payoff plans, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, a Notion connection, web merchant lookup, and 5 app icons.",
-                    es: "500 capturas cada 30 días, cuentas, apps de cuotas, personas, planes de pago, presupuestos por categoría y monedas sin límite, sincronización entre dispositivos, respaldo de las fotos de tus recibos, asignación con IA al importar un CSV, conexión con Notion, búsqueda web de comercios y 5 íconos de la app.",
+                    en: "500 captures every 30 days, unlimited auto-logged expenses, accounts, installment apps, people, payoff plans, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, a Notion connection, web merchant lookup, and 5 app icons.",
+                    es: "500 capturas cada 30 días, gastos registrados automáticamente, cuentas, apps de cuotas, personas, planes de pago, presupuestos por categoría y monedas sin límite, sincronización entre dispositivos, respaldo de las fotos de tus recibos, asignación con IA al importar un CSV, conexión con Notion, búsqueda web de comercios y 5 íconos de la app.",
                 }),
             },
             {

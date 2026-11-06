@@ -21,18 +21,19 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - App lock with Face ID or Touch ID on iPhone, or a fingerprint or face on Android.
 - On iPhone: Home Screen and Lock Screen widgets, Spotlight search, and Apple Pay logging through a Shortcuts automation.
 - On Android: home screen widgets for your balance, today's spending, an overview, recent entries, and insights, plus a 1×1 + that opens a new expense.
+- On Android: with notification access on, Outlayr logs purchases from the notifications of apps you turn on, such as your bank; Google Wallet starts on. These entries and Apple Pay logging on iPhone count toward the free plan's 30 auto-logged expenses a month.
 - CSV export and full archive export.
 - Entries are stored on the phone first and work offline.
 
 ## Plans
 
-- Free: logging, budgets, goals, insights, subscriptions, debts, installments, and widgets. 20 voice, receipt, or payment plan captures every 30 days, 3 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, and 1 account currency.
-- Outlayr Pro: 500 captures every 30 days, unlimited accounts, installment apps, people, payoff plans, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, web merchant lookup, and 5 app icons on iPhone.
+- Free: logging, budgets, goals, insights, subscriptions, debts, installments, and widgets. 20 voice, receipt, or payment plan captures every 30 days, 30 auto-logged expenses a month, 3 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, and 1 account currency.
+- Outlayr Pro: 500 captures every 30 days, unlimited auto-logged expenses, accounts, installment apps, people, payoff plans, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, web merchant lookup, and 5 app icons on iPhone.
 - Pro is billed monthly or yearly, or bought once. US prices: $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Prices vary by country and the app store shows yours before purchase.
 
 ## Privacy
 
-- The ledger is stored on the device. It reaches Outlayr's servers only when you sign in and turn on sync, or use a feature that needs the server (voice entry, receipt scanning, suggestions).
+- The ledger is stored on the device. It reaches Outlayr's servers only when you sign in and turn on sync, or use a feature that needs the server: voice entry, receipt scanning, installment plan imports, PDF bank statement imports, AI matching on CSV import, merchant suggestions and web lookups, reading bank notifications that show an amount, and the Notion connection. Anthropic processes those AI features and ElevenLabs turns voice into text, only after you allow it. Outlayr's servers do not store recordings, scanned photos, screenshots, or notifications.
 - No ads, no cross-app tracking, and data is never sold. The app sends usage analytics and crash reports to PostHog, never amounts, merchants, or notes.
 
 ## Open source
