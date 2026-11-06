@@ -6,7 +6,7 @@ import { categoriesOf } from "./dashboard-series";
 import type { SeriesCategory } from "./dashboard-series";
 import { endOfDay, round, rowsBetween, total } from "./dashboard-series-ledger";
 import type { Ledger, Scope } from "./dashboard-series-ledger";
-import { netWorthSeries } from "./dashboard-series-net-worth";
+import { netWorthPoints } from "./dashboard-series-net-worth";
 import { daysFrom, periodOf, shiftPeriodKey } from "./dashboard-series-period";
 import type { Period } from "./dashboard-series-period";
 
@@ -157,7 +157,7 @@ export function netWorthHistory(ledger: Ledger, period: Period, scope: Scope, mo
     const periods = Array.from({ length: months }, (_, index) =>
         periodOf(shiftPeriodKey(period.key, index + 1 - months), ledger.firstDayOfMonth)
     );
-    const worth = netWorthSeries(
+    const worth = netWorthPoints(
         ledger,
         scope,
         periods.map((each) => Math.min(ledger.now, endOfDay(ledger, each.to)))
@@ -165,6 +165,6 @@ export function netWorthHistory(ledger: Ledger, period: Period, scope: Scope, mo
     return periods.map((each, index) => ({
         date: lastDayOf(ledger, each),
         key: each.key,
-        netWorth: worth[index] ?? 0,
+        netWorth: worth[index]?.net ?? 0,
     }));
 }

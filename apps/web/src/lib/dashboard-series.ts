@@ -7,7 +7,7 @@ import type { ChartDatum } from "@/components/charts/shared";
 
 import { endOfDay, round, rowsBetween, rowsOf, startOfDay, total } from "./dashboard-series-ledger";
 import type { Ledger, LedgerRow, Scope } from "./dashboard-series-ledger";
-import { netWorthSeries } from "./dashboard-series-net-worth";
+import { netWorthPoints } from "./dashboard-series-net-worth";
 import { daysFrom, priorSlice, periodOf, shiftPeriodKey } from "./dashboard-series-period";
 import type { Period } from "./dashboard-series-period";
 import { daysBetween } from "./ledger";
@@ -172,10 +172,9 @@ export function kpis(ledger: Ledger, period: Period, scope: Scope): Kpis {
     const keptNow = round(ledger, incomeNow - spentNow);
     const keptBefore = round(ledger, incomeBefore - spentBefore);
     const asOf = Math.min(ledger.now, endOfDay(ledger, period.to));
-    const [netBefore = 0, netNow = 0] = netWorthSeries(ledger, scope, [
-        Math.min(startOfDay(ledger, period.from) - 1, asOf),
-        asOf,
-    ]);
+    const [before, now] = netWorthPoints(ledger, scope, [Math.min(startOfDay(ledger, period.from) - 1, asOf), asOf]);
+    const netBefore = before?.net ?? 0;
+    const netNow = now?.net ?? 0;
     return {
         income: { delta: change(incomeNow, incomeBefore), prior: incomeBefore, value: incomeNow },
         kept: {

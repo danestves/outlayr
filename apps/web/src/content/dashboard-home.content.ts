@@ -37,6 +37,7 @@ const dashboardHome = {
             left: insert(t({ en: "{{amount}} left of budget", es: "Quedan {{amount}} del presupuesto" })),
             moreAccounts: insert(t({ en: "{{count}} more", es: "{{count}} más" })),
             net: insert(t({ en: "Net {{amount}}", es: "Neto {{amount}}" })),
+            netOn: insert(t({ en: "Net {{amount}} on {{day}}", es: "Neto {{amount}} al {{day}}" })),
             noBudget: t({ en: "no budget", es: "sin presupuesto" }),
             of: t({ en: "of", es: "de" }),
             onPace: t({ en: "Within budget so far.", es: "Dentro del presupuesto por ahora." }),

@@ -113,18 +113,18 @@ function movementsOf(ledger: Ledger): Movements {
     return prepared;
 }
 
+export interface NetWorthPoint {
+    accounts: readonly { balance: number; id: string }[];
+    net: number;
+}
+
 interface Pile {
     currency: string;
     entries: CurrencyEntry[];
     value: number;
 }
 
-/**
- * Net worth at each instant, from one pass over the ledger instead of one `accountBalances` replay per instant.
- * An account opened with a balance counts from the local day it opened, as the mobile chart does; at `ledger.now`
- * every account counts, so today's figure is the accounts list's.
- */
-export function netWorthSeries(ledger: Ledger, scope: Scope, instants: readonly number[]): number[] {
+export function netWorthPoints(ledger: Ledger, scope: Scope, instants: readonly number[]): NetWorthPoint[] {
     const { holders, list } = movementsOf(ledger);
     const chosen = new Set(scope.accounts);
     const accounts = new Map(
@@ -133,7 +133,7 @@ export function netWorthSeries(ledger: Ledger, scope: Scope, instants: readonly 
             .map((holder) => [holder.id, { holder, piles: new Map<string, Pile>() }])
     );
     const decimals = decimalsFor(ledger.currency);
-    const results = Array.from({ length: instants.length }, () => 0);
+    const results = Array.from({ length: instants.length }, (): NetWorthPoint => ({ accounts: [], net: 0 }));
     const touched = new Set<Pile>();
     let next = 0;
     const ascending = instants.map((instant, index) => ({ index, instant })).toSorted((a, b) => a.instant - b.instant);
@@ -169,9 +169,12 @@ export function netWorthSeries(ledger: Ledger, scope: Scope, instants: readonly 
                 total += pile.value;
             }
             const { value } = restate(total, holder.currency, ledger.currency, rateDay, ledger.rates);
-            return [{ balance: value, kind: holder.kind }];
+            return [{ balance: value, id: holder.id, kind: holder.kind }];
         });
-        results[index] = roundMoney(netWorth(balances).net, decimals);
+        results[index] = {
+            accounts: balances.map(({ balance, id }) => ({ balance: roundMoney(balance, decimals), id })),
+            net: roundMoney(netWorth(balances).net, decimals),
+        };
     }
     return results;
 }

@@ -9,7 +9,7 @@ import { categoryBudget, categoryBudgets, categoryDetail, kpis, spendSeries, sta
 import { cashFlow, categorySpend, dailySpend, monthlyByCategory, netWorthHistory } from "./dashboard-series-insights";
 import { endOfDay, prepareLedger } from "./dashboard-series-ledger";
 import type { Ledger } from "./dashboard-series-ledger";
-import { netWorthSeries } from "./dashboard-series-net-worth";
+import { netWorthPoints } from "./dashboard-series-net-worth";
 import { periodOf } from "./dashboard-series-period";
 
 const at = (iso: string) => Date.parse(iso);
@@ -528,7 +528,7 @@ describe("net worth over time", () => {
             ledger.currency,
             ledger.rates,
             { now: instant, offsetAt: ledger.offsetAt }
-        ).net;
+        );
     const newYork = [{ key: "timeZone", value: "America/New_York" }];
     const world = (currency: string) =>
         books({
@@ -625,8 +625,15 @@ describe("net worth over time", () => {
             const ledger = prepareLedger(world(currency), NOW);
             const instants = instantsOf(ledger).toReversed();
 
-            expect(netWorthSeries(ledger, { accounts }, instants)).toStrictEqual(
-                instants.map((instant) => replayed(ledger, accounts, instant))
+            const points = netWorthPoints(ledger, { accounts }, instants);
+
+            expect(points.map((point) => point.net)).toStrictEqual(
+                instants.map((instant) => replayed(ledger, accounts, instant).net)
+            );
+            expect(points.map((point) => point.accounts.map((each) => each.balance))).toStrictEqual(
+                instants.map((instant) =>
+                    replayed(ledger, accounts, instant).accounts.map((each) => each.balanceInMainCurrency)
+                )
             );
         }
     );
