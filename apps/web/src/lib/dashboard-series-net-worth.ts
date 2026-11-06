@@ -45,7 +45,7 @@ function movementsOf(ledger: Ledger): Movements {
     );
     const list: Movement[] = [];
     const add = (accountId: string, leg: string, entry: CurrencyEntry & { date: Date }) => {
-        const key = `${leg}|${entry.currency ?? ""}|${utcDateString(entry.date.getTime())}|${entry.income}`;
+        const key = `${leg}|${entry.currency ?? null}|${utcDateString(entry.date.getTime())}|${entry.income}`;
         list.push({ accountId, at: entry.date.getTime(), entry, key });
     };
     for (const row of transactions) {

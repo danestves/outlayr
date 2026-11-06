@@ -545,6 +545,22 @@ describe("net worth over time", () => {
             ledger.rates,
             { now: instant, offsetAt: ledger.offsetAt }
         );
+    it("keeps a row with no currency apart from one with an empty code", () => {
+        const on = "2026-10-03T16:00:00Z";
+        const ledger = prepareLedger(
+            books({
+                transactions: [
+                    { ...entry("none", on, 10, { accountId: "chase" }), currency: null },
+                    { ...entry("empty", on, 7, { accountId: "chase" }), currency: "" },
+                ],
+            }),
+            NOW
+        );
+        const [point] = netWorthPoints(ledger, { accounts: [] }, [NOW]);
+
+        expect(point?.net).toBe(replayed(ledger, [], NOW).net);
+    });
+
     const newYork = [{ key: "timeZone", value: "America/New_York" }];
     const world = (currency: string) =>
         books({
