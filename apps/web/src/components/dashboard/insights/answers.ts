@@ -20,13 +20,14 @@ export interface Usual {
 const earlier = (a: string, b: string) => (a < b ? a : b);
 
 function priorWindows(ledger: Ledger, period: Period) {
-    const elapsed = Math.max(Math.min(daysBetween(period.from, ledger.today) + 1, period.days), 1);
+    const elapsed = Math.max(daysBetween(period.from, ledger.today) + 1, 1);
+    const closed = elapsed >= period.days;
     const firstSpend = ledger.rows.reduce((first, row) => (row.income ? first : earlier(first, row.day)), ledger.today);
     return Array.from({ length: PRIOR_PERIODS }, (_, index) =>
         periodOf(shiftPeriodKey(period.key, -(index + 1)), ledger.firstDayOfMonth)
     )
         .filter((prior) => prior.from >= firstSpend)
-        .map((prior) => ({ cut: earlier(addDays(prior.from, elapsed - 1), prior.to), prior }));
+        .map((prior) => ({ cut: closed ? prior.to : earlier(addDays(prior.from, elapsed - 1), prior.to), prior }));
 }
 
 export function usualSpend(ledger: Ledger, period: Period, scope: Scope): Usual | null {

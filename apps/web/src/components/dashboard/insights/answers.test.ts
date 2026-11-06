@@ -128,6 +128,17 @@ describe("usualSpend", () => {
         expect(usual?.byCategory.get("food")).toBe(200);
         expect(usual?.active.get("food")).toBe(3);
     });
+
+    it("compares a closed period to the whole of each earlier one, even a longer one", () => {
+        const ledger = prepareLedger(
+            booksWith([
+                entry("may", "2026-05-20T12:00:00Z", 5, "rent"),
+                entry("aug-last", "2026-08-31T12:00:00Z", 300, "food"),
+            ]),
+            NOW
+        );
+        expect(usualSpend(ledger, periodOf("2026-09", 1), ALL)?.byCategory.get("food")).toBe(100);
+    });
 });
 
 describe("standouts", () => {
