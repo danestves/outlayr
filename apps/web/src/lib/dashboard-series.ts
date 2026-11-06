@@ -98,11 +98,11 @@ export function categoriesOf(ledger: Ledger, rows: readonly LedgerRow[], base: s
     );
 }
 
-export interface DashboardScope extends Scope {
+interface DashboardScope extends Scope {
     category: string | null;
 }
 
-export interface SpendSeries {
+interface SpendSeries {
     categories: readonly SeriesCategory[];
     data: readonly ChartDatum[];
     income: number;
@@ -151,7 +151,7 @@ export interface Kpi {
     value: number;
 }
 
-export interface Kpis {
+interface Kpis {
     income: Kpi;
     kept: Kpi & { share: number | null };
     netWorth: Kpi;
@@ -265,14 +265,14 @@ export function categoryBudgets(ledger: Ledger, period: Period) {
     return standings;
 }
 
-export interface ShareRow {
+interface ShareRow {
     amount: number;
     id: string | null;
     name: string;
     share: number;
 }
 
-export interface MerchantRow {
+interface MerchantRow {
     amount: number;
     count: number;
     name: string;

@@ -113,7 +113,7 @@ function movementsOf(ledger: Ledger): Movements {
     return prepared;
 }
 
-export interface NetWorthPoint {
+interface NetWorthPoint {
     accounts: readonly { balance: number; id: string }[];
     net: number;
 }

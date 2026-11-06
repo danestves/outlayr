@@ -14,7 +14,7 @@ const largestFirst = (categories: readonly SeriesCategory[]) => categories.toSor
 
 const lastDayOf = (ledger: Ledger, period: Period) => (ledger.today < period.to ? ledger.today : period.to);
 
-export interface CategorySpend extends TreemapDatum {
+interface CategorySpend extends TreemapDatum {
     id: string;
     share: number;
 }
@@ -33,7 +33,7 @@ export function categorySpend(ledger: Ledger, period: Period, scope: Scope): Cat
         }));
 }
 
-export interface CashFlow {
+interface CashFlow {
     income: number;
     kept: number;
     links: SankeyLink[];
@@ -71,7 +71,7 @@ export function cashFlow(ledger: Ledger, period: Period, scope: Scope): CashFlow
     return { income, kept, links, nodes, spent };
 }
 
-export interface MonthlyStack {
+interface MonthlyStack {
     average: number;
     categories: readonly SeriesCategory[];
     data: readonly ChartDatum[];
@@ -109,7 +109,7 @@ export function monthlyByCategory(ledger: Ledger, period: Period, scope: Scope, 
     return { average: round(ledger, average), categories, data };
 }
 
-export interface DailySpend {
+interface DailySpend {
     average: number;
     averageWithout: number;
     categories: readonly SeriesCategory[];
