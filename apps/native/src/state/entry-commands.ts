@@ -51,7 +51,8 @@ export const entryMedia = {
     persistAttachmentPhoto: (uri: string) => Effect.suspend(() => photoStorage().persistAttachmentPhoto(uri)),
     persistAttachmentPdf: (uri: string, name: string | null) =>
         Effect.sync(() => photoStorage().persistAttachmentPdf(uri, name)),
-    persistLogoBytes: (bytes: Uint8Array) => Effect.suspend(() => photoStorage().persistLogoBytes(bytes)),
+    persistLogoBytes: (bytes: Uint8Array, domain: string) =>
+        Effect.suspend(() => photoStorage().persistLogoBytes(bytes, domain)),
     prepareReceiptImage: (uri: string) => Effect.suspend(() => receiptImage().prepareReceiptImage(uri)),
 };
 
@@ -77,5 +78,5 @@ export const carriedLogo = Effect.fn("Entry.carriedLogo")(function* carriedLogo(
     if (outcome.kind !== "logo") {
         return yield* new NoLogoToCarryError();
     }
-    return yield* entryMedia.persistLogoBytes(outcome.bytes);
+    return yield* entryMedia.persistLogoBytes(outcome.bytes, domain);
 });

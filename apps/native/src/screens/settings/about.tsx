@@ -18,7 +18,6 @@ const X_PROFILE = "https://x.com/tryoutlayr";
 const OUTLAYR_REPO = "https://github.com/danestves/outlayr";
 const DIME_REPO = "https://github.com/rafsoh/dimeApp";
 const GPL_LICENSE = "https://www.gnu.org/licenses/gpl-3.0.html";
-const LOGO_DEV = "https://logo.dev";
 
 export function About() {
     const t = useTranslation();
@@ -78,11 +77,6 @@ export function About() {
                     icon="LegalDocument01"
                     onPress={() => router.push("/settings/licenses")}
                     title={t("settings.about.openSourceLicenses")}
-                />
-                <LinkRow
-                    icon="Sparkles"
-                    onPress={() => openInAppBrowser(LOGO_DEV)}
-                    title={t("settings.about.logoDev")}
                 />
             </SettingsSection>
 

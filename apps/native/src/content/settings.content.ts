@@ -47,13 +47,6 @@ const settings = {
             fr: "Liens",
             pt: "Links",
         }),
-        "settings.about.logoDev": t({
-            en: "Logos provided by Logo.dev",
-            es: "Logos proporcionados por Logo.dev",
-            fr: "Logos fournis par Logo.dev",
-            pt: "Logos fornecidos por Logo.dev",
-            "pt-PT": "Logótipos fornecidos por Logo.dev",
-        }),
         "settings.about.openSourceLicenses": t({
             en: "Open source licenses",
             es: "Licencias de código abierto",

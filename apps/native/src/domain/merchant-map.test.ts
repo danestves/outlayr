@@ -54,7 +54,7 @@ describe("regional merchant coverage", () => {
     });
 });
 
-describe("logo.dev domain backfill", () => {
+describe("logo domain backfill", () => {
     it("resolves every spelling of mcdonalds to the same entry", () => {
         for (const name of ["McDonald's", "mc donalds", "mcdonalds", "McDonalds"]) {
             expect(resolveMerchant(name)?.domain).toBe("mcdonalds.com");

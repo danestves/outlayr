@@ -22,22 +22,23 @@ export const attachImportLogos = Effect.fn("ImportLogoAttach.attach")(function* 
     // sharing that domain is reached.
     for (const entry of entries) {
         const identity = reviewEntryIdentity(entry.note);
-        if (identity.domain == null) {
+        const { domain } = identity;
+        if (domain == null) {
             result.push(entry);
             continue;
         }
-        let brand = brands.get(identity.domain);
+        let brand = brands.get(domain);
         if (brand === undefined) {
-            const cached = yield* readCachedLogo(logoCacheKey(identity.domain, identity.domain));
+            const cached = yield* readCachedLogo(logoCacheKey(domain, domain));
             brand = cached.kind === "logo" ? { bytes: cached.bytes, color: null } : null;
-            brands.set(identity.domain, brand);
+            brands.set(domain, brand);
         }
         if (brand == null) {
             result.push(entry);
             continue;
         }
         const attached = yield* Effect.gen(function* attach() {
-            const imageUri = yield* photoStorage.persistLogoBytes(brand.bytes);
+            const imageUri = yield* photoStorage.persistLogoBytes(brand.bytes, domain);
             if (brand.color == null) {
                 const hues = yield* glowFromImage(imageUri);
                 brand.color = hues[0] ?? null;

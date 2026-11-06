@@ -19,11 +19,21 @@ export function ownsPhotoKey(userId: string, key: string): boolean {
     return name !== null && photoKeyFor(userId, name) === key;
 }
 
-// T8: a shared `merchant/…` logo must never pass as an owned photo, even if either prefix changes.
-const MERCHANT_CACHE_KEY_PREFIX = "merchant/";
+// A shared `merchants/…` logo must never pass as an owned photo, even if either prefix changes.
+const MERCHANT_KEY_PREFIX = "merchants/";
+const MERCHANT_LOGOS_ORIGIN = "https://logos.tryoutlayr.com";
+const MERCHANT_DOMAIN = /^[a-z0-9][a-z0-9.-]{0,252}$/;
+
+export function merchantLogoUrl(key: string): string | null {
+    if (!key.startsWith(MERCHANT_KEY_PREFIX)) {
+        return null;
+    }
+    const domain = key.slice(MERCHANT_KEY_PREFIX.length);
+    return MERCHANT_DOMAIN.test(domain) ? `${MERCHANT_LOGOS_ORIGIN}/${key}` : null;
+}
 
 export function photoNameFromKey(key: string): string | null {
-    if (key.startsWith(MERCHANT_CACHE_KEY_PREFIX)) {
+    if (key.startsWith(MERCHANT_KEY_PREFIX)) {
         return null;
     }
     const segments = key.split("/");

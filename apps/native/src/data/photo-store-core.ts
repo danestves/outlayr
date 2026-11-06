@@ -52,6 +52,22 @@ export interface PhotoFiles {
 
 const TRAILING_SLASHES = /\/+$/;
 
+const MERCHANT_KEY_PREFIX = "merchants/";
+const MERCHANT_FILE = /^logo\.(.+)\.[^.]+\.[^.]+$/;
+
+export function merchantLogoFileName(domain: string, id: string, extension: string): string {
+    return `logo.${domain}.${id}${extension}`;
+}
+
+export function merchantKeyOfFile(name: string): string | null {
+    const domain = MERCHANT_FILE.exec(name)?.[1];
+    return domain === undefined ? null : `${MERCHANT_KEY_PREFIX}${domain}`;
+}
+
+export function isMerchantKey(key: string): boolean {
+    return key.startsWith(MERCHANT_KEY_PREFIX);
+}
+
 export function photoFileName(uri: string): string {
     const [beforeQuery] = uri.split("?");
     const [path] = beforeQuery.split("#");

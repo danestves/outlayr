@@ -106,7 +106,7 @@ export function sanitizeDomain(domain: string | null): string | null {
     if (trimmed.length === 0 || trimmed.length > MAX_DOMAIN_LENGTH) {
         return null;
     }
-    // Grounded lookups return `www.` domains; logo.dev is apex-only.
+    // Grounded lookups return `www.` domains; the logo Worker files every logo under the apex.
     const apex = trimmed.startsWith("www.") ? trimmed.slice(4) : trimmed;
     return DOMAIN_PATTERN.test(apex) ? apex : null;
 }

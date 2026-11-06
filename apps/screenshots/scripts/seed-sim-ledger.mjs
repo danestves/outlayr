@@ -19,7 +19,6 @@ if (!region) {
     throw new Error(`Unknown region "${regionName}". Use one of: ${Object.keys(REGIONS).join(", ")}.`);
 }
 
-const LOGO_TOKEN = "pk_cgf-s1esShGTN9IOQRGZBQ";
 const VES_RATE = 807.3862;
 const RECURRING_MONTHLY = 3;
 const RECURRING_YEARLY = 4;
@@ -89,8 +88,8 @@ function logoCacheKey(name, domain) {
         .slice(0, 80);
 }
 
-function logoDevUrl(domain) {
-    return `https://img.logo.dev/${encodeURIComponent(domain)}?token=${LOGO_TOKEN}&size=512&format=png&fallback=404`;
+function merchantLogoUrl(domain) {
+    return `https://logos.tryoutlayr.com/merchants/${encodeURIComponent(domain)}`;
 }
 
 const HAS_MAGICK = (() => {
@@ -214,14 +213,13 @@ async function brandFor(domain) {
         return brandCache.get(domain);
     }
 
-    const response = await fetch(logoDevUrl(domain));
-    // `fallback=404` is logo.dev having no mark for the domain.
+    const response = await fetch(merchantLogoUrl(domain));
     if (response.status === 404) {
         brandCache.set(domain, null);
         return null;
     }
     if (!response.ok) {
-        throw new Error(`logo.dev answered ${response.status} for ${domain}`);
+        throw new Error(`The logo Worker answered ${response.status} for ${domain}`);
     }
     const bytes = Buffer.from(await response.arrayBuffer());
     const png = join(tmp, `${domain.replaceAll(/[^a-z0-9]/gi, "-")}.png`);

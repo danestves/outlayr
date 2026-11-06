@@ -82,7 +82,7 @@ export const attachMerchantLogo = Effect.fn("TransactionForm.attachLogo")(functi
         return false;
     }
     const photoUri = yield* entryMedia
-        .persistLogoBytes(outcome.bytes)
+        .persistLogoBytes(outcome.bytes, domain)
         .pipe(Effect.catchCause(() => Effect.succeed(null)));
     if (photoUri === null) {
         return false;

@@ -826,7 +826,7 @@ describe("runSuggest regionCode", () => {
 });
 
 describe(sanitizeDomain, () => {
-    it("strips a leading www. so logo.dev's apex-only lookup still matches", () => {
+    it("strips a leading www. so the logo Worker's apex key still matches", () => {
         expect(sanitizeDomain("www.unicasa.com.ve")).toBe("unicasa.com.ve");
     });
 

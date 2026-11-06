@@ -253,11 +253,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "With Pro, a statement you choose goes to our server, and its text to our AI provider with long numbers masked, plus your name and address if printed. The file is then deleted. If you already allowed AI features, there's nothing to do and we won't ask again.",
                     label: "Reading PDF bank statements",
                 },
+                {
+                    detail: "The app now asks our own server for logos. Logo.dev and Google no longer see your IP address.",
+                    label: "Where logos come from",
+                },
             ],
             es: [
                 {
                     detail: "Con Pro, el estado de cuenta que elijas va a nuestro servidor, y su texto a nuestro proveedor de IA con los números largos ocultos, además de tu nombre y dirección si aparecen. Luego se borra el archivo. Si ya permitiste las funciones de IA, no tienes que hacer nada y no te lo volveremos a preguntar.",
                     label: "Lectura de estados de cuenta en PDF",
+                },
+                {
+                    detail: "La app ahora le pide los logos a nuestro propio servidor. Logo.dev y Google ya no ven tu dirección IP.",
+                    label: "De dónde vienen los logos",
                 },
             ],
             fr: [
@@ -265,16 +273,24 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Avec Pro, le relevé que vous choisissez va sur notre serveur, et son texte à notre fournisseur d'IA avec les longs numéros masqués, ainsi que votre nom et votre adresse s'ils y figurent. Le fichier est ensuite supprimé. Si vous avez déjà autorisé les fonctions d'IA, vous n'avez rien à faire et nous ne vous le redemanderons pas.",
                     label: "Lecture des relevés bancaires PDF",
                 },
+                {
+                    detail: "L'app demande désormais les logos à notre propre serveur. Logo.dev et Google ne voient plus votre adresse IP.",
+                    label: "D'où viennent les logos",
+                },
             ],
             pt: [
                 {
                     detail: "Com o Pro, o extrato que você escolher vai para o nosso servidor, e o texto dele para o nosso provedor de IA com os números longos ocultos, além do seu nome e endereço se aparecerem. Depois o arquivo é apagado. Se você já permitiu os recursos de IA, não precisa fazer nada e não perguntaremos de novo.",
                     label: "Leitura de extratos bancários em PDF",
                 },
+                {
+                    detail: "O app agora pede os logos ao nosso próprio servidor. A Logo.dev e o Google não veem mais o seu endereço IP.",
+                    label: "De onde vêm os logos",
+                },
             ],
         },
         document: "privacy",
-        effectiveAtMs: Date.UTC(2026, 10, 9),
+        effectiveAtMs: Date.UTC(2026, 10, 6),
     },
 ];
 

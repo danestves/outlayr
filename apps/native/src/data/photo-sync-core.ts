@@ -5,7 +5,7 @@ import * as Schema from "effect/Schema";
 import type { CloudError } from "@/lib/cloud-error";
 
 import type { SpendDb } from "./budget-spent";
-import { PHOTO_TABLES, photoFileName, photoUriFor } from "./photo-store-core";
+import { isMerchantKey, merchantKeyOfFile, PHOTO_TABLES, photoFileName, photoUriFor } from "./photo-store-core";
 import type { PhotoFiles } from "./photo-store-core";
 import type { PhotoTable } from "./sync-tables";
 
@@ -101,6 +101,12 @@ export const uploadPhotos = Effect.fn("PhotoSync.uploadPhotos")(function* upload
 ) {
     let uploaded = 0;
     let released = 0;
+    const releaseKey = (key: string) =>
+        remote("release", transport.release(key)).pipe(
+            Effect.as(1),
+            // Leaked, not lost. A later server-side sweep reclaims it.
+            Effect.catchTags({ PhotoTransferError: () => Effect.succeed(0) })
+        );
 
     for (const photoTable of PHOTO_TABLES) {
         // PHOTO_SYNC_BATCH caps the pass by counting uploads that have already finished, so each photo's
@@ -116,6 +122,23 @@ export const uploadPhotos = Effect.fn("PhotoSync.uploadPhotos")(function* upload
             }
 
             const name = photoFileName(uri);
+            const merchantKey = merchantKeyOfFile(name);
+            if (merchantKey !== null) {
+                if (row.imageKey !== merchantKey) {
+                    yield* transfer("upload", () =>
+                        db
+                            .update(photoTable.table)
+                            .set({ imageKey: merchantKey, updatedAt: now })
+                            .where(and(eq(photoTable.id, row.id), eq(photoTable.imageUri, uri)))
+                    );
+                    const superseded = row.imageKey;
+                    if (superseded !== null && !isMerchantKey(superseded)) {
+                        released += yield* releaseKey(superseded);
+                    }
+                }
+                continue;
+            }
+
             const bytes = yield* files("upload", () => photoFiles.read(name));
             if (name === "" || bytes === null) {
                 // Launch reconciliation owns a missing file; re-pointing here would duplicate it against a stale read.
@@ -136,15 +159,8 @@ export const uploadPhotos = Effect.fn("PhotoSync.uploadPhotos")(function* upload
             );
             uploaded += 1;
 
-            if (superseded !== null && superseded !== key) {
-                const didRelease = yield* remote("release", transport.release(superseded)).pipe(
-                    Effect.as(true),
-                    // Leaked, not lost. A later server-side sweep reclaims it.
-                    Effect.catchTags({ PhotoTransferError: () => Effect.succeed(false) })
-                );
-                if (didRelease) {
-                    released += 1;
-                }
+            if (superseded !== null && superseded !== key && !isMerchantKey(superseded)) {
+                released += yield* releaseKey(superseded);
             }
         }
     }

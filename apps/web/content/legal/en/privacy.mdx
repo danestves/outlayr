@@ -1,6 +1,6 @@
 ---
 title: "Privacy Policy"
-description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 9 November 2026."
+description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 6 November 2026."
 intro: "This policy explains what Outlayr collects, where it goes, how long it stays, and what you can do about it."
 ---
 
@@ -48,7 +48,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | A PDF statement you choose, and its text | Bank statement PDF import | Our servers, Anthropic (Pro) | Deleted after reading, at most about 75 minutes if the import never finishes |
 | Notion access key (encrypted), Notion user ID | Connect Notion (Pro) | Our servers | Until you disconnect Notion or delete your account |
 | Names, columns, and rows of the Notion databases you pick | Notion import (Pro) | Notion, our servers, your device | Not kept on our servers |
-| Web address, IP address | Logos | Logo.dev, Google | Their policies |
+| Web address, IP address | Logos | Our servers (Cloudflare) | Web address stored with the logo; IP address not kept |
 | Purchase records, user ID, name, email | App opens, Pro | RevenueCat, Apple or Google, our servers | Until account deletion |
 | Invite code, who invited whom, first names, days logged up to three and the date of the third, months earned | Invites | Our servers, RevenueCat | Until account deletion |
 | Install ID, app version, errors | Update checks | Expo | Expo’s policy |
@@ -76,7 +76,7 @@ You don’t need an account to use Outlayr. Without one, none of your ledger is 
 ### What the app sends even without an account
 
 - **Exchange rates.** The app downloads market rates from our server. The request needs no account and carries no ledger data. Our server reads the rates from Open Exchange Rates, CotizaVE, and Binance, which receive nothing about you.
-- **Logos.** To show a logo for a merchant or bank, the app asks Logo.dev for it by web address (for example, netflix.com), and Google’s favicon service if Logo.dev has none. The request comes from your device, so those services see your IP address. It never includes amounts, notes, or who you are. Logos are then cached on the phone.
+- **Logos.** To show a logo for a merchant or bank, the app asks our logo server for it by web address (for example, netflix.com). It never includes amounts, notes, or who you are. If we don’t have that logo yet, our server looks it up on Google’s and DuckDuckGo’s icon services, the merchant’s own website, and Wikidata, and keeps a copy for everyone. Those services see the web address and our server, not you. Logos are then cached on the phone.
 - **App updates.** When the app starts, it asks Expo, the platform we use to ship updates, whether a newer version of the app’s code is available. The request includes a random ID created for this install (not linked to your account), the app version, and your IP address. If an update failed to start last time, it also includes a short error message.
 - **Purchase status.** The app checks with RevenueCat whether you have Outlayr Pro, using a random anonymous ID until you sign in, and your account ID, name, and email after. See [Outlayr Pro](#outlayr-pro).
 - **Analytics and crash reports.** The app tells PostHog, the analytics service we use, when it is installed, updated, opened, or closed, which kind of screen you open (for example, an account’s screen, never which account), and when you save an entry, transfer, account, category, or budget, share a card, import or export data, change a setting, open Outlayr Pro, or open the app from a widget, shortcut, or link. These events carry details such as expense or income, whether an entry came from a scan or your voice, whether it was new or an edit, which setting changed and whether it is now on, and how many rows an import brought in, rounded to a range such as 10 to 99. If the app hits an error, it sends the error message and where in the code it happened. Each event carries a random ID created for this install, the app version, your device model, operating system, language, time zone, and screen size. It never includes amounts, merchants, notes, account or category names, or your email. PostHog discards your IP address. Once you sign in, these events are linked to your Outlayr account ID. If your device’s region is set to a country in the EEA or UK, **Settings › Share analytics** starts off and none of this is sent until you turn it on. Turning it off stops all of it on that device.
@@ -265,8 +265,7 @@ These companies help run Outlayr. Each receives only what its job needs.
 - **[ElevenLabs](https://elevenlabs.io/privacy-policy)** turns voice recordings into text. It receives the recording and your language.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** tracks subscription status. It receives an anonymous ID, or your account ID, name, and email once you sign in, and your purchase records.
 - **[Apple](https://www.apple.com/legal/privacy/)** provides Sign in with Apple, App Store payments, and iOS features such as Siri and Shortcuts, under its own policy.
-- **[Google](https://policies.google.com/privacy)** provides Sign in with Google and Google Play payments, under its own policy, and is a fallback source for logos, for which it receives a web address and your IP address.
-- **Logo.dev** provides merchant and bank logos. It receives a web address and your IP address.
+- **[Google](https://policies.google.com/privacy)** provides Sign in with Google and Google Play payments, under its own policy.
 - **[Expo](https://expo.dev/privacy)** delivers app updates. It receives a random install ID, the app version, your IP address, and update error messages.
 - **[PostHog](https://posthog.com/privacy)** provides usage analytics and crash reports, from servers in the United States. It receives the events described in [What the app sends even without an account](#what-the-app-sends-even-without-an-account), a random install ID, and your account ID once you sign in, plus the [records of AI requests](#records-of-ai-requests) our server sends. It also receives this website’s analytics, described in [This website](#this-website).
 
@@ -380,7 +379,7 @@ If you live in California or another US state with a privacy law, this is what w
 
 | Category and examples | Received by |
 | --- | --- |
-| **Identifiers:** name, email, account ID, install ID, IP address | Hetzner, RevenueCat, Expo, PostHog, Logo.dev, Google, Cloudflare (email) |
+| **Identifiers:** name, email, account ID, install ID, IP address | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (email, logos) |
 | **Commercial information:** subscription and purchase records | Apple, Google, RevenueCat, Hetzner |
 | **Audio and visual information:** voice clips, receipt scans, installment plan screenshots, attached photos | ElevenLabs (clips), Anthropic (scans), Cloudflare (photos) |
 | **Internet or network activity:** IP address, user agent, request logs, app and website usage, crash reports | Hetzner, Expo, PostHog, our website host |
@@ -406,7 +405,7 @@ No system is perfectly secure. If you find a security problem, write to [support
 
 ## International transfers
 
-Our servers are in Helsinki, Finland, in the European Union. danestves LLC is a US company, and Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Logo.dev, Apple, Google, and Notion process the data they receive mainly in the United States, whose laws may protect it differently from your own. Write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com) for details of the safeguards that apply.
+Our servers are in Helsinki, Finland, in the European Union. danestves LLC is a US company, and Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Apple, Google, and Notion process the data they receive mainly in the United States, whose laws may protect it differently from your own. Write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com) for details of the safeguards that apply.
 
 ## Children
 

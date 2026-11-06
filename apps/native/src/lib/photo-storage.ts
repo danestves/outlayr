@@ -5,7 +5,7 @@ import * as Schema from "effect/Schema";
 import { Directory, File, Paths } from "expo-file-system";
 
 import { MAX_ATTACHMENT_BYTES } from "@/data/attachments-core";
-import { PHOTO_DIRECTORY, photoExtension, photoFileName } from "@/data/photo-store-core";
+import { merchantLogoFileName, PHOTO_DIRECTORY, photoExtension, photoFileName } from "@/data/photo-store-core";
 import type { PhotoFiles } from "@/data/photo-store-core";
 import { newId } from "@/domain/ids";
 import { decodeImage, drawOnPlate } from "@/lib/logo-plating";
@@ -111,7 +111,8 @@ const downscaleToJpeg = (sourceUri: string) =>
 
 /** The picker's path is in a cache the system may reclaim, so only the returned uri is safe to write to a row. */
 export const persistPickedPhoto = Effect.fn("PhotoStorage.persistPickedPhoto")(function* persistPickedPhoto(
-    sourceUri: string
+    sourceUri: string,
+    fileName: (extension: string) => string = (extension) => `${newId()}${extension}`
 ) {
     const directory = yield* Effect.try({ catch: failedPhoto, try: photoDirectory });
     const encoded = yield* downscaleToJpeg(sourceUri);
@@ -120,7 +121,7 @@ export const persistPickedPhoto = Effect.fn("PhotoStorage.persistPickedPhoto")(f
         return yield* Effect.try({
             catch: failedPhoto,
             try: () => {
-                const target = new File(directory, `${newId()}.jpg`);
+                const target = new File(directory, fileName(".jpg"));
                 target.create({ overwrite: true });
                 target.writeSync(encoded);
                 return target.uri;
@@ -131,7 +132,7 @@ export const persistPickedPhoto = Effect.fn("PhotoStorage.persistPickedPhoto")(f
     return yield* Effect.try({
         catch: failedPhoto,
         try: () => {
-            const target = new File(directory, `${newId()}${photoExtension(photoFileName(sourceUri))}`);
+            const target = new File(directory, fileName(photoExtension(photoFileName(sourceUri))));
             new File(sourceUri).copySync(target, { overwrite: true });
             return target.uri;
         },
@@ -154,14 +155,17 @@ function platedLogoJpeg(bytes: Uint8Array): Uint8Array | null {
  * re-encode also neutralises anything hiding behind a valid image header.
  */
 export const persistLogoBytes = Effect.fn("PhotoStorage.persistLogoBytes")(function* persistLogoBytes(
-    bytes: Uint8Array
+    bytes: Uint8Array,
+    domain?: string
 ) {
+    const fileName = (extension: string) =>
+        domain === undefined ? `${newId()}${extension}` : merchantLogoFileName(domain, newId(), extension);
     const plated = platedLogoJpeg(bytes);
     if (plated != null) {
         return yield* Effect.try({
             catch: failedLogo,
             try: () => {
-                const target = new File(photoDirectory(), `${newId()}.jpg`);
+                const target = new File(photoDirectory(), fileName(".jpg"));
                 target.create({ overwrite: true });
                 target.writeSync(plated);
                 return target.uri;
@@ -179,7 +183,7 @@ export const persistLogoBytes = Effect.fn("PhotoStorage.persistLogoBytes")(funct
                 return temp;
             },
         }),
-        (temp) => persistPickedPhoto(temp.uri),
+        (temp) => persistPickedPhoto(temp.uri, fileName),
         (temp) => Effect.try({ catch: failedLogo, try: () => temp.delete() }).pipe(Effect.orDie)
     );
 });
