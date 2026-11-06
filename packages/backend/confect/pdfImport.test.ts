@@ -69,6 +69,7 @@ describe(redactStatementText, () => {
         ["an IBAN", "IBAN ES91 2100 0418 4502 0005 1332 titular", "IBAN ****1332 titular"],
         ["a compact IBAN", "DE89370400440532013000", "****3000"],
         ["an IBAN with text glued to it", "ES91 2100 0418 4502 0005 1332Tarjeta", "****1332Tarjeta"],
+        ["a card with text glued to it", "4111 1111 1111 1234Visa", "****1234Visa"],
         ["a card", "Tarjeta 4111 1111 1111 1234", "Tarjeta ****1234"],
         ["a dashed card", "4111-1111-1111-1234", "****1234"],
         ["an Amex card", "3782 822463 10005", "****0005"],
@@ -156,6 +157,12 @@ describe(readStatement, () => {
             rows: [...ROWS, { amount: -5, currency: null, date: "2026-03-09", label: "Bad currency" }],
             status: "ok",
         });
+    });
+
+    it("refuses a statement over the row cap instead of importing part of it", async () => {
+        const rows = Array.from({ length: 2001 }, () => ROWS[0]);
+
+        await expect(read(mockModel(JSON.stringify({ rows })))).resolves.toStrictEqual({ status: "invalid" });
     });
 
     it("answers invalidResponse when the model's output has the wrong shape", async () => {

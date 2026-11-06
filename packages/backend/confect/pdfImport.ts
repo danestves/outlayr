@@ -39,7 +39,7 @@ export const rateLimiter = new RateLimiter(components.rateLimiter, {
 const MASK = "****";
 // No closing \b: text glued to the last group would otherwise back the match off a group and leak those digits.
 const IBAN_LIKE = /\b[A-Z]{2}\d{2}(?:[ -]?[A-Z0-9]{2,4}){3,8}/g;
-const GROUPED_DIGITS = /\b\d{4}(?:[ -]\d{4}){2,3}(?:[ -]\d{1,4})?\b|\b\d{4}[ -]\d{6}[ -]\d{5}\b/g;
+const GROUPED_DIGITS = /\b\d{4}(?:[ -]\d{4}){2,3}(?:[ -]\d{1,4})?|\b\d{4}[ -]\d{6}[ -]\d{5}/g;
 // The lookahead keeps an ungrouped amount: 1234567890,50 is money, 1234567890 is an account.
 const LONG_DIGITS = /\d{9,}(?!\d|[.,]\d{1,2}(?!\d))/g;
 const NON_DIGIT = /\D/g;
@@ -291,8 +291,12 @@ export const readStatement = Effect.fn("PdfImport.readStatement")(
             chunks.map((chunk, index) => extractChunk(model, chunk, index === 0 ? null : header, context)),
             { concurrency: CHUNK_CONCURRENCY }
         );
+        const found = answers.flat();
+        if (found.length > MAX_ROWS) {
+            return { status: "invalid" };
+        }
         const rows: StatementRow[] = [];
-        for (const row of answers.flat().slice(0, MAX_ROWS)) {
+        for (const row of found) {
             const clean = sanitizeRow(row, context.today);
             if (clean !== null) {
                 rows.push(clean);
