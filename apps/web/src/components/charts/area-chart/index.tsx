@@ -145,7 +145,8 @@ function AreaChartRoot({
     const peak = Math.max(
         1,
         ...(bands.at(-1)?.map((band) => band.y2) ?? []),
-        ...lineRows.flat().map((row) => row.value)
+        ...lineRows.flat().map((row) => row.value),
+        ...partsOf(children, ReferenceLine).map((line) => line.y)
     );
     const domain = yDomain ?? ([0, peak * HEADROOM] as const);
     const plotHeight = height - MARGIN_TOP - MARGIN_BOTTOM;
