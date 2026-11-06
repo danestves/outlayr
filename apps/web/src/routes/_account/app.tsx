@@ -8,7 +8,7 @@ import { useIntlayer } from "react-intlayer";
 import { LINE_PILL, Muted, SOLID_PILL, Screen } from "@/components/account/parts";
 import { HomePanelPending, HomePending } from "@/components/dashboard/home/home-pending";
 import { signOut } from "@/components/dashboard/shell/account-menu";
-import { DashboardContext, resolveFilters } from "@/components/dashboard/shell/dashboard";
+import { DashboardContext, useFilters } from "@/components/dashboard/shell/dashboard";
 import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filters";
 import type { FilterPatch } from "@/components/dashboard/shell/filters";
 import { photoKeys, photoUrlsQuery, usePhotoUrls } from "@/components/dashboard/shell/photos";
@@ -104,7 +104,7 @@ function LiveDashboard({ children }: { children: ReactNode }) {
     useTurnover(overview.nextChangeAt, setAsOf);
     const ledger = useMemo(() => prepareLedger(books, asOf), [books, asOf]);
     const photos = usePhotoUrls(overview);
-    const filters = useMemo(() => resolveFilters(search, ledger), [search, ledger]);
+    const filters = useFilters(search, ledger);
     const dashboard = useMemo(
         () => ({
             filters,
