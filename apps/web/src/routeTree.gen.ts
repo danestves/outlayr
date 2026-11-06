@@ -30,6 +30,8 @@ import { Route as Char123LocaleChar125PrivacyRouteImport } from './routes/{-$loc
 import { Route as Char123LocaleChar125SupportRouteImport } from './routes/{-$locale}/support'
 import { Route as Char123LocaleChar125TermsRouteImport } from './routes/{-$locale}/terms'
 import { Route as DotwellKnownMcpServerCardDotjsonRouteImport } from './routes/[.]well-known.mcp.server-card[.]json'
+import { Route as AccountAppIndexRouteImport } from './routes/_account/app.index'
+import { Route as AccountAppInsightsRouteImport } from './routes/_account/app.insights'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as Char123LocaleChar125BlogIndexRouteImport } from './routes/{-$locale}/blog.index'
 import { Route as Char123LocaleChar125BlogSlugRouteImport } from './routes/{-$locale}/blog.$slug'
@@ -158,6 +160,16 @@ const DotwellKnownMcpServerCardDotjsonRoute =
     path: '/.well-known/mcp/server-card.json',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AccountAppIndexRoute = AccountAppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountAppRoute,
+} as any)
+const AccountAppInsightsRoute = AccountAppInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
+  getParentRoute: () => AccountAppRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -234,7 +246,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
-  '/app': typeof AccountAppRoute
+  '/app': typeof AccountAppRouteWithChildren
   '/connect': typeof AccountConnectRoute
   '/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
@@ -246,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
+  '/app/insights': typeof AccountAppInsightsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
   '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
@@ -253,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
   '/{-$locale}/i/$code': typeof Char123LocaleChar125ICodeRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
+  '/app/': typeof AccountAppIndexRoute
   '/{-$locale}/blog/': typeof Char123LocaleChar125BlogIndexRoute
   '/{-$locale}/compare/': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides/': typeof Char123LocaleChar125GuidesIndexRoute
@@ -267,7 +281,6 @@ export interface FileRoutesByTo {
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
-  '/app': typeof AccountAppRoute
   '/connect': typeof AccountConnectRoute
   '/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
@@ -279,6 +292,7 @@ export interface FileRoutesByTo {
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
   '/{-$locale}': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
+  '/app/insights': typeof AccountAppInsightsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
   '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
@@ -286,6 +300,7 @@ export interface FileRoutesByTo {
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
   '/{-$locale}/i/$code': typeof Char123LocaleChar125ICodeRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
+  '/app': typeof AccountAppIndexRoute
   '/{-$locale}/blog': typeof Char123LocaleChar125BlogIndexRoute
   '/{-$locale}/compare': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides': typeof Char123LocaleChar125GuidesIndexRoute
@@ -302,7 +317,7 @@ export interface FileRoutesById {
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
   '/.well-known/api-catalog': typeof DotwellKnownApiCatalogRoute
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
-  '/_account/app': typeof AccountAppRoute
+  '/_account/app': typeof AccountAppRouteWithChildren
   '/_account/connect': typeof AccountConnectRoute
   '/_account/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
@@ -314,6 +329,7 @@ export interface FileRoutesById {
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
+  '/_account/app/insights': typeof AccountAppInsightsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
   '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
@@ -321,6 +337,7 @@ export interface FileRoutesById {
   '/{-$locale}/guides/$slug': typeof Char123LocaleChar125GuidesSlugRoute
   '/{-$locale}/i/$code': typeof Char123LocaleChar125ICodeRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
+  '/_account/app/': typeof AccountAppIndexRoute
   '/{-$locale}/blog/': typeof Char123LocaleChar125BlogIndexRoute
   '/{-$locale}/compare/': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides/': typeof Char123LocaleChar125GuidesIndexRoute
@@ -350,6 +367,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/terms'
     | '/{-$locale}/'
     | '/.well-known/mcp/server-card.json'
+    | '/app/insights'
     | '/api/auth/$'
     | '/{-$locale}/blog/$slug'
     | '/{-$locale}/blog/rss.xml'
@@ -357,6 +375,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/guides/$slug'
     | '/{-$locale}/i/$code'
     | '/{-$locale}/tools/$slug'
+    | '/app/'
     | '/{-$locale}/blog/'
     | '/{-$locale}/compare/'
     | '/{-$locale}/guides/'
@@ -371,7 +390,6 @@ export interface FileRouteTypes {
     | '/.well-known/ai-catalog.json'
     | '/.well-known/api-catalog'
     | '/.well-known/http-message-signatures-directory'
-    | '/app'
     | '/connect'
     | '/login'
     | '/{-$locale}/$'
@@ -383,6 +401,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/terms'
     | '/{-$locale}'
     | '/.well-known/mcp/server-card.json'
+    | '/app/insights'
     | '/api/auth/$'
     | '/{-$locale}/blog/$slug'
     | '/{-$locale}/blog/rss.xml'
@@ -390,6 +409,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/guides/$slug'
     | '/{-$locale}/i/$code'
     | '/{-$locale}/tools/$slug'
+    | '/app'
     | '/{-$locale}/blog'
     | '/{-$locale}/compare'
     | '/{-$locale}/guides'
@@ -417,6 +437,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/terms'
     | '/{-$locale}/'
     | '/.well-known/mcp/server-card.json'
+    | '/_account/app/insights'
     | '/api/auth/$'
     | '/{-$locale}/blog/$slug'
     | '/{-$locale}/blog/rss.xml'
@@ -424,6 +445,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/guides/$slug'
     | '/{-$locale}/i/$code'
     | '/{-$locale}/tools/$slug'
+    | '/_account/app/'
     | '/{-$locale}/blog/'
     | '/{-$locale}/compare/'
     | '/{-$locale}/guides/'
@@ -593,6 +615,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotwellKnownMcpServerCardDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_account/app/': {
+      id: '/_account/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AccountAppIndexRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
+    '/_account/app/insights': {
+      id: '/_account/app/insights'
+      path: '/insights'
+      fullPath: '/app/insights'
+      preLoaderRoute: typeof AccountAppInsightsRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -724,14 +760,28 @@ const Char123LocaleChar125RouteRouteWithChildren =
     Char123LocaleChar125RouteRouteChildren,
   )
 
+interface AccountAppRouteChildren {
+  AccountAppInsightsRoute: typeof AccountAppInsightsRoute
+  AccountAppIndexRoute: typeof AccountAppIndexRoute
+}
+
+const AccountAppRouteChildren: AccountAppRouteChildren = {
+  AccountAppInsightsRoute: AccountAppInsightsRoute,
+  AccountAppIndexRoute: AccountAppIndexRoute,
+}
+
+const AccountAppRouteWithChildren = AccountAppRoute._addFileChildren(
+  AccountAppRouteChildren,
+)
+
 interface AccountRouteChildren {
-  AccountAppRoute: typeof AccountAppRoute
+  AccountAppRoute: typeof AccountAppRouteWithChildren
   AccountConnectRoute: typeof AccountConnectRoute
   AccountLoginRoute: typeof AccountLoginRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
-  AccountAppRoute: AccountAppRoute,
+  AccountAppRoute: AccountAppRouteWithChildren,
   AccountConnectRoute: AccountConnectRoute,
   AccountLoginRoute: AccountLoginRoute,
 }
