@@ -38,7 +38,28 @@ describe("findLogo", () => {
         expect(result.kind === "found" && result.logo.size).toBe(128);
     });
 
-    it("prefers Wikidata over a blurry icon", async () => {
+    it("keeps a small icon over Wikidata's wide logo", async () => {
+        const called: string[] = [];
+        const result = await findLogo(
+            fetcher((url) => {
+                called.push(url);
+                return url.includes("google.com") ? image(16) : notFound();
+            }),
+            "ebay.com"
+        );
+        expect(result.kind === "found" && result.logo.source).toBe("google");
+        expect(called.some((url) => url.includes("wikidata"))).toBeFalsy();
+    });
+
+    it("refuses a file claiming an impossible size", async () => {
+        const result = await findLogo(
+            fetcher((url) => (url.includes("google.com") ? image(8192) : notFound())),
+            "xfinity.com"
+        );
+        expect(result.kind).not.toBe("found");
+    });
+
+    it("uses Wikidata when no source has an icon", async () => {
         const result = await findLogo(
             fetcher((url) => {
                 if (url.includes("query.wikidata.org")) {
@@ -49,7 +70,7 @@ describe("findLogo", () => {
                 if (url.includes("commons.wikimedia.org")) {
                     return image(256);
                 }
-                return url.includes("google.com") ? image(16) : notFound();
+                return notFound();
             }),
             "ebay.com"
         );

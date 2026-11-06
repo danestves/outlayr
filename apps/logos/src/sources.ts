@@ -11,11 +11,11 @@ export interface FoundLogo extends ImageInfo {
 export type LookupResult = { kind: "found"; logo: FoundLogo } | { kind: "missing" } | { kind: "unknown" };
 
 const SHARP_SIZE = 120;
-const USABLE_SIZE = 64;
 // Matches `MIN_BYTES` in the app's logo acceptance.
 const MIN_BYTES = 512;
 // Matches `MAX_BYTES` in the app's logo acceptance.
 const MAX_BYTES = 524_288;
+const MAX_SIZE = 4096;
 const MAX_SITE_ICONS = 6;
 const SOURCE_TIMEOUT_MS = 3000;
 const BROWSER_AGENT =
@@ -45,7 +45,9 @@ async function attempt(fetcher: Fetcher, url: string, source: string, agent = BR
             return { kind: "missing" };
         }
         const info = imageInfo(bytes);
-        return info === null ? { kind: "missing" } : { kind: "found", logo: { ...info, bytes, source } };
+        return info === null || info.size > MAX_SIZE
+            ? { kind: "missing" }
+            : { kind: "found", logo: { ...info, bytes, source } };
     } catch {
         return { kind: "unknown" };
     }
@@ -151,12 +153,9 @@ export async function findLogo(fetcher: Fetcher, domain: string): Promise<Lookup
     if ((bestOf()?.size ?? 0) < SHARP_SIZE) {
         attempts = [...attempts, await ownSite(fetcher, domain)];
     }
-    if ((bestOf()?.size ?? 0) < USABLE_SIZE) {
-        const fromWikidata = await wikidata(fetcher, domain);
-        attempts = [...attempts, fromWikidata];
-        if (fromWikidata.kind === "found") {
-            return fromWikidata;
-        }
+    // Wikidata's logos are mostly wide wordmarks, which read worse in a square tile than a small icon.
+    if (bestOf() === null) {
+        attempts = [...attempts, await wikidata(fetcher, domain)];
     }
     const best = bestOf();
     if (best !== null) {
