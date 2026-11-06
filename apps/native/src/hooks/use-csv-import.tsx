@@ -40,7 +40,7 @@ const retryCsvImportAtom = appRuntime
     .fn<ResolveRequest>()((request) => CsvImport.pipe(Effect.flatMap((csvImport) => csvImport.retry(request))))
     .pipe(Atom.withLabel("csv-import:retry"));
 
-function buildCategoryTree(meta: ReadonlyMap<string, CategoryMetaRow>) {
+export function buildCategoryTree(meta: ReadonlyMap<string, CategoryMetaRow>) {
     const named = [...meta.entries()].filter(([, row]) => row.name != null);
     // SAFETY: `named` is filtered to non-null names above; the column is nullable.
     return named
@@ -108,6 +108,7 @@ export function useCsvImport(): UseCsvImportResult {
         labels,
         parsed,
         regionCode,
+        statement: flow.statement,
     });
 
     const run = () => {

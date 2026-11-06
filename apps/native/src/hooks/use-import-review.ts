@@ -303,7 +303,11 @@ export function useImportReview(): ImportReviewResult {
             return;
         }
         importDraftStore.dispatch({ type: "commitStarted" });
-        importRows({ db, plan: { ...plan, entries: selectedEntries } });
+        importRows({
+            db,
+            kind: flow.sourceId === "pdf" ? "pdf" : "csv",
+            plan: { ...plan, entries: selectedEntries },
+        });
     };
 
     return {

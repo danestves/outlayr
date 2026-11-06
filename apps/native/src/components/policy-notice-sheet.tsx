@@ -15,15 +15,17 @@ import { useAppLockOpen } from "@/components/app-lock-gate";
 import { useAuthCovered } from "@/components/auth-cover";
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
+import { useUpdateWaiting } from "@/components/update-sheet";
 import { useSheetInsets } from "@/components/use-sheet-insets";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useNumberSetting } from "@/data/settings";
+import { useAiConsent, useNumberSetting } from "@/data/settings";
 import { formatTargetDate } from "@/domain/dates";
 import { pendingNotices } from "@/domain/policy-notice";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { languageSubtag } from "@/i18n/languages";
 import type { Language } from "@/i18n/languages";
 import { openInAppBrowser } from "@/lib/app-handoff";
+import { useAuthSession } from "@/lib/auth-session";
 import { legalUrl } from "@/lib/legal-url";
 import { policyNoticesAtom } from "@/lib/policy-notices";
 import { SILENT } from "@/state/atom-command";
@@ -47,6 +49,9 @@ export function PolicyNoticeSheet() {
     const onTabs = useSegments()[0] === "(tabs)";
     const lockOpen = useAppLockOpen();
     const covered = useAuthCovered();
+    const { gate } = useAuthSession();
+    const consentDue = useAiConsent(db) === "unanswered" && gate === "signed-in";
+    const updateDue = useUpdateWaiting();
     const notices = useAtomValue(policyNoticesAtom);
     const privacySeen = useNumberSetting(db, "privacyNoticeSeen");
     const termsSeen = useNumberSetting(db, "termsNoticeSeen");
@@ -74,7 +79,8 @@ export function PolicyNoticeSheet() {
     const single = shown.length === 1;
     const documentName = (document: PolicyNotice["document"]) =>
         t(document === "privacy" ? "policyNotice.privacyName" : "policyNotice.termsName");
-    const open = pending.length > 0 && onTabs && lockOpen && !covered;
+    // UIKit drops a sheet asked for over another, and that close would count as Got it for a notice nobody saw.
+    const open = pending.length > 0 && onTabs && lockOpen && !covered && !consentDue && !updateDue;
 
     return (
         <BottomSheet

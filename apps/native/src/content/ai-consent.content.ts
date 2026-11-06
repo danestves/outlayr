@@ -29,12 +29,12 @@ const aiConsent = {
                 "As sugestões de categoria nunca incluem valores, datas ou contas. Não guardamos gravações, fotos, capturas de ecrã nem notificações.",
         }),
         "aiConsent.lead": t({
-            en: "These features need an account and go through our server to third-party AI providers, which turn recordings into text, read receipts and bank notifications, and suggest categories. They never get your name, email, or account ID.",
-            es: "Estas funciones necesitan una cuenta y pasan por nuestro servidor hacia proveedores de IA externos, que convierten las grabaciones en texto, leen recibos y notificaciones del banco, y sugieren categorías. Nunca reciben tu nombre, tu correo ni el ID de tu cuenta.",
-            fr: "Ces fonctions nécessitent un compte et passent par notre serveur vers des fournisseurs d'IA tiers, qui transcrivent les enregistrements, lisent les tickets et les notifications bancaires, et suggèrent des catégories. Ils ne reçoivent jamais votre nom, votre e-mail ni l'identifiant de votre compte.",
-            pt: "Estes recursos precisam de uma conta e passam pelo nosso servidor até provedores de IA terceiros, que transformam gravações em texto, leem recibos e notificações do banco e sugerem categorias. Eles nunca recebem seu nome, e-mail ou ID da conta.",
+            en: "These features need an account and go through our server to third-party AI providers, which turn recordings into text, read receipts and bank notifications, and suggest categories. Apart from what a statement you import shows, they never get your name, email, or account ID.",
+            es: "Estas funciones necesitan una cuenta y pasan por nuestro servidor hacia proveedores de IA externos, que convierten las grabaciones en texto, leen recibos y notificaciones del banco, y sugieren categorías. Salvo lo que muestre un estado de cuenta que importes, nunca reciben tu nombre, tu correo ni el ID de tu cuenta.",
+            fr: "Ces fonctions nécessitent un compte et passent par notre serveur vers des fournisseurs d'IA tiers, qui transcrivent les enregistrements, lisent les tickets et les notifications bancaires, et suggèrent des catégories. Hormis ce que montre un relevé que vous importez, ils ne reçoivent jamais votre nom, votre e-mail ni l'identifiant de votre compte.",
+            pt: "Estes recursos precisam de uma conta e passam pelo nosso servidor até provedores de IA terceiros, que transformam gravações em texto, leem recibos e notificações do banco e sugerem categorias. Fora o que aparece num extrato que você importar, eles nunca recebem seu nome, e-mail ou ID da conta.",
             "pt-PT":
-                "Estas funcionalidades precisam de uma conta e passam pelo nosso servidor até fornecedores de IA terceiros, que transformam gravações em texto, leem talões e notificações do banco e sugerem categorias. Nunca recebem o seu nome, e-mail ou ID da conta.",
+                "Estas funcionalidades precisam de uma conta e passam pelo nosso servidor até fornecedores de IA terceiros, que transformam gravações em texto, leem talões e notificações do banco e sugerem categorias. Fora o que aparece num extrato que importar, nunca recebem o seu nome, e-mail ou ID da conta.",
         }),
         "aiConsent.lookup": t({
             en: "Web lookup",
@@ -103,6 +103,23 @@ const aiConsent = {
             es: "La foto, más los mismos datos que al dictar y tu región",
             fr: "La photo, plus les mêmes données que la saisie vocale et votre région",
             pt: "A foto, mais os mesmos dados do ditado e a sua região",
+        }),
+        "aiConsent.statement": t({
+            en: "Bank statements",
+            es: "Estados de cuenta",
+            "es-ES": "Extractos bancarios",
+            fr: "Relevés bancaires",
+            pt: "Extratos bancários",
+        }),
+        "aiConsent.statementSends": t({
+            en: "The text of a PDF statement you choose to import, with long account and card numbers masked. It includes your name and address if printed. We delete the file after reading it",
+            es: "El texto del PDF de estado de cuenta que elijas importar, con los números largos de cuenta y tarjeta ocultos. Incluye tu nombre y dirección si aparecen. Borramos el archivo después de leerlo",
+            "es-ES":
+                "El texto del extracto en PDF que elijas importar, con los números largos de cuenta y tarjeta ocultos. Incluye tu nombre y dirección si aparecen. Borramos el archivo después de leerlo",
+            fr: "Le texte du relevé PDF que vous choisissez d'importer, avec les longs numéros de compte et de carte masqués. Il inclut votre nom et votre adresse s'ils y figurent. Nous supprimons le fichier après lecture",
+            pt: "O texto do extrato em PDF que você escolher importar, com os números longos de conta e cartão ocultos. Inclui seu nome e endereço se aparecerem. Apagamos o arquivo depois de ler",
+            "pt-PT":
+                "O texto do extrato em PDF que escolher importar, com os números longos de conta e cartão ocultos. Inclui o seu nome e morada se aparecerem. Apagamos o ficheiro depois de o ler",
         }),
         "aiConsent.suggestions": t({
             en: "Category suggestions",

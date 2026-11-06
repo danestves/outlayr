@@ -76,7 +76,7 @@ function StepBody({ step, onOpenFeatureLab, onDone }: StepBodyProps) {
             return <SourceStep />;
         }
         case "file": {
-            return <FileStep busy={status === "loading"} onChoose={choose} />;
+            return <FileStep busy={status === "loading"} onChoose={choose} onSeePro={openPaywall} />;
         }
         case "resolve": {
             return <ResolveStep onOpenFeatureLab={onOpenFeatureLab} onSeePro={openPaywall} review={review} />;

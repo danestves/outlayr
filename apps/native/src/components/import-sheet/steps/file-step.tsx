@@ -4,6 +4,7 @@ import { Button } from "panelui-native/components/button";
 import { View } from "react-native";
 
 import { Text } from "@/components/text";
+import type { ImportSourceId } from "@/domain/import-sources";
 import { deduceDateFormat } from "@/domain/transaction-csv";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
@@ -15,16 +16,22 @@ import { MeasureStrip } from "../measure-strip";
 import { StepCta } from "../step-cta";
 
 const ERROR_TITLE = {
+    aiOff: "import.errorAiOffTitle",
     empty: "import.errorEmptyTitle",
+    extractionFailed: "import.errorStatementTitle",
     io: "import.errorIoTitle",
     noDataRows: "import.errorNoDataTitle",
+    notEntitled: "import.errorStatementProTitle",
     tooFewColumns: "import.errorTooFewColumnsTitle",
     tooLarge: "import.errorTooLargeTitle",
 } satisfies Record<FileStepError["cause"], TranslationKey>;
 
 const ERROR_BODY = {
+    aiOff: "import.errorAiOffBody",
     empty: "import.errorEmptyBody",
+    extractionFailed: "import.errorStatementBody",
     noDataRows: "import.errorNoDataBody",
+    notEntitled: "import.errorStatementProBody",
     tooFewColumns: "import.errorTooFewColumnsBody",
     tooLarge: "import.errorTooLargeBody",
 } satisfies Partial<Record<FileStepError["cause"], TranslationKey>>;
@@ -40,7 +47,14 @@ const DOC_TILE_SIZE = 30;
 interface FileStepProps {
     busy?: boolean;
     onChoose: () => void;
+    onSeePro: () => void;
 }
+
+const CHOOSE_LABEL = {
+    csv: "import.chooseCsv",
+    notion: "import.chooseNotionExport",
+    pdf: "import.choosePdf",
+} satisfies Record<ImportSourceId, TranslationKey>;
 
 function ChooseDifferentFile({ onChoose }: { onChoose: () => void }) {
     const t = useTranslation();
@@ -51,12 +65,14 @@ function ChooseDifferentFile({ onChoose }: { onChoose: () => void }) {
     );
 }
 
-export function FileStep({ onChoose, busy = false }: FileStepProps) {
+export function FileStep({ onChoose, onSeePro, busy = false }: FileStepProps) {
     const t = useTranslation();
     const colors = useColors();
     const { flow: state, ui } = useImportDraft();
     const error = ui.fileError;
-    const chooseLabel = t(state.sourceId === "notion" ? "import.chooseNotionExport" : "import.chooseCsv");
+    const chooseLabel = t(CHOOSE_LABEL[state.sourceId ?? "csv"]);
+    const statement = state.sourceId === "pdf";
+    const busyLabel = t(statement ? "import.readingStatement" : "import.readingFile");
 
     const { parsed, resolved } = state;
     const dateFormat =
@@ -92,13 +108,17 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
                         {error.cause === "io" ? t(error.key) : t(ERROR_BODY[error.cause] as TranslationKey)}
                     </Text>
                 </View>
-                <StepCta
-                    busy={busy}
-                    busyLabel={t("import.readingFile")}
-                    className="mt-6"
-                    label={chooseLabel}
-                    onPress={onChoose}
-                />
+                {error.cause === "notEntitled" ? (
+                    <StepCta className="mt-6" label={t("pro.action.see")} onPress={onSeePro} />
+                ) : (
+                    <StepCta
+                        busy={busy}
+                        busyLabel={busyLabel}
+                        className="mt-6"
+                        label={chooseLabel}
+                        onPress={onChoose}
+                    />
+                )}
             </View>
         );
     }
@@ -115,7 +135,7 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
                             {state.file?.name}
                         </Text>
                         <Text className="text-muted text-subtitle" numberOfLines={1}>
-                            {t("import.fileReadOnDevice")}
+                            {t(statement ? "import.fileReadByAi" : "import.fileReadOnDevice")}
                         </Text>
                     </View>
                 </View>
@@ -140,7 +160,7 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
                     ]}
                 />
 
-                {state.resolved.labelSource === "descriptionColumn" ? (
+                {state.resolved.labelSource === "descriptionColumn" && !statement ? (
                     <Text className="text-footnote text-muted leading-snug">{t("import.fileNoCategoryColumn")}</Text>
                 ) : null}
 
@@ -148,7 +168,7 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
                     <ChooseDifferentFile onChoose={onChoose} />
                     <StepCta
                         busy={busy}
-                        busyLabel={t("import.readingFile")}
+                        busyLabel={busyLabel}
                         label={t("common.continue")}
                         onPress={() => importDraftStore.setStep("resolve")}
                         testID="import-file-continue"
@@ -169,7 +189,7 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
                         {t("import.fileEmptyCaption")}
                     </Text>
                     <Text className="text-muted text-subtitle" numberOfLines={1}>
-                        {t("import.fileOnDeviceNote")}
+                        {t(statement ? "import.fileAiNote" : "import.fileOnDeviceNote")}
                     </Text>
                 </View>
             </View>
@@ -186,7 +206,11 @@ export function FileStep({ onChoose, busy = false }: FileStepProps) {
                 <Text className="text-footnote text-muted leading-snug">{t("import.notionExportSteps")}</Text>
             ) : null}
 
-            <StepCta busy={busy} busyLabel={t("import.readingFile")} label={chooseLabel} onPress={onChoose} />
+            {statement ? (
+                <Text className="text-footnote text-muted leading-snug">{t("import.statementPrivacy")}</Text>
+            ) : null}
+
+            <StepCta busy={busy} busyLabel={busyLabel} label={chooseLabel} onPress={onChoose} />
         </View>
     );
 }

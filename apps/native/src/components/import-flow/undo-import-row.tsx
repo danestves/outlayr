@@ -44,7 +44,7 @@ export function UndoImportRow() {
                     },
                 ])
             }
-            title={t(last.kind === "csv" ? "settings.import.undoRow" : "mmImport.undo.row")}
+            title={t(last.kind === "moneyManager" ? "mmImport.undo.row" : "settings.import.undoRow")}
         />
     );
 }

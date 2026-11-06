@@ -33,4 +33,5 @@ Library behavior that breaks code far from where we first hit it. Each entry nam
 ## Convex
 
 - **An unsharded rate limiter throws OCC conflicts.** `shards: 10` is load-bearing (`packages/backend/confect/enrichment.ts`, `csvImport.ts`).
+- **pdf.js needs a shim in the V8 runtime.** Convex's `structuredClone` throws on `transfer`, which pdf.js's in-process worker always passes, so `unpdf` fails on every file until `withoutCloneTransfer` (`packages/backend/confect/pdfImport.ts`) drops the option. `convex-test` does not reproduce it, as it runs on a real `structuredClone`. The isolate's 64 MB heap also ran out at about 2000 pages, which is why `MAX_PDF_PAGES` exists.
 - **A query can serve an expired signed URL.** Convex caches query results, so `photos.readUrls` is a mutation though it writes nothing.

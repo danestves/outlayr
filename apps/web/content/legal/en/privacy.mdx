@@ -1,6 +1,6 @@
 ---
 title: "Privacy Policy"
-description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 4 November 2026."
+description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 9 November 2026."
 intro: "This policy explains what Outlayr collects, where it goes, how long it stays, and what you can do about it."
 ---
 
@@ -9,7 +9,7 @@ intro: "This policy explains what Outlayr collects, where it goes, how long it s
 - Your ledger is stored on your device. You can use Outlayr without an account, and then your entries, amounts, and notes never leave the phone.
 - An account (Sign in with Apple, Google, or an email and password) turns on merchant suggestions, notification reading, voice entry, receipt scans, and installment plan imports. With Outlayr Pro it also turns on sync, which keeps a copy of your ledger and photos on our servers until you delete your account.
 - With an account, we email you a welcome note, a note when Pro starts, and notice before this policy or our Terms change. No newsletters or marketing.
-- Voice entries, receipt scans, installment plan imports, merchant suggestions, and bank notifications that show an amount are processed by Anthropic, and ElevenLabs turns voice recordings into text. We don’t store your recordings, scanned photos, screenshots, or notifications, and we never send either company your name, email, or account ID.
+- Voice entries, receipt scans, installment plan imports, PDF bank statements you choose to import, merchant suggestions, and bank notifications that show an amount are processed by Anthropic, and ElevenLabs turns voice recordings into text. We don’t store your recordings, scanned photos, screenshots, or notifications, and, apart from whatever a statement you import shows, we never send either company your name, email, or account ID.
 - Nothing goes to Anthropic or ElevenLabs until you allow it. The app asks during setup, or after you sign in, and Speak an entry and Scan a receipt ask again until you do. Import from a screenshot, for installment plans, asks the first time you use it, even if you allowed the others. Withdraw it any time in **Settings › Send data to AI providers**. Once allowed, merchant suggestions, notification reading, and web lookups are on, and all three can be turned off in **Settings › Smart fill**. Turning Smart fill on also allows sending data to AI providers.
 - The app sends usage analytics and crash reports to PostHog: which screens you open, which features you use, and errors. Never amounts, merchants, notes, or names. It starts off if your device’s region is in the EEA or UK, and on everywhere else. Change it in **Settings › Share analytics**. Our server also tells PostHog the size, cost, and speed of each request to Anthropic, never what it contained, and links it to your account only while Share analytics is on.
 - This website uses PostHog too, with a cookie. If you’re in the EEA or UK, it asks first. Change your answer in the footer under **Cookies**.
@@ -45,6 +45,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Receipt photo | Receipt scan | Our servers, Anthropic | Not kept |
 | Installment plan screenshot | Installment plan import | Our servers, Anthropic | Not kept |
 | File descriptions | CSV import | Our servers, Anthropic (Pro) | Not kept |
+| A PDF statement you choose, and its text | Bank statement PDF import | Our servers, Anthropic (Pro) | Deleted after reading, at most about 75 minutes if the import never finishes |
 | Notion access key (encrypted), Notion user ID | Connect Notion (Pro) | Our servers | Until you disconnect Notion or delete your account |
 | Names, columns, and rows of the Notion databases you pick | Notion import (Pro) | Notion, our servers, your device | Not kept on our servers |
 | Web address, IP address | Logos | Logo.dev, Google | Their policies |
@@ -187,6 +188,10 @@ When you import an installment plan, you choose a screenshot of an order’s pay
 
 The file is read on your device, and so is a Notion export: the zip is opened and its CSV read on the phone. With Smart fill on, descriptions Outlayr can’t match on the device are sent to our server, and with Pro, on to Anthropic to suggest categories: at most 200 at a time, with any run of four or more digits removed, together with your category names and device region. Amounts, dates, and the rest of the file stay on your device. With web lookup on, some descriptions may also be looked up on the web as described above.
 
+### Bank statement PDF import
+
+This feature is part of Pro and works differently from CSV import: the file leaves your device. When you pick a statement, the PDF is uploaded to our server, which reads its text and deletes the file as soon as it has. If the import is interrupted, a scheduled job deletes the file within about 75 minutes. Our server masks long runs of digits such as IBANs and card numbers, keeping the last four, and sends Anthropic the remaining text of the statement, which is everything printed on it: your name and address if the statement shows them, dates, descriptions, amounts, and balances. The transactions Anthropic finds come back to your device for you to review, and their descriptions are classified as in [CSV import](#csv-import). We do not keep the statement or its text.
+
 ### Who Anthropic and ElevenLabs are
 
 Anthropic is the US company that makes the Claude AI models. ElevenLabs makes the speech-to-text models that write down voice entries. Both process these requests for us as service providers under their API terms. Anthropic doesn’t train its models on this data, and we’ve turned off ElevenLabs’ use of it for training. We don’t use your data to train AI models either.
@@ -256,7 +261,7 @@ These companies help run Outlayr. Each receives only what its job needs.
 
 - **[Hetzner](https://www.hetzner.com/legal/privacy-policy)** hosts the servers in Helsinki, Finland, that run our database and server functions. They hold your account and synced data, and handle every request to our server.
 - **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** stores the photos you attach to entries and accounts (Cloudflare R2), when photo backup is on, and sends our emails (sign-in codes, the welcome and Pro notes, and notice of changes), for which it receives your email address and the email’s contents.
-- **[Anthropic](https://www.anthropic.com/legal/privacy)** provides the Claude AI models behind suggestions, notification reading, voice entry, receipt scans, installment plan imports, CSV import, and web lookups. It receives the content described in [Suggestions, voice, and receipts](#suggestions-voice-and-receipts).
+- **[Anthropic](https://www.anthropic.com/legal/privacy)** provides the Claude AI models behind suggestions, notification reading, voice entry, receipt scans, installment plan imports, CSV import, bank statement PDF import, and web lookups. It receives the content described in [Suggestions, voice, and receipts](#suggestions-voice-and-receipts).
 - **[ElevenLabs](https://elevenlabs.io/privacy-policy)** turns voice recordings into text. It receives the recording and your language.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** tracks subscription status. It receives an anonymous ID, or your account ID, name, and email once you sign in, and your purchase records.
 - **[Apple](https://www.apple.com/legal/privacy/)** provides Sign in with Apple, App Store payments, and iOS features such as Siri and Shortcuts, under its own policy.
@@ -293,9 +298,9 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 
 | Purpose | Legal basis |
 | --- | --- |
-| Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, the Notion connection, Pro, invites, and AI assistant connections | Contract: we need this data to provide what you ask for. |
+| Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, bank statement PDF import, the Notion connection, Pro, invites, and AI assistant connections | Contract: we need this data to provide what you ask for. |
 | The welcome and Pro notes, and notice of changes to this policy or our Terms | Contract: they’re part of the account and subscription you asked for. |
-| Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, notification text, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
+| Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, PDF statements, notification text, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
 | Merchant suggestions, notification reading, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster and more accurate to file. Suggestions, notification reading, and web lookups reach Anthropic only once you allow it, and turning off Smart fill is how you object. |
 | Sessions, usage limits, error logs, update checks, and records of AI requests not linked to you | Legitimate interests: keeping Outlayr secure, working, and free of abuse. |
 | Usage analytics, crash reports, and records of AI requests linked to your account | Your consent. Share analytics starts off when your device’s region is in the EEA or UK. Turning it on gives consent, and turning it off withdraws it. |

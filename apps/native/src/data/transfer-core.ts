@@ -561,7 +561,18 @@ export function parseCsvImportRecord(raw: string | null | undefined): CsvImportR
     return raw == null || raw === "" ? null : Option.getOrNull(decodeImportRecord(raw));
 }
 
-export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyImport(db: Database, plan: ImportPlan) {
+export type FileImportKind = "csv" | "pdf";
+
+const FILE_IMPORT_META = { csv: META_KEYS.csvImport, pdf: META_KEYS.pdfImport } satisfies Record<
+    FileImportKind,
+    string
+>;
+
+export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyImport(
+    db: Database,
+    plan: ImportPlan,
+    kind: FileImportKind = "csv"
+) {
     if (plan.entries.length === 0) {
         return 0;
     }
@@ -581,7 +592,7 @@ export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyI
                 transactionIds.push(id);
             }
             const record = { categoryIds: created, importedAt: Date.now(), transactionIds } satisfies CsvImportRecord;
-            yield* setMeta(db, META_KEYS.csvImport, JSON.stringify(record)).pipe(
+            yield* setMeta(db, FILE_IMPORT_META[kind], JSON.stringify(record)).pipe(
                 Effect.mapError((cause) => new CsvTransferError({ cause, operation: "import" }))
             );
         }),
@@ -591,21 +602,27 @@ export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyI
     return plan.entries.length;
 });
 
-export const lastCsvImport = Effect.fn("CsvTransfer.lastCsvImport")(function* lastCsvImport(db: Database) {
-    const raw = yield* getMeta(db, META_KEYS.csvImport).pipe(
+export const lastFileImport = Effect.fn("CsvTransfer.lastFileImport")(function* lastFileImport(
+    db: Database,
+    kind: FileImportKind = "csv"
+) {
+    const raw = yield* getMeta(db, FILE_IMPORT_META[kind]).pipe(
         Effect.mapError((cause) => new CsvTransferError({ cause, operation: "undo" }))
     );
     return parseCsvImportRecord(raw);
 });
 
-export const undoCsvImport = Effect.fn("CsvTransfer.undoCsvImport")(function* undoCsvImport(db: Database) {
-    const record = yield* lastCsvImport(db);
+export const undoFileImport = Effect.fn("CsvTransfer.undoFileImport")(function* undoFileImport(
+    db: Database,
+    kind: FileImportKind = "csv"
+) {
+    const record = yield* lastFileImport(db, kind);
     if (record == null) {
         return NOTHING_UNDONE;
     }
     return yield* undoRecordedImport(
         db,
         { ...record, accountIds: [], budgetIds: [], transferIds: [] },
-        META_KEYS.csvImport
+        FILE_IMPORT_META[kind]
     ).pipe(Effect.mapError((cause) => new CsvTransferError({ cause, operation: "undo" })));
 });

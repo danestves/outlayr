@@ -9,6 +9,94 @@ const importSheet = {
             fr: "Choisir un CSV",
             pt: "Escolher CSV",
         }),
+        "import.choosePdf": t({
+            en: "Choose PDF",
+            es: "Elegir PDF",
+            fr: "Choisir un PDF",
+            pt: "Escolher PDF",
+        }),
+        "import.errorAiOffBody": t({
+            en: "Reading a statement needs AI. Turn on Settings › Send data to AI providers, or import a CSV instead.",
+            es: "Leer un estado de cuenta necesita IA. Activa Ajustes › Enviar datos a proveedores de IA, o importa un CSV.",
+            "es-ES":
+                "Leer un extracto necesita IA. Activa Ajustes › Enviar datos a proveedores de IA, o importa un CSV.",
+            fr: "La lecture d'un relevé nécessite l'IA. Activez Réglages › Envoyer des données aux fournisseurs d'IA, ou importez un CSV.",
+            pt: "Ler um extrato precisa de IA. Ative Ajustes › Enviar dados a provedores de IA ou importe um CSV.",
+            "pt-PT":
+                "Ler um extrato precisa de IA. Ative Definições › Enviar dados a fornecedores de IA ou importe um CSV.",
+        }),
+        "import.errorAiOffTitle": t({
+            en: "AI is turned off",
+            es: "La IA está desactivada",
+            fr: "L'IA est désactivée",
+            pt: "A IA está desativada",
+        }),
+        "import.errorStatementBody": t({
+            en: "It may be a scan or password protected. Ask your bank for a CSV or a PDF with selectable text.",
+            es: "Puede ser un escaneo o tener contraseña. Pídele a tu banco un CSV o un PDF con texto seleccionable.",
+            fr: "Il s'agit peut-être d'un scan ou d'un fichier protégé par mot de passe. Demandez à votre banque un CSV ou un PDF au texte sélectionnable.",
+            pt: "Pode ser uma digitalização ou ter senha. Peça ao seu banco um CSV ou um PDF com texto selecionável.",
+            "pt-PT":
+                "Pode ser uma digitalização ou ter palavra-passe. Peça ao seu banco um CSV ou um PDF com texto selecionável.",
+        }),
+        "import.errorStatementProBody": t({
+            en: "Reading PDF statements is part of Pro. CSV import stays free.",
+            es: "Leer estados de cuenta en PDF es parte de Pro. Importar CSV sigue siendo gratis.",
+            "es-ES": "Leer extractos en PDF es parte de Pro. Importar CSV sigue siendo gratis.",
+            fr: "La lecture des relevés PDF fait partie de Pro. L'import CSV reste gratuit.",
+            pt: "Ler extratos em PDF faz parte do Pro. Importar CSV continua grátis.",
+        }),
+        "import.errorStatementProTitle": t({
+            en: "PDF statements need Pro",
+            es: "Los PDF necesitan Pro",
+            fr: "Les relevés PDF nécessitent Pro",
+            pt: "Extratos em PDF precisam do Pro",
+        }),
+        "import.errorStatementTitle": t({
+            en: "We couldn't read this statement",
+            es: "No pudimos leer este estado de cuenta",
+            "es-ES": "No pudimos leer este extracto",
+            fr: "Impossible de lire ce relevé",
+            pt: "Não conseguimos ler este extrato",
+        }),
+        "import.fileAiNote": t({
+            en: "Its text goes to our AI provider. The file is deleted.",
+            es: "Su texto va a nuestro proveedor de IA. El archivo se borra.",
+            fr: "Son texte va à notre fournisseur d'IA. Le fichier est supprimé.",
+            pt: "O texto vai para o nosso provedor de IA. O arquivo é apagado.",
+            "pt-PT": "O texto vai para o nosso fornecedor de IA. O ficheiro é apagado.",
+        }),
+        "import.fileReadByAi": t({
+            en: "Read by our AI provider",
+            es: "Leído por nuestro proveedor de IA",
+            fr: "Lu par notre fournisseur d'IA",
+            pt: "Lido pelo nosso provedor de IA",
+            "pt-PT": "Lido pelo nosso fornecedor de IA",
+        }),
+        "import.readingStatement": t({
+            en: "Reading statement…",
+            es: "Leyendo estado de cuenta…",
+            "es-ES": "Leyendo extracto…",
+            fr: "Lecture du relevé…",
+            pt: "Lendo extrato…",
+            "pt-PT": "A ler o extrato…",
+        }),
+        "import.statementPrivacy": t({
+            en: "The file goes to our server, which deletes it after reading it. Its text goes to Anthropic with long account and card numbers masked, including your name and address if printed. It needs selectable text, so scans won't work.",
+            es: "El archivo va a nuestro servidor, que lo borra después de leerlo. Su texto va a Anthropic con los números largos de cuenta y tarjeta ocultos, e incluye tu nombre y dirección si aparecen. Necesita texto seleccionable, así que los escaneos no funcionan.",
+            fr: "Le fichier va sur notre serveur, qui le supprime après lecture. Son texte va à Anthropic, avec les longs numéros de compte et de carte masqués, y compris votre nom et votre adresse s'ils y figurent. Il doit contenir du texte sélectionnable : les scans ne fonctionnent pas.",
+            pt: "O arquivo vai para o nosso servidor, que o apaga depois de ler. O texto vai para a Anthropic com os números longos de conta e cartão ocultos, incluindo seu nome e endereço se aparecerem. Ele precisa ter texto selecionável, então digitalizações não funcionam.",
+            "pt-PT":
+                "O ficheiro vai para o nosso servidor, que o apaga depois de o ler. O texto vai para a Anthropic com os números longos de conta e cartão ocultos, incluindo o seu nome e morada se aparecerem. Tem de ter texto selecionável, por isso as digitalizações não funcionam.",
+        }),
+        "import.statementRateLimited": t({
+            en: "You've reached this month's statement imports.",
+            es: "Llegaste al límite de estados de cuenta de este mes.",
+            "es-ES": "Has llegado al límite de extractos de este mes.",
+            fr: "Vous avez atteint la limite de relevés de ce mois-ci.",
+            pt: "Você atingiu o limite de extratos deste mês.",
+            "pt-PT": "Atingiu o limite de extratos deste mês.",
+        }),
         "import.chooseNotionExport": t({
             en: "Choose export",
             es: "Elegir exportación",
@@ -259,6 +347,23 @@ const importSheet = {
             fr: "{count} noms de commerçants envoyés",
             pt: "{count} nomes de estabelecimentos enviados",
         }),
+        "import.resolveFootnoteStatement": t({
+            en: "Your statement's text went to our AI provider, and the file has been deleted. You choose what to import next.",
+            es: "El texto de tu estado de cuenta fue a nuestro proveedor de IA y el archivo ya se borró. Tú eliges qué importar a continuación.",
+            "es-ES":
+                "El texto de tu extracto fue a nuestro proveedor de IA y el archivo ya se borró. Tú eliges qué importar a continuación.",
+            fr: "Le texte de votre relevé est allé à notre fournisseur d'IA et le fichier a été supprimé. Vous choisissez ensuite quoi importer.",
+            pt: "O texto do seu extrato foi para o nosso provedor de IA e o arquivo já foi apagado. Você escolhe o que importar a seguir.",
+            "pt-PT":
+                "O texto do seu extrato foi para o nosso fornecedor de IA e o ficheiro já foi apagado. Escolhe o que importar a seguir.",
+        }),
+        "import.resolveDetailStatement": t({
+            en: "Asked when we read the statement.",
+            es: "Se preguntó al leer el estado de cuenta.",
+            "es-ES": "Se preguntó al leer el extracto.",
+            fr: "Demandé à la lecture du relevé.",
+            pt: "Perguntado ao ler o extrato.",
+        }),
         "import.resolveFootnote": t({
             en: "Only unmatched merchant names and your category names are sent. Never your amounts, dates, or the file itself.",
             es: "Solo se envían los nombres de comercios sin coincidencia y los de tus categorías. Nunca tus montos, fechas ni el archivo.",
@@ -491,11 +596,12 @@ const importSheet = {
             "pt-PT": "Traga os seus dados",
         }),
         "import.sourceLede": t({
-            en: "Bring transactions in from a file. Everything is read on your device.",
-            es: "Trae transacciones desde un archivo. Todo se lee en tu dispositivo.",
-            fr: "Importez des opérations depuis un fichier. Tout est lu sur votre appareil.",
-            pt: "Traga lançamentos de um arquivo. Tudo é lido no seu dispositivo.",
-            "pt-PT": "Traga registos de um ficheiro. Tudo é lido no seu dispositivo.",
+            en: "Bring transactions in from a file. CSV files are read on your device; a PDF statement's text goes to our AI provider.",
+            es: "Trae transacciones desde un archivo. Los CSV se leen en tu dispositivo; el texto de los PDF va a nuestro proveedor de IA.",
+            fr: "Importez des opérations depuis un fichier. Les CSV sont lus sur votre appareil ; le texte des relevés PDF va à notre fournisseur d'IA.",
+            pt: "Traga lançamentos de um arquivo. CSVs são lidos no seu dispositivo; o texto dos extratos em PDF vai para o nosso provedor de IA.",
+            "pt-PT":
+                "Traga registos de um ficheiro. Os CSV são lidos no seu dispositivo; o texto dos extratos em PDF vai para o nosso fornecedor de IA.",
         }),
         "import.startOver": t({
             en: "Start over",

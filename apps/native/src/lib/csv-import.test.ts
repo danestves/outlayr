@@ -99,6 +99,65 @@ const untilSettled = Effect.gen(function* untilSettled() {
 });
 
 describe("csvImport", () => {
+    it("links what a statement's read already classified, without a second model call", async () => {
+        const parsed = parsedFile("Zq Cafe");
+        const store = openDraft(parsed);
+        const transport = vi.fn<CsvImportFn>().mockReturnValue(Effect.succeed(answered("Zq Cafe")));
+
+        await withService(
+            transport,
+            store,
+            Effect.gen(function* run() {
+                const csvImport = yield* CsvImport.CsvImport;
+                yield* csvImport.run(
+                    requestFor(parsed, {
+                        statement: {
+                            complete: true,
+                            suggestions: [{ categoryName: "Food", domain: null, label: "Zq Cafe" }],
+                        },
+                    })
+                );
+                yield* untilSettled;
+            })
+        );
+
+        expect(transport).not.toHaveBeenCalled();
+        expect(store.getSnapshot().flow.resolution?.links).toStrictEqual(new Map([[categoryKey("Zq Cafe"), FOOD_ID]]));
+    });
+
+    it("asks about the labels a degraded statement read left unclassified", async () => {
+        const parsed: ParsedImportFile = {
+            header: ["date", "amount", "category"],
+            rows: [
+                ["2026-08-01", "3.50", "Zq Cafe"],
+                ["2026-08-02", "4.50", "Zq Deli"],
+            ],
+            width: 3,
+        };
+        const store = openDraft(parsed);
+        const transport = vi.fn<CsvImportFn>().mockReturnValue(Effect.succeed(answered("Zq Deli")));
+
+        await withService(
+            transport,
+            store,
+            Effect.gen(function* run() {
+                const csvImport = yield* CsvImport.CsvImport;
+                yield* csvImport.run(
+                    requestFor(parsed, {
+                        statement: {
+                            complete: false,
+                            suggestions: [{ categoryName: "Food", domain: null, label: "Zq Cafe" }],
+                        },
+                    })
+                );
+                yield* untilSettled;
+            })
+        );
+
+        expect(transport.mock.calls[0]?.[0].labels).toStrictEqual(["Zq Deli"]);
+        expect(store.getSnapshot().flow.resolution?.links.size).toBe(2);
+    });
+
     it("settles a run once into the draft with its links, outcome and reason", async () => {
         const parsed = parsedFile("Zq Cafe");
         const store = openDraft(parsed);

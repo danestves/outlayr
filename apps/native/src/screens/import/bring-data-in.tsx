@@ -104,6 +104,13 @@ export function BringDataIn() {
                     testID="import-source-csv"
                     title={t("mmImport.sources.csv")}
                 />
+                <ImportRow
+                    detail={t("mmImport.sources.pdfDetail")}
+                    leading={<CategoryIconTile color={colors.foreground} icon="Pdf01" size={32} type="solid" />}
+                    onPress={() => openFileImport("pdf")}
+                    testID="import-source-pdf"
+                    title={t("mmImport.sources.pdf")}
+                />
             </SettingsSection>
             <ImportSheet ref={csvSheet} />
             <NotionSheet

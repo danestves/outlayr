@@ -9,7 +9,10 @@ export type FileStepError =
     | { cause: "tooLarge" }
     | { cause: "empty" }
     | { cause: "noDataRows" }
-    | { cause: "tooFewColumns" };
+    | { cause: "tooFewColumns" }
+    | { cause: "extractionFailed" }
+    | { cause: "notEntitled" }
+    | { cause: "aiOff" };
 
 interface ImportDraftUi {
     fileError: FileStepError | null;

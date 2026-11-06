@@ -11,6 +11,7 @@ import { duringHandoff } from "@/lib/app-handoff";
 /** `text/plain` because plenty of banks hand out `.csv` files typed as plain text. */
 const CSV_TYPES = ["text/csv", "text/comma-separated-values", "text/plain"];
 const ZIP_TYPES = ["application/zip", "public.zip-archive"];
+const PDF_TYPES = ["application/pdf"];
 
 /** Carries a catalog key, not a sentence: every catch site puts it straight into an `Alert` body. */
 export class TransferError extends Schema.TaggedError<TransferError>()("TransferError", {
@@ -89,6 +90,22 @@ export const pickImportFile = Effect.fn("DataTransfer.pickImportFile")(function*
         return yield* new TransferError({ key: "alerts.transfer.archiveWithoutCsv" });
     }
     return { name: asset.name, text } satisfies PickedFile;
+});
+
+export const pickPdfFile = Effect.fn("DataTransfer.pickPdfFile")(function* pickPdfFile(maxBytes: number) {
+    const asset = yield* pickDocument(PDF_TYPES);
+    if (asset == null) {
+        return null;
+    }
+    // Before the read, as `bytes()` holds the whole file in memory.
+    if ((asset.size ?? 0) > maxBytes) {
+        return "tooLarge" as const;
+    }
+    const bytes = yield* Effect.tryPromise({
+        catch: (cause) => new TransferError({ cause, key: "alerts.transfer.unreadableFile" }),
+        try: () => new File(asset.uri).bytes(),
+    });
+    return { bytes, name: asset.name };
 });
 
 /** Permissive: iOS reports another app's `.json` under several UTIs, and `parseArchive` vets the contents. */

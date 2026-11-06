@@ -996,10 +996,25 @@ const moneyManagerImport = {
             "pt-PT": "De um ficheiro",
         }),
         "mmImport.sources.footer": t({
-            en: "Everything is read on this device.",
-            es: "Todo se lee en este dispositivo.",
-            fr: "Tout est lu sur cet appareil.",
-            pt: "Tudo é lido neste dispositivo.",
+            en: "CSV files are read on this device. A PDF statement's text goes to our AI provider.",
+            es: "Los CSV se leen en este dispositivo. El texto de los PDF va a nuestro proveedor de IA.",
+            fr: "Les CSV sont lus sur cet appareil. Le texte des relevés PDF va à notre fournisseur d'IA.",
+            pt: "CSVs são lidos neste dispositivo. O texto dos extratos em PDF vai para o nosso provedor de IA.",
+            "pt-PT":
+                "Os CSV são lidos neste dispositivo. O texto dos extratos em PDF vai para o nosso fornecedor de IA.",
+        }),
+        "mmImport.sources.pdf": t({
+            en: "Bank statement PDF",
+            es: "PDF de estado de cuenta",
+            "es-ES": "PDF de extracto bancario",
+            fr: "Relevé bancaire PDF",
+            pt: "Extrato bancário em PDF",
+        }),
+        "mmImport.sources.pdfDetail": t({
+            en: "Read by AI · Pro",
+            es: "Lo lee la IA · Pro",
+            fr: "Lu par l'IA · Pro",
+            pt: "Lido por IA · Pro",
         }),
         "mmImport.sources.moneyManagerDetail": t({
             en: "Orange Dog · .mmbackup",

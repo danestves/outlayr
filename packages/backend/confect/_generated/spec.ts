@@ -23,6 +23,7 @@ import notificationRead from "../notificationRead.spec";
 import notion from "../notion.spec";
 import openStats from "../openStats.spec";
 import openexchangerates from "../openexchangerates.spec";
+import pdfImport from "../pdfImport.spec";
 import photos from "../photos.spec";
 import receiptScan from "../receiptScan.spec";
 import referrals from "../referrals.spec";
@@ -55,6 +56,7 @@ const spec: Spec.Spec<{
   readonly notion: GroupSpec.NamedAt<typeof notion, "notion">;
   readonly openStats: GroupSpec.NamedAt<typeof openStats, "openStats">;
   readonly openexchangerates: GroupSpec.NamedAt<typeof openexchangerates, "openexchangerates">;
+  readonly pdfImport: GroupSpec.NamedAt<typeof pdfImport, "pdfImport">;
   readonly photos: GroupSpec.NamedAt<typeof photos, "photos">;
   readonly receiptScan: GroupSpec.NamedAt<typeof receiptScan, "receiptScan">;
   readonly referrals: GroupSpec.NamedAt<typeof referrals, "referrals">;
@@ -86,6 +88,7 @@ const spec: Spec.Spec<{
   ["notion"]: notion,
   ["openStats"]: openStats,
   ["openexchangerates"]: openexchangerates,
+  ["pdfImport"]: pdfImport,
   ["photos"]: photos,
   ["receiptScan"]: receiptScan,
   ["referrals"]: referrals,

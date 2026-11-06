@@ -331,6 +331,20 @@ const settingsData = {
             pt: "Arquivo CSV",
             "pt-PT": "Ficheiro CSV",
         }),
+        "settings.import.sourcePdfSubtitle": t({
+            en: "A statement your bank sent you. Read by AI.",
+            es: "Un estado de cuenta de tu banco. Lo lee la IA.",
+            "es-ES": "Un extracto de tu banco. Lo lee la IA.",
+            fr: "Un relevé de votre banque. Lu par l'IA.",
+            pt: "Um extrato do seu banco. Lido por IA.",
+        }),
+        "settings.import.sourcePdfTitle": t({
+            en: "Bank statement PDF",
+            es: "PDF de estado de cuenta",
+            "es-ES": "PDF de extracto bancario",
+            fr: "Relevé bancaire PDF",
+            pt: "Extrato bancário em PDF",
+        }),
         "settings.import.sourceNotionSubtitle": t({
             en: "A database exported as Markdown & CSV.",
             es: "Una base de datos exportada como Markdown y CSV.",
