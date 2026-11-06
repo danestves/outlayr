@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { applyNumpadKey, numberToNumpad, numpadMode, numpadToNumber, wholeUnitsToNumpad } from "./numpad";
+import {
+    applyNumpadKey,
+    decimalPadEntry,
+    decimalPadSeed,
+    numberToNumpad,
+    numpadMode,
+    numpadToNumber,
+    wholeUnitsToNumpad,
+} from "./numpad";
 import type { NumpadKey, NumpadMode } from "./numpad";
 
 function type(keys: string, minorUnits = 2, from = "", mode: NumpadMode = "explicitSeparator"): string {
@@ -189,5 +197,66 @@ describe("wholeUnitsToNumpad", () => {
     it("leaves no entry for a zero or negative amount", () => {
         expect(wholeUnitsToNumpad(0)).toBe("");
         expect(wholeUnitsToNumpad(0.4)).toBe("");
+    });
+});
+
+describe("decimalPadEntry", () => {
+    it("reads a comma from a regional keyboard as the separator", () => {
+        expect(numpadToNumber(decimalPadEntry("12,5", 2, "explicitSeparator"))).toBe(12.5);
+    });
+
+    it("keeps one separator and caps the fraction at the currency's minor units", () => {
+        expect(decimalPadEntry("12.3.456", 2, "explicitSeparator")).toBe("12.34");
+    });
+
+    it("drops the fraction for a currency without minor units", () => {
+        expect(decimalPadEntry("1500,75", 0, "explicitSeparator")).toBe("1500");
+    });
+
+    it("strips pasted grouping and symbols and leading zeros", () => {
+        expect(decimalPadEntry("$007", 2, "explicitSeparator")).toBe("7");
+    });
+
+    it("caps the digits that stay exact as cents", () => {
+        expect(decimalPadEntry("12345678901234567", 2, "explicitSeparator")).toBe("1234567890123");
+    });
+});
+
+describe("decimalPadEntry pre-dotted", () => {
+    it("shifts each digit through the minor units", () => {
+        expect(decimalPadEntry("1234", 2, "preDotted")).toBe("12.34");
+        expect(decimalPadEntry("5", 2, "preDotted")).toBe("0.05");
+    });
+
+    it("reads the field's own text, whichever separator the language shows", () => {
+        expect(decimalPadEntry("12,345", 2, "preDotted")).toBe("123.45");
+    });
+
+    it("moves the point back on backspace, so 250.00 becomes 25.00", () => {
+        const seed = decimalPadSeed(250, 2, "preDotted");
+        expect(decimalPadEntry(seed.slice(0, -1), 2, "preDotted")).toBe("25.00");
+    });
+
+    it("empties once only zeros remain", () => {
+        expect(decimalPadEntry("0.0", 2, "preDotted")).toBe("");
+    });
+
+    it("stays whole for a currency without minor units", () => {
+        expect(decimalPadEntry("1500", 0, "preDotted")).toBe("1500");
+    });
+
+    it("ignores a digit past the thirteen integer digits", () => {
+        expect(decimalPadEntry("1234567890123.456", 2, "preDotted")).toBe("1234567890123.45");
+    });
+});
+
+describe("decimalPadSeed", () => {
+    it("keeps the zero minor units in pre-dotted mode only", () => {
+        expect(decimalPadSeed(250, 2, "preDotted")).toBe("250.00");
+        expect(decimalPadSeed(250, 2, "explicitSeparator")).toBe("250");
+    });
+
+    it("starts empty with nothing planned", () => {
+        expect(decimalPadSeed(0, 2, "preDotted")).toBe("");
     });
 });

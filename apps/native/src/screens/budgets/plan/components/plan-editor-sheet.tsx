@@ -1,7 +1,7 @@
-import { BottomSheetModal, BottomSheetView } from "@expo/ui/community/bottom-sheet";
+import { BottomSheetModal, BottomSheetTextInput, BottomSheetView } from "@expo/ui/community/bottom-sheet";
 import { useState } from "react";
 import type { Ref } from "react";
-import { Pressable, View } from "react-native";
+import { Keyboard, Pressable, View } from "react-native";
 import type { LayoutChangeEvent } from "react-native";
 import { GestureDetector, usePanGesture } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
@@ -15,16 +15,20 @@ import { SheetDragRegion } from "@/components/sheet-drag-region";
 import { SheetGestureRoot } from "@/components/sheet-gesture-root";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
+import { useSettingNumber } from "@/contexts/display-settings-context";
 import { useYearPlan } from "@/data/budget-plans";
 import type { PlanCategoryMeta } from "@/data/budget-plans";
 import type { Database } from "@/db/client";
-import { formatAmount } from "@/domain/money";
+import { currencySymbol, formatAmount, minorUnitsFor, numberLocale } from "@/domain/money";
+import { decimalPadEntry, decimalPadSeed, numpadMode, numpadToNumber } from "@/domain/numpad";
 import { aboveTypical, editorMonths, overPlan } from "@/domain/year-plan";
 import type { EditorMonth, MonthKey } from "@/domain/year-plan";
+import { useKeyboardEvent } from "@/hooks/use-keyboard-height";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useHaptics } from "@/lib/use-haptics";
 import { CHART_BAR } from "@/theme/chart";
+import { useColors } from "@/theme/use-colors";
 
 import { EditorRow } from "../../components/editor-row";
 import { EditorSwitch } from "../../components/editor-switch";
@@ -114,6 +118,7 @@ function PlanEditorBody({
     const t = useTranslation();
     const { language } = useLanguage();
     const haptics = useHaptics();
+    const colors = useColors();
     const { currency, projection } = useYearPlan(db, nowMs, year);
     const money = (value: number) => formatAmount(value, currency, false, language);
     const { categoryId } = target;
@@ -125,17 +130,19 @@ function PlanEditorBody({
     const [touched, setTouched] = useState<MonthKey | null>(null);
     const [same, setSame] = useState(false);
     const [width, setWidth] = useState(0);
-    const [axisTop] = useState(() => Math.max(10, ...opened.map((month) => month.value * 1.25), (typical ?? 0) * 1.5));
+    const axisFor = (amounts: number[]) =>
+        Math.max(10, ...amounts.map((amount) => amount * 1.25), (typical ?? 0) * 1.5);
+    const [axisTop, setAxisTop] = useState(() => axisFor(opened.map((month) => month.value)));
+    const [typing, setTyping] = useState(false);
+    const [entry, setEntry] = useState("");
+    const minorUnits = minorUnitsFor(currency);
+    const entryMode = numpadMode(useSettingNumber("numberEntryType"));
+    const { decimal } = numberLocale(language);
     const step = planStep(axisTop);
     const editable = opened.filter((month) => !month.locked);
     const months: EditorMonth[] = opened.map((month) => ({ ...month, value: values.get(month.key) ?? month.value }));
 
-    const setMonth = (index: number, next: number) => {
-        const month = opened[index];
-        if (!month || month.locked) {
-            return;
-        }
-        haptics("selection");
+    const writeMonth = (month: EditorMonth, next: number) => {
         setTouched(month.key);
         setValues((current) => {
             const draft = new Map(current);
@@ -146,6 +153,50 @@ function PlanEditorBody({
         });
     };
 
+    const setMonth = (index: number, next: number) => {
+        const month = opened[index];
+        if (!month || month.locked) {
+            return;
+        }
+        haptics("selection");
+        writeMonth(month, next);
+    };
+
+    const startTyping = (month: EditorMonth) => {
+        setTouched(month.key);
+        setEntry(decimalPadSeed(values.get(month.key) ?? month.value, minorUnits, entryMode));
+        setTyping(true);
+    };
+
+    const pickTypedMonth = (index: number) => {
+        const month = opened[index];
+        if (month && !month.locked && month.key !== touched) {
+            haptics("selection");
+            startTyping(month);
+        }
+    };
+
+    const typeAmount = (text: string) => {
+        const month = editable.find((candidate) => candidate.key === touched);
+        if (!month) {
+            return;
+        }
+        const next = decimalPadEntry(text, minorUnits, entryMode);
+        setEntry(next);
+        writeMonth(month, numpadToNumber(next));
+    };
+
+    const stopTyping = () => {
+        setTyping(false);
+        setAxisTop(axisFor([...values.values()]));
+    };
+
+    useKeyboardEvent("keyboardDidHide", () => {
+        if (typing) {
+            stopTyping();
+        }
+    });
+
     const columnWidth = width > 0 ? (width - COLUMN_GAP * 11) / 12 : 0;
     const lastPicked = useSharedValue(-1);
     const lastValue = useSharedValue(-1);
@@ -155,6 +206,13 @@ function PlanEditorBody({
             return;
         }
         const index = Math.min(11, Math.max(0, Math.floor(eventX / (columnWidth + COLUMN_GAP))));
+        if (typing) {
+            if (index !== lastPicked.get()) {
+                lastPicked.set(index);
+                scheduleOnRN(pickTypedMonth, index);
+            }
+            return;
+        }
         const raw = ((PLOT - eventY) / PLOT) * axisTop;
         const next = Math.min(Math.floor(axisTop / step) * step, Math.max(0, Math.round(raw / step) * step));
         // One crossing per change of month or snapped step, not per frame.
@@ -253,9 +311,55 @@ function PlanEditorBody({
                     textClassName={STATED}
                 />
                 <View className="flex-row items-baseline justify-between pt-3">
-                    <HeroNumber amount={total} code={currency} showCents={false} sign="" size={40} still />
-                    {typical === null ? null : (
-                        <MonoLabel>{t("budgets.plan.editor.typical", { amount: money(typical) })}</MonoLabel>
+                    {typing ? (
+                        <>
+                            <View className="flex-1 flex-row items-baseline">
+                                <Text className="text-muted text-[20px]">{currencySymbol(currency)}</Text>
+                                <BottomSheetTextInput
+                                    accessibilityLabel={t("budgets.plan.editor.amountA11y", {
+                                        month: touched === null ? "" : monthName(touched, language),
+                                    })}
+                                    autoFocus
+                                    keyboardType={entryMode === "preDotted" ? "number-pad" : "decimal-pad"}
+                                    onBlur={stopTyping}
+                                    onChangeText={typeAmount}
+                                    placeholder="0"
+                                    placeholderTextColor={colors.muted}
+                                    selectionColor={colors.tint}
+                                    style={{ color: colors.foreground, flex: 1, fontSize: 40, padding: 0 }}
+                                    value={entry.replaceAll(".", decimal)}
+                                />
+                            </View>
+                            <View className="flex-row items-baseline gap-3">
+                                <MonoLabel>
+                                    {touched === null ? "" : monthName(touched, language).toUpperCase()}
+                                </MonoLabel>
+                                <Pressable accessibilityRole="button" hitSlop={12} onPress={Keyboard.dismiss}>
+                                    <Text className="text-subtitle text-tint">{t("common.done")}</Text>
+                                </Pressable>
+                            </View>
+                        </>
+                    ) : (
+                        <>
+                            <Pressable
+                                accessibilityLabel={t("budgets.plan.editor.typeA11y")}
+                                accessibilityRole="button"
+                                disabled={copySource === null}
+                                onPress={() => {
+                                    const month = editable.find((candidate) => candidate.key === copySource);
+                                    if (month) {
+                                        startTyping(month);
+                                    }
+                                }}
+                            >
+                                <HeroNumber amount={total} code={currency} showCents={false} sign="" size={40} still />
+                            </Pressable>
+                            <MonoLabel>
+                                {typical === null
+                                    ? t("budgets.sheet.tapToType").toUpperCase()
+                                    : t("budgets.plan.editor.typical", { amount: money(typical) })}
+                            </MonoLabel>
+                        </>
                     )}
                 </View>
             </View>
@@ -276,6 +380,7 @@ function PlanEditorBody({
                                 return (
                                     <View className="items-center" key={month.key} style={{ width: columnWidth }}>
                                         <Text
+                                            adjustsFontSizeToFit
                                             className={cn(
                                                 "font-mono text-[9px] tabular-nums",
                                                 picked ? "text-tint" : "text-muted"
@@ -307,8 +412,8 @@ function PlanEditorBody({
                         </View>
                     ))}
                 </View>
-                <View className="flex-row items-baseline justify-between pt-2.5">
-                    <MonoLabel>{t("budgets.plan.editor.drag")}</MonoLabel>
+                <View className="gap-0.5 pt-2.5">
+                    {typing ? null : <MonoLabel>{t("budgets.plan.editor.drag")}</MonoLabel>}
                     {closedLabel ? (
                         <MonoLabel>{t("budgets.plan.editor.spent", { months: closedLabel })}</MonoLabel>
                     ) : null}
@@ -320,54 +425,56 @@ function PlanEditorBody({
                 ))}
             </View>
 
-            <View className="px-5 pt-4">
-                {copySource !== null && copyTargets.length > 0 ? (
-                    <EditorRow
-                        label={t("budgets.plan.editor.copyForward", { month: monthName(copySource, language) })}
-                        onPress={() => {
-                            const value = values.get(copySource) ?? 0;
-                            haptics("light");
-                            setValues((current) => {
-                                const draft = new Map(current);
-                                for (const month of copyTargets) {
-                                    draft.set(month.key, value);
-                                }
-                                return draft;
-                            });
-                        }}
-                        value={monthRange(
-                            copyTargets[0].key,
-                            copyTargets.at(-1)?.key ?? copyTargets[0].key,
-                            language,
-                            t
-                        )}
-                    />
-                ) : null}
-                <View className="border-border border-b py-3.5">
-                    <View className="flex-row items-center gap-3">
-                        <Text className="text-body text-foreground flex-1">
-                            {t("budgets.plan.editor.sameEveryMonth")}
-                        </Text>
-                        <EditorSwitch
-                            accessibilityLabel={t("budgets.plan.editor.sameEveryMonth")}
-                            onValueChange={(next) => {
-                                setSame(next);
-                                const source = copySource === null ? null : (values.get(copySource) ?? null);
-                                if (next && source !== null) {
-                                    setValues((current) => {
-                                        const draft = new Map(current);
-                                        for (const month of editable) {
-                                            draft.set(month.key, source);
-                                        }
-                                        return draft;
-                                    });
-                                }
+            {typing ? null : (
+                <View className="px-5 pt-4">
+                    {copySource !== null && copyTargets.length > 0 ? (
+                        <EditorRow
+                            label={t("budgets.plan.editor.copyForward", { month: monthName(copySource, language) })}
+                            onPress={() => {
+                                const value = values.get(copySource) ?? 0;
+                                haptics("light");
+                                setValues((current) => {
+                                    const draft = new Map(current);
+                                    for (const month of copyTargets) {
+                                        draft.set(month.key, value);
+                                    }
+                                    return draft;
+                                });
                             }}
-                            value={same}
+                            value={monthRange(
+                                copyTargets[0].key,
+                                copyTargets.at(-1)?.key ?? copyTargets[0].key,
+                                language,
+                                t
+                            )}
                         />
+                    ) : null}
+                    <View className="border-border border-b py-3.5">
+                        <View className="flex-row items-center gap-3">
+                            <Text className="text-body text-foreground flex-1">
+                                {t("budgets.plan.editor.sameEveryMonth")}
+                            </Text>
+                            <EditorSwitch
+                                accessibilityLabel={t("budgets.plan.editor.sameEveryMonth")}
+                                onValueChange={(next) => {
+                                    setSame(next);
+                                    const source = copySource === null ? null : (values.get(copySource) ?? null);
+                                    if (next && source !== null) {
+                                        setValues((current) => {
+                                            const draft = new Map(current);
+                                            for (const month of editable) {
+                                                draft.set(month.key, source);
+                                            }
+                                            return draft;
+                                        });
+                                    }
+                                }}
+                                value={same}
+                            />
+                        </View>
                     </View>
                 </View>
-            </View>
+            )}
 
             <View className="px-5 pt-5">
                 <SheetCommitButton label={t("budgets.plan.editor.save", { year })} onPress={commit} />

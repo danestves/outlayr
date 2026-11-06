@@ -95,3 +95,26 @@ export function numberToNumpad(amount: number, minorUnits: number): string {
 export function wholeUnitsToNumpad(amount: number): string {
     return numberToNumpad(Math.round(amount), 0);
 }
+
+const NOT_AMOUNT_CHARACTER = /[^\d.]/g;
+const NOT_DIGIT = /\D/g;
+
+export function decimalPadEntry(text: string, minorUnits: number, mode: NumpadMode): string {
+    if (mode === "preDotted") {
+        const digits = text.replaceAll(NOT_DIGIT, "").replace(LEADING_ZEROS, "");
+        return fromMinorDigits(digits.slice(0, MAX_INTEGER_DIGITS + minorUnits), minorUnits);
+    }
+    const [typedInteger = "", ...fractions] = text.replaceAll(",", ".").replaceAll(NOT_AMOUNT_CHARACTER, "").split(".");
+    const integer = typedInteger.replace(LEADING_ZEROS, "").slice(0, MAX_INTEGER_DIGITS);
+    if (fractions.length === 0 || minorUnits === 0) {
+        return integer === "" && typedInteger !== "" ? "0" : integer;
+    }
+    return `${integer === "" ? "0" : integer}.${fractions.join("").slice(0, minorUnits)}`;
+}
+
+export function decimalPadSeed(amount: number, minorUnits: number, mode: NumpadMode): string {
+    if (mode === "preDotted" && amount > 0) {
+        return amount.toFixed(minorUnits);
+    }
+    return numberToNumpad(amount, minorUnits);
+}
