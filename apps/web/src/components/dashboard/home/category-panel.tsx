@@ -147,11 +147,7 @@ function Shares({ detail, selected }: Selection) {
                         const image = imageKeys.get(merchantKey(merchant.name));
                         return (
                             <li className="flex items-center gap-2 py-2 text-sm" key={merchant.name}>
-                                <MerchantTile
-                                    imageUrl={image ? photos?.get(image) : undefined}
-                                    name={merchant.name}
-                                    size="md"
-                                />
+                                <MerchantTile imageUrl={image ? photos?.get(image) : undefined} name={merchant.name} />
                                 <span className="min-w-0 flex-1 truncate font-medium">{merchant.name}</span>
                                 <span className="font-mono text-xs tabular-nums">
                                     {money(merchant.amount, ledger.currency)}
