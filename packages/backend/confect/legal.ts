@@ -246,6 +246,36 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 6),
     },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "With Pro, a statement you choose goes to our server, and its text to our AI provider with long numbers masked. The file is then deleted. If you already allowed AI features, there's nothing to do and we won't ask again.",
+                    label: "Reading PDF bank statements",
+                },
+            ],
+            es: [
+                {
+                    detail: "Con Pro, el estado de cuenta que elijas va a nuestro servidor, y su texto a nuestro proveedor de IA con los números largos ocultos. Luego se borra el archivo. Si ya permitiste las funciones de IA, no tienes que hacer nada y no te lo volveremos a preguntar.",
+                    label: "Lectura de estados de cuenta en PDF",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Avec Pro, le relevé que vous choisissez va sur notre serveur, et son texte à notre fournisseur d'IA avec les longs numéros masqués. Le fichier est ensuite supprimé. Si vous avez déjà autorisé les fonctions d'IA, vous n'avez rien à faire et nous ne vous le redemanderons pas.",
+                    label: "Lecture des relevés bancaires PDF",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Com o Pro, o extrato que você escolher vai para o nosso servidor, e o texto dele para o nosso provedor de IA com os números longos ocultos. Depois o arquivo é apagado. Se você já permitiu os recursos de IA, não precisa fazer nada e não perguntaremos de novo.",
+                    label: "Leitura de extratos bancários em PDF",
+                },
+            ],
+        },
+        document: "privacy",
+        effectiveAtMs: Date.UTC(2026, 10, 9),
+    },
 ];
 
 export const noticeKey = ({ document, effectiveAtMs }: typeof PolicyNotice.Type) => `${document}:${effectiveAtMs}`;

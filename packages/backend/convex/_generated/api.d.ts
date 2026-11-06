@@ -35,7 +35,6 @@ import type * as notion from "../notion.js";
 import type * as openStats from "../openStats.js";
 import type * as openexchangerates from "../openexchangerates.js";
 import type * as pdfImport from "../pdfImport.js";
-import type * as pdfSpike from "../pdfSpike.js";
 import type * as photos from "../photos.js";
 import type * as receiptScan from "../receiptScan.js";
 import type * as referrals from "../referrals.js";
@@ -77,7 +76,6 @@ declare const fullApi: ApiFromModules<{
   openStats: typeof openStats;
   openexchangerates: typeof openexchangerates;
   pdfImport: typeof pdfImport;
-  pdfSpike: typeof pdfSpike;
   photos: typeof photos;
   receiptScan: typeof receiptScan;
   referrals: typeof referrals;
