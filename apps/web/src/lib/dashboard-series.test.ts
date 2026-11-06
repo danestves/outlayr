@@ -5,7 +5,7 @@ import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
-import { categoryBudget, categoryDetail, kpis, spendSeries, stackOrder } from "./dashboard-series";
+import { categoryBudget, categoryBudgets, categoryDetail, kpis, spendSeries, stackOrder } from "./dashboard-series";
 import { cashFlow, categorySpend, dailySpend, monthlyByCategory, netWorthHistory } from "./dashboard-series-insights";
 import { endOfDay, prepareLedger } from "./dashboard-series-ledger";
 import type { Ledger } from "./dashboard-series-ledger";
@@ -271,6 +271,34 @@ describe("what counts", () => {
         });
 
         expect(kpis(prepareLedger(eur, NOW), oct, ALL).spent.value).toBe(90);
+    });
+});
+
+describe("budgets on any category", () => {
+    const ledger = prepareLedger(
+        books({
+            budgets: [budget("costco", 50), budget("rent", 2000)],
+            transactions: [entry("a", "2026-10-03T16:00:00Z", 80, { categoryId: "costco" })],
+        }),
+        NOW
+    );
+
+    it("reads a subcategory's budget from its own spending and a budget with no spending", () => {
+        const standings = categoryBudgets(ledger, oct);
+
+        expect(standings.get("costco")).toMatchObject({ overBudget: true, spent: 80 });
+        expect(standings.get("rent")).toMatchObject({ overBudget: false, spent: 0 });
+    });
+
+    it("lets the dashboard name and open each one, a subcategory under its parent", () => {
+        expect(ledger.budgetTargets.get("costco")).toStrictEqual({
+            color: "#4f9d69",
+            id: "costco",
+            name: "Costco",
+            topId: "groceries",
+        });
+        expect(ledger.budgetTargets.get("rent")?.topId).toBe("rent");
+        expect(ledger.categories.has("rent")).toBe(true);
     });
 });
 

@@ -8,7 +8,7 @@ import type { TileLook } from "@/components/ledger/tiles";
 import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 
-export function catalogOf(ledger: Pick<Ledger, "books" | "categories">) {
+export function catalogOf(ledger: Pick<Ledger, "books" | "budgetTargets" | "categories">) {
     const categories = new Map(ledger.books.categories.map((row) => [row.localId, row]));
     const accounts = new Map(ledger.books.accounts.map((row) => [row.localId, row]));
     const transactions = new Map(ledger.books.transactions.map((row) => [row.localId, row]));
@@ -20,7 +20,7 @@ export function catalogOf(ledger: Pick<Ledger, "books" | "categories">) {
         category: (id: string): TileLook => {
             const row = categories.get(id);
             return {
-                color: ledger.categories.get(id)?.color ?? NEUTRAL_COLOR,
+                color: (ledger.budgetTargets.get(id) ?? ledger.categories.get(id))?.color ?? NEUTRAL_COLOR,
                 emoji: row?.emoji ?? null,
                 icon: row?.icon ?? null,
             };
@@ -31,7 +31,7 @@ export function catalogOf(ledger: Pick<Ledger, "books" | "categories">) {
 
 export type Catalog = ReturnType<typeof catalogOf>;
 
-export function useCatalog(ledger: Pick<Ledger, "books" | "categories">) {
+export function useCatalog(ledger: Pick<Ledger, "books" | "budgetTargets" | "categories">) {
     return useMemo(() => catalogOf(ledger), [ledger]);
 }
 

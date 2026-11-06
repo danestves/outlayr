@@ -91,7 +91,7 @@ export type Standout =
 function biggestPurchase(ledger: Ledger, scope: Scope, budget: CategoryBudget, categoryId: string) {
     const to = earlier(budget.to, ledger.today);
     return rowsBetween(ledger, scope, budget.from, to, false)
-        .filter((row) => row.topId === categoryId)
+        .filter((row) => row.categoryId === categoryId || row.parentId === categoryId)
         .reduce<BiggestPurchase | null>(
             (top, row) =>
                 top === null || row.amount > top.amount
@@ -109,7 +109,7 @@ export function standouts(
     usual: Usual | null
 ): Standout[] {
     const cards: Standout[] = [...budgets]
-        .filter(([id, budget]) => ledger.categories.has(id) && budget.overBudget && budget.remaining < 0)
+        .filter(([id, budget]) => ledger.budgetTargets.has(id) && budget.overBudget && budget.remaining < 0)
         .map(([categoryId, budget]) => ({
             biggest: biggestPurchase(ledger, scope, budget, categoryId),
             budget,

@@ -28,7 +28,7 @@ function Budgets() {
         const standings = categoryBudgets(ledger, period);
         const spent = spendSeries(ledger, period, { accounts: filters.accounts, category: null }).categories;
         const budgeted = [...standings].flatMap(([id, standing]) => {
-            const category = ledger.categories.get(id);
+            const category = ledger.budgetTargets.get(id);
             return category ? [{ category, standing }] : [];
         });
         const unbudgeted = spent.filter((each) => !standings.has(each.id) && each.total > 0);
@@ -51,11 +51,11 @@ function Budgets() {
             title={copy.budgets}
         >
             <ul>
-                {rows.budgeted.slice(0, BUDGET_ROWS).map(({ category, standing }) => (
+                {rows.budgeted.map(({ category, standing }) => (
                     <li key={category.id}>
                         <button
                             className="block w-full cursor-pointer py-2 text-left"
-                            onClick={() => setFilters({ category: category.id })}
+                            onClick={() => setFilters({ category: category.topId })}
                             type="button"
                         >
                             <span className="flex items-center gap-2 text-[13px]">

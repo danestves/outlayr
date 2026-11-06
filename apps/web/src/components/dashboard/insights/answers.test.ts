@@ -1,8 +1,10 @@
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import type { Doc, TableNames } from "@outlayr/backend/convex/_generated/dataModel";
+import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
+import { categoryBudgets } from "../../../lib/dashboard-series";
 import type { CategoryBudget } from "../../../lib/dashboard-series";
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
 import { periodOf } from "../../../lib/dashboard-series-period";
@@ -20,7 +22,7 @@ const envelope = (localId: string) => {
     return { deletedAt: null, deviceId: "device", localId, seq: sequence, updatedAt: 0, userId: "owner" };
 };
 
-const category = (localId: string, name: string, color: string) =>
+const category = (localId: string, name: string, color: string | null, parentId: string | null = null) =>
     docOf<"categories">({
         ...envelope(localId),
         color,
@@ -29,8 +31,23 @@ const category = (localId: string, name: string, color: string) =>
         icon: null,
         income: false,
         name,
-        parentId: null,
+        parentId,
         sortOrder: 0,
+    });
+
+const budget = (categoryId: string, limit: number) =>
+    docOf<"budgets">({
+        ...envelope(`budget-${categoryId}`),
+        amount: limit,
+        amountUsd: limit,
+        categoryId,
+        currency: "USD",
+        dateCreated: 0,
+        green: false,
+        name: null,
+        rollover: false,
+        startDate: at("2026-10-01T04:00:00Z"),
+        type: BUDGET_TYPE.month,
     });
 
 const entry = (localId: string, iso: string, amount: number, categoryId: string) =>
@@ -60,7 +77,7 @@ const entry = (localId: string, iso: string, amount: number, categoryId: string)
         recurringType: RECURRING_TYPE.none,
     });
 
-const booksWith = (transactions: LedgerBooks["transactions"]): LedgerBooks => ({
+const booksWith = (transactions: LedgerBooks["transactions"], fields: Partial<LedgerBooks> = {}): LedgerBooks => ({
     accounts: [],
     appMeta: [{ key: "timeZone", value: "UTC" }],
     budgets: [],
@@ -72,6 +89,7 @@ const booksWith = (transactions: LedgerBooks["transactions"]): LedgerBooks => ({
     outsidePayments: [],
     transactions,
     transfers: [],
+    ...fields,
 });
 
 const history = [
@@ -113,7 +131,7 @@ describe("usualSpend", () => {
 });
 
 describe("standouts", () => {
-    const ledger = prepareLedger(booksWith(history), NOW);
+    const ledger = prepareLedger(booksWith(history, { budgets: [budget("food", 400)] }), NOW);
     const usual = usualSpend(ledger, october, ALL);
 
     it("flags a category far from its usual when it has no budget", () => {
@@ -126,6 +144,41 @@ describe("standouts", () => {
         const cards = standouts(ledger, october, ALL, new Map([["food", blown]]), usual);
         expect(cards).toHaveLength(1);
         expect(cards[0]).toMatchObject({ categoryId: "food", impact: 100, kind: "overBudget" });
+    });
+});
+
+describe("a budget on a subcategory", () => {
+    const withSnacks = prepareLedger(
+        booksWith(
+            [
+                entry("snack-1", "2026-10-09T12:00:00Z", 40, "snacks"),
+                entry("snack-2", "2026-10-12T12:00:00Z", 30, "snacks"),
+                entry("food", "2026-10-08T12:00:00Z", 500, "food"),
+            ],
+            {
+                budgets: [budget("snacks", 50)],
+                categories: [category("food", "Groceries", "#4f9d69"), category("snacks", "Snacks", null, "food")],
+            }
+        ),
+        NOW
+    );
+
+    it("stands out under its own name, with its own biggest purchase, and opens its parent", () => {
+        const budgets = categoryBudgets(withSnacks, october);
+        const [card] = standouts(withSnacks, october, ALL, budgets, null);
+
+        expect(card).toMatchObject({
+            biggest: { amount: 40, day: "2026-10-09" },
+            categoryId: "snacks",
+            impact: 20,
+            kind: "overBudget",
+        });
+        expect(withSnacks.budgetTargets.get("snacks")).toStrictEqual({
+            color: "#4f9d69",
+            id: "snacks",
+            name: "Snacks",
+            topId: "food",
+        });
     });
 });
 

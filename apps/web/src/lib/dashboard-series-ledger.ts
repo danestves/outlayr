@@ -29,6 +29,10 @@ export interface LedgerCategory {
     name: string;
 }
 
+export interface BudgetTarget extends LedgerCategory {
+    topId: string;
+}
+
 export interface Expense extends ExpenseContribution {
     day: string;
 }
@@ -36,6 +40,7 @@ export interface Expense extends ExpenseContribution {
 export interface Ledger {
     accounts: ReadonlyMap<string, { currency: string; name: string }>;
     books: LedgerBooks;
+    budgetTargets: ReadonlyMap<string, BudgetTarget>;
     categories: ReadonlyMap<string, LedgerCategory>;
     currency: string;
     expensesByCategory: ReadonlyMap<string, readonly Expense[]>;
@@ -91,6 +96,29 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
             topId: top?.localId ?? UNCATEGORIZED_ID,
         };
     });
+    const budgetTargets = new Map<string, BudgetTarget>();
+    for (const budget of books.budgets) {
+        const row = budget.deletedAt === null && budget.categoryId !== null ? filed.get(budget.categoryId) : undefined;
+        if (!row) {
+            continue;
+        }
+        const parent = row.parentId === null ? undefined : filed.get(row.parentId);
+        const top = parent ?? row;
+        const topCategory = {
+            color: top.color ?? NEUTRAL_COLOR,
+            id: top.localId,
+            name: top.name ?? UNCATEGORIZED_NAME,
+        };
+        if (!categories.has(top.localId)) {
+            categories.set(top.localId, topCategory);
+        }
+        budgetTargets.set(row.localId, {
+            color: row.color ?? topCategory.color,
+            id: row.localId,
+            name: row.name ?? UNCATEGORIZED_NAME,
+            topId: top.localId,
+        });
+    }
     const expensesByCategory = new Map<string, Expense[]>();
     for (const row of rows) {
         if (row.income) {
@@ -117,6 +145,7 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
     return {
         accounts: new Map(books.accounts.map((row) => [row.localId, { currency: row.currency, name: row.name }])),
         books,
+        budgetTargets,
         categories,
         currency,
         expensesByCategory,
