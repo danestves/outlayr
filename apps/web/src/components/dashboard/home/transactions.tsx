@@ -9,7 +9,7 @@ import { useMemo, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { LookTile, MerchantTile } from "@/components/ledger/tiles";
+import { AccountTile, LookTile, MerchantTile } from "@/components/ledger/tiles";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +23,7 @@ const SORTS = ["newest", "oldest", "largest"] as const satisfies readonly Transa
 const CELL = "text-muted-foreground";
 
 export function Transactions() {
-    const { filters, ledger } = useDashboard();
+    const { filters, ledger, photos: accountPhotos } = useDashboard();
     const { category, period } = filters;
     const copy = useIntlayer("dashboard-home");
     const categoryName = useCategoryName();
@@ -41,7 +41,7 @@ export function Transactions() {
         () => [
             ...new Set(
                 view.rows.flatMap((row) => {
-                    const key = catalog.transaction(row.id)?.imageKey;
+                    const key = "fromId" in row ? null : catalog.transaction(row.id)?.imageKey;
                     return key ? [key] : [];
                 })
             ),
@@ -102,6 +102,33 @@ export function Transactions() {
                     </Table.Header>
                     <Table.Body>
                         {view.rows.map((row) => {
+                            const when = (
+                                <Table.Cell className={cn(CELL, "whitespace-nowrap")}>
+                                    {date.weekday(row.day)} · {clockTime(timeOfDay(row.at, ledger.offsetAt(row.at)))}
+                                </Table.Cell>
+                            );
+                            if ("fromId" in row) {
+                                const from = catalog.account(row.fromId);
+                                const names = [row.fromId, row.toId].map((id) => ledger.accounts.get(id)?.name ?? "");
+                                return (
+                                    <Table.Row key={row.id}>
+                                        <Table.Cell>
+                                            <span className="flex items-center gap-2 font-medium">
+                                                {from ? (
+                                                    <AccountTile account={from} photos={accountPhotos} size="sm" />
+                                                ) : null}
+                                                <span className="truncate">{names.join(" → ")}</span>
+                                            </span>
+                                        </Table.Cell>
+                                        <Table.Cell className={CELL}>{copy.transactions.transfer}</Table.Cell>
+                                        <Table.Cell className="hidden md:table-cell" />
+                                        {when}
+                                        <Table.Cell align="end" className={cn(CELL, "font-mono whitespace-nowrap")}>
+                                            {money(row.amount, ledger.currency)}
+                                        </Table.Cell>
+                                    </Table.Row>
+                                );
+                            }
                             const book = catalog.transaction(row.id);
                             const top = ledger.categories.get(row.topId);
                             const merchant = row.note.trim() || (top ? categoryName(top) : "");
@@ -128,10 +155,7 @@ export function Transactions() {
                                     <Table.Cell className={cn(CELL, "hidden md:table-cell")}>
                                         {row.accountId ? (ledger.accounts.get(row.accountId)?.name ?? "") : ""}
                                     </Table.Cell>
-                                    <Table.Cell className={cn(CELL, "whitespace-nowrap")}>
-                                        {date.weekday(row.day)} ·{" "}
-                                        {clockTime(timeOfDay(row.at, ledger.offsetAt(row.at)))}
-                                    </Table.Cell>
+                                    {when}
                                     {selected ? (
                                         <Table.Cell className={cn(CELL, "hidden max-w-48 truncate lg:table-cell")}>
                                             {book?.details ?? ""}

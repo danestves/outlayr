@@ -2,6 +2,7 @@ import FALLBACK_ICON from "@hugeicons/core-free-icons/MoreHorizontalCircle01Icon
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { useLocale } from "react-intlayer";
 
@@ -38,8 +39,16 @@ interface TileProps {
 }
 
 function Tile({ children, color, imageUrl, ink, size }: TileProps) {
-    if (imageUrl) {
-        return <img alt="" className={cn(SIZES[size].box, "shrink-0 bg-white object-cover")} src={imageUrl} />;
+    const [failedUrl, setFailedUrl] = useState<string>();
+    if (imageUrl && imageUrl !== failedUrl) {
+        return (
+            <img
+                alt=""
+                className={cn(SIZES[size].box, "shrink-0 bg-white object-cover")}
+                onError={() => setFailedUrl(imageUrl)}
+                src={imageUrl}
+            />
+        );
     }
     return (
         <span

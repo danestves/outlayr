@@ -21,8 +21,28 @@ const period = { days: 31, from: "2026-10-01", key: "2026-10", to: "2026-10-31" 
 const view = { accounts: [], category: null, period };
 
 describe("viewRows", () => {
+    it("lists a transfer on either account, in amount order, and leaves it out of a category", () => {
+        const transfer = {
+            amount: 500,
+            at: Date.parse("2026-10-06T15:00:00Z"),
+            day: "2026-10-06",
+            fromId: "chase",
+            id: "move",
+            toId: "savings",
+        };
+        const ledger = { rows: [row("a", "2026-10-02")], transfers: [transfer] };
+        const ids = (accounts: string[], category: string | null) =>
+            viewRows(ledger, { ...view, accounts, category }, "largest").map((each) => each.id);
+
+        expect(ids([], null)).toStrictEqual(["move", "a"]);
+        expect(ids(["savings"], null)).toStrictEqual(["move"]);
+        expect(ids(["amex"], null)).toStrictEqual([]);
+        expect(ids([], "groceries")).toStrictEqual(["a"]);
+    });
+
     it("keeps whole days of the period and drops the neighbouring months", () => {
         const ledger = {
+            transfers: [],
             rows: [
                 row("before", "2026-09-30"),
                 row("first", "2026-10-01"),
@@ -36,6 +56,7 @@ describe("viewRows", () => {
 
     it("filters by account and by the top category a sub-category rolls into", () => {
         const ledger = {
+            transfers: [],
             rows: [
                 row("a", "2026-10-02"),
                 row("b", "2026-10-03", { accountId: "amex" }),
@@ -50,7 +71,10 @@ describe("viewRows", () => {
     });
 
     it("orders by size when asked and puts the newest first otherwise", () => {
-        const ledger = { rows: [row("small", "2026-10-02", { amount: 5 }), row("big", "2026-10-01", { amount: 90 })] };
+        const ledger = {
+            transfers: [],
+            rows: [row("small", "2026-10-02", { amount: 5 }), row("big", "2026-10-01", { amount: 90 })],
+        };
 
         expect(viewRows(ledger, view, "largest").map((each) => each.id)).toStrictEqual(["big", "small"]);
         expect(viewRows(ledger, view, "newest").map((each) => each.id)).toStrictEqual(["small", "big"]);

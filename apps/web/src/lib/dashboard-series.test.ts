@@ -378,6 +378,22 @@ describe("deleted categories", () => {
             ["Rent", 30],
         ]);
     });
+
+    it("opens a budget on a subcategory of a deleted parent where its entries are", () => {
+        const ledger = prepareLedger(
+            books({
+                budgets: [budget("costco", 50)],
+                categories: [
+                    { ...category("groceries", { color: "#4f9d69", name: "Groceries" }), deletedAt: 1 },
+                    category("costco", { color: null, name: "Costco", parentId: "groceries" }),
+                ],
+                transactions: [entry("a", "2026-10-03T16:00:00Z", 100, { categoryId: "costco" })],
+            }),
+            NOW
+        );
+
+        expect(ledger.budgetTargets.get("costco")?.topId).toBe(ledger.rows[0]?.topId);
+    });
 });
 
 describe("days and months", () => {

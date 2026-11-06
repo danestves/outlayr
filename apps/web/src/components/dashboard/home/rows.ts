@@ -1,5 +1,5 @@
 import { inScope } from "../../../lib/dashboard-series-ledger";
-import type { Ledger, LedgerRow } from "../../../lib/dashboard-series-ledger";
+import type { Ledger, LedgerRow, LedgerTransfer } from "../../../lib/dashboard-series-ledger";
 import type { Period } from "../../../lib/dashboard-series-period";
 
 export const PAGE_SIZE = 10;
@@ -12,23 +12,28 @@ export interface RowsView {
     period: Period;
 }
 
-const COMPARERS = {
-    largest: (a: LedgerRow, b: LedgerRow) => b.amount - a.amount || b.at - a.at,
-    newest: (a: LedgerRow, b: LedgerRow) => b.at - a.at || a.id.localeCompare(b.id),
-    oldest: (a: LedgerRow, b: LedgerRow) => a.at - b.at || a.id.localeCompare(b.id),
-} satisfies Record<TransactionSort, (a: LedgerRow, b: LedgerRow) => number>;
+export type TableRow = LedgerRow | LedgerTransfer;
 
-export function viewRows(ledger: Pick<Ledger, "rows">, view: RowsView, sort: TransactionSort) {
+const COMPARERS = {
+    largest: (a: TableRow, b: TableRow) => b.amount - a.amount || b.at - a.at,
+    newest: (a: TableRow, b: TableRow) => b.at - a.at || a.id.localeCompare(b.id),
+    oldest: (a: TableRow, b: TableRow) => a.at - b.at || a.id.localeCompare(b.id),
+} satisfies Record<TransactionSort, (a: TableRow, b: TableRow) => number>;
+
+export function viewRows(ledger: Pick<Ledger, "rows" | "transfers">, view: RowsView, sort: TransactionSort) {
     const wanted = inScope(view);
-    return ledger.rows
-        .filter(
-            (row) =>
-                row.day >= view.period.from &&
-                row.day <= view.period.to &&
-                wanted(row) &&
-                (view.category === null || row.topId === view.category)
-        )
-        .toSorted(COMPARERS[sort]);
+    const chosen = new Set(view.accounts);
+    const inPeriod = ({ day }: { day: string }) => day >= view.period.from && day <= view.period.to;
+    const entries = ledger.rows.filter(
+        (row) => inPeriod(row) && wanted(row) && (view.category === null || row.topId === view.category)
+    );
+    const transfers =
+        view.category === null
+            ? ledger.transfers.filter(
+                  (row) => inPeriod(row) && (chosen.size === 0 || chosen.has(row.fromId) || chosen.has(row.toId))
+              )
+            : [];
+    return [...entries, ...transfers].toSorted(COMPARERS[sort]);
 }
 
 export function pageOf<Row>(rows: readonly Row[], page: number, size = PAGE_SIZE) {

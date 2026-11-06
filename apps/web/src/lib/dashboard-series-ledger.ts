@@ -23,6 +23,15 @@ export interface LedgerRow {
     topId: string;
 }
 
+export interface LedgerTransfer {
+    amount: number;
+    at: number;
+    day: string;
+    fromId: string;
+    id: string;
+    toId: string;
+}
+
 export interface LedgerCategory {
     color: string;
     id: string;
@@ -50,6 +59,7 @@ export interface Ledger {
     rates: ReturnType<typeof rateTableOf>;
     rows: readonly LedgerRow[];
     today: string;
+    transfers: readonly LedgerTransfer[];
 }
 
 export const startOfDay = (ledger: Pick<Ledger, "offsetAt">, day: string) =>
@@ -96,6 +106,25 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
             topId: top?.localId ?? UNCATEGORIZED_ID,
         };
     });
+    const moved = books.transfers.filter((row) => row.deletedAt === null && row.date <= now).toSorted(bySeq);
+    const movedValues = valueDatedRowsIn(
+        moved.map((row) => ({
+            amount: row.fromAmount,
+            amountUsd: row.fromAmountUsd,
+            currency: row.fromCurrency,
+            date: new Date(row.date),
+        })),
+        currency,
+        rates
+    );
+    const transfers = moved.map((row, index): LedgerTransfer => ({
+        amount: movedValues[index] ?? 0,
+        at: row.date,
+        day: localDate(row.date, offsetAt(row.date)),
+        fromId: row.fromAccountId,
+        id: row.localId,
+        toId: row.toAccountId,
+    }));
     const budgetTargets = new Map<string, BudgetTarget>();
     for (const budget of books.budgets) {
         const row = budget.deletedAt === null && budget.categoryId !== null ? filed.get(budget.categoryId) : undefined;
@@ -109,14 +138,15 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
             id: top.localId,
             name: top.name ?? UNCATEGORIZED_NAME,
         };
-        if (!categories.has(top.localId)) {
+        const orphaned = row.parentId !== null && !parent;
+        if (!orphaned && !categories.has(top.localId)) {
             categories.set(top.localId, topCategory);
         }
         budgetTargets.set(row.localId, {
             color: row.color ?? topCategory.color,
             id: row.localId,
             name: row.name ?? UNCATEGORIZED_NAME,
-            topId: top.localId,
+            topId: orphaned ? UNCATEGORIZED_ID : top.localId,
         });
     }
     const expensesByCategory = new Map<string, Expense[]>();
@@ -155,6 +185,7 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
         rates,
         rows,
         today: localDate(now, offsetAt(now)),
+        transfers,
     };
 }
 

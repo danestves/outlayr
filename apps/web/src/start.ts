@@ -7,13 +7,11 @@ const SERVER_FN_PREFIX = "/_serverFn/";
 
 const canonicalUrl = createMiddleware().server(({ next, request }) => {
     const url = new URL(request.url);
-    if (url.pathname.startsWith(SERVER_FN_PREFIX)) {
-        return next();
-    }
     const host = request.headers.get("host") ?? url.host;
     const insecure = request.headers.get("cf-visitor")?.includes('"scheme":"http"') ?? false;
     const lower = url.pathname.toLowerCase().replace(TRAILING_SLASH, "$1");
-    const path = lower === "/policy" ? "/privacy" : lower;
+    const canonicalPath = lower === "/policy" ? "/privacy" : lower;
+    const path = url.pathname.startsWith(SERVER_FN_PREFIX) ? url.pathname : canonicalPath;
     if (!insecure && !WWW.test(host) && path === url.pathname) {
         return next();
     }

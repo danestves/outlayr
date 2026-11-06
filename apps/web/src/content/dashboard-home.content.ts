@@ -86,6 +86,7 @@ const dashboardHome = {
                 oldest: t({ en: "Oldest", es: "Más antiguos" }),
             },
             title: t({ en: "Transactions", es: "Movimientos" }),
+            transfer: t({ en: "Transfer", es: "Transferencia" }),
         },
         uncategorized: t({ en: "Uncategorized", es: "Sin categoría" }),
     },
