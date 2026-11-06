@@ -64,7 +64,7 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
         currency,
         rates
     );
-    const filed = new Map(books.categories.map((row) => [row.localId, row]));
+    const filed = new Map(books.categories.filter((row) => row.deletedAt === null).map((row) => [row.localId, row]));
     const categories = new Map<string, LedgerCategory>([
         [UNCATEGORIZED_ID, { color: NEUTRAL_COLOR, id: UNCATEGORIZED_ID, name: UNCATEGORIZED_NAME }],
     ]);

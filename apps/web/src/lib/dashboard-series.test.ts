@@ -274,6 +274,44 @@ describe("what counts", () => {
     });
 });
 
+describe("deleted categories", () => {
+    const filed = (deleted: string) =>
+        prepareLedger(
+            books({
+                categories: [
+                    category("groceries", { color: "#4f9d69", name: "Groceries" }),
+                    category("costco", { color: null, name: "Costco", parentId: "groceries" }),
+                    category("rent", { color: "#e2643f", name: "Rent" }),
+                ].map((row) => (row.localId === deleted ? { ...row, deletedAt: 1 } : row)),
+                transactions: [
+                    entry("a", "2026-10-03T16:00:00Z", 100, { categoryId: "costco" }),
+                    entry("b", "2026-10-04T16:00:00Z", 30, { categoryId: "rent" }),
+                ],
+            }),
+            NOW
+        );
+    const labels = (deleted: string) =>
+        categorySpend(filed(deleted), oct, ALL).map(({ label, value }) => [label, value]);
+
+    it("files a subcategory under its parent while the parent lives", () => {
+        expect(labels("none")).toStrictEqual([
+            ["Groceries", 100],
+            ["Rent", 30],
+        ]);
+    });
+
+    it("reads entries of a deleted category, and subcategories of a deleted parent, as uncategorized", () => {
+        expect(labels("rent")).toStrictEqual([
+            ["Groceries", 100],
+            ["Uncategorized", 30],
+        ]);
+        expect(labels("groceries")).toStrictEqual([
+            ["Uncategorized", 100],
+            ["Rent", 30],
+        ]);
+    });
+});
+
 describe("days and months", () => {
     const lateOctober = at("2026-11-02T15:00:00Z");
     const night = books({ transactions: [entry("late", "2026-11-01T02:00:00Z", 30)] });
