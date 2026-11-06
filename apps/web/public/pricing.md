@@ -16,7 +16,7 @@ Prices vary by country. Google Play and the App Store show your price before you
 | | Free | Pro |
 |---|---|---|
 | Voice, receipt, or payment plan captures | 20 every 30 days | 500 every 30 days |
-| Auto-logged expenses | 30 a month | Unlimited |
+| Auto-logged entries | 30 a month | Unlimited |
 | Accounts | 3 | Unlimited |
 | Installment apps | 2 | Unlimited |
 | People you lend to or borrow from | 3 | Unlimited |
