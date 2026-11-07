@@ -94,20 +94,20 @@ const OUTLAYR = {
 };
 
 const LABELS = {
-    availability: t({ en: "Available in", es: "Disponible en" }),
-    budgets: t({ en: "Budgets", es: "Presupuestos" }),
-    canada: t({ en: "In Canada", es: "En Canadá" }),
-    currencies: t({ en: "Currencies", es: "Monedas" }),
-    entries: t({ en: "Adding entries", es: "Cómo registras" }),
-    focus: t({ en: "Tracks", es: "Sigue" }),
-    free: t({ en: "Free plan", es: "Plan gratis" }),
-    license: t({ en: "License", es: "Licencia" }),
-    phone: t({ en: "On a phone", es: "En el celular" }),
-    platforms: t({ en: "Runs on", es: "Funciona en" }),
-    price: t({ en: "Price", es: "Precio" }),
-    style: t({ en: "Budget style", es: "Tipo de presupuesto" }),
-    subscriptions: t({ en: "Subscriptions", es: "Suscripciones" }),
-    watch: t({ en: "Watch out for", es: "Ten en cuenta" }),
+    availability: t({ en: "Available in", es: "Disponible en", pt: "Disponível em", fr: "Disponible sur" }),
+    budgets: t({ en: "Budgets", es: "Presupuestos", pt: "Orçamentos", fr: "Budgets" }),
+    canada: t({ en: "In Canada", es: "En Canadá", pt: "No Canadá", fr: "Au Canada" }),
+    currencies: t({ en: "Currencies", es: "Monedas", pt: "Moedas", fr: "Devises" }),
+    entries: t({ en: "Adding entries", es: "Cómo registras", pt: "Como você registra", fr: "Saisie des opérations" }),
+    focus: t({ en: "Tracks", es: "Sigue", pt: "Acompanha", fr: "Suit" }),
+    free: t({ en: "Free plan", es: "Plan gratis", pt: "Plano grátis", fr: "Offre gratuite" }),
+    license: t({ en: "License", es: "Licencia", pt: "Licença", fr: "Licence" }),
+    phone: t({ en: "On a phone", es: "En el celular", pt: "No celular", fr: "Sur téléphone" }),
+    platforms: t({ en: "Runs on", es: "Funciona en", pt: "Funciona em", fr: "Fonctionne sur" }),
+    price: t({ en: "Price", es: "Precio", pt: "Preço", fr: "Prix" }),
+    style: t({ en: "Budget style", es: "Tipo de presupuesto", pt: "Tipo de orçamento", fr: "Type de budget" }),
+    subscriptions: t({ en: "Subscriptions", es: "Suscripciones", pt: "Assinaturas", fr: "Abonnements" }),
+    watch: t({ en: "Watch out for", es: "Ten en cuenta", pt: "Fique atento a", fr: "Points d'attention" }),
 };
 
 const MOVING = {
@@ -7440,40 +7440,108 @@ const answers = {
             },
         },
         labels: {
-            feature: t({ en: "Feature", es: "Función" }),
-            fit: t({ en: "Which one fits", es: "Cuál te conviene" }),
-            fitHeading: insert(t({ en: "{{name}}, if you", es: "{{name}}, si" })),
-            questions: t({ en: "Questions", es: "Preguntas" }),
-            checked: insert(t({ en: ", checked {{date}}.", es: ", revisados el {{date}}." })),
-            source: insert(t({ en: "{{name}} details from", es: "Datos de {{name}} tomados de" })),
-            steps: t({ en: "How it works", es: "Cómo funciona" }),
+            feature: t({ en: "Feature", es: "Función", pt: "Recurso", fr: "Fonctionnalité" }),
+            fit: t({
+                en: "Which one fits",
+                es: "Cuál te conviene",
+                pt: "Qual combina com você",
+                fr: "Lequel vous convient",
+            }),
+            fitHeading: insert(
+                t({ en: "{{name}}, if you", es: "{{name}}, si", pt: "{{name}}, se você", fr: "{{name}}, si vous" })
+            ),
+            questions: t({ en: "Questions", es: "Preguntas", pt: "Perguntas", fr: "Questions" }),
+            checked: insert(
+                t({
+                    en: ", checked {{date}}.",
+                    es: ", revisados el {{date}}.",
+                    pt: ", verificados em {{date}}.",
+                    fr: ", vérifiées le {{date}}.",
+                })
+            ),
+            source: insert(
+                t({
+                    en: "{{name}} details from",
+                    es: "Datos de {{name}} tomados de",
+                    pt: "Dados do {{name}} tirados de",
+                    fr: "Informations sur {{name}} tirées de",
+                })
+            ),
+            steps: t({ en: "How it works", es: "Cómo funciona", pt: "Como funciona", fr: "Comment ça marche" }),
             summary: {
-                app: t({ en: "App", es: "App" }),
-                bestIf: t({ en: "Who it fits", es: "Para quién es" }),
+                app: t({ en: "App", es: "App", pt: "App", fr: "App" }),
+                bestIf: t({ en: "Who it fits", es: "Para quién es", pt: "Para quem é", fr: "Pour qui" }),
                 platforms: LABELS.platforms,
                 price: LABELS.price,
             },
-            byline: t({ en: "By Daniel Esteves", es: "Por Daniel Esteves" }),
-            updatedOn: insert(t({ en: "Updated {{date}}", es: "Actualizado el {{date}}" })),
-            checkedOn: insert(t({ en: "Checked {{date}}", es: "Revisado el {{date}}" })),
-            contents: t({ en: "On this page", es: "En esta página" }),
-            picked: t({ en: "How we picked", es: "Cómo las elegimos" }),
+            byline: t({
+                en: "By Daniel Esteves",
+                es: "Por Daniel Esteves",
+                pt: "Por Daniel Esteves",
+                fr: "Par Daniel Esteves",
+            }),
+            updatedOn: insert(
+                t({
+                    en: "Updated {{date}}",
+                    es: "Actualizado el {{date}}",
+                    pt: "Atualizado em {{date}}",
+                    fr: "Mis à jour le {{date}}",
+                })
+            ),
+            checkedOn: insert(
+                t({
+                    en: "Checked {{date}}",
+                    es: "Revisado el {{date}}",
+                    pt: "Verificado em {{date}}",
+                    fr: "Vérifié le {{date}}",
+                })
+            ),
+            contents: t({ en: "On this page", es: "En esta página", pt: "Nesta página", fr: "Sur cette page" }),
+            picked: t({
+                en: "How we picked",
+                es: "Cómo las elegimos",
+                pt: "Como escolhemos",
+                fr: "Comment nous avons choisi",
+            }),
             cta: {
                 lead: t({
                     en: "Free to start. No ads on any plan.",
                     es: "Gratis para empezar. Sin anuncios en ningún plan.",
+                    pt: "Grátis para começar. Sem anúncios em nenhum plano.",
+                    fr: "Gratuit pour commencer. Aucune publicité, quelle que soit la formule.",
                 }),
-                title: t({ en: "Track every expense in one sentence", es: "Registra cada gasto en una oración" }),
+                title: t({
+                    en: "Track every expense in one sentence",
+                    es: "Registra cada gasto en una oración",
+                    pt: "Registre cada gasto em uma frase",
+                    fr: "Notez chaque dépense en une phrase",
+                }),
             },
             exportsChecked: insert(
                 t({
                     en: "Each export detail links to the page it was read on, checked {{date}}.",
                     es: "Cada dato de exportación enlaza a la página donde se leyó, revisado el {{date}}.",
+                    pt: "Cada dado de exportação tem link para a página onde foi lido, verificado em {{date}}.",
+                    fr: "Chaque détail d'export renvoie à la page où il a été relevé, vérifié le {{date}}.",
                 })
             ),
-            movingFrom: insert(t({ en: "Moving from {{name}}", es: "Cómo pasarte desde {{name}}" })),
-            related: t({ en: "Keep reading", es: "Sigue leyendo" }),
-            sideBySide: insert(t({ en: "Outlayr and {{name}}, side by side", es: "Outlayr y {{name}}, lado a lado" })),
+            movingFrom: insert(
+                t({
+                    en: "Moving from {{name}}",
+                    es: "Cómo pasarte desde {{name}}",
+                    pt: "Como migrar do {{name}}",
+                    fr: "Quitter {{name}} pour Outlayr",
+                })
+            ),
+            related: t({ en: "Keep reading", es: "Sigue leyendo", pt: "Continue lendo", fr: "À lire aussi" }),
+            sideBySide: insert(
+                t({
+                    en: "Outlayr and {{name}}, side by side",
+                    es: "Outlayr y {{name}}, lado a lado",
+                    pt: "Outlayr e {{name}} lado a lado",
+                    fr: "Outlayr et {{name}} côte à côte",
+                })
+            ),
         },
     },
     key: "answers",

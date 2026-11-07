@@ -25,9 +25,17 @@ export function pageUrl(path: string, locale: Locale): string {
 }
 
 // Portuguese and French serve only the pages translated so far, so no English text sits under /pt or /fr.
+const TOOL_PATHS = [
+    "/tools",
+    "/tools/50-30-20-budget-calculator",
+    "/tools/installment-calculator",
+    "/tools/split-expenses-calculator",
+    "/tools/subscription-cost-calculator",
+];
+
 export const TRANSLATED: Partial<Record<Locale, ReadonlySet<string>>> = {
-    fr: new Set(["/"]),
-    pt: new Set(["/"]),
+    fr: new Set(["/", ...TOOL_PATHS]),
+    pt: new Set(["/", ...TOOL_PATHS]),
 };
 
 const TRAILING_SLASH = /(?<=.)\/$/u;
