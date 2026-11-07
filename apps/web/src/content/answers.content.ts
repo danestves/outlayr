@@ -5418,6 +5418,38 @@ const answers = {
                         }),
                     },
                     {
+                        label: t({ en: "Reporting", es: "Reporte" }),
+                        source: "https://intercom.help/cashea/es/articles/15330725-como-puedo-reportar-el-pago-por-la-app",
+                        text: t({
+                            en: "Ya pagué, then the date, amount, reference, and receipt. A Pago Móvil from Banesco counts as Transferencia",
+                            es: "Ya pagué, luego la fecha, el monto, la referencia y el comprobante. Un Pago Móvil desde Banesco va como Transferencia",
+                        }),
+                    },
+                    {
+                        label: t({ en: "One purchase per payment", es: "Una compra por pago" }),
+                        source: "https://intercom.help/cashea/es/articles/8526826-como-encuentro-los-datos-de-pago",
+                        text: t({
+                            en: "One payment can't cover installments from different purchases",
+                            es: "Un pago no puede cubrir cuotas de compras diferentes",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Paying early", es: "Adelantar" }),
+                        source: "https://intercom.help/cashea/es/articles/6602906-puedo-pagar-mis-cuotas-por-adelantado",
+                        text: t({
+                            en: "Pay early or in part, in the app, as long as each installment is whole by its due date",
+                            es: "Adelanta o abona parte, por la app, siempre que cada cuota esté completa en su vencimiento",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Number of installments", es: "Número de cuotas" }),
+                        source: "https://intercom.help/cashea/es/articles/6602447-puedo-elegir-el-numero-de-cuotas",
+                        text: t({
+                            en: "Set by the product, not by you. The app shows it",
+                            es: "Lo define el producto, no tú. La app te lo muestra",
+                        }),
+                    },
+                    {
                         label: t({ en: "Upfront payment", es: "Inicial" }),
                         source: "https://intercom.help/cashea/es/articles/6198516-como-funciona-el-pago-inicial",
                         text: t({
