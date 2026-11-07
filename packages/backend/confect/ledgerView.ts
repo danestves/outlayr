@@ -504,6 +504,7 @@ function ledgerUpcoming(
                 const category = row.categoryId ? categories.get(row.categoryId) : undefined;
                 return {
                     ...valuedIn(row, landsOn),
+                    accountId: row.accountId,
                     cadence: cadenceOf(row.recurringType),
                     every: row.recurringCoefficient,
                     fee: feeOf.get(row.localId) ?? null,
