@@ -33,6 +33,7 @@ export interface LedgerTransfer {
     day: string;
     fromId: string;
     id: string;
+    sent: number;
     sentCurrency: string;
     toId: string;
 }
@@ -133,6 +134,7 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
         day: localDate(row.date, offsetAt(row.date)),
         fromId: row.fromAccountId,
         id: row.localId,
+        sent: row.fromAmount,
         sentCurrency: row.fromCurrency,
         toId: row.toAccountId,
     }));

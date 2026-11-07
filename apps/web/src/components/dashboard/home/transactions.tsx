@@ -1,7 +1,7 @@
 import { RiAddLine, RiUpload2Line } from "@remixicon/react";
 import { Table } from "panelui-web/table";
 import { Tabs } from "panelui-web/tabs";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -11,6 +11,7 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { CardFrame } from "./card-frame";
 import { useCatalog, useImageUrls } from "./catalog";
+import type { Catalog } from "./catalog";
 import { useCategoryName, useDateFormat } from "./format";
 import type { SetupState } from "./model";
 import { ROW_HEIGHT, useRowWindow } from "./row-window";
@@ -36,6 +37,16 @@ const SECOND_LINE = "dash-figure text-muted-foreground block text-xs leading-4";
 const ARRIVAL_LINE =
     "dash-figure text-muted-foreground flex justify-end text-xs leading-4 @max-sm:w-0 @max-sm:min-w-full";
 
+const imageKeys = (catalog: Catalog, rows: readonly FoldedRow[], skip: readonly string[] = []) =>
+    [
+        ...new Set(
+            rows.flatMap((row) => {
+                const key = "fromId" in row ? null : catalog.transaction(row.id)?.imageKey;
+                return key ? [key] : [];
+            })
+        ),
+    ].filter((key) => !skip.includes(key));
+
 export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger, photos: accountPhotos, setFilters } = useDashboard();
     const { add } = useIntlayer("dashboard");
@@ -59,18 +70,14 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
         [filters.accounts, filters.categories, filters.period, ledger, tab]
     );
     const rows = useMemo(() => (expanded ? every : every.slice(0, ROWS_SHOWN)), [every, expanded]);
-    const keys = useMemo(
-        () => [
-            ...new Set(
-                rows.flatMap((row) => {
-                    const key = "fromId" in row ? null : catalog.transaction(row.id)?.imageKey;
-                    return key ? [key] : [];
-                })
-            ),
-        ],
-        [catalog, rows]
+    const headKeys = useMemo(() => imageKeys(catalog, every.slice(0, ROWS_SHOWN)), [catalog, every]);
+    const restKeys = useMemo(
+        () => (expanded ? imageKeys(catalog, every.slice(ROWS_SHOWN), headKeys) : []),
+        [catalog, every, expanded, headKeys]
     );
-    const photos = useImageUrls(keys);
+    const headPhotos = useImageUrls(headKeys);
+    const restPhotos = useImageUrls(restKeys);
+    const tableId = useId();
     const { body, first, last } = useRowWindow(rows.length);
     if (quiet) {
         const current = periodOf(filters.currentKey, ledger.firstDayOfMonth);
@@ -122,7 +129,12 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                 <Tabs onValueChange={(value) => isTab(value) && setTab(value)} value={tab}>
                     <Tabs.List className="bg-background/40 rounded-[9px] p-0.5">
                         {TABS.map((each) => (
-                            <Tabs.Trigger className="h-[26px] rounded-[7px] px-2.5 text-[13px]" key={each} value={each}>
+                            <Tabs.Trigger
+                                aria-controls={tableId}
+                                className="h-[26px] rounded-[7px] px-2.5 text-[13px]"
+                                key={each}
+                                value={each}
+                            >
                                 {copy[each]}
                             </Tabs.Trigger>
                         ))}
@@ -153,13 +165,15 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
         >
             <Table
                 aria-label={copy.title.value}
+                aria-rowcount={setup ? undefined : Math.max(rows.length, 1) + 1}
                 className="@2xl:table-fixed"
                 containerClassName="overflow-clip"
                 maxHeight="none"
+                id={tableId}
                 striped
             >
                 <Table.Header className="in-data-[sticky]:bg-card">
-                    <Table.Row>
+                    <Table.Row aria-rowindex={1}>
                         <Table.Head className={`${HEAD} w-full @2xl:w-[31%]`}>{copy.columns.merchant}</Table.Head>
                         <Table.Head className={`${SIDE_HEAD} w-[18%]`}>{copy.columns.category}</Table.Head>
                         <Table.Head className={`${SIDE_HEAD} w-[17%]`}>{copy.columns.account}</Table.Head>
@@ -171,7 +185,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                 </Table.Header>
                 <Table.Body ref={body}>
                     {rows.length === 0 && !setup ? (
-                        <Table.Row className="border-0">
+                        <Table.Row aria-rowindex={2} className="border-0">
                             <Table.Cell className="text-muted-foreground py-8 text-[13px] first:ps-3.5" colSpan={5}>
                                 {copy.empty}
                             </Table.Cell>
@@ -182,14 +196,14 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                             <td aria-label={copy.title.value} colSpan={5} style={{ height: first * ROW_HEIGHT }} />
                         </tr>
                     ) : null}
-                    {rows.slice(first, last).map((row) => {
+                    {rows.slice(first, last).map((row, index) => {
                         const figure = figureOf(ledger, row);
                         const line = second(row, figure);
                         const day = date.day(row.day);
                         if ("fromId" in row) {
                             const names = `${accountName(row.fromId)} → ${accountName(row.toId)}`;
                             return (
-                                <Table.Row className={ROW} key={row.id}>
+                                <Table.Row aria-rowindex={first + index + 2} className={ROW} key={row.id}>
                                     <Table.Cell className={NAME}>
                                         <span className="flex items-center gap-3 font-medium">
                                             <TransferTile
@@ -225,14 +239,18 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                         const standsAlone = row.feeFor !== null;
                         const feeKind = catalog.transaction(row.id)?.feeForId ? copy.cardFee : copy.transferFee;
                         return (
-                            <Table.Row className={ROW} key={row.id}>
+                            <Table.Row aria-rowindex={first + index + 2} className={ROW} key={row.id}>
                                 <Table.Cell className={NAME}>
                                     <span className="flex items-center gap-3 font-medium">
                                         {standsAlone ? (
                                             <FeeTile />
                                         ) : (
                                             <MerchantTile
-                                                imageUrl={imageKey ? photos?.get(imageKey) : undefined}
+                                                imageUrl={
+                                                    imageKey
+                                                        ? (headPhotos?.get(imageKey) ?? restPhotos?.get(imageKey))
+                                                        : undefined
+                                                }
                                                 name={merchant}
                                                 size="lg"
                                             />

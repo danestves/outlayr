@@ -32,6 +32,7 @@ describe("viewRows", () => {
             id: "move",
             arrived: 500,
             arrivedCurrency: "USD",
+            sent: 500,
             sentCurrency: "USD",
             toId: "savings",
         };
@@ -98,6 +99,7 @@ const moved = (id: string, extra: Partial<LedgerTransfer> = {}): LedgerTransfer 
     day: "2026-10-06",
     fromId: "chase",
     id,
+    sent: 1200,
     sentCurrency: "USD",
     toId: "amex",
     ...extra,
@@ -138,10 +140,11 @@ describe("figureOf", () => {
         expect(figureOf(usd, { ...moved("t"), fees: [source] })).toMatchObject({ amount: 1205, arrived: 1200 });
     });
 
-    it("shows an arrival only when a fee or a currency makes it differ", () => {
+    it("shows an arrival only when a fee, a currency or the amount makes it differ", () => {
         const bolivars = moved("t", { arrived: 25_180, arrivedCurrency: "VES" });
 
         expect(figureOf(usd, { ...moved("t"), fees: [] }).arrived).toBeNull();
         expect(figureOf(usd, { ...bolivars, fees: [] }).arrived).toBe(25_180);
+        expect(figureOf(usd, { ...moved("t", { arrived: 1170 }), fees: [] }).arrived).toBe(1170);
     });
 });

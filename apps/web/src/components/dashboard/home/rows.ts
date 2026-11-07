@@ -66,7 +66,7 @@ export function figureOf(ledger: Pick<Ledger, "currency">, row: FoldedRow) {
         const atDestination = row.fees.filter((fee) => fee.accountId === row.toId);
         const atSource = row.fees.filter((fee) => fee.accountId !== row.toId);
         const taken = atDestination.reduce((sum, fee) => sum + fee.original, 0);
-        const moved = row.fees.length > 0 || row.arrivedCurrency !== row.sentCurrency;
+        const moved = row.fees.length > 0 || row.arrivedCurrency !== row.sentCurrency || row.arrived !== row.sent;
         return {
             amount: round(ledger, row.amount + valueOf(ledger, atSource)),
             arrived: moved ? roundMoney(row.arrived - taken, decimalsFor(row.arrivedCurrency)) : null,
