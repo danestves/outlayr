@@ -199,7 +199,7 @@ export const shareMerchantWebsite = Effect.fn("TransactionForm.shareWebsite")(fu
     const submit = merchantWebsiteTransport();
     yield* Effect.all(
         [
-            carryLookup(input),
+            carryLookup(input).pipe(Effect.ignore({ log: true })),
             submit === null
                 ? Effect.void
                 : submit({
