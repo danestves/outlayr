@@ -19,8 +19,9 @@ export function sparks(ledger: Ledger, period: Period, scope: Scope) {
     );
     const figure = (each: Period, income: boolean) =>
         total(ledger, rowsBetween(ledger, scope, each.from, each.to, income));
-    const income = periods.map((each) => figure(each, true));
-    const spent = periods.map((each) => figure(each, false));
+    const finished = periods.filter((each) => each.to < ledger.today);
+    const income = finished.map((each) => figure(each, true));
+    const spent = finished.map((each) => figure(each, false));
     const instants = periods.map((each) => Math.min(ledger.now, endOfDay(ledger, each.to)));
     return {
         income,
