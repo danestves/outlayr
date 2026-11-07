@@ -1,6 +1,6 @@
 # Announcing a policy change
 
-A change to the Privacy Policy or the Terms of Use reaches people three ways: the site, a sheet
+The `policy-notice` skill decides whether a change needs this. A change to the Privacy Policy or the Terms of Use reaches people three ways: the site, a sheet
 in the app, and an email to every confirmed account. The sheet and the email read the same
 notice from `POLICY_NOTICES`, so a new notice needs no app release. App versions from before the
 sheet show nothing until they update.
@@ -10,13 +10,14 @@ sheet show nothing until they update.
    `apps/web/src/lib/site.ts`.
 2. Append a notice to `POLICY_NOTICES` in `packages/backend/confect/legal.ts`: the document,
    `effectiveAtMs` as UTC midnight of that day, and the changes in en, es, fr and pt, one short
-   label each with an optional detail. Use the day the PR merges, because the site updates on merge. If the PR waits, update the date before merging.
+   label each with an optional detail. Use the day after the email goes out, because the Privacy Policy promises notice before a change takes effect. If the PR waits, update the date before merging. Once a date has been emailed, new changes need a new date.
 3. Merge, then run **Deploy the backend** for `production`. Once it is live, the app shows the
    sheet on its next launch to anyone who installed before that day, until they tap Got it.
-4. Email the account holders, from `packages/backend`:
+4. With Daniel's go-ahead, email the account holders. Production is self-hosted, and `--prod` targets an empty cloud project. Get the admin key from Daniel, then run this from a scratch directory whose `package.json` lists `convex`, because `packages/backend` picks up the local `.env.local`:
 
    ```sh
-   vp exec convex run --prod mailDelivery:notifyPolicy '{}'
+   CONVEX_SELF_HOSTED_URL=https://api.tryoutlayr.com CONVEX_SELF_HOSTED_ADMIN_KEY=... \
+     <repo>/packages/backend/node_modules/.bin/convex run mailDelivery:notifyPolicy '{}'
    ```
 
    It sends the notices with the latest `effectiveAtMs`: when both documents change that day, each
