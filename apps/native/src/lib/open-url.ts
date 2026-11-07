@@ -16,7 +16,6 @@ export class OpenUrlError extends Schema.TaggedError<OpenUrlError>()("OpenUrlErr
 export const openUrl = (url: string) =>
     Effect.tryPromise({ catch: (cause) => new OpenUrlError({ cause }), try: () => Linking.openURL(url) });
 
-/** iOS and Android can refuse to hand a link to another app, and the in-app browser needs no other app. */
 export const openWebUrl = (url: string) =>
     openUrl(url).pipe(
         Effect.catchTags({
