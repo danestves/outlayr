@@ -5,6 +5,7 @@ import { Stage } from "@/stageshow/stage";
 
 import { CategoryTile, formatMoney, loopBack, Micro, Money, Ruled } from "./parts";
 import type { Category } from "./parts";
+import { FILM_COMPACT_BELOW, FILM_SIZES } from "./sizes";
 
 import "./month.css";
 
@@ -44,13 +45,13 @@ export function MonthFilm() {
     const days = copy.days.value.split(" ");
     return (
         <Stage<Scene>
-            compact={{ below: 520, height: 520, width: 358 }}
-            height={664}
+            compact={{ below: FILM_COMPACT_BELOW, ...FILM_SIZES.month.compact }}
+            height={FILM_SIZES.month.wide.height}
             initial={START}
             play="loop"
             poster={END}
             script={script}
-            width={664}
+            width={FILM_SIZES.month.wide.width}
         >
             {({ out, step }, _rect, layout) => {
                 const compact = layout === "compact";

@@ -8,7 +8,7 @@ import { hubTrail, itemList, ldJson, pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/{-$locale}/compare/")({
     component: Comparisons,
-    head: ({ params }) => {
+    loader: ({ params }) => {
         const locale = localeFromParam(params.locale);
         const { compare, hubs } = getIntlayer("answers", locale);
         const items = Object.entries(compare).map(([slug, page]) => ({
@@ -16,10 +16,13 @@ export const Route = createFileRoute("/{-$locale}/compare/")({
             url: pageUrl(`/compare/${slug}`, locale),
         }));
         return {
-            meta: pageMeta(hubs.compare.meta.title, hubs.compare.meta.description),
-            scripts: [ldJson(itemList(items)), ldJson(hubTrail(locale, "compare"))],
+            head: {
+                meta: pageMeta(hubs.compare.meta.title, hubs.compare.meta.description),
+                scripts: [ldJson(itemList(items)), ldJson(hubTrail(locale, "compare"))],
+            },
         };
     },
+    head: ({ loaderData }) => loaderData?.head ?? {},
 });
 
 function Comparisons() {

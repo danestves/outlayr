@@ -12,34 +12,31 @@ import { EXPORTS_CHECKED, compareUpdated, longDate, rivalChecked } from "@/lib/s
 export const Route = createFileRoute("/{-$locale}/compare/$slug")({
     component: Compare,
     loader: ({ params }) => {
-        if (!hasKey(getIntlayer("answers").compare, params.slug)) {
+        const { slug } = params;
+        if (!hasKey(getIntlayer("answers").compare, slug)) {
             throw notFound({ routeId: rootRouteId });
         }
-        return params.slug;
-    },
-    head: ({ loaderData, params }) => {
-        if (!loaderData) {
-            return {};
-        }
         const locale = localeFromParam(params.locale);
-        const rival = getIntlayer("answers", locale).compare[loaderData];
-        return {
+        const rival = getIntlayer("answers", locale).compare[slug];
+        const head = {
             meta: pageMeta(rival.meta.title, rival.meta.description),
             scripts: [
                 ldJson(faqPage(rival.faq, LANGUAGES[locale].lang)),
-                ldJson(answerTrail(locale, "compare", loaderData, rival.title)),
+                ldJson(answerTrail(locale, "compare", slug, rival.title)),
                 ldJson(
-                    webPage(locale, `/compare/${loaderData}`, {
-                        dateModified: compareUpdated(loaderData).toISOString().slice(0, 10),
+                    webPage(locale, `/compare/${slug}`, {
+                        dateModified: compareUpdated(slug).toISOString().slice(0, 10),
                     })
                 ),
             ],
         };
+        return { head, slug };
     },
+    head: ({ loaderData }) => loaderData?.head ?? {},
 });
 
 function Compare() {
-    const slug = Route.useLoaderData();
+    const { slug } = Route.useLoaderData();
     const { compare, labels } = useIntlayer("answers");
     const { locale } = useLocale();
     const page = compare[slug];

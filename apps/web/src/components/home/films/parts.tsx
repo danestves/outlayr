@@ -161,7 +161,12 @@ export function Logo({ name, size }: { name: LogoName; size: number }) {
                     placeItems: "center",
                 }}
             >
-                <img alt="" src="/films/logos/costco.png" style={{ width: size * 0.84 }} />
+                <img
+                    alt=""
+                    height={Math.round((size * 0.84 * 57) / 200)}
+                    src="/films/logos/costco.webp"
+                    width={Math.round(size * 0.84)}
+                />
             </span>
         );
     }

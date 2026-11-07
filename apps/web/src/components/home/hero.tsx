@@ -43,7 +43,7 @@ export function Hero() {
                 </div>
                 <div className="relative mt-8 delay-200 lg:col-span-5 lg:mt-16" data-reveal>
                     <div className="relative mx-auto w-3/5 max-w-80 sm:w-1/2 lg:w-2/3">
-                        <Phone className="drop-shadow-[0_32px_48px_rgb(19_18_9/0.3)]">
+                        <Phone className="drop-shadow-[0_32px_48px_rgb(19_18_9/0.3)]" priority>
                             <FilmFrame className="phone-screen bg-app-bg overflow-hidden" label={hero.videoLabel.value}>
                                 <LogFilm />
                             </FilmFrame>

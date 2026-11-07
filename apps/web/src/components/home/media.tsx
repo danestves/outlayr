@@ -5,13 +5,22 @@ const BEZEL = {
     src: "/app/iphone.webp",
     srcSet: "/app/iphone-500.webp 500w, /app/iphone.webp 1000w",
 };
-export function Phone({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function Phone({
+    children,
+    className = "",
+    priority = false,
+}: {
+    children: ReactNode;
+    className?: string;
+    priority?: boolean;
+}) {
     return (
         <div className={`phone ${className}`}>
             {children}
             <img
                 alt=""
                 className="phone-bezel"
+                fetchPriority={priority ? "high" : undefined}
                 height={2041}
                 sizes={BEZEL.sizes}
                 src={BEZEL.src}

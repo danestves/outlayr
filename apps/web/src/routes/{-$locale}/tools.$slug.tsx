@@ -32,16 +32,9 @@ export const Route = createFileRoute("/{-$locale}/tools/$slug")({
         if (!hasKey(getIntlayer("tools").pages, slug)) {
             throw notFound({ routeId: rootRouteId });
         }
-        return { rates: hasKey(RATE_MARKETS, slug) ? await getRates({ data: slug }) : null, slug };
-    },
-    head: ({ loaderData, params }) => {
-        if (!loaderData) {
-            return {};
-        }
-        const { slug } = loaderData;
         const locale = localeFromParam(params.locale);
         const page = getIntlayer("tools", locale).pages[slug];
-        return {
+        const head = {
             meta: pageMeta(page.meta.title, page.lead),
             scripts: [
                 ldJson({
@@ -62,7 +55,9 @@ export const Route = createFileRoute("/{-$locale}/tools/$slug")({
                 ldJson(answerTrail(locale, "tools", slug, page.title)),
             ],
         };
+        return { head, rates: hasKey(RATE_MARKETS, slug) ? await getRates({ data: slug }) : null, slug };
     },
+    head: ({ loaderData }) => loaderData?.head ?? {},
 });
 
 function Calculator({ rates, slug }: { rates: readonly Rate[] | null; slug: ToolSlug }) {

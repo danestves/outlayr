@@ -5,8 +5,7 @@ import { useIntlayer } from "react-intlayer";
 import { Icon } from "@/components/icon";
 import { CONTAINER } from "@/lib/layout";
 
-import { ChaosFilm } from "./films/chaos";
-import { FilmFrame } from "./films/frame";
+import { LazyFilm } from "./films/lazy";
 
 export const LABEL = "text-muted font-mono text-xs";
 export const HEADING = "text-4xl font-semibold tracking-tight md:text-5xl";
@@ -37,9 +36,7 @@ export function Problem() {
                 </div>
                 <div className="lg:col-span-7" data-reveal>
                     <div className="bg-surface overflow-hidden rounded-3xl">
-                        <FilmFrame label={problem.film.value}>
-                            <ChaosFilm />
-                        </FilmFrame>
+                        <LazyFilm label={problem.film.value} name="chaos" />
                     </div>
                 </div>
             </div>
