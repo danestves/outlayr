@@ -25,9 +25,9 @@ export function pageUrl(path: string, locale: Locale): string {
 }
 
 // Portuguese and French serve only the pages translated so far, so no English text sits under /pt or /fr.
-const TRANSLATED: Partial<Record<Locale, ReadonlySet<string>>> = {
-    fr: new Set<string>(),
-    pt: new Set<string>(),
+export const TRANSLATED: Partial<Record<Locale, ReadonlySet<string>>> = {
+    fr: new Set(["/"]),
+    pt: new Set(["/"]),
 };
 
 const TRAILING_SLASH = /(?<=.)\/$/u;

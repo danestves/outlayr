@@ -123,6 +123,14 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - [Elimina tu cuenta](https://tryoutlayr.com/es/delete-account): account deletion in Spanish
 - Every guide, comparison, and calculator has a Spanish version under https://tryoutlayr.com/es, for example https://tryoutlayr.com/es/guides/receipt-scanner
 
+## Pages in Portuguese
+
+- [Início](https://tryoutlayr.com/pt): the home page in Brazilian Portuguese
+
+## Pages in French
+
+- [Accueil](https://tryoutlayr.com/fr): the home page in French
+
 ## Links
 
 - App Store: https://apps.apple.com/app/id6801652978
