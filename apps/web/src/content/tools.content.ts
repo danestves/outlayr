@@ -162,7 +162,7 @@ const tools = {
                 meta: {
                     title: t({
                         en: "50/30/20 Budget Calculator · Outlayr",
-                        es: "Calculadora de presupuesto 50/30/20 · Outlayr",
+                        es: "Calculadora regla 50 30 20: reparte tu sueldo · Outlayr",
                     }),
                 },
                 method: [
@@ -184,7 +184,7 @@ const tools = {
                     "/guides/best-budget-apps",
                     "/guides/how-to-track-expenses",
                 ] satisfies PageRef[],
-                title: t({ en: "50/30/20 budget calculator", es: "Calculadora de presupuesto 50/30/20" }),
+                title: t({ en: "50/30/20 budget calculator", es: "Calculadora de la regla 50 30 20" }),
             },
             "subscription-cost-calculator": {
                 answer: insert(
@@ -503,7 +503,7 @@ const tools = {
                 }),
                 meta: {
                     title: t({
-                        en: "Split Expenses Calculator: Who Owes Whom · Outlayr",
+                        en: "Split Bill Calculator: Split Expenses and See Who Owes Whom · Outlayr",
                         es: "Calculadora para dividir gastos: quién le debe a quién",
                     }),
                 },
@@ -530,7 +530,7 @@ const tools = {
                     en: "Everyone paid their share. Nobody owes anything.",
                     es: "Todos pagaron su parte. Nadie debe nada.",
                 }),
-                title: t({ en: "Split expenses calculator", es: "Calculadora para dividir gastos" }),
+                title: t({ en: "Split bill calculator: who owes whom", es: "Calculadora para dividir gastos" }),
             },
             "dolar-bcv-hoy": {
                 faq: [
