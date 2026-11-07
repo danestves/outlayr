@@ -1,6 +1,7 @@
 import { ledgerGlance } from "@outlayr/backend/confect/ledgerView";
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import type { Doc, Id, TableNames } from "@outlayr/backend/convex/_generated/dataModel";
+import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
@@ -10,11 +11,13 @@ import type { Dashboard } from "./dashboard";
 import { NO_PHOTOS } from "./photos";
 
 const HOUR_MS = 3_600_000;
-const MONTH_MS = 30 * 24 * HOUR_MS;
+const DAY_MS = 24 * HOUR_MS;
+const MONTH_MS = 30 * DAY_MS;
 const RECENT_ENTRIES = 25;
 // Tight enough that every recent entry stays in the current period, even just after a month turns.
 const RECENT_GAP_MS = 1000;
 const PAST_MONTHS = 5;
+const UPCOMING = 3;
 
 const envelope = <Table extends TableNames>(localId: string, seq: number) => ({
     _creationTime: 0,
@@ -53,10 +56,30 @@ const category = (name: string, seq: number): Doc<"categories"> => ({
     sortOrder: seq,
 });
 
-const ACCOUNTS = ["Checking", "Savings", "Credit card"].map(account);
+const ACCOUNTS = ["Checking", "Savings", "Credit card", "Cash", "Brokerage", "Travel card"].map(account);
 const CATEGORIES = ["Groceries", "Dining out", "Transport", "Home", "Health"].map(category);
 
-const entry = (date: number, seq: number, fields: { amount: number; income?: boolean }): Doc<"transactions"> => ({
+const budget = (spentOn: Doc<"categories">, seq: number, startDate: number): Doc<"budgets"> => {
+    const { emoji: _emoji, icon: _icon, ...base } = envelope<"budgets">(`budget-${seq}`, seq);
+    return {
+        ...base,
+        amount: 600,
+        amountUsd: 600,
+        categoryId: spentOn.localId,
+        currency: "USD",
+        green: false,
+        name: null,
+        rollover: false,
+        startDate,
+        type: BUDGET_TYPE.month,
+    };
+};
+
+const entry = (
+    date: number,
+    seq: number,
+    fields: { amount: number; income?: boolean; recurringType?: number }
+): Doc<"transactions"> => ({
     ...envelope<"transactions">(`entry-${seq}`, seq),
     accountId: ACCOUNTS[seq % ACCOUNTS.length]?.localId ?? null,
     amountUsd: fields.amount,
@@ -88,18 +111,25 @@ function sampleBooks(now: number): LedgerBooks {
         entry(now - (index + 1) * MONTH_MS, RECENT_ENTRIES + index, { amount: 600 })
     );
     const income = entry(now, RECENT_ENTRIES + PAST_MONTHS, { amount: 3000, income: true });
+    // Charged weeks ago and monthly, so each one is due again inside the Upcoming window.
+    const charges = Array.from({ length: UPCOMING }, (_, index) =>
+        entry(now - (20 + index * 3) * DAY_MS, RECENT_ENTRIES + PAST_MONTHS + 1 + index, {
+            amount: 15,
+            recurringType: RECURRING_TYPE.monthly,
+        })
+    );
     return {
         accounts: ACCOUNTS,
         // Without a stored zone the ledger infers one from each row's `day`, which these rows do not model.
         appMeta: [{ key: "timeZone", value: "UTC" }],
-        budgets: [],
+        budgets: CATEGORIES.slice(0, 3).map((each, index) => budget(each, index, now - PAST_MONTHS * MONTH_MS)),
         categories: CATEGORIES,
         exchangeRates: [],
         installmentPlans: [],
         mainBudget: [],
         outsideMoves: [],
         outsidePayments: [],
-        transactions: [...past, ...recent, income],
+        transactions: [...past, ...recent, income, ...charges],
         transfers: [],
     };
 }
