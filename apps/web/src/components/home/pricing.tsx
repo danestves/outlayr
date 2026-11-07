@@ -1,13 +1,19 @@
-import { useIntlayer } from "react-intlayer";
+import { useLoaderData } from "@tanstack/react-router";
+import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
+import { LANGUAGES } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
+import { proPrices } from "@/lib/pro-prices";
 
 import { HEADING, LABEL } from "./problem";
 
 export function Pricing() {
     const { limits, plansCopy, proOnly } = useIntlayer("home");
     const { pricing } = useIntlayer("story");
+    const { locale } = useLocale();
+    const { lang } = LANGUAGES[locale];
+    const prices = proPrices(useLoaderData({ from: "__root__" }), locale);
     return (
         <section className={`${CONTAINER} scroll-mt-24 py-24`} id="pricing">
             <p className={LABEL} data-reveal>
@@ -23,7 +29,7 @@ export function Pricing() {
                 <div className="bg-surface flex flex-col rounded-3xl p-6 md:p-8" data-reveal>
                     <div className="min-h-40">
                         <h3 className="text-lg font-semibold">Outlayr</h3>
-                        <p className="mt-4 text-5xl font-semibold tracking-tight">{pricing.zero}</p>
+                        <p className="mt-4 text-5xl font-semibold tracking-tight">{prices.zero}</p>
                         <p className="text-muted mt-3 text-sm">{plansCopy.lead}</p>
                     </div>
                     <ul className="mt-8 flex flex-col gap-3 text-base">
@@ -52,12 +58,14 @@ export function Pricing() {
                         </h3>
                         <p className="mt-4 flex items-baseline gap-2">
                             <span className="text-5xl font-semibold tracking-tight">
-                                {pricing.price}
-                                <span className="text-2xl opacity-60">{pricing.cents}</span>
+                                {prices.monthly.whole}
+                                <span className="text-2xl opacity-60">{prices.monthly.fraction}</span>
                             </span>
                             <span className="text-base opacity-60">{pricing.month}</span>
                         </p>
-                        <p className="mt-3 text-sm opacity-60">{pricing.other}</p>
+                        <p className="mt-3 text-sm opacity-60">
+                            {pricing.other({ once: prices.once, yearly: prices.yearly })}
+                        </p>
                     </div>
                     <ul className="mt-8 flex flex-col gap-3 text-base">
                         {limits.map((limit) => (
@@ -79,7 +87,12 @@ export function Pricing() {
                 </div>
             </div>
             <p className="text-muted mt-6 text-sm">
-                {pricing.note} {plansCopy.footnote}
+                {prices.country
+                    ? pricing.localNote({
+                          country: new Intl.DisplayNames(lang, { type: "region" }).of(prices.country) ?? prices.country,
+                      })
+                    : pricing.note}{" "}
+                {plansCopy.footnote}
             </p>
         </section>
     );

@@ -1,4 +1,4 @@
-import { t } from "intlayer";
+import { insert, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
 const story = {
@@ -73,25 +73,33 @@ const story = {
         pause: t({ en: "Pause the film", es: "Pausar el video" }),
         play: t({ en: "Play the film", es: "Reproducir el video" }),
         pricing: {
-            cents: t({ en: ".99", es: ".99" }),
             label: t({ en: "Pricing", es: "Precios" }),
             lead: t({
                 en: "The tracker is free and has no ads. Pro lifts the limits and adds sync. Cancel anytime from your app store, or buy it once.",
                 es: "La app es gratis y no tiene anuncios. Pro quita los límites y agrega la sincronización. Cancela cuando quieras desde tu tienda de apps, o cómpralo una sola vez.",
             }),
+            localNote: insert(
+                t({
+                    en: "Prices for {{country}}. Your app store shows the final price.",
+                    es: "Precios para {{country}}. Tu tienda de apps muestra el precio final.",
+                })
+            ),
             month: t({ en: "a month", es: "al mes" }),
             note: t({
                 en: "US prices. Your app store shows the price for your country.",
                 es: "Precios de Estados Unidos. Tu tienda de apps muestra el precio de tu país.",
             }),
-            other: t({ en: "Or $49.99 a year, or $129.99 once.", es: "O US$49.99 al año, o US$129.99 una sola vez." }),
-            price: t({ en: "$7", es: "US$7" }),
+            other: insert(
+                t({
+                    en: "Or {{yearly}} a year, or {{once}} once.",
+                    es: "O {{yearly}} al año, o {{once}} una sola vez.",
+                })
+            ),
             trial: t({ en: "7 days free on yearly", es: "7 días gratis en el plan anual" }),
             title: t({
                 en: "Free to start. Pro when you want more",
                 es: "Gratis para empezar. Pro cuando quieras más",
             }),
-            zero: t({ en: "$0", es: "US$0" }),
         },
         problem: {
             body: t({
