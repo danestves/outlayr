@@ -9,6 +9,9 @@ import { daysFrom, periodOf, shiftPeriodKey } from "../../../lib/dashboard-serie
 import type { Period } from "../../../lib/dashboard-series-period";
 
 const SPARK_PERIODS = 12;
+const WHAT_IF_STOPS = 400;
+const NICE_STEPS = [1, 2, 5, 10];
+const CENT = 0.01;
 
 export function sparks(ledger: Ledger, period: Period, scope: Scope) {
     const periods = Array.from({ length: SPARK_PERIODS }, (_, index) =>
@@ -168,4 +171,21 @@ export function setupState(ledger: Ledger): SetupState | null {
     }
     const spending = ledger.rows.filter((row) => !row.income).toSorted((a, b) => a.at - b.at);
     return { done, firstSpendTopId: spending[0]?.topId ?? null, spent: total(ledger, spending), step };
+}
+
+export function whatIfStep(income: number) {
+    if (income <= 0) {
+        return CENT;
+    }
+    const rough = income / WHAT_IF_STOPS;
+    const power = 10 ** Math.floor(Math.log10(rough));
+    const nice = NICE_STEPS.find((each) => each * power >= rough) ?? 1;
+    return Math.max(Number((nice * power).toFixed(2)), CENT);
+}
+
+export function snapWhatIf(value: number, step: number, income: number) {
+    if (value >= income) {
+        return income;
+    }
+    return Math.max(0, Math.min(income, Number((Math.round(value / step) * step).toFixed(2))));
 }

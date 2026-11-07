@@ -74,7 +74,16 @@ const dashboardHome = {
         },
         spentOfIncome: {
             cashFlow: t({ en: "Cash flow", es: "Flujo de caja" }),
+            noIncome: t({ en: "No income", es: "Sin ingresos" }),
+            over: t({ en: "over", es: "de más" }),
             title: t({ en: "Spent of income", es: "Gastado de ingresos" }),
+            whatIf: t({ en: "What if", es: "Y si" }),
+            whatIfHint: t({
+                en: "Preview only, nothing is saved. Escape returns to the real amount.",
+                es: "Solo una vista previa, no se guarda nada. Escape vuelve al monto real.",
+            }),
+            whatIfTag: t({ en: "If", es: "Si" }),
+            wouldKeep: t({ en: "Would keep", es: "Ahorrarías" }),
         },
         panel: {
             accounts: t({ en: "Accounts", es: "Cuentas" }),
