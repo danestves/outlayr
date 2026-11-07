@@ -564,8 +564,8 @@ const tools = {
                     },
                     {
                         answer: t({
-                            en: "The month by month list of your payments. Each row shows how much of the payment goes to interest, how much pays down the loan, and what you still owe. In the first months most of the payment is interest, and by the end almost all of it pays down the loan.",
-                            es: "La lista mes a mes de tus cuotas. Cada fila muestra cuánto de la cuota se va en intereses, cuánto baja el préstamo y cuánto te falta por pagar. En los primeros meses casi toda la cuota es interés, y al final casi toda baja el préstamo.",
+                            en: "The month by month list of your payments. Each row shows how much of the payment goes to interest, how much pays down the loan, and what you still owe. Interest takes its biggest share in the first months, and by the end almost all of the payment pays down the loan.",
+                            es: "La lista mes a mes de tus cuotas. Cada fila muestra cuánto de la cuota se va en intereses, cuánto baja el préstamo y cuánto te falta por pagar. El interés se lleva su parte más grande en los primeros meses, y al final casi toda la cuota baja el préstamo.",
                         }),
                         question: t({
                             en: "What is an amortization schedule?",
@@ -623,8 +623,8 @@ const tools = {
                 },
                 method: [
                     t({
-                        en: "The calculator uses a fixed payment, the French system most banks use for personal, car and home loans. Early on most of each payment is interest. Each payment lowers what you owe, so the interest shrinks and more of the payment goes to the loan.",
-                        es: "La calculadora usa una cuota fija, el sistema francés que usan casi todos los bancos para préstamos personales, de auto e hipotecarios. Al principio casi toda la cuota es interés. Cada pago baja el saldo, así que el interés baja y más de la cuota se va al préstamo.",
+                        en: "The calculator uses a fixed payment, the French system most banks use for personal, car and home loans. Interest takes its biggest share early on. Each payment lowers what you owe, so the interest shrinks and more of the payment goes to the loan.",
+                        es: "La calculadora usa una cuota fija, el sistema francés que usan casi todos los bancos para préstamos personales, de auto e hipotecarios. Al principio el interés se lleva su parte más grande. Cada pago baja el saldo, así que el interés baja y más de la cuota se va al préstamo.",
                     }),
                     t({
                         en: "As a formula: payment = amount × r ÷ (1 − (1 + r)^−n), where r is the annual rate ÷ 12 and n is the number of months. With the starting example, $10,000 at 18% over 36 months, r is 1.5% and the payment is $361.52. In the first month $150 is interest and $211.52 pays down the loan.",
