@@ -211,7 +211,7 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
                                     </div>
                                 ) : null}
                                 <DayGrid.Title className="dash-figure text-base leading-6">
-                                    {trimmed(selected.amount)}
+                                    {money(selected.amount, ledger.currency)}
                                 </DayGrid.Title>
                                 <DayGrid.Description className="dash-figure text-xs leading-5">
                                     {date.day(selected.day)}
