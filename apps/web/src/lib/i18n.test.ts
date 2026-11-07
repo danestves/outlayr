@@ -35,6 +35,16 @@ const PAGE_CONTENT: Record<string, readonly unknown[]> = {
         about.content.allGuides,
     ],
     "/guides": [...SHELL, answers.content.hubs.guides],
+    "/guides/best-budget-apps-france": [
+        ...SHELL,
+        answers.content.labels,
+        answers.content.guides["best-budget-apps-france"],
+    ],
+    "/guides/best-expense-tracker-apps-brazil": [
+        ...SHELL,
+        answers.content.labels,
+        answers.content.guides["best-expense-tracker-apps-brazil"],
+    ],
     "/guides/expense-tracker-template": [
         ...SHELL,
         answers.content.labels,

@@ -36,8 +36,8 @@ const TOOL_PATHS = [
 const PAGE_PATHS = ["/", "/support", "/guides", "/guides/expense-tracker-template", ...TOOL_PATHS];
 
 export const TRANSLATED: Partial<Record<Locale, ReadonlySet<string>>> = {
-    fr: new Set(PAGE_PATHS),
-    pt: new Set(PAGE_PATHS),
+    fr: new Set([...PAGE_PATHS, "/guides/best-budget-apps-france"]),
+    pt: new Set([...PAGE_PATHS, "/guides/best-expense-tracker-apps-brazil"]),
 };
 
 const TRAILING_SLASH = /(?<=.)\/$/u;
