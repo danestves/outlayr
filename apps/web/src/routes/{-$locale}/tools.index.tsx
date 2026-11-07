@@ -3,7 +3,7 @@ import { getIntlayer } from "intlayer";
 import { useIntlayer } from "react-intlayer";
 
 import { AnswerHub } from "@/components/answer-hub";
-import { localeFromParam, pageUrl } from "@/lib/i18n";
+import { isPublished, localeFromParam, pageUrl } from "@/lib/i18n";
 import { hubTrail, itemList, ldJson, pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/{-$locale}/tools/")({
@@ -11,10 +11,9 @@ export const Route = createFileRoute("/{-$locale}/tools/")({
     loader: ({ params }) => {
         const locale = localeFromParam(params.locale);
         const { hub, pages } = getIntlayer("tools", locale);
-        const items = Object.entries(pages).map(([slug, page]) => ({
-            name: page.title,
-            url: pageUrl(`/tools/${slug}`, locale),
-        }));
+        const items = Object.entries(pages)
+            .filter(([slug]) => isPublished(`/tools/${slug}`, locale))
+            .map(([slug, page]) => ({ name: page.title, url: pageUrl(`/tools/${slug}`, locale) }));
         return {
             head: {
                 meta: pageMeta(hub.meta.title, hub.meta.description),
