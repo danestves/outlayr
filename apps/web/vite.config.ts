@@ -21,6 +21,14 @@ const UNFRAMEABLE = {
         "content-security-policy": "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
     },
 };
+const LOADER_SPLIT_ROUTES = new Set([
+    "/{-$locale}/compare/",
+    "/{-$locale}/compare/$slug",
+    "/{-$locale}/guides/",
+    "/{-$locale}/guides/$slug",
+    "/{-$locale}/tools/",
+    "/{-$locale}/tools/$slug",
+]);
 const AN_HOUR = { headers: { "cache-control": "public, max-age=3600" } };
 const A_DAY = { headers: { "cache-control": "public, max-age=86400" } };
 
@@ -30,7 +38,22 @@ export default defineConfig({
         contentCollections(),
         tailwindcss(),
         intlayer(),
-        tanstackStart(),
+        tanstackStart({
+            router: {
+                codeSplittingOptions: {
+                    splitBehavior: ({ routeId }) =>
+                        routeId === "/_account/app" || LOADER_SPLIT_ROUTES.has(routeId)
+                            ? [
+                                  ["component"],
+                                  ["loader"],
+                                  ["pendingComponent"],
+                                  ["errorComponent"],
+                                  ["notFoundComponent"],
+                              ]
+                            : undefined,
+                },
+            },
+        }),
         nitro({
             routeRules: {
                 "/**": { headers: SECURITY_HEADERS },
@@ -47,6 +70,7 @@ export default defineConfig({
                 "/favicon-light.png": A_DAY,
                 "/favicon.ico": A_DAY,
                 "/favicon.svg": A_DAY,
+                "/films/logos/**": A_DAY,
                 "/llms.txt": AN_HOUR,
                 "/og-es.png": A_DAY,
                 "/og.png": A_DAY,

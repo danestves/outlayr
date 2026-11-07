@@ -184,7 +184,7 @@
         @starting-style {
             main > :first-child [data-reveal],
             [data-reveal="now"] {
-                opacity: 0;
+                opacity: 0.01;
                 transform: translateY(4rem);
             }
         }
@@ -204,7 +204,7 @@
     }
 
     [data-word] {
-        opacity: 0.3;
+        opacity: 0.46;
         transition: opacity 700ms var(--ease-fluid);
     }
 

@@ -7,6 +7,7 @@ import { Stage } from "@/stageshow/stage";
 
 import { formatMoney, Logo, loopBack, Micro, Ruled } from "./parts";
 import type { LogoName } from "./parts";
+import { FILM_COMPACT_BELOW, FILM_SIZES } from "./sizes";
 
 import "./chaos.css";
 
@@ -35,7 +36,7 @@ const GEOMETRY = {
     compact: {
         gap: 10,
         head: 26,
-        height: 500,
+        height: FILM_SIZES.chaos.compact.height,
         logo: 32,
         pad: 20,
         padTop: 22,
@@ -43,12 +44,12 @@ const GEOMETRY = {
         row: 48,
         rowGap: 12,
         top: 16,
-        width: 358,
+        width: FILM_SIZES.chaos.compact.width,
     },
     wide: {
         gap: 14,
         head: 28,
-        height: 560,
+        height: FILM_SIZES.chaos.wide.height,
         logo: 36,
         pad: 28,
         padTop: 26,
@@ -56,7 +57,7 @@ const GEOMETRY = {
         row: 56,
         rowGap: 14,
         top: 36,
-        width: 664,
+        width: FILM_SIZES.chaos.wide.width,
     },
 } as const;
 
@@ -347,13 +348,13 @@ export function ChaosFilm() {
     ] as const satisfies readonly { amount: string; logo: LogoName; sub: string; title: string }[];
     return (
         <Stage<Scene>
-            compact={{ below: 520, height: GEOMETRY.compact.height, width: GEOMETRY.compact.width }}
-            height={GEOMETRY.wide.height}
+            compact={{ below: FILM_COMPACT_BELOW, ...FILM_SIZES.chaos.compact }}
+            height={FILM_SIZES.chaos.wide.height}
             initial={START}
             play="loop"
             poster={END}
             script={script}
-            width={GEOMETRY.wide.width}
+            width={FILM_SIZES.chaos.wide.width}
         >
             {({ out, step }, _rect, layout) => {
                 const g = GEOMETRY[layout];

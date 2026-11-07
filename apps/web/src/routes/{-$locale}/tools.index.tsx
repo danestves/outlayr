@@ -8,7 +8,7 @@ import { hubTrail, itemList, ldJson, pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/{-$locale}/tools/")({
     component: Tools,
-    head: ({ params }) => {
+    loader: ({ params }) => {
         const locale = localeFromParam(params.locale);
         const { hub, pages } = getIntlayer("tools", locale);
         const items = Object.entries(pages).map(([slug, page]) => ({
@@ -16,10 +16,13 @@ export const Route = createFileRoute("/{-$locale}/tools/")({
             url: pageUrl(`/tools/${slug}`, locale),
         }));
         return {
-            meta: pageMeta(hub.meta.title, hub.meta.description),
-            scripts: [ldJson(itemList(items)), ldJson(hubTrail(locale, "tools"))],
+            head: {
+                meta: pageMeta(hub.meta.title, hub.meta.description),
+                scripts: [ldJson(itemList(items)), ldJson(hubTrail(locale, "tools"))],
+            },
         };
     },
+    head: ({ loaderData }) => loaderData?.head ?? {},
 });
 
 function Tools() {

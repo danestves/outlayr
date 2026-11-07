@@ -6,6 +6,7 @@ import type { Act } from "@/stageshow/act";
 import { Stage } from "@/stageshow/stage";
 
 import { FilmIcon, Logo, loopBack, Micro, Ruled } from "./parts";
+import { FILM_COMPACT_BELOW, FILM_SIZES } from "./sizes";
 
 import "./capture.css";
 
@@ -189,13 +190,13 @@ export function CaptureFilm() {
     const script = useMemo(() => makeScript(sentence), [sentence]);
     return (
         <Stage<Scene>
-            compact={{ below: 520, height: 390, width: 358 }}
-            height={452}
+            compact={{ below: FILM_COMPACT_BELOW, ...FILM_SIZES.capture.compact }}
+            height={FILM_SIZES.capture.wide.height}
             initial={START}
             play="loop"
             poster={END}
             script={script}
-            width={664}
+            width={FILM_SIZES.capture.wide.width}
         >
             {({ mode, out, saved, scan, typed }, _rect, layout) => (
                 <div className="film-scene" data-out={out || undefined}>

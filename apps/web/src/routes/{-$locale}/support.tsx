@@ -5,8 +5,8 @@ import { useIntlayer } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
 import { Page } from "@/components/page";
-import { fold } from "@/lib/agent-tools";
 import { capture } from "@/lib/analytics";
+import { fold } from "@/lib/fold";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { faqPage, ldJson, pageMeta } from "@/lib/seo";
 import { SUPPORT_EMAIL } from "@/lib/site";

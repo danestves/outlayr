@@ -145,3 +145,15 @@
         transition: none;
     }
 }
+
+.film-slot {
+    container-type: inline-size;
+
+    & > div {
+        height: min(var(--c-h) * 1px, 100cqw * var(--c-h) / var(--c-w));
+
+        @container (min-width: 520px) {
+            height: min(var(--w-h) * 1px, 100cqw * var(--w-h) / var(--w-w));
+        }
+    }
+}

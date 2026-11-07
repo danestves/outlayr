@@ -51,22 +51,17 @@ const LABEL = "text-muted font-mono text-xs";
 export const Route = createFileRoute("/{-$locale}/guides/$slug")({
     component: Guide,
     loader: ({ params }) => {
-        if (!hasKey(getIntlayer("answers").guides, params.slug)) {
+        const { slug } = params;
+        if (!hasKey(getIntlayer("answers").guides, slug)) {
             throw notFound({ routeId: rootRouteId });
         }
-        return params.slug;
-    },
-    head: ({ loaderData, params }) => {
-        if (!loaderData) {
-            return {};
-        }
         const locale = localeFromParam(params.locale);
-        const guide = getIntlayer("answers", locale).guides[loaderData];
-        const path = `/guides/${loaderData}`;
+        const guide = getIntlayer("answers", locale).guides[slug];
+        const path = `/guides/${slug}`;
         const url = pageUrl(path, locale);
-        const updated = guideUpdated(loaderData);
-        const plate = plateImage(loaderData, locale);
-        return {
+        const updated = guideUpdated(slug);
+        const plate = plateImage(slug, locale);
+        const head = {
             links: plate
                 ? [
                       {
@@ -97,7 +92,7 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
                     })
                 ),
                 ldJson(faqPage(guide.faq, LANGUAGES[locale].lang)),
-                ldJson(answerTrail(locale, "guides", loaderData, guide.title)),
+                ldJson(answerTrail(locale, "guides", slug, guide.title)),
                 ...("apps" in guide
                     ? [
                           ldJson({
@@ -116,7 +111,9 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
                     : []),
             ],
         };
+        return { head, slug };
     },
+    head: ({ loaderData }) => loaderData?.head ?? {},
 });
 
 function GuidePlate({ alt, locale, plate }: { alt: string; locale: Locale; plate: string }) {
@@ -163,7 +160,7 @@ function textOf(facts: readonly { label: { value: string }; text: { value: strin
 }
 
 function Guide() {
-    const slug = Route.useLoaderData();
+    const { slug } = Route.useLoaderData();
     const { compare, guides, labels } = useIntlayer("answers");
     const { locale } = useLocale();
     const guide = guides[slug];

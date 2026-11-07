@@ -7,6 +7,7 @@ import { Stage } from "@/stageshow/stage";
 
 import { CategoryTile, FilmIcon, formatMoney, Logo, loopBack, Micro, Money, Ruled } from "./parts";
 import type { LogoName } from "./parts";
+import { FILM_COMPACT_BELOW, FILM_SIZES } from "./sizes";
 
 import "./sorted.css";
 
@@ -290,13 +291,13 @@ function EntryCard({ compact, step }: { compact: boolean; step: number }) {
 export function SortedFilm() {
     return (
         <Stage<Scene>
-            compact={{ below: 520, height: 608, width: 358 }}
-            height={664}
+            compact={{ below: FILM_COMPACT_BELOW, ...FILM_SIZES.sorted.compact }}
+            height={FILM_SIZES.sorted.wide.height}
             initial={START}
             play="loop"
             poster={END}
             script={script}
-            width={664}
+            width={FILM_SIZES.sorted.wide.width}
         >
             {({ out, step }, _rect, layout) => {
                 const compact = layout === "compact";

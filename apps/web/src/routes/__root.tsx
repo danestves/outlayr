@@ -15,7 +15,6 @@ import { ConsentBanner } from "@/components/consent-banner";
 import { NotFound } from "@/components/not-found";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { useAgentTools } from "@/lib/agent-tools";
 import { startAnalytics } from "@/lib/analytics";
 import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
@@ -24,6 +23,7 @@ import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } fr
 import type { Session } from "@/lib/session";
 import { COMPANY, FOUNDER, SITE_URL, SOURCE_URL, SUPPORT_EMAIL, X_URL } from "@/lib/site";
 import { THEME_SCRIPT } from "@/lib/theme";
+import { useAgentTools } from "@/lib/use-agent-tools";
 
 import appCss from "../index.css?url";
 

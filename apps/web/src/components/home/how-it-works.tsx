@@ -5,13 +5,10 @@ import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
 import { CONTAINER } from "@/lib/layout";
 
-import { CaptureFilm } from "./films/capture";
-import { FilmFrame } from "./films/frame";
-import { MonthFilm } from "./films/month";
-import { SortedFilm } from "./films/sorted";
+import { LazyFilm } from "./films/lazy";
 import { HEADING, LABEL } from "./problem";
 
-const FILMS = [CaptureFilm, SortedFilm, MonthFilm] as const;
+const FILMS = ["capture", "sorted", "month"] as const;
 const WAYS: IconName[] = ["text-aa", "microphone", "receipt", "file-csv"];
 
 export function HowItWorks() {
@@ -63,9 +60,7 @@ export function HowItWorks() {
                         </div>
                         <div className="lg:col-span-7" data-reveal>
                             <div className="bg-surface overflow-hidden rounded-3xl">
-                                <FilmFrame label={step.film.value}>
-                                    <Scene film={FILMS[index]} />
-                                </FilmFrame>
+                                <Scene film={FILMS[index]} label={step.film.value} />
                             </div>
                         </div>
                     </li>
@@ -79,6 +74,6 @@ export function HowItWorks() {
     );
 }
 
-function Scene({ film: Film }: { film: (typeof FILMS)[number] | undefined }) {
-    return Film === undefined ? null : <Film />;
+function Scene({ film, label }: { film: (typeof FILMS)[number] | undefined; label: string }) {
+    return film === undefined ? null : <LazyFilm label={label} name={film} />;
 }

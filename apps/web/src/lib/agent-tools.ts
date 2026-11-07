@@ -1,9 +1,9 @@
-import { useRouter } from "@tanstack/react-router";
+import type { useRouter } from "@tanstack/react-router";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { getIntlayer, getLocalizedUrl } from "intlayer";
-import { useEffect } from "react";
 
+import { fold } from "./fold";
 import { pageUrl } from "./i18n";
 import type { Locale } from "./i18n";
 
@@ -13,10 +13,7 @@ export interface SitePage {
     title: string;
 }
 
-const DIACRITICS = /\p{Diacritic}/gu;
 const SPACES = /\s+/u;
-
-export const fold = (text: string) => text.normalize("NFD").replaceAll(DIACRITICS, "").toLowerCase();
 
 function sitePages(locale: Locale): SitePage[] {
     const home = getIntlayer("home", locale);
@@ -87,66 +84,61 @@ const openPage = Effect.fn("AgentTools.openPage")(function* openPage(
     return located(page, locale);
 });
 
-export function useAgentTools(locale: Locale) {
-    const router = useRouter();
-    // oxlint-disable-next-line outlayr/react-effect-budget -- registers WebMCP tools on document.modelContext and aborts them on unmount
-    useEffect(() => {
-        const modelContext = document.modelContext ?? navigator.modelContext;
-        if (!modelContext) {
-            return;
-        }
-        const pages = sitePages(locale);
-        const { faq } = getIntlayer("home", locale);
-        const { answers } = getIntlayer("support", locale);
-        const controller = new AbortController();
-        const options = { signal: controller.signal };
-        void modelContext.registerTool(
-            {
-                annotations: { readOnlyHint: true },
-                description:
-                    "Search tryoutlayr.com, the site for Outlayr, a mobile expense tracker and budget app. Covers the product overview, how-to guides, comparisons with other budget apps, free money calculators, support, and legal pages. Returns each match's title, description, path, and URL. Leave the query empty to list every page.",
-                execute: ({ query = "" }: { query?: string }) =>
-                    searchPages(pages, query).map((page) => located(page, locale)),
-                inputSchema: {
-                    properties: {
-                        query: { description: "Words to look for, like 'receipt' or 'ynab'.", type: "string" },
-                    },
-                    type: "object",
+export function registerAgentTools(
+    modelContext: ModelContext,
+    router: ReturnType<typeof useRouter>,
+    locale: Locale,
+    signal: AbortSignal
+) {
+    const pages = sitePages(locale);
+    const { faq } = getIntlayer("home", locale);
+    const { answers } = getIntlayer("support", locale);
+    const options = { signal };
+    void modelContext.registerTool(
+        {
+            annotations: { readOnlyHint: true },
+            description:
+                "Search tryoutlayr.com, the site for Outlayr, a mobile expense tracker and budget app. Covers the product overview, how-to guides, comparisons with other budget apps, free money calculators, support, and legal pages. Returns each match's title, description, path, and URL. Leave the query empty to list every page.",
+            execute: ({ query = "" }: { query?: string }) =>
+                searchPages(pages, query).map((page) => located(page, locale)),
+            inputSchema: {
+                properties: {
+                    query: { description: "Words to look for, like 'receipt' or 'ynab'.", type: "string" },
                 },
-                name: "search_pages",
+                type: "object",
             },
-            options
-        );
-        void modelContext.registerTool(
-            {
-                description: "Open a page of tryoutlayr.com in this tab. Takes a path returned by search_pages.",
-                execute: ({ path }: { path: string }) => Effect.runPromise(openPage(router, locale, pages, path)),
-                inputSchema: {
-                    properties: {
-                        path: {
-                            description: "Site path, like /guides/budget-planner.",
-                            enum: pages.map(({ path }) => path),
-                            type: "string",
-                        },
+            name: "search_pages",
+        },
+        options
+    );
+    void modelContext.registerTool(
+        {
+            description: "Open a page of tryoutlayr.com in this tab. Takes a path returned by search_pages.",
+            execute: ({ path }: { path: string }) => Effect.runPromise(openPage(router, locale, pages, path)),
+            inputSchema: {
+                properties: {
+                    path: {
+                        description: "Site path, like /guides/budget-planner.",
+                        enum: pages.map(({ path }) => path),
+                        type: "string",
                     },
-                    required: ["path"],
-                    type: "object",
                 },
-                name: "open_page",
+                required: ["path"],
+                type: "object",
             },
-            options
-        );
-        void modelContext.registerTool(
-            {
-                annotations: { readOnlyHint: true },
-                description:
-                    "Answers to common questions about Outlayr: what it is, what is free and what Pro adds, platforms, languages, privacy, and how to restore or cancel Pro, get a refund, and export or delete data.",
-                execute: () => [...faq, ...answers],
-                inputSchema: { properties: {}, type: "object" },
-                name: "get_answers",
-            },
-            options
-        );
-        return () => controller.abort();
-    }, [locale, router]);
+            name: "open_page",
+        },
+        options
+    );
+    void modelContext.registerTool(
+        {
+            annotations: { readOnlyHint: true },
+            description:
+                "Answers to common questions about Outlayr: what it is, what is free and what Pro adds, platforms, languages, privacy, and how to restore or cancel Pro, get a refund, and export or delete data.",
+            execute: () => [...faq, ...answers],
+            inputSchema: { properties: {}, type: "object" },
+            name: "get_answers",
+        },
+        options
+    );
 }
