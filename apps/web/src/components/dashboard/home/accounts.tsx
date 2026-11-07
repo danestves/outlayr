@@ -50,7 +50,13 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
         };
     }, [catalog, filters.accounts, ledger, overview.balances, period, quiet, scoped]);
     const horizon = addDays(ledger.today, UPCOMING_DAYS);
-    const charges = overview.upcoming.charges.filter((charge) => charge.nextCharge <= horizon).slice(0, UPCOMING_ROWS);
+    const charges = overview.upcoming.charges
+        .filter(
+            (charge) =>
+                charge.nextCharge <= horizon &&
+                (filters.accounts.length === 0 || filters.accounts.includes(charge.accountId ?? ""))
+        )
+        .slice(0, UPCOMING_ROWS);
     if (setup?.step === "account") {
         return (
             <section className="dash-card relative min-h-[375px] text-sm" data-active>
