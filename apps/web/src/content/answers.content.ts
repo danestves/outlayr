@@ -3899,7 +3899,7 @@ const answers = {
                 related: [
                     "/guides/multi-currency-expense-tracker",
                     "/tools/installment-calculator",
-                    "/guides/best-expense-tracker-apps",
+                    "/tools/dolar-hoy-bolivia",
                 ] satisfies PageRef[],
                 sources: LIST_SOURCES,
                 title: t({

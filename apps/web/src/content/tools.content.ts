@@ -51,7 +51,9 @@ const tools = {
                 buy: t({ en: "buy", es: "compra" }),
                 convert: t({ en: "Convert", es: "Convertir" }),
                 kinds: {
+                    bcb: t({ en: "Official (BCB)", es: "Oficial (BCB)" }),
                     bcv: t({ en: "Official (BCV)", es: "Oficial (BCV)" }),
+                    binance: t({ en: "Parallel (Binance P2P)", es: "Paralelo (Binance P2P)" }),
                     blue: t({ en: "Blue", es: "Blue" }),
                     ccl: t({ en: "CCL (contado con liquidación)", es: "CCL (contado con liquidación)" }),
                     cripto: t({ en: "Crypto", es: "Cripto" }),
@@ -588,7 +590,7 @@ const tools = {
                 related: [
                     "/guides/multi-currency-expense-tracker",
                     "/guides/best-expense-tracker-apps-latin-america",
-                    "/tools/installment-calculator",
+                    "/tools/dolar-hoy-bolivia",
                 ] satisfies PageRef[],
                 title: t({
                     en: "BCV dollar today: the official rate in Venezuela",
@@ -667,11 +669,79 @@ const tools = {
                 related: [
                     "/guides/multi-currency-expense-tracker",
                     "/guides/best-expense-tracker-apps-latin-america",
-                    "/tools/installment-calculator",
+                    "/tools/dolar-hoy-bolivia",
                 ] satisfies PageRef[],
                 title: t({
                     en: "Dollar today in Argentina: blue, official, MEP and card",
                     es: "Dólar hoy en Argentina: blue, oficial, MEP y tarjeta",
+                }),
+            },
+            "dolar-hoy-bolivia": {
+                faq: [
+                    {
+                        answer: t({
+                            en: "It is the price people pay each other for dollars outside the banks, also called the parallel dollar. This page shows the Binance P2P price, where people trade USDT, a stablecoin worth one dollar, for bolivianos. It is the closest public number to the blue dollar, so many people call it the Binance dollar.",
+                            es: "Es el precio al que la gente se compra y se vende dólares fuera de los bancos, también llamado dólar paralelo. Esta página muestra el precio de Binance P2P, donde la gente cambia USDT, una stablecoin que vale un dólar, por bolivianos. Es el número público más cercano al dólar blue, por eso muchos le dicen dólar Binance.",
+                        }),
+                        question: t({
+                            en: "What is the blue dollar in Bolivia?",
+                            es: "¿Qué es el dólar blue en Bolivia?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "The official rate is the one the Banco Central de Bolivia publishes for each day. The parallel rate comes from what people agree to pay each other on Binance, so it moves all day with supply and demand.",
+                            es: "El oficial es el que publica el Banco Central de Bolivia para cada día. El paralelo sale de lo que la gente acuerda pagarse en Binance, así que se mueve todo el día con la oferta y la demanda.",
+                        }),
+                        question: t({
+                            en: "Why is the parallel dollar different from the official one?",
+                            es: "¿Por qué el dólar paralelo es distinto del oficial?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Outlayr is a multi-currency expense tracker that keeps the rate it used next to every entry. Choose My rate and type the rate you actually got, such as the parallel rate you paid, and the entry keeps it.",
+                            es: "Sí. Outlayr es una app para controlar gastos en varias monedas que guarda la tasa que usó junto a cada registro. Elige Mi tasa y escribe la que te dieron, como el paralelo al que pagaste, y el registro la conserva.",
+                        }),
+                        question: t({
+                            en: "Can Outlayr log my spending in bolivianos and dollars?",
+                            es: "¿Outlayr puede llevar mis gastos en bolivianos y en dólares?",
+                        }),
+                    },
+                    PRIVACY_FAQ,
+                ],
+                lead: t({
+                    en: "Today's parallel dollar in Bolivia, also called the blue dollar, from the Binance P2P market, and the official rate from the BCB, with a calculator to turn dollars into bolivianos and back.",
+                    es: "El dólar blue o paralelo de hoy en Bolivia, del mercado P2P de Binance, y el oficial del BCB, con una calculadora para pasar de dólares a bolivianos y de bolivianos a dólares.",
+                }),
+                meta: {
+                    title: t({
+                        en: "Dollar Rate Today in Bolivia: Parallel (Blue) and Official · Outlayr",
+                        es: "Dólar blue Bolivia hoy: paralelo, oficial y calculadora · Outlayr",
+                    }),
+                },
+                method: [
+                    t({
+                        en: "The parallel row is the USDT price on Binance P2P, the market people mean by the blue or parallel dollar. It is not a bank rate. The official row is the rate the Banco Central de Bolivia publishes for a date, so it shows that date and no time.",
+                        es: "La fila del paralelo es el precio del USDT en Binance P2P, el mercado al que la gente se refiere con dólar blue o paralelo. No es una tasa de banco. La fila del oficial es la tasa que publica el Banco Central de Bolivia para una fecha, así que muestra esa fecha y no una hora.",
+                    }),
+                    t({
+                        en: "Each row has a buy and a sell price. The calculator uses the sell price, which is what it costs to buy one dollar. If you are selling dollars, the buy price is the one you get. Amounts are multiplied or divided by the rate and rounded to the cent.",
+                        es: "Cada fila tiene un precio de compra y uno de venta. La calculadora usa el de venta, que es lo que cuesta comprar un dólar. Si vas a vender dólares, el que te pagan es el de compra. Los montos se multiplican o se dividen por la tasa y se redondean al centavo.",
+                    }),
+                    t({
+                        en: "This page refreshes the rates from DolarApi every few hours, so a rate can be a few hours old, and each row shows when its source last updated it. If DolarApi can't be reached, the page says so instead of showing an old number.",
+                        es: "Esta página actualiza las tasas desde DolarApi cada pocas horas, así que una tasa puede tener unas horas, y cada fila muestra cuándo la actualizó su fuente. Si no se puede llegar a DolarApi, la página lo dice en vez de mostrar un número viejo.",
+                    }),
+                ],
+                related: [
+                    "/guides/multi-currency-expense-tracker",
+                    "/guides/best-expense-tracker-apps-latin-america",
+                    "/tools/dolar-hoy-argentina",
+                ] satisfies PageRef[],
+                title: t({
+                    en: "Dollar today in Bolivia: parallel and official",
+                    es: "Dólar blue Bolivia hoy: paralelo y oficial",
                 }),
             },
         },

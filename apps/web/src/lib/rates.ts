@@ -49,6 +49,25 @@ export const RATE_MARKETS = {
         timeZone: "America/Argentina/Buenos_Aires",
         url: "https://dolarapi.com/v1/dolares",
     },
+    "dolar-hoy-bolivia": {
+        buy: true,
+        currency: "BOB",
+        key: "casa",
+        kinds: [
+            {
+                api: "binance",
+                dateOnly: false,
+                kind: "binance",
+                source: "https://p2p.binance.com/es/trade/all-payments/USDT?fiat=BOB",
+            },
+            { api: "oficial", dateOnly: true, kind: "bcb", source: "https://www.bcb.gob.bo/" },
+        ],
+        maxAgeMs: 3 * DAY_MS,
+        numberLocale: "es-BO",
+        prices: ["venta", "promedio"],
+        timeZone: "America/La_Paz",
+        url: "https://bo.dolarapi.com/v1/dolares",
+    },
 } as const;
 
 export type RateSlug = keyof typeof RATE_MARKETS;
