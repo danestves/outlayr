@@ -19,6 +19,8 @@ Library behavior that breaks code far from where we first hit it. Each entry nam
 - **`withUniwind` runs once per component.** Every wrapper lives in `apps/native/src/components/styled.ts`; React Native and Reanimated components take `className` already. A wrapped `GlassView` renders no glass at all: import it from `expo-glass-effect` and size it with `style`.
 - **tailwind-merge doesn't know our text sizes.** It files every unknown `--text-*` token as a color, so `cn("text-body", "text-danger")` drops the size. `apps/native/src/components/tw.ts` declares the sizes through `extendTailwindMerge`; `tailwind-variants`' `cnMerge` accepts `twMergeConfig` and ignores it.
 - **PanelUI's disabled dim never lands.** Its `AnimatedPressable` writes `opacity` every frame, which beats a static class (other classes apply). Dim a wrapper instead (`apps/native/src/components/editor-cta.tsx`).
+- **panelui-web is scanned one component at a time.** Scanning its whole `dist` added 200 KB of unused classes to the CSS every web page blocks on, so `apps/web/src/index.css` has an `@source` line per component. A new `panelui-web/*` import without a line renders unstyled, and `apps/web/src/panelui-sources.test.ts` fails.
+- **Long-cached web images never change in place.** Badges, logos and the hero bezel keep their URL for a year (`A_YEAR` in `apps/web/vite.config.ts`), so a redrawn file ships under a new name.
 
 ## Native UI
 

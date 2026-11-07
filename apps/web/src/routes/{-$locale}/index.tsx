@@ -1,3 +1,4 @@
+import mono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 
@@ -27,6 +28,7 @@ export const Route = createFileRoute("/{-$locale}/")({
         const locale = localeFromParam(params.locale);
         const { faq, meta } = getIntlayer("home", locale);
         return {
+            links: [{ as: "font", crossOrigin: "anonymous", href: mono, rel: "preload", type: "font/woff2" }],
             meta: pageMeta(meta.title, meta.description),
             scripts: [ldJson(faqPage(faq, LANGUAGES[locale].lang))],
         };
