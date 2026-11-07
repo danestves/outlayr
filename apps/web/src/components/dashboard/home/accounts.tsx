@@ -81,7 +81,7 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
         );
     }
     return (
-        <section className="dash-card text-sm lg:self-start">
+        <section className="dash-card text-sm @4xl:self-start">
             <div className="dash-card-head">
                 <h2>{copy.accounts}</h2>
                 {setup ? null : (
