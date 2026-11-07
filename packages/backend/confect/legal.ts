@@ -315,11 +315,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "A website you add for a merchant, with its name and a general category, joins our shared merchant list so others see the logo. It isn't linked to you.",
                     label: "Adding a merchant's website",
                 },
+                {
+                    detail: "We now email you before a material change to this policy or our Terms. Other changes, such as clearer wording, are only posted on the website.",
+                    label: "When we email you about changes",
+                },
             ],
             es: [
                 {
                     detail: "El sitio web que agregues para un comercio, con su nombre y una categoría general, entra en nuestra lista compartida para que otros vean el logo. No está vinculado a ti.",
                     label: "Agregar el sitio web de un comercio",
+                },
+                {
+                    detail: "Ahora te enviamos un correo antes de un cambio importante en esta política o nuestros Términos. Otros cambios, como una redacción más clara, solo se publican en el sitio web.",
+                    label: "Cuándo te avisamos de cambios por correo",
                 },
             ],
             fr: [
@@ -327,11 +335,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Le site que vous ajoutez pour un commerçant, avec son nom et une catégorie générale, rejoint notre liste partagée pour que d'autres voient le logo. Il n'est pas lié à vous.",
                     label: "Ajouter le site d'un commerçant",
                 },
+                {
+                    detail: "Nous vous envoyons désormais un e-mail avant un changement important de cette politique ou de nos Conditions. Les autres changements, comme une formulation plus claire, sont seulement publiés sur le site.",
+                    label: "Quand nous vous écrivons au sujet des changements",
+                },
             ],
             pt: [
                 {
                     detail: "O site que você adicionar para um comerciante, com o nome e uma categoria geral, entra na nossa lista compartilhada para que outros vejam o logo. Ele não fica vinculado a você.",
                     label: "Adicionar o site de um comerciante",
+                },
+                {
+                    detail: "Agora enviamos um e-mail antes de uma mudança importante nesta política ou nos nossos Termos. Outras mudanças, como uma redação mais clara, são apenas publicadas no site.",
+                    label: "Quando avisamos sobre mudanças por e-mail",
                 },
             ],
         },
