@@ -79,7 +79,7 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
             <div className="dash-card-head">
                 <h2>{copy.accounts}</h2>
                 {setup ? null : (
-                    <span className="dash-figure text-muted-foreground ml-auto text-[13px]">
+                    <span className="dash-figure text-muted-foreground ml-auto min-w-0 truncate text-[13px]">
                         {money(shown.net, ledger.currency)}
                     </span>
                 )}
@@ -89,10 +89,12 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                     <p className="text-muted-foreground py-6 text-[13px]">{copy.noAccounts}</p>
                 ) : null}
                 {shown.rows.slice(0, ACCOUNT_ROWS).map((account) => (
-                    <div className={ROW} key={account.key}>
+                    <div className="flex min-h-10 flex-wrap items-center gap-x-2.5 font-medium" key={account.key}>
                         <AccountTile account={account.look} photos={photos} size="lg" />
-                        <span className="min-w-0 truncate">{account.name}</span>
-                        <span className="dash-figure ml-auto">{money(account.balance, ledger.currency)}</span>
+                        <span className="min-w-18 flex-[1_1_0] truncate">{account.name}</span>
+                        <span className="dash-figure ml-auto whitespace-nowrap">
+                            {money(account.balance, ledger.currency)}
+                        </span>
                     </div>
                 ))}
                 {shown.rows.length > ACCOUNT_ROWS ? (

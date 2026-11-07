@@ -18,16 +18,16 @@ export function CardFrame({
 }) {
     return (
         <Frame className={`min-w-0 rounded-2xl ${className}`} variant="band">
-            <Frame.Header className="min-h-10">
-                <Frame.Title as="h2" className="text-[15px] font-semibold tracking-[-0.01em]">
+            <Frame.Header className="min-h-10 has-data-[slot=frame-action]:grid-cols-[auto_minmax(0,1fr)]">
+                <Frame.Title as="h2" className="text-[15px] font-semibold tracking-[-0.01em] whitespace-nowrap">
                     {title}
                 </Frame.Title>
-                {action ? <Frame.Action>{action}</Frame.Action> : null}
+                {action ? <Frame.Action className="min-w-0 justify-self-end">{action}</Frame.Action> : null}
             </Frame.Header>
             <Frame.Panel className={`relative flex-1 group-data-[variant=band]/frame:rounded-[10px] ${panelClassName}`}>
                 {children}
             </Frame.Panel>
-            {footer ? <Frame.Footer className="min-h-11 text-sm">{footer}</Frame.Footer> : null}
+            {footer ? <Frame.Footer className="min-h-11 flex-wrap text-sm">{footer}</Frame.Footer> : null}
         </Frame>
     );
 }

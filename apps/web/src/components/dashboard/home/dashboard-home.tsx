@@ -14,6 +14,9 @@ import { SetupHero } from "./setup";
 import { SpentOfIncome } from "./spent-of-income";
 import { Transactions } from "./transactions";
 
+// Measured on main, not the viewport: the open sidebar takes 247 px that a viewport breakpoint can't see.
+const THREE_CARDS = "@2xl:[&>:last-child]:col-span-2 @4xl:grid-cols-3 @4xl:[&>:last-child]:col-span-1";
+
 export function DashboardHome() {
     const { incomeTracking } = useContext(LedgerSettingsContext);
     const { filters, ledger } = useDashboard();
@@ -27,10 +30,10 @@ export function DashboardHome() {
         [filters.accounts, filters.period, ledger, setup]
     );
     return (
-        <main className={`min-w-0 px-6 ${setup ? "pb-3.5" : "pb-5"}`}>
+        <main className={`@container min-w-0 px-4 sm:px-6 ${setup ? "pb-3.5" : "pb-5"}`}>
             <FilterBar quiet={quiet} setup={setup} />
             {setup ? <SetupHero setup={setup} /> : <KpiGroup quiet={quiet} />}
-            <div className={`mt-4 grid grid-cols-1 gap-4 ${incomeTracking ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}>
+            <div className={`mt-4 grid grid-cols-1 gap-4 @2xl:grid-cols-2 ${incomeTracking ? THREE_CARDS : ""}`}>
                 {incomeTracking ? <SpentOfIncome quiet={quiet} setup={setup} /> : null}
                 <EveryDay quiet={quiet} setup={setup} />
                 <Budgets setup={setup} />
