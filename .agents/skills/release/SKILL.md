@@ -61,6 +61,8 @@ Step 1 asks `asc` and `play.ts status`, so a build verdict needs both logged in.
 
 A platform can skip numbers, for example Android going from 1.2.3 to 1.2.5. Neither store cares. A major is a **stop and ask**: name the commits that made it, because the app may not have changed enough to deserve one.
 
+Before dispatching any verdict that ships something, run the `policy-notice` skill on the commits it lists and report its verdict. If an email is due, say so: this skill's go-ahead doesn't cover sending it.
+
 Before an `OTA` or `BUILD`, run `node --import tsx scripts/licenses.ts --check` from `apps/native`. If it reports the open source licenses list as stale, **stop and ask**: a dependency change shipped without regenerating it, and the fix is a PR, not an edit on detached main.
 
 ## 3. Message
