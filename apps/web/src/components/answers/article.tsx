@@ -43,7 +43,7 @@ export function Figures({ text }: { text: string }) {
 
 const WWW = /^www\./u;
 
-function Source({ href }: { href: string }) {
+export function Source({ href }: { href: string }) {
     return (
         <a
             className="fluid text-muted hover:text-foreground ml-2 inline-flex items-center gap-1 font-mono text-xs whitespace-nowrap"
