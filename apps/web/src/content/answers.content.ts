@@ -3221,8 +3221,8 @@ const answers = {
                                 es: "Monarch, PocketGuard y YNAB publican sus precios en dólares estadounidenses, así que lo que pagas en Canadá cambia con la tasa y con la comisión por compras en el extranjero de tu tarjeta. Cuando un plan se vende por el App Store o Google Play, la tienda cobra en CAD.",
                             }),
                             t({
-                                en: "Monarch adds accounts in different currencies as if they were one, so a US dollar account next to a CAD one inflates your totals. Outlayr and Spendee keep each account in its own currency.",
-                                es: "Monarch suma cuentas en monedas distintas como si fueran una, así que una cuenta en dólares estadounidenses junto a una en CAD infla tus totales. Outlayr y Spendee mantienen cada cuenta en su propia moneda.",
+                                en: "Monarch adds accounts in different currencies as if they were one, so a US dollar account next to a CAD one gives misleading totals. Outlayr and Spendee keep each account in its own currency.",
+                                es: "Monarch suma cuentas en monedas distintas como si fueran una, así que una cuenta en dólares estadounidenses junto a una en CAD da totales engañosos. Outlayr y Spendee mantienen cada cuenta en su propia moneda.",
                             }),
                         ],
                         id: "cad",
