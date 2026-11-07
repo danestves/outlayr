@@ -46,6 +46,7 @@ packageExtensions:
                 optional: true
 minimumReleaseAgeExclude:
     - panelui-native@0.75.1
+    - panelui-web@0.14.0
 
 patchedDependencies:
     "@convex-dev/agent@0.7.8": patches/@convex-dev__agent@0.7.8.patch
