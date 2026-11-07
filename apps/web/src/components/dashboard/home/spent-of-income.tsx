@@ -156,7 +156,7 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
                         {previewing ? copy.spentOfIncome.wouldKeep : copy.kpi.kept}
                     </span>
                     <span
-                        className={`dash-figure font-medium ${previewing ? "decoration-muted-foreground underline decoration-dashed underline-offset-3" : ""}`}
+                        className={`dash-figure font-medium whitespace-nowrap ${previewing ? "decoration-muted-foreground underline decoration-dashed underline-offset-3" : ""}`}
                     >
                         {shown(kept)}
                     </span>
@@ -192,19 +192,19 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
                     end={hasIncome ? shown(income) : copy.spentOfIncome.noIncome}
                     start={moneyIn(0, ledger.currency, "auto", false)}
                 />
-                <div className="mt-3.5 flex items-baseline justify-between text-sm">
+                <div className="mt-3.5 flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
                     <span className="text-muted-foreground flex items-center gap-2 text-[13px]">
                         <u aria-hidden className="bg-foreground block size-[7px] rotate-45 rounded-[1px]" />
                         {capitalize(date.month(priorMonth))}
                     </span>
-                    <span className="dash-figure">{shown(prior)}</span>
+                    <span className="dash-figure ml-auto whitespace-nowrap">{shown(prior)}</span>
                 </div>
-                <div className="mt-1.5 flex items-baseline justify-between text-sm">
-                    <span className="text-muted-foreground flex items-center gap-2 text-[13px]">
+                <div className="mt-1.5 flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
+                    <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-[13px]">
                         {capitalize(date.month(period.key))}
                         {overBy ? <span className="text-app-spend">{overBy}</span> : null}
                     </span>
-                    <span className="dash-figure">{shown(spent)}</span>
+                    <span className="dash-figure ml-auto whitespace-nowrap">{shown(spent)}</span>
                 </div>
             </div>
         </CardFrame>

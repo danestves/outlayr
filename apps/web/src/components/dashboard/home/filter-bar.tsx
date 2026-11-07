@@ -244,7 +244,7 @@ function PeriodControl() {
     const title = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
     const keys = usePeriodKeys(dashboard);
     return (
-        <div className="bg-app-group ml-auto inline-flex rounded-[10px] p-[3px]">
+        <div className="bg-app-group inline-flex rounded-[10px] p-[3px] sm:ml-auto">
             <Menu>
                 <Menu.Trigger className="dash-seg" data-on>
                     {title(filters.period)}
@@ -282,7 +282,7 @@ export function FilterBar({ quiet, setup }: { quiet: boolean; setup: SetupState 
                 </>
             )}
             <PeriodControl />
-            <button aria-disabled className="dash-btn ml-1" title={add.hint.value} type="button">
+            <button aria-disabled className="dash-btn sm:ml-1" title={add.hint.value} type="button">
                 <RiAddLine size={18} />
                 {add.entry}
             </button>

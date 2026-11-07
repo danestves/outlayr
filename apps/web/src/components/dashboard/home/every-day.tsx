@@ -58,8 +58,8 @@ function useWeekLetters(firstWeekday: number) {
 function Stat({ amount, day, label }: { amount: string; day: string; label: string }) {
     return (
         <>
-            <div className="text-muted-foreground truncate text-[13px]">{label}</div>
-            <div className="dash-figure text-base leading-6 font-medium">{amount}</div>
+            <div className="text-muted-foreground w-0 min-w-full truncate text-[13px]">{label}</div>
+            <div className="dash-figure text-base leading-6 font-medium whitespace-nowrap">{amount}</div>
             <div className="dash-figure text-muted-foreground text-xs leading-5">{day}</div>
         </>
     );
@@ -224,7 +224,7 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
     return (
         <CardFrame
             action={
-                <span className="dash-figure text-muted-foreground text-[13px]">
+                <span className="dash-figure text-muted-foreground block truncate text-[13px]">
                     {copy.aDay({ amount: money(days.average, ledger.currency) })}
                 </span>
             }
@@ -252,7 +252,7 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
                         />
                     </Month>
                 </div>
-                <div className={`min-w-0 flex-[1_1_96px] ${days.runnerUp ? "min-h-36" : ""}`}>
+                <div className={`min-w-0 flex-auto ${days.runnerUp ? "min-h-36" : ""}`}>
                     <DayGrid.Caption className="gap-0 empty:hidden">
                         {selected ? (
                             <>

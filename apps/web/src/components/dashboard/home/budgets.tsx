@@ -49,7 +49,7 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
     const filter = () => setFilters({ category: category.topId });
     const percent = Math.round((standing.spent / Math.max(standing.effectiveLimit, 1)) * PERCENT);
     const badge = (
-        <span className="dash-badge h-5 shrink-0" data-tone="bad">
+        <span className="dash-badge ml-auto h-5 shrink-0" data-tone="bad">
             <u />
             {overAmount}
         </span>
@@ -81,7 +81,7 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
         note = copy.budgetResets({ day: date.day(addDays(standing.to, 1)) });
     }
     return (
-        <div className="flex h-9 items-center gap-1.5 max-lg:h-11">
+        <div className="flex min-h-9 items-center gap-1.5 max-lg:min-h-11">
             <Usage {...figures} locales={USAGE_LOCALE} onOpenChange={setOpen} open={open} value={standing.spent}>
                 <Usage.Trigger
                     aria-label={
@@ -126,15 +126,15 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
                 </Usage.Content>
             </Usage>
             <button
-                className="flex h-full min-w-0 flex-1 items-center gap-2 pr-1.5 text-left text-[13px] font-medium"
+                className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 self-stretch py-1 pr-1.5 text-left text-[13px] font-medium"
                 onClick={filter}
                 type="button"
             >
-                <span className="min-w-0 flex-1 truncate">{name}</span>
+                <span className="min-w-18 flex-[1_1_0] truncate">{name}</span>
                 {over ? (
                     badge
                 ) : (
-                    <span className="dash-figure text-muted-foreground text-xs leading-4 whitespace-nowrap">
+                    <span className="dash-figure text-muted-foreground ml-auto text-xs leading-4 whitespace-nowrap">
                         <b className="text-foreground font-medium">{whole(standing.spent)}</b> /{" "}
                         {whole(standing.effectiveLimit)}
                     </span>
@@ -199,7 +199,7 @@ export function Budgets({ setup }: { setup: SetupState | null }) {
             }
             title={copy.budgets}
         >
-            <Stat className="px-3.5 pt-[11px] pb-[7px]">
+            <Stat className="flex-wrap gap-y-1 px-3.5 pt-[11px] pb-[7px]">
                 <Stat.Content>
                     <Stat.Label className="text-[13px] leading-[18px]">
                         {left < 0 ? copy.budgetOverTotal : copy.budgetLeft}
