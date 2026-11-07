@@ -24,6 +24,7 @@ const site = {
                 "ai-expense-tracker": t({ en: "AI expense tracker", es: "Gastos con IA" }),
                 "apple-pay-expense-tracker": t({ en: "Apple Pay", es: "Apple Pay" }),
                 "best-budget-apps": t({ en: "Best budget apps", es: "Mejores apps de presupuesto" }),
+                "best-budget-apps-canada": t({ en: "Budget apps in Canada", es: "Apps de presupuesto en Canadá" }),
                 "best-expense-tracker-apps": t({ en: "Best expense trackers", es: "Mejores apps de gastos" }),
                 "best-expense-tracker-apps-latin-america": t({
                     en: "Expense trackers in Latin America",

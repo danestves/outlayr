@@ -1,4 +1,5 @@
 export const CURRENCIES = {
+    CAD: { symbol: "$" },
     EUR: { symbol: "€" },
     MXN: { symbol: "MX$" },
     USD: { symbol: "$" },

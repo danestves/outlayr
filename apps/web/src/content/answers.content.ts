@@ -96,6 +96,7 @@ const OUTLAYR = {
 const LABELS = {
     availability: t({ en: "Available in", es: "Disponible en" }),
     budgets: t({ en: "Budgets", es: "Presupuestos" }),
+    canada: t({ en: "In Canada", es: "En Canadá" }),
     currencies: t({ en: "Currencies", es: "Monedas" }),
     entries: t({ en: "Adding entries", es: "Cómo registras" }),
     focus: t({ en: "Tracks", es: "Sigue" }),
@@ -2982,6 +2983,269 @@ const answers = {
                 title: t({
                     en: "The best budget apps, by how you budget",
                     es: "Las mejores apps de presupuesto, según cómo presupuestas",
+                }),
+            },
+            "best-budget-apps-canada": {
+                apps: [
+                    {
+                        ...ACTUAL,
+                        facts: [
+                            ...ACTUAL.facts,
+                            {
+                                label: LABELS.canada,
+                                source: "https://actualbudget.org/docs/advanced/bank-sync/",
+                                text: t({
+                                    en: "Bank sync through SimpleFIN Bridge, which covers North American banks, set up on your own server",
+                                    es: "Sincronización bancaria con SimpleFIN Bridge, que cubre bancos de Norteamérica, configurada en tu propio servidor",
+                                }),
+                            },
+                        ],
+                    },
+                    {
+                        ...GOODBUDGET,
+                        facts: [
+                            ...GOODBUDGET.facts,
+                            {
+                                label: LABELS.canada,
+                                source: "https://goodbudget.com/help/using-accounts/import/",
+                                text: t({
+                                    en: "Bank sync is for US banks, so Canadian accounts go in by hand or from a QFX, OFX, or CSV file",
+                                    es: "La sincronización es para bancos de EE. UU., así que las cuentas canadienses entran a mano o desde un archivo QFX, OFX o CSV",
+                                }),
+                            },
+                        ],
+                    },
+                    {
+                        ...MONARCH,
+                        facts: [
+                            ...MONARCH.facts,
+                            {
+                                label: LABELS.canada,
+                                source: "https://www.monarch.com/canada",
+                                text: t({
+                                    en: "Available, billed in US dollars, with a 7-day trial to check that your banks connect",
+                                    es: "Disponible, con cobro en dólares estadounidenses y una prueba de 7 días para comprobar que tus bancos conectan",
+                                }),
+                            },
+                        ],
+                    },
+                    {
+                        facts: [
+                            ...OUTLAYR_FACTS,
+                            {
+                                label: LABELS.canada,
+                                text: t({
+                                    en: "Set CAD as your main currency. Entries are typed, said, scanned, or imported from your bank's CSV, with no bank login",
+                                    es: "Pon CAD como moneda principal. Los registros se escriben, se dictan, se escanean o se importan del CSV de tu banco, sin iniciar sesión en el banco",
+                                }),
+                            },
+                            { label: LABELS.watch, text: OUTLAYR_WATCH },
+                        ],
+                        name: "Outlayr",
+                        slug: "outlayr",
+                        summary: t(OUTLAYR_LEAD),
+                    },
+                    {
+                        ...POCKETGUARD,
+                        facts: [
+                            ...POCKETGUARD.facts,
+                            {
+                                label: LABELS.canada,
+                                source: "https://pocketguard.com/help/what-countries-does-pocketguard-support/",
+                                text: t({
+                                    en: "Supports bank accounts and cards from Canada",
+                                    es: "Admite cuentas bancarias y tarjetas de Canadá",
+                                }),
+                            },
+                        ],
+                    },
+                    {
+                        ...SPENDEE,
+                        facts: [
+                            ...SPENDEE.facts,
+                            {
+                                label: LABELS.canada,
+                                source: "https://help.spendee.com/article/231-how-to-setchange-the-currency-and-exchange-rate",
+                                text: t({
+                                    en: "A wallet can be in CAD. Bank sync is in Premium, so check that your bank is on its list first",
+                                    es: "Una billetera puede estar en CAD. La sincronización bancaria es de Premium, así que revisa antes que tu banco esté en su lista",
+                                }),
+                            },
+                        ],
+                    },
+                    {
+                        ...YNAB,
+                        facts: [
+                            ...YNAB.facts,
+                            {
+                                label: LABELS.canada,
+                                source: "https://www.ynab.com/pricing",
+                                text: t({
+                                    en: "Priced in US dollars. Direct Import covers select Canadian banks",
+                                    es: "Con precio en dólares estadounidenses. Direct Import cubre algunos bancos canadienses",
+                                }),
+                            },
+                        ],
+                    },
+                ],
+                facts: [
+                    {
+                        label: "Actual Budget",
+                        text: t({
+                            en: "Best if you want free envelope budgeting on a computer and can run a server for bank sync",
+                            es: "Ideal si quieres presupuestar por sobres gratis en la computadora y puedes montar un servidor para sincronizar el banco",
+                        }),
+                    },
+                    {
+                        label: "Goodbudget",
+                        text: t({
+                            en: "Best if you want envelopes on the web and both phones, starting free, without linking a bank",
+                            es: "Ideal si quieres sobres en la web y en los dos celulares, empezando gratis, sin vincular un banco",
+                        }),
+                    },
+                    {
+                        label: "Monarch Money",
+                        text: t({
+                            en: "Best if you want budgets next to net worth from linked Canadian accounts, and can pay in US dollars",
+                            es: "Ideal si quieres tus presupuestos junto a tu patrimonio desde cuentas canadienses vinculadas, y puedes pagar en dólares estadounidenses",
+                        }),
+                    },
+                    {
+                        label: "Outlayr",
+                        text: t({
+                            en: "Best if you want to budget in CAD without a bank login, logging a purchase in one sentence",
+                            es: "Ideal si quieres presupuestar en CAD sin iniciar sesión en tu banco, registrando una compra en una oración",
+                        }),
+                    },
+                    {
+                        label: "PocketGuard",
+                        text: t({
+                            en: "Best if you want zero-based, envelope, or category budgets from linked Canadian accounts",
+                            es: "Ideal si quieres presupuestos de base cero, por sobres o por categoría desde cuentas canadienses vinculadas",
+                        }),
+                    },
+                    {
+                        label: "Spendee",
+                        text: t({
+                            en: "Best if you want a free start with a CAD wallet and other currencies beside it",
+                            es: "Ideal si quieres empezar gratis con una billetera en CAD y otras monedas al lado",
+                        }),
+                    },
+                    {
+                        label: "YNAB",
+                        text: t({
+                            en: "Best if you want to decide what each dollar is for before you spend it, and are fine paying in US dollars",
+                            es: "Ideal si quieres decidir para qué es cada dólar antes de gastarlo y no te molesta pagar en dólares estadounidenses",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "The one that fits how you budget and whether you want to link a bank. To budget without a bank login, Goodbudget and Outlayr start free, and Actual Budget is free on a computer. To link Canadian accounts, Monarch and PocketGuard sync them, and YNAB imports from select Canadian banks.",
+                            es: "La que coincide con cómo presupuestas y con si quieres vincular un banco. Para presupuestar sin iniciar sesión en el banco, Goodbudget y Outlayr empiezan gratis, y Actual Budget es gratis en la computadora. Para vincular cuentas canadienses, Monarch y PocketGuard las sincronizan, y YNAB importa desde algunos bancos canadienses.",
+                        }),
+                        question: t({
+                            en: "What is the best budget app in Canada?",
+                            es: "¿Cuál es la mejor app de presupuesto en Canadá?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Actual Budget is free software, with a server needed to sync. Goodbudget's free plan has 20 envelopes, 1 account, and 1 year of history. Spendee Basic has 1 wallet and 1 budget. Outlayr's free plan has 2 category budgets plus one for the month, and 3 accounts. Monarch, PocketGuard, and YNAB are paid after a trial.",
+                            es: "Actual Budget es software gratis, con un servidor necesario para sincronizar. El plan gratis de Goodbudget tiene 20 sobres, 1 cuenta y 1 año de historial. Spendee Basic tiene 1 billetera y 1 presupuesto. El plan gratis de Outlayr tiene 2 presupuestos por categoría más uno para el mes, y 3 cuentas. Monarch, PocketGuard y YNAB son de pago después de una prueba.",
+                        }),
+                        question: t({
+                            en: "Is there a free budget app in Canada?",
+                            es: "¿Hay una app de presupuesto gratis en Canadá?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Goodbudget, Outlayr, Spendee, and YNAB all work by hand or from a file your bank exports, and Actual Budget does without its server. Monarch also takes manual accounts. None of them needs your RBC, TD, Scotiabank, BMO, or CIBC login to budget.",
+                            es: "Sí. Goodbudget, Outlayr, Spendee y YNAB funcionan a mano o con un archivo que exporta tu banco, y Actual Budget también sin su servidor. Monarch también acepta cuentas manuales. Ninguna necesita tu usuario de RBC, TD, Scotiabank, BMO o CIBC para presupuestar.",
+                        }),
+                        question: t({
+                            en: "Can I use a budget app without linking my bank?",
+                            es: "¿Puedo usar una app de presupuesto sin vincular mi banco?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Copilot syncs only US financial institutions, and Rocket Money works with US banks. EveryDollar sells its mobile app and Premium in the US only. That is why none of them is on this list.",
+                            es: "Copilot solo sincroniza instituciones financieras de EE. UU., y Rocket Money funciona con bancos de EE. UU. EveryDollar vende su app móvil y su Premium solo en EE. UU. Por eso ninguna está en esta lista.",
+                        }),
+                        question: t({
+                            en: "Do Copilot, Rocket Money, and EveryDollar work in Canada?",
+                            es: "¿Copilot, Rocket Money y EveryDollar funcionan en Canadá?",
+                        }),
+                    },
+                    COST_FAQ,
+                ],
+                lead: t({
+                    en: "Seven budget apps that work in Canada, each best for a different way to budget: Actual Budget, Goodbudget, Monarch Money, Outlayr, PocketGuard, Spendee, and YNAB. Most bill in US dollars and link Canadian banks unevenly, so each one says what it costs and whether it works without your bank login. Outlayr is ours; the other six are not.",
+                    es: "Siete apps de presupuesto que funcionan en Canadá, cada una mejor para una forma distinta de presupuestar: Actual Budget, Goodbudget, Monarch Money, Outlayr, PocketGuard, Spendee y YNAB. La mayoría cobra en dólares estadounidenses y conecta bancos canadienses de forma desigual, así que cada una dice cuánto cuesta y si funciona sin tu usuario del banco. Outlayr es nuestra; las otras seis no.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Seven budget apps that work in Canada, with price, free plan, and whether each needs your bank login. Budget in CAD, checked November 2026.",
+                        es: "Siete apps de presupuesto que funcionan en Canadá, con precio, plan gratis y si cada una necesita tu usuario del banco. Presupuesto en CAD, revisado en noviembre de 2026.",
+                    }),
+                    title: t({
+                        en: "Best Budget Apps in Canada (2026), With or Without Your Bank · Outlayr",
+                        es: "Mejores apps de presupuesto en Canadá (2026), con o sin tu banco · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Linking a bank pulls in transactions on their own, through a third-party connection that has to support your bank. Monarch asks Canadians to use its 7-day trial to check that their institutions connect reliably. If your bank is not covered, a linked app has little left to show.",
+                                es: "Vincular un banco trae los movimientos solos, a través de una conexión de terceros que tiene que admitir tu banco. Monarch le pide a quien vive en Canadá usar su prueba de 7 días para comprobar que sus instituciones conectan bien. Si tu banco no está cubierto, a una app vinculada le queda poco que mostrar.",
+                            }),
+                            t({
+                                en: "Without a link, you log purchases yourself or import the CSV your bank lets you download from online banking. It takes a minute a day, works with any bank or credit union, and no app holds your banking password.",
+                                es: "Sin vincular, registras tú las compras o importas el CSV que tu banco te deja descargar desde la banca en línea. Toma un minuto al día, funciona con cualquier banco o cooperativa de crédito, y ninguna app guarda tu contraseña del banco.",
+                            }),
+                        ],
+                        id: "bank-or-not",
+                        title: t({
+                            en: "Linking your bank, or not",
+                            es: "Vincular tu banco, o no",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Monarch, PocketGuard, and YNAB list their prices in US dollars, so what you pay in Canada moves with the exchange rate and your card's foreign transaction fee. When a plan is sold through the App Store or Google Play, the store charges in CAD.",
+                                es: "Monarch, PocketGuard y YNAB publican sus precios en dólares estadounidenses, así que lo que pagas en Canadá cambia con la tasa y con la comisión por compras en el extranjero de tu tarjeta. Cuando un plan se vende por el App Store o Google Play, la tienda cobra en CAD.",
+                            }),
+                            t({
+                                en: "Monarch adds accounts in different currencies as if they were one, so a US dollar account next to a CAD one gives misleading totals. Outlayr and Spendee keep each account in its own currency.",
+                                es: "Monarch suma cuentas en monedas distintas como si fueran una, así que una cuenta en dólares estadounidenses junto a una en CAD da totales engañosos. Outlayr y Spendee mantienen cada cuenta en su propia moneda.",
+                            }),
+                        ],
+                        id: "cad",
+                        title: t({ en: "Paying and budgeting in CAD", es: "Pagar y presupuestar en CAD" }),
+                    },
+                ],
+                picked: [
+                    t({
+                        en: "Each app here plans what you will spend, works for someone living in Canada, and fits a different way to budget. Copilot, EveryDollar, and Rocket Money are left out because they are built for the US. They are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista planea lo que vas a gastar, sirve para quien vive en Canadá y encaja con una forma distinta de presupuestar. Copilot, EveryDollar y Rocket Money quedan fuera porque están hechas para EE. UU. Van en orden alfabético, no por puesto.",
+                    }),
+                    LIST_PICKED_FACTS,
+                    LIST_PICKED_OURS,
+                ],
+                plateAlt: t({
+                    en: "A November budget in Canadian dollars with no bank linked: $1,284.60 left, Groceries $412 of $600, Transit $128 of $156, Eating out over at $171 of $150.",
+                    es: "Un presupuesto de noviembre en dólares canadienses sin banco vinculado: quedan $1,284.60, Supermercado $412 de $600, Transporte $128 de $156, Comer fuera pasado con $171 de $150.",
+                }),
+                related: ["/guides/best-budget-apps", "/guides/budget-planner", "/compare/monarch"] satisfies PageRef[],
+                sources: LIST_SOURCES,
+                title: t({
+                    en: "The best budget apps in Canada, with or without your bank",
+                    es: "Las mejores apps de presupuesto en Canadá, con o sin tu banco",
                 }),
             },
             "best-expense-tracker-apps": {
