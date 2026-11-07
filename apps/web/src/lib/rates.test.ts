@@ -66,6 +66,19 @@ it("ignores rows in another currency or with a broken shape, and keeps the valid
     expect(read("dolar-bcv-hoy", body).map(({ rate }) => rate)).toEqual([891.1054]);
 });
 
+it("reads Bolivia's Binance P2P and BCB quotes with buy and sell, the BCB one as a date", () => {
+    const body = [
+        { casa: "oficial", compra: 11.81, fechaActualizacion: "2026-11-03T00:00:00.000Z", moneda: "USD", venta: 11.81 },
+        { casa: "binance", compra: 11.97, fechaActualizacion: "2026-11-03T19:02:09.713Z", moneda: "USD", venta: 12.01 },
+    ];
+    expect(read("dolar-hoy-bolivia", body).map(({ buy, dateOnly, kind, rate }) => [kind, buy, rate, dateOnly])).toEqual(
+        [
+            ["binance", 11.97, 12.01, false],
+            ["bcb", 11.81, 11.81, true],
+        ]
+    );
+});
+
 it("takes the sell price as the rate in Argentina, keeps the buy price, and orders by the market's list", () => {
     const rates = read("dolar-hoy-argentina", ARGENTINA);
     expect(rates.map(({ buy, kind, rate }) => [kind, buy, rate])).toEqual([
