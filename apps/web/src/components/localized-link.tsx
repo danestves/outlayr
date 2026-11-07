@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import type { LinkComponentProps } from "@tanstack/react-router";
-import { getPrefix } from "intlayer";
 import { useLocale } from "react-intlayer";
+
+import { linkPrefix } from "@/lib/i18n";
 
 const LOCALE_SEGMENT = "/{-$locale}";
 
@@ -18,7 +19,7 @@ export function LocalizedLink({ to, ...props }: Omit<LinkComponentProps, "params
     return (
         <Link
             {...props}
-            params={{ locale: getPrefix(locale).localePrefix }}
+            params={{ locale: linkPrefix(to, locale) }}
             to={to === "/" ? LOCALE_SEGMENT : `${LOCALE_SEGMENT}${to}`}
         />
     );

@@ -10,7 +10,7 @@ import remarkGfm from "remark-gfm";
 const HEADING = /^(#{1,6})\s+(.+)$/;
 const WHITESPACE = /\s+/u;
 
-const decodeLocale = Schema.decodeUnknownSync(Schema.Literals(["en", "es"]));
+const decodeLocale = Schema.decodeUnknownSync(Schema.Literals(["en", "es", "pt", "fr"]));
 const decodeSlug = Schema.decodeUnknownSync(Schema.Literals(["terms", "privacy", "delete-account"]));
 const IsoDay = Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}$/));
 const Figure = Schema.Struct({ label: Schema.String, value: Schema.String });

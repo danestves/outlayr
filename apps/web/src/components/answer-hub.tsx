@@ -3,6 +3,8 @@ import { getPrefix } from "intlayer";
 import type { ReactNode } from "react";
 import { useLocale } from "react-intlayer";
 
+import { isPublished } from "@/lib/i18n";
+
 import { Icon } from "./icon";
 import { Page } from "./page";
 import { StoreBadges } from "./store-badges";
@@ -48,7 +50,21 @@ export function AnswerCard({ heading: Heading, item }: { heading: "h2" | "h3"; i
     );
 }
 
-export function AnswerHub({ items, lead, title }: { items: readonly AnswerItem[]; lead: ReactNode; title: ReactNode }) {
+function answerPath(item: AnswerItem): string {
+    return item.to.replace("/{-$locale}", "").replace("$slug", item.slug);
+}
+
+export function AnswerHub({
+    items: all,
+    lead,
+    title,
+}: {
+    items: readonly AnswerItem[];
+    lead: ReactNode;
+    title: ReactNode;
+}) {
+    const { locale } = useLocale();
+    const items = all.filter((item) => isPublished(answerPath(item), locale));
     const lone = items.length % 2 === 1 ? items.length - 1 : -1;
     return (
         <Page lead={lead} title={title}>

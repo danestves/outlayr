@@ -9,9 +9,17 @@ import { useNames } from "./use-names";
 const FADE_IN =
     "transition-[opacity,translate] duration-200 ease-out motion-reduce:transition-none starting:translate-y-1 starting:opacity-0";
 
-export const COFFEE_SHOP = { en: "Blue Bottle", es: "Juan Valdez" } as const satisfies Record<Locale, string>;
+export const COFFEE_SHOP = {
+    en: "Blue Bottle",
+    es: "Juan Valdez",
+    fr: "Columbus Café",
+    pt: "Starbucks",
+} as const satisfies Record<Locale, string>;
 
-const STORE = { en: "Target", es: "Farmatodo" } as const satisfies Record<Locale, string>;
+const STORE = { en: "Target", es: "Farmatodo", fr: "Monoprix", pt: "Drogasil" } as const satisfies Record<
+    Locale,
+    string
+>;
 
 const RECEIPT = {
     en: [
@@ -38,9 +46,38 @@ const RECEIPT = {
         { left: "TOTAL", mark: 3, right: "54.28" },
         { left: "VISA", mark: null, right: "•••• 1008" },
     ],
+    fr: [
+        { left: "MONOPRIX", mark: 1, right: "" },
+        { left: "MAGASIN 214", mark: null, right: "" },
+        { left: "21/09/2026", mark: 2, right: "14:32" },
+        { left: "ESSUIE-TOUT", mark: null, right: "17.99" },
+        { left: "LESSIVE CAPSULES", mark: null, right: "12.49" },
+        { left: "SERVIETTE DE BAIN", mark: null, right: "19.49" },
+        { left: "SOUS-TOTAL", mark: null, right: "49.97" },
+        { left: "TVA", mark: null, right: "4.31" },
+        { left: "TOTAL", mark: 3, right: "54.28" },
+        { left: "CB", mark: null, right: "•••• 1008" },
+    ],
+    pt: [
+        { left: "DROGASIL", mark: 1, right: "" },
+        { left: "LOJA 214", mark: null, right: "" },
+        { left: "21/09/2026", mark: 2, right: "14:32" },
+        { left: "PAPEL TOALHA", mark: null, right: "17.99" },
+        { left: "SABAO EM CAPSULAS", mark: null, right: "12.49" },
+        { left: "TOALHA DE BANHO", mark: null, right: "19.49" },
+        { left: "SUBTOTAL", mark: null, right: "49.97" },
+        { left: "IMPOSTOS", mark: null, right: "4.31" },
+        { left: "TOTAL", mark: 3, right: "54.28" },
+        { left: "VISA", mark: null, right: "•••• 1008" },
+    ],
 } as const satisfies Record<Locale, readonly { left: string; mark: number | null; right: string }[]>;
 
-const CSV_FILE = { en: "chase-activity.csv", es: "bbva-movimientos.csv" } as const satisfies Record<Locale, string>;
+const CSV_FILE = {
+    en: "chase-activity.csv",
+    es: "bbva-movimientos.csv",
+    fr: "boursorama-releve.csv",
+    pt: "nubank-extrato.csv",
+} as const satisfies Record<Locale, string>;
 
 const CSV_ROWS = {
     en: [
@@ -56,6 +93,20 @@ const CSV_ROWS = {
         { amount: "-4.00", category: "Subscriptions", date: "20/09", label: "SPOTIFY", matchedAt: 1 },
         { amount: "-6.25", category: "Coffee", date: "21/09", label: "JUAN VALDEZ CAFE 0412", matchedAt: 2 },
         { amount: "-38.90", category: "Dining Out", date: "22/09", label: "RAPPI*RESTAURANTE", matchedAt: 2 },
+    ],
+    fr: [
+        { amount: "-142.18", category: "Shopping", date: "18/09", label: "AMAZON MKTP FR", matchedAt: 1 },
+        { amount: "-18.40", category: "Transport", date: "19/09", label: "SNCF INTERNET", matchedAt: 1 },
+        { amount: "-4.00", category: "Subscriptions", date: "20/09", label: "SPOTIFY", matchedAt: 1 },
+        { amount: "-6.25", category: "Coffee", date: "21/09", label: "COLUMBUS CAFE 0412", matchedAt: 2 },
+        { amount: "-38.90", category: "Dining Out", date: "22/09", label: "DELIVEROO*RESTAURANT", matchedAt: 2 },
+    ],
+    pt: [
+        { amount: "-142.18", category: "Shopping", date: "18/09", label: "MERCADOLIVRE*COMPRA", matchedAt: 1 },
+        { amount: "-18.40", category: "Transport", date: "19/09", label: "UBER *TRIP", matchedAt: 1 },
+        { amount: "-4.00", category: "Subscriptions", date: "20/09", label: "SPOTIFY", matchedAt: 1 },
+        { amount: "-6.25", category: "Coffee", date: "21/09", label: "STARBUCKS 0412", matchedAt: 2 },
+        { amount: "-38.90", category: "Dining Out", date: "22/09", label: "IFOOD *RESTAURANTE", matchedAt: 2 },
     ],
 } as const satisfies Record<
     Locale,

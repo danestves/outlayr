@@ -10,7 +10,7 @@ import { LocalizedLink } from "@/components/localized-link";
 import { ASIDE, COLUMNS } from "@/components/page";
 import { StoreBadges } from "@/components/store-badges";
 import { hasKey } from "@/lib/has-key";
-import { LANGUAGES } from "@/lib/i18n";
+import { LANGUAGES, isPublished } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
 import { scanMotion } from "@/lib/motion";
 import { useScrollSpy } from "@/lib/scroll-spy";
@@ -108,28 +108,37 @@ function useRelated(refs: readonly PageRef[]): AnswerItem[] {
     const { compare, guides } = useIntlayer("answers");
     const { pages } = useIntlayer("tools");
     const { footer } = useIntlayer("site");
-    return refs.map((ref) => {
-        const [, hub = "", slug = ""] = ref.split("/");
-        if (hub === "guides" && hasKey(guides, slug)) {
-            const guide = guides[slug];
-            return { kicker: footer.guides, name: guide.title, slug, text: guide.lead, to: "/{-$locale}/guides/$slug" };
-        }
-        if (hub === "compare" && hasKey(compare, slug)) {
-            const page = compare[slug];
-            return {
-                kicker: footer.compare,
-                name: page.title,
-                slug,
-                text: page.summary,
-                to: "/{-$locale}/compare/$slug",
-            };
-        }
-        if (hub === "tools" && hasKey(pages, slug)) {
-            const page = pages[slug];
-            return { kicker: footer.tools, name: page.title, slug, text: page.lead, to: "/{-$locale}/tools/$slug" };
-        }
-        throw new Error(`No page for related link ${ref}`);
-    });
+    const { locale } = useLocale();
+    return refs
+        .filter((ref) => isPublished(ref, locale))
+        .map((ref) => {
+            const [, hub = "", slug = ""] = ref.split("/");
+            if (hub === "guides" && hasKey(guides, slug)) {
+                const guide = guides[slug];
+                return {
+                    kicker: footer.guides,
+                    name: guide.title,
+                    slug,
+                    text: guide.lead,
+                    to: "/{-$locale}/guides/$slug",
+                };
+            }
+            if (hub === "compare" && hasKey(compare, slug)) {
+                const page = compare[slug];
+                return {
+                    kicker: footer.compare,
+                    name: page.title,
+                    slug,
+                    text: page.summary,
+                    to: "/{-$locale}/compare/$slug",
+                };
+            }
+            if (hub === "tools" && hasKey(pages, slug)) {
+                const page = pages[slug];
+                return { kicker: footer.tools, name: page.title, slug, text: page.lead, to: "/{-$locale}/tools/$slug" };
+            }
+            throw new Error(`No page for related link ${ref}`);
+        });
 }
 
 const LABEL = "text-muted font-mono text-xs font-normal";

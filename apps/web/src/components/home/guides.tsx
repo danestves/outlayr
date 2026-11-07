@@ -4,6 +4,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
 import { LocalizedLink } from "@/components/localized-link";
+import { isPublished } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
 
 import { LABEL } from "./problem";
@@ -21,6 +22,10 @@ export function Guides() {
     const { answerLinks, footer } = useIntlayer("site");
     const { allGuides } = useIntlayer("about");
     const { locale } = useLocale();
+    const picks = PICKS.filter((slug) => isPublished(`/guides/${slug}`, locale));
+    if (picks.length === 0) {
+        return null;
+    }
     return (
         <section aria-labelledby="home-guides" className={`${CONTAINER} pt-24`}>
             <div className="border-foreground flex items-baseline justify-between gap-6 border-b pb-3" data-reveal>
@@ -32,7 +37,7 @@ export function Guides() {
                 </LocalizedLink>
             </div>
             <ul>
-                {PICKS.map((slug) => (
+                {picks.map((slug) => (
                     <li className="border-border border-b" data-reveal key={slug}>
                         <Link
                             className="fluid group hover:text-tint flex items-center justify-between gap-6 py-4 text-lg"

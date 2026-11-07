@@ -233,6 +233,126 @@ export const CASTS = {
             { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "Spotify" },
         ],
     },
+    fr: {
+        accounts: ["Boursorama", "Revolut", "Crédit Agricole", "Wise", "Cash", "Livret A"],
+        entries: [
+            {
+                account: "Boursorama",
+                category: "Groceries",
+                currency: "USD",
+                keys: ["4", "2"],
+                kind: "expense",
+                merchant: "Carrefour",
+                when: "today",
+            },
+            {
+                account: "Revolut",
+                category: "Transport",
+                currency: "USD",
+                keys: ["1", "4", ".", "6"],
+                kind: "expense",
+                merchant: "SNCF",
+                when: "today",
+            },
+            {
+                account: "Wise",
+                category: "Freelance",
+                currency: "USD",
+                keys: ["1", "4", "5", "0"],
+                kind: "income",
+                merchant: "Upwork",
+                when: "yesterday",
+            },
+            {
+                account: "Crédit Agricole",
+                category: "Fashion",
+                currency: "EUR",
+                keys: ["8", "9"],
+                kind: "expense",
+                merchant: "Zara",
+                when: "today",
+            },
+        ],
+        knownMerchants: new Map([
+            ["carrefour", "Groceries"],
+            ["columbus café", "Coffee"],
+            ["deliveroo", "Dining Out"],
+            ["monoprix", "Shopping"],
+            ["netflix", "Subscriptions"],
+            ["sncf", "Transport"],
+            ["spotify", "Subscriptions"],
+            ["zara", "Fashion"],
+        ]),
+        recentMerchants: {
+            expense: ["Carrefour", "SNCF", "Zara", "Monoprix", "Deliveroo", "Spotify"],
+            income: ["Upwork", "Deel"],
+        },
+        seedLog: [
+            { amount: 15, category: "Subscriptions", currency: "USD", id: 3, income: false, merchant: "Netflix" },
+            { amount: 54.28, category: "Shopping", currency: "USD", id: 2, income: false, merchant: "Monoprix" },
+            { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "Spotify" },
+        ],
+    },
+    pt: {
+        accounts: ["Nubank", "Itaú", "Inter", "Wise", "Cash", "Caixa"],
+        entries: [
+            {
+                account: "Nubank",
+                category: "Shopping",
+                currency: "USD",
+                keys: ["4", "2"],
+                kind: "expense",
+                merchant: "Mercado Livre",
+                when: "today",
+            },
+            {
+                account: "Inter",
+                category: "Transport",
+                currency: "USD",
+                keys: ["1", "4", ".", "6"],
+                kind: "expense",
+                merchant: "Uber",
+                when: "today",
+            },
+            {
+                account: "Wise",
+                category: "Freelance",
+                currency: "USD",
+                keys: ["1", "4", "5", "0"],
+                kind: "income",
+                merchant: "Upwork",
+                when: "yesterday",
+            },
+            {
+                account: "Itaú",
+                category: "Fashion",
+                currency: "EUR",
+                keys: ["8", "9"],
+                kind: "expense",
+                merchant: "Zara",
+                when: "today",
+            },
+        ],
+        knownMerchants: new Map([
+            ["drogasil", "Shopping"],
+            ["ifood", "Dining Out"],
+            ["mercado livre", "Shopping"],
+            ["netflix", "Subscriptions"],
+            ["spotify", "Subscriptions"],
+            ["starbucks", "Coffee"],
+            ["uber", "Transport"],
+            ["zara", "Fashion"],
+        ]),
+        recentMerchants: {
+            expense: ["Mercado Livre", "Uber", "Zara", "Drogasil", "iFood", "Spotify"],
+            income: ["Upwork", "Deel"],
+        },
+        seedLog: [
+            { amount: 15, category: "Subscriptions", currency: "USD", id: 3, income: false, merchant: "Netflix" },
+            { amount: 54.28, category: "Shopping", currency: "USD", id: 2, income: false, merchant: "Drogasil" },
+            { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "Spotify" },
+        ],
+    },
 } as const satisfies Record<Locale, Cast>;
 
 const PACE = {
@@ -418,10 +538,12 @@ function scriptOf(cast: Cast) {
     };
 }
 
-const SCRIPTS = { en: scriptOf(CASTS.en), es: scriptOf(CASTS.es) } satisfies Record<
-    Locale,
-    ReturnType<typeof scriptOf>
->;
+const SCRIPTS = {
+    en: scriptOf(CASTS.en),
+    es: scriptOf(CASTS.es),
+    fr: scriptOf(CASTS.fr),
+    pt: scriptOf(CASTS.pt),
+} satisfies Record<Locale, ReturnType<typeof scriptOf>>;
 
 function targetOf(move: Move): Target {
     switch (move.type) {

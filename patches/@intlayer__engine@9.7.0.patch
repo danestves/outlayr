@@ -1,0 +1,68 @@
+diff --git a/dist/cjs/createType/createType.cjs b/dist/cjs/createType/createType.cjs
+--- a/dist/cjs/createType/createType.cjs
++++ b/dist/cjs/createType/createType.cjs
+@@ -5,6 +5,21 @@
+ let node_fs_promises = require("node:fs/promises");
+ 
+ //#region src/createType/createType.ts
++const fillFromDefault = (target, source) => {
++	if (source === void 0) return target;
++	if (target === void 0 || target === null) return source;
++	if (Array.isArray(source)) return source.map((item, index) => fillFromDefault(Array.isArray(target) ? target[index] : void 0, item));
++	if (typeof source !== "object" || typeof target !== "object" || source === null) return target;
++	const filled = { ...target };
++	for (const key of Object.keys(source)) filled[key] = fillFromDefault(target[key], source[key]);
++	return filled;
++};
++const withDefaultLocaleFallback = (dictionary, defaultLocale) => {
++	const translations = dictionary.content?.nodeType === "translation" ? dictionary.content.translation : void 0;
++	if (!translations?.[defaultLocale]) return dictionary;
++	const filled = Object.fromEntries(Object.entries(translations).map(([locale, content]) => [locale, fillFromDefault(content, translations[defaultLocale])]));
++	return { ...dictionary, content: { ...dictionary.content, translation: filled } };
++};
+ const generateTypeScriptType = (dictionary) => {
+ 	return `/* eslint-disable */\nexport default ${JSON.stringify(dictionary, null, 2)} as const;\n`;
+ };
+@@ -17,7 +32,7 @@
+ 	await (0, node_fs_promises.mkdir)(typesDir, { recursive: true });
+ 	return (await require_utils_parallelize.parallelize(dictionaries, async (dictionary) => {
+ 		if (!dictionary.key) return;
+-		const typeDefinition = generateTypeScriptType(dictionary);
++		const typeDefinition = generateTypeScriptType(withDefaultLocaleFallback(dictionary, configuration.internationalization.defaultLocale));
+ 		const outputPath = (0, node_path.resolve)(typesDir, `${dictionary.key}.ts`);
+ 		await require_writeFileIfChanged.writeFileIfChanged(outputPath, typeDefinition);
+ 		return outputPath;
+diff --git a/dist/esm/createType/createType.mjs b/dist/esm/createType/createType.mjs
+--- a/dist/esm/createType/createType.mjs
++++ b/dist/esm/createType/createType.mjs
+@@ -4,6 +4,21 @@
+ import { mkdir } from "node:fs/promises";
+ 
+ //#region src/createType/createType.ts
++const fillFromDefault = (target, source) => {
++	if (source === void 0) return target;
++	if (target === void 0 || target === null) return source;
++	if (Array.isArray(source)) return source.map((item, index) => fillFromDefault(Array.isArray(target) ? target[index] : void 0, item));
++	if (typeof source !== "object" || typeof target !== "object" || source === null) return target;
++	const filled = { ...target };
++	for (const key of Object.keys(source)) filled[key] = fillFromDefault(target[key], source[key]);
++	return filled;
++};
++const withDefaultLocaleFallback = (dictionary, defaultLocale) => {
++	const translations = dictionary.content?.nodeType === "translation" ? dictionary.content.translation : void 0;
++	if (!translations?.[defaultLocale]) return dictionary;
++	const filled = Object.fromEntries(Object.entries(translations).map(([locale, content]) => [locale, fillFromDefault(content, translations[defaultLocale])]));
++	return { ...dictionary, content: { ...dictionary.content, translation: filled } };
++};
+ const generateTypeScriptType = (dictionary) => {
+ 	return `/* eslint-disable */\nexport default ${JSON.stringify(dictionary, null, 2)} as const;\n`;
+ };
+@@ -16,7 +31,7 @@
+ 	await mkdir(typesDir, { recursive: true });
+ 	return (await parallelize(dictionaries, async (dictionary) => {
+ 		if (!dictionary.key) return;
+-		const typeDefinition = generateTypeScriptType(dictionary);
++		const typeDefinition = generateTypeScriptType(withDefaultLocaleFallback(dictionary, configuration.internationalization.defaultLocale));
+ 		const outputPath = resolve(typesDir, `${dictionary.key}.ts`);
+ 		await writeFileIfChanged(outputPath, typeDefinition);
+ 		return outputPath;

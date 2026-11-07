@@ -6,7 +6,7 @@ import { HeadContent, Scripts, createRootRouteWithContext, useMatches, useParams
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import * as Effect from "effect/Effect";
-import { defaultLocale, getIntlayer, getPathWithoutLocale, locales } from "intlayer";
+import { defaultLocale, getIntlayer, getPathWithoutLocale } from "intlayer";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { IntlayerProvider } from "react-intlayer";
@@ -16,7 +16,7 @@ import { NotFound } from "@/components/not-found";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { startAnalytics } from "@/lib/analytics";
-import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
+import { LANGUAGES, localeFromParam, pageUrl, publishedLocales } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
 import { startMotion } from "@/lib/motion";
 import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } from "@/lib/seo";
@@ -50,7 +50,7 @@ function siteGraph(locale: Locale) {
                 brand: { "@type": "Brand", name: "Outlayr" },
                 contactPoint: {
                     "@type": "ContactPoint",
-                    availableLanguage: Object.values(LANGUAGES).map((language) => language.lang),
+                    availableLanguage: [LANGUAGES.en.lang, LANGUAGES.es.lang],
                     contactType: "customer support",
                     email: SUPPORT_EMAIL,
                 },
@@ -77,7 +77,7 @@ function siteGraph(locale: Locale) {
             {
                 "@id": WEBSITE_ID,
                 "@type": "WebSite",
-                inLanguage: Object.values(LANGUAGES).map((language) => language.lang),
+                inLanguage: publishedLocales("/").map((published) => LANGUAGES[published].lang),
                 name: "Outlayr",
                 publisher: { "@id": ORGANIZATION_ID },
                 url: SITE_URL,
@@ -116,12 +116,13 @@ export const Route = createRootRouteWithContext<{
         const found = matches.every((match) => match.status === "success" && !match._notFound);
         const { hero, meta } = getIntlayer("home", locale);
         const { notFound } = getIntlayer("site", locale);
+        const alternates = publishedLocales(path);
         return {
             links: [
                 ...(found
                     ? [
                           { href: pageUrl(path, locale), rel: "canonical" },
-                          ...locales.map((alternate) => ({
+                          ...alternates.map((alternate) => ({
                               href: pageUrl(path, alternate),
                               hrefLang: LANGUAGES[alternate].hreflang,
                               rel: "alternate",
@@ -158,7 +159,7 @@ export const Route = createRootRouteWithContext<{
                 { content: "Outlayr", property: "og:site_name" },
                 { content: "website", property: "og:type" },
                 { content: LANGUAGES[locale].og, property: "og:locale" },
-                ...locales
+                ...alternates
                     .filter((alternate) => alternate !== locale)
                     .map((alternate) => ({
                         content: LANGUAGES[alternate].og,
