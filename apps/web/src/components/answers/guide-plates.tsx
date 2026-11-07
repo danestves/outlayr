@@ -100,3 +100,70 @@ export function CanadaPlate() {
         </Plate>
     );
 }
+
+interface CasheaCopy {
+    due: string;
+    grace: string;
+    interest: string;
+    level: string;
+    purchase: string;
+    rows: readonly [string, string, string, string];
+}
+
+const CASHEA = {
+    en: {
+        due: "Installment 2 of 3 · due Fri, 21 Nov",
+        grace: "2 days of grace, then $4 per installment",
+        interest: "0% interest",
+        level: "Level 1",
+        purchase: "Fridge",
+        rows: ["Upfront 60%", "Installment 1", "Installment 2", "Installment 3"],
+    },
+    es: {
+        due: "Cuota 2 de 3 · vence el vie, 21 nov",
+        grace: "2 días de gracia, luego $4 por cuota",
+        interest: "0% interés",
+        level: "Nivel 1",
+        purchase: "Nevera",
+        rows: ["Inicial 60%", "Cuota 1", "Cuota 2", "Cuota 3"],
+    },
+} as const satisfies Record<Locale, CasheaCopy>;
+
+const CASHEA_SCHEDULE = [
+    { amount: 360, day: { en: "24 Oct", es: "24 oct" }, state: "paid" },
+    { amount: 80, day: { en: "7 Nov", es: "7 nov" }, state: "paid" },
+    { amount: 80, day: { en: "21 Nov", es: "21 nov" }, state: "next" },
+    { amount: 80, day: { en: "5 Dec", es: "5 dic" }, state: "later" },
+] as const satisfies readonly { amount: number; day: Record<Locale, string>; state: string }[];
+
+export function CasheaPlate() {
+    const { locale } = useLocale();
+    const copy = CASHEA[locale];
+    return (
+        <Plate side={copy.level} title={`${copy.purchase} · ${formatMoney(600, "USD")}`}>
+            <p className="text-4xl font-semibold tracking-tight tabular-nums">{formatMoney(80, "USD")}</p>
+            <p className="text-muted mt-1">{copy.due}</p>
+            <ol className="mt-3">
+                {CASHEA_SCHEDULE.map(({ amount, day, state }, index) => (
+                    <li
+                        className={`border-border grid grid-cols-[4.5rem_1fr_auto] items-baseline gap-2 border-b py-2.5 last:border-b-0 ${state === "next" ? "font-semibold" : ""}`}
+                        key={copy.rows[index]}
+                    >
+                        <span className="text-muted font-mono text-xs">{day[locale]}</span>
+                        <span className={state === "later" ? "text-muted" : ""}>{copy.rows[index]}</span>
+                        <span
+                            className={`tabular-nums ${state === "paid" ? "text-income" : ""} ${state === "later" ? "text-muted" : ""}`}
+                        >
+                            {formatMoney(amount, "USD")}
+                            {state === "paid" ? " ✓" : ""}
+                        </span>
+                    </li>
+                ))}
+            </ol>
+            <p className="border-border text-muted flex justify-between gap-3 border-t pt-3 text-xs">
+                <span>{copy.grace}</span>
+                <span className="shrink-0 font-mono">{copy.interest}</span>
+            </p>
+        </Plate>
+    );
+}

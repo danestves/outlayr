@@ -40,6 +40,7 @@ const site = {
                 }),
                 "budget-planner": t({ en: "Budgets", es: "Presupuestos" }),
                 "expense-tracker-template": t({ en: "Spreadsheet template", es: "Plantilla de Excel" }),
+                "how-to-pay-cashea": t({ en: "How to pay Cashea", es: "Cómo pagar Cashea" }),
                 "how-to-track-expenses": t({ en: "How to track expenses", es: "Cómo controlar gastos" }),
                 "mint-alternative": t({ en: "Mint alternatives", es: "Alternativas a Mint" }),
                 "multi-currency-expense-tracker": t({ en: "Multi-currency", es: "Varias monedas" }),

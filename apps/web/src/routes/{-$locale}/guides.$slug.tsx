@@ -3,9 +3,18 @@ import { getIntlayer, getPrefix } from "intlayer";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { Article, CompareTable, DELAYS, FactList, Figures, Prose, Questions } from "@/components/answers/article";
+import {
+    Article,
+    CompareTable,
+    DELAYS,
+    FactList,
+    Figures,
+    Prose,
+    Questions,
+    Source,
+} from "@/components/answers/article";
 import type { ArticleSection } from "@/components/answers/article";
-import { CanadaPlate } from "@/components/answers/guide-plates";
+import { CanadaPlate, CasheaPlate } from "@/components/answers/guide-plates";
 import { SayPanel, ScanPanel } from "@/components/demo/capture-panels";
 import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
@@ -28,6 +37,7 @@ const PLATES = {
     "best-subscription-tracker-apps": null,
     "budget-planner": "04",
     "expense-tracker-template": null,
+    "how-to-pay-cashea": "cashea",
     "how-to-track-expenses": null,
     "mint-alternative": null,
     "multi-currency-expense-tracker": "06",
@@ -40,6 +50,7 @@ const PLATES = {
 
 const PANELS = {
     canada: () => <CanadaPlate />,
+    cashea: () => <CasheaPlate />,
     say: () => <SayPanel frame={5} />,
     scan: () => <ScanPanel frame={5} />,
 } as const;
@@ -320,6 +331,7 @@ function Guide() {
                                 <dt className={LABEL}>{fact.label}</dt>
                                 <dd className="mt-2">
                                     <Figures text={fact.text.value} />
+                                    {"source" in fact ? <Source href={fact.source.value} /> : null}
                                 </dd>
                             </div>
                         ))}

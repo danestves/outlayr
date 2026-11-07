@@ -5383,6 +5383,249 @@ const answers = {
                     es: "Arma tu presupuesto y ve a dónde te lleva este ritmo",
                 }),
             },
+            "how-to-pay-cashea": {
+                facts: [
+                    {
+                        label: t({ en: "How you pay", es: "Cómo pagas" }),
+                        source: "https://intercom.help/cashea/es/articles/6198516-como-funciona-el-pago-inicial",
+                        text: t({
+                            en: "An upfront payment when you buy, then equal installments with no interest",
+                            es: "Una inicial al comprar y luego cuotas iguales sin interés",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Due", es: "Vencimiento" }),
+                        source: "https://intercom.help/cashea/es/articles/6602490-cuando-vence-mi-proxima-cuota",
+                        text: t({
+                            en: "Every 14 days from the day you bought",
+                            es: "Cada 14 días desde el día de la compra",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Methods", es: "Métodos" }),
+                        source: "https://intercom.help/cashea/es/articles/8076020-metodos-de-pago",
+                        text: t({
+                            en: "Pago Móvil, a bank transfer in bolívares, or a deposit in bolívares or dollars",
+                            es: "Pago Móvil, transferencia bancaria en bolívares, o depósito en bolívares o dólares",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Where", es: "Dónde" }),
+                        source: "https://intercom.help/cashea/es/articles/8526831-como-pagar-por-la-app",
+                        text: t({
+                            en: "Only to the account the app shows for that installment",
+                            es: "Solo a la cuenta que te muestra la app para esa cuota",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Reporting", es: "Reporte" }),
+                        source: "https://intercom.help/cashea/es/articles/15330725-como-puedo-reportar-el-pago-por-la-app",
+                        text: t({
+                            en: "Ya pagué, then the date, amount, reference, and receipt. A Pago Móvil from Banesco counts as Transferencia",
+                            es: "Ya pagué, luego la fecha, el monto, la referencia y el comprobante. Un Pago Móvil desde Banesco va como Transferencia",
+                        }),
+                    },
+                    {
+                        label: t({ en: "One purchase per payment", es: "Una compra por pago" }),
+                        source: "https://intercom.help/cashea/es/articles/8526826-como-encuentro-los-datos-de-pago",
+                        text: t({
+                            en: "One payment can't cover installments from different purchases",
+                            es: "Un pago no puede cubrir cuotas de compras diferentes",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Paying early", es: "Adelantar" }),
+                        source: "https://intercom.help/cashea/es/articles/6602906-puedo-pagar-mis-cuotas-por-adelantado",
+                        text: t({
+                            en: "Pay early or in part, in the app, as long as each installment is whole by its due date",
+                            es: "Adelanta o abona parte, por la app, siempre que cada cuota esté completa en su vencimiento",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Number of installments", es: "Número de cuotas" }),
+                        source: "https://intercom.help/cashea/es/articles/6602447-puedo-elegir-el-numero-de-cuotas",
+                        text: t({
+                            en: "Set by the product, not by you. The app shows it",
+                            es: "Lo define el producto, no tú. La app te lo muestra",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Upfront payment", es: "Inicial" }),
+                        source: "https://intercom.help/cashea/es/articles/6198516-como-funciona-el-pago-inicial",
+                        text: t({
+                            en: "From 60% at Level 1, lower as your level rises",
+                            es: "Desde 60% en el Nivel 1, menos a medida que subes de nivel",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Late", es: "Atraso" }),
+                        source: "https://intercom.help/cashea/es/articles/8526833-atraso-y-periodo-de-gracia",
+                        text: t({
+                            en: "2 days of grace, then $4 per late installment, and your purchase line is blocked until you pay",
+                            es: "2 días de gracia, luego $4 por cada cuota vencida, y tu línea de compra queda bloqueada hasta que pagues",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "In the Cashea app. Tap Mis Compras or the calendar under it, pick the installment under Próximos pagos or Pagar, and pay with one of the methods the app shows, to the account it shows. Then tap Ya pagué, enter the date, the amount, and the reference number, and upload a photo of the receipt.",
+                            es: "En la app de Cashea. Toca Mis Compras o el calendario de abajo, elige la cuota en Próximos pagos o Pagar, y paga con uno de los métodos que te muestra la app, a la cuenta que te muestra. Después toca Ya pagué, escribe la fecha, el monto y el número de referencia, y sube una foto del comprobante.",
+                        }),
+                        question: t({
+                            en: "How do I pay a Cashea installment?",
+                            es: "¿Cómo pago una cuota de Cashea?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Pago Móvil, a bank transfer in bolívares, or a deposit in bolívares or dollars. The methods available depend on the store you bought from. For an in-store purchase, the upfront payment is made at the register with whatever the store accepts.",
+                            es: "Pago Móvil, transferencia bancaria en bolívares, o depósito en bolívares o dólares. Los métodos disponibles dependen de la tienda donde compraste. En una compra en tienda física, la inicial se paga en caja con lo que acepte la tienda.",
+                        }),
+                        question: t({
+                            en: "What payment methods does Cashea take?",
+                            es: "¿Qué métodos de pago acepta Cashea?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. You can pay installments early, or pay part of one, as long as the whole installment is paid by its due date. Early payments are made only in the app.",
+                            es: "Sí. Puedes adelantar cuotas o abonar parte de una, siempre que la cuota completa esté pagada en su fecha de vencimiento. Los adelantos se hacen solo por la app.",
+                        }),
+                        question: t({
+                            en: "Can I pay Cashea installments early?",
+                            es: "¿Puedo adelantar cuotas de Cashea?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "You have 2 extra days with no charge. After that, Cashea charges $4 for each late installment and blocks your purchase line until you catch up. Being late can also cost you points and your level.",
+                            es: "Tienes 2 días adicionales sin cargo. Después, Cashea cobra $4 por cada cuota vencida y bloquea tu línea de compra hasta que te pongas al día. Atrasarte también te puede costar puntos y tu nivel.",
+                        }),
+                        question: t({
+                            en: "What happens if I pay Cashea late?",
+                            es: "¿Qué pasa si pago tarde una cuota de Cashea?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. There is one plan: an upfront payment and then installments. How many installments depends on the product, and the app shows it before you buy.",
+                            es: "No. Hay una sola modalidad: una inicial y luego un plan de cuotas. Cuántas cuotas depende del producto, y la app te lo muestra antes de comprar.",
+                        }),
+                        question: t({
+                            en: "Can I choose how many Cashea installments to pay?",
+                            es: "¿Puedo elegir en cuántas cuotas pago en Cashea?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. Outlayr is not affiliated with Cashea and does not take payments for it. It keeps track of your Cashea purchases next to the rest of your spending: the upfront payment, each installment, any late fee, and a reminder the day before each one is due.",
+                            es: "No. Outlayr no está afiliada a Cashea y no recibe pagos para ella. Lleva tus compras de Cashea junto al resto de tus gastos: la inicial, cada cuota, los recargos por atraso y un aviso el día antes de cada pago.",
+                        }),
+                        question: t({
+                            en: "Can I pay Cashea from Outlayr?",
+                            es: "¿Puedo pagar Cashea desde Outlayr?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "Cashea charges an upfront payment when you buy and the rest in installments with no interest, due every 14 days. You pay each one in the Cashea app with Pago Móvil, a transfer, or a deposit, to the account the app shows, and then report it with its reference number.",
+                    es: "Cashea cobra una inicial al comprar y el resto en cuotas sin intereses que vencen cada 14 días. Cada una la pagas desde la app de Cashea con Pago Móvil, transferencia o depósito, a la cuenta que te muestra la app, y luego la reportas con su número de referencia.",
+                }),
+                meta: {
+                    description: t({
+                        en: "How to pay a Cashea installment step by step: payment methods, reporting the reference, paying early, and what a late payment costs, from Cashea's own help center.",
+                        es: "Cómo pagar una cuota de Cashea paso a paso: métodos de pago, cómo reportar la referencia, adelantar cuotas y cuánto cuesta un atraso, según el centro de ayuda de Cashea.",
+                    }),
+                    title: t({
+                        en: "How to Pay Cashea: Installments, Methods, and Late Fees · Outlayr",
+                        es: "Cómo pagar Cashea: cuotas, métodos de pago y atrasos · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "After you pay, tap Ya pagué and then Sí, continuar. If the app asks for the payment details, enter the number you paid from, the date, and the reference digits, then upload the receipt with Subir comprobante.",
+                                es: "Después de pagar, toca Ya pagué y luego Sí, continuar. Si la app te pide los datos del pago, escribe el número desde donde pagaste, la fecha y los dígitos de la referencia, y sube el comprobante con Subir comprobante.",
+                            }),
+                            t({
+                                en: "On a cash deposit receipt from the bank, the number to report is the Serial, not the reference. On a Banco de Venezuela receipt it is the Operación number. A Pago Móvil sent from a Banesco account is reported as Transferencia.",
+                                es: "En el comprobante de un depósito en efectivo, el número que reportas es el Serial y no la referencia. En un comprobante del Banco de Venezuela es el número de Operación. Un Pago Móvil desde una cuenta de Banesco se reporta como Transferencia.",
+                            }),
+                            t({
+                                en: "One payment covers installments from one purchase only. To pay two purchases, make two payments.",
+                                es: "Un pago cubre cuotas de una sola compra. Para pagar dos compras, haz dos pagos.",
+                            }),
+                        ],
+                        id: "report",
+                        title: t({ en: "Reporting the payment", es: "Cómo reportar el pago" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Cashea says it announces changes to a store's account only in the app, and that no one from Cashea or its stores will ask you for a payment outside it. Pay only to the account shown for that installment, and report any message asking you to pay somewhere else to Cashea's support.",
+                                es: "Cashea dice que avisa los cambios en la cuenta de una tienda solo por la app, y que nadie de Cashea ni de sus tiendas te pedirá un pago por fuera de ella. Paga solo a la cuenta que aparece para esa cuota, y reporta a soporte de Cashea cualquier mensaje que te pida pagar en otro lado.",
+                            }),
+                        ],
+                        id: "safe",
+                        title: t({ en: "Pay only inside the app", es: "Paga solo dentro de la app" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Outlayr tracks purchases in installments from buy now, pay later apps such as Cashea: the upfront payment, each installment, and any late fees, with a reminder the day before each one is due. For an order already in progress, take a screenshot of its payment plan and Outlayr fills in each payment and what is already paid.",
+                                es: "Outlayr lleva las compras en cuotas de apps como Cashea: la inicial, cada cuota y los recargos por atraso, con un aviso el día antes de cada pago. Para una compra que ya va por la mitad, toma una captura de su plan de pagos y Outlayr llena cada cuota y lo que ya pagaste.",
+                            }),
+                            t({
+                                en: "The free plan holds 2 installment apps, and each screenshot counts as one capture. Outlayr is not affiliated with Cashea, and paying still happens in the Cashea app.",
+                                es: "El plan gratis permite 2 apps de cuotas, y cada captura de pantalla cuenta como una captura. Outlayr no está afiliada a Cashea, y el pago se sigue haciendo en la app de Cashea.",
+                            }),
+                        ],
+                        id: "outlayr",
+                        title: t({
+                            en: "Keep track of your Cashea installments",
+                            es: "Lleva el control de tus cuotas de Cashea",
+                        }),
+                    },
+                ],
+                plateAlt: t({
+                    en: "A $600 fridge bought in installments: a 60% upfront payment of $360 and installment 1 of $80 are paid, installment 2 of $80 is due Friday 21 November, and installment 3 is due 5 December. Two days of grace, then $4 per installment.",
+                    es: "Una nevera de $600 comprada en cuotas: la inicial del 60%, $360, y la cuota 1 de $80 están pagadas, la cuota 2 de $80 vence el viernes 21 de noviembre y la cuota 3 el 5 de diciembre. Dos días de gracia, luego $4 por cuota.",
+                }),
+                related: [
+                    "/tools/installment-calculator",
+                    "/guides/multi-currency-expense-tracker",
+                    "/guides/best-expense-tracker-apps-latin-america",
+                ] satisfies PageRef[],
+                steps: [
+                    {
+                        text: t({
+                            en: "Tap Mis Compras or the calendar under it, then the installment under Próximos pagos or Pagar.",
+                            es: "Toca Mis Compras o el calendario de abajo, y luego la cuota en Próximos pagos o Pagar.",
+                        }),
+                        title: t({ en: "Open the installment", es: "Abre la cuota" }),
+                    },
+                    {
+                        text: t({
+                            en: "Use Pago Móvil, a transfer, or a deposit, to the account details the app shows. Check them before you pay.",
+                            es: "Usa Pago Móvil, transferencia o depósito, a los datos que te muestra la app. Revísalos antes de pagar.",
+                        }),
+                        title: t({ en: "Pay to the account shown", es: "Paga a la cuenta que aparece" }),
+                    },
+                    {
+                        text: t({
+                            en: "Tap Ya pagué, enter the date, amount, and reference number, and upload the receipt.",
+                            es: "Toca Ya pagué, escribe la fecha, el monto y el número de referencia, y sube el comprobante.",
+                        }),
+                        title: t({ en: "Report it", es: "Repórtalo" }),
+                    },
+                ],
+                title: t({
+                    en: "How to pay Cashea: installments, methods, and late fees",
+                    es: "Cómo pagar Cashea: cuotas, métodos y atrasos",
+                }),
+            },
             "how-to-track-expenses": {
                 facts: [
                     {
