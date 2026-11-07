@@ -1289,6 +1289,22 @@
         background: var(--color-app-strong);
     }
 
+    .dash-menu-list {
+        margin-right: -3px;
+        scrollbar-color: auto;
+        scrollbar-gutter: stable;
+        scrollbar-width: auto;
+    }
+
+    .dash-menu-list::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    .dash-menu-list::-webkit-scrollbar-thumb {
+        border-radius: 2px;
+        background: var(--color-app-strong);
+    }
+
     .dash-check {
         position: relative;
         display: block;

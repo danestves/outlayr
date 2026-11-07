@@ -4,13 +4,12 @@ import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile, LookTile } from "@/components/ledger/tiles";
-import { endOfDay } from "@/lib/dashboard-series-ledger";
-import { netWorthPoints } from "@/lib/dashboard-series-net-worth";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { useCatalog } from "./catalog";
 import { useDateFormat } from "./format";
+import { accountBalances } from "./model";
 import type { SetupState } from "./model";
 import { Cover, GhostAccounts, PhoneButton } from "./setup";
 
@@ -41,17 +40,15 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                 })),
             };
         }
-        const [end] = netWorthPoints(ledger, { accounts: filters.accounts }, [
-            closed ? endOfDay(ledger, period.to) : ledger.now,
-        ]);
+        const end = accountBalances(ledger, period, quiet, filters.accounts);
         return {
-            net: end?.net ?? 0,
-            rows: (end?.accounts ?? []).flatMap(({ balance, id }) => {
+            net: end.net,
+            rows: end.accounts.flatMap(({ balance, id }) => {
                 const look = catalog.account(id);
                 return look ? [{ balance, key: id, look, name: ledger.accounts.get(id)?.name ?? "" }] : [];
             }),
         };
-    }, [catalog, closed, filters.accounts, ledger, overview.balances, period.to, scoped]);
+    }, [catalog, filters.accounts, ledger, overview.balances, period, quiet, scoped]);
     const horizon = addDays(ledger.today, UPCOMING_DAYS);
     const charges = overview.upcoming.charges.filter((charge) => charge.nextCharge <= horizon).slice(0, UPCOMING_ROWS);
     if (setup?.step === "account") {

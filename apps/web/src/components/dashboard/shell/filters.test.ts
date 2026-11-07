@@ -54,14 +54,12 @@ describe("dashboardSearch", () => {
 });
 
 describe("toggledAccounts", () => {
-    const every = ["chase", "amex", "cash"];
-
-    it("deselects one account out of all of them", () => {
-        expect(toggledAccounts(every, [], "amex")).toStrictEqual(["chase", "cash"]);
+    it("narrows from all accounts to the one ticked, not to all the others", () => {
+        expect(toggledAccounts([], "amex")).toStrictEqual(["amex"]);
+        expect(toggledAccounts(["amex"], "cash")).toStrictEqual(["amex", "cash"]);
     });
 
-    it("returns to all accounts when the last one is turned off or the missing one back on", () => {
-        expect(toggledAccounts(every, ["amex"], "amex")).toStrictEqual([]);
-        expect(toggledAccounts(every, ["chase", "cash"], "amex")).toStrictEqual([]);
+    it("returns to all accounts when the last tick comes off", () => {
+        expect(toggledAccounts(["amex"], "amex")).toStrictEqual([]);
     });
 });
