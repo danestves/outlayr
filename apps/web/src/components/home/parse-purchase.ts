@@ -7,6 +7,8 @@ const AMOUNT = /(?:^|\s)((?:(USD|EUR|US\$|[$€])\s*)?(\d+(?:[.,]\d{1,2})?)(?:\s
 const CONNECTOR_SUFFIX = {
     en: /\s+for$/i,
     es: /\s+por$/i,
+    fr: /\s+pour$/i,
+    pt: /\s+por$/i,
 } as const satisfies Record<Locale, RegExp>;
 const PREFERRED_AMOUNT = /(?:USD|EUR|US\$|[$€]|[.,]\d)/i;
 const WHITESPACE = /\s+/g;

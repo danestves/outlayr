@@ -4,7 +4,7 @@ import type { IntlayerConfig } from "intlayer";
 const config: IntlayerConfig = {
     internationalization: {
         defaultLocale: Locales.ENGLISH,
-        locales: [Locales.ENGLISH, Locales.SPANISH],
+        locales: [Locales.ENGLISH, Locales.SPANISH, Locales.PORTUGUESE, Locales.FRENCH],
         requiredLocales: [Locales.ENGLISH, Locales.SPANISH],
         strictMode: "strict",
     },

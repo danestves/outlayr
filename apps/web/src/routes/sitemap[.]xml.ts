@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { defaultLocale, getIntlayer, locales } from "intlayer";
+import { defaultLocale, getIntlayer } from "intlayer";
 
-import { LANGUAGES, pageUrl } from "@/lib/i18n";
+import { LANGUAGES, pageUrl, publishedLocales } from "@/lib/i18n";
 import { postDay, postsIn } from "@/lib/posts";
 import { LEGAL_DAYS, compareUpdated, guideUpdated } from "@/lib/site";
 
@@ -35,10 +35,11 @@ function pages(): [path: string, updated: Date | null][] {
 
 function sitemap(): string {
     const list = pages();
-    const urls = locales.flatMap((locale) =>
-        list.map(([path, updated]) => {
+    const urls = list.flatMap(([path, updated]) => {
+        const published = publishedLocales(path);
+        return published.map((locale) => {
             const alternates = [
-                ...locales.map((alternate) => [LANGUAGES[alternate].hreflang, pageUrl(path, alternate)]),
+                ...published.map((alternate) => [LANGUAGES[alternate].hreflang, pageUrl(path, alternate)]),
                 ["x-default", pageUrl(path, defaultLocale)],
             ].map(([hreflang, href]) => `<xhtml:link rel="alternate" hreflang="${hreflang}" href="${href}"/>`);
             return [
@@ -48,8 +49,8 @@ function sitemap(): string {
                 ...alternates,
                 "</url>",
             ].join("");
-        })
-    );
+        });
+    });
     return [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',

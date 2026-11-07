@@ -60,7 +60,7 @@ function LivePurchase({ locale }: { locale: Locale }) {
     const { hero } = useIntlayer("home");
     const { day, voiceAt } = useIntlayer("demo");
     const nameOf = useNames();
-    const initial = `${COFFEE_SHOP[locale].toLowerCase()} ${locale === "es" ? "4,50" : "4.50"}`;
+    const initial = `${COFFEE_SHOP[locale].toLowerCase()} ${locale === "en" ? "4.50" : "4,50"}`;
     const [text, setText] = useState(initial);
     const parsed = parsePurchase(text, locale);
 

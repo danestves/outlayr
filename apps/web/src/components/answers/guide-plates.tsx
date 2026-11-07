@@ -60,6 +60,24 @@ const CANADA = {
         side: "sin banco vinculado",
         today: "Hoy",
     },
+    fr: {
+        budgets: ["Épicerie", "Transport", "Restos", "Téléphone et internet"],
+        last: "64,20 $ chez Loblaws, saisi",
+        left: "Reste ce mois-ci",
+        month: "Novembre · CAD",
+        of: "sur",
+        side: "aucune banque liée",
+        today: "Aujourd'hui",
+    },
+    pt: {
+        budgets: ["Mercado", "Transporte", "Comer fora", "Telefone e internet"],
+        last: "$64.20 no Loblaws, digitado",
+        left: "Resta este mês",
+        month: "Novembro · CAD",
+        of: "de",
+        side: "nenhum banco conectado",
+        today: "Hoje",
+    },
 } as const satisfies Record<Locale, CanadaCopy>;
 
 const CANADA_BUDGETS = [
@@ -127,13 +145,29 @@ const CASHEA = {
         purchase: "Nevera",
         rows: ["Inicial 60%", "Cuota 1", "Cuota 2", "Cuota 3"],
     },
+    fr: {
+        due: "Échéance 2 sur 3 · le ven. 21 nov.",
+        grace: "2 jours de grâce, puis 4 $ par échéance",
+        interest: "0 % d'intérêt",
+        level: "Niveau 1",
+        purchase: "Réfrigérateur",
+        rows: ["Apport 60 %", "Échéance 1", "Échéance 2", "Échéance 3"],
+    },
+    pt: {
+        due: "Parcela 2 de 3 · vence sex, 21 nov",
+        grace: "2 dias de carência, depois $4 por parcela",
+        interest: "0% de juros",
+        level: "Nível 1",
+        purchase: "Geladeira",
+        rows: ["Entrada 60%", "Parcela 1", "Parcela 2", "Parcela 3"],
+    },
 } as const satisfies Record<Locale, CasheaCopy>;
 
 const CASHEA_SCHEDULE = [
-    { amount: 360, day: { en: "24 Oct", es: "24 oct" }, state: "paid" },
-    { amount: 80, day: { en: "7 Nov", es: "7 nov" }, state: "paid" },
-    { amount: 80, day: { en: "21 Nov", es: "21 nov" }, state: "next" },
-    { amount: 80, day: { en: "5 Dec", es: "5 dic" }, state: "later" },
+    { amount: 360, day: { en: "24 Oct", es: "24 oct", fr: "24 oct.", pt: "24 out" }, state: "paid" },
+    { amount: 80, day: { en: "7 Nov", es: "7 nov", fr: "7 nov.", pt: "7 nov" }, state: "paid" },
+    { amount: 80, day: { en: "21 Nov", es: "21 nov", fr: "21 nov.", pt: "21 nov" }, state: "next" },
+    { amount: 80, day: { en: "5 Dec", es: "5 dic", fr: "5 déc.", pt: "5 dez" }, state: "later" },
 ] as const satisfies readonly { amount: number; day: Record<Locale, string>; state: string }[];
 
 export function CasheaPlate() {

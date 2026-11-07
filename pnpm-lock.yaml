@@ -78,6 +78,7 @@ patchedDependencies:
   '@convex-dev/agent@0.7.8': ff775218dc1150ede74b4bc79fc8cb826e7e6dca242bfb4d2903ce1673d23f9b
   '@expo/ui@58.0.26': cf570f2c26411be3add00def407c3367a9158d0472fdb083a627e61d42ccb53a
   '@hugeicons/react-native@1.0.16': d88b0ddeff9a70801c5e44d61f2d4a31f1e3a7da7571052da14248c956b0dddc
+  '@intlayer/engine@9.7.0': f5b4cd64abb48bd275710fb4178b2d6cdb5403a55ad1b3ff10f9e8450b4d0b00
   '@tanstack/ai-mcp@1.0.0': e5fa7bd1f3aa01b044a3bf9e6201d44bd03017dbd27760ea872acee006d3c5cc
   expo-router@58.0.29: f800049d8b393f24d729a6644c92d03194cf809fe208596a8114d1c24925d2fb
   expo-widgets@58.0.26: 36bd251d23b3f875da7c4fc483d7cbe60e5b8e14a4460a56536fc8898acc0421
@@ -5252,7 +5253,9 @@ packages:
   '@smithy/core@3.37.0':
     resolution: {integrity: sha512-97imTcCyiPd8k0e9+ts/Sp0W65Dn9Ti357J7M09Ov4tI8Q1JDJVFSoAJtjEVKqfHEr3Pdo2jfolqKCaaiszH0g==}
     engines: {node: '>=18.0.0'}
-    deprecated: Deprecated due to a bug in custom logger data redaction. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
+    deprecated: |-
+      Deprecated due to a bug in custom logger data redaction. Upgrade to the latest version. If you used a custom logger with this
+        version, review your logs and rotate any credentials or other secrets. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/credential-provider-imds@4.5.2':
     resolution: {integrity: sha512-A9uSdn72ozbRUSit0eib0TW7nXuNPlaeM0zcGkJ+nE6tFcSDbnmtwoxbTCFBukVQcszDAyvsd7+rTduPTXpygg==}
@@ -15832,7 +15835,7 @@ snapshots:
       '@intlayer/config': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)
       '@intlayer/core': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)
       '@intlayer/dictionaries-entry': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)
-      '@intlayer/engine': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
+      '@intlayer/engine': 9.7.0(patch_hash=f5b4cd64abb48bd275710fb4178b2d6cdb5403a55ad1b3ff10f9e8450b4d0b00)(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
       '@intlayer/types': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))
     transitivePeerDependencies:
       - '@ai-sdk/alibaba'
@@ -15866,7 +15869,7 @@ snapshots:
       '@intlayer/config': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
       '@intlayer/core': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
       '@intlayer/dictionaries-entry': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
-      '@intlayer/engine': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
+      '@intlayer/engine': 9.7.0(patch_hash=f5b4cd64abb48bd275710fb4178b2d6cdb5403a55ad1b3ff10f9e8450b4d0b00)(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
       '@intlayer/types': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))
     transitivePeerDependencies:
       - '@ai-sdk/alibaba'
@@ -15939,7 +15942,7 @@ snapshots:
       '@intlayer/config': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)
       '@intlayer/core': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)
       '@intlayer/dictionaries-entry': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)
-      '@intlayer/engine': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
+      '@intlayer/engine': 9.7.0(patch_hash=f5b4cd64abb48bd275710fb4178b2d6cdb5403a55ad1b3ff10f9e8450b4d0b00)(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
       '@intlayer/types': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))
       commander: 15.0.0
       enquirer: 2.4.1
@@ -15976,7 +15979,7 @@ snapshots:
       '@intlayer/config': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
       '@intlayer/core': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
       '@intlayer/dictionaries-entry': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
-      '@intlayer/engine': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
+      '@intlayer/engine': 9.7.0(patch_hash=f5b4cd64abb48bd275710fb4178b2d6cdb5403a55ad1b3ff10f9e8450b4d0b00)(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
       '@intlayer/types': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))
       commander: 15.0.0
       enquirer: 2.4.1
@@ -16297,7 +16300,7 @@ snapshots:
       - '@openrouter/ai-sdk-provider'
       - react
 
-  '@intlayer/engine@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)':
+  '@intlayer/engine@9.7.0(patch_hash=f5b4cd64abb48bd275710fb4178b2d6cdb5403a55ad1b3ff10f9e8450b4d0b00)(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)':
     dependencies:
       '@intlayer/api': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)
       '@intlayer/config': 9.6.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)
@@ -16333,7 +16336,7 @@ snapshots:
       - typescript
       - zod
 
-  '@intlayer/engine@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)':
+  '@intlayer/engine@9.7.0(patch_hash=f5b4cd64abb48bd275710fb4178b2d6cdb5403a55ad1b3ff10f9e8450b4d0b00)(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)':
     dependencies:
       '@intlayer/api': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
       '@intlayer/config': 9.6.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
@@ -25690,7 +25693,7 @@ snapshots:
     dependencies:
       '@intlayer/config': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)
       '@intlayer/core': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)
-      '@intlayer/engine': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
+      '@intlayer/engine': 9.7.0(patch_hash=f5b4cd64abb48bd275710fb4178b2d6cdb5403a55ad1b3ff10f9e8450b4d0b00)(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
       '@intlayer/types': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))
       expo: 58.0.22(@babel/core@7.29.7(supports-color@8.1.1))(@expo/dom-webview@58.0.2)(@expo/metro-runtime@58.0.16)(expo-router@58.0.29)(expo-widgets@58.0.26)(react-dom@19.3.0(react@19.3.0))(react-native-web@0.21.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-native-worklets@0.13.0(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)(typescript@6.0.3)
       react: 19.3.0
@@ -27398,7 +27401,7 @@ snapshots:
       '@intlayer/config': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
       '@intlayer/core': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
       '@intlayer/dictionaries-entry': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
-      '@intlayer/engine': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
+      '@intlayer/engine': 9.7.0(patch_hash=f5b4cd64abb48bd275710fb4178b2d6cdb5403a55ad1b3ff10f9e8450b4d0b00)(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@intlayer/babel@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
       '@intlayer/types': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))
       vite: '@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)'
     optionalDependencies:

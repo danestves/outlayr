@@ -4,7 +4,7 @@ import * as Schema from "effect/Schema";
 import { getIntlayer, getLocalizedUrl } from "intlayer";
 
 import { fold } from "./fold";
-import { pageUrl } from "./i18n";
+import { isPublished, pageUrl } from "./i18n";
 import type { Locale } from "./i18n";
 
 export interface SitePage {
@@ -90,7 +90,7 @@ export function registerAgentTools(
     locale: Locale,
     signal: AbortSignal
 ) {
-    const pages = sitePages(locale);
+    const pages = sitePages(locale).filter((page) => isPublished(page.path, locale));
     const { faq } = getIntlayer("home", locale);
     const { answers } = getIntlayer("support", locale);
     const options = { signal };

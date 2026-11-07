@@ -19,7 +19,7 @@ import { SayPanel, ScanPanel } from "@/components/demo/capture-panels";
 import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
 import { hasKey } from "@/lib/has-key";
-import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
+import { LANGUAGES, isPublished, localeFromParam, pageUrl } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n";
 import { answerTrail, article, faqPage, itemList, ldJson, pageMeta, webPage } from "@/lib/seo";
 import { guideUpdated, listChecked, longDate } from "@/lib/site";
@@ -195,7 +195,7 @@ function Guide() {
                             {app.summary}
                         </p>
                         <FactList facts={app.facts} />
-                        {hasKey(compare, app.slug.value) ? (
+                        {hasKey(compare, app.slug.value) && isPublished(`/compare/${app.slug.value}`, locale) ? (
                             <Link
                                 className="fluid bg-surface hover:bg-foreground/5 group mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
                                 params={{ locale: getPrefix(locale).localePrefix, slug: app.slug.value }}
