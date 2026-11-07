@@ -1,8 +1,10 @@
-@import "tailwindcss";
+@import "tailwindcss" source(".");
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 @import "@fontsource-variable/nunito";
-@source "../node_modules/panelui-web/dist";
+@source "../node_modules/panelui-web/dist/components/button/index.js";
+@source "../node_modules/panelui-web/dist/components/chip/index.js";
+@source "../node_modules/panelui-web/dist/components/menu/index.js";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 

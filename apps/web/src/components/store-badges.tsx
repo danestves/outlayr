@@ -10,9 +10,9 @@ const APP_STORE_BADGE = {
 } as const satisfies Record<Locale, string>;
 
 const GOOGLE_PLAY_BADGE = {
-    en: { height: 168, src: "/badges/google-play.png", width: 564 },
-    es: { height: 192, src: "/badges/google-play-es.png", width: 646 },
-} as const satisfies Record<Locale, { height: number; src: string; width: number }>;
+    en: "/badges/google-play",
+    es: "/badges/google-play-es",
+} as const satisfies Record<Locale, string>;
 
 type Placement = "answer" | "closing" | "hero" | "intro" | "invite" | "story";
 
@@ -31,10 +31,11 @@ export function StoreBadges({ placement }: { placement: Placement }) {
                 <img
                     alt={badges.googlePlay.value}
                     className="h-12 w-auto"
-                    height={googlePlay.height}
+                    height={96}
                     loading={loading}
-                    src={googlePlay.src}
-                    width={googlePlay.width}
+                    src={`${googlePlay}-2x.webp`}
+                    srcSet={`${googlePlay}-2x.webp 2x, ${googlePlay}-3x.webp 3x`}
+                    width={322}
                 />
             </a>
             <a

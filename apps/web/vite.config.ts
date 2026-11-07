@@ -31,6 +31,7 @@ const LOADER_SPLIT_ROUTES = new Set([
 ]);
 const AN_HOUR = { headers: { "cache-control": "public, max-age=3600" } };
 const A_DAY = { headers: { "cache-control": "public, max-age=86400" } };
+const A_YEAR = { headers: { "cache-control": "public, max-age=31536000" } };
 
 export default defineConfig({
     plugins: [
@@ -61,16 +62,16 @@ export default defineConfig({
                 "/login": UNFRAMEABLE,
                 // Every file under /assets is content-hashed by Vite, so a URL never changes meaning.
                 "/assets/**": { headers: { "cache-control": "public, max-age=31536000, immutable" } },
-                "/app/iphone.webp": A_DAY,
-                "/app/iphone-500.webp": A_DAY,
-                "/app/logos/**": A_DAY,
+                "/app/iphone.webp": A_YEAR,
+                "/app/iphone-500.webp": A_YEAR,
+                "/app/logos/**": A_YEAR,
                 "/apple-touch-icon.png": A_DAY,
-                "/badges/**": A_DAY,
+                "/badges/**": A_YEAR,
                 "/favicon-dark.png": A_DAY,
                 "/favicon-light.png": A_DAY,
                 "/favicon.ico": A_DAY,
                 "/favicon.svg": A_DAY,
-                "/films/logos/**": A_DAY,
+                "/films/logos/**": A_YEAR,
                 "/llms.txt": AN_HOUR,
                 "/og-es.png": A_DAY,
                 "/og.png": A_DAY,
