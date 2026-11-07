@@ -39,6 +39,7 @@
     --color-app-spend: #c0402e;
     --color-app-chip: #c6d8cc;
     --color-app-strong: #cdc8b9;
+    --color-app-ghost: #cdc8b9;
     --color-app-float: #fffefb;
     --color-app-warn: #8f6200;
     --color-app-hover: #17150f05;
@@ -1048,6 +1049,7 @@
     --color-app-rule: #2e2d24;
     --color-app-fill: #26251b;
     --color-app-strong: #3a392e;
+    --color-app-ghost: #4a4839;
     --color-app-float: #26251b;
     --color-app-warn: #e0b04f;
     --color-app-hover: #ffffff08;
@@ -1301,6 +1303,88 @@
         border-color: var(--color-app-tint);
         background: var(--color-app-tint);
         color: var(--color-app-on-tint);
+    }
+
+    .dash-card[data-active="true"] {
+        border-color: color-mix(in oklab, var(--color-app-tint) 55%, var(--color-app-rule));
+    }
+
+    .dash-cover {
+        position: absolute;
+        inset: 52px 0 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 24px 22px;
+        text-align: center;
+    }
+
+    .dash-step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--color-app-muted);
+    }
+
+    .dash-step > u {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        border: 1px solid var(--color-app-rule);
+        border-radius: 50%;
+        font: 500 12px/1 var(--font-mono);
+        text-decoration: none;
+    }
+
+    .dash-step[data-state="on"] {
+        font-weight: 500;
+        color: var(--color-app-ink);
+    }
+
+    .dash-step[data-state="on"] > u {
+        border-color: var(--color-app-tint);
+        background: var(--color-app-tint);
+        color: var(--color-app-on-tint);
+    }
+
+    .dash-step[data-state="ok"] > u {
+        border-color: transparent;
+        background: color-mix(in oklab, var(--color-app-income) 16%, transparent);
+        color: var(--color-app-income);
+    }
+
+    .dash-gl {
+        display: inline-block;
+        height: 9px;
+        border: 1px solid var(--color-app-ghost);
+        border-radius: 5px;
+    }
+
+    .dash-gx {
+        flex: none;
+        width: 26px;
+        height: 26px;
+        border: 1px solid var(--color-app-ghost);
+        border-radius: 8px;
+    }
+
+    .dash-gbar {
+        position: relative;
+        height: 8px;
+        margin-top: 7px;
+        border: 1px solid var(--color-app-ghost);
+        border-radius: 99px;
+    }
+
+    .dash-gbar > i {
+        position: absolute;
+        inset: -1px auto -1px -1px;
+        border: 1px dashed var(--color-app-ghost);
+        border-radius: 99px;
     }
 
     .dash-empty {

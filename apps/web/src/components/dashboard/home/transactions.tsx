@@ -1,25 +1,36 @@
+import { RiAddLine, RiUpload2Line } from "@remixicon/react";
 import { useMemo, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
+import { periodOf } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { useCatalog, useImageUrls } from "./catalog";
 import { useCategoryName, useDateFormat } from "./format";
+import type { SetupState } from "./model";
 import { viewRows } from "./rows";
+import { Cover, GhostRows, PhoneButton, QuietTable, TABLE_FADE } from "./setup";
 
 const ROWS_SHOWN = 6;
 const TABS = ["all", "expenses", "incomeTab"] as const;
 type Tab = (typeof TABS)[number];
 
+const COLUMNS = {
+    ledger: ["24.9%", "22.3%", "18.8%"],
+    setup: ["26.6%", "23%", "19.3%"],
+    setupRows: ["25.8%", "22.4%", "18.8%"],
+} as const;
+
 const TH =
     "text-muted-foreground h-9 px-3 text-left text-xs font-medium shadow-[inset_0_1px_0_var(--color-app-rule),inset_0_-1px_0_var(--color-app-rule)] first:pl-5 last:pr-5 last:text-right";
 const TD = "border-border h-[42px] border-b px-3 first:pl-5 last:pr-5 last:text-right group-last:border-0";
 
-export function Transactions() {
-    const { filters, ledger, photos: accountPhotos } = useDashboard();
-    const copy = useIntlayer("dashboard-home").transactions;
+export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
+    const { filters, ledger, photos: accountPhotos, setFilters } = useDashboard();
+    const { add } = useIntlayer("dashboard");
+    const { setup: setupCopy, transactions: copy } = useIntlayer("dashboard-home");
     const categoryName = useCategoryName();
     const date = useDateFormat();
     const { money } = useDisplayFormat();
@@ -53,8 +64,34 @@ export function Transactions() {
         [catalog, rows]
     );
     const photos = useImageUrls(keys);
+    if (quiet) {
+        const current = periodOf(filters.currentKey, ledger.firstDayOfMonth);
+        const month = date.month(current.key);
+        return (
+            <section className="dash-card lg:col-span-2">
+                <div className="dash-card-head">
+                    <h2>{copy.title}</h2>
+                </div>
+                <div className="dash-empty relative isolate min-h-[299px] justify-end pt-0 pb-7">
+                    <QuietTable />
+                    <b className="text-[15px] font-semibold">{copy.quietTitle}</b>
+                    <p className="text-muted-foreground text-[13px]">
+                        {copy.quietLine({ from: date.day(filters.period.from), to: date.day(filters.period.to) })}
+                    </p>
+                    {filters.period.key === filters.currentKey ? null : (
+                        <button className="dash-btn mt-2.5" onClick={() => setFilters({ period: null })} type="button">
+                            {copy.backTo({ month: `${month.charAt(0).toLocaleUpperCase()}${month.slice(1)}` })}
+                        </button>
+                    )}
+                </div>
+            </section>
+        );
+    }
+    const active = setup?.step === "entry";
+    const setupColumns = rows.length > 0 ? "setupRows" : "setup";
+    const columns = COLUMNS[setup ? setupColumns : "ledger"];
     return (
-        <section className="dash-card lg:col-span-2">
+        <section className={`dash-card lg:col-span-2 ${setup ? "relative min-h-[375px]" : ""}`} data-active={active}>
             <div className="dash-card-head pr-3">
                 <h2>{copy.title}</h2>
                 <div className="ml-3 flex h-[52px] gap-[18px]">
@@ -70,7 +107,7 @@ export function Transactions() {
                         </button>
                     ))}
                 </div>
-                {expanded ? null : (
+                {expanded || setup ? null : (
                     <button className="dash-ob ml-auto" onClick={() => setExpanded(true)} type="button">
                         {copy.seeAll}
                     </button>
@@ -79,9 +116,9 @@ export function Transactions() {
             <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-sm whitespace-nowrap">
                     <colgroup>
-                        <col className="w-[24.9%]" />
-                        <col className="w-[22.3%]" />
-                        <col className="w-[18.8%]" />
+                        <col style={{ width: columns[0] }} />
+                        <col style={{ width: columns[1] }} />
+                        <col style={{ width: columns[2] }} />
                         <col />
                         <col />
                     </colgroup>
@@ -95,7 +132,7 @@ export function Transactions() {
                         </tr>
                     </thead>
                     <tbody>
-                        {rows.length === 0 ? (
+                        {rows.length === 0 && !setup ? (
                             <tr>
                                 <td className="text-muted-foreground px-5 py-8 text-[13px]" colSpan={5}>
                                     {copy.empty}
@@ -155,7 +192,9 @@ export function Transactions() {
                                         </span>
                                     </td>
                                     <td className={`${TD} text-muted-foreground`}>
-                                        {row.accountId ? (ledger.accounts.get(row.accountId)?.name ?? "") : ""}
+                                        {row.accountId
+                                            ? (ledger.accounts.get(row.accountId)?.name ?? "")
+                                            : copy.noAccount}
                                     </td>
                                     <td className={`${TD} dash-figure text-muted-foreground`}>{date.day(row.day)}</td>
                                     <td className={`${TD} dash-figure ${row.income ? "text-app-income" : ""}`}>
@@ -164,9 +203,23 @@ export function Transactions() {
                                 </tr>
                             );
                         })}
+                        {setup ? <GhostRows cell={TD} label={copy.title.value} /> : null}
                     </tbody>
                 </table>
             </div>
+            {setup && rows.length > 0 ? <Cover fade={TABLE_FADE} /> : null}
+            {setup?.done.entry === false ? (
+                <Cover line={active ? setupCopy.entryLast : setupCopy.entryLine} title={setupCopy.entryTitle}>
+                    <PhoneButton className={active ? "dash-btn" : "dash-ob h-[34px] px-3"}>
+                        <RiAddLine size={active ? 18 : 15} />
+                        {add.entry}
+                    </PhoneButton>
+                    <PhoneButton className="dash-ob h-[34px] px-3">
+                        <RiUpload2Line size={15} />
+                        {setupCopy.import}
+                    </PhoneButton>
+                </Cover>
+            ) : null}
         </section>
     );
 }

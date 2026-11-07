@@ -6,6 +6,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { kpis } from "@/lib/dashboard-series";
+import { netWorthPoints } from "@/lib/dashboard-series-net-worth";
 import { LedgerSettingsContext, useDisplayFormat } from "@/lib/ledger-settings";
 
 import { sparks } from "./model";
@@ -37,7 +38,7 @@ interface FigureProps {
     color: string;
     icon: RemixiconComponentType;
     label: ReactNode;
-    points: readonly number[];
+    points: readonly number[] | null;
     tone: "flat" | "good" | "poor";
     trend: string | null;
     value: string;
@@ -64,7 +65,7 @@ function Figure({ color, icon: Icon, label, points, tone, trend, value }: Figure
                         {trend}
                     </span>
                 )}
-                <Spark color={color} points={points} />
+                {points ? <Spark color={color} points={points} /> : null}
             </div>
         </div>
     );
@@ -79,7 +80,7 @@ const toneOf = (delta: number, badGoesUp: boolean) => {
     return delta > 0 === badGoesUp ? "poor" : "good";
 };
 
-export function KpiGroup() {
+export function KpiGroup({ quiet }: { quiet: boolean }) {
     const { filters, ledger } = useDashboard();
     const { incomeTracking } = useContext(LedgerSettingsContext);
     const copy = useIntlayer("dashboard-home").kpi;
@@ -88,6 +89,12 @@ export function KpiGroup() {
     const figures = useMemo(() => kpis(ledger, filters.period, scope), [filters.period, ledger, scope]);
     const lines = useMemo(() => sparks(ledger, filters.period, scope), [filters.period, ledger, scope]);
     const shown = (value: number) => money(value, ledger.currency);
+    // A period with nothing in it has no history worth drawing, and its closing balance says nothing either.
+    const now = useMemo(
+        () => (quiet ? (netWorthPoints(ledger, scope, [ledger.now])[0]?.net ?? 0) : null),
+        [ledger, quiet, scope]
+    );
+    const flat = quiet ? ({ tone: "flat", trend: "0%" } as const) : null;
 
     return (
         <section
@@ -97,19 +104,19 @@ export function KpiGroup() {
                 color="var(--color-app-muted)"
                 icon={RiSafe2Line}
                 label={copy.netWorth}
-                points={lines.netWorth}
-                tone={toneOf(figures.netWorth.delta ?? 0, false)}
-                trend={trend(figures.netWorth.delta)}
-                value={shown(figures.netWorth.value)}
+                points={quiet ? null : lines.netWorth}
+                tone={flat?.tone ?? toneOf(figures.netWorth.delta ?? 0, false)}
+                trend={quiet ? copy.now.value : trend(figures.netWorth.delta)}
+                value={shown(now ?? figures.netWorth.value)}
             />
             {incomeTracking ? (
                 <Figure
                     color="var(--color-app-income)"
                     icon={RiArrowLeftDownLine}
                     label={copy.income}
-                    points={lines.income}
-                    tone={toneOf(figures.income.delta ?? 0, false)}
-                    trend={trend(figures.income.delta)}
+                    points={quiet ? null : lines.income}
+                    tone={flat?.tone ?? toneOf(figures.income.delta ?? 0, false)}
+                    trend={flat?.trend ?? trend(figures.income.delta)}
                     value={shown(figures.income.value)}
                 />
             ) : null}
@@ -117,9 +124,9 @@ export function KpiGroup() {
                 color="var(--color-app-tint)"
                 icon={RiArrowRightUpLine}
                 label={copy.spent}
-                points={lines.spent}
-                tone={toneOf(figures.spent.delta ?? 0, true)}
-                trend={trend(figures.spent.delta)}
+                points={quiet ? null : lines.spent}
+                tone={flat?.tone ?? toneOf(figures.spent.delta ?? 0, true)}
+                trend={flat?.trend ?? trend(figures.spent.delta)}
                 value={shown(figures.spent.value)}
             />
             {incomeTracking ? (
@@ -127,9 +134,12 @@ export function KpiGroup() {
                     color="var(--color-app-muted)"
                     icon={RiCoinsLine}
                     label={copy.kept}
-                    points={lines.kept}
+                    points={quiet ? null : lines.kept}
                     tone="flat"
-                    trend={figures.kept.share === null ? null : `${Math.round(figures.kept.share * PERCENT)}%`}
+                    trend={
+                        flat?.trend ??
+                        (figures.kept.share === null ? null : `${Math.round(figures.kept.share * PERCENT)}%`)
+                    }
                     value={shown(figures.kept.value)}
                 />
             ) : null}

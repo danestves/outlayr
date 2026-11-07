@@ -83,7 +83,9 @@ export function budgetRows(ledger: Ledger, standings: ReadonlyMap<string, Catego
     });
     return {
         over: rows.filter((row) => row.standing.overBudget).length,
-        rows: rows.toSorted((a, b) => b.standing.spent - a.standing.spent),
+        rows: rows.toSorted(
+            (a, b) => b.standing.spent - a.standing.spent || b.standing.effectiveLimit - a.standing.effectiveLimit
+        ),
     };
 }
 
@@ -120,4 +122,30 @@ export function categoryChoices(ledger: Ledger, period: Period, scope: Scope, pi
             .toSorted((a, b) => a.name.localeCompare(b.name)),
         recent: recentIds.flatMap((id) => every.filter((each) => each.id === id)),
     };
+}
+
+export type SetupStep = "account" | "budget" | "entry";
+
+export interface SetupState {
+    done: Record<SetupStep, boolean>;
+    firstSpendTopId: string | null;
+    spent: number;
+    step: SetupStep;
+}
+
+// The placeholder table holds six rows; past that a ledger is in use, and accounts and budgets are optional.
+const SETUP_ENTRY_LIMIT = 6;
+
+export function setupState(ledger: Ledger): SetupState | null {
+    const done = {
+        account: ledger.books.accounts.some((row) => row.deletedAt === null),
+        budget: ledger.books.budgets.some((row) => row.deletedAt === null),
+        entry: ledger.rows.length > 0,
+    };
+    const step = (["account", "entry", "budget"] as const).find((each) => !done[each]);
+    if (!step || ledger.rows.length + ledger.transfers.length >= SETUP_ENTRY_LIMIT) {
+        return null;
+    }
+    const spending = ledger.rows.filter((row) => !row.income).toSorted((a, b) => a.at - b.at);
+    return { done, firstSpendTopId: spending[0]?.topId ?? null, spent: total(ledger, spending), step };
 }

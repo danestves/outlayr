@@ -1,3 +1,4 @@
+import { RiAddLine } from "@remixicon/react";
 import { useMemo } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -10,20 +11,22 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { useCatalog } from "./catalog";
 import { useDateFormat } from "./format";
+import type { SetupState } from "./model";
+import { Cover, GhostAccounts, PhoneButton } from "./setup";
 
 const ACCOUNT_ROWS = 6;
 const UPCOMING_ROWS = 5;
 const UPCOMING_DAYS = 30;
 const ROW = "flex h-10 items-center gap-2.5 font-medium";
 
-export function Accounts() {
+export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger, overview, photos } = useDashboard();
-    const copy = useIntlayer("dashboard-home").panel;
+    const { panel: copy, setup: setupCopy } = useIntlayer("dashboard-home");
     const date = useDateFormat();
     const { money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
     const { period } = filters;
-    const closed = period.to < ledger.today;
+    const closed = !quiet && period.to < ledger.today;
     const scoped = closed || filters.accounts.length > 0;
     const shown = useMemo(() => {
         if (!scoped) {
@@ -51,13 +54,38 @@ export function Accounts() {
     }, [catalog, closed, filters.accounts, ledger, overview.balances, period.to, scoped]);
     const horizon = addDays(ledger.today, UPCOMING_DAYS);
     const charges = overview.upcoming.charges.filter((charge) => charge.nextCharge <= horizon).slice(0, UPCOMING_ROWS);
+    if (setup?.step === "account") {
+        return (
+            <section className="dash-card relative min-h-[375px] text-sm" data-active>
+                <div className="dash-card-head">
+                    <h2>{copy.accounts}</h2>
+                </div>
+                <GhostAccounts />
+                <Cover
+                    line={
+                        setup.spent > 0
+                            ? setupCopy.accountFrom({ amount: money(setup.spent, ledger.currency) })
+                            : setupCopy.accountLine
+                    }
+                    title={setupCopy.accountTitle}
+                >
+                    <PhoneButton className="dash-btn">
+                        <RiAddLine size={18} />
+                        {setupCopy.addAccount}
+                    </PhoneButton>
+                </Cover>
+            </section>
+        );
+    }
     return (
         <section className="dash-card text-sm">
             <div className="dash-card-head">
                 <h2>{copy.accounts}</h2>
-                <span className="dash-figure text-muted-foreground ml-auto text-[13px]">
-                    {money(shown.net, ledger.currency)}
-                </span>
+                {setup ? null : (
+                    <span className="dash-figure text-muted-foreground ml-auto text-[13px]">
+                        {money(shown.net, ledger.currency)}
+                    </span>
+                )}
             </div>
             <div className="flex-1 px-5 pb-2">
                 {shown.rows.length === 0 && charges.length === 0 ? (

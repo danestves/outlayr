@@ -2,7 +2,7 @@ import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { describe, expect, it } from "vite-plus/test";
 
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
-import { budgetFill, categoryChoices, everyDay } from "./model";
+import { budgetFill, categoryChoices, everyDay, setupState } from "./model";
 
 const NOW = Date.parse("2026-10-10T15:00:00Z");
 const period = { days: 31, from: "2026-10-01", key: "2026-10", to: "2026-10-31" };
@@ -126,5 +126,43 @@ describe("categoryChoices", () => {
         const { recent } = categoryChoices(ledger, period, SCOPE, ["travel"]);
 
         expect(ids(recent)[0]).toBe("travel");
+    });
+});
+
+describe("setupState", () => {
+    const account = {
+        ...envelope("chase", 1),
+        currency: "USD",
+        initialBalance: 0,
+        initialBalanceDate: 0,
+        name: "Chase",
+    };
+    const budget = { ...envelope("limit", 1), categoryId: "food" };
+    const setup = (accounts: unknown[], budgets: unknown[], entries: number) =>
+        setupState(
+            prepareLedger(
+                {
+                    ...ledger.books,
+                    accounts,
+                    budgets,
+                    transactions: Array.from({ length: entries }, (_, index) =>
+                        entry(index + 1, "2026-10-02", "food", 10)
+                    ),
+                } as unknown as LedgerBooks,
+                NOW
+            )
+        );
+
+    it("walks account, entry, budget and asks for the account even when an entry came first", () => {
+        expect(setup([], [], 0)?.step).toBe("account");
+        expect(setup([account], [], 0)?.step).toBe("entry");
+        expect(setup([account], [], 1)).toMatchObject({ firstSpendTopId: "food", spent: 10, step: "budget" });
+        expect(setup([], [], 1)).toMatchObject({ done: { account: false, entry: true }, step: "account" });
+    });
+
+    it("ends once all three are done, or once the ledger is in real use without them", () => {
+        expect(setup([account], [budget], 1)).toBeNull();
+        expect(setup([], [], 6)).toBeNull();
+        expect(setup([account], [], 6)).toBeNull();
     });
 });

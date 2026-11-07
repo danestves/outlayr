@@ -11,6 +11,8 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { useDateFormat } from "./format";
 import { percentChange } from "./kpi-group";
+import type { SetupState } from "./model";
+import { Cover, GhostRuler, LATE_FADE, QuietBars } from "./setup";
 
 const BARS = 51;
 const WIDTH = 336;
@@ -86,7 +88,7 @@ function Ruler({ label, mark, value }: { label: string; mark: number; value: num
     );
 }
 
-export function SpentOfIncome() {
+export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger } = useDashboard();
     const copy = useIntlayer("dashboard-home");
     const date = useDateFormat();
@@ -101,6 +103,48 @@ export function SpentOfIncome() {
     const { prior } = figures.spent;
     const { delta } = figures.spent;
     const shown = (value: number) => money(value, ledger.currency);
+    if (setup && (income === 0 || spent === 0)) {
+        return (
+            <section className="dash-card relative min-h-[363px]">
+                <div className="dash-card-head">
+                    <h2>{copy.spentOfIncome.title}</h2>
+                </div>
+                <div className="px-5">
+                    <GhostRuler />
+                </div>
+                {spent > 0 ? (
+                    <Cover
+                        fade={LATE_FADE}
+                        line={copy.setup.logIncome}
+                        title={copy.setup.spent({ amount: shown(spent) })}
+                    />
+                ) : (
+                    <Cover fade={LATE_FADE} line={copy.setup.fillsIn} title={copy.setup.spentTitle} />
+                )}
+            </section>
+        );
+    }
+    if (quiet) {
+        return (
+            <section className="dash-card">
+                <div className="dash-card-head">
+                    <h2>{copy.spentOfIncome.title}</h2>
+                </div>
+                <div className="dash-empty relative isolate min-h-[241px] justify-end pt-0 pb-7">
+                    <QuietBars />
+                    <b className="text-[15px] font-semibold">{copy.quiet.spentTitle}</b>
+                    <p className="text-muted-foreground mb-2.5 text-[13px]">{copy.quiet.spentLine}</p>
+                </div>
+                <div className="dash-card-foot text-sm">
+                    <span className="text-muted-foreground text-[13px]">{copy.kpi.kept}</span>
+                    <span className="dash-figure font-medium">{shown(0)}</span>
+                    <span className="dash-trend" data-tone="flat">
+                        0%
+                    </span>
+                </div>
+            </section>
+        );
+    }
     const priorMonth = periodOf(shiftPeriodKey(period.key, -1), ledger.firstDayOfMonth).key;
     return (
         <section className="dash-card">

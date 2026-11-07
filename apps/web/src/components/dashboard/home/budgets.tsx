@@ -1,4 +1,4 @@
-import { RiArrowRightUpLine } from "@remixicon/react";
+import { RiAddLine, RiArrowRightUpLine } from "@remixicon/react";
 import { useMemo } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -8,13 +8,15 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { useCategoryName, useWholeMoney } from "./format";
 import { budgetFill, budgetRows } from "./model";
+import type { SetupState } from "./model";
+import { Cover, GhostBudgets, PhoneButton } from "./setup";
 
 const ROWS_SHOWN = 5;
 const PERCENT = 100;
 
-export function Budgets() {
+export function Budgets({ setup }: { setup: SetupState | null }) {
     const { filters, ledger, setFilters } = useDashboard();
-    const copy = useIntlayer("dashboard-home").panel;
+    const { panel: copy, setup: setupCopy } = useIntlayer("dashboard-home");
     const categoryName = useCategoryName();
     const { money } = useDisplayFormat();
     const { whole } = useWholeMoney(ledger.currency);
@@ -22,6 +24,27 @@ export function Budgets() {
         () => budgetRows(ledger, categoryBudgets(ledger, filters.period)),
         [filters.period, ledger]
     );
+    if (setup && rows.length === 0) {
+        const active = setup.step === "budget";
+        const first = setup.firstSpendTopId ? ledger.categories.get(setup.firstSpendTopId) : undefined;
+        return (
+            <section className="dash-card relative min-h-[363px]" data-active={active}>
+                <div className="dash-card-head">
+                    <h2>{copy.budgets}</h2>
+                </div>
+                <GhostBudgets />
+                <Cover
+                    line={first ? setupCopy.budgetFirstSpend({ name: categoryName(first) }) : setupCopy.budgetLine}
+                    title={copy.budgetsEmptyTitle}
+                >
+                    <PhoneButton className={active ? "dash-btn" : "dash-ob h-[34px] px-3"}>
+                        <RiAddLine size={active ? 18 : 15} />
+                        {setupCopy.addBudget}
+                    </PhoneButton>
+                </Cover>
+            </section>
+        );
+    }
     return (
         <section className="dash-card">
             <div className="dash-card-head">

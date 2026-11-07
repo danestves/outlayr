@@ -11,6 +11,7 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { useCategoryName, usePeriodTitle } from "./format";
 import { categoryChoices } from "./model";
+import type { SetupState } from "./model";
 
 function AccountChips() {
     const { filters, ledger, setFilters } = useDashboard();
@@ -174,12 +175,16 @@ function PeriodControl() {
     );
 }
 
-export function FilterBar() {
+export function FilterBar({ setup }: { setup: SetupState | null }) {
     const { add } = useIntlayer("dashboard");
     return (
         <div className="flex min-h-16 flex-wrap items-center gap-2 py-3.5 lg:py-0">
-            <AccountChips />
-            <CategoryMenu />
+            {setup ? null : (
+                <>
+                    <AccountChips />
+                    <CategoryMenu />
+                </>
+            )}
             <PeriodControl />
             <button aria-disabled className="dash-btn ml-1" title={add.hint.value} type="button">
                 <RiAddLine size={18} />
