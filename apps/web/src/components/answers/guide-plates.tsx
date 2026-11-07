@@ -167,3 +167,90 @@ export function CasheaPlate() {
         </Plate>
     );
 }
+
+interface CouplesCopy {
+    earns: string;
+    month: string;
+    note: string;
+    pays: string;
+    share: string;
+    shared: string;
+    side: string;
+}
+
+const COUPLES = {
+    en: {
+        earns: "Earns",
+        month: "Shared bills · November",
+        note: "Rent, groceries, utilities. The rest stays personal.",
+        pays: "Pays",
+        share: "Share",
+        shared: "Shared this month",
+        side: "by income",
+    },
+    es: {
+        earns: "Gana",
+        month: "Cuentas compartidas · noviembre",
+        note: "Alquiler, supermercado, servicios. El resto es personal.",
+        pays: "Paga",
+        share: "Parte",
+        shared: "Compartido este mes",
+        side: "según ingresos",
+    },
+} as const satisfies Record<Locale, CouplesCopy>;
+
+const SHARED_BILLS = 2500;
+const PARTNERS = [
+    { earns: 4200, name: "Ana" },
+    { earns: 2800, name: "Luis" },
+] as const;
+
+export function CouplesPlate() {
+    const { locale } = useLocale();
+    const copy = COUPLES[locale];
+    const total = PARTNERS.reduce((sum, partner) => sum + partner.earns, 0);
+    const [first, second] = PARTNERS.map((partner) => partner.earns / total);
+    return (
+        <Plate side={copy.side} title={copy.month}>
+            <Hero amount={formatMoney(SHARED_BILLS, "USD")} label={copy.shared} />
+            <div aria-hidden="true" className="mt-4 flex h-2 gap-0.5 overflow-hidden rounded-full">
+                <div className="bg-foreground" style={{ width: `${(first ?? 0) * 100}%` }} />
+                <div className="bg-muted/45 flex-1" />
+            </div>
+            <table className="mt-4 w-full tabular-nums">
+                <thead>
+                    <tr className="text-muted font-mono text-xs uppercase">
+                        <th className="pb-2 text-left font-normal" scope="col">
+                            <span className="sr-only">{copy.side}</span>
+                        </th>
+                        <th className="pb-2 text-right font-normal" scope="col">
+                            {copy.earns}
+                        </th>
+                        <th className="pb-2 text-right font-normal" scope="col">
+                            {copy.share}
+                        </th>
+                        <th className="pb-2 text-right font-normal" scope="col">
+                            {copy.pays}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {PARTNERS.map((partner, index) => {
+                        const share = (index === 0 ? first : second) ?? 0;
+                        return (
+                            <tr className="border-border border-t" key={partner.name}>
+                                <th className="py-2.5 text-left font-normal" scope="row">
+                                    {partner.name}
+                                </th>
+                                <td className="py-2.5 text-right">${partner.earns.toLocaleString("en-US")}</td>
+                                <td className="py-2.5 text-right">{Math.round(share * 100)}%</td>
+                                <td className="py-2.5 text-right">{formatMoney(SHARED_BILLS * share, "USD")}</td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
+            <p className="border-border text-muted border-t pt-3 text-xs">{copy.note}</p>
+        </Plate>
+    );
+}

@@ -14,7 +14,7 @@ import {
     Source,
 } from "@/components/answers/article";
 import type { ArticleSection } from "@/components/answers/article";
-import { CanadaPlate, CasheaPlate } from "@/components/answers/guide-plates";
+import { CanadaPlate, CasheaPlate, CouplesPlate } from "@/components/answers/guide-plates";
 import { SayPanel, ScanPanel } from "@/components/demo/capture-panels";
 import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
@@ -35,6 +35,7 @@ const PLATES = {
     "best-expense-tracker-apps-latin-america": null,
     "best-open-source-expense-tracker-apps": null,
     "best-subscription-tracker-apps": null,
+    "budget-app-for-couples": "couples",
     "budget-planner": "04",
     "expense-tracker-template": null,
     "how-to-pay-cashea": "cashea",
@@ -51,6 +52,7 @@ const PLATES = {
 const PANELS = {
     canada: () => <CanadaPlate />,
     cashea: () => <CasheaPlate />,
+    couples: () => <CouplesPlate />,
     say: () => <SayPanel frame={5} />,
     scan: () => <ScanPanel frame={5} />,
 } as const;

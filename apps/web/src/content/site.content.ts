@@ -38,6 +38,7 @@ const site = {
                     en: "Best subscription trackers",
                     es: "Mejores apps de suscripciones",
                 }),
+                "budget-app-for-couples": t({ en: "Budgeting as a couple", es: "Presupuesto en pareja" }),
                 "budget-planner": t({ en: "Budgets", es: "Presupuestos" }),
                 "expense-tracker-template": t({ en: "Spreadsheet template", es: "Plantilla de Excel" }),
                 "how-to-pay-cashea": t({ en: "How to pay Cashea", es: "Cómo pagar Cashea" }),
