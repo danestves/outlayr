@@ -395,18 +395,18 @@ const tools = {
                 },
                 lead: t({
                     en: "Installments or cash? See the total installment price, which costs less in today's money with inflation and a cash discount, and the yearly rate behind the extra over the cash price.",
-                    es: "¿Cuotas o contado? Mira el precio total en cuotas, cuál conviene más con la inflación y el descuento por pagar de contado, y a qué tasa anual pagas de más.",
+                    es: "Calcula cuánto pagas en total por una compra en cuotas o a plazos, a qué tasa anual pagas de más y si conviene el contado, con inflación y descuento.",
                 }),
                 meta: {
                     title: t({
                         en: "Installment Calculator: Installments or Cash? With Inflation",
-                        es: "Calculadora de cuotas: ¿cuotas o contado? Con inflación",
+                        es: "Calculadora de cuotas y pago a plazos: ¿cuotas o contado?",
                     }),
                 },
                 method: [
                     t({
                         en: "The calculator adds what you pay today to every installment and compares the total with the cash price: total = paid today + payments × each payment, and extra = total − cash price.",
-                        es: "La calculadora suma lo que pagas hoy y todas las cuotas, y compara el total con el precio de contado: total = lo que pagas hoy + cuotas × cada cuota, y lo que pagas de más = total − precio de contado.",
+                        es: "En un pago a plazos divides el precio en cuotas iguales cada cierto tiempo, a veces con un pago inicial. La calculadora suma lo que pagas hoy y todas las cuotas, y compara el total con el precio de contado: total = lo que pagas hoy + cuotas × cada cuota, y lo que pagas de más = total − precio de contado. Por ejemplo, algo que cuesta US$600 de contado, con US$100 hoy y 6 cuotas mensuales de US$95, suma US$670: US$70 más que de contado, una tasa anual de 57.8%.",
                     }),
                     t({
                         en: "The yearly rate is the interest rate that makes those payments worth exactly what you financed, the cash price minus today's payment. It compounds over a year, like an effective annual rate, so a small fee on a short plan shows its real size.",
@@ -426,7 +426,7 @@ const tools = {
                     }),
                     t({
                         en: "Late fees are not included. Most plans charge one when a payment is late, which raises the real cost.",
-                        es: "No incluye recargos por atraso. La mayoría de los planes cobra uno cuando una cuota se atrasa, y eso sube el costo real.",
+                        es: "La calculadora no saca la cuota a partir de un interés: pon la cuota que te ofrece la tienda, el banco o la app. Solo cuenta los intereses y comisiones que ya estén dentro de esa cuota o de lo que pagas hoy; suma aparte cualquier otro cargo. No incluye recargos por atraso. La mayoría de los planes cobra uno cuando una cuota se atrasa, y eso sube el costo real.",
                     }),
                 ],
                 preview: {
@@ -440,7 +440,7 @@ const tools = {
                 ] satisfies PageRef[],
                 title: t({
                     en: "Installment calculator: pay in installments or cash?",
-                    es: "Calculadora de cuotas: ¿cuotas o contado?",
+                    es: "Calculadora de cuotas y pago a plazos: ¿cuotas o contado?",
                 }),
             },
             "split-expenses-calculator": {
