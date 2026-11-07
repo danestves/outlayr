@@ -40,11 +40,23 @@ const site = {
                     pt: "Apps de orçamento no Canadá",
                     fr: "Applis budget au Canada",
                 }),
+                "best-budget-apps-france": t({
+                    en: "Budget apps in France",
+                    es: "Apps de presupuesto en Francia",
+                    pt: "Apps de orçamento na França",
+                    fr: "Applis de budget en France",
+                }),
                 "best-expense-tracker-apps": t({
                     en: "Best expense trackers",
                     es: "Mejores apps de gastos",
                     pt: "Melhores apps de gastos",
                     fr: "Meilleures apps de dépenses",
+                }),
+                "best-expense-tracker-apps-brazil": t({
+                    en: "Expense trackers in Brazil",
+                    es: "Apps de gastos en Brasil",
+                    pt: "Apps de controle financeiro",
+                    fr: "Apps de dépenses au Brésil",
                 }),
                 "best-expense-tracker-apps-latin-america": t({
                     en: "Expense trackers in Latin America",

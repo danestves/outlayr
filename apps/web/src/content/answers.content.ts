@@ -183,6 +183,19 @@ const LATAM = {
     spanish: t({ en: "In Spanish", es: "En español" }),
 };
 
+const BRAZIL = {
+    bank: t({ en: "Bank connection", es: "Conexión bancaria", pt: "Conexão com o banco" }),
+    cards: t({ en: "Credit cards", es: "Tarjetas de crédito", pt: "Cartões de crédito" }),
+    installments: t({ en: "Installments", es: "Cuotas", pt: "Parcelas" }),
+    portuguese: t({ en: "In Portuguese", es: "En portugués", pt: "Em português" }),
+};
+
+const FRANCE = {
+    bank: t({ en: "Bank sync", es: "Sincronización bancaria", fr: "Synchronisation bancaire" }),
+    french: t({ en: "In French", es: "En francés", fr: "En français" }),
+    quebec: t({ en: "In Quebec", es: "En Quebec", fr: "Au Québec" }),
+};
+
 const LISTED_IN_SPANISH = t({
     en: "Yes, and it is listed in the Argentina and Mexico App Stores",
     es: "Sí, y aparece en el App Store de Argentina y de México",
@@ -4169,6 +4182,1316 @@ const answers = {
                 title: t({
                     en: "The best expense tracker apps in Argentina, Mexico, and the rest of Latin America",
                     es: "La mejor app para controlar gastos en Argentina, México y el resto de Latinoamérica",
+                }),
+            },
+            "best-expense-tracker-apps-brazil": {
+                apps: [
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://meudinheiroweb.com.br/pessoal/planos/",
+                                text: t({
+                                    en: "Básico is free for 12 months, with up to 100 entries a month. Pessoal, Plus, and Família are paid, and the plans page does not show their prices",
+                                    es: "Básico es gratis por 12 meses, con hasta 100 registros al mes. Pessoal, Plus y Família son de pago, y la página de planes no muestra sus precios",
+                                    pt: "O Básico é grátis por 12 meses, com até 100 lançamentos por mês. Pessoal, Plus e Família são pagos, e a página de planos não mostra os preços",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.bank,
+                                source: "https://www.meudinheiroweb.com.br/",
+                                text: t({
+                                    en: "Syncs your bank transactions through Open Finance",
+                                    es: "Sincroniza tus movimientos bancarios por Open Finance",
+                                    pt: "Sincroniza suas movimentações bancárias pelo Open Finance",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.cards,
+                                source: "https://meudinheiroweb.com.br/pessoal/planos/",
+                                text: t({
+                                    en: "Credit card control from the Pessoal plan up. Básico does not include it",
+                                    es: "Control de tarjetas de crédito desde el plan Pessoal. Básico no lo incluye",
+                                    pt: "Controle de cartão de crédito a partir do plano Pessoal. O Básico não inclui",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://meudinheiroweb.com.br/pessoal/planos/",
+                                text: t({
+                                    en: "Accounts in another currency: 1 on Plus, 3 on Família",
+                                    es: "Cuentas en otra moneda: 1 en Plus, 3 en Família",
+                                    pt: "Contas em outra moeda: 1 no Plus, 3 no Família",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.meudinheiroweb.com.br/",
+                                text: t({
+                                    en: "Web, with the Android and iPhone apps on every plan",
+                                    es: "Web, con las apps de Android y iPhone en todos los planes",
+                                    pt: "Web, com os apps de Android e iPhone em todos os planos",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.meudinheiroweb.com.br/",
+                                text: t({
+                                    en: "Plans do not renew on their own: you subscribe again to keep one, and Básico is free only for the first 12 months",
+                                    es: "Los planes no se renuevan solos: vuelves a suscribirte para mantener uno, y Básico es gratis solo los primeros 12 meses",
+                                    pt: "Os planos não renovam sozinhos: você assina de novo para manter um, e o Básico só é grátis nos primeiros 12 meses",
+                                }),
+                            },
+                        ],
+                        name: "Meu Dinheiro",
+                        slug: "meu-dinheiro",
+                        summary: t({
+                            en: "Meu Dinheiro is a Brazilian money manager for the web, with Android and iPhone apps, for personal and business finances.",
+                            es: "Meu Dinheiro es un gestor financiero brasileño para la web, con apps de Android y iPhone, para finanzas personales y de empresa.",
+                            pt: "O Meu Dinheiro é um gestor financeiro brasileiro para a web, com apps de Android e iPhone, para finanças pessoais e da empresa.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/br/app/minhas-economias/id520869873",
+                                text: t({
+                                    en: "Free, with in-app purchases. Meu Clube Mensal is R$ 24,90, and the other Meu Clube options run from R$ 119,00 to R$ 199,90",
+                                    es: "Gratis, con compras dentro de la app. Meu Clube Mensal cuesta R$ 24,90, y las otras opciones de Meu Clube van de R$ 119,00 a R$ 199,90",
+                                    pt: "Grátis, com compras no app. O Meu Clube Mensal custa R$ 24,90, e as outras opções do Meu Clube vão de R$ 119,00 a R$ 199,90",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.bank,
+                                source: "https://www.minhaseconomias.com.br/",
+                                text: t({
+                                    en: "Connects accounts and cards through Open Finance, or you add them by hand",
+                                    es: "Conecta cuentas y tarjetas por Open Finance, o las agregas a mano",
+                                    pt: "Conecta contas e cartões pelo Open Finance, ou você cadastra à mão",
+                                }),
+                            },
+                            {
+                                label: LABELS.budgets,
+                                source: "https://www.minhaseconomias.com.br/",
+                                text: t({
+                                    en: "Spending limits with alerts, and goals you follow in the app",
+                                    es: "Límites de gasto con alertas, y metas que sigues en la app",
+                                    pt: "Limites de gastos com alertas, e objetivos que você acompanha no app",
+                                }),
+                            },
+                            {
+                                label: LABELS.focus,
+                                source: "https://www.minhaseconomias.com.br/",
+                                text: t({
+                                    en: "Categories, subcategories, tags, family members, and automatic rules",
+                                    es: "Categorías, subcategorías, etiquetas, miembros de la familia y reglas automáticas",
+                                    pt: "Categorias, subcategorias, tags, membros da família e regras automáticas",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.minhaseconomias.com.br/",
+                                text: t({ en: "iPhone and Android", es: "iPhone y Android", pt: "iPhone e Android" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://apps.apple.com/br/app/minhas-economias/id520869873",
+                                text: t({
+                                    en: "The App Store lists the Meu Clube prices without saying how long each one lasts",
+                                    es: "El App Store muestra los precios de Meu Clube sin decir cuánto dura cada uno",
+                                    pt: "A App Store mostra os preços do Meu Clube sem dizer quanto tempo cada um dura",
+                                }),
+                            },
+                        ],
+                        name: "Minhas Economias",
+                        slug: "minhas-economias",
+                        summary: t({
+                            en: "Minhas Economias is a Brazilian budget app that connects your accounts and cards through Open Finance and sets spending limits with alerts.",
+                            es: "Minhas Economias es una app brasileña de presupuesto que conecta tus cuentas y tarjetas por Open Finance y pone límites de gasto con alertas.",
+                            pt: "O Minhas Economias é um app brasileiro de orçamento que conecta suas contas e cartões pelo Open Finance e define limites de gastos com alertas.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://www.mobills.com.br/pricing/",
+                                text: t({
+                                    en: "Mobills Premium is R$ 99,90 a year, which the site puts at under R$ 8,40 a month",
+                                    es: "Mobills Premium cuesta R$ 99,90 al año, que el sitio presenta como menos de R$ 8,40 al mes",
+                                    pt: "O Mobills Premium custa R$ 99,90 por ano, menos de R$ 8,40 por mês, segundo o site",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                source: "https://apps.apple.com/br/app/id921838244",
+                                text: t({
+                                    en: "Free to download, with in-app purchases. The listing does not spell out the free version's limits",
+                                    es: "Gratis para descargar, con compras dentro de la app. La ficha no detalla los límites de la versión gratis",
+                                    pt: "Grátis para baixar, com compras no app. A página da loja não detalha os limites da versão grátis",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.bank,
+                                source: "https://apps.apple.com/br/app/id921838244",
+                                text: t({
+                                    en: "Automatic integrations with the main banks, in Premium",
+                                    es: "Integraciones automáticas con los principales bancos, en Premium",
+                                    pt: "Integrações automáticas com os principais bancos, no Premium",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.cards,
+                                source: "https://www.mobills.com.br/pricing/",
+                                text: t({
+                                    en: "All your credit cards in one place, in Premium",
+                                    es: "Todas tus tarjetas de crédito en un solo lugar, en Premium",
+                                    pt: "Todos os seus cartões de crédito em um só lugar, no Premium",
+                                }),
+                            },
+                            {
+                                label: LABELS.budgets,
+                                source: "https://www.mobills.com.br/",
+                                text: t({
+                                    en: "Monthly budgets and goals",
+                                    es: "Presupuestos mensuales y metas",
+                                    pt: "Orçamentos mensais e objetivos",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.mobills.com.br/",
+                                text: t({ en: "iPhone and Android", es: "iPhone y Android", pt: "iPhone e Android" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://apps.apple.com/br/app/id921838244",
+                                text: t({
+                                    en: "Bank integrations need Premium",
+                                    es: "Las integraciones bancarias requieren Premium",
+                                    pt: "As integrações com bancos exigem o Premium",
+                                }),
+                            },
+                        ],
+                        name: "Mobills",
+                        slug: "mobills",
+                        summary: t({
+                            en: "Mobills is a Brazilian personal finance app for accounts, credit cards, budgets, and goals, with bank integrations in Premium.",
+                            es: "Mobills es una app brasileña de finanzas personales para cuentas, tarjetas de crédito, presupuestos y metas, con integraciones bancarias en Premium.",
+                            pt: "O Mobills é um app brasileiro de finanças pessoais para contas, cartões de crédito, orçamentos e objetivos, com integrações bancárias no Premium.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/br/app/id1212024409",
+                                text: t({
+                                    en: "Free, with in-app purchases. Monefy Premium is listed at R$ 219,90 and R$ 299,90",
+                                    es: "Gratis, con compras dentro de la app. Monefy Premium aparece a R$ 219,90 y R$ 299,90",
+                                    pt: "Grátis, com compras no app. O Monefy Premium aparece por R$ 219,90 e R$ 299,90",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                source: "https://www.monefy.com/",
+                                text: t({
+                                    en: "By hand, any purchase in two taps",
+                                    es: "A mano, cualquier compra en dos toques",
+                                    pt: "À mão, qualquer compra em dois toques",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://www.monefy.com/",
+                                text: t({ en: "150+", es: "Más de 150", pt: "Mais de 150" }),
+                            },
+                            {
+                                label: BRAZIL.portuguese,
+                                source: "https://apps.apple.com/br/app/id1212024409",
+                                text: t({
+                                    en: "Yes, Portuguese and 15 other languages",
+                                    es: "Sí, portugués y 15 idiomas más",
+                                    pt: "Sim, português e mais 15 idiomas",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.monefy.com/",
+                                text: t({
+                                    en: "iPhone and Android, synced through Google Drive or Dropbox",
+                                    es: "iPhone y Android, con sincronización por Google Drive o Dropbox",
+                                    pt: "iPhone e Android, com sincronização pelo Google Drive ou Dropbox",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.monefy.com/",
+                                text: t({
+                                    en: "Unlimited accounts and recurring transactions need the paid upgrade",
+                                    es: "Las cuentas ilimitadas y los movimientos recurrentes requieren la mejora de pago",
+                                    pt: "Contas ilimitadas e lançamentos recorrentes exigem a versão paga",
+                                }),
+                            },
+                        ],
+                        name: "Monefy",
+                        slug: "monefy",
+                        summary: t({
+                            en: "Monefy is an expense tracker for iPhone and Android that records a purchase in two taps, free at its core, with an optional paid upgrade.",
+                            es: "Monefy es una app para controlar gastos en iPhone y Android que registra una compra en dos toques, gratis en lo básico, con una mejora de pago opcional.",
+                            pt: "O Monefy é um app de controle de gastos para iPhone e Android que registra uma compra em dois toques, grátis no básico, com uma versão paga opcional.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://www.organizze.com.br/planos/",
+                                text: t({
+                                    en: "Manual R$ 39 a month, or 12x R$ 29,90 billed yearly. Conectado R$ 49 a month or 12x R$ 39,90. Conectado Plus R$ 79 a month or 12x R$ 69,90. Manual has 7 days free",
+                                    es: "Manual R$ 39 al mes, o 12x R$ 29,90 con cobro anual. Conectado R$ 49 al mes o 12x R$ 39,90. Conectado Plus R$ 79 al mes o 12x R$ 69,90. Manual tiene 7 días gratis",
+                                    pt: "Manual R$ 39 por mês, ou 12x de R$ 29,90 cobrado anualmente. Conectado R$ 49 por mês ou 12x de R$ 39,90. Conectado Plus R$ 79 por mês ou 12x de R$ 69,90. O Manual tem 7 dias grátis",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.bank,
+                                source: "https://www.organizze.com.br/planos/",
+                                text: t({
+                                    en: "Conexão Bancária from the Conectado plan, with up to 3 connected accounts or cards. Conectado Plus allows 10, business accounts included",
+                                    es: "Conexão Bancária desde el plan Conectado, con hasta 3 cuentas o tarjetas conectadas. Conectado Plus permite 10, cuentas de empresa incluidas",
+                                    pt: "Conexão Bancária a partir do plano Conectado, com até 3 contas ou cartões conectados. O Conectado Plus permite 10, incluindo contas Pessoa Jurídica",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.cards,
+                                source: "https://apps.apple.com/br/app/id677699286",
+                                text: t({
+                                    en: "Fixed bills, expenses, and card statements in one place",
+                                    es: "Cuentas fijas, gastos y resúmenes de tarjeta en un solo lugar",
+                                    pt: "Contas fixas, despesas e faturas em um só lugar",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.installments,
+                                source: "https://apps.apple.com/br/app/id677699286",
+                                text: t({
+                                    en: "Fixed, installment, and recurring expenses",
+                                    es: "Gastos fijos, en cuotas y recurrentes",
+                                    pt: "Despesas fixas, parceladas e recorrentes",
+                                }),
+                            },
+                            {
+                                label: LABELS.budgets,
+                                source: "https://apps.apple.com/br/app/id677699286",
+                                text: t({
+                                    en: "Limits per category, followed through the month",
+                                    es: "Límites por categoría, con seguimiento durante el mes",
+                                    pt: "Limites por categoria, acompanhados ao longo do mês",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.organizze.com.br/",
+                                text: t({
+                                    en: "Phone and computer, through the app and the browser",
+                                    es: "Celular y computadora, con la app y el navegador",
+                                    pt: "Celular e computador, pelo app e pelo navegador",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.organizze.com.br/planos/",
+                                text: t({
+                                    en: "Its plans page has no free plan: after the 7 day trial, every plan is paid, and bank connection starts at Conectado",
+                                    es: "Su página de planes no tiene plan gratis: tras la prueba de 7 días, todos los planes son de pago, y la conexión bancaria empieza en Conectado",
+                                    pt: "A página de planos não tem plano grátis: depois do teste de 7 dias, todos os planos são pagos, e a conexão bancária começa no Conectado",
+                                }),
+                            },
+                        ],
+                        name: "Organizze",
+                        slug: "organizze",
+                        summary: t({
+                            en: "Organizze is a Brazilian personal finance app for phone and browser, with category limits and bank connection through Open Finance on its Conectado plans.",
+                            es: "Organizze es una app brasileña de finanzas personales para celular y navegador, con límites por categoría y conexión bancaria por Open Finance en sus planes Conectado.",
+                            pt: "O Organizze é um app brasileiro de finanças pessoais para celular e navegador, com limites por categoria e conexão bancária via Open Finance nos planos Conectado.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                text: t({
+                                    en: "Free. Pro is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once in the US. Prices vary by country",
+                                    es: "Gratis. Pro cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
+                                    pt: "Grátis. O Pro custa US$7.99 por mês, US$49.99 por ano com 7 dias grátis ou US$129.99 em pagamento único nos Estados Unidos. Os preços mudam conforme o país",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                text: t({
+                                    en: "One sentence, voice, receipt scan, CSV import",
+                                    es: "Una oración, voz, escaneo de recibos, importación de CSV",
+                                    pt: "Uma frase, voz, escaneamento de recibos, importação de CSV",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.bank,
+                                text: t({
+                                    en: "None. It does not connect to your bank. On Android it can log purchases from the notifications of apps you turn on, such as your bank's, up to 30 a month on the free plan",
+                                    es: "No tiene. No se conecta a tu banco. En Android puede registrar compras desde las notificaciones de las apps que actives, como la de tu banco, hasta 30 al mes en el plan gratis",
+                                    pt: "Não tem. Ele não se conecta ao seu banco. No Android, pode lançar compras a partir das notificações dos apps que você ativar, como o do seu banco, até 30 por mês no plano grátis",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.installments,
+                                text: t({
+                                    en: "Splits a purchase into installments: what you pay now, then each payment on its own date, with a reminder the day before it is due",
+                                    es: "Divide una compra en cuotas: lo que pagas hoy y cada pago con su fecha, con un aviso el día antes de cada uno",
+                                    pt: "Divide uma compra em parcelas: o que você paga agora e cada parcela na sua data, com um aviso no dia anterior ao vencimento",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                text: t({
+                                    en: "165, converted at the rate of the day",
+                                    es: "165, convertidas con la tasa del día",
+                                    pt: "165, convertidas pela cotação do dia",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                text: t({
+                                    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in one currency",
+                                    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en una moneda",
+                                    pt: "3 contas, 2 orçamentos por categoria mais um para o mês, 20 capturas por voz ou de recibos a cada 30 dias e contas em uma moeda",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.portuguese,
+                                text: t({
+                                    en: "Yes, along with English, Spanish, and French",
+                                    es: "Sí, además de inglés, español y francés",
+                                    pt: "Sim, além de inglês, espanhol e francês",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                text: t({ en: "iPhone and Android", es: "iPhone y Android", pt: "iPhone e Android" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                text: t({
+                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account and a connection, with 20 captures every 30 days on the free plan. There is no web app",
+                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta y conexión, con 20 capturas cada 30 días en el plan gratis. No tiene app web",
+                                    pt: "Não sincroniza com o banco, então cada lançamento começa por você. Lançar por voz e escanear recibos exige uma conta e conexão, com 20 capturas a cada 30 dias no plano grátis. Não tem versão web",
+                                }),
+                            },
+                        ],
+                        name: "Outlayr",
+                        slug: "outlayr",
+                        summary: t({
+                            en: "Outlayr is an open source expense tracker you fill in by sentence, voice, or receipt, free to start.",
+                            es: "Outlayr es una app de código abierto para controlar tus gastos que llenas con una oración, con tu voz o con un recibo, gratis para empezar.",
+                            pt: "O Outlayr é um app de código aberto para controlar seus gastos, que você preenche com uma frase, com a voz ou com um recibo, grátis para começar.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/br/app/id1032467659",
+                                text: t({
+                                    en: "Free, with in-app purchases. Premium from R$ 31,90, and Lifetime Premium is R$ 279,90",
+                                    es: "Gratis, con compras dentro de la app. Premium desde R$ 31,90, y Lifetime Premium cuesta R$ 279,90",
+                                    pt: "Grátis, com compras no app. Premium a partir de R$ 31,90, e o Lifetime Premium custa R$ 279,90",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.bank,
+                                source: "https://apps.apple.com/br/app/id1032467659",
+                                text: t({
+                                    en: "In Premium, with 4,000 participating banks worldwide. The listing does not say which banks in Brazil",
+                                    es: "En Premium, con 4.000 bancos participantes en todo el mundo. La ficha no dice cuáles hay en Brasil",
+                                    pt: "No Premium, com 4.000 bancos participantes no mundo inteiro. A página da loja não diz quais são do Brasil",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "Several, with exchange rates calculated in real time",
+                                    es: "Varias, con tasas de cambio calculadas en tiempo real",
+                                    pt: "Várias, com cotações calculadas em tempo real",
+                                }),
+                            },
+                            {
+                                label: BRAZIL.portuguese,
+                                source: "https://apps.apple.com/br/app/id1032467659",
+                                text: t({
+                                    en: "Yes, Portuguese and 47 other languages",
+                                    es: "Sí, portugués y 47 idiomas más",
+                                    pt: "Sim, português e mais 47 idiomas",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "iPhone, Android, web",
+                                    es: "iPhone, Android, web",
+                                    pt: "iPhone, Android, web",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "The free tier is for tracking by hand. Bank sync needs Premium",
+                                    es: "El plan gratis es para registrar a mano. La sincronización bancaria requiere Premium",
+                                    pt: "O plano grátis é para lançar à mão. A sincronização bancária exige o Premium",
+                                }),
+                            },
+                        ],
+                        name: "Wallet by BudgetBakers",
+                        slug: "wallet",
+                        summary: t({
+                            en: "Wallet by BudgetBakers is a money app with a free tier for tracking by hand and bank sync in Premium.",
+                            es: "Wallet by BudgetBakers es una app de finanzas con un plan gratis para registrar a mano y sincronización bancaria en Premium.",
+                            pt: "O Wallet by BudgetBakers é um app de finanças com um plano grátis para lançar à mão e sincronização bancária no Premium.",
+                        }),
+                    },
+                ],
+                facts: [
+                    {
+                        label: "Meu Dinheiro",
+                        text: t({
+                            en: "Best if you would rather manage your money in a browser, with the phone apps alongside",
+                            es: "Ideal si prefieres manejar tu dinero en el navegador, con las apps del celular al lado",
+                            pt: "Ideal se você prefere cuidar do dinheiro no navegador, com os apps do celular junto",
+                        }),
+                    },
+                    {
+                        label: "Minhas Economias",
+                        text: t({
+                            en: "Best if you want accounts and cards to come in through Open Finance, with spending limits that alert you",
+                            es: "Ideal si quieres que cuentas y tarjetas lleguen por Open Finance, con límites de gasto que te avisan",
+                            pt: "Ideal se você quer que contas e cartões entrem pelo Open Finance, com limites de gastos que avisam",
+                        }),
+                    },
+                    {
+                        label: "Mobills",
+                        text: t({
+                            en: "Best if you want every credit card, budget, and goal in one Brazilian app at a yearly price",
+                            es: "Ideal si quieres todas tus tarjetas, presupuestos y metas en una app brasileña con precio anual",
+                            pt: "Ideal se você quer todos os cartões, orçamentos e objetivos em um app brasileiro com preço anual",
+                        }),
+                    },
+                    {
+                        label: "Monefy",
+                        text: t({
+                            en: "Best if you want to log in two taps, free, without connecting anything",
+                            es: "Ideal si quieres registrar en dos toques, gratis, sin conectar nada",
+                            pt: "Ideal se você quer lançar em dois toques, de graça, sem conectar nada",
+                        }),
+                    },
+                    {
+                        label: "Organizze",
+                        text: t({
+                            en: "Best if you pay for bank connection and want card statements and installment expenses in the same place",
+                            es: "Ideal si pagas por la conexión bancaria y quieres resúmenes de tarjeta y gastos en cuotas en un mismo lugar",
+                            pt: "Ideal se você paga pela conexão bancária e quer faturas e despesas parceladas no mesmo lugar",
+                        }),
+                    },
+                    {
+                        label: "Outlayr",
+                        text: t({
+                            en: "Best if you would rather log by sentence, voice, or receipt than connect a bank, or spend in reais and other currencies",
+                            es: "Ideal si prefieres registrar con una oración, tu voz o un recibo antes que conectar un banco, o gastas en reales y otras monedas",
+                            pt: "Ideal se você prefere lançar com uma frase, a voz ou um recibo em vez de conectar o banco, ou gasta em reais e outras moedas",
+                        }),
+                    },
+                    {
+                        label: "Wallet by BudgetBakers",
+                        text: t({
+                            en: "Best if you want a free tier by hand and real time exchange rates, on the phone and the web",
+                            es: "Ideal si quieres un plan gratis a mano y tasas de cambio en tiempo real, en el celular y la web",
+                            pt: "Ideal se você quer um plano grátis à mão e cotações em tempo real, no celular e na web",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "It depends on how you want entries to get in. Organizze, Minhas Economias, Meu Dinheiro, and Mobills connect to Brazilian banks through Open Finance or their own integrations, Organizze and Mobills only on a paid plan. Monefy and Outlayr do not connect to a bank: Monefy logs a purchase in two taps, and Outlayr logs it by sentence, voice, or receipt. Wallet by BudgetBakers has a free tier by hand and bank sync in Premium. All of them are in Portuguese.",
+                            es: "Depende de cómo quieras que entren los registros. Organizze, Minhas Economias, Meu Dinheiro y Mobills se conectan a bancos de Brasil por Open Finance o integraciones propias, Organizze y Mobills solo en un plan de pago. Monefy y Outlayr no se conectan a un banco: Monefy registra una compra en dos toques, y Outlayr con una oración, tu voz o un recibo. Wallet by BudgetBakers tiene un plan gratis a mano y sincronización bancaria en Premium. Todas están en portugués.",
+                            pt: "Depende de como você quer que os lançamentos entrem. Organizze, Minhas Economias, Meu Dinheiro e Mobills se conectam a bancos brasileiros pelo Open Finance ou por integrações próprias, Organizze e Mobills só em um plano pago. Monefy e Outlayr não se conectam ao banco: o Monefy registra uma compra em dois toques, e o Outlayr com uma frase, a voz ou um recibo. O Wallet by BudgetBakers tem um plano grátis à mão e sincronização bancária no Premium. Todos estão em português.",
+                        }),
+                        question: t({
+                            en: "What is the best financial control app in Brazil?",
+                            es: "¿Cuál es la mejor app de control financiero en Brasil?",
+                            pt: "Qual é o melhor app de controle financeiro?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Organizze connects through Open Finance from its Conectado plan, R$ 49 a month, with up to 3 accounts or cards. Minhas Economias and Meu Dinheiro also sync through Open Finance. Mobills has automatic integrations with the main banks in Premium. Wallet by BudgetBakers syncs in Premium, but its listing does not say which Brazilian banks. Monefy and Outlayr do not connect to banks.",
+                            es: "Organizze se conecta por Open Finance desde su plan Conectado, R$ 49 al mes, con hasta 3 cuentas o tarjetas. Minhas Economias y Meu Dinheiro también sincronizan por Open Finance. Mobills tiene integraciones automáticas con los principales bancos en Premium. Wallet by BudgetBakers sincroniza en Premium, pero su ficha no dice qué bancos de Brasil. Monefy y Outlayr no se conectan a bancos.",
+                            pt: "O Organizze conecta pelo Open Finance a partir do plano Conectado, R$ 49 por mês, com até 3 contas ou cartões. Minhas Economias e Meu Dinheiro também sincronizam pelo Open Finance. O Mobills tem integrações automáticas com os principais bancos no Premium. O Wallet by BudgetBakers sincroniza no Premium, mas a página da loja não diz quais bancos brasileiros. Monefy e Outlayr não se conectam a bancos.",
+                        }),
+                        question: t({
+                            en: "Which app connects to my bank through Open Finance?",
+                            es: "¿Qué app se conecta a mi banco por Open Finance?",
+                            pt: "Qual app se conecta ao meu banco pelo Open Finance?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Monefy is free at its core. Wallet by BudgetBakers has a free tier for tracking by hand. Meu Dinheiro's Básico is free for 12 months, up to 100 entries a month. Minhas Economias and Mobills are free to download, with paid plans inside. Outlayr has a free plan with 3 accounts and 20 voice or receipt captures every 30 days. Organizze's plans page has no free plan, only 7 days free on Manual.",
+                            es: "Monefy es gratis en lo básico. Wallet by BudgetBakers tiene un plan gratis para registrar a mano. Básico de Meu Dinheiro es gratis por 12 meses, hasta 100 registros al mes. Minhas Economias y Mobills son gratis para descargar, con planes de pago dentro. Outlayr tiene un plan gratis con 3 cuentas y 20 capturas de voz o de recibos cada 30 días. La página de planes de Organizze no tiene plan gratis, solo 7 días gratis en Manual.",
+                            pt: "O Monefy é grátis no básico. O Wallet by BudgetBakers tem um plano grátis para lançar à mão. O Básico do Meu Dinheiro é grátis por 12 meses, com até 100 lançamentos por mês. Minhas Economias e Mobills são grátis para baixar, com planos pagos dentro do app. O Outlayr tem um plano grátis com 3 contas e 20 capturas por voz ou de recibos a cada 30 dias. A página de planos do Organizze não tem plano grátis, só 7 dias grátis no Manual.",
+                        }),
+                        question: t({
+                            en: "Which expense control app is free?",
+                            es: "¿Qué app de control de gastos es gratis?",
+                            pt: "Qual app de controle de gastos é grátis?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Organizze records fixed, installment, and recurring expenses. Outlayr splits a purchase into installments: what you pay now, then each payment on its own date, with a reminder the day before it is due. The pages we read for the other five do not describe installment purchases.",
+                            es: "Organizze registra gastos fijos, en cuotas y recurrentes. Outlayr divide una compra en cuotas: lo que pagas hoy y cada pago con su fecha, con un aviso el día antes. Las páginas de las otras cinco apps que revisamos no describen compras en cuotas.",
+                            pt: "O Organizze registra despesas fixas, parceladas e recorrentes. O Outlayr divide uma compra em parcelas: o que você paga agora e cada parcela na sua data, com um aviso no dia anterior ao vencimento. As páginas dos outros cinco apps que lemos não descrevem compras parceladas.",
+                        }),
+                        question: t({
+                            en: "Which app handles purchases in installments?",
+                            es: "¿Qué app maneja compras en cuotas?",
+                            pt: "Qual app controla compras parceladas?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
+                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+                            pt: "Registrar gastos é grátis, assim como orçamentos, metas, assinaturas e widgets. O plano grátis inclui 20 capturas por voz ou de recibos a cada 30 dias, 3 contas, 2 orçamentos por categoria e contas em uma moeda. O Outlayr Pro aumenta esses limites e adiciona a sincronização. Nos Estados Unidos, custa US$7.99 por mês, US$49.99 por ano com 7 dias grátis ou US$129.99 em pagamento único. Sua loja de apps mostra o preço do seu país.",
+                        }),
+                        question: t({
+                            en: "How much does Outlayr cost?",
+                            es: "¿Cuánto cuesta Outlayr?",
+                            pt: "Quanto custa o Outlayr?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Outlayr is offered in 175 countries and regions, and the app is in Portuguese, English, Spanish, and French. Your app store shows the price for your country.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, y la app está en portugués, inglés, español y francés. Tu tienda de apps muestra el precio de tu país.",
+                            pt: "Sim. O Outlayr é oferecido em 175 países e regiões, e o app está em português, inglês, espanhol e francês. Sua loja de apps mostra o preço do seu país.",
+                        }),
+                        question: t({
+                            en: "Is Outlayr available in Brazil?",
+                            es: "¿Outlayr está disponible en Brasil?",
+                            pt: "O Outlayr está disponível no Brasil?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "Seven financial control apps for Brazil, each best for a different need: Meu Dinheiro, Minhas Economias, Mobills, Monefy, Organizze, Outlayr, and Wallet by BudgetBakers. Five connect to your bank, some only on a paid plan; Monefy and Outlayr do not. Outlayr is ours; the other six are not.",
+                    es: "Siete apps de control financiero para Brasil, cada una mejor para algo distinto: Meu Dinheiro, Minhas Economias, Mobills, Monefy, Organizze, Outlayr y Wallet by BudgetBakers. Cinco se conectan a tu banco, algunas solo en un plan de pago; Monefy y Outlayr no. Outlayr es nuestra; las otras seis no.",
+                    pt: "Sete apps de controle financeiro para o Brasil, cada um melhor para uma necessidade: Meu Dinheiro, Minhas Economias, Mobills, Monefy, Organizze, Outlayr e Wallet by BudgetBakers. Cinco se conectam ao seu banco, alguns só em um plano pago; Monefy e Outlayr não. O Outlayr é nosso; os outros seis não.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Seven financial control apps compared for Brazil: price in reais, Open Finance, credit cards, and installments. Outlayr is ours; the other six are not.",
+                        es: "Compara 7 apps de control financiero para Brasil: precio en reales, Open Finance, tarjetas de crédito y cuotas. Outlayr es nuestra; las otras seis no.",
+                        pt: "Compare 7 apps de controle financeiro: preço em reais, Open Finance, cartões e parcelas. Mobills, Organizze e mais. O Outlayr é nosso.",
+                    }),
+                    title: t({
+                        en: "Best Financial Control Apps in Brazil (2026) · Outlayr",
+                        es: "Mejores apps de control financiero en Brasil (2026) · Outlayr",
+                        pt: "Melhor app de controle financeiro (2026) · Outlayr",
+                    }),
+                },
+                picked: [
+                    t({
+                        en: "Each app here is in Portuguese and sold in Brazil, and each fits a different need, from Open Finance bank connection to logging in two taps without connecting anything. They are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista está en portugués y se vende en Brasil, y cada una sirve para algo distinto, desde la conexión bancaria por Open Finance hasta registrar en dos toques sin conectar nada. Van en orden alfabético, no por puesto.",
+                        pt: "Cada app desta lista está em português e é vendido no Brasil, e cada um serve para uma coisa, da conexão bancária pelo Open Finance a lançar em dois toques sem conectar nada. Estão em ordem alfabética, não por posição.",
+                    }),
+                    t({
+                        en: "Every detail about the other apps was read on that app's own site, plans page, or Brazilian App Store listing on the date below the table, and links to the page it came from. Prices are in reais as each page shows them. These are the facts as each app states them, not results of our own testing. A feature a page does not mention is left out, not marked as missing.",
+                        es: "Cada dato de las otras apps se leyó en el sitio, la página de planes o la ficha del App Store de Brasil de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Los precios están en reales, como los muestra cada página. Son los datos tal como los da cada app, no resultados de pruebas nuestras. Lo que una página no menciona se deja fuera, no se marca como faltante.",
+                        pt: "Cada dado dos outros apps foi lido no site, na página de planos ou na página da App Store brasileira desse app na data que aparece abaixo da tabela, e tem link para a página de onde saiu. Os preços estão em reais, como cada página mostra. São os dados como cada app os informa, não resultados de testes nossos. O que uma página não menciona fica de fora, não é marcado como ausente.",
+                    }),
+                    t({
+                        en: "Outlayr is ours. It gets the same facts as the others, including its own Watch out for row.",
+                        es: "Outlayr es nuestra. Tiene los mismos datos que las demás, incluida su propia fila de Ten en cuenta.",
+                        pt: "O Outlayr é nosso. Ele tem os mesmos dados que os outros, incluindo a própria linha de Fique atento a.",
+                    }),
+                ],
+                related: [
+                    "/guides/expense-tracker-template",
+                    "/tools/installment-calculator",
+                    "/tools/50-30-20-budget-calculator",
+                ] satisfies PageRef[],
+                sources: t({
+                    en: "Each detail about the other apps links to the page it was read on",
+                    es: "Los datos de las otras apps enlazan a la página donde se leyeron",
+                    pt: "Os dados dos outros apps têm link para a página onde foram lidos",
+                }),
+                title: t({
+                    en: "The best financial control apps in Brazil",
+                    es: "La mejor app de control financiero en Brasil",
+                    pt: "O melhor app de controle financeiro no Brasil",
+                }),
+            },
+            "best-budget-apps-france": {
+                apps: [
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/fr/app/bankin-g%C3%A9rer-son-budget/id447040033",
+                                text: t({
+                                    en: "Free, with in-app purchases. Bankin' Plus is 4,99 € a month or 39,99 € a year, Bankin' Pro 19,99 € a month or 99,99 € a year",
+                                    es: "Gratis, con compras dentro de la app. Bankin' Plus cuesta 4,99 € al mes o 39,99 € al año, Bankin' Pro 19,99 € al mes o 99,99 € al año",
+                                    fr: "Gratuit, avec achats intégrés. Bankin' Plus : 4,99 € par mois ou 39,99 € par an. Bankin' Pro : 19,99 € par mois ou 99,99 € par an",
+                                }),
+                            },
+                            {
+                                label: FRANCE.bank,
+                                source: "https://apps.apple.com/fr/app/bankin-g%C3%A9rer-son-budget/id447040033",
+                                text: t({
+                                    en: "350+ banks in 4 countries: France, the United Kingdom, Spain, and Germany",
+                                    es: "Más de 350 bancos en 4 países: Francia, Reino Unido, España y Alemania",
+                                    fr: "Plus de 350 banques dans 4 pays : France, Royaume-Uni, Espagne et Allemagne",
+                                }),
+                            },
+                            {
+                                label: LABELS.budgets,
+                                source: "https://apps.apple.com/fr/app/bankin-g%C3%A9rer-son-budget/id447040033",
+                                text: t({
+                                    en: "A budget per spending category, an end of month balance forecast, and alerts before an overdraft",
+                                    es: "Un presupuesto por categoría de gasto, una previsión del saldo a fin de mes y alertas antes de un sobregiro",
+                                    fr: "Un budget par catégorie de dépenses, une prévision du solde de fin de mois et des alertes avant un découvert",
+                                }),
+                            },
+                            {
+                                label: FRANCE.quebec,
+                                source: "https://apps.apple.com/ca/app/bankin-budget-et-comptes/id447040033?l=fr",
+                                text: t({
+                                    en: "In the Canadian App Store, but its developer says in review replies that it does not support Canadian banks",
+                                    es: "Está en el App Store de Canadá, pero su desarrollador dice en respuestas a reseñas que no admite bancos canadienses",
+                                    fr: "Présente dans l'App Store canadien, mais l'éditeur répond dans les avis qu'il ne prend pas en charge les banques canadiennes",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://bankin.com/",
+                                text: t({
+                                    en: "iPhone, Android, web",
+                                    es: "iPhone, Android, web",
+                                    fr: "iPhone, Android, web",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://bankin.com/fr/pluspro.html",
+                                text: t({
+                                    en: "Your own categories and the budget history are listed under Plus and Pro",
+                                    es: "Las categorías propias y el historial del presupuesto aparecen en Plus y Pro",
+                                    fr: "Les catégories personnalisées et l'historique du budget figurent dans Plus et Pro",
+                                }),
+                            },
+                        ],
+                        name: "Bankin'",
+                        slug: "bankin",
+                        summary: t({
+                            en: "Bankin' is a French budget app that syncs and categorizes your bank accounts, with Plus and Pro subscriptions.",
+                            es: "Bankin' es una app francesa de presupuesto que sincroniza y clasifica tus cuentas bancarias, con suscripciones Plus y Pro.",
+                            fr: "Bankin' est une app française de budget qui synchronise et catégorise vos comptes bancaires, avec les abonnements Plus et Pro.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://finary.com/fr/pricing",
+                                text: t({
+                                    en: "Free plan. Lite is 54,99 € a year, Plus 149,99 € a year, and Pro 349,99 € a year",
+                                    es: "Plan gratis. Lite cuesta 54,99 € al año, Plus 149,99 € al año y Pro 349,99 € al año",
+                                    fr: "Offre gratuite. Lite : 54,99 € par an, Plus : 149,99 € par an, Pro : 349,99 € par an",
+                                }),
+                            },
+                            {
+                                label: LABELS.focus,
+                                source: "https://finary.com/fr",
+                                text: t({
+                                    en: "Your whole net worth, from 20,000+ banks, brokers, and crypto platforms worldwide",
+                                    es: "Todo tu patrimonio, desde más de 20.000 bancos, brókeres y plataformas cripto de todo el mundo",
+                                    fr: "Tout votre patrimoine, depuis plus de 20 000 banques, courtiers et plateformes crypto dans le monde",
+                                }),
+                            },
+                            {
+                                label: FRANCE.bank,
+                                source: "https://finary.com/fr/pricing",
+                                text: t({
+                                    en: "2 bank syncs on the free plan, unlimited on Lite, Plus, and Pro",
+                                    es: "2 sincronizaciones bancarias en el plan gratis, ilimitadas en Lite, Plus y Pro",
+                                    fr: "2 synchronisations bancaires en offre gratuite, illimitées en Lite, Plus et Pro",
+                                }),
+                            },
+                            {
+                                label: LABELS.budgets,
+                                source: "https://finary.com/fr/pricing",
+                                text: t({
+                                    en: "Budget management on Plus and Pro only",
+                                    es: "Gestión del presupuesto solo en Plus y Pro",
+                                    fr: "Gestion du budget en Plus et Pro uniquement",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://finary.com/fr",
+                                text: t({
+                                    en: "Web, iPhone, Android",
+                                    es: "Web, iPhone, Android",
+                                    fr: "Web, iPhone, Android",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://finary.com/fr/pricing",
+                                text: t({
+                                    en: "Neither the free plan nor Lite includes budget management, so budgeting starts at 149,99 € a year",
+                                    es: "Ni el plan gratis ni Lite incluyen la gestión del presupuesto, así que presupuestar empieza en 149,99 € al año",
+                                    fr: "Ni l'offre gratuite ni Lite n'incluent la gestion du budget, qui commence donc à 149,99 € par an",
+                                }),
+                            },
+                        ],
+                        name: "Finary",
+                        slug: "finary",
+                        summary: t({
+                            en: "Finary is a French wealth app that tracks bank accounts, investments, and crypto in one place, with budgeting on its Plus plan.",
+                            es: "Finary es una app francesa de patrimonio que sigue cuentas bancarias, inversiones y cripto en un solo lugar, con presupuesto en su plan Plus.",
+                            fr: "Finary est une app française de suivi de patrimoine qui réunit comptes bancaires, placements et crypto, avec la gestion du budget dans son offre Plus.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/FR/app/id440509306",
+                                text: t({
+                                    en: "Free, with in-app purchases. Linxo Premium is 5,99 € for a month or 47,99 € for a year",
+                                    es: "Gratis, con compras dentro de la app. Linxo Premium cuesta 5,99 € por un mes o 47,99 € por un año",
+                                    fr: "Gratuit, avec achats intégrés. Linxo Premium : 5,99 € pour 1 mois ou 47,99 € pour 1 an",
+                                }),
+                            },
+                            {
+                                label: FRANCE.bank,
+                                source: "https://apps.apple.com/FR/app/id440509306",
+                                text: t({
+                                    en: "Close to 320 banks and account types, such as Crédit Agricole, Société Générale, BNP Paribas, LCL, Boursorama, Revolut, and N26",
+                                    es: "Cerca de 320 bancos y tipos de cuenta, como Crédit Agricole, Société Générale, BNP Paribas, LCL, Boursorama, Revolut y N26",
+                                    fr: "Près de 320 banques et types de comptes, dont Crédit Agricole, Société Générale, BNP Paribas, LCL, Boursorama, Revolut et N26",
+                                }),
+                            },
+                            {
+                                label: LABELS.focus,
+                                source: "https://apps.apple.com/FR/app/id440509306",
+                                text: t({
+                                    en: "Automatic categories, charts, alerts for salary and bank fees, and savings accounts such as PEA and life insurance",
+                                    es: "Categorías automáticas, gráficos, alertas de sueldo y comisiones bancarias, y cuentas de ahorro como el PEA y el seguro de vida",
+                                    fr: "Catégories automatiques, graphiques, alertes de salaire et de frais bancaires, et comptes d'épargne comme le PEA ou l'assurance vie",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.linxo.com/",
+                                text: t({
+                                    en: "iPhone, Android, web",
+                                    es: "iPhone, Android, web",
+                                    fr: "iPhone, Android, web",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://apps.apple.com/FR/app/id440509306",
+                                text: t({
+                                    en: "The 30 day balance forecast and unlimited search history need Premium",
+                                    es: "La previsión del saldo a 30 días y el historial de búsqueda ilimitado requieren Premium",
+                                    fr: "La prévision du solde sur 30 jours et l'historique de recherche illimité demandent Premium",
+                                }),
+                            },
+                        ],
+                        name: "Linxo",
+                        slug: "linxo",
+                        summary: t({
+                            en: "Linxo is a French budget app that gathers your bank accounts in one place and sorts spending into categories, free with a Premium option.",
+                            es: "Linxo es una app francesa de presupuesto que reúne tus cuentas bancarias en un lugar y clasifica tus gastos, gratis con una opción Premium.",
+                            fr: "Linxo est une app française de budget qui réunit vos comptes bancaires au même endroit et classe vos dépenses, gratuite avec une option Premium.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/fr/app/id1212024409",
+                                text: t({
+                                    en: "Free, with in-app purchases. Monefy Premium is listed at 42,99 € and 69,99 €",
+                                    es: "Gratis, con compras dentro de la app. Monefy Premium aparece a 42,99 € y 69,99 €",
+                                    fr: "Gratuit, avec achats intégrés. Monefy Premium est affiché à 42,99 € et 69,99 €",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                source: "https://www.monefy.com/",
+                                text: t({
+                                    en: "By hand, any purchase in two taps",
+                                    es: "A mano, cualquier compra en dos toques",
+                                    fr: "À la main, chaque achat en deux touches",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://www.monefy.com/",
+                                text: t({ en: "150+", es: "Más de 150", fr: "Plus de 150" }),
+                            },
+                            {
+                                label: FRANCE.french,
+                                source: "https://apps.apple.com/fr/app/id1212024409",
+                                text: t({
+                                    en: "Yes, French and 15 other languages",
+                                    es: "Sí, francés y 15 idiomas más",
+                                    fr: "Oui, français et 15 autres langues",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.monefy.com/",
+                                text: t({
+                                    en: "iPhone and Android, synced through Google Drive or Dropbox",
+                                    es: "iPhone y Android, con sincronización por Google Drive o Dropbox",
+                                    fr: "iPhone et Android, synchronisés par Google Drive ou Dropbox",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.monefy.com/",
+                                text: t({
+                                    en: "Unlimited accounts and recurring transactions need the paid upgrade",
+                                    es: "Las cuentas ilimitadas y los movimientos recurrentes requieren la mejora de pago",
+                                    fr: "Les comptes illimités et les opérations récurrentes demandent la version payante",
+                                }),
+                            },
+                        ],
+                        name: "Monefy",
+                        slug: "monefy",
+                        summary: t({
+                            en: "Monefy is an expense tracker for iPhone and Android that records a purchase in two taps, free at its core, with an optional paid upgrade.",
+                            es: "Monefy es una app para controlar gastos en iPhone y Android que registra una compra en dos toques, gratis en lo básico, con una mejora de pago opcional.",
+                            fr: "Monefy est une app de suivi des dépenses pour iPhone et Android qui enregistre un achat en deux touches, gratuite pour l'essentiel, avec une version payante en option.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                text: t({
+                                    en: "Free. Pro is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once in the US. Prices vary by country",
+                                    es: "Gratis. Pro cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
+                                    fr: "Gratuit. Pro coûte US$7.99 par mois, US$49.99 par an avec 7 jours gratuits ou US$129.99 en un seul paiement aux États-Unis. Les prix varient selon le pays",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                text: t({
+                                    en: "One sentence, voice, receipt scan, CSV import",
+                                    es: "Una oración, voz, escaneo de recibos, importación de CSV",
+                                    fr: "Une phrase, la voix, le scan de tickets, l'import CSV",
+                                }),
+                            },
+                            {
+                                label: FRANCE.bank,
+                                text: t({
+                                    en: "None. It does not connect to your bank. On Android it can log purchases from the notifications of apps you turn on, such as your bank's, up to 30 a month on the free plan",
+                                    es: "No tiene. No se conecta a tu banco. En Android puede registrar compras desde las notificaciones de las apps que actives, como la de tu banco, hasta 30 al mes en el plan gratis",
+                                    fr: "Aucune. Outlayr ne se connecte pas à votre banque. Sur Android, il peut enregistrer les achats à partir des notifications des apps que vous activez, comme celle de votre banque, jusqu'à 30 par mois en formule gratuite",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                text: t({
+                                    en: "165, converted at the rate of the day",
+                                    es: "165, convertidas con la tasa del día",
+                                    fr: "165, converties au taux du jour",
+                                }),
+                            },
+                            {
+                                label: FRANCE.quebec,
+                                text: t({
+                                    en: "Works the same: there is no bank to connect, and it is offered in 175 countries and regions, Canada included",
+                                    es: "Funciona igual: no hay banco que conectar, y se ofrece en 175 países y regiones, Canadá incluido",
+                                    fr: "Fonctionne de la même façon : pas de banque à connecter, et l'app est proposée dans 175 pays et régions, dont le Canada",
+                                }),
+                            },
+                            {
+                                label: FRANCE.french,
+                                text: t({
+                                    en: "Yes, along with English, Spanish, and Portuguese",
+                                    es: "Sí, además de inglés, español y portugués",
+                                    fr: "Oui, ainsi qu'en anglais, espagnol et portugais",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                text: t({
+                                    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in one currency",
+                                    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en una moneda",
+                                    fr: "3 comptes, 2 budgets par catégorie plus un pour le mois, 20 captures vocales ou de tickets tous les 30 jours et des comptes dans une seule devise",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                text: t({ en: "iPhone and Android", es: "iPhone y Android", fr: "iPhone et Android" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                text: t({
+                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account and a connection, with 20 captures every 30 days on the free plan. There is no web app",
+                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta y conexión, con 20 capturas cada 30 días en el plan gratis. No tiene app web",
+                                    fr: "Pas de synchronisation bancaire, donc chaque opération part de vous. La saisie vocale et le scan de tickets demandent un compte et une connexion, avec 20 captures tous les 30 jours en formule gratuite. Pas de version web",
+                                }),
+                            },
+                        ],
+                        name: "Outlayr",
+                        slug: "outlayr",
+                        summary: t({
+                            en: "Outlayr is an open source expense tracker you fill in by sentence, voice, or receipt, free to start.",
+                            es: "Outlayr es una app de código abierto para controlar tus gastos que llenas con una oración, con tu voz o con un recibo, gratis para empezar.",
+                            fr: "Outlayr est une app open source de suivi des dépenses que vous remplissez par une phrase, à la voix ou avec un ticket, gratuite pour commencer.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/fr/app/id1032467659",
+                                text: t({
+                                    en: "Free, with in-app purchases. Premium from 5,99 €, and Lifetime Premium is 49,99 €",
+                                    es: "Gratis, con compras dentro de la app. Premium desde 5,99 €, y Lifetime Premium cuesta 49,99 €",
+                                    fr: "Gratuit, avec achats intégrés. Premium à partir de 5,99 €, et Lifetime Premium à 49,99 €",
+                                }),
+                            },
+                            {
+                                label: FRANCE.bank,
+                                source: "https://apps.apple.com/fr/app/id1032467659",
+                                text: t({
+                                    en: "In Premium, with 4,000 participating banks worldwide",
+                                    es: "En Premium, con 4.000 bancos participantes en todo el mundo",
+                                    fr: "En Premium, avec 4 000 banques participantes dans le monde",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "Several, with exchange rates calculated in real time",
+                                    es: "Varias, con tasas de cambio calculadas en tiempo real",
+                                    fr: "Plusieurs, avec des taux de change calculés en temps réel",
+                                }),
+                            },
+                            {
+                                label: FRANCE.french,
+                                source: "https://apps.apple.com/fr/app/id1032467659",
+                                text: t({
+                                    en: "Yes, French and 47 other languages",
+                                    es: "Sí, francés y 47 idiomas más",
+                                    fr: "Oui, français et 47 autres langues",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "iPhone, Android, web",
+                                    es: "iPhone, Android, web",
+                                    fr: "iPhone, Android, web",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "The free tier is for tracking by hand. Bank sync needs Premium",
+                                    es: "El plan gratis es para registrar a mano. La sincronización bancaria requiere Premium",
+                                    fr: "L'offre gratuite sert à saisir à la main. La synchronisation bancaire demande Premium",
+                                }),
+                            },
+                        ],
+                        name: "Wallet by BudgetBakers",
+                        slug: "wallet",
+                        summary: t({
+                            en: "Wallet by BudgetBakers is a money app with a free tier for tracking by hand and bank sync in Premium.",
+                            es: "Wallet by BudgetBakers es una app de finanzas con un plan gratis para registrar a mano y sincronización bancaria en Premium.",
+                            fr: "Wallet by BudgetBakers est une app de finances avec une offre gratuite pour saisir à la main et la synchronisation bancaire en Premium.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/fr/app/ynab/id1010865877",
+                                text: t({
+                                    en: "Free for 30 days, then a monthly or yearly subscription, listed at 15,49 € and 119,00 € in the French App Store",
+                                    es: "Gratis 30 días, luego una suscripción mensual o anual, a 15,49 € y 119,00 € en el App Store de Francia",
+                                    fr: "Gratuit 30 jours, puis un abonnement mensuel ou annuel, affiché à 15,49 € et 119,00 € dans l'App Store français",
+                                }),
+                            },
+                            {
+                                label: LABELS.style,
+                                source: "https://www.ynab.com/",
+                                text: t({
+                                    en: "You decide what your money is for before you spend it",
+                                    es: "Decides para qué es tu dinero antes de gastarlo",
+                                    fr: "Vous décidez à quoi sert votre argent avant de le dépenser",
+                                }),
+                            },
+                            {
+                                label: FRANCE.bank,
+                                source: "https://www.ynab.com/pricing",
+                                text: t({
+                                    en: "Direct import from select US, Canadian, UK, and EU banks, and file import for the rest",
+                                    es: "Importación directa desde algunos bancos de EE. UU., Canadá, Reino Unido y la UE, e importación de archivos para el resto",
+                                    fr: "Import direct depuis certaines banques des États-Unis, du Canada, du Royaume-Uni et de l'UE, et import de fichiers pour les autres",
+                                }),
+                            },
+                            {
+                                label: FRANCE.quebec,
+                                source: "https://www.ynab.com/pricing",
+                                text: t({
+                                    en: "Its direct import covers select Canadian banks",
+                                    es: "Su importación directa cubre algunos bancos canadienses",
+                                    fr: "Son import direct couvre certaines banques canadiennes",
+                                }),
+                            },
+                            {
+                                label: FRANCE.french,
+                                source: "https://apps.apple.com/fr/app/ynab/id1010865877",
+                                text: t({
+                                    en: "No, the app is in English only",
+                                    es: "No, la app solo está en inglés",
+                                    fr: "Non, l'app est uniquement en anglais",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.ynab.com/",
+                                text: t({
+                                    en: "iPhone, Android, web, Apple Watch",
+                                    es: "iPhone, Android, web, Apple Watch",
+                                    fr: "iPhone, Android, web, Apple Watch",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.ynab.com/pricing",
+                                text: t({
+                                    en: "No free plan after the trial, and direct import reaches only select EU banks",
+                                    es: "No hay plan gratis después de la prueba, y la importación directa llega solo a algunos bancos de la UE",
+                                    fr: "Pas d'offre gratuite après l'essai, et l'import direct ne couvre que certaines banques de l'UE",
+                                }),
+                            },
+                        ],
+                        name: "YNAB",
+                        slug: "ynab",
+                        summary: t({
+                            en: "YNAB is a paid budgeting method built on bank imports, in English, with direct import from select banks in Canada and the EU.",
+                            es: "YNAB es un método de presupuesto de pago basado en importar movimientos del banco, en inglés, con importación directa de algunos bancos de Canadá y la UE.",
+                            fr: "YNAB est une méthode de budget payante fondée sur l'import bancaire, en anglais, avec un import direct depuis certaines banques du Canada et de l'UE.",
+                        }),
+                    },
+                ],
+                facts: [
+                    {
+                        label: "Bankin'",
+                        text: t({
+                            en: "Best if your banks are in France, the UK, Spain, or Germany and you want a budget per category built from them",
+                            es: "Ideal si tus bancos están en Francia, Reino Unido, España o Alemania y quieres un presupuesto por categoría hecho con ellos",
+                            fr: "Idéal si vos banques sont en France, au Royaume-Uni, en Espagne ou en Allemagne et que vous voulez un budget par catégorie à partir d'elles",
+                        }),
+                    },
+                    {
+                        label: "Finary",
+                        text: t({
+                            en: "Best if you mostly follow savings and investments, and budgeting comes second",
+                            es: "Ideal si sigues sobre todo ahorro e inversiones, y el presupuesto viene después",
+                            fr: "Idéal si vous suivez surtout votre épargne et vos placements, le budget venant ensuite",
+                        }),
+                    },
+                    {
+                        label: "Linxo",
+                        text: t({
+                            en: "Best if you want your French bank accounts sorted into categories for free",
+                            es: "Ideal si quieres tus cuentas de bancos franceses clasificadas por categoría, gratis",
+                            fr: "Idéal si vous voulez vos comptes de banques françaises classés par catégorie, gratuitement",
+                        }),
+                    },
+                    {
+                        label: "Monefy",
+                        text: t({
+                            en: "Best if you want to log in two taps, free, without connecting anything",
+                            es: "Ideal si quieres registrar en dos toques, gratis, sin conectar nada",
+                            fr: "Idéal si vous voulez saisir en deux touches, gratuitement, sans rien connecter",
+                        }),
+                    },
+                    {
+                        label: "Outlayr",
+                        text: t({
+                            en: "Best if you would rather log by sentence, voice, or receipt than connect a bank, wherever you live, or spend in more than one currency",
+                            es: "Ideal si prefieres registrar con una oración, tu voz o un recibo antes que conectar un banco, vivas donde vivas, o gastas en más de una moneda",
+                            fr: "Idéal si vous préférez saisir par une phrase, à la voix ou avec un ticket plutôt que connecter une banque, où que vous viviez, ou si vous dépensez dans plusieurs devises",
+                        }),
+                    },
+                    {
+                        label: "Wallet by BudgetBakers",
+                        text: t({
+                            en: "Best if you want a free tier by hand, real time exchange rates, and bank sync in Premium",
+                            es: "Ideal si quieres un plan gratis a mano, tasas de cambio en tiempo real y sincronización bancaria en Premium",
+                            fr: "Idéal si vous voulez une offre gratuite à la main, des taux de change en temps réel et la synchronisation bancaire en Premium",
+                        }),
+                    },
+                    {
+                        label: "YNAB",
+                        text: t({
+                            en: "Best if you read English, live in Quebec, and want a strict budgeting method with Canadian bank import",
+                            es: "Ideal si lees en inglés, vives en Quebec y quieres un método de presupuesto estricto con importación de bancos canadienses",
+                            fr: "Idéal si vous lisez l'anglais, vivez au Québec et voulez une méthode de budget stricte avec import de banques canadiennes",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "It depends on where your bank is and how you want entries to get in. In France, Bankin' and Linxo sync your bank accounts and sort the spending, both free with paid options. Finary suits net worth more than budgets. Monefy and Outlayr do not connect to a bank: Monefy logs a purchase in two taps, and Outlayr logs it by sentence, voice, or receipt. Wallet by BudgetBakers has a free tier by hand. YNAB is a paid method in English.",
+                            es: "Depende de dónde esté tu banco y de cómo quieras que entren los registros. En Francia, Bankin' y Linxo sincronizan tus cuentas y clasifican el gasto, las dos gratis con opciones de pago. Finary sirve más para el patrimonio que para el presupuesto. Monefy y Outlayr no se conectan a un banco: Monefy registra una compra en dos toques, y Outlayr con una oración, tu voz o un recibo. Wallet by BudgetBakers tiene un plan gratis a mano. YNAB es un método de pago en inglés.",
+                            fr: "Tout dépend de l'endroit où se trouve votre banque et de la façon dont vous voulez saisir. En France, Bankin' et Linxo synchronisent vos comptes et classent vos dépenses, tous deux gratuits avec des options payantes. Finary convient mieux au patrimoine qu'au budget. Monefy et Outlayr ne se connectent pas à une banque : Monefy enregistre un achat en deux touches, Outlayr par une phrase, à la voix ou avec un ticket. Wallet by BudgetBakers a une offre gratuite à la main. YNAB est une méthode payante en anglais.",
+                        }),
+                        question: t({
+                            en: "What is the best budget app?",
+                            es: "¿Cuál es la mejor app de presupuesto?",
+                            fr: "Quelle est la meilleure application de gestion de budget ?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Linxo and Bankin' are free, with Premium at 5,99 € a month for Linxo and Plus at 4,99 € a month for Bankin'. Monefy is free at its core. Wallet by BudgetBakers has a free tier by hand. Finary is free, but budget management needs Plus. Outlayr has a free plan with 3 accounts and 20 voice or receipt captures every 30 days. YNAB is free for 30 days, then paid.",
+                            es: "Linxo y Bankin' son gratis, con Premium a 5,99 € al mes en Linxo y Plus a 4,99 € al mes en Bankin'. Monefy es gratis en lo básico. Wallet by BudgetBakers tiene un plan gratis a mano. Finary es gratis, pero la gestión del presupuesto requiere Plus. Outlayr tiene un plan gratis con 3 cuentas y 20 capturas de voz o de recibos cada 30 días. YNAB es gratis 30 días y luego de pago.",
+                            fr: "Linxo et Bankin' sont gratuits, avec Premium à 5,99 € par mois chez Linxo et Plus à 4,99 € par mois chez Bankin'. Monefy est gratuit pour l'essentiel. Wallet by BudgetBakers a une offre gratuite à la main. Finary est gratuit, mais la gestion du budget demande Plus. Outlayr a une formule gratuite avec 3 comptes et 20 captures vocales ou de tickets tous les 30 jours. YNAB est gratuit 30 jours, puis payant.",
+                        }),
+                        question: t({
+                            en: "Which budget app is free?",
+                            es: "¿Qué app de presupuesto es gratis?",
+                            fr: "Quelle appli budget gratuite choisir ?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Bankin' connects to banks in France, the UK, Spain, and Germany, and its developer says it does not support Canadian banks. Linxo's listing names banks such as Crédit Agricole, BNP Paribas, Revolut, and N26, and no Canadian bank. YNAB's direct import covers select Canadian banks, in English. Wallet by BudgetBakers and Finary state worldwide bank counts without naming Canada. Monefy and Outlayr connect to no bank, so they work the same in Quebec, both in French.",
+                            es: "Bankin' se conecta a bancos de Francia, Reino Unido, España y Alemania, y su desarrollador dice que no admite bancos canadienses. La ficha de Linxo nombra bancos como Crédit Agricole, BNP Paribas, Revolut y N26, y ningún banco canadiense. La importación directa de YNAB cubre algunos bancos canadienses, en inglés. Wallet by BudgetBakers y Finary dan cifras de bancos en todo el mundo sin nombrar Canadá. Monefy y Outlayr no se conectan a ningún banco, así que funcionan igual en Quebec, las dos en francés.",
+                            fr: "Bankin' se connecte aux banques de France, du Royaume-Uni, d'Espagne et d'Allemagne, et son éditeur indique ne pas prendre en charge les banques canadiennes. La fiche de Linxo cite des banques comme Crédit Agricole, BNP Paribas, Revolut et N26, et aucune banque canadienne. L'import direct de YNAB couvre certaines banques canadiennes, en anglais. Wallet by BudgetBakers et Finary annoncent des banques dans le monde entier sans citer le Canada. Monefy et Outlayr ne se connectent à aucune banque et fonctionnent donc de la même façon au Québec, tous deux en français.",
+                        }),
+                        question: t({
+                            en: "Which budget app works in Quebec?",
+                            es: "¿Qué app de presupuesto funciona en Quebec?",
+                            fr: "Quelle application budget utiliser au Québec ?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Bankin' lists 350+ banks in France, the UK, Spain, and Germany; Belgium is not among its 4 countries. Linxo lists close to 320 banks and account types. Finary syncs 2 accounts free and unlimited on paid plans. Wallet by BudgetBakers syncs in Premium. YNAB imports directly from select EU banks. Outlayr does not connect to a bank; on Android it can log purchases from your bank app's notifications.",
+                            es: "Bankin' anuncia más de 350 bancos en Francia, Reino Unido, España y Alemania; Bélgica no está entre sus 4 países. Linxo anuncia cerca de 320 bancos y tipos de cuenta. Finary sincroniza 2 cuentas gratis e ilimitadas en sus planes de pago. Wallet by BudgetBakers sincroniza en Premium. YNAB importa directamente desde algunos bancos de la UE. Outlayr no se conecta a un banco; en Android puede registrar compras desde las notificaciones de la app de tu banco.",
+                            fr: "Bankin' annonce plus de 350 banques en France, au Royaume-Uni, en Espagne et en Allemagne ; la Belgique ne fait pas partie de ses 4 pays. Linxo annonce près de 320 banques et types de comptes. Finary synchronise 2 comptes gratuitement et sans limite dans ses offres payantes. Wallet by BudgetBakers synchronise en Premium. YNAB importe directement depuis certaines banques de l'UE. Outlayr ne se connecte pas à une banque ; sur Android, il peut enregistrer les achats à partir des notifications de l'app de votre banque.",
+                        }),
+                        question: t({
+                            en: "Which budget app connects to my bank?",
+                            es: "¿Qué app de presupuesto se conecta a mi banco?",
+                            fr: "Quelle application budget se connecte à ma banque ?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
+                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+                            fr: "La saisie, les budgets, les objectifs, les abonnements et les widgets sont gratuits. La formule gratuite comprend 20 captures vocales ou de tickets tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans une seule devise. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte US$7.99 par mois, US$49.99 par an avec 7 jours gratuits ou US$129.99 en un seul paiement. Votre boutique d'apps affiche le prix de votre pays.",
+                        }),
+                        question: t({
+                            en: "How much does Outlayr cost?",
+                            es: "¿Cuánto cuesta Outlayr?",
+                            fr: "Combien coûte Outlayr ?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Outlayr is offered in 175 countries and regions, Canada included, and the app is in French, English, Spanish, and Portuguese. Your app store shows the price for your country.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Canadá incluido, y la app está en francés, inglés, español y portugués. Tu tienda de apps muestra el precio de tu país.",
+                            fr: "Oui. Outlayr est proposé dans 175 pays et régions, dont le Canada, et l'app est en français, anglais, espagnol et portugais. Votre boutique d'apps affiche le prix de votre pays.",
+                        }),
+                        question: t({
+                            en: "Is Outlayr available in France, Quebec, and Belgium?",
+                            es: "¿Outlayr está disponible en Francia, Quebec y Bélgica?",
+                            fr: "Outlayr est-il disponible en France, au Québec et en Belgique ?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "Seven budget apps for France, Quebec, and Belgium, each best for a different need: Bankin', Finary, Linxo, Monefy, Outlayr, Wallet by BudgetBakers, and YNAB. Bankin' and Linxo sync French bank accounts; Monefy and Outlayr connect to none, so they work the same anywhere. Outlayr is ours; the other six are not.",
+                    es: "Siete apps de presupuesto para Francia, Quebec y Bélgica, cada una mejor para algo distinto: Bankin', Finary, Linxo, Monefy, Outlayr, Wallet by BudgetBakers y YNAB. Bankin' y Linxo sincronizan cuentas de bancos franceses; Monefy y Outlayr no se conectan a ninguno, así que funcionan igual en cualquier lugar. Outlayr es nuestra; las otras seis no.",
+                    fr: "Sept applications de budget pour la France, le Québec et la Belgique, chacune meilleure pour un besoin : Bankin', Finary, Linxo, Monefy, Outlayr, Wallet by BudgetBakers et YNAB. Bankin' et Linxo synchronisent les comptes des banques françaises ; Monefy et Outlayr ne se connectent à aucune et fonctionnent donc partout. Outlayr est la nôtre ; les six autres non.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Seven budget apps compared for France, Quebec, and Belgium: price in euros, bank sync, free plans, and French. Outlayr is ours; the other six are not.",
+                        es: "Compara 7 apps de presupuesto para Francia, Quebec y Bélgica: precio en euros, sincronización bancaria, plan gratis y francés. Outlayr es nuestra.",
+                        fr: "7 applications de budget comparées pour la France, le Québec et la Belgique : prix, synchro bancaire, offre gratuite. Outlayr est la nôtre.",
+                    }),
+                    title: t({
+                        en: "Best Budget Apps in France and Quebec (2026) · Outlayr",
+                        es: "Mejores apps de presupuesto en Francia y Quebec (2026) · Outlayr",
+                        fr: "Meilleure application de gestion de budget 2026 · Outlayr",
+                    }),
+                },
+                picked: [
+                    t({
+                        en: "Each app here is sold in France, and each fits a different need, from syncing French bank accounts to logging in two taps without connecting anything. For Quebec and Belgium, the bank rows say which countries each app's bank connection covers. They are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista se vende en Francia, y cada una sirve para algo distinto, desde sincronizar cuentas de bancos franceses hasta registrar en dos toques sin conectar nada. Para Quebec y Bélgica, las filas de banco dicen qué países cubre la conexión bancaria de cada app. Van en orden alfabético, no por puesto.",
+                        fr: "Chaque app de cette liste est vendue en France, et chacune répond à un besoin différent, de la synchronisation des comptes de banques françaises à la saisie en deux touches sans rien connecter. Pour le Québec et la Belgique, les lignes bancaires indiquent les pays que couvre la connexion de chaque app. Elles sont classées par ordre alphabétique, pas par rang.",
+                    }),
+                    t({
+                        en: "Every detail about the other apps was read on that app's own site, pricing page, or App Store listing on the date below the table, and links to the page it came from. Prices are in euros as each page shows them. These are the facts as each app states them, not results of our own testing. A feature a page does not mention is left out, not marked as missing.",
+                        es: "Cada dato de las otras apps se leyó en el sitio, la página de precios o la ficha del App Store de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Los precios están en euros, como los muestra cada página. Son los datos tal como los da cada app, no resultados de pruebas nuestras. Lo que una página no menciona se deja fuera, no se marca como faltante.",
+                        fr: "Chaque information sur les autres apps a été lue sur le site, la page de tarifs ou la fiche App Store de l'app à la date indiquée sous le tableau, avec un lien vers la page d'origine. Les prix sont en euros, tels que chaque page les affiche. Ce sont les informations données par chaque app, pas des résultats de nos propres tests. Ce qu'une page ne mentionne pas est laissé de côté, pas marqué comme absent.",
+                    }),
+                    t({
+                        en: "Outlayr is ours. It gets the same facts as the others, including its own Watch out for row.",
+                        es: "Outlayr es nuestra. Tiene los mismos datos que las demás, incluida su propia fila de Ten en cuenta.",
+                        fr: "Outlayr est la nôtre. Elle a les mêmes informations que les autres, y compris sa propre ligne Points d'attention.",
+                    }),
+                ],
+                related: [
+                    "/guides/expense-tracker-template",
+                    "/tools/50-30-20-budget-calculator",
+                    "/guides/best-budget-apps",
+                ] satisfies PageRef[],
+                sources: t({
+                    en: "Each detail about the other apps links to the page it was read on",
+                    es: "Los datos de las otras apps enlazan a la página donde se leyeron",
+                    fr: "Les informations sur les autres apps renvoient à la page où elles ont été lues",
+                }),
+                title: t({
+                    en: "The best budget apps in France, Quebec, and Belgium",
+                    es: "La mejor app de presupuesto en Francia, Quebec y Bélgica",
+                    fr: "La meilleure application de budget en France, au Québec et en Belgique",
                 }),
             },
             "best-open-source-expense-tracker-apps": {
