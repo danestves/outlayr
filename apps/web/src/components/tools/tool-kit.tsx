@@ -118,6 +118,24 @@ export function AmountInput({
     );
 }
 
+export function PercentInput({ onChange, value }: { onChange: (value: string) => void; value: string }) {
+    return (
+        <span className="flex items-baseline gap-1 font-mono">
+            <input
+                autoComplete="off"
+                className={BARE}
+                inputMode="decimal"
+                onChange={(event) => onChange(event.target.value)}
+                placeholder="0"
+                value={value}
+            />
+            <span aria-hidden="true" className="text-muted">
+                %
+            </span>
+        </span>
+    );
+}
+
 export function Choice<T extends string>({
     label,
     onChange,

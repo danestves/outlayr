@@ -14,6 +14,7 @@ import {
     Field,
     Fields,
     Figure,
+    PercentInput,
     ToolPanel,
     useCadences,
 } from "./tool-kit";
@@ -34,24 +35,6 @@ function formatRate(rate: number): string {
     }
     const shown = Number(percent.toFixed(percent < 100 ? 1 : 0));
     return shown === 0 && percent > 0 ? "<0.1%" : `${shown}%`;
-}
-
-function PercentInput({ onChange, value }: { onChange: (value: string) => void; value: string }) {
-    return (
-        <span className="flex items-baseline gap-1 font-mono">
-            <input
-                autoComplete="off"
-                className={BARE}
-                inputMode="decimal"
-                onChange={(event) => onChange(event.target.value)}
-                placeholder="0"
-                value={value}
-            />
-            <span aria-hidden="true" className="text-muted">
-                %
-            </span>
-        </span>
-    );
 }
 
 export function InstallmentTool() {

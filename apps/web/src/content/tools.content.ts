@@ -436,8 +436,8 @@ const tools = {
                     paid: insert(t({ en: "Paid {{paid}} of {{count}}", es: "Pagaste {{paid}} de {{count}}" })),
                 },
                 related: [
+                    "/tools/loan-calculator",
                     "/guides/budget-planner",
-                    "/tools/50-30-20-budget-calculator",
                     "/tools/split-expenses-calculator",
                 ] satisfies PageRef[],
                 title: t({
@@ -531,6 +531,149 @@ const tools = {
                     es: "Todos pagaron su parte. Nadie debe nada.",
                 }),
                 title: t({ en: "Split bill calculator: who owes whom", es: "Calculadora para dividir gastos" }),
+            },
+            "loan-calculator": {
+                answer: {
+                    cost: insert(
+                        t({
+                            en: "You pay {{payment}} a month for {{span}}. In total {{total}}, {{extra}} more than you borrowed.",
+                            es: "Pagas {{payment}} al mes por {{span}}. En total {{total}}, {{extra}} más de lo que pediste.",
+                        })
+                    ),
+                    empty: t({
+                        en: "Add the amount and the term to see your monthly payment.",
+                        es: "Pon el monto y el plazo para ver tu cuota mensual.",
+                    }),
+                    free: insert(
+                        t({
+                            en: "You pay {{payment}} a month for {{span}}, {{total}} in total, with no interest.",
+                            es: "Pagas {{payment}} al mes por {{span}}, {{total}} en total, sin intereses.",
+                        })
+                    ),
+                },
+                faq: [
+                    {
+                        answer: t({
+                            en: "Most banks use a fixed payment: amount × r ÷ (1 − (1 + r)^−n), where r is the annual rate ÷ 12 and n is the number of months. A $10,000 loan at 18% a year over 36 months has r = 1.5% and a payment of $361.52. Enter the amount, the rate and the term above and the calculator does this for any loan.",
+                            es: "La mayoría de los bancos usa una cuota fija: monto × r ÷ (1 − (1 + r)^−n), donde r es la tasa anual ÷ 12 y n es el número de meses. Un préstamo de $10,000 al 18% anual a 36 meses tiene r = 1.5% y una cuota de $361.52. Pon el monto, la tasa y el plazo arriba y la calculadora hace la cuenta con cualquier préstamo.",
+                        }),
+                        question: t({
+                            en: "How is a loan payment calculated?",
+                            es: "¿Cómo se calcula la cuota de un préstamo?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "The month by month list of your payments. Each row shows how much of the payment goes to interest, how much pays down the loan, and what you still owe. Interest takes its biggest share in the first months, and by the end almost all of the payment pays down the loan.",
+                            es: "La lista mes a mes de tus cuotas. Cada fila muestra cuánto de la cuota se va en intereses, cuánto baja el préstamo y cuánto te falta por pagar. El interés se lleva su parte más grande en los primeros meses, y al final casi toda la cuota baja el préstamo.",
+                        }),
+                        question: t({
+                            en: "What is an amortization schedule?",
+                            es: "¿Qué es una tabla de amortización?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "A longer term lowers the payment but raises the interest. The same $10,000 at 18% costs $499.24 a month and $1,981.78 in interest over 24 months, $361.52 and $3,014.89 over 36, and $253.93 and $5,236.20 over 60.",
+                            es: "Un plazo más largo baja la cuota pero sube los intereses. Los mismos $10,000 al 18% cuestan $499.24 al mes y $1,981.78 de intereses a 24 meses, $361.52 y $3,014.89 a 36, y $253.93 y $5,236.20 a 60.",
+                        }),
+                        question: t({
+                            en: "Is a longer term better?",
+                            es: "¿Conviene pedir el préstamo a más meses?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Enter the annual rate. If your lender quotes a monthly rate, multiply it by 12: 1.5% a month is 18% a year.",
+                            es: "Pon la tasa anual. Si te dan una tasa mensual, multiplícala por 12: 1.5% al mes es 18% al año.",
+                        }),
+                        question: t({
+                            en: "Do I enter the annual or the monthly rate?",
+                            es: "¿Pongo la tasa anual o la mensual?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Log it as money you borrowed, under the bank or the person who lent it, and it shows as a balance until it is paid back. Add a payoff plan with a date and Outlayr shows what that takes a month, and whether you are ahead or behind. The free plan holds 3 people and 2 payoff plans.",
+                            es: "Sí. Anótalo como dinero que te prestaron, a nombre del banco o de quien te prestó, y queda como saldo hasta que lo pagas. Ponle un plan de pago con fecha y Outlayr te muestra cuánto toca al mes y si vas adelantado o atrasado. El plan gratis permite 3 personas y 2 planes de pago.",
+                        }),
+                        question: t({
+                            en: "Can Outlayr track my loan?",
+                            es: "¿Outlayr puede llevar mi préstamo?",
+                        }),
+                    },
+                    PRIVACY_FAQ,
+                ],
+                fields: {
+                    amount: t({ en: "Amount", es: "Monto" }),
+                    fee: t({ en: "Upfront fee", es: "Comisión de apertura" }),
+                    rate: t({ en: "Annual rate", es: "Tasa anual" }),
+                    term: t({ en: "Term", es: "Plazo" }),
+                    unit: t({ en: "Term in", es: "Plazo en" }),
+                },
+                lead: t({
+                    en: "See the monthly payment on a personal, car or home loan, the interest you pay, and the month by month amortization schedule, with an optional upfront fee.",
+                    es: "Calcula la cuota mensual de un préstamo personal, de auto o hipotecario, cuánto pagas de intereses y la tabla de amortización mes a mes, con comisión de apertura.",
+                }),
+                meta: {
+                    title: t({
+                        en: "Loan Calculator: Monthly Payment and Amortization · Outlayr",
+                        es: "Calculadora de préstamos: cuota y tabla de amortización",
+                    }),
+                },
+                method: [
+                    t({
+                        en: "The calculator uses a fixed payment, the French system most banks use for personal, car and home loans. Interest takes its biggest share early on. Each payment lowers what you owe, so the interest shrinks and more of the payment goes to the loan.",
+                        es: "La calculadora usa una cuota fija, el sistema francés que usan casi todos los bancos para préstamos personales, de auto e hipotecarios. Al principio el interés se lleva su parte más grande. Cada pago baja el saldo, así que el interés baja y más de la cuota se va al préstamo.",
+                    }),
+                    t({
+                        en: "As a formula: payment = amount × r ÷ (1 − (1 + r)^−n), where r is the annual rate ÷ 12 and n is the number of months. With the starting example, $10,000 at 18% over 36 months, r is 1.5% and the payment is $361.52. In the first month $150 is interest and $211.52 pays down the loan.",
+                        es: "Como fórmula: cuota = monto × r ÷ (1 − (1 + r)^−n), donde r es la tasa anual ÷ 12 y n es el número de meses. Con el ejemplo inicial, $10,000 al 18% a 36 meses, r es 1.5% y la cuota es de $361.52. El primer mes $150 son intereses y $211.52 bajan el préstamo.",
+                    }),
+                    t({
+                        en: "Each month the interest is what you owe × r, rounded to the cent. Because of that rounding the last payment can be a few cents off: it is the one that leaves the balance at zero. At 0% the payment is the amount ÷ the number of months.",
+                        es: "Cada mes el interés es el saldo × r, redondeado al centavo. Por ese redondeo la última cuota puede variar unos centavos: es la que deja el saldo en cero. Con tasa 0% la cuota es el monto ÷ el número de meses.",
+                    }),
+                    t({
+                        en: "The upfront fee is a percentage of the amount, charged once when you get the loan. It adds to the total you pay but not to the payment. Insurance, taxes and other charges a lender adds to each payment are not included, so your real payment can be higher.",
+                        es: "La comisión de apertura es un porcentaje del monto que se cobra una vez al recibir el préstamo. Se suma al total que pagas, pero no a la cuota. No incluye seguros, impuestos ni otros cargos que el banco sume a cada cuota, así que tu cuota real puede ser más alta.",
+                    }),
+                ],
+                preview: {
+                    payment: t({ en: "Monthly payment", es: "Cuota mensual" }),
+                    split: insert(
+                        t({
+                            en: "Principal {{principal}} · Interest {{interest}}",
+                            es: "Capital {{principal}} · Intereses {{interest}}",
+                        })
+                    ),
+                },
+                related: [
+                    "/tools/installment-calculator",
+                    "/tools/50-30-20-budget-calculator",
+                    "/guides/budget-planner",
+                ] satisfies PageRef[],
+                table: {
+                    all: insert(t({ en: "See all {{count}} months", es: "Ver los {{count}} meses" })),
+                    balance: t({ en: "Balance", es: "Saldo" }),
+                    interest: t({ en: "Interest", es: "Interés" }),
+                    last: insert(t({ en: "Last payment {{amount}}", es: "Última cuota {{amount}}" })),
+                    less: t({ en: "Show less", es: "Ver menos" }),
+                    month: t({ en: "Month", es: "Mes" }),
+                    principal: t({ en: "Principal", es: "Capital" }),
+                },
+                term: {
+                    one: t({ en: "1 month", es: "1 mes" }),
+                    other: insert(t({ en: "{{n}} months", es: "{{n}} meses" })),
+                },
+                title: t({
+                    en: "Loan calculator: monthly payment and amortization schedule",
+                    es: "Calculadora de préstamos: cuota mensual y tabla de amortización",
+                }),
+                units: {
+                    months: t({ en: "Months", es: "Meses" }),
+                    years: t({ en: "Years", es: "Años" }),
+                },
             },
             "dolar-bcv-hoy": {
                 faq: [
