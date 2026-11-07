@@ -25,6 +25,7 @@ export function Transactions() {
     const { money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
     const [tab, setTab] = useState<Tab>("all");
+    const [expanded, setExpanded] = useState(false);
     const rows = useMemo(() => {
         const every = viewRows(
             ledger,
@@ -38,8 +39,8 @@ export function Transactions() {
                 }
                 return "income" in row && row.income === (tab === "incomeTab");
             })
-            .slice(0, ROWS_SHOWN);
-    }, [filters.accounts, filters.categories, filters.period, ledger, tab]);
+            .slice(0, expanded ? undefined : ROWS_SHOWN);
+    }, [expanded, filters.accounts, filters.categories, filters.period, ledger, tab]);
     const keys = useMemo(
         () => [
             ...new Set(
@@ -56,23 +57,24 @@ export function Transactions() {
         <section className="dash-card lg:col-span-2">
             <div className="dash-card-head pr-3">
                 <h2>{copy.title}</h2>
-                <div className="ml-3 flex h-[52px] gap-[18px]" role="tablist">
+                <div className="ml-3 flex h-[52px] gap-[18px]">
                     {TABS.map((each) => (
                         <button
-                            aria-selected={tab === each}
+                            aria-pressed={tab === each}
                             className={`relative flex items-center text-[13px] font-medium ${tab === each ? "after:bg-foreground after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-sm" : "text-muted-foreground"}`}
                             key={each}
                             onClick={() => setTab(each)}
-                            role="tab"
                             type="button"
                         >
                             {copy[each]}
                         </button>
                     ))}
                 </div>
-                <span aria-disabled className="dash-ob ml-auto">
-                    {copy.seeAll}
-                </span>
+                {expanded ? null : (
+                    <button className="dash-ob ml-auto" onClick={() => setExpanded(true)} type="button">
+                        {copy.seeAll}
+                    </button>
+                )}
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-sm whitespace-nowrap">

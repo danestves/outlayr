@@ -92,7 +92,7 @@ export function Sidebar() {
     return (
         <nav
             aria-label={nav.label.value}
-            className={`border-border sticky top-0 flex h-dvh shrink-0 flex-col border-r px-3 pb-3 ${collapsed ? "w-[60px]" : "w-[232px]"}`}
+            className={`border-border sticky top-0 flex h-dvh shrink-0 flex-col overflow-y-auto border-r px-3 pb-3 ${collapsed ? "w-[60px]" : "w-[232px]"}`}
         >
             <div className="flex h-16 items-center gap-[9px] px-2 text-[15px] font-semibold">
                 <Link aria-label={nav.home.value} className="text-app-tint flex items-center gap-[9px]" to="/">

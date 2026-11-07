@@ -103,7 +103,12 @@ function CategoryMenu() {
                         aria-label={copy.searchCategories.value}
                         className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
                         onChange={(event) => setQuery(event.target.value)}
-                        onKeyDown={(event) => event.stopPropagation()}
+                        onKeyDown={(event) => {
+                            // Typing stays in the field; the menu's typeahead would otherwise take each letter.
+                            if (event.key !== "Escape" && event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+                                event.stopPropagation();
+                            }
+                        }}
                         placeholder={copy.searchCategories.value}
                         ref={(input) => {
                             input?.focus();

@@ -106,7 +106,7 @@ export function categoryChoices(ledger: Ledger, period: Period, scope: Scope, pi
         if (recentIds.length >= RECENT_SHOWN) {
             break;
         }
-        if (!row.income && !recentIds.includes(row.topId)) {
+        if (!row.income && (totals.get(row.topId) ?? 0) > 0 && !recentIds.includes(row.topId)) {
             recentIds.push(row.topId);
         }
     }

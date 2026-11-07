@@ -24,8 +24,9 @@ export function Accounts() {
     const catalog = useCatalog(ledger);
     const { period } = filters;
     const closed = period.to < ledger.today;
+    const scoped = closed || filters.accounts.length > 0;
     const shown = useMemo(() => {
-        if (!closed) {
+        if (!scoped) {
             const { accounts, net } = overview.balances;
             return {
                 net,
@@ -37,7 +38,9 @@ export function Accounts() {
                 })),
             };
         }
-        const [end] = netWorthPoints(ledger, { accounts: [] }, [endOfDay(ledger, period.to)]);
+        const [end] = netWorthPoints(ledger, { accounts: filters.accounts }, [
+            closed ? endOfDay(ledger, period.to) : ledger.now,
+        ]);
         return {
             net: end?.net ?? 0,
             rows: (end?.accounts ?? []).flatMap(({ balance, id }) => {
@@ -45,7 +48,7 @@ export function Accounts() {
                 return look ? [{ balance, key: id, look, name: ledger.accounts.get(id)?.name ?? "" }] : [];
             }),
         };
-    }, [catalog, closed, ledger, overview.balances, period.to]);
+    }, [catalog, closed, filters.accounts, ledger, overview.balances, period.to, scoped]);
     const horizon = addDays(ledger.today, UPCOMING_DAYS);
     const charges = overview.upcoming.charges.filter((charge) => charge.nextCharge <= horizon).slice(0, UPCOMING_ROWS);
     return (

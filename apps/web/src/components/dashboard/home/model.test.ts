@@ -115,6 +115,13 @@ describe("categoryChoices", () => {
         expect([...ids(choices.recent), ...ids(choices.all)].toSorted()).toStrictEqual(["food", "rent"]);
     });
 
+    it("leaves recent categories with nothing spent this period out of the list", () => {
+        const september = { days: 30, from: "2026-09-01", key: "2026-09", to: "2026-09-30" };
+        const choices = categoryChoices(ledger, september, SCOPE, []);
+
+        expect([...ids(choices.recent), ...ids(choices.all)]).toStrictEqual(["travel"]);
+    });
+
     it("pins what is picked even with nothing spent this period", () => {
         const { recent } = categoryChoices(ledger, period, SCOPE, ["travel"]);
 
