@@ -284,6 +284,13 @@ const settings = {
             pt: "Vibra ao salvar e em erros",
             "pt-PT": "Vibra ao guardar e em erros",
         }),
+        "settings.link.openFailed": t({
+            en: "Couldn't open that link",
+            es: "No se pudo abrir ese enlace",
+            fr: "Impossible d'ouvrir ce lien",
+            pt: "Não foi possível abrir esse link",
+            "pt-PT": "Não foi possível abrir essa ligação",
+        }),
         "settings.lock.alertTitle": t({
             en: "Biometric lock",
             es: "Bloqueo biométrico",

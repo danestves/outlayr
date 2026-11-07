@@ -4,7 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react-native";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Button } from "panelui-native/components/button";
 import type { ReactNode } from "react";
-import { Linking, Pressable, ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
@@ -16,8 +16,8 @@ import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
-import { expectHandoff } from "@/lib/app-handoff";
 import { proTermAtom, UNKNOWN_PRO_TERM } from "@/lib/pro-status";
+import { openWebLink } from "@/lib/web-link";
 import { useColors } from "@/theme/use-colors";
 
 import { useAccountLimit } from "./account-top";
@@ -165,10 +165,7 @@ export function PaywallRedesign() {
                     <Button
                         className="rounded-full"
                         fullWidth
-                        onPress={() => {
-                            expectHandoff();
-                            Linking.openURL(manageUrl);
-                        }}
+                        onPress={() => openWebLink(manageUrl)}
                         size="md"
                         testID="paywall-manage"
                         variant="secondary"

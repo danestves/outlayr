@@ -1,12 +1,12 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
-import { Linking, Pressable, View } from "react-native";
+import { Pressable, View } from "react-native";
 
 import { Text } from "@/components/text";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
 import { useTranslation } from "@/i18n/context";
-import { expectHandoff } from "@/lib/app-handoff";
 import { managementUrlAtom } from "@/lib/management-url";
+import { openWebLink } from "@/lib/web-link";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
@@ -42,10 +42,7 @@ export function StoreTerms({ plan }: StoreTermsProps) {
                     accessibilityRole="link"
                     android_ripple={{ color: withAlpha(m3.primary, 0.12) }}
                     className="min-h-12 justify-center overflow-hidden rounded-full px-3"
-                    onPress={() => {
-                        expectHandoff();
-                        Linking.openURL(manage);
-                    }}
+                    onPress={() => openWebLink(manage)}
                     testID="paywall-manage"
                 >
                     <Text className="font-sans-medium text-caption text-m3-primary">{t("pro.play.manage")}</Text>

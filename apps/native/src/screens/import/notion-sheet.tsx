@@ -11,7 +11,7 @@ import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { useImperativeHandle, useRef, useState } from "react";
 import type { ReactNode, Ref } from "react";
-import { Linking, Platform, Pressable, useWindowDimensions, View } from "react-native";
+import { Platform, Pressable, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useCSSVariable } from "uniwind";
 
@@ -29,6 +29,7 @@ import { useTranslation } from "@/i18n/context";
 import { notifyFailure, notifyWarning } from "@/lib/notify";
 import { NotionConnectError } from "@/lib/notion-connect";
 import type { NotionFailure } from "@/lib/notion-connect";
+import { openWebLink } from "@/lib/web-link";
 import { SILENT } from "@/state/atom-command";
 import { connectNotionCommand, disconnectNotionCommand, importNotionCommand } from "@/state/notion-commands";
 import type { NotionConnection } from "@/state/notion-commands";
@@ -300,7 +301,7 @@ function ConnectionBody({ onDisconnect, onImport, onRefresh, onSignIn, onUpload,
                     <Pressable
                         accessibilityRole="link"
                         className="self-start pt-3 active:opacity-60"
-                        onPress={() => Linking.openURL(NOTION_EXPORT_HELP)}
+                        onPress={() => openWebLink(NOTION_EXPORT_HELP)}
                     >
                         <Text className="text-tint text-subtitle font-sans-semibold">
                             {t("mmImport.notion.howToExport")}

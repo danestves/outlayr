@@ -1,7 +1,7 @@
 import { addDays } from "@outlayr/money/calendar";
 import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
-import { Linking, ScrollView, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HeroNumber } from "@/components/amount-text";
@@ -20,7 +20,7 @@ import { listNames } from "@/domain/savings-names";
 import { YEAR_SHEET_LEAD_DAYS } from "@/domain/year-sheet";
 import { useHeldSubscription } from "@/hooks/use-held-subscription";
 import { useLanguage, useTranslation } from "@/i18n/context";
-import { expectHandoff } from "@/lib/app-handoff";
+import { openWebLink } from "@/lib/web-link";
 import { SavingsBar, SavingsRow, SavingsSection } from "@/screens/recap/savings-rows";
 
 const PREVIEW_PRICE = 49.99;
@@ -151,10 +151,7 @@ export function Year({ preview }: { preview: boolean }) {
                         <Button
                             className="rounded-full"
                             fullWidth
-                            onPress={() => {
-                                expectHandoff();
-                                Linking.openURL(manageUrl);
-                            }}
+                            onPress={() => openWebLink(manageUrl)}
                             size="md"
                             variant="secondary"
                         >

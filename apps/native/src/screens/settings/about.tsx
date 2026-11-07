@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { Linking, Share, View } from "react-native";
+import { Share, View } from "react-native";
 
 import { LinkRow, SettingsSection } from "@/components/list/list-row";
 import { MonoLabel } from "@/components/mono-label";
@@ -8,6 +8,7 @@ import { Text } from "@/components/text";
 import { useTranslation } from "@/i18n/context";
 import { expectHandoff, openInAppBrowser } from "@/lib/app-handoff";
 import { APP_VERSION } from "@/lib/app-version";
+import { openWebLink } from "@/lib/web-link";
 import { SILENT } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { openStoreReviewCommand } from "@/state/link-commands";
@@ -47,14 +48,7 @@ export function About() {
                     }}
                     title={t("settings.row.share")}
                 />
-                <LinkRow
-                    icon="NewTwitter"
-                    onPress={() => {
-                        expectHandoff();
-                        Linking.openURL(X_PROFILE);
-                    }}
-                    title={t("settings.row.followX")}
-                />
+                <LinkRow icon="NewTwitter" onPress={() => openWebLink(X_PROFILE)} title={t("settings.row.followX")} />
             </SettingsSection>
 
             <SettingsSection title={t("settings.about.links")}>
