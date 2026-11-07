@@ -4,6 +4,7 @@ import {
     convertAtRate,
     formatAmount,
     installmentCost,
+    loanSchedule,
     parseAmount,
     settleUp,
     splitBudget,
@@ -236,4 +237,36 @@ describe(settleUp, () => {
             expect(transfers.length).toBeLessThan(paid.length);
         }
     );
+});
+
+describe(loanSchedule, () => {
+    it("keeps the payment fixed and lets the last one clear the rounding", () => {
+        const { interest, payment, schedule, total } = loanSchedule({
+            amount: 1_000_000,
+            annualPercent: 18,
+            months: 36,
+        });
+        expect(payment).toBe(36_152);
+        expect(schedule.slice(0, -1).every((row) => row.payment === payment)).toBe(true);
+        expect(schedule.at(-1)).toEqual({ balance: 0, interest: 535, payment: 36_169, principal: 35_634 });
+        expect(schedule.reduce((sum, row) => sum + row.principal, 0)).toBe(1_000_000);
+        expect(interest).toBe(301_489);
+        expect(total).toBe(1_301_489);
+    });
+
+    it("splits a 0% loan into equal payments with the remainder on the last one", () => {
+        const { interest, payment, schedule } = loanSchedule({ amount: 1_000_000, annualPercent: 0, months: 36 });
+        expect(payment).toBe(27_778);
+        expect(schedule.at(-1)?.payment).toBe(27_770);
+        expect(interest).toBe(0);
+    });
+
+    it("has no schedule without an amount", () => {
+        expect(loanSchedule({ amount: 0, annualPercent: 18, months: 36 })).toEqual({
+            interest: 0,
+            payment: 0,
+            schedule: [],
+            total: 0,
+        });
+    });
 });

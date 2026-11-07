@@ -6,6 +6,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { Article, Prose, Questions } from "@/components/answers/article";
 import { BudgetTool } from "@/components/tools/budget-tool";
 import { InstallmentTool } from "@/components/tools/installment-tool";
+import { LoanTool } from "@/components/tools/loan-tool";
 import { RateTool } from "@/components/tools/rate-tool";
 import { SplitTool } from "@/components/tools/split-tool";
 import { SubscriptionTool } from "@/components/tools/subscription-tool";
@@ -21,6 +22,7 @@ type ToolSlug = keyof ReturnType<typeof getIntlayer<"tools">>["pages"];
 const CALCULATORS = {
     "50-30-20-budget-calculator": BudgetTool,
     "installment-calculator": InstallmentTool,
+    "loan-calculator": LoanTool,
     "split-expenses-calculator": SplitTool,
     "subscription-cost-calculator": SubscriptionTool,
 } satisfies Record<Exclude<ToolSlug, RateSlug>, ComponentType>;

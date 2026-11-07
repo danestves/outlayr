@@ -197,3 +197,37 @@ export function settleUp(paid: readonly number[]) {
     }
     return { share: paid.map((_, index) => shareOf(index)), total, transfers };
 }
+
+export interface LoanMonth {
+    balance: number;
+    interest: number;
+    payment: number;
+    principal: number;
+}
+
+export function loanSchedule({
+    amount,
+    annualPercent,
+    months,
+}: {
+    amount: number;
+    annualPercent: number;
+    months: number;
+}) {
+    const rate = annualPercent / 100 / MONTHS_PER_YEAR;
+    const payment =
+        amount <= 0 || months < 1
+            ? 0
+            : Math.round(rate === 0 ? amount / months : (amount * rate) / -Math.expm1(-months * Math.log1p(rate)));
+    const schedule: LoanMonth[] = [];
+    let balance = Math.max(0, amount);
+    const paidMonths = payment > 0 ? months : 0;
+    for (let month = 1; month <= paidMonths; month += 1) {
+        const interest = Math.round(balance * rate);
+        const principal = month === months ? balance : Math.min(payment - interest, balance);
+        balance -= principal;
+        schedule.push({ balance, interest, payment: interest + principal, principal });
+    }
+    const interest = schedule.reduce((sum, row) => sum + row.interest, 0);
+    return { interest, payment, schedule, total: Math.max(0, amount) + interest };
+}
