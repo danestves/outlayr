@@ -1,5 +1,5 @@
-import { RiArrowLeftDownLine, RiArrowRightUpLine, RiCoinsLine, RiSafe2Line } from "@remixicon/react";
-import type { RemixiconComponentType } from "@remixicon/react";
+import { Kpi } from "panelui-web/kpi";
+import type { KpiColor, KpiGoodDirection } from "panelui-web/kpi";
 import { useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -11,74 +11,70 @@ import { LedgerSettingsContext, useDisplayFormat } from "@/lib/ledger-settings";
 
 import { sparks } from "./model";
 
-const SPARK_WIDTH = 96;
-const SPARK_HEIGHT = 28;
 const PERCENT = 100;
+const TENTHS = 10;
+const MONO_ADVANCE = 0.56;
+const STACK_OVER = 12;
+const TREND = "dash-figure text-[13px] leading-5";
+const LINE = "[&_path]:[vector-effect:non-scaling-stroke]";
+const NOTE = "text-muted-foreground shrink-0 text-[13px] leading-5 whitespace-nowrap";
+const TWO_BY_TWO =
+    "max-lg:grid max-lg:grid-cols-2 max-lg:gap-y-5 max-lg:divide-x-0 max-lg:*:odd:border-e max-lg:*:odd:ps-0 max-lg:*:odd:pe-3 max-lg:*:even:ps-3 max-lg:*:even:pe-0";
+const STACKED =
+    "max-sm:flex max-sm:flex-col max-sm:gap-y-4 max-sm:divide-y-0 max-sm:divide-x-0 max-sm:*:px-0 max-sm:*:odd:border-e-0 max-sm:*:odd:pe-0 max-sm:*:even:ps-0";
 
-function Spark({ color, points }: { color: string; points: readonly number[] }) {
-    const high = Math.max(...points);
-    const low = Math.min(...points);
-    const path = points
-        .map((value, index) => {
-            const x = (index / Math.max(points.length - 1, 1)) * SPARK_WIDTH;
-            const y = SPARK_HEIGHT - 2 - ((value - low) / (high - low || 1)) * (SPARK_HEIGHT - 4);
-            return `${index === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
-        })
-        .join("");
+function Change({ delta, goodDirection }: { delta: number | null; goodDirection?: KpiGoodDirection }) {
+    if (delta === null) {
+        return null;
+    }
     return (
-        <svg aria-hidden className="overflow-visible" height={SPARK_HEIGHT} width={SPARK_WIDTH}>
-            <path d={path} fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
-        </svg>
+        <Kpi.Trend
+            className={TREND}
+            goodDirection={goodDirection}
+            value={Math.round(delta * PERCENT * TENTHS) / TENTHS}
+        />
     );
 }
 
-export const percentChange = (delta: number) => `${delta > 0 ? "+" : ""}${(delta * PERCENT).toFixed(1)}%`;
+const flatZero = () => "0%";
+const stretch = (node: SVGSVGElement | null) => node?.setAttribute("preserveAspectRatio", "none");
 
 interface FigureProps {
-    color: string;
-    icon: RemixiconComponentType;
+    color?: KpiColor;
     label: ReactNode;
-    points: readonly number[] | null;
-    tone: "flat" | "good" | "poor";
-    trend: string | null;
+    longest: number;
+    points: number[] | null;
+    trend: ReactNode;
     value: string;
 }
 
-function Figure({ color, icon: Icon, label, points, tone, trend, value }: FigureProps) {
+function Figure({ color, label, longest, points, trend, value }: FigureProps) {
     return (
-        <div className="border-border min-w-0 border-l px-5 first:border-l-0 first:pl-0 last:pr-0">
-            <div className="text-muted-foreground flex items-center gap-2 text-[13px] font-medium">
-                <span
-                    className="flex size-7 items-center justify-center rounded-[10px]"
-                    style={{ backgroundColor: `color-mix(in oklab, ${color} 16%, transparent)`, color }}
-                >
-                    <Icon size={14} />
-                </span>
-                {label}
-            </div>
-            <div className="mt-2 truncate font-mono text-2xl leading-8 font-semibold tracking-[-0.04em]">{value}</div>
-            <div className="mt-1 flex h-7 items-center justify-between">
-                {trend === null ? (
-                    <span />
-                ) : (
-                    <span className="dash-trend" data-tone={tone}>
-                        {trend}
-                    </span>
-                )}
-                {points ? <Spark color={color} points={points} /> : null}
-            </div>
-        </div>
+        <Kpi className="@container">
+            <Kpi.Header className="max-sm:min-h-10 max-sm:flex-col max-sm:items-start max-sm:gap-0">
+                <Kpi.Title className="max-sm:w-full">{label}</Kpi.Title>
+                {trend}
+            </Kpi.Header>
+            <Kpi.Value
+                className="dash-figure leading-8 font-semibold tracking-[-0.04em] wrap-anywhere"
+                style={{ fontSize: `clamp(12px, calc(100cqi / ${longest * MONO_ADVANCE}), 24px)` }}
+            >
+                {value}
+            </Kpi.Value>
+            {points ? (
+                <Kpi.Chart
+                    aria-hidden
+                    className={color ? LINE : `${LINE} [--pu-color:var(--muted-foreground)]`}
+                    color={color}
+                    data={points}
+                    height={32}
+                    ref={stretch}
+                    strokeWidth={1.5}
+                />
+            ) : null}
+        </Kpi>
     );
 }
-
-const trend = (delta: number | null) => (delta === null ? null : percentChange(delta));
-
-const toneOf = (delta: number, badGoesUp: boolean) => {
-    if (delta === 0) {
-        return "flat";
-    }
-    return delta > 0 === badGoesUp ? "poor" : "good";
-};
 
 export function KpiGroup({ quiet }: { quiet: boolean }) {
     const { filters, ledger } = useDashboard();
@@ -94,55 +90,65 @@ export function KpiGroup({ quiet }: { quiet: boolean }) {
         () => (quiet ? (netWorthPoints(ledger, scope, [ledger.now])[0]?.net ?? 0) : null),
         [ledger, quiet, scope]
     );
-    const flat = quiet ? ({ tone: "flat", trend: "0%" } as const) : null;
+    const zero = <Kpi.Trend className={TREND} format={flatZero} value={0} />;
+    const values = {
+        income: shown(figures.income.value),
+        kept: shown(figures.kept.value),
+        netWorth: shown(now ?? figures.netWorth.value),
+        spent: shown(figures.spent.value),
+    };
+    const longest = Math.max(
+        ...(incomeTracking
+            ? [values.netWorth, values.income, values.spent, values.kept]
+            : [values.netWorth, values.spent]
+        ).map((value) => value.length)
+    );
+    const layout = `${incomeTracking ? TWO_BY_TWO : ""} ${longest > STACK_OVER ? STACKED : ""}`;
 
     return (
-        <section
-            className={`bg-app-group border-border grid grid-cols-2 gap-y-5 rounded-3xl border p-5 ${incomeTracking ? "lg:grid-cols-4" : ""}`}
-        >
+        <Kpi.Group className={`rounded-2xl ${layout}`} surface>
             <Figure
-                color="var(--color-app-muted)"
-                icon={RiSafe2Line}
                 label={copy.netWorth}
+                longest={longest}
                 points={quiet ? null : lines.netWorth}
-                tone={flat?.tone ?? toneOf(figures.netWorth.delta ?? 0, false)}
-                trend={quiet ? copy.now.value : trend(figures.netWorth.delta)}
-                value={shown(now ?? figures.netWorth.value)}
+                trend={quiet ? <span className={NOTE}>{copy.now}</span> : <Change delta={figures.netWorth.delta} />}
+                value={values.netWorth}
             />
             {incomeTracking ? (
                 <Figure
-                    color="var(--color-app-income)"
-                    icon={RiArrowLeftDownLine}
+                    color="success"
                     label={copy.income}
+                    longest={longest}
                     points={quiet ? null : lines.income}
-                    tone={flat?.tone ?? toneOf(figures.income.delta ?? 0, false)}
-                    trend={flat?.trend ?? trend(figures.income.delta)}
-                    value={shown(figures.income.value)}
+                    trend={quiet ? zero : <Change delta={figures.income.delta} />}
+                    value={values.income}
                 />
             ) : null}
             <Figure
-                color="var(--color-app-tint)"
-                icon={RiArrowRightUpLine}
+                color="primary"
                 label={copy.spent}
+                longest={longest}
                 points={quiet ? null : lines.spent}
-                tone={flat?.tone ?? toneOf(figures.spent.delta ?? 0, true)}
-                trend={flat?.trend ?? trend(figures.spent.delta)}
-                value={shown(figures.spent.value)}
+                trend={quiet ? zero : <Change delta={figures.spent.delta} goodDirection="down" />}
+                value={values.spent}
             />
             {incomeTracking ? (
                 <Figure
-                    color="var(--color-app-muted)"
-                    icon={RiCoinsLine}
                     label={copy.kept}
+                    longest={longest}
                     points={quiet ? null : lines.kept}
-                    tone="flat"
                     trend={
-                        flat?.trend ??
-                        (figures.kept.share === null ? null : `${Math.round(figures.kept.share * PERCENT)}%`)
+                        quiet
+                            ? zero
+                            : figures.kept.share !== null && (
+                                  <span className={NOTE}>
+                                      {copy.share({ percent: Math.round(figures.kept.share * PERCENT) })}
+                                  </span>
+                              )
                     }
-                    value={shown(figures.kept.value)}
+                    value={values.kept}
                 />
             ) : null}
-        </section>
+        </Kpi.Group>
     );
 }
