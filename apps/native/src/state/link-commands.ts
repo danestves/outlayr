@@ -1,5 +1,5 @@
 import { openLanguageSettings } from "@/lib/language-settings";
-import { openUrl } from "@/lib/open-url";
+import { openUrl, openWebUrl } from "@/lib/open-url";
 import { openStoreReview } from "@/lib/store-links";
 import { BANK_SHORTCUT_URL, openShortcutsAutomations } from "@/lib/wallet-shortcut";
 
@@ -13,6 +13,11 @@ export const openBankShortcutCommand = createCommand({
 export const emailSupportCommand = createCommand({
     execute: (mailto: string) => openUrl(mailto),
     label: "links:email-support",
+});
+
+export const openWebLinkCommand = createCommand({
+    execute: (url: string) => openWebUrl(url),
+    label: "links:open-web-link",
 });
 
 export const openShortcutsAutomationsCommand = createCommand({
