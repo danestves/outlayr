@@ -3,7 +3,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import type { CategoryBudget } from "../../../lib/dashboard-series";
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
-import { budgetRows, categoryChoices, everyDay, setupState } from "./model";
+import { budgetRows, categoryChoices, everyDay, setupState, snapWhatIf, whatIfStep } from "./model";
 
 const NOW = Date.parse("2026-10-10T15:00:00Z");
 const period = { days: 31, from: "2026-10-01", key: "2026-10", to: "2026-10-31" };
@@ -227,5 +227,33 @@ describe("setupState", () => {
         expect(setup([account], [budget], 1)).toBeNull();
         expect(setup([], [], 6)).toBeNull();
         expect(setup([account], [], 6)).toBeNull();
+    });
+});
+
+describe("what-if amounts", () => {
+    it("picks a round step that scales with income", () => {
+        expect(whatIfStep(4855.21)).toBe(20);
+        expect(whatIfStep(4_000_000)).toBe(10_000);
+        expect(whatIfStep(120)).toBe(0.5);
+    });
+
+    it("never steps below a cent or divides by nothing", () => {
+        expect(whatIfStep(3)).toBe(0.01);
+        expect(whatIfStep(0)).toBe(0.01);
+    });
+
+    it("snaps a keyboard move that started off the grid", () => {
+        expect(snapWhatIf(3661, 20, 4855.21)).toBe(3660);
+        expect(snapWhatIf(3621, 20, 4855.21)).toBe(3620);
+    });
+
+    it("reaches both ends exactly, so End means all of income", () => {
+        expect(snapWhatIf(4855.21, 20, 4855.21)).toBe(4855.21);
+        expect(snapWhatIf(4850, 20, 4855.21)).toBe(4855.21);
+        expect(snapWhatIf(0, 20, 4855.21)).toBe(0);
+    });
+
+    it("keeps cents clean on small steps", () => {
+        expect(snapWhatIf(0.30000000000000004, 0.1, 10)).toBe(0.3);
     });
 });
