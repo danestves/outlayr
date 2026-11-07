@@ -17,7 +17,7 @@ const MONO_ADVANCE = 0.56;
 const STACK_OVER = 12;
 const TREND = "dash-figure text-[13px] leading-5";
 const LINE = "[&_path]:[vector-effect:non-scaling-stroke]";
-const NOTE = "text-muted-foreground shrink-0 text-[13px] leading-5 whitespace-nowrap";
+const NOTE = "text-muted-foreground min-w-0 truncate text-[13px] leading-5";
 const TWO_BY_TWO =
     "max-lg:grid max-lg:grid-cols-2 max-lg:gap-y-5 max-lg:divide-x-0 max-lg:*:odd:border-e max-lg:*:odd:ps-0 max-lg:*:odd:pe-3 max-lg:*:even:ps-3 max-lg:*:even:pe-0";
 const STACKED =
@@ -52,7 +52,7 @@ function Figure({ color, label, longest, points, trend, value }: FigureProps) {
     return (
         <Kpi className="@container">
             <Kpi.Header className="max-sm:min-h-10 max-sm:flex-col max-sm:items-start max-sm:gap-0">
-                <Kpi.Title className="max-sm:w-full">{label}</Kpi.Title>
+                <Kpi.Title className="min-w-fit max-sm:w-full">{label}</Kpi.Title>
                 {trend}
             </Kpi.Header>
             <Kpi.Value
