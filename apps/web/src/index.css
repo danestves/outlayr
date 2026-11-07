@@ -4,6 +4,8 @@
 @import "@fontsource-variable/nunito";
 @source "../node_modules/panelui-web/dist/components/button/index.js";
 @source "../node_modules/panelui-web/dist/components/chip/index.js";
+@source "../node_modules/panelui-web/dist/components/day-grid/index.js";
+@source "../node_modules/panelui-web/dist/components/frame/index.js";
 @source "../node_modules/panelui-web/dist/components/menu/index.js";
 @source "../node_modules/panelui-web/dist/components/range-meter/index.js";
 

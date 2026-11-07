@@ -1,3 +1,5 @@
+import type { DayLevel } from "panelui-web/day-grid";
+
 import { spendSeries } from "../../../lib/dashboard-series";
 import type { CategoryBudget } from "../../../lib/dashboard-series";
 import { endOfDay, rowsBetween, round, total } from "../../../lib/dashboard-series-ledger";
@@ -32,20 +34,24 @@ export function accountBalances(ledger: Ledger, period: Period, quiet: boolean, 
 }
 
 // Multiples of the day's average, so the dots mean the same in every currency.
-const LEVEL_STEPS = [0.25, 0.6, 1.2] as const;
+const LEVEL_STEPS = [
+    [1.2, 4],
+    [0.6, 3],
+    [0.25, 2],
+] as const;
 
-const levelOf = (amount: number, average: number) => {
+const levelOf = (amount: number, average: number): DayLevel => {
     if (amount <= 0) {
         return 0;
     }
-    const passed = LEVEL_STEPS.filter((step) => amount >= step * average).length;
-    return passed + 1;
+    return LEVEL_STEPS.find(([step]) => amount >= step * average)?.[1] ?? 1;
 };
 
 export interface DayCell {
     amount: number;
     day: string;
-    level: number;
+    level: DayLevel;
+    topId: string | null;
 }
 
 const MONDAY_FIRST = 6;
@@ -61,16 +67,18 @@ export function everyDay(ledger: Ledger, period: Period, scope: Scope, categorie
     const spent = total(ledger, rows);
     const average = elapsed > 0 ? round(ledger, spent / elapsed) : 0;
     const cells: DayCell[] = daysFrom(period.from, period.to).map((day) => {
-        const amount = total(ledger, byDay.get(day) ?? []);
-        return { amount, day, level: levelOf(amount, average) };
+        const dayRows = byDay.get(day) ?? [];
+        const amount = total(ledger, dayRows);
+        return { amount, day, level: levelOf(amount, average), topId: biggestCategory(dayRows) };
     });
     const [first, second] = cells.filter((cell) => cell.amount > 0).toSorted((a, b) => b.amount - a.amount);
     return {
         average,
         cells,
         lead: (new Date(`${period.from}T12:00:00Z`).getUTCDay() + MONDAY_FIRST) % 7,
+        measured: cells.slice(0, elapsed),
         runnerUp: second ?? null,
-        top: first ? { ...first, topId: biggestCategory(byDay.get(first.day) ?? []) } : null,
+        top: first ?? null,
     };
 }
 

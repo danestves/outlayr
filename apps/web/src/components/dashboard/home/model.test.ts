@@ -81,6 +81,13 @@ describe("everyDay", () => {
         expect(days.cells).toHaveLength(31);
     });
 
+    it("measures up to today, so a day still to come never reads as nothing spent", () => {
+        const { measured } = everyDay(ledger, period, SCOPE, []);
+
+        expect(measured).toHaveLength(10);
+        expect(measured.at(-1)?.day).toBe("2026-10-10");
+    });
+
     it("offsets the grid so a Thursday first lands in the Monday-first column", () => {
         expect(everyDay(ledger, period, SCOPE, []).lead).toBe(3);
     });

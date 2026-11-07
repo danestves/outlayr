@@ -1,0 +1,33 @@
+import { Frame } from "panelui-web/frame";
+import type { ReactNode } from "react";
+
+export function CardFrame({
+    action,
+    children,
+    className = "",
+    footer,
+    panelClassName = "",
+    title,
+}: {
+    action?: ReactNode;
+    children: ReactNode;
+    className?: string;
+    footer?: ReactNode;
+    panelClassName?: string;
+    title: ReactNode;
+}) {
+    return (
+        <Frame className={`min-w-0 rounded-2xl ${className}`} variant="band">
+            <Frame.Header className="min-h-10">
+                <Frame.Title as="h2" className="text-[15px] font-semibold tracking-[-0.01em]">
+                    {title}
+                </Frame.Title>
+                {action ? <Frame.Action>{action}</Frame.Action> : null}
+            </Frame.Header>
+            <Frame.Panel className={`relative flex-1 group-data-[variant=band]/frame:rounded-[10px] ${panelClassName}`}>
+                {children}
+            </Frame.Panel>
+            {footer ? <Frame.Footer className="min-h-11 text-sm">{footer}</Frame.Footer> : null}
+        </Frame>
+    );
+}
