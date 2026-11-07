@@ -171,26 +171,16 @@ export function QuietTable() {
     );
 }
 
-const GHOST_BUDGETS = [
-    [44, 60],
-    [72, 100],
-    [64, 100],
-    [70, 67],
-    [58, 74],
-] as const;
+const GHOST_BUDGETS = [44, 72, 64, 70, 58] as const;
 
 export function GhostBudgets() {
     return (
-        <div aria-hidden className="flex-1 px-5 pb-[18px]">
-            {GHOST_BUDGETS.map(([label, fill], index) => (
-                <div className={index === 0 ? "" : "pt-3"} key={label}>
-                    <div className="flex h-4 items-center">
-                        <i className="dash-gl" style={{ width: label }} />
-                        <i className="dash-gl ml-auto w-[84px]" />
-                    </div>
-                    <div className="dash-gbar">
-                        <i style={{ width: `${fill}%` }} />
-                    </div>
+        <div aria-hidden className="px-3.5 pt-2">
+            {GHOST_BUDGETS.map((width) => (
+                <div className="flex h-9 items-center gap-2" key={width}>
+                    <i className="dash-gx size-5 rounded-full" />
+                    <i className="dash-gl" style={{ width }} />
+                    <i className="dash-gl ml-auto w-[84px]" />
                 </div>
             ))}
         </div>

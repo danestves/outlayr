@@ -7,7 +7,7 @@ import { roundMoney } from "@outlayr/money/round";
 import { valueDatedRowsIn } from "@outlayr/money/valuation";
 
 export const UNCATEGORIZED_ID = "uncategorized";
-const UNCATEGORIZED_NAME = "Uncategorized";
+export const UNCATEGORIZED_NAME = "Uncategorized";
 export const NEUTRAL_COLOR = "#767676";
 
 export interface LedgerRow {
@@ -38,7 +38,7 @@ export interface LedgerCategory {
     name: string;
 }
 
-interface BudgetTarget extends LedgerCategory {
+export interface BudgetTarget extends LedgerCategory {
     topId: string;
 }
 

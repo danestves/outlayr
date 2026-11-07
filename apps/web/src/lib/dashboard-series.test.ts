@@ -5,7 +5,15 @@ import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
-import { categoryBudget, categoryBudgets, categoryDetail, kpis, spendSeries, stackOrder } from "./dashboard-series";
+import {
+    budgetParts,
+    categoryBudget,
+    categoryBudgets,
+    categoryDetail,
+    kpis,
+    spendSeries,
+    stackOrder,
+} from "./dashboard-series";
 import { cashFlow, categorySpend, dailySpend, monthlyByCategory, netWorthHistory } from "./dashboard-series-insights";
 import { endOfDay, prepareLedger } from "./dashboard-series-ledger";
 import type { Ledger } from "./dashboard-series-ledger";
@@ -288,6 +296,22 @@ describe("budgets on any category", () => {
 
         expect(standings.get("costco")).toMatchObject({ overBudget: true, spent: 80 });
         expect(standings.get("rent")).toMatchObject({ overBudget: false, spent: 0 });
+    });
+
+    it("splits a parent budget by subcategory and adds up to what the budget says was spent", () => {
+        const groceries = prepareLedger(october(), NOW);
+        const standing = categoryBudget(groceries, "groceries", oct);
+        const parts = standing ? budgetParts(groceries, "groceries", standing, oct) : [];
+
+        expect(parts.map((part) => part.name)).toContain("Costco");
+        expect(parts.map((part) => part.name)).toContain(null);
+        expect(parts.reduce((sum, part) => sum + part.amount, 0)).toBe(standing?.spent);
+    });
+
+    it("has no split for a subcategory's own budget", () => {
+        const costco = categoryBudgets(ledger, oct).get("costco");
+
+        expect(costco ? budgetParts(ledger, "costco", costco, oct) : null).toStrictEqual([]);
     });
 
     it("lets the dashboard name and open each one, a subcategory under its parent", () => {
