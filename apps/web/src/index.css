@@ -144,8 +144,8 @@
     box-shadow:
         inset 0 1px 0 rgb(255 255 255 / 0.6),
         0 24px 48px -24px rgb(19 18 9 / 0.25);
-    backdrop-filter: blur(24px) saturate(1.4);
     -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    backdrop-filter: blur(24px) saturate(1.4);
 
     :root[data-theme="dark"] & {
         border-color: rgb(255 255 255 / 0.1);

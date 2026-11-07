@@ -271,8 +271,8 @@
   .ss-stage[data-theme="glass"] .ss-window,
   .ss-stage[data-theme="glass"] .ss-popover,
   .ss-stage[data-theme="glass"] .ss-glass {
-    backdrop-filter: blur(24px) saturate(1.6);
     -webkit-backdrop-filter: blur(24px) saturate(1.6);
+    backdrop-filter: blur(24px) saturate(1.6);
   }
 
   /* Cool grays (Stage greys="cool"): the canvas and well lose their warmth,
