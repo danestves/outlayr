@@ -25,7 +25,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <div className="app-shell ph-no-capture flex h-dvh">
                 <Sidebar />
                 <div
-                    className="min-w-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto overscroll-contain outline-none"
+                    className="min-w-0 flex-1 [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto overscroll-contain outline-none"
                     data-scroll-restoration-id="dashboard-content"
                     ref={forwardScrollKeys}
                     tabIndex={-1}
