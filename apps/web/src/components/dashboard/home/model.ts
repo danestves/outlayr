@@ -25,6 +25,12 @@ export function sparks(ledger: Ledger, period: Period, scope: Scope) {
     };
 }
 
+export function accountBalances(ledger: Ledger, period: Period, quiet: boolean, accounts: readonly string[]) {
+    const instant = !quiet && period.to < ledger.today ? endOfDay(ledger, period.to) : ledger.now;
+    const [end] = netWorthPoints(ledger, { accounts }, [instant]);
+    return end ?? { accounts: [], net: 0 };
+}
+
 // Multiples of the day's average, so the dots mean the same in every currency.
 const LEVEL_STEPS = [0.25, 0.6, 1.2] as const;
 

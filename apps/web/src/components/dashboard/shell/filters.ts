@@ -41,9 +41,6 @@ export const searchPatch = (patch: FilterPatch): DashboardSearch => ({
     ...(patch.period !== undefined && { period: patch.period ?? undefined }),
 });
 
-// An empty list means every account, so turning the last one off or the last one back on both land there.
-export function toggledAccounts(every: readonly string[], chosen: readonly string[], id: string) {
-    const on = chosen.length === 0 ? every : chosen;
-    const next = on.includes(id) ? on.filter((each) => each !== id) : [...on, id];
-    return next.length === every.length ? [] : next;
-}
+// An empty list means every account, so ticking a row narrows and unticking the last one widens back.
+export const toggledAccounts = (chosen: readonly string[], id: string) =>
+    chosen.includes(id) ? chosen.filter((each) => each !== id) : [...chosen, id];
