@@ -24,9 +24,10 @@ import { LogoMark } from "@/components/logo-mark";
 import { UserMenu } from "./account-menu";
 
 const COLLAPSED_KEY = "outlayr-sidebar-collapsed";
+const NARROW_QUERY = "(max-width: 1023px)";
 const listeners = new Set<() => void>();
 
-function readCollapsed() {
+function storedCollapsed() {
     try {
         return localStorage.getItem(COLLAPSED_KEY) === "1";
     } catch {
@@ -34,14 +35,22 @@ function readCollapsed() {
     }
 }
 
+// Below the desktop layout the full sidebar would leave the page no room, so it stays a rail.
+const readCollapsed = () => matchMedia(NARROW_QUERY).matches || storedCollapsed();
+
 function subscribeCollapsed(listener: () => void) {
+    const query = matchMedia(NARROW_QUERY);
     listeners.add(listener);
-    return () => listeners.delete(listener);
+    query.addEventListener("change", listener);
+    return () => {
+        listeners.delete(listener);
+        query.removeEventListener("change", listener);
+    };
 }
 
 function toggleCollapsed() {
     try {
-        localStorage.setItem(COLLAPSED_KEY, readCollapsed() ? "0" : "1");
+        localStorage.setItem(COLLAPSED_KEY, storedCollapsed() ? "0" : "1");
     } catch {
         return;
     }
@@ -113,7 +122,7 @@ export function Sidebar() {
             {collapsed ? (
                 <button
                     aria-label={nav.collapse.value}
-                    className="dash-nav"
+                    className="dash-nav max-lg:hidden"
                     onClick={toggleCollapsed}
                     title={nav.collapse.value}
                     type="button"
