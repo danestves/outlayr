@@ -5,6 +5,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Article, CompareTable, DELAYS, FactList, Figures, Prose, Questions } from "@/components/answers/article";
 import type { ArticleSection } from "@/components/answers/article";
+import { CanadaPlate } from "@/components/answers/guide-plates";
 import { SayPanel, ScanPanel } from "@/components/demo/capture-panels";
 import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
@@ -20,6 +21,7 @@ const PLATES = {
     "ai-expense-tracker": "say",
     "apple-pay-expense-tracker": "log-an-expense",
     "best-budget-apps": null,
+    "best-budget-apps-canada": "canada",
     "best-expense-tracker-apps": null,
     "best-expense-tracker-apps-latin-america": null,
     "best-open-source-expense-tracker-apps": null,
@@ -37,8 +39,9 @@ const PLATES = {
 } as const satisfies Record<GuideSlug, string | null>;
 
 const PANELS = {
-    say: { frame: 5, Panel: SayPanel },
-    scan: { frame: 5, Panel: ScanPanel },
+    canada: () => <CanadaPlate />,
+    say: () => <SayPanel frame={5} />,
+    scan: () => <ScanPanel frame={5} />,
 } as const;
 
 function plateImage(slug: GuideSlug, locale: Locale) {
@@ -144,12 +147,11 @@ function GuidePlate({ alt, locale, plate }: { alt: string; locale: Locale; plate
             </figure>
         );
     }
-    const { frame, Panel } = PANELS[plate];
     return (
         <figure className="bg-surface mx-auto w-full max-w-sm rounded-3xl p-2">
             <figcaption className="sr-only">{alt}</figcaption>
             <div aria-hidden="true" className="bg-raised rounded-2xl px-6 pb-6">
-                <Panel frame={frame} />
+                {PANELS[plate]()}
             </div>
         </figure>
     );
