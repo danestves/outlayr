@@ -72,4 +72,6 @@ export function useWholeMoney(currency: string) {
     }, [currency]);
 }
 
+export const percentChange = (delta: number) => `${delta > 0 ? "+" : ""}${(delta * 100).toFixed(1)}%`;
+
 export const timeOfDay = (instant: number, offset: number) => new Date(instant + offset).toISOString().slice(11, 16);

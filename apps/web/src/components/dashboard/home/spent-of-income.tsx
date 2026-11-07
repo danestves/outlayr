@@ -13,8 +13,7 @@ import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { CardFrame } from "./card-frame";
-import { useDateFormat } from "./format";
-import { percentChange } from "./kpi-group";
+import { percentChange, useDateFormat } from "./format";
 import { snapWhatIf, whatIfStep } from "./model";
 import type { SetupState } from "./model";
 import { Cover, GhostRuler, LATE_FADE, QuietBars } from "./setup";
