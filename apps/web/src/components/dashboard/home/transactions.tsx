@@ -131,6 +131,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                         {TABS.map((each) => (
                             <Tabs.Trigger
                                 aria-controls={tableId}
+                                id={`${tableId}-${each}`}
                                 className="h-[26px] rounded-[7px] px-2.5 text-[13px]"
                                 key={each}
                                 value={each}
@@ -163,147 +164,155 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
             stackAction
             title={copy.title}
         >
-            <Table
-                aria-label={copy.title.value}
-                aria-rowcount={setup ? undefined : Math.max(rows.length, 1) + 1}
-                className="@2xl:table-fixed"
-                containerClassName="overflow-clip"
-                maxHeight="none"
-                id={tableId}
-                striped
-            >
-                <Table.Header className="in-data-[sticky]:bg-card">
-                    <Table.Row aria-rowindex={1}>
-                        <Table.Head className={`${HEAD} w-full @2xl:w-[31%]`}>{copy.columns.merchant}</Table.Head>
-                        <Table.Head className={`${SIDE_HEAD} w-[18%]`}>{copy.columns.category}</Table.Head>
-                        <Table.Head className={`${SIDE_HEAD} w-[17%]`}>{copy.columns.account}</Table.Head>
-                        <Table.Head className={`${SIDE_HEAD} w-[11%]`}>{copy.columns.date}</Table.Head>
-                        <Table.Head align="end" className={`${HEAD} w-px @2xl:w-[23%]`}>
-                            {copy.columns.amount}
-                        </Table.Head>
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body ref={body}>
-                    {rows.length === 0 && !setup ? (
-                        <Table.Row aria-rowindex={2} className="border-0">
-                            <Table.Cell className="text-muted-foreground py-8 text-[13px] first:ps-3.5" colSpan={5}>
-                                {copy.empty}
-                            </Table.Cell>
+            <div aria-labelledby={`${tableId}-${tab}`} id={tableId} role="tabpanel">
+                <Table
+                    aria-label={copy.title.value}
+                    aria-rowcount={setup ? undefined : Math.max(rows.length, 1) + 1}
+                    className="@2xl:table-fixed"
+                    containerClassName="overflow-clip"
+                    maxHeight="none"
+                    striped
+                >
+                    <Table.Header className="in-data-[sticky]:bg-card">
+                        <Table.Row aria-rowindex={1}>
+                            <Table.Head className={`${HEAD} w-full @2xl:w-[31%]`}>{copy.columns.merchant}</Table.Head>
+                            <Table.Head className={`${SIDE_HEAD} w-[18%]`}>{copy.columns.category}</Table.Head>
+                            <Table.Head className={`${SIDE_HEAD} w-[17%]`}>{copy.columns.account}</Table.Head>
+                            <Table.Head className={`${SIDE_HEAD} w-[11%]`}>{copy.columns.date}</Table.Head>
+                            <Table.Head align="end" className={`${HEAD} w-px @2xl:w-[23%]`}>
+                                {copy.columns.amount}
+                            </Table.Head>
                         </Table.Row>
-                    ) : null}
-                    {first > 0 ? (
-                        <tr aria-hidden>
-                            <td aria-label={copy.title.value} colSpan={5} style={{ height: first * ROW_HEIGHT }} />
-                        </tr>
-                    ) : null}
-                    {rows.slice(first, last).map((row, index) => {
-                        const figure = figureOf(ledger, row);
-                        const line = second(row, figure);
-                        const day = date.day(row.day);
-                        if ("fromId" in row) {
-                            const names = `${accountName(row.fromId)} → ${accountName(row.toId)}`;
+                    </Table.Header>
+                    <Table.Body ref={body}>
+                        {rows.length === 0 && !setup ? (
+                            <Table.Row aria-rowindex={2} className="border-0">
+                                <Table.Cell className="text-muted-foreground py-8 text-[13px] first:ps-3.5" colSpan={5}>
+                                    {copy.empty}
+                                </Table.Cell>
+                            </Table.Row>
+                        ) : null}
+                        {first > 0 ? (
+                            <tr aria-hidden>
+                                <td aria-label={copy.title.value} colSpan={5} style={{ height: first * ROW_HEIGHT }} />
+                            </tr>
+                        ) : null}
+                        {rows.slice(first, last).map((row, index) => {
+                            const figure = figureOf(ledger, row);
+                            const line = second(row, figure);
+                            const day = date.day(row.day);
+                            if ("fromId" in row) {
+                                const names = `${accountName(row.fromId)} → ${accountName(row.toId)}`;
+                                return (
+                                    <Table.Row aria-rowindex={first + index + 2} className={ROW} key={row.id}>
+                                        <Table.Cell className={NAME}>
+                                            <span className="flex items-center gap-3 font-medium">
+                                                <TransferTile
+                                                    from={catalog.account(row.fromId)}
+                                                    photos={accountPhotos}
+                                                    to={catalog.account(row.toId)}
+                                                />
+                                                <span className="min-w-0">
+                                                    <span className="block truncate">{names}</span>
+                                                    <span className="text-muted-foreground block truncate text-xs font-normal @2xl:hidden">
+                                                        {day}
+                                                        <span className="hidden @sm:inline"> · {copy.transfer}</span>
+                                                    </span>
+                                                </span>
+                                            </span>
+                                        </Table.Cell>
+                                        <Table.Cell className={`${SIDE} text-muted-foreground`}>
+                                            {copy.transfer}
+                                        </Table.Cell>
+                                        <Table.Cell aria-label={copy.columns.account.value} className={SIDE} />
+                                        <Table.Cell className={`${SIDE} dash-figure text-muted-foreground`}>
+                                            {day}
+                                        </Table.Cell>
+                                        <Table.Cell align="end" className={`${FIGURE} text-muted-foreground`}>
+                                            {money(figure.amount, ledger.currency)}
+                                            {line}
+                                        </Table.Cell>
+                                    </Table.Row>
+                                );
+                            }
+                            const top = ledger.categories.get(row.topId);
+                            const name = top ? categoryName(top) : "";
+                            const merchant = row.note.trim() || name;
+                            const imageKey = catalog.transaction(row.id)?.imageKey;
+                            const standsAlone = row.feeFor !== null;
+                            const feeKind = catalog.transaction(row.id)?.feeForId ? copy.cardFee : copy.transferFee;
                             return (
                                 <Table.Row aria-rowindex={first + index + 2} className={ROW} key={row.id}>
                                     <Table.Cell className={NAME}>
                                         <span className="flex items-center gap-3 font-medium">
-                                            <TransferTile
-                                                from={catalog.account(row.fromId)}
-                                                photos={accountPhotos}
-                                                to={catalog.account(row.toId)}
-                                            />
+                                            {standsAlone ? (
+                                                <FeeTile />
+                                            ) : (
+                                                <MerchantTile
+                                                    imageUrl={
+                                                        imageKey
+                                                            ? (headPhotos?.get(imageKey) ?? restPhotos?.get(imageKey))
+                                                            : undefined
+                                                    }
+                                                    name={merchant}
+                                                    size="lg"
+                                                />
+                                            )}
                                             <span className="min-w-0">
-                                                <span className="block truncate">{names}</span>
+                                                <span className="block truncate">{merchant}</span>
                                                 <span className="text-muted-foreground block truncate text-xs font-normal @2xl:hidden">
                                                     {day}
-                                                    <span className="hidden @sm:inline"> · {copy.transfer}</span>
+                                                    <span className="hidden @sm:inline">
+                                                        {" "}
+                                                        · {standsAlone ? feeKind : name}
+                                                    </span>
                                                 </span>
                                             </span>
                                         </span>
                                     </Table.Cell>
-                                    <Table.Cell className={`${SIDE} text-muted-foreground`}>{copy.transfer}</Table.Cell>
-                                    <Table.Cell aria-label={copy.columns.account.value} className={SIDE} />
+                                    <Table.Cell className={SIDE}>
+                                        {standsAlone ? (
+                                            <span className="text-muted-foreground">{feeKind}</span>
+                                        ) : (
+                                            <span className="flex min-w-0 items-center gap-2">
+                                                <span
+                                                    aria-hidden
+                                                    className="size-1.5 shrink-0 rounded-full bg-current"
+                                                    style={{ color: top?.color }}
+                                                />
+                                                <span className="truncate">{name}</span>
+                                            </span>
+                                        )}
+                                    </Table.Cell>
+                                    <Table.Cell className={`${SIDE} text-muted-foreground`}>
+                                        {row.accountId ? accountName(row.accountId) : copy.noAccount}
+                                    </Table.Cell>
                                     <Table.Cell className={`${SIDE} dash-figure text-muted-foreground`}>
                                         {day}
                                     </Table.Cell>
-                                    <Table.Cell align="end" className={`${FIGURE} text-muted-foreground`}>
-                                        {money(figure.amount, ledger.currency)}
+                                    <Table.Cell
+                                        align="end"
+                                        className={`${FIGURE} ${row.income ? "text-app-income" : ""}`}
+                                    >
+                                        {money(row.income ? figure.amount : -figure.amount, ledger.currency, "always")}
                                         {line}
                                     </Table.Cell>
                                 </Table.Row>
                             );
-                        }
-                        const top = ledger.categories.get(row.topId);
-                        const name = top ? categoryName(top) : "";
-                        const merchant = row.note.trim() || name;
-                        const imageKey = catalog.transaction(row.id)?.imageKey;
-                        const standsAlone = row.feeFor !== null;
-                        const feeKind = catalog.transaction(row.id)?.feeForId ? copy.cardFee : copy.transferFee;
-                        return (
-                            <Table.Row aria-rowindex={first + index + 2} className={ROW} key={row.id}>
-                                <Table.Cell className={NAME}>
-                                    <span className="flex items-center gap-3 font-medium">
-                                        {standsAlone ? (
-                                            <FeeTile />
-                                        ) : (
-                                            <MerchantTile
-                                                imageUrl={
-                                                    imageKey
-                                                        ? (headPhotos?.get(imageKey) ?? restPhotos?.get(imageKey))
-                                                        : undefined
-                                                }
-                                                name={merchant}
-                                                size="lg"
-                                            />
-                                        )}
-                                        <span className="min-w-0">
-                                            <span className="block truncate">{merchant}</span>
-                                            <span className="text-muted-foreground block truncate text-xs font-normal @2xl:hidden">
-                                                {day}
-                                                <span className="hidden @sm:inline">
-                                                    {" "}
-                                                    · {standsAlone ? feeKind : name}
-                                                </span>
-                                            </span>
-                                        </span>
-                                    </span>
-                                </Table.Cell>
-                                <Table.Cell className={SIDE}>
-                                    {standsAlone ? (
-                                        <span className="text-muted-foreground">{feeKind}</span>
-                                    ) : (
-                                        <span className="flex min-w-0 items-center gap-2">
-                                            <span
-                                                aria-hidden
-                                                className="size-1.5 shrink-0 rounded-full bg-current"
-                                                style={{ color: top?.color }}
-                                            />
-                                            <span className="truncate">{name}</span>
-                                        </span>
-                                    )}
-                                </Table.Cell>
-                                <Table.Cell className={`${SIDE} text-muted-foreground`}>
-                                    {row.accountId ? accountName(row.accountId) : copy.noAccount}
-                                </Table.Cell>
-                                <Table.Cell className={`${SIDE} dash-figure text-muted-foreground`}>{day}</Table.Cell>
-                                <Table.Cell align="end" className={`${FIGURE} ${row.income ? "text-app-income" : ""}`}>
-                                    {money(row.income ? figure.amount : -figure.amount, ledger.currency, "always")}
-                                    {line}
-                                </Table.Cell>
-                            </Table.Row>
-                        );
-                    })}
-                    {last < rows.length ? (
-                        <tr aria-hidden className="bg-transparent!">
-                            <td
-                                aria-label={copy.title.value}
-                                colSpan={5}
-                                style={{ height: (rows.length - last) * ROW_HEIGHT }}
-                            />
-                        </tr>
-                    ) : null}
-                    {setup ? <GhostRows cell={CELL} label={copy.title.value} side={SIDE} /> : null}
-                </Table.Body>
-            </Table>
+                        })}
+                        {last < rows.length ? (
+                            <tr aria-hidden className="bg-transparent!">
+                                <td
+                                    aria-label={copy.title.value}
+                                    colSpan={5}
+                                    style={{ height: (rows.length - last) * ROW_HEIGHT }}
+                                />
+                            </tr>
+                        ) : null}
+                        {setup ? <GhostRows cell={CELL} label={copy.title.value} side={SIDE} /> : null}
+                    </Table.Body>
+                </Table>
+            </div>
             {setup && rows.length > 0 ? <Cover fade={TABLE_FADE} /> : null}
             {setup?.done.entry === false ? (
                 <Cover line={active ? setupCopy.entryLast : setupCopy.entryLine} title={setupCopy.entryTitle}>
