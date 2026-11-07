@@ -4,6 +4,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
@@ -95,6 +96,7 @@ const SEND_TIMEOUT = Duration.seconds(10);
 
 export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
     cause: Schema.optional(Schema.Defect()),
+    codes: Schema.optional(Schema.Array(Schema.Number)),
     reason: Schema.Literals(["unconfigured", "transport", "status"]),
     status: Schema.optional(Schema.Number),
 }) {
@@ -103,13 +105,18 @@ export class EmailError extends Schema.TaggedError<EmailError>()("EmailError", {
             return "Email needs CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_EMAIL_TOKEN and EMAIL_FROM";
         }
         if (this.reason === "status") {
-            return `Cloudflare refused the email with ${this.status}`;
+            const codes = this.codes?.length ? ` (${this.codes.join(", ")})` : "";
+            return `Cloudflare refused the email with ${this.status}${codes}`;
         }
         return "Email request failed";
     }
 }
 
 const transport = (cause: unknown) => new EmailError({ cause, reason: "transport" });
+
+const decodeFailure = HttpIncomingMessage.schemaBodyJson(
+    Schema.Struct({ errors: Schema.Array(Schema.Struct({ code: Schema.Number })) })
+);
 
 export const sendEmail = Effect.fn("Email.send")(function* sendEmail(to: string, { html, subject, text }: Email) {
     const config = yield* emailConfig;
@@ -129,6 +136,11 @@ export const sendEmail = Effect.fn("Email.send")(function* sendEmail(to: string,
         Effect.catchTags({ HttpClientError: transport, TimeoutError: transport })
     );
     if (response.status < 200 || response.status >= 300) {
-        return yield* new EmailError({ reason: "status", status: response.status });
+        const failure = yield* decodeFailure(response).pipe(Effect.option);
+        return yield* new EmailError({
+            codes: Option.getOrUndefined(failure)?.errors.map(({ code }) => code),
+            reason: "status",
+            status: response.status,
+        });
     }
 });
