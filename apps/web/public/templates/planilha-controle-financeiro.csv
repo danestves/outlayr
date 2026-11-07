@@ -1,0 +1,9 @@
+﻿Data (Date),Nota (Note),Valor (Amount),Moeda (Currency),Categoria (Category),Tipo (Type)
+2026-10-01,Salário,6500.00,BRL,Salário,Income
+2026-10-01,Aluguel,2200.00,BRL,Aluguel,Expense
+2026-10-03,Pão de Açúcar,486.90,BRL,Mercado,Expense
+2026-10-05,Drogasil,89.70,BRL,Saúde,Expense
+2026-10-08,Conta de luz,214.35,BRL,Contas da casa,Expense
+2026-10-11,iFood,72.40,BRL,Restaurantes,Expense
+2026-10-14,Netflix,44.90,BRL,Lazer,Expense
+2026-10-18,Uber em Buenos Aires,9500.00,ARS,Transporte,Expense

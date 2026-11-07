@@ -126,10 +126,16 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 ## Pages in Portuguese
 
 - [Início](https://tryoutlayr.com/pt): the home page in Brazilian Portuguese
+- [Suporte](https://tryoutlayr.com/pt/support): the support page in Portuguese
+- [Planilha de controle financeiro](https://tryoutlayr.com/pt/guides/expense-tracker-template): the expense tracker template guide, with a Portuguese Excel workbook and CSV in reais
+- [Calculadoras](https://tryoutlayr.com/pt/tools): the 50/30/20, subscription, installment, and split expenses calculators in Portuguese
 
 ## Pages in French
 
 - [Accueil](https://tryoutlayr.com/fr): the home page in French
+- [Assistance](https://tryoutlayr.com/fr/support): the support page in French
+- [Modèle de budget mensuel](https://tryoutlayr.com/fr/guides/expense-tracker-template): the expense tracker template guide, with a French Excel workbook and CSV in euros
+- [Calculateurs](https://tryoutlayr.com/fr/tools): the 50/30/20, subscription, installment, and split expenses calculators in French
 
 ## Links
 
