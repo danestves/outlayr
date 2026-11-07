@@ -19,6 +19,9 @@ on:
                 type: string
                 required: true
 
+permissions:
+    contents: read
+
 jobs:
     deploy:
         name: Deploy Convex functions

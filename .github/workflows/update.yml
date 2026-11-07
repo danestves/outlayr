@@ -30,6 +30,9 @@ on:
                 description: Version of the build this update targets, as the release skill prints it.
                 required: true
 
+permissions:
+    contents: read
+
 concurrency:
     group: update-${{ inputs.platform }}-${{ inputs.channel }}
     cancel-in-progress: false
