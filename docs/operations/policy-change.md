@@ -1,6 +1,6 @@
 # Announcing a policy change
 
-The `policy-notice` skill decides whether a change needs this. A change to the Privacy Policy or the Terms of Use reaches people three ways: the site, a sheet
+The `policy-notice` skill decides whether a change needs this. A material change to the Privacy Policy or the Terms of Use reaches people three ways: the site, a sheet
 in the app, and an email to every confirmed account. The sheet and the email read the same
 notice from `POLICY_NOTICES`, so a new notice needs no app release. App versions from before the
 sheet show nothing until they update.

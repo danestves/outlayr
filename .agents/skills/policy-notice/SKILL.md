@@ -13,11 +13,11 @@ This is an engineering checklist, not legal advice. When a case isn't clearly co
 
 The Privacy Policy is stricter than the Terms, and the stricter promise wins:
 
-- **Privacy, `## Changes`:** "Before a change takes effect, the app shows what changes, and if you have an account, we email you too."
-- **Privacy, `### Emails we send`:** "Notice before this policy or our Terms of Use change."
+- **Privacy, `## Changes`:** "Before a material change takes effect, the app shows what changes, and if you have an account, we email you too." A change is material if it affects what we collect, who receives it, how we use it, how long we keep it, or people's rights and obligations.
+- **Privacy, `### Emails we send`:** "Notice before a material change to this policy or our Terms of Use."
 - **Terms, `## Changes to these terms`:** a material change gets notice "in the app, on this website, or by email". On its own this would allow skipping email, but the Privacy Policy lines above don't.
 
-So every substantive change to either document needs an email, sent before its effective date. Breaking a promise to announce changes is what the FTC called deceptive in Gateway Learning. If those lines are reworded, update this skill in the same PR.
+So every material change to either document needs an email, sent before its effective date. Breaking a promise to announce changes is what the FTC called deceptive in Gateway Learning. If those lines are reworded, update this skill in the same PR.
 
 ## 1. Look at the change
 
@@ -46,7 +46,8 @@ Take the first row that matches:
 | **DOCS MISSING** | Any question above is yes, but the documents don't say it yet. | Update privacy or terms in en and es, then check again. |
 | **CONSENT, THEN EMAIL** | Data goes to a new third party or AI provider, or data already collected gets a materially different use. New features sending a new kind of data to an allowed AI provider: ask Daniel whether the existing permission covers it. | Ask in the app before the data flows, and don't apply the change to old data without that permission. Email alone isn't enough. Then follow **EMAIL**. |
 | **ADVANCE NOTICE** | Pro loses something material (Terms: "in advance"), or Outlayr or Pro is shutting down (Terms: try for 30 days). | Tell Daniel the required lead time before scheduling. Then follow **EMAIL**. |
-| **EMAIL** | Any other substantive change to privacy or terms, including one that favors people or fixes a wrong statement. | Add a `POLICY_NOTICES` entry and follow [the runbook](../../../docs/operations/policy-change.md). |
+| **EMAIL** | Any other material change to privacy or terms, including fixing a wrong statement about our data handling. | Add a `POLICY_NOTICES` entry and follow [the runbook](../../../docs/operations/policy-change.md). |
+| **SITE ONLY** | A change with a new effective date that isn't material, such as clearer wording that changes no practice, or a better free plan. If in doubt, it's **EMAIL**. | Update the date in the documents and `LEGAL_DAYS`, with no `POLICY_NOTICES` entry. |
 | **NOTHING** | Typos, formatting, or a translation fix with the same meaning, or no effect on either document. | Keep the effective date as it is. Say why in the PR's legal line. |
 
 A store-managed price rise on an existing subscription is handled by the store, per Terms `### Price changes`. It still needs **EMAIL** if the Terms text changes.
