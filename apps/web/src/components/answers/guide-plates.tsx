@@ -10,7 +10,7 @@ function Plate({ children, side, title }: { children: ReactNode; side: string; t
     return (
         <>
             <div className="border-border flex h-11 items-center justify-between gap-4 border-b">
-                <p className="text-muted truncate text-sm">{title}</p>
+                <p className="text-muted w-0 flex-1 truncate text-sm">{title}</p>
                 <span className="text-muted shrink-0 font-mono text-xs">{side}</span>
             </div>
             <div className="pt-5">{children}</div>
@@ -190,7 +190,7 @@ const COUPLES = {
     },
     es: {
         earns: "Gana",
-        month: "Cuentas compartidas · noviembre",
+        month: "En común · noviembre",
         note: "Alquiler, supermercado, servicios. El resto es personal.",
         pays: "Paga",
         share: "Parte",
