@@ -7,15 +7,15 @@ import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/site";
 const APP_STORE_BADGE = {
     en: "/badges/app-store.svg",
     es: "/badges/app-store-es.svg",
-    fr: "/badges/app-store.svg",
-    pt: "/badges/app-store.svg",
+    fr: "/badges/app-store-fr.svg",
+    pt: "/badges/app-store-pt.svg",
 } as const satisfies Record<Locale, string>;
 
 const GOOGLE_PLAY_BADGE = {
     en: "/badges/google-play",
     es: "/badges/google-play-es",
-    fr: "/badges/google-play",
-    pt: "/badges/google-play",
+    fr: "/badges/google-play-fr",
+    pt: "/badges/google-play-pt",
 } as const satisfies Record<Locale, string>;
 
 type Placement = "answer" | "closing" | "hero" | "intro" | "invite" | "story";

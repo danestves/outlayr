@@ -4,7 +4,7 @@ import type { Dictionary } from "intlayer";
 const about = {
     content: {
         allComparisons: t({ en: "All comparisons", es: "Todas las comparativas" }),
-        allGuides: t({ en: "All guides", es: "Todas las guías" }),
+        allGuides: t({ en: "All guides", es: "Todas las guías", pt: "Todos os guias", fr: "Tous les guides" }),
         appIcon: t({ en: "App icon", es: "Ícono de la app" }),
         contact: {
             lead: t({
