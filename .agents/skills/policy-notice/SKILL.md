@@ -55,7 +55,7 @@ A store-managed price rise on an existing subscription is handled by the store, 
 
 These traps come from how the notice code works:
 
-- **The email must arrive before the effective date.** Merge and email on one day and date the notice the next at the earliest, or later when **ADVANCE NOTICE** applies. A notice dated today is already late. If the send can't finish in time, ask Daniel before anything goes out, and move the date if nothing has.
+- **The email must arrive before the effective date.** Date the notice the next UTC day after the email at the earliest, because `effectiveAtMs` is UTC midnight and Caracas evenings are already the next day in UTC. Use a later date when **ADVANCE NOTICE** applies. A notice dated today is already late. If the send can't finish in time, ask Daniel before anything goes out, and move the date if nothing has.
 - **A date freezes once it's emailed.** Emails dedupe on `<document>:<effectiveAtMs>`, and the sheet compares dates. Anything added to a sent notice misses everyone already emailed and everyone who tapped Got it, so it needs a new date.
 - **Only the latest day gets emailed.** `notifyPolicy` sends only notices with the newest `effectiveAtMs`. Dating a newer notice first means an unsent older one never goes out, so send it first or move its changes into the newer one.
 - **Two changes close together share one date.** To avoid two emails in a row, merge them under the same future date, before that date is emailed.

@@ -10,7 +10,7 @@ sheet show nothing until they update.
    `apps/web/src/lib/site.ts`.
 2. Append a notice to `POLICY_NOTICES` in `packages/backend/confect/legal.ts`: the document,
    `effectiveAtMs` as UTC midnight of that day, and the changes in en, es, fr and pt, one short
-   label each with an optional detail. Use the day after the email goes out at the earliest, or later when a longer notice period applies, because the Privacy Policy promises notice before a change takes effect. If the PR waits, update the date before merging. Once a date has been emailed, new changes need a new date.
+   label each with an optional detail. Use the UTC day after the email goes out at the earliest, or later when a longer notice period applies, because the Privacy Policy promises notice before a change takes effect. If the PR waits, update the date before merging. Once a date has been emailed, new changes need a new date.
 3. Merge, then run **Deploy the backend** for `production`. Once it is live, the app shows the
    sheet on its next launch to anyone who installed before that day, until they tap Got it.
 4. With Daniel's go-ahead, email the account holders. Production is self-hosted, and `--prod` targets an empty cloud project. Get the admin key from Daniel as a file, so it stays out of shell history, then run this from a scratch directory whose `package.json` lists `convex`, because `packages/backend` picks up the local `.env.local`:
