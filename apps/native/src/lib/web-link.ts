@@ -1,6 +1,7 @@
+import { Alert } from "react-native";
+
 import { translateNow } from "@/i18n/runtime";
 import { expectHandoff } from "@/lib/app-handoff";
-import { notifyFailure } from "@/lib/notify";
 import { SILENT } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { openWebLinkCommand } from "@/state/link-commands";
@@ -12,7 +13,7 @@ export function openWebLink(url: string): void {
         appAtomRegistry,
         openWebLinkCommand,
         url,
-        { onFailure: () => notifyFailure({ title: translateNow("settings.link.openFailed") }) },
+        { onFailure: () => Alert.alert(translateNow("settings.link.openFailed")) },
         SILENT
     );
 }
