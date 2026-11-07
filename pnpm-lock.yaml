@@ -619,6 +619,9 @@ importers:
       '@outlayr/money':
         specifier: workspace:*
         version: link:../../packages/money
+      '@remixicon/react':
+        specifier: 4.9.0
+        version: 4.9.0(react@19.3.1)
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))
@@ -4857,6 +4860,11 @@ packages:
     engines: {node: '>= 20.0.0'}
     peerDependencies:
       '@redis/client': ^6.3.0
+
+  '@remixicon/react@4.9.0':
+    resolution: {integrity: sha512-5/jLDD4DtKxH2B4QVXTobvV1C2uL8ab9D5yAYNtFt+w80O0Ys1xFOrspqROL3fjrZi+7ElFUWE37hBfaAl6U+Q==}
+    peerDependencies:
+      react: '>=18.2.0'
 
   '@remotion/bundler@4.0.539':
     resolution: {integrity: sha512-TK+O9Xd/mdPQuXvXaxND8QLW5QyAVLkD38CuB1UKVpVJEEMBxVVIP6iqdCoVm3fvwlys+KKWyXzhd8ZiyV8CIA==}
@@ -17904,6 +17912,10 @@ snapshots:
   '@redis/time-series@6.3.0(@redis/client@6.3.0(@opentelemetry/api@1.9.1))':
     dependencies:
       '@redis/client': 6.3.0(@opentelemetry/api@1.9.1)
+
+  '@remixicon/react@4.9.0(react@19.3.1)':
+    dependencies:
+      react: 19.3.1
 
   '@remotion/bundler@4.0.539(@swc/helpers@0.5.23)(lightningcss@1.33.0)(postcss@8.5.32)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:

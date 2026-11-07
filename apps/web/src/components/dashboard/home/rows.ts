@@ -2,13 +2,11 @@ import { inScope } from "../../../lib/dashboard-series-ledger";
 import type { Ledger, LedgerRow, LedgerTransfer } from "../../../lib/dashboard-series-ledger";
 import type { Period } from "../../../lib/dashboard-series-period";
 
-export const PAGE_SIZE = 10;
-
 export type TransactionSort = "largest" | "newest" | "oldest";
 
 export interface RowsView {
     accounts: readonly string[];
-    category: string | null;
+    categories: readonly string[];
     period: Period;
 }
 
@@ -23,29 +21,16 @@ const COMPARERS = {
 export function viewRows(ledger: Pick<Ledger, "rows" | "transfers">, view: RowsView, sort: TransactionSort) {
     const wanted = inScope(view);
     const chosen = new Set(view.accounts);
+    const picked = new Set(view.categories);
     const inPeriod = ({ day }: { day: string }) => day >= view.period.from && day <= view.period.to;
     const entries = ledger.rows.filter(
-        (row) => inPeriod(row) && wanted(row) && (view.category === null || row.topId === view.category)
+        (row) => inPeriod(row) && wanted(row) && (picked.size === 0 || picked.has(row.topId))
     );
     const transfers =
-        view.category === null
+        picked.size === 0
             ? ledger.transfers.filter(
                   (row) => inPeriod(row) && (chosen.size === 0 || chosen.has(row.fromId) || chosen.has(row.toId))
               )
             : [];
     return [...entries, ...transfers].toSorted(COMPARERS[sort]);
-}
-
-export function pageOf<Row>(rows: readonly Row[], page: number, size = PAGE_SIZE) {
-    const pages = Math.max(Math.ceil(rows.length / size), 1);
-    const current = Math.min(Math.max(page, 0), pages - 1);
-    const start = current * size;
-    return {
-        from: rows.length === 0 ? 0 : start + 1,
-        page: current,
-        pages,
-        rows: rows.slice(start, start + size),
-        to: Math.min(start + size, rows.length),
-        total: rows.length,
-    };
 }

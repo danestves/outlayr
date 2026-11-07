@@ -3,21 +3,18 @@ import type { Dictionary } from "intlayer";
 
 const dashboardHome = {
     content: {
-        chart: {
-            budget: insert(t({ en: "{{name}} budget {{amount}}", es: "Presupuesto de {{name}} {{amount}}" })),
-            budgetGone: insert(t({ en: "{{day}}, budget gone", es: "{{day}}, presupuesto agotado" })),
-            description: insert(
-                t({
-                    en: "Cumulative spending by category through {{day}}, against income.",
-                    es: "Gasto acumulado por categoría hasta el {{day}}, frente a los ingresos.",
-                })
-            ),
-            income: t({ en: "Income", es: "Ingresos" }),
-            kept: t({ en: "Kept", es: "Ahorrado" }),
-            seeCashFlow: t({ en: "See cash flow", es: "Ver flujo de caja" }),
-            select: insert(t({ en: "Show {{name}}", es: "Ver {{name}}" })),
-            title: t({ en: "Spending against income", es: "Gasto frente a ingresos" }),
-            titleSpendOnly: t({ en: "Spending", es: "Gasto" }),
+        everyDay: {
+            aDay: insert(t({ en: "{{amount}} a day", es: "{{amount}} al día" })),
+            biggestAfter: t({ en: "Biggest after", es: "El mayor después" }),
+            emptyLine: t({
+                en: "Days fill in as you log entries.",
+                es: "Los días se llenan al registrar movimientos.",
+            }),
+            emptyTitle: t({ en: "Nothing spent yet", es: "Nada gastado aún" }),
+            less: t({ en: "Less", es: "Menos" }),
+            more: t({ en: "More", es: "Más" }),
+            title: t({ en: "Every day", es: "Cada día" }),
+            topDay: insert(t({ en: "{{name}} day", es: "Día de {{name}}" })),
         },
         kpi: {
             income: t({ en: "Income", es: "Ingresos" }),
@@ -28,21 +25,28 @@ const dashboardHome = {
             spent: t({ en: "Spent", es: "Gastado" }),
             versus: insert(t({ en: "vs {{range}}", es: "vs {{range}}" })),
         },
+        spentOfIncome: {
+            cashFlow: t({ en: "Cash flow", es: "Flujo de caja" }),
+            title: t({ en: "Spent of income", es: "Gastado de ingresos" }),
+        },
         panel: {
             accounts: t({ en: "Accounts", es: "Cuentas" }),
             average: insert(t({ en: "Avg {{amount}}", es: "Prom. {{amount}}" })),
             budgets: t({ en: "Budgets", es: "Presupuestos" }),
+            budgetsEmptyLine: t({ en: "Set one on your phone.", es: "Crea uno en tu teléfono." }),
+            budgetsEmptyTitle: t({ en: "No budgets yet", es: "Aún no hay presupuestos" }),
+            details: t({ en: "Details", es: "Detalles" }),
+            onTrackLabel: t({ en: "On track", es: "En regla" }),
+            overCount: insert(t({ en: "{{count}} over", es: "{{count}} excedidos" })),
+            overAmount: insert(t({ en: "{{amount}} over", es: "{{amount}} de más" })),
+            onTrackCount: insert(t({ en: "{{count}} of {{total}}", es: "{{count}} de {{total}}" })),
             byAccount: t({ en: "By account", es: "Por cuenta" }),
             byDay: t({ en: "By day", es: "Por día" }),
-            clearCategory: insert(t({ en: "Clear {{name}}", es: "Quitar {{name}}" })),
             left: insert(t({ en: "{{amount}} left of budget", es: "Quedan {{amount}} del presupuesto" })),
             moreAccounts: insert(t({ en: "{{count}} more", es: "{{count}} más" })),
             net: insert(t({ en: "Net {{amount}}", es: "Neto {{amount}}" })),
-            netOn: insert(t({ en: "Net {{amount}} on {{day}}", es: "Neto {{amount}} al {{day}}" })),
-            noBudget: t({ en: "no budget", es: "sin presupuesto" }),
+            noAccounts: t({ en: "No accounts yet.", es: "Aún no hay cuentas." }),
             of: t({ en: "of", es: "de" }),
-            onPace: t({ en: "Within budget so far.", es: "Dentro del presupuesto por ahora." }),
-            onTrack: insert(t({ en: "{{count}} of {{total}} on track", es: "{{count}} de {{total}} en regla" })),
             over: t({ en: "over", es: "de más" }),
             overBudget: insert(t({ en: "{{amount}} over budget", es: "{{amount}} sobre el presupuesto" })),
             peak: insert(t({ en: "Peak {{day}}", es: "Máximo {{day}}" })),
@@ -58,14 +62,15 @@ const dashboardHome = {
                     es: "Se agotó el {{day}}, 1 día antes.",
                 })
             ),
-            ranOutLast: insert(t({ en: "Ran out {{day}}.", es: "Se agotó el {{day}}." })),
             share: t({ en: "Share", es: "Parte" }),
-            topMerchants: t({ en: "Top merchants", es: "Comercios principales" }),
             upcoming: t({ en: "Upcoming", es: "Próximos" }),
-            upcomingWindow: t({ en: "Next 30 days", es: "Próximos 30 días" }),
             versus: t({ en: "vs last 3 months", es: "vs los últimos 3 meses" }),
         },
         transactions: {
+            all: t({ en: "All", es: "Todos" }),
+            expenses: t({ en: "Expenses", es: "Gastos" }),
+            incomeTab: t({ en: "Income", es: "Ingresos" }),
+            seeAll: t({ en: "See all", es: "Ver todos" }),
             columns: {
                 account: t({ en: "Account", es: "Cuenta" }),
                 amount: t({ en: "Amount", es: "Monto" }),

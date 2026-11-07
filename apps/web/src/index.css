@@ -38,6 +38,10 @@
     --color-app-income: #00714a;
     --color-app-spend: #c0402e;
     --color-app-chip: #c6d8cc;
+    --color-app-strong: #cdc8b9;
+    --color-app-float: #fffefb;
+    --color-app-warn: #8f6200;
+    --color-app-hover: #17150f05;
 
     --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
     --font-mono: "Geist Mono Variable", ui-monospace, monospace;
@@ -999,6 +1003,10 @@
 }
 
 .app-shell {
+    --color-app-on-tint: #ffffff;
+    --color-app-scrim: #17150f59;
+    --color-app-shadow-far: #1c191738;
+    --color-app-shadow-near: #1c19171f;
     --color-background: var(--color-app-bg);
     --color-foreground: var(--color-app-ink);
     --color-border: var(--color-app-rule);
@@ -1017,7 +1025,9 @@
     --warning: var(--color-warning);
     background-color: var(--color-app-bg);
     color: var(--color-app-ink);
-    font-family: var(--font-app);
+    font-size: 14px;
+    line-height: 20px;
+    font-family: var(--font-sans);
     --skullet-base: var(--color-app-fill);
     --skullet-animation: none;
 }
@@ -1027,4 +1037,303 @@
     .app-shell * {
         border-color: var(--color-border);
     }
+}
+
+/* The web redesign's dark surfaces are the site's, not the phone's, so the shell re-points app-* here only. */
+:root[data-theme="dark"] .app-shell {
+    --color-app-bg: #131209;
+    --color-app-group: #1c1b13;
+    --color-app-ink: #fafaf9;
+    --color-app-muted: #a8a29e;
+    --color-app-rule: #2e2d24;
+    --color-app-fill: #26251b;
+    --color-app-tint: #e2643f;
+    --color-app-strong: #3a392e;
+    --color-app-float: #26251b;
+    --color-app-warn: #e0b04f;
+    --color-app-on-tint: #17150f;
+    --color-app-hover: #ffffff08;
+    --color-app-scrim: #0009;
+    --color-app-shadow-far: #000c;
+    --color-app-shadow-near: #0006;
+}
+
+@layer components {
+    .dash-figure {
+        font-family: var(--font-mono);
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+    }
+
+    .dash-nav {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        height: 34px;
+        padding: 0 10px;
+        margin-bottom: 2px;
+        border-radius: 10px;
+        color: var(--color-app-muted);
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 500;
+    }
+
+    .dash-nav[aria-current="page"] {
+        background: var(--color-app-fill);
+        color: var(--color-app-ink);
+    }
+
+    .dash-nav[aria-current="page"] svg {
+        color: var(--color-app-tint);
+    }
+
+    .dash-nav[aria-current="page"]::before {
+        content: "";
+        position: absolute;
+        left: -12px;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        background: var(--color-app-tint);
+        border-radius: 0 3px 3px 0;
+    }
+
+    .dash-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 36px;
+        padding: 0 14px;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        background: var(--color-app-tint);
+        color: var(--color-app-on-tint);
+        box-shadow: inset 0 1px 0 #ffffff33;
+    }
+
+    .dash-ob {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        height: 30px;
+        padding: 0 10px;
+        border: 1px solid var(--color-app-rule);
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+        background: var(--color-app-hover);
+    }
+
+    .dash-ob svg {
+        color: var(--color-app-muted);
+    }
+
+    .dash-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        border: 1px solid var(--color-app-rule);
+        background: var(--color-app-hover);
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .dash-chip[data-on="true"] {
+        border-color: color-mix(in oklab, var(--color-app-tint) 40%, var(--color-app-bg));
+        background: color-mix(in oklab, var(--color-app-tint) 20%, var(--color-app-bg));
+        color: color-mix(in oklab, var(--color-app-tint), var(--color-app-ink) 35%);
+    }
+
+    .dash-chip[data-on="true"] svg {
+        color: inherit;
+    }
+
+    .dash-count {
+        font: 500 11px/18px var(--font-mono);
+        padding: 0 6px;
+        border-radius: 6px;
+        color: color-mix(in oklab, var(--color-app-tint), var(--color-app-ink) 35%);
+        background: color-mix(in oklab, var(--color-app-tint) 18%, var(--color-app-bg));
+    }
+
+    .dash-seg {
+        height: 30px;
+        padding: 0 12px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        color: var(--color-app-muted);
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .dash-seg[data-on="true"] {
+        background: var(--color-app-float);
+        color: var(--color-app-ink);
+        box-shadow: 0 1px 2px var(--color-app-shadow-near);
+    }
+
+    .dash-card {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid var(--color-app-rule);
+        border-radius: 16px;
+        background: var(--color-app-group);
+    }
+
+    .dash-card-head {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 8px;
+        height: 52px;
+        padding: 0 20px;
+    }
+
+    .dash-card-head h2 {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+    }
+
+    .dash-card-foot {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 52px;
+        margin-top: auto;
+        padding: 0 12px 0 20px;
+        border-top: 1px solid var(--color-app-rule);
+        background: var(--color-app-hover);
+    }
+
+    .dash-trend {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font: 500 12px/16px var(--font-mono);
+        letter-spacing: -0.02em;
+    }
+
+    .dash-trend[data-tone="good"] {
+        color: var(--color-app-income);
+        background: color-mix(in oklab, var(--color-app-income) 14%, transparent);
+    }
+
+    .dash-trend[data-tone="poor"] {
+        color: var(--color-app-spend);
+        background: color-mix(in oklab, var(--color-app-spend) 16%, transparent);
+    }
+
+    .dash-trend[data-tone="flat"] {
+        color: var(--color-app-muted);
+        background: var(--color-app-fill);
+    }
+
+    .dash-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 22px;
+        padding: 0 7px;
+        border-radius: 6px;
+        border: 1px solid var(--color-app-rule);
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .dash-badge > u {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .dash-badge[data-tone="bad"] {
+        color: color-mix(in oklab, var(--color-app-spend), var(--color-app-ink) 30%);
+        background: color-mix(in oklab, var(--color-app-spend) 16%, var(--color-app-bg));
+        border-color: color-mix(in oklab, var(--color-app-spend) 28%, var(--color-app-bg));
+    }
+
+    .dash-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px;
+        border-radius: 16px;
+        border: 1px solid var(--color-app-strong);
+        background: var(--color-app-float);
+        box-shadow:
+            0 16px 32px -12px var(--color-app-shadow-far),
+            0 4px 12px var(--color-app-shadow-near);
+    }
+
+    .dash-menu-rule {
+        height: 1px;
+        margin: 0 8px;
+        background: var(--color-app-strong);
+    }
+
+    .dash-check {
+        position: relative;
+        display: block;
+        flex: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 5px;
+        border: 1px solid var(--color-app-strong);
+    }
+
+    .dash-check[data-on="true"] {
+        border-color: var(--color-app-tint);
+        background: var(--color-app-tint);
+        color: var(--color-app-on-tint);
+    }
+
+    .dash-empty {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 40px 24px;
+        text-align: center;
+    }
+}
+
+/* Outside the layer: panelui's Menu.Item utilities would otherwise win over this spacing. */
+.dash-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+}
+
+.dash-menu-item:hover,
+.dash-menu-item[data-highlighted] {
+    background: color-mix(in oklab, var(--color-app-ink) 5%, transparent);
+}
+
+.dash-menu-item > svg {
+    color: var(--color-app-muted);
 }

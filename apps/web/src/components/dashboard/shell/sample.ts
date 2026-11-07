@@ -111,6 +111,7 @@ export function sampleDashboard(now: number): Dashboard {
     return {
         filters: {
             accounts: [],
+            categories: [],
             category: null,
             currentKey,
             period: periodOf(currentKey, ledger.firstDayOfMonth),

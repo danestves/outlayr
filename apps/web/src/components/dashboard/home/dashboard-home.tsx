@@ -1,24 +1,30 @@
-import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useContext } from "react";
 
-import { CategoryPanel } from "./category-panel";
-import { KpiStrip } from "./kpi-strip";
-import { OverviewPanel } from "./overview-panel";
-import { SpendingChart } from "./spending-chart";
+import { LedgerSettingsContext } from "@/lib/ledger-settings";
+
+import { Accounts } from "./accounts";
+import { Budgets } from "./budgets";
+import { EveryDay } from "./every-day";
+import { FilterBar } from "./filter-bar";
+import { KpiGroup } from "./kpi-group";
+import { SpentOfIncome } from "./spent-of-income";
 import { Transactions } from "./transactions";
 
-export function HomeMain() {
-    const { filters } = useDashboard();
-    const { accounts, category, period } = filters;
+export function DashboardHome() {
+    const { incomeTracking } = useContext(LedgerSettingsContext);
     return (
-        <>
-            <KpiStrip />
-            <SpendingChart />
-            <Transactions key={`${period.key}|${accounts.join(",")}|${category}`} />
-        </>
+        <main className="min-w-0 px-6 pb-6">
+            <FilterBar />
+            <KpiGroup />
+            <div className={`mt-4 grid grid-cols-1 gap-4 ${incomeTracking ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}>
+                {incomeTracking ? <SpentOfIncome /> : null}
+                <EveryDay />
+                <Budgets />
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <Transactions />
+                <Accounts />
+            </div>
+        </main>
     );
-}
-
-export function HomePanel() {
-    const { filters } = useDashboard();
-    return filters.category === null ? <OverviewPanel /> : <CategoryPanel />;
 }

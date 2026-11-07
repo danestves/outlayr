@@ -1,213 +1,170 @@
-import Caret from "@hugeicons/core-free-icons/ArrowDown01Icon";
-import Left from "@hugeicons/core-free-icons/ArrowLeft01Icon";
-import Right from "@hugeicons/core-free-icons/ArrowRight01Icon";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "panelui-web/button";
-import { Menu } from "panelui-web/menu";
-import { Table } from "panelui-web/table";
 import { useMemo, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
 import { useDisplayFormat } from "@/lib/ledger-settings";
-import { cn } from "@/lib/utils";
 
 import { useCatalog, useImageUrls } from "./catalog";
-import { useCategoryName, useDateFormat, timeOfDay } from "./format";
-import { pageOf, viewRows } from "./rows";
-import type { TransactionSort } from "./rows";
+import { useCategoryName, useDateFormat } from "./format";
+import { viewRows } from "./rows";
 
-const SORTS = ["newest", "oldest", "largest"] as const satisfies readonly TransactionSort[];
+const ROWS_SHOWN = 6;
+const TABS = ["all", "expenses", "incomeTab"] as const;
+type Tab = (typeof TABS)[number];
 
-const CELL = "text-muted-foreground";
+const TH =
+    "text-muted-foreground h-9 px-3 text-left text-xs font-medium shadow-[inset_0_1px_0_var(--color-app-rule),inset_0_-1px_0_var(--color-app-rule)] first:pl-5 last:pr-5 last:text-right";
+const TD = "border-border h-[42px] border-b px-3 first:pl-5 last:pr-5 last:text-right group-last:border-0";
 
 export function Transactions() {
     const { filters, ledger, photos: accountPhotos } = useDashboard();
-    const { category, period } = filters;
-    const copy = useIntlayer("dashboard-home");
+    const copy = useIntlayer("dashboard-home").transactions;
     const categoryName = useCategoryName();
     const date = useDateFormat();
-    const { clockTime, money } = useDisplayFormat();
+    const { money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
-    const [sort, setSort] = useState<TransactionSort>("newest");
-    const [page, setPage] = useState(0);
-    const rows = useMemo(
-        () => viewRows(ledger, { accounts: filters.accounts, category, period }, sort),
-        [category, filters.accounts, ledger, period, sort]
-    );
-    const view = pageOf(rows, page);
+    const [tab, setTab] = useState<Tab>("all");
+    const rows = useMemo(() => {
+        const every = viewRows(
+            ledger,
+            { accounts: filters.accounts, categories: filters.categories, period: filters.period },
+            "newest"
+        );
+        return every
+            .filter((row) => {
+                if (tab === "all") {
+                    return true;
+                }
+                return "income" in row && row.income === (tab === "incomeTab");
+            })
+            .slice(0, ROWS_SHOWN);
+    }, [filters.accounts, filters.categories, filters.period, ledger, tab]);
     const keys = useMemo(
         () => [
             ...new Set(
-                view.rows.flatMap((row) => {
+                rows.flatMap((row) => {
                     const key = "fromId" in row ? null : catalog.transaction(row.id)?.imageKey;
                     return key ? [key] : [];
                 })
             ),
         ],
-        [catalog, view.rows]
+        [catalog, rows]
     );
     const photos = useImageUrls(keys);
-    const selected = category === null ? undefined : ledger.categories.get(category);
-    const count =
-        rows.length === 1 ? copy.transactions.countOne.value : copy.transactions.count({ count: rows.length }).value;
-    const { columns } = copy.transactions;
     return (
-        <section aria-labelledby="transactions-title" className="border-border border-t">
-            <div className="flex min-h-11 items-center gap-2 px-5 pt-1">
-                <h2 className="shrink-0 text-sm font-medium" id="transactions-title">
-                    {copy.transactions.title}
-                </h2>
-                <span className="text-muted-foreground truncate text-xs">
-                    {selected ? `${categoryName(selected)} · ${count}` : count}
-                </span>
-                <Menu>
-                    <Menu.Trigger
-                        render={<Button className="ml-auto h-7 gap-1 px-2.5 text-xs" size="sm" variant="outline" />}
-                    >
-                        {copy.transactions.sort.label}: {copy.transactions.sort[sort]}
-                        <HugeiconsIcon className="size-3.5" icon={Caret} />
-                    </Menu.Trigger>
-                    <Menu.Content align="end" className="app-shell ph-no-capture">
-                        <Menu.RadioGroup
-                            onValueChange={(next) => {
-                                setSort(SORTS.find((each) => each === next) ?? "newest");
-                                setPage(0);
-                            }}
-                            value={sort}
+        <section className="dash-card lg:col-span-2">
+            <div className="dash-card-head pr-3">
+                <h2>{copy.title}</h2>
+                <div className="ml-3 flex h-[52px] gap-[18px]" role="tablist">
+                    {TABS.map((each) => (
+                        <button
+                            aria-selected={tab === each}
+                            className={`relative flex items-center text-[13px] font-medium ${tab === each ? "after:bg-foreground after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-sm" : "text-muted-foreground"}`}
+                            key={each}
+                            onClick={() => setTab(each)}
+                            role="tab"
+                            type="button"
                         >
-                            {SORTS.map((each) => (
-                                <Menu.RadioItem closeOnClick key={each} value={each}>
-                                    {copy.transactions.sort[each]}
-                                </Menu.RadioItem>
-                            ))}
-                        </Menu.RadioGroup>
-                    </Menu.Content>
-                </Menu>
+                            {copy[each]}
+                        </button>
+                    ))}
+                </div>
+                <span aria-disabled className="dash-ob ml-auto">
+                    {copy.seeAll}
+                </span>
             </div>
-            {rows.length === 0 ? (
-                <p className="text-muted-foreground px-5 py-8 text-sm">{copy.transactions.empty}</p>
-            ) : (
-                <Table containerClassName="px-5" density="compact">
-                    <Table.Header>
-                        <Table.Row>
-                            <Table.Head>{columns.merchant}</Table.Head>
-                            {selected ? null : (
-                                <Table.Head className="hidden sm:table-cell">{columns.category}</Table.Head>
-                            )}
-                            <Table.Head className="hidden lg:table-cell">{columns.account}</Table.Head>
-                            <Table.Head className="hidden md:table-cell">{columns.date}</Table.Head>
-                            {selected ? <Table.Head className="hidden lg:table-cell">{columns.note}</Table.Head> : null}
-                            <Table.Head align="end">{columns.amount}</Table.Head>
-                        </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
-                        {view.rows.map((row) => {
-                            const when = (
-                                <Table.Cell className={cn(CELL, "hidden whitespace-nowrap md:table-cell")}>
-                                    {date.weekday(row.day)} · {clockTime(timeOfDay(row.at, ledger.offsetAt(row.at)))}
-                                </Table.Cell>
-                            );
+            <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-sm whitespace-nowrap">
+                    <colgroup>
+                        <col className="w-[24.9%]" />
+                        <col className="w-[22.3%]" />
+                        <col className="w-[18.8%]" />
+                        <col />
+                        <col />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th className={TH}>{copy.columns.merchant}</th>
+                            <th className={TH}>{copy.columns.category}</th>
+                            <th className={TH}>{copy.columns.account}</th>
+                            <th className={TH}>{copy.columns.date}</th>
+                            <th className={TH}>{copy.columns.amount}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows.length === 0 ? (
+                            <tr>
+                                <td className="text-muted-foreground px-5 py-8 text-[13px]" colSpan={5}>
+                                    {copy.empty}
+                                </td>
+                            </tr>
+                        ) : null}
+                        {rows.map((row) => {
                             if ("fromId" in row) {
                                 const from = catalog.account(row.fromId);
                                 const names = [row.fromId, row.toId].map((id) => ledger.accounts.get(id)?.name ?? "");
                                 return (
-                                    <Table.Row key={row.id}>
-                                        <Table.Cell>
-                                            <span className="flex max-w-48 items-center gap-2 font-medium">
+                                    <tr className="group" key={row.id}>
+                                        <td className={TD}>
+                                            <span className="flex items-center gap-2.5 font-medium">
                                                 {from ? (
-                                                    <AccountTile account={from} photos={accountPhotos} size="sm" />
+                                                    <AccountTile account={from} photos={accountPhotos} size="lg" />
                                                 ) : null}
-                                                <span className="truncate">{names.join(" → ")}</span>
+                                                <span className="max-w-48 truncate">{names.join(" → ")}</span>
                                             </span>
-                                        </Table.Cell>
-                                        <Table.Cell className={cn(CELL, "hidden sm:table-cell")}>
-                                            {copy.transactions.transfer}
-                                        </Table.Cell>
-                                        <Table.Cell className="hidden lg:table-cell" />
-                                        {when}
-                                        <Table.Cell align="end" className={cn(CELL, "font-mono whitespace-nowrap")}>
+                                        </td>
+                                        <td className={TD}>
+                                            <span className="dash-badge">{copy.transfer}</span>
+                                        </td>
+                                        <td
+                                            aria-label={copy.columns.account.value}
+                                            className={`${TD} text-muted-foreground`}
+                                        />
+                                        <td className={`${TD} dash-figure text-muted-foreground`}>
+                                            {date.day(row.day)}
+                                        </td>
+                                        <td className={`${TD} dash-figure text-muted-foreground`}>
                                             {money(row.amount, ledger.currency)}
-                                        </Table.Cell>
-                                    </Table.Row>
+                                        </td>
+                                    </tr>
                                 );
                             }
-                            const book = catalog.transaction(row.id);
                             const top = ledger.categories.get(row.topId);
-                            const merchant = row.note.trim() || (top ? categoryName(top) : "");
-                            const imageKey = book?.imageKey;
+                            const name = top ? categoryName(top) : "";
+                            const merchant = row.note.trim() || name;
+                            const imageKey = catalog.transaction(row.id)?.imageKey;
                             return (
-                                <Table.Row key={row.id}>
-                                    <Table.Cell>
-                                        <span className="flex max-w-48 items-center gap-2 font-medium">
+                                <tr className="group" key={row.id}>
+                                    <td className={TD}>
+                                        <span className="flex items-center gap-2.5 font-medium">
                                             <MerchantTile
                                                 imageUrl={imageKey ? photos?.get(imageKey) : undefined}
                                                 name={merchant}
+                                                size="lg"
                                             />
-                                            <span className="truncate">{merchant}</span>
+                                            <span className="max-w-48 truncate">{merchant}</span>
                                         </span>
-                                    </Table.Cell>
-                                    {selected ? null : (
-                                        <Table.Cell className={cn(CELL, "hidden sm:table-cell")}>
-                                            <span className="flex max-w-48 items-center gap-2">
-                                                <span
-                                                    aria-hidden
-                                                    className="size-2 shrink-0 rounded-full"
-                                                    style={{
-                                                        backgroundColor: catalog.category(row.topId).color ?? undefined,
-                                                    }}
-                                                />
-                                                <span className="truncate">{top ? categoryName(top) : ""}</span>
-                                            </span>
-                                        </Table.Cell>
-                                    )}
-                                    <Table.Cell className={cn(CELL, "hidden max-w-48 truncate lg:table-cell")}>
+                                    </td>
+                                    <td className={TD}>
+                                        <span className="dash-badge">
+                                            <u style={{ color: top?.color }} />
+                                            {name}
+                                        </span>
+                                    </td>
+                                    <td className={`${TD} text-muted-foreground`}>
                                         {row.accountId ? (ledger.accounts.get(row.accountId)?.name ?? "") : ""}
-                                    </Table.Cell>
-                                    {when}
-                                    {selected ? (
-                                        <Table.Cell className={cn(CELL, "hidden max-w-48 truncate lg:table-cell")}>
-                                            {book?.details ?? ""}
-                                        </Table.Cell>
-                                    ) : null}
-                                    <Table.Cell
-                                        align="end"
-                                        className={cn("font-mono whitespace-nowrap", row.income && "text-app-income")}
-                                    >
+                                    </td>
+                                    <td className={`${TD} dash-figure text-muted-foreground`}>{date.day(row.day)}</td>
+                                    <td className={`${TD} dash-figure ${row.income ? "text-app-income" : ""}`}>
                                         {money(row.income ? row.amount : -row.amount, ledger.currency, "always")}
-                                    </Table.Cell>
-                                </Table.Row>
+                                    </td>
+                                </tr>
                             );
                         })}
-                    </Table.Body>
-                </Table>
-            )}
-            {view.pages > 1 ? (
-                <div className="text-muted-foreground flex items-center justify-end gap-2 px-5 py-3 text-xs">
-                    <span className="tabular-nums">
-                        {copy.transactions.range({ from: view.from, to: view.to, total: view.total })}
-                    </span>
-                    <Button
-                        aria-label={copy.transactions.previous.value}
-                        disabled={view.page === 0}
-                        onClick={() => setPage(view.page - 1)}
-                        size="icon-sm"
-                        variant="outline"
-                    >
-                        <HugeiconsIcon className="size-4" icon={Left} />
-                    </Button>
-                    <Button
-                        aria-label={copy.transactions.next.value}
-                        disabled={view.page === view.pages - 1}
-                        onClick={() => setPage(view.page + 1)}
-                        size="icon-sm"
-                        variant="outline"
-                    >
-                        <HugeiconsIcon className="size-4" icon={Right} />
-                    </Button>
-                </div>
-            ) : null}
+                    </tbody>
+                </table>
+            </div>
         </section>
     );
 }

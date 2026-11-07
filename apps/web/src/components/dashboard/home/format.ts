@@ -14,7 +14,12 @@ export function useDateFormat() {
     const { locale } = useLocale();
     const { date } = LANGUAGES[localeFromParam(locale)];
     return useMemo(() => {
-        const short = new Intl.DateTimeFormat(date, { day: "numeric", month: "short", timeZone: "UTC" });
+        // The redesign reads "Oct 28" in English; the site's en-GB date locale would flip it.
+        const short = new Intl.DateTimeFormat(date === "en-GB" ? "en-US" : date, {
+            day: "numeric",
+            month: "short",
+            timeZone: "UTC",
+        });
         const withWeekday = new Intl.DateTimeFormat(date, {
             day: "numeric",
             month: "short",
@@ -39,13 +44,19 @@ export function useCategoryName() {
         category.id === UNCATEGORIZED_ID ? uncategorized.value : titled(category.name, locale);
 }
 
-export function usePeriodTitle(firstDayOfMonth: number) {
+const YEAR_LENGTH = 4;
+
+export function usePeriodTitle(firstDayOfMonth: number, currentKey: string) {
     const date = useDateFormat();
     const { locale } = useLocale();
-    return (period: Period) =>
-        firstDayOfMonth === 1
-            ? titled(date.month(period.key), locale)
-            : `${date.day(period.from)} - ${date.day(period.to)}`;
+    return (period: Period) => {
+        const title =
+            firstDayOfMonth === 1
+                ? titled(date.month(period.key), locale)
+                : `${date.day(period.from)} - ${date.day(period.to)}`;
+        const year = period.key.slice(0, YEAR_LENGTH);
+        return year === currentKey.slice(0, YEAR_LENGTH) ? title : `${title} ${year}`;
+    };
 }
 
 export function useWholeMoney(currency: string) {
