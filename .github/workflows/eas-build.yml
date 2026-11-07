@@ -49,6 +49,9 @@ on:
                 description: The build plan rnd resolved, as JSON
                 required: true
 
+permissions:
+    contents: read
+
 concurrency:
     group: eas-build-${{ inputs.platform }}-${{ inputs.profile }}-${{ github.ref }}
     cancel-in-progress: false

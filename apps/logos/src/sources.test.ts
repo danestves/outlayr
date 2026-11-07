@@ -46,7 +46,9 @@ describe("findLogo", () => {
 
     it("retries Google on www when the bare domain has no icon", async () => {
         const result = await findLogo(
-            fetcher((url) => (url.includes("google.com") && url.includes("domain=www.") ? image(128) : notFound())),
+            fetcher((url) =>
+                url === "https://www.google.com/s2/favicons?domain=www.locatel.com.ve&sz=128" ? image(128) : notFound()
+            ),
             "locatel.com.ve"
         );
         expect(result.kind === "found" && result.logo.size).toBe(128);
@@ -57,7 +59,7 @@ describe("findLogo", () => {
         const result = await findLogo(
             fetcher((url) => {
                 called.push(url);
-                return url.includes("google.com") ? image(16) : notFound();
+                return new URL(url).hostname === "www.google.com" ? image(16) : notFound();
             }),
             "ebay.com"
         );
@@ -67,7 +69,7 @@ describe("findLogo", () => {
 
     it("refuses a file claiming an impossible size", async () => {
         const result = await findLogo(
-            fetcher((url) => (url.includes("google.com") ? image(8192) : notFound())),
+            fetcher((url) => (new URL(url).hostname === "www.google.com" ? image(8192) : notFound())),
             "xfinity.com"
         );
         expect(result.kind).not.toBe("found");
@@ -76,12 +78,12 @@ describe("findLogo", () => {
     it("uses Wikidata when no source has an icon", async () => {
         const result = await findLogo(
             fetcher((url) => {
-                if (url.includes("query.wikidata.org")) {
+                if (new URL(url).hostname === "query.wikidata.org") {
                     return Response.json({
                         results: { bindings: [{ logo: { value: "http://commons.wikimedia.org/x.svg" } }] },
                     });
                 }
-                if (url.includes("commons.wikimedia.org")) {
+                if (new URL(url).hostname === "commons.wikimedia.org") {
                     return image(256);
                 }
                 return notFound();
