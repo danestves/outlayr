@@ -43,6 +43,19 @@ describe(sendEmail, () => {
         ).rejects.toThrow("Cloudflare refused the email with 502");
     });
 
+    it("names Cloudflare's error code when it rejects the message", async () => {
+        const http = stubHttp(() =>
+            Response.json(
+                { errors: [{ code: 10_001, message: "email.sending.error.invalid_request_schema" }], success: false },
+                { status: 400 }
+            )
+        );
+
+        await expect(
+            runEdge(sendEmail("owner@example.com", { subject: "Hi", text: "Body" }).pipe(Effect.provide(http.layer)))
+        ).rejects.toThrow("Cloudflare refused the email with 400 (10001)");
+    });
+
     it("sends nothing when a provider variable is missing", async () => {
         vi.stubEnv("EMAIL_FROM", "");
         const http = stubHttp(() => Response.json({}));
