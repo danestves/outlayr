@@ -38,9 +38,8 @@ function usePeriodLabel(firstDayOfMonth: number) {
 
 const CHIP_BUTTON = "h-8 max-w-64 min-w-0 gap-1.5 px-2.5 text-sm font-medium";
 
-function PeriodChip({ filters, ledger, setFilters }: Dashboard) {
-    const label = usePeriodLabel(ledger.firstDayOfMonth);
-    const keys = useMemo(() => {
+export function usePeriodKeys({ filters, ledger }: Pick<Dashboard, "filters" | "ledger">) {
+    return useMemo(() => {
         const earliest = ledger.rows.reduce((first, row) => (row.day < first ? row.day : first), ledger.today);
         const count = Math.min(
             monthsBetween(periodKeyOf(earliest, ledger.firstDayOfMonth), filters.currentKey) + 1,
@@ -48,6 +47,11 @@ function PeriodChip({ filters, ledger, setFilters }: Dashboard) {
         );
         return Array.from({ length: count }, (_, index) => shiftPeriodKey(filters.currentKey, -index));
     }, [filters.currentKey, ledger.firstDayOfMonth, ledger.rows, ledger.today]);
+}
+
+function PeriodChip({ filters, ledger, setFilters }: Dashboard) {
+    const label = usePeriodLabel(ledger.firstDayOfMonth);
+    const keys = usePeriodKeys({ filters, ledger });
     return (
         <Menu>
             <Menu.Trigger render={<Button className={CHIP_BUTTON} size="sm" variant="outline" />}>

@@ -20,6 +20,7 @@ export type DashboardSearch = typeof Search.Type;
 
 export interface FilterPatch {
     accounts?: readonly string[];
+    categories?: readonly string[];
     category?: string | null;
     period?: string | null;
 }
@@ -34,5 +35,15 @@ export const searchPatch = (patch: FilterPatch): DashboardSearch => ({
         accounts: patch.accounts.length > 0 ? patch.accounts.join(",") : undefined,
     }),
     ...(patch.category !== undefined && { category: patch.category ?? undefined }),
+    ...(patch.categories !== undefined && {
+        category: patch.categories.length > 0 ? patch.categories.join(",") : undefined,
+    }),
     ...(patch.period !== undefined && { period: patch.period ?? undefined }),
 });
+
+// An empty list means every account, so turning the last one off or the last one back on both land there.
+export function toggledAccounts(every: readonly string[], chosen: readonly string[], id: string) {
+    const on = chosen.length === 0 ? every : chosen;
+    const next = on.includes(id) ? on.filter((each) => each !== id) : [...on, id];
+    return next.length === every.length ? [] : next;
+}

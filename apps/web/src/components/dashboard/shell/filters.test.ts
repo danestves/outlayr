@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { accountIdsOf, dashboardSearch, periodKeyOr, searchPatch } from "./filters";
+import { accountIdsOf, dashboardSearch, periodKeyOr, searchPatch, toggledAccounts } from "./filters";
 
 describe("periodKeyOr", () => {
     it("keeps an earlier month", () => {
@@ -50,5 +50,18 @@ describe("dashboardSearch", () => {
         const result = await read({ accounts: 123, category: true, period: 2026 });
 
         expect(result).toStrictEqual({ value: { accounts: undefined, category: undefined, period: undefined } });
+    });
+});
+
+describe("toggledAccounts", () => {
+    const every = ["chase", "amex", "cash"];
+
+    it("deselects one account out of all of them", () => {
+        expect(toggledAccounts(every, [], "amex")).toStrictEqual(["chase", "cash"]);
+    });
+
+    it("returns to all accounts when the last one is turned off or the missing one back on", () => {
+        expect(toggledAccounts(every, ["amex"], "amex")).toStrictEqual([]);
+        expect(toggledAccounts(every, ["chase", "cash"], "amex")).toStrictEqual([]);
     });
 });

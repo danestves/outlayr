@@ -28,7 +28,7 @@ export function DashboardPending() {
     const { nav } = useIntlayer("dashboard");
     const onInsights = useLocation({ select: (location) => location.pathname.endsWith("/insights") });
     const held = useHeld();
-    const blank = <Workspace main={null} panel={null} title={onInsights ? nav.insights : nav.dashboard} />;
+    const blank = onInsights ? <Workspace main={null} panel={null} title={nav.insights} /> : null;
     if (held) {
         return blank;
     }

@@ -1,12 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useIntlayer } from "react-intlayer";
 
-import { HomeMain, HomePanel } from "@/components/dashboard/home/dashboard-home";
-import { Workspace } from "@/components/dashboard/shell/workspace";
+import { DashboardHome } from "@/components/dashboard/home/dashboard-home";
 
-export const Route = createFileRoute("/_account/app/")({ component: Dashboard });
-
-function Dashboard() {
-    const { nav } = useIntlayer("dashboard");
-    return <Workspace main={<HomeMain />} panel={<HomePanel />} title={nav.dashboard} />;
-}
+export const Route = createFileRoute("/_account/app/")({ component: DashboardHome });

@@ -10,6 +10,7 @@ import type { DashboardSearch, FilterPatch } from "./filters";
 
 export interface DashboardFilters {
     accounts: readonly string[];
+    categories: readonly string[];
     category: string | null;
     currentKey: string;
     period: Period;
@@ -33,7 +34,7 @@ export function useDashboard() {
     return dashboard;
 }
 
-const NO_ACCOUNTS: readonly string[] = [];
+const NONE: readonly string[] = [];
 
 export function useFilters(search: DashboardSearch, ledger: Ledger): DashboardFilters {
     const { firstDayOfMonth } = ledger;
@@ -42,8 +43,20 @@ export function useFilters(search: DashboardSearch, ledger: Ledger): DashboardFi
         .filter((id) => ledger.accounts.has(id))
         .join(",");
     const periodKey = periodKeyOr(search.period, currentKey);
-    const category = search.category !== undefined && ledger.categories.has(search.category) ? search.category : null;
-    const accounts = useMemo(() => (accountKey === "" ? NO_ACCOUNTS : accountKey.split(",")), [accountKey]);
+    const categoryKey = accountIdsOf(search.category)
+        .filter((id) => ledger.categories.has(id))
+        .join(",");
+    const accounts = useMemo(() => (accountKey === "" ? NONE : accountKey.split(",")), [accountKey]);
+    const categories = useMemo(() => (categoryKey === "" ? NONE : categoryKey.split(",")), [categoryKey]);
     const period = useMemo(() => periodOf(periodKey, firstDayOfMonth), [firstDayOfMonth, periodKey]);
-    return useMemo(() => ({ accounts, category, currentKey, period }), [accounts, category, currentKey, period]);
+    return useMemo(
+        () => ({
+            accounts,
+            categories,
+            category: categories.length === 1 ? (categories[0] ?? null) : null,
+            currentKey,
+            period,
+        }),
+        [accounts, categories, currentKey, period]
+    );
 }

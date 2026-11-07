@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 export const NEUTRAL_TILE = "#767676";
 
 const SIZES = {
+    lg: { box: "size-[26px] rounded-lg", glyph: 14, initial: "text-[11px]", emoji: "text-sm" },
     md: { box: "size-6 rounded-md", glyph: 14, initial: "text-[11px]", emoji: "text-sm" },
     sm: { box: "size-5 rounded-[5px]", glyph: 12, initial: "text-[10px]", emoji: "text-xs" },
 } as const;
@@ -28,7 +29,7 @@ export interface TileLook {
 
 export type AccountLook = ReturnType<typeof accountLook>;
 
-const INK = { dark: "text-[#131209]", light: "text-white", plain: "text-foreground" } as const;
+const INK = { dark: "text-[#131209]", light: "text-white", plain: "text-muted-foreground" } as const;
 
 interface TileProps {
     children?: ReactNode;
@@ -75,13 +76,19 @@ function SymbolGlyph({ look, size }: { look: Pick<TileLook, "emoji" | "icon">; s
 interface LookTileProps {
     look: TileLook;
     photos?: PhotoUrls;
+    plain?: boolean;
     size?: TileSize;
 }
 
-export function LookTile({ look, photos, size = "md" }: LookTileProps) {
+export function LookTile({ look, photos, plain = false, size = "md" }: LookTileProps) {
     const imageUrl = look.imageKey ? photos?.get(look.imageKey) : undefined;
     return (
-        <Tile color={look.color ?? NEUTRAL_TILE} imageUrl={imageUrl} ink="dark" size={size}>
+        <Tile
+            color={plain ? "var(--color-muted)" : (look.color ?? NEUTRAL_TILE)}
+            imageUrl={imageUrl}
+            ink={plain ? "plain" : "dark"}
+            size={size}
+        >
             <SymbolGlyph look={look} size={size} />
         </Tile>
     );

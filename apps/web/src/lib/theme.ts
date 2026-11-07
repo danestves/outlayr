@@ -24,6 +24,7 @@ export function subscribeTheme(listener: () => void) {
     const stopWatching = watchSystemTheme(() => {
         if (readTheme() === "system") {
             paintTheme("system");
+            listener();
         }
     });
     return () => {
