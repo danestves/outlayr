@@ -38,7 +38,7 @@ export function DashboardHome() {
                 <EveryDay quiet={quiet} setup={setup} />
                 <Budgets setup={setup} />
             </div>
-            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <div className="mt-4 grid grid-cols-1 gap-4 @4xl:grid-cols-3">
                 <Transactions quiet={quiet} setup={setup} />
                 <Accounts quiet={quiet} setup={setup} />
             </div>

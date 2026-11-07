@@ -83,7 +83,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
         const current = periodOf(filters.currentKey, ledger.firstDayOfMonth);
         const month = date.month(current.key);
         return (
-            <CardFrame className="lg:col-span-2" title={copy.title}>
+            <CardFrame className="@4xl:col-span-2" title={copy.title}>
                 <div className="dash-empty relative isolate min-h-[299px] justify-end pt-0 pb-7">
                     <QuietTable />
                     <b className="text-[15px] font-semibold">{copy.quietTitle}</b>
@@ -142,7 +142,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                     </Tabs.List>
                 </Tabs>
             }
-            className={`lg:col-span-2 ${setup ? "min-h-[375px]" : ""} ${active ? "ring-primary/55 ring-1" : ""}`}
+            className={`@4xl:col-span-2 ${setup ? "min-h-[375px]" : ""} ${active ? "ring-primary/55 ring-1" : ""}`}
             footer={
                 setup || every.length === 0 ? undefined : (
                     <>
