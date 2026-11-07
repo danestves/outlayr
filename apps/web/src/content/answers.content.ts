@@ -3037,23 +3037,26 @@ const answers = {
                         facts: [
                             {
                                 label: LABELS.price,
-                                source: "https://help.realbyteapps.com/hc/en-us/articles/10669850586649-Is-the-paid-app-an-one-time-payment-or-a-subscription-service",
+                                source: "https://apps.apple.com/us/app/money-manager-remove-ads/id564730202",
                                 text: t({
-                                    en: "Premium is a one-time purchase, not a subscription",
-                                    es: "Premium es un solo pago, no una suscripción",
+                                    en: "Free version. The full iPhone app is $5.99 once on the US App Store, not a subscription",
+                                    es: "Versión gratis. La app completa para iPhone cuesta US$5.99 en un solo pago en el App Store de EE. UU., sin suscripción",
                                 }),
                             },
                             {
                                 label: t({ en: "Free plan", es: "Plan gratis" }),
-                                source: "https://help.realbyteapps.com/hc/en-us/articles/360042746754-Refer-your-friends",
-                                text: t({ en: "Up to 15 accounts", es: "Hasta 15 cuentas" }),
+                                source: "https://apps.apple.com/us/app/money-manager-expense-budget/id560481810",
+                                text: t({
+                                    en: "Up to 10 accounts on iPhone",
+                                    es: "Hasta 10 cuentas en iPhone",
+                                }),
                             },
                             {
                                 label: LABELS.entries,
-                                source: "https://help.realbyteapps.com/hc/en-us/articles/360043536233-How-to-import-bulk-data-by-Excel-file",
+                                source: "https://play.google.com/store/apps/details?id=com.realbyteapps.moneymanagerfree",
                                 text: t({
-                                    en: "By hand, or in bulk from an Excel file",
-                                    es: "A mano, o en bloque desde un archivo de Excel",
+                                    en: "By hand, with backups and restores through Excel files",
+                                    es: "A mano, con copias de seguridad y restauración en archivos de Excel",
                                 }),
                             },
                             {
@@ -3087,18 +3090,64 @@ const answers = {
                     },
                     {
                         facts: [
-                            { label: LABELS.price, text: OUTLAYR.price },
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/us/app/subscription-tracker-outlayr/id6801652978",
+                                text: OUTLAYR.price,
+                            },
                             { label: LABELS.entries, text: OUTLAYR.entries },
-                            { label: LABELS.currencies, text: OUTLAYR.currencies },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://github.com/danestves/outlayr/blob/main/packages/money/src/catalog.generated.ts",
+                                text: OUTLAYR.currencies,
+                            },
                             { label: LABELS.platforms, text: OUTLAYR.platforms },
                             {
                                 label: t({ en: "Free plan", es: "Plan gratis" }),
+                                source: "https://github.com/danestves/outlayr/blob/main/apps/native/src/domain/pro-limits.ts",
                                 text: t({
-                                    en: "20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in one currency",
-                                    es: "20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en una moneda",
+                                    en: "3 accounts, 2 category budgets, and accounts in one currency",
+                                    es: "3 cuentas, 2 presupuestos por categoría y cuentas en una moneda",
                                 }),
                             },
-                            { label: LABELS.watch, text: OUTLAYR_WATCH },
+                            {
+                                label: t({ en: "Bank notifications", es: "Notificaciones del banco" }),
+                                source: t({
+                                    en: "https://tryoutlayr.com/blog/reading-bank-notifications-with-ai",
+                                    es: "https://tryoutlayr.com/es/blog/reading-bank-notifications-with-ai",
+                                }),
+                                text: t({
+                                    en: "Logged through a Shortcuts automation on iPhone or notification access on Android, 30 a month for free. A regex parser once filed a $22.99 SiteGround charge under Groceries, so with Smart fill on, notifications that show an amount now go to Anthropic",
+                                    es: "Se registran con una automatización de Atajos en iPhone o con el acceso a notificaciones en Android, 30 al mes gratis. Un lector con expresiones regulares registró un cargo de SiteGround de US$22.99 en Supermercado, así que con el autocompletado activo, las notificaciones con un monto ahora van a Anthropic",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Moving in", es: "Si vienes de otra app" }),
+                                source: "https://github.com/danestves/outlayr/blob/main/apps/native/src/domain/money-manager/archive.ts",
+                                text: t({
+                                    en: "CSV files and .mmbackup files from Orange Dog's Money Manager, both read on the phone. Backups from Realbyte's Money Manager, the one on this page, are not supported. Free plan limits still apply",
+                                    es: "Archivos CSV y archivos .mmbackup del Money Manager de Orange Dog, ambos leídos en el celular. Las copias del Money Manager de Realbyte, el de esta página, no son compatibles. Los límites del plan gratis siguen aplicando",
+                                }),
+                            },
+                            {
+                                label: t({ en: "What leaves the phone", es: "Qué sale del celular" }),
+                                source: t({
+                                    en: "https://tryoutlayr.com/privacy",
+                                    es: "https://tryoutlayr.com/es/privacy",
+                                }),
+                                text: t({
+                                    en: "Without an account, your entries, amounts, and notes stay on the phone. Usage analytics go to PostHog, on by default outside the EEA and UK, and you can turn them off",
+                                    es: "Sin una cuenta, tus registros, montos y notas se quedan en el celular. Las analíticas de uso van a PostHog, activas por defecto fuera del EEE y el Reino Unido, y puedes apagarlas",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://github.com/danestves/outlayr/blob/main/packages/backend/confect/lib/captures.ts",
+                                text: t({
+                                    en: "It does not connect to your bank. Voice entry and receipt scans need an account and a connection, with 20 captures every 30 days on the free plan",
+                                    es: "No se conecta con tu banco. Dictar y escanear recibos requiere una cuenta y conexión, con 20 capturas cada 30 días en el plan gratis",
+                                }),
+                            },
                         ],
                         name: "Outlayr",
                         slug: "outlayr",
@@ -3152,10 +3201,10 @@ const answers = {
                         facts: [
                             {
                                 label: LABELS.price,
-                                source: "https://support.budgetbakers.com/hc/en-us/articles/7151349344018-Everything-about-Premium",
+                                source: "https://apps.apple.com/us/app/wallet-daily-budget-profit/id1032467659",
                                 text: t({
-                                    en: "Free tier. Premium monthly, yearly, or lifetime, priced in the app",
-                                    es: "Plan gratis. Premium al mes, al año o de por vida, con precio en la app",
+                                    en: "Free tier. The US App Store lists Premium from $5.99 up to $49.99 for lifetime",
+                                    es: "Plan gratis. El App Store de EE. UU. muestra Premium desde US$5.99 hasta US$49.99 de por vida",
                                 }),
                             },
                             {
@@ -3181,10 +3230,10 @@ const answers = {
                             },
                             {
                                 label: LABELS.watch,
-                                source: "https://support.budgetbakers.com/hc/en-us/articles/7151349344018-Everything-about-Premium",
+                                source: "https://budgetbakers.com/en/products/wallet/",
                                 text: t({
-                                    en: "Premium prices are shown only in the app, and bank sync needs Premium",
-                                    es: "Los precios de Premium solo aparecen en la app, y la sincronización bancaria requiere Premium",
+                                    en: "Bank sync needs Premium, and the free tier is for tracking by hand",
+                                    es: "La sincronización bancaria requiere Premium, y el plan gratis es para registrar a mano",
                                 }),
                             },
                         ],
@@ -3248,8 +3297,8 @@ const answers = {
                     {
                         label: "Money Manager",
                         text: t({
-                            en: "Best if you want double-entry accounts for cards, savings, and loans, with Premium paid once",
-                            es: "Ideal si quieres contabilidad de doble entrada para tarjetas, ahorros y préstamos, con Premium en un solo pago",
+                            en: "Best if you want double-entry accounts for cards, savings, and loans, with the full version paid once",
+                            es: "Ideal si quieres contabilidad de doble entrada para tarjetas, ahorros y préstamos, con la versión completa en un solo pago",
                         }),
                     },
                     {
@@ -3284,8 +3333,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It depends on how you want to log. Monefy logs a purchase in two taps. Money Manager keeps double-entry accounts, up to 15 on its free version. Spendee and Wallet by BudgetBakers start free and sync bank accounts in Premium. Outlayr logs by sentence, voice, or receipt on its free plan. YNAB is paid after a 34-day trial.",
-                            es: "Depende de cómo quieras registrar. Monefy registra una compra en dos toques. Money Manager lleva contabilidad de doble entrada, con hasta 15 cuentas en su versión gratis. Spendee y Wallet by BudgetBakers empiezan gratis y sincronizan cuentas de banco en Premium. Outlayr registra con una oración, tu voz o un recibo en su plan gratis. YNAB es de pago después de una prueba de 34 días.",
+                            en: "It depends on how you want to log. Monefy logs a purchase in two taps. Money Manager keeps double-entry accounts, up to 10 on its free iPhone version. Spendee and Wallet by BudgetBakers start free and sync bank accounts in Premium. Outlayr logs by sentence, voice, or receipt on its free plan. YNAB is paid after a 34-day trial.",
+                            es: "Depende de cómo quieras registrar. Monefy registra una compra en dos toques. Money Manager lleva contabilidad de doble entrada, con hasta 10 cuentas en su versión gratis para iPhone. Spendee y Wallet by BudgetBakers empiezan gratis y sincronizan cuentas de banco en Premium. Outlayr registra con una oración, tu voz o un recibo en su plan gratis. YNAB es de pago después de una prueba de 34 días.",
                         }),
                         question: t({
                             en: "What is the best free expense tracker app?",
@@ -3302,6 +3351,16 @@ const answers = {
                             es: "¿Qué app para controlar gastos maneja varias monedas?",
                         }),
                     },
+                    {
+                        answer: t({
+                            en: "No. Outlayr has no bank connection. It logs what you type, say, or scan, your CSV files, and on iPhone and Android the purchase notifications you turn on. If you want your bank's transactions pulled in for you, Spendee and Wallet by BudgetBakers do it in Premium, and YNAB imports from select US, Canadian, UK, and EU banks.",
+                            es: "No. Outlayr no tiene conexión con bancos. Registra lo que escribes, dices o escaneas, tus archivos CSV y, en iPhone y Android, las notificaciones de compra que actives. Si quieres que los movimientos de tu banco entren solos, Spendee y Wallet by BudgetBakers lo hacen en Premium, y YNAB importa desde algunos bancos de EE. UU., Canadá, Reino Unido y la UE.",
+                        }),
+                        question: t({
+                            en: "Does Outlayr connect to my bank?",
+                            es: "¿Outlayr se conecta con mi banco?",
+                        }),
+                    },
                     COST_FAQ,
                     {
                         answer: t({
@@ -3312,8 +3371,8 @@ const answers = {
                     },
                 ],
                 lead: t({
-                    en: "Six expense trackers, each best for a different need: Monefy, Money Manager, Outlayr, Spendee, Wallet by BudgetBakers, and YNAB. All but YNAB are free to start. Outlayr is ours; the other five are not.",
-                    es: "Seis apps para controlar gastos, cada una mejor para algo distinto: Monefy, Money Manager, Outlayr, Spendee, Wallet by BudgetBakers y YNAB. Todas menos YNAB son gratis para empezar. Outlayr es nuestra; las otras cinco no.",
+                    en: "Six expense trackers, each best for a different need: Monefy, Money Manager, Outlayr, Spendee, Wallet by BudgetBakers, and YNAB. All but YNAB are free to start. Outlayr is ours, and its code is public, so you can check what we say about it.",
+                    es: "Seis apps para controlar gastos, cada una mejor para algo distinto: Monefy, Money Manager, Outlayr, Spendee, Wallet by BudgetBakers y YNAB. Todas menos YNAB son gratis para empezar. Outlayr es nuestra y su código es público, así que puedes comprobar lo que decimos de ella.",
                 }),
                 meta: {
                     description: t({
@@ -3331,12 +3390,12 @@ const answers = {
                         es: "Cada app de esta lista lleva lo que gastas desde el celular, y cada una sirve para algo distinto, desde registrar en dos toques hasta sincronizar el banco o darle un trabajo a cada dólar. Van en orden alfabético, no por puesto.",
                     }),
                     t({
-                        en: "Every detail about the other apps was read on that app's own site, help center, or store listing on the date below the table, and links to the page it came from. These are the facts as each app states them, not results of our own testing.",
-                        es: "Cada dato de las otras apps se leyó en el sitio, el centro de ayuda o la ficha de la tienda de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Son los datos tal como los da cada app, no resultados de pruebas nuestras.",
+                        en: "Every detail about the other apps was read on that app's own site or store listing on the date below the table, and links to the page it came from, so you can repeat the check. These are the facts as each app states them, not results of our own testing.",
+                        es: "Cada dato de las otras apps se leyó en el sitio o en la ficha de la tienda de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió, para que puedas repetir la revisión. Son los datos tal como los da cada app, no resultados de pruebas nuestras.",
                     }),
                     t({
-                        en: "Outlayr is ours. It gets the same facts as the others, including its own Watch out for row.",
-                        es: "Outlayr es nuestra. Tiene los mismos datos que las demás, incluida su propia fila de Ten en cuenta.",
+                        en: "Outlayr is ours. It gets the same facts as the others, including its own Watch out for row, and its limits link to the code, policy, or post behind them.",
+                        es: "Outlayr es nuestra. Tiene los mismos datos que las demás, incluida su propia fila de Ten en cuenta, y sus límites enlazan al código, la política o la publicación que los respalda.",
                     }),
                 ],
                 related: [
@@ -3862,10 +3921,18 @@ const answers = {
                             },
                             {
                                 label: LABELS.entries,
+                                source: "https://actualbudget.org/docs/transactions/importing/",
+                                text: t({
+                                    en: "By hand, or CSV, QIF, OFX, QFX, or CAMT files",
+                                    es: "A mano, o archivos CSV, QIF, OFX, QFX o CAMT",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Bank sync", es: "Sincronización bancaria" }),
                                 source: "https://actualbudget.org/docs/advanced/bank-sync/",
                                 text: t({
-                                    en: "By hand, QIF, OFX, QFX, CAMT.053, or CSV files, and bank sync through a server you run, with Enable Banking in Europe, SimpleFIN in North America, Akahu in New Zealand, or Pluggy.ai in Brazil",
-                                    es: "A mano, archivos QIF, OFX, QFX, CAMT.053 o CSV, y sincronización bancaria con un servidor propio, con Enable Banking en Europa, SimpleFIN en Norteamérica, Akahu en Nueva Zelanda o Pluggy.ai en Brasil",
+                                    en: "Through a server you run and your own API keys, with Enable Banking in Europe, SimpleFIN in North America, Akahu in New Zealand, or Pluggy.ai in Brazil",
+                                    es: "Con un servidor propio y tus propias claves de API, con Enable Banking en Europa, SimpleFIN en Norteamérica, Akahu en Nueva Zelanda o Pluggy.ai en Brasil",
                                 }),
                             },
                             {
@@ -3883,16 +3950,27 @@ const answers = {
                             },
                             {
                                 label: LABELS.phone,
-                                source: "https://actualbudget.org/docs/faq",
+                                source: "https://actualbudget.org/docs/faq/",
                                 text: t({
-                                    en: "A web app you add to the home screen. The official phone apps are deprecated",
-                                    es: "Una app web que agregas a la pantalla de inicio. Las apps oficiales para celular quedaron obsoletas",
+                                    en: "A web app you install to the home screen, or an official iOS app in beta on TestFlight. There is no official Android app yet",
+                                    es: "Una app web que instalas en la pantalla de inicio, o una app oficial para iOS en beta en TestFlight. Todavía no hay app oficial para Android",
                                 }),
                             },
                             {
                                 label: LABELS.license,
-                                source: "https://github.com/actualbudget/actual",
-                                text: t({ en: "MIT", es: "MIT" }),
+                                source: "https://github.com/actualbudget/actual/blob/master/LICENSE.txt",
+                                text: t({
+                                    en: "MIT",
+                                    es: "MIT",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Latest release", es: "Última versión" }),
+                                source: "https://github.com/actualbudget/actual/releases/tag/v26.11.0",
+                                text: t({
+                                    en: "v26.11.0, November 2, 2026",
+                                    es: "v26.11.0, 2 de noviembre de 2026",
+                                }),
                             },
                             {
                                 label: LABELS.watch,
@@ -3943,23 +4021,42 @@ const answers = {
                             },
                             {
                                 label: LABELS.license,
-                                source: "https://github.com/jameskokoska/Cashew",
-                                text: t({ en: "GPL-3.0", es: "GPL-3.0" }),
+                                source: "https://github.com/jameskokoska/Cashew/issues/725#issuecomment-4362504635",
+                                text: t({
+                                    en: 'GPL-3.0 for the public repository, not for the current app. The maintainer wrote in May 2026: "For now, the production code will be not publicly available. Please note this is not a forever decision."',
+                                    es: "GPL-3.0 para el repositorio público, no para la app actual. En mayo de 2026 su creador escribió que, por ahora, el código de producción no será público, y que no es una decisión para siempre",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Latest release", es: "Última versión" }),
+                                source: "https://apps.apple.com/us/app/cashew-expense-budget-tracker/id6463662930",
+                                text: t({
+                                    en: "5.10 on the App Store, October 22, 2026",
+                                    es: "5.10 en el App Store, 22 de octubre de 2026",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Public code", es: "Código público" }),
+                                source: "https://github.com/jameskokoska/Cashew/commits/main/",
+                                text: t({
+                                    en: "Stops at version 5.4.3, with the last code change on October 9, 2024. Later commits only edit the README",
+                                    es: "Llega hasta la versión 5.4.3, con el último cambio de código el 9 de octubre de 2024. Los commits posteriores solo editan el README",
+                                }),
                             },
                             {
                                 label: LABELS.watch,
-                                source: "https://apps.apple.com/us/app/cashew-expense-budget-tracker/id6463662930",
+                                source: "https://github.com/jameskokoska/Cashew/issues/725#issuecomment-4364354802",
                                 text: t({
-                                    en: "Some features are in Cashew Pro, a paid upgrade",
-                                    es: "Algunas funciones están en Cashew Pro, una mejora de pago",
+                                    en: "You can't read the code of the app you install, though the maintainer says its privacy policy and handling of data are unchanged. Some features are in Cashew Pro, a paid upgrade",
+                                    es: "No puedes leer el código de la app que instalas, aunque su creador dice que su política de privacidad y el manejo de datos no cambiaron. Algunas funciones están en Cashew Pro, una mejora de pago",
                                 }),
                             },
                         ],
                         name: "Cashew",
                         slug: "cashew",
                         summary: t({
-                            en: "Cashew is an expense and budget tracker for iPhone, Android, and the web, free with an optional Pro, and open source under GPL-3.0.",
-                            es: "Cashew es una app de gastos y presupuesto para iPhone, Android y la web, gratis con un Pro opcional, y de código abierto con licencia GPL-3.0.",
+                            en: "Cashew is an expense and budget tracker for iPhone, Android, and the web, free with an optional Pro. Its older code is public under GPL-3.0, but the code of the current app is not.",
+                            es: "Cashew es una app de gastos y presupuesto para iPhone, Android y la web, gratis con un Pro opcional. Su código anterior es público con licencia GPL-3.0, pero el de la app actual no.",
                         }),
                     },
                     {
@@ -4003,8 +4100,19 @@ const answers = {
                             },
                             {
                                 label: LABELS.license,
-                                source: "https://github.com/firefly-iii/firefly-iii",
-                                text: t({ en: "AGPL-3.0", es: "AGPL-3.0" }),
+                                source: "https://github.com/firefly-iii/firefly-iii/blob/main/LICENSE",
+                                text: t({
+                                    en: "AGPL-3.0",
+                                    es: "AGPL-3.0",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Latest release", es: "Última versión" }),
+                                source: "https://github.com/firefly-iii/firefly-iii/releases/tag/v6.7.9",
+                                text: t({
+                                    en: "v6.7.9, October 11, 2026",
+                                    es: "v6.7.9, 11 de octubre de 2026",
+                                }),
                             },
                             {
                                 label: LABELS.watch,
@@ -4055,8 +4163,19 @@ const answers = {
                             },
                             {
                                 label: LABELS.license,
-                                source: "https://github.com/flow-mn/flow",
-                                text: t({ en: "GPL-3.0", es: "GPL-3.0" }),
+                                source: "https://github.com/flow-mn/flow/blob/develop/LICENSE",
+                                text: t({
+                                    en: "GPL-3.0",
+                                    es: "GPL-3.0",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Latest release", es: "Última versión" }),
+                                source: "https://github.com/flow-mn/flow/releases/tag/0.26.0",
+                                text: t({
+                                    en: "0.26.0, October 18, 2026. The App Store shows the same version as the code",
+                                    es: "0.26.0, 18 de octubre de 2026. El App Store muestra la misma versión que el código",
+                                }),
                             },
                             {
                                 label: LABELS.watch,
@@ -4076,20 +4195,85 @@ const answers = {
                     },
                     {
                         facts: [
-                            { label: LABELS.price, text: OUTLAYR.price },
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/us/app/subscription-tracker-outlayr/id6801652978",
+                                text: OUTLAYR.price,
+                            },
                             { label: LABELS.entries, text: OUTLAYR.entries },
-                            { label: LABELS.currencies, text: OUTLAYR.currencies },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://github.com/danestves/outlayr/blob/main/packages/money/src/catalog.generated.ts",
+                                text: OUTLAYR.currencies,
+                            },
                             { label: LABELS.platforms, text: OUTLAYR.platforms },
                             {
                                 label: LABELS.license,
-                                source: "https://github.com/danestves/outlayr",
-                                text: t({ en: "GPL-3.0 app, AGPL-3.0 server", es: "App GPL-3.0, servidor AGPL-3.0" }),
+                                source: "https://github.com/danestves/outlayr#license",
+                                text: t({
+                                    en: "GPL-3.0 app, AGPL-3.0 server",
+                                    es: "App GPL-3.0, servidor AGPL-3.0",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Latest release", es: "Última versión" }),
+                                source: "https://apps.apple.com/us/app/subscription-tracker-outlayr/id6801652978",
+                                text: t({
+                                    en: "1.11.0 on the App Store, November 5, 2026. The repository has no tagged releases, so you can't match a store build to a commit",
+                                    es: "1.11.0 en el App Store, 5 de noviembre de 2026. El repositorio no tiene versiones etiquetadas, así que no puedes vincular una versión de la tienda con un commit",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Not in the code", es: "Fuera del código" }),
+                                source: "https://github.com/danestves/outlayr#without-a-hugeicons-pro-license",
+                                text: t({
+                                    en: "The icons come from Hugeicons Pro, a paid package. Without a license, a build draws free icons, with a dashed circle for any the free set lacks, and type-checking and a few test suites still need the paid packages",
+                                    es: "Los íconos vienen de Hugeicons Pro, un paquete de pago. Sin licencia, una compilación usa íconos gratis, con un círculo punteado para los que falten, y la revisión de tipos y algunas pruebas siguen necesitando los paquetes de pago",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Your own server", es: "Servidor propio" }),
+                                source: "https://github.com/danestves/outlayr#getting-started",
+                                text: t({
+                                    en: "The repository documents a local server for development, not a self-hosting guide, and the store apps connect only to Outlayr's servers. A build with no server has no sign-in, sync, exchange rates, or AI. If you want your own server, pick Actual Budget or Firefly III",
+                                    es: "El repositorio documenta un servidor local para desarrollo, no una guía para alojarlo, y las apps de las tiendas solo se conectan a los servidores de Outlayr. Una compilación sin servidor no tiene inicio de sesión, sincronización, tasas de cambio ni IA. Si quieres tu propio servidor, elige Actual Budget o Firefly III",
+                                }),
+                            },
+                            {
+                                label: t({ en: "What leaves the phone", es: "Qué sale del celular" }),
+                                source: t({
+                                    en: "https://tryoutlayr.com/privacy",
+                                    es: "https://tryoutlayr.com/es/privacy",
+                                }),
+                                text: t({
+                                    en: "Without an account, your entries, amounts, and notes stay on the phone. Usage analytics and crash reports go to PostHog, on by default outside the EEA and UK, never with amounts, merchants, notes, or names. You can turn them off",
+                                    es: "Sin una cuenta, tus registros, montos y notas se quedan en el celular. Las analíticas de uso y los reportes de fallas van a PostHog, activos por defecto fuera del EEE y el Reino Unido, nunca con montos, comercios, notas ni nombres. Puedes apagarlos",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Importing", es: "Importación" }),
+                                source: t({
+                                    en: "https://tryoutlayr.com/privacy#csv-import",
+                                    es: "https://tryoutlayr.com/es/privacy#importación-de-csv",
+                                }),
+                                text: t({
+                                    en: "CSV files are read on the phone. With Pro and Smart fill, up to 200 descriptions it can't match go to Anthropic at a time, with runs of four or more digits removed. PDF statements, also Pro, are uploaded, read, and deleted. No OFX or QIF, which Actual Budget reads",
+                                    es: "Los archivos CSV se leen en el celular. Con Pro y el autocompletado, hasta 200 descripciones que no reconoce van a Anthropic cada vez, sin las series de cuatro dígitos o más. Los estados de cuenta en PDF, también con Pro, se suben, se leen y se borran. No lee OFX ni QIF, que Actual Budget sí lee",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Public numbers", es: "Números públicos" }),
+                                source: t({ en: "https://tryoutlayr.com/open", es: "https://tryoutlayr.com/es/open" }),
+                                text: t({
+                                    en: "People, entries, and revenue, updated daily, each linked to the code that counts it",
+                                    es: "Personas, registros e ingresos, actualizados a diario, cada uno enlazado al código que lo cuenta",
+                                }),
                             },
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "Voice entry and receipt scans run on Outlayr's servers through Anthropic and ElevenLabs, and need an account. Typing works offline",
-                                    es: "Dictar y escanear recibos pasa por los servidores de Outlayr, con Anthropic y ElevenLabs, y requiere una cuenta. Escribir funciona sin conexión",
+                                    en: "Voice entry and receipt scans run on Outlayr's servers through Anthropic and ElevenLabs, and need an account. Typing works offline, but new exchange rates need a connection",
+                                    es: "Dictar y escanear recibos pasa por los servidores de Outlayr, con Anthropic y ElevenLabs, y requiere una cuenta. Escribir funciona sin conexión, pero las tasas de cambio nuevas necesitan conexión",
                                 }),
                             },
                         ],
@@ -4109,8 +4293,8 @@ const answers = {
                     {
                         label: "Cashew",
                         text: t({
-                            en: "Best if you want one app on iPhone, Android, and the web, with CSV and Google Sheets import",
-                            es: "Ideal si quieres una sola app en iPhone, Android y la web, con importación de CSV y Google Sheets",
+                            en: "Best if you want one app on iPhone, Android, and the web, with CSV and Google Sheets import, and don't need to read its current code",
+                            es: "Ideal si quieres una sola app en iPhone, Android y la web, con importación de CSV y Google Sheets, y no necesitas leer su código actual",
                         }),
                     },
                     {
@@ -4138,8 +4322,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It depends on where you want it to run. Cashew and Flow are phone apps, and Cashew also runs on the web. Actual Budget runs on Windows, macOS, Linux, and the web, with envelope budgeting. Firefly III runs on your own server. Outlayr logs by sentence, voice, or receipt on iPhone and Android. All five are free to start.",
-                            es: "Depende de dónde quieras usarla. Cashew y Flow son apps para el celular, y Cashew también funciona en la web. Actual Budget funciona en Windows, macOS, Linux y la web, con presupuesto por sobres. Firefly III funciona en tu propio servidor. Outlayr registra con una oración, tu voz o un recibo en iPhone y Android. Las cinco son gratis para empezar.",
+                            en: "It depends on where you want it to run. Flow is a phone app that works offline. Actual Budget runs on Windows, macOS, Linux, and the web, with envelope budgeting. Firefly III runs on your own server. Outlayr logs by sentence, voice, or receipt on iPhone and Android. All four publish the code of their current version and are free to start. Cashew is free too, but the code of its current app is no longer public.",
+                            es: "Depende de dónde quieras usarla. Flow es una app para el celular que funciona sin conexión. Actual Budget funciona en Windows, macOS, Linux y la web, con presupuesto por sobres. Firefly III funciona en tu propio servidor. Outlayr registra con una oración, tu voz o un recibo en iPhone y Android. Las cuatro publican el código de su versión actual y son gratis para empezar. Cashew también es gratis, pero el código de su app actual ya no es público.",
                         }),
                         question: t({
                             en: "What is the best open source expense tracker?",
@@ -4148,25 +4332,35 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Cashew, Flow, and Outlayr are on the App Store. Actual Budget runs as a web app you add to the home screen, since its official phone apps are deprecated. Firefly III works through apps made by third parties.",
-                            es: "Cashew, Flow y Outlayr están en el App Store. Actual Budget funciona como una app web que agregas a la pantalla de inicio, porque sus apps oficiales para celular quedaron obsoletas. Firefly III funciona con apps hechas por terceros.",
+                            en: "Flow and Outlayr are on the App Store with public code. Actual Budget has an official iOS app in beta on TestFlight, or a web app you install to the home screen. Firefly III works through apps made by third parties. Cashew is on the App Store too, but the code of its current app is not public.",
+                            es: "Flow y Outlayr están en el App Store con código público. Actual Budget tiene una app oficial para iOS en beta en TestFlight, o una app web que instalas en la pantalla de inicio. Firefly III funciona con apps hechas por terceros. Cashew también está en el App Store, pero el código de su app actual no es público.",
                         }),
                         question: t({
                             en: "Which open source expense tracker works on iPhone?",
                             es: "¿Qué app de gastos de código abierto funciona en iPhone?",
                         }),
                     },
+                    {
+                        answer: t({
+                            en: "Only in part. Its public repository is still GPL-3.0, but the code stops at version 5.4.3, last changed on October 9, 2024, while the App Store has 5.10. In May 2026 its maintainer said the production code will not be public for now, and that this is not a forever decision.",
+                            es: "Solo en parte. Su repositorio público sigue con licencia GPL-3.0, pero el código llega hasta la versión 5.4.3, con su último cambio el 9 de octubre de 2024, mientras que el App Store tiene la 5.10. En mayo de 2026 su creador dijo que, por ahora, el código de producción no será público, y que no es una decisión para siempre.",
+                        }),
+                        question: t({
+                            en: "Is Cashew still open source?",
+                            es: "¿Cashew sigue siendo de código abierto?",
+                        }),
+                    },
                     { answer: OPEN_SOURCE_ANSWER, question: OPEN_SOURCE_QUESTION },
                     COST_FAQ,
                 ],
                 lead: t({
-                    en: "Five open source expense trackers, each best for a different need: Actual Budget, Cashew, Firefly III, Flow, and Outlayr. Anyone can read the code of all five. Outlayr is ours; the other four are not.",
-                    es: "Cinco apps de gastos de código abierto, cada una mejor para algo distinto: Actual Budget, Cashew, Firefly III, Flow y Outlayr. Cualquiera puede leer el código de las cinco. Outlayr es nuestra; las otras cuatro no.",
+                    en: "Four open source expense trackers whose current code anyone can read, each best for a different need: Actual Budget, Firefly III, Flow, and Outlayr. Cashew is here too, because its public repository is GPL-3.0, but the code of its current app is no longer public. Outlayr is ours; the others are not.",
+                    es: "Cuatro apps de gastos de código abierto cuyo código actual cualquiera puede leer, cada una mejor para algo distinto: Actual Budget, Firefly III, Flow y Outlayr. Cashew también aparece porque su repositorio público tiene licencia GPL-3.0, pero el código de su app actual ya no es público. Outlayr es nuestra; las demás no.",
                 }),
                 meta: {
                     description: t({
-                        en: "Actual Budget, Cashew, Firefly III, Flow, and Outlayr compared on price, entry, currencies, platforms, and license. Outlayr is ours; the others are not.",
-                        es: "Actual Budget, Cashew, Firefly III, Flow y Outlayr comparadas en precio, registro, monedas, plataformas y licencia. Outlayr es nuestra; las demás no.",
+                        en: "Actual Budget, Firefly III, Flow, and Outlayr compared on license, latest release, and platforms, plus what changed at Cashew. Outlayr is ours.",
+                        es: "Actual Budget, Firefly III, Flow y Outlayr comparadas en licencia, última versión y plataformas, y qué cambió en Cashew. Outlayr es nuestra.",
                     }),
                     title: t({
                         en: "Best Open Source Expense Tracker Apps (2026) · Outlayr",
@@ -4175,16 +4369,16 @@ const answers = {
                 },
                 picked: [
                     t({
-                        en: "Each app here publishes its code under an open source license, and each one fits a different need, from a phone app that works offline to a server you run yourself. They are in alphabetical order, not ranked.",
-                        es: "Cada app de esta lista publica su código con una licencia de código abierto, y cada una sirve para algo distinto, desde una app para el celular que funciona sin conexión hasta un servidor que manejas tú. Van en orden alfabético, no por puesto.",
+                        en: "Four apps here publish the code of their current version under an open source license, and each one fits a different need, from a phone app that works offline to a server you run yourself. Cashew's rows explain why it is the exception. They are in alphabetical order, not ranked.",
+                        es: "Cuatro apps de esta lista publican el código de su versión actual con una licencia de código abierto, y cada una sirve para algo distinto, desde una app para el celular que funciona sin conexión hasta un servidor que manejas tú. Las filas de Cashew explican por qué es la excepción. Van en orden alfabético, no por puesto.",
                     }),
                     t({
-                        en: "Every detail about the other apps was read on that app's own site, code repository, or store listing on the date below the table, and links to the page it came from. These are the facts as each app states them, not results of our own testing.",
-                        es: "Cada dato de las otras apps se leyó en el sitio, el repositorio de código o la ficha de la tienda de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Son los datos tal como los da cada app, no resultados de pruebas nuestras.",
+                        en: "On the date below the table, we read each app's license, latest release, and commit history on GitHub, compared the version in the code with the App Store where an app is sold there, and read its docs and site. Each row links to the page it came from, so you can repeat the check. These are the facts as each app publishes them, not results of our own testing.",
+                        es: "En la fecha que aparece bajo la tabla, leímos la licencia, la última versión y el historial de commits de cada app en GitHub, comparamos la versión del código con la del App Store cuando la app está ahí, y leímos su documentación y su sitio. Cada fila enlaza a la página de donde salió, para que puedas repetir la revisión. Son los datos tal como los publica cada app, no resultados de pruebas nuestras.",
                     }),
                     t({
-                        en: "Outlayr is ours. It gets the same facts as the others, including its own Watch out for row.",
-                        es: "Outlayr es nuestra. Tiene los mismos datos que las demás, incluida su propia fila de Ten en cuenta.",
+                        en: "Outlayr is ours. It gets the same facts as the others, plus what isn't open and what leaves the phone, each linked to the code or policy behind it.",
+                        es: "Outlayr es nuestra. Tiene los mismos datos que las demás, además de lo que no es abierto y lo que sale del celular, cada uno enlazado al código o la política que lo respalda.",
                     }),
                 ],
                 related: [

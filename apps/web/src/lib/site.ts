@@ -57,8 +57,9 @@ export const LISTS_CHECKED = new Date(Date.UTC(2026, 9, 9));
 
 const LISTS_RECHECKED = {
     "best-budget-apps": new Date(Date.UTC(2026, 9, 23)),
+    "best-expense-tracker-apps": new Date(Date.UTC(2026, 10, 7)),
     "best-expense-tracker-apps-latin-america": new Date(Date.UTC(2026, 10, 3)),
-    "best-open-source-expense-tracker-apps": new Date(Date.UTC(2026, 9, 20)),
+    "best-open-source-expense-tracker-apps": new Date(Date.UTC(2026, 10, 7)),
     "best-subscription-tracker-apps": new Date(Date.UTC(2026, 10, 7)),
     "mint-alternative": new Date(Date.UTC(2026, 9, 23)),
     "track-money-sent-home": new Date(Date.UTC(2026, 10, 3)),
