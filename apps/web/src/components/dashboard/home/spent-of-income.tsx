@@ -1,5 +1,6 @@
 import { RiArrowRightUpLine } from "@remixicon/react";
 import { Link } from "@tanstack/react-router";
+import { RangeMeter } from "panelui-web/range-meter";
 import { useMemo } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -14,79 +15,12 @@ import { percentChange } from "./kpi-group";
 import type { SetupState } from "./model";
 import { Cover, GhostRuler, LATE_FADE, QuietBars } from "./setup";
 
-const BARS = 51;
-const WIDTH = 336;
-const BAR = 3;
-const BASELINE = 94;
-const REST_HEIGHT = 14;
-const SWELL = 46;
-const SWELL_SPREAD = 22;
-const MARK_TOP = 104;
-const PILL_HEIGHT = 24;
-const PILL_MIN = 80;
-const PILL_CHAR = 7.6;
 const PERCENT = 100;
 
 // The ruler's ends are income, so a month that overspends pins at the right edge instead of running off the card.
 const capitalize = (text: string) => `${text.charAt(0).toLocaleUpperCase()}${text.slice(1)}`;
 
 const share = (amount: number, income: number) => (income > 0 ? Math.min(amount / income, 1) : Number(amount > 0));
-
-function Ruler({ label, mark, value }: { label: string; mark: number; value: number }) {
-    const bars = Array.from({ length: BARS }, (_, index) => {
-        const at = index / (BARS - 1);
-        const distance = (at - value) * BARS;
-        const swell = Math.exp(-(distance * distance) / SWELL_SPREAD);
-        const height = REST_HEIGHT + swell * SWELL;
-        const filled = at <= value;
-        return (
-            <rect
-                height={height}
-                key={at}
-                rx={BAR / 2}
-                style={{
-                    fill: filled ? "var(--color-app-tint)" : "var(--color-app-strong)",
-                    fillOpacity: filled ? 0.5 + swell * 0.5 : 1,
-                }}
-                width={BAR}
-                x={at * (WIDTH - BAR)}
-                y={BASELINE - height}
-            />
-        );
-    });
-    const pill = Math.max(PILL_MIN, label.length * PILL_CHAR + 12);
-    const valueX = value * (WIDTH - BAR);
-    const markX = mark * (WIDTH - BAR);
-    const pillX = Math.min(Math.max(valueX - pill / 2, 0), WIDTH - pill);
-    return (
-        <svg aria-hidden className="block h-auto w-[calc(100%+2px)] overflow-visible" viewBox={`0 0 ${WIDTH} 124`}>
-            {bars}
-            <rect
-                height={7}
-                rx={1}
-                style={{ fill: "var(--color-app-ink)" }}
-                transform={`rotate(45 ${markX} ${MARK_TOP + 3.5})`}
-                width={7}
-                x={markX - 3}
-                y={MARK_TOP}
-            />
-            <rect height={PILL_HEIGHT} rx={6} style={{ fill: "var(--color-app-ink)" }} width={pill} x={pillX} />
-            <text
-                style={{
-                    fill: "var(--color-app-bg)",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    textAnchor: "middle",
-                }}
-                x={pillX + pill / 2}
-                y={16.5}
-            >
-                {label}
-            </text>
-        </svg>
-    );
-}
 
 export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger } = useDashboard();
@@ -157,11 +91,20 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
                 )}
             </div>
             <div className="flex-1 px-5 pb-[18px]">
-                <Ruler label={shown(spent)} mark={share(prior, income)} value={share(spent, income)} />
-                <div className="dash-figure text-muted-foreground mt-3 flex items-baseline justify-between text-[13px]">
-                    <span>{moneyIn(0, ledger.currency, "auto", false)}</span>
-                    <span>{shown(income)}</span>
-                </div>
+                <RangeMeter
+                    className="dash-figure [&>[aria-hidden]]:h-16"
+                    formatValue={() => shown(spent)}
+                    label={copy.spentOfIncome.title.value}
+                    marker={share(prior, income)}
+                    max={1}
+                    value={share(spent, income)}
+                    valueText={shown(spent)}
+                />
+                <RangeMeter.Scale
+                    className="dash-figure mt-5 text-[13px]"
+                    end={shown(income)}
+                    start={moneyIn(0, ledger.currency, "auto", false)}
+                />
                 <div className="mt-[15px] flex items-baseline justify-between text-sm">
                     <span className="text-muted-foreground flex items-center gap-2 text-[13px]">
                         <u aria-hidden className="bg-foreground block size-[7px] rotate-45 rounded-[1px]" />
