@@ -12,6 +12,7 @@ import filmSorted from "../content/film-sorted.content";
 import home from "../content/home.content";
 import site from "../content/site.content";
 import story from "../content/story.content";
+import support from "../content/support.content";
 import tools from "../content/tools.content";
 import { TRANSLATED } from "./i18n";
 
@@ -33,6 +34,13 @@ const PAGE_CONTENT: Record<string, readonly unknown[]> = {
         filmSorted.content,
         about.content.allGuides,
     ],
+    "/guides": [...SHELL, answers.content.hubs.guides],
+    "/guides/expense-tracker-template": [
+        ...SHELL,
+        answers.content.labels,
+        answers.content.guides["expense-tracker-template"],
+    ],
+    "/support": [...SHELL, support.content],
     "/tools": [...TOOL, tools.content.hub],
     "/tools/50-30-20-budget-calculator": [...TOOL, tools.content.pages["50-30-20-budget-calculator"]],
     "/tools/installment-calculator": [...TOOL, tools.content.pages["installment-calculator"]],

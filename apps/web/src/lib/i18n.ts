@@ -33,9 +33,11 @@ const TOOL_PATHS = [
     "/tools/subscription-cost-calculator",
 ];
 
+const PAGE_PATHS = ["/", "/support", "/guides", "/guides/expense-tracker-template", ...TOOL_PATHS];
+
 export const TRANSLATED: Partial<Record<Locale, ReadonlySet<string>>> = {
-    fr: new Set(["/", ...TOOL_PATHS]),
-    pt: new Set(["/", ...TOOL_PATHS]),
+    fr: new Set(PAGE_PATHS),
+    pt: new Set(PAGE_PATHS),
 };
 
 const TRAILING_SLASH = /(?<=.)\/$/u;

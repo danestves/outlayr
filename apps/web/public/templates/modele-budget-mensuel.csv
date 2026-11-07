@@ -1,0 +1,9 @@
+﻿Date,Libellé (Note),Montant (Amount),Devise (Currency),Catégorie (Category),Type
+2026-10-01,Salaire,2400.00,EUR,Salaire,Income
+2026-10-01,Loyer,850.00,EUR,Loyer,Expense
+2026-10-03,Monoprix,96.40,EUR,Courses,Expense
+2026-10-05,Pharmacie,18.90,EUR,Santé,Expense
+2026-10-08,Facture d'électricité,64.20,EUR,Charges,Expense
+2026-10-11,Dîner à Montréal,58.00,CAD,Restaurants,Expense
+2026-10-14,Netflix,13.49,EUR,Loisirs,Expense
+2026-10-18,SNCF,45.00,EUR,Transports,Expense
