@@ -1,8 +1,9 @@
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { describe, expect, it } from "vite-plus/test";
 
+import type { CategoryBudget } from "../../../lib/dashboard-series";
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
-import { budgetFill, categoryChoices, everyDay, setupState } from "./model";
+import { budgetRows, categoryChoices, everyDay, setupState } from "./model";
 
 const NOW = Date.parse("2026-10-10T15:00:00Z");
 const period = { days: 31, from: "2026-10-01", key: "2026-10", to: "2026-10-31" };
@@ -101,15 +102,70 @@ describe("everyDay", () => {
     });
 });
 
-describe("budgetFill", () => {
-    it("shows spent over limit, then limit over spent once it overruns", () => {
-        expect(budgetFill({ effectiveLimit: 200, spent: 50 })).toBe(0.25);
-        expect(budgetFill({ effectiveLimit: 50, spent: 200 })).toBe(0.25);
+describe("budgetRows", () => {
+    const standing = (spent: number, effectiveLimit: number): CategoryBudget => ({
+        effectiveLimit,
+        from: "2026-10-01",
+        limit: effectiveLimit,
+        overBudget: spent > effectiveLimit,
+        period: "monthly",
+        remaining: effectiveLimit - spent,
+        runOut: null,
+        spent,
+        to: "2026-10-31",
+    });
+    const target = (id: string, topId = id) => ({ color: "#767676", id, name: id, topId });
+    const flat = {
+        budgetTargets: new Map(["rent", "food", "coffee", "gym"].map((id) => [id, target(id)])),
+        currency: "USD",
+    };
+
+    it("lists overspent budgets first, so a small overrun is not hidden under big spending", () => {
+        const { rows } = budgetRows(
+            flat,
+            new Map([
+                ["rent", standing(1800, 1800)],
+                ["gym", standing(100, 200)],
+                ["coffee", standing(90, 60)],
+                ["food", standing(500, 400)],
+            ])
+        );
+
+        expect(rows.map((row) => row.category.id)).toStrictEqual(["food", "coffee", "rent", "gym"]);
     });
 
-    it("stays empty with no limit or no spending", () => {
-        expect(budgetFill({ effectiveLimit: 0, spent: 50 })).toBe(0);
-        expect(budgetFill({ effectiveLimit: 50, spent: 0 })).toBe(0);
+    it("counts a subcategory's spending once when its parent has a budget too", () => {
+        const nested = {
+            ...flat,
+            budgetTargets: new Map([
+                ["food", target("food")],
+                ["costco", target("costco", "food")],
+                ["rent", target("rent")],
+            ]),
+        };
+
+        const { left, limit } = budgetRows(
+            nested,
+            new Map([
+                ["food", standing(300, 400)],
+                ["costco", standing(200, 150)],
+                ["rent", standing(1000, 1000)],
+            ])
+        );
+
+        expect({ left, limit }).toStrictEqual({ left: 100, limit: 1400 });
+    });
+
+    it("keeps a subcategory budget in the total when its parent has none", () => {
+        const { left, limit } = budgetRows(
+            {
+                ...flat,
+                budgetTargets: new Map([["costco", target("costco", "food")]]),
+            },
+            new Map([["costco", standing(200, 150)]])
+        );
+
+        expect({ left, limit }).toStrictEqual({ left: -50, limit: 150 });
     });
 });
 

@@ -8,6 +8,9 @@
 @source "../node_modules/panelui-web/dist/components/frame/index.js";
 @source "../node_modules/panelui-web/dist/components/menu/index.js";
 @source "../node_modules/panelui-web/dist/components/range-meter/index.js";
+@source "../node_modules/panelui-web/dist/components/rolling-number/index.js";
+@source "../node_modules/panelui-web/dist/components/stat/index.js";
+@source "../node_modules/panelui-web/dist/components/usage/index.js";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
@@ -1400,21 +1403,6 @@ html:has(.app-shell) {
         height: 26px;
         border: 1px solid var(--color-app-ghost);
         border-radius: 8px;
-    }
-
-    .dash-gbar {
-        position: relative;
-        height: 8px;
-        margin-top: 7px;
-        border: 1px solid var(--color-app-ghost);
-        border-radius: 99px;
-    }
-
-    .dash-gbar > i {
-        position: absolute;
-        inset: -1px auto -1px -1px;
-        border: 1px dashed var(--color-app-ghost);
-        border-radius: 99px;
     }
 
     .dash-empty {

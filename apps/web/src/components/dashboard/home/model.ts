@@ -90,26 +90,32 @@ function biggestCategory(rows: readonly LedgerRow[]) {
     return [...totals].toSorted((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 }
 
-export function budgetRows(ledger: Ledger, standings: ReadonlyMap<string, CategoryBudget>) {
+const overBy = ({ overBudget, remaining }: Pick<CategoryBudget, "overBudget" | "remaining">) =>
+    overBudget ? -remaining : 0;
+
+export function budgetRows(
+    ledger: Pick<Ledger, "budgetTargets" | "currency">,
+    standings: ReadonlyMap<string, CategoryBudget>
+) {
     const rows = [...standings].flatMap(([id, standing]) => {
         const category = ledger.budgetTargets.get(id);
         return category ? [{ category, standing }] : [];
     });
+    const counted = rows.filter(({ category }) => category.id === category.topId || !standings.has(category.topId));
+    const limit = counted.reduce((sum, { standing }) => sum + standing.effectiveLimit, 0);
+    const spent = counted.reduce((sum, { standing }) => sum + standing.spent, 0);
     return {
+        left: round(ledger, limit - spent),
+        limit: round(ledger, limit),
         over: rows.filter((row) => row.standing.overBudget).length,
         rows: rows.toSorted(
-            (a, b) => b.standing.spent - a.standing.spent || b.standing.effectiveLimit - a.standing.effectiveLimit
+            (a, b) =>
+                overBy(b.standing) - overBy(a.standing) ||
+                b.standing.spent - a.standing.spent ||
+                b.standing.effectiveLimit - a.standing.effectiveLimit
         ),
     };
 }
-
-// The bar shows the smaller of spent and limit over the larger: an overrun's limit share leaves room for the red part.
-export const budgetFill = ({ effectiveLimit, spent }: Pick<CategoryBudget, "effectiveLimit" | "spent">) => {
-    if (effectiveLimit <= 0 || spent <= 0) {
-        return 0;
-    }
-    return Math.min(spent / effectiveLimit, effectiveLimit / spent, 1);
-};
 
 const RECENT_SHOWN = 2;
 

@@ -5,7 +5,7 @@ import { merchantKey } from "@outlayr/money/merchant-key";
 
 import type { ChartDatum } from "@/components/charts/shared";
 
-import { endOfDay, round, rowsBetween, rowsOf, startOfDay, total } from "./dashboard-series-ledger";
+import { endOfDay, round, rowsBetween, rowsOf, startOfDay, total, UNCATEGORIZED_NAME } from "./dashboard-series-ledger";
 import type { Ledger, LedgerRow, Scope } from "./dashboard-series-ledger";
 import { netWorthPoints } from "./dashboard-series-net-worth";
 import { daysFrom, priorSlice, periodOf, shiftPeriodKey } from "./dashboard-series-period";
@@ -253,6 +253,29 @@ function standingOf(ledger: Ledger, budget: Budget, categoryId: string, period: 
 export function categoryBudget(ledger: Ledger, categoryId: string, period: Period) {
     const budget = budgetsByAge(ledger).find((row) => row.categoryId === categoryId);
     return budget ? standingOf(ledger, budget, categoryId, period) : null;
+}
+
+export function budgetParts(ledger: Ledger, categoryId: string, standing: CategoryBudget, period: Period) {
+    const asOf = Math.min(ledger.now, endOfDay(ledger, period.to));
+    const now = wall(asOf, ledger.offsetAt(asOf)).getTime();
+    const totals = new Map<string, number>();
+    for (const expense of ledger.expensesByCategory.get(categoryId) ?? []) {
+        if (expense.day >= standing.from && expense.day <= standing.to && expense.date.getTime() <= now) {
+            const id = expense.categoryId ?? categoryId;
+            totals.set(id, (totals.get(id) ?? 0) + expense.amount);
+        }
+    }
+    if (totals.size < 2) {
+        return [];
+    }
+    const names = new Map(ledger.books.categories.map((row) => [row.localId, row.name]));
+    return [...totals]
+        .map(([id, amount]) => ({
+            amount: round(ledger, amount),
+            id,
+            name: id === categoryId ? null : (names.get(id) ?? UNCATEGORIZED_NAME),
+        }))
+        .toSorted((a, b) => b.amount - a.amount);
 }
 
 export function categoryBudgets(ledger: Ledger, period: Period) {
