@@ -563,12 +563,12 @@ const tools = {
                 ],
                 lead: t({
                     en: "Today's official BCV rate for the dollar in Venezuela, with a calculator to turn dollars into bolívares and back.",
-                    es: "La tasa oficial del BCV para el dólar en Venezuela hoy, con una calculadora para pasar de dólares a bolívares y de bolívares a dólares.",
+                    es: "La tasa oficial del BCV para el dólar en Venezuela hoy, con una calculadora para convertir bolívares a dólares y dólares a bolívares.",
                 }),
                 meta: {
                     title: t({
                         en: "BCV Dollar Rate Today and USD to Bolívar Calculator · Outlayr",
-                        es: "Dólar BCV hoy: tasa oficial y calculadora de bolívares · Outlayr",
+                        es: "Calculadora dólar BCV: convertir bolívares a dólares hoy · Outlayr",
                     }),
                 },
                 method: [
@@ -592,7 +592,7 @@ const tools = {
                 ] satisfies PageRef[],
                 title: t({
                     en: "BCV dollar today: the official rate in Venezuela",
-                    es: "Dólar BCV hoy: la tasa oficial en Venezuela",
+                    es: "Calculadora dólar BCV: la tasa oficial de hoy",
                 }),
             },
             "dolar-hoy-argentina": {
