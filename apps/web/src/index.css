@@ -11,6 +11,8 @@
 @source "../node_modules/panelui-web/dist/components/range-meter/index.js";
 @source "../node_modules/panelui-web/dist/components/rolling-number/index.js";
 @source "../node_modules/panelui-web/dist/components/stat/index.js";
+@source "../node_modules/panelui-web/dist/components/table/index.js";
+@source "../node_modules/panelui-web/dist/components/tabs/index.js";
 @source "../node_modules/panelui-web/dist/components/usage/index.js";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));

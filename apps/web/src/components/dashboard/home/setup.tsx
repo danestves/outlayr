@@ -130,39 +130,39 @@ export function QuietBars() {
 }
 
 const QUIET_COLUMNS = [
-    [20, 50],
-    [237.8, 47],
-    [368.5, 43],
-    [491.9, 45],
-    [706, 40],
+    [15, 50],
+    [265, 47],
+    [410, 43],
+    [540, 45],
+    [711, 40],
 ] as const;
-const QUIET_ROWS = [58, 100] as const;
+const QUIET_ROWS = [52, 103] as const;
 
 export function QuietTable() {
     return (
         <svg
             aria-hidden
             className="absolute inset-x-0 top-0 -z-10 h-auto w-full"
-            style={{ maskImage: "linear-gradient(black 59px, transparent 121px)" }}
+            style={{ maskImage: "linear-gradient(black 59px, transparent 150px)" }}
             viewBox="0 0 766 299"
         >
             {QUIET_COLUMNS.map(([x, head]) => (
-                <rect height={9} key={x} rx={4.5} style={GHOST} width={head} x={x} y={27.5} />
+                <rect height={9} key={x} rx={4.5} style={GHOST} width={head} x={x} y={15.5} />
             ))}
-            <path d="M0 50H766M0 92H766" style={{ ...GHOST, stroke: "var(--color-app-strong)" }} />
+            <path d="M0 40H766" style={{ ...GHOST, stroke: "var(--color-app-strong)" }} />
             {QUIET_ROWS.map((top, row) => (
                 <g key={top}>
-                    <rect height={26} rx={8} style={GHOST} width={26} x={20} y={top} />
-                    <rect height={9} rx={4.5} style={GHOST} width={[62, 78][row]} x={56} y={top + 8.5} />
-                    <rect height={22} rx={6} style={GHOST} width={[75, 91][row]} x={237.8} y={top + 2} />
-                    <rect height={9} rx={4.5} style={GHOST} width={[70, 54][row]} x={368.5} y={top + 8.5} />
-                    <rect height={9} rx={4.5} style={GHOST} width={[41, 31][row]} x={491.9} y={top + 8.5} />
+                    <rect height={26} rx={8} style={GHOST} width={26} x={15} y={top} />
+                    <rect height={9} rx={4.5} style={GHOST} width={[62, 78][row]} x={53} y={top + 8.5} />
+                    <rect height={9} rx={4.5} style={GHOST} width={[75, 91][row]} x={265} y={top + 8.5} />
+                    <rect height={9} rx={4.5} style={GHOST} width={[70, 54][row]} x={410} y={top + 8.5} />
+                    <rect height={9} rx={4.5} style={GHOST} width={[41, 31][row]} x={540} y={top + 8.5} />
                     <rect
                         height={9}
                         rx={4.5}
                         style={GHOST}
                         width={[68, 46][row]}
-                        x={746 - ([68, 46][row] ?? 0)}
+                        x={751 - ([68, 46][row] ?? 0)}
                         y={top + 8.5}
                     />
                 </g>
@@ -212,7 +212,7 @@ const GHOST_ROWS = [
     [62, 76, 52, 36, 54],
 ] as const;
 
-export function GhostRows({ cell, label }: { cell: string; label: string }) {
+export function GhostRows({ cell, label, side }: { cell: string; label: string; side: string }) {
     return GHOST_ROWS.map(([merchant, category, account, day, amount], index) => (
         <tr aria-hidden className="group" key={index}>
             <td aria-label={label} className={cell}>
@@ -221,13 +221,13 @@ export function GhostRows({ cell, label }: { cell: string; label: string }) {
                     <i className="dash-gl" style={{ width: merchant }} />
                 </span>
             </td>
-            <td aria-label={label} className={cell}>
-                <i className="dash-gl relative -top-[3px] block h-[22px] rounded-md" style={{ width: category }} />
+            <td aria-label={label} className={side}>
+                <i className="dash-gl block" style={{ width: category }} />
             </td>
-            <td aria-label={label} className={cell}>
+            <td aria-label={label} className={side}>
                 <i className="dash-gl block" style={{ width: account }} />
             </td>
-            <td aria-label={label} className={cell}>
+            <td aria-label={label} className={side}>
                 <i className="dash-gl block" style={{ width: day }} />
             </td>
             <td aria-label={label} className={cell}>

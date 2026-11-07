@@ -1,77 +1,89 @@
 import { RiAddLine, RiUpload2Line } from "@remixicon/react";
-import { useMemo, useState } from "react";
-import { useIntlayer } from "react-intlayer";
+import { Table } from "panelui-web/table";
+import { Tabs } from "panelui-web/tabs";
+import { useId, useMemo, useState } from "react";
+import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
+import { FeeTile, MerchantTile, TransferTile } from "@/components/ledger/tiles";
 import { periodOf } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
+import { CardFrame } from "./card-frame";
 import { useCatalog, useImageUrls } from "./catalog";
+import type { Catalog } from "./catalog";
 import { useCategoryName, useDateFormat } from "./format";
 import type { SetupState } from "./model";
-import { viewRows } from "./rows";
+import { ROW_HEIGHT, useRowWindow } from "./row-window";
+import { figureOf, foldFees, viewRows } from "./rows";
+import type { FoldedRow } from "./rows";
 import { Cover, GhostRows, PhoneButton, QuietTable, TABLE_FADE } from "./setup";
 
-const ROWS_SHOWN = 6;
+const ROWS_SHOWN = 10;
+const LONG_FEE = 8;
 const TABS = ["all", "expenses", "incomeTab"] as const;
 type Tab = (typeof TABS)[number];
+const isTab = (value: unknown): value is Tab => TABS.some((tab) => tab === value);
 
-const COLUMNS = {
-    ledger: ["24.9%", "22.3%", "18.8%"],
-    setup: ["26.6%", "23%", "19.3%"],
-    setupRows: ["25.8%", "22.4%", "18.8%"],
-} as const;
+const ROW =
+    "h-[51px] border-0 [--tile-ring:var(--color-card)] even:[--tile-ring:color-mix(in_oklab,var(--muted)_40%,var(--color-card))] hover:[--tile-ring:color-mix(in_oklab,var(--muted)_40%,var(--color-card))]";
+const HEAD = "first:ps-3.5 last:pe-3.5";
+const CELL = "h-[51px] overflow-hidden px-1.5 py-0 align-middle first:ps-3.5 last:pe-3.5 @sm:px-3";
+const SIDE = `${CELL} hidden truncate @2xl:table-cell`;
+const FIGURE = `${CELL} dash-figure whitespace-nowrap @max-sm:overflow-visible`;
+const NAME = `${CELL} max-w-0 @2xl:max-w-none`;
+const SIDE_HEAD = `${HEAD} hidden @2xl:table-cell`;
+const SECOND_LINE = "dash-figure text-muted-foreground block text-xs leading-4";
+const ARRIVAL_LINE =
+    "dash-figure text-muted-foreground flex justify-end text-xs leading-4 @max-sm:w-0 @max-sm:min-w-full";
 
-const TH =
-    "text-muted-foreground h-9 px-3 text-left text-xs font-medium shadow-[inset_0_1px_0_var(--color-app-rule),inset_0_-1px_0_var(--color-app-rule)] first:pl-5 last:pr-5 last:text-right";
-const TD = "border-border h-[42px] border-b px-3 first:pl-5 last:pr-5 last:text-right group-last:border-0";
+const imageKeys = (catalog: Catalog, rows: readonly FoldedRow[], skip: readonly string[] = []) =>
+    [
+        ...new Set(
+            rows.flatMap((row) => {
+                const key = "fromId" in row ? null : catalog.transaction(row.id)?.imageKey;
+                return key ? [key] : [];
+            })
+        ),
+    ].filter((key) => !skip.includes(key));
 
 export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger, photos: accountPhotos, setFilters } = useDashboard();
     const { add } = useIntlayer("dashboard");
     const { setup: setupCopy, transactions: copy } = useIntlayer("dashboard-home");
+    const { locale } = useLocale();
     const categoryName = useCategoryName();
     const date = useDateFormat();
     const { money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
     const [tab, setTab] = useState<Tab>("all");
     const [expanded, setExpanded] = useState(false);
-    const rows = useMemo(() => {
-        const every = viewRows(
-            ledger,
-            { accounts: filters.accounts, categories: filters.categories, period: filters.period },
-            "newest"
-        );
-        return every
-            .filter((row) => {
-                if (tab === "all") {
-                    return true;
-                }
-                return "income" in row && row.income === (tab === "incomeTab");
-            })
-            .slice(0, expanded ? undefined : ROWS_SHOWN);
-    }, [expanded, filters.accounts, filters.categories, filters.period, ledger, tab]);
-    const keys = useMemo(
-        () => [
-            ...new Set(
-                rows.flatMap((row) => {
-                    const key = "fromId" in row ? null : catalog.transaction(row.id)?.imageKey;
-                    return key ? [key] : [];
-                })
+    const every = useMemo(
+        () =>
+            foldFees(
+                viewRows(
+                    ledger,
+                    { accounts: filters.accounts, categories: filters.categories, period: filters.period },
+                    "newest"
+                ).filter((row) => tab === "all" || ("income" in row && row.income === (tab === "incomeTab")))
             ),
-        ],
-        [catalog, rows]
+        [filters.accounts, filters.categories, filters.period, ledger, tab]
     );
-    const photos = useImageUrls(keys);
+    const rows = useMemo(() => (expanded ? every : every.slice(0, ROWS_SHOWN)), [every, expanded]);
+    const headKeys = useMemo(() => imageKeys(catalog, every.slice(0, ROWS_SHOWN)), [catalog, every]);
+    const restKeys = useMemo(
+        () => (expanded ? imageKeys(catalog, every.slice(ROWS_SHOWN), headKeys) : []),
+        [catalog, every, expanded, headKeys]
+    );
+    const headPhotos = useImageUrls(headKeys);
+    const restPhotos = useImageUrls(restKeys);
+    const tableId = useId();
+    const { body, first, last } = useRowWindow(rows.length);
     if (quiet) {
         const current = periodOf(filters.currentKey, ledger.firstDayOfMonth);
         const month = date.month(current.key);
         return (
-            <section className="dash-card lg:col-span-2">
-                <div className="dash-card-head">
-                    <h2>{copy.title}</h2>
-                </div>
+            <CardFrame className="lg:col-span-2" title={copy.title}>
                 <div className="dash-empty relative isolate min-h-[299px] justify-end pt-0 pb-7">
                     <QuietTable />
                     <b className="text-[15px] font-semibold">{copy.quietTitle}</b>
@@ -84,128 +96,222 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                         </button>
                     )}
                 </div>
-            </section>
+            </CardFrame>
         );
     }
     const active = setup?.step === "entry";
-    const setupColumns = rows.length > 0 ? "setupRows" : "setup";
-    const columns = COLUMNS[setup ? setupColumns : "ledger"];
+    const count = (value: number) => value.toLocaleString(locale);
+    const accountName = (id: string) => ledger.accounts.get(id)?.name ?? "";
+    const second = (row: FoldedRow, figure: ReturnType<typeof figureOf>) => {
+        if (figure.arrived !== null && "fromId" in row) {
+            const arrived = money(figure.arrived, row.arrivedCurrency);
+            return (
+                <span className={ARRIVAL_LINE}>
+                    <span aria-hidden>→ {arrived}</span>
+                    <span className="sr-only">{copy.arrived({ amount: arrived })}</span>
+                </span>
+            );
+        }
+        if (figure.fee === null) {
+            return null;
+        }
+        const fee = money(figure.fee, ledger.currency);
+        return (
+            <span className={SECOND_LINE}>
+                +{fee}
+                <span className={fee.length > LONG_FEE ? "hidden @2xl:inline" : ""}> {copy.feeWord}</span>
+            </span>
+        );
+    };
     return (
-        <section className={`dash-card lg:col-span-2 ${setup ? "relative min-h-[375px]" : ""}`} data-active={active}>
-            <div className="dash-card-head pr-3">
-                <h2>{copy.title}</h2>
-                <div className="ml-3 flex h-[52px] gap-[18px]">
-                    {TABS.map((each) => (
-                        <button
-                            aria-pressed={tab === each}
-                            className={`relative flex items-center text-[13px] font-medium ${tab === each ? "after:bg-foreground after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-sm" : "text-muted-foreground"}`}
-                            key={each}
-                            onClick={() => setTab(each)}
-                            type="button"
-                        >
-                            {copy[each]}
-                        </button>
-                    ))}
-                </div>
-                {expanded || setup ? null : (
-                    <button className="dash-ob ml-auto" onClick={() => setExpanded(true)} type="button">
-                        {copy.seeAll}
-                    </button>
-                )}
-            </div>
-            <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm whitespace-nowrap">
-                    <colgroup>
-                        <col style={{ width: columns[0] }} />
-                        <col style={{ width: columns[1] }} />
-                        <col style={{ width: columns[2] }} />
-                        <col />
-                        <col />
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th className={TH}>{copy.columns.merchant}</th>
-                            <th className={TH}>{copy.columns.category}</th>
-                            <th className={TH}>{copy.columns.account}</th>
-                            <th className={TH}>{copy.columns.date}</th>
-                            <th className={TH}>{copy.columns.amount}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+        <CardFrame
+            action={
+                <Tabs onValueChange={(value) => isTab(value) && setTab(value)} value={tab}>
+                    <Tabs.List className="bg-background/40 rounded-[9px] p-0.5">
+                        {TABS.map((each) => (
+                            <Tabs.Trigger
+                                aria-controls={tableId}
+                                id={`${tableId}-${each}`}
+                                className="h-[26px] rounded-[7px] px-2.5 text-[13px]"
+                                key={each}
+                                value={each}
+                            >
+                                {copy[each]}
+                            </Tabs.Trigger>
+                        ))}
+                    </Tabs.List>
+                </Tabs>
+            }
+            className={`lg:col-span-2 ${setup ? "min-h-[375px]" : ""} ${active ? "ring-primary/55 ring-1" : ""}`}
+            footer={
+                setup || every.length === 0 ? undefined : (
+                    <>
+                        <span className="text-muted-foreground text-[13px]">{copy.entries}</span>
+                        <span className="dash-figure font-medium">
+                            {expanded || every.length <= ROWS_SHOWN
+                                ? count(every.length)
+                                : copy.shownOf({ shown: count(ROWS_SHOWN), total: count(every.length) })}
+                        </span>
+                        {every.length > ROWS_SHOWN ? (
+                            <button className="dash-ob ml-auto" onClick={() => setExpanded(!expanded)} type="button">
+                                {expanded ? copy.showLess : copy.seeAll}
+                            </button>
+                        ) : null}
+                    </>
+                )
+            }
+            panelClassName="@container overflow-clip [overflow-anchor:none]"
+            stackAction
+            title={copy.title}
+        >
+            <div aria-labelledby={`${tableId}-${tab}`} id={tableId} role="tabpanel">
+                <Table
+                    aria-label={copy.title.value}
+                    aria-rowcount={setup ? undefined : Math.max(rows.length, 1) + 1}
+                    className="@2xl:table-fixed"
+                    containerClassName="overflow-clip"
+                    maxHeight="none"
+                    striped
+                >
+                    <Table.Header className="in-data-[sticky]:bg-card">
+                        <Table.Row aria-rowindex={1}>
+                            <Table.Head className={`${HEAD} w-full @2xl:w-[31%]`}>{copy.columns.merchant}</Table.Head>
+                            <Table.Head className={`${SIDE_HEAD} w-[18%]`}>{copy.columns.category}</Table.Head>
+                            <Table.Head className={`${SIDE_HEAD} w-[17%]`}>{copy.columns.account}</Table.Head>
+                            <Table.Head className={`${SIDE_HEAD} w-[11%]`}>{copy.columns.date}</Table.Head>
+                            <Table.Head align="end" className={`${HEAD} w-px @2xl:w-[23%]`}>
+                                {copy.columns.amount}
+                            </Table.Head>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body ref={body}>
                         {rows.length === 0 && !setup ? (
-                            <tr>
-                                <td className="text-muted-foreground px-5 py-8 text-[13px]" colSpan={5}>
+                            <Table.Row aria-rowindex={2} className="border-0">
+                                <Table.Cell className="text-muted-foreground py-8 text-[13px] first:ps-3.5" colSpan={5}>
                                     {copy.empty}
-                                </td>
+                                </Table.Cell>
+                            </Table.Row>
+                        ) : null}
+                        {first > 0 ? (
+                            <tr aria-hidden>
+                                <td aria-label={copy.title.value} colSpan={5} style={{ height: first * ROW_HEIGHT }} />
                             </tr>
                         ) : null}
-                        {rows.map((row) => {
+                        {rows.slice(first, last).map((row, index) => {
+                            const figure = figureOf(ledger, row);
+                            const line = second(row, figure);
+                            const day = date.day(row.day);
                             if ("fromId" in row) {
-                                const from = catalog.account(row.fromId);
-                                const names = [row.fromId, row.toId].map((id) => ledger.accounts.get(id)?.name ?? "");
+                                const names = `${accountName(row.fromId)} → ${accountName(row.toId)}`;
                                 return (
-                                    <tr className="group" key={row.id}>
-                                        <td className={TD}>
-                                            <span className="flex items-center gap-2.5 font-medium">
-                                                {from ? (
-                                                    <AccountTile account={from} photos={accountPhotos} size="lg" />
-                                                ) : null}
-                                                <span className="max-w-48 truncate">{names.join(" → ")}</span>
+                                    <Table.Row aria-rowindex={first + index + 2} className={ROW} key={row.id}>
+                                        <Table.Cell className={NAME}>
+                                            <span className="flex items-center gap-3 font-medium">
+                                                <TransferTile
+                                                    from={catalog.account(row.fromId)}
+                                                    photos={accountPhotos}
+                                                    to={catalog.account(row.toId)}
+                                                />
+                                                <span className="min-w-0">
+                                                    <span className="block truncate">{names}</span>
+                                                    <span className="text-muted-foreground block truncate text-xs font-normal @2xl:hidden">
+                                                        {day}
+                                                        <span className="hidden @sm:inline"> · {copy.transfer}</span>
+                                                    </span>
+                                                </span>
                                             </span>
-                                        </td>
-                                        <td className={TD}>
-                                            <span className="dash-badge">{copy.transfer}</span>
-                                        </td>
-                                        <td
-                                            aria-label={copy.columns.account.value}
-                                            className={`${TD} text-muted-foreground`}
-                                        />
-                                        <td className={`${TD} dash-figure text-muted-foreground`}>
-                                            {date.day(row.day)}
-                                        </td>
-                                        <td className={`${TD} dash-figure text-muted-foreground`}>
-                                            {money(row.amount, ledger.currency)}
-                                        </td>
-                                    </tr>
+                                        </Table.Cell>
+                                        <Table.Cell className={`${SIDE} text-muted-foreground`}>
+                                            {copy.transfer}
+                                        </Table.Cell>
+                                        <Table.Cell aria-label={copy.columns.account.value} className={SIDE} />
+                                        <Table.Cell className={`${SIDE} dash-figure text-muted-foreground`}>
+                                            {day}
+                                        </Table.Cell>
+                                        <Table.Cell align="end" className={`${FIGURE} text-muted-foreground`}>
+                                            {money(figure.amount, ledger.currency)}
+                                            {line}
+                                        </Table.Cell>
+                                    </Table.Row>
                                 );
                             }
                             const top = ledger.categories.get(row.topId);
                             const name = top ? categoryName(top) : "";
                             const merchant = row.note.trim() || name;
                             const imageKey = catalog.transaction(row.id)?.imageKey;
+                            const standsAlone = row.feeFor !== null;
+                            const feeKind = catalog.transaction(row.id)?.feeForId ? copy.cardFee : copy.transferFee;
                             return (
-                                <tr className="group" key={row.id}>
-                                    <td className={TD}>
-                                        <span className="flex items-center gap-2.5 font-medium">
-                                            <MerchantTile
-                                                imageUrl={imageKey ? photos?.get(imageKey) : undefined}
-                                                name={merchant}
-                                                size="lg"
-                                            />
-                                            <span className="max-w-48 truncate">{merchant}</span>
+                                <Table.Row aria-rowindex={first + index + 2} className={ROW} key={row.id}>
+                                    <Table.Cell className={NAME}>
+                                        <span className="flex items-center gap-3 font-medium">
+                                            {standsAlone ? (
+                                                <FeeTile />
+                                            ) : (
+                                                <MerchantTile
+                                                    imageUrl={
+                                                        imageKey
+                                                            ? (headPhotos?.get(imageKey) ?? restPhotos?.get(imageKey))
+                                                            : undefined
+                                                    }
+                                                    name={merchant}
+                                                    size="lg"
+                                                />
+                                            )}
+                                            <span className="min-w-0">
+                                                <span className="block truncate">{merchant}</span>
+                                                <span className="text-muted-foreground block truncate text-xs font-normal @2xl:hidden">
+                                                    {day}
+                                                    <span className="hidden @sm:inline">
+                                                        {" "}
+                                                        · {standsAlone ? feeKind : name}
+                                                    </span>
+                                                </span>
+                                            </span>
                                         </span>
-                                    </td>
-                                    <td className={TD}>
-                                        <span className="dash-badge">
-                                            <u style={{ color: top?.color }} />
-                                            {name}
-                                        </span>
-                                    </td>
-                                    <td className={`${TD} text-muted-foreground`}>
-                                        {row.accountId
-                                            ? (ledger.accounts.get(row.accountId)?.name ?? "")
-                                            : copy.noAccount}
-                                    </td>
-                                    <td className={`${TD} dash-figure text-muted-foreground`}>{date.day(row.day)}</td>
-                                    <td className={`${TD} dash-figure ${row.income ? "text-app-income" : ""}`}>
-                                        {money(row.income ? row.amount : -row.amount, ledger.currency, "always")}
-                                    </td>
-                                </tr>
+                                    </Table.Cell>
+                                    <Table.Cell className={SIDE}>
+                                        {standsAlone ? (
+                                            <span className="text-muted-foreground">{feeKind}</span>
+                                        ) : (
+                                            <span className="flex min-w-0 items-center gap-2">
+                                                <span
+                                                    aria-hidden
+                                                    className="size-1.5 shrink-0 rounded-full bg-current"
+                                                    style={{ color: top?.color }}
+                                                />
+                                                <span className="truncate">{name}</span>
+                                            </span>
+                                        )}
+                                    </Table.Cell>
+                                    <Table.Cell className={`${SIDE} text-muted-foreground`}>
+                                        {row.accountId ? accountName(row.accountId) : copy.noAccount}
+                                    </Table.Cell>
+                                    <Table.Cell className={`${SIDE} dash-figure text-muted-foreground`}>
+                                        {day}
+                                    </Table.Cell>
+                                    <Table.Cell
+                                        align="end"
+                                        className={`${FIGURE} ${row.income ? "text-app-income" : ""}`}
+                                    >
+                                        {money(row.income ? figure.amount : -figure.amount, ledger.currency, "always")}
+                                        {line}
+                                    </Table.Cell>
+                                </Table.Row>
                             );
                         })}
-                        {setup ? <GhostRows cell={TD} label={copy.title.value} /> : null}
-                    </tbody>
-                </table>
+                        {last < rows.length ? (
+                            <tr aria-hidden className="bg-transparent!">
+                                <td
+                                    aria-label={copy.title.value}
+                                    colSpan={5}
+                                    style={{ height: (rows.length - last) * ROW_HEIGHT }}
+                                />
+                            </tr>
+                        ) : null}
+                        {setup ? <GhostRows cell={CELL} label={copy.title.value} side={SIDE} /> : null}
+                    </Table.Body>
+                </Table>
             </div>
             {setup && rows.length > 0 ? <Cover fade={TABLE_FADE} /> : null}
             {setup?.done.entry === false ? (
@@ -220,6 +326,6 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                     </PhoneButton>
                 </Cover>
             ) : null}
-        </section>
+        </CardFrame>
     );
 }
