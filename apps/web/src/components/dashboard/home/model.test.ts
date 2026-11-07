@@ -89,8 +89,11 @@ describe("everyDay", () => {
         expect(measured.at(-1)?.day).toBe("2026-10-10");
     });
 
-    it("offsets the grid so a Thursday first lands in the Monday-first column", () => {
-        expect(everyDay(ledger, period, SCOPE, []).lead).toBe(3);
+    it("offsets a Thursday first by the week start the user set", () => {
+        const lead = (firstWeekday: number) => everyDay({ ...ledger, firstWeekday }, period, SCOPE, []).lead;
+
+        expect(lead(1)).toBe(4);
+        expect(lead(2)).toBe(3);
     });
 
     it("narrows to the picked categories", () => {

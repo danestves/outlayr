@@ -54,6 +54,7 @@ export interface Ledger {
     currency: string;
     expensesByCategory: ReadonlyMap<string, readonly Expense[]>;
     firstDayOfMonth: number;
+    firstWeekday: number;
     now: number;
     offsetAt: (instant: number) => number;
     rates: ReturnType<typeof rateTableOf>;
@@ -180,6 +181,7 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
         currency,
         expensesByCategory,
         firstDayOfMonth: settings.firstDayOfMonth,
+        firstWeekday: settings.firstWeekday,
         now,
         offsetAt,
         rates,

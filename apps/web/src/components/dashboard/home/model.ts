@@ -57,8 +57,6 @@ export interface DayCell {
     topId: string | null;
 }
 
-const MONDAY_FIRST = 6;
-
 export function everyDay(ledger: Ledger, period: Period, scope: Scope, categories: readonly string[]) {
     const last = ledger.today < period.to ? ledger.today : period.to;
     const picked = new Set(categories);
@@ -78,7 +76,7 @@ export function everyDay(ledger: Ledger, period: Period, scope: Scope, categorie
     return {
         average,
         cells,
-        lead: (new Date(`${period.from}T12:00:00Z`).getUTCDay() + MONDAY_FIRST) % 7,
+        lead: (new Date(`${period.from}T12:00:00Z`).getUTCDay() - ledger.firstWeekday + 8) % 7,
         measured: cells.slice(0, elapsed),
         runnerUp: second ?? null,
         top: first ?? null,
