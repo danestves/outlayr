@@ -3,7 +3,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import type { CategoryBudget } from "../../../lib/dashboard-series";
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
-import { budgetRows, categoryChoices, everyDay, setupState, snapWhatIf, whatIfStep } from "./model";
+import { budgetRows, categoryChoices, everyDay, setupState, snapWhatIf, sparks, whatIfStep } from "./model";
 
 const NOW = Date.parse("2026-10-10T15:00:00Z");
 const period = { days: 31, from: "2026-10-01", key: "2026-10", to: "2026-10-31" };
@@ -71,6 +71,24 @@ const ledger = prepareLedger(
     } as unknown as LedgerBooks,
     NOW
 );
+
+describe("sparks", () => {
+    it("leaves the unfinished month out of the flows but keeps today's balance", () => {
+        const lines = sparks(ledger, period, SCOPE);
+        expect(lines.spent).toHaveLength(11);
+        expect(lines.spent.at(-1)).toBe(40);
+        expect(lines.kept.at(-1)).toBe(-40);
+        expect(lines.netWorth).toHaveLength(12);
+        expect(lines.netWorth.at(-1)).toBe(360);
+    });
+
+    it("draws every month of a finished period", () => {
+        const september = { days: 30, from: "2026-09-01", key: "2026-09", to: "2026-09-30" };
+        const lines = sparks(ledger, september, SCOPE);
+        expect(lines.spent).toHaveLength(12);
+        expect(lines.spent.at(-1)).toBe(40);
+    });
+});
 
 describe("everyDay", () => {
     it("averages over the days elapsed and leaves future entries out", () => {
