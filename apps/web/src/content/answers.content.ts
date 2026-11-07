@@ -51,7 +51,7 @@ const RIVALS = {
     },
     fintonic: {
         en: "Fintonic is a free app in Spain that reads your connected Spanish bank accounts, scores your finances with its FinScore, and arranges loans with over 40 lenders.",
-        es: "Fintonic es una app gratis en España que lee tus cuentas de bancos españoles conectadas, califica tus finanzas con su FinScore y te consigue préstamos con más de 40 entidades.",
+        es: "Fintonic es una app gratis de España que conecta tus bancos en modo lectura, te da una nota financiera, el FinScore, y busca préstamos entre más de 40 entidades.",
     },
     goodbudget: {
         en: "Goodbudget is an envelope budgeting app for the web, Android, and iPhone, with a free plan and bank sync for US banks in Premium.",
@@ -886,7 +886,7 @@ const answers = {
                     {
                         answer: t({
                             en: "It is if you live outside Spain, pay in cash as well as by card, or want to log a purchase by saying it or scanning the receipt. Fintonic fits better if you bank in Spain and want your accounts to sync on their own, a financial score, or help getting a loan.",
-                            es: "Sí, si vives fuera de España, también pagas en efectivo o quieres registrar una compra dictándola o escaneando el recibo. Fintonic te conviene más si tienes tus cuentas en un banco español y quieres que se sincronicen solas, una nota financiera o ayuda para conseguir un préstamo.",
+                            es: "Sí, si vives fuera de España, también pagas en efectivo o prefieres registrar tus gastos sin conectar tu banco, con una oración, tu voz o un recibo. Fintonic te conviene más si tu banco está en su lista y quieres que los movimientos lleguen solos, o si buscas una nota financiera y ayuda para conseguir un préstamo. Outlayr no se conecta a tu banco, no calcula una nota financiera ni ofrece préstamos. Lo más cercano es registrar compras desde Apple Pay en iPhone o desde las notificaciones de tus apps en Android.",
                         }),
                         question: t({
                             en: "Is Outlayr a good Fintonic alternative?",
@@ -895,18 +895,18 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in 175 countries and regions, Chile and Mexico included, with 165 currencies, in English, Spanish, Portuguese, and French. Fintonic is offered only in Spain and connects Spanish banks.",
-                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Chile y México incluidos, con 165 monedas, en inglés, español, portugués y francés. Fintonic solo se ofrece en España y conecta bancos españoles.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, Chile and Mexico included, with 165 currencies, in English, Spanish, Portuguese, and French. Fintonic's App Store listing is only in Spain, and the banks it lists operate there.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, entre ellos España, Chile y México, con 165 monedas, en inglés, francés, portugués y español de España y de Latinoamérica. Fintonic solo aparece en la App Store de España y los bancos de su lista operan allí. Su web todavía muestra México y Chile en el selector de país, pero al elegirlos sigues en la web de España.",
                         }),
                         question: t({
                             en: "Does Outlayr work in Chile and Mexico?",
-                            es: "¿Outlayr funciona en Chile y México?",
+                            es: "¿Outlayr funciona en España, Chile y México?",
                         }),
                     },
                     {
                         answer: t({
                             en: "Yes. Type one sentence, say it, or scan the receipt, and file it under a cash account. Fintonic's help center says it shows only movements that went through a bank account.",
-                            es: "Sí. Escribe una oración, díctala o escanea el recibo, y regístrala en una cuenta de efectivo. El centro de ayuda de Fintonic dice que solo muestra los movimientos que pasaron por una cuenta bancaria.",
+                            es: "Sí. Escribe una oración, díctala o escanea el recibo, y regístrala en una cuenta de efectivo. El centro de ayuda de Fintonic dice que no puedes añadir gastos en efectivo que no pasaron por el banco.",
                         }),
                         question: t({
                             en: "Can I log cash expenses in Outlayr?",
@@ -921,7 +921,7 @@ const answers = {
                         t({ en: "Pay in cash as well as by card", es: "También pagas en efectivo" }),
                         t({
                             en: "Want to log a purchase by saying it or scanning the receipt",
-                            es: "Quieres registrar una compra dictándola o escaneando el recibo",
+                            es: "Quieres registrar tus gastos sin conectar tu banco",
                         }),
                     ],
                     rival: [
@@ -930,21 +930,21 @@ const answers = {
                             en: "Want a financial score and help getting a loan",
                             es: "Quieres una nota financiera y ayuda para conseguir un préstamo",
                         }),
-                        t({ en: "Bank in Spain", es: "Tienes tus cuentas en un banco español" }),
+                        t({ en: "Bank in Spain", es: "Tienes tus cuentas en un banco de su lista, en España" }),
                     ],
                 },
                 lead: t({
                     en: `${OUTLAYR_LEAD.en} ${RIVALS.fintonic.en}`,
-                    es: `${OUTLAYR_LEAD.es} ${RIVALS.fintonic.es}`,
+                    es: `¿Buscas una alternativa a Fintonic? Outlayr es una app de código abierto para controlar tus gastos sin conectar tu banco: los registras con una oración, con tu voz o con un recibo, también en efectivo y fuera de España, gratis para empezar. ${RIVALS.fintonic.es} Si quieres que tus movimientos lleguen solos, te conviene más Fintonic.`,
                 }),
                 meta: {
                     description: t({
                         en: "Fintonic is a free app in Spain that reads Spanish bank accounts and arranges loans. Outlayr is an open source alternative for cash, cards, and 165 currencies.",
-                        es: "Fintonic es una app gratis en España que lee tus cuentas bancarias españolas. Outlayr es una alternativa de código abierto para efectivo y 165 monedas.",
+                        es: "¿Buscas una alternativa a Fintonic sin conectar tu banco? Outlayr registra gastos y efectivo con tu voz o un recibo. Compara precio, funciones y cómo cambiarte.",
                     }),
                     title: t({
                         en: "Fintonic Alternative: Outlayr vs Fintonic",
-                        es: "Alternativa a Fintonic: Outlayr vs Fintonic",
+                        es: "Alternativa a Fintonic sin conectar tu banco: Outlayr vs Fintonic",
                     }),
                 },
                 moving: [
@@ -953,28 +953,29 @@ const answers = {
                         source: "https://www.fintonic.com/blog/descubre-el-nuevo-fintonic/",
                         text: t({
                             en: "Fintonic's site doesn't describe an export today. Its blog said in 2018 that you could download your movements as an Excel file, but not where to find it.",
-                            es: "El sitio de Fintonic no explica hoy cómo exportar. Su blog decía en 2018 que podías descargar tus movimientos en un Excel, pero no dónde encontrarlo.",
+                            es: "Ni la web ni el centro de ayuda de Fintonic explican hoy cómo exportar. Su blog decía en 2018 que podías descargar todo tu histórico de movimientos en un Excel, pero no dónde encontrarlo.",
                         }),
                     },
                     {
                         label: MOVING.file,
                         text: t({
-                            en: "If you get an Excel file, save it as a comma-separated CSV first, since Outlayr reads only CSV files.",
-                            es: "Si consigues un Excel, guárdalo primero como CSV separado por comas, porque Outlayr solo lee archivos CSV.",
+                            en: "If you get an Excel file, save it as a comma-separated CSV first, since Outlayr can't open Excel files. Fintonic doesn't publish that file's columns. With Pro, Outlayr can also read a bank statement PDF with AI, if you allow it.",
+                            es: "Si consigues un Excel, guárdalo primero como CSV separado por comas, porque Outlayr no abre archivos de Excel. Fintonic no publica qué columnas trae. Si no lo encuentras, descarga los movimientos en CSV desde tu banco, si te lo permite. Con Pro, Outlayr también lee con IA un extracto o estado de cuenta en PDF, si lo autorizas.",
                         }),
                     },
                     {
                         label: MOVING.into,
                         text: t({
                             en: "Import it in Settings, under Import data, as a CSV file, and check the columns Outlayr picked before you import. Or start fresh: type a purchase as one sentence, say it, or scan the receipt.",
-                            es: "Impórtalo en Configuración, en Importar datos, como archivo CSV, y revisa las columnas que eligió Outlayr antes de importar. O empieza de cero: escribe una compra en una oración, díctala o escanea el recibo.",
+                            es: "En la sección Datos de la configuración de Outlayr, toca Importar y elige el CSV. Revisa las columnas que eligió Outlayr: necesita la fecha, el monto y una categoría o descripción. Pasan tus movimientos pasados, no la conexión con el banco. O empieza de cero: escribe una compra en una oración, díctala o escanea el recibo.",
                         }),
                     },
                     {
                         label: MOVING.lost,
+                        source: "https://fintonic.ladesk.com/992441-C%C3%B3mo-puedo-darme-de-baja-en-Fintonic",
                         text: t({
                             en: "Your FinScore, alerts, and loan offers stay in Fintonic.",
-                            es: "Tu FinScore, las alertas y las ofertas de préstamos se quedan en Fintonic.",
+                            es: "Tu FinScore, las alertas y las ofertas de préstamos se quedan en Fintonic. Guarda lo que quieras conservar antes de darte de baja: Fintonic avisa que pierdes el histórico de movimientos, las categorizaciones y las notas.",
                         }),
                     },
                 ],
@@ -998,7 +999,7 @@ const answers = {
                         outlayr: OUTLAYR.entries,
                         rival: t({
                             en: "Movements from connected Spanish bank accounts only",
-                            es: "Solo movimientos de cuentas de bancos españoles conectadas",
+                            es: "Solo movimientos de los bancos que conectas, sin efectivo",
                         }),
                     },
                     {
@@ -1015,19 +1016,25 @@ const answers = {
                             en: "175 countries and regions",
                             es: "175 países y regiones",
                         }),
-                        rival: t({ en: "Spain only, with Spanish banks", es: "Solo España, con bancos españoles" }),
+                        rival: t({
+                            en: "Spain, with banks that operate there",
+                            es: "España, con bancos que operan allí",
+                        }),
                     },
                     {
                         label: LABELS.platforms,
                         outlayr: OUTLAYR.platforms,
-                        rival: t({ en: "iPhone, Android", es: "iPhone, Android" }),
+                        rival: t({ en: "iPhone, Android, web", es: "iPhone, Android, web" }),
                     },
                     LICENSE_ROW,
                 ],
                 site: "fintonic.com",
                 source: "https://www.fintonic.com/es-ES/inicio/",
                 summary: t(RIVALS.fintonic),
-                title: t({ en: "Outlayr as a Fintonic alternative", es: "Outlayr como alternativa a Fintonic" }),
+                title: t({
+                    en: "Outlayr as a Fintonic alternative",
+                    es: "Outlayr, una alternativa a Fintonic sin conectar tu banco",
+                }),
             },
             goodbudget: {
                 faq: [

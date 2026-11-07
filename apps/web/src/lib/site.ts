@@ -34,7 +34,7 @@ export const RIVALS_CHECKED = new Date(Date.UTC(2026, 9, 7));
 const RIVALS_RECHECKED = {
     copilot: new Date(Date.UTC(2026, 9, 23)),
     everydollar: new Date(Date.UTC(2026, 9, 23)),
-    fintonic: new Date(Date.UTC(2026, 10, 3)),
+    fintonic: new Date(Date.UTC(2026, 10, 7)),
     goodbudget: new Date(Date.UTC(2026, 9, 23)),
     monefy: new Date(Date.UTC(2026, 9, 23)),
     "money-lover": new Date(Date.UTC(2026, 9, 26)),
