@@ -16,6 +16,7 @@ const SIZES = {
     lg: { box: "size-[26px] rounded-lg", glyph: 14, initial: "text-[11px]", emoji: "text-sm" },
     md: { box: "size-6 rounded-md", glyph: 14, initial: "text-[11px]", emoji: "text-sm" },
     sm: { box: "size-5 rounded-[5px]", glyph: 12, initial: "text-[10px]", emoji: "text-xs" },
+    xs: { box: "size-[15px] rounded-[5px]", glyph: 9, initial: "text-[8px]", emoji: "text-[9px]" },
 } as const;
 
 type TileSize = keyof typeof SIZES;
@@ -127,6 +128,37 @@ export function AccountTile({
             ) : (
                 <SymbolGlyph look={account} size={size} />
             )}
+        </Tile>
+    );
+}
+
+export function TransferTile({
+    from,
+    photos,
+    to,
+}: {
+    from: AccountLook | null;
+    photos?: PhotoUrls;
+    to: AccountLook | null;
+}) {
+    return (
+        <span className="relative shrink-0">
+            {from ? <AccountTile account={from} photos={photos} size="lg" /> : <FeeTile />}
+            {to ? (
+                <span className="absolute -right-1.5 -bottom-1.5 rounded-[7px] bg-(--tile-ring) p-0.5">
+                    <AccountTile account={to} photos={photos} size="xs" />
+                </span>
+            ) : null}
+        </span>
+    );
+}
+
+export function FeeTile() {
+    return (
+        <Tile color="var(--color-muted)" ink="plain" size="lg">
+            <span className="text-[15px] leading-none font-semibold" aria-hidden>
+                %
+            </span>
         </Tile>
     );
 }

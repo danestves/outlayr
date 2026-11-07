@@ -16,19 +16,24 @@ export interface LedgerRow {
     at: number;
     categoryId: string | null;
     day: string;
+    feeFor: string | null;
     id: string;
     income: boolean;
     note: string;
+    original: number;
     parentId: string | null;
     topId: string;
 }
 
 export interface LedgerTransfer {
     amount: number;
+    arrived: number;
+    arrivedCurrency: string;
     at: number;
     day: string;
     fromId: string;
     id: string;
+    sentCurrency: string;
     toId: string;
 }
 
@@ -100,9 +105,11 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
             at: row.date,
             categoryId: row.categoryId,
             day: localDate(row.date, offsetAt(row.date)),
+            feeFor: row.feeForId ?? row.transferId ?? null,
             id: row.localId,
             income: row.income,
             note: row.note,
+            original: row.amount,
             parentId: category?.parentId ?? null,
             topId: top?.localId ?? UNCATEGORIZED_ID,
         };
@@ -120,10 +127,13 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
     );
     const transfers = moved.map((row, index): LedgerTransfer => ({
         amount: movedValues[index] ?? 0,
+        arrived: row.toAmount,
+        arrivedCurrency: row.toCurrency,
         at: row.date,
         day: localDate(row.date, offsetAt(row.date)),
         fromId: row.fromAccountId,
         id: row.localId,
+        sentCurrency: row.fromCurrency,
         toId: row.toAccountId,
     }));
     const budgetTargets = new Map<string, BudgetTarget>();

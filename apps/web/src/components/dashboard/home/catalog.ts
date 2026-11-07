@@ -1,5 +1,5 @@
 import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQueries } from "@tanstack/react-query";
 import { useRouteContext } from "@tanstack/react-router";
 import { useMemo } from "react";
 
@@ -35,12 +35,25 @@ export function useCatalog(ledger: Pick<Ledger, "books" | "budgetTargets" | "cat
     return useMemo(() => catalogOf(ledger), [ledger]);
 }
 
+const PHOTO_URL_BATCH = 100;
+
+const mergedPhotos = (results: readonly { data?: readonly { key: string; url: string }[] }[]) =>
+    toPhotoUrls(results.flatMap((result) => result.data ?? []));
+
 export function useImageUrls(keys: readonly string[]) {
     const { convexQueryClient } = useRouteContext({ from: "/_account/app" });
-    const { data } = useQuery({
-        ...photoUrlsQuery(convexQueryClient, keys),
-        placeholderData: keepPreviousData,
-        select: toPhotoUrls,
+    const batches = useMemo(
+        () =>
+            Array.from({ length: Math.ceil(keys.length / PHOTO_URL_BATCH) }, (_, index) =>
+                keys.slice(index * PHOTO_URL_BATCH, (index + 1) * PHOTO_URL_BATCH)
+            ),
+        [keys]
+    );
+    return useQueries({
+        combine: mergedPhotos,
+        queries: batches.map((batch) => ({
+            ...photoUrlsQuery(convexQueryClient, batch),
+            placeholderData: keepPreviousData,
+        })),
     });
-    return data;
 }
