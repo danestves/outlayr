@@ -4202,8 +4202,8 @@ const answers = {
                                 label: LABELS.price,
                                 source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
                                 text: t({
-                                    en: "Free, with in-app purchases from $0.99 to $2.99 in the US App Store",
-                                    es: "Gratis, con compras dentro de la app de US$0.99 a US$2.99 en el App Store de EE. UU.",
+                                    en: "Free to start, with in-app purchases from $0.99 to $2.99 in the US App Store, including one that unlocks a subscription limit",
+                                    es: "Gratis para empezar, con compras dentro de la app de US$0.99 a US$2.99 en el App Store de EE. UU., entre ellas una que desbloquea un límite de suscripciones",
                                 }),
                             },
                             {
@@ -4234,6 +4234,14 @@ const answers = {
                                 label: LABELS.platforms,
                                 source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
                                 text: "iPhone",
+                            },
+                            {
+                                label: t({ en: "Privacy", es: "Privacidad" }),
+                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                text: t({
+                                    en: "Its listing describes no bank or email connection. It says the app may collect identifiers, purchase history, usage data, and diagnostics",
+                                    es: "Su ficha no describe ninguna conexión con el banco ni con el correo. Dice que la app puede recopilar identificadores, historial de compras, datos de uso y diagnósticos",
+                                }),
                             },
                             {
                                 label: LABELS.watch,
@@ -4288,6 +4296,14 @@ const answers = {
                                 text: t({ en: "Web, iPhone, iPad, Android", es: "Web, iPhone, iPad, Android" }),
                             },
                             {
+                                label: t({ en: "Privacy", es: "Privacidad" }),
+                                source: "https://www.monarch.com/pricing",
+                                text: t({
+                                    en: "Holds your transaction history from linked accounts. Monarch says it never sells your financial data",
+                                    es: "Guarda el historial de movimientos de tus cuentas vinculadas. Monarch dice que nunca vende tus datos financieros",
+                                }),
+                            },
+                            {
                                 label: LABELS.watch,
                                 source: "https://www.monarch.com/pricing",
                                 text: t({
@@ -4315,10 +4331,17 @@ const answers = {
                                 }),
                             },
                             {
+                                label: t({ en: "Privacy", es: "Privacidad" }),
+                                text: t({
+                                    en: "No bank or inbox link. Your ledger stays on the phone unless you turn on sync or use a server feature such as voice or receipt capture",
+                                    es: "No se conecta al banco ni al correo. Tu registro se queda en el teléfono, salvo que actives la sincronización o uses una función del servidor, como registrar por voz o con un recibo",
+                                }),
+                            },
+                            {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "It doesn't find subscriptions for you, cancel them, or negotiate bills. You add each one once",
-                                    es: "No encuentra suscripciones por ti, no las cancela ni negocia facturas. Agregas cada una una vez",
+                                    en: "It doesn't find subscriptions for you, cancel them, or negotiate bills. Each charge logs the amount you entered, so it won't notice a price change or a failed payment",
+                                    es: "No encuentra suscripciones por ti, no las cancela ni negocia facturas. Cada cobro registra el monto que pusiste, así que no notará si sube el precio o si falla un pago",
                                 }),
                             },
                         ],
@@ -4330,10 +4353,18 @@ const answers = {
                         facts: [
                             {
                                 label: LABELS.price,
+                                source: "https://apps.apple.com/us/app/pocketguard-budget-app/id949414211",
+                                text: t({
+                                    en: "$12.99 a month or $74.99 a year in the US App Store, after a 7-day trial",
+                                    es: "US$12.99 al mes o US$74.99 al año en el App Store de EE. UU., después de una prueba de 7 días",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Pay once", es: "Pago único" }),
                                 source: "https://pocketguard.com/pricing/",
                                 text: t({
-                                    en: "$12.99 a month, $74.99 a year, or $149.99 once, after a 7-day trial",
-                                    es: "US$12.99 al mes, US$74.99 al año o US$149.99 en un solo pago, después de una prueba de 7 días",
+                                    en: "Its site offers some customers a one-time plan, priced by country",
+                                    es: "Su sitio les ofrece a algunos clientes un plan de pago único, con precio según el país",
                                 }),
                             },
                             {
@@ -4356,8 +4387,8 @@ const answers = {
                                 label: LABELS.availability,
                                 source: "https://pocketguard.com/",
                                 text: t({
-                                    en: "Linked accounts in the US, Canada, and the UK",
-                                    es: "Cuentas vinculadas en EE. UU., Canadá y Reino Unido",
+                                    en: "Linked accounts at institutions in the US, Canada, and the UK",
+                                    es: "Cuentas vinculadas de instituciones en EE. UU., Canadá y Reino Unido",
                                 }),
                             },
                             {
@@ -4366,6 +4397,14 @@ const answers = {
                                 text: t({
                                     en: "Web, iPhone, Apple Watch, Android",
                                     es: "Web, iPhone, Apple Watch, Android",
+                                }),
+                            },
+                            {
+                                label: t({ en: "Privacy", es: "Privacidad" }),
+                                source: "https://pocketguard.com/security/",
+                                text: t({
+                                    en: "Reads your transactions through Plaid, Finicity, or Salt Edge with read-only access. PocketGuard says it can't move money and doesn't sell your data",
+                                    es: "Lee tus movimientos a través de Plaid, Finicity o Salt Edge con acceso de solo lectura. PocketGuard dice que no puede mover dinero y que no vende tus datos",
                                 }),
                             },
                             {
@@ -4411,8 +4450,8 @@ const answers = {
                                 label: t({ en: "Bills", es: "Facturas" }),
                                 source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
                                 text: t({
-                                    en: "Its team negotiates bills, for 35% to 60% of the first year's savings when it works",
-                                    es: "Su equipo negocia tus facturas, por el 35% al 60% del ahorro del primer año cuando lo logra",
+                                    en: "Its team negotiates bills on Premium+, at no additional cost beyond the $15 a month",
+                                    es: "Su equipo negocia tus facturas con Premium+, sin costo adicional a los US$15 al mes",
                                 }),
                             },
                             {
@@ -4432,11 +4471,19 @@ const answers = {
                                 }),
                             },
                             {
+                                label: t({ en: "Privacy", es: "Privacidad" }),
+                                source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+                                text: t({
+                                    en: "Connects through Plaid and holds your transaction history. Rocket Money says your bank credentials are never stored on its servers",
+                                    es: "Se conecta a través de Plaid y guarda el historial de tus movimientos. Rocket Money dice que tus credenciales del banco nunca se guardan en sus servidores",
+                                }),
+                            },
+                            {
                                 label: LABELS.watch,
                                 source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
                                 text: t({
-                                    en: "Only in the United States, manual transactions need Premium, and bill negotiation costs 35% to 60% of the first year's savings",
-                                    es: "Solo en Estados Unidos, los movimientos a mano requieren Premium y negociar facturas cuesta del 35% al 60% del ahorro del primer año",
+                                    en: "Only in the United States, the free plan leaves out cancellation and upcoming bills, and manual transactions need Premium",
+                                    es: "Solo en Estados Unidos, el plan gratis no incluye la cancelación ni los pagos próximos, y los movimientos a mano requieren Premium",
                                 }),
                             },
                         ],
@@ -4444,13 +4491,68 @@ const answers = {
                         slug: "rocket-money",
                         summary: t(RIVALS.rocketMoney),
                     },
+                    {
+                        facts: [
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/us/app/id6758765733",
+                                text: t({
+                                    en: "Free for up to 5 subscriptions. Pro is $4.99 a month, $14.99 a year, or $24.99 once in the US App Store",
+                                    es: "Gratis hasta 5 suscripciones. Pro cuesta US$4.99 al mes, US$14.99 al año o US$24.99 en un solo pago en el App Store de EE. UU.",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                source: "https://apps.apple.com/us/app/id6758765733",
+                                text: t({
+                                    en: "Imported from Gmail receipts, your App Store subscriptions, or a bank statement file. Statement import is a Pro feature",
+                                    es: "Se importan desde recibos de Gmail, tus suscripciones del App Store o un archivo de estado de cuenta. Importar estados de cuenta es una función Pro",
+                                }),
+                            },
+                            {
+                                label: LABELS.subscriptions,
+                                source: "https://apps.apple.com/us/app/id6758765733",
+                                text: t({
+                                    en: "Monthly and yearly totals, a bill calendar, reminders, and cancellation steps. You cancel each one yourself",
+                                    es: "Totales al mes y al año, un calendario de cobros, avisos y pasos para cancelar. Tú cancelas cada una",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://apps.apple.com/us/app/id6758765733",
+                                text: t({ en: "iPhone, iPad", es: "iPhone, iPad" }),
+                            },
+                            {
+                                label: t({ en: "Privacy", es: "Privacidad" }),
+                                source: "https://apps.apple.com/us/app/id6758765733",
+                                text: t({
+                                    en: "Data stays on your device, with optional iCloud sync. Statements and receipts you import go to a service that reads them. Its privacy label says purchase history and identifiers may be used for third-party advertising",
+                                    es: "Los datos se quedan en tu dispositivo, con sincronización opcional en iCloud. Los estados de cuenta y recibos que importas van a un servicio que los lee. Su etiqueta de privacidad dice que el historial de compras y los identificadores pueden usarse para publicidad de terceros",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://apps.apple.com/us/app/id6758765733",
+                                text: t({
+                                    en: "Apple devices only, 5 subscriptions on the free plan, and imported receipts or statements leave your device",
+                                    es: "Solo para dispositivos Apple, 5 suscripciones en el plan gratis, y los recibos o estados de cuenta que importas salen de tu dispositivo",
+                                }),
+                            },
+                        ],
+                        name: "Subcut",
+                        slug: "subcut",
+                        summary: t({
+                            en: "Subcut is an iPhone and iPad app that finds subscriptions in your Gmail receipts or a bank statement file, without linking a bank.",
+                            es: "Subcut es una app para iPhone y iPad que encuentra suscripciones en tus recibos de Gmail o en un archivo de estado de cuenta, sin vincular un banco.",
+                        }),
+                    },
                 ],
                 facts: [
                     {
                         label: "Bobby",
                         text: t({
-                            en: "Best if you want a plain list of your subscriptions on iPhone",
-                            es: "Ideal si quieres una lista simple de tus suscripciones en iPhone",
+                            en: "Best if you know what you pay for and want a plain list on iPhone, with no bank or email connection",
+                            es: "Ideal si ya sabes lo que pagas y quieres una lista simple en iPhone, sin conectar el banco ni el correo",
                         }),
                     },
                     {
@@ -4481,12 +4583,19 @@ const answers = {
                             es: "Ideal si vives en Estados Unidos y quieres que su equipo cancele suscripciones por ti",
                         }),
                     },
+                    {
+                        label: "Subcut",
+                        text: t({
+                            en: "Best if you use Gmail on an iPhone or iPad and want subscriptions found without linking a bank",
+                            es: "Ideal si usas Gmail en iPhone o iPad y quieres que encuentre tus suscripciones sin vincular un banco",
+                        }),
+                    },
                 ],
                 faq: [
                     {
                         answer: t({
-                            en: "It depends on what you need. In the United States, Rocket Money's team can cancel subscriptions for you on Premium. PocketGuard and Monarch find recurring charges in linked accounts. Bobby keeps a plain list on iPhone. Outlayr logs each subscription on its day next to your daily spending, on a free plan.",
-                            es: "Depende de lo que necesites. En Estados Unidos, el equipo de Rocket Money puede cancelar suscripciones por ti con Premium. PocketGuard y Monarch encuentran los cobros recurrentes en tus cuentas vinculadas. Bobby lleva una lista simple en iPhone. Outlayr registra cada suscripción en su día junto a tus gastos diarios, con un plan gratis.",
+                            en: "It depends on whether you need the app to find your subscriptions. PocketGuard, Monarch, and Rocket Money find them in linked accounts, and in the United States Rocket Money's team can also cancel them on Premium. Subcut finds them in Gmail receipts or a statement file. Bobby and Outlayr work from a list you add yourself, and Outlayr logs each charge next to your daily spending.",
+                            es: "Depende de si necesitas que la app encuentre tus suscripciones. PocketGuard, Monarch y Rocket Money las encuentran en tus cuentas vinculadas, y en Estados Unidos el equipo de Rocket Money también puede cancelarlas con Premium. Subcut las encuentra en recibos de Gmail o en un archivo de estado de cuenta. Bobby y Outlayr funcionan con una lista que agregas tú, y Outlayr registra cada cobro junto a tus gastos diarios.",
                         }),
                         question: t({
                             en: "What is the best app to track subscriptions?",
@@ -4495,12 +4604,22 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. In Outlayr, subscriptions, reminders, and Upcoming are part of the free plan. Rocket Money's free plan tracks subscriptions, and Bobby is free with in-app purchases. PocketGuard and Monarch are paid after a 7-day trial.",
-                            es: "Sí. En Outlayr, las suscripciones, los avisos y Próximos son parte del plan gratis. El plan gratis de Rocket Money controla suscripciones, y Bobby es gratis con compras dentro de la app. PocketGuard y Monarch son de pago después de una prueba de 7 días.",
+                            en: "Yes, with limits. Outlayr's subscriptions, reminders, and Upcoming are on its free plan, but you add each subscription yourself. Rocket Money's free plan finds subscriptions in the United States but leaves out upcoming bills and cancellation. Subcut is free for up to 5 subscriptions, and Bobby is free to start with paid unlocks. PocketGuard and Monarch are paid after a 7-day trial.",
+                            es: "Sí, con límites. En Outlayr, las suscripciones, los avisos y Próximos son parte del plan gratis, pero agregas tú cada suscripción. El plan gratis de Rocket Money encuentra suscripciones en Estados Unidos, pero no incluye los pagos próximos ni la cancelación. Subcut es gratis hasta 5 suscripciones, y Bobby es gratis para empezar, con funciones de pago. PocketGuard y Monarch son de pago después de una prueba de 7 días.",
                         }),
                         question: t({
                             en: "Is there a free subscription tracker app?",
                             es: "¿Hay una app gratis para controlar suscripciones?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. Bobby and Outlayr work from a list you add yourself, and Subcut can read Gmail receipts or a statement file instead. The apps that find subscriptions in linked accounts are Rocket Money, Monarch, and PocketGuard.",
+                            es: "No. Bobby y Outlayr funcionan con una lista que agregas tú, y Subcut puede leer recibos de Gmail o un archivo de estado de cuenta. Las apps que encuentran suscripciones en cuentas vinculadas son Rocket Money, Monarch y PocketGuard.",
+                        }),
+                        question: t({
+                            en: "Do I have to link my bank to track subscriptions?",
+                            es: "¿Tengo que vincular mi banco para controlar suscripciones?",
                         }),
                     },
                     {
@@ -4515,8 +4634,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Rocket Money is available in the United States only, and Monarch in the United States and Canada. PocketGuard links accounts in the US, Canada, and the UK. Outlayr is offered in 175 countries and regions, in English, Spanish, Portuguese, and French.",
-                            es: "Rocket Money solo está disponible en Estados Unidos, y Monarch en Estados Unidos y Canadá. PocketGuard vincula cuentas de EE. UU., Canadá y Reino Unido. Outlayr se ofrece en 175 países y regiones, en inglés, español, portugués y francés.",
+                            en: "Rocket Money is available in the United States only, and Monarch in the United States and Canada. PocketGuard links accounts in the US, Canada, and the UK. If your bank is elsewhere, use an app that doesn't link one: Bobby, Subcut, or Outlayr, which comes in English, Spanish, Portuguese, and French. Check your app store to confirm it's offered in your country.",
+                            es: "Rocket Money solo está disponible en Estados Unidos, y Monarch en Estados Unidos y Canadá. PocketGuard vincula cuentas de EE. UU., Canadá y Reino Unido. Si tu banco está en otro país, usa una app que no lo vincule: Bobby, Subcut u Outlayr, que está en inglés, español, portugués y francés. Revisa tu tienda de apps para confirmar que se ofrece en tu país.",
                         }),
                         question: t({
                             en: "Which subscription trackers work outside the United States?",
@@ -4525,23 +4644,67 @@ const answers = {
                     },
                 ],
                 lead: t({
-                    en: "Five apps to track subscriptions, each best for a different need: Bobby, Monarch, Outlayr, PocketGuard, and Rocket Money. Outlayr is ours; the other four are not. Outlayr does not cancel subscriptions or negotiate bills, and Rocket Money's team does both.",
-                    es: "Cinco apps para controlar suscripciones, cada una mejor para algo distinto: Bobby, Monarch, Outlayr, PocketGuard y Rocket Money. Outlayr es nuestra; las otras cuatro no. Outlayr no cancela suscripciones ni negocia facturas, y el equipo de Rocket Money hace las dos cosas.",
+                    en: "The best subscription tracker depends on how you want charges found. To catch the ones you forgot, link a bank with Rocket Money (US only), Monarch, or PocketGuard, or read your Gmail receipts with Subcut. To share neither, keep your own list in Bobby or Outlayr. Outlayr is ours, and it doesn't find subscriptions for you, cancel them, or negotiate bills.",
+                    es: "La mejor app para controlar suscripciones depende de cómo quieres encontrar los cobros. Para dar con los que olvidaste, vincula tu banco con Rocket Money (solo en EE. UU.), Monarch o PocketGuard, o lee tus recibos de Gmail con Subcut. Para no compartir ninguno de los dos, lleva tu propia lista en Bobby o en Outlayr. Outlayr es nuestra, y no encuentra suscripciones por ti, no las cancela ni negocia facturas.",
                 }),
                 meta: {
                     description: t({
-                        en: "Bobby, Monarch, Outlayr, PocketGuard, and Rocket Money compared on price, which are free, how subscriptions get in, and where each works. Outlayr is ours; the rest are not.",
-                        es: "Bobby, Monarch, Outlayr, PocketGuard y Rocket Money comparadas en precio, cuáles son gratis, cómo entran las suscripciones y dónde funcionan. Outlayr es nuestra.",
+                        en: "Six subscription tracker apps compared by how they find charges: bank link, Gmail receipts, or your own list. Prices, free plans, and privacy. Outlayr is ours.",
+                        es: "Seis apps de suscripciones según cómo encuentran los cobros: banco, recibos de Gmail o tu propia lista. Precios, planes gratis y privacidad. Outlayr es nuestra.",
                     }),
                     title: t({
-                        en: "Best Subscription Tracker Apps, Compared (2026) · Outlayr",
-                        es: "Mejores apps para controlar suscripciones (2026) · Outlayr",
+                        en: "Best Subscription Tracker Apps (2026), Free and Paid · Outlayr",
+                        es: "Mejores apps de suscripciones (2026), gratis y de pago · Outlayr",
                     }),
                 },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Bank-linked apps read your transactions and look for charges that repeat, so they catch subscriptions you forgot, whichever card pays them. Rocket Money, Monarch, and PocketGuard work this way. Rocket Money can find them for free in the United States; Monarch and PocketGuard cost $74.99 to $99.99 a year. The tradeoff is that the app and its data provider see your transaction history, and your bank has to be supported, which here means the US, Canada, or the UK.",
+                                es: "Las apps que se vinculan al banco leen tus movimientos y buscan cobros que se repiten, así que encuentran las suscripciones que olvidaste, sin importar con qué tarjeta las pagas. Rocket Money, Monarch y PocketGuard funcionan así. Rocket Money puede encontrarlas gratis en Estados Unidos; Monarch y PocketGuard cuestan de US$74.99 a US$99.99 al año. A cambio, la app y su proveedor de datos ven el historial de tus movimientos, y tu banco tiene que estar soportado, lo que aquí significa EE. UU., Canadá o Reino Unido.",
+                            }),
+                            t({
+                                en: "Email-based apps read receipts and confirmation emails instead, so you don't share bank access. Subcut does this with Gmail and is free for up to 5 subscriptions. The tradeoff is that you give the app access to your inbox, and it can only find what sent a receipt to that address.",
+                                es: "Las apps que leen el correo revisan recibos y correos de confirmación, así que no compartes el acceso a tu banco. Subcut lo hace con Gmail y es gratis hasta 5 suscripciones. A cambio, le das a la app acceso a tu correo, y solo encuentra lo que mandó un recibo a esa dirección.",
+                            }),
+                            t({
+                                en: "Manual lists like Bobby and Outlayr need no connection and work with any bank, in any country, for free or a few dollars. They share the least, but you have to know what you pay for and type it in, and a price change won't show up until you edit it.",
+                                es: "Las listas manuales como Bobby y Outlayr no necesitan ninguna conexión y sirven con cualquier banco, en cualquier país, gratis o por pocos dólares. Son las que menos datos comparten, pero tienes que saber lo que pagas y escribirlo, y un cambio de precio no aparece hasta que lo edites.",
+                            }),
+                            t({
+                                en: "Not sure what you're paying for? Start free: your Apple account and Google Play each list the subscriptions billed through them, though not the ones charged straight to your card. If that leaves gaps, a statement or an app that finds charges will fill them. If you already know your list, a manual app is enough.",
+                                es: "¿No sabes bien qué estás pagando? Empieza gratis: tu cuenta de Apple y Google Play muestran las suscripciones que se cobran a través de ellas, pero no las que se cargan directo a tu tarjeta. Si te faltan algunas, un estado de cuenta o una app que encuentre los cobros las completa. Si ya conoces tu lista, te basta con una app manual.",
+                            }),
+                        ],
+                        id: t({ en: "how-to-choose", es: "como-elegir" }),
+                        title: t({
+                            en: "How to choose: bank link, email, or manual list",
+                            es: "Cómo elegir: banco, correo o lista manual",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "List every charge from your last two or three card statements, your email receipts, and your App Store or Google Play subscriptions. Turn each price into a yearly cost: a weekly charge counts 52 times, a monthly one 12, one every 3 months 4, and a yearly one once. Add them up and divide by 12 for the monthly figure.",
+                                es: "Anota cada cobro de tus últimos dos o tres estados de cuenta, tus recibos por correo y tus suscripciones del App Store o de Google Play. Convierte cada precio en un costo anual: un cobro semanal cuenta 52 veces, uno mensual 12, uno cada 3 meses 4 y uno anual una vez. Súmalos y divide entre 12 para tener la cifra mensual.",
+                            }),
+                            t({
+                                en: "For example, $15 a month, $120 a year, and $5 a week come to $560 a year, or $46.67 a month. The subscription cost calculator linked below does this math for you, and nothing you type leaves your browser.",
+                                es: "Por ejemplo, US$15 al mes, US$120 al año y US$5 a la semana suman US$560 al año, o US$46.67 al mes. La calculadora de suscripciones que está enlazada abajo hace esta cuenta por ti, y nada de lo que escribes sale de tu navegador.",
+                            }),
+                        ],
+                        id: t({ en: "how-much-you-spend", es: "cuanto-gastas" }),
+                        title: t({
+                            en: "How much am I spending on subscriptions?",
+                            es: "¿Cuánto gasto en suscripciones?",
+                        }),
+                    },
+                ],
                 picked: [
                     t({
-                        en: "Each app here shows what your subscriptions cost, whether you add them yourself or the app finds them in linked accounts, and each one fits a different need. They are in alphabetical order, not ranked.",
-                        es: "Cada app de esta lista te muestra cuánto cuestan tus suscripciones, ya sea que las agregues tú o que la app las encuentre en tus cuentas vinculadas, y cada una sirve para algo distinto. Van en orden alfabético, no por puesto.",
+                        en: "Each app here shows what your subscriptions cost, and they differ in how the subscriptions get in: from linked accounts, from email or files, or by hand. They are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista te muestra cuánto cuestan tus suscripciones, y se diferencian en cómo entran: desde cuentas vinculadas, desde el correo o archivos, o a mano. Van en orden alfabético, no por puesto.",
                     }),
                     t({
                         en: "Every detail about the other apps was read on that app's own site, help center, or store listing on the date below the table, and links to the page it came from. These are the facts as each app states them, not results of our own testing.",
@@ -4553,8 +4716,8 @@ const answers = {
                     }),
                 ],
                 related: [
-                    "/guides/subscription-tracker",
                     "/tools/subscription-cost-calculator",
+                    "/guides/subscription-tracker",
                     "/compare/rocket-money",
                 ] satisfies PageRef[],
                 sources: t({
