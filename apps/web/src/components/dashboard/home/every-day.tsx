@@ -1,6 +1,6 @@
 import { DayGrid } from "panelui-web/day-grid";
 import { useMemo, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -25,10 +25,11 @@ const CELL = 28;
 const GAP = 4;
 const TRACK = CELL + GAP;
 const WEEKDAY_GUTTER = 18;
-// 2024-01-01 was a Monday.
-const MONDAY_NOON = Date.UTC(2024, 0, 1, 12);
+// 2023-12-31 was a Sunday, the day firstWeekday 1 means.
+const SUNDAY_NOON = Date.UTC(2023, 11, 31, 12);
 const DAY_MS = 86_400_000;
 const FIRST_DAY_ON_WEEKDAY = "[&>:first-child]:[grid-row-start:var(--first-row)]";
+const DOTS_CLEAR_OF_NEIGHBOURS = "[&>:not([aria-hidden])]:p-[18%] [&>*>span]:shadow-none";
 
 const weekLayout = (lead: number, days: number) => {
     const weeks = Math.ceil((lead + days) / WEEK);
@@ -38,18 +39,20 @@ const weekLayout = (lead: number, days: number) => {
         gridTemplateColumns: `repeat(${weeks}, minmax(0, 1fr))`,
         gridTemplateRows: `repeat(${WEEK}, minmax(0, 1fr))`,
     };
-    return { style, width: weeks * TRACK + WEEKDAY_GUTTER };
+    return { style, width: weeks * TRACK - GAP + WEEKDAY_GUTTER };
 };
 
-function useWeekLetters() {
+function useWeekLetters(firstWeekday: number) {
     const { locale } = useLocale();
     return useMemo(() => {
         const format = new Intl.DateTimeFormat(LANGUAGES[localeFromParam(locale)].date, {
             timeZone: "UTC",
             weekday: "narrow",
         });
-        return Array.from({ length: WEEK }, (_, index) => format.format(MONDAY_NOON + index * DAY_MS));
-    }, [locale]);
+        return Array.from({ length: WEEK }, (_, index) =>
+            format.format(SUNDAY_NOON + (firstWeekday - 1 + index) * DAY_MS)
+        );
+    }, [firstWeekday, locale]);
 }
 
 function Stat({ amount, day, label }: { amount: string; day: string; label: string }) {
@@ -62,13 +65,49 @@ function Stat({ amount, day, label }: { amount: string; day: string; label: stri
     );
 }
 
+function Month({
+    children,
+    days,
+    filled = days.measured.length,
+    gridStyle,
+    letters,
+}: {
+    children: ReactNode;
+    days: ReturnType<typeof everyDay>;
+    filled?: number;
+    gridStyle: CSSProperties;
+    letters: string[];
+}) {
+    return (
+        <>
+            <DayGrid.Weekdays className="dash-figure w-3 flex-none text-[11px]" labels={letters} />
+            <div className="grid min-w-0 flex-1 grid-cols-1 *:self-start *:[grid-area:1/1]">
+                <div
+                    aria-hidden
+                    className={`grid w-full grid-flow-col gap-1 ${FIRST_DAY_ON_WEEKDAY}`}
+                    style={gridStyle}
+                >
+                    {days.cells.map((cell, index) => (
+                        <span className="flex aspect-square items-center justify-center" key={cell.day}>
+                            {index < filled ? null : (
+                                <u className="border-app-ghost block size-1.5 rounded-full border" />
+                            )}
+                        </span>
+                    ))}
+                </div>
+                {children}
+            </div>
+        </>
+    );
+}
+
 export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger } = useDashboard();
     const { everyDay: copy, setup: setupCopy } = useIntlayer("dashboard-home");
     const categoryName = useCategoryName();
     const date = useDateFormat();
     const { money } = useDisplayFormat();
-    const letters = useWeekLetters();
+    const letters = useWeekLetters(ledger.firstWeekday);
     const days = useMemo(
         () => everyDay(ledger, filters.period, { accounts: filters.accounts }, filters.categories),
         [filters.accounts, filters.categories, filters.period, ledger]
@@ -85,36 +124,46 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
         return category ? categoryName(category) : "";
     };
     const { style, width } = weekLayout(days.lead, days.cells.length);
-    const weekdays = <DayGrid.Weekdays className="dash-figure w-3 flex-none text-[11px]" labels={letters} />;
     if (setup) {
         const logged = days.cells.some((cell) => cell.amount > 0);
+        const emptyDayFill = logged ? "var(--color-app-ghost)" : undefined;
         return (
             <CardFrame className="min-h-[363px]" title={copy.title}>
                 <div aria-hidden className="mx-auto flex max-w-full gap-1.5 pt-3" style={{ width }}>
-                    {weekdays}
-                    <div className={`grid min-w-0 flex-1 grid-flow-col gap-1 ${FIRST_DAY_ON_WEEKDAY}`} style={style}>
-                        {(logged ? days.measured : days.cells).map((cell, index) => {
-                            const loggedLevel = cell.amount > 0 ? LOGGED_LEVEL : 0;
-                            const level = logged ? loggedLevel : (GHOST_LEVELS[index] ?? 0);
-                            const today = !logged && cell.day === ledger.today;
-                            return (
-                                <span className="flex aspect-square items-center justify-center" key={cell.day}>
-                                    <u
-                                        className="block rounded-full border"
-                                        style={{
-                                            backgroundColor: cell.amount > 0 ? "var(--color-app-tint)" : undefined,
-                                            borderColor:
-                                                cell.amount > 0 || today
-                                                    ? "var(--color-app-tint)"
-                                                    : "var(--color-app-ghost)",
-                                            height: `${(SIZES[level] ?? 0) * 100}%`,
-                                            width: `${(SIZES[level] ?? 0) * 100}%`,
-                                        }}
-                                    />
-                                </span>
-                            );
-                        })}
-                    </div>
+                    <Month
+                        days={days}
+                        filled={logged ? days.measured.length : days.cells.length}
+                        gridStyle={style}
+                        letters={letters}
+                    >
+                        <div className={`grid w-full grid-flow-col gap-1 ${FIRST_DAY_ON_WEEKDAY}`} style={style}>
+                            {(logged ? days.measured : days.cells).map((cell, index) => {
+                                const loggedLevel = cell.amount > 0 ? LOGGED_LEVEL : 0;
+                                const level = logged ? loggedLevel : (GHOST_LEVELS[index] ?? 0);
+                                const today = !logged && cell.day === ledger.today;
+                                return (
+                                    <span
+                                        className="flex aspect-square items-center justify-center p-[18%]"
+                                        key={cell.day}
+                                    >
+                                        <u
+                                            className="block min-h-1 min-w-1 rounded-full border"
+                                            style={{
+                                                backgroundColor:
+                                                    cell.amount > 0 ? "var(--color-app-tint)" : emptyDayFill,
+                                                borderColor:
+                                                    cell.amount > 0 || today
+                                                        ? "var(--color-app-tint)"
+                                                        : "var(--color-app-ghost)",
+                                                height: `${(SIZES[level] ?? 0) * 100}%`,
+                                                width: `${(SIZES[level] ?? 0) * 100}%`,
+                                            }}
+                                        />
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    </Month>
                 </div>
                 {logged ? null : <Cover fade={LATE_FADE} line={setupCopy.fillsIn} title={setupCopy.daysTitle} />}
             </CardFrame>
@@ -136,14 +185,15 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
                 title={copy.title}
             >
                 <div className="mx-auto my-4 flex max-w-full gap-1.5" style={{ width }}>
-                    {weekdays}
-                    <DayGrid
-                        aria-label={copy.quietDays({ count: days.measured.length }).value}
-                        cells={days.measured.map((cell) => ({ label: date.day(cell.day), level: 0 }))}
-                        className={`min-w-0 flex-1 ${FIRST_DAY_ON_WEEKDAY}`}
-                        rows={WEEK}
-                        style={style}
-                    />
+                    <Month days={days} gridStyle={style} letters={letters}>
+                        <DayGrid
+                            aria-label={copy.quietDays({ count: days.measured.length }).value}
+                            cells={days.measured.map((cell) => ({ label: date.day(cell.day), level: 0 }))}
+                            className={`${DOTS_CLEAR_OF_NEIGHBOURS} ${FIRST_DAY_ON_WEEKDAY}`}
+                            rows={WEEK}
+                            style={style}
+                        />
+                    </Month>
                 </div>
             </CardFrame>
         );
@@ -184,22 +234,23 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
         >
             <div className="flex flex-1 flex-wrap gap-4 p-4">
                 <div className="flex flex-[9_1_140px] gap-1.5 self-start" style={{ maxWidth: width }}>
-                    {weekdays}
-                    <DayGrid
-                        aria-label={copy.title.value}
-                        cells={days.measured.map((cell) => ({
-                            label: `${date.day(cell.day)} · ${money(cell.amount, ledger.currency)}`,
-                            level: cell.level,
-                        }))}
-                        className={`min-w-0 flex-1 touch-manipulation ${FIRST_DAY_ON_WEEKDAY}`}
-                        onValueChange={(index) => {
-                            const { day } = days.measured[index] ?? {};
-                            setSelectedDay(day === selectedDay ? null : (day ?? null));
-                        }}
-                        rows={WEEK}
-                        style={style}
-                        value={selected ? selectedIndex : null}
-                    />
+                    <Month days={days} gridStyle={style} letters={letters}>
+                        <DayGrid
+                            aria-label={copy.title.value}
+                            cells={days.measured.map((cell) => ({
+                                label: `${date.day(cell.day)} · ${money(cell.amount, ledger.currency)}`,
+                                level: cell.level,
+                            }))}
+                            className={`touch-manipulation ${DOTS_CLEAR_OF_NEIGHBOURS} ${FIRST_DAY_ON_WEEKDAY}`}
+                            onValueChange={(index) => {
+                                const { day } = days.measured[index] ?? {};
+                                setSelectedDay(day === selectedDay ? null : (day ?? null));
+                            }}
+                            rows={WEEK}
+                            style={style}
+                            value={selected ? selectedIndex : null}
+                        />
+                    </Month>
                 </div>
                 <div className={`min-w-0 flex-[1_1_96px] ${days.runnerUp ? "min-h-36" : ""}`}>
                     <DayGrid.Caption className="gap-0 empty:hidden">
