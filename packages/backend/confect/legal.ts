@@ -336,7 +336,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
             ],
         },
         document: "privacy",
-        effectiveAtMs: Date.UTC(2026, 10, 7),
+        effectiveAtMs: Date.UTC(2026, 10, 8),
     },
     {
         changes: {
@@ -366,7 +366,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
             ],
         },
         document: "terms",
-        effectiveAtMs: Date.UTC(2026, 10, 7),
+        effectiveAtMs: Date.UTC(2026, 10, 8),
     },
 ];
 
