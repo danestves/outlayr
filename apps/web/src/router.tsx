@@ -36,6 +36,7 @@ export function getRouter() {
         routeTree,
         scrollRestoration: true,
         scrollRestorationBehavior: "instant",
+        scrollToTopSelectors: ['[data-scroll-restoration-id="dashboard-content"]'],
     });
     setupRouterSsrQueryIntegration({ queryClient, router });
     return routerWithDbClient(router, dbClient);
