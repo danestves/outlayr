@@ -5220,8 +5220,8 @@ const answers = {
                     {
                         label: t({ en: "In Outlayr", es: "En Outlayr" }),
                         text: t({
-                            en: "A Household profile: its own ledger and budgets next to your Personal one. Pro",
-                            es: "Un perfil Hogar: su propio registro y presupuestos junto al Personal. Pro",
+                            en: "One profile you both join, with its own ledger and budgets. Pro",
+                            es: "Un perfil al que se unen los dos, con su propio registro y presupuestos. Pro",
                         }),
                     },
                 ],
@@ -5238,8 +5238,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Not between two Outlayr accounts. Profiles keep separate ledgers inside one account, so a Household profile holds your shared bills and budgets apart from your Personal ones. Outlayr has no invites or shared access between two people.",
-                            es: "No entre dos cuentas de Outlayr. Los perfiles guardan registros separados dentro de una cuenta, así que un perfil Hogar lleva las cuentas y presupuestos compartidos aparte de los personales. Outlayr no tiene invitaciones ni acceso compartido entre dos personas.",
+                            en: "Yes. Create a profile for your shared money and invite your partner to join it. You both log into the same ledger and see the same budgets, and each of your Personal profiles stays your own.",
+                            es: "Sí. Crea un perfil para el dinero compartido e invita a tu pareja a unirse. Los dos registran en el mismo registro y ven los mismos presupuestos, y el perfil Personal de cada uno sigue siendo solo suyo.",
                         }),
                         question: t({
                             en: "Can my partner and I share one Outlayr budget?",
@@ -5259,13 +5259,13 @@ const answers = {
                     COST_FAQ,
                 ],
                 lead: t({
-                    en: "Couples usually split money one of three ways: everything joint, split by income, or yours, mine, and ours. Pick one, agree which bills are shared, and track those in their own budget. In Outlayr, a Household profile keeps shared bills and budgets in a ledger of their own, next to your Personal one.",
-                    es: "Las parejas suelen dividir el dinero de una de tres formas: todo en común, según ingresos, o lo tuyo, lo mío y lo nuestro. Elijan una, acuerden qué cuentas son compartidas y llévenlas en su propio presupuesto. En Outlayr, un perfil Hogar guarda las cuentas y presupuestos compartidos en un registro aparte, junto al Personal.",
+                    en: "Couples usually split money one of three ways: everything joint, split by income, or yours, mine, and ours. Pick one, agree which bills are shared, and track those in their own budget. In Outlayr, you both join one profile that keeps those bills and budgets in a ledger of their own, apart from each of your Personal ones.",
+                    es: "Las parejas suelen dividir el dinero de una de tres formas: todo en común, según ingresos, o lo tuyo, lo mío y lo nuestro. Elijan una, acuerden qué cuentas son compartidas y llévenlas en su propio presupuesto. En Outlayr, los dos se unen a un perfil que lleva esas cuentas y presupuestos en un registro aparte, separado del Personal de cada uno.",
                 }),
                 meta: {
                     description: t({
-                        en: "Three ways couples budget, how to split bills by income with a worked example, and how a Household profile in Outlayr keeps shared money apart.",
-                        es: "Tres formas de presupuestar en pareja, cómo dividir las cuentas según ingresos con un ejemplo, y cómo un perfil Hogar en Outlayr separa el dinero compartido.",
+                        en: "Three ways couples budget, how to split bills by income with a worked example, and how one shared profile in Outlayr keeps shared money apart.",
+                        es: "Tres formas de presupuestar en pareja, cómo dividir las cuentas según ingresos con un ejemplo, y cómo un perfil compartido en Outlayr separa el dinero en común.",
                     }),
                     title: t({
                         en: "Budget App for Couples: How to Split Money Fairly · Outlayr",
@@ -5290,16 +5290,16 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "With Outlayr Pro, create a profile named Household from the profile switcher in the Log title. It is a separate ledger, with its own accounts, categories, budgets, and main currency, and switching back to Personal shows only your own money.",
-                                es: "Con Outlayr Pro, crea un perfil llamado Hogar desde el selector de perfiles en el título del Registro. Es un registro aparte, con sus propias cuentas, categorías, presupuestos y moneda principal, y al volver a Personal ves solo tu dinero.",
+                                en: "With Outlayr Pro, create a profile for your shared money, such as Household, from the profile switcher in the Log title. It is a separate ledger, with its own accounts, categories, budgets, and main currency.",
+                                es: "Con Outlayr Pro, crea un perfil para el dinero compartido, como Hogar, desde el selector de perfiles en el título del Registro. Es un registro aparte, con sus propias cuentas, categorías, presupuestos y moneda principal.",
                             }),
                             t({
-                                en: "Log shared bills in Household and set a monthly budget on each. Outlayr does not link two people's accounts, so the partner who keeps the Household profile logs the shared bills, and you settle up between you by the split you agreed.",
-                                es: "Registra las cuentas compartidas en Hogar y ponle un presupuesto mensual a cada una. Outlayr no conecta las cuentas de dos personas, así que quien lleva el perfil Hogar registra las cuentas compartidas, y ustedes se ponen al día entre los dos según la división que acordaron.",
+                                en: "Then invite your partner to join it. You both log shared bills there and see what is left in each budget, whoever paid. Your Personal profiles stay separate, so the rest of your spending stays yours.",
+                                es: "Luego invita a tu pareja a unirse. Los dos registran ahí las cuentas compartidas y ven cuánto queda en cada presupuesto, sin importar quién pagó. Sus perfiles Personales siguen separados, así que el resto de lo que gasta cada uno sigue siendo suyo.",
                             }),
                         ],
                         id: "outlayr",
-                        title: t({ en: "A Household profile in Outlayr", es: "Un perfil Hogar en Outlayr" }),
+                        title: t({ en: "One shared profile in Outlayr", es: "Un perfil compartido en Outlayr" }),
                     },
                 ],
                 plateAlt: t({
@@ -5328,10 +5328,10 @@ const answers = {
                     },
                     {
                         text: t({
-                            en: "A Household profile in Outlayr keeps them in a ledger of their own.",
-                            es: "Un perfil Hogar en Outlayr las lleva en un registro aparte.",
+                            en: "Create one profile in Outlayr and invite your partner to join it.",
+                            es: "Creen un perfil en Outlayr e inviten a la pareja a unirse.",
                         }),
-                        title: t({ en: "Track them in their own budget", es: "Llévenlas en su propio presupuesto" }),
+                        title: t({ en: "Track them in one shared profile", es: "Llévenlas en un perfil compartido" }),
                     },
                 ],
                 title: t({
