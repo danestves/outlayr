@@ -70,7 +70,7 @@ const record = FunctionImpl.make(
         const writer = yield* DatabaseWriter;
         const row = {
             ...args,
-            expiresAt: args.resolvedAt + (args.source === "web" ? WEB_TTL_MS : MODEL_TTL_MS),
+            expiresAt: args.resolvedAt + (args.source === "model" ? MODEL_TTL_MS : WEB_TTL_MS),
         };
         // One indexed point read and write per key, inside one transaction.
         for (const key of keys.slice(0, MAX_KEYS)) {
@@ -79,7 +79,7 @@ const record = FunctionImpl.make(
                 yield* writer.table("merchantKnowledge").insert({ ...row, key });
             } else if (
                 args.source === "web" ||
-                sourceOf(existing) === "model" ||
+                (args.source === "model" && sourceOf(existing) === "model") ||
                 expiresAt(existing) <= args.resolvedAt
             ) {
                 yield* writer.table("merchantKnowledge").patch(existing._id, { ...row, key });

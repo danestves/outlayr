@@ -3,12 +3,16 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 
 import { META_KEYS, setMeta } from "@/data/app-meta-core";
+import { getCategoryById } from "@/data/categories-core";
+import { recallMerchant, rememberMerchant } from "@/data/merchant-book-core";
 import { applyMerchantToSiblings } from "@/data/merchant-siblings-core";
 import { setBoolSetting } from "@/data/settings-core";
 import { tagIdsForQuery, tagsRepo } from "@/data/tags-core";
 import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
+import { getCachedEnrichment, setCachedEnrichment } from "@/domain/enrichment-cache";
 import { enableReminderStep } from "@/domain/reminder";
+import { merchantWebsiteTransport } from "@/lib/convex";
 import { outboundHttp } from "@/lib/http";
 import { fetchMerchantImage } from "@/lib/logo-fetch";
 import { Reminders } from "@/lib/reminders";
@@ -97,6 +101,45 @@ export const attachMerchantLogo = Effect.fn("TransactionForm.attachLogo")(functi
     return true;
 });
 
+export interface MerchantWebsiteLogo {
+    domain: string;
+    hue: string | null;
+    photoUri: string;
+}
+
+export const checkMerchantWebsite = Effect.fn("TransactionForm.checkWebsite")(
+    function* checkMerchantWebsite(domain: string, merchant: string) {
+        const outcome = yield* fetchMerchantImage({ domain, name: merchant, refresh: true });
+        if (outcome.kind !== "logo") {
+            return null;
+        }
+        const photoUri = yield* entryMedia.persistLogoBytes(outcome.bytes, domain);
+        const hues = yield* entryMedia.glowFromImage(photoUri);
+        const logo: MerchantWebsiteLogo = { domain, hue: hues[0] ?? null, photoUri };
+        return logo;
+    },
+    Effect.catchCause(() => Effect.succeed(null))
+);
+
+export interface ShareWebsiteInput {
+    currency: string;
+    db: Database;
+    domain: string;
+    forCurrency: string | null;
+    forIncome: boolean;
+    globalCurrency: string;
+    locale: string | undefined;
+    merchant: string;
+    read: () => { carryCategory: boolean; carryTags: boolean; domain: string | null };
+    savedId: string;
+}
+
+const sharedCategoryName = (db: Database, savedId: string) => {
+    const categoryId = getTransactionById(db, savedId)?.categoryId ?? null;
+    const category = categoryId === null ? null : getCategoryById(db, categoryId);
+    return category?.preset ?? null;
+};
+
 export interface CarryInput {
     db: Database;
     forCurrency: string | null;
@@ -131,6 +174,45 @@ export const carryLookup = Effect.fn("TransactionForm.carryLookup")(function* ca
         persistLogo,
         tagIds: carriedTags.map((row) => row.tagId),
     });
+});
+
+export const shareMerchantWebsite = Effect.fn("TransactionForm.shareWebsite")(function* shareMerchantWebsite(
+    input: ShareWebsiteInput
+) {
+    const { currency, db, domain, forIncome, merchant, savedId } = input;
+    const key = merchantKey(merchant);
+    const categoryName = sharedCategoryName(db, savedId);
+    const answer = {
+        categoryName,
+        domain,
+        emoji: null,
+        grounding: false,
+        isNewCategory: false,
+        merchantName: merchant,
+        parentCategoryName: null,
+        tags: [],
+    };
+    const cached = getCachedEnrichment(key, currency);
+    setCachedEnrichment(key, { ...answer, ...(cached.hit ? cached.value : null), domain }, currency);
+    const remembered = yield* recallMerchant(db, merchant, currency);
+    yield* rememberMerchant(db, merchant, currency, { ...answer, ...remembered, domain });
+    const submit = merchantWebsiteTransport();
+    yield* Effect.all(
+        [
+            carryLookup(input).pipe(Effect.ignore({ log: true })),
+            submit === null
+                ? Effect.void
+                : submit({
+                      categoryName,
+                      currency,
+                      domain,
+                      income: forIncome,
+                      locale: input.locale,
+                      name: merchant,
+                  }).pipe(Effect.ignore({ log: true })),
+        ],
+        { concurrency: "unbounded", discard: true }
+    );
 });
 
 export const createTagEntry = Effect.fn("TransactionForm.createTag")(function* createTagEntry(

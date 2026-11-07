@@ -36,6 +36,7 @@ export interface PendingCategory {
 export interface EnrichmentSuggestion {
     categoryId: string | null;
     domain: string | null;
+    lookedUp: boolean;
     pendingCategory: PendingCategory | null;
     pendingTagNames: readonly string[];
     source: "curated" | "history" | "remote";
@@ -45,6 +46,7 @@ export interface EnrichmentSuggestion {
 const NOTHING: EnrichmentSuggestion = {
     categoryId: null,
     domain: null,
+    lookedUp: false,
     pendingCategory: null,
     pendingTagNames: [],
     source: "curated",
@@ -102,6 +104,7 @@ function toCuratedSuggestion(match: MerchantMatch): EnrichmentSuggestion {
     return {
         categoryId: null,
         domain: match.domain,
+        lookedUp: false,
         pendingCategory: preset
             ? {
                   color: preset.color,
@@ -122,6 +125,7 @@ function toRemoteSuggestion(result: RemoteEnrichmentResult): EnrichmentSuggestio
     return {
         categoryId: null,
         domain: result.domain,
+        lookedUp: true,
         pendingCategory:
             result.categoryName == null || preset == null
                 ? null
@@ -239,8 +243,8 @@ function emitDomainResult(
 function emitRemoteResult(ports: EnrichmentPorts, key: string, result: RemoteEnrichmentResult | null) {
     const fallback = ports.curatedFallbackRef.current;
     if (fallback != null && fallback.key === key) {
-        if (result?.domain != null) {
-            emit(ports, { ...fallback.suggestion, domain: result.domain });
+        if (result != null) {
+            emit(ports, { ...fallback.suggestion, domain: result.domain, lookedUp: true });
         }
         return;
     }

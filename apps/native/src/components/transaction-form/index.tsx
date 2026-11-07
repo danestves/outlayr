@@ -1,3 +1,4 @@
+import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { toAccountKind } from "@outlayr/money/account-kind";
 import { useField, useForm, useSelector } from "@tanstack/react-form";
 import type * as Effect from "effect/Effect";
@@ -5,7 +6,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import { PortalHost, PortalProvider } from "panelui-native/primitives/portal";
 import type { ComponentProps, RefObject } from "react";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Keyboard, KeyboardAvoidingView, Pressable, View, useWindowDimensions } from "react-native";
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
 
@@ -68,6 +69,7 @@ import { FormScroll, FormScrollItem, FormScrollStageTarget } from "./form-scroll
 import { initialFormValues } from "./form-values";
 import type { TransactionFormValues, TransactionSeed } from "./form-values";
 import type { LookupSources } from "./merchant-lookup";
+import { MerchantWebsiteSheet } from "./merchant-website-sheet";
 import { TransactionSentenceBody } from "./sentence/sentence-body";
 import { sentenceLabelsOf } from "./sentence/sentence-labels";
 import { MetaLine } from "./stage/meta-line";
@@ -136,6 +138,10 @@ function entrySources(props: TransactionFormProps) {
     return props.mode === "edit"
         ? { copyOf: undefined, initial: props.initial, seed: undefined }
         : { copyOf: props.copyOf, initial: undefined, seed: props.seed };
+}
+
+function offeredWebsiteMerchant(showCoach: boolean, identity: IdentitySelection, merchant: string | null) {
+    return showCoach || identity.photoUri || identity.emoji || identity.icon ? null : merchant;
 }
 
 export function TransactionForm(props: TransactionFormProps) {
@@ -862,6 +868,30 @@ export function TransactionForm(props: TransactionFormProps) {
         </SubscribeFields>
     );
 
+    const websiteSheetRef = useRef<BottomSheetModal>(null);
+    const [websiteMerchant, setWebsiteMerchant] = useState("");
+    const unfoundMerchant = useSelector(form.store, (s) =>
+        lookup.unfoundMerchant(s.values.merchant) ? s.values.merchant.trim() : null
+    );
+    const offeredMerchant = offeredWebsiteMerchant(showCoach, identity, unfoundMerchant);
+    const websiteOffer =
+        offeredMerchant === null ? undefined : (
+            <Pressable
+                accessibilityRole="button"
+                onPress={() => {
+                    Keyboard.dismiss();
+                    setWebsiteMerchant(offeredMerchant);
+                    websiteSheetRef.current?.present();
+                }}
+            >
+                <MetaLine
+                    qualifier={t("transaction.website.add")}
+                    qualifierIsAction
+                    statement={t("transaction.website.offer", { merchant: offeredMerchant })}
+                />
+            </Pressable>
+        );
+
     const sentenceProps = {
         coach: showCoach ? (
             <Pressable
@@ -875,7 +905,9 @@ export function TransactionForm(props: TransactionFormProps) {
                     statement={t("transaction.sentence.coach")}
                 />
             </Pressable>
-        ) : undefined,
+        ) : (
+            websiteOffer
+        ),
         extras: [rate.line, split.line, note.line].filter((line) => line !== null),
         onAccountPress: () => enterStep("account"),
         onAmountPress: () => leaveTo("amount"),
@@ -1088,6 +1120,7 @@ export function TransactionForm(props: TransactionFormProps) {
                 />
 
                 <PortalHost />
+                <MerchantWebsiteSheet merchant={websiteMerchant} onUse={lookup.applyWebsite} ref={websiteSheetRef} />
             </View>
         </PortalProvider>
     );

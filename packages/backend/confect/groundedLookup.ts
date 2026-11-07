@@ -37,7 +37,7 @@ const FORBIDDEN_LOGO_ORIGINS = [/(^|\.)logo\.dev$/i, /(^|\.)itunes\.apple\.com$/
 
 const FENCED_JSON = /```(?:json)?\s*([\s\S]*?)```/i;
 
-function isForbiddenLogoOrigin(domain: string): boolean {
+export function isForbiddenLogoOrigin(domain: string): boolean {
     return FORBIDDEN_LOGO_ORIGINS.some((pattern) => pattern.test(domain));
 }
 

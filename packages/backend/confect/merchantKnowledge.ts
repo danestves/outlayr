@@ -5,7 +5,7 @@ import { WEB_TTL_MS } from "./lib/merchantTrust";
 
 export const MAX_KEYS = 5;
 
-export const KnowledgeSource = Schema.Literals(["model", "web"]);
+export const KnowledgeSource = Schema.Literals(["model", "user", "web"]);
 
 export function sourceOf(row: MerchantKnowledgeDoc): typeof KnowledgeSource.Type {
     return row.source ?? "web";
