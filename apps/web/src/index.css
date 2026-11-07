@@ -1033,6 +1033,15 @@
     --skullet-animation: none;
 }
 
+html:has(.app-shell) {
+    overscroll-behavior: none;
+    background-color: var(--color-app-bg);
+}
+
+.app-shell:has([aria-haspopup="menu"][data-popup-open]) > [data-scroll-restoration-id="dashboard-content"] {
+    overflow-y: hidden;
+}
+
 @layer base {
     .app-shell,
     .app-shell * {
