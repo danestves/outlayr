@@ -76,6 +76,9 @@ export const revenueCatMetricsConfig = Config.all({
     secretKey: secret("REVENUECAT_V2_SECRET_KEY"),
 }).pipe(Config.map(Option.all));
 
+export const stripeSecretKey = secret("STRIPE_SECRET_KEY");
+export const revenueCatStripePublicKey = secret("REVENUECAT_STRIPE_PUBLIC_KEY");
+
 export const gitHubToken = secret("GITHUB_TOKEN");
 
 export const revenueCatWebhookAuth = Config.schema(

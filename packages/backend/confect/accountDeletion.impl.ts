@@ -48,6 +48,7 @@ import { revokeAppleToken, revokeGoogleToken } from "./lib/providerLifecycle";
 import { sha256Hex } from "./lib/sha256Hex";
 import { NOTION_PROVIDER_ID } from "./notion";
 import { eraseUpstreamCustomer, revenuecat } from "./revenuecat";
+import { eraseStripeCustomer } from "./stripe";
 
 const GOOGLE_PROVIDER_ID = "google";
 const APPLE_PROVIDER_ID = "apple";
@@ -501,6 +502,7 @@ const eraseBilling = FunctionImpl.make(
         const { runMutation } = yield* MutationRunner;
         const appUserId = yield* runQuery(refs.internal.accountDeletion.billingTarget, args);
         if (appUserId !== null) {
+            yield* eraseStripeCustomer(appUserId).pipe(Effect.provide(outboundHttp));
             yield* eraseUpstreamCustomer(appUserId).pipe(Effect.provide(outboundHttp));
             yield* erasePostHogPerson(appUserId).pipe(Effect.provide(outboundHttp));
         }
