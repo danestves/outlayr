@@ -22,7 +22,6 @@ import { useCatalog } from "../home/catalog";
 import { titled } from "../home/format";
 import type { FoldedRow, TransactionSort } from "../home/rows";
 import { QuietTable } from "../home/setup";
-import { plainEntries } from "./delete";
 import { EntrySheet } from "./entry-sheet";
 import { LedgerTable } from "./ledger-table";
 import { ENTRY_TYPES, csvOf, exportLines, linesOf, queryRows, rangeOf, tally } from "./model";
@@ -136,12 +135,10 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const [pickedIds, setPickedIds] = useState<ReadonlySet<string>>(new Set());
     const picked = useMemo(() => rows.filter((row) => pickedIds.has(row.id)), [pickedIds, rows]);
     const pickedTotals = useMemo(() => tally(ledger, picked), [ledger, picked]);
-    const plain = useMemo(() => plainEntries(ledger.books), [ledger.books]);
     const deleteEntries = useDeleteEntries();
     const clearPicked = () => setPickedIds(new Set());
     const deletePicked = () => {
-        const ids = picked.map((row) => row.id).filter((id) => plain.has(id));
-        deleteEntries(ids, picked.length - ids.length);
+        deleteEntries(picked.map((row) => row.id));
         clearPicked();
     };
     const onEscape = useEffectEvent(() => {
@@ -384,12 +381,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                 <RiDownload2Line size={14} />
                                 {words.export}
                             </button>
-                            <button
-                                className="dash-ob gap-1.5 border-0"
-                                disabled={!picked.some((row) => plain.has(row.id))}
-                                onClick={deletePicked}
-                                type="button"
-                            >
+                            <button className="dash-ob gap-1.5 border-0" onClick={deletePicked} type="button">
                                 <RiDeleteBinLine size={14} />
                                 {words.bulk.delete}
                             </button>
@@ -407,14 +399,10 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             </CardFrame>
             <EntrySheet
                 onClose={() => setSearch({ entry: null })}
-                onDelete={
-                    selected && plain.has(selected.id)
-                        ? (row) => {
-                              setSearch({ entry: null });
-                              deleteEntries([row.id]);
-                          }
-                        : null
-                }
+                onDelete={(row) => {
+                    setSearch({ entry: null });
+                    deleteEntries([row.id]);
+                }}
                 onStep={step}
                 row={selected}
             />

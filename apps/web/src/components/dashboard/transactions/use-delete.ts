@@ -1,11 +1,9 @@
-import { createTransaction } from "@tanstack/react-db";
 import { useRouteContext } from "@tanstack/react-router";
 import { createToaster } from "panelui-web/toast";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { ledgerCollections } from "@/lib/ledger-db";
-import { pushRows } from "@/lib/ledger-write";
+import { stageRows } from "@/lib/ledger-commit";
 
 import { deletionOf } from "./delete";
 
@@ -19,20 +17,12 @@ export function useDeleteEntries() {
     const { dbClient } = useRouteContext({ from: "__root__" });
     const { ledger } = useDashboard();
     const { deleted } = useIntlayer("dashboard-transactions");
-    return (ids: Iterable<string>, skipped = 0) => {
-        const collection = dbClient.collection(ledgerCollections.transactions);
-        const { count, keys, rows } = deletionOf(ledger.books, ids, Date.now());
+    return (ids: Iterable<string>) => {
+        const { count, rows } = deletionOf(ledger.books, ids, Date.now());
         if (count === 0) {
             return;
         }
-        const transaction = createTransaction({
-            autoCommit: false,
-            mutationFn: async () => {
-                await pushRows(dbClient, rows);
-                await collection.utils.awaitSync();
-            },
-        });
-        transaction.mutate(() => collection.delete(keys));
+        const transaction = stageRows(dbClient, rows);
         let toastId = "";
         const finish = () => {
             clearTimeout(timer);
@@ -56,7 +46,6 @@ export function useDeleteEntries() {
                     transaction.rollback();
                 },
             },
-            description: skipped > 0 ? deleted.skipped({ count: skipped }).value : undefined,
             timeout: UNDO_MS,
             title: count === 1 ? deleted.one.value : deleted.many({ count }).value,
         });

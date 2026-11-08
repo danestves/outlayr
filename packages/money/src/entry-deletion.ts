@@ -4,13 +4,13 @@ interface Live {
 }
 
 export interface DeletionBooks {
-    installmentPlans: readonly (Live & { transactionId: string | null })[];
+    installmentPlans: readonly (Live & { transactionId: string })[];
     installments: readonly (Live & { planId: string })[];
     outsidePayments: readonly (Live & { planId: string })[];
     transactions: readonly (Live & {
-        feeForId: string | null;
-        installmentId: string | null;
-        transferId: string | null;
+        feeForId?: string | null;
+        installmentId?: string | null;
+        transferId?: string | null;
     })[];
     transfers: readonly Live[];
 }
@@ -48,9 +48,7 @@ export function deletionPlan(books: DeletionBooks, ids: Iterable<string>) {
             gone.transfers.add(id);
         }
     }
-    const plans = books.installmentPlans.filter(
-        (plan) => isLive(plan) && plan.transactionId != null && wanted.has(plan.transactionId)
-    );
+    const plans = books.installmentPlans.filter((plan) => isLive(plan) && wanted.has(plan.transactionId));
     for (const plan of plans) {
         gone.installmentPlans.add(plan.id);
     }
