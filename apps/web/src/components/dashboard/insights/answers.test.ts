@@ -84,6 +84,8 @@ const booksWith = (transactions: LedgerBooks["transactions"], fields: Partial<Le
     categories: [category("rent", "Rent", "#e2643f"), category("food", "Groceries", "#4f9d69")],
     exchangeRates: [],
     installmentPlans: [],
+    installments: [],
+    savingsGoals: [],
     mainBudget: [],
     outsideMoves: [],
     outsidePayments: [],

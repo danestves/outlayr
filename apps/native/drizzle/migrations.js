@@ -48,6 +48,7 @@ import m0044 from './20261031213723_0044_accounts_by_hand_synced/migration.sql';
 import m0045 from './20261102025744_0045_account_checked_at/migration.sql';
 import m0046 from './20261103032956_0046_card_statement/migration.sql';
 import m0047 from './20261103192730_0047_outside_move_adjustment/migration.sql';
+import m0048 from './20261108140833_0048_account_archived_at/migration.sql';
 
   export default {
     migrations: {
@@ -98,7 +99,8 @@ import m0047 from './20261103192730_0047_outside_move_adjustment/migration.sql';
       "20261031213723_0044_accounts_by_hand_synced": m0044,
       "20261102025744_0045_account_checked_at": m0045,
       "20261103032956_0046_card_statement": m0046,
-      "20261103192730_0047_outside_move_adjustment": m0047
+      "20261103192730_0047_outside_move_adjustment": m0047,
+      "20261108140833_0048_account_archived_at": m0048
 }
   }
   

@@ -379,6 +379,24 @@ describe("push table coverage", () => {
         expect(row?.fields).toMatchObject({ checkedAt: 1_700_000_500_000, name: "Everyday" });
     });
 
+    it("keeps an account archived when a build that predates it renames the account", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const account = (updatedAt: number, fields: Partial<Arm<"accounts">["fields"]>): Arm<"accounts"> => ({
+            deletedAt: null,
+            fields: accountFields(fields),
+            localId: "acct-1",
+            table: "accounts",
+            updatedAt,
+        });
+
+        await pushAs(t, owner, DEVICE_A, [account(1, { archivedAt: 1_700_000_500_000 })]);
+        await pushAs(t, owner, DEVICE_B, [account(2, { name: "Everyday" })]);
+
+        const [row] = (await pullAs(t, owner, 0)).rows;
+        expect(row?.fields).toMatchObject({ archivedAt: 1_700_000_500_000, name: "Everyday" });
+    });
+
     it("round-trips resolved and pending custom transaction rate triples", async () => {
         const t = harness();
         const owner = await seedProUser(t);

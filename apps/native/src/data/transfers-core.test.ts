@@ -29,6 +29,7 @@ function makeDb(): Database {
 			initialBalanceDate integer NOT NULL,
 			kind text NOT NULL DEFAULT 'asset',
 			checkedAt integer,
+			archivedAt integer,
 			creditLimit real, paymentDay integer, statementDay integer,
 			icon text, emoji text, customColor text, imageColor text, imageUri text, imageKey text,
 			sortOrder integer DEFAULT 0 NOT NULL,

@@ -1,4 +1,3 @@
-import { merchantKey } from "@outlayr/money/merchant-key";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -9,6 +8,7 @@ import {
     isInstallmentAppAccount,
     resolveInstitutionDomain,
 } from "./institution-map";
+import { merchantKey } from "./merchant-key";
 
 describe("resolveInstitutionDomain", () => {
     it("folds punctuation and accents the way merchantKey does", () => {
@@ -91,8 +91,8 @@ describe("isInstallmentAppAccount", () => {
     });
 
     it("knows an app by a longer name, and only as a liability", () => {
-        expect(isInstallmentAppAccount({ kind: "liability", name: "Cashea USD" })).toBe(true);
-        expect(isInstallmentAppAccount({ kind: "asset", name: "Klarna" })).toBe(false);
-        expect(isInstallmentAppAccount({ kind: "liability", name: "Chase Sapphire" })).toBe(false);
+        expect(isInstallmentAppAccount({ kind: "liability", name: "Cashea USD" })).toBeTruthy();
+        expect(isInstallmentAppAccount({ kind: "asset", name: "Klarna" })).toBeFalsy();
+        expect(isInstallmentAppAccount({ kind: "liability", name: "Chase Sapphire" })).toBeFalsy();
     });
 });

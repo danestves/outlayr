@@ -8,7 +8,7 @@ import type { MintedPhotos } from "@/components/dashboard/shell/photos";
 const DATABASE = "outlayr-ledger";
 const STORE = "snapshots";
 const LATEST = "latest";
-export const LEDGER_CACHE_VERSION = 2;
+export const LEDGER_CACHE_VERSION = 3;
 
 export interface LedgerSnapshot {
     collections: DehydratedDbState["collections"];

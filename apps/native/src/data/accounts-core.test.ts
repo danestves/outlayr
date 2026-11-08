@@ -559,6 +559,54 @@ describe("an attached entry moving the balance", () => {
     });
 });
 
+describe("accountsRepo.archive", () => {
+    let db: Database;
+    beforeEach(() => {
+        db = makeDb();
+    });
+
+    const newAccount = (name: string) =>
+        Effect.runPromise(accountsRepo.create(db, { currency: "USD", initialBalance: 100, name }));
+
+    it("leaves lists and the last-used default while keeping the row and its entries", async () => {
+        const id = await newAccount("Savings");
+        await db.insert(transactions).values({
+            accountId: id,
+            amount: 10,
+            amountUsd: 10,
+            currency: "USD",
+            date: JAN_5,
+            day: JAN_5,
+            id: "t1",
+            income: false,
+            month: JAN_5,
+            note: "t1",
+            updatedAt: JAN_5,
+        });
+        await Effect.runPromise(rememberLastUsedAccount(db, id));
+
+        await Effect.runPromise(accountsRepo.archive(db, id, JAN_5));
+
+        await expect(Effect.runPromise(accountsRepo.listActive(db))).resolves.toStrictEqual([]);
+        expect(getLastUsedAccount(db)).toBeNull();
+        expect(getAccountById(db, id)?.archivedAt).toStrictEqual(JAN_5);
+        const [entry] = await db.select().from(transactions).where(eq(transactions.id, "t1"));
+        expect(entry?.accountId).toBe(id);
+    });
+
+    it("comes back on restore with a later clock, so the restore wins over the archive when it syncs", async () => {
+        const id = await newAccount("Savings");
+        await Effect.runPromise(accountsRepo.archive(db, id, JAN_5));
+        const later = new Date(JAN_5.getTime() + 1000);
+
+        await Effect.runPromise(accountsRepo.restore(db, id, later));
+
+        const [listed] = await Effect.runPromise(accountsRepo.listActive(db));
+        expect(listed?.archivedAt).toBeNull();
+        expect(listed?.updatedAt).toStrictEqual(later);
+    });
+});
+
 describe("accountsRepo.markChecked", () => {
     let db: Database;
     beforeEach(() => {

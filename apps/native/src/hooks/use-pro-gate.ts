@@ -1,11 +1,13 @@
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
+import { isPerson } from "@outlayr/money/account-kind";
+import { isInstallmentAppAccount } from "@outlayr/money/institution-map";
 import { useRouter } from "expo-router";
 import { use } from "react";
 
 import { useDatabase } from "@/contexts/local-data-context";
-import { useBankAccounts, usePeople } from "@/data/accounts";
+import { useAccounts, usePeople } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
-import { isInstallmentAppAccount } from "@/domain/institution-map";
+import type { Database } from "@/db/client";
 import { paywallHref } from "@/domain/paywall-trigger";
 import type { PaywallTrigger } from "@/domain/paywall-trigger";
 import {
@@ -21,12 +23,15 @@ import { SILENT } from "@/state/atom-command";
 import { livePayoffPlanCountCommand } from "@/state/planning-commands";
 import { fireAtomCommand } from "@/state/use-atom-action";
 
+// Archived accounts still count, or archiving one would be a free way past the cap.
+const useCappedAccounts = (db: Database) => useAccounts(db).filter((account) => !isPerson(account));
+
 export function useProCapped(count: number, limit: number): boolean {
     return useProLocked() && count >= limit;
 }
 
 export function useAccountCaps(): ReturnType<typeof fullAccountCaps> {
-    return fullAccountCaps(useBankAccounts(useDatabase()), useProLocked());
+    return fullAccountCaps(useCappedAccounts(useDatabase()), useProLocked());
 }
 
 type Named = Pick<Account, "kind" | "name">;
@@ -118,7 +123,7 @@ export function usePayoffPlanGate(): (accountId: string | null, open: () => void
 
 export function useCurrencyBlocked(exceptAccountId: string | null): (account: Priced) => boolean {
     const db = useDatabase();
-    const accounts = useBankAccounts(db);
+    const accounts = useCappedAccounts(db);
     const locked = useProLocked();
     return (account) =>
         blocksSavedCurrency(

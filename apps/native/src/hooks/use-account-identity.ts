@@ -1,7 +1,7 @@
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
+import { resolveInstitutionDomain } from "@outlayr/money/institution-map";
 import { use, useEffect, useEffectEvent, useRef } from "react";
 
-import { resolveInstitutionDomain } from "@/domain/institution-map";
 import type { EnrichmentFn } from "@/lib/convex";
 import { useLatest } from "@/lib/use-latest";
 import { attachAccountLogoCommand } from "@/state/identity-commands";

@@ -1,6 +1,6 @@
-import type { TranslationKey } from "@/i18n/catalog";
+import { buildPatternIndex } from "@outlayr/money/pattern-index";
 
-import { buildPatternIndex } from "./pattern-index";
+import type { TranslationKey } from "@/i18n/catalog";
 
 type TagName<Key> = Key extends `merchantTag.${infer Tag}` ? Tag : never;
 

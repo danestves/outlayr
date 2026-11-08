@@ -69,6 +69,12 @@ export interface Ledger {
     transfers: readonly LedgerTransfer[];
 }
 
+/** Live and not archived, in the user's order: the accounts that count toward net worth and fill pickers. */
+export const openAccounts = (books: Pick<LedgerBooks, "accounts">) =>
+    books.accounts
+        .filter((row) => row.deletedAt === null && (row.archivedAt ?? null) === null)
+        .toSorted((a, b) => a.sortOrder - b.sortOrder);
+
 export const startOfDay = (ledger: Pick<Ledger, "offsetAt">, day: string) =>
     fromWall(Date.parse(`${day}T00:00:00Z`), ledger.offsetAt);
 

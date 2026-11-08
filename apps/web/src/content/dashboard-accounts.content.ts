@@ -362,6 +362,326 @@ const dashboardAccounts = {
                 pt: "Nenhuma conta ainda",
             }),
         },
+        flows: {
+            archive: t({ en: "Archive", es: "Archivar", fr: "Archiver", pt: "Arquivar" }),
+            archiveBody: t({
+                en: "It leaves your lists and totals. Every transaction is kept, and you can restore it anytime.",
+                es: "Sale de tus listas y totales. Se conservan todos los movimientos y puedes restaurarla cuando quieras.",
+                fr: "Il quitte vos listes et vos totaux. Toutes les opérations sont conservées et vous pouvez le restaurer à tout moment.",
+                pt: "Ela sai das suas listas e totais. Todas as transações são mantidas e você pode restaurá-la quando quiser.",
+            }),
+            archiveTitle: insert(
+                t({
+                    en: "Archive {{name}}?",
+                    es: "¿Archivar {{name}}?",
+                    fr: "Archiver {{name}} ?",
+                    pt: "Arquivar {{name}}?",
+                })
+            ),
+            archived: t({ en: "Archived", es: "Archivadas", fr: "Archivés", pt: "Arquivadas" }),
+            archivedNote: t({
+                en: "Not counted in net worth",
+                es: "No cuenta en el patrimonio",
+                fr: "Non compté dans le patrimoine",
+                pt: "Não conta no patrimônio",
+            }),
+            archivedOn: insert(
+                t({
+                    en: "archived {{date}}",
+                    es: "archivada el {{date}}",
+                    fr: "archivé le {{date}}",
+                    pt: "arquivada em {{date}}",
+                })
+            ),
+            archivedToast: insert(
+                t({
+                    en: "{{name}} archived",
+                    es: "{{name}} archivada",
+                    fr: "{{name}} archivé",
+                    pt: "{{name}} arquivada",
+                })
+            ),
+            balance: t({ en: "Balance", es: "Saldo", fr: "Solde", pt: "Saldo" }),
+            bank: t({ en: "Bank", es: "Banco", fr: "Banque", pt: "Banco" }),
+            cancel: t({ en: "Cancel", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
+            cardOrLoan: t({
+                en: "Card or loan",
+                es: "Tarjeta o préstamo",
+                fr: "Carte ou prêt",
+                pt: "Cartão ou empréstimo",
+            }),
+            cash: t({ en: "Cash", es: "Efectivo", fr: "Espèces", pt: "Dinheiro" }),
+            checkAdjustment: t({ en: "Adjustment", es: "Ajuste", fr: "Ajustement", pt: "Ajuste" }),
+            checkBack: t({ en: "Back", es: "Atrás", fr: "Retour", pt: "Voltar" }),
+            checkCompare: t({
+                en: "Compare it with your bank or wallet app.",
+                es: "Compáralo con tu banco o billetera.",
+                fr: "Comparez-le avec votre banque ou votre portefeuille.",
+                pt: "Compare com seu banco ou carteira.",
+            }),
+            checkDifferent: t({
+                en: "No, it's different",
+                es: "No, es distinto",
+                fr: "Non, c'est différent",
+                pt: "Não, é diferente",
+            }),
+            checkLog: insert(
+                t({
+                    en: "Log {{amount}} and mark checked",
+                    es: "Registrar {{amount}} y marcar revisado",
+                    fr: "Enregistrer {{amount}} et marquer vérifié",
+                    pt: "Registrar {{amount}} e marcar conferido",
+                })
+            ),
+            checkMarkChecked: t({
+                en: "Mark checked",
+                es: "Marcar revisado",
+                fr: "Marquer vérifié",
+                pt: "Marcar conferido",
+            }),
+            checkMatches: t({
+                en: "Yes, it matches",
+                es: "Sí, coincide",
+                fr: "Oui, ça correspond",
+                pt: "Sim, confere",
+            }),
+            checkNote: t({
+                en: "Balance adjustment",
+                es: "Ajuste de saldo",
+                fr: "Ajustement du solde",
+                pt: "Ajuste de saldo",
+            }),
+            checkOutlayrHas: t({ en: "Outlayr has", es: "Outlayr tiene", fr: "Outlayr indique", pt: "Outlayr tem" }),
+            checkQuestion: t({
+                en: "Does your bank show",
+                es: "¿Tu banco muestra",
+                fr: "Votre banque affiche-t-elle",
+                pt: "Seu banco mostra",
+            }),
+            checkShows: insert(
+                t({
+                    en: "What {{name}} shows",
+                    es: "Lo que muestra {{name}}",
+                    fr: "Ce qu'affiche {{name}}",
+                    pt: "O que {{name}} mostra",
+                })
+            ),
+            checkTitle: insert(
+                t({ en: "Check {{name}}", es: "Revisar {{name}}", fr: "Vérifier {{name}}", pt: "Conferir {{name}}" })
+            ),
+            checkedAdjusted: insert(
+                t({
+                    en: "{{name}} checked, {{amount}} adjusted",
+                    es: "{{name}} revisada, {{amount}} ajustado",
+                    fr: "{{name}} vérifié, {{amount}} ajusté",
+                    pt: "{{name}} conferida, {{amount}} ajustado",
+                })
+            ),
+            checkedToast: insert(
+                t({ en: "{{name}} checked", es: "{{name}} revisada", fr: "{{name}} vérifié", pt: "{{name}} conferida" })
+            ),
+            choosePhoto: t({
+                en: "Choose a photo",
+                es: "Elegir una foto",
+                fr: "Choisir une photo",
+                pt: "Escolher uma foto",
+            }),
+            close: t({ en: "Close", es: "Cerrar", fr: "Fermer", pt: "Fechar" }),
+            creditLimit: t({
+                en: "Credit limit",
+                es: "Límite de crédito",
+                fr: "Plafond de crédit",
+                pt: "Limite de crédito",
+            }),
+            currency: t({ en: "Currency", es: "Moneda", fr: "Devise", pt: "Moeda" }),
+            currencyAll: t({ en: "All", es: "Todas", fr: "Toutes", pt: "Todas" }),
+            currencySearch: t({
+                en: "Search currencies",
+                es: "Buscar monedas",
+                fr: "Rechercher une devise",
+                pt: "Buscar moedas",
+            }),
+            currencyYours: t({ en: "Your accounts", es: "Tus cuentas", fr: "Vos comptes", pt: "Suas contas" }),
+            day: insert(t({ en: "Day {{day}}", es: "Día {{day}}", fr: "Jour {{day}}", pt: "Dia {{day}}" })),
+            deleteAccount: t({
+                en: "Delete account",
+                es: "Eliminar cuenta",
+                fr: "Supprimer le compte",
+                pt: "Excluir conta",
+            }),
+            deleteBody: t({
+                en: "Its transactions are kept; they just stop belonging to an account.",
+                es: "Sus movimientos se conservan; solo dejan de pertenecer a una cuenta.",
+                fr: "Ses opérations sont conservées ; elles ne sont simplement plus liées à un compte.",
+                pt: "Suas transações são mantidas; só deixam de pertencer a uma conta.",
+            }),
+            deleteEmptyBody: t({
+                en: "Nothing is attached to it, so only its starting balance goes.",
+                es: "No tiene nada asociado, así que solo se va su saldo inicial.",
+                fr: "Rien n'y est rattaché, seul son solde de départ disparaît.",
+                pt: "Nada está ligado a ela, então só o saldo inicial sai.",
+            }),
+            deleteFailed: insert(
+                t({
+                    en: "Couldn't delete {{name}}. Try again.",
+                    es: "No se pudo eliminar {{name}}. Inténtalo de nuevo.",
+                    fr: "Impossible de supprimer {{name}}. Réessayez.",
+                    pt: "Não foi possível excluir {{name}}. Tente novamente.",
+                })
+            ),
+            deleteTitle: insert(
+                t({
+                    en: "Delete {{name}}?",
+                    es: "¿Eliminar {{name}}?",
+                    fr: "Supprimer {{name}} ?",
+                    pt: "Excluir {{name}}?",
+                })
+            ),
+            deletedToast: insert(
+                t({
+                    en: "{{name}} deleted",
+                    es: "{{name}} eliminada",
+                    fr: "{{name}} supprimé",
+                    pt: "{{name}} excluída",
+                })
+            ),
+            editTitle: t({ en: "Edit account", es: "Editar cuenta", fr: "Modifier le compte", pt: "Editar conta" }),
+            emoji: t({ en: "Emoji", es: "Emoji", fr: "Emoji", pt: "Emoji" }),
+            icon: t({ en: "Icon", es: "Ícono", fr: "Icône", pt: "Ícone" }),
+            lastEntry: t({
+                en: "Last entry",
+                es: "Último movimiento",
+                fr: "Dernière opération",
+                pt: "Último lançamento",
+            }),
+            logo: t({ en: "Logo", es: "Logo", fr: "Logo", pt: "Logo" }),
+            logoSearch: t({
+                en: "Search banks and cards",
+                es: "Buscar bancos y tarjetas",
+                fr: "Rechercher banques et cartes",
+                pt: "Buscar bancos e cartões",
+            }),
+            moneyIOwe: t({
+                en: "Money I owe",
+                es: "Dinero que debo",
+                fr: "Argent que je dois",
+                pt: "Dinheiro que devo",
+            }),
+            name: t({ en: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
+            namePlaceholder: t({
+                en: "Chase, Cash, Nubank…",
+                es: "Chase, Efectivo, Nubank…",
+                fr: "Chase, Espèces, Nubank…",
+                pt: "Chase, Dinheiro, Nubank…",
+            }),
+            nameRequired: t({
+                en: "Give this account a name.",
+                es: "Ponle un nombre a esta cuenta.",
+                fr: "Donnez un nom à ce compte.",
+                pt: "Dê um nome a esta conta.",
+            }),
+            netWorthAfter: t({
+                en: "Net worth after",
+                es: "Patrimonio después",
+                fr: "Patrimoine après",
+                pt: "Patrimônio depois",
+            }),
+            newCardTitle: t({
+                en: "New card or loan",
+                es: "Nueva tarjeta o préstamo",
+                fr: "Nouvelle carte ou prêt",
+                pt: "Novo cartão ou empréstimo",
+            }),
+            newTitle: t({ en: "New account", es: "Nueva cuenta", fr: "Nouveau compte", pt: "Nova conta" }),
+            paymentDue: t({ en: "Payment due", es: "Vencimiento del pago", fr: "Échéance", pt: "Vencimento" }),
+            photo: t({ en: "Photo", es: "Foto", fr: "Photo", pt: "Foto" }),
+            photoFailed: t({
+                en: "Couldn't upload that photo.",
+                es: "No se pudo subir esa foto.",
+                fr: "Impossible d'envoyer cette photo.",
+                pt: "Não foi possível enviar a foto.",
+            }),
+            plansDeleted: t({
+                en: "Installment plans, deleted",
+                es: "Planes a cuotas, eliminados",
+                fr: "Paiements échelonnés, supprimés",
+                pt: "Parcelamentos, excluídos",
+            }),
+            reorderDone: t({ en: "Done", es: "Listo", fr: "Terminé", pt: "Concluir" }),
+            reorderFailed: t({
+                en: "Couldn't save your order. Try again.",
+                es: "No se pudo guardar tu orden. Inténtalo de nuevo.",
+                fr: "Impossible d'enregistrer votre ordre. Réessayez.",
+                pt: "Não foi possível salvar sua ordem. Tente novamente.",
+            }),
+            reorderHint: t({
+                en: "Drag to reorder",
+                es: "Arrastra para reordenar",
+                fr: "Glissez pour réorganiser",
+                pt: "Arraste para reordenar",
+            }),
+            reorderMove: insert(
+                t({
+                    en: "Move {{name}}. Use the up and down arrows.",
+                    es: "Mover {{name}}. Usa las flechas arriba y abajo.",
+                    fr: "Déplacer {{name}}. Utilisez les flèches haut et bas.",
+                    pt: "Mover {{name}}. Use as setas para cima e para baixo.",
+                })
+            ),
+            restore: t({ en: "Restore", es: "Restaurar", fr: "Restaurer", pt: "Restaurar" }),
+            restoreFailed: insert(
+                t({
+                    en: "Couldn't restore {{name}}. Try again.",
+                    es: "No se pudo restaurar {{name}}. Inténtalo de nuevo.",
+                    fr: "Impossible de restaurer {{name}}. Réessayez.",
+                    pt: "Não foi possível restaurar {{name}}. Tente novamente.",
+                })
+            ),
+            saveCard: t({ en: "Save card", es: "Guardar tarjeta", fr: "Enregistrer la carte", pt: "Salvar cartão" }),
+            saveAccount: t({
+                en: "Save account",
+                es: "Guardar cuenta",
+                fr: "Enregistrer le compte",
+                pt: "Salvar conta",
+            }),
+            saveFailed: t({
+                en: "Couldn't save this account. Try again.",
+                es: "No se pudo guardar esta cuenta. Inténtalo de nuevo.",
+                fr: "Impossible d'enregistrer ce compte. Réessayez.",
+                pt: "Não foi possível salvar esta conta. Tente novamente.",
+            }),
+            seeTransactions: t({
+                en: "See transactions",
+                es: "Ver movimientos",
+                fr: "Voir les opérations",
+                pt: "Ver transações",
+            }),
+            statementCloses: t({
+                en: "Statement closes",
+                es: "Cierre del corte",
+                fr: "Clôture du relevé",
+                pt: "Fechamento da fatura",
+            }),
+            transactionsKept: t({
+                en: "Transactions kept",
+                es: "Movimientos conservados",
+                fr: "Opérations conservées",
+                pt: "Transações mantidas",
+            }),
+            transactionsKeptRow: t({
+                en: "Transactions, kept",
+                es: "Movimientos, conservados",
+                fr: "Opérations, conservées",
+                pt: "Transações, mantidas",
+            }),
+            transfersDeleted: t({
+                en: "Transfers, deleted",
+                es: "Transferencias, eliminadas",
+                fr: "Virements, supprimés",
+                pt: "Transferências, excluídas",
+            }),
+            undo: t({ en: "Undo", es: "Deshacer", fr: "Annuler", pt: "Desfazer" }),
+        },
         kpi: {
             accounts: insert(
                 t({

@@ -1,3 +1,4 @@
+import { accountBalances } from "@outlayr/backend/confect/ledgerView";
 import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
 import { localDate } from "@outlayr/backend/confect/mcpLedger";
 import { toAccountKind } from "@outlayr/money/account-kind";
@@ -8,7 +9,8 @@ import { utcDateString } from "@outlayr/money/dates";
 import { roundMoney } from "@outlayr/money/round";
 import { valueDatedRowsIn } from "@outlayr/money/valuation";
 
-import { endOfDay, startOfDay } from "../../../lib/dashboard-series-ledger";
+import { deletedAccount } from "../../../lib/account-writes";
+import { endOfDay, openAccounts, startOfDay } from "../../../lib/dashboard-series-ledger";
 import type { Ledger } from "../../../lib/dashboard-series-ledger";
 import { accountFlows, netWorthPoints } from "../../../lib/dashboard-series-net-worth";
 import type { AccountFlow } from "../../../lib/dashboard-series-net-worth";
@@ -34,12 +36,9 @@ export interface AccountRow {
     value: number;
 }
 
-/** `accountBalances` keeps live accounts in `sortOrder` and one row each, so the two line up by index. */
+/** `accountBalances` keeps open accounts in `sortOrder` and one row each, so the two line up by index. */
 export function accountRows(ledger: Ledger, overview: Overview): AccountRow[] {
-    const live = ledger.books.accounts
-        .filter((row) => row.deletedAt === null)
-        .toSorted((a, b) => a.sortOrder - b.sortOrder);
-    return live.flatMap((row, index) => {
+    return openAccounts(ledger.books).flatMap((row, index) => {
         const shown = overview.balances.accounts[index];
         if (!shown || shown.name !== row.name) {
             return [];
@@ -70,6 +69,123 @@ function openedOn(ledger: Ledger, row: Ledger["books"]["accounts"][number]) {
     const day = localDate(row.initialBalanceDate, ledger.offsetAt(row.initialBalanceDate));
     const [first] = row.initialBalance === 0 ? flowsOf(ledger, row.localId) : [];
     return first && first.day < day ? first.day : day;
+}
+
+const clockOf = ({ now, offsetAt }: Ledger) => ({ now, offsetAt });
+
+/** The balance as if the account were open: `accountBalances` leaves archived ones out of every total. */
+function heldAsOpen(ledger: Ledger, row: Ledger["books"]["accounts"][number]) {
+    const books = { ...ledger.books, accounts: [{ ...row, archivedAt: null }] };
+    return accountBalances(books, ledger.currency, ledger.rates, clockOf(ledger)).accounts[0];
+}
+
+export interface AccountFacts {
+    /** Balance corrections, which go with the account on delete while transactions stay. */
+    adjustments: number;
+    /** In the account's currency. */
+    balance: number;
+    netAfter: number;
+    plans: number;
+    transactions: number;
+    transfers: number;
+}
+
+/**
+ * What the archive and delete dialogs state. `netAfter` is the archive figure: an archived account already left net
+ * worth, and its transfers stay. Delete takes transfers with it, so it states `netAfterDelete`.
+ */
+export function accountFacts(ledger: Ledger, accountId: string): AccountFacts {
+    const { accounts, installmentPlans, outsideMoves, transactions, transfers } = ledger.books;
+    const onAccount = (entry: { accountId?: string | null; deletedAt: number | null }) =>
+        entry.deletedAt === null && entry.accountId === accountId;
+    const row = accounts.find((each) => each.localId === accountId);
+    const held = row && heldAsOpen(ledger, row);
+    const [now] = netWorthPoints(ledger, { accounts: [] }, [ledger.now]);
+    const counted = row && (row.archivedAt ?? null) === null ? (held?.balanceInMainCurrency ?? 0) : 0;
+    return {
+        adjustments: outsideMoves.filter(onAccount).length,
+        balance: held?.balance ?? 0,
+        netAfter: roundMoney((now?.net ?? 0) - counted, decimalsFor(ledger.currency)),
+        plans: installmentPlans.filter(onAccount).length,
+        transactions: transactions.filter(onAccount).length,
+        transfers: transfers.filter(
+            (move) => move.deletedAt === null && (move.fromAccountId === accountId || move.toAccountId === accountId)
+        ).length,
+    };
+}
+
+/** Net worth once the delete lands: the account's transfers and fees also leave the accounts on the other side. */
+export function netAfterDelete(ledger: Ledger, account: Ledger["books"]["accounts"][number]) {
+    const { books } = ledger;
+    const changes = new Map(
+        deletedAccount(books, account, ledger.now).map((row) => [`${row.table}|${row.localId}`, row])
+    );
+    const applied = <Row extends { deletedAt: number | null; localId: string }>(table: string, rows: readonly Row[]) =>
+        rows.map((row) => {
+            const change = changes.get(`${table}|${row.localId}`);
+            return change ? { ...row, ...change.fields, deletedAt: change.deletedAt } : row;
+        });
+    const after = {
+        ...books,
+        accounts: applied("accounts", books.accounts),
+        installmentPlans: applied("installmentPlans", books.installmentPlans),
+        outsideMoves: applied("outsideMoves", books.outsideMoves),
+        outsidePayments: applied("outsidePayments", books.outsidePayments),
+        transactions: applied("transactions", books.transactions),
+        transfers: applied("transfers", books.transfers),
+    };
+    const [point] = netWorthPoints({ ...ledger, books: after }, { accounts: [] }, [ledger.now]);
+    return roundMoney(point?.net ?? 0, decimalsFor(ledger.currency));
+}
+
+export interface ArchivedRow {
+    archivedDay: string;
+    balance: number;
+    currency: string;
+    id: string;
+    lastDay: string | null;
+    look: ReturnType<typeof accountLook>;
+    name: string;
+}
+
+/** Newest archive first. Its last entry comes from the raw books: archived accounts have no flows. */
+export function archivedRows(ledger: Ledger): ArchivedRow[] {
+    const shelved = ledger.books.accounts.filter((row) => row.deletedAt === null && (row.archivedAt ?? null) !== null);
+    if (shelved.length === 0) {
+        return [];
+    }
+    const lastAt = new Map<string, number>();
+    const saw = (id: string | null | undefined, at: number) => {
+        if (id && at > (lastAt.get(id) ?? 0)) {
+            lastAt.set(id, at);
+        }
+    };
+    for (const entry of [...ledger.books.transactions, ...ledger.books.outsideMoves]) {
+        if (entry.deletedAt === null && entry.date <= ledger.now) {
+            saw(entry.accountId, entry.date);
+        }
+    }
+    for (const move of ledger.books.transfers) {
+        if (move.deletedAt === null && move.date <= ledger.now) {
+            saw(move.fromAccountId, move.date);
+            saw(move.toAccountId, move.date);
+        }
+    }
+    const dayOf = (at: number) => localDate(at, ledger.offsetAt(at));
+    return shelved
+        .toSorted((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0))
+        .map((row) => {
+            const last = lastAt.get(row.localId);
+            return {
+                archivedDay: dayOf(row.archivedAt ?? ledger.now),
+                balance: heldAsOpen(ledger, row)?.balance ?? 0,
+                currency: row.currency,
+                id: row.localId,
+                lastDay: last === undefined ? null : dayOf(last),
+                look: accountLook(row),
+                name: row.name,
+            };
+        });
 }
 
 export type AccountSort = "balance" | "order";
@@ -336,8 +452,7 @@ export function rangeDays(ledger: Ledger, range: WorthRange) {
             addDays(ledger.today, (index - QUARTER_WEEKS) * WEEK)
         );
     }
-    const [opened] = ledger.books.accounts
-        .filter((row) => row.deletedAt === null)
+    const [opened] = openAccounts(ledger.books)
         .map((row) => openedOn(ledger, row))
         .toSorted();
     const months =

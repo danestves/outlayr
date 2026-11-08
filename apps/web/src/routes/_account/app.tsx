@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 
 import { LINE_PILL, Muted, SOLID_PILL, Screen } from "@/components/account/parts";
+import { AccountFlowsProvider } from "@/components/dashboard/accounts/flows";
 import { DashboardPending } from "@/components/dashboard/pending";
 import { signOut } from "@/components/dashboard/shell/account-menu";
 import { DashboardContext, useFilters } from "@/components/dashboard/shell/dashboard";
@@ -157,7 +158,11 @@ function LiveDashboard({ children }: { children: ReactNode }) {
         }),
         [filters, ledger, navigate, overview, photos]
     );
-    return <DashboardContext value={dashboard}>{children}</DashboardContext>;
+    return (
+        <DashboardContext value={dashboard}>
+            <AccountFlowsProvider>{children}</AccountFlowsProvider>
+        </DashboardContext>
+    );
 }
 
 const proRequired = (error: Error) => error.message.includes("Pro is required");

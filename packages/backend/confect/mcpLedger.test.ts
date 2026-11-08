@@ -406,6 +406,21 @@ describe("account_balances", () => {
         });
     });
 
+    it("leaves an archived account out of the balances and net worth", async () => {
+        const t = await seeded({
+            accounts: [
+                account("checking", { initialBalance: 1000, initialBalanceUsd: 1000 }),
+                account("old", { archivedAt: 1, initialBalance: 400, initialBalanceUsd: 400, sortOrder: 1 }),
+            ],
+            currency: "USD",
+        });
+
+        const result = await t.query(internal.mcpLedger.accountBalances, { user });
+
+        expect(result.accounts.map((row) => row.name)).toStrictEqual(["checking"]);
+        expect(result.net).toBe(1000);
+    });
+
     it("moves a person's balance by what was settled outside Outlayr, either way", async () => {
         const t = await seeded({
             accounts: [account("pedro", { initialBalance: -50, initialBalanceUsd: -50, kind: "person" })],

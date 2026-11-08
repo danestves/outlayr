@@ -50,6 +50,7 @@ import { Route as Char123LocaleChar125ToolsSlugRouteImport } from './routes/{-$l
 import { Route as AccountAppAccountsIndexRouteImport } from './routes/_account/app.accounts.index'
 import { Route as AccountAppAccountsAccountIdRouteImport } from './routes/_account/app.accounts.$accountId'
 import { Route as AccountAppAccountsNetWorthRouteImport } from './routes/_account/app.accounts.net-worth'
+import { Route as AccountAppAccountsReorderRouteImport } from './routes/_account/app.accounts.reorder'
 import { Route as AccountAppSettingsIndexRouteImport } from './routes/_account/app.settings.index'
 import { Route as AccountAppSettingsAccountRouteImport } from './routes/_account/app.settings.account'
 import { Route as AccountAppSettingsCurrencyRouteImport } from './routes/_account/app.settings.currency'
@@ -286,6 +287,12 @@ const AccountAppAccountsNetWorthRoute =
     path: '/accounts/net-worth',
     getParentRoute: () => AccountAppRoute,
   } as any)
+const AccountAppAccountsReorderRoute =
+  AccountAppAccountsReorderRouteImport.update({
+    id: '/accounts/reorder',
+    path: '/accounts/reorder',
+    getParentRoute: () => AccountAppRoute,
+  } as any)
 const AccountAppSettingsIndexRoute = AccountAppSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -356,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
   '/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
@@ -401,6 +409,7 @@ export interface FileRoutesByTo {
   '/{-$locale}/tools': typeof Char123LocaleChar125ToolsIndexRoute
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
   '/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
@@ -450,6 +459,7 @@ export interface FileRoutesById {
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
   '/_account/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/_account/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/_account/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
   '/_account/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/_account/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/_account/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
@@ -500,6 +510,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/tools/'
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
+    | '/app/accounts/reorder'
     | '/app/settings/account'
     | '/app/settings/currency'
     | '/app/settings/preferences'
@@ -545,6 +556,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/tools'
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
+    | '/app/accounts/reorder'
     | '/app/settings/account'
     | '/app/settings/currency'
     | '/app/settings/preferences'
@@ -593,6 +605,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/tools/'
     | '/_account/app/accounts/$accountId'
     | '/_account/app/accounts/net-worth'
+    | '/_account/app/accounts/reorder'
     | '/_account/app/settings/account'
     | '/_account/app/settings/currency'
     | '/_account/app/settings/preferences'
@@ -906,6 +919,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppAccountsNetWorthRouteImport
       parentRoute: typeof AccountAppRoute
     }
+    '/_account/app/accounts/reorder': {
+      id: '/_account/app/accounts/reorder'
+      path: '/accounts/reorder'
+      fullPath: '/app/accounts/reorder'
+      preLoaderRoute: typeof AccountAppAccountsReorderRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
     '/_account/app/settings/': {
       id: '/_account/app/settings/'
       path: '/'
@@ -1021,6 +1041,7 @@ interface AccountAppRouteChildren {
   AccountAppIndexRoute: typeof AccountAppIndexRoute
   AccountAppAccountsAccountIdRoute: typeof AccountAppAccountsAccountIdRoute
   AccountAppAccountsNetWorthRoute: typeof AccountAppAccountsNetWorthRoute
+  AccountAppAccountsReorderRoute: typeof AccountAppAccountsReorderRoute
   AccountAppAccountsIndexRoute: typeof AccountAppAccountsIndexRoute
 }
 
@@ -1031,6 +1052,7 @@ const AccountAppRouteChildren: AccountAppRouteChildren = {
   AccountAppIndexRoute: AccountAppIndexRoute,
   AccountAppAccountsAccountIdRoute: AccountAppAccountsAccountIdRoute,
   AccountAppAccountsNetWorthRoute: AccountAppAccountsNetWorthRoute,
+  AccountAppAccountsReorderRoute: AccountAppAccountsReorderRoute,
   AccountAppAccountsIndexRoute: AccountAppAccountsIndexRoute,
 }
 

@@ -15,7 +15,7 @@ import type { PlottedCell } from "@/domain/goal-balance-series";
 import { isPayoffPlan } from "@/domain/savings-goal";
 import type { TransferLogRow } from "@/domain/transfer-log-rows";
 
-import { useAccounts, useOverviewOf } from "./accounts";
+import { useOpenAccounts, useOverviewOf } from "./accounts";
 import type { SettledCell } from "./accounts";
 import type { Account } from "./accounts-core";
 import { useGlobalCurrency } from "./app-meta";
@@ -63,7 +63,7 @@ export function useDebtsOverview(
     db: Database,
     nowMs: number
 ): DebtsScreenOverview & { overview: AccountsOverview | null; payoff: ReadonlyMap<string, PayoffLine> } {
-    const all = useAccounts(db);
+    const all = useOpenAccounts(db);
     const { pendingId } = useDeferredDelete("account");
     const accounts = all.filter((account) => account.id !== pendingId);
     const displayCurrency = useGlobalCurrency(db);
@@ -148,7 +148,7 @@ export function useLogOverviewIn(
     nowMs: number,
     excludeId: string | null = null
 ): LogOverview {
-    const all = useAccounts(db);
+    const all = useOpenAccounts(db);
     const rows = excludeId == null ? all : all.filter((account) => account.id !== excludeId);
     const { displayCurrency } = valuation;
     const { overview, rates } = useOverviewOf(db, rows, displayCurrency, nowMs);

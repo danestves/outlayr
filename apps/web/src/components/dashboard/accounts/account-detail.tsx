@@ -1,5 +1,6 @@
 import {
     RiAddLine,
+    RiArchiveLine,
     RiArrowLeftDownLine,
     RiArrowLeftLine,
     RiArrowLeftRightLine,
@@ -45,6 +46,7 @@ import {
     UpcomingCard,
     rateText,
 } from "./accounts-screen";
+import { useAccountFlows } from "./flows";
 import {
     accountEntries,
     monthsBetween,
@@ -99,7 +101,8 @@ function useMonthYear() {
 
 function DetailBar({ row }: { row: AccountRow }) {
     const { ledger, photos } = useDashboard();
-    const { actions, detail } = useIntlayer("dashboard-accounts");
+    const { actions, detail, flows } = useIntlayer("dashboard-accounts");
+    const { open } = useAccountFlows();
     const card = isCard(row);
     return (
         <AccountsBar
@@ -120,24 +123,42 @@ function DetailBar({ row }: { row: AccountRow }) {
                 <RiArrowLeftRightLine />
                 {card ? detail.payCard : actions.transfer}
             </PhoneButton>
-            <PhoneButton className={`${OB} max-sm:hidden`}>
+            <button
+                className={`${OB} max-sm:hidden`}
+                onClick={() => open({ accountId: row.id, kind: "edit" })}
+                type="button"
+            >
                 <RiPencilLine />
                 {actions.edit}
-            </PhoneButton>
+            </button>
             <Menu>
                 <Menu.Trigger aria-label={actions.more({ name: row.name }).value} className={ICO}>
                     <RiMore2Fill className="text-muted-foreground" size={17} />
                 </Menu.Trigger>
                 <Menu.Content align="end" className="app-shell dash-menu ph-no-capture w-[200px]" sideOffset={4}>
-                    <PhoneItem>
+                    <Menu.Item
+                        className="dash-menu-item sm:hidden"
+                        onClick={() => open({ accountId: row.id, kind: "edit" })}
+                    >
+                        <RiPencilLine size={16} />
+                        {actions.edit}
+                    </Menu.Item>
+                    <Menu.Item className="dash-menu-item" onClick={() => open({ accountId: row.id, kind: "check" })}>
                         <RiCheckboxCircleLine size={16} />
                         {actions.check}
-                    </PhoneItem>
+                    </Menu.Item>
+                    <Menu.Item className="dash-menu-item" onClick={() => open({ accountId: row.id, kind: "archive" })}>
+                        <RiArchiveLine size={16} />
+                        {flows.archive}
+                    </Menu.Item>
                     <div className="dash-menu-rule" />
-                    <PhoneItem className="text-app-spend [&>svg]:text-app-spend!">
+                    <Menu.Item
+                        className="dash-menu-item text-app-spend [&>svg]:text-app-spend!"
+                        onClick={() => open({ accountId: row.id, kind: "delete" })}
+                    >
                         <RiDeleteBin6Line size={16} />
                         {actions.delete}
-                    </PhoneItem>
+                    </Menu.Item>
                 </Menu.Content>
             </Menu>
             <PhoneButton className="dash-btn">
@@ -617,6 +638,7 @@ function EmptyEntries() {
 function CheckCard({ row }: { row: AccountRow }) {
     const { ledger } = useDashboard();
     const { detail } = useIntlayer("dashboard-accounts");
+    const { open } = useAccountFlows();
     const { clockTime } = useDisplayFormat();
     const checked = useCheckedText();
     const date = useDateFormat();
@@ -648,7 +670,9 @@ function CheckCard({ row }: { row: AccountRow }) {
                 </b>
                 <small className="text-muted-foreground block truncate text-xs leading-4">{line}</small>
             </span>
-            <PhoneButton className="dash-ob">{detail.check}</PhoneButton>
+            <button className="dash-ob" onClick={() => open({ accountId: row.id, kind: "check" })} type="button">
+                {detail.check}
+            </button>
         </Card>
     );
 }

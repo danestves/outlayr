@@ -8,6 +8,7 @@ import type { CurrencyEntry } from "@outlayr/money/currency-totals";
 import { utcDateString } from "@outlayr/money/dates";
 import { roundMoney } from "@outlayr/money/round";
 
+import { openAccounts } from "./dashboard-series-ledger";
 import type { Ledger, Scope } from "./dashboard-series-ledger";
 
 interface Movement {
@@ -38,8 +39,8 @@ function movementsOf(ledger: Ledger): Movements {
     if (cached) {
         return cached;
     }
-    const { accounts, installmentPlans, outsideMoves, outsidePayments, transactions, transfers } = ledger.books;
-    const live = accounts.filter((row) => row.deletedAt === null).toSorted((a, b) => a.sortOrder - b.sortOrder);
+    const { installmentPlans, outsideMoves, outsidePayments, transactions, transfers } = ledger.books;
+    const live = openAccounts(ledger.books);
     const currencyOf = new Map(live.map((row) => [row.localId, row.currency]));
     const planAccount = new Map(
         installmentPlans.filter((row) => row.deletedAt === null).map((row) => [row.localId, row.accountId])

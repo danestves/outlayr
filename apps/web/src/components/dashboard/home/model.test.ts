@@ -57,6 +57,8 @@ const ledger = prepareLedger(
         categories: [category("food"), category("rent"), category("travel"), category("salary", true)],
         exchangeRates: [],
         installmentPlans: [],
+        installments: [],
+        savingsGoals: [],
         mainBudget: [],
         outsideMoves: [],
         outsidePayments: [],
