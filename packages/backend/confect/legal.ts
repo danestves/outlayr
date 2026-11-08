@@ -444,7 +444,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
             ],
         },
         document: "privacy",
-        effectiveAtMs: Date.UTC(2026, 10, 10),
+        effectiveAtMs: Date.UTC(2026, 10, 9),
     },
 ];
 
