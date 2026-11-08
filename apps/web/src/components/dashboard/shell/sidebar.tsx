@@ -105,7 +105,9 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
         collapsed ? (
             <div className="h-4" />
         ) : (
-            <div className="dash-group text-muted-foreground px-2.5 pt-3 pb-1 text-xs leading-4">{label}</div>
+            <div className="text-muted-foreground px-2.5 pt-3 pb-1 text-xs leading-4 [.dash-drawer_&]:pt-2">
+                {label}
+            </div>
         );
     return (
         <>

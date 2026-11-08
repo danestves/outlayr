@@ -1183,10 +1183,6 @@ html[data-theme="dark"]:has(.dash-sheet) body::after {
         font-weight: 400;
     }
 
-    .dash-drawer .dash-group {
-        padding-top: 8px;
-    }
-
     @media (max-width: 1023px) {
         .dash-chip {
             position: relative;
