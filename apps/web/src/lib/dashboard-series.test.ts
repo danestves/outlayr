@@ -14,7 +14,7 @@ import {
     spendSeries,
     stackOrder,
 } from "./dashboard-series";
-import { cashFlow, categorySpend, dailySpend, monthlyByCategory, netWorthHistory } from "./dashboard-series-insights";
+import { cashFlow, categorySpend, monthlyTotals, netWorthHistory } from "./dashboard-series-insights";
 import { endOfDay, prepareLedger } from "./dashboard-series-ledger";
 import type { Ledger } from "./dashboard-series-ledger";
 import { netWorthPoints } from "./dashboard-series-net-worth";
@@ -483,8 +483,7 @@ describe("an empty ledger", () => {
         expect(spendSeries(ledger, oct, ALL_CATEGORIES).categories).toStrictEqual([]);
         expect(categorySpend(ledger, oct, ALL)).toStrictEqual([]);
         expect(cashFlow(ledger, oct, ALL).links).toStrictEqual([]);
-        expect(monthlyByCategory(ledger, oct, ALL).average).toBe(0);
-        expect(dailySpend(ledger, oct, ALL).average).toBe(0);
+        expect(monthlyTotals(ledger, oct, ALL)).toStrictEqual([{ ended: false, income: 0, key: "2026-10", spent: 0 }]);
         expect(netWorthHistory(ledger, oct, ALL)).toHaveLength(12);
         expect(categoryDetail(ledger, "groceries", oct, ALL).average).toBeNull();
     });
@@ -520,15 +519,6 @@ describe("category detail", () => {
         );
 
         expect(categoryDetail(recent, "groceries", oct, ALL).average).toBeNull();
-    });
-});
-
-describe("daily spend", () => {
-    it("averages without the category holding the month's largest single expense", () => {
-        const { average, averageWithout, excluded } = dailySpend(prepareLedger(october(), NOW), oct, ALL);
-
-        expect(excluded).toStrictEqual({ id: "rent", name: "Rent" });
-        expect([average, averageWithout]).toStrictEqual([102.7, 10.2]);
     });
 });
 

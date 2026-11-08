@@ -1,0 +1,26 @@
+diff --git a/dist/dom/dom.js b/dist/dom/dom.js
+index 9cb28fe9e06bc59b77a4e3c60fb61be0302faf39..8847ce84c50d5122444d6e02cf6f2ac8aa3286a6 100644
+--- a/dist/dom/dom.js
++++ b/dist/dom/dom.js
+@@ -138,7 +138,7 @@ function setEventHandler(el, name, next) {
+   }
+   existing.c = next;
+ }
+-const UNITLESS_STYLE = /^(animationIterationCount|borderImage(Outset|Slice|Width)|box(Flex(Group)?|OrdinalGroup)|column(Count|s)|flex(Grow|Positive|Shrink|Negative|Order)?|grid(Area|(Row|Column)(End|Span|Start)?)|fontWeight|line(Clamp|Height)|opacity|order|orphans|tabSize|widows|zIndex|zoom|(fill|flood|stop|stroke)Opacity|stroke(Dasharray|Dashoffset|Miterlimit|Width))$/;
++const UNITLESS_STYLE = /^(animationIterationCount|aspectRatio|scale|borderImage(Outset|Slice|Width)|box(Flex(Group)?|OrdinalGroup)|column(Count|s)|flex(Grow|Positive|Shrink|Negative|Order)?|grid(Area|(Row|Column)(End|Span|Start)?)|fontWeight|line(Clamp|Height)|opacity|order|orphans|tabSize|widows|zIndex|zoom|(fill|flood|stop|stroke)Opacity|stroke(Dasharray|Dashoffset|Miterlimit|Width))$/;
+ function createHostNode(type, isSvg) {
+   if (isSvg || type === "svg") {
+     return document.createElementNS(SVG_NS, type);
+diff --git a/dist/server/escape.js b/dist/server/escape.js
+index 81412e46db89e1416c5c5ba77d0e5b29c68b9de9..43036d0c802600402c7b107d6aa890b675adf41f 100644
+--- a/dist/server/escape.js
++++ b/dist/server/escape.js
+@@ -89,6 +89,8 @@ function attrToHtml(name, value, isSvg = false) {
+ }
+ const UNITLESS_STYLE = /* @__PURE__ */ new Set([
+   "animationIterationCount",
++  "aspectRatio",
++  "scale",
+   "borderImageOutset",
+   "borderImageSlice",
+   "borderImageWidth",

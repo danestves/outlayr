@@ -1,4 +1,5 @@
 import type { CategoryBudget } from "../../../lib/dashboard-series";
+import type { MonthTotal } from "../../../lib/dashboard-series-insights";
 import { round, rowsBetween, total } from "../../../lib/dashboard-series-ledger";
 import type { Ledger, Scope } from "../../../lib/dashboard-series-ledger";
 import { periodOf, shiftPeriodKey } from "../../../lib/dashboard-series-period";
@@ -10,6 +11,7 @@ const MIN_PRIOR_PERIODS = 3;
 const MIN_DELTA_OF_USUAL = 0.2;
 const MIN_DELTA_OF_TOTAL = 0.05;
 const MAX_CARDS = 3;
+const SHOWN_MOVES = 4;
 
 export interface Usual {
     active: ReadonlyMap<string, number>;
@@ -102,6 +104,82 @@ function biggestPurchase(ledger: Ledger, scope: Scope, budget: CategoryBudget, c
         );
 }
 
+const spentByCategory = (ledger: Ledger, period: Period, scope: Scope) =>
+    Map.groupBy(rowsBetween(ledger, scope, period.from, earlier(period.to, ledger.today), false), (row) => row.topId);
+
+export interface Move {
+    categoryId: string;
+    delta: number;
+}
+
+export interface Changes {
+    moves: Move[];
+    now: number;
+    other: number;
+    usual: number;
+}
+
+export function changesFromUsual(ledger: Ledger, period: Period, scope: Scope, usual: Usual | null): Changes | null {
+    if (usual === null) {
+        return null;
+    }
+    const spent = new Map([...spentByCategory(ledger, period, scope)].map(([id, rows]) => [id, total(ledger, rows)]));
+    const now = round(
+        ledger,
+        [...spent.values()].reduce((sum, each) => sum + each, 0)
+    );
+    const moves = [...new Set([...usual.byCategory.keys(), ...spent.keys()])]
+        .map((categoryId) => ({
+            categoryId,
+            delta: round(ledger, (spent.get(categoryId) ?? 0) - (usual.byCategory.get(categoryId) ?? 0)),
+        }))
+        .filter(
+            ({ categoryId, delta }) =>
+                ledger.categories.has(categoryId) && delta !== 0 && Math.abs(delta) >= usual.total * MIN_DELTA_OF_TOTAL
+        )
+        .toSorted((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+        .slice(0, SHOWN_MOVES);
+    const moved = moves.reduce((sum, move) => sum + move.delta, 0);
+    return { moves, now, other: round(ledger, now - usual.total - moved), usual: usual.total };
+}
+
+const keptShare = ({ income, spent }: MonthTotal) => (income - spent) / income;
+
+export function usualKeptShare(months: readonly MonthTotal[]): number | null {
+    const prior = months
+        .slice(0, -1)
+        .filter((month) => month.ended && month.income > 0)
+        .slice(-PRIOR_PERIODS);
+    if (prior.length < MIN_PRIOR_PERIODS) {
+        return null;
+    }
+    return prior.reduce((sum, month) => sum + keptShare(month), 0) / prior.length;
+}
+
+export interface KeptStreak {
+    kind: "highest" | "lowest";
+    months: number;
+    since: string | null;
+}
+
+export function keptStreak(months: readonly MonthTotal[]): KeptStreak | null {
+    const current = months.at(-1);
+    const prior = months.slice(0, -1).filter((month) => month.ended && month.income > 0);
+    const previous = prior.at(-1);
+    if (!current?.ended || current.income <= 0 || !previous || prior.length < MIN_PRIOR_PERIODS) {
+        return null;
+    }
+    const share = keptShare(current);
+    if (share === keptShare(previous)) {
+        return null;
+    }
+    const kind = share < keptShare(previous) ? "lowest" : "highest";
+    const breaks = prior.findLast((month) =>
+        kind === "lowest" ? keptShare(month) <= share : keptShare(month) >= share
+    );
+    return { kind, months: prior.length + 1, since: breaks?.key ?? null };
+}
+
 export function standouts(
     ledger: Ledger,
     period: Period,
@@ -119,10 +197,7 @@ export function standouts(
             kind: "overBudget" as const,
         }));
     if (usual !== null) {
-        const spent = Map.groupBy(
-            rowsBetween(ledger, scope, period.from, earlier(period.to, ledger.today), false),
-            (row) => row.topId
-        );
+        const spent = spentByCategory(ledger, period, scope);
         for (const [categoryId, typical] of usual.byCategory) {
             const now = total(ledger, spent.get(categoryId) ?? []);
             const gap = round(ledger, Math.abs(now - typical));

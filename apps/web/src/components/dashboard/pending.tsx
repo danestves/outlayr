@@ -1,10 +1,7 @@
 import { useLocation } from "@tanstack/react-router";
 import { Suspense, lazy, useState } from "react";
-import { useIntlayer } from "react-intlayer";
 
 import { useTimeout } from "@/lib/timeout";
-
-import { Workspace } from "./shell/workspace";
 
 const SKELETON_HOLD_MS = 150;
 
@@ -25,12 +22,10 @@ function useHeld() {
 }
 
 export function DashboardPending() {
-    const { nav } = useIntlayer("dashboard");
     const onInsights = useLocation({ select: (location) => location.pathname.endsWith("/insights") });
     const held = useHeld();
-    const blank = onInsights ? <Workspace main={null} panel={null} title={nav.insights} /> : null;
     if (held) {
-        return blank;
+        return null;
     }
-    return <Suspense fallback={blank}>{onInsights ? <InsightsPending /> : <HomePending />}</Suspense>;
+    return <Suspense fallback={null}>{onInsights ? <InsightsPending /> : <HomePending />}</Suspense>;
 }

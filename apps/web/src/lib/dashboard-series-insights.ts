@@ -1,22 +1,24 @@
-import type { SankeyLink, SankeyNode } from "@/components/charts/sankey-chart";
-import type { ChartDatum } from "@/components/charts/shared";
-import type { TreemapDatum } from "@/components/charts/treemap-chart";
+import type { AreaChartDatum } from "panelui-web/area-chart";
+import type { SankeyLink, SankeyNode } from "panelui-web/sankey-chart";
 
 import { categoriesOf } from "./dashboard-series";
 import type { SeriesCategory } from "./dashboard-series";
 import { endOfDay, round, rowsBetween, total } from "./dashboard-series-ledger";
 import type { Ledger, Scope } from "./dashboard-series-ledger";
 import { netWorthPoints } from "./dashboard-series-net-worth";
-import { daysFrom, periodOf, shiftPeriodKey } from "./dashboard-series-period";
+import { periodOf, shiftPeriodKey } from "./dashboard-series-period";
 import type { Period } from "./dashboard-series-period";
 
 const largestFirst = (categories: readonly SeriesCategory[]) => categories.toSorted((a, b) => b.total - a.total);
 
 const lastDayOf = (ledger: Ledger, period: Period) => (ledger.today < period.to ? ledger.today : period.to);
 
-interface CategorySpend extends TreemapDatum {
+interface CategorySpend {
+    color: string;
     id: string;
+    label: string;
     share: number;
+    value: number;
 }
 
 export function categorySpend(ledger: Ledger, period: Period, scope: Scope): CategorySpend[] {
@@ -71,92 +73,35 @@ export function cashFlow(ledger: Ledger, period: Period, scope: Scope): CashFlow
     return { income, kept, links, nodes, spent };
 }
 
-interface MonthlyStack {
-    average: number;
-    categories: readonly SeriesCategory[];
-    data: readonly ChartDatum[];
+export interface MonthTotal {
+    ended: boolean;
+    income: number;
+    key: string;
+    spent: number;
 }
 
-const MONTHS_SHOWN = 6;
-
-export function monthlyByCategory(ledger: Ledger, period: Period, scope: Scope, months = MONTHS_SHOWN): MonthlyStack {
-    const periods = Array.from({ length: months }, (_, index) =>
+const lastPeriods = (ledger: Ledger, period: Period, months: number) =>
+    Array.from({ length: months }, (_, index) =>
         periodOf(shiftPeriodKey(period.key, index + 1 - months), ledger.firstDayOfMonth)
     );
-    const first = periods[0]?.from ?? period.from;
-    const spend = rowsBetween(ledger, scope, first, period.to, false);
-    const categories = categoriesOf(ledger, spend, null);
-    const slots = periods.map((each) => spend.filter((row) => row.day >= each.from && row.day <= each.to));
-    const data = periods.map((each, index) => ({
-        key: each.key,
-        name: each.key,
-        ...Object.fromEntries(
-            categories.map((category) => [
-                category.id,
-                total(
-                    ledger,
-                    (slots[index] ?? []).filter((member) => member.topId === category.id)
-                ),
-            ])
-        ),
-    }));
-    const started = periods.flatMap((each, index) =>
-        each.from <= ledger.today ? [{ ended: each.to < ledger.today, spent: total(ledger, slots[index] ?? []) }] : []
-    );
-    const ended = started.filter((each) => each.ended);
-    const counted = ended.length > 0 ? ended : started;
-    const average = counted.length === 0 ? 0 : counted.reduce((sum, each) => sum + each.spent, 0) / counted.length;
-    return { average: round(ledger, average), categories, data };
+
+export function monthlyTotals(ledger: Ledger, period: Period, scope: Scope, months = 12): MonthTotal[] {
+    const firstDay = ledger.rows.reduce((first, row) => (row.day < first ? row.day : first), ledger.today);
+    return lastPeriods(ledger, period, months)
+        .filter((each) => each.to >= firstDay || each.key === period.key)
+        .map((each) => {
+            const last = lastDayOf(ledger, each);
+            return {
+                ended: each.to < ledger.today,
+                income: total(ledger, rowsBetween(ledger, scope, each.from, last, true)),
+                key: each.key,
+                spent: total(ledger, rowsBetween(ledger, scope, each.from, last, false)),
+            };
+        });
 }
 
-interface DailySpend {
-    average: number;
-    averageWithout: number;
-    categories: readonly SeriesCategory[];
-    data: readonly ChartDatum[];
-    excluded: { id: string; name: string } | null;
-}
-
-const LUMP_SHARE = 0.3;
-
-export function dailySpend(ledger: Ledger, period: Period, scope: Scope): DailySpend {
-    const spend = rowsBetween(ledger, scope, period.from, lastDayOf(ledger, period), false);
-    const categories = categoriesOf(ledger, spend, null);
-    const byDay = Map.groupBy(spend, (row) => row.day);
-    const days = daysFrom(period.from, lastDayOf(ledger, period));
-    const data = days.map((date) => ({
-        date,
-        ...Object.fromEntries(
-            categories.map((category) => [
-                category.id,
-                total(
-                    ledger,
-                    (byDay.get(date) ?? []).filter((member) => member.topId === category.id)
-                ),
-            ])
-        ),
-    }));
-    const spent = total(ledger, spend);
-    const largest = spend.reduce<(typeof spend)[number] | null>(
-        (top, row) => (top === null || row.amount > top.amount ? row : top),
-        null
-    );
-    const found = categories.find((category) => category.id === largest?.topId);
-    const lump = found !== undefined && found.total >= spent * LUMP_SHARE ? found : null;
-    const perDay = (amount: number) => (days.length === 0 ? 0 : round(ledger, amount / days.length));
-    return {
-        average: perDay(spent),
-        averageWithout: perDay(spent - (lump?.total ?? 0)),
-        categories,
-        data,
-        excluded: lump ? { id: lump.id, name: lump.name } : null,
-    };
-}
-
-export function netWorthHistory(ledger: Ledger, period: Period, scope: Scope, months = 12): ChartDatum[] {
-    const periods = Array.from({ length: months }, (_, index) =>
-        periodOf(shiftPeriodKey(period.key, index + 1 - months), ledger.firstDayOfMonth)
-    );
+export function netWorthHistory(ledger: Ledger, period: Period, scope: Scope, months = 12): AreaChartDatum[] {
+    const periods = lastPeriods(ledger, period, months);
     const worth = netWorthPoints(
         ledger,
         scope,

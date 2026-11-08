@@ -8,7 +8,7 @@ import { categoryBudgets } from "../../../lib/dashboard-series";
 import type { CategoryBudget } from "../../../lib/dashboard-series";
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
 import { periodOf } from "../../../lib/dashboard-series-period";
-import { compareToUsual, standouts, usualSpend } from "./answers";
+import { changesFromUsual, compareToUsual, keptStreak, standouts, usualKeptShare, usualSpend } from "./answers";
 
 const at = (iso: string) => Date.parse(iso);
 const NOW = at("2026-10-20T15:00:00Z");
@@ -138,6 +138,72 @@ describe("usualSpend", () => {
             NOW
         );
         expect(usualSpend(ledger, periodOf("2026-09", 1), ALL)?.byCategory.get("food")).toBe(100);
+    });
+});
+
+describe("changesFromUsual", () => {
+    it("walks from usual to now by the largest moves and folds the rest into other", () => {
+        const ledger = prepareLedger(
+            booksWith([...history, entry("oct-misc", "2026-10-09T12:00:00Z", 10, "gone")]),
+            NOW
+        );
+        const changes = changesFromUsual(ledger, october, ALL, usualSpend(ledger, october, ALL));
+        expect(changes).toEqual({
+            moves: [
+                { categoryId: "rent", delta: 1233.33 },
+                { categoryId: "food", delta: 300 },
+            ],
+            now: 2360,
+            other: 10,
+            usual: 816.67,
+        });
+    });
+});
+
+const month = (key: string, income: number, spent: number, ended = true) => ({ ended, income, key, spent });
+
+describe("usualKeptShare", () => {
+    it("averages ended months with income and leaves out the last one", () => {
+        const months = [
+            month("2026-06", 1000, 500),
+            month("2026-07", 0, 300),
+            month("2026-08", 1000, 800),
+            month("2026-09", 2000, 1000),
+            month("2026-10", 1000, 1000, false),
+        ];
+        expect(usualKeptShare(months)).toBeCloseTo(0.4);
+        expect(usualKeptShare(months.slice(2))).toBeNull();
+    });
+});
+
+describe("keptStreak", () => {
+    const past = [
+        month("2026-06", 1000, 700),
+        month("2026-07", 1000, 500),
+        month("2026-08", 1000, 400),
+        month("2026-09", 1000, 300),
+    ];
+
+    it("names the last month that kept as little, or none when it is the lowest of all", () => {
+        expect(keptStreak([...past, month("2026-10", 1000, 600)])).toEqual({
+            kind: "lowest",
+            months: 5,
+            since: "2026-06",
+        });
+        expect(keptStreak([...past, month("2026-10", 1000, 800)])).toEqual({
+            kind: "lowest",
+            months: 5,
+            since: null,
+        });
+        expect(keptStreak([...past, month("2026-10", 1000, 200)])).toEqual({
+            kind: "highest",
+            months: 5,
+            since: null,
+        });
+    });
+
+    it("waits for the period to end", () => {
+        expect(keptStreak([...past, month("2026-10", 1000, 600, false)])).toBeNull();
     });
 });
 

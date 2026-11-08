@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
+import { SankeyChart } from "panelui-web/sankey-chart";
 import { useIntlayer } from "react-intlayer";
 
-import { SankeyChart } from "@/components/charts/sankey-chart";
+import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import type { Dashboard } from "@/components/dashboard/shell/dashboard";
 import { cn } from "@/lib/utils";
@@ -17,9 +18,10 @@ const HEAD_HEIGHT = 36;
 const ROW_HEIGHT = 38;
 const MIN_CHART_HEIGHT = 200;
 const STACKED_CHART_HEIGHT = 260;
-const TABLE_WIDTH = 430;
+const TABLE_WIDTH = 520;
+const COLLAPSED = "max-sm:overflow-hidden max-sm:p-0 max-sm:whitespace-nowrap";
 const RIBBON_TAPER = 0.3;
-const CHART_WIDTH = 540;
+const PHONE_TARGETS = 6;
 
 type Format = ReturnType<typeof useInsightsFormat>;
 
@@ -39,7 +41,7 @@ function BudgetCells({ categoryId, fmt, model }: { categoryId: string; fmt: Form
     if (!budget) {
         return (
             <td
-                className="text-muted-foreground border-border/60 border-b pl-2.5 text-right font-mono text-xs"
+                className="text-muted-foreground border-border/60 border-b pl-2.5 text-right font-mono text-xs whitespace-nowrap"
                 colSpan={2}
             >
                 {copy.budget.none}
@@ -50,7 +52,7 @@ function BudgetCells({ categoryId, fmt, model }: { categoryId: string; fmt: Form
     const share = budget.effectiveLimit > 0 ? Math.min(budget.spent / budget.effectiveLimit, 1) : 1;
     return (
         <>
-            <td className="border-border/60 border-b pl-2.5">
+            <td className={cn("border-border/60 border-b pl-2.5", COLLAPSED)}>
                 <span className="sr-only">{fmt.amount(budget.effectiveLimit)}</span>
                 <div aria-hidden className="bg-border hidden h-1 overflow-hidden rounded-full sm:block">
                     <div
@@ -61,13 +63,44 @@ function BudgetCells({ categoryId, fmt, model }: { categoryId: string; fmt: Form
             </td>
             <td
                 className={cn(
-                    "border-border/60 border-b pl-2.5 text-right font-mono text-xs",
+                    "border-border/60 border-b pl-2.5 text-right font-mono text-xs whitespace-nowrap",
                     budget.overBudget ? "text-destructive" : "text-muted-foreground"
                 )}
             >
                 {fmt.amount(budget.remaining)}
             </td>
         </>
+    );
+}
+
+function VersusCell({
+    amount,
+    categoryId,
+    fmt,
+    model,
+}: {
+    amount: number;
+    categoryId: string;
+    fmt: Format;
+    model: InsightsModel;
+}) {
+    const { table } = useIntlayer("dashboard-insights");
+    if (model.usual === null) {
+        return null;
+    }
+    const delta = Math.round(amount - (model.usual.byCategory.get(categoryId) ?? 0));
+    return (
+        <td
+            className={cn(
+                "border-border/60 border-b pl-2.5 text-right font-mono text-xs",
+                COLLAPSED,
+                delta > 0 && "text-destructive",
+                delta < 0 && "text-success",
+                delta === 0 && "text-muted-foreground"
+            )}
+        >
+            {delta === 0 ? table.same : fmt.signedWhole(delta)}
+        </td>
     );
 }
 
@@ -87,7 +120,10 @@ function CategoryRow({ dashboard, fmt, model, row }: TableProps & { row: FlowRow
                     </Link>
                 </div>
             </th>
-            <td className="border-border/60 border-b pl-2.5 text-right font-mono text-xs">{fmt.amount(row.amount)}</td>
+            <td className="border-border/60 border-b pl-2.5 text-right font-mono text-xs whitespace-nowrap">
+                {fmt.amount(row.amount)}
+            </td>
+            <VersusCell amount={row.amount} categoryId={row.id} fmt={fmt} model={model} />
             <BudgetCells categoryId={row.id} fmt={fmt} model={model} />
         </tr>
     );
@@ -108,7 +144,10 @@ function KeptRow({ fmt, model, row }: Pick<TableProps, "fmt" | "model"> & { row:
                     <span className="truncate font-medium">{measures.kept}</span>
                 </div>
             </th>
-            <td className="border-border/60 border-b pl-2.5 text-right font-mono text-xs">{fmt.amount(row.amount)}</td>
+            <td className="border-border/60 border-b pl-2.5 text-right font-mono text-xs whitespace-nowrap">
+                {fmt.amount(row.amount)}
+            </td>
+            {model.usual === null ? null : <td aria-hidden className="border-border/60 border-b" />}
             <td aria-hidden className="border-border/60 border-b" />
             <td className="text-muted-foreground border-border/60 border-b pl-2.5 text-right font-mono text-xs">
                 {share}%
@@ -123,7 +162,8 @@ function FlowTable(props: TableProps) {
         <table className="w-full table-fixed border-separate border-spacing-0 text-sm">
             <colgroup>
                 <col />
-                <col className="w-22" />
+                <col className="w-24" />
+                {props.model.usual === null ? null : <col className="w-0 sm:w-22" />}
                 <col className="w-0 sm:w-28" />
                 <col className="w-22" />
             </colgroup>
@@ -135,7 +175,12 @@ function FlowTable(props: TableProps) {
                     <th className="pl-2.5 text-right font-normal" scope="col">
                         {table.spent}
                     </th>
-                    <th className="hidden pl-2.5 text-left font-normal sm:table-cell" scope="col">
+                    {props.model.usual === null ? null : (
+                        <th className={cn("pl-2.5 text-right font-normal", COLLAPSED)} scope="col">
+                            {table.vsUsual}
+                        </th>
+                    )}
+                    <th className={cn("pl-2.5 text-left font-normal", COLLAPSED)} scope="col">
                         {table.budget}
                     </th>
                     <th className="pl-2.5 text-right font-normal" scope="col">
@@ -156,39 +201,59 @@ function FlowTable(props: TableProps) {
     );
 }
 
-export function CashFlowSection({ model }: { model: InsightsModel }) {
+function Totals({ fmt, model }: { fmt: Format; model: InsightsModel }) {
+    const { measures } = useIntlayer("dashboard-insights");
+    const { income, kept, spent } = model.flow;
+    const parts = [
+        [measures.in.value, income],
+        [measures.out.value, spent],
+        [kept < 0 ? measures.savings.value : measures.kept.value, Math.abs(kept)],
+    ] as const;
+    return (
+        <dl className="text-muted-foreground flex flex-wrap gap-x-3 text-xs">
+            {parts.map(([label, value]) => (
+                <div className="flex gap-1" key={label}>
+                    <dt>{label}</dt>
+                    <dd className="text-foreground font-mono font-medium">{fmt.amount(value)}</dd>
+                </div>
+            ))}
+        </dl>
+    );
+}
+
+export function CashFlowCard({ model }: { model: InsightsModel }) {
     const dashboard = useDashboard();
     const copy = useIntlayer("dashboard-insights");
     const fmt = useInsightsFormat(dashboard.ledger);
     const wide = useWide();
     const { links, nodes, rows } = flowOf(model.flow, {
         hub: copy.cashFlow.hub.value,
+        kept: copy.measures.kept.value,
         savings: copy.cashFlow.savings.value,
     });
     const empty = model.flow.income === 0 && model.flow.spent === 0;
     return (
-        <section className="border-border border-b px-5 pt-4 pb-4" id="cash-flow">
-            <h2 className="text-sm font-medium">{copy.cashFlow.title}</h2>
+        <CardFrame action={empty ? null : <Totals fmt={fmt} model={model} />} stackAction title={copy.cashFlow.title}>
             {empty ? (
-                <p className="text-muted-foreground mt-3 text-sm">{copy.empty.cashFlow}</p>
+                <p className="text-muted-foreground p-4 text-sm">{copy.empty.cashFlow}</p>
             ) : (
                 <div
-                    className="mt-1 grid items-start gap-x-3"
+                    className="grid items-start gap-x-3 px-4 pt-1 pb-3"
                     style={wide ? { gridTemplateColumns: `minmax(0, 1fr) ${TABLE_WIDTH}px` } : undefined}
                 >
                     <SankeyChart
-                        ariaLabel={copy.cashFlow.title.value}
+                        collapse={wide ? undefined : { label: copy.changes.other.value, maxPerColumn: PHONE_TARGETS }}
                         height={
                             wide
                                 ? Math.max(HEAD_HEIGHT + rows.length * ROW_HEIGHT, MIN_CHART_HEIGHT)
                                 : STACKED_CHART_HEIGHT
                         }
-                        initialWidth={wide ? CHART_WIDTH : 340}
+                        label={copy.cashFlow.title.value}
                         links={links}
                         nodes={nodes}
                         targetRows={wide ? { height: ROW_HEIGHT, taper: RIBBON_TAPER, top: HEAD_HEIGHT } : undefined}
                     >
-                        <SankeyChart.Links />
+                        <SankeyChart.Links gradient />
                         <SankeyChart.Nodes />
                         <SankeyChart.Labels formatValue={fmt.amount} />
                         <SankeyChart.Tooltip formatValue={fmt.amount} />
@@ -196,6 +261,6 @@ export function CashFlowSection({ model }: { model: InsightsModel }) {
                     <FlowTable dashboard={dashboard} fmt={fmt} model={model} rows={rows} />
                 </div>
             )}
-        </section>
+        </CardFrame>
     );
 }

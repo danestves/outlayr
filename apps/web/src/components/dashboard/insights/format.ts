@@ -4,6 +4,7 @@ import { useLocale } from "react-intlayer";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import type { Period } from "@/lib/dashboard-series-period";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
+import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 const noon = (day: string) => Date.parse(`${day}T12:00:00Z`);
@@ -33,6 +34,7 @@ export function useInsightsFormat({
             compact: (value: number) => compact.format(value).replace(/K$/, "k"),
             day,
             signed: (value: number) => money(value, currency, "always"),
+            signedWhole: (value: number) => moneyIn(value, currency, "always", false),
             month: (key: string) => shortMonth.format(noon(`${key}-15`)),
             periodName: (period: Period) => {
                 if (firstDayOfMonth !== 1) {
