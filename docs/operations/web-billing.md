@@ -29,8 +29,8 @@ Iraq and Jordan have no price: US Stripe accounts cannot charge IQD or JOD, so t
 
 | | Sandbox | Live |
 |---|---|---|
-| Stripe account | `acct_1UZX5w6yuuTosy7D` | `acct_1KuMX8G2PTGM0E8f` |
-| RevenueCat app, project `proj4796fe85` | `appd207aa76d6` | `appe2ba9057b8` |
+| Stripe account | `acct_1UZajI6VQIlEIn29` | `acct_1UZaGc5mqHV6IxIj` |
+| RevenueCat app, project `proj4796fe85` | `app0bee759e68` | `app66679adc15` |
 
 Stripe test mode does not support Managed Payments; use the sandbox. Sandbox events go to the `Convex | Staging` webhook, not production. Test with a throwaway user and delete the RevenueCat customer afterwards.
 
