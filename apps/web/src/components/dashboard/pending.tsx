@@ -13,6 +13,10 @@ const AccountsPending = lazy(async () => {
     const pending = await import("./accounts/accounts-pending");
     return { default: pending.AccountsPending };
 });
+const SettingsPending = lazy(async () => {
+    const pending = await import("./settings/settings-layout");
+    return { default: pending.SettingsPending };
+});
 const InsightsPending = lazy(async () => {
     const pending = await import("./insights/insights-pending");
     return { default: pending.InsightsPending };
@@ -25,13 +29,21 @@ function useHeld() {
     return held;
 }
 
+function pendingFor(page: string | undefined) {
+    if (page === "insights") {
+        return <InsightsPending />;
+    }
+    if (page === "accounts") {
+        return <AccountsPending />;
+    }
+    return page === "settings" ? <SettingsPending /> : <HomePending />;
+}
+
 export function DashboardPending() {
-    const onInsights = useLocation({ select: (location) => location.pathname.endsWith("/insights") });
-    const onAccounts = useLocation({ select: (location) => location.pathname.startsWith("/app/accounts") });
+    const page = useLocation({ select: (location) => location.pathname.split("/")[2] });
     const held = useHeld();
     if (held) {
         return null;
     }
-    const screen = onAccounts ? <AccountsPending /> : <HomePending />;
-    return <Suspense fallback={null}>{onInsights ? <InsightsPending /> : screen}</Suspense>;
+    return <Suspense fallback={null}>{pendingFor(page)}</Suspense>;
 }

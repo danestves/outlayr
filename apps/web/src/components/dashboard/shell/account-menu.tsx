@@ -8,6 +8,7 @@ import {
     RiUserAddLine,
     RiVerifiedBadgeFill,
 } from "@remixicon/react";
+import { Link } from "@tanstack/react-router";
 import { Menu } from "panelui-web/menu";
 import { useSyncExternalStore } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -98,7 +99,7 @@ export function UserMenu({ collapsed, side = "right" }: { collapsed: boolean; si
                     <RiPlugLine className="size-[19px]" />
                     {account.connections}
                 </Menu.Item>
-                <Menu.Item aria-disabled className="dash-menu-item" closeOnClick={false}>
+                <Menu.Item className="dash-menu-item" render={<Link to="/app/settings" />}>
                     <RiSettings2Line className="size-[19px]" />
                     {account.settings}
                 </Menu.Item>

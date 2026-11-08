@@ -11,13 +11,15 @@ import { UserMenu } from "./account-menu";
 import { NavLinks, SearchButton } from "./sidebar";
 
 export function MobileBar() {
-    const { add, nav } = useIntlayer("dashboard");
-    const path = useLocation({ select: (location) => location.pathname });
+    const { account, add, nav } = useIntlayer("dashboard");
+    const page = useLocation({ select: (location) => location.pathname.split("/")[2] });
     let title: ReactNode = nav.dashboard;
-    if (path.endsWith("/insights")) {
+    if (page === "insights") {
         title = nav.insights;
-    } else if (path.startsWith("/app/accounts")) {
+    } else if (page === "accounts") {
         title = nav.accounts;
+    } else if (page === "settings") {
+        title = account.settings;
     }
     const [open, setOpen] = useState(false);
     return (

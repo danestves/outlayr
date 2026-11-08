@@ -34,6 +34,7 @@ import { Route as Char123LocaleChar125TermsRouteImport } from './routes/{-$local
 import { Route as DotwellKnownMcpServerCardDotjsonRouteImport } from './routes/[.]well-known.mcp.server-card[.]json'
 import { Route as AccountAppIndexRouteImport } from './routes/_account/app.index'
 import { Route as AccountAppInsightsRouteImport } from './routes/_account/app.insights'
+import { Route as AccountAppSettingsRouteImport } from './routes/_account/app.settings'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as Char123LocaleChar125BlogIndexRouteImport } from './routes/{-$locale}/blog.index'
 import { Route as Char123LocaleChar125BlogSlugRouteImport } from './routes/{-$locale}/blog.$slug'
@@ -48,6 +49,10 @@ import { Route as Char123LocaleChar125ToolsSlugRouteImport } from './routes/{-$l
 import { Route as AccountAppAccountsIndexRouteImport } from './routes/_account/app.accounts.index'
 import { Route as AccountAppAccountsAccountIdRouteImport } from './routes/_account/app.accounts.$accountId'
 import { Route as AccountAppAccountsNetWorthRouteImport } from './routes/_account/app.accounts.net-worth'
+import { Route as AccountAppSettingsIndexRouteImport } from './routes/_account/app.settings.index'
+import { Route as AccountAppSettingsCurrencyRouteImport } from './routes/_account/app.settings.currency'
+import { Route as AccountAppSettingsPreferencesRouteImport } from './routes/_account/app.settings.preferences'
+import { Route as AccountAppSettingsTimeRouteImport } from './routes/_account/app.settings.time'
 
 const AccountRoute = AccountRouteImport.update({
   id: '/_account',
@@ -187,6 +192,11 @@ const AccountAppInsightsRoute = AccountAppInsightsRouteImport.update({
   path: '/insights',
   getParentRoute: () => AccountAppRoute,
 } as any)
+const AccountAppSettingsRoute = AccountAppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AccountAppRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -269,6 +279,28 @@ const AccountAppAccountsNetWorthRoute =
     path: '/accounts/net-worth',
     getParentRoute: () => AccountAppRoute,
   } as any)
+const AccountAppSettingsIndexRoute = AccountAppSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountAppSettingsRoute,
+} as any)
+const AccountAppSettingsCurrencyRoute =
+  AccountAppSettingsCurrencyRouteImport.update({
+    id: '/currency',
+    path: '/currency',
+    getParentRoute: () => AccountAppSettingsRoute,
+  } as any)
+const AccountAppSettingsPreferencesRoute =
+  AccountAppSettingsPreferencesRouteImport.update({
+    id: '/preferences',
+    path: '/preferences',
+    getParentRoute: () => AccountAppSettingsRoute,
+  } as any)
+const AccountAppSettingsTimeRoute = AccountAppSettingsTimeRouteImport.update({
+  id: '/time',
+  path: '/time',
+  getParentRoute: () => AccountAppSettingsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/{-$locale}': typeof Char123LocaleChar125RouteRouteWithChildren
@@ -295,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/app/insights': typeof AccountAppInsightsRoute
+  '/app/settings': typeof AccountAppSettingsRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
   '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
@@ -309,7 +342,11 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
+  '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
+  '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/accounts/': typeof AccountAppAccountsIndexRoute
+  '/app/settings/': typeof AccountAppSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AccountRouteWithChildren
@@ -348,7 +385,11 @@ export interface FileRoutesByTo {
   '/{-$locale}/tools': typeof Char123LocaleChar125ToolsIndexRoute
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
+  '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
+  '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/accounts': typeof AccountAppAccountsIndexRoute
+  '/app/settings': typeof AccountAppSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -376,6 +417,7 @@ export interface FileRoutesById {
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/_account/app/insights': typeof AccountAppInsightsRoute
+  '/_account/app/settings': typeof AccountAppSettingsRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
   '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
@@ -390,7 +432,11 @@ export interface FileRoutesById {
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
   '/_account/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/_account/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/_account/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
+  '/_account/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
+  '/_account/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/_account/app/accounts/': typeof AccountAppAccountsIndexRoute
+  '/_account/app/settings/': typeof AccountAppSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -419,6 +465,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/'
     | '/.well-known/mcp/server-card.json'
     | '/app/insights'
+    | '/app/settings'
     | '/api/auth/$'
     | '/{-$locale}/blog/$slug'
     | '/{-$locale}/blog/rss.xml'
@@ -433,7 +480,11 @@ export interface FileRouteTypes {
     | '/{-$locale}/tools/'
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
+    | '/app/settings/currency'
+    | '/app/settings/preferences'
+    | '/app/settings/time'
     | '/app/accounts/'
+    | '/app/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -472,7 +523,11 @@ export interface FileRouteTypes {
     | '/{-$locale}/tools'
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
+    | '/app/settings/currency'
+    | '/app/settings/preferences'
+    | '/app/settings/time'
     | '/app/accounts'
+    | '/app/settings'
   id:
     | '__root__'
     | '/{-$locale}'
@@ -499,6 +554,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/'
     | '/.well-known/mcp/server-card.json'
     | '/_account/app/insights'
+    | '/_account/app/settings'
     | '/api/auth/$'
     | '/{-$locale}/blog/$slug'
     | '/{-$locale}/blog/rss.xml'
@@ -513,7 +569,11 @@ export interface FileRouteTypes {
     | '/{-$locale}/tools/'
     | '/_account/app/accounts/$accountId'
     | '/_account/app/accounts/net-worth'
+    | '/_account/app/settings/currency'
+    | '/_account/app/settings/preferences'
+    | '/_account/app/settings/time'
     | '/_account/app/accounts/'
+    | '/_account/app/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -709,6 +769,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppInsightsRouteImport
       parentRoute: typeof AccountAppRoute
     }
+    '/_account/app/settings': {
+      id: '/_account/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AccountAppSettingsRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -807,6 +874,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppAccountsNetWorthRouteImport
       parentRoute: typeof AccountAppRoute
     }
+    '/_account/app/settings/': {
+      id: '/_account/app/settings/'
+      path: '/'
+      fullPath: '/app/settings/'
+      preLoaderRoute: typeof AccountAppSettingsIndexRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
+    '/_account/app/settings/currency': {
+      id: '/_account/app/settings/currency'
+      path: '/currency'
+      fullPath: '/app/settings/currency'
+      preLoaderRoute: typeof AccountAppSettingsCurrencyRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
+    '/_account/app/settings/preferences': {
+      id: '/_account/app/settings/preferences'
+      path: '/preferences'
+      fullPath: '/app/settings/preferences'
+      preLoaderRoute: typeof AccountAppSettingsPreferencesRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
+    '/_account/app/settings/time': {
+      id: '/_account/app/settings/time'
+      path: '/time'
+      fullPath: '/app/settings/time'
+      preLoaderRoute: typeof AccountAppSettingsTimeRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
   }
 }
 
@@ -861,8 +956,26 @@ const Char123LocaleChar125RouteRouteWithChildren =
     Char123LocaleChar125RouteRouteChildren,
   )
 
+interface AccountAppSettingsRouteChildren {
+  AccountAppSettingsCurrencyRoute: typeof AccountAppSettingsCurrencyRoute
+  AccountAppSettingsPreferencesRoute: typeof AccountAppSettingsPreferencesRoute
+  AccountAppSettingsTimeRoute: typeof AccountAppSettingsTimeRoute
+  AccountAppSettingsIndexRoute: typeof AccountAppSettingsIndexRoute
+}
+
+const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
+  AccountAppSettingsCurrencyRoute: AccountAppSettingsCurrencyRoute,
+  AccountAppSettingsPreferencesRoute: AccountAppSettingsPreferencesRoute,
+  AccountAppSettingsTimeRoute: AccountAppSettingsTimeRoute,
+  AccountAppSettingsIndexRoute: AccountAppSettingsIndexRoute,
+}
+
+const AccountAppSettingsRouteWithChildren =
+  AccountAppSettingsRoute._addFileChildren(AccountAppSettingsRouteChildren)
+
 interface AccountAppRouteChildren {
   AccountAppInsightsRoute: typeof AccountAppInsightsRoute
+  AccountAppSettingsRoute: typeof AccountAppSettingsRouteWithChildren
   AccountAppIndexRoute: typeof AccountAppIndexRoute
   AccountAppAccountsAccountIdRoute: typeof AccountAppAccountsAccountIdRoute
   AccountAppAccountsNetWorthRoute: typeof AccountAppAccountsNetWorthRoute
@@ -871,6 +984,7 @@ interface AccountAppRouteChildren {
 
 const AccountAppRouteChildren: AccountAppRouteChildren = {
   AccountAppInsightsRoute: AccountAppInsightsRoute,
+  AccountAppSettingsRoute: AccountAppSettingsRouteWithChildren,
   AccountAppIndexRoute: AccountAppIndexRoute,
   AccountAppAccountsAccountIdRoute: AccountAppAccountsAccountIdRoute,
   AccountAppAccountsNetWorthRoute: AccountAppAccountsNetWorthRoute,

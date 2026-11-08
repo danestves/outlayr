@@ -17,6 +17,10 @@ const AccountsFirstVisit = lazy(async () => {
     const pending = await import("@/components/dashboard/accounts/accounts-pending");
     return { default: pending.AccountsFirstVisit };
 });
+const SettingsFirstVisit = lazy(async () => {
+    const pending = await import("@/components/dashboard/settings/settings-layout");
+    return { default: pending.SettingsFirstVisit };
+});
 const InsightsFirstVisit = lazy(async () => {
     const pending = await import("@/components/dashboard/insights/insights-pending");
     return { default: pending.InsightsFirstVisit };
@@ -39,20 +43,25 @@ export const Route = createFileRoute("/_account")({
     head: () => ({ meta: [{ content: "noindex", name: "robots" }] }),
 });
 
-const firstVisit = (onAccounts: boolean) => (onAccounts ? <AccountsFirstVisit /> : <HomeFirstVisit />);
+function firstVisitFor(page: string | undefined) {
+    if (page === "insights") {
+        return <InsightsFirstVisit />;
+    }
+    if (page === "accounts") {
+        return <AccountsFirstVisit />;
+    }
+    return page === "settings" ? <SettingsFirstVisit /> : <HomeFirstVisit />;
+}
 
 function Account() {
     const { token } = Route.useRouteContext();
-    const onInsights = useLocation({ select: (location) => location.pathname.endsWith("/insights") });
-    const onAccounts = useLocation({ select: (location) => location.pathname.startsWith("/app/accounts") });
+    const page = useLocation({ select: (location) => location.pathname.split("/")[2] });
     const appStatus = useMatches({
         select: (matches) => matches.find((match) => match.routeId === "/_account/app")?.status,
     });
     return (
         <ConvexBetterAuthProvider authClient={authClient} client={convexClient()} initialToken={token}>
-            {appStatus === "pending" && !hasLedgerCopy() ? (
-                <Suspense>{onInsights ? <InsightsFirstVisit /> : firstVisit(onAccounts)}</Suspense>
-            ) : null}
+            {appStatus === "pending" && !hasLedgerCopy() ? <Suspense>{firstVisitFor(page)}</Suspense> : null}
             <Outlet />
         </ConvexBetterAuthProvider>
     );
