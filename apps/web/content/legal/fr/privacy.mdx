@@ -1,6 +1,6 @@
 ---
 title: "Politique de confidentialité"
-description: "Ce qu’Outlayr enregistre sur votre appareil, ce qui parvient à nos serveurs, aux fournisseurs d’IA et aux outils d’analyse, combien de temps c’est conservé et comment le supprimer. En vigueur le 8 novembre 2026."
+description: "Ce qu’Outlayr enregistre sur votre appareil, ce qui parvient à nos serveurs, aux fournisseurs d’IA et aux outils d’analyse, combien de temps c’est conservé et comment le supprimer. En vigueur le 10 novembre 2026."
 intro: "Cette politique explique ce qu’Outlayr collecte, où cela va, combien de temps cela reste et ce que vous pouvez y faire. Cette traduction est fournie pour votre commodité. En cas de différence avec la version anglaise, la version anglaise prévaut."
 ---
 
@@ -16,7 +16,7 @@ intro: "Cette politique explique ce qu’Outlayr collecte, où cela va, combien 
 - Avec Outlayr Pro, vous pouvez connecter Notion pour importer des dépenses depuis vos bases de données Notion. Nous conservons la clé d’accès de Notion chiffrée sur nos serveurs afin que vous puissiez importer à nouveau, jusqu’à ce que vous déconnectiez Notion ou supprimiez votre compte. Ce que nous lisons dans Notion transite par notre serveur jusqu’à votre téléphone et n’est pas conservé.
 - Vous pouvez connecter à votre compte un assistant IA comme Claude. Une fois que vous l’avez approuvé, il peut lire ce que vos appareils ont synchronisé et, avec Outlayr Pro, ajouter des opérations. Ce qu’il lit est traité selon la politique de confidentialité de cet assistant.
 - Si vous invitez des amis, chacun voit votre prénom sur votre invitation, et vous voyez son prénom, le nombre de jours où il a saisi des opérations, jusqu’à trois, et la date du troisième. Jamais ce qu’il a saisi.
-- Pas de publicité et pas de pistage à travers les apps d’autres sociétés. Nous ne vendons ni ne partageons vos informations personnelles.
+- Pas de publicité et pas de pistage à travers les apps d’autres sociétés. Nous ne vendons pas vos informations personnelles et ne les partageons pas à des fins publicitaires.
 - Vous pouvez supprimer votre compte et tout ce qui y est synchronisé depuis l’app à tout moment : **Réglages › Compte › Supprimer le compte**.
 
 ## Qui nous sommes
@@ -143,7 +143,7 @@ Notion Labs, Inc. traite votre espace de travail selon [sa propre politique de c
 
 ## Suggestions, voix et tickets
 
-Ces fonctionnalités nécessitent un compte, et aucune ne fonctionne tant que vous n’avez pas autorisé l’envoi de données à Anthropic et ElevenLabs lorsque l’app vous le demande. Désactiver **Réglages › Envoyer les données aux fournisseurs d’IA** les arrête toutes. Chaque requête passe d’abord par notre serveur, qui vérifie votre compte et vos limites, puis ne transmet que le contenu indiqué ci-dessous. Aucune n’envoie à Anthropic ou à ElevenLabs votre nom, votre adresse e-mail ou votre identifiant de compte.
+Ces fonctionnalités nécessitent un compte, et aucune ne fonctionne tant que vous n’avez pas autorisé l’envoi de données à Anthropic et ElevenLabs lorsque l’app vous le demande. Désactiver **Réglages › Envoyer les données aux fournisseurs d’IA** les arrête toutes. Chaque requête passe d’abord par notre serveur, qui vérifie votre compte et vos limites, puis ne transmet que le contenu indiqué ci-dessous. Aucune n’envoie à Anthropic ou à ElevenLabs votre nom, votre adresse e-mail ou votre identifiant de compte, sauf ce que montre un [relevé bancaire PDF](#import-de-relevé-bancaire-pdf) que vous importez, qui peut inclure votre nom et votre adresse.
 
 ### Suggestions de commerçants (Remplissage intelligent)
 
@@ -328,7 +328,7 @@ Le [tableau ci-dessus](#aperçu-des-données) indique combien de temps chaque ty
 - Les compteurs d’utilisation qui appliquent les limites sur les scans, les saisies vocales, les suggestions et la lecture des notifications ne contiennent que des nombres, associés à votre identifiant de compte, et sont supprimés avec votre compte.
 - Les données d’invitation (votre code, qui a invité qui, les prénoms, les jours de saisie et les mois obtenus ou en attente) sont supprimées avec le compte auquel elles appartiennent. Une invitation qui a valu un mois perd le nom de l’ami lorsque le compte de celui-ci est supprimé, et reste jusqu’à la suppression du compte de la personne qui l’a invité.
 - Les éléments de la liste partagée des commerçants ne sont liés à personne. Ils sont actualisés après 30 ou 90 jours.
-- Les événements d’analyse liés à votre compte sont supprimés avec celui-ci. Les événements d’une installation qui ne s’est jamais connectée ne contiennent qu’un identifiant d’installation aléatoire et sont conservés selon la politique de conservation de PostHog. Les enregistrements des requêtes d’IA envoyés alors que Partager les données d’analyse était désactivé contiennent un identifiant aléatoire au lieu de votre identifiant de compte, plus l’identifiant de conversation pour la saisie vocale, et sont conservés de la même façon.
+- Les événements d’analyse liés à votre compte sont supprimés avec celui-ci. PostHog les efface lors d’un traitement ultérieur, ils peuvent donc subsister un moment après que l’app a indiqué la fin de la suppression. Les événements d’une installation qui ne s’est jamais connectée ne contiennent qu’un identifiant d’installation aléatoire et sont conservés selon la politique de conservation de PostHog. Les enregistrements des requêtes d’IA envoyés alors que Partager les données d’analyse était désactivé contiennent un identifiant aléatoire au lieu de votre identifiant de compte, plus l’identifiant de conversation pour la saisie vocale, et sont conservés de la même façon.
 - Les événements du site web contiennent un identifiant de navigateur aléatoire, ou un code qui change chaque jour si vous avez refusé les cookies, et sont conservés selon la politique de conservation de PostHog.
 - Nos prestataires, dont Anthropic, ElevenLabs, Apple, Google et Expo, ainsi que Notion si vous le connectez, conservent les données qu’ils reçoivent selon leurs propres politiques de conservation.
 
@@ -342,7 +342,7 @@ Ouvrez **Réglages › Compte › Supprimer le compte**. Il peut vous être dema
 - Si vous avez connecté Notion, notre serveur demande à Notion de révoquer la clé d’accès d’Outlayr.
 - Votre journal synchronisé, les traces de suppression, les photos sauvegardées et les demandes de suggestion en attente sont supprimés de nos serveurs.
 - Votre fiche client chez RevenueCat et notre copie du statut de votre abonnement sont supprimées.
-- Votre profil chez PostHog et chaque événement d’analyse qui y est lié sont supprimés.
+- Votre profil chez PostHog et chaque événement d’analyse qui y est lié sont supprimés. PostHog efface les événements lors d’un traitement ultérieur, ils peuvent donc subsister un moment après que l’app a indiqué la fin de la suppression.
 - Vos compteurs d’utilisation, conversations vocales ouvertes, sessions, accès d’assistants IA, liens de connexion, clé d’accès Notion, code d’invitation et invitations, ainsi que votre compte, sont supprimés. Si l’invitation que vous avez utilisée a déjà valu un mois à votre ami, elle reste sur sa liste sans votre nom.
 
 Elle commence immédiatement et s’exécute depuis votre appareil. Si elle est interrompue, ouvrez de nouveau Réglages › Compte et l’app reprend là où elle s’était arrêtée. Si vous ne pouvez pas utiliser l’app, écrivez à [support@tryoutlayr.com](mailto:support@tryoutlayr.com). La page [Supprimer votre compte](/fr/delete-account) réunit ces étapes.
@@ -357,7 +357,7 @@ Votre journal sur le téléphone reste après la suppression de votre compte, sa
 
 ### Sans compte
 
-Rien de votre journal ne se trouve sur nos serveurs. **Réglages › Effacer les données** efface du téléphone vos transactions, et vos budgets si vous le choisissez. Les opérations déjà présentes dans Supprimés récemment y restent. Supprimer l’app efface tout le journal.
+Rien de votre journal ne se trouve sur nos serveurs. **Réglages › Effacer les données** efface du téléphone vos transactions, et vos budgets si vous le choisissez. Les opérations déjà présentes dans Supprimés récemment y restent. Supprimer l’app efface tout le journal du téléphone, mais une sauvegarde du téléphone sur iCloud ou Google peut en garder une copie et la restaurer si vous réinstallez Outlayr.
 
 ### Exportez d’abord
 
@@ -384,7 +384,7 @@ Si vous vivez en Californie ou dans un autre État américain doté d’une loi 
 
 | Catégorie et exemples | Destinataires |
 | --- | --- |
-| **Identifiants :** nom, adresse e-mail, identifiant de compte, identifiant d’installation, adresse IP | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (e-mail, logos) |
+| **Identifiants :** nom, adresse e-mail, identifiant de compte, identifiant d’installation, adresse IP | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (e-mail, logos), Anthropic (ce que montre un relevé que vous importez) |
 | **Informations commerciales :** historique des abonnements et des achats | Apple, Google, RevenueCat, Hetzner |
 | **Informations audio et visuelles :** extraits vocaux, scans de tickets, captures d’écran d’échéanciers, photos jointes | ElevenLabs (extraits), Anthropic (scans), Cloudflare (photos) |
 | **Activité sur Internet ou le réseau :** adresse IP, agent utilisateur, journaux de requêtes, utilisation de l’app et du site web, rapports de plantage | Hetzner, Expo, PostHog, notre hébergeur du site web |
@@ -403,7 +403,7 @@ Comme nous ne vendons ni ne partageons, un signal Global Privacy Control n’a r
 - Les échanges entre l’app, nos serveurs et nos prestataires passent par des connexions HTTPS chiffrées.
 - Chaque requête portant sur vos données est liée à votre session connectée, et notre serveur décide à quelles données une requête peut accéder. Un compte ne peut ni lire ni modifier le journal ou les photos d’un autre.
 - Les jetons d’actualisation de connexion et la clé d’accès Notion sont chiffrés avant d’être stockés.
-- Les requêtes envoyées à Anthropic et ElevenLabs ne contiennent ni nom, ni adresse e-mail, ni identifiant de compte.
+- Les requêtes envoyées à Anthropic et ElevenLabs ne contiennent ni nom, ni adresse e-mail, ni identifiant de compte, sauf ce que montre un relevé que vous importez.
 - Vous pouvez protéger Outlayr par le verrouillage biométrique de votre appareil (Face ID ou Touch ID sur iPhone).
 
 Aucun système n’est parfaitement sûr. Si vous trouvez un problème de sécurité, écrivez à [support@tryoutlayr.com](mailto:support@tryoutlayr.com) et, si une violation touche vos données, nous vous en informerons comme la loi l’exige.

@@ -1,6 +1,6 @@
 ---
 title: "Política de Privacidade"
-description: "O que o Outlayr guarda no seu dispositivo, o que chega aos nossos servidores, aos provedores de IA e às análises, por quanto tempo é guardado e como apagar. Em vigor desde 8 de novembro de 2026."
+description: "O que o Outlayr guarda no seu dispositivo, o que chega aos nossos servidores, aos provedores de IA e às análises, por quanto tempo é guardado e como apagar. Em vigor desde 10 de novembro de 2026."
 intro: "Esta política explica o que o Outlayr coleta, para onde vai, por quanto tempo fica guardado e o que você pode fazer a respeito. Esta tradução é oferecida para sua conveniência. Se houver alguma diferença em relação à versão em inglês, prevalece a versão em inglês."
 ---
 
@@ -16,7 +16,7 @@ intro: "Esta política explica o que o Outlayr coleta, para onde vai, por quanto
 - Com o Outlayr Pro, você pode conectar o Notion para importar despesas dos seus bancos de dados do Notion. Guardamos a chave de acesso do Notion criptografada nos nossos servidores para que você possa importar de novo, até você desconectar o Notion ou apagar sua conta. O que lemos do Notion passa pelo nosso servidor até o seu celular e não é guardado.
 - Você pode conectar um assistente de IA, como o Claude, à sua conta. Depois que você o aprova, ele pode ler o que seus dispositivos sincronizaram e, com o Outlayr Pro, adicionar lançamentos. O que ele lê é tratado conforme a política de privacidade desse assistente.
 - Se você convidar amigos, cada um vê seu primeiro nome no seu convite, e você vê o primeiro nome deles, em quantos dias eles registraram lançamentos, até três, e a data do terceiro. Nunca o que eles registraram.
-- Sem anúncios e sem rastreamento entre apps de outras empresas. Não vendemos nem compartilhamos suas informações pessoais.
+- Sem anúncios e sem rastreamento entre apps de outras empresas. Não vendemos suas informações pessoais nem as compartilhamos para publicidade.
 - Você pode apagar sua conta e tudo o que foi sincronizado com ela pelo app a qualquer momento: **Ajustes › Conta › Apagar conta**.
 
 ## Quem somos
@@ -143,7 +143,7 @@ A Notion Labs, Inc. trata seu espaço de trabalho conforme a [própria política
 
 ## Sugestões, voz e recibos
 
-Esses recursos exigem uma conta, e nenhum deles funciona até você permitir o envio de dados à Anthropic e à ElevenLabs quando o app perguntar. Desativar **Ajustes › Enviar dados a provedores de IA** interrompe todos eles. Cada solicitação vai primeiro para o nosso servidor, que verifica sua conta e seus limites e depois encaminha apenas o conteúdo listado abaixo. Nenhum deles envia à Anthropic ou à ElevenLabs seu nome, e-mail ou ID de conta.
+Esses recursos exigem uma conta, e nenhum deles funciona até você permitir o envio de dados à Anthropic e à ElevenLabs quando o app perguntar. Desativar **Ajustes › Enviar dados a provedores de IA** interrompe todos eles. Cada solicitação vai primeiro para o nosso servidor, que verifica sua conta e seus limites e depois encaminha apenas o conteúdo listado abaixo. Nenhum deles envia à Anthropic ou à ElevenLabs seu nome, e-mail ou ID de conta, exceto o que mostrar um [extrato bancário em PDF](#importação-de-extratos-bancários-em-pdf) que você importar, o que pode incluir seu nome e endereço.
 
 ### Sugestões de estabelecimentos (Preenchimento inteligente)
 
@@ -328,7 +328,7 @@ A [tabela acima](#dados-em-resumo) lista por quanto tempo cada tipo de dado é g
 - Os contadores de uso que aplicam os limites de escaneamentos, lançamentos por voz, sugestões e leitura de notificações guardam apenas contagens, associadas ao seu ID de conta, e são apagados junto com sua conta.
 - Os registros de convites (seu código, quem convidou quem, primeiros nomes, dias com lançamentos e meses ganhos ou em espera) são apagados junto com a conta à qual pertencem. Um convite que rendeu um mês perde o nome do amigo quando a conta do amigo é apagada, e fica até a conta de quem convidou ser apagada.
 - Os itens da lista compartilhada de estabelecimentos não estão vinculados a ninguém. Eles são atualizados após 30 ou 90 dias.
-- Os eventos de análise vinculados à sua conta são apagados junto com ela. Os eventos de uma instalação que nunca iniciou sessão levam apenas um ID de instalação aleatório e são guardados conforme a política de retenção do PostHog. Os registros de solicitações de IA enviados enquanto Compartilhar análises estava desativado levam um ID aleatório em vez do seu ID de conta, além do ID da conversa no lançamento por voz, e são guardados da mesma forma.
+- Os eventos de análise vinculados à sua conta são apagados junto com ela. O PostHog os apaga em um lote posterior, então eles podem continuar lá por um tempo depois que o app informar que a exclusão terminou. Os eventos de uma instalação que nunca iniciou sessão levam apenas um ID de instalação aleatório e são guardados conforme a política de retenção do PostHog. Os registros de solicitações de IA enviados enquanto Compartilhar análises estava desativado levam um ID aleatório em vez do seu ID de conta, além do ID da conversa no lançamento por voz, e são guardados da mesma forma.
 - Os eventos do site levam um ID aleatório do navegador, ou um código que muda diariamente se você recusou os cookies, e são guardados conforme a política de retenção do PostHog.
 - Nossos provedores, incluindo a Anthropic, a ElevenLabs, a Apple, o Google e a Expo, e o Notion se você o conectar, guardam os dados que recebem conforme as próprias políticas de retenção.
 
@@ -342,7 +342,7 @@ Abra **Ajustes › Conta › Apagar conta**. Talvez você precise iniciar sessã
 - Se você conectou o Notion, nosso servidor pede ao Notion que revogue a chave de acesso do Outlayr.
 - Seus lançamentos sincronizados, os registros de exclusão, as fotos com backup e as solicitações de sugestão pendentes são apagados dos nossos servidores.
 - Seu registro de cliente na RevenueCat e nossa cópia do status da sua assinatura são apagados.
-- Seu perfil no PostHog e todos os eventos de análise vinculados a ele são apagados.
+- Seu perfil no PostHog e todos os eventos de análise vinculados a ele são apagados. O PostHog apaga os eventos em um lote posterior, então eles podem continuar lá por um tempo depois que o app informar que a exclusão terminou.
 - Seus contadores de uso, conversas de voz abertas, sessões, acessos de assistentes de IA, links de início de sessão, chave de acesso do Notion, código de convite e convites, e sua conta são apagados. Se o convite que você resgatou já rendeu um mês ao seu amigo, ele continua na lista dele sem o seu nome.
 
 Ela começa na hora e é executada a partir do seu dispositivo. Se for interrompida, abra Ajustes › Conta de novo e o app continua de onde parou. Se você não conseguir usar o app, escreva para [support@tryoutlayr.com](mailto:support@tryoutlayr.com). [Apague sua conta](/pt/delete-account) reúne estes passos em uma só página.
@@ -357,7 +357,7 @@ Seus lançamentos no celular continuam lá depois que você apaga sua conta, a m
 
 ### Sem conta
 
-Nada dos seus lançamentos está nos nossos servidores. **Ajustes › Apagar dados** apaga suas transações do celular e, se você escolher, seus orçamentos. Os lançamentos que já estão em Apagados recentemente continuam lá. Apagar o app remove todos os lançamentos.
+Nada dos seus lançamentos está nos nossos servidores. **Ajustes › Apagar dados** apaga suas transações do celular e, se você escolher, seus orçamentos. Os lançamentos que já estão em Apagados recentemente continuam lá. Apagar o app remove todos os lançamentos do celular, mas um backup do celular no iCloud ou no Google pode guardar uma cópia e restaurá-la se você reinstalar o Outlayr.
 
 ### Exporte antes
 
@@ -384,7 +384,7 @@ Se você mora na Califórnia ou em outro estado dos EUA com uma lei de privacida
 
 | Categoria e exemplos | Recebida por |
 | --- | --- |
-| **Identificadores:** nome, e-mail, ID de conta, ID de instalação, endereço IP | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (e-mail, logos) |
+| **Identificadores:** nome, e-mail, ID de conta, ID de instalação, endereço IP | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (e-mail, logos), Anthropic (o que mostrar um extrato que você importar) |
 | **Informações comerciais:** registros de assinaturas e compras | Apple, Google, RevenueCat, Hetzner |
 | **Informações de áudio e visuais:** áudios de voz, escaneamentos de recibos, capturas de tela de parcelamentos, fotos anexadas | ElevenLabs (áudios), Anthropic (escaneamentos), Cloudflare (fotos) |
 | **Atividade na internet ou em outras redes:** endereço IP, agente de usuário, registros de solicitações, uso do app e do site, relatórios de falhas | Hetzner, Expo, PostHog, a empresa que hospeda nosso site |
@@ -403,7 +403,7 @@ Como não vendemos nem compartilhamos, não há nada de que um sinal de Global P
 - O tráfego entre o app, nossos servidores e nossos provedores passa por conexões HTTPS criptografadas.
 - Cada solicitação dos seus dados está ligada à sua sessão iniciada, e nosso servidor decide em quais dados uma solicitação pode tocar. Uma conta não pode ler nem gravar os lançamentos ou as fotos de outra.
 - Os tokens de atualização de início de sessão e a chave de acesso do Notion são criptografados antes de serem guardados.
-- As solicitações à Anthropic e à ElevenLabs não levam nome, e-mail nem ID de conta.
+- As solicitações à Anthropic e à ElevenLabs não levam nome, e-mail nem ID de conta, exceto o que mostrar um extrato que você importar.
 - Você pode proteger o Outlayr com o bloqueio biométrico do seu dispositivo (Face ID ou Touch ID no iPhone).
 
 Nenhum sistema é perfeitamente seguro. Se você encontrar um problema de segurança, escreva para [support@tryoutlayr.com](mailto:support@tryoutlayr.com) e, se uma violação afetar seus dados, avisaremos você como a lei exige.

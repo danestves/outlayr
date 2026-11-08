@@ -33,7 +33,7 @@ C’est votre boutique d’applications qui facture Outlayr Pro : supprimer votr
 - Les suggestions de commerçants en attente, les conversations vocales ouvertes et les compteurs d’utilisation.
 - Les connexions d’assistants IA et leurs clés d’accès, ainsi que la clé d’accès Notion.
 - Notre copie de l’historique de votre abonnement, et votre fiche client chez RevenueCat.
-- Votre profil d’analyse PostHog et chaque événement qui y est lié.
+- Votre profil d’analyse PostHog et chaque événement qui y est lié. PostHog efface les événements lors d’un traitement ultérieur, ils peuvent donc subsister un moment après que l’app a indiqué la fin de la suppression.
 - Vos sessions, le lien avec votre compte Apple ou Google, et votre compte avec son adresse e-mail et son nom.
 
 ## Ce qui est conservé
@@ -46,6 +46,7 @@ C’est votre boutique d’applications qui facture Outlayr Pro : supprimer votr
 | Les données que nos prestataires de services ont déjà reçues | Ces prestataires | Selon leurs politiques |
 | Les e-mails que vous nous avez envoyés | Notre boîte de réception | Aussi longtemps que nécessaire, ou jusqu’à ce que vous nous demandiez de les supprimer |
 | Le journal sur votre téléphone | Votre appareil | Jusqu’à ce que vous l’effaciez ou supprimiez l’app |
+| Une copie du journal dans la sauvegarde iCloud ou Google de votre téléphone | Apple ou Google | Jusqu’à ce que cette sauvegarde soit remplacée ou supprimée |
 
 Notre [Politique de confidentialité](/fr/privacy) indique chaque prestataire et ce qu’il reçoit.
 
@@ -53,4 +54,4 @@ Notre [Politique de confidentialité](/fr/privacy) indique chaque prestataire et
 
 Supprimer votre compte laisse le journal sur le téléphone, sauf si vous choisissez **Supprimer le compte et effacer cet appareil**. Cela supprime aussi la base de données d’Outlayr, les photos, les données des widgets, les rappels programmés et les informations de connexion enregistrées et, sur iPhone, ses entrées Spotlight. Le système garde le contrôle des autorisations et de l’emplacement des widgets.
 
-Si vous ne vous êtes jamais connecté, rien de votre journal ne se trouve sur nos serveurs et il n’y a aucun compte à supprimer. **Réglages › Effacer les données** efface vos opérations, vos virements et toutes les photos qu’Outlayr a stockées sur le téléphone, y compris les images des comptes, ainsi que vos budgets si vous le choisissez. Vos comptes, catégories, objectifs d’épargne, étiquettes et réglages restent, de même que les opérations déjà présentes dans Supprimés récemment. Supprimer l’app efface tout.
+Si vous ne vous êtes jamais connecté, rien de votre journal ne se trouve sur nos serveurs et il n’y a aucun compte à supprimer. **Réglages › Effacer les données** efface vos opérations, vos virements et toutes les photos qu’Outlayr a stockées sur le téléphone, y compris les images des comptes, ainsi que vos budgets si vous le choisissez. Vos comptes, catégories, objectifs d’épargne, étiquettes et réglages restent, de même que les opérations déjà présentes dans Supprimés récemment. Supprimer l’app efface tout du téléphone, mais une sauvegarde du téléphone sur iCloud ou Google peut en garder une copie et la restaurer si vous réinstallez Outlayr.

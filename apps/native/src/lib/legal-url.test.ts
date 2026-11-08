@@ -16,7 +16,7 @@ const headingIds = (markdown: string) =>
             .replaceAll(/\s/g, "-")
     );
 
-test.each(["en", "es"] as const)("links to privacy sections that exist on the %s page", (language) => {
+test.each(["en", "es", "fr", "pt"] as const)("links to privacy sections that exist on the %s page", (language) => {
     const ids = headingIds(readFileSync(join(LEGAL_DIR, language, "privacy.mdx"), "utf-8"));
     for (const section of Object.values(PRIVACY_SECTIONS)) {
         expect(ids).toContain(section[language]);

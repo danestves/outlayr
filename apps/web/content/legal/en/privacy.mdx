@@ -1,6 +1,6 @@
 ---
 title: "Privacy Policy"
-description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 8 November 2026."
+description: "What Outlayr stores on your device, what reaches our servers, AI providers, and analytics, how long it is kept, and how to delete it. Effective 10 November 2026."
 intro: "This policy explains what Outlayr collects, where it goes, how long it stays, and what you can do about it."
 ---
 
@@ -16,7 +16,7 @@ intro: "This policy explains what Outlayr collects, where it goes, how long it s
 - With Outlayr Pro you can connect Notion to import expenses from your Notion databases. We keep Notion’s access key encrypted on our servers so you can import again, until you disconnect Notion or delete your account. What we read from Notion passes through our server to your phone and isn’t stored.
 - You can connect an AI assistant such as Claude to your account. Once you approve it, it can read what your devices synced, and with Outlayr Pro add entries. What it reads is handled under that assistant’s privacy policy.
 - If you invite friends, each one sees your first name on your invite, and you see their first name, how many days they have logged up to three, and the date of the third. Never what they logged.
-- No ads and no tracking across other companies’ apps. We don’t sell or share your personal information.
+- No ads and no tracking across other companies’ apps. We don’t sell your personal information or share it for advertising.
 - You can delete your account and everything synced to it from the app at any time: **Settings › Account › Delete account**.
 
 ## Who we are
@@ -72,7 +72,7 @@ You don’t need an account to use Outlayr. Without one, none of your ledger is 
 - **Search**: on iPhone, Outlayr adds your 500 most recent entries and your budgets to the on-device Spotlight index so you can find them from Search. To stop this, turn off Show Content in Search for Outlayr in the iOS Settings app.
 - **Reminders** (a daily nudge and upcoming subscription charges) are scheduled on your device. Outlayr never sends notifications from a server and doesn’t register for push notifications.
 - **Siri and Shortcuts actions** on iPhone (log a transaction, check a budget, get a spending summary) run on the device. Apple handles Siri requests under its own privacy policy. Logging from a notification can also send its text to be [read by Anthropic](#reading-bank-notifications).
-- **App lock** (Settings › Authentication) puts Outlayr behind your device’s biometric lock (Face ID or Touch ID on iPhone). The system checks your face or fingerprint, and Outlayr only learns whether the check passed.
+- **App lock** (Settings › Biometric lock) puts Outlayr behind your device’s biometric lock (Face ID or Touch ID on iPhone). The system checks your face or fingerprint, and Outlayr only learns whether the check passed.
 
 ### What the app sends even without an account
 
@@ -143,7 +143,7 @@ Notion Labs, Inc. handles your workspace under [its own privacy policy](https://
 
 ## Suggestions, voice, and receipts
 
-These features need an account, and none of them run until you allow sending data to Anthropic and ElevenLabs when the app asks. Turning off **Settings › Send data to AI providers** stops all of them. Each request goes to our server first, which checks your account and limits, then forwards only the content listed below. None of them send Anthropic or ElevenLabs your name, email, or account ID.
+These features need an account, and none of them run until you allow sending data to Anthropic and ElevenLabs when the app asks. Turning off **Settings › Send data to AI providers** stops all of them. Each request goes to our server first, which checks your account and limits, then forwards only the content listed below. None of them send Anthropic or ElevenLabs your name, email, or account ID, except what a [bank statement PDF](#bank-statement-pdf-import) you import shows, which can include your name and address.
 
 ### Merchant suggestions (Smart fill)
 
@@ -328,7 +328,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Usage counters that enforce limits on scans, voice entries, suggestions, and notification reading hold counts only, keyed to your account ID, and are deleted with your account.
 - Invite records (your code, who invited whom, first names, days logged, and months earned or waiting) are deleted with the account they belong to. An invite that earned a month loses the friend’s name when the friend’s account is deleted, and stays until the inviter’s account is deleted.
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.
-- Analytics events linked to your account are deleted with it. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way.
+- Analytics events linked to your account are deleted with it. PostHog erases them in a later batch, so they can remain for a while after the app reports the deletion finished. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way.
 - Website events carry a random browser ID, or a code that changes daily if you declined cookies, and are kept under PostHog’s retention policy.
 - Our providers, including Anthropic, ElevenLabs, Apple, Google, and Expo, and Notion if you connect it, keep the data they receive under their own retention policies.
 
@@ -342,7 +342,7 @@ Open **Settings › Account › Delete account**. You may be asked to sign in ag
 - If you connected Notion, our server asks Notion to revoke Outlayr’s access key.
 - Your synced ledger, deletion records, backed-up photos, and pending suggestion requests are deleted from our servers.
 - Your customer record at RevenueCat and our copy of your subscription status are deleted.
-- Your profile at PostHog and every analytics event linked to it are deleted.
+- Your profile at PostHog and every analytics event linked to it are deleted. PostHog erases the events in a later batch, so they can remain for a while after the app reports the deletion finished.
 - Your usage counters, open voice conversations, sessions, AI assistant access, sign-in links, Notion access key, invite code and invites, and account are deleted. If the invite you claimed already earned your friend a month, it stays on their list without your name.
 
 It starts right away and runs from your device. If it’s interrupted, open Settings › Account again and the app picks up where it stopped. If you can’t use the app, write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com). [Delete your account](/delete-account) has these steps on one page.
@@ -357,7 +357,7 @@ Your ledger on the phone stays after you delete your account, unless you choose 
 
 ### Without an account
 
-Nothing of your ledger is on our servers. **Settings › Erase data** clears your transactions, and your budgets if you choose, from the phone. Entries already in Recently deleted stay there. Deleting the app removes the whole ledger.
+Nothing of your ledger is on our servers. **Settings › Erase data** clears your transactions, and your budgets if you choose, from the phone. Entries already in Recently deleted stay there. Deleting the app removes the whole ledger from the phone, but an iCloud or Google backup of the phone can keep a copy and restore it if you reinstall Outlayr.
 
 ### Export first
 
@@ -384,7 +384,7 @@ If you live in California or another US state with a privacy law, this is what w
 
 | Category and examples | Received by |
 | --- | --- |
-| **Identifiers:** name, email, account ID, install ID, IP address | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (email, logos) |
+| **Identifiers:** name, email, account ID, install ID, IP address | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (email, logos), Anthropic (whatever a bank statement you import shows) |
 | **Commercial information:** subscription and purchase records | Apple, Google, RevenueCat, Hetzner |
 | **Audio and visual information:** voice clips, receipt scans, installment plan screenshots, attached photos | ElevenLabs (clips), Anthropic (scans), Cloudflare (photos) |
 | **Internet or network activity:** IP address, user agent, request logs, app and website usage, crash reports | Hetzner, Expo, PostHog, our website host |
@@ -403,7 +403,7 @@ Because we don’t sell or share, there is nothing for a Global Privacy Control 
 - Traffic between the app, our servers, and our providers travels over encrypted HTTPS connections.
 - Every request for your data is tied to your signed-in session, and our server decides whose data a request can touch. One account can’t read or write another’s ledger or photos.
 - Sign-in refresh tokens and the Notion access key are encrypted before we store them.
-- Requests to Anthropic and ElevenLabs carry no name, email, or account ID.
+- Requests to Anthropic and ElevenLabs carry no name, email, or account ID, apart from what a bank statement you import shows.
 - You can lock Outlayr behind your device’s biometric lock (Face ID or Touch ID on iPhone).
 
 No system is perfectly secure. If you find a security problem, write to [support@tryoutlayr.com](mailto:support@tryoutlayr.com), and if a breach affects your data we’ll tell you as the law requires.
