@@ -305,6 +305,20 @@ const plan = {
                     fr: "Ouvrir l'App Store",
                     pt: "Abrir App Store",
                 }),
+                lifetime: {
+                    title: t({
+                        en: "Bought in the App Store",
+                        es: "Comprado en App Store",
+                        fr: "Acheté sur l'App Store",
+                        pt: "Comprado na App Store",
+                    }),
+                    body: t({
+                        en: "You paid once through Apple, so there's no subscription to manage or cancel.",
+                        es: "Pagaste una sola vez a través de Apple, así que no hay ninguna suscripción que administrar ni cancelar.",
+                        fr: "Vous avez payé une seule fois via Apple : il n'y a donc aucun abonnement à gérer ni à résilier.",
+                        pt: "Você pagou uma única vez pela Apple, então não há assinatura para gerenciar nem cancelar.",
+                    }),
+                },
             },
             play_store: {
                 name: t({ en: "Google Play", es: "Google Play", fr: "Google Play", pt: "Google Play" }),
@@ -338,6 +352,20 @@ const plan = {
                     fr: "Ouvrir Google Play",
                     pt: "Abrir Google Play",
                 }),
+                lifetime: {
+                    title: t({
+                        en: "Bought on Google Play",
+                        es: "Comprado en Google Play",
+                        fr: "Acheté sur Google Play",
+                        pt: "Comprado no Google Play",
+                    }),
+                    body: t({
+                        en: "You paid once through Google, so there's no subscription to manage or cancel.",
+                        es: "Pagaste una sola vez a través de Google, así que no hay ninguna suscripción que administrar ni cancelar.",
+                        fr: "Vous avez payé une seule fois via Google : il n'y a donc aucun abonnement à gérer ni à résilier.",
+                        pt: "Você pagou uma única vez pelo Google, então não há assinatura para gerenciar nem cancelar.",
+                    }),
+                },
             },
             step3: t({ en: "Tap Outlayr", es: "Toca Outlayr", fr: "Touchez Outlayr", pt: "Toque em Outlayr" }),
             stripe: t({ en: "Stripe", es: "Stripe", fr: "Stripe", pt: "Stripe" }),
