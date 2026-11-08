@@ -95,7 +95,8 @@ export function Accounts({ addMenu, onAddGoal, toggle }: AccountsProps) {
     const router = useRouter();
     const t = useTranslation();
     const colors = useColors();
-    const { assets, currency, db, debts, deleteAccount, empty, goals, openDetail, openGoal, rows } = useAccountList();
+    const { archivedCount, assets, currency, db, debts, deleteAccount, empty, goals, openDetail, openGoal, rows } =
+        useAccountList();
     const sortMenu = useSortMenu(rows.length);
     const rowGround = groupedRows(colors);
 
@@ -162,6 +163,31 @@ export function Accounts({ addMenu, onAddGoal, toggle }: AccountsProps) {
                                         {t("transfers.title")}
                                     </SwiftText>
                                     <Spacer />
+                                </HStack>
+                            </Section>
+                        ) : null}
+                        {archivedCount > 0 ? (
+                            <Section modifiers={[rowGround]}>
+                                <HStack
+                                    modifiers={[
+                                        hitArea(outline.rectangle()),
+                                        onTapGesture(() => router.push("/accounts/archived")),
+                                        accessibilityElement("combine"),
+                                        accessibilityAddTraits(["isButton"]),
+                                        accessibilityLabel(t("accounts.archived.title")),
+                                        accessibilityValue(String(archivedCount)),
+                                    ]}
+                                    spacing={12}
+                                >
+                                    <Image color={colors.muted} size={18} systemName="archivebox" />
+                                    <SwiftText modifiers={[foregroundStyle(LABEL)]}>
+                                        {t("accounts.archived.title")}
+                                    </SwiftText>
+                                    <Spacer />
+                                    <SwiftText modifiers={[AMOUNT, monospacedDigit(), foregroundStyle(colors.muted)]}>
+                                        {String(archivedCount)}
+                                    </SwiftText>
+                                    <Image color={colors.muted} modifiers={[CHEVRON]} systemName="chevron.right" />
                                 </HStack>
                             </Section>
                         ) : null}

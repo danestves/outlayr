@@ -1,4 +1,5 @@
 import type { MenuComponentRef } from "@expo/ui/community/menu";
+import Archive02Icon from "@hugeicons-pro/core-stroke-rounded/Archive02Icon";
 import ArrowDataTransferHorizontalIcon from "@hugeicons-pro/core-stroke-rounded/ArrowDataTransferHorizontalIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { isMultiCurrency } from "@outlayr/money/account-overview";
@@ -52,7 +53,8 @@ export function Accounts({ addMenu, onAddGoal, toggle }: AccountsProps) {
     const t = useTranslation();
     const colors = useColors();
     const insets = useSafeAreaInsets();
-    const { assets, currency, db, debts, deleteAccount, empty, goals, openDetail, openGoal, rows } = useAccountList();
+    const { archivedCount, assets, currency, db, debts, deleteAccount, empty, goals, openDetail, openGoal, rows } =
+        useAccountList();
     const sortMenu = useSortMenu(rows.length);
 
     const openEditor = (id: string) => {
@@ -97,6 +99,7 @@ export function Accounts({ addMenu, onAddGoal, toggle }: AccountsProps) {
                         <SavingsGoalsSection currency={currency} goals={goals} onAdd={onAddGoal} onPress={openGoal} />
                     </View>
                     {rows.length >= 2 ? <TransfersRow /> : null}
+                    {archivedCount > 0 ? <ArchivedRow count={archivedCount} /> : null}
                 </ScrollView>
             )}
         </View>
@@ -132,6 +135,28 @@ function TransfersRow() {
                 <HugeiconsIcon color={m3.primary} icon={ArrowDataTransferHorizontalIcon} size={22} />
             </View>
             <Text className="font-sans-medium text-body text-m3-primary">{t("transfers.title")}</Text>
+        </Pressable>
+    );
+}
+
+function ArchivedRow({ count }: { count: number }) {
+    const router = useRouter();
+    const t = useTranslation();
+    const m3 = useMaterialColors();
+    return (
+        <Pressable
+            accessibilityLabel={t("accounts.archived.title")}
+            accessibilityRole="button"
+            accessibilityValue={{ text: String(count) }}
+            android_ripple={{ color: withAlpha(m3.onSurface, 0.1) }}
+            className="bg-m3-surface min-h-14 flex-row items-center gap-4 px-4"
+            onPress={() => router.push("/accounts/archived")}
+        >
+            <View className="items-center" style={{ width: PARENT_TILE }}>
+                <HugeiconsIcon color={m3.onSurfaceVariant} icon={Archive02Icon} size={22} />
+            </View>
+            <Text className="text-body text-m3-on-surface flex-1">{t("accounts.archived.title")}</Text>
+            <Text className="text-caption text-m3-on-surface-variant tabular-nums">{count}</Text>
         </Pressable>
     );
 }

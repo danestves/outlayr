@@ -1,4 +1,5 @@
 import { useAtomMount } from "@effect/atom-react/Hooks";
+import Archive02Icon from "@hugeicons-pro/core-stroke-rounded/Archive02Icon";
 import Delete02Icon from "@hugeicons-pro/core-stroke-rounded/Delete02Icon";
 import { useRef } from "react";
 import { ScrollView, View } from "react-native";
@@ -32,6 +33,7 @@ export default function AccountEditor(props: AccountEditorProps) {
     const insets = useSafeAreaInsets();
     const keyboardHeight = useKeyboardHeight();
     const {
+        archiveAccount,
         balanceSheet,
         canSave,
         currencySheet,
@@ -62,6 +64,14 @@ export default function AccountEditor(props: AccountEditorProps) {
     return (
         <View className="bg-m3-surface-container-low flex-1">
             <SheetHeader title={t(sheetTitle(props))}>
+                {archiveAccount == null ? null : (
+                    <SheetHeaderIconButton
+                        accessibilityLabel={t("accounts.archive")}
+                        disabled={pickerOpen}
+                        icon={Archive02Icon}
+                        onPress={archiveAccount}
+                    />
+                )}
                 {deleteAccount == null ? null : (
                     <SheetHeaderIconButton
                         accessibilityLabel={t("common.delete")}

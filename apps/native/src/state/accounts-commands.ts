@@ -72,6 +72,12 @@ export const checkBalanceCommand = accountsCommand("check-balance", ({ account, 
     accountsRepo.markChecked(db, account, new Date(), difference === 0 ? undefined : { amount: difference, note })
 );
 
+export const setAccountArchivedCommand = accountsCommand(
+    "set-archived",
+    ({ archived, db, id }: { archived: boolean; db: Database; id: string }) =>
+        archived ? accountsRepo.archive(db, id) : accountsRepo.restore(db, id)
+);
+
 export const reorderAccountsCommand = accountsCommand("reorder", (input: { db: Database; orderedIds: string[] }) =>
     accountsRepo.reorder(input.db, input.orderedIds)
 );

@@ -2,7 +2,7 @@ import { toAccountKind } from "@outlayr/money/account-kind";
 import { useRouter } from "expo-router";
 
 import { useDatabase } from "@/contexts/local-data-context";
-import { useBankAccounts } from "@/data/accounts";
+import { useArchivedAccounts, useBankAccounts } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useDebtsOverview } from "@/data/debts";
@@ -18,6 +18,7 @@ export function useAccountList() {
     const router = useRouter();
     const t = useTranslation();
     const all = useBankAccounts(db);
+    const archivedCount = useArchivedAccounts(db).length;
     const { pendingId, requestDelete } = useDeferredDelete("account");
     const { pendingId: pendingGoalId } = useDeferredDelete("goal");
     const currency = useGlobalCurrency(db);
@@ -30,6 +31,7 @@ export function useAccountList() {
     const assets = rows.filter((account) => toAccountKind(account.kind) === "asset");
 
     return {
+        archivedCount,
         assets: displayOrder(assets, byHand, (account) => balances.get(account.id) ?? 0),
         currency,
         db,
@@ -37,7 +39,7 @@ export function useAccountList() {
         deleteAccount: (account: Account) => {
             requestDelete(account.id, { body: t("accounts.undo.body") });
         },
-        empty: rows.length + debts.owedToYou.length + debts.youOwe.length + debts.settled.length === 0,
+        empty: rows.length + debts.owedToYou.length + debts.youOwe.length + debts.settled.length + archivedCount === 0,
         goals,
         openDetail: (id: string) => {
             router.push({

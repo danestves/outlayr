@@ -338,6 +338,7 @@ function RootStack() {
                         <Stack.Screen key={screen.name} name={screen.name} options={importOptions(screen)} />
                     ))}
                     <Stack.Screen name="accounts/reorder" options={chrome.pushed} />
+                    <Stack.Screen name="accounts/archived" options={chrome.pushed} />
                     <Stack.Screen name="accounts/[accountId]/index" options={chrome.pushed} />
                     <Stack.Screen name="i/[code]" options={{ headerShown: false }} />
                     <Stack.Screen name="installments/[planId]" options={chrome.pushed} />

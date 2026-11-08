@@ -58,6 +58,7 @@ export default function AccountEditor(props: AccountEditorProps) {
         balanceSheet,
         canSave,
         currencySheet,
+        archiveAccount,
         deleteAccount,
         draft,
         failure,
@@ -118,6 +119,13 @@ export default function AccountEditor(props: AccountEditorProps) {
             <Stack.Screen options={{ sheetAllowedDetents: pickerOpen ? LARGE_ONLY : [ACCOUNT_DETENT, 1] }} />
             {deleteAccount == null ? null : (
                 <Stack.Toolbar placement="right">
+                    {archiveAccount == null ? null : (
+                        <Stack.Toolbar.Button
+                            accessibilityLabel={t("accounts.archive")}
+                            icon="archivebox"
+                            onPress={archiveAccount}
+                        />
+                    )}
                     <Stack.Toolbar.Button
                         accessibilityLabel={t("common.delete")}
                         onPress={deleteAccount}

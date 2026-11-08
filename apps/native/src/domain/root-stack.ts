@@ -129,6 +129,7 @@ export const ROOT_STACK_SCREEN_NAMES = {
         ...MODAL_SCREENS.map((modal) => modal.name),
         ...IMPORT_SCREENS.map((screen) => screen.name),
         "accounts/reorder",
+        "accounts/archived",
         "accounts/[accountId]/index",
         "i/[code]",
         "installments/[planId]",

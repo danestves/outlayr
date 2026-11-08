@@ -2,7 +2,7 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { SectionList } from "@legendapp/list/section-list";
 import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
 import { Stack, useRouter } from "expo-router";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Alert, View } from "react-native";
 
@@ -53,7 +53,10 @@ export function AccountDetail({ id }: { id: string }) {
     const { pendingId } = useDeferredDelete("account");
     const account = accounts.find((row) => row.id === id && row.id !== pendingId) ?? null;
 
-    useLeaveWhenGone(account == null, () => router.back());
+    const [openedArchived] = useState(account?.archivedAt != null);
+    const archivedWhileOpen = account?.archivedAt != null && !openedArchived;
+
+    useLeaveWhenGone(account == null || archivedWhileOpen, () => router.back());
 
     if (account == null) {
         return null;
