@@ -1,4 +1,5 @@
 import { RiRepeatLine } from "@remixicon/react";
+import { Checkbox } from "panelui-web/checkbox";
 import { Table } from "panelui-web/table";
 import { memo, useMemo } from "react";
 import type { ReactNode } from "react";
@@ -24,6 +25,9 @@ const RING = "[--tile-ring:var(--color-card)]";
 const STRIPE = "bg-muted/40 [--tile-ring:color-mix(in_oklab,var(--muted)_40%,var(--color-card))]";
 const ROW = "relative h-[51px] border-0 hover:bg-muted/40 has-[button:focus-visible]:bg-muted/60";
 const HEAD = "first:ps-3.5 last:pe-3.5";
+// Checkboxes sit above the row's stretched button. Bulk actions are for wider screens; the sheet deletes on a phone.
+const PICK = "relative z-[1] hidden w-10 px-0 align-middle first:ps-3.5 @2xl:table-cell";
+const AFTER_PICK = "@max-2xl:ps-3.5!";
 const CELL = "h-[51px] overflow-hidden px-1.5 py-0 align-middle first:ps-3.5 last:pe-3.5 @sm:px-3";
 const SIDE = `${CELL} hidden truncate @2xl:table-cell`;
 const FIGURE = `${CELL} dash-figure whitespace-nowrap`;
@@ -39,15 +43,29 @@ interface EntryRowProps {
     imageUrl: string | undefined;
     index: number;
     onOpen: (row: FoldedRow) => void;
+    onPick: ((id: string) => void) | null;
+    picked: boolean;
     row: FoldedRow;
     selected: boolean;
     stripe: boolean;
 }
 
-function EntryRowView({ account, catalog, day, imageUrl, index, onOpen, row, selected, stripe }: EntryRowProps) {
+function EntryRowView({
+    account,
+    catalog,
+    day,
+    imageUrl,
+    index,
+    onOpen,
+    onPick,
+    picked,
+    row,
+    selected,
+    stripe,
+}: EntryRowProps) {
     const { ledger, photos: accountPhotos } = useDashboard();
     const { transactions: copy } = useIntlayer("dashboard-home");
-    const { recurring: recurringLabel } = useIntlayer("dashboard-transactions");
+    const { bulk, recurring: recurringLabel } = useIntlayer("dashboard-transactions");
     const categoryName = useCategoryName();
     const { money } = useDisplayFormat();
     const figure = figureOf(ledger, row);
@@ -77,8 +95,19 @@ function EntryRowView({ account, catalog, day, imageUrl, index, onOpen, row, sel
         }
         return null;
     };
+    const pickCell = (name: string) =>
+        onPick ? (
+            <Table.Cell className={PICK}>
+                <Checkbox
+                    aria-label={bulk.selectEntry({ name }).value}
+                    checked={picked}
+                    className="align-middle"
+                    onCheckedChange={() => onPick(row.id)}
+                />
+            </Table.Cell>
+        ) : null;
     const merchantCell = (tile: ReactNode, name: string, kind: string, recurring: boolean) => (
-        <Table.Cell className={`${CELL} max-w-0 @2xl:max-w-none`}>
+        <Table.Cell className={`${CELL} ${AFTER_PICK} max-w-0 @2xl:max-w-none`}>
             <span className="flex items-center gap-3 font-medium">
                 {tile}
                 <span className="min-w-0">
@@ -113,6 +142,7 @@ function EntryRowView({ account, catalog, day, imageUrl, index, onOpen, row, sel
     if ("fromId" in row) {
         return (
             <Table.Row aria-rowindex={index + 2} className={tone}>
+                {pickCell(`${accountName(row.fromId)} → ${accountName(row.toId)}`)}
                 {merchantCell(
                     <TransferTile
                         from={catalog.account(row.fromId)}
@@ -140,6 +170,7 @@ function EntryRowView({ account, catalog, day, imageUrl, index, onOpen, row, sel
     const kind = standsAlone ? feeKind : name;
     return (
         <Table.Row aria-rowindex={index + 2} className={tone}>
+            {pickCell(merchant)}
             {merchantCell(
                 standsAlone ? <FeeTile /> : <MerchantTile imageUrl={imageUrl} name={merchant} size="lg" />,
                 merchant,
@@ -187,6 +218,15 @@ function stripesOf(lines: readonly Line[]) {
 
 const uniqueKeys = (keyList: string) => (keyList === "" ? [] : [...new Set(keyList.split(" "))]);
 
+/** Turns on the checkbox column. */
+export interface TablePicking {
+    all: boolean;
+    ids: ReadonlySet<string>;
+    onPick: (id: string) => void;
+    onPickAll: () => void;
+    some: boolean;
+}
+
 interface LedgerTableProps {
     /** Shows the Account column; an account's own page hides it. */
     account?: boolean;
@@ -194,11 +234,21 @@ interface LedgerTableProps {
     label: string;
     lines: readonly Line[];
     onOpen: (row: FoldedRow) => void;
+    picking?: TablePicking;
     selected?: string | null;
 }
 
 /** The ledger as a table: rows in the ledger currency, fees folded, a header over each day when there is one. */
-export function LedgerTable({ account = true, empty, label, lines, onOpen, selected = null }: LedgerTableProps) {
+export function LedgerTable({
+    account = true,
+    empty,
+    label,
+    lines,
+    onOpen,
+    picking,
+    selected = null,
+}: LedgerTableProps) {
+    const { bulk } = useIntlayer("dashboard-transactions");
     const { ledger } = useDashboard();
     const { transactions: copy } = useIntlayer("dashboard-home");
     const dayTitle = useDayTitle();
@@ -217,7 +267,7 @@ export function LedgerTable({ account = true, empty, label, lines, onOpen, selec
         })
         .join(" ");
     const photos = useImageUrls(uniqueKeys(keyList));
-    const columns = account ? 4 : 3;
+    const columns = (account ? 4 : 3) + (picking ? 1 : 0);
     return (
         <Table
             aria-label={label}
@@ -228,7 +278,20 @@ export function LedgerTable({ account = true, empty, label, lines, onOpen, selec
         >
             <Table.Header className={HEAD_STICKY}>
                 <Table.Row aria-rowindex={1}>
-                    <Table.Head className={`${HEAD} w-full @2xl:w-[38%]`}>{copy.columns.merchant}</Table.Head>
+                    {picking ? (
+                        <Table.Head className={PICK}>
+                            <Checkbox
+                                aria-label={bulk.selectAll.value}
+                                checked={picking.all}
+                                className="align-middle"
+                                indeterminate={!picking.all && picking.some}
+                                onCheckedChange={picking.onPickAll}
+                            />
+                        </Table.Head>
+                    ) : null}
+                    <Table.Head className={`${HEAD} ${AFTER_PICK} w-full @2xl:w-[38%]`}>
+                        {copy.columns.merchant}
+                    </Table.Head>
                     <Table.Head className={`${HEAD} hidden w-[20%] @2xl:table-cell`}>
                         {copy.columns.category}
                     </Table.Head>
@@ -268,6 +331,8 @@ export function LedgerTable({ account = true, empty, label, lines, onOpen, selec
                                 index={index}
                                 key={line.row.id}
                                 onOpen={onOpen}
+                                onPick={picking?.onPick ?? null}
+                                picked={picking?.ids.has(line.row.id) ?? false}
                                 row={line.row}
                                 selected={selected === line.row.id}
                                 stripe={stripes[index] ?? false}

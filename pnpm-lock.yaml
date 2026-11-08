@@ -80,7 +80,7 @@ patchedDependencies:
   '@hugeicons/react-native@1.0.16': d88b0ddeff9a70801c5e44d61f2d4a31f1e3a7da7571052da14248c956b0dddc
   '@intlayer/engine@9.7.0': f5b4cd64abb48bd275710fb4178b2d6cdb5403a55ad1b3ff10f9e8450b4d0b00
   '@tanstack/ai-mcp@1.0.0': e5fa7bd1f3aa01b044a3bf9e6201d44bd03017dbd27760ea872acee006d3c5cc
-  '@tanstack/redact@0.2.0': a2d2baccf576f3a686a9ee812f95800c62776940803fa2077828912369a4416b
+  '@tanstack/redact@0.2.0': e762f9295f6c4df45958bdb744a208e30e8cfd9248e6173c392995454840eeb2
   expo-router@58.0.29: f800049d8b393f24d729a6644c92d03194cf809fe208596a8114d1c24925d2fb
   expo-widgets@58.0.26: 36bd251d23b3f875da7c4fc483d7cbe60e5b8e14a4460a56536fc8898acc0421
   lru-cache@11.5.3: e8e3c1f1fe60a81e844dadb33f38e643021f6b544737936de71c1a8ad3d36347
@@ -717,7 +717,7 @@ importers:
         version: link:../../packages/config
       '@tanstack/redact':
         specifier: 0.2.0
-        version: 0.2.0(patch_hash=a2d2baccf576f3a686a9ee812f95800c62776940803fa2077828912369a4416b)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(next@16.4.3(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))
+        version: 0.2.0(patch_hash=e762f9295f6c4df45958bdb744a208e30e8cfd9248e6173c392995454840eeb2)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(next@16.4.3(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))
       '@types/react':
         specifier: ^19.2.18
         version: 19.3.0
@@ -19058,7 +19058,7 @@ snapshots:
       react: 19.3.1
       react-dom: 19.3.1(react@19.3.1)
 
-  '@tanstack/redact@0.2.0(patch_hash=a2d2baccf576f3a686a9ee812f95800c62776940803fa2077828912369a4416b)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(next@16.4.3(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))':
+  '@tanstack/redact@0.2.0(patch_hash=e762f9295f6c4df45958bdb744a208e30e8cfd9248e6173c392995454840eeb2)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(next@16.4.3(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))':
     optionalDependencies:
       next: 16.4.3(@babel/core@7.29.7(supports-color@8.1.1))(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       vite: '@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)'

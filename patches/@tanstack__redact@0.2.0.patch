@@ -1,3 +1,15 @@
+diff --git a/dist/core/attributes.js b/dist/core/attributes.js
+--- a/dist/core/attributes.js
++++ b/dist/core/attributes.js
+@@ -7,7 +7,7 @@ function attributeName(name, isSvg) {
+   if (isSvg && /^(clip|fill|stroke)/.test(name) || /^(httpEquiv|acceptCharset|maskType)$/.test(name)) {
+     return name.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
+   }
+-  return name === "viewBox" || /^(aria|data)-/.test(name) ? name : name.toLowerCase();
++  return name === "viewBox" || name === "pathLength" || /^(aria|data)-/.test(name) ? name : name.toLowerCase();
+ }
+ export {
+   STRING_BOOLEAN_ATTRS,
 diff --git a/dist/dom/dom.js b/dist/dom/dom.js
 index 9cb28fe9e06bc59b77a4e3c60fb61be0302faf39..8847ce84c50d5122444d6e02cf6f2ac8aa3286a6 100644
 --- a/dist/dom/dom.js
