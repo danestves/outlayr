@@ -461,7 +461,7 @@ export function PurchaseForm({
                         <Field>
                             <Field.Label>{purchase.firstDue}</Field.Label>
                             <Input
-                                className="dash-figure"
+                                className="dash-figure appearance-none"
                                 onChange={(event) => setFirstDueKey(event.target.value || null)}
                                 type="date"
                                 value={dayKey(plan.firstDue)}
