@@ -1,6 +1,6 @@
 ---
 title: "Política de privacidad"
-description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 8 de noviembre de 2026."
+description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 9 de noviembre de 2026."
 intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo se conserva y qué puedes hacer al respecto. Esta traducción se ofrece para tu comodidad. Si hay alguna diferencia con la versión en inglés, prevalece la versión en inglés."
 ---
 
@@ -16,7 +16,7 @@ intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo
 - Con Outlayr Pro puedes conectar Notion para importar gastos de tus bases de datos de Notion. Guardamos cifrada en nuestros servidores la clave de acceso de Notion para que puedas volver a importar, hasta que desconectes Notion o elimines tu cuenta. Lo que leemos de Notion pasa por nuestro servidor hacia tu celular y no se guarda.
 - Puedes conectar a tu cuenta un asistente de IA como Claude. Una vez que lo apruebas, puede leer lo que tus dispositivos sincronizaron y, con Outlayr Pro, agregar entradas. Lo que lee se rige por la política de privacidad de ese asistente.
 - Si invitas amigos, cada uno ve tu nombre de pila en tu invitación, y tú ves su nombre de pila, cuántos días han registrado hasta tres y la fecha del tercero. Nunca lo que registraron.
-- Sin anuncios y sin rastreo en apps de otras empresas. No vendemos ni compartimos tu información personal.
+- Sin anuncios y sin rastreo en apps de otras empresas. No vendemos tu información personal ni la compartimos para publicidad.
 - Puedes eliminar tu cuenta y todo lo que está sincronizado con ella desde la app en cualquier momento: **Configuración › Cuenta › Eliminar cuenta**.
 
 ## Quiénes somos
@@ -72,7 +72,7 @@ No necesitas una cuenta para usar Outlayr. Sin una, no se nos envía nada de tu 
 - **Búsqueda**: en iPhone, Outlayr agrega tus 500 entradas más recientes y tus presupuestos al índice de Spotlight del dispositivo para que puedas encontrarlos desde Buscar. Para evitarlo, desactiva Mostrar contenido en Buscar para Outlayr en la app Configuración de iOS.
 - Los **recordatorios** (un aviso diario y los próximos cobros de suscripciones) se programan en tu dispositivo. Outlayr nunca envía notificaciones desde un servidor y no se registra para recibir notificaciones push.
 - Las **acciones de Siri y Atajos** en iPhone (registrar una transacción, consultar un presupuesto, obtener un resumen de gastos) se ejecutan en el dispositivo. Apple gestiona las solicitudes a Siri según su propia política de privacidad. Registrar desde una notificación también puede enviar su texto para que [lo lea Anthropic](#leer-notificaciones-del-banco).
-- El **bloqueo de la app** (Configuración › Autenticación) protege Outlayr con el bloqueo biométrico de tu dispositivo (Face ID o Touch ID en iPhone). El sistema verifica tu rostro o tu huella, y Outlayr solo sabe si la verificación salió bien.
+- El **bloqueo de la app** (Configuración › Bloqueo biométrico) protege Outlayr con el bloqueo biométrico de tu dispositivo (Face ID o Touch ID en iPhone). El sistema verifica tu rostro o tu huella, y Outlayr solo sabe si la verificación salió bien.
 
 ### Lo que la app envía incluso sin cuenta
 
@@ -143,7 +143,7 @@ Notion Labs, Inc. trata tu espacio de trabajo según [su propia política de pri
 
 ## Sugerencias, voz y recibos
 
-Estas funciones requieren una cuenta, y ninguna funciona hasta que permites enviar datos a Anthropic y ElevenLabs cuando la app lo pregunta. Desactivar **Configuración › Enviar datos a proveedores de IA** las detiene todas. Cada solicitud va primero a nuestro servidor, que verifica tu cuenta y tus límites, y luego reenvía solo el contenido que se indica abajo. Ninguna le envía a Anthropic ni a ElevenLabs tu nombre, tu correo electrónico ni tu ID de cuenta.
+Estas funciones requieren una cuenta, y ninguna funciona hasta que permites enviar datos a Anthropic y ElevenLabs cuando la app lo pregunta. Desactivar **Configuración › Enviar datos a proveedores de IA** las detiene todas. Cada solicitud va primero a nuestro servidor, que verifica tu cuenta y tus límites, y luego reenvía solo el contenido que se indica abajo. Ninguna le envía a Anthropic ni a ElevenLabs tu nombre, tu correo electrónico ni tu ID de cuenta, salvo lo que muestre un [estado de cuenta en PDF](#importación-de-estados-de-cuenta-en-pdf) que importes, que puede incluir tu nombre y tu dirección.
 
 ### Sugerencias de comercios (Autocompletado)
 
@@ -328,7 +328,7 @@ La [tabla de arriba](#datos-de-un-vistazo) indica cuánto tiempo se conserva cad
 - Los contadores de uso que aplican los límites de escaneos, entradas por voz, sugerencias y lectura de notificaciones guardan solo cantidades, asociadas a tu ID de cuenta, y se eliminan con tu cuenta.
 - Los registros de invitaciones (tu código, quién invitó a quién, los nombres de pila, los días registrados y los meses ganados o en espera) se eliminan con la cuenta a la que pertenecen. Una invitación que ya dio un mes pierde el nombre del amigo cuando se elimina su cuenta, y se queda hasta que se elimina la de quien invitó.
 - Los elementos de la lista compartida de comercios no están vinculados a nadie. Se actualizan después de 30 o 90 días.
-- Los eventos de analíticas vinculados a tu cuenta se eliminan con ella. Los eventos de una instalación que nunca inició sesión llevan solo un ID de instalación aleatorio y se conservan según la política de conservación de PostHog. Los registros de solicitudes de IA enviados con Compartir analíticas desactivado llevan un ID aleatorio en lugar de tu ID de cuenta, más el ID de la conversación en la entrada por voz, y se conservan de la misma forma.
+- Los eventos de analíticas vinculados a tu cuenta se eliminan con ella. PostHog los borra en un lote posterior, así que pueden seguir ahí un tiempo después de que la app indique que la eliminación terminó. Los eventos de una instalación que nunca inició sesión llevan solo un ID de instalación aleatorio y se conservan según la política de conservación de PostHog. Los registros de solicitudes de IA enviados con Compartir analíticas desactivado llevan un ID aleatorio en lugar de tu ID de cuenta, más el ID de la conversación en la entrada por voz, y se conservan de la misma forma.
 - Los eventos del sitio web llevan un ID aleatorio del navegador, o un código que cambia cada día si rechazaste las cookies, y se conservan según la política de conservación de PostHog.
 - Nuestros proveedores, incluidos Anthropic, ElevenLabs, Apple, Google y Expo, y Notion si lo conectas, conservan los datos que reciben según sus propias políticas de conservación.
 
@@ -342,7 +342,7 @@ Abre **Configuración › Cuenta › Eliminar cuenta**. Es posible que se te pid
 - Si conectaste Notion, nuestro servidor le pide a Notion que revoque la clave de acceso de Outlayr.
 - Tu registro sincronizado, los registros de eliminación, las fotos respaldadas y las solicitudes de sugerencia pendientes se eliminan de nuestros servidores.
 - Se eliminan tu registro de cliente en RevenueCat y nuestra copia del estado de tu suscripción.
-- Se eliminan tu perfil en PostHog y todos los eventos de analíticas vinculados a él.
+- Se eliminan tu perfil en PostHog y todos los eventos de analíticas vinculados a él. PostHog borra los eventos en un lote posterior, así que pueden seguir ahí un tiempo después de que la app indique que la eliminación terminó.
 - Se eliminan tus contadores de uso, tus conversaciones de voz abiertas, tus sesiones, el acceso de los asistentes de IA, tus enlaces de inicio de sesión, la clave de acceso de Notion, tu código de invitación y tus invitaciones, y tu cuenta. Si la invitación que reclamaste ya le dio un mes a tu amigo, queda en su lista sin tu nombre.
 
 Empieza de inmediato y se ejecuta desde tu dispositivo. Si se interrumpe, abre de nuevo Configuración › Cuenta y la app continúa donde se detuvo. Si no puedes usar la app, escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com). [Elimina tu cuenta](/es/delete-account) reúne estos pasos en una sola página.
@@ -357,7 +357,7 @@ Tu registro en el celular se conserva después de eliminar tu cuenta, a menos qu
 
 ### Sin cuenta
 
-Nada de tu registro está en nuestros servidores. **Configuración › Borrar datos** borra del celular tus transacciones y, si lo eliges, tus presupuestos. Las entradas que ya están en Eliminados recientemente se quedan ahí. Eliminar la app borra todo el registro.
+Nada de tu registro está en nuestros servidores. **Configuración › Borrar datos** borra del celular tus transacciones y, si lo eliges, tus presupuestos. Las entradas que ya están en Eliminados recientemente se quedan ahí. Eliminar la app borra todo el registro del celular, pero una copia de seguridad del celular en iCloud o Google puede conservar una copia y restaurarla si vuelves a instalar Outlayr.
 
 ### Exporta primero
 
@@ -384,7 +384,7 @@ Si vives en California o en otro estado de EE. UU. con una ley de privacidad, es
 
 | Categoría y ejemplos | Recibida por |
 | --- | --- |
-| **Identificadores:** nombre, correo electrónico, ID de cuenta, ID de instalación, dirección IP | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (correo, logos) |
+| **Identificadores:** nombre, correo electrónico, ID de cuenta, ID de instalación, dirección IP | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (correo, logos), Anthropic (lo que muestre un estado de cuenta que importes) |
 | **Información comercial:** registros de suscripciones y compras | Apple, Google, RevenueCat, Hetzner |
 | **Información de audio y visual:** clips de voz, escaneos de recibos, capturas de planes de cuotas, fotos adjuntas | ElevenLabs (clips), Anthropic (escaneos), Cloudflare (fotos) |
 | **Actividad en internet u otras redes:** dirección IP, agente de usuario, registros de solicitudes, uso de la app y del sitio web, reportes de fallas | Hetzner, Expo, PostHog, el proveedor que aloja nuestro sitio web |
@@ -403,7 +403,7 @@ Como no vendemos ni compartimos, no hay nada de lo que una señal de Global Priv
 - El tráfico entre la app, nuestros servidores y nuestros proveedores viaja por conexiones HTTPS cifradas.
 - Cada solicitud de tus datos está ligada a tu sesión iniciada, y nuestro servidor decide a qué datos puede acceder cada solicitud. Una cuenta no puede leer ni escribir el registro ni las fotos de otra.
 - Los tokens de actualización del inicio de sesión y la clave de acceso de Notion se cifran antes de guardarlos.
-- Las solicitudes a Anthropic y ElevenLabs no llevan nombre, correo electrónico ni ID de cuenta.
+- Las solicitudes a Anthropic y ElevenLabs no llevan nombre, correo electrónico ni ID de cuenta, salvo lo que muestre un estado de cuenta que importes.
 - Puedes proteger Outlayr con el bloqueo biométrico de tu dispositivo (Face ID o Touch ID en iPhone).
 
 Ningún sistema es perfectamente seguro. Si encuentras un problema de seguridad, escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com), y si una brecha de seguridad afecta tus datos, te avisaremos según lo exija la ley.

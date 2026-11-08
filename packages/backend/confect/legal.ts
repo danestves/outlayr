@@ -384,6 +384,68 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 8),
     },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "The text of a bank statement PDF you import goes to Anthropic with long numbers masked, and can include your name and address.",
+                    label: "Bank statement imports",
+                },
+                {
+                    detail: "PostHog erases your analytics events in a later batch, so they can remain for a while after the app reports your account deleted.",
+                    label: "Deleting your account",
+                },
+                {
+                    detail: "An iCloud or Google backup of your phone can keep a copy of your ledger after you delete the app, and restore it if you reinstall.",
+                    label: "Phone backups",
+                },
+            ],
+            es: [
+                {
+                    detail: "El texto de un estado de cuenta en PDF que importes llega a Anthropic con los números largos ocultos, y puede incluir tu nombre y tu dirección.",
+                    label: "Importar estados de cuenta",
+                },
+                {
+                    detail: "PostHog borra tus eventos de analíticas en un lote posterior, así que pueden seguir ahí un tiempo después de que la app indique que tu cuenta se eliminó.",
+                    label: "Eliminar tu cuenta",
+                },
+                {
+                    detail: "Una copia de seguridad de tu celular en iCloud o Google puede conservar una copia de tu registro después de eliminar la app y restaurarla si la vuelves a instalar.",
+                    label: "Copias de seguridad del celular",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Le texte d'un relevé bancaire PDF que vous importez est envoyé à Anthropic avec les longs numéros masqués, et peut inclure votre nom et votre adresse.",
+                    label: "Import de relevés bancaires",
+                },
+                {
+                    detail: "PostHog efface vos événements d'analyse lors d'un traitement ultérieur, ils peuvent donc subsister un moment après que l'app a indiqué la suppression de votre compte.",
+                    label: "Suppression de votre compte",
+                },
+                {
+                    detail: "Une sauvegarde iCloud ou Google de votre téléphone peut garder une copie de votre journal après la suppression de l'app, et la restaurer si vous la réinstallez.",
+                    label: "Sauvegardes du téléphone",
+                },
+            ],
+            pt: [
+                {
+                    detail: "O texto de um extrato bancário em PDF que você importar vai para a Anthropic com os números longos mascarados, e pode incluir seu nome e endereço.",
+                    label: "Importar extratos bancários",
+                },
+                {
+                    detail: "O PostHog apaga seus eventos de análise em um lote posterior, então eles podem continuar lá por um tempo depois que o app informar que sua conta foi excluída.",
+                    label: "Excluir sua conta",
+                },
+                {
+                    detail: "Um backup do seu celular no iCloud ou no Google pode guardar uma cópia dos seus lançamentos depois que você apagar o app, e restaurá-la se você reinstalar.",
+                    label: "Backups do celular",
+                },
+            ],
+        },
+        document: "privacy",
+        effectiveAtMs: Date.UTC(2026, 10, 9),
+    },
 ];
 
 export const noticeKey = ({ document, effectiveAtMs }: typeof PolicyNotice.Type) => `${document}:${effectiveAtMs}`;
