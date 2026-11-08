@@ -312,6 +312,7 @@ function Offer({
             {plan === "monthly" ? (
                 <p className="text-muted-foreground mt-2 text-center text-xs">{copy.cancelAnytime}</p>
             ) : null}
+            <p className="text-muted-foreground mt-2 text-center text-xs">{copy.checkoutBy}</p>
             <Links onRestore={onRestore} restoring={restoring} />
         </Panel>
     );

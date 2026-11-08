@@ -217,6 +217,12 @@ const paywall = {
             fr: "Activation de Pro...",
             pt: "Ativando o Pro...",
         }),
+        checkoutBy: t({
+            en: "Checkout runs on Stripe, which receives your name and email.",
+            es: "El pago se hace en Stripe, que recibe tu nombre y correo.",
+            fr: "Le paiement se fait sur Stripe, qui reçoit votre nom et votre e-mail.",
+            pt: "O pagamento é feito na Stripe, que recebe seu nome e e-mail.",
+        }),
         restore: t({ en: "Restore", es: "Restaurar", fr: "Restaurer", pt: "Restaurar" }),
         restoring: t({ en: "Restoring...", es: "Restaurando...", fr: "Restauration...", pt: "Restaurando..." }),
         terms: t({ en: "Terms", es: "Términos", fr: "Conditions", pt: "Termos" }),
