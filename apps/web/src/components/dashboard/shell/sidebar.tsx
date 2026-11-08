@@ -24,7 +24,6 @@ import { LogoMark } from "@/components/logo-mark";
 import { UserMenu } from "./account-menu";
 
 const COLLAPSED_KEY = "outlayr-sidebar-collapsed";
-const NARROW_QUERY = "(max-width: 1023px)";
 const listeners = new Set<() => void>();
 
 function storedCollapsed() {
@@ -35,16 +34,10 @@ function storedCollapsed() {
     }
 }
 
-// Below the desktop layout the full sidebar would leave the page no room, so it stays a rail.
-const readCollapsed = () => matchMedia(NARROW_QUERY).matches || storedCollapsed();
-
 function subscribeCollapsed(listener: () => void) {
-    const query = matchMedia(NARROW_QUERY);
     listeners.add(listener);
-    query.addEventListener("change", listener);
     return () => {
         listeners.delete(listener);
-        query.removeEventListener("change", listener);
     };
 }
 
@@ -89,9 +82,23 @@ function NavLink({
     );
 }
 
-export function Sidebar() {
+export function SearchButton() {
     const { nav } = useIntlayer("dashboard");
-    const collapsed = useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
+    return (
+        <button
+            aria-disabled
+            className="border-border bg-app-hover text-muted-foreground mb-1 flex h-[34px] shrink-0 items-center gap-[9px] rounded-[10px] border px-2.5 text-[13px]"
+            type="button"
+        >
+            <RiSearch2Line size={15} />
+            {nav.search}
+            <kbd className="ml-auto text-[11px] leading-4">⌘K</kbd>
+        </button>
+    );
+}
+
+export function NavLinks({ collapsed }: { collapsed: boolean }) {
+    const { nav } = useIntlayer("dashboard");
     const group = (label: string) =>
         collapsed ? (
             <div className="h-4" />
@@ -99,9 +106,32 @@ export function Sidebar() {
             <div className="text-muted-foreground px-2.5 pt-3 pb-1 text-xs leading-4">{label}</div>
         );
     return (
+        <>
+            {group(nav.label.value)}
+            <NavLink collapsed={collapsed} exact icon={RiLayoutGridLine} label={nav.dashboard.value} to="/app" />
+            <Soon collapsed={collapsed} icon={RiHistoryLine} label={nav.transactions.value} />
+            <Soon collapsed={collapsed} icon={RiBankCardLine} label={nav.accounts.value} />
+            <NavLink collapsed={collapsed} icon={RiBarChartBoxLine} label={nav.insights.value} to="/app/insights" />
+            {group(nav.plan.value)}
+            <Soon collapsed={collapsed} icon={RiPieChartLine} label={nav.budgets.value} />
+            <Soon collapsed={collapsed} icon={RiFlagLine} label={nav.goals.value} />
+            <Soon collapsed={collapsed} icon={RiRepeatLine} label={nav.recurring.value} />
+            <Soon collapsed={collapsed} icon={RiHandCoinLine} label={nav.debts.value} />
+            <Soon collapsed={collapsed} icon={RiCalendarCheckLine} label={nav.installments.value} />
+            {group(nav.tools.value)}
+            <Soon collapsed={collapsed} icon={RiUpload2Line} label={nav.import.value} />
+            <Soon collapsed={collapsed} icon={RiMagicLine} label={nav.rules.value} />
+        </>
+    );
+}
+
+export function Sidebar() {
+    const { nav } = useIntlayer("dashboard");
+    const collapsed = useSyncExternalStore(subscribeCollapsed, storedCollapsed, () => false);
+    return (
         <nav
             aria-label={nav.label.value}
-            className={`border-border flex h-dvh shrink-0 flex-col overflow-y-auto overscroll-none border-r px-3 pb-3 ${collapsed ? "w-[60px]" : "w-[232px]"}`}
+            className={`border-border flex h-dvh shrink-0 flex-col overflow-y-auto overscroll-none border-r px-3 pb-3 max-lg:hidden ${collapsed ? "w-[60px]" : "w-[232px]"}`}
         >
             <div className="flex h-16 items-center gap-[9px] px-2 text-[15px] font-semibold">
                 <Link aria-label={nav.home.value} className="text-app-tint flex items-center gap-[9px]" to="/">
@@ -122,7 +152,7 @@ export function Sidebar() {
             {collapsed ? (
                 <button
                     aria-label={nav.collapse.value}
-                    className="dash-nav max-lg:hidden"
+                    className="dash-nav"
                     onClick={toggleCollapsed}
                     title={nav.collapse.value}
                     type="button"
@@ -130,30 +160,9 @@ export function Sidebar() {
                     <RiArrowRightSLine className="shrink-0" size={17} />
                 </button>
             ) : (
-                <button
-                    aria-disabled
-                    className="border-border bg-app-hover text-muted-foreground mb-1 flex h-[34px] items-center gap-[9px] rounded-[10px] border px-2.5 text-[13px]"
-                    type="button"
-                >
-                    <RiSearch2Line size={15} />
-                    {nav.search}
-                    <kbd className="ml-auto text-[11px] leading-4">⌘K</kbd>
-                </button>
+                <SearchButton />
             )}
-            {group(nav.label.value)}
-            <NavLink collapsed={collapsed} exact icon={RiLayoutGridLine} label={nav.dashboard.value} to="/app" />
-            <Soon collapsed={collapsed} icon={RiHistoryLine} label={nav.transactions.value} />
-            <Soon collapsed={collapsed} icon={RiBankCardLine} label={nav.accounts.value} />
-            <NavLink collapsed={collapsed} icon={RiBarChartBoxLine} label={nav.insights.value} to="/app/insights" />
-            {group(nav.plan.value)}
-            <Soon collapsed={collapsed} icon={RiPieChartLine} label={nav.budgets.value} />
-            <Soon collapsed={collapsed} icon={RiFlagLine} label={nav.goals.value} />
-            <Soon collapsed={collapsed} icon={RiRepeatLine} label={nav.recurring.value} />
-            <Soon collapsed={collapsed} icon={RiHandCoinLine} label={nav.debts.value} />
-            <Soon collapsed={collapsed} icon={RiCalendarCheckLine} label={nav.installments.value} />
-            {group(nav.tools.value)}
-            <Soon collapsed={collapsed} icon={RiUpload2Line} label={nav.import.value} />
-            <Soon collapsed={collapsed} icon={RiMagicLine} label={nav.rules.value} />
+            <NavLinks collapsed={collapsed} />
             <UserMenu collapsed={collapsed} />
         </nav>
     );

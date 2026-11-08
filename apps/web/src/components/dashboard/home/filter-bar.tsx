@@ -1,8 +1,18 @@
 import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
-import { RiAddLine, RiBankCardLine, RiCheckLine, RiCloseLine, RiPriceTag3Line, RiSearch2Line } from "@remixicon/react";
+import {
+    RiAddLine,
+    RiArrowDownSLine,
+    RiBankCardLine,
+    RiCalendarLine,
+    RiCheckLine,
+    RiCloseLine,
+    RiPriceTag3Line,
+    RiSearch2Line,
+} from "@remixicon/react";
 import type { RemixiconComponentType } from "@remixicon/react";
 import { Menu } from "panelui-web/menu";
-import { useMemo, useState } from "react";
+import { Sheet } from "panelui-web/sheet";
+import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -11,6 +21,7 @@ import type { Dashboard } from "@/components/dashboard/shell/dashboard";
 import { toggledAccounts } from "@/components/dashboard/shell/filters";
 import { usePeriodKeys } from "@/components/dashboard/shell/top-bar";
 import { AccountTile } from "@/components/ledger/tiles";
+import { rowsBetween, total } from "@/lib/dashboard-series-ledger";
 import { periodOf } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -28,7 +39,29 @@ interface CheckRowProps {
     onToggle: () => void;
 }
 
+const InSheet = createContext(false);
+
 function CheckRow({ children, className = "", figure, on, onToggle }: CheckRowProps) {
+    const inSheet = useContext(InSheet);
+    const inner = (
+        <>
+            <span className="dash-check" data-on={on}>
+                {on ? <RiCheckLine className="absolute -inset-px" size={16} /> : null}
+            </span>
+            {children}
+            <span className="dash-figure text-muted-foreground ml-auto shrink-0 pl-2 text-[13px] whitespace-nowrap">
+                {figure}
+            </span>
+        </>
+    );
+    if (inSheet) {
+        return (
+            <label className="dash-menu-item has-focus-visible:ring-app-tint h-11! w-full shrink-0 has-focus-visible:ring-2">
+                <input checked={on} className="sr-only" onChange={onToggle} type="checkbox" />
+                {inner}
+            </label>
+        );
+    }
     return (
         <Menu.Item
             aria-checked={on}
@@ -37,13 +70,7 @@ function CheckRow({ children, className = "", figure, on, onToggle }: CheckRowPr
             onClick={onToggle}
             role="menuitemcheckbox"
         >
-            <span className="dash-check" data-on={on}>
-                {on ? <RiCheckLine className="absolute -inset-px" size={16} /> : null}
-            </span>
-            {children}
-            <span className="dash-figure text-muted-foreground ml-auto shrink-0 pl-2 text-[13px] whitespace-nowrap">
-                {figure}
-            </span>
+            {inner}
         </Menu.Item>
     );
 }
@@ -62,52 +89,85 @@ function FilterMenu({ children, count, icon: Icon, label, onClear, searchLabel, 
     const { filters: copy } = useIntlayer("dashboard");
     const [query, setQuery] = useState("");
     const needle = query.trim().toLocaleLowerCase();
+    const matches = (name: string) => name.toLocaleLowerCase().includes(needle);
+    const forget = (open: boolean) => {
+        if (!open) {
+            setQuery("");
+        }
+    };
+    const chip = (
+        <>
+            {count > 0 ? <Icon size={14} /> : <RiAddLine className="-ml-0.5" size={14} />}
+            {label}
+            {count > 0 ? (
+                <span className="dash-count bg-[color-mix(in_oklab,var(--color-app-tint)_30%,var(--color-app-bg))]">
+                    {count}
+                </span>
+            ) : null}
+        </>
+    );
+    const search = (focus: boolean) => (
+        <label className="border-app-tint text-muted-foreground mb-1.5 flex h-9 shrink-0 items-center gap-2 rounded-[10px] border px-2.5 text-[13px] shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-app-tint)_22%,transparent)]">
+            <RiSearch2Line size={15} />
+            <input
+                aria-label={searchLabel}
+                className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                    // Typing stays in the field; the menu's typeahead would otherwise take each letter.
+                    if (event.key !== "Escape" && event.key !== "ArrowDown" && event.key !== "ArrowUp") {
+                        event.stopPropagation();
+                    }
+                }}
+                placeholder={searchLabel}
+                ref={(input) => {
+                    if (focus) {
+                        input?.focus();
+                    }
+                }}
+                value={query}
+            />
+        </label>
+    );
     return (
-        <Menu
-            onOpenChange={(open) => {
-                if (!open) {
-                    setQuery("");
-                }
-            }}
-        >
-            <Menu.Trigger className="dash-chip" data-on={count > 0}>
-                {count > 0 ? <Icon size={14} /> : <RiAddLine className="-ml-0.5" size={14} />}
-                {label}
-                {count > 0 ? (
-                    <span className="dash-count bg-[color-mix(in_oklab,var(--color-app-tint)_30%,var(--color-app-bg))]">
-                        {count}
-                    </span>
-                ) : null}
-            </Menu.Trigger>
-            <Menu.Content className={`app-shell dash-menu ph-no-capture gap-0.5 p-2 ${width}`} sideOffset={8}>
-                <label className="border-app-tint text-muted-foreground mb-1.5 flex h-9 shrink-0 items-center gap-2 rounded-[10px] border px-2.5 text-[13px] shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-app-tint)_22%,transparent)]">
-                    <RiSearch2Line size={15} />
-                    <input
-                        aria-label={searchLabel}
-                        className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
-                        onChange={(event) => setQuery(event.target.value)}
-                        onKeyDown={(event) => {
-                            // Typing stays in the field; the menu's typeahead would otherwise take each letter.
-                            if (event.key !== "Escape" && event.key !== "ArrowDown" && event.key !== "ArrowUp") {
-                                event.stopPropagation();
-                            }
-                        }}
-                        placeholder={searchLabel}
-                        ref={(input) => {
-                            input?.focus();
-                        }}
-                        value={query}
-                    />
-                </label>
-                {children((name) => name.toLocaleLowerCase().includes(needle))}
-                <div className="dash-menu-rule my-1" />
-                <Menu.Item className="dash-menu-item text-muted-foreground" closeOnClick={false} onClick={onClear}>
-                    <RiCloseLine size={16} />
-                    {copy.clear}
-                    <span className="dash-figure ml-auto text-xs">{copy.selected({ count })}</span>
-                </Menu.Item>
-            </Menu.Content>
-        </Menu>
+        <>
+            <Menu onOpenChange={forget}>
+                <Menu.Trigger className="dash-chip max-lg:hidden" data-on={count > 0}>
+                    {chip}
+                </Menu.Trigger>
+                <Menu.Content className={`app-shell dash-menu ph-no-capture gap-0.5 p-2 ${width}`} sideOffset={8}>
+                    {search(true)}
+                    {children(matches)}
+                    <div className="dash-menu-rule my-1" />
+                    <Menu.Item className="dash-menu-item text-muted-foreground" closeOnClick={false} onClick={onClear}>
+                        <RiCloseLine size={16} />
+                        {copy.clear}
+                        <span className="dash-figure ml-auto text-xs">{copy.selected({ count })}</span>
+                    </Menu.Item>
+                </Menu.Content>
+            </Menu>
+            <Sheet onOpenChange={forget}>
+                <Sheet.Trigger className="dash-chip lg:hidden" data-on={count > 0}>
+                    {chip}
+                </Sheet.Trigger>
+                <Sheet.Content className="app-shell ph-no-capture" detached={false}>
+                    <Sheet.Header title={label} />
+                    <div className="px-4">{search(false)}</div>
+                    <Sheet.Body className="px-2 [&_.dash-menu-list]:max-h-none [&_.dash-menu-list]:overflow-visible">
+                        <InSheet value>{children(matches)}</InSheet>
+                    </Sheet.Body>
+                    <Sheet.Footer className="flex-row">
+                        <button className="dash-ob h-11 flex-1 justify-center text-sm" onClick={onClear} type="button">
+                            {copy.clear}
+                            {count > 0 ? (
+                                <span className="dash-figure text-muted-foreground text-xs">{count}</span>
+                            ) : null}
+                        </button>
+                        <Sheet.Close className="dash-btn h-11 flex-1 justify-center">{copy.done}</Sheet.Close>
+                    </Sheet.Footer>
+                </Sheet.Content>
+            </Sheet>
+        </>
     );
 }
 
@@ -244,7 +304,7 @@ function PeriodControl() {
     const title = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
     const keys = usePeriodKeys(dashboard);
     return (
-        <div className="bg-app-group inline-flex rounded-[10px] p-[3px] sm:ml-auto">
+        <div className="bg-app-group ml-auto inline-flex rounded-[10px] p-[3px] max-lg:hidden">
             <Menu>
                 <Menu.Trigger className="dash-seg" data-on>
                     {title(filters.period)}
@@ -271,10 +331,84 @@ function PeriodControl() {
     );
 }
 
+function PeriodRows({ onPick }: { onPick: (key: string) => void }) {
+    const dashboard = useDashboard();
+    const { filters, ledger } = dashboard;
+    const { money } = useDisplayFormat();
+    const title = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
+    const keys = usePeriodKeys(dashboard);
+    const periods = useMemo(
+        () =>
+            keys.map((key) => {
+                const period = periodOf(key, ledger.firstDayOfMonth);
+                const spent = total(ledger, rowsBetween(ledger, filters, period.from, period.to, false));
+                return { period, spent };
+            }),
+        [filters, keys, ledger]
+    );
+    return periods.map(({ period, spent }) => {
+        const on = period.key === filters.period.key;
+        return (
+            <button
+                aria-pressed={on}
+                className="dash-menu-item h-11! w-full text-left"
+                key={period.key}
+                onClick={() => onPick(period.key)}
+                type="button"
+            >
+                <span className={on ? "font-medium" : ""}>{title(period)}</span>
+                <span className="dash-figure text-muted-foreground ml-auto text-[13px]">
+                    {money(spent, ledger.currency)}
+                </span>
+                <RiCheckLine className={`text-app-tint shrink-0 ${on ? "" : "invisible"}`} size={18} />
+            </button>
+        );
+    });
+}
+
+function PeriodSheet() {
+    const { filters, ledger, setFilters } = useDashboard();
+    const { filters: copy } = useIntlayer("dashboard");
+    const title = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
+    const [open, setOpen] = useState(false);
+    return (
+        <Sheet onOpenChange={setOpen} open={open}>
+            <Sheet.Trigger className="dash-chip lg:hidden">
+                <RiCalendarLine className="text-muted-foreground" size={14} />
+                {title(filters.period)}
+                <RiArrowDownSLine className="text-muted-foreground" size={15} />
+            </Sheet.Trigger>
+            <Sheet.Content className="app-shell ph-no-capture" detached={false}>
+                <Sheet.Header title={copy.period} />
+                <div className="bg-app-fill mx-4 mb-2 flex rounded-[10px] p-[3px]">
+                    <span className="dash-seg bg-app-group text-foreground h-9 flex-1 justify-center">
+                        {copy.month}
+                    </span>
+                    <span aria-disabled className="dash-seg h-9 flex-1 justify-center opacity-60">
+                        {copy.quarter}
+                    </span>
+                    <span aria-disabled className="dash-seg h-9 flex-1 justify-center opacity-60">
+                        {copy.year}
+                    </span>
+                </div>
+                <Sheet.Body className="px-2">
+                    <PeriodRows
+                        onPick={(key) => {
+                            setFilters({ period: key === filters.currentKey ? null : key });
+                            setOpen(false);
+                        }}
+                    />
+                </Sheet.Body>
+            </Sheet.Content>
+        </Sheet>
+    );
+}
+
 export function FilterBar({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { add } = useIntlayer("dashboard");
     return (
-        <div className="flex min-h-16 flex-wrap items-center gap-2 py-3.5">
+        <div className="flex min-h-16 flex-wrap items-center gap-2 py-3.5 max-lg:-mx-4 max-lg:[scrollbar-width:none] max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:px-4 max-sm:min-h-0 max-sm:py-3">
+            <PeriodSheet />
             {setup ? null : (
                 <>
                     <AccountMenu quiet={quiet} />
@@ -282,7 +416,7 @@ export function FilterBar({ quiet, setup }: { quiet: boolean; setup: SetupState 
                 </>
             )}
             <PeriodControl />
-            <button aria-disabled className="dash-btn sm:ml-1" title={add.hint.value} type="button">
+            <button aria-disabled className="dash-btn ml-1 max-lg:hidden" title={add.hint.value} type="button">
                 <RiAddLine size={18} />
                 {add.entry}
             </button>

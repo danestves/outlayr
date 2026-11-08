@@ -58,7 +58,7 @@ function DarkModeItem() {
     );
 }
 
-export function UserMenu({ collapsed }: { collapsed: boolean }) {
+export function UserMenu({ collapsed, side = "right" }: { collapsed: boolean; side?: "right" | "top" }) {
     const { data: session } = authClient.useSession();
     const { account } = useIntlayer("dashboard");
     const name = session?.user.name || session?.user.email || "";
@@ -87,10 +87,10 @@ export function UserMenu({ collapsed }: { collapsed: boolean }) {
                 )}
             </Menu.Trigger>
             <Menu.Content
-                align="end"
-                className="app-shell dash-menu ph-no-capture w-[300px] p-2"
-                side="right"
-                sideOffset={25}
+                align={side === "top" ? "start" : "end"}
+                className="app-shell dash-menu ph-no-capture w-[min(300px,calc(100vw-32px))] p-2 max-lg:[&_.dash-menu-item]:h-11!"
+                side={side}
+                sideOffset={side === "top" ? 8 : 25}
             >
                 <DarkModeItem />
                 <div className="dash-menu-rule" />

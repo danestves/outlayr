@@ -147,11 +147,11 @@ export function TopBar({ children, title }: { children?: ReactNode; title: React
     const { add } = useIntlayer("dashboard");
     return (
         <header className="border-border flex min-h-13 shrink-0 flex-wrap items-center gap-2 border-b px-5 py-2">
-            <h1 className="mr-1 text-base font-medium">{title}</h1>
+            <h1 className="mr-1 text-base font-medium max-lg:hidden">{title}</h1>
             <FilterBar />
             {children}
             <Button
-                className="ml-auto h-8 gap-1.5 px-3 text-sm"
+                className="ml-auto h-8 gap-1.5 px-3 text-sm max-lg:hidden"
                 disabled
                 size="sm"
                 title={add.hint.value}
