@@ -1,8 +1,8 @@
+import { draftSchedule } from "@outlayr/money/installment-draft";
 import { describe, expect, it } from "vite-plus/test";
 
 import type { InstallmentPlanDraft, InstallmentPlanRow } from "@/lib/cloud-ai";
 
-import { draftSchedule } from "./installment-draft";
 import { encodeInstallmentSeed, parseInstallmentSeed, scannedOrder } from "./installment-scan";
 
 const day = (year: number, month: number, date: number) => new Date(year, month - 1, date);

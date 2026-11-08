@@ -1,6 +1,7 @@
+import type { InstallmentStanding, PlanStanding } from "@outlayr/money/installments";
+
 import type { InstallmentRow } from "@/data/installments-core";
 import { formatSentenceDate } from "@/domain/dates";
-import type { InstallmentStanding, PlanStanding } from "@/domain/installments";
 import { daysBetween, startOfLocalDay } from "@/domain/local-day";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";

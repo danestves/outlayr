@@ -1,9 +1,9 @@
+import { generateSchedule } from "@outlayr/money/installments";
 import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { transactionalDatabase } from "@/db/test-database";
-import { generateSchedule } from "@/domain/installments";
 
 import { settledCellsAt } from "./accounts";
 import { accountsRepo, getAccountById } from "./accounts-core";

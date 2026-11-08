@@ -1,3 +1,4 @@
+import type { InstallmentStanding } from "@outlayr/money/installments";
 import { Stack } from "expo-router";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,9 +17,8 @@ import { useAccounts } from "@/data/accounts";
 import type { InstallmentRow, PlanWithStanding } from "@/data/installments-core";
 import { formatSentenceDate } from "@/domain/dates";
 import { orderPlanPhrase } from "@/domain/installment-plan-phrase";
-import { orderName } from "@/domain/installments";
-import type { InstallmentStanding } from "@/domain/installments";
 import { formatAmount } from "@/domain/money";
+import { orderName } from "@/domain/order-name";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";

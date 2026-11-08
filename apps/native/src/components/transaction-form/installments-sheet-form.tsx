@@ -1,10 +1,4 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
-import { useRef, useState } from "react";
-import type { Ref } from "react";
-
-import type { Account } from "@/data/accounts-core";
-import { useNow } from "@/data/use-now";
-import { formatSentenceDate } from "@/domain/dates";
 import {
     EVERY_OPTIONS,
     MAX_INSTALLMENT_COUNT,
@@ -13,11 +7,17 @@ import {
     rescheduled,
     UPFRONT_SHARES,
     upfrontOf,
-} from "@/domain/installment-draft";
-import type { InstallmentDraft } from "@/domain/installment-draft";
+} from "@outlayr/money/installment-draft";
+import type { InstallmentDraft } from "@outlayr/money/installment-draft";
+import type { ScheduledInstallment } from "@outlayr/money/installments";
+import { useRef, useState } from "react";
+import type { Ref } from "react";
+
+import type { Account } from "@/data/accounts-core";
+import { useNow } from "@/data/use-now";
+import { formatSentenceDate } from "@/domain/dates";
 import { planPhrase } from "@/domain/installment-plan-phrase";
 import type { InstallmentSeed } from "@/domain/installment-scan";
-import type { ScheduledInstallment } from "@/domain/installments";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { useLanguage, useTranslation } from "@/i18n/context";

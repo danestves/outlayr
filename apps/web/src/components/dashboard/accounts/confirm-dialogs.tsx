@@ -1,6 +1,8 @@
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { RiArrowLeftRightLine, RiCalendarCheckLine, RiHistoryLine, RiSafe2Line } from "@remixicon/react";
 import { useNavigate } from "@tanstack/react-router";
+import { Button } from "panelui-web/button";
+import { Dialog } from "panelui-web/dialog";
 import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -46,22 +48,22 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
         });
     };
     return (
-        <FlowDialog confirm label={flows.archiveTitle({ name: account.name })} onClose={onClose}>
-            <div className="dash-db">
-                <p className="text-muted-foreground mb-3 text-[13px]">{flows.archiveBody}</p>
-                <Fact label={flows.balance}>{money(facts.balance, account.currency)}</Fact>
-                <Fact label={flows.transactionsKept}>{facts.transactions}</Fact>
-                <Fact label={flows.netWorthAfter}>{money(facts.netAfter, ledger.currency)}</Fact>
-            </div>
-            <div className="dash-df">
-                {failed ? <span className="text-app-spend mr-auto text-[13px]">{flows.saveFailed}</span> : null}
-                <button className="dash-ob" onClick={onClose} type="button">
+        <FlowDialog label={flows.archiveTitle({ name: account.name })} onClose={onClose} size="sm">
+            <Dialog.Body>
+                <p className="text-muted-foreground text-[13px]">{flows.archiveBody}</p>
+                <div>
+                    <Fact label={flows.balance}>{money(facts.balance, account.currency)}</Fact>
+                    <Fact label={flows.transactionsKept}>{facts.transactions}</Fact>
+                    <Fact label={flows.netWorthAfter}>{money(facts.netAfter, ledger.currency)}</Fact>
+                </div>
+            </Dialog.Body>
+            <Dialog.Footer>
+                {failed ? <span className="text-destructive mr-auto text-[13px]">{flows.saveFailed}</span> : null}
+                <Button onClick={onClose} variant="outline">
                     {flows.cancel}
-                </button>
-                <button className="dash-btn" onClick={archive} type="button">
-                    {flows.archive}
-                </button>
-            </div>
+                </Button>
+                <Button onClick={archive}>{flows.archive}</Button>
+            </Dialog.Footer>
         </FlowDialog>
     );
 }
@@ -90,64 +92,66 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
         });
     };
     return (
-        <FlowDialog confirm label={flows.deleteTitle({ name: account.name })} onClose={onClose}>
-            <div className="dash-db">
-                <p className="text-muted-foreground mb-3 text-[13px]">
+        <FlowDialog label={flows.deleteTitle({ name: account.name })} onClose={onClose} size="sm">
+            <Dialog.Body>
+                <p className="text-muted-foreground text-[13px]">
                     {nothing ? flows.deleteEmptyBody : flows.deleteBody}
                 </p>
-                {nothing ? null : (
-                    <>
-                        <Fact
-                            label={
-                                <>
-                                    <RiHistoryLine size={16} />
-                                    {flows.transactionsKeptRow}
-                                </>
-                            }
-                        >
-                            {facts.transactions}
-                        </Fact>
-                        <Fact
-                            label={
-                                <>
-                                    <RiArrowLeftRightLine size={16} />
-                                    {flows.transfersDeleted}
-                                </>
-                            }
-                        >
-                            {facts.transfers}
-                        </Fact>
-                        <Fact
-                            label={
-                                <>
-                                    <RiCalendarCheckLine size={16} />
-                                    {flows.plansDeleted}
-                                </>
-                            }
-                        >
-                            {facts.plans}
-                        </Fact>
-                    </>
-                )}
-                <Fact
-                    label={
+                <div>
+                    {nothing ? null : (
                         <>
-                            <RiSafe2Line size={16} />
-                            {flows.netWorthAfter}
+                            <Fact
+                                label={
+                                    <>
+                                        <RiHistoryLine size={16} />
+                                        {flows.transactionsKeptRow}
+                                    </>
+                                }
+                            >
+                                {facts.transactions}
+                            </Fact>
+                            <Fact
+                                label={
+                                    <>
+                                        <RiArrowLeftRightLine size={16} />
+                                        {flows.transfersDeleted}
+                                    </>
+                                }
+                            >
+                                {facts.transfers}
+                            </Fact>
+                            <Fact
+                                label={
+                                    <>
+                                        <RiCalendarCheckLine size={16} />
+                                        {flows.plansDeleted}
+                                    </>
+                                }
+                            >
+                                {facts.plans}
+                            </Fact>
                         </>
-                    }
-                >
-                    {money(netAfterDelete(ledger, account), ledger.currency)}
-                </Fact>
-            </div>
-            <div className="dash-df">
-                <button className="dash-ob" onClick={onClose} type="button">
+                    )}
+                    <Fact
+                        label={
+                            <>
+                                <RiSafe2Line size={16} />
+                                {flows.netWorthAfter}
+                            </>
+                        }
+                    >
+                        {money(netAfterDelete(ledger, account), ledger.currency)}
+                    </Fact>
+                </div>
+            </Dialog.Body>
+            <Dialog.Footer>
+                <Button onClick={onClose} variant="outline">
                     {flows.cancel}
-                </button>
-                <button className="dash-btn" data-danger="true" onClick={remove} type="button">
+                </Button>
+                <Button onClick={remove} variant="destructive">
                     {flows.deleteAccount}
-                </button>
-            </div>
+                </Button>
+            </Dialog.Footer>
         </FlowDialog>
     );
 }

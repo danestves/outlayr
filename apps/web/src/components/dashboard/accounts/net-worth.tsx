@@ -1,6 +1,9 @@
 import { RiArrowLeftLine } from "@remixicon/react";
 import { Link } from "@tanstack/react-router";
+import { Badge } from "panelui-web/badge";
+import { Button } from "panelui-web/button";
 import { Plot } from "panelui-web/plot";
+import { Table } from "panelui-web/table";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -12,18 +15,16 @@ import { periodOf } from "@/lib/dashboard-series-period";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
-import { AccountsBar, Card, EmptyAccounts, Head, INCOME, MUTED, PERCENT, SPEND, TD, Table } from "./accounts-screen";
+import { AccountsBar, Card, Cell, DataTable, EmptyAccounts, INCOME, MUTED, PERCENT, SPEND } from "./accounts-screen";
 import { accountRows, changeSince, monthStart, rangeDays, worthSeries } from "./model";
 import type { AccountRow, WorthRange } from "./model";
-import { KpiBand, KpiCell, Segments, Trend, toneOf, useChartRatio } from "./parts";
+import { KpiBand, KpiCell, Segments, Trend, useChartRatio } from "./parts";
 import { useMonthShort } from "./worth-chart";
 
-const ICO = "border-border bg-app-hover inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] border";
 const CHART = 1118 / 326;
 const NAMED = 2;
 const THOUSAND = 1000;
 const DAILY_TICKS = 6;
-const FIGURE = "dash-figure text-right";
 
 function useNetWorthModel(range: WorthRange) {
     const { ledger, overview } = useDashboard();
@@ -84,14 +85,12 @@ function Kpis({ model }: { model: NetWorthModel }) {
     const period = date.month(ledger.today.slice(0, 7));
     const signed = (value: number) => money(value, ledger.currency, "always");
     return (
-        <KpiBand columns={4}>
+        <KpiBand>
             <KpiCell color={INCOME} label={kpi.netWorth} value={money(now?.net ?? 0, ledger.currency)}>
                 <Note
                     pill={
                         growth === null ? null : (
-                            <Trend
-                                tone={toneOf(growth)}
-                            >{`${growth > 0 ? "+" : ""}${(growth * PERCENT).toFixed(1)}%`}</Trend>
+                            <Trend value={growth}>{`${growth > 0 ? "+" : ""}${(growth * PERCENT).toFixed(1)}%`}</Trend>
                         )
                     }
                 >
@@ -99,7 +98,7 @@ function Kpis({ model }: { model: NetWorthModel }) {
                 </Note>
             </KpiCell>
             <KpiCell color={INCOME} label={kpi.have} value={money(now?.own ?? 0, ledger.currency)}>
-                <Note pill={<Trend tone={toneOf(delta("own"))}>{signed(delta("own"))}</Trend>}>
+                <Note pill={<Trend value={delta("own")}>{signed(delta("own"))}</Trend>}>
                     {moved(
                         rows.filter((row) => row.kind === "asset"),
                         changes
@@ -107,7 +106,13 @@ function Kpis({ model }: { model: NetWorthModel }) {
                 </Note>
             </KpiCell>
             <KpiCell color={SPEND} label={kpi.owe} value={money(now?.owe ?? 0, ledger.currency)}>
-                <Note pill={<Trend tone={toneOf(delta("owe"), false)}>{signed(delta("owe"))}</Trend>}>
+                <Note
+                    pill={
+                        <Trend goodWhenUp={false} value={delta("owe")}>
+                            {signed(delta("owe"))}
+                        </Trend>
+                    }
+                >
                     {moved(
                         rows.filter((row) => row.kind === "liability"),
                         changes
@@ -116,7 +121,7 @@ function Kpis({ model }: { model: NetWorthModel }) {
             </KpiCell>
             <KpiCell color={INCOME} label={net.keptIn({ period })} value={money(kept.value, ledger.currency)}>
                 {kept.share === null ? null : (
-                    <Note pill={<Trend tone="flat">{`${Math.round(kept.share * PERCENT)}%`}</Trend>}>
+                    <Note pill={<Badge variant="secondary">{`${Math.round(kept.share * PERCENT)}%`}</Badge>}>
                         {net.ofIncome({ amount: money(income.value, ledger.currency) })}
                     </Note>
                 )}
@@ -169,16 +174,18 @@ function HaveOweCard({ model, range }: { model: NetWorthModel; range: WorthRange
     );
     const { domain, rows } = zeroDomain(data.flatMap((datum) => [datum.have, datum.owe, datum.net]));
     return (
-        <Card>
-            <div className="dash-card-head flex-wrap gap-x-4 max-sm:h-auto max-sm:py-3">
-                <h2>{net.haveAndOwe}</h2>
+        <Card
+            action={
                 <span className="flex flex-wrap items-center gap-x-3.5 gap-y-1">
                     <Legend color={`color-mix(in oklab, ${INCOME} 45%, transparent)`} label={kpi.have} />
                     <Legend color={`color-mix(in oklab, ${SPEND} 60%, transparent)`} label={kpi.owe} />
                     <Legend color="var(--color-foreground)" label={kpi.netWorth} line />
                 </span>
-            </div>
-            <div className="px-5 pb-3.5">
+            }
+            stackAction
+            title={net.haveAndOwe}
+        >
+            <div className="p-3.5">
                 <Plot
                     aspectRatio={ratio}
                     curve="linear"
@@ -223,29 +230,28 @@ function MonthsCard({ model }: { model: NetWorthModel }) {
         .filter(({ point }) => point.day.slice(0, 7) >= opened)
         .toReversed();
     return (
-        <Card>
-            <Head title={net.byMonth} />
-            <Table head={[net.month, net.started, kpi.have, kpi.owe, kpi.netWorth, net.change]} numbers={4}>
+        <Card title={net.byMonth}>
+            <DataTable head={[net.month, net.started, kpi.have, kpi.owe, kpi.netWorth, net.change]} numbers={4}>
                 {rows.map(({ point, started }) => {
                     const key = point.day.slice(0, 7);
                     const name = titled(date.month(key), locale);
                     const change = point.net - started;
                     return (
-                        <tr key={key}>
-                            <td className={`${TD} dash-figure`}>
+                        <Table.Row key={key}>
+                            <Cell className="dash-figure">
                                 {key.startsWith(year) ? name : `${name} ${key.slice(0, 4)}`}
-                            </td>
-                            <td className={`${TD} ${FIGURE}`}>{money(started, ledger.currency)}</td>
-                            <td className={`${TD} ${FIGURE}`}>{money(point.own, ledger.currency)}</td>
-                            <td className={`${TD} ${FIGURE}`}>{money(point.owe, ledger.currency)}</td>
-                            <td className={`${TD} ${FIGURE}`}>{money(point.net, ledger.currency)}</td>
-                            <td className={TD}>
-                                <Trend tone={toneOf(change)}>{money(change, ledger.currency, "always")}</Trend>
-                            </td>
-                        </tr>
+                            </Cell>
+                            <Cell figure>{money(started, ledger.currency)}</Cell>
+                            <Cell figure>{money(point.own, ledger.currency)}</Cell>
+                            <Cell figure>{money(point.owe, ledger.currency)}</Cell>
+                            <Cell figure>{money(point.net, ledger.currency)}</Cell>
+                            <Cell>
+                                <Trend value={change}>{money(change, ledger.currency, "always")}</Trend>
+                            </Cell>
+                        </Table.Row>
                     );
                 })}
-            </Table>
+            </DataTable>
         </Card>
     );
 }
@@ -263,9 +269,15 @@ export function NetWorthScreen() {
             <AccountsBar
                 title={
                     <span className="flex min-w-0 items-center gap-3">
-                        <Link aria-label={detail.back.value} className={ICO} to="/app/accounts">
-                            <RiArrowLeftLine className="text-muted-foreground" size={17} />
-                        </Link>
+                        <Button
+                            aria-label={detail.back.value}
+                            nativeButton={false}
+                            render={<Link to="/app/accounts" />}
+                            size="icon"
+                            variant="outline"
+                        >
+                            <RiArrowLeftLine className="text-muted-foreground" />
+                        </Button>
                         <span className="truncate">{kpi.netWorth}</span>
                     </span>
                 }
@@ -286,7 +298,7 @@ export function NetWorthScreen() {
             </AccountsBar>
             {model.rows.length === 0 ? (
                 <>
-                    <KpiBand columns={4}>
+                    <KpiBand>
                         {[
                             kpi.netWorth,
                             kpi.have,

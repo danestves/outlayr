@@ -2,6 +2,9 @@ import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
 import { RiArrowLeftLine } from "@remixicon/react";
+import { Button } from "panelui-web/button";
+import { Dialog } from "panelui-web/dialog";
+import { Field } from "panelui-web/field";
 import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -64,55 +67,59 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
 
     if (!different) {
         return (
-            <FlowDialog confirm label={flows.checkTitle({ name })} onClose={onClose}>
-                <div className="dash-db text-center">
-                    <p className="text-muted-foreground text-[13px]">{flows.checkQuestion}</p>
-                    <div className="dash-figure mt-1 text-[32px] leading-10 font-semibold tracking-[-0.04em]">
-                        {money(has, currency)}
+            <FlowDialog label={flows.checkTitle({ name })} onClose={onClose} size="sm">
+                <Dialog.Body className="text-center">
+                    <div>
+                        <p className="text-muted-foreground text-[13px]">{flows.checkQuestion}</p>
+                        <div className="dash-figure mt-1 text-[32px] leading-10 font-semibold tracking-[-0.04em]">
+                            {money(has, currency)}
+                        </div>
+                        <p className="text-muted-foreground mt-1 text-[13px]">{flows.checkCompare}</p>
+                        {failed ? (
+                            <p className="text-destructive mt-1.5 text-xs" role="alert">
+                                {flows.saveFailed}
+                            </p>
+                        ) : null}
                     </div>
-                    <p className="text-muted-foreground mt-1 text-[13px]">{flows.checkCompare}</p>
-                    {failed ? <p className="dash-er">{flows.saveFailed}</p> : null}
-                    <div className="mt-[18px] grid grid-cols-2 gap-2">
-                        <button
-                            className="dash-ob h-9 justify-center rounded-[10px]"
-                            onClick={() => setDifferent(true)}
-                            type="button"
-                        >
+                    <div className="grid grid-cols-2 gap-2">
+                        <Button onClick={() => setDifferent(true)} variant="outline">
                             {flows.checkDifferent}
-                        </button>
-                        <button className="dash-btn justify-center" onClick={save} type="button">
-                            {flows.checkMatches}
-                        </button>
+                        </Button>
+                        <Button onClick={save}>{flows.checkMatches}</Button>
                     </div>
-                </div>
+                </Dialog.Body>
             </FlowDialog>
         );
     }
     return (
         <FlowDialog
-            confirm
             head={
-                <button aria-label={flows.checkBack.value} onClick={() => setDifferent(false)} type="button">
+                <Button
+                    aria-label={flows.checkBack.value}
+                    onClick={() => setDifferent(false)}
+                    size="icon-sm"
+                    variant="ghost"
+                >
                     <RiArrowLeftLine size={18} />
-                </button>
+                </Button>
             }
             label={flows.checkTitle({ name })}
             onClose={onClose}
+            size="sm"
         >
-            <div className="dash-db">
-                <label className="dash-lb" htmlFor="check-shows">
-                    {flows.checkShows({ name })}
-                </label>
-                <AmountInput
-                    autoFocus
-                    currency={currency}
-                    id="check-shows"
-                    negative={negative}
-                    onNegative={setNegative}
-                    onText={setText}
-                    text={text}
-                />
-                <div className="mt-2.5">
+            <Dialog.Body>
+                <Field>
+                    <Field.Label>{flows.checkShows({ name })}</Field.Label>
+                    <AmountInput
+                        autoFocus
+                        currency={currency}
+                        negative={negative}
+                        onNegative={setNegative}
+                        onText={setText}
+                        text={text}
+                    />
+                </Field>
+                <div>
                     <Fact label={flows.checkOutlayrHas}>{money(has, currency)}</Fact>
                     <Fact label={flows.checkAdjustment}>
                         <span
@@ -122,18 +129,18 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
                         </span>
                     </Fact>
                 </div>
-            </div>
-            <div className="dash-df">
-                {failed ? <span className="text-app-spend mr-auto text-[13px]">{flows.saveFailed}</span> : null}
-                <button className="dash-ob" onClick={() => setDifferent(false)} type="button">
+            </Dialog.Body>
+            <Dialog.Footer>
+                {failed ? <span className="text-destructive mr-auto text-[13px]">{flows.saveFailed}</span> : null}
+                <Button onClick={() => setDifferent(false)} variant="outline">
                     {flows.checkBack}
-                </button>
-                <button className="dash-btn" onClick={save} type="button">
+                </Button>
+                <Button onClick={save}>
                     {change === 0
                         ? flows.checkMarkChecked
                         : flows.checkLog({ amount: money(change, currency, "always") })}
-                </button>
-            </div>
+                </Button>
+            </Dialog.Footer>
         </FlowDialog>
     );
 }

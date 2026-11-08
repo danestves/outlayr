@@ -1,9 +1,12 @@
 import { Popover } from "@base-ui/react/popover";
 import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { currencyDisplayFor, decimalsFor } from "@outlayr/money/currency";
-import { RiArrowDownSLine, RiCheckLine, RiCloseLine, RiSearch2Line } from "@remixicon/react";
+import { RiArrowDownSLine, RiCheckLine, RiSearch2Line } from "@remixicon/react";
+import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
-import { useMemo, useState } from "react";
+import { Input } from "panelui-web/input";
+import { Label } from "panelui-web/label";
+import { useId, useMemo, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -19,7 +22,6 @@ const focusNode = (node: HTMLInputElement | null) => node?.select();
 export function AmountInput({
     autoFocus = false,
     currency,
-    id,
     negative,
     onNegative,
     onText,
@@ -27,27 +29,27 @@ export function AmountInput({
 }: {
     autoFocus?: boolean;
     currency: string;
-    id: string;
     negative?: boolean;
     onNegative?: (negative: boolean) => void;
     onText: (text: string) => void;
     text: string;
 }) {
     return (
-        <div className="dash-fi">
+        <Input.Group>
             {onNegative ? (
-                <button
-                    aria-pressed={negative}
-                    className="dash-sg dash-figure"
-                    onClick={() => onNegative(!negative)}
-                    type="button"
-                >
-                    {negative ? "-" : "+"}
-                </button>
+                <Input.Addon>
+                    <button
+                        aria-pressed={negative}
+                        className="dash-sg dash-figure"
+                        onClick={() => onNegative(!negative)}
+                        type="button"
+                    >
+                        {negative ? "-" : "+"}
+                    </button>
+                </Input.Addon>
             ) : null}
-            <input
+            <Input
                 className="dash-figure"
-                id={id}
                 inputMode="decimal"
                 onBlur={() => {
                     if (text.trim() !== "") {
@@ -59,22 +61,24 @@ export function AmountInput({
                 ref={autoFocus ? focusNode : undefined}
                 value={text}
             />
-        </div>
+        </Input.Group>
     );
 }
 
+/** A popover, not a Select: the list runs to every currency, so it needs the search Select does not have. */
 export function CurrencyField({
-    id,
     inUse,
+    label,
     onPick,
     value,
 }: {
-    id: string;
     inUse: readonly string[];
+    label: ReactNode;
     onPick: (code: string) => void;
     value: string;
 }) {
     const { flows } = useIntlayer("dashboard-accounts");
+    const id = useId();
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
     const groups = useMemo(() => {
@@ -106,23 +110,31 @@ export function CurrencyField({
     const heading = "text-muted-foreground px-2 pt-2.5 pb-1 text-xs leading-4";
     return (
         <Popover.Root onOpenChange={setOpen} open={open}>
-            <Popover.Trigger className="dash-fi" id={id} type="button">
-                <span className="dash-figure">{value}</span>
-                <span className="text-muted-foreground truncate">{currencyDisplayFor(value).name}</span>
-                <RiArrowDownSLine className="text-muted-foreground ml-auto flex-none" size={16} />
-            </Popover.Trigger>
+            <div className="flex flex-col gap-2">
+                <Label htmlFor={id}>{label}</Label>
+                <Popover.Trigger
+                    id={id}
+                    render={<Button className="w-full justify-start px-3 font-normal" variant="outline" />}
+                >
+                    <span className="dash-figure">{value}</span>
+                    <span className="text-muted-foreground truncate">{currencyDisplayFor(value).name}</span>
+                    <RiArrowDownSLine className="text-muted-foreground ml-auto flex-none" size={16} />
+                </Popover.Trigger>
+            </div>
             <Popover.Portal>
                 <Popover.Positioner align="start" className="z-[60]" sideOffset={6}>
                     <Popover.Popup className="app-shell dash-po ph-no-capture flex max-h-[440px] w-[290px] flex-col">
-                        <div className="dash-fi flex-none">
-                            <RiSearch2Line className="text-muted-foreground flex-none" size={16} />
-                            <input
+                        <Input.Group className="flex-none">
+                            <Input.Addon>
+                                <RiSearch2Line size={16} />
+                            </Input.Addon>
+                            <Input
                                 aria-label={flows.currencySearch.value}
                                 onChange={(event) => setQuery(event.target.value)}
                                 placeholder={flows.currencySearch.value}
                                 value={query}
                             />
-                        </div>
+                        </Input.Group>
                         <div className="min-h-0 overflow-y-auto">
                             {groups.yours.length > 0 ? <div className={heading}>{flows.currencyYours}</div> : null}
                             {groups.yours.map(row)}
@@ -138,37 +150,34 @@ export function CurrencyField({
 
 export function FlowDialog({
     children,
-    confirm = false,
     head,
     initialFocus,
     label,
     onClose,
+    size = "md",
 }: {
     children: ReactNode;
-    confirm?: boolean;
     head?: ReactNode;
     initialFocus?: RefObject<HTMLInputElement | null>;
     label: ReactNode;
     onClose: () => void;
+    size?: "lg" | "md" | "sm";
 }) {
-    const { flows } = useIntlayer("dashboard-accounts");
     return (
         <Dialog onOpenChange={(open) => (open ? undefined : onClose())} open>
             <Dialog.Content
-                className="app-shell dash-dialog ph-no-capture"
-                data-size={confirm ? "confirm" : undefined}
-                showClose={false}
+                className="app-shell ph-no-capture"
+                size={size}
                 variant="plain"
                 // Content forwards the rest to Base UI's Popup, though its props only declare the div's.
                 {...{ initialFocus }}
             >
-                <div className="dash-dh">
-                    {head}
-                    <Dialog.Title className="text-[15px] leading-5 font-semibold tracking-normal">{label}</Dialog.Title>
-                    <button aria-label={flows.close.value} onClick={onClose} type="button">
-                        <RiCloseLine size={18} />
-                    </button>
-                </div>
+                <Dialog.Header>
+                    <div className="flex items-center gap-2">
+                        {head}
+                        <Dialog.Title>{label}</Dialog.Title>
+                    </div>
+                </Dialog.Header>
                 {children}
             </Dialog.Content>
         </Dialog>

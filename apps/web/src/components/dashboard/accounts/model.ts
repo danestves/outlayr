@@ -6,8 +6,9 @@ import type { AccountKind } from "@outlayr/money/account-kind";
 import { restate } from "@outlayr/money/account-overview";
 import { decimalsFor } from "@outlayr/money/currency";
 import { utcDateString } from "@outlayr/money/dates";
+import { planStanding } from "@outlayr/money/installments";
 import { roundMoney } from "@outlayr/money/round";
-import { valueDatedRowsIn } from "@outlayr/money/valuation";
+import { convertUsdSum, valueDatedRowsIn } from "@outlayr/money/valuation";
 
 import { deletedAccount } from "../../../lib/account-writes";
 import { endOfDay, openAccounts, startOfDay } from "../../../lib/dashboard-series-ledger";
@@ -262,22 +263,25 @@ export function statementCycle(statementDay: number, paymentDay: number, today: 
 
 export interface CardStatement {
     cycle: StatementCycle;
-    /** Null when the card opened after the last close, or when installments could be billed later. */
+    /** Null when the card opened after the last close. */
     due: number | null;
     overdue: boolean;
     /** Charged since the last close, stated positive. */
     since: number;
 }
 
-/**
- * What the last statement asks for: the debt at the close, less what came in since. Native also subtracts
- * installments billed after the due date, which the web has no schedule for, so a card with plans shows no amount.
- */
+/** What the last statement asks for: the debt at the close, less what came in since and installments billed later. */
+/** A plan with no purchase day stays whole in the statement, matching `billedLater` below, so none of it is apart. */
+export const billedApart = (
+    plan: Pick<PlanRow, "purchaseDay" | "rows">,
+    { closedOn, dueOn }: Pick<StatementCycle, "closedOn" | "dueOn">
+) => plan.rows.filter((each) => plan.purchaseDay !== null && (plan.purchaseDay > closedOn || each.day > dueOn));
+
 export function cardStatement(
     row: Pick<AccountRow, "currency" | "initialBalance" | "openedDay" | "paymentDay" | "statementDay">,
     flows: readonly Pick<AccountFlow, "day" | "value">[],
     today: string,
-    hasPlans: boolean
+    plans: readonly Pick<PlanRow, "purchaseDay" | "rows">[]
 ): CardStatement | null {
     if (row.statementDay === null || row.paymentDay === null) {
         return null;
@@ -296,8 +300,14 @@ export function cardStatement(
             since -= flow.value;
         }
     }
+    const billedLater = plans
+        .filter((plan) => plan.purchaseDay !== null && plan.purchaseDay <= cycle.closedOn)
+        .flatMap((plan) => plan.rows)
+        .reduce((sum, each) => sum + (each.day > cycle.dueOn ? each.remaining : 0), 0);
     const due =
-        hasPlans || row.openedDay > cycle.closedOn ? null : roundMoney(Math.max(0, -atClose - inSince), decimals) || 0;
+        row.openedDay > cycle.closedOn
+            ? null
+            : roundMoney(Math.max(0, -atClose - billedLater - inSince), decimals) || 0;
     return {
         cycle,
         due,
@@ -355,8 +365,227 @@ export function flowsOf(ledger: Ledger, accountId: string) {
     return flows;
 }
 
-export const hasPlans = (ledger: Ledger, accountId: string) =>
-    ledger.books.installmentPlans.some((plan) => plan.deletedAt === null && plan.accountId === accountId);
+export interface PlanRow {
+    accountId: string;
+    count: number;
+    currency: string;
+    each: number;
+    /** Share of the schedule already paid, 0 to 1. */
+    fraction: number;
+    id: string;
+    left: number;
+    name: string;
+    paidCount: number;
+    /** Null when the purchase was deleted on its own: native then keeps it out of statements. */
+    purchaseDay: string | null;
+    rows: readonly { day: string; remaining: number; sequence: number }[];
+}
+
+const plansMemo = new WeakMap<Ledger, PlanRow[]>();
+
+/** Every live plan with what is left, in native's reading: only transfers still arriving on its account pay it. */
+export function planRows(ledger: Ledger): PlanRow[] {
+    const kept = plansMemo.get(ledger);
+    if (kept) {
+        return kept;
+    }
+    const { accounts, installmentPlans, installments, outsidePayments, transactions, transfers } = ledger.books;
+    const dayOf = (at: number) => localDate(at, ledger.offsetAt(at));
+    const plans = installmentPlans.flatMap((plan): PlanRow[] => {
+        const account = accounts.find((row) => row.localId === plan.accountId && row.deletedAt === null);
+        if (plan.deletedAt !== null || !account) {
+            return [];
+        }
+        const rows = installments
+            .filter((row) => row.deletedAt === null && row.planId === plan.localId)
+            .map((row) => ({
+                amount: row.amount,
+                dueDate: new Date(row.dueDate),
+                fee: transactions
+                    .filter(
+                        (each) =>
+                            each.deletedAt === null &&
+                            each.installmentId === row.localId &&
+                            !each.income &&
+                            each.accountId === plan.accountId &&
+                            each.currency === account.currency
+                    )
+                    .reduce((sum, each) => sum + each.amount, 0),
+                sequence: row.sequence,
+            }));
+        const moved = transfers
+            .filter(
+                (row) =>
+                    row.deletedAt === null &&
+                    row.installmentPlanId === plan.localId &&
+                    row.toAccountId === plan.accountId
+            )
+            .reduce((sum, row) => sum + row.toAmount, 0);
+        const paid = outsidePayments
+            .filter((row) => row.deletedAt === null && row.planId === plan.localId)
+            .reduce((sum, row) => sum + row.amount, moved);
+        const standing = planStanding(rows, paid, new Date(ledger.now), account.currency);
+        const purchase = transactions.find((row) => row.localId === plan.transactionId && row.deletedAt === null);
+        return [
+            {
+                accountId: plan.accountId,
+                count: standing.installmentsTotal,
+                currency: account.currency,
+                each: rows.find((row) => row.sequence === 1)?.amount ?? 0,
+                fraction: standing.scheduled > 0 ? Math.min(1, standing.paid / standing.scheduled) : 0,
+                id: plan.localId,
+                left: standing.remaining,
+                name: purchase?.note.trim() ?? "",
+                paidCount: standing.installmentsPaid,
+                purchaseDay: purchase ? dayOf(purchase.date) : null,
+                rows: standing.rows.map((each) => ({
+                    day: dayOf(each.row.dueDate.getTime()),
+                    remaining: each.remaining,
+                    sequence: each.row.sequence,
+                })),
+            },
+        ];
+    });
+    plansMemo.set(ledger, plans);
+    return plans;
+}
+
+export const plansOn = (ledger: Ledger, accountId: string) =>
+    planRows(ledger).filter((plan) => plan.accountId === accountId);
+
+export type UpcomingSource =
+    | { accountName: string; kind: "statement" }
+    | { count: number; kind: "installment"; name: string; sequence: number }
+    | { charge: Overview["upcoming"]["charges"][number]; kind: "charge" };
+
+export interface UpcomingRow {
+    /** What the row shows, in `currency`. */
+    amount: number;
+    currency: string;
+    day: string;
+    id: string;
+    income: boolean;
+    source: UpcomingSource;
+    /** In the main currency; null when no rate covers it. */
+    value: number | null;
+}
+
+/**
+ * Recurring charges, card payments and installments due by `through`, soonest first; a missed one stays listed.
+ * The list skips installments of a card with a statement, and a card's own view skips those its payment bills.
+ */
+export function upcomingRows(ledger: Ledger, overview: Overview, through: string, accountId?: string): UpcomingRow[] {
+    const open = accountRows(ledger, overview);
+    const cards = open.filter((row) => row.kind === "liability" && (!accountId || row.id === accountId));
+    const openIds = new Set(open.map((row) => row.id));
+    const statements = cards.flatMap((row): UpcomingRow[] => {
+        const statement = cardStatement(row, flowsOf(ledger, row.id), ledger.today, plansOn(ledger, row.id));
+        if (!statement?.due || statement.cycle.dueOn > through) {
+            return [];
+        }
+        const main = inMain(ledger, statement.due, row.currency);
+        return [
+            {
+                amount: statement.due,
+                currency: row.currency,
+                day: statement.cycle.dueOn,
+                id: `statement-${row.id}`,
+                income: false,
+                source: { accountName: row.name, kind: "statement" },
+                value: main.exact ? main.value : null,
+            },
+        ];
+    });
+    const withStatement = new Set(cards.filter((row) => row.statementDay !== null).map((row) => row.id));
+    const [card] = cards;
+    const cycle =
+        accountId && card?.statementDay != null && card.paymentDay != null
+            ? statementCycle(card.statementDay, card.paymentDay, ledger.today)
+            : null;
+    const installments = planRows(ledger)
+        .filter(
+            (plan) =>
+                openIds.has(plan.accountId) &&
+                (accountId ? plan.accountId === accountId : !withStatement.has(plan.accountId))
+        )
+        .flatMap((plan) =>
+            (cycle ? billedApart(plan, cycle) : plan.rows)
+                .filter((each) => each.remaining > 0 && each.day <= through)
+                .map((each): UpcomingRow => {
+                    const main = inMain(ledger, each.remaining, plan.currency);
+                    return {
+                        amount: each.remaining,
+                        currency: plan.currency,
+                        day: each.day,
+                        id: `installment-${plan.id}-${each.sequence}`,
+                        income: false,
+                        source: { count: plan.count, kind: "installment", name: plan.name, sequence: each.sequence },
+                        value: main.exact ? main.value : null,
+                    };
+                })
+        );
+    const { charges, currency } = overview.upcoming;
+    const scheduled = charges
+        .filter((charge) => charge.nextCharge <= through && (!accountId || charge.accountId === accountId))
+        .map((charge): UpcomingRow => {
+            const same = charge.currency === currency;
+            return {
+                amount: charge.valued ?? charge.amount,
+                currency: charge.valued === null ? charge.currency : currency,
+                day: charge.nextCharge,
+                id: charge.id,
+                income: charge.kind === "income",
+                source: { charge, kind: "charge" },
+                value: charge.valued ?? (same ? charge.amount : null),
+            };
+        });
+    return [...statements, ...installments, ...scheduled].toSorted((a, b) => a.day.localeCompare(b.day));
+}
+
+export interface GoalRow {
+    exact: boolean;
+    /** 0 to 1. */
+    fraction: number;
+    id: string;
+    name: string;
+    saved: number;
+    target: number;
+}
+
+/** A goal is held in its account, its target frozen at the rate of its creation. Payoff plans are not goals. */
+export function goalRows(ledger: Ledger, rows: readonly AccountRow[]): GoalRow[] {
+    const held = new Map(rows.map((row) => [row.id, row]));
+    return ledger.books.savingsGoals
+        .toSorted((a, b) => a.sortOrder - b.sortOrder)
+        .flatMap((goal): GoalRow[] => {
+            const account = held.get(goal.accountId);
+            if (goal.deletedAt !== null || goal.targetAmount === 0 || !account) {
+                return [];
+            }
+            const converted =
+                goal.currency !== ledger.currency && goal.targetAmountUsd !== null
+                    ? convertUsdSum(
+                          goal.targetAmountUsd,
+                          utcDateString(goal.dateCreated),
+                          ledger.currency,
+                          ledger.rates
+                      )
+                    : null;
+            const same = goal.currency === ledger.currency;
+            const target = same ? goal.targetAmount : (converted ?? goal.targetAmount);
+            const saved = Math.max(0, account.value);
+            return [
+                {
+                    exact: account.exact && (same || converted !== null),
+                    fraction: target > 0 ? Math.min(1, saved / target) : 0,
+                    id: goal.localId,
+                    name: goal.name,
+                    saved,
+                    target,
+                },
+            ];
+        });
+}
 
 /** An amount in another currency restated at today's rate, flagged when no rate covers today. */
 export function inMain(ledger: Ledger, amount: number, currency: string) {

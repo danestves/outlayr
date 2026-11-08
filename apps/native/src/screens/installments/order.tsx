@@ -1,3 +1,4 @@
+import type { InstallmentStanding } from "@outlayr/money/installments";
 import { Stack } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { Pressable, ScrollView, View } from "react-native";
@@ -13,9 +14,8 @@ import { useAccounts } from "@/data/accounts";
 import type { InstallmentRow, PlanWithStanding } from "@/data/installments-core";
 import { formatSentenceDate } from "@/domain/dates";
 import { orderPlanPhrase } from "@/domain/installment-plan-phrase";
-import { orderName } from "@/domain/installments";
-import type { InstallmentStanding } from "@/domain/installments";
 import { formatAmount } from "@/domain/money";
+import { orderName } from "@/domain/order-name";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
 import { CuotaSheet } from "./cuota-sheet";

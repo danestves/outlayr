@@ -2,6 +2,7 @@ import { text } from "node:stream/consumers";
 
 import { startOfDay } from "@outlayr/money/calendar";
 import { utcDateString } from "@outlayr/money/dates";
+import { generateSchedule } from "@outlayr/money/installments";
 import { buildRateTable } from "@outlayr/money/valuation";
 
 import { accountBalanceSeries } from "./account-balance-series";
@@ -11,7 +12,6 @@ import { budgetPace, daysLeftInWindow, hoursLeftInDay } from "./budget-math";
 import { nextClockTick } from "./clock";
 import { formatDayHeader } from "./dates";
 import { cumulativeByDay, periodProgress } from "./insights-answers";
-import { generateSchedule } from "./installments";
 import { daysBetween, localDayKey } from "./local-day";
 import { loggedDays } from "./month-days";
 import { goalProgress } from "./savings-goal";

@@ -1,7 +1,8 @@
+import { generateSchedule } from "@outlayr/money/installments";
+import type { InstallmentInterval, InstallmentLike, MonthDay } from "@outlayr/money/installments";
+
 import type { TranslateFn } from "@/i18n/context";
 
-import { generateSchedule } from "./installments";
-import type { InstallmentInterval, InstallmentLike, MonthDay } from "./installments";
 import { daysBetween, localDayKey } from "./local-day";
 
 export interface PlanTerms {

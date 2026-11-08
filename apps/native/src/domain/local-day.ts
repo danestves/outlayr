@@ -1,10 +1,6 @@
-// Goals compare against `useNow` and date pickers, which both cut on local midnight. `setHours`, not epoch
-// arithmetic: flooring by the epoch gives a UTC day, and clock-shift days are 23 or 25 hours long.
-export function startOfLocalDay(ms: number): number {
-    const date = new Date(ms);
-    date.setHours(0, 0, 0, 0);
-    return date.getTime();
-}
+import { addLocalDays } from "@outlayr/money/calendar";
+
+export { addLocalDays, addLocalMonths, startOfLocalDay } from "@outlayr/money/calendar";
 
 /** The local day SQLite's `'localtime'` cuts (`LOCAL_DAY`). */
 export function localDayKey(ms: number): string {
@@ -24,22 +20,6 @@ export function tomorrowLocal(nowMs: number = Date.now()): Date {
 // Rounded, not divided: a span crossing a clock shift is not a whole number of 24-hour days.
 export function daysBetween(fromMs: number, toMs: number): number {
     return Math.round((toMs - fromMs) / 86_400_000);
-}
-
-export function addLocalDays(ms: number, days: number): number {
-    const date = new Date(ms);
-    date.setDate(date.getDate() + days);
-    date.setHours(0, 0, 0, 0);
-    return date.getTime();
-}
-
-// Clamped because `setMonth` rolls an impossible date forward: 31 August plus six months would land on 3 March.
-export function addLocalMonths(ms: number, months: number): Date {
-    const source = new Date(ms);
-    const target = new Date(source.getFullYear(), source.getMonth() + months, 1);
-    const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
-    target.setDate(Math.min(source.getDate(), lastDay));
-    return target;
 }
 
 export interface PayDays {

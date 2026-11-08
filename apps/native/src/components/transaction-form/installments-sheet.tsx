@@ -3,6 +3,8 @@ import MinusSignIcon from "@hugeicons-pro/core-stroke-rounded/MinusSignIcon";
 import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
 import Tick02Icon from "@hugeicons-pro/core-stroke-rounded/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import { EVERY_ORDER, MAX_INSTALLMENT_COUNT, rescheduled } from "@outlayr/money/installment-draft";
+import type { ScheduledInstallment } from "@outlayr/money/installments";
 import { Pressable, useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,8 +13,6 @@ import { SHEET_CARD_GAP, SHEET_TOP_PADDING } from "@/components/currency-picker-
 import { ChoiceRow } from "@/components/list/list-row";
 import { revealEntering } from "@/components/sentence/sentence-motion";
 import { formatSentenceDate, formatTargetDate } from "@/domain/dates";
-import { EVERY_ORDER, MAX_INSTALLMENT_COUNT, rescheduled } from "@/domain/installment-draft";
-import type { ScheduledInstallment } from "@/domain/installments";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { CompactDatePicker } from "@/screens/budgets/components/compact-date-picker";

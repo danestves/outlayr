@@ -1,11 +1,10 @@
-import { decimalsFor } from "@outlayr/money/currency";
-import { utcDateString } from "@outlayr/money/dates";
-import { computeAmountUSD } from "@outlayr/money/rates";
-import type { EntryRateType } from "@outlayr/money/rates";
-import { convertFromUsd } from "@outlayr/money/round";
-
+import { decimalsFor } from "./currency";
+import { utcDateString } from "./dates";
 import { generateSchedule } from "./installments";
 import type { InstallmentInterval, ScheduledInstallment } from "./installments";
+import { computeAmountUSD } from "./rates";
+import type { EntryRateType } from "./rates";
+import { convertFromUsd } from "./round";
 
 export const EVERY_OPTIONS = {
     days14: { every: 14, kind: "days" },

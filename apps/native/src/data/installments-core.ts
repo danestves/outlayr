@@ -1,6 +1,8 @@
 import { toAccountKind } from "@outlayr/money/account-kind";
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
+import { planStanding } from "@outlayr/money/installments";
+import type { InstallmentStanding, PlanStanding, ScheduledInstallment } from "@outlayr/money/installments";
 import { and, asc, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -9,9 +11,8 @@ import type { Database } from "@/db/client";
 import { accounts, installmentPlans, installments, outsidePayments, transactions, transfers } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
-import { orderName, planStanding } from "@/domain/installments";
-import type { InstallmentStanding, PlanStanding, ScheduledInstallment } from "@/domain/installments";
 import { roundToMinorUnits } from "@/domain/money";
+import { orderName } from "@/domain/order-name";
 import { translateNow } from "@/i18n/runtime";
 
 import { getAccountById } from "./accounts-core";

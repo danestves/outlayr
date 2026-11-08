@@ -1,4 +1,7 @@
 import { decimalsFor } from "@outlayr/money/currency";
+import { draftSchedule, EVERY_OPTIONS, EVERY_ORDER, MAX_INSTALLMENT_COUNT } from "@outlayr/money/installment-draft";
+import type { EveryOption, InstallmentDraft } from "@outlayr/money/installment-draft";
+import { generateSchedule } from "@outlayr/money/installments";
 import { roundMoney } from "@outlayr/money/round";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -6,9 +9,6 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import type { InstallmentPlanDraft } from "@/lib/cloud-ai";
 
-import { draftSchedule, EVERY_OPTIONS, EVERY_ORDER, MAX_INSTALLMENT_COUNT } from "./installment-draft";
-import type { EveryOption, InstallmentDraft } from "./installment-draft";
-import { generateSchedule } from "./installments";
 import { addLocalDays, addLocalMonths } from "./local-day";
 import { AMOUNT_CEILING } from "./numpad";
 
