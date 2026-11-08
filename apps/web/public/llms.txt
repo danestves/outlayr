@@ -113,7 +113,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - [Dólar BCV hoy](https://tryoutlayr.com/tools/dolar-bcv-hoy): today's official BCV rate for the dollar in Venezuela, with a converter between dollars and bolívares; rates come from DolarApi, each shows when its source updated it, and the page says so when they are unavailable
 - [Dólar hoy en Argentina](https://tryoutlayr.com/tools/dolar-hoy-argentina): today's blue, official, MEP, CCL, card, wholesale, and crypto dollar in Argentina, with a converter between dollars and pesos; rates come from DolarApi, each shows when its source updated it, and the page says so when they are unavailable
 - [Dólar blue Bolivia hoy](https://tryoutlayr.com/tools/dolar-hoy-bolivia): today's parallel dollar in Bolivia, also called the blue dollar, from the Binance P2P market, and the official BCB rate, with a converter between dollars and bolivianos; rates come from DolarApi, each shows when its source updated it, and the page says so when they are unavailable
-- The site's MCP server at https://tryoutlayr.com/mcp runs the four money calculators without signing in, as the tools budget_split, subscription_cost, installment_cost, and split_expenses
+- The site's MCP server at https://tryoutlayr.com/mcp runs four of the money calculators without signing in, as the tools budget_split, subscription_cost, installment_cost, and split_expenses
 
 ## Pages in Spanish
 
