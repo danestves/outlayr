@@ -19,7 +19,7 @@ import type { Span } from "./model";
 import type { PageQuery, SearchPatch } from "./search";
 
 const FIELD =
-    "border-border focus:border-app-tint h-9 w-full rounded-[10px] border bg-transparent px-2.5 text-[13px] outline-none";
+    "border-border focus:border-app-tint h-9 w-full rounded-[10px] border bg-transparent px-2.5 text-[13px] outline-none pointer-coarse:text-base";
 
 function AmountMenu({ query, setSearch }: { query: PageQuery; setSearch: (patch: SearchPatch) => void }) {
     const { ledger } = useDashboard();

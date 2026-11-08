@@ -207,7 +207,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                 <RiSearch2Line className="shrink-0" size={14} />
                 <input
                     aria-label={words.search.value}
-                    className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none"
+                    className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none pointer-coarse:text-base"
                     onChange={(event) => setSearch({ q: event.target.value }, { replace: true })}
                     onKeyDown={(event) => {
                         if (event.key === "Escape") {
