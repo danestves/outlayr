@@ -50,11 +50,9 @@ export function InsightsScreen({ model }: { model: InsightsModel }) {
                         <div className="@3xl:col-span-2">
                             <StandoutsCard model={model} />
                         </div>
-                        {incomeTracking ? (
-                            <div className="@3xl:col-span-2">
-                                <CashFlowCard model={model} />
-                            </div>
-                        ) : null}
+                        <div className="@3xl:col-span-2">
+                            <CashFlowCard model={model} />
+                        </div>
                         <ChangesCard model={model} />
                         <MonthsCard model={model} />
                         {incomeTracking ? <IncomeSpendingCard model={model} /> : null}

@@ -62,7 +62,11 @@ export function ChangesCard({ model }: { model: InsightsModel }) {
     ];
     const stepValue = (value: number, total: boolean) => (total ? fmt.compact(value) : fmt.signedWhole(value));
     return (
-        <CardFrame action={<Aside label={copy.changes.usual} value={fmt.amount(changes.usual)} />} title={title}>
+        <CardFrame
+            action={<Aside label={copy.changes.usual} value={fmt.amount(changes.usual)} />}
+            stackAction
+            title={title}
+        >
             <Body>
                 <WaterfallChart
                     aspectRatio={1.9}

@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { SankeyChart } from "panelui-web/sankey-chart";
+import { useContext } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import type { Dashboard } from "@/components/dashboard/shell/dashboard";
+import { LedgerSettingsContext } from "@/lib/ledger-settings";
 import { cn } from "@/lib/utils";
 
 import { CategoryTile } from "./category-tile";
@@ -226,12 +228,31 @@ export function CashFlowCard({ model }: { model: InsightsModel }) {
     const copy = useIntlayer("dashboard-insights");
     const fmt = useInsightsFormat(dashboard.ledger);
     const wide = useWide();
+    const { incomeTracking } = useContext(LedgerSettingsContext);
     const { links, nodes, rows } = flowOf(model.flow, {
         hub: copy.cashFlow.hub.value,
         kept: copy.measures.kept.value,
         savings: copy.cashFlow.savings.value,
     });
     const empty = model.flow.income === 0 && model.flow.spent === 0;
+    if (!incomeTracking) {
+        return (
+            <CardFrame title={copy.trend.spending}>
+                {model.flow.spent === 0 ? (
+                    <p className="text-muted-foreground p-4 text-sm">{copy.empty.spending}</p>
+                ) : (
+                    <div className="px-4 pt-1 pb-3">
+                        <FlowTable
+                            dashboard={dashboard}
+                            fmt={fmt}
+                            model={model}
+                            rows={rows.filter((row) => row.kind === "category")}
+                        />
+                    </div>
+                )}
+            </CardFrame>
+        );
+    }
     return (
         <CardFrame action={empty ? null : <Totals fmt={fmt} model={model} />} stackAction title={copy.cashFlow.title}>
             {empty ? (

@@ -473,6 +473,26 @@ describe("a month without income", () => {
     });
 });
 
+describe("monthly totals for one account", () => {
+    it("starts at that account's first entry, not the ledger's", () => {
+        const ledger = prepareLedger(
+            books({
+                accounts: [account("chase", "Chase"), account("cash", "Cash")],
+                transactions: [
+                    entry("old", "2026-01-10T16:00:00Z", 50, { accountId: "chase" }),
+                    entry("new", "2026-09-10T16:00:00Z", 900, { accountId: "cash" }),
+                ],
+            }),
+            NOW
+        );
+
+        expect(monthlyTotals(ledger, oct, { accounts: ["cash"] }).map((month) => month.key)).toStrictEqual([
+            "2026-09",
+            "2026-10",
+        ]);
+    });
+});
+
 describe("an empty ledger", () => {
     const ledger = prepareLedger(NO_BOOKS, NOW);
 

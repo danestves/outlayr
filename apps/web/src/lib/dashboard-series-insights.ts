@@ -3,7 +3,7 @@ import type { SankeyLink, SankeyNode } from "panelui-web/sankey-chart";
 
 import { categoriesOf } from "./dashboard-series";
 import type { SeriesCategory } from "./dashboard-series";
-import { endOfDay, round, rowsBetween, total } from "./dashboard-series-ledger";
+import { endOfDay, inScope, round, rowsBetween, total } from "./dashboard-series-ledger";
 import type { Ledger, Scope } from "./dashboard-series-ledger";
 import { netWorthPoints } from "./dashboard-series-net-worth";
 import { periodOf, shiftPeriodKey } from "./dashboard-series-period";
@@ -86,7 +86,9 @@ const lastPeriods = (ledger: Ledger, period: Period, months: number) =>
     );
 
 export function monthlyTotals(ledger: Ledger, period: Period, scope: Scope, months = 12): MonthTotal[] {
-    const firstDay = ledger.rows.reduce((first, row) => (row.day < first ? row.day : first), ledger.today);
+    const firstDay = ledger.rows
+        .filter(inScope(scope))
+        .reduce((first, row) => (row.day < first ? row.day : first), ledger.today);
     return lastPeriods(ledger, period, months)
         .filter((each) => each.to >= firstDay || each.key === period.key)
         .map((each) => {
