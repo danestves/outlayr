@@ -32,19 +32,20 @@ export function deletionPlan(books: DeletionBooks, ids: Iterable<string>) {
         transactions: new Set<string>(),
         transfers: new Set<string>(),
     };
-    for (const id of wanted) {
-        if (liveTransfers.has(id)) {
-            gone.transfers.add(id);
-        }
-    }
+    // A fee outliving its transfer keeps charging for a movement the ledger no longer holds, even one already gone.
+    const moved = new Set(wanted);
     for (const entry of books.transactions) {
         if (!wanted.has(entry.id) || !isLive(entry)) {
             continue;
         }
         gone.transactions.add(entry.id);
-        // A fee outliving its transfer would keep charging for a movement the ledger no longer holds.
-        if (entry.transferId != null && liveTransfers.has(entry.transferId)) {
-            gone.transfers.add(entry.transferId);
+        if (entry.transferId != null) {
+            moved.add(entry.transferId);
+        }
+    }
+    for (const id of moved) {
+        if (liveTransfers.has(id)) {
+            gone.transfers.add(id);
         }
     }
     const plans = books.installmentPlans.filter(
@@ -67,7 +68,7 @@ export function deletionPlan(books: DeletionBooks, ids: Iterable<string>) {
         if (
             isLive(row) &&
             ((row.feeForId != null && wanted.has(row.feeForId)) ||
-                (row.transferId != null && gone.transfers.has(row.transferId)) ||
+                (row.transferId != null && moved.has(row.transferId)) ||
                 (row.installmentId != null && gone.installments.has(row.installmentId)))
         ) {
             gone.transactions.add(row.id);

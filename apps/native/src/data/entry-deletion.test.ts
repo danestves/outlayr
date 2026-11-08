@@ -50,12 +50,15 @@ async function seeded() {
             entry("old card fee", { deletedAt: EARLIER, feeForId: "coffee" }),
             entry("wire fee", { transferId: "move" }),
             entry("second wire fee", { transferId: "move" }),
+            entry("orphaned wire fee", { transferId: "gone move" }),
             entry("financed"),
             entry("first payment", { installmentId: "i1" }),
             entry("old payment", { deletedAt: EARLIER, installmentId: "i2" }),
             entry("other plan payment", { installmentId: "other" }),
         ]);
-    await db.insert(transfers).values([transfer("move"), transfer("still here")]);
+    await db
+        .insert(transfers)
+        .values([transfer("move"), transfer("still here"), transfer("gone move", { deletedAt: EARLIER })]);
     await db.insert(installmentPlans).values([
         { accountId: "a", dateCreated: AT, id: "plan", transactionId: "financed", updatedAt: AT },
         { accountId: "a", dateCreated: AT, id: "other plan", transactionId: "coffee2", updatedAt: AT },
@@ -109,10 +112,10 @@ describe("deletionPlan matches what native's delete writes", () => {
         expect(plan).toStrictEqual(await tombstonedSince(db, NOW));
     });
 
-    it("a transfer and its fees", async () => {
+    it.each(["move", "gone move"])("transfer %s and its live fees", async (id) => {
         const db = await seeded();
-        const plan = deletionPlan(await booksOf(db), ["move"]);
-        await Effect.runPromise(transfersRepo.softDelete(db, "move", NOW));
+        const plan = deletionPlan(await booksOf(db), [id]);
+        await Effect.runPromise(transfersRepo.softDelete(db, id, NOW));
         expect(plan).toStrictEqual(await tombstonedSince(db, NOW));
     });
 });

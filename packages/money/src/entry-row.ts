@@ -55,14 +55,15 @@ export const entryRow = Effect.fn("EntryRow.entryRow")(function* entryRow<E>(
     input: EntryInput,
     ledger: {
         categoryName: string | null;
-        // Stamped even when unpicked: a null currency would follow the setting and restate a $18.50 lunch as €18.50.
+        // Stamped when unpicked: a null currency would follow the setting and restate a $18.50 lunch as €18.50.
         currency: string;
         now: Date;
     }
 ) {
     const details = input.details?.trim() ? input.details.trim() : null;
     const recurring = input.onceRecurring ?? false;
-    const { currency, now } = ledger;
+    const { now } = ledger;
+    const currency = input.currency ?? ledger.currency;
     const canonical = yield* canonicalUsd(lookup, {
         amount: Math.abs(input.amount),
         currency,
