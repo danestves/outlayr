@@ -60,6 +60,7 @@ const dashboard = {
             recurring: t({ en: "Recurring", es: "Recurrentes" }),
             rules: t({ en: "Rules", es: "Reglas" }),
             search: t({ en: "Search", es: "Buscar" }),
+            soon: t({ en: "Soon", es: "Pronto" }),
             tools: t({ en: "Tools", es: "Herramientas" }),
             transactions: t({ en: "Transactions", es: "Movimientos" }),
         },

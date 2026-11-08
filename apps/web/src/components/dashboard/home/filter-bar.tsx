@@ -107,7 +107,7 @@ function FilterMenu({ children, count, icon: Icon, label, onClear, searchLabel, 
         </>
     );
     const search = (focus: boolean) => (
-        <label className="border-app-tint text-muted-foreground mb-1.5 flex h-9 shrink-0 items-center gap-2 rounded-[10px] border px-2.5 text-[13px] shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-app-tint)_22%,transparent)]">
+        <label className="border-border focus-within:border-app-tint text-muted-foreground mb-1.5 flex h-9 shrink-0 items-center gap-2 rounded-[10px] border px-2.5 text-[13px] focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-app-tint)_22%,transparent)]">
             <RiSearch2Line size={15} />
             <input
                 aria-label={searchLabel}
@@ -150,7 +150,7 @@ function FilterMenu({ children, count, icon: Icon, label, onClear, searchLabel, 
                 <Sheet.Trigger className="dash-chip lg:hidden" data-on={count > 0}>
                     {chip}
                 </Sheet.Trigger>
-                <Sheet.Content className="app-shell ph-no-capture" detached={false}>
+                <Sheet.Content className="app-shell dash-sheet ph-no-capture" detached={false}>
                     <Sheet.Header title={label} />
                     <div className="px-4">{search(false)}</div>
                     <Sheet.Body className="px-2 [&_.dash-menu-list]:max-h-none [&_.dash-menu-list]:overflow-visible">
@@ -378,7 +378,7 @@ function PeriodSheet() {
                 {title(filters.period)}
                 <RiArrowDownSLine className="text-muted-foreground" size={15} />
             </Sheet.Trigger>
-            <Sheet.Content className="app-shell ph-no-capture" detached={false}>
+            <Sheet.Content className="app-shell dash-sheet ph-no-capture" detached={false}>
                 <Sheet.Header title={copy.period} />
                 <div className="bg-app-fill mx-4 mb-2 flex rounded-[10px] p-[3px]">
                     <span className="dash-seg bg-app-group text-foreground h-9 flex-1 justify-center">
@@ -407,7 +407,7 @@ function PeriodSheet() {
 export function FilterBar({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { add } = useIntlayer("dashboard");
     return (
-        <div className="flex min-h-16 flex-wrap items-center gap-2 py-3.5 max-lg:-mx-4 max-lg:[scrollbar-width:none] max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:px-4 max-sm:min-h-0 max-sm:py-3">
+        <div className="flex min-h-16 flex-wrap items-center gap-2 py-3.5 max-lg:-mx-4 max-lg:[scrollbar-width:none] max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:[mask-image:linear-gradient(to_right,#000_calc(100%-16px),transparent)] max-lg:px-4 max-sm:min-h-0 max-sm:py-3">
             <PeriodSheet />
             {setup ? null : (
                 <>
