@@ -123,7 +123,7 @@ export function useCategoryWrites() {
                 entries.delete(deletion.entries.map((row) => row.localId));
             }
             if (deletion.budgets.length > 0) {
-                budgets.delete(deletion.budgets.map((row) => row._id));
+                budgets.delete(deletion.budgets.map((row) => row.localId));
             }
             for (const child of deletion.children) {
                 collection.update(child.localId, (row) => {
