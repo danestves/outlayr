@@ -88,7 +88,7 @@ export function UserMenu({ collapsed, side = "right" }: { collapsed: boolean; si
             </Menu.Trigger>
             <Menu.Content
                 align={side === "top" ? "start" : "end"}
-                className="app-shell dash-menu ph-no-capture w-[min(300px,calc(100vw-32px))] p-2"
+                className="app-shell dash-menu ph-no-capture w-[min(300px,calc(100vw-32px))] p-2 max-lg:[&_.dash-menu-item]:h-11!"
                 side={side}
                 sideOffset={side === "top" ? 8 : 25}
             >

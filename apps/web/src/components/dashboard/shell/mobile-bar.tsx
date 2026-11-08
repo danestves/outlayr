@@ -30,7 +30,11 @@ export function MobileBar() {
                     }}
                 >
                     <div className="flex h-[52px] shrink-0 items-center gap-[9px] pr-1.5 pl-2">
-                        <Link aria-label={nav.home.value} className="text-app-tint" to="/">
+                        <Link
+                            aria-label={nav.home.value}
+                            className="text-app-tint -mx-2.5 flex size-11 items-center justify-center"
+                            to="/"
+                        >
                             <LogoMark className="size-6" />
                         </Link>
                         <Sheet.Title className="text-[15px] font-semibold">Outlayr</Sheet.Title>
