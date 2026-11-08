@@ -10,6 +10,7 @@
 @source "../node_modules/panelui-web/dist/components/menu/index.js";
 @source "../node_modules/panelui-web/dist/components/range-meter/index.js";
 @source "../node_modules/panelui-web/dist/components/rolling-number/index.js";
+@source "../node_modules/panelui-web/dist/components/sheet/index.js";
 @source "../node_modules/panelui-web/dist/components/stat/index.js";
 @source "../node_modules/panelui-web/dist/components/table/index.js";
 @source "../node_modules/panelui-web/dist/components/tabs/index.js";
@@ -1133,6 +1134,37 @@ html:has(.app-shell) {
         background: var(--color-app-tint);
         color: var(--color-app-on-tint);
         box-shadow: inset 0 1px 0 #ffffff33;
+    }
+
+    .dash-mobile-bar {
+        min-height: calc(52px + env(safe-area-inset-top));
+        padding: env(safe-area-inset-top) max(8px, env(safe-area-inset-right)) 0 max(6px, env(safe-area-inset-left));
+    }
+
+    .dash-icon-btn {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+
+    .dash-drawer .dash-nav {
+        height: 44px;
+    }
+
+    @media (max-width: 1023px) {
+        .dash-chip {
+            position: relative;
+        }
+
+        .dash-chip::after {
+            content: "";
+            position: absolute;
+            inset: -6px -2px;
+        }
     }
 
     .dash-ob {
