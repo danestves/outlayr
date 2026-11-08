@@ -21,7 +21,7 @@ export default GroupSpec.make()
         FunctionSpec.publicAction({
             name: "confirmCheckout",
             args: () => ({ sessionId: Schema.String }),
-            returns: () => Schema.Boolean,
+            returns: () => Schema.Literals(["unlocked", "unpaid", "unconfirmed"]),
         })
     )
     .addFunction(

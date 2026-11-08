@@ -109,17 +109,18 @@ const confirmCheckout = FunctionImpl.make(
         function* confirmCheckout({ sessionId }) {
             const user = yield* billingUser();
             if (user === null || !(yield* withinLimit(user.id))) {
-                return false;
+                return "unconfirmed" as const;
             }
             if (!(yield* paidSession(sessionId, user.id))) {
-                return yield* mirrorFromStore(user.id);
+                return (yield* mirrorFromStore(user.id)) ? ("unlocked" as const) : ("unpaid" as const);
             }
             yield* postReceipt(user.id, sessionId);
-            return yield* mirrorFromStore(user.id);
+            return (yield* mirrorFromStore(user.id)) ? ("unlocked" as const) : ("unconfirmed" as const);
         },
         Effect.provide(outboundHttp),
         Effect.catchTags({
-            StripeError: (error) => Effect.logWarning("[billing] confirm failed", error).pipe(Effect.as(false)),
+            StripeError: (error) =>
+                Effect.logWarning("[billing] confirm failed", error).pipe(Effect.as("unconfirmed" as const)),
         }),
         Effect.orDie
     )
