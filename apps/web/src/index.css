@@ -1042,7 +1042,7 @@
     line-height: 20px;
     font-family: var(--font-sans);
     --skullet-base: var(--color-app-fill);
-    --skullet-animation: none;
+    --skullet-animation: pulse;
 }
 
 html:has(.app-shell) {

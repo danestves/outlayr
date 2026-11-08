@@ -1,5 +1,5 @@
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
-import { Outlet, createFileRoute, redirect, useMatches } from "@tanstack/react-router";
+import { Outlet, createFileRoute, redirect, useLocation, useMatches } from "@tanstack/react-router";
 import { Suspense, lazy } from "react";
 
 import { authClient } from "@/lib/auth-client";
@@ -9,9 +9,13 @@ import { currentToken, tokenWait } from "@/lib/session";
 
 const IN_APP = /^\/app(?:\/|$)/u;
 
-const FirstVisitPending = lazy(async () => {
-    const pending = await import("@/components/dashboard/first-visit-pending");
-    return { default: pending.FirstVisitPending };
+const HomeFirstVisit = lazy(async () => {
+    const pending = await import("@/components/dashboard/home/home-pending");
+    return { default: pending.HomeFirstVisit };
+});
+const InsightsFirstVisit = lazy(async () => {
+    const pending = await import("@/components/dashboard/insights/insights-pending");
+    return { default: pending.InsightsFirstVisit };
 });
 
 export const Route = createFileRoute("/_account")({
@@ -33,15 +37,14 @@ export const Route = createFileRoute("/_account")({
 
 function Account() {
     const { token } = Route.useRouteContext();
+    const onInsights = useLocation({ select: (location) => location.pathname.endsWith("/insights") });
     const appStatus = useMatches({
         select: (matches) => matches.find((match) => match.routeId === "/_account/app")?.status,
     });
     return (
         <ConvexBetterAuthProvider authClient={authClient} client={convexClient()} initialToken={token}>
             {appStatus === "pending" && !hasLedgerCopy() ? (
-                <Suspense>
-                    <FirstVisitPending />
-                </Suspense>
+                <Suspense>{onInsights ? <InsightsFirstVisit /> : <HomeFirstVisit />}</Suspense>
             ) : null}
             <Outlet />
         </ConvexBetterAuthProvider>
