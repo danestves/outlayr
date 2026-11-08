@@ -1,5 +1,6 @@
 import { RiArrowLeftLine, RiDraggable } from "@remixicon/react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { Button } from "panelui-web/button";
 import { useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -11,7 +12,7 @@ import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { commitRows } from "@/lib/ledger-commit";
 import { useDisplayFormat, writeSettings } from "@/lib/ledger-settings";
 
-import { AccountsBar, Card, Head } from "./accounts-screen";
+import { AccountsBar, Card } from "./accounts-screen";
 import { useLedgerDb } from "./flows";
 import { accountRows, groupRows, sortRows, storedSort } from "./model";
 import type { AccountRow, AccountSort } from "./model";
@@ -119,10 +120,7 @@ function Group({
         return null;
     }
     return (
-        <Card className="overflow-visible">
-            <div className="border-b">
-                <Head aside={aside} count={rows.length} title={title} />
-            </div>
+        <Card aside={aside} count={rows.length} panelClassName="overflow-visible" title={title}>
             <Rows onMove={onMove} rows={rows} />
         </Card>
     );
@@ -209,12 +207,10 @@ export function ReorderAccounts() {
                     ]}
                     value={sort}
                 />
-                <Link className="dash-ob h-9 rounded-[10px] px-3" to="/app/accounts">
+                <Button nativeButton={false} render={<Link to="/app/accounts" />} variant="outline">
                     {flows.cancel}
-                </Link>
-                <button className="dash-btn" onClick={done} type="button">
-                    {flows.reorderDone}
-                </button>
+                </Button>
+                <Button onClick={done}>{flows.reorderDone}</Button>
             </AccountsBar>
             <div className="mx-auto flex max-w-[760px] flex-col gap-4">
                 <Group aside={hint} onMove={moveIn(assets)} rows={assets} title={list.accounts} />

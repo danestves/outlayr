@@ -15,7 +15,6 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDateFormat } from "@/components/dashboard/home/format";
-import { PhoneButton } from "@/components/dashboard/home/setup";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
 import { createdAccount, parseAmount } from "@/lib/account-writes";
@@ -30,6 +29,7 @@ import { AmountInput, amountText, FlowDialog } from "./fields";
 import { useLedgerDb } from "./flows";
 import type { AccountFlow } from "./flows";
 import { logoIdentity } from "./identity-picker";
+import { PhoneAction } from "./parts";
 
 const COUNTS = Array.from({ length: MAX_INSTALLMENT_COUNT }, (_, index) => String(index + 1));
 const OTHER_APP = "other";
@@ -474,10 +474,10 @@ export function PurchaseForm({
             <Dialog.Footer>
                 {failed ? <span className="text-destructive mr-auto text-[13px]">{flows.saveFailed}</span> : null}
                 {failed || blocked ? null : (
-                    <PhoneButton className="dash-ob mr-auto">
+                    <PhoneAction className="mr-auto">
                         <RiImageAddLine size={16} />
                         {purchase.importScreenshot}
-                    </PhoneButton>
+                    </PhoneAction>
                 )}
                 <Button onClick={onClose} variant="outline">
                     {flows.cancel}

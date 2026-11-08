@@ -16,13 +16,18 @@ import {
 } from "@remixicon/react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useRouteContext } from "@tanstack/react-router";
+import { Badge } from "panelui-web/badge";
+import { Button } from "panelui-web/button";
+import { Frame } from "panelui-web/frame";
+import type { KpiColor } from "panelui-web/kpi";
 import { Menu } from "panelui-web/menu";
+import { Table } from "panelui-web/table";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDateFormat, useWholeMoney, titled } from "@/components/dashboard/home/format";
-import { PhoneButton } from "@/components/dashboard/home/setup";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { NO_PHOTOS, photoUrlsQuery, toPhotoUrls } from "@/components/dashboard/shell/photos";
 import { AccountTile, LookTile } from "@/components/ledger/tiles";
@@ -58,12 +63,14 @@ import {
     AccountCell,
     KpiBand,
     KpiCell,
+    Meter,
+    PhoneAction,
     RowMenu,
     Segments,
     SortMenu,
     Spark,
     Trend,
-    toneOf,
+    stretch,
     useCheckedText,
 } from "./parts";
 import { WorthChart } from "./worth-chart";
@@ -77,45 +84,66 @@ const UPCOMING_ROWS = 5;
 const TRANSFER_ROWS = 7;
 export const PERCENT = 100;
 const LIST_CHART = 770 / 236;
-const TH =
-    "text-muted-foreground h-9 px-2.5 text-left text-xs font-medium shadow-[inset_0_1px_0_var(--color-app-rule),inset_0_-1px_0_var(--color-app-rule)] first:pl-5 last:pr-5 last:text-right";
-export const TD = "h-11 border-b px-2.5 whitespace-nowrap first:pl-5 last:pr-5 last:text-right";
-export const BALANCE = "dash-figure text-right text-sm font-medium";
+const HEAD = "first:ps-3.5 last:pe-3.5 last:text-end";
+const CELL = "h-[51px] py-0 whitespace-nowrap first:ps-3.5 last:pe-3.5 last:text-end";
 export const ROW = "flex h-11 items-center gap-2.5 border-b text-[13px] font-medium last:border-0";
 export const ICON_TILE =
     "bg-app-fill text-muted-foreground flex size-[26px] shrink-0 items-center justify-center rounded-lg";
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-    return <section className={`dash-card ${className}`}>{children}</section>;
-}
-
-export function Head({
+/** A band with its count beside the title and a quiet figure, the action or both at the end. */
+export function Card({
     action,
     aside,
+    children,
+    className,
     count,
+    panelClassName,
+    stackAction,
     title,
 }: {
     action?: ReactNode;
     aside?: ReactNode;
+    children?: ReactNode;
+    className?: string;
     count?: number;
+    panelClassName?: string;
+    stackAction?: boolean;
     title: ReactNode;
 }) {
     return (
-        <div className="dash-card-head">
-            <h2>{title}</h2>
-            {count === undefined ? null : (
-                <span className="dash-figure text-muted-foreground text-[13px]">{count}</span>
-            )}
-            {aside ? (
-                <span className="dash-figure text-muted-foreground ml-auto min-w-0 truncate text-[13px]">{aside}</span>
-            ) : null}
-            {action ? <span className="ml-auto flex">{action}</span> : null}
-        </div>
+        <CardFrame
+            action={
+                aside || action ? (
+                    <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:justify-end">
+                        {aside ? (
+                            <span className="dash-figure text-muted-foreground min-w-0 truncate text-[13px]">
+                                {aside}
+                            </span>
+                        ) : null}
+                        {action}
+                    </span>
+                ) : null
+            }
+            className={className}
+            panelClassName={panelClassName}
+            stackAction={stackAction}
+            title={
+                count === undefined ? (
+                    title
+                ) : (
+                    <>
+                        {title} <span className="dash-figure text-muted-foreground ms-1 font-normal">{count}</span>
+                    </>
+                )
+            }
+        >
+            {children}
+        </CardFrame>
     );
 }
 
-/** `numbers` counts the right-aligned figure columns that sit before the trailing menu column. */
-export function Table({
+/** `numbers` counts the right-aligned figure columns that sit before the trailing column. */
+export function DataTable({
     children,
     head,
     numbers = 1,
@@ -125,23 +153,42 @@ export function Table({
     numbers?: number;
 }) {
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-[13px]">
-                <thead>
-                    <tr>
-                        {head.map((cell, index) => (
-                            <th
-                                className={`${TH} ${index >= head.length - 1 - numbers && index < head.length - 1 ? "text-right" : ""}`}
-                                key={index}
-                            >
-                                {cell}
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody className="[&>tr:last-child>td]:border-0">{children}</tbody>
-            </table>
-        </div>
+        <Table containerClassName="overflow-x-auto" striped>
+            <Table.Header>
+                <Table.Row>
+                    {head.map((cell, index) => (
+                        <Table.Head
+                            align={index >= head.length - 1 - numbers && index < head.length - 1 ? "end" : "start"}
+                            className={HEAD}
+                            key={index}
+                        >
+                            {cell}
+                        </Table.Head>
+                    ))}
+                </Table.Row>
+            </Table.Header>
+            <Table.Body>{children}</Table.Body>
+        </Table>
+    );
+}
+
+/** `figure` is a right-aligned amount. */
+export function Cell({
+    children,
+    className = "",
+    figure = false,
+}: {
+    children?: ReactNode;
+    className?: string;
+    figure?: boolean;
+}) {
+    return (
+        <Table.Cell
+            align={figure ? "end" : "start"}
+            className={`${CELL} ${figure ? "dash-figure text-sm font-medium" : ""} ${className}`}
+        >
+            {children}
+        </Table.Cell>
     );
 }
 
@@ -177,16 +224,18 @@ function Kpis({ model }: { model: ListModel }) {
     const delta = (key: "net" | "owe" | "own") => (now?.[key] ?? 0) - (before?.[key] ?? 0);
     const quiet = rows.length === 0;
     const growth = before && before.net !== 0 ? delta("net") / Math.abs(before.net) : null;
-    const line = (key: "net" | "owe" | "own", color: string) =>
-        quiet ? null : <Spark color={color} height={28} values={months.map((point) => point[key])} width={96} />;
+    const line = (key: "net" | "owe" | "own", color?: KpiColor) =>
+        quiet ? null : <Spark className="w-24" color={color} height={28} values={months.map((point) => point[key])} />;
     const change = (key: "owe" | "own", goodWhenUp: boolean) =>
         quiet ? null : (
-            <Trend tone={toneOf(delta(key), goodWhenUp)}>{money(delta(key), ledger.currency, "always")}</Trend>
+            <Trend goodWhenUp={goodWhenUp} value={delta(key)}>
+                {money(delta(key), ledger.currency, "always")}
+            </Trend>
         );
     if (quiet) {
         const zero = money(0, ledger.currency);
         return (
-            <KpiBand columns={4}>
+            <KpiBand>
                 {[kpi.netWorth, kpi.have, kpi.owe, kpi.available].map((label) => (
                     <KpiCell color={MUTED} key={label.value} label={label} quiet value={zero} />
                 ))}
@@ -194,14 +243,14 @@ function Kpis({ model }: { model: ListModel }) {
         );
     }
     return (
-        <KpiBand columns={credit ? 4 : 3}>
+        <KpiBand>
             <KpiCell color={MUTED} icon={RiSafe2Line} label={kpi.netWorth} value={money(net, ledger.currency)}>
                 {growth === null || quiet ? (
                     <span />
                 ) : (
-                    <Trend tone={toneOf(growth)}>{`${growth > 0 ? "+" : ""}${(growth * PERCENT).toFixed(1)}%`}</Trend>
+                    <Trend value={growth}>{`${growth > 0 ? "+" : ""}${(growth * PERCENT).toFixed(1)}%`}</Trend>
                 )}
-                {line("net", MUTED)}
+                {line("net")}
             </KpiCell>
             <KpiCell
                 color={INCOME}
@@ -210,7 +259,7 @@ function Kpis({ model }: { model: ListModel }) {
                 value={money(now?.own ?? 0, ledger.currency)}
             >
                 {change("own", true)}
-                {line("own", INCOME)}
+                {line("own", "success")}
             </KpiCell>
             <KpiCell
                 color={SPEND}
@@ -219,7 +268,7 @@ function Kpis({ model }: { model: ListModel }) {
                 value={money(now?.owe ?? 0, ledger.currency)}
             >
                 {change("owe", false)}
-                {line("owe", SPEND)}
+                {line("owe", "destructive")}
             </KpiCell>
             {credit ? (
                 <KpiCell
@@ -228,7 +277,9 @@ function Kpis({ model }: { model: ListModel }) {
                     label={kpi.available}
                     value={`${credit.exact ? "" : "~"}${money(credit.available, ledger.currency)}`}
                 >
-                    <Trend tone="flat">{kpi.of({ amount: `${credit.exact ? "" : "~"}${whole(credit.limit)}` })}</Trend>
+                    <span className="dash-figure text-muted-foreground truncate text-[13px]">
+                        {kpi.of({ amount: `${credit.exact ? "" : "~"}${whole(credit.limit)}` })}
+                    </span>
                 </KpiCell>
             ) : null}
         </KpiBand>
@@ -251,34 +302,33 @@ function WorthCard({ model }: { model: ListModel }) {
     );
     const gained = (model.now?.net ?? 0) - (model.before?.net ?? 0);
     return (
-        <Card className="flex-1">
-            <div className="dash-card-head max-sm:h-auto max-sm:flex-wrap max-sm:py-3">
-                <h2>
-                    <Link className="hover:text-app-tint inline-flex items-center gap-1" to="/app/accounts/net-worth">
-                        {kpi.netWorth}
-                        <RiArrowRightUpLine className="text-muted-foreground" size={15} />
-                    </Link>
-                </h2>
-                <span className="dash-figure text-muted-foreground truncate text-[13px]">
-                    {list.inPeriod({
-                        amount: money(gained, ledger.currency, "always"),
-                        period: date.month(ledger.today.slice(0, 7)),
-                    })}
-                </span>
-                <div className="ml-auto">
-                    <Segments
-                        onPick={setRange}
-                        options={[
-                            { label: copy.month, value: "month" },
-                            { label: copy.quarter, value: "quarter" },
-                            { label: copy.sixMonths, value: "sixMonths" },
-                            { label: copy.year, value: "year" },
-                        ]}
-                        value={range}
-                    />
-                </div>
-            </div>
-            <div className="flex-1 px-5 pb-3.5">
+        <Card
+            action={
+                <Segments
+                    onPick={setRange}
+                    options={[
+                        { label: copy.month, value: "month" },
+                        { label: copy.quarter, value: "quarter" },
+                        { label: copy.sixMonths, value: "sixMonths" },
+                        { label: copy.year, value: "year" },
+                    ]}
+                    value={range}
+                />
+            }
+            aside={list.inPeriod({
+                amount: money(gained, ledger.currency, "always"),
+                period: date.month(ledger.today.slice(0, 7)),
+            })}
+            className="flex-1"
+            stackAction
+            title={
+                <Link className="hover:text-app-tint inline-flex items-center gap-1" to="/app/accounts/net-worth">
+                    {kpi.netWorth}
+                    <RiArrowRightUpLine className="text-muted-foreground" size={15} />
+                </Link>
+            }
+        >
+            <div className="flex-1 p-3.5">
                 <WorthChart aspectRatio={LIST_CHART} data={data} label={kpi.netWorth.value} range={range} />
             </div>
         </Card>
@@ -287,36 +337,38 @@ function WorthCard({ model }: { model: ListModel }) {
 
 function Balance({ row }: { row: AccountRow }) {
     const { money } = useDisplayFormat();
-    return <td className={`${TD} ${BALANCE}`}>{money(row.balance, row.currency)}</td>;
+    return <Cell figure>{money(row.balance, row.currency)}</Cell>;
 }
 
 function InMain({ row }: { row: AccountRow }) {
     const { ledger } = useDashboard();
     const { money } = useDisplayFormat();
     return (
-        <td className={`${TD} ${BALANCE}`}>
+        <Cell figure>
             {row.exact ? "" : "~"}
             {money(row.value, ledger.currency)}
-        </td>
+        </Cell>
     );
 }
 
 function CurrencyCell({ row }: { row: AccountRow }) {
     return (
-        <td className={TD}>
+        <Cell>
             {row.currency}
             {row.exact ? null : (
-                <span className="dash-badge text-muted-foreground ml-2 font-mono">{row.currency}?</span>
+                <Badge className="ms-2 font-mono" variant="outline">
+                    {row.currency}?
+                </Badge>
             )}
-        </td>
+        </Cell>
     );
 }
 
 function MenuCell({ row }: { row: AccountRow }) {
     return (
-        <td className={`${TD} w-10`}>
+        <Cell className="w-10">
             <RowMenu row={row} />
-        </td>
+        </Cell>
     );
 }
 
@@ -333,10 +385,9 @@ function AssetsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
     const total = assets.reduce((sum, row) => sum + row.value, 0);
     const monthName = titled(date.month(ledger.today.slice(0, 7)), locale);
     return (
-        <Card>
-            <Head aside={money(total, ledger.currency)} count={assets.length} title={list.accounts} />
+        <Card aside={money(total, ledger.currency)} count={assets.length} title={list.accounts}>
             {model.multi ? (
-                <Table
+                <DataTable
                     head={[
                         columns.account,
                         columns.currency,
@@ -347,48 +398,48 @@ function AssetsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
                     numbers={2}
                 >
                     {assets.map((row) => (
-                        <tr key={row.id}>
-                            <td className={TD}>
+                        <Table.Row key={row.id}>
+                            <Cell>
                                 <AccountLink row={row}>
                                     <AccountCell note={<CheckedNote row={row} />} row={row} />
                                 </AccountLink>
-                            </td>
+                            </Cell>
                             <CurrencyCell row={row} />
                             <Balance row={row} />
                             <InMain row={row} />
                             <MenuCell row={row} />
-                        </tr>
+                        </Table.Row>
                     ))}
-                </Table>
+                </DataTable>
             ) : (
-                <Table head={[columns.account, columns.last30, monthName, columns.balance, ""]}>
+                <DataTable head={[columns.account, columns.last30, monthName, columns.balance, ""]}>
                     {assets.map((row) => {
                         const line = model.recent.get(row.id) ?? [];
                         const change = model.changes.get(row.id) ?? 0;
                         return (
-                            <tr key={row.id}>
-                                <td className={TD}>
+                            <Table.Row key={row.id}>
+                                <Cell>
                                     <AccountLink row={row}>
                                         <AccountCell row={row} />
                                     </AccountLink>
-                                </td>
-                                <td className={TD}>
+                                </Cell>
+                                <Cell>
                                     <Spark
-                                        color={(line.at(-1) ?? 0) >= (line[0] ?? 0) ? INCOME : SPEND}
+                                        className="w-[120px]"
+                                        color={(line.at(-1) ?? 0) >= (line[0] ?? 0) ? "success" : "destructive"}
                                         height={26}
                                         values={line}
-                                        width={120}
                                     />
-                                </td>
-                                <td className={TD}>
-                                    <Trend tone={toneOf(change)}>{money(change, row.currency, "always")}</Trend>
-                                </td>
+                                </Cell>
+                                <Cell>
+                                    <Trend value={change}>{money(change, row.currency, "always")}</Trend>
+                                </Cell>
                                 <Balance row={row} />
                                 <MenuCell row={row} />
-                            </tr>
+                            </Table.Row>
                         );
                     })}
-                </Table>
+                </DataTable>
             )}
         </Card>
     );
@@ -448,20 +499,18 @@ function UsedCell({ row }: { row: AccountRow }) {
     const { card } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     if (row.creditLimit === null || row.creditLimit <= 0) {
-        return <td className={`${TD} text-muted-foreground`}>{card.noLimit}</td>;
+        return <Cell className="text-muted-foreground">{card.noLimit}</Cell>;
     }
     const used = Math.min(1, Math.max(0, -row.balance / row.creditLimit));
     return (
-        <td className={TD}>
-            <div className="bg-app-fill flex h-2 w-[120px] overflow-hidden rounded-full">
-                <i className="bg-foreground block h-full rounded-full" style={{ width: `${used * PERCENT}%` }} />
-            </div>
+        <Cell>
+            <Meter className="w-[120px]" max={1} value={used} />
             <small className="dash-figure text-muted-foreground mt-1 block text-xs leading-4">
                 {card.available({
                     amount: money(Math.max(0, row.creditLimit + row.balance), row.currency),
                 })}
             </small>
-        </td>
+        </Cell>
     );
 }
 
@@ -476,10 +525,9 @@ function CardsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
     }
     const total = cards.reduce((sum, row) => sum + row.value, 0);
     return (
-        <Card>
-            <Head aside={money(total, ledger.currency)} count={cards.length} title={list.cards} />
+        <Card aside={money(total, ledger.currency)} count={cards.length} title={list.cards}>
             {model.multi ? (
-                <Table
+                <DataTable
                     head={[
                         columns.card,
                         columns.currency,
@@ -490,35 +538,35 @@ function CardsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
                     numbers={2}
                 >
                     {cards.map((row) => (
-                        <tr key={row.id}>
-                            <td className={TD}>
+                        <Table.Row key={row.id}>
+                            <Cell>
                                 <AccountLink row={row}>
                                     <AccountCell note={statement(row) ?? <CheckedNote row={row} />} row={row} />
                                 </AccountLink>
-                            </td>
+                            </Cell>
                             <CurrencyCell row={row} />
                             <Balance row={row} />
                             <InMain row={row} />
                             <MenuCell row={row} />
-                        </tr>
+                        </Table.Row>
                     ))}
-                </Table>
+                </DataTable>
             ) : (
-                <Table head={[columns.card, columns.used, columns.statement, columns.balance, ""]}>
+                <DataTable head={[columns.card, columns.used, columns.statement, columns.balance, ""]}>
                     {cards.map((row) => (
-                        <tr key={row.id}>
-                            <td className={TD}>
+                        <Table.Row key={row.id}>
+                            <Cell>
                                 <AccountLink row={row}>
                                     <AccountCell row={row} />
                                 </AccountLink>
-                            </td>
+                            </Cell>
                             <UsedCell row={row} />
-                            <td className={TD}>{statement(row)}</td>
+                            <Cell>{statement(row)}</Cell>
                             <Balance row={row} />
                             <MenuCell row={row} />
-                        </tr>
+                        </Table.Row>
                     ))}
-                </Table>
+                </DataTable>
             )}
         </Card>
     );
@@ -559,9 +607,8 @@ export function UpcomingCard({ accountId }: { accountId?: string }) {
         return source.sequence > 0 ? list.planNth({ count: source.count, name, sequence: source.sequence }) : name;
     };
     return (
-        <Card>
-            <Head aside={unvalued ? null : money(total, overview.upcoming.currency)} title={list.upcoming} />
-            <div className="px-5 pb-1.5">
+        <Card aside={unvalued ? null : money(total, overview.upcoming.currency)} title={list.upcoming}>
+            <div className="px-3.5 py-1">
                 {rows.map((row) => (
                     <div className={ROW} key={row.id}>
                         <UpcomingLead row={row} />
@@ -592,9 +639,8 @@ function GoalsCard({ model }: { model: ListModel }) {
         return null;
     }
     return (
-        <Card>
-            <Head title={list.goals} />
-            <div className="flex flex-col gap-4 px-5 pb-[18px]">
+        <Card title={list.goals}>
+            <div className="flex flex-col gap-4 p-3.5">
                 {goals.map((goal) => (
                     <div key={goal.id}>
                         <div className="flex items-baseline gap-2 text-[13px] font-medium">
@@ -608,12 +654,7 @@ function GoalsCard({ model }: { model: ListModel }) {
                                 </span>
                             </span>
                         </div>
-                        <div className="bg-app-fill mt-2.5 flex h-2 overflow-hidden rounded-full">
-                            <i
-                                className="bg-foreground block h-full rounded-full"
-                                style={{ width: `${goal.fraction * PERCENT}%` }}
-                            />
-                        </div>
+                        <Meter className="mt-2.5" max={1} value={goal.fraction} />
                     </div>
                 ))}
             </div>
@@ -631,16 +672,21 @@ function TransfersCard() {
         return null;
     }
     return (
-        <Card className="flex-1">
-            <Head
-                action={
-                    <Link className="dash-ob" search={{ span: "all", type: "transfers" }} to="/app/transactions">
-                        {actions.seeAll}
-                    </Link>
-                }
-                title={list.transfers}
-            />
-            <div className="px-5 pb-1.5">
+        <Card
+            action={
+                <Button
+                    nativeButton={false}
+                    render={<Link search={{ span: "all", type: "transfers" }} to="/app/transactions" />}
+                    size="sm"
+                    variant="outline"
+                >
+                    {actions.seeAll}
+                </Button>
+            }
+            className="flex-1"
+            title={list.transfers}
+        >
+            <div className="px-3.5 py-1">
                 {transfers.map((transfer) => (
                     <div className={ROW} key={transfer.id}>
                         <span className={ICON_TILE}>
@@ -673,9 +719,8 @@ function CurrencyCard({ model }: { model: ListModel }) {
     const positive = shares.filter((share) => share.value > 0);
     const whole = positive.reduce((sum, share) => sum + share.value, 0);
     return (
-        <Card>
-            <Head aside={money(model.now?.net ?? 0, ledger.currency)} title={list.byCurrency} />
-            <div className="px-5 pb-[18px]">
+        <Card aside={money(model.now?.net ?? 0, ledger.currency)} title={list.byCurrency}>
+            <div className="p-3.5">
                 <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
                     {positive.map((share, index) => (
                         <i
@@ -725,9 +770,8 @@ function RatesCard({ model }: { model: ListModel }) {
         .filter((rate) => !rate.exact)
         .map((rate) => (rate.from === ledger.currency ? rate.to : rate.from));
     return (
-        <Card>
-            <Head aside={date.day(ledger.today)} title={list.rates} />
-            <div className="px-5 pb-[18px]">
+        <Card aside={date.day(ledger.today)} title={list.rates}>
+            <div className="p-3.5">
                 {rates.map((rate) => (
                     <div
                         className="dash-figure flex h-10 items-center border-b text-[13px] last:border-0"
@@ -755,10 +799,7 @@ const GHOST_TABLE = [
     [76, 40, 64],
     [56, 34, 64],
 ] as const;
-const GHOST_GRID = "grid grid-cols-[34%_21%_1fr_auto] items-center px-5";
-// The client renderer drops preserveAspectRatio from JSX, so it is set on the node.
-const stretch = (node: SVGSVGElement | null) => node?.setAttribute("preserveAspectRatio", "none");
-
+const GHOST_GRID = "grid grid-cols-[34%_21%_1fr_auto] items-center px-3.5";
 function GhostSpark() {
     return (
         <svg className="block h-3.5 w-[184px] max-w-full" ref={stretch} viewBox="0 0 184 14">
@@ -771,47 +812,49 @@ export function EmptyAccounts() {
     const { actions, empty } = useIntlayer("dashboard-accounts");
     const { open } = useAccountFlows();
     return (
-        <section className="dash-card relative min-h-[760px] flex-1">
-            <div aria-hidden className="px-5 pt-3.5">
-                <svg
-                    className="block h-[192px] w-full [&_*]:[vector-effect:non-scaling-stroke]"
-                    ref={stretch}
-                    viewBox="0 0 500 40"
-                >
-                    {[0.5, 13.5, 26.5, 39.5].map((y) => (
-                        <line className="stroke-border" key={y} x1={0} x2={500} y1={y} y2={y} />
+        <Frame className="min-h-[760px] min-w-0 flex-1 rounded-2xl" variant="band">
+            <Frame.Panel className="flex-1 group-data-[variant=band]/frame:rounded-[10px]">
+                <div aria-hidden className="px-3.5 pt-3.5">
+                    <svg
+                        className="block h-[192px] w-full [&_*]:[vector-effect:non-scaling-stroke]"
+                        ref={stretch}
+                        viewBox="0 0 500 40"
+                    >
+                        {[0.5, 13.5, 26.5, 39.5].map((y) => (
+                            <line className="stroke-border" key={y} x1={0} x2={500} y1={y} y2={y} />
+                        ))}
+                        <path className="stroke-app-ghost" d={GHOST_LINE} fill="none" strokeDasharray="2 3" />
+                    </svg>
+                </div>
+                <div aria-hidden className={`${GHOST_GRID} mt-6 h-9 border-b`}>
+                    <i className="dash-gl w-[52px]" />
+                    <i className="dash-gl w-[38px]" />
+                    <i className="dash-gl w-[46px]" />
+                    <i className="dash-gl w-[40px]" />
+                </div>
+                <div aria-hidden className="[mask-image:linear-gradient(#000_40%,transparent)]">
+                    {GHOST_TABLE.map(([name, change, balance]) => (
+                        <div className={`${GHOST_GRID} h-[42px] border-b last:border-0`} key={name}>
+                            <span className="flex items-center gap-2.5">
+                                <i className="dash-gx" />
+                                <i className="dash-gl" style={{ width: name }} />
+                            </span>
+                            <GhostSpark />
+                            <i className="dash-gl" style={{ width: change }} />
+                            <i className="dash-gl" style={{ width: balance }} />
+                        </div>
                     ))}
-                    <path className="stroke-app-ghost" d={GHOST_LINE} fill="none" strokeDasharray="2 3" />
-                </svg>
-            </div>
-            <div aria-hidden className={`${GHOST_GRID} mt-6 h-9 border-b`}>
-                <i className="dash-gl w-[52px]" />
-                <i className="dash-gl w-[38px]" />
-                <i className="dash-gl w-[46px]" />
-                <i className="dash-gl w-[40px]" />
-            </div>
-            <div aria-hidden className="[mask-image:linear-gradient(#000_40%,transparent)]">
-                {GHOST_TABLE.map(([name, change, balance]) => (
-                    <div className={`${GHOST_GRID} h-[42px] border-b last:border-0`} key={name}>
-                        <span className="flex items-center gap-2.5">
-                            <i className="dash-gx" />
-                            <i className="dash-gl" style={{ width: name }} />
-                        </span>
-                        <GhostSpark />
-                        <i className="dash-gl" style={{ width: change }} />
-                        <i className="dash-gl" style={{ width: balance }} />
-                    </div>
-                ))}
-            </div>
-            <div className="flex flex-col items-center gap-1.5 px-6 pt-6 pb-10 text-center">
-                <b className="text-[15px] leading-[22px] font-semibold">{empty.title}</b>
-                <p className="text-muted-foreground text-[13px]">{empty.line}</p>
-                <button className="dash-btn mt-3" onClick={() => open({ kind: "create", type: "bank" })} type="button">
-                    <RiAddLine size={17} />
-                    {actions.addAccount}
-                </button>
-            </div>
-        </section>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 px-6 pt-6 pb-10 text-center">
+                    <b className="text-[15px] leading-[22px] font-semibold">{empty.title}</b>
+                    <p className="text-muted-foreground text-[13px]">{empty.line}</p>
+                    <Button className="mt-3" onClick={() => open({ kind: "create", type: "bank" })}>
+                        <RiAddLine />
+                        {actions.addAccount}
+                    </Button>
+                </div>
+            </Frame.Panel>
+        </Frame>
     );
 }
 
@@ -836,27 +879,23 @@ function ArchivedMenu({ row }: { row: ArchivedRow }) {
         <Menu>
             <Menu.Trigger
                 aria-label={actions.more({ name: row.name }).value}
-                className="text-muted-foreground hover:text-foreground -mr-1 inline-flex size-7 items-center justify-center rounded-lg align-middle"
+                render={<Button className="text-muted-foreground -mr-1" size="icon-sm" variant="ghost" />}
             >
                 <RiMore2Fill size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell dash-menu ph-no-capture w-[210px]" sideOffset={4}>
-                <Menu.Item className="dash-menu-item" onClick={restore}>
+            <Menu.Content align="end" className="app-shell ph-no-capture w-[210px]" sideOffset={4}>
+                <Menu.Item onClick={restore}>
                     <RiArchiveLine size={16} />
                     {flows.restore}
                 </Menu.Item>
                 <Menu.Item
-                    className="dash-menu-item"
                     onClick={() => navigate({ search: { accounts: row.id, span: "all" }, to: "/app/transactions" })}
                 >
                     <RiHistoryLine size={16} />
                     {flows.seeTransactions}
                 </Menu.Item>
-                <div className="dash-menu-rule" />
-                <Menu.Item
-                    className="dash-menu-item text-app-spend [&>svg]:text-app-spend!"
-                    onClick={() => open({ accountId: row.id, kind: "delete" })}
-                >
+                <Menu.Separator />
+                <Menu.Item variant="destructive" onClick={() => open({ accountId: row.id, kind: "delete" })}>
                     <RiDeleteBin6Line size={16} />
                     {actions.delete}
                 </Menu.Item>
@@ -874,10 +913,10 @@ function ArchivedRows({ rows }: { rows: readonly ArchivedRow[] }) {
     const keys = [...new Set(rows.flatMap((row) => (row.look?.imageKey ? [row.look.imageKey] : [])))].toSorted();
     const { data: photos = NO_PHOTOS } = useQuery({ ...photoUrlsQuery(convex, keys), select: toPhotoUrls });
     return (
-        <Table head={[columns.account, flows.lastEntry, columns.balance, ""]}>
+        <DataTable head={[columns.account, flows.lastEntry, columns.balance, ""]}>
             {rows.map((row) => (
-                <tr key={row.id}>
-                    <td className={TD}>
+                <Table.Row key={row.id}>
+                    <Cell>
                         <div className="flex min-w-0 items-center gap-2.5 opacity-60">
                             <AccountTile account={row.look} photos={photos} size="lg" />
                             <div className="min-w-0">
@@ -887,17 +926,19 @@ function ArchivedRows({ rows }: { rows: readonly ArchivedRow[] }) {
                                 </small>
                             </div>
                         </div>
-                    </td>
-                    <td className={`${TD} dash-figure text-muted-foreground`}>
+                    </Cell>
+                    <Cell className="dash-figure text-muted-foreground">
                         {row.lastDay === null ? "" : date.full(row.lastDay)}
-                    </td>
-                    <td className={`${TD} ${BALANCE} text-muted-foreground`}>{money(row.balance, row.currency)}</td>
-                    <td className={`${TD} w-10`}>
+                    </Cell>
+                    <Cell className="text-muted-foreground" figure>
+                        {money(row.balance, row.currency)}
+                    </Cell>
+                    <Cell className="w-10">
                         <ArchivedMenu row={row} />
-                    </td>
-                </tr>
+                    </Cell>
+                </Table.Row>
             ))}
-        </Table>
+        </DataTable>
     );
 }
 
@@ -910,26 +951,28 @@ function ArchivedCard() {
         return null;
     }
     return (
-        <Card>
-            <button
-                aria-expanded={open}
-                className="dash-card-head w-full text-left"
-                onClick={() => setOpen(!open)}
-                type="button"
-            >
-                <RiArchiveLine className="text-muted-foreground shrink-0" size={16} />
-                <h2>{flows.archived}</h2>
-                <span className="dash-figure text-muted-foreground text-[13px]">{rows.length}</span>
-                {open ? (
-                    <span className="text-muted-foreground ml-auto min-w-0 truncate text-[13px]">
-                        {flows.archivedNote}
-                    </span>
-                ) : null}
-                <RiArrowDownSLine
-                    className={`text-muted-foreground shrink-0 ${open ? "rotate-180" : "ml-auto"}`}
-                    size={18}
-                />
-            </button>
+        <Card
+            action={
+                <Button
+                    aria-expanded={open}
+                    aria-label={flows.archived.value}
+                    className="text-muted-foreground"
+                    onClick={() => setOpen(!open)}
+                    size="icon-sm"
+                    variant="ghost"
+                >
+                    <RiArrowDownSLine className={open ? "rotate-180" : ""} />
+                </Button>
+            }
+            aside={open ? flows.archivedNote : null}
+            count={rows.length}
+            title={
+                <span className="inline-flex items-center gap-2">
+                    <RiArchiveLine className="text-muted-foreground shrink-0" size={16} />
+                    {flows.archived}
+                </span>
+            }
+        >
             {open ? <ArchivedRows rows={rows} /> : null}
         </Card>
     );
@@ -940,20 +983,20 @@ function AddAccountMenu() {
     const { open } = useAccountFlows();
     return (
         <Menu>
-            <Menu.Trigger className="dash-btn">
-                <RiAddLine size={17} />
+            <Menu.Trigger render={<Button />}>
+                <RiAddLine />
                 {actions.addAccount}
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell dash-menu ph-no-capture w-[232px]" sideOffset={4}>
-                <Menu.Item className="dash-menu-item" onClick={() => open({ kind: "create", type: "bank" })}>
+            <Menu.Content align="end" className="app-shell ph-no-capture w-[232px]" sideOffset={4}>
+                <Menu.Item onClick={() => open({ kind: "create", type: "bank" })}>
                     <RiBankLine size={16} />
                     {columns.account}
                 </Menu.Item>
-                <Menu.Item className="dash-menu-item" onClick={() => open({ kind: "create", type: "card" })}>
+                <Menu.Item onClick={() => open({ kind: "create", type: "card" })}>
                     <RiBankCardLine size={16} />
                     {flows.cardOrLoan}
                 </Menu.Item>
-                <Menu.Item className="dash-menu-item" onClick={() => open({ kind: "purchase" })}>
+                <Menu.Item onClick={() => open({ kind: "purchase" })}>
                     <RiCalendarCheckLine size={16} />
                     {flows.purchaseInInstallments}
                 </Menu.Item>
@@ -982,17 +1025,17 @@ export function AccountsScreen() {
         <main className="@container min-w-0 px-4 pb-5 sm:px-6">
             <AccountsBar title={list.title}>
                 {empty ? (
-                    <PhoneButton className="dash-ob h-9 gap-1.5 rounded-[10px] px-3 [&>svg]:size-4">
+                    <PhoneAction>
                         <RiUpload2Line />
                         {actions.import}
-                    </PhoneButton>
+                    </PhoneAction>
                 ) : (
                     <>
                         <SortMenu onSort={saveSort} sort={sort} />
-                        <PhoneButton className="dash-ob h-9 gap-1.5 rounded-[10px] px-3 max-sm:hidden [&>svg]:size-4">
+                        <PhoneAction className="max-sm:hidden">
                             <RiArrowLeftRightLine />
                             {actions.transfer}
-                        </PhoneButton>
+                        </PhoneAction>
                     </>
                 )}
                 {empty ? null : <AddAccountMenu />}

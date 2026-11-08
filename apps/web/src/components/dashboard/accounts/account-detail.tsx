@@ -21,29 +21,30 @@ import {
     RiWallet3Line,
 } from "@remixicon/react";
 import { Link } from "@tanstack/react-router";
+import { Badge } from "panelui-web/badge";
+import { Button } from "panelui-web/button";
+import { Frame } from "panelui-web/frame";
 import { Menu } from "panelui-web/menu";
+import { Table } from "panelui-web/table";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { timeOfDay, titled, useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
-import { PhoneButton } from "@/components/dashboard/home/setup";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import {
     AccountsBar,
-    BALANCE,
     Card,
-    Head,
+    Cell,
+    DataTable,
     ICON_TILE,
     INCOME,
     MUTED,
     PERCENT,
     SPEND,
-    TD,
-    Table,
     UpcomingCard,
     rateText,
 } from "./accounts-screen";
@@ -66,12 +67,10 @@ import {
     spentByCategory,
 } from "./model";
 import type { AccountEntry, AccountRow, WorthRange } from "./model";
-import { KpiBand, KpiCell, PhoneItem, Segments, Trend, toneOf, useCheckedText } from "./parts";
+import { KpiBand, KpiCell, Meter, PhoneAction, PhoneItem, Segments, Trend, useCheckedText } from "./parts";
 import { WorthChart } from "./worth-chart";
 
 const DETAIL_CHART = 770 / 172;
-const OB = "dash-ob h-9 gap-1.5 rounded-[10px] px-3 [&>svg]:size-4";
-const ICO = "border-border bg-app-hover inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] border";
 const FIELD = "flex h-9 items-center justify-between border-b text-[13px] last:border-0";
 
 const isCard = (row: AccountRow) => row.kind === "liability" && (row.statementDay !== null || row.creditLimit !== null);
@@ -109,63 +108,68 @@ function DetailBar({ row }: { row: AccountRow }) {
         <AccountsBar
             title={
                 <span className="flex min-w-0 items-center gap-3">
-                    <Link aria-label={detail.back.value} className={ICO} to="/app/accounts">
-                        <RiArrowLeftLine className="text-muted-foreground" size={17} />
-                    </Link>
+                    <Button
+                        aria-label={detail.back.value}
+                        nativeButton={false}
+                        render={<Link to="/app/accounts" />}
+                        size="icon"
+                        variant="outline"
+                    >
+                        <RiArrowLeftLine className="text-muted-foreground" />
+                    </Button>
                     <AccountTile account={row.look} photos={photos} size="lg" />
                     <span className="truncate">{row.name}</span>
                     {row.currency === ledger.currency ? null : (
-                        <span className="dash-badge dash-figure shrink-0 text-xs">{row.currency}</span>
+                        <Badge className="dash-figure shrink-0" variant="outline">
+                            {row.currency}
+                        </Badge>
                     )}
                 </span>
             }
         >
-            <PhoneButton className={`${OB} max-sm:hidden`}>
+            <PhoneAction className="max-sm:hidden">
                 <RiArrowLeftRightLine />
                 {card ? detail.payCard : actions.transfer}
-            </PhoneButton>
-            <button
-                className={`${OB} max-sm:hidden`}
+            </PhoneAction>
+            <Button
+                className="max-sm:hidden"
                 onClick={() => open({ accountId: row.id, kind: "edit" })}
-                type="button"
+                variant="outline"
             >
                 <RiPencilLine />
                 {actions.edit}
-            </button>
+            </Button>
             <Menu>
-                <Menu.Trigger aria-label={actions.more({ name: row.name }).value} className={ICO}>
-                    <RiMore2Fill className="text-muted-foreground" size={17} />
+                <Menu.Trigger
+                    aria-label={actions.more({ name: row.name }).value}
+                    render={<Button size="icon" variant="outline" />}
+                >
+                    <RiMore2Fill className="text-muted-foreground" />
                 </Menu.Trigger>
-                <Menu.Content align="end" className="app-shell dash-menu ph-no-capture w-[200px]" sideOffset={4}>
-                    <Menu.Item
-                        className="dash-menu-item sm:hidden"
-                        onClick={() => open({ accountId: row.id, kind: "edit" })}
-                    >
+                <Menu.Content align="end" className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
+                    <Menu.Item className="sm:hidden" onClick={() => open({ accountId: row.id, kind: "edit" })}>
                         <RiPencilLine size={16} />
                         {actions.edit}
                     </Menu.Item>
-                    <Menu.Item className="dash-menu-item" onClick={() => open({ accountId: row.id, kind: "check" })}>
+                    <Menu.Item onClick={() => open({ accountId: row.id, kind: "check" })}>
                         <RiCheckboxCircleLine size={16} />
                         {actions.check}
                     </Menu.Item>
-                    <Menu.Item className="dash-menu-item" onClick={() => open({ accountId: row.id, kind: "archive" })}>
+                    <Menu.Item onClick={() => open({ accountId: row.id, kind: "archive" })}>
                         <RiArchiveLine size={16} />
                         {flows.archive}
                     </Menu.Item>
-                    <div className="dash-menu-rule" />
-                    <Menu.Item
-                        className="dash-menu-item text-app-spend [&>svg]:text-app-spend!"
-                        onClick={() => open({ accountId: row.id, kind: "delete" })}
-                    >
+                    <Menu.Separator />
+                    <Menu.Item variant="destructive" onClick={() => open({ accountId: row.id, kind: "delete" })}>
                         <RiDeleteBin6Line size={16} />
                         {actions.delete}
                     </Menu.Item>
                 </Menu.Content>
             </Menu>
-            <PhoneButton className="dash-btn">
-                <RiAddLine size={17} />
+            <PhoneAction variant="default">
+                <RiAddLine />
                 {detail.addEntry}
-            </PhoneButton>
+            </PhoneAction>
         </AccountsBar>
     );
 }
@@ -203,7 +207,7 @@ function BankKpis({ row }: { row: AccountRow }) {
     const [rate] = ratesFor(ledger, [row.currency]);
     const main = inMain(ledger, row.balance, row.currency);
     return (
-        <KpiBand columns={4}>
+        <KpiBand>
             <KpiCell
                 color={MUTED}
                 icon={icon(RiSafe2Line)}
@@ -275,7 +279,7 @@ function CardKpis({ row }: { row: AccountRow }) {
             : detail.dueClosed({ closed: date.day(statement.cycle.closedOn), due: date.day(statement.cycle.dueOn) });
     }
     return (
-        <KpiBand columns={4}>
+        <KpiBand>
             <KpiCell
                 color={MUTED}
                 icon={RiBankCardLine}
@@ -309,12 +313,7 @@ function CardKpis({ row }: { row: AccountRow }) {
             >
                 {limit > 0 ? (
                     <>
-                        <span className="bg-app-fill flex h-2 min-w-10 flex-1 overflow-hidden rounded-full">
-                            <i
-                                className="bg-foreground block h-full rounded-full"
-                                style={{ width: `${used * PERCENT}%` }}
-                            />
-                        </span>
+                        <Meter className="min-w-10 flex-1" max={1} value={used} />
                         <span className="dash-figure text-muted-foreground shrink-0 text-xs">
                             {detail.ofLimit({ limit: whole(limit), percent: Math.round(used * PERCENT) })}
                         </span>
@@ -342,27 +341,27 @@ function HistoryCard({ row }: { row: AccountRow }) {
     );
     const change = ((data.at(-1)?.value ?? 0) - (data[0]?.value ?? 0)) * (owes ? -1 : 1);
     const pill = owes
-        ? detail.owed({ amount: money(-change, row.currency, "always") })
+        ? detail.owed({ amount: money(-change, row.currency, "always") }).value
         : money(change, row.currency, "always");
     return (
-        <Card>
-            <div className="dash-card-head max-sm:h-auto max-sm:flex-wrap max-sm:py-3">
-                <h2>{detail.history}</h2>
-                <Trend tone={toneOf(change)}>{pill}</Trend>
-                <div className="ml-auto">
-                    <Segments
-                        onPick={setRange}
-                        options={[
-                            { label: copy.month, value: "month" },
-                            { label: copy.quarter, value: "quarter" },
-                            { label: copy.year, value: "year" },
-                            { label: copy.all, value: "all" },
-                        ]}
-                        value={range}
-                    />
-                </div>
-            </div>
-            <div className="px-5 pb-3.5">
+        <Card
+            action={
+                <Segments
+                    onPick={setRange}
+                    options={[
+                        { label: copy.month, value: "month" },
+                        { label: copy.quarter, value: "quarter" },
+                        { label: copy.year, value: "year" },
+                        { label: copy.all, value: "all" },
+                    ]}
+                    value={range}
+                />
+            }
+            aside={<Trend value={change}>{pill}</Trend>}
+            stackAction
+            title={detail.history}
+        >
+            <div className="p-3.5">
                 <WorthChart
                     aspectRatio={DETAIL_CHART}
                     currency={row.currency}
@@ -399,14 +398,11 @@ function ChipMenu({
 }) {
     return (
         <Menu>
-            <Menu.Trigger className="dash-chip" data-on={on}>
+            <Menu.Trigger render={<Button size="sm" variant={on ? "secondary" : "outline"} />}>
                 {icon}
                 {label}
             </Menu.Trigger>
-            <Menu.Content
-                className="app-shell dash-menu ph-no-capture max-h-80 w-[200px] overflow-y-auto"
-                sideOffset={6}
-            >
+            <Menu.Content className="app-shell ph-no-capture max-h-80 w-[200px] overflow-y-auto" sideOffset={6}>
                 {children}
             </Menu.Content>
         </Menu>
@@ -445,11 +441,9 @@ function TransactionsCard({ row }: { row: AccountRow }) {
     const shown = category ? entries.filter((entry) => entry.categoryId === category) : entries;
     const chosen = category ? ledger.categories.get(category) : undefined;
     return (
-        <Card>
-            <div className="dash-card-head max-sm:h-auto max-sm:flex-wrap max-sm:py-3">
-                <h2>{detail.transactions}</h2>
-                <span className="dash-figure text-muted-foreground text-[13px]">{shown.length}</span>
-                <div className="ml-auto flex items-center gap-2">
+        <Card
+            action={
+                <span className="flex flex-wrap items-center gap-2">
                     <ChipMenu
                         icon={<RiCalendarLine className="text-muted-foreground" size={14} />}
                         label={monthName(month)}
@@ -457,7 +451,6 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                     >
                         {months.map((key) => (
                             <Menu.Item
-                                className="dash-menu-item"
                                 key={key}
                                 onClick={() => {
                                     setMonth(key);
@@ -477,31 +470,40 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                         label={chosen?.name ?? detail.category}
                         on={chosen !== undefined}
                     >
-                        <Menu.Item className="dash-menu-item" onClick={() => setCategory(null)}>
+                        <Menu.Item onClick={() => setCategory(null)}>
                             {detail.category}
                             {check(category === null)}
                         </Menu.Item>
-                        <div className="dash-menu-rule" />
+                        <Menu.Separator />
                         {categories.map((each) => (
-                            <Menu.Item className="dash-menu-item" key={each.id} onClick={() => setCategory(each.id)}>
+                            <Menu.Item key={each.id} onClick={() => setCategory(each.id)}>
                                 <i className="size-1.5 shrink-0 rounded-full" style={{ background: each.color }} />
                                 {each.name}
                                 {check(category === each.id)}
                             </Menu.Item>
                         ))}
                     </ChipMenu>
-                    <Link className="dash-chip" search={{ accounts: row.id, span: "all" }} to="/app/transactions">
+                    <Button
+                        nativeButton={false}
+                        render={<Link search={{ accounts: row.id, span: "all" }} to="/app/transactions" />}
+                        size="sm"
+                        variant="outline"
+                    >
                         {actions.seeAll}
-                        <RiArrowRightUpLine className="text-muted-foreground" size={14} />
-                    </Link>
-                </div>
-            </div>
+                        <RiArrowRightUpLine className="text-muted-foreground" />
+                    </Button>
+                </span>
+            }
+            count={shown.length}
+            stackAction
+            title={detail.transactions}
+        >
             {shown.length === 0 ? (
-                <p className="text-muted-foreground border-t px-5 py-8 text-center text-[13px]">
+                <p className="text-muted-foreground px-5 py-8 text-center text-[13px]">
                     {detail.nothingIn({ period: date.month(month) })}
                 </p>
             ) : (
-                <Table
+                <DataTable
                     head={[
                         detail.merchant,
                         detail.category,
@@ -522,51 +524,55 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                             title = entry.other ? detail.fromName({ name: otherName }) : detail.transfer;
                         }
                         return (
-                            <tr key={entry.id}>
-                                <td className={TD}>
+                            <Table.Row key={entry.id}>
+                                <Cell>
                                     <span className="flex min-w-0 items-center gap-2.5 text-sm font-medium">
                                         <EntryTile entry={entry} />
                                         <span className="max-w-[260px] truncate">{title}</span>
                                     </span>
-                                </td>
-                                <td className={TD}>
+                                </Cell>
+                                <Cell>
                                     {found ? (
-                                        <span className="dash-badge">
-                                            <u style={{ color: found.color }} />
+                                        <Badge variant="outline">
+                                            <i className="size-1.5 rounded-full" style={{ background: found.color }} />
                                             {found.name}
-                                        </span>
+                                        </Badge>
                                     ) : (
-                                        <span className="dash-badge text-muted-foreground">
+                                        <Badge className="text-muted-foreground" variant="outline">
                                             {entry.kind === "entry" ? detail.category : detail.transfer}
-                                        </span>
+                                        </Badge>
                                     )}
-                                </td>
-                                <td className={`${TD} dash-figure text-muted-foreground`}>{date.day(entry.day)}</td>
-                                <td
-                                    className={`${TD} ${BALANCE} font-normal ${entry.value > 0 ? "text-app-income" : ""}`}
-                                >
+                                </Cell>
+                                <Cell className="dash-figure text-muted-foreground">{date.day(entry.day)}</Cell>
+                                <Cell className={`font-normal ${entry.value > 0 ? "text-app-income" : ""}`} figure>
                                     {money(entry.value, row.currency, "always")}
-                                </td>
+                                </Cell>
                                 {foreign ? (
-                                    <td className={`${TD} ${BALANCE} text-muted-foreground font-normal`}>
+                                    <Cell className="text-muted-foreground font-normal" figure>
                                         {money(
                                             entry.main ?? inMain(ledger, entry.value, row.currency).value,
                                             ledger.currency,
                                             "always"
                                         )}
-                                    </td>
+                                    </Cell>
                                 ) : null}
-                                <td className={`${TD} w-10`}>
+                                <Cell className="w-10">
                                     <Menu>
                                         <Menu.Trigger
                                             aria-label={detail.transactions.value}
-                                            className="text-muted-foreground hover:text-foreground -mr-1 inline-flex size-7 items-center justify-center rounded-lg align-middle"
+                                            render={
+                                                <Button
+                                                    className="text-muted-foreground -mr-1"
+                                                    size="icon-sm"
+                                                    variant="ghost"
+                                                />
+                                            }
                                         >
                                             <RiMore2Fill size={17} />
                                         </Menu.Trigger>
                                         <Menu.Content
                                             align="end"
-                                            className="app-shell dash-menu ph-no-capture w-[180px]"
+                                            className="app-shell ph-no-capture w-[180px]"
                                             sideOffset={4}
                                         >
                                             <PhoneItem>
@@ -575,11 +581,11 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                                             </PhoneItem>
                                         </Menu.Content>
                                     </Menu>
-                                </td>
-                            </tr>
+                                </Cell>
+                            </Table.Row>
                         );
                     })}
-                </Table>
+                </DataTable>
             )}
         </Card>
     );
@@ -594,16 +600,13 @@ const GHOST_ROWS = [
     [88, 90, 64, 30, 50],
     [94, 88, 50, 34, 56],
 ] as const;
-const GHOST_COLUMNS = "grid grid-cols-[30%_18%_17%_1fr_auto] items-center gap-2 px-5";
+const GHOST_COLUMNS = "grid grid-cols-[30%_18%_17%_1fr_auto] items-center gap-2 px-3.5";
 
 function EmptyEntries() {
     const { detail } = useIntlayer("dashboard-accounts");
     return (
-        <Card className="flex-1">
-            <div className="dash-card-head">
-                <h2>{detail.transactions}</h2>
-            </div>
-            <div aria-hidden className={`${GHOST_COLUMNS} mt-3 h-9 border-b`}>
+        <Card className="flex-1" title={detail.transactions}>
+            <div aria-hidden className={`${GHOST_COLUMNS} h-9 border-b`}>
                 {[48, 44, 42, 40, 40].map((width, index) => (
                     <i className={`dash-gl ${index === 4 ? "justify-self-end" : ""}`} key={index} style={{ width }} />
                 ))}
@@ -626,14 +629,14 @@ function EmptyEntries() {
                 <b className="text-[15px] leading-[22px] font-semibold">{detail.emptyTitle}</b>
                 <p className="text-muted-foreground text-[13px]">{detail.emptyBody}</p>
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
-                    <PhoneButton className="dash-btn">
-                        <RiAddLine size={17} />
+                    <PhoneAction variant="default">
+                        <RiAddLine />
                         {detail.addEntry}
-                    </PhoneButton>
-                    <PhoneButton className={OB}>
+                    </PhoneAction>
+                    <PhoneAction>
                         <RiUpload2Line />
                         {detail.importEntries}
-                    </PhoneButton>
+                    </PhoneAction>
                 </div>
             </div>
         </Card>
@@ -659,26 +662,32 @@ function CheckCard({ row }: { row: AccountRow }) {
                 : detail.matchedOn({ date: date.day(new Date(row.checkedAt + offset).toISOString().slice(0, 10)) });
     }
     return (
-        <Card className="flex-row! items-center gap-3 p-4">
-            <span
-                className="flex size-8 shrink-0 items-center justify-center rounded-[10px]"
-                style={{
-                    background: `color-mix(in oklab, ${fresh ? INCOME : "var(--color-app-tint)"} 16%, transparent)`,
-                    color: fresh ? INCOME : "var(--color-app-tint)",
-                }}
-            >
-                {fresh ? <RiCheckLine size={16} /> : <RiErrorWarningLine size={16} />}
-            </span>
-            <span className="min-w-0 flex-1">
-                <b className="block truncate text-[13px] leading-[18px] font-medium">
-                    {age.state === "never" ? detail.checkTitle : titled(checked(age), locale)}
-                </b>
-                <small className="text-muted-foreground block truncate text-xs leading-4">{line}</small>
-            </span>
-            <button className="dash-ob" onClick={() => open({ accountId: row.id, kind: "check" })} type="button">
-                {detail.check}
-            </button>
-        </Card>
+        <Frame className="min-w-0 rounded-2xl" variant="band">
+            <Frame.Panel className="group-data-[variant=band]/frame:rounded-[10px]">
+                <Frame.Row>
+                    <Frame.Media
+                        className="size-8 rounded-[10px]"
+                        style={{
+                            background: `color-mix(in oklab, ${fresh ? INCOME : "var(--color-app-tint)"} 16%, transparent)`,
+                            color: fresh ? INCOME : "var(--color-app-tint)",
+                        }}
+                    >
+                        {fresh ? <RiCheckLine size={16} /> : <RiErrorWarningLine size={16} />}
+                    </Frame.Media>
+                    <Frame.Content>
+                        <Frame.Title>
+                            {age.state === "never" ? detail.checkTitle : titled(checked(age), locale)}
+                        </Frame.Title>
+                        <Frame.Description className="text-xs">{line}</Frame.Description>
+                    </Frame.Content>
+                    <Frame.Actions>
+                        <Button onClick={() => open({ accountId: row.id, kind: "check" })} size="sm" variant="outline">
+                            {detail.check}
+                        </Button>
+                    </Frame.Actions>
+                </Frame.Row>
+            </Frame.Panel>
+        </Frame>
     );
 }
 
@@ -689,22 +698,17 @@ function InstallmentsCard({ row }: { row: AccountRow }) {
     const { money } = useDisplayFormat();
     const plans = plansOn(ledger, row.id).filter((plan) => plan.left > 0);
     return (
-        <Card>
-            <Head
-                action={
-                    <button
-                        className="dash-ob"
-                        onClick={() => open({ accountId: row.id, kind: "purchase" })}
-                        type="button"
-                    >
-                        <RiAddLine size={16} />
-                        {actions.newPurchase}
-                    </button>
-                }
-                title={list.installments}
-            />
+        <Card
+            action={
+                <Button onClick={() => open({ accountId: row.id, kind: "purchase" })} size="sm" variant="outline">
+                    <RiAddLine />
+                    {actions.newPurchase}
+                </Button>
+            }
+            title={list.installments}
+        >
             {plans.length === 0 ? null : (
-                <div className="flex flex-col gap-4 px-5 pb-[18px]">
+                <div className="flex flex-col gap-4 p-3.5">
                     {plans.map((plan) => (
                         <div key={plan.id}>
                             <div className="flex items-baseline gap-2 text-[13px] font-medium">
@@ -713,12 +717,7 @@ function InstallmentsCard({ row }: { row: AccountRow }) {
                                     {list.planLeft({ amount: money(plan.left, plan.currency) })}
                                 </span>
                             </div>
-                            <div className="bg-app-fill mt-2.5 flex h-2 overflow-hidden rounded-full">
-                                <i
-                                    className="bg-foreground block h-full rounded-full"
-                                    style={{ width: `${plan.fraction * PERCENT}%` }}
-                                />
-                            </div>
+                            <Meter className="mt-2.5" max={1} value={plan.fraction} />
                             <div className="dash-figure text-muted-foreground mt-2.5 flex text-xs leading-4">
                                 {plan.count} x {money(plan.each, plan.currency)}
                                 <span className="ml-auto">{list.planPaid({ count: plan.paidCount })}</span>
@@ -741,14 +740,8 @@ function SpentCard({ row }: { row: AccountRow }) {
     }
     const total = shares.reduce((sum, share) => sum + share.value, 0);
     return (
-        <Card>
-            <div className="dash-card-head">
-                <h2 className="min-w-0 truncate">{detail.spentFrom({ name: row.name })}</h2>
-                <span className="dash-figure text-muted-foreground ml-auto text-[13px]">
-                    {money(total, ledger.currency)}
-                </span>
-            </div>
-            <div className="px-5 pb-[18px]">
+        <Card aside={money(total, ledger.currency)} title={detail.spentFrom({ name: row.name })}>
+            <div className="p-3.5">
                 <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
                     {shares.map((share) => (
                         <i
@@ -820,11 +813,8 @@ function DetailsCard({ row }: { row: AccountRow }) {
         }
     }
     return (
-        <Card className="flex-1">
-            <div className="dash-card-head">
-                <h2>{detail.details}</h2>
-            </div>
-            <div className="px-5 pb-3">
+        <Card className="flex-1" title={detail.details}>
+            <div className="px-3.5 py-1">
                 {fields.map(([label, value], index) => (
                     <div className={FIELD} key={index}>
                         <span className="text-muted-foreground">{label}</span>

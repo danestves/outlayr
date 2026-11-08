@@ -11,7 +11,7 @@ export function CardFrame({
     title,
 }: {
     action?: ReactNode;
-    children: ReactNode;
+    children?: ReactNode;
     className?: string;
     footer?: ReactNode;
     panelClassName?: string;
@@ -34,9 +34,13 @@ export function CardFrame({
                     </Frame.Action>
                 ) : null}
             </Frame.Header>
-            <Frame.Panel className={`relative flex-1 group-data-[variant=band]/frame:rounded-[10px] ${panelClassName}`}>
-                {children}
-            </Frame.Panel>
+            {children ? (
+                <Frame.Panel
+                    className={`relative flex-1 group-data-[variant=band]/frame:rounded-[10px] ${panelClassName}`}
+                >
+                    {children}
+                </Frame.Panel>
+            ) : null}
             {footer ? <Frame.Footer className="min-h-11 flex-wrap text-sm">{footer}</Frame.Footer> : null}
         </Frame>
     );

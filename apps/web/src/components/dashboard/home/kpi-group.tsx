@@ -18,9 +18,9 @@ const STACK_OVER = 12;
 const TREND = "dash-figure text-[13px] leading-5";
 const LINE = "[&_path]:[vector-effect:non-scaling-stroke]";
 const NOTE = "text-muted-foreground min-w-0 truncate text-[13px] leading-5";
-const TWO_BY_TWO =
+export const TWO_BY_TWO =
     "max-lg:grid max-lg:grid-cols-2 max-lg:gap-y-5 max-lg:divide-x-0 max-lg:*:odd:border-e max-lg:*:odd:ps-0 max-lg:*:odd:pe-3 max-lg:*:even:ps-3 max-lg:*:even:pe-0";
-const STACKED =
+export const STACKED =
     "max-sm:flex max-sm:flex-col max-sm:gap-y-4 max-sm:divide-y-0 max-sm:divide-x-0 max-sm:*:px-0 max-sm:*:odd:border-e-0 max-sm:*:odd:pe-0 max-sm:*:even:ps-0";
 
 function Change({ delta, goodDirection }: { delta: number | null; goodDirection?: KpiGoodDirection }) {
