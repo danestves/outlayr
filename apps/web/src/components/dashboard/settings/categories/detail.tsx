@@ -1,10 +1,14 @@
 import { RiArrowLeftSLine, RiArrowRightSLine, RiAddLine, RiPencilLine } from "@remixicon/react";
 import { Link } from "@tanstack/react-router";
+import { BarChart } from "panelui-web/bar-chart";
+import { Button } from "panelui-web/button";
+import { Kpi } from "panelui-web/kpi";
+import { Table } from "panelui-web/table";
 import { useMemo, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { BALANCE, Card, Head, TD, Table } from "@/components/dashboard/accounts/accounts-screen";
-import { KpiBand, KpiCell } from "@/components/dashboard/accounts/parts";
+import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDateFormat, usePeriodTitle } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
@@ -16,10 +20,39 @@ import { CategoryEditor } from "./editor";
 import type { EditorTarget } from "./editor";
 import { categoryFigures, liveCategories } from "./model";
 
-const OB = "dash-ob h-9 gap-1.5 rounded-[10px] px-3 [&>svg]:size-4";
 const ENTRIES_SHOWN = 10;
 const PERCENT = 100;
-const MIN_BAR = 2;
+const HEAD = "first:ps-3.5 last:pe-3.5";
+const CELL = "h-11 py-0 whitespace-nowrap first:ps-3.5 last:pe-3.5";
+const FIGURE_NOTE = "text-muted-foreground min-w-0 truncate text-[13px] leading-5";
+const TWO_BY_TWO =
+    "max-lg:grid max-lg:grid-cols-2 max-lg:gap-y-5 max-lg:divide-x-0 max-lg:*:odd:border-e max-lg:*:odd:ps-0 max-lg:*:odd:pe-3 max-lg:*:even:ps-3 max-lg:*:even:pe-0";
+
+function Figure({
+    children,
+    label,
+    quiet,
+    value,
+}: {
+    children?: ReactNode;
+    label: ReactNode;
+    quiet?: boolean;
+    value: ReactNode;
+}) {
+    return (
+        <Kpi>
+            <Kpi.Header>
+                <Kpi.Title>{label}</Kpi.Title>
+            </Kpi.Header>
+            <Kpi.Value
+                className={`dash-figure text-2xl leading-8 font-semibold tracking-[-0.04em] wrap-anywhere ${quiet ? "text-muted-foreground" : ""}`}
+            >
+                {value}
+            </Kpi.Value>
+            <p className={FIGURE_NOTE}>{children}</p>
+        </Kpi>
+    );
+}
 
 export function CategoryDetail({ categoryId }: { categoryId: string }) {
     const copy = useIntlayer("dashboard-categories");
@@ -37,10 +70,16 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
     const parent = live.find((row) => row.localId === category?.parentId);
 
     const back = (
-        <Link className="text-muted-foreground flex items-center gap-1 text-[13px]" to="/app/settings/categories">
+        <Button
+            aria-label={parent?.name ?? copy.title.value}
+            className="text-muted-foreground -ml-2"
+            render={<Link to="/app/settings/categories" />}
+            size="sm"
+            variant="ghost"
+        >
             <RiArrowLeftSLine size={18} />
             <span className="max-sm:sr-only">{parent?.name ?? copy.title}</span>
-        </Link>
+        </Button>
     );
     if (!category || !figures) {
         return (
@@ -60,7 +99,16 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
     const unfiled = figures.rows
         .filter((row) => row.categoryId === category.localId)
         .reduce((sum, row) => sum + row.amount, 0);
-    const peak = Math.max(...figures.months.map((month) => month.amount), budget?.limit ?? 0, 1);
+    const months = figures.months.map((month) => ({
+        key: month.key,
+        now: month.key === key ? month.amount : 0,
+        past: month.key === key ? 0 : month.amount,
+    }));
+    // SAFETY: CSSProperties has no entry for custom properties; these two only recolor the chart roles below.
+    const barColors = {
+        "--chart-1": category.color ?? undefined,
+        "--chart-2": category.color ? `color-mix(in srgb, ${category.color} 45%, transparent)` : undefined,
+    } as CSSProperties;
     const shown = figures.rows.slice(0, ENTRIES_SHOWN);
     const names = ledger.categories;
 
@@ -71,41 +119,39 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                 <LookTile look={category} size="lg" />
                 <h1 className="mr-auto min-w-0 truncate text-lg font-semibold tracking-[-0.02em]">{category.name}</h1>
                 <div className="flex items-center gap-1">
-                    <button
+                    <Button
                         aria-label={copy.previousMonth.value}
-                        className="dash-icon-btn"
                         onClick={() => setKey(shiftPeriodKey(key, -1))}
-                        type="button"
+                        size="icon-sm"
+                        variant="ghost"
                     >
                         <RiArrowLeftSLine size={18} />
-                    </button>
+                    </Button>
                     <span className="dash-figure text-[13px] font-medium whitespace-nowrap">{periodTitle(period)}</span>
-                    <button
+                    <Button
                         aria-label={copy.nextMonth.value}
-                        className="dash-icon-btn"
                         disabled={key >= filters.currentKey}
                         onClick={() => setKey(shiftPeriodKey(key, 1))}
-                        type="button"
+                        size="icon-sm"
+                        variant="ghost"
                     >
                         <RiArrowRightSLine size={18} />
-                    </button>
+                    </Button>
                 </div>
-                <button className={OB} onClick={() => setEditing({ doc: category })} type="button">
-                    <RiPencilLine />
+                <Button onClick={() => setEditing({ doc: category })} size="sm" variant="outline">
+                    <RiPencilLine size={16} />
                     {copy.edit}
-                </button>
+                </Button>
             </div>
             <div className="flex flex-col gap-4">
-                <KpiBand columns={4}>
-                    <KpiCell
-                        color={category.color ?? ""}
+                <Kpi.Group className={`rounded-2xl ${TWO_BY_TWO}`} surface>
+                    <Figure
                         label={category.income ? copy.earned : copy.spent}
                         value={money(figures.spent, ledger.currency)}
                     >
                         {copy.ofSpending({ percent: Math.round(figures.share * PERCENT) })}
-                    </KpiCell>
-                    <KpiCell
-                        color={category.color ?? ""}
+                    </Figure>
+                    <Figure
                         label={copy.limit}
                         quiet={!budget}
                         value={budget ? money(budget.limit, ledger.currency) : copy.noLimit.value}
@@ -115,48 +161,38 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                                   amount: money(Math.abs(budget.remaining), ledger.currency),
                               })
                             : null}
-                    </KpiCell>
-                    <KpiCell
-                        color={category.color ?? ""}
+                    </Figure>
+                    <Figure
                         label={copy.typical}
                         value={figures.typical === null ? "-" : money(figures.typical, ledger.currency)}
                     >
                         {copy.typicalHint}
-                    </KpiCell>
-                    <KpiCell color={category.color ?? ""} label={copy.entries} value={String(figures.count)}>
+                    </Figure>
+                    <Figure label={copy.entries} value={String(figures.count)}>
                         {copy.allTime({ count: figures.allTime })}
-                    </KpiCell>
-                </KpiBand>
+                    </Figure>
+                </Kpi.Group>
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-                    <Card>
-                        <Head title={copy.last5} />
-                        <ol className="flex h-[200px] items-end gap-3 px-5 pb-4">
-                            {figures.months.map((month) => (
-                                <li className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1.5" key={month.key}>
-                                    <span className="dash-figure text-muted-foreground truncate text-center text-xs">
-                                        {money(month.amount, ledger.currency)}
-                                    </span>
-                                    <span
-                                        className="block rounded-md"
-                                        style={{
-                                            background: category.color ?? undefined,
-                                            height: `${Math.max(MIN_BAR, (month.amount / peak) * (PERCENT - 30))}%`,
-                                            opacity: month.key === key ? 1 : 0.45,
-                                        }}
-                                    />
-                                    <span className="text-muted-foreground truncate text-center text-xs">
-                                        {date.month(month.key).slice(0, 3)}
-                                    </span>
-                                </li>
-                            ))}
-                        </ol>
-                    </Card>
+                    <CardFrame title={copy.last5}>
+                        <div className="px-4 py-3" style={barColors}>
+                            <BarChart aspectRatio={2.4} data={months} label={copy.last5.value} stacked xDataKey="key">
+                                <BarChart.Bar color="chart-2" dataKey="past" />
+                                <BarChart.Bar color="chart-1" dataKey="now" />
+                                <BarChart.XAxis format={(datum) => date.month(String(datum.key)).slice(0, 3)} />
+                                <BarChart.YAxis format={(value) => money(value, ledger.currency)} ticks={3} />
+                                <BarChart.Tooltip
+                                    formatValue={(value) => money(value, ledger.currency)}
+                                    formatX={(datum) => date.month(String(datum.key))}
+                                    labels={{ now: copy.spent.value, past: copy.spent.value }}
+                                />
+                            </BarChart>
+                        </div>
+                    </CardFrame>
                     {category.parentId === null ? (
-                        <Card>
-                            <Head title={copy.subcategories} />
+                        <CardFrame title={copy.subcategories}>
                             {children.map((child) => (
                                 <Link
-                                    className="border-border flex h-11 items-center gap-2.5 border-t px-5 text-[13px]"
+                                    className="border-border flex h-11 items-center gap-2.5 border-b px-4 text-[13px]"
                                     key={child.localId}
                                     params={{ categoryId: child.localId }}
                                     to="/app/settings/categories/$categoryId"
@@ -169,69 +205,92 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                                 </Link>
                             ))}
                             {children.length > 0 ? (
-                                <div className="border-border text-muted-foreground flex h-11 items-center justify-between border-t px-5 text-[13px]">
+                                <div className="border-border text-muted-foreground flex h-11 items-center justify-between border-b px-4 text-[13px]">
                                     <span>{copy.notInSub}</span>
                                     <span className="dash-figure">{money(unfiled, ledger.currency)}</span>
                                 </div>
                             ) : null}
-                            <button
-                                className="border-border text-muted-foreground hover:text-foreground flex h-11 w-full items-center gap-2 border-t px-5 text-[13px]"
+                            <Button
+                                className="text-muted-foreground h-11 w-full justify-start rounded-none px-4"
                                 onClick={() => setEditing({ income: category.income, parentId: category.localId })}
-                                type="button"
+                                size="sm"
+                                variant="ghost"
                             >
                                 <RiAddLine size={15} />
                                 {copy.addSubcategory}
-                            </button>
-                        </Card>
+                            </Button>
+                        </CardFrame>
                     ) : null}
                 </div>
-                <Card>
-                    <Head
-                        aside={
-                            <Link
-                                className="text-foreground font-sans"
-                                search={{ category: category.localId }}
-                                to="/app/transactions"
-                            >
-                                {copy.viewAll}
-                            </Link>
-                        }
-                        title={copy.entries}
-                    />
+                <CardFrame
+                    action={
+                        <Button
+                            render={<Link search={{ category: category.localId }} to="/app/transactions" />}
+                            size="sm"
+                            variant="link"
+                        >
+                            {copy.viewAll}
+                        </Button>
+                    }
+                    footer={
+                        <div className="flex w-full justify-between">
+                            <span className="dash-figure">
+                                {shown.length} / {figures.count}
+                            </span>
+                            <span className="dash-figure">{money(figures.spent, ledger.currency)}</span>
+                        </div>
+                    }
+                    title={copy.entries}
+                >
                     {shown.length === 0 ? (
-                        <p className="text-muted-foreground border-t px-5 py-8 text-center text-sm">{copy.noEntries}</p>
+                        <p className="text-muted-foreground px-5 py-8 text-center text-sm">{copy.noEntries}</p>
                     ) : (
-                        <Table head={[copy.merchant, copy.account, copy.date, copy.amount]} numbers={1}>
-                            {shown.map((row) => (
-                                <tr key={row.id}>
-                                    <td className={`${TD} max-w-[260px]`}>
-                                        <span className="flex min-w-0 items-center gap-2">
-                                            <span className="truncate font-medium">
-                                                {row.note.trim() || category.name}
-                                            </span>
-                                            {row.categoryId && row.categoryId !== category.localId ? (
-                                                <span className="text-muted-foreground truncate text-xs">
-                                                    {names.get(row.categoryId)?.name}
+                        <Table
+                            aria-label={copy.entries.value}
+                            containerClassName="overflow-clip"
+                            maxHeight="none"
+                            striped
+                        >
+                            <Table.Header className="in-data-[sticky]:bg-card">
+                                <Table.Row>
+                                    <Table.Head className={HEAD}>{copy.merchant}</Table.Head>
+                                    <Table.Head className={HEAD}>{copy.account}</Table.Head>
+                                    <Table.Head className={HEAD}>{copy.date}</Table.Head>
+                                    <Table.Head align="end" className={HEAD}>
+                                        {copy.amount}
+                                    </Table.Head>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
+                                {shown.map((row) => (
+                                    <Table.Row key={row.id}>
+                                        <Table.Cell className={`${CELL} max-w-[260px]`}>
+                                            <span className="flex min-w-0 items-center gap-2">
+                                                <span className="truncate font-medium">
+                                                    {row.note.trim() || category.name}
                                                 </span>
-                                            ) : null}
-                                        </span>
-                                    </td>
-                                    <td className={`${TD} text-muted-foreground`}>
-                                        {row.accountId ? ledger.accounts.get(row.accountId)?.name : null}
-                                    </td>
-                                    <td className={`${TD} dash-figure text-muted-foreground`}>{date.day(row.day)}</td>
-                                    <td className={`${TD} ${BALANCE}`}>{money(row.amount, ledger.currency)}</td>
-                                </tr>
-                            ))}
+                                                {row.categoryId && row.categoryId !== category.localId ? (
+                                                    <span className="text-muted-foreground truncate text-xs">
+                                                        {names.get(row.categoryId)?.name}
+                                                    </span>
+                                                ) : null}
+                                            </span>
+                                        </Table.Cell>
+                                        <Table.Cell className={`${CELL} text-muted-foreground`}>
+                                            {row.accountId ? ledger.accounts.get(row.accountId)?.name : null}
+                                        </Table.Cell>
+                                        <Table.Cell className={`${CELL} dash-figure text-muted-foreground`}>
+                                            {date.day(row.day)}
+                                        </Table.Cell>
+                                        <Table.Cell align="end" className={`${CELL} dash-figure text-sm font-medium`}>
+                                            {money(row.amount, ledger.currency)}
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ))}
+                            </Table.Body>
                         </Table>
                     )}
-                    <div className="dash-card-foot flex justify-between pr-5">
-                        <span className="dash-figure">
-                            {shown.length} / {figures.count}
-                        </span>
-                        <span className="dash-figure">{money(figures.spent, ledger.currency)}</span>
-                    </div>
-                </Card>
+                </CardFrame>
             </div>
             {editing ? <CategoryEditor onClose={() => setEditing(null)} target={editing} /> : null}
         </>

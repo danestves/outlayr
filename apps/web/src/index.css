@@ -2,6 +2,7 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 @import "@fontsource-variable/nunito";
+@source "../node_modules/panelui-web/dist/components/alert/index.js";
 @source "../node_modules/panelui-web/dist/components/alert-dialog/index.js";
 @source "../node_modules/panelui-web/dist/components/area-chart/index.js";
 @source "../node_modules/panelui-web/dist/components/bar-chart/index.js";
@@ -10,9 +11,11 @@
 @source "../node_modules/panelui-web/dist/components/command/index.js";
 @source "../node_modules/panelui-web/dist/components/day-grid/index.js";
 @source "../node_modules/panelui-web/dist/components/dialog/index.js";
+@source "../node_modules/panelui-web/dist/components/field/index.js";
 @source "../node_modules/panelui-web/dist/components/frame/index.js";
 @source "../node_modules/panelui-web/dist/components/input/index.js";
 @source "../node_modules/panelui-web/dist/components/kpi/index.js";
+@source "../node_modules/panelui-web/dist/components/label/index.js";
 @source "../node_modules/panelui-web/dist/components/menu/index.js";
 @source "../node_modules/panelui-web/dist/components/mirror-area-chart/index.js";
 @source "../node_modules/panelui-web/dist/components/plot/index.js";
@@ -26,6 +29,7 @@
 @source "../node_modules/panelui-web/dist/components/table/index.js";
 @source "../node_modules/panelui-web/dist/components/tabs/index.js";
 @source "../node_modules/panelui-web/dist/components/checkbox/index.js";
+@source "../node_modules/panelui-web/dist/components/choice-cards/index.js";
 @source "../node_modules/panelui-web/dist/components/toast/index.js";
 @source "../node_modules/panelui-web/dist/components/usage/index.js";
 @source "../node_modules/panelui-web/dist/components/waterfall-chart/index.js";

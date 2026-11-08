@@ -1,18 +1,22 @@
 import { firstAvailableColor, CATEGORY_PALETTE } from "@outlayr/money/category-rules";
 import { RiAddLine, RiSearchLine } from "@remixicon/react";
+import { Alert } from "panelui-web/alert";
 import { Button } from "panelui-web/button";
+import { ChoiceCards } from "panelui-web/choice-cards";
 import { Dialog } from "panelui-web/dialog";
+import { Field } from "panelui-web/field";
 import { Input } from "panelui-web/input";
+import { Label } from "panelui-web/label";
 import { Select } from "panelui-web/select";
 import { useId, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { Segments } from "@/components/dashboard/accounts/parts";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
 import { LookTile } from "@/components/ledger/tiles";
 
+import { Choice } from "../parts";
 import { categoryProblem, categoryTree, INCOME_COLOR, liveCategories, MAX_EXPENSE_CATEGORIES } from "./model";
 import type { Category } from "./model";
 import { useCategoryWrites } from "./write";
@@ -133,6 +137,8 @@ const EMOJI = [
     "❓",
 ];
 const NO_PARENT = "none";
+const SYMBOL_GRID = "grid max-h-[300px] grid-cols-[repeat(auto-fill,minmax(44px,1fr))] gap-1 overflow-y-auto p-1";
+const SYMBOL_CELL = "[&_[data-slot=choice-cards-check]]:hidden";
 
 export type EditorTarget = { doc: Category } | { income: boolean; parentId: string | null };
 
@@ -161,8 +167,6 @@ function SymbolDialog({
         onPick(symbol);
         onClose();
     };
-    const CELL =
-        "hover:bg-muted flex size-10 items-center justify-center rounded-[10px] data-[on=true]:ring-2 data-[on=true]:ring-(--color-primary)";
     return (
         <Dialog onOpenChange={(open) => open || onClose()} open>
             <Dialog.Content className="app-shell sm:max-w-[560px]">
@@ -172,24 +176,24 @@ function SymbolDialog({
                 <Dialog.Body className="flex flex-col gap-3">
                     <div className="flex items-center gap-2 max-sm:flex-wrap">
                         {tab === "icons" ? (
-                            <div className="relative min-w-0 flex-1">
-                                <RiSearchLine
-                                    className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2"
-                                    size={15}
-                                />
+                            <Input.Group className="min-w-0 flex-1">
+                                <Input.Addon>
+                                    <RiSearchLine size={15} />
+                                </Input.Addon>
                                 <Input
                                     aria-label={copy.searchSymbols.value}
-                                    className="pl-9 max-sm:text-base"
+                                    className="max-sm:text-base"
                                     onChange={(event) => setQuery(event.target.value)}
                                     placeholder={copy.searchSymbols.value}
                                     value={query}
                                 />
-                            </div>
+                            </Input.Group>
                         ) : (
                             <span className="flex-1" />
                         )}
-                        <Segments
-                            onPick={setTab}
+                        <Choice
+                            label={copy.symbol.value}
+                            onChange={setTab}
                             options={[
                                 { label: copy.icons, value: "icons" },
                                 { label: copy.emoji, value: "emoji" },
@@ -197,32 +201,34 @@ function SymbolDialog({
                             value={tab}
                         />
                     </div>
-                    <div className="grid max-h-[300px] grid-cols-[repeat(auto-fill,minmax(40px,1fr))] justify-items-center gap-1 overflow-y-auto">
+                    <ChoiceCards
+                        aria-label={copy.symbol.value}
+                        aspect="1 / 1"
+                        className={SYMBOL_GRID}
+                        onValueChange={(next) =>
+                            pick(tab === "icons" ? { emoji: null, icon: next } : { emoji: next, icon: null })
+                        }
+                        value={(tab === "icons" ? value.icon : value.emoji) ?? ""}
+                    >
                         {tab === "icons"
                             ? keys.map((key) => (
-                                  <button
-                                      aria-label={key}
-                                      className={CELL}
-                                      data-on={value.icon === key}
-                                      key={key}
-                                      onClick={() => pick({ emoji: null, icon: key })}
-                                      type="button"
-                                  >
-                                      <LookTile look={{ color, emoji: null, icon: key }} />
-                                  </button>
+                                  <ChoiceCards.Item aria-label={key} className={SYMBOL_CELL} key={key} value={key}>
+                                      <ChoiceCards.Media>
+                                          <LookTile look={{ color, emoji: null, icon: key }} />
+                                      </ChoiceCards.Media>
+                                  </ChoiceCards.Item>
                               ))
                             : EMOJI.map((emoji) => (
-                                  <button
-                                      className={`${CELL} text-xl`}
-                                      data-on={value.emoji === emoji}
+                                  <ChoiceCards.Item
+                                      aria-label={emoji}
+                                      className={SYMBOL_CELL}
                                       key={emoji}
-                                      onClick={() => pick({ emoji, icon: null })}
-                                      type="button"
+                                      value={emoji}
                                   >
-                                      {emoji}
-                                  </button>
+                                      <ChoiceCards.Media className="text-xl">{emoji}</ChoiceCards.Media>
+                                  </ChoiceCards.Item>
                               ))}
-                    </div>
+                    </ChoiceCards>
                 </Dialog.Body>
                 <Dialog.Footer>
                     <Button onClick={() => pick({ emoji: null, icon: null })} type="button" variant="outline">
@@ -240,16 +246,18 @@ function SymbolDialog({
 function SymbolButton({ color, onClick, symbol }: { color: string; onClick: () => void; symbol: CategorySymbol }) {
     const copy = useIntlayer("dashboard-categories");
     return (
-        <button
+        <Button
             aria-label={copy.symbol.value}
-            className="border-border hover:bg-muted flex size-16 shrink-0 items-center justify-center rounded-2xl border border-dashed text-[28px] leading-none"
+            className="size-16 shrink-0 rounded-2xl border-dashed text-[28px] leading-none"
             onClick={onClick}
+            size="icon-lg"
             type="button"
+            variant="outline"
         >
             {symbol.emoji ?? null}
             {symbol.icon ? <LookTile look={{ ...symbol, color }} size="lg" /> : null}
             {symbol.emoji || symbol.icon ? null : <RiAddLine size={22} />}
-        </button>
+        </Button>
     );
 }
 
@@ -263,12 +271,9 @@ function ParentField({
     value: string | null;
 }) {
     const copy = useIntlayer("dashboard-categories");
-    const labelId = useId();
     return (
-        <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium" id={labelId}>
-                {copy.parent}
-            </span>
+        <Field>
+            <Field.Label>{copy.parent}</Field.Label>
             <Select
                 items={[
                     { label: copy.none.value, value: NO_PARENT },
@@ -277,7 +282,7 @@ function ParentField({
                 onValueChange={(next) => onChange(!next || next === NO_PARENT ? null : next)}
                 value={value ?? NO_PARENT}
             >
-                <Select.Trigger aria-labelledby={labelId} className="w-full">
+                <Select.Trigger className="w-full">
                     <Select.Value />
                 </Select.Trigger>
                 <Select.Content className="app-shell">
@@ -289,29 +294,29 @@ function ParentField({
                     ))}
                 </Select.Content>
             </Select>
-        </div>
+        </Field>
     );
 }
 
 function ColorField({ onPick, value }: { onPick: (hex: string) => void; value: string }) {
     const copy = useIntlayer("dashboard-categories");
     return (
-        <fieldset className="flex flex-col gap-1.5">
-            <legend className="mb-1.5 text-sm font-medium">{copy.color}</legend>
-            <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-1.5">
+            <Label render={<span />}>{copy.color}</Label>
+            <ChoiceCards
+                aria-label={copy.color.value}
+                aspect="1 / 1"
+                className="grid grid-cols-[repeat(auto-fill,36px)] gap-2"
+                onValueChange={onPick}
+                value={value}
+            >
                 {CATEGORY_PALETTE.map((hex) => (
-                    <button
-                        aria-label={hex}
-                        aria-pressed={value === hex}
-                        className="size-8 rounded-full ring-offset-2 ring-offset-(--color-background) aria-pressed:ring-2 aria-pressed:ring-(--color-foreground)"
-                        key={hex}
-                        onClick={() => onPick(hex)}
-                        style={{ background: hex }}
-                        type="button"
-                    />
+                    <ChoiceCards.Item aria-label={hex} key={hex} value={hex}>
+                        <ChoiceCards.Media style={{ background: hex }} />
+                    </ChoiceCards.Item>
                 ))}
-            </div>
-        </fieldset>
+            </ChoiceCards>
+        </div>
     );
 }
 
@@ -354,7 +359,7 @@ export function CategoryEditor({ onClose, target }: { onClose: () => void; targe
     const rows = ledger.books.categories;
     const live = liveCategories(rows);
     const doc = "doc" in target ? target.doc : null;
-    const nameId = useId();
+    const formId = useId();
 
     const start = doc ?? target;
     const startParent = "parentId" in start ? start.parentId : null;
@@ -418,38 +423,39 @@ export function CategoryEditor({ onClose, target }: { onClose: () => void; targe
     return (
         <Dialog onOpenChange={(open) => open || onClose()} open>
             <Dialog.Content className="app-shell">
-                <form onSubmit={submit}>
-                    <Dialog.Header>
-                        <Dialog.Title>{titles[mode]}</Dialog.Title>
-                    </Dialog.Header>
-                    <Dialog.Body className="flex flex-col gap-4">
+                <Dialog.Header>
+                    <Dialog.Title>{titles[mode]}</Dialog.Title>
+                </Dialog.Header>
+                <Dialog.Body>
+                    <form className="flex flex-col gap-4" id={formId} onSubmit={submit}>
                         {forcedIncome ? (
-                            <p className="bg-muted rounded-[10px] px-3 py-2 text-[13px]">
-                                {copy.atLimit({ max: MAX_EXPENSE_CATEGORIES, used: expenseCount })}
-                            </p>
+                            <Alert variant="plain">
+                                <Alert.Description>
+                                    {copy.atLimit({ max: MAX_EXPENSE_CATEGORIES, used: expenseCount })}
+                                </Alert.Description>
+                            </Alert>
                         ) : null}
-                        <div className="flex items-end gap-3">
+                        <div className="flex items-start gap-3">
                             <SymbolButton color={color} onClick={() => setPicking(true)} symbol={symbol} />
-                            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                                <label className="text-sm font-medium" htmlFor={nameId}>
-                                    {copy.name}
-                                </label>
+                            <Field className="min-w-0 flex-1" invalid={problem !== null}>
+                                <Field.Label>{copy.name}</Field.Label>
                                 <Input
                                     autoFocus
                                     className="max-sm:text-base"
-                                    id={nameId}
                                     name="name"
                                     onChange={(event) => setName(event.target.value)}
                                     value={name}
                                 />
-                            </div>
+                                {problem ? <Field.Error match>{copy.problems[problem]}</Field.Error> : null}
+                            </Field>
                         </div>
                         {forcedIncome || startParent !== null || doc ? null : (
                             <div className="flex flex-col gap-1.5">
-                                <span className="text-sm font-medium">{copy.type}</span>
+                                <Label render={<span />}>{copy.type}</Label>
                                 <div>
-                                    <Segments
-                                        onPick={(value) => {
+                                    <Choice
+                                        label={copy.type.value}
+                                        onChange={(value) => {
                                             setIncome(value === "income");
                                             setParentId(null);
                                         }}
@@ -471,32 +477,29 @@ export function CategoryEditor({ onClose, target }: { onClose: () => void; targe
                             </p>
                         ) : null}
                         {income || parent ? null : <ColorField onPick={setPicked} value={color} />}
-                        {problem ? (
-                            <p className="text-destructive text-[13px]" role="alert">
-                                {copy.problems[problem]}
-                            </p>
-                        ) : null}
-                    </Dialog.Body>
-                    <Dialog.Footer>
-                        {doc ? (
-                            <Button
-                                className="text-destructive mr-auto"
-                                onClick={() => {
-                                    writes.remove(doc.localId);
-                                    onClose();
-                                }}
-                                type="button"
-                                variant="outline"
-                            >
-                                {copy.delete}
-                            </Button>
-                        ) : null}
-                        <Button onClick={onClose} type="button" variant="outline">
-                            {copy.cancel}
+                    </form>
+                </Dialog.Body>
+                <Dialog.Footer>
+                    {doc ? (
+                        <Button
+                            className="mr-auto"
+                            onClick={() => {
+                                writes.remove(doc.localId);
+                                onClose();
+                            }}
+                            type="button"
+                            variant="destructive"
+                        >
+                            {copy.delete}
                         </Button>
-                        <Button type="submit">{submitLabel}</Button>
-                    </Dialog.Footer>
-                </form>
+                    ) : null}
+                    <Button onClick={onClose} type="button" variant="outline">
+                        {copy.cancel}
+                    </Button>
+                    <Button form={formId} type="submit">
+                        {submitLabel}
+                    </Button>
+                </Dialog.Footer>
                 {picking ? (
                     <SymbolDialog color={color} onClose={() => setPicking(false)} onPick={setSymbol} value={symbol} />
                 ) : null}

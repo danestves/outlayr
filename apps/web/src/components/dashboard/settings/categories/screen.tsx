@@ -10,19 +10,21 @@ import {
 } from "@remixicon/react";
 import { Link, useNavigate, useRouteContext } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
+import { Frame } from "panelui-web/frame";
 import { Menu } from "panelui-web/menu";
-import { Tabs } from "panelui-web/tabs";
+import { Table } from "panelui-web/table";
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { BALANCE, Card, Head, MUTED, TD, Table } from "@/components/dashboard/accounts/accounts-screen";
+import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
 import { categoryBudgets } from "@/lib/dashboard-series";
 import { metaFlag, useDisplayFormat, useMeta, writeSettings } from "@/lib/ledger-settings";
 
-import { SectionHead } from "../parts";
+import { Choice, SectionHead } from "../parts";
 import { CategoryEditor } from "./editor";
 import type { EditorTarget } from "./editor";
 import { categoryLines, categoryTree, INCOME_COLOR, liveCategories, MAX_EXPENSE_CATEGORIES } from "./model";
@@ -37,7 +39,9 @@ const presetKey = (name: string) =>
         .replaceAll(/[^a-z]+(.)/gu, (_, letter: string) => letter.toUpperCase())
         .replaceAll(/[^a-zA-Z]/gu, "") as keyof IntlayerPresets;
 
-const OB = "dash-ob h-9 gap-1.5 rounded-[10px] px-3 [&>svg]:size-4";
+const HEAD = "first:ps-3.5 last:pe-3.5";
+const CELL = "h-11 py-0 whitespace-nowrap first:ps-3.5 last:pe-3.5";
+const FIGURE = `${CELL} dash-figure text-muted-foreground`;
 const PHONE_COLUMNS = "max-sm:[&_tr>*:nth-child(2)]:hidden max-sm:[&_tr>*:nth-child(4)]:hidden";
 
 type IntlayerPresets = ReturnType<typeof useIntlayer<"category-presets">>;
@@ -50,13 +54,12 @@ function RowActions({ onEdit, onSubcategory, row }: { onEdit: () => void; onSubc
         <Menu>
             <Menu.Trigger
                 aria-label={copy.more({ name: row.name ?? "" }).value}
-                className="text-muted-foreground hover:text-foreground -mr-1 inline-flex size-7 items-center justify-center rounded-lg"
+                render={<Button className="text-muted-foreground -mr-1" size="icon-sm" variant="ghost" />}
             >
                 <RiMore2Fill size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell dash-menu ph-no-capture w-[200px]" sideOffset={4}>
+            <Menu.Content align="end" className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
                 <Menu.Item
-                    className="dash-menu-item"
                     onClick={() =>
                         navigate({ params: { categoryId: row.localId }, to: "/app/settings/categories/$categoryId" })
                     }
@@ -64,26 +67,33 @@ function RowActions({ onEdit, onSubcategory, row }: { onEdit: () => void; onSubc
                     <RiArrowRightUpLine size={16} />
                     {copy.open}
                 </Menu.Item>
-                <Menu.Item className="dash-menu-item" onClick={onEdit}>
+                <Menu.Item onClick={onEdit}>
                     <RiPencilLine size={16} />
                     {copy.edit}
                 </Menu.Item>
                 {onSubcategory ? (
-                    <Menu.Item className="dash-menu-item" onClick={onSubcategory}>
+                    <Menu.Item onClick={onSubcategory}>
                         <RiAddLine size={16} />
                         {copy.addSubcategory}
                     </Menu.Item>
                 ) : null}
-                <div className="dash-menu-rule" />
-                <Menu.Item
-                    className="dash-menu-item text-app-spend [&>svg]:text-app-spend!"
-                    onClick={() => writes.remove(row.localId)}
-                >
+                <Menu.Separator />
+                <Menu.Item onClick={() => writes.remove(row.localId)} variant="destructive">
                     <RiDeleteBin6Line size={16} />
                     {copy.delete}
                 </Menu.Item>
             </Menu.Content>
         </Menu>
+    );
+}
+
+function TabbedCard({ children, footer, tabs }: { children: ReactNode; footer?: ReactNode; tabs: ReactNode }) {
+    return (
+        <Frame className="min-w-0 rounded-2xl" variant="band">
+            <Frame.Header className="min-h-10">{tabs}</Frame.Header>
+            <Frame.Panel className="group-data-[variant=band]/frame:rounded-[10px]">{children}</Frame.Panel>
+            {footer ? <Frame.Footer className="min-h-11 flex-wrap text-sm">{footer}</Frame.Footer> : null}
+        </Frame>
     );
 }
 
@@ -134,15 +144,19 @@ export function Categories() {
     const spent = tree.reduce((sum, node) => sum + (lines.get(node.localId)?.spent ?? 0), 0);
 
     const tabs = (
-        <Tabs onValueChange={(value) => setIncome(value === "income")} value={income ? "income" : "expense"}>
-            <Tabs.List className="bg-background/40 rounded-[9px] p-0.5">
-                {(["expense", "income"] as const).map((side, index) => (
-                    <Tabs.Trigger className="h-[26px] rounded-[7px] px-2.5 text-[13px]" key={side} value={side}>
+        <Choice
+            label={copy.type.value}
+            onChange={(side) => setIncome(side === "income")}
+            options={(["expense", "income"] as const).map((side, index) => ({
+                label: (
+                    <>
                         {copy[side]} <span className="dash-figure text-muted-foreground ml-1">{counts[index]}</span>
-                    </Tabs.Trigger>
-                ))}
-            </Tabs.List>
-        </Tabs>
+                    </>
+                ),
+                value: side,
+            }))}
+            value={income ? "income" : "expense"}
+        />
     );
 
     if (reordering) {
@@ -156,10 +170,9 @@ export function Categories() {
                     }
                     title={copy.reorderTitle}
                 />
-                <Card>
-                    <div className="dash-card-head">{tabs}</div>
+                <TabbedCard tabs={tabs}>
                     <ReorderList tree={tree} />
-                </Card>
+                </TabbedCard>
             </>
         );
     }
@@ -169,16 +182,20 @@ export function Categories() {
         const budget = budgets.get(row.localId);
         return (
             <>
-                <td className={`${TD} dash-figure text-muted-foreground text-right`}>{line?.entries ?? 0}</td>
-                <td className={`${TD} ${BALANCE}`}>{money(line?.spent ?? 0, ledger.currency)}</td>
-                <td className={`${TD} dash-figure text-muted-foreground text-right`} style={{ color: MUTED }}>
+                <Table.Cell align="end" className={FIGURE}>
+                    {line?.entries ?? 0}
+                </Table.Cell>
+                <Table.Cell align="end" className={`${CELL} dash-figure text-sm font-medium`}>
+                    {money(line?.spent ?? 0, ledger.currency)}
+                </Table.Cell>
+                <Table.Cell align="end" className={FIGURE}>
                     {budget ? money(budget.limit, ledger.currency) : null}
-                </td>
-                <td className={`${TD} text-right`}>
+                </Table.Cell>
+                <Table.Cell align="end" className={CELL}>
                     {budget ? (
                         <Left currency={ledger.currency} over={budget.overBudget} remaining={budget.remaining} />
                     ) : null}
-                </td>
+                </Table.Cell>
             </>
         );
     };
@@ -188,19 +205,20 @@ export function Categories() {
             <SectionHead
                 action={
                     <div className="flex items-center gap-2">
-                        <button
+                        <Button
                             aria-pressed={showSuggestions}
-                            className={`${OB} max-sm:hidden`}
+                            className="max-sm:hidden"
                             onClick={() => writeSettings(dbClient, { categorySuggestions: String(!showSuggestions) })}
-                            type="button"
+                            size="sm"
+                            variant="outline"
                         >
-                            <RiLightbulbLine />
+                            <RiLightbulbLine size={16} />
                             {copy.suggestions}
-                        </button>
-                        <button className={OB} onClick={() => setReordering(true)} type="button">
-                            <RiDraggable />
+                        </Button>
+                        <Button onClick={() => setReordering(true)} size="sm" variant="outline">
+                            <RiDraggable size={16} />
                             <span className="max-sm:sr-only">{copy.reorder}</span>
-                        </button>
+                        </Button>
                         <Button onClick={() => setEditing({ income, parentId: null })} size="sm">
                             <RiAddLine size={16} />
                             <span className="max-sm:sr-only">{copy.newCategory}</span>
@@ -210,21 +228,49 @@ export function Categories() {
                 title={copy.title}
             />
             <div className="flex flex-col gap-4">
-                <Card>
-                    <div className="dash-card-head">{tabs}</div>
+                <TabbedCard
+                    footer={
+                        <div className="flex w-full flex-wrap justify-between gap-x-4 gap-y-1">
+                            <span>{copy.census({ categories: tree.length, subcategories: children })}</span>
+                            <span>
+                                {copy.entries} <span className="dash-figure">{entries}</span> ·{" "}
+                                <span className="dash-figure">{money(spent, ledger.currency)}</span>
+                            </span>
+                        </div>
+                    }
+                    tabs={tabs}
+                >
                     {tree.length === 0 ? (
-                        <p className="text-muted-foreground border-t px-5 py-8 text-center text-sm">
-                            {copy.emptyTitle}
-                        </p>
+                        <p className="text-muted-foreground px-5 py-8 text-center text-sm">{copy.emptyTitle}</p>
                     ) : (
-                        <div className={PHONE_COLUMNS}>
-                            <Table
-                                head={[copy.category, copy.entries, date.month(period.key), copy.budget, copy.left, ""]}
-                                numbers={4}
-                            >
+                        <Table
+                            aria-label={copy.title.value}
+                            containerClassName={`overflow-clip ${PHONE_COLUMNS}`}
+                            maxHeight="none"
+                            striped
+                        >
+                            <Table.Header className="in-data-[sticky]:bg-card">
+                                <Table.Row>
+                                    <Table.Head className={HEAD}>{copy.category}</Table.Head>
+                                    <Table.Head align="end" className={HEAD}>
+                                        {copy.entries}
+                                    </Table.Head>
+                                    <Table.Head align="end" className={HEAD}>
+                                        {date.month(period.key)}
+                                    </Table.Head>
+                                    <Table.Head align="end" className={HEAD}>
+                                        {copy.budget}
+                                    </Table.Head>
+                                    <Table.Head align="end" className={HEAD}>
+                                        {copy.left}
+                                    </Table.Head>
+                                    <Table.Head className={`${HEAD} w-10`} />
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {tree.flatMap((node) => [
-                                    <tr key={node.localId}>
-                                        <td className={TD}>
+                                    <Table.Row key={node.localId}>
+                                        <Table.Cell className={CELL}>
                                             <Link
                                                 className="flex min-w-0 items-center gap-2.5 font-medium"
                                                 params={{ categoryId: node.localId }}
@@ -233,9 +279,9 @@ export function Categories() {
                                                 <LookTile look={node} size="lg" />
                                                 <span className="truncate">{node.name}</span>
                                             </Link>
-                                        </td>
+                                        </Table.Cell>
                                         {lineCells(node)}
-                                        <td className={`${TD} w-10 text-right`}>
+                                        <Table.Cell align="end" className={CELL}>
                                             <RowActions
                                                 onEdit={() => setEditing({ doc: node })}
                                                 onSubcategory={() =>
@@ -243,11 +289,11 @@ export function Categories() {
                                                 }
                                                 row={node}
                                             />
-                                        </td>
-                                    </tr>,
+                                        </Table.Cell>
+                                    </Table.Row>,
                                     ...node.children.map((child) => (
-                                        <tr key={child.localId}>
-                                            <td className={TD}>
+                                        <Table.Row key={child.localId}>
+                                            <Table.Cell className={CELL}>
                                                 <Link
                                                     className="flex min-w-0 items-center gap-2.5 pl-8"
                                                     params={{ categoryId: child.localId }}
@@ -256,32 +302,28 @@ export function Categories() {
                                                     <LookTile look={child} />
                                                     <span className="truncate">{child.name}</span>
                                                 </Link>
-                                            </td>
+                                            </Table.Cell>
                                             {lineCells(child)}
-                                            <td className={`${TD} w-10 text-right`}>
+                                            <Table.Cell align="end" className={CELL}>
                                                 <RowActions onEdit={() => setEditing({ doc: child })} row={child} />
-                                            </td>
-                                        </tr>
+                                            </Table.Cell>
+                                        </Table.Row>
                                     )),
                                 ])}
-                            </Table>
-                        </div>
+                            </Table.Body>
+                        </Table>
                     )}
-                    <div className="dash-card-foot flex flex-wrap justify-between gap-x-4 gap-y-1 pr-5 max-sm:py-2">
-                        <span>{copy.census({ categories: tree.length, subcategories: children })}</span>
-                        <span>
-                            {copy.entries} <span className="dash-figure">{entries}</span> ·{" "}
-                            <span className="dash-figure">{money(spent, ledger.currency)}</span>
-                        </span>
-                    </div>
-                </Card>
+                </TabbedCard>
                 {showSuggestions && suggestions.length > 0 && !atExpenseCap ? (
-                    <Card>
-                        <Head count={suggestions.length} title={copy.suggested} />
-                        <div className="flex flex-wrap gap-2 px-5 pb-5">
+                    <CardFrame
+                        action={
+                            <span className="dash-figure text-muted-foreground text-[13px]">{suggestions.length}</span>
+                        }
+                        title={copy.suggested}
+                    >
+                        <div className="flex flex-wrap gap-2 p-4">
                             {suggestions.map((preset) => (
-                                <button
-                                    className={OB}
+                                <Button
                                     key={preset.name}
                                     onClick={() =>
                                         writes.add({
@@ -294,14 +336,15 @@ export function Categories() {
                                             preset: preset.name,
                                         })
                                     }
-                                    type="button"
+                                    size="sm"
+                                    variant="outline"
                                 >
-                                    <RiAddLine />
+                                    <RiAddLine size={16} />
                                     {labelOf(preset.name)}
-                                </button>
+                                </Button>
                             ))}
                         </div>
-                    </Card>
+                    </CardFrame>
                 ) : null}
             </div>
             {editing ? <CategoryEditor onClose={() => setEditing(null)} target={editing} /> : null}

@@ -1,4 +1,5 @@
 import { RiDraggable } from "@remixicon/react";
+import { Button } from "panelui-web/button";
 import { Fragment, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -45,15 +46,16 @@ function ReorderRow({
             data-reorder-id={row.localId}
             data-reorder-scope={scope}
         >
-            <button
+            <Button
                 aria-label={copy.move({ name: row.name ?? "" }).value}
-                className="text-muted-foreground hover:text-foreground flex size-8 cursor-grab touch-none items-center justify-center rounded-lg active:cursor-grabbing"
+                className="text-muted-foreground cursor-grab touch-none active:cursor-grabbing"
                 onKeyDown={onKeyDown}
                 onPointerDown={onDragStart}
-                type="button"
+                size="icon-sm"
+                variant="ghost"
             >
                 <RiDraggable size={16} />
-            </button>
+            </Button>
             <LookTile look={row} />
             <span className="min-w-0 truncate text-[13px] font-medium">{row.name}</span>
         </div>
