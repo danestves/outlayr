@@ -7,6 +7,8 @@ const forward = <Ctx, Args, Returns>(handler: (ctx: Ctx, args: Args) => Promise<
 const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../../ledger.spec")["default"]>(databaseSchema, groupLayer);
 
 export default {
+["installments"]: RegisteredConvexFunction.register({ ...definitions["installments"], handler: forward(definitions["installments"].handler) }),
+["savingsGoals"]: RegisteredConvexFunction.register({ ...definitions["savingsGoals"], handler: forward(definitions["savingsGoals"].handler) }),
 ["transactions"]: RegisteredConvexFunction.register({ ...definitions["transactions"], handler: forward(definitions["transactions"].handler) }),
 ["transfers"]: RegisteredConvexFunction.register({ ...definitions["transfers"], handler: forward(definitions["transfers"].handler) }),
 ["accounts"]: RegisteredConvexFunction.register({ ...definitions["accounts"], handler: forward(definitions["accounts"].handler) }),

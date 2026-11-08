@@ -1,6 +1,5 @@
+import { resolveInstitutionDomain } from "@outlayr/money/institution-map";
 import { merchantKey } from "@outlayr/money/merchant-key";
-
-import { resolveInstitutionDomain } from "./institution-map";
 
 export interface CardAccountCandidate {
     readonly id: string;

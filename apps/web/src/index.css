@@ -14,8 +14,8 @@
 @source "../node_modules/panelui-web/dist/components/input/index.js";
 @source "../node_modules/panelui-web/dist/components/kpi/index.js";
 @source "../node_modules/panelui-web/dist/components/menu/index.js";
-@source "../node_modules/panelui-web/dist/components/plot/index.js";
 @source "../node_modules/panelui-web/dist/components/mirror-area-chart/index.js";
+@source "../node_modules/panelui-web/dist/components/plot/index.js";
 @source "../node_modules/panelui-web/dist/components/range-meter/index.js";
 @source "../node_modules/panelui-web/dist/components/rolling-number/index.js";
 @source "../node_modules/panelui-web/dist/components/sankey-chart/index.js";
@@ -1530,4 +1530,332 @@ html[data-theme="dark"]:has(.dash-sheet) body::after {
 
 .dash-menu-item > svg {
     color: var(--color-app-muted);
+}
+
+/* Outside the layer: panelui's Dialog utilities would otherwise win over the approved frame. */
+.dash-dialog {
+    width: min(480px, 100vw - 16px);
+    overflow: hidden;
+    border: 1px solid var(--color-app-strong);
+    border-radius: 20px;
+    background: var(--color-app-group);
+    box-shadow: 0 24px 48px -12px var(--color-app-shadow-far);
+}
+
+.dash-dialog[data-size="confirm"] {
+    width: min(420px, 100vw - 16px);
+}
+
+.dash-dh {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    height: 56px;
+    padding: 0 20px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 20px;
+}
+
+.dash-dh > button {
+    display: inline-flex;
+    color: var(--color-app-muted);
+}
+
+.dash-dh > button:last-child {
+    margin-left: auto;
+}
+
+.dash-db {
+    min-height: 0;
+    padding: 0 20px 20px;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 20px;
+}
+
+.dash-df {
+    flex-wrap: wrap;
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--color-app-rule);
+    background: var(--color-app-hover);
+}
+
+.dash-df .dash-ob {
+    height: 36px;
+    padding: 0 12px;
+    border-radius: 10px;
+}
+
+.dash-btn[data-danger="true"] {
+    background: var(--color-app-spend);
+}
+
+.dash-fi {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--color-app-rule);
+    border-radius: 10px;
+    background: var(--color-app-hover);
+    font-size: 14px;
+    text-align: left;
+    outline: none;
+}
+
+.dash-fi input {
+    min-width: 0;
+    flex: 1;
+    background: transparent;
+    outline: none;
+}
+
+.dash-fi:focus-within,
+.dash-fi:focus-visible,
+.dash-fi[data-popup-open] {
+    border-color: var(--color-app-tint);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-app-tint) 22%, transparent);
+}
+
+.dash-fi[data-invalid="true"] {
+    border-color: var(--color-app-spend);
+    box-shadow: none;
+}
+
+.dash-lb {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 20px;
+}
+
+.dash-er {
+    margin-top: 6px;
+    color: var(--color-app-spend);
+    font-size: 12px;
+    line-height: 20px;
+}
+
+.dash-sg {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-left: -4px;
+    border-radius: 6px;
+    background: var(--color-app-fill);
+}
+
+.dash-ty {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.dash-ty button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--color-app-rule);
+    border-radius: 10px;
+    background: var(--color-app-hover);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.dash-ty button svg {
+    flex: none;
+    color: var(--color-app-muted);
+}
+
+.dash-ty button[aria-pressed="true"] {
+    border-color: var(--color-app-tint);
+    background: color-mix(in oklab, var(--color-app-tint) 14%, var(--color-app-group));
+}
+
+.dash-ty button[aria-pressed="true"] svg {
+    color: var(--color-app-tint);
+}
+
+.dash-ib {
+    position: relative;
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+}
+
+.dash-ib > img {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: #fff;
+    object-fit: cover;
+}
+
+.dash-ib > u {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--color-app-strong);
+    border-radius: 50%;
+    background: var(--color-app-float);
+    color: var(--color-app-ink);
+    text-decoration: none;
+}
+
+.dash-po {
+    padding: 12px;
+    border: 1px solid var(--color-app-strong);
+    border-radius: 16px;
+    background: var(--color-app-float);
+    box-shadow:
+        0 16px 32px -12px var(--color-app-shadow-far),
+        0 4px 12px var(--color-app-shadow-near);
+    font-size: 14px;
+    line-height: 20px;
+    outline: none;
+}
+
+.dash-po-tabs {
+    display: flex;
+    padding: 3px;
+    border-radius: 10px;
+    background: var(--color-app-group);
+}
+
+.dash-po-tabs button {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    border-radius: 8px;
+    color: var(--color-app-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.dash-po-tabs button[aria-pressed="true"] {
+    background: var(--color-app-strong);
+    color: var(--color-app-ink);
+}
+
+.dash-pr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 40px;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-size: 14px;
+    text-align: left;
+    outline: none;
+}
+
+.dash-pr:hover,
+.dash-pr:focus-visible,
+.dash-pr[aria-pressed="true"] {
+    background: color-mix(in oklab, var(--color-app-ink) 5%, transparent);
+}
+
+.dash-pg {
+    display: grid;
+    gap: 4px;
+    margin-top: 10px;
+}
+
+.dash-pg button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 34px;
+    border-radius: 8px;
+    color: var(--color-app-muted);
+    font-size: 16px;
+}
+
+.dash-pg button[aria-pressed="true"] {
+    background: color-mix(in oklab, var(--color-app-ink) 8%, transparent);
+    color: var(--color-app-ink);
+}
+
+.dash-swatches {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding: 0 3px;
+}
+
+.dash-swatches button {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.dash-swatches button[aria-pressed="true"] {
+    box-shadow:
+        0 0 0 2px var(--color-app-float),
+        0 0 0 4px var(--color-app-ink);
+}
+
+.dash-toast {
+    position: fixed;
+    right: 24px;
+    bottom: max(24px, env(safe-area-inset-bottom));
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100vw - 32px);
+    min-height: 44px;
+    padding: 0 8px 0 14px;
+    border: 1px solid var(--color-app-strong);
+    border-radius: 12px;
+    background: var(--color-app-float);
+    box-shadow: 0 16px 32px -12px var(--color-app-shadow-far);
+    color: var(--color-app-ink);
+    font-size: 13px;
+}
+
+.dash-toast > button {
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: color-mix(in oklab, var(--color-app-ink) 5%, transparent);
+    font-weight: 500;
+}
+
+@media (max-width: 639px) {
+    .dash-toast {
+        right: 16px;
+        left: 16px;
+    }
+
+    .dash-toast > button {
+        margin-left: auto;
+    }
 }

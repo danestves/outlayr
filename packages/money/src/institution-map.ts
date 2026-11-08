@@ -1,6 +1,5 @@
-import { toAccountKind } from "@outlayr/money/account-kind";
-import { merchantKey } from "@outlayr/money/merchant-key";
-
+import { toAccountKind } from "./account-kind";
+import { merchantKey } from "./merchant-key";
 import { buildPatternIndex, containsTokenSequence } from "./pattern-index";
 
 // Account names only: in `resolveMerchant` these would suppress the model call for a payee named "Chase".
@@ -368,6 +367,19 @@ export function isInstallmentAppAccount(account: { readonly kind: string; readon
 }
 
 // No fuzzy tier: a near-miss would brand an account with another bank's logo, which is worse than none.
+const SEARCHABLE = INSTITUTIONS.map(({ domain, label }) => ({ domain, key: merchantKey(label), label }));
+
+/** Names with a logo that match what was typed, those starting with it first. */
+export function searchInstitutions(query: string) {
+    const key = merchantKey(query);
+    if (key.length === 0) {
+        return [];
+    }
+    return SEARCHABLE.filter((entry) => entry.key.includes(key)).sort(
+        (a, b) => Number(b.key.startsWith(key)) - Number(a.key.startsWith(key)) || a.label.localeCompare(b.label)
+    );
+}
+
 export function resolveInstitutionDomain(key: string): string | null {
     if (key.length === 0) {
         return null;

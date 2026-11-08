@@ -48,10 +48,18 @@ export function useAccounts(db: Database): Account[] {
     ) as Account[];
 }
 
-// Readers that only resolve an id keep `useAccounts`: an entry or a transfer can point at a person.
+// Readers that only resolve an id keep `useAccounts`: an entry or a transfer can point at a person or an archived
+// account.
+export function useOpenAccounts(db: Database): Account[] {
+    return useAccounts(db).filter((account) => account.archivedAt === null);
+}
+
 export function useBankAccounts(db: Database): Account[] {
-    const all = useAccounts(db);
-    return all.filter((account) => !isPerson(account));
+    return useOpenAccounts(db).filter((account) => !isPerson(account));
+}
+
+export function useArchivedAccounts(db: Database): Account[] {
+    return useAccounts(db).filter((account) => account.archivedAt !== null);
 }
 
 export function useBankAccountsInOrder(db: Database, nowMs: number): Account[] {
@@ -63,8 +71,7 @@ export function useBankAccountsInOrder(db: Database, nowMs: number): Account[] {
 }
 
 export function usePeople(db: Database): Account[] {
-    const all = useAccounts(db);
-    return all.filter(isPerson);
+    return useOpenAccounts(db).filter(isPerson);
 }
 
 export function useBalanceRates(db: Database, code: string, accountRows: readonly Account[]): RateTable {
@@ -240,7 +247,7 @@ export interface NetWorth {
 }
 
 function useNetWorthIn(db: Database, valuation: Valuation, nowMs: number): NetWorth {
-    const rows = useAccounts(db);
+    const rows = useOpenAccounts(db);
     const settledAt = new Date(nowMs);
     const cells = useSettledCells(db, settledAt);
     const { displayCurrency } = valuation;

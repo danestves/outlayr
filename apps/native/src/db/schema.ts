@@ -29,6 +29,8 @@ export const categories = sqliteTable(
 export const accounts = sqliteTable(
     "accounts",
     {
+        /** Hidden from lists, pickers and totals; its entries still count. Unlike `deletedAt`, reversible. */
+        archivedAt: integer("archivedAt", { mode: "timestamp_ms" }),
         checkedAt: integer("checkedAt", { mode: "timestamp_ms" }),
         creditLimit: real("creditLimit"),
         currency: text("currency").notNull(),

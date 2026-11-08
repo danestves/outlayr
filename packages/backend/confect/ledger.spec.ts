@@ -7,13 +7,29 @@ import budgets from "./_generated/tables/budgets";
 import categories from "./_generated/tables/categories";
 import exchangeRates from "./_generated/tables/exchangeRates";
 import installmentPlans from "./_generated/tables/installmentPlans";
+import installments from "./_generated/tables/installments";
 import mainBudget from "./_generated/tables/mainBudget";
 import outsideMoves from "./_generated/tables/outsideMoves";
 import outsidePayments from "./_generated/tables/outsidePayments";
+import savingsGoals from "./_generated/tables/savingsGoals";
 import transactions from "./_generated/tables/transactions";
 import transfers from "./_generated/tables/transfers";
 
 export default GroupSpec.make()
+    .addFunction(
+        FunctionSpec.publicQuery({
+            args: () => ({}),
+            name: "installments",
+            returns: () => Schema.Array(installments.Doc),
+        })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({
+            args: () => ({}),
+            name: "savingsGoals",
+            returns: () => Schema.Array(savingsGoals.Doc),
+        })
+    )
     .addFunction(FunctionSpec.publicPaginatedQuery({ item: () => transactions.Doc, name: "transactions" }))
     .addFunction(FunctionSpec.publicPaginatedQuery({ item: () => transfers.Doc, name: "transfers" }))
     .addFunction(

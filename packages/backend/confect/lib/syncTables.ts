@@ -87,6 +87,8 @@ export const transferFields = {
 };
 
 export const accountFields = {
+    /** Optional for older builds; `push` patches, so an absent key leaves a stored archive alone. */
+    archivedAt: Schema.optional(Schema.NullOr(Schema.Number)),
     /** Optional for older builds; `push` patches, so an absent key leaves a stored check alone. */
     checkedAt: Schema.optional(Schema.NullOr(Schema.Number)),
     creditLimit: Schema.optional(Schema.NullOr(Schema.Number)),

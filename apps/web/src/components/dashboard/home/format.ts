@@ -20,6 +20,12 @@ export function useDateFormat() {
             month: "short",
             timeZone: "UTC",
         });
+        const withYear = new Intl.DateTimeFormat(date === "en-GB" ? "en-US" : date, {
+            day: "numeric",
+            month: "short",
+            timeZone: "UTC",
+            year: "numeric",
+        });
         const withWeekday = new Intl.DateTimeFormat(date, {
             day: "numeric",
             month: "short",
@@ -29,6 +35,7 @@ export function useDateFormat() {
         const month = new Intl.DateTimeFormat(date, { month: "long", timeZone: "UTC" });
         return {
             day: (day: string) => short.format(noonOf(day)),
+            full: (day: string) => withYear.format(noonOf(day)),
             month: (key: string) => month.format(noonOf(`${key}-15`)),
             weekday: (day: string) => withWeekday.format(noonOf(day)).replace(WEEKDAY_LEAD, "$1, "),
         };

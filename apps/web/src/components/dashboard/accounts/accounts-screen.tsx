@@ -1,13 +1,21 @@
 import {
     RiAddLine,
+    RiArchiveLine,
+    RiArrowDownSLine,
     RiArrowLeftDownLine,
     RiArrowLeftRightLine,
     RiArrowRightUpLine,
     RiBankCardLine,
+    RiBankLine,
+    RiDeleteBin6Line,
+    RiHistoryLine,
+    RiMore2Fill,
     RiUpload2Line,
     RiSafe2Line,
 } from "@remixicon/react";
-import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate, useRouteContext } from "@tanstack/react-router";
+import { Menu } from "panelui-web/menu";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -15,12 +23,17 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { useDateFormat, useWholeMoney, titled } from "@/components/dashboard/home/format";
 import { PhoneButton } from "@/components/dashboard/home/setup";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { LookTile } from "@/components/ledger/tiles";
+import { NO_PHOTOS, photoUrlsQuery, toPhotoUrls } from "@/components/dashboard/shell/photos";
+import { AccountTile, LookTile } from "@/components/ledger/tiles";
+import { archivedAccount } from "@/lib/account-writes";
 import { addDays } from "@/lib/ledger";
+import { commitRows } from "@/lib/ledger-commit";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
+import { useAccountFlows, useLedgerDb } from "./flows";
 import {
     accountRows,
+    archivedRows,
     byCurrency,
     cardStatement,
     changeSince,
@@ -37,7 +50,7 @@ import {
     storedSort,
     worthSeries,
 } from "./model";
-import type { AccountRow, AccountSort, WorthRange } from "./model";
+import type { AccountRow, AccountSort, ArchivedRow, WorthRange } from "./model";
 import {
     AccountCell,
     KpiBand,
@@ -682,6 +695,7 @@ function GhostSpark() {
 
 export function EmptyAccounts() {
     const { actions, empty } = useIntlayer("dashboard-accounts");
+    const { open } = useAccountFlows();
     return (
         <section className="dash-card relative min-h-[760px] flex-1">
             <div aria-hidden className="px-5 pt-3.5">
@@ -718,12 +732,155 @@ export function EmptyAccounts() {
             <div className="flex flex-col items-center gap-1.5 px-6 pt-6 pb-10 text-center">
                 <b className="text-[15px] leading-[22px] font-semibold">{empty.title}</b>
                 <p className="text-muted-foreground text-[13px]">{empty.line}</p>
-                <PhoneButton className="dash-btn mt-3">
+                <button className="dash-btn mt-3" onClick={() => open({ kind: "create", type: "bank" })} type="button">
                     <RiAddLine size={17} />
                     {actions.addAccount}
-                </PhoneButton>
+                </button>
             </div>
         </section>
+    );
+}
+
+function ArchivedMenu({ row }: { row: ArchivedRow }) {
+    const { ledger } = useDashboard();
+    const { actions, flows } = useIntlayer("dashboard-accounts");
+    const { open, toast } = useAccountFlows();
+    const db = useLedgerDb();
+    const navigate = useNavigate();
+    const restore = async () => {
+        const account = ledger.books.accounts.find((each) => each.localId === row.id);
+        if (!account) {
+            return;
+        }
+        try {
+            await commitRows(db, [archivedAccount(account, null, Date.now())]);
+        } catch {
+            toast({ text: flows.restoreFailed({ name: row.name }).value });
+        }
+    };
+    return (
+        <Menu>
+            <Menu.Trigger
+                aria-label={actions.more({ name: row.name }).value}
+                className="text-muted-foreground hover:text-foreground -mr-1 inline-flex size-7 items-center justify-center rounded-lg align-middle"
+            >
+                <RiMore2Fill size={17} />
+            </Menu.Trigger>
+            <Menu.Content align="end" className="app-shell dash-menu ph-no-capture w-[210px]" sideOffset={4}>
+                <Menu.Item className="dash-menu-item" onClick={restore}>
+                    <RiArchiveLine size={16} />
+                    {flows.restore}
+                </Menu.Item>
+                <Menu.Item
+                    className="dash-menu-item"
+                    onClick={() => navigate({ search: { accounts: row.id, span: "all" }, to: "/app/transactions" })}
+                >
+                    <RiHistoryLine size={16} />
+                    {flows.seeTransactions}
+                </Menu.Item>
+                <div className="dash-menu-rule" />
+                <Menu.Item
+                    className="dash-menu-item text-app-spend [&>svg]:text-app-spend!"
+                    onClick={() => open({ accountId: row.id, kind: "delete" })}
+                >
+                    <RiDeleteBin6Line size={16} />
+                    {actions.delete}
+                </Menu.Item>
+            </Menu.Content>
+        </Menu>
+    );
+}
+
+function ArchivedRows({ rows }: { rows: readonly ArchivedRow[] }) {
+    const { columns, flows } = useIntlayer("dashboard-accounts");
+    const { money } = useDisplayFormat();
+    const date = useDateFormat();
+    const convex = useRouteContext({ from: "/_account/app", select: (context) => context.convexQueryClient });
+    // The shell mints photos only for open accounts, so an archived logo or photo is minted when it is looked at.
+    const keys = [...new Set(rows.flatMap((row) => (row.look?.imageKey ? [row.look.imageKey] : [])))].toSorted();
+    const { data: photos = NO_PHOTOS } = useQuery({ ...photoUrlsQuery(convex, keys), select: toPhotoUrls });
+    return (
+        <Table head={[columns.account, flows.lastEntry, columns.balance, ""]}>
+            {rows.map((row) => (
+                <tr key={row.id}>
+                    <td className={TD}>
+                        <div className="flex min-w-0 items-center gap-2.5 opacity-60">
+                            <AccountTile account={row.look} photos={photos} size="lg" />
+                            <div className="min-w-0">
+                                <b className="block truncate text-sm leading-[18px] font-medium">{row.name}</b>
+                                <small className="text-muted-foreground block truncate text-xs leading-4">
+                                    {row.currency} · {flows.archivedOn({ date: date.day(row.archivedDay) })}
+                                </small>
+                            </div>
+                        </div>
+                    </td>
+                    <td className={`${TD} dash-figure text-muted-foreground`}>
+                        {row.lastDay === null ? "" : date.full(row.lastDay)}
+                    </td>
+                    <td className={`${TD} ${BALANCE} text-muted-foreground`}>{money(row.balance, row.currency)}</td>
+                    <td className={`${TD} w-10`}>
+                        <ArchivedMenu row={row} />
+                    </td>
+                </tr>
+            ))}
+        </Table>
+    );
+}
+
+function ArchivedCard() {
+    const { ledger } = useDashboard();
+    const { flows } = useIntlayer("dashboard-accounts");
+    const [open, setOpen] = useState(false);
+    const rows = useMemo(() => archivedRows(ledger), [ledger]);
+    if (rows.length === 0) {
+        return null;
+    }
+    return (
+        <Card>
+            <button
+                aria-expanded={open}
+                className="dash-card-head w-full text-left"
+                onClick={() => setOpen(!open)}
+                type="button"
+            >
+                <RiArchiveLine className="text-muted-foreground shrink-0" size={16} />
+                <h2>{flows.archived}</h2>
+                <span className="dash-figure text-muted-foreground text-[13px]">{rows.length}</span>
+                {open ? (
+                    <span className="text-muted-foreground ml-auto min-w-0 truncate text-[13px]">
+                        {flows.archivedNote}
+                    </span>
+                ) : null}
+                <RiArrowDownSLine
+                    className={`text-muted-foreground shrink-0 ${open ? "rotate-180" : "ml-auto"}`}
+                    size={18}
+                />
+            </button>
+            {open ? <ArchivedRows rows={rows} /> : null}
+        </Card>
+    );
+}
+
+function AddAccountMenu() {
+    const { actions, columns, flows } = useIntlayer("dashboard-accounts");
+    const { open } = useAccountFlows();
+    return (
+        <Menu>
+            <Menu.Trigger className="dash-btn">
+                <RiAddLine size={17} />
+                {actions.addAccount}
+            </Menu.Trigger>
+            <Menu.Content align="end" className="app-shell dash-menu ph-no-capture w-[232px]" sideOffset={4}>
+                <Menu.Item className="dash-menu-item" onClick={() => open({ kind: "create", type: "bank" })}>
+                    <RiBankLine size={16} />
+                    {columns.account}
+                </Menu.Item>
+                <Menu.Item className="dash-menu-item" onClick={() => open({ kind: "create", type: "card" })}>
+                    <RiBankCardLine size={16} />
+                    {flows.cardOrLoan}
+                </Menu.Item>
+            </Menu.Content>
+        </Menu>
     );
 }
 
@@ -740,7 +897,8 @@ export function AccountsScreen() {
     const { ledger } = useDashboard();
     const { actions, list } = useIntlayer("dashboard-accounts");
     const model = useListModel();
-    const [sort, setSort] = useState<AccountSort>(() => storedSort(ledger));
+    const { sort: saveSort } = useAccountFlows();
+    const sort = storedSort(ledger);
     const empty = model.rows.length === 0;
     return (
         <main className="@container min-w-0 px-4 pb-5 sm:px-6">
@@ -752,24 +910,20 @@ export function AccountsScreen() {
                     </PhoneButton>
                 ) : (
                     <>
-                        <SortMenu onSort={setSort} sort={sort} />
+                        <SortMenu onSort={saveSort} sort={sort} />
                         <PhoneButton className="dash-ob h-9 gap-1.5 rounded-[10px] px-3 max-sm:hidden [&>svg]:size-4">
                             <RiArrowLeftRightLine />
                             {actions.transfer}
                         </PhoneButton>
                     </>
                 )}
-                {empty ? null : (
-                    <PhoneButton className="dash-btn">
-                        <RiAddLine size={17} />
-                        {actions.addAccount}
-                    </PhoneButton>
-                )}
+                {empty ? null : <AddAccountMenu />}
             </AccountsBar>
             <Kpis model={model} />
             {empty ? (
-                <div className="mt-4">
+                <div className="mt-4 flex flex-col gap-4">
                     <EmptyAccounts />
+                    <ArchivedCard />
                 </div>
             ) : (
                 <div className="mt-4 grid grid-cols-1 gap-4 @5xl:grid-cols-[minmax(0,1fr)_332px]">
@@ -777,6 +931,7 @@ export function AccountsScreen() {
                         <WorthCard model={model} />
                         <AssetsCard model={model} sort={sort} />
                         <CardsCard model={model} sort={sort} />
+                        <ArchivedCard />
                     </div>
                     <div className="flex min-w-0 flex-col gap-4">
                         {model.multi ? (

@@ -48,7 +48,7 @@ export const ledgerCollections = {
     accounts: collectionOptions("ledger.accounts", (db) =>
         convexCollectionOptions({
             client: convexOf(db),
-            getKey: (row) => row._id,
+            getKey: (row) => row.localId,
             queryArgs: {},
             id: "ledger.accounts",
             query: api.ledger.accounts,
@@ -69,7 +69,7 @@ export const ledgerCollections = {
     budgets: collectionOptions("ledger.budgets", (db) =>
         convexCollectionOptions({
             client: convexOf(db),
-            getKey: (row) => row._id,
+            getKey: (row) => row.localId,
             queryArgs: {},
             id: "ledger.budgets",
             query: api.ledger.budgets,
@@ -78,7 +78,7 @@ export const ledgerCollections = {
     categories: collectionOptions("ledger.categories", (db) =>
         convexCollectionOptions({
             client: convexOf(db),
-            getKey: (row) => row._id,
+            getKey: (row) => row.localId,
             queryArgs: {},
             id: "ledger.categories",
             query: api.ledger.categories,
@@ -96,16 +96,25 @@ export const ledgerCollections = {
     installmentPlans: collectionOptions("ledger.installmentPlans", (db) =>
         convexCollectionOptions({
             client: convexOf(db),
-            getKey: (row) => row._id,
+            getKey: (row) => row.localId,
             queryArgs: {},
             id: "ledger.installmentPlans",
             query: api.ledger.installmentPlans,
         })
     ),
+    installments: collectionOptions("ledger.installments", (db) =>
+        convexCollectionOptions({
+            client: convexOf(db),
+            getKey: (row) => row.localId,
+            queryArgs: {},
+            id: "ledger.installments",
+            query: api.ledger.installments,
+        })
+    ),
     mainBudget: collectionOptions("ledger.mainBudget", (db) =>
         convexCollectionOptions({
             client: convexOf(db),
-            getKey: (row) => row._id,
+            getKey: (row) => row.localId,
             queryArgs: {},
             id: "ledger.mainBudget",
             query: api.ledger.mainBudget,
@@ -114,7 +123,7 @@ export const ledgerCollections = {
     outsideMoves: collectionOptions("ledger.outsideMoves", (db) =>
         convexCollectionOptions({
             client: convexOf(db),
-            getKey: (row) => row._id,
+            getKey: (row) => row.localId,
             queryArgs: {},
             id: "ledger.outsideMoves",
             query: api.ledger.outsideMoves,
@@ -123,17 +132,26 @@ export const ledgerCollections = {
     outsidePayments: collectionOptions("ledger.outsidePayments", (db) =>
         convexCollectionOptions({
             client: convexOf(db),
-            getKey: (row) => row._id,
+            getKey: (row) => row.localId,
             queryArgs: {},
             id: "ledger.outsidePayments",
             query: api.ledger.outsidePayments,
+        })
+    ),
+    savingsGoals: collectionOptions("ledger.savingsGoals", (db) =>
+        convexCollectionOptions({
+            client: convexOf(db),
+            getKey: (row) => row.localId,
+            queryArgs: {},
+            id: "ledger.savingsGoals",
+            query: api.ledger.savingsGoals,
         })
     ),
     transactions: collectionOptions("ledger.transactions", (db) =>
         convexPaginatedCollectionOptions({
             ...paged,
             client: convexOf(db),
-            getKey: (row) => row._id,
+            getKey: (row) => row.localId,
             queryArgs: {},
             id: "ledger.transactions",
             query: api.ledger.transactions,
@@ -143,7 +161,7 @@ export const ledgerCollections = {
         convexPaginatedCollectionOptions({
             ...paged,
             client: convexOf(db),
-            getKey: (row) => row._id,
+            getKey: (row) => row.localId,
             queryArgs: {},
             id: "ledger.transfers",
             query: api.ledger.transfers,
@@ -162,9 +180,11 @@ export const preloadLedger = (db: DbClient) =>
         load(db.collection(ledgerCollections.categories)),
         load(db.collection(ledgerCollections.exchangeRates)),
         load(db.collection(ledgerCollections.installmentPlans)),
+        load(db.collection(ledgerCollections.installments)),
         load(db.collection(ledgerCollections.mainBudget)),
         load(db.collection(ledgerCollections.outsideMoves)),
         load(db.collection(ledgerCollections.outsidePayments)),
+        load(db.collection(ledgerCollections.savingsGoals)),
         load(db.collection(ledgerCollections.transactions)),
         load(db.collection(ledgerCollections.transfers)),
     ]);
@@ -176,9 +196,11 @@ export const ledgerBooks = (db: DbClient): LedgerBooks => ({
     categories: db.collection(ledgerCollections.categories).toArray,
     exchangeRates: db.collection(ledgerCollections.exchangeRates).toArray,
     installmentPlans: db.collection(ledgerCollections.installmentPlans).toArray,
+    installments: db.collection(ledgerCollections.installments).toArray,
     mainBudget: db.collection(ledgerCollections.mainBudget).toArray,
     outsideMoves: db.collection(ledgerCollections.outsideMoves).toArray,
     outsidePayments: db.collection(ledgerCollections.outsidePayments).toArray,
+    savingsGoals: db.collection(ledgerCollections.savingsGoals).toArray,
     transactions: db.collection(ledgerCollections.transactions).toArray,
     transfers: db.collection(ledgerCollections.transfers).toArray,
 });
@@ -208,6 +230,10 @@ export function useLedgerBooks(): LedgerBooks {
         query: (q) => q.from({ row: ledgerCollections.installmentPlans }),
         queryKey: ["ledger.installmentPlans"],
     }).data;
+    const installments = useLiveQuery({
+        query: (q) => q.from({ row: ledgerCollections.installments }),
+        queryKey: ["ledger.installments"],
+    }).data;
     const mainBudget = useLiveQuery({
         query: (q) => q.from({ row: ledgerCollections.mainBudget }),
         queryKey: ["ledger.mainBudget"],
@@ -219,6 +245,10 @@ export function useLedgerBooks(): LedgerBooks {
     const outsidePayments = useLiveQuery({
         query: (q) => q.from({ row: ledgerCollections.outsidePayments }),
         queryKey: ["ledger.outsidePayments"],
+    }).data;
+    const savingsGoals = useLiveQuery({
+        query: (q) => q.from({ row: ledgerCollections.savingsGoals }),
+        queryKey: ["ledger.savingsGoals"],
     }).data;
     const transactions = useLiveQuery({
         query: (q) => q.from({ row: ledgerCollections.transactions }),
@@ -236,9 +266,11 @@ export function useLedgerBooks(): LedgerBooks {
             categories,
             exchangeRates,
             installmentPlans,
+            installments,
             mainBudget,
             outsideMoves,
             outsidePayments,
+            savingsGoals,
             transactions,
             transfers,
         }),
@@ -249,9 +281,11 @@ export function useLedgerBooks(): LedgerBooks {
             categories,
             exchangeRates,
             installmentPlans,
+            installments,
             mainBudget,
             outsideMoves,
             outsidePayments,
+            savingsGoals,
             transactions,
             transfers,
         ]

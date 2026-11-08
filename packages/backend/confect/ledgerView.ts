@@ -219,7 +219,9 @@ export function accountBalances(
     rates: RateTable,
     { now, offsetAt }: LedgerClock
 ) {
-    const accounts = live(books.accounts).sort((a, b) => a.sortOrder - b.sortOrder);
+    const accounts = live(books.accounts)
+        .filter((account) => (account.archivedAt ?? null) === null)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
     const ledger = new Map<string, LegEntry[]>(accounts.map((account) => [account.localId, []]));
     for (const row of happened(books.transactions, now).sort(bySeq)) {
         if (row.accountId) {
@@ -546,9 +548,11 @@ export interface LedgerBooks {
     categories: readonly Category[];
     exchangeRates: readonly Doc<"exchangeRates">[];
     installmentPlans: readonly Doc<"installmentPlans">[];
+    installments: readonly Doc<"installments">[];
     mainBudget: readonly Doc<"mainBudget">[];
     outsideMoves: readonly Doc<"outsideMoves">[];
     outsidePayments: readonly Doc<"outsidePayments">[];
+    savingsGoals: readonly Doc<"savingsGoals">[];
     transactions: readonly Transaction[];
     transfers: readonly Transfer[];
 }

@@ -8,7 +8,7 @@ import { AccountDetail } from "./account-detail";
 import { AccountsScreen } from "./accounts-screen";
 import { NetWorthScreen } from "./net-worth";
 
-const DETAIL = /^\/app\/accounts\/[^/]+/u;
+const DETAIL = /^\/app\/accounts\/(?!reorder)[^/]+/u;
 const NET_WORTH = /^\/app\/accounts\/net-worth/u;
 
 function screenFor(path: string, sampleId: string | undefined) {

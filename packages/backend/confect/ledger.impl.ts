@@ -53,6 +53,28 @@ const categoriesQuery = FunctionImpl.make(databaseSchema, spec, "categories", ()
     }).pipe(Effect.orDie)
 );
 
+const installmentsQuery = FunctionImpl.make(databaseSchema, spec, "installments", () =>
+    Effect.gen(function* installments() {
+        const userId = yield* syncedUser();
+        const reader = yield* DatabaseReader;
+        return yield* reader
+            .table("installments")
+            .index("by_user_and_seq", (q) => q.eq("userId", userId))
+            .collect();
+    }).pipe(Effect.orDie)
+);
+
+const savingsGoalsQuery = FunctionImpl.make(databaseSchema, spec, "savingsGoals", () =>
+    Effect.gen(function* savingsGoals() {
+        const userId = yield* syncedUser();
+        const reader = yield* DatabaseReader;
+        return yield* reader
+            .table("savingsGoals")
+            .index("by_user_and_seq", (q) => q.eq("userId", userId))
+            .collect();
+    }).pipe(Effect.orDie)
+);
+
 const installmentPlansQuery = FunctionImpl.make(databaseSchema, spec, "installmentPlans", () =>
     Effect.gen(function* installmentPlans() {
         const userId = yield* syncedUser();
@@ -180,6 +202,8 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(budgetsQuery),
     Layer.provide(categoriesQuery),
     Layer.provide(installmentPlansQuery),
+    Layer.provide(installmentsQuery),
+    Layer.provide(savingsGoalsQuery),
     Layer.provide(mainBudgetQuery),
     Layer.provide(outsideMovesQuery),
     Layer.provide(outsidePaymentsQuery),

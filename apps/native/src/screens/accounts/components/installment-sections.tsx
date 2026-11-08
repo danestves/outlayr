@@ -1,3 +1,4 @@
+import { isInstallmentAppAccount } from "@outlayr/money/institution-map";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -13,7 +14,6 @@ import type { PlanWithStanding, UpcomingInstallment } from "@/data/installments-
 import type { Database } from "@/db/client";
 import { formatSentenceDate } from "@/domain/dates";
 import { orderName } from "@/domain/installments";
-import { isInstallmentAppAccount } from "@/domain/institution-map";
 import { addLocalDays } from "@/domain/local-day";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";

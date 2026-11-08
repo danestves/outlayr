@@ -1,6 +1,6 @@
 import { isPerson } from "@outlayr/money/account-kind";
+import { isInstallmentAppAccount } from "@outlayr/money/institution-map";
 
-import { isInstallmentAppAccount } from "@/domain/institution-map";
 import { FREE_ACCOUNTS, FREE_BUDGETS, FREE_CURRENCIES, FREE_INSTALLMENT_APPS } from "@/domain/pro-limits";
 
 import type { MmImportPlan, OutlayrLedgerState } from "./types";

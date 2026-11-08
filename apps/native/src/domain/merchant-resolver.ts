@@ -1,8 +1,8 @@
 import { merchantKey } from "@outlayr/money/merchant-key";
+import { containsTokenSequence } from "@outlayr/money/pattern-index";
 
 import { MERCHANT_INDEX } from "./merchant-map";
 import type { MerchantEntry, MerchantTag } from "./merchant-map";
-import { containsTokenSequence } from "./pattern-index";
 
 export interface MerchantMatch {
     readonly categoryName: string;

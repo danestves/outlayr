@@ -21,7 +21,7 @@ import type { Dashboard } from "@/components/dashboard/shell/dashboard";
 import { toggledAccounts } from "@/components/dashboard/shell/filters";
 import { usePeriodKeys } from "@/components/dashboard/shell/period-keys";
 import { AccountTile } from "@/components/ledger/tiles";
-import { rowsBetween, total } from "@/lib/dashboard-series-ledger";
+import { openAccounts, rowsBetween, total } from "@/lib/dashboard-series-ledger";
 import { periodOf } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -210,11 +210,7 @@ function AccountRows({
 export function AccountMenu({ quiet }: { quiet: boolean }) {
     const { filters, ledger, setFilters } = useDashboard();
     const { filters: copy } = useIntlayer("dashboard");
-    const accounts = useMemo(
-        () =>
-            ledger.books.accounts.filter((row) => row.deletedAt === null).toSorted((a, b) => a.sortOrder - b.sortOrder),
-        [ledger.books.accounts]
-    );
+    const accounts = useMemo(() => openAccounts(ledger.books), [ledger.books]);
     if (accounts.length < 2) {
         return null;
     }

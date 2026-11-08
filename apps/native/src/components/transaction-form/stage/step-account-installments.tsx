@@ -1,5 +1,13 @@
 import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import {
+    installmentAppDomain,
+    installmentAppsIn,
+    installmentRegion,
+    isInstallmentAppAccount,
+    searchInstallmentApps,
+} from "@outlayr/money/institution-map";
+import type { FoundInstallmentApp, InstallmentApp } from "@outlayr/money/institution-map";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -16,14 +24,6 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { accountsRepo, getAccountById } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import type { Database } from "@/db/client";
-import {
-    installmentAppDomain,
-    installmentAppsIn,
-    installmentRegion,
-    isInstallmentAppAccount,
-    searchInstallmentApps,
-} from "@/domain/institution-map";
-import type { FoundInstallmentApp, InstallmentApp } from "@/domain/institution-map";
 import { useLongWait } from "@/hooks/use-long-wait";
 import { useMerchantMark } from "@/hooks/use-merchant-mark";
 import { useAccountCaps, useCreateLiability, useOpenPaywall } from "@/hooks/use-pro-gate";

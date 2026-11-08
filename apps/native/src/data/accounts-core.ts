@@ -47,14 +47,23 @@ export function getAccountById(db: Database, id: string): Account | null {
     return rows[0] ?? null;
 }
 
-// A tombstoned account resolves to null, so the default never revives it; a person is never the default either.
+// A tombstoned account resolves to null, so the default never revives it. A person or archived account is never the
+// default either.
 export function getLastUsedAccount(db: Database): Account | null {
     const id = getMetaSync(db, META_KEYS.lastTransactionAccount);
     const account = id == null ? null : getAccountById(db, id);
-    return account && !isPerson(account) ? account : null;
+    return account && !isPerson(account) && account.archivedAt === null ? account : null;
 }
 
-const AccountsOperation = Schema.Literals(["remember-last-used", "create", "list", "reorder", "delete", "update"]);
+const AccountsOperation = Schema.Literals([
+    "archive",
+    "create",
+    "delete",
+    "list",
+    "remember-last-used",
+    "reorder",
+    "update",
+]);
 
 export class AccountsError extends Schema.TaggedError<AccountsError>()("AccountsError", {
     cause: Schema.optional(Schema.Defect()),
@@ -91,11 +100,31 @@ const nextSortOrder = Effect.fn("Accounts.nextSortOrder")(function* nextSortOrde
 
 const listActive = Effect.fn("Accounts.listActive")(function* listActive(db: Database) {
     return yield* query("list", () =>
-        db.select().from(accounts).where(isNull(accounts.deletedAt)).orderBy(accounts.sortOrder)
+        db
+            .select()
+            .from(accounts)
+            .where(and(isNull(accounts.deletedAt), isNull(accounts.archivedAt)))
+            .orderBy(accounts.sortOrder)
+    );
+});
+
+const setArchivedAt = Effect.fn("Accounts.setArchivedAt")(function* setArchivedAt(
+    db: Database,
+    id: string,
+    archivedAt: Date | null,
+    now: Date
+) {
+    yield* query("archive", () =>
+        db
+            .update(accounts)
+            .set({ archivedAt, updatedAt: now })
+            .where(and(eq(accounts.id, id), isNull(accounts.deletedAt)))
     );
 });
 
 export const accountsRepo = {
+    archive: (db: Database, id: string, now: Date = new Date()) => setArchivedAt(db, id, now, now),
+
     create: Effect.fn("Accounts.create")(function* create(db: Database, input: AccountInput) {
         const now = new Date();
         const id = newId();
@@ -136,6 +165,8 @@ export const accountsRepo = {
         const live = yield* listActive(db);
         return live.filter((account) => !isPerson(account));
     }),
+
+    restore: (db: Database, id: string, now: Date = new Date()) => setArchivedAt(db, id, null, now),
 
     /** Takes every live account it lists, already ordered; people keep their own relative order. */
     reorder: Effect.fn("Accounts.reorder")(function* reorder(db: Database, orderedIds: string[]) {

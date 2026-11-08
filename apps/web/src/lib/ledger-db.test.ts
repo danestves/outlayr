@@ -8,7 +8,7 @@ import { LEDGER_CACHE_VERSION, snapshotOf, usableSnapshot } from "./ledger-cache
 import { ledgerBooks, preloadLedger } from "./ledger-db";
 import type { LedgerPusher } from "./ledger-write";
 
-const row = (id: string) => ({ _id: id, note: `entry ${id}` });
+const row = (id: string) => ({ _id: id, localId: id, note: `entry ${id}` });
 const ROWS = 2500;
 
 type Reply = (name: string, args: Record<string, unknown>) => unknown;

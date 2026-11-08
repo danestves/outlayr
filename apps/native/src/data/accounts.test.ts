@@ -234,6 +234,7 @@ describe("useLogOverviewIn", () => {
     });
 
     const account = (id: string, initialBalance: number) => ({
+        archivedAt: null,
         currency: "USD",
         id,
         initialBalance,

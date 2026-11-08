@@ -147,9 +147,11 @@ const NO_BOOKS: LedgerBooks = {
     categories: [],
     exchangeRates: [],
     installmentPlans: [],
+    installments: [],
     mainBudget: [],
     outsideMoves: [],
     outsidePayments: [],
+    savingsGoals: [],
     transactions: [],
     transfers: [],
 };

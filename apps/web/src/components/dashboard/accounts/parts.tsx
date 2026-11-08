@@ -1,5 +1,6 @@
 import type { RemixiconComponentType } from "@remixicon/react";
 import {
+    RiArchiveLine,
     RiArrowRightUpLine,
     RiCheckboxCircleLine,
     RiCheckLine,
@@ -19,6 +20,7 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
 
+import { useAccountFlows } from "./flows";
 import type { AccountRow, AccountSort, CheckedAge } from "./model";
 import { checkedAge } from "./model";
 
@@ -180,7 +182,8 @@ export function PhoneItem({ children, className = "" }: { children: ReactNode; c
 }
 
 export function RowMenu({ row }: { row: AccountRow }) {
-    const { actions } = useIntlayer("dashboard-accounts");
+    const { actions, flows } = useIntlayer("dashboard-accounts");
+    const { open } = useAccountFlows();
     const navigate = useNavigate();
     return (
         <Menu>
@@ -198,19 +201,26 @@ export function RowMenu({ row }: { row: AccountRow }) {
                     <RiArrowRightUpLine size={16} />
                     {actions.open}
                 </Menu.Item>
-                <PhoneItem>
+                <Menu.Item className="dash-menu-item" onClick={() => open({ accountId: row.id, kind: "edit" })}>
                     <RiPencilLine size={16} />
                     {actions.edit}
-                </PhoneItem>
-                <PhoneItem>
+                </Menu.Item>
+                <Menu.Item className="dash-menu-item" onClick={() => open({ accountId: row.id, kind: "check" })}>
                     <RiCheckboxCircleLine size={16} />
                     {actions.check}
-                </PhoneItem>
+                </Menu.Item>
+                <Menu.Item className="dash-menu-item" onClick={() => open({ accountId: row.id, kind: "archive" })}>
+                    <RiArchiveLine size={16} />
+                    {flows.archive}
+                </Menu.Item>
                 <div className="dash-menu-rule" />
-                <PhoneItem className="text-app-spend [&>svg]:text-app-spend!">
+                <Menu.Item
+                    className="dash-menu-item text-app-spend [&>svg]:text-app-spend!"
+                    onClick={() => open({ accountId: row.id, kind: "delete" })}
+                >
                     <RiDeleteBin6Line size={16} />
                     {actions.delete}
-                </PhoneItem>
+                </Menu.Item>
             </Menu.Content>
         </Menu>
     );
@@ -218,6 +228,7 @@ export function RowMenu({ row }: { row: AccountRow }) {
 
 export function SortMenu({ onSort, sort }: { onSort: (sort: AccountSort) => void; sort: AccountSort }) {
     const { actions } = useIntlayer("dashboard-accounts");
+    const navigate = useNavigate();
     const Icon = sort === "order" ? RiSortDesc : RiSortAsc;
     const choice = (value: AccountSort, icon: RemixiconComponentType, label: ReactNode) => {
         const Glyph = icon;
@@ -239,10 +250,10 @@ export function SortMenu({ onSort, sort }: { onSort: (sort: AccountSort) => void
                 {choice("order", RiSortDesc, actions.yourOrder)}
                 {choice("balance", RiSortAsc, actions.byBalance)}
                 <div className="dash-menu-rule" />
-                <PhoneItem>
+                <Menu.Item className="dash-menu-item" onClick={() => navigate({ to: "/app/accounts/reorder" })}>
                     <RiDragMove2Line size={16} />
                     {actions.reorder}
-                </PhoneItem>
+                </Menu.Item>
             </Menu.Content>
         </Menu>
     );

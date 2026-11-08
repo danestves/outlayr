@@ -130,6 +130,8 @@ function sampleBooks(now: number): LedgerBooks {
         categories: CATEGORIES,
         exchangeRates: [],
         installmentPlans: [],
+        installments: [],
+        savingsGoals: [],
         mainBudget: [],
         outsideMoves: [],
         outsidePayments: [],

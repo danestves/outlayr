@@ -1,4 +1,5 @@
 import { isPerson } from "@outlayr/money/account-kind";
+import { isInstallmentAppAccount } from "@outlayr/money/institution-map";
 import { View } from "react-native";
 
 import { AccountTile } from "@/components/account-tile";
@@ -6,7 +7,6 @@ import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAccounts } from "@/data/accounts";
-import { isInstallmentAppAccount } from "@/domain/institution-map";
 import type { PaywallTrigger } from "@/domain/paywall-trigger";
 import { FREE_ACCOUNTS, FREE_INSTALLMENT_APPS } from "@/domain/pro-limits";
 import { useTranslation } from "@/i18n/context";

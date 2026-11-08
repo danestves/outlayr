@@ -1221,6 +1221,36 @@ describe("two devices against one account", () => {
         expect(row.checkedAt?.getTime()).toBe(9000);
     });
 
+    it("carries an account's archive and its restore to another device", async () => {
+        const alpha = makeDb();
+        const beta = makeDb();
+        const server = makeServer();
+        await Effect.runPromise(setSyncEnabled(alpha, true));
+        await Effect.runPromise(setSyncEnabled(beta, true));
+        await alpha.insert(accounts).values({
+            currency: "USD",
+            dateCreated: AT(1000),
+            id: "acct-1",
+            initialBalanceDate: AT(1000),
+            name: "Checking",
+            updatedAt: AT(1000),
+        });
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
+
+        await Effect.runPromise(accountsRepo.archive(alpha, "acct-1", AT(9000)));
+        await Effect.runPromise(runSync(alpha, server.transport));
+        await Effect.runPromise(runSync(beta, server.transport));
+        const [archived] = await beta.select().from(accounts);
+        expect(archived.archivedAt?.getTime()).toBe(9000);
+
+        await Effect.runPromise(accountsRepo.restore(beta, "acct-1", AT(10_000)));
+        await Effect.runPromise(runSync(beta, server.transport));
+        await Effect.runPromise(runSync(alpha, server.transport));
+        const [restored] = await alpha.select().from(accounts);
+        expect(restored.archivedAt).toBeNull();
+    });
+
     it("converges a concurrent edit to the same row on the later writer", async () => {
         const alpha = makeDb();
         const beta = makeDb();
