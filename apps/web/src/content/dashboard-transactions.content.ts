@@ -73,14 +73,6 @@ const dashboardTransactions = {
                 fr: "Opération supprimée",
                 pt: "Lançamento excluído",
             }),
-            skipped: insert(
-                t({
-                    en: "{{count}} kept. Recurring entries, transfers and installments are deleted on your phone.",
-                    es: "{{count}} sin eliminar. Los recurrentes, transferencias y cuotas se eliminan en tu teléfono.",
-                    fr: "{{count}} conservées. Les récurrences, virements et échéances se suppriment sur votre téléphone.",
-                    pt: "{{count}} mantidos. Recorrentes, transferências e parcelas são excluídos no seu celular.",
-                })
-            ),
             undo: t({ en: "Undo", es: "Deshacer", fr: "Annuler", pt: "Desfazer" }),
         },
         detail: {

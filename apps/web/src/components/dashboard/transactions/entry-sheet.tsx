@@ -27,12 +27,12 @@ function Field({ children, label }: { children: ReactNode; label: ReactNode }) {
 
 interface EntrySheetProps {
     onClose: () => void;
-    onDelete: ((row: FoldedRow) => void) | null;
+    onDelete: (row: FoldedRow) => void;
     onStep: (by: 1 | -1) => void;
     row: FoldedRow | null;
 }
 
-/** One entry or transfer. `onDelete` is set only for what the web may delete. */
+/** One entry or transfer. */
 export function EntrySheet({ onClose, onDelete, onStep, row }: EntrySheetProps) {
     const wide = useWide();
     return (
@@ -84,7 +84,16 @@ function EntryBody({ onDelete, onStep, row }: Omit<EntrySheetProps, "onClose" | 
         </div>
     );
     if ("fromId" in row) {
-        return <TransferBody accountName={accountName} fees={fees} row={row} stepper={stepper} when={when} />;
+        return (
+            <TransferBody
+                accountName={accountName}
+                fees={fees}
+                onDelete={() => onDelete(row)}
+                row={row}
+                stepper={stepper}
+                when={when}
+            />
+        );
     }
     const top = ledger.categories.get(row.topId);
     const category = row.categoryId
@@ -159,16 +168,14 @@ function EntryBody({ onDelete, onStep, row }: Omit<EntrySheetProps, "onClose" | 
                 </dl>
                 <div className="flex items-center gap-3 py-4">
                     <p className="text-muted-foreground text-[13px]">{detail.editOnPhone}</p>
-                    {onDelete ? (
-                        <button
-                            className="dash-ob text-destructive ml-auto gap-1.5"
-                            onClick={() => onDelete(row)}
-                            type="button"
-                        >
-                            <RiDeleteBinLine size={14} />
-                            {bulk.delete}
-                        </button>
-                    ) : null}
+                    <button
+                        className="dash-ob text-destructive ml-auto gap-1.5"
+                        onClick={() => onDelete(row)}
+                        type="button"
+                    >
+                        <RiDeleteBinLine size={14} />
+                        {bulk.delete}
+                    </button>
                 </div>
             </Sheet.Body>
         </>
@@ -178,14 +185,15 @@ function EntryBody({ onDelete, onStep, row }: Omit<EntrySheetProps, "onClose" | 
 interface TransferBodyProps {
     accountName: (id: string | null) => string;
     fees: ReactNode;
+    onDelete: () => void;
     row: Extract<FoldedRow, { fromId: string }>;
     stepper: ReactNode;
     when: string;
 }
 
-function TransferBody({ accountName, fees, row, stepper, when }: TransferBodyProps) {
+function TransferBody({ accountName, fees, onDelete, row, stepper, when }: TransferBodyProps) {
     const { ledger, photos: accountPhotos } = useDashboard();
-    const { detail } = useIntlayer("dashboard-transactions");
+    const { bulk, detail } = useIntlayer("dashboard-transactions");
     const { money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
     const figure = figureOf(ledger, row);
@@ -227,7 +235,13 @@ function TransferBody({ accountName, fees, row, stepper, when }: TransferBodyPro
                     {fees}
                     {move?.note.trim() ? <Field label={detail.note}>{move.note}</Field> : null}
                 </dl>
-                <p className="text-muted-foreground py-4 text-[13px]">{detail.editOnPhone}</p>
+                <div className="flex items-center gap-3 py-4">
+                    <p className="text-muted-foreground text-[13px]">{detail.editOnPhone}</p>
+                    <button className="dash-ob text-destructive ml-auto gap-1.5" onClick={onDelete} type="button">
+                        <RiDeleteBinLine size={14} />
+                        {bulk.delete}
+                    </button>
+                </div>
             </Sheet.Body>
         </>
     );

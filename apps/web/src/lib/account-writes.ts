@@ -35,7 +35,7 @@ interface SyncedDoc {
 type Change = Readonly<Record<string, boolean | number | string | null | undefined>> & { deletedAt?: number | null };
 
 /** A row at its next version. `restoredAt` travels with it: without it the server reads an older era and drops it. */
-function nextRow(table: CommitRow["table"], doc: SyncedDoc, change: Change, at: number): CommitRow {
+export function nextRow(table: CommitRow["table"], doc: SyncedDoc, change: Change, at: number): CommitRow {
     const merged = new Map(Object.entries({ ...doc, ...change }));
     const fields = Object.fromEntries(
         Object.keys(FIELDS_BY_TABLE[table]).flatMap((key) =>
@@ -55,7 +55,7 @@ function nextRow(table: CommitRow["table"], doc: SyncedDoc, change: Change, at: 
 
 const isLive = <Row extends { deletedAt: number | null }>(row: Row) => row.deletedAt === null;
 
-const ratesLookup =
+export const ratesLookup =
     (books: Pick<LedgerBooks, "exchangeRates">): RateLookup =>
     (quote, rateType, date) => {
         let newest: { date: string; rate: number } | null = null;
