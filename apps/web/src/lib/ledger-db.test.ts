@@ -6,6 +6,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { ledgerDependencies } from "./db";
 import { LEDGER_CACHE_VERSION, snapshotOf, usableSnapshot } from "./ledger-cache";
 import { ledgerBooks, preloadLedger } from "./ledger-db";
+import type { LedgerPusher } from "./ledger-write";
 
 const row = (id: string) => ({ _id: id, note: `entry ${id}` });
 const ROWS = 2500;
@@ -13,6 +14,9 @@ const ROWS = 2500;
 type Reply = (name: string, args: Record<string, unknown>) => unknown;
 
 const pagesOf = (rows: readonly ReturnType<typeof row>[]) => (name: string, args: Record<string, unknown>) => {
+    if (name === "sync:pullSince") {
+        return { cursor: 0, hasMore: false, rows: [] };
+    }
     if (name !== "ledger:transactions") {
         return name === "ledger:transfers" ? { continueCursor: "", isDone: true, page: [] } : [];
     }
@@ -26,8 +30,12 @@ const pagesOf = (rows: readonly ReturnType<typeof row>[]) => (name: string, args
     return { continueCursor: String(end), isDone: end >= rows.length, page: rows.slice(start, end) };
 };
 
+const pushed = { accepted: 0, nextSeq: 0, skipped: 0 };
+const mutation = () => Promise.resolve(pushed);
+
 const fakeConvex = (reply: Reply) =>
     ({
+        mutation,
         onUpdate: (query, args, callback) => {
             let current: unknown;
             queueMicrotask(() => {
@@ -39,11 +47,12 @@ const fakeConvex = (reply: Reply) =>
                 unsubscribe: () => undefined,
             });
         },
-    }) satisfies ConvexCollectionClient;
+    }) satisfies ConvexCollectionClient & LedgerPusher;
 
 const silentConvex = {
+    mutation,
     onUpdate: () => Object.assign(() => undefined, { getCurrentValue: () => undefined, unsubscribe: () => undefined }),
-} satisfies ConvexCollectionClient;
+} satisfies ConvexCollectionClient & LedgerPusher;
 
 const hydrated = async (rows: readonly ReturnType<typeof row>[]) => {
     const source = new DbClient(ledgerDependencies(fakeConvex(pagesOf(rows))));

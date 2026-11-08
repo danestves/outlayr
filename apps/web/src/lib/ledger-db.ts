@@ -4,9 +4,11 @@ import { convexCollectionOptions, convexPaginatedCollectionOptions } from "@tans
 import type { ConvexCollectionClient } from "@tanstack/convex-db-collection";
 import { collectionOptions, useLiveQuery } from "@tanstack/react-db";
 import type { Collection, DbClient } from "@tanstack/react-db";
+import type { FunctionReturnType } from "convex/server";
 import { useMemo } from "react";
 
 import { CONVEX } from "./db";
+import { pushRows } from "./ledger-write";
 
 const PAGE_SIZE = 1000;
 const MAX_ROWS = 100_000;
@@ -14,6 +16,33 @@ const MAX_ROWS = 100_000;
 const convexOf = (db: DbClient) => db.requireDependency<ConvexCollectionClient>(CONVEX);
 
 const paged = { maxRows: MAX_ROWS, pageSize: PAGE_SIZE };
+
+type PulledRow = FunctionReturnType<typeof api.sync.pullSince>["rows"][number];
+
+export interface MetaRow {
+    key: string;
+    updatedAt: number;
+    value: string | null;
+}
+
+const metaOf = (row: PulledRow): MetaRow => ({
+    key: row.localId,
+    updatedAt: row.updatedAt,
+    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- pullSince types every table's fields loosely; this is the boundary.
+    value: typeof row.fields.value === "string" ? row.fields.value : null,
+});
+
+const pushMeta = (db: DbClient, mutations: readonly { modified: MetaRow }[]) =>
+    pushRows(
+        db,
+        mutations.map(({ modified }) => ({
+            deletedAt: null,
+            fields: { value: modified.value },
+            localId: modified.key,
+            table: "appMeta",
+            updatedAt: modified.updatedAt,
+        }))
+    );
 
 export const ledgerCollections = {
     accounts: collectionOptions("ledger.accounts", (db) =>
@@ -26,12 +55,15 @@ export const ledgerCollections = {
         })
     ),
     appMeta: collectionOptions("ledger.appMeta", (db) =>
-        convexCollectionOptions({
+        convexCollectionOptions<typeof api.sync.pullSince, MetaRow, string>({
             client: convexOf(db),
-            getKey: (row) => row._id,
-            queryArgs: {},
+            getKey: (row) => row.key,
             id: "ledger.appMeta",
-            query: api.ledger.appMeta,
+            query: api.sync.pullSince,
+            queryArgs: { cursor: 0, tables: ["appMeta"] },
+            select: (page) => page.rows.map(metaOf),
+            onInsert: ({ transaction }) => pushMeta(db, transaction.mutations),
+            onUpdate: ({ transaction }) => pushMeta(db, transaction.mutations),
         })
     ),
     budgets: collectionOptions("ledger.budgets", (db) =>

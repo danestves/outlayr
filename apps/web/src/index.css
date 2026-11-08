@@ -6,6 +6,7 @@
 @source "../node_modules/panelui-web/dist/components/bar-chart/index.js";
 @source "../node_modules/panelui-web/dist/components/button/index.js";
 @source "../node_modules/panelui-web/dist/components/chip/index.js";
+@source "../node_modules/panelui-web/dist/components/command/index.js";
 @source "../node_modules/panelui-web/dist/components/day-grid/index.js";
 @source "../node_modules/panelui-web/dist/components/frame/index.js";
 @source "../node_modules/panelui-web/dist/components/kpi/index.js";
@@ -15,10 +16,13 @@
 @source "../node_modules/panelui-web/dist/components/range-meter/index.js";
 @source "../node_modules/panelui-web/dist/components/rolling-number/index.js";
 @source "../node_modules/panelui-web/dist/components/sankey-chart/index.js";
+@source "../node_modules/panelui-web/dist/components/select/index.js";
 @source "../node_modules/panelui-web/dist/components/sheet/index.js";
 @source "../node_modules/panelui-web/dist/components/stat/index.js";
+@source "../node_modules/panelui-web/dist/components/switch/index.js";
 @source "../node_modules/panelui-web/dist/components/table/index.js";
 @source "../node_modules/panelui-web/dist/components/tabs/index.js";
+@source "../node_modules/panelui-web/dist/components/toast/index.js";
 @source "../node_modules/panelui-web/dist/components/usage/index.js";
 @source "../node_modules/panelui-web/dist/components/waterfall-chart/index.js";
 
@@ -1268,6 +1272,19 @@ html[data-theme="dark"]:has(.dash-sheet) body::after {
         background: var(--color-app-float);
         color: var(--color-app-ink);
         box-shadow: 0 1px 2px var(--color-app-shadow-near);
+    }
+
+    .dash-swatch {
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        background: currentColor;
+    }
+
+    .dash-swatch[aria-pressed="true"] {
+        box-shadow:
+            0 0 0 2px var(--color-background),
+            0 0 0 4px currentColor;
     }
 
     .dash-card {
