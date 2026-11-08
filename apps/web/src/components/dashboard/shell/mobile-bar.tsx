@@ -2,6 +2,7 @@ import { RiAddLine, RiCloseLine, RiMenu2Line, RiSearch2Line } from "@remixicon/r
 import { Link, useLocation } from "@tanstack/react-router";
 import { Sheet } from "panelui-web/sheet";
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { LogoMark } from "@/components/logo-mark";
@@ -11,7 +12,13 @@ import { NavLinks, SearchButton } from "./sidebar";
 
 export function MobileBar() {
     const { add, nav } = useIntlayer("dashboard");
-    const onInsights = useLocation({ select: (location) => location.pathname.endsWith("/insights") });
+    const path = useLocation({ select: (location) => location.pathname });
+    let title: ReactNode = nav.dashboard;
+    if (path.endsWith("/insights")) {
+        title = nav.insights;
+    } else if (path.startsWith("/app/accounts")) {
+        title = nav.accounts;
+    }
     const [open, setOpen] = useState(false);
     return (
         <header className="dash-mobile-bar bg-background border-border sticky top-0 z-20 flex items-center gap-1 border-b lg:hidden">
@@ -54,7 +61,7 @@ export function MobileBar() {
                     </div>
                 </Sheet.Content>
             </Sheet>
-            <h1 className="min-w-0 truncate text-[17px] font-semibold">{onInsights ? nav.insights : nav.dashboard}</h1>
+            <h1 className="min-w-0 truncate text-[17px] font-semibold">{title}</h1>
             <button
                 aria-disabled
                 aria-label={nav.search.value}

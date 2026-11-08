@@ -5,6 +5,7 @@ import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
+import { accountEntries, rangeDays } from "../components/dashboard/accounts/model";
 import {
     budgetParts,
     categoryBudget,
@@ -347,6 +348,17 @@ describe("an account opened partway through the history", () => {
     it("counts every account today, so the figure matches the accounts list", () => {
         expect(worth("2026-10")).toBe(10_500);
         expect(kpis(opened, oct, ALL).netWorth.value).toBe(10_500);
+    });
+
+    it("starts the accounts page's All range at that first entry", () => {
+        const zero = prepareLedger(
+            books({
+                accounts: [account("zero", "Zero", { initialBalanceDate: at("2026-09-20T16:00:00Z") })],
+                transactions: [entry("early", "2026-08-10T16:00:00Z", 500, { accountId: "zero", income: true })],
+            }),
+            NOW
+        );
+        expect(rangeDays(zero, "all")[0]).toBe("2026-08-31");
     });
 
     it("starts a month's change from the accounts that existed before it", () => {
@@ -703,4 +715,25 @@ describe("net worth over time", () => {
             );
         }
     );
+});
+
+describe("a transfer between currencies on an account's entries", () => {
+    it("books each leg at its own frozen value", () => {
+        const ledger = prepareLedger(
+            books({
+                accounts: [account("chase", "Chase"), account("cash", "Cash", { currency: "EUR" })],
+                transfers: [
+                    {
+                        ...transfer("t", "2026-10-10T16:00:00Z", 100),
+                        toAmount: 90,
+                        toAmountUsd: 98,
+                        toCurrency: "EUR",
+                    },
+                ],
+            }),
+            NOW
+        );
+        const main = (id: string) => accountEntries(ledger, id, "2026-10-01", "2026-10-31")[0]?.main;
+        expect([main("chase"), main("cash")]).toStrictEqual([-100, 98]);
+    });
 });
