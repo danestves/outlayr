@@ -11,7 +11,7 @@ export interface LedgerPusher {
 
 export const PUSHER = "pusher";
 
-const BATCH = 500;
+const BATCH = 100;
 const DEVICE_KEY = "outlayr-device-id";
 
 let fallbackDevice: string | undefined;

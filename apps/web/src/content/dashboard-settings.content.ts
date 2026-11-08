@@ -13,6 +13,7 @@ const dashboardSettings = {
         sections: {
             account: t({ en: "Account", es: "Cuenta", fr: "Compte", pt: "Conta" }),
             plan: t({ en: "Plan", es: "Plan", fr: "Forfait", pt: "Plano" }),
+            categories: t({ en: "Categories", es: "Categorías", fr: "Catégories", pt: "Categorias" }),
             preferences: t({ en: "Preferences", es: "Preferencias", fr: "Préférences", pt: "Preferências" }),
             currency: t({ en: "Currency", es: "Moneda", fr: "Devise", pt: "Moeda" }),
             time: t({ en: "Time", es: "Tiempo", fr: "Temps", pt: "Tempo" }),

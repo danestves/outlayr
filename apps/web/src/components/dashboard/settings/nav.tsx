@@ -3,6 +3,7 @@ import {
     RiCalendarLine,
     RiEqualizer2Line,
     RiMoneyDollarCircleLine,
+    RiPriceTag3Line,
     RiUserLine,
     RiVerifiedBadgeLine,
 } from "@remixicon/react";
@@ -15,6 +16,7 @@ const SECTIONS = [
     { icon: RiEqualizer2Line, key: "preferences", to: "/app/settings/preferences" },
     { icon: RiMoneyDollarCircleLine, key: "currency", to: "/app/settings/currency" },
     { icon: RiCalendarLine, key: "time", to: "/app/settings/time" },
+    { icon: RiPriceTag3Line, key: "categories", to: "/app/settings/categories" },
 ] as const;
 
 export function SettingsNav({ list = false }: { list?: boolean }) {
