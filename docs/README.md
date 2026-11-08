@@ -23,5 +23,6 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 
 - [Measuring render work](./operations/perf-loop.md)
 - [Announcing a policy change](./operations/policy-change.md)
+- [Web billing](./operations/web-billing.md)
 - [Merchant logos](./operations/merchant-logos.md)
 - [App Store header and search art](../apps/screenshots/app-store-header/README.md)

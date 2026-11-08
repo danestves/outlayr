@@ -136,6 +136,7 @@ export const listsPro = Schema.is(
 );
 
 export const syncLimiter = new RateLimiter(components.rateLimiter, {
+    billing: { capacity: 30, kind: "token bucket", period: HOUR, rate: 30 },
     revenuecatSync: { capacity: 12, kind: "token bucket", period: HOUR, rate: 12 },
 });
 

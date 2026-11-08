@@ -28,6 +28,7 @@
         "./merchant-key": "./src/merchant-key.ts",
         "./occurrence": "./src/occurrence.ts",
         "./pattern-index": "./src/pattern-index.ts",
+        "./pro-prices": "./src/pro-prices.ts",
         "./rates": "./src/rates.ts",
         "./recurrence": "./src/recurrence.ts",
         "./round": "./src/round.ts",
