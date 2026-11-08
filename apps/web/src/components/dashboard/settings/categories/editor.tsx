@@ -399,7 +399,14 @@ export function CategoryEditor({ onClose, target }: { onClose: () => void; targe
         if (found) {
             return;
         }
-        const draft = { ...symbol, color, income, name, parentId, preset: doc?.preset ?? null };
+        const draft = {
+            ...symbol,
+            color,
+            income,
+            name,
+            parentId: parent?.localId ?? null,
+            preset: doc?.preset ?? null,
+        };
         if (doc) {
             writes.update(doc, draft);
         } else {

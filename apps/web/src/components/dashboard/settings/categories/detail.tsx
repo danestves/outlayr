@@ -72,7 +72,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                 <h1 className="mr-auto min-w-0 truncate text-lg font-semibold tracking-[-0.02em]">{category.name}</h1>
                 <div className="flex items-center gap-1">
                     <button
-                        aria-label={shiftPeriodKey(key, -1)}
+                        aria-label={copy.previousMonth.value}
                         className="dash-icon-btn"
                         onClick={() => setKey(shiftPeriodKey(key, -1))}
                         type="button"
@@ -81,7 +81,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                     </button>
                     <span className="dash-figure text-[13px] font-medium whitespace-nowrap">{periodTitle(period)}</span>
                     <button
-                        aria-label={shiftPeriodKey(key, 1)}
+                        aria-label={copy.nextMonth.value}
                         className="dash-icon-btn"
                         disabled={key >= filters.currentKey}
                         onClick={() => setKey(shiftPeriodKey(key, 1))}

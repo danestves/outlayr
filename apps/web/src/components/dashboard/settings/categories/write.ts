@@ -34,6 +34,7 @@ async function budgetPlansOf(categoryId: string) {
                         month: row.fields.month,
                     },
                     localId: row.localId,
+                    restoredAt: row.restoredAt,
                 });
             }
         }
@@ -119,7 +120,7 @@ export function useCategoryWrites() {
         });
         transaction.mutate(() => {
             if (deletion.entries.length > 0) {
-                entries.delete(deletion.entries.map((row) => row._id));
+                entries.delete(deletion.entries.map((row) => row.localId));
             }
             if (deletion.budgets.length > 0) {
                 budgets.delete(deletion.budgets.map((row) => row._id));

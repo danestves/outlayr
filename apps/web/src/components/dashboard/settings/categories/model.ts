@@ -18,6 +18,7 @@ export interface CategoryNode extends Category {
 export interface PlanRow {
     fields: { amount: number | null; categoryId: string; currency: string | null; month: number };
     localId: string;
+    restoredAt?: number | null;
 }
 
 export const MAX_EXPENSE_CATEGORIES = 24;
@@ -104,6 +105,7 @@ export const categoryPush = (doc: Category): PushRow => ({
         sortOrder: doc.sortOrder,
     },
     localId: doc.localId,
+    restoredAt: doc.restoredAt,
     table: "categories",
     updatedAt: doc.updatedAt,
 });
@@ -202,12 +204,14 @@ export function deletionRows(deletion: Deletion, plans: readonly PlanRow[], now:
                 type: 0,
             },
             localId: doc.localId,
+            restoredAt: doc.restoredAt,
             table: "budgets",
         })),
         ...plans.map((plan): PushRow => ({
             ...stamp,
             fields: plan.fields,
             localId: plan.localId,
+            restoredAt: plan.restoredAt,
             table: "budgetPlans",
         })),
         ...deletion.children.map((doc) => categoryPush({ ...doc, parentId: null, updatedAt: now })),

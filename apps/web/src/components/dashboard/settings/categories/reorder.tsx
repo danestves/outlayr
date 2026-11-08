@@ -86,16 +86,19 @@ export function ReorderList({ tree }: { tree: readonly CategoryNode[] }) {
             order = moved(order, order.indexOf(id), order.indexOf(target));
             setDrag({ id, order, scope });
         };
-        const onUp = () => {
+        const stop = () => {
             handle.removeEventListener("pointermove", onMove);
             handle.removeEventListener("pointerup", onUp);
-            handle.removeEventListener("pointercancel", onUp);
-            writes.reorder(order);
+            handle.removeEventListener("pointercancel", stop);
             setDrag(null);
         };
+        function onUp() {
+            stop();
+            writes.reorder(order);
+        }
         handle.addEventListener("pointermove", onMove);
         handle.addEventListener("pointerup", onUp);
-        handle.addEventListener("pointercancel", onUp);
+        handle.addEventListener("pointercancel", stop);
     };
 
     const keyMove = (id: string, scope: string, delta: number) => {

@@ -138,6 +138,8 @@ const dashboardCategories = {
             fr: "Tout voir dans Opérations",
             pt: "Ver tudo em Transações",
         }),
+        previousMonth: t({ en: "Previous month", es: "Mes anterior", fr: "Mois précédent", pt: "Mês anterior" }),
+        nextMonth: t({ en: "Next month", es: "Mes siguiente", fr: "Mois suivant", pt: "Próximo mês" }),
         noEntries: t({
             en: "No entries this month",
             es: "Sin registros este mes",
