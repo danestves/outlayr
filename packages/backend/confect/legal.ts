@@ -388,7 +388,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         changes: {
             en: [
                 {
-                    detail: "A bank statement PDF you import goes to Anthropic with everything printed on it, which can include your name and address.",
+                    detail: "The text of a bank statement PDF you import goes to Anthropic with long numbers masked, and can include your name and address.",
                     label: "Bank statement imports",
                 },
                 {
@@ -402,7 +402,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
             ],
             es: [
                 {
-                    detail: "Un estado de cuenta en PDF que importes llega a Anthropic con todo lo que tiene impreso, lo que puede incluir tu nombre y tu dirección.",
+                    detail: "El texto de un estado de cuenta en PDF que importes llega a Anthropic con los números largos ocultos, y puede incluir tu nombre y tu dirección.",
                     label: "Importar estados de cuenta",
                 },
                 {
@@ -416,7 +416,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
             ],
             fr: [
                 {
-                    detail: "Un relevé bancaire PDF que vous importez est envoyé à Anthropic avec tout ce qui y est imprimé, ce qui peut inclure votre nom et votre adresse.",
+                    detail: "Le texte d'un relevé bancaire PDF que vous importez est envoyé à Anthropic avec les longs numéros masqués, et peut inclure votre nom et votre adresse.",
                     label: "Import de relevés bancaires",
                 },
                 {
@@ -430,7 +430,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
             ],
             pt: [
                 {
-                    detail: "Um extrato bancário em PDF que você importar vai para a Anthropic com tudo o que está impresso nele, o que pode incluir seu nome e endereço.",
+                    detail: "O texto de um extrato bancário em PDF que você importar vai para a Anthropic com os números longos mascarados, e pode incluir seu nome e endereço.",
                     label: "Importar extratos bancários",
                 },
                 {
