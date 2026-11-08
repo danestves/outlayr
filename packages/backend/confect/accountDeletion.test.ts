@@ -290,6 +290,25 @@ async function linkAppleAccount(t: TestConvex<typeof schema>, userId: string) {
     );
 }
 
+async function linkGoogleAccount(t: TestConvex<typeof schema>, userId: string) {
+    const now = Date.now();
+    await t.run((ctx) =>
+        ctx.runMutation(components.betterAuth.adapter.create, {
+            input: {
+                data: {
+                    accountId: "google-subject",
+                    createdAt: now,
+                    providerId: "google",
+                    refreshToken: "google-refresh-token",
+                    updatedAt: now,
+                    userId,
+                },
+                model: "account",
+            },
+        })
+    );
+}
+
 describe("deleting a password account", () => {
     async function preparedFor(link?: (t: TestConvex<typeof schema>, userId: string) => Promise<void>) {
         const t = convexTest(schema, modules);
@@ -314,6 +333,14 @@ describe("deleting a password account", () => {
 
     it("goes on to the purge when the only other link is a Notion import connection", async () => {
         const { resumeSecret, t } = await preparedFor(linkNotionAccount);
+
+        await expect(t.mutation(api.accountDeletion.recordCredentialOnly, { resumeSecret })).resolves.toMatchObject({
+            phase: "providersRevoked",
+        });
+    });
+
+    it("goes on when Google is linked, which the server revokes at the end", async () => {
+        const { resumeSecret, t } = await preparedFor(linkGoogleAccount);
 
         await expect(t.mutation(api.accountDeletion.recordCredentialOnly, { resumeSecret })).resolves.toMatchObject({
             phase: "providersRevoked",
@@ -365,6 +392,22 @@ describe("auth deletion", () => {
         await expect(t.query(api.accountDeletion.poll, { resumeSecret })).resolves.toMatchObject({
             phase: "complete",
         });
+    });
+
+    it("schedules revocation of every linked sign-in provider before the account rows go", async () => {
+        stubUpstream(200);
+        const { owner, resumeSecret, t } = await purgedJob();
+        await linkAppleAccount(t, owner.userId);
+        await linkGoogleAccount(t, owner.userId);
+        await t.action(api.accountDeletion.eraseBilling, { resumeSecret });
+        await t.mutation(api.accountDeletion.advance, { resumeSecret });
+        await t.mutation(api.accountDeletion.advance, { resumeSecret });
+
+        const scheduled = await t.run((ctx) => ctx.db.system.query("_scheduled_functions").collect());
+        const revoked = scheduled.filter(({ name }) => name.includes("revokeProviderToken")).map(({ args }) => args[0]);
+        expect(revoked).toHaveLength(2);
+        expect(revoked).toContainEqual({ provider: "apple", token: "apple-refresh-token" });
+        expect(revoked).toContainEqual({ provider: "google", token: "google-refresh-token" });
     });
 
     it("revokes a linked Notion token at Notion, since erasing the row alone leaves the access open", async () => {

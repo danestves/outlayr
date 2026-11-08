@@ -17,5 +17,6 @@ export default {
 ["eraseBilling"]: RegisteredConvexFunction.register({ ...definitions["eraseBilling"], handler: forward(definitions["eraseBilling"].handler) }),
 ["poll"]: RegisteredConvexFunction.register({ ...definitions["poll"], handler: forward(definitions["poll"].handler) }),
 ["resumeUserId"]: RegisteredConvexFunction.register({ ...definitions["resumeUserId"], handler: forward(definitions["resumeUserId"].handler) }),
+["revokeProviderToken"]: RegisteredConvexFunction.register({ ...definitions["revokeProviderToken"], handler: forward(definitions["revokeProviderToken"].handler) }),
 ["cleanupExpired"]: RegisteredConvexFunction.register({ ...definitions["cleanupExpired"], handler: forward(definitions["cleanupExpired"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../accountDeletion.spec")["default"]>;

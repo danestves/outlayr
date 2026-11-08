@@ -10,4 +10,5 @@ export const recordAppleRevocation = registeredFunctions.recordAppleRevocation;
 export const recordBillingErased = registeredFunctions.recordBillingErased;
 export const recordCredentialOnly = registeredFunctions.recordCredentialOnly;
 export const resumeUserId = registeredFunctions.resumeUserId;
+export const revokeProviderToken = registeredFunctions.revokeProviderToken;
 export const submitGoogleLocalReceipt = registeredFunctions.submitGoogleLocalReceipt;

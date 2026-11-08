@@ -52,5 +52,12 @@ export default GroupSpec.make()
     )
     .addFunction(FunctionSpec.internalQuery({ name: "resumeUserId", args: ResumeArgs, returns: () => Schema.String }))
     .addFunction(
+        FunctionSpec.internalAction({
+            name: "revokeProviderToken",
+            args: () => ({ provider: Schema.Literals(["apple", "google"]), token: Schema.String }),
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
         FunctionSpec.internalMutation({ name: "cleanupExpired", args: () => ({}), returns: () => Schema.Null })
     );

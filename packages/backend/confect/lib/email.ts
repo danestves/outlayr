@@ -25,6 +25,7 @@ export function emailLanguage(headers: Headers | undefined): Language {
 }
 
 interface CodeCopy {
+    change: string;
     expiry: (minutes: number) => string;
     reset: string;
     subject: (otp: string) => string;
@@ -33,6 +34,7 @@ interface CodeCopy {
 
 const CODE_EMAIL = {
     en: {
+        change: "Use this code to change your Outlayr email to this address:",
         expiry: (minutes: number) =>
             `It expires in ${minutes} minutes. If you didn't ask for it, you can ignore this email.`,
         reset: "Use this code to reset your Outlayr password:",
@@ -40,12 +42,14 @@ const CODE_EMAIL = {
         verify: "Use this code to confirm your email for Outlayr:",
     },
     es: {
+        change: "Usa este código para cambiar tu correo de Outlayr a esta dirección:",
         expiry: (minutes: number) => `Caduca en ${minutes} minutos. Si no lo pediste, puedes ignorar este correo.`,
         reset: "Usa este código para restablecer tu contraseña de Outlayr:",
         subject: (otp: string) => `Tu código de Outlayr: ${otp}`,
         verify: "Usa este código para confirmar tu correo en Outlayr:",
     },
     fr: {
+        change: "Utilisez ce code pour remplacer votre e-mail Outlayr par cette adresse\u00A0:",
         expiry: (minutes: number) =>
             `Il expire dans ${minutes}\u00A0minutes. Si vous ne l'avez pas demandé, vous pouvez ignorer cet e-mail.`,
         reset: "Utilisez ce code pour réinitialiser votre mot de passe Outlayr\u00A0:",
@@ -53,6 +57,7 @@ const CODE_EMAIL = {
         verify: "Utilisez ce code pour confirmer votre e-mail sur Outlayr\u00A0:",
     },
     pt: {
+        change: "Use este código para trocar seu e-mail do Outlayr por este endereço:",
         expiry: (minutes: number) => `Ele expira em ${minutes} minutos. Se você não pediu, pode ignorar este e-mail.`,
         reset: "Use este código para redefinir sua senha do Outlayr:",
         subject: (otp: string) => `Seu código do Outlayr: ${otp}`,
@@ -60,7 +65,7 @@ const CODE_EMAIL = {
     },
 } satisfies Record<Language, CodeCopy>;
 
-export function codeEmail(otp: string, purpose: "verify" | "reset", language: Language): Email {
+export function codeEmail(otp: string, purpose: "change" | "verify" | "reset", language: Language): Email {
     const copy = CODE_EMAIL[language];
     return {
         subject: copy.subject(otp),

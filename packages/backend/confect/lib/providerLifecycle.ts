@@ -158,9 +158,13 @@ export function appleTokenVerifier(clientId: string) {
     });
 }
 
-interface AppleServerConfig {
+interface AppleClient {
     clientId: string;
     clientSecret: Effect.Effect<string, AppleLifecycleError>;
+}
+
+interface AppleServerConfig extends AppleClient {
+    revokeClients?: readonly AppleClient[];
 }
 
 interface AppleResumeValidator {
@@ -204,7 +208,7 @@ const AppleGrantBody = Schema.toStandardSchemaV1(
 const AppleRevokeBody = Schema.toStandardSchemaV1(Schema.Struct({ resumeSecret: Schema.NonEmptyString }));
 
 const appleFormRequest = Effect.fn("AppleLifecycle.formRequest")(function* appleFormRequest(
-    config: AppleServerConfig,
+    config: AppleClient,
     path: "revoke" | "token",
     parameters: Record<string, string>,
     failure: "exchangeFailed" | "revokeFailed"
@@ -223,7 +227,7 @@ const appleFormRequest = Effect.fn("AppleLifecycle.formRequest")(function* apple
 });
 
 const appleTokenRequest = Effect.fn("AppleLifecycle.tokenRequest")(
-    function* appleTokenRequest(config: AppleServerConfig, parameters: Record<string, string>) {
+    function* appleTokenRequest(config: AppleClient, parameters: Record<string, string>) {
         const response = yield* appleFormRequest(config, "token", parameters, "exchangeFailed");
         const tokens = yield* decodeAppleTokenResponse(response).pipe(
             Effect.catchTags({
@@ -241,6 +245,39 @@ const appleTokenRequest = Effect.fn("AppleLifecycle.tokenRequest")(
     Effect.timeout(APPLE_TIMEOUT),
     Effect.catchTags({ TimeoutError: (cause) => new AppleLifecycleError({ cause, reason: "exchangeFailed" }) })
 );
+
+export const revokeAppleToken = Effect.fn("AppleLifecycle.revokeToken")(function* revokeAppleToken(
+    clients: readonly AppleClient[],
+    refreshToken: string
+) {
+    yield* Effect.firstSuccessOf(
+        clients.map((client) =>
+            appleFormRequest(
+                client,
+                "revoke",
+                { token: refreshToken, token_type_hint: "refresh_token" },
+                "revokeFailed"
+            ).pipe(
+                Effect.timeout(APPLE_TIMEOUT),
+                Effect.catchTags({
+                    TimeoutError: (cause) => new AppleLifecycleError({ cause, reason: "revokeFailed" }),
+                })
+            )
+        )
+    );
+});
+
+const GOOGLE_REVOKE_URL = "https://oauth2.googleapis.com/revoke";
+const GOOGLE_INVALID_TOKEN = 400;
+
+export const revokeGoogleToken = Effect.fn("GoogleLifecycle.revokeToken")(function* revokeGoogleToken(token: string) {
+    const response = yield* HttpClient.execute(
+        HttpClientRequest.post(GOOGLE_REVOKE_URL).pipe(HttpClientRequest.bodyUrlParams({ token }))
+    );
+    if (response.status >= 300 && response.status !== GOOGLE_INVALID_TOKEN) {
+        return yield* Effect.fail(new Error(`Google token revocation answered ${response.status}`));
+    }
+});
 
 export function appleCredentialLifecycleDependencies(config: AppleServerConfig, context: AppleLifecycleContext) {
     const storageFailed = (cause: unknown) => new AppleLifecycleError({ cause, reason: "accountStorageFailed" });
@@ -291,17 +328,7 @@ export function appleCredentialLifecycleDependencies(config: AppleServerConfig, 
             });
         }),
         revoke: Effect.fn("AppleLifecycle.revoke")(function* revoke(refreshToken: string) {
-            yield* appleFormRequest(
-                config,
-                "revoke",
-                { token: refreshToken, token_type_hint: "refresh_token" },
-                "revokeFailed"
-            ).pipe(
-                Effect.timeout(APPLE_TIMEOUT),
-                Effect.catchTags({
-                    TimeoutError: (cause) => new AppleLifecycleError({ cause, reason: "revokeFailed" }),
-                })
-            );
+            yield* revokeAppleToken([config], refreshToken);
         }),
         verify: appleTokenVerifier(config.clientId),
     } satisfies AppleGrantDependencies<AppleLifecycleError, HttpClient.HttpClient>;
@@ -354,8 +381,11 @@ export function appleCredentialLifecycle(config: AppleServerConfig | null, resum
                             const account = yield* dependencies.findAppleAccount(
                                 yield* resumeValidator.resumeUserId(ctx.body.resumeSecret)
                             );
-                            const encryptedToken = account?.refreshToken ?? account?.accessToken;
-                            if (!(account && encryptedToken)) {
+                            if (account === null) {
+                                return ctx.json({ revoked: true });
+                            }
+                            const encryptedToken = account.refreshToken ?? account.accessToken;
+                            if (!encryptedToken) {
                                 return yield* new AppleLifecycleError({ reason: "reauthenticationRequired" });
                             }
                             // SAFETY: the unexported `AuthContext`, as in `persist`.
@@ -364,7 +394,7 @@ export function appleCredentialLifecycle(config: AppleServerConfig | null, resum
                                 catch: (cause) => new AppleLifecycleError({ cause, reason: "accountStorageFailed" }),
                                 try: () => Promise.resolve(decryptOAuthToken(encryptedToken, authContext)),
                             });
-                            yield* dependencies.revoke(refreshToken);
+                            yield* revokeAppleToken(config.revokeClients ?? [config], refreshToken);
                             return ctx.json({ revoked: true });
                         }).pipe(Effect.provide(outboundHttp))
                     )

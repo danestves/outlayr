@@ -34,6 +34,7 @@ const CONVEX_JWT_SECONDS = 24 * 60 * 60;
 
 /** Better Auth limits per IP; these are per address, so one inbox cannot be guessed or flooded from many IPs. */
 const EMAIL_LIMITED_PATHS = new Set([
+    "/email-otp/request-email-change",
     "/email-otp/request-password-reset",
     "/email-otp/send-verification-otp",
     "/sign-in/email",
@@ -44,7 +45,15 @@ const emailLimiter = new RateLimiter(components.rateLimiter, {
     emailAuth: { capacity: 10, kind: "token bucket", period: HOUR, rate: 10 },
 });
 
-const decodeEmailBody = Schema.decodeUnknownOption(Schema.Struct({ email: Schema.String }));
+const decodeEmailBody = Schema.decodeUnknownOption(
+    Schema.Union([Schema.Struct({ email: Schema.String }), Schema.Struct({ newEmail: Schema.String })])
+);
+
+const CODE_PURPOSES = new Map<string, "change" | "reset" | "verify">([
+    ["change-email", "change"],
+    ["email-verification", "verify"],
+    ["forget-password", "reset"],
+]);
 
 const decodeProviderBody = Schema.decodeUnknownOption(Schema.Struct({ provider: Schema.String }));
 
@@ -75,6 +84,21 @@ const generateAppleClientSecret = Effect.fn("BetterAuth.generateAppleClientSecre
                 .sign(key),
     });
 });
+
+interface AppleCredentials {
+    clientId: string;
+    keyId: string;
+    privateKey: Redacted.Redacted;
+    teamId: string;
+    webClientId: string;
+}
+
+export function appleRevokeClients({ clientId, keyId, privateKey, teamId, webClientId }: AppleCredentials) {
+    return [...new Set([clientId, webClientId])].map((id) => ({
+        clientId: id,
+        clientSecret: generateAppleClientSecret(id, teamId, keyId, Redacted.value(privateKey)),
+    }));
+}
 
 function createAuth(ctx: GenericCtx<DataModel>) {
     const {
@@ -172,7 +196,8 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                         }
                         const body = decodeEmailBody(endpoint.body);
                         if (EMAIL_LIMITED_PATHS.has(endpoint.path) && Option.isSome(body)) {
-                            const key = yield* sha256Hex(body.value.email.trim().toLowerCase());
+                            const address = "email" in body.value ? body.value.email : body.value.newEmail;
+                            const key = yield* sha256Hex(address.trim().toLowerCase());
                             const { ok } = yield* Effect.promise(() =>
                                 emailLimiter.limit(requireRunMutationCtx(ctx), "emailAuth", { key })
                             );
@@ -197,6 +222,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                               appleConfig.value.keyId,
                               Redacted.value(appleConfig.value.privateKey)
                           ),
+                          revokeClients: appleRevokeClients(appleConfig.value),
                       }
                     : null,
                 {
@@ -212,15 +238,16 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                 }
             ),
             emailOTP({
+                changeEmail: { enabled: true },
                 expiresIn: EMAIL_CODE_TTL_SECONDS,
                 overrideDefaultEmailVerification: true,
                 sendVerificationOTP: ({ email, otp, type }, endpoint) =>
                     runEdge(
                         Effect.gen(function* sendVerificationOTP() {
-                            if (type !== "email-verification" && type !== "forget-password") {
+                            const purpose = CODE_PURPOSES.get(type);
+                            if (purpose === undefined) {
                                 return;
                             }
-                            const purpose = type === "forget-password" ? "reset" : "verify";
                             const language = emailLanguage(endpoint?.request?.headers ?? endpoint?.headers);
                             yield* sendEmail(email, codeEmail(otp, purpose, language));
                         }).pipe(Effect.provide(outboundHttp))
