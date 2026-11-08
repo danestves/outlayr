@@ -10,6 +10,7 @@
 @source "../node_modules/panelui-web/dist/components/button/index.js";
 @source "../node_modules/panelui-web/dist/components/card/index.js";
 @source "../node_modules/panelui-web/dist/components/chip/index.js";
+@source "../node_modules/panelui-web/dist/components/choice-cards/index.js";
 @source "../node_modules/panelui-web/dist/components/command/index.js";
 @source "../node_modules/panelui-web/dist/components/day-grid/index.js";
 @source "../node_modules/panelui-web/dist/components/dialog/index.js";
@@ -1539,124 +1540,6 @@ html[data-theme="dark"]:has(.dash-sheet) body::after {
 }
 
 /* Outside the layer: panelui's Dialog utilities would otherwise win over the approved frame. */
-.dash-dialog {
-    width: min(480px, 100vw - 16px);
-    max-width: none;
-    overflow: hidden;
-    border: 1px solid var(--color-app-strong);
-    border-radius: 20px;
-    background: var(--color-app-group);
-    box-shadow: 0 24px 48px -12px var(--color-app-shadow-far);
-}
-
-.dash-dialog[data-size="confirm"] {
-    width: min(420px, 100vw - 16px);
-}
-
-.dash-dialog[data-size="wide"] {
-    width: min(520px, 100vw - 16px);
-}
-
-.dash-dh {
-    display: flex;
-    flex: none;
-    align-items: center;
-    gap: 8px;
-    height: 56px;
-    padding: 0 20px;
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 20px;
-}
-
-.dash-dh > button {
-    display: inline-flex;
-    color: var(--color-app-muted);
-}
-
-.dash-dh > button:last-child {
-    margin-left: auto;
-}
-
-.dash-db {
-    min-height: 0;
-    padding: 0 20px 20px;
-    overflow-y: auto;
-    font-size: 14px;
-    line-height: 20px;
-}
-
-.dash-df {
-    flex-wrap: wrap;
-    display: flex;
-    flex: none;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    padding: 12px 20px;
-    border-top: 1px solid var(--color-app-rule);
-    background: var(--color-app-hover);
-}
-
-.dash-df .dash-ob {
-    height: 36px;
-    padding: 0 12px;
-    border-radius: 10px;
-}
-
-.dash-btn[data-danger="true"] {
-    background: var(--color-app-spend);
-}
-
-.dash-fi {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    height: 36px;
-    padding: 0 12px;
-    border: 1px solid var(--color-app-rule);
-    border-radius: 10px;
-    background: var(--color-app-hover);
-    font-size: 14px;
-    text-align: left;
-    outline: none;
-}
-
-.dash-fi input {
-    min-width: 0;
-    flex: 1;
-    background: transparent;
-    outline: none;
-}
-
-.dash-fi:focus-within,
-.dash-fi:focus-visible,
-.dash-fi[data-popup-open] {
-    border-color: var(--color-app-tint);
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-app-tint) 22%, transparent);
-}
-
-.dash-fi[data-invalid="true"] {
-    border-color: var(--color-app-spend);
-    box-shadow: none;
-}
-
-.dash-lb {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 20px;
-}
-
-.dash-er {
-    margin-top: 6px;
-    color: var(--color-app-spend);
-    font-size: 12px;
-    line-height: 20px;
-}
-
 .dash-sg {
     display: inline-flex;
     flex: none;
@@ -1667,40 +1550,6 @@ html[data-theme="dark"]:has(.dash-sheet) body::after {
     margin-left: -4px;
     border-radius: 6px;
     background: var(--color-app-fill);
-}
-
-.dash-ty {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-}
-
-.dash-ty button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    height: 44px;
-    padding: 0 12px;
-    border: 1px solid var(--color-app-rule);
-    border-radius: 10px;
-    background: var(--color-app-hover);
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.dash-ty button svg {
-    flex: none;
-    color: var(--color-app-muted);
-}
-
-.dash-ty button[aria-pressed="true"] {
-    border-color: var(--color-app-tint);
-    background: color-mix(in oklab, var(--color-app-tint) 14%, var(--color-app-group));
-}
-
-.dash-ty button[aria-pressed="true"] svg {
-    color: var(--color-app-tint);
 }
 
 .dash-ib {

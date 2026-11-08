@@ -1,11 +1,14 @@
-import { Popover } from "@base-ui/react/popover";
 import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
 import { decimalsFor } from "@outlayr/money/currency";
 import { EVERY_ORDER, MAX_INSTALLMENT_COUNT, newInstallmentDraft } from "@outlayr/money/installment-draft";
 import type { EveryOption } from "@outlayr/money/installment-draft";
 import { installmentAppsIn, installmentRegion } from "@outlayr/money/institution-map";
 import type { InstallmentApp } from "@outlayr/money/institution-map";
-import { RiArrowDownSLine, RiCalendarLine, RiImageAddLine } from "@remixicon/react";
+import { RiImageAddLine } from "@remixicon/react";
+import { Button } from "panelui-web/button";
+import { Dialog } from "panelui-web/dialog";
+import { Field } from "panelui-web/field";
+import { Input } from "panelui-web/input";
 import { Select } from "panelui-web/select";
 import { useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -29,6 +32,8 @@ import type { AccountFlow } from "./flows";
 import { logoIdentity } from "./identity-picker";
 
 const COUNTS = Array.from({ length: MAX_INSTALLMENT_COUNT }, (_, index) => String(index + 1));
+const OTHER_APP = "other";
+const CONTENT = "app-shell z-[60]";
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const dayKey = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -45,39 +50,27 @@ function browserRegion() {
     }
 }
 
-function Field({ children, htmlFor, label }: { children: ReactNode; htmlFor: string; label: ReactNode }) {
-    return (
-        <div>
-            <label className="dash-lb" htmlFor={htmlFor}>
-                {label}
-            </label>
-            {children}
-        </div>
-    );
-}
-
 function ChoiceField<Value extends string>({
-    className = "",
-    id,
+    figure = false,
     label,
     onPick,
     options,
     value,
 }: {
-    className?: string;
-    id: string;
+    figure?: boolean;
     label: ReactNode;
     onPick: (value: Value) => void;
     options: readonly { label: string; value: Value }[];
     value: Value;
 }) {
     return (
-        <Field htmlFor={id} label={label}>
+        <Field>
+            <Field.Label>{label}</Field.Label>
             <Select items={options} onValueChange={(next) => next && onPick(next)} value={value}>
-                <Select.Trigger className={`dash-fi ${className}`} icon={<RiArrowDownSLine size={16} />} id={id}>
-                    <Select.Value />
+                <Select.Trigger>
+                    <Select.Value className={figure ? "dash-figure" : undefined} />
                 </Select.Trigger>
-                <Select.Content className="app-shell z-[60]">
+                <Select.Content className={CONTENT}>
                     {options.map((option) => (
                         <Select.Item key={option.value} value={option.value}>
                             {option.label}
@@ -89,69 +82,51 @@ function ChoiceField<Value extends string>({
     );
 }
 
-function NoCardsField({
-    id,
-    onAdd,
-    onOther,
-}: {
-    id: string;
-    onAdd: (app: InstallmentApp) => void;
-    onOther: () => void;
-}) {
+/** Nothing to pick yet, so picking one of the region's apps creates it. */
+function NoCardsSelect({ onAdd, onOther }: { onAdd: (app: InstallmentApp) => void; onOther: () => void }) {
     const { purchase } = useIntlayer("dashboard-accounts");
     const { locale } = useLocale();
-    const [open, setOpen] = useState(false);
     const region = browserRegion();
     const apps = installmentAppsIn(region);
     const regionName = region && new Intl.DisplayNames([locale], { style: "short", type: "region" }).of(region);
     return (
-        <Popover.Root onOpenChange={setOpen} open={open}>
-            <Popover.Trigger className="dash-fi" id={id} type="button">
-                <span className="text-muted-foreground">{purchase.pick}</span>
-                <RiArrowDownSLine className="text-muted-foreground ml-auto flex-none" size={16} />
-            </Popover.Trigger>
-            <Popover.Portal>
-                <Popover.Positioner align="start" className="z-[60]" sideOffset={6}>
-                    <Popover.Popup className="app-shell dash-po ph-no-capture w-[232px]">
-                        {apps.length > 0 ? (
-                            <div className="text-muted-foreground px-2 pt-1 pb-1.5 text-xs leading-4">
-                                {purchase.appsIn({ region: regionName ?? "" })}
-                            </div>
-                        ) : null}
+        <Select
+            onValueChange={(next) => {
+                const app = apps.find((each) => each.id === next);
+                if (app) {
+                    onAdd(app);
+                } else if (next === OTHER_APP) {
+                    onOther();
+                }
+            }}
+            value={null}
+        >
+            <Select.Trigger>
+                <Select.Value placeholder={purchase.pick.value} />
+            </Select.Trigger>
+            <Select.Content className={CONTENT}>
+                {apps.length > 0 ? (
+                    <Select.Group>
+                        <Select.GroupLabel>{purchase.appsIn({ region: regionName ?? "" })}</Select.GroupLabel>
                         {apps.map((app) => (
-                            <button
-                                className="dash-pr"
-                                key={app.id}
-                                onClick={() => {
-                                    onAdd(app);
-                                    setOpen(false);
-                                }}
-                                type="button"
-                            >
-                                <span className="truncate">{app.label}</span>
-                                <span className="text-app-tint ml-auto">{purchase.add}</span>
-                            </button>
+                            <Select.Item key={app.id} value={app.id}>
+                                {app.label}
+                            </Select.Item>
                         ))}
-                        {apps.length > 0 ? <div className="dash-menu-rule" /> : null}
-                        <button className="dash-pr" onClick={onOther} type="button">
-                            {purchase.other}
-                        </button>
-                    </Popover.Popup>
-                </Popover.Positioner>
-            </Popover.Portal>
-        </Popover.Root>
+                    </Select.Group>
+                ) : null}
+                {apps.length > 0 ? <Select.Separator /> : null}
+                <Select.Item value={OTHER_APP}>{purchase.other}</Select.Item>
+            </Select.Content>
+        </Select>
     );
 }
 
-function CategoryField({
-    id,
-    onPick,
-    value,
-}: {
-    id: string;
-    onPick: (id: string | null) => void;
-    value: string | null;
-}) {
+function CategoryDot({ color }: { color: string | null | undefined }) {
+    return <i className="size-1.5 flex-none rounded-full" style={{ background: color ?? undefined }} />;
+}
+
+function CategoryField({ onPick, value }: { onPick: (id: string | null) => void; value: string | null }) {
     const { ledger } = useDashboard();
     const { purchase } = useIntlayer("dashboard-accounts");
     const categories = ledger.books.categories
@@ -159,24 +134,20 @@ function CategoryField({
         .toSorted((a, b) => a.sortOrder - b.sortOrder);
     const chosen = categories.find((row) => row.localId === value);
     return (
-        <Field htmlFor={id} label={purchase.category}>
-            <Select onValueChange={onPick} value={value}>
-                <Select.Trigger className="dash-fi" icon={<RiArrowDownSLine size={16} />} id={id}>
-                    {chosen ? (
-                        <span className="flex min-w-0 items-center gap-2">
-                            <i
-                                className="size-1.5 flex-none rounded-full"
-                                style={{ background: chosen.color ?? undefined }}
-                            />
-                            <span className="truncate">{chosen.name}</span>
-                        </span>
-                    ) : (
-                        <span className="text-muted-foreground">{purchase.pick}</span>
-                    )}
+        <Field>
+            <Field.Label>{purchase.category}</Field.Label>
+            <Select
+                items={categories.map((row) => ({ label: row.name, value: row.localId }))}
+                onValueChange={onPick}
+                value={value}
+            >
+                <Select.Trigger>
+                    {chosen ? <CategoryDot color={chosen.color} /> : null}
+                    <Select.Value placeholder={purchase.pick.value} />
                 </Select.Trigger>
-                <Select.Content className="app-shell z-[60]">
+                <Select.Content className={CONTENT}>
                     {categories.map((row) => (
-                        <Select.Item key={row.localId} value={row.localId}>
+                        <Select.Item icon={<CategoryDot color={row.color} />} key={row.localId} value={row.localId}>
                             {row.name}
                         </Select.Item>
                     ))}
@@ -188,14 +159,12 @@ function CategoryField({
 
 function AccountField({
     error,
-    id,
     onAdd,
     onOther,
     onPick,
     value,
 }: {
     error: boolean;
-    id: string;
     onAdd: (app: InstallmentApp) => void;
     onOther: () => void;
     onPick: (id: string | null) => void;
@@ -206,22 +175,21 @@ function AccountField({
     const cards = openAccounts(ledger.books).filter((row) => row.kind === "liability");
     const chosen = cards.find((row) => row.localId === value);
     return (
-        <Field htmlFor={id} label={purchase.account}>
+        <Field invalid={error}>
+            <Field.Label>{purchase.account}</Field.Label>
             {cards.length === 0 ? (
-                <NoCardsField id={id} onAdd={onAdd} onOther={onOther} />
+                <NoCardsSelect onAdd={onAdd} onOther={onOther} />
             ) : (
-                <Select onValueChange={onPick} value={value}>
-                    <Select.Trigger className="dash-fi" icon={<RiArrowDownSLine size={16} />} id={id}>
-                        {chosen ? (
-                            <span className="flex min-w-0 items-center gap-2">
-                                <AccountTile account={accountLook(chosen)} photos={photos} size="sm" />
-                                <span className="truncate">{chosen.name}</span>
-                            </span>
-                        ) : (
-                            <span className="text-muted-foreground">{purchase.pick}</span>
-                        )}
+                <Select
+                    items={cards.map((row) => ({ label: row.name, value: row.localId }))}
+                    onValueChange={onPick}
+                    value={value}
+                >
+                    <Select.Trigger>
+                        {chosen ? <AccountTile account={accountLook(chosen)} photos={photos} size="sm" /> : null}
+                        <Select.Value placeholder={purchase.pick.value} />
                     </Select.Trigger>
-                    <Select.Content className="app-shell z-[60]">
+                    <Select.Content className={CONTENT}>
                         {cards.map((row) => (
                             <Select.Item key={row.localId} value={row.localId}>
                                 {row.name}
@@ -230,30 +198,7 @@ function AccountField({
                     </Select.Content>
                 </Select>
             )}
-            {error ? <p className="dash-er">{purchase.accountRequired}</p> : null}
-        </Field>
-    );
-}
-
-function FirstDueField({ day, id, onPick }: { day: string; id: string; onPick: (day: string | null) => void }) {
-    const { purchase } = useIntlayer("dashboard-accounts");
-    const date = useDateFormat();
-    const input = useRef<HTMLInputElement>(null);
-    return (
-        <Field htmlFor={id} label={purchase.firstDue}>
-            <div className="dash-fi relative">
-                <span className="dash-figure">{date.full(day)}</span>
-                <RiCalendarLine className="text-muted-foreground ml-auto flex-none" size={16} />
-                <input
-                    className="absolute inset-0 opacity-0"
-                    id={id}
-                    onChange={(event) => onPick(event.target.value || null)}
-                    onClick={() => input.current?.showPicker()}
-                    ref={input}
-                    type="date"
-                    value={day}
-                />
-            </div>
+            {error ? <Field.Error match>{purchase.accountRequired}</Field.Error> : null}
         </Field>
     );
 }
@@ -276,7 +221,7 @@ function Summary({ currency, plan }: { currency: string; plan: ReturnType<typeof
     };
     return (
         <div>
-            <div className={`rounded-xl border px-3 ${over > 0 ? "border-app-spend" : ""}`}>
+            <div className={`rounded-xl border px-3 ${over > 0 ? "border-destructive" : ""}`}>
                 <div className={`${SUMMARY_ROW} border-b`}>
                     <span className="text-muted-foreground">{purchase.paidNow}</span>
                     <span className="dash-figure ml-auto">{money(paidNow, currency)}</span>
@@ -296,8 +241,16 @@ function Summary({ currency, plan }: { currency: string; plan: ReturnType<typeof
                     <span className="dash-figure ml-auto">{money(total, currency)}</span>
                 </div>
             </div>
-            {over > 0 ? <p className="dash-er">{purchase.overPrice({ amount: money(over, currency) })}</p> : null}
-            {upfrontTooHigh ? <p className="dash-er">{purchase.upfrontTooHigh}</p> : null}
+            {over > 0 ? (
+                <p className="text-destructive mt-1.5 text-xs" role="alert">
+                    {purchase.overPrice({ amount: money(over, currency) })}
+                </p>
+            ) : null}
+            {upfrontTooHigh ? (
+                <p className="text-destructive mt-1.5 text-xs" role="alert">
+                    {purchase.upfrontTooHigh}
+                </p>
+            ) : null}
         </div>
     );
 }
@@ -438,45 +391,38 @@ export function PurchaseForm({
     };
 
     return (
-        <FlowDialog initialFocus={nameInput} label={purchase.title} onClose={onClose} wide>
-            <form
-                className="flex min-h-0 flex-col"
-                noValidate
-                onSubmit={(event) => {
-                    event.preventDefault();
-                    void save();
-                }}
-            >
-                <div className="dash-db flex flex-col gap-3.5">
+        <FlowDialog initialFocus={nameInput} label={purchase.title} onClose={onClose} size="lg">
+            <Dialog.Body>
+                <form
+                    className="flex flex-col gap-4"
+                    id={id}
+                    noValidate
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        void save();
+                    }}
+                >
                     <div className="grid grid-cols-2 gap-3">
-                        <Field htmlFor={`${id}-name`} label={purchase.for}>
-                            <div className="dash-fi" data-invalid={attempted && nameMissing ? "true" : undefined}>
-                                <input
-                                    id={`${id}-name`}
-                                    onChange={(event) => setName(event.target.value)}
-                                    placeholder={purchase.forPlaceholder.value}
-                                    ref={nameInput}
-                                    value={name}
-                                />
-                            </div>
-                            {attempted && nameMissing ? <p className="dash-er">{purchase.nameRequired}</p> : null}
+                        <Field invalid={attempted && nameMissing}>
+                            <Field.Label>{purchase.for}</Field.Label>
+                            <Input
+                                onChange={(event) => setName(event.target.value)}
+                                placeholder={purchase.forPlaceholder.value}
+                                ref={nameInput}
+                                value={name}
+                            />
+                            {attempted && nameMissing ? <Field.Error match>{purchase.nameRequired}</Field.Error> : null}
                         </Field>
-                        <CategoryField id={`${id}-category`} onPick={setCategoryId} value={categoryId} />
+                        <CategoryField onPick={setCategoryId} value={categoryId} />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                        <Field htmlFor={`${id}-total`} label={purchase.total}>
-                            <AmountInput
-                                currency={currency}
-                                id={`${id}-total`}
-                                invalid={attempted && price <= 0}
-                                onText={setTotalText}
-                                text={totalText}
-                            />
-                            {attempted && price <= 0 ? <p className="dash-er">{purchase.totalRequired}</p> : null}
+                        <Field invalid={attempted && price <= 0}>
+                            <Field.Label>{purchase.total}</Field.Label>
+                            <AmountInput currency={currency} onText={setTotalText} text={totalText} />
+                            {attempted && price <= 0 ? <Field.Error match>{purchase.totalRequired}</Field.Error> : null}
                         </Field>
                         <AccountField
                             error={attempted && !account}
-                            id={`${id}-account`}
                             onAdd={addApp}
                             onOther={() => onSwitch({ kind: "create", type: "card" })}
                             onPick={setPicked}
@@ -484,67 +430,62 @@ export function PurchaseForm({
                         />
                     </div>
                     <div className="grid grid-cols-3 gap-3">
-                        <Field htmlFor={`${id}-upfront`} label={purchase.upfront}>
-                            <AmountInput
-                                currency={currency}
-                                id={`${id}-upfront`}
-                                onText={setUpfrontText}
-                                text={upfrontText}
-                            />
+                        <Field>
+                            <Field.Label>{purchase.upfront}</Field.Label>
+                            <AmountInput currency={currency} onText={setUpfrontText} text={upfrontText} />
                         </Field>
                         <ChoiceField
-                            className="dash-figure"
-                            id={`${id}-count`}
+                            figure
                             label={purchase.count}
                             onPick={(value) => setCount(Number(value))}
                             options={COUNTS.map((value) => ({ label: value, value }))}
                             value={String(count)}
                         />
-                        <div onBlur={() => eachText?.trim() === "" && setEachText(null)}>
-                            <Field htmlFor={`${id}-each`} label={purchase.each}>
-                                <AmountInput
-                                    currency={currency}
-                                    id={`${id}-each`}
-                                    invalid={plan.over > 0}
-                                    // The blur reformat lands here too, and must not make the split amount a typed one.
-                                    onText={(next) => setEachText(next === splitText ? null : next)}
-                                    text={eachText ?? splitText}
-                                />
-                            </Field>
-                        </div>
+                        <Field invalid={plan.over > 0} onBlur={() => eachText?.trim() === "" && setEachText(null)}>
+                            <Field.Label>{purchase.each}</Field.Label>
+                            <AmountInput
+                                currency={currency}
+                                // The blur reformat lands here too, and must not make the split amount a typed one.
+                                onText={(next) => setEachText(next === splitText ? null : next)}
+                                text={eachText ?? splitText}
+                            />
+                        </Field>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                         <ChoiceField
-                            id={`${id}-every`}
                             label={purchase.every}
                             onPick={setEvery}
                             options={EVERY_ORDER.map((value) => ({ label: everyLabels[value], value }))}
                             value={every}
                         />
-                        <FirstDueField day={dayKey(plan.firstDue)} id={`${id}-first`} onPick={setFirstDueKey} />
+                        <Field>
+                            <Field.Label>{purchase.firstDue}</Field.Label>
+                            <Input
+                                className="dash-figure"
+                                onChange={(event) => setFirstDueKey(event.target.value || null)}
+                                type="date"
+                                value={dayKey(plan.firstDue)}
+                            />
+                        </Field>
                     </div>
                     <Summary currency={currency} plan={plan} />
-                </div>
-                <div className="dash-df">
-                    {failed ? <span className="text-app-spend mr-auto text-[13px]">{flows.saveFailed}</span> : null}
-                    {failed || blocked ? null : (
-                        <PhoneButton className="dash-ob mr-auto">
-                            <RiImageAddLine size={16} />
-                            {purchase.importScreenshot}
-                        </PhoneButton>
-                    )}
-                    <button className="dash-ob" onClick={onClose} type="button">
-                        {flows.cancel}
-                    </button>
-                    <button
-                        className={`dash-btn ${blocked ? "opacity-50" : ""}`}
-                        disabled={blocked || saving}
-                        type="submit"
-                    >
-                        {purchase.save}
-                    </button>
-                </div>
-            </form>
+                </form>
+            </Dialog.Body>
+            <Dialog.Footer>
+                {failed ? <span className="text-destructive mr-auto text-[13px]">{flows.saveFailed}</span> : null}
+                {failed || blocked ? null : (
+                    <PhoneButton className="dash-ob mr-auto">
+                        <RiImageAddLine size={16} />
+                        {purchase.importScreenshot}
+                    </PhoneButton>
+                )}
+                <Button onClick={onClose} variant="outline">
+                    {flows.cancel}
+                </Button>
+                <Button disabled={blocked} form={id} loading={saving} type="submit">
+                    {purchase.save}
+                </Button>
+            </Dialog.Footer>
         </FlowDialog>
     );
 }

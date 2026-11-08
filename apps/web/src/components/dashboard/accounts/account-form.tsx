@@ -3,15 +3,14 @@ import { toAccountKind } from "@outlayr/money/account-kind";
 import { decimalsFor } from "@outlayr/money/currency";
 import { resolveInstitutionDomain } from "@outlayr/money/institution-map";
 import { merchantKey } from "@outlayr/money/merchant-key";
-import {
-    RiArchiveLine,
-    RiArrowDownSLine,
-    RiBankCardLine,
-    RiBankLine,
-    RiDeleteBin6Line,
-    RiWallet3Line,
-} from "@remixicon/react";
+import { RiArchiveLine, RiBankCardLine, RiBankLine, RiDeleteBin6Line, RiWallet3Line } from "@remixicon/react";
 import { useForm, useStore } from "@tanstack/react-form";
+import { Button } from "panelui-web/button";
+import { ChoiceCards } from "panelui-web/choice-cards";
+import { Dialog } from "panelui-web/dialog";
+import { Field } from "panelui-web/field";
+import { Input } from "panelui-web/input";
+import { Label } from "panelui-web/label";
 import { Select } from "panelui-web/select";
 import { Switch } from "panelui-web/switch";
 import { useId, useMemo, useRef, useState } from "react";
@@ -61,30 +60,18 @@ const logoFor = (name: string) => {
     return domain === null ? null : logoIdentity(domain);
 };
 
-function DayField({
-    id,
-    label,
-    onChange,
-    value,
-}: {
-    id: string;
-    label: ReactNode;
-    onChange: (day: number) => void;
-    value: number;
-}) {
+function DayField({ label, onChange, value }: { label: ReactNode; onChange: (day: number) => void; value: number }) {
     const { flows } = useIntlayer("dashboard-accounts");
     return (
-        <div>
-            <label className="dash-lb" htmlFor={id}>
-                {label}
-            </label>
+        <Field>
+            <Field.Label>{label}</Field.Label>
             <Select
                 items={DAYS.map((day) => ({ label: flows.day({ day }).value, value: day }))}
                 onValueChange={(day) => day && onChange(Number(day))}
                 value={String(value)}
             >
-                <Select.Trigger className="dash-fi dash-figure" icon={<RiArrowDownSLine size={16} />} id={id}>
-                    <Select.Value />
+                <Select.Trigger>
+                    <Select.Value className="dash-figure" />
                 </Select.Trigger>
                 <Select.Content className="app-shell z-[60]">
                     {DAYS.map((day) => (
@@ -94,7 +81,7 @@ function DayField({
                     ))}
                 </Select.Content>
             </Select>
-        </div>
+        </Field>
     );
 }
 
@@ -102,6 +89,7 @@ function FormFooter({
     account,
     dim,
     failed,
+    formId,
     label,
     onClose,
     onSwitch,
@@ -109,41 +97,38 @@ function FormFooter({
     account: Account | null;
     dim: boolean;
     failed: boolean;
+    formId: string;
     label: ReactNode;
     onClose: () => void;
     onSwitch: (flow: AccountFlow) => void;
 }) {
     const { actions, flows } = useIntlayer("dashboard-accounts");
     return (
-        <div className="dash-df">
+        <Dialog.Footer>
             {account ? (
                 <>
-                    <button
-                        className="dash-ob"
-                        onClick={() => onSwitch({ accountId: account.localId, kind: "archive" })}
-                        type="button"
-                    >
+                    <Button onClick={() => onSwitch({ accountId: account.localId, kind: "archive" })} variant="outline">
                         <RiArchiveLine size={16} />
                         {flows.archive}
-                    </button>
-                    <button
-                        className="dash-ob text-app-spend [&>svg]:text-app-spend! mr-auto"
+                    </Button>
+                    <Button
+                        className="text-destructive mr-auto"
                         onClick={() => onSwitch({ accountId: account.localId, kind: "delete" })}
-                        type="button"
+                        variant="outline"
                     >
                         <RiDeleteBin6Line size={16} />
                         {actions.delete}
-                    </button>
+                    </Button>
                 </>
             ) : null}
-            {failed ? <span className="text-app-spend mr-auto text-[13px]">{flows.saveFailed}</span> : null}
-            <button className="dash-ob" onClick={onClose} type="button">
+            {failed ? <span className="text-destructive mr-auto text-[13px]">{flows.saveFailed}</span> : null}
+            <Button onClick={onClose} variant="outline">
                 {flows.cancel}
-            </button>
-            <button className={`dash-btn ${dim ? "opacity-50" : ""}`} type="submit">
+            </Button>
+            <Button className={dim ? "opacity-50" : undefined} form={formId} type="submit">
                 {label}
-            </button>
-        </div>
+            </Button>
+        </Dialog.Footer>
     );
 }
 
@@ -267,29 +252,37 @@ export function AccountForm({
             label={editing ? flows.editTitle : createTitle}
             onClose={onClose}
         >
-            <form
-                className="flex min-h-0 flex-col"
-                noValidate
-                onSubmit={(event) => {
-                    event.preventDefault();
-                    void form.handleSubmit();
-                }}
-            >
-                <div className="dash-db">
+            <Dialog.Body>
+                <form
+                    className="flex flex-col gap-4"
+                    id={id}
+                    noValidate
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        void form.handleSubmit();
+                    }}
+                >
                     {editing ? null : (
-                        <div className="dash-ty mb-5">
+                        <ChoiceCards
+                            aria-label={flows.accountType.value}
+                            aspect="5 / 2"
+                            onValueChange={(next) => {
+                                const picked = types.find((each) => each.value === next);
+                                if (picked) {
+                                    pickType(picked.value);
+                                }
+                            }}
+                            value={type}
+                        >
                             {types.map(({ icon: Icon, label, value }) => (
-                                <button
-                                    aria-pressed={type === value}
-                                    key={value}
-                                    onClick={() => pickType(value)}
-                                    type="button"
-                                >
-                                    <Icon size={17} />
-                                    <span className="truncate">{label}</span>
-                                </button>
+                                <ChoiceCards.Item key={value} value={value}>
+                                    <ChoiceCards.Media>
+                                        <Icon size={20} />
+                                    </ChoiceCards.Media>
+                                    <ChoiceCards.Label>{label}</ChoiceCards.Label>
+                                </ChoiceCards.Item>
                             ))}
-                        </div>
+                        </ChoiceCards>
                     )}
                     <form.Field name="name">
                         {(field) => {
@@ -311,53 +304,40 @@ export function AccountForm({
                                         }}
                                         photoError={flows.photoFailed.value}
                                     />
-                                    <div className="min-w-0 flex-1">
-                                        <label className="dash-lb" htmlFor={`${id}-name`}>
-                                            {flows.name}
-                                        </label>
-                                        <div className="dash-fi" data-invalid={error ? "true" : undefined}>
-                                            <input
-                                                id={`${id}-name`}
-                                                onBlur={field.handleBlur}
-                                                onChange={(event) => onName(event.target.value)}
-                                                placeholder={flows.namePlaceholder.value}
-                                                ref={nameInput}
-                                                value={field.state.value}
-                                            />
-                                        </div>
-                                        {error ? <p className="dash-er">{String(error)}</p> : null}
-                                    </div>
+                                    <Field className="flex-1" invalid={Boolean(error)}>
+                                        <Field.Label>{flows.name}</Field.Label>
+                                        <Input
+                                            onBlur={field.handleBlur}
+                                            onChange={(event) => onName(event.target.value)}
+                                            placeholder={flows.namePlaceholder.value}
+                                            ref={nameInput}
+                                            value={field.state.value}
+                                        />
+                                        {error ? <Field.Error match>{String(error)}</Field.Error> : null}
+                                    </Field>
                                 </div>
                             );
                         }}
                     </form.Field>
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="dash-lb" htmlFor={`${id}-currency`}>
-                                {flows.currency}
-                            </label>
-                            <form.Field name="currency">
-                                {(field) => (
-                                    <CurrencyField
-                                        id={`${id}-currency`}
-                                        inUse={inUse}
-                                        onPick={field.handleChange}
-                                        value={field.state.value}
-                                    />
-                                )}
-                            </form.Field>
-                        </div>
-                        <div>
-                            <label className="dash-lb" htmlFor={`${id}-balance`}>
-                                {flows.balance}
-                            </label>
+                    <div className="grid grid-cols-2 gap-3">
+                        <form.Field name="currency">
+                            {(field) => (
+                                <CurrencyField
+                                    inUse={inUse}
+                                    label={flows.currency}
+                                    onPick={field.handleChange}
+                                    value={field.state.value}
+                                />
+                            )}
+                        </form.Field>
+                        <Field>
+                            <Field.Label>{flows.balance}</Field.Label>
                             <form.Field name="balanceText">
                                 {(text) => (
                                     <form.Field name="negative">
                                         {(negative) => (
                                             <AmountInput
                                                 currency={currency}
-                                                id={`${id}-balance`}
                                                 negative={negative.state.value}
                                                 onNegative={negative.handleChange}
                                                 onText={text.handleChange}
@@ -367,48 +347,44 @@ export function AccountForm({
                                     </form.Field>
                                 )}
                             </form.Field>
-                        </div>
+                        </Field>
                     </div>
                     {editing ? (
                         <form.Field name="liability">
                             {(field) => (
-                                <div className="mt-4 flex h-9 items-center justify-between">
-                                    <label className="text-[13px] font-medium" htmlFor={`${id}-owe`}>
-                                        {flows.moneyIOwe}
-                                    </label>
-                                    <Switch
-                                        checked={field.state.value}
-                                        className="origin-right scale-[.82]"
-                                        id={`${id}-owe`}
-                                        onCheckedChange={field.handleChange}
-                                        size="sm"
-                                    />
-                                </div>
+                                <Field>
+                                    <Field.Label>
+                                        <Label.Text>{flows.moneyIOwe}</Label.Text>
+                                        <Label.Action>
+                                            <Switch
+                                                checked={field.state.value}
+                                                onCheckedChange={field.handleChange}
+                                                size="sm"
+                                            />
+                                        </Label.Action>
+                                    </Field.Label>
+                                </Field>
                             )}
                         </form.Field>
                     ) : null}
                     {liability ? (
                         <>
-                            <div className={editing ? "mt-2" : "mt-4"}>
-                                <label className="dash-lb" htmlFor={`${id}-limit`}>
-                                    {flows.creditLimit}
-                                </label>
+                            <Field>
+                                <Field.Label>{flows.creditLimit}</Field.Label>
                                 <form.Field name="limitText">
                                     {(field) => (
                                         <AmountInput
                                             currency={currency}
-                                            id={`${id}-limit`}
                                             onText={field.handleChange}
                                             text={field.state.value}
                                         />
                                     )}
                                 </form.Field>
-                            </div>
-                            <div className="mt-4 grid grid-cols-2 gap-3">
+                            </Field>
+                            <div className="grid grid-cols-2 gap-3">
                                 <form.Field name="statementDay">
                                     {(field) => (
                                         <DayField
-                                            id={`${id}-statement`}
                                             label={flows.statementCloses}
                                             onChange={field.handleChange}
                                             value={field.state.value}
@@ -418,7 +394,6 @@ export function AccountForm({
                                 <form.Field name="paymentDay">
                                     {(field) => (
                                         <DayField
-                                            id={`${id}-payment`}
                                             label={flows.paymentDue}
                                             onChange={field.handleChange}
                                             value={field.state.value}
@@ -428,16 +403,17 @@ export function AccountForm({
                             </div>
                         </>
                     ) : null}
-                </div>
-                <FormFooter
-                    account={account}
-                    dim={name.trim() === "" && !attempted}
-                    failed={failed}
-                    label={card ? flows.saveCard : flows.saveAccount}
-                    onClose={onClose}
-                    onSwitch={onSwitch}
-                />
-            </form>
+                </form>
+            </Dialog.Body>
+            <FormFooter
+                account={account}
+                dim={name.trim() === "" && !attempted}
+                failed={failed}
+                formId={id}
+                label={card ? flows.saveCard : flows.saveAccount}
+                onClose={onClose}
+                onSwitch={onSwitch}
+            />
         </FlowDialog>
     );
 }

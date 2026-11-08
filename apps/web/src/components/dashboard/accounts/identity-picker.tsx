@@ -4,6 +4,7 @@ import { api } from "@outlayr/backend/convex/_generated/api";
 import { searchInstitutions } from "@outlayr/money/institution-map";
 import { RiCheckLine, RiPencilLine, RiSearch2Line } from "@remixicon/react";
 import { useRouteContext } from "@tanstack/react-router";
+import { Input } from "panelui-web/input";
 import { useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -229,15 +230,17 @@ export function IdentityPicker({
                         </div>
                         {tab === "logo" ? (
                             <>
-                                <div className="dash-fi mt-2.5">
-                                    <RiSearch2Line className="text-muted-foreground flex-none" size={16} />
-                                    <input
+                                <Input.Group className="mt-2.5">
+                                    <Input.Addon>
+                                        <RiSearch2Line size={16} />
+                                    </Input.Addon>
+                                    <Input
                                         aria-label={flows.logoSearch.value}
                                         onChange={(event) => setQuery(event.target.value)}
                                         placeholder={flows.logoSearch.value}
                                         value={query}
                                     />
-                                </div>
+                                </Input.Group>
                                 <div className="mt-1.5 empty:hidden">
                                     {found.map(({ domain, label: name }) => {
                                         const chosen = identity.imageKey === `merchants/${domain}`;
@@ -327,7 +330,11 @@ export function IdentityPicker({
                                     {flows.choosePhoto}
                                     <input accept="image/*" className="sr-only" onChange={onFile} type="file" />
                                 </label>
-                                {failed ? <p className="dash-er">{photoError}</p> : null}
+                                {failed ? (
+                                    <p className="text-destructive mt-1.5 text-xs" role="alert">
+                                        {photoError}
+                                    </p>
+                                ) : null}
                             </div>
                         ) : null}
                     </Popover.Popup>

@@ -493,7 +493,7 @@ const dashboardAccounts = {
                 fr: "Choisir une photo",
                 pt: "Escolher uma foto",
             }),
-            close: t({ en: "Close", es: "Cerrar", fr: "Fermer", pt: "Fechar" }),
+            accountType: t({ en: "Account type", es: "Tipo de cuenta", fr: "Type de compte", pt: "Tipo de conta" }),
             creditLimit: t({
                 en: "Credit limit",
                 es: "Límite de crédito",
