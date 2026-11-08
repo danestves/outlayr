@@ -12,8 +12,8 @@ function subscribeScroll(onChange: () => void) {
 }
 
 // Scroll is read in steps so a fling re-renders the table every few rows, not every frame.
-const STEP_PX = 400;
-const OVERSCAN_PX = 1200;
+const STEP_PX = 600;
+const OVERSCAN_PX = 1500;
 
 /** Lines `[first, last)` to draw for a scroll position, plus the space the skipped lines above take. */
 export function lineWindow(offsets: readonly number[], hiddenAbove: number, viewport: number) {

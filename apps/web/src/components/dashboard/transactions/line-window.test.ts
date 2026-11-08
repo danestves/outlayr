@@ -13,10 +13,10 @@ describe("lineWindow", () => {
         const scrolled = 60_000;
         const { first, last } = lineWindow(offsets, scrolled, 900);
 
-        expect(offsets[first + 1]).toBeGreaterThan(scrolled - 1200);
-        expect(offsets[first]).toBeLessThanOrEqual(scrolled - 1200);
-        expect(offsets[last]).toBeGreaterThanOrEqual(scrolled + 900 + 1200);
-        expect(offsets[last - 1]).toBeLessThan(scrolled + 900 + 1200);
+        expect(offsets[first + 1]).toBeGreaterThan(scrolled - 1500);
+        expect(offsets[first]).toBeLessThanOrEqual(scrolled - 1500);
+        expect(offsets[last]).toBeGreaterThanOrEqual(scrolled + 900 + 1500);
+        expect(offsets[last - 1]).toBeLessThan(scrolled + 900 + 1500);
         expect(lineWindow(offsets, 0, 900).first).toBe(0);
         expect(lineWindow(offsets, 10_000_000, 900)).toStrictEqual({ first: 3000, last: 3000 });
     });

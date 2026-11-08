@@ -1,6 +1,6 @@
 import { RiRepeatLine } from "@remixicon/react";
 import { Table } from "panelui-web/table";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -9,6 +9,7 @@ import { FeeTile, MerchantTile, TransferTile } from "@/components/ledger/tiles";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { useCatalog, useImageUrls } from "../home/catalog";
+import type { Catalog } from "../home/catalog";
 import { useCategoryName } from "../home/format";
 import { figureOf } from "../home/rows";
 import type { FoldedRow } from "../home/rows";
@@ -31,56 +32,30 @@ const SECOND_LINE = "dash-figure text-muted-foreground block text-xs leading-4";
 const HEAD_STICKY = "in-data-[sticky]:bg-card max-lg:top-[calc(52px+env(safe-area-inset-top))]!";
 const DAY_STICKY = "sticky top-[calc(92px+env(safe-area-inset-top))] z-[1] lg:top-10";
 
-interface LedgerTableProps {
-    /** Shows the Account column; an account's own page hides it. */
-    account?: boolean;
-    empty?: ReactNode;
-    label: string;
-    lines: readonly Line[];
+interface EntryRowProps {
+    account: boolean;
+    catalog: Catalog;
+    day: string;
+    imageUrl: string | undefined;
+    index: number;
     onOpen: (row: FoldedRow) => void;
-    selected?: string | null;
+    row: FoldedRow;
+    selected: boolean;
+    stripe: boolean;
 }
 
-/** The ledger as a table: rows in the ledger currency, fees folded, a header over each day when there is one. */
-export function LedgerTable({ account = true, empty, label, lines, onOpen, selected = null }: LedgerTableProps) {
+function EntryRowView({ account, catalog, day, imageUrl, index, onOpen, row, selected, stripe }: EntryRowProps) {
     const { ledger, photos: accountPhotos } = useDashboard();
     const { transactions: copy } = useIntlayer("dashboard-home");
-    const words = useIntlayer("dashboard-transactions");
+    const { recurring: recurringLabel } = useIntlayer("dashboard-transactions");
     const categoryName = useCategoryName();
-    const dayTitle = useDayTitle();
     const { money } = useDisplayFormat();
-    const catalog = useCatalog(ledger);
-    const grouped = lines[0]?.type === "day";
-    const heights = useMemo(() => lines.map((line) => (line.type === "day" ? DAY_HEIGHT : ROW_HEIGHT)), [lines]);
-    const { after, before, body, first, last } = useLineWindow(heights);
-    const shown = lines.slice(first, last);
-    const imageKeys = useMemo(
-        () => [
-            ...new Set(
-                shown.flatMap((line) => {
-                    const key =
-                        line.type === "row" && !("fromId" in line.row)
-                            ? catalog.transaction(line.row.id)?.imageKey
-                            : null;
-                    return key ? [key] : [];
-                })
-            ),
-        ],
-        [catalog, shown]
-    );
-    const photos = useImageUrls(imageKeys);
-    const columns = account ? 4 : 3;
+    const figure = figureOf(ledger, row);
     const accountName = (id: string | null) =>
         id === null ? copy.noAccount.value : (ledger.accounts.get(id)?.name ?? "");
-    // Stripes restart under each day so a window that starts mid-list never flips them.
-    const stripeOf = (index: number) => {
-        let rows = 0;
-        for (let at = index - 1; at >= 0 && lines[at]?.type === "row"; at -= 1) {
-            rows += 1;
-        }
-        return rows % 2 === 1;
-    };
-    const secondLine = (row: FoldedRow, figure: ReturnType<typeof figureOf>) => {
+    const raw = "fromId" in row ? undefined : catalog.transaction(row.id);
+    const tone = `${ROW} ${stripe ? STRIPE : RING} ${selected ? "bg-muted/70" : ""}`;
+    const secondLine = () => {
         if (figure.arrived !== null && "fromId" in row) {
             const arrived = money(figure.arrived, row.arrivedCurrency);
             return (
@@ -97,26 +72,18 @@ export function LedgerTable({ account = true, empty, label, lines, onOpen, selec
                 </span>
             );
         }
-        const raw = "fromId" in row ? undefined : catalog.transaction(row.id);
         if (raw?.currency && raw.currency !== ledger.currency && ISO_CURRENCY.test(raw.currency)) {
             return <span className={SECOND_LINE}>{money(raw.amount, raw.currency)}</span>;
         }
         return null;
     };
-    const merchantCell = (
-        row: FoldedRow,
-        tile: ReactNode,
-        name: string,
-        day: string,
-        kind: string,
-        recurring: boolean
-    ) => (
+    const merchantCell = (tile: ReactNode, name: string, kind: string, recurring: boolean) => (
         <Table.Cell className={`${CELL} max-w-0 @2xl:max-w-none`}>
             <span className="flex items-center gap-3 font-medium">
                 {tile}
                 <span className="min-w-0">
                     <button
-                        aria-current={selected === row.id ? "true" : undefined}
+                        aria-current={selected ? "true" : undefined}
                         className="flex max-w-full items-center gap-1.5 text-left outline-none after:absolute after:inset-0"
                         onClick={() => onOpen(row)}
                         type="button"
@@ -124,7 +91,7 @@ export function LedgerTable({ account = true, empty, label, lines, onOpen, selec
                         <span className="truncate">{name}</span>
                         {recurring ? (
                             <RiRepeatLine
-                                aria-label={words.recurring.value}
+                                aria-label={recurringLabel.value}
                                 className="text-muted-foreground shrink-0"
                                 size={12}
                             />
@@ -143,85 +110,114 @@ export function LedgerTable({ account = true, empty, label, lines, onOpen, selec
             </span>
         </Table.Cell>
     );
-    const rowOf = (row: FoldedRow, index: number) => {
-        const figure = figureOf(ledger, row);
-        const day = grouped ? "" : dayTitle(row.day);
-        const tone = `${ROW} ${stripeOf(index) ? STRIPE : RING} ${selected === row.id ? "bg-muted/70" : ""}`;
-        if ("fromId" in row) {
-            const names = `${accountName(row.fromId)} → ${accountName(row.toId)}`;
-            return (
-                <Table.Row aria-rowindex={index + 2} className={tone} key={row.id}>
-                    {merchantCell(
-                        row,
-                        <TransferTile
-                            from={catalog.account(row.fromId)}
-                            photos={accountPhotos}
-                            to={catalog.account(row.toId)}
-                        />,
-                        names,
-                        day,
-                        copy.transfer.value,
-                        false
-                    )}
-                    <Table.Cell className={`${SIDE} text-muted-foreground`}>{copy.transfer}</Table.Cell>
-                    {account ? <Table.Cell aria-label={copy.columns.account.value} className={SIDE} /> : null}
-                    <Table.Cell align="end" className={`${FIGURE} text-muted-foreground`}>
-                        {money(figure.amount, ledger.currency)}
-                        {secondLine(row, figure)}
-                    </Table.Cell>
-                </Table.Row>
-            );
-        }
-        const top = ledger.categories.get(row.topId);
-        const name = top ? categoryName(top) : "";
-        const merchant = row.note.trim() || name;
-        const raw = catalog.transaction(row.id);
-        const standsAlone = row.feeFor !== null;
-        const feeKind = raw?.feeForId ? copy.cardFee.value : copy.transferFee.value;
-        const kind = standsAlone ? feeKind : name;
-        const imageKey = raw?.imageKey;
+    if ("fromId" in row) {
         return (
-            <Table.Row aria-rowindex={index + 2} className={tone} key={row.id}>
+            <Table.Row aria-rowindex={index + 2} className={tone}>
                 {merchantCell(
-                    row,
-                    standsAlone ? (
-                        <FeeTile />
-                    ) : (
-                        <MerchantTile
-                            imageUrl={imageKey ? photos?.get(imageKey) : undefined}
-                            name={merchant}
-                            size="lg"
-                        />
-                    ),
-                    merchant,
-                    day,
-                    kind,
-                    (raw?.recurringType ?? 0) > 0
+                    <TransferTile
+                        from={catalog.account(row.fromId)}
+                        photos={accountPhotos}
+                        to={catalog.account(row.toId)}
+                    />,
+                    `${accountName(row.fromId)} → ${accountName(row.toId)}`,
+                    copy.transfer.value,
+                    false
                 )}
-                <Table.Cell className={SIDE}>
-                    {standsAlone ? (
-                        <span className="text-muted-foreground">{kind}</span>
-                    ) : (
-                        <span className="flex min-w-0 items-center gap-2">
-                            <span
-                                aria-hidden
-                                className="size-1.5 shrink-0 rounded-full bg-current"
-                                style={{ color: top?.color }}
-                            />
-                            <span className="truncate">{name}</span>
-                        </span>
-                    )}
-                </Table.Cell>
-                {account ? (
-                    <Table.Cell className={`${SIDE} text-muted-foreground`}>{accountName(row.accountId)}</Table.Cell>
-                ) : null}
-                <Table.Cell align="end" className={`${FIGURE} ${row.income ? "text-app-income" : ""}`}>
-                    {money(row.income ? figure.amount : -figure.amount, ledger.currency, "always")}
-                    {secondLine(row, figure)}
+                <Table.Cell className={`${SIDE} text-muted-foreground`}>{copy.transfer}</Table.Cell>
+                {account ? <Table.Cell aria-label={copy.columns.account.value} className={SIDE} /> : null}
+                <Table.Cell align="end" className={`${FIGURE} text-muted-foreground`}>
+                    {money(figure.amount, ledger.currency)}
+                    {secondLine()}
                 </Table.Cell>
             </Table.Row>
         );
-    };
+    }
+    const top = ledger.categories.get(row.topId);
+    const name = top ? categoryName(top) : "";
+    const merchant = row.note.trim() || name;
+    const standsAlone = row.feeFor !== null;
+    const feeKind = raw?.feeForId ? copy.cardFee.value : copy.transferFee.value;
+    const kind = standsAlone ? feeKind : name;
+    return (
+        <Table.Row aria-rowindex={index + 2} className={tone}>
+            {merchantCell(
+                standsAlone ? <FeeTile /> : <MerchantTile imageUrl={imageUrl} name={merchant} size="lg" />,
+                merchant,
+                kind,
+                (raw?.recurringType ?? 0) > 0
+            )}
+            <Table.Cell className={SIDE}>
+                {standsAlone ? (
+                    <span className="text-muted-foreground">{kind}</span>
+                ) : (
+                    <span className="flex min-w-0 items-center gap-2">
+                        <span
+                            aria-hidden
+                            className="size-1.5 shrink-0 rounded-full bg-current"
+                            style={{ color: top?.color }}
+                        />
+                        <span className="truncate">{name}</span>
+                    </span>
+                )}
+            </Table.Cell>
+            {account ? (
+                <Table.Cell className={`${SIDE} text-muted-foreground`}>{accountName(row.accountId)}</Table.Cell>
+            ) : null}
+            <Table.Cell align="end" className={`${FIGURE} ${row.income ? "text-app-income" : ""}`}>
+                {money(row.income ? figure.amount : -figure.amount, ledger.currency, "always")}
+                {secondLine()}
+            </Table.Cell>
+        </Table.Row>
+    );
+}
+
+// Memoized so a scroll that shifts the window renders only the rows coming into view.
+const EntryRow = memo(EntryRowView);
+
+// Stripes restart under each day so a window that starts mid-list never flips them.
+function stripesOf(lines: readonly Line[]) {
+    const stripes: boolean[] = [];
+    let run = 0;
+    for (const line of lines) {
+        run = line.type === "day" ? 0 : run + 1;
+        stripes.push(run % 2 === 0);
+    }
+    return stripes;
+}
+
+const uniqueKeys = (keyList: string) => (keyList === "" ? [] : [...new Set(keyList.split(" "))]);
+
+interface LedgerTableProps {
+    /** Shows the Account column; an account's own page hides it. */
+    account?: boolean;
+    empty?: ReactNode;
+    label: string;
+    lines: readonly Line[];
+    onOpen: (row: FoldedRow) => void;
+    selected?: string | null;
+}
+
+/** The ledger as a table: rows in the ledger currency, fees folded, a header over each day when there is one. */
+export function LedgerTable({ account = true, empty, label, lines, onOpen, selected = null }: LedgerTableProps) {
+    const { ledger } = useDashboard();
+    const { transactions: copy } = useIntlayer("dashboard-home");
+    const dayTitle = useDayTitle();
+    const { money } = useDisplayFormat();
+    const catalog = useCatalog(ledger);
+    const grouped = lines[0]?.type === "day";
+    const heights = useMemo(() => lines.map((line) => (line.type === "day" ? DAY_HEIGHT : ROW_HEIGHT)), [lines]);
+    const stripes = useMemo(() => stripesOf(lines), [lines]);
+    const { after, before, body, first, last } = useLineWindow(heights);
+    const shown = lines.slice(first, last);
+    const keyList = shown
+        .flatMap((line) => {
+            const key =
+                line.type === "row" && !("fromId" in line.row) ? catalog.transaction(line.row.id)?.imageKey : null;
+            return key ? [key] : [];
+        })
+        .join(" ");
+    const photos = useImageUrls(uniqueKeys(keyList));
+    const columns = account ? 4 : 3;
     return (
         <Table
             aria-label={label}
@@ -262,7 +258,21 @@ export function LedgerTable({ account = true, empty, label, lines, onOpen, selec
                 {shown.map((line, offset) => {
                     const index = first + offset;
                     if (line.type === "row") {
-                        return rowOf(line.row, index);
+                        const imageKey = catalog.transaction(line.row.id)?.imageKey;
+                        return (
+                            <EntryRow
+                                account={account}
+                                catalog={catalog}
+                                day={grouped ? "" : dayTitle(line.row.day)}
+                                imageUrl={imageKey ? photos?.get(imageKey) : undefined}
+                                index={index}
+                                key={line.row.id}
+                                onOpen={onOpen}
+                                row={line.row}
+                                selected={selected === line.row.id}
+                                stripe={stripes[index] ?? false}
+                            />
+                        );
                     }
                     const title = dayTitle(line.day);
                     return (
