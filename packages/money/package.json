@@ -14,6 +14,7 @@
         "./budget-spent": "./src/budget-spent.ts",
         "./budget-window": "./src/budget-window.ts",
         "./calendar": "./src/calendar.ts",
+        "./category-rules": "./src/category-rules.ts",
         "./canonical-usd": "./src/canonical-usd.ts",
         "./card-fee": "./src/card-fee.ts",
         "./catalog": "./src/catalog.generated.ts",

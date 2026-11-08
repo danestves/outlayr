@@ -1,6 +1,9 @@
 import { RiArrowLeftSLine } from "@remixicon/react";
 import { Link, useRouteContext } from "@tanstack/react-router";
+import { Button } from "panelui-web/button";
+import { Label } from "panelui-web/label";
 import { Switch } from "panelui-web/switch";
+import { Tabs } from "panelui-web/tabs";
 import { useToast } from "panelui-web/toast";
 import { useId } from "react";
 import type { ReactNode } from "react";
@@ -13,9 +16,15 @@ export function SectionHead({ action, title }: { action?: ReactNode; title: Reac
     const { title: settings } = useIntlayer("dashboard-settings");
     return (
         <div className="flex min-h-16 items-center gap-2 max-lg:min-h-12">
-            <Link aria-label={settings.value} className="dash-icon-btn -ml-2.5 lg:hidden" to="/app/settings">
+            <Button
+                aria-label={settings.value}
+                className="-ml-2.5 lg:hidden"
+                render={<Link to="/app/settings" />}
+                size="icon"
+                variant="ghost"
+            >
                 <RiArrowLeftSLine size={22} />
-            </Link>
+            </Button>
             <h1 className="mr-auto text-lg font-semibold tracking-[-0.02em]">{title}</h1>
             {action}
         </div>
@@ -57,9 +66,9 @@ export function Row({
         <div className="border-border flex min-h-14 items-center gap-4 border-t px-4 py-2.5 first:border-t-0 max-sm:flex-wrap max-sm:gap-y-2">
             {leading}
             <div className="min-w-0 flex-1">
-                <label className="block text-sm leading-5 font-medium" htmlFor={labelFor}>
+                <Label className="block text-sm leading-5 font-medium" htmlFor={labelFor}>
                     {label}
-                </label>
+                </Label>
                 {hint ? <p className="text-muted-foreground text-[13px] leading-[18px]">{hint}</p> : null}
             </div>
             {children}
@@ -94,24 +103,31 @@ export function Choice<Value extends string | number>({
 }: {
     label: string;
     onChange: (next: Value) => void;
-    options: readonly { label: string; value: Value }[];
+    options: readonly { label: ReactNode; value: Value }[];
     value: Value;
 }) {
     return (
-        <fieldset aria-label={label} className="bg-app-fill inline-flex shrink-0 rounded-[10px] p-[3px]">
-            {options.map((option) => (
-                <button
-                    aria-pressed={option.value === value}
-                    className="dash-seg"
-                    data-on={option.value === value}
-                    key={option.value}
-                    onClick={() => onChange(option.value)}
-                    type="button"
-                >
-                    {option.label}
-                </button>
-            ))}
-        </fieldset>
+        <Tabs
+            onValueChange={(next) => {
+                const picked = options.find((option) => option.value === next);
+                if (picked) {
+                    onChange(picked.value);
+                }
+            }}
+            value={value}
+        >
+            <Tabs.List aria-label={label} className="bg-background/40 rounded-[9px] p-0.5">
+                {options.map((option) => (
+                    <Tabs.Trigger
+                        className="h-[26px] rounded-[7px] px-2.5 text-[13px]"
+                        key={option.value}
+                        value={option.value}
+                    >
+                        {option.label}
+                    </Tabs.Trigger>
+                ))}
+            </Tabs.List>
+        </Tabs>
     );
 }
 

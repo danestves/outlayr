@@ -57,6 +57,8 @@ import { Route as AccountAppSettingsCurrencyRouteImport } from './routes/_accoun
 import { Route as AccountAppSettingsPlanRouteImport } from './routes/_account/app.settings.plan'
 import { Route as AccountAppSettingsPreferencesRouteImport } from './routes/_account/app.settings.preferences'
 import { Route as AccountAppSettingsTimeRouteImport } from './routes/_account/app.settings.time'
+import { Route as AccountAppSettingsCategoriesIndexRouteImport } from './routes/_account/app.settings.categories.index'
+import { Route as AccountAppSettingsCategoriesCategoryIdRouteImport } from './routes/_account/app.settings.categories.$categoryId'
 
 const AccountRoute = AccountRouteImport.update({
   id: '/_account',
@@ -327,6 +329,18 @@ const AccountAppSettingsTimeRoute = AccountAppSettingsTimeRouteImport.update({
   path: '/time',
   getParentRoute: () => AccountAppSettingsRoute,
 } as any)
+const AccountAppSettingsCategoriesIndexRoute =
+  AccountAppSettingsCategoriesIndexRouteImport.update({
+    id: '/categories/',
+    path: '/categories/',
+    getParentRoute: () => AccountAppSettingsRoute,
+  } as any)
+const AccountAppSettingsCategoriesCategoryIdRoute =
+  AccountAppSettingsCategoriesCategoryIdRouteImport.update({
+    id: '/categories/$categoryId',
+    path: '/categories/$categoryId',
+    getParentRoute: () => AccountAppSettingsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/{-$locale}': typeof Char123LocaleChar125RouteRouteWithChildren
@@ -377,6 +391,8 @@ export interface FileRoutesByFullPath {
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/accounts/': typeof AccountAppAccountsIndexRoute
   '/app/settings/': typeof AccountAppSettingsIndexRoute
+  '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AccountRouteWithChildren
@@ -424,6 +440,8 @@ export interface FileRoutesByTo {
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/accounts': typeof AccountAppAccountsIndexRoute
   '/app/settings': typeof AccountAppSettingsIndexRoute
+  '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/app/settings/categories': typeof AccountAppSettingsCategoriesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -475,6 +493,8 @@ export interface FileRoutesById {
   '/_account/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/_account/app/accounts/': typeof AccountAppAccountsIndexRoute
   '/_account/app/settings/': typeof AccountAppSettingsIndexRoute
+  '/_account/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/_account/app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -527,6 +547,8 @@ export interface FileRouteTypes {
     | '/app/settings/time'
     | '/app/accounts/'
     | '/app/settings/'
+    | '/app/settings/categories/$categoryId'
+    | '/app/settings/categories/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -574,6 +596,8 @@ export interface FileRouteTypes {
     | '/app/settings/time'
     | '/app/accounts'
     | '/app/settings'
+    | '/app/settings/categories/$categoryId'
+    | '/app/settings/categories'
   id:
     | '__root__'
     | '/{-$locale}'
@@ -624,6 +648,8 @@ export interface FileRouteTypes {
     | '/_account/app/settings/time'
     | '/_account/app/accounts/'
     | '/_account/app/settings/'
+    | '/_account/app/settings/categories/$categoryId'
+    | '/_account/app/settings/categories/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -980,6 +1006,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppSettingsTimeRouteImport
       parentRoute: typeof AccountAppSettingsRoute
     }
+    '/_account/app/settings/categories/': {
+      id: '/_account/app/settings/categories/'
+      path: '/categories'
+      fullPath: '/app/settings/categories/'
+      preLoaderRoute: typeof AccountAppSettingsCategoriesIndexRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
+    '/_account/app/settings/categories/$categoryId': {
+      id: '/_account/app/settings/categories/$categoryId'
+      path: '/categories/$categoryId'
+      fullPath: '/app/settings/categories/$categoryId'
+      preLoaderRoute: typeof AccountAppSettingsCategoriesCategoryIdRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
   }
 }
 
@@ -1041,6 +1081,8 @@ interface AccountAppSettingsRouteChildren {
   AccountAppSettingsPreferencesRoute: typeof AccountAppSettingsPreferencesRoute
   AccountAppSettingsTimeRoute: typeof AccountAppSettingsTimeRoute
   AccountAppSettingsIndexRoute: typeof AccountAppSettingsIndexRoute
+  AccountAppSettingsCategoriesCategoryIdRoute: typeof AccountAppSettingsCategoriesCategoryIdRoute
+  AccountAppSettingsCategoriesIndexRoute: typeof AccountAppSettingsCategoriesIndexRoute
 }
 
 const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
@@ -1050,6 +1092,10 @@ const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
   AccountAppSettingsPreferencesRoute: AccountAppSettingsPreferencesRoute,
   AccountAppSettingsTimeRoute: AccountAppSettingsTimeRoute,
   AccountAppSettingsIndexRoute: AccountAppSettingsIndexRoute,
+  AccountAppSettingsCategoriesCategoryIdRoute:
+    AccountAppSettingsCategoriesCategoryIdRoute,
+  AccountAppSettingsCategoriesIndexRoute:
+    AccountAppSettingsCategoriesIndexRoute,
 }
 
 const AccountAppSettingsRouteWithChildren =

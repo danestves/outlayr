@@ -1,3 +1,11 @@
+import {
+    capitalizeCategoryName,
+    detectCategoryCollision,
+    formatCategoryName,
+    SUGGESTED_CATEGORY_PRESETS,
+    suggestionsNotAdded,
+} from "@outlayr/money/category-rules";
+import type { SuggestedCategoryPreset } from "@outlayr/money/category-rules";
 import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
 import type { CanonicalCategoryName } from "@outlayr/money/contract";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
@@ -58,36 +66,13 @@ const query = <A>(operation: typeof CategoriesOperation.Type, run: () => Promise
 const findCategory = (operation: typeof CategoriesOperation.Type, db: Database, id: string) =>
     Effect.try({ catch: (cause) => new CategoriesError({ cause, operation }), try: () => getCategoryById(db, id) });
 
-const WHITESPACE_RUN = /\s+/;
-
-// Uniform OKLCH lightness 0.600 and chroma 0.102, 15 degrees apart (above the ~9 degree floor where hues blur), so no
-// tile shouts or vanishes. Identical in light and dark: `glyphShade` derives the readable glyph per theme.
-export const CATEGORY_PALETTE = [
-    "#B56858",
-    "#B16C48",
-    "#AB723A",
-    "#A17830",
-    "#957E2E",
-    "#868535",
-    "#758A41",
-    "#618F51",
-    "#4B9263",
-    "#339475",
-    "#189486",
-    "#009296",
-    "#1190A5",
-    "#2C8CB0",
-    "#4487B8",
-    "#5981BD",
-    "#6C7BBD",
-    "#7D76BA",
-    "#8D71B2",
-    "#9A6CA8",
-    "#A4689A",
-    "#AD668B",
-    "#B2657A",
-    "#B56669",
-] as const;
+export {
+    capitalizeCategoryName,
+    CATEGORY_PALETTE,
+    formatCategoryName,
+    SUGGESTED_CATEGORY_PRESETS,
+} from "@outlayr/money/category-rules";
+export type { SuggestedCategoryPreset } from "@outlayr/money/category-rules";
 
 // Names only: a seed with its own icon would shadow the preset, since `suggestedCategoriesNotAdded` filters by name.
 export const SEEDED_CATEGORY_NAMES = {
@@ -320,26 +305,6 @@ export interface CategoryValidationResult {
     order: number;
 }
 
-// Close enough to Swift's `.capitalized` to keep name-collision checks stable across the two apps.
-export function capitalizeCategoryName(raw: string): string {
-    return raw
-        .trim()
-        .split(WHITESPACE_RUN)
-        .filter((word) => word.length > 0)
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(" ");
-}
-
-export function formatCategoryName(raw: string): string {
-    const name = raw.trim().split(WHITESPACE_RUN).join(" ");
-    return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
-// U+FE0F is stripped so the text and emoji presentations of one glyph collide.
-function emojiComparisonKey(emoji: string): string {
-    return emoji.trim().split(String.fromCodePoint(0xfe_0f)).join("");
-}
-
 // Icons and emoji collide namespace-wide, not per-parent, matching Swift.
 const namespaceSiblings = Effect.fn("Categories.namespaceSiblings")(function* namespaceSiblings(
     operation: typeof CategoriesOperation.Type,
@@ -355,46 +320,6 @@ const namespaceSiblings = Effect.fn("Categories.namespaceSiblings")(function* na
     );
     return excludeId == null ? rows : rows.filter((row) => row.id !== excludeId);
 });
-
-/** `name` must be title-cased already; icon and emoji are the raw candidates ("" when absent). */
-function detectCollision(
-    candidate: { name: string; icon: string; emoji: string },
-    siblings: Category[]
-): CategoryError | null {
-    const iconKeys = new Set(
-        siblings.map((row) => row.icon).filter((icon): icon is string => icon != null && icon !== "")
-    );
-    const emojiKeys = new Set(
-        siblings
-            .map((row) => row.emoji)
-            .filter((emoji): emoji is string => emoji != null && emoji !== "")
-            .map(emojiComparisonKey)
-    );
-    const nameKeys = new Set(
-        siblings
-            .map((row) => row.name)
-            .filter((name): name is string => name != null)
-            .map(capitalizeCategoryName)
-    );
-
-    const iconTaken = candidate.icon !== "" && iconKeys.has(candidate.icon);
-    const emojiTaken = candidate.emoji !== "" && emojiKeys.has(emojiComparisonKey(candidate.emoji));
-    const nameTaken = nameKeys.has(candidate.name);
-
-    if ((iconTaken || emojiTaken) && nameTaken) {
-        return "duplicate";
-    }
-    if (iconTaken) {
-        return "duplicateIcon";
-    }
-    if (emojiTaken) {
-        return "duplicateEmoji";
-    }
-    if (nameTaken) {
-        return "duplicateName";
-    }
-    return null;
-}
 
 export function pickFreeCategoryIcon(siblings: readonly Category[], preferred: string): string {
     const used = new Set(siblings.map((row) => row.icon).filter((icon): icon is string => icon != null && icon !== ""));
@@ -436,7 +361,10 @@ export const validateCategoryCreate = Effect.fn("Categories.validateCategoryCrea
     }
 
     const siblings = yield* namespaceSiblings("validate", db, input.income);
-    return { error: detectCollision({ emoji, icon, name }, siblings), order } satisfies CategoryValidationResult;
+    return {
+        error: detectCategoryCollision({ emoji, icon, name }, siblings),
+        order,
+    } satisfies CategoryValidationResult;
 });
 
 // Missing-symbol checks fire only when the row already had one, so a symbol-less legacy category stays renamable.
@@ -469,23 +397,11 @@ export const validateCategoryEdit = Effect.fn("Categories.validateCategoryEdit")
     }
 
     const siblings = yield* namespaceSiblings("validate", db, existing.income, id);
-    return { error: detectCollision({ emoji, icon, name }, siblings), order } satisfies CategoryValidationResult;
+    return {
+        error: detectCategoryCollision({ emoji, icon, name }, siblings),
+        order,
+    } satisfies CategoryValidationResult;
 });
-
-export interface SuggestedCategoryPreset {
-    color: string;
-    /** Icon registry key (`components/category-icon.tsx`). */
-    icon: string;
-    name: string;
-}
-
-// Named so `name` stays `string`, which is what `merchant-map` matches against.
-export interface SuggestedCategoryPresets {
-    readonly expense: readonly SuggestedCategoryPreset[];
-    readonly income: readonly SuggestedCategoryPreset[];
-}
-
-type PresetStyle = Omit<SuggestedCategoryPreset, "name">;
 
 export type CategoryPreset = CanonicalCategoryName<"expense" | "income">;
 
@@ -541,75 +457,12 @@ export function presetLabel(name: string, translate: (key: TranslatableKey) => s
     return isCategoryPreset(name) ? translate(PRESET_LABELS[name]) : name;
 }
 
-const EXPENSE_STYLES: Record<CanonicalCategoryName<"expense">, PresetStyle> = {
-    Groceries: { color: "#53915A", icon: "ShoppingCart01" },
-    "Dining Out": { color: "#A97332", icon: "Restaurant01" },
-    Coffee: { color: "#AE703A", icon: "Coffee02" },
-    Transport: { color: "#4D84BD", icon: "Bus01" },
-    Fuel: { color: "#B46A4D", icon: "Fuel01" },
-    Rent: { color: "#B26C43", icon: "Home01" },
-    Home: { color: "#728B41", icon: "Sofa01" },
-    Utilities: { color: "#937F2B", icon: "Flash" },
-    "Phone & Internet": { color: "#0590A7", icon: "Wifi01" },
-    Subscriptions: { color: "#7C76BC", icon: "Repeat" },
-    Healthcare: { color: "#1D947F", icon: "Health" },
-    Fitness: { color: "#B76662", icon: "Dumbbell01" },
-    Shopping: { color: "#B16482", icon: "ShoppingBag01" },
-    Fashion: { color: "#9B6BA8", icon: "Dress01" },
-    Entertainment: { color: "#936EAF", icon: "FilmRoll01" },
-    Travel: { color: "#2F8AB4", icon: "Airplane01" },
-    Education: { color: "#7179BE", icon: "Mortarboard01" },
-    Gifts: { color: "#B46477", icon: "Gift" },
-    Pets: { color: "#A3772D", icon: "Bone01" },
-    Family: { color: "#B66757", icon: "Kid" },
-    "Personal Care": { color: "#AD658C", icon: "HairDryer" },
-    Insurance: { color: "#667DBF", icon: "Shield01" },
-    Taxes: { color: "#5A81BF", icon: "Taxes" },
-};
-
-const INCOME_STYLES: Record<CanonicalCategoryName<"income">, PresetStyle> = {
-    Paycheck: { color: "#53915A", icon: "MoneyBag01" },
-    Freelance: { color: "#00948A", icon: "Laptop" },
-    "Part-Time": { color: "#3F87B9", icon: "Briefcase01" },
-    Business: { color: "#459365", icon: "Building01" },
-    Investments: { color: "#668E4B", icon: "ChartUp" },
-    Interest: { color: "#359470", icon: "PercentCircle" },
-    Bonus: { color: "#9C7B2A", icon: "Target01" },
-    Tips: { color: "#A3772D", icon: "Tips" },
-    Refund: { color: "#1E8DAE", icon: "Cashback" },
-    Gifts: { color: "#B6646C", icon: "GiftCard" },
-};
-
-export const SUGGESTED_CATEGORY_PRESETS: SuggestedCategoryPresets = {
-    expense: CANONICAL_CATEGORY_NAMES.expense.map((name) => ({ ...EXPENSE_STYLES[name], name })),
-    income: CANONICAL_CATEGORY_NAMES.income.map((name) => ({ ...INCOME_STYLES[name], name })),
-};
-
 export function presetsNotAdded(
     income: boolean,
     existing: readonly Pick<Category, "icon" | "name" | "preset">[],
     translate: (key: TranslatableKey) => string = translateNow
 ): SuggestedCategoryPreset[] {
-    const pool = income ? SUGGESTED_CATEGORY_PRESETS.income : SUGGESTED_CATEGORY_PRESETS.expense;
-    const usedPresets = new Set(existing.map((row) => row.preset));
-    const usedNames = new Set(
-        existing
-            .map((row) => row.name)
-            .filter((name): name is string => name != null)
-            .map(capitalizeCategoryName)
-    );
-    const usedIcons = new Set(
-        existing.map((row) => row.icon).filter((icon): icon is string => icon != null && icon !== "")
-    );
-    return pool.filter(
-        (preset) =>
-            !(
-                usedPresets.has(preset.name) ||
-                usedNames.has(capitalizeCategoryName(preset.name)) ||
-                usedNames.has(capitalizeCategoryName(presetLabel(preset.name, translate))) ||
-                usedIcons.has(preset.icon)
-            )
-    );
+    return suggestionsNotAdded(income, existing, (name) => presetLabel(name, translate));
 }
 
 export const suggestedCategoriesNotAdded = Effect.fn("Categories.suggestedCategoriesNotAdded")(
