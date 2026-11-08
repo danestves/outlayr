@@ -5,9 +5,9 @@ import { Outlet, createFileRoute, redirect, useNavigate, useRouter } from "@tans
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { ConvexError } from "convex/values";
 import { Toast, useToast } from "panelui-web/toast";
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
-import { useIntlayer, useLocale } from "react-intlayer";
+import { IntlayerProvider, useIntlayer, useLocale } from "react-intlayer";
 
 import { Muted, SOLID_PILL, Screen } from "@/components/account/parts";
 import { AccountFlowsProvider } from "@/components/dashboard/accounts/flows";
@@ -19,7 +19,9 @@ import { mintedPhotos, photoKeys, seedPhotos, usePhotoUrls } from "@/components/
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 import { convexClient } from "@/lib/convex";
+import { readDashboardLocale, serverDashboardLocale, subscribeDashboardLocale } from "@/lib/dashboard-locale";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
+import { LANGUAGES } from "@/lib/i18n";
 import { dropLedger, forgetLedger, hasLedgerCopy, restoreLedger, saveLedger } from "@/lib/ledger-cache";
 import { resendUnsent } from "@/lib/ledger-commit";
 import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
@@ -72,7 +74,26 @@ export const Route = createFileRoute("/_account/app")({
     head: () => ({ meta: [{ title: "Outlayr" }] }),
 });
 
+function Localized({ children }: { children: ReactNode }) {
+    const locale = useSyncExternalStore(subscribeDashboardLocale, readDashboardLocale, serverDashboardLocale);
+    return (
+        <IntlayerProvider locale={locale}>
+            <div className="contents" lang={LANGUAGES[locale].lang}>
+                {children}
+            </div>
+        </IntlayerProvider>
+    );
+}
+
 function App() {
+    return (
+        <Localized>
+            <SyncedApp />
+        </Localized>
+    );
+}
+
+function SyncedApp() {
     const { synced } = Route.useLoaderData();
     if (!synced) {
         return (
@@ -132,9 +153,11 @@ function Pending() {
         return null;
     }
     return (
-        <DashboardShell>
-            <DashboardPending />
-        </DashboardShell>
+        <Localized>
+            <DashboardShell>
+                <DashboardPending />
+            </DashboardShell>
+        </Localized>
     );
 }
 

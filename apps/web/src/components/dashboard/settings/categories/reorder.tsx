@@ -1,4 +1,5 @@
-import { RiDraggable } from "@remixicon/react";
+import DragDropVerticalIcon from "@hugeicons/core-free-icons/DragDropVerticalIcon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "panelui-web/button";
 import { Fragment, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
@@ -54,7 +55,7 @@ function ReorderRow({
                 size="icon-sm"
                 variant="ghost"
             >
-                <RiDraggable size={16} />
+                <HugeiconsIcon icon={DragDropVerticalIcon} size={16} />
             </Button>
             <LookTile look={row} />
             <span className="min-w-0 truncate text-[13px] font-medium">{row.name}</span>

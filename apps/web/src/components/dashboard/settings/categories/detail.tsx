@@ -1,4 +1,8 @@
-import { RiArrowLeftSLine, RiArrowRightSLine, RiAddLine, RiPencilLine } from "@remixicon/react";
+import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
+import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
+import PencilEdit02Icon from "@hugeicons/core-free-icons/PencilEdit02Icon";
+import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
 import { BarChart } from "panelui-web/bar-chart";
 import { Button } from "panelui-web/button";
@@ -8,7 +12,6 @@ import { useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDateFormat, usePeriodTitle } from "@/components/dashboard/home/format";
 import { OverlayPresence } from "@/components/dashboard/overlay-presence";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -17,14 +20,14 @@ import { categoryBudget } from "@/lib/dashboard-series";
 import { periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
+import { SettingsCard } from "../parts";
 import { CategoryEditor } from "./editor";
 import type { EditorTarget } from "./editor";
 import { categoryFigures, liveCategories } from "./model";
 
 const ENTRIES_SHOWN = 10;
 const PERCENT = 100;
-const HEAD = "first:ps-3.5 last:pe-3.5";
-const CELL = "h-11 py-0 whitespace-nowrap first:ps-3.5 last:pe-3.5";
+const CELL = "whitespace-nowrap";
 const FIGURE_NOTE = "text-muted-foreground min-w-0 truncate text-[13px] leading-5";
 const TWO_BY_TWO =
     "max-lg:grid max-lg:grid-cols-2 max-lg:gap-y-5 max-lg:divide-x-0 max-lg:*:odd:border-e max-lg:*:odd:ps-0 max-lg:*:odd:pe-3 max-lg:*:even:ps-3 max-lg:*:even:pe-0";
@@ -78,7 +81,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
             size="sm"
             variant="ghost"
         >
-            <RiArrowLeftSLine size={18} />
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
             <span className="max-sm:sr-only">{parent?.name ?? copy.title}</span>
         </Button>
     );
@@ -126,7 +129,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                         size="icon-sm"
                         variant="ghost"
                     >
-                        <RiArrowLeftSLine size={18} />
+                        <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
                     </Button>
                     <span className="dash-figure text-[13px] font-medium whitespace-nowrap">{periodTitle(period)}</span>
                     <Button
@@ -136,11 +139,11 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                         size="icon-sm"
                         variant="ghost"
                     >
-                        <RiArrowRightSLine size={18} />
+                        <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
                     </Button>
                 </div>
                 <Button onClick={() => setEditing({ doc: category })} size="sm" variant="outline">
-                    <RiPencilLine size={16} />
+                    <HugeiconsIcon icon={PencilEdit02Icon} size={16} />
                     {copy.edit}
                 </Button>
             </div>
@@ -174,7 +177,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                     </Figure>
                 </Kpi.Group>
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-                    <CardFrame title={copy.last5}>
+                    <SettingsCard title={copy.last5}>
                         <div className="px-4 py-3" style={barColors}>
                             <BarChart aspectRatio={2.4} data={months} label={copy.last5.value} stacked xDataKey="key">
                                 <BarChart.Bar color="chart-2" dataKey="past" />
@@ -188,9 +191,9 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                                 />
                             </BarChart>
                         </div>
-                    </CardFrame>
+                    </SettingsCard>
                     {category.parentId === null ? (
-                        <CardFrame title={copy.subcategories}>
+                        <SettingsCard title={copy.subcategories}>
                             {children.map((child) => (
                                 <Link
                                     className="border-border flex h-11 items-center gap-2.5 border-b px-4 text-[13px]"
@@ -217,13 +220,13 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                                 size="sm"
                                 variant="ghost"
                             >
-                                <RiAddLine size={15} />
+                                <HugeiconsIcon icon={PlusSignIcon} size={15} />
                                 {copy.addSubcategory}
                             </Button>
-                        </CardFrame>
+                        </SettingsCard>
                     ) : null}
                 </div>
-                <CardFrame
+                <SettingsCard
                     action={
                         <Button
                             render={<Link search={{ category: category.localId }} to="/app/transactions" />}
@@ -246,20 +249,13 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                     {shown.length === 0 ? (
                         <p className="text-muted-foreground px-5 py-8 text-center text-sm">{copy.noEntries}</p>
                     ) : (
-                        <Table
-                            aria-label={copy.entries.value}
-
-                            maxHeight="none"
-                            striped
-                        >
+                        <Table framed aria-label={copy.entries.value} maxHeight="none">
                             <Table.Header className="in-data-[sticky]:bg-card">
                                 <Table.Row>
-                                    <Table.Head className={HEAD}>{copy.merchant}</Table.Head>
-                                    <Table.Head className={HEAD}>{copy.account}</Table.Head>
-                                    <Table.Head className={HEAD}>{copy.date}</Table.Head>
-                                    <Table.Head align="end" className={HEAD}>
-                                        {copy.amount}
-                                    </Table.Head>
+                                    <Table.Head>{copy.merchant}</Table.Head>
+                                    <Table.Head>{copy.account}</Table.Head>
+                                    <Table.Head>{copy.date}</Table.Head>
+                                    <Table.Head align="end">{copy.amount}</Table.Head>
                                 </Table.Row>
                             </Table.Header>
                             <Table.Body>
@@ -291,7 +287,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                             </Table.Body>
                         </Table>
                     )}
-                </CardFrame>
+                </SettingsCard>
             </div>
             <OverlayPresence value={editing}>
                 {(target) => <CategoryEditor onClose={() => setEditing(null)} target={target} />}
