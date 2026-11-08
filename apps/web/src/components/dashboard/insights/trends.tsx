@@ -111,7 +111,7 @@ export function MonthsCard({ model }: { model: InsightsModel }) {
     const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-insights");
     const fmt = useInsightsFormat(ledger);
-    const ended = model.months.filter((month) => month.ended && (month.spent > 0 || month.income > 0));
+    const ended = model.months.filter((month) => month.ended);
     const average = ended.length === 0 ? 0 : ended.reduce((sum, month) => sum + month.spent, 0) / ended.length;
     const spent = model.months.some((month) => month.spent > 0);
     return (
