@@ -3,7 +3,16 @@ import { describe, expect, it } from "vite-plus/test";
 
 import type { CategoryBudget } from "../../../lib/dashboard-series";
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
-import { budgetRows, categoryChoices, everyDay, setupState, snapWhatIf, sparks, whatIfStep } from "./model";
+import {
+    budgetRows,
+    categoryChoices,
+    categorySpend,
+    everyDay,
+    setupState,
+    snapWhatIf,
+    sparks,
+    whatIfStep,
+} from "./model";
 
 const NOW = Date.parse("2026-10-10T15:00:00Z");
 const period = { days: 31, from: "2026-10-01", key: "2026-10", to: "2026-10-31" };
@@ -89,6 +98,20 @@ describe("sparks", () => {
         const lines = sparks(ledger, september, SCOPE);
         expect(lines.spent).toHaveLength(12);
         expect(lines.spent.at(-1)).toBe(40);
+    });
+});
+
+describe("categorySpend", () => {
+    it("counts only the picked categories up to today and shares them against all spending", () => {
+        const food = categorySpend(ledger, period, SCOPE, ["food"]);
+
+        expect(food).toMatchObject({ delta: null, prior: 0, share: 0.3, shareChange: 0.3, value: 30 });
+    });
+
+    it("compares against the same slice of the month before", () => {
+        const travel = categorySpend(ledger, period, SCOPE, ["travel"]);
+
+        expect(travel).toMatchObject({ delta: -1, prior: 40, share: 0, shareChange: -1, value: 0 });
     });
 });
 

@@ -1,22 +1,23 @@
-import {
-    RiArrowRightSLine,
-    RiBankCardLine,
-    RiBarChartBoxLine,
-    RiCalendarCheckLine,
-    RiFlagLine,
-    RiHandCoinLine,
-    RiHistoryLine,
-    RiLayoutGridLine,
-    RiMagicLine,
-    RiPieChartLine,
-    RiRepeatLine,
-    RiSearch2Line,
-    RiSideBarLine,
-    RiUpload2Line,
-} from "@remixicon/react";
-import type { RemixiconComponentType } from "@remixicon/react";
+import Analytics01Icon from "@hugeicons/core-free-icons/Analytics01Icon";
+import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
+import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
+import DashboardSquare01Icon from "@hugeicons/core-free-icons/DashboardSquare01Icon";
+import Flag02Icon from "@hugeicons/core-free-icons/Flag02Icon";
+import HandCoinsIcon from "@hugeicons/core-free-icons/HandCoinsIcon";
+import MagicWand01Icon from "@hugeicons/core-free-icons/MagicWand01Icon";
+import PieChartIcon from "@hugeicons/core-free-icons/PieChartIcon";
+import RepeatIcon from "@hugeicons/core-free-icons/RepeatIcon";
+import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
+import SidebarLeftIcon from "@hugeicons/core-free-icons/SidebarLeftIcon";
+import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
+import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { IconSvgElement } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
+import { Button } from "panelui-web/button";
+import { Tooltip } from "panelui-web/tooltip";
 import { useSyncExternalStore } from "react";
+import type { ReactElement } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { LogoMark } from "@/components/logo-mark";
@@ -54,48 +55,76 @@ function toggleCollapsed() {
 
 interface NavProps {
     collapsed: boolean;
-    icon: RemixiconComponentType;
+    icon: IconSvgElement;
     label: string;
 }
 
-function Soon({ collapsed, icon: Icon, label }: NavProps) {
-    const { nav } = useIntlayer("dashboard");
+function RailTip({ children, label }: { children: ReactElement; label: string }) {
     return (
-        <span aria-disabled className="dash-nav" title={label}>
-            <Icon className="shrink-0" size={17} />
+        <Tooltip>
+            <Tooltip.Trigger render={children} />
+            <Tooltip.Content side="right" sideOffset={10} variant="outline">
+                {label}
+            </Tooltip.Content>
+        </Tooltip>
+    );
+}
+
+function Soon({ collapsed, icon, label }: NavProps) {
+    const { nav } = useIntlayer("dashboard");
+    const item = (
+        <span aria-disabled className="dash-nav" title={collapsed ? undefined : label}>
+            <HugeiconsIcon className="shrink-0" icon={icon} size={17} strokeWidth={2} />
             {collapsed ? null : label}
             <span className="dash-soon">{nav.soon}</span>
         </span>
     );
+    return collapsed ? <RailTip label={label}>{item}</RailTip> : item;
 }
 
 function NavLink({
     collapsed,
     exact,
-    icon: Icon,
+    icon,
     label,
     to,
 }: NavProps & { exact?: boolean; to: "/app" | "/app/accounts" | "/app/insights" | "/app/transactions" }) {
-    return (
-        <Link activeOptions={{ exact, includeSearch: false }} className="dash-nav" title={label} to={to}>
-            <Icon className="shrink-0" size={17} />
+    const item = (
+        <Link activeOptions={{ exact, includeSearch: false }} className="dash-nav" to={to}>
+            <HugeiconsIcon className="shrink-0" icon={icon} size={17} strokeWidth={2} />
             {collapsed ? null : label}
         </Link>
     );
+    return collapsed ? <RailTip label={label}>{item}</RailTip> : item;
 }
 
-export function SearchButton() {
+export function SearchButton({ collapsed = false }: { collapsed?: boolean }) {
     const { nav } = useIntlayer("dashboard");
+    if (collapsed) {
+        return (
+            <RailTip label={nav.search.value}>
+                <Button
+                    aria-disabled
+                    aria-label={nav.search.value}
+                    className="text-muted-foreground"
+                    size="icon"
+                    variant="ghost"
+                >
+                    <HugeiconsIcon icon={Search01Icon} size={17} strokeWidth={2} />
+                </Button>
+            </RailTip>
+        );
+    }
     return (
-        <button
+        <Button
             aria-disabled
-            className="border-border bg-app-hover text-muted-foreground mb-1 flex h-[34px] shrink-0 items-center gap-[9px] rounded-[10px] border px-2.5 text-[13px]"
-            type="button"
+            className="text-muted-foreground mb-1 h-[34px] w-full shrink-0 justify-start gap-[9px] px-2.5 text-[13px] font-normal"
+            variant="outline"
         >
-            <RiSearch2Line size={15} />
+            <HugeiconsIcon icon={Search01Icon} size={15} strokeWidth={2} />
             {nav.search}
             <kbd className="ml-auto text-[11px] leading-4 pointer-coarse:hidden">⌘K</kbd>
-        </button>
+        </Button>
     );
 }
 
@@ -103,7 +132,7 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
     const { nav } = useIntlayer("dashboard");
     const group = (label: string) =>
         collapsed ? (
-            <div className="h-4" />
+            <div className="border-app-strong mx-2 my-1.5 border-t" />
         ) : (
             <div className="text-muted-foreground px-2.5 pt-3 pb-1 text-xs leading-4 [.dash-drawer_&]:pt-2">
                 {label}
@@ -112,19 +141,24 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
     return (
         <>
             {group(nav.label.value)}
-            <NavLink collapsed={collapsed} exact icon={RiLayoutGridLine} label={nav.dashboard.value} to="/app" />
-            <NavLink collapsed={collapsed} icon={RiHistoryLine} label={nav.transactions.value} to="/app/transactions" />
-            <NavLink collapsed={collapsed} icon={RiBankCardLine} label={nav.accounts.value} to="/app/accounts" />
-            <NavLink collapsed={collapsed} icon={RiBarChartBoxLine} label={nav.insights.value} to="/app/insights" />
+            <NavLink collapsed={collapsed} exact icon={DashboardSquare01Icon} label={nav.dashboard.value} to="/app" />
+            <NavLink
+                collapsed={collapsed}
+                icon={TransactionHistoryIcon}
+                label={nav.transactions.value}
+                to="/app/transactions"
+            />
+            <NavLink collapsed={collapsed} icon={CreditCardIcon} label={nav.accounts.value} to="/app/accounts" />
+            <NavLink collapsed={collapsed} icon={Analytics01Icon} label={nav.insights.value} to="/app/insights" />
             {group(nav.plan.value)}
-            <Soon collapsed={collapsed} icon={RiPieChartLine} label={nav.budgets.value} />
-            <Soon collapsed={collapsed} icon={RiFlagLine} label={nav.goals.value} />
-            <Soon collapsed={collapsed} icon={RiRepeatLine} label={nav.recurring.value} />
-            <Soon collapsed={collapsed} icon={RiHandCoinLine} label={nav.debts.value} />
-            <Soon collapsed={collapsed} icon={RiCalendarCheckLine} label={nav.installments.value} />
+            <Soon collapsed={collapsed} icon={PieChartIcon} label={nav.budgets.value} />
+            <Soon collapsed={collapsed} icon={Flag02Icon} label={nav.goals.value} />
+            <Soon collapsed={collapsed} icon={RepeatIcon} label={nav.recurring.value} />
+            <Soon collapsed={collapsed} icon={HandCoinsIcon} label={nav.debts.value} />
+            <Soon collapsed={collapsed} icon={CalendarCheckIn01Icon} label={nav.installments.value} />
             {group(nav.tools.value)}
-            <Soon collapsed={collapsed} icon={RiUpload2Line} label={nav.import.value} />
-            <Soon collapsed={collapsed} icon={RiMagicLine} label={nav.rules.value} />
+            <Soon collapsed={collapsed} icon={Upload04Icon} label={nav.import.value} />
+            <Soon collapsed={collapsed} icon={MagicWand01Icon} label={nav.rules.value} />
         </>
     );
 }
@@ -132,37 +166,36 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
 export function Sidebar() {
     const { nav } = useIntlayer("dashboard");
     const collapsed = useSyncExternalStore(subscribeCollapsed, storedCollapsed, () => false);
+    const toggle = (
+        <Button
+            aria-label={nav.collapse.value}
+            className="text-muted-foreground"
+            onClick={toggleCollapsed}
+            size={collapsed ? "icon" : "icon-sm"}
+            variant="ghost"
+        >
+            <HugeiconsIcon icon={SidebarLeftIcon} size={17} strokeWidth={2} />
+        </Button>
+    );
     return (
         <nav
             aria-label={nav.label.value}
-            className={`border-border flex h-dvh shrink-0 flex-col overflow-y-auto overscroll-none border-r px-3 pb-3 max-lg:hidden ${collapsed ? "w-[60px]" : "w-[232px]"}`}
+            className={`border-border flex h-dvh shrink-0 flex-col overflow-y-auto overscroll-none border-r px-3 pb-3 max-lg:hidden ${collapsed ? "w-16" : "w-[232px]"}`}
         >
-            <div className="flex h-16 items-center gap-[9px] px-2 text-[15px] font-semibold">
+            <div
+                className={`flex h-16 shrink-0 items-center gap-[9px] text-[15px] font-semibold ${collapsed ? "justify-center" : "px-2"}`}
+            >
                 <Link aria-label={nav.home.value} className="text-app-tint flex items-center gap-[9px]" to="/">
                     <LogoMark className="size-6 shrink-0" />
                 </Link>
                 {collapsed ? null : "Outlayr"}
-                {collapsed ? null : (
-                    <button
-                        aria-label={nav.collapse.value}
-                        className="text-muted-foreground ml-auto"
-                        onClick={toggleCollapsed}
-                        type="button"
-                    >
-                        <RiSideBarLine size={17} />
-                    </button>
-                )}
+                {collapsed ? null : <span className="ml-auto">{toggle}</span>}
             </div>
             {collapsed ? (
-                <button
-                    aria-label={nav.collapse.value}
-                    className="dash-nav"
-                    onClick={toggleCollapsed}
-                    title={nav.collapse.value}
-                    type="button"
-                >
-                    <RiArrowRightSLine className="shrink-0" size={17} />
-                </button>
+                <div className="-mt-1.5 flex flex-col items-center">
+                    <RailTip label={nav.collapse.value}>{toggle}</RailTip>
+                    <SearchButton collapsed />
+                </div>
             ) : (
                 <SearchButton />
             )}

@@ -1,5 +1,9 @@
-import { RiAddLine, RiCloseLine, RiMenu2Line, RiSearch2Line } from "@remixicon/react";
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import Menu01Icon from "@hugeicons/core-free-icons/Menu01Icon";
+import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useLocation } from "@tanstack/react-router";
+import { Button } from "panelui-web/button";
 import { Sheet } from "panelui-web/sheet";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -27,64 +31,52 @@ export function MobileBar() {
     return (
         <header className="dash-mobile-bar bg-background border-border sticky top-0 z-20 flex items-center gap-1 border-b lg:hidden">
             <Sheet onOpenChange={setOpen} open={open} side="left">
-                <Sheet.Trigger aria-label={nav.open.value} className="dash-icon-btn">
-                    <RiMenu2Line size={21} />
+                <Sheet.Trigger aria-label={nav.open.value} render={<Button size="icon-lg" variant="ghost" />}>
+                    <HugeiconsIcon icon={Menu01Icon} strokeWidth={2} />
                 </Sheet.Trigger>
                 <Sheet.Content
-                    className="app-shell dash-sheet dash-drawer ph-no-capture bg-background h-auto w-[min(320px,calc(100vw-56px))] px-3 pt-[env(safe-area-inset-top)] pb-[max(12px,env(safe-area-inset-bottom))]"
+                    className="app-shell dash-drawer ph-no-capture w-[min(320px,calc(100vw-56px))]"
                     detached={false}
-                    showClose={false}
                     onClick={(event) => {
                         if (event.target instanceof Element && event.target.closest("a[href]")) {
                             setOpen(false);
                         }
                     }}
                 >
-                    <div className="flex h-12 shrink-0 items-center gap-[9px] pr-1.5 pl-2">
-                        <Link
-                            aria-label={nav.home.value}
-                            className="text-app-tint -mx-2.5 flex size-11 items-center justify-center"
-                            to="/"
-                        >
-                            <LogoMark className="size-6" />
-                        </Link>
-                        <Sheet.Title className="text-[15px] font-semibold">Outlayr</Sheet.Title>
-                        <Sheet.Close
-                            aria-label={nav.close.value}
-                            className="dash-icon-btn text-muted-foreground ml-auto"
-                        >
-                            <RiCloseLine size={21} />
-                        </Sheet.Close>
+                    <Sheet.Header
+                        title={
+                            <span className="flex items-center gap-[9px] text-[15px] font-semibold">
+                                <Link aria-label={nav.home.value} className="text-app-tint -m-2.5 p-2.5" to="/">
+                                    <LogoMark className="size-6" />
+                                </Link>
+                                Outlayr
+                            </span>
+                        }
+                    />
+                    <div className="shrink-0 px-3">
+                        <SearchButton />
                     </div>
-                    <SearchButton />
-                    <div className="-mx-3 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3">
+                    <Sheet.Body className="min-h-0 flex-1 overscroll-contain px-3 pb-2">
                         <NavLinks collapsed={false} />
-                    </div>
-                    <div className="border-border -mx-3 flex flex-col border-t px-3 pt-1">
+                    </Sheet.Body>
+                    <Sheet.Footer className="border-border border-t px-3 pt-1 pb-[max(12px,env(safe-area-inset-bottom))]">
                         <UserMenu collapsed={false} side="top" />
-                    </div>
+                    </Sheet.Footer>
                 </Sheet.Content>
             </Sheet>
             <h1 className="min-w-0 truncate text-[17px] font-semibold">{title}</h1>
-            <button
+            <Button
                 aria-disabled
                 aria-label={nav.search.value}
-                className="dash-icon-btn text-muted-foreground ml-auto"
-                type="button"
+                className="text-muted-foreground ml-auto"
+                size="icon-lg"
+                variant="ghost"
             >
-                <RiSearch2Line size={20} />
-            </button>
-            <button
-                aria-disabled
-                aria-label={add.entry.value}
-                className="dash-icon-btn"
-                title={add.hint.value}
-                type="button"
-            >
-                <span className="dash-btn size-[34px] justify-center p-0">
-                    <RiAddLine size={20} />
-                </span>
-            </button>
+                <HugeiconsIcon icon={Search01Icon} strokeWidth={2} />
+            </Button>
+            <Button aria-disabled aria-label={add.entry.value} className="mx-[5px]" size="icon" title={add.hint.value}>
+                <HugeiconsIcon icon={Add01Icon} size={20} strokeWidth={2} />
+            </Button>
         </header>
     );
 }

@@ -1,5 +1,8 @@
-import { RiAddLine, RiUpload2Line } from "@remixicon/react";
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
+import { Button } from "panelui-web/button";
 import { Table } from "panelui-web/table";
 import { Tabs } from "panelui-web/tabs";
 import { useId, useMemo, useState } from "react";
@@ -7,6 +10,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { FeeTile, MerchantTile, TransferTile } from "@/components/ledger/tiles";
+import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { periodOf } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -84,15 +88,16 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                         {copy.quietLine({ from: date.day(filters.period.from), to: date.day(filters.period.to) })}
                     </p>
                     {filters.period.key === filters.currentKey ? null : (
-                        <button className="dash-btn mt-2.5" onClick={() => setFilters({ period: null })} type="button">
+                        <Button className="mt-2.5" onClick={() => setFilters({ period: null })}>
                             {copy.backTo({ month: `${month.charAt(0).toLocaleUpperCase()}${month.slice(1)}` })}
-                        </button>
+                        </Button>
                     )}
                 </div>
             </CardFrame>
         );
     }
     const active = setup?.step === "entry";
+    const showAccount = Boolean(setup) || openAccounts(ledger.books).length > 1;
     const count = (value: number) => value.toLocaleString(locale);
     const accountName = (id: string) => ledger.accounts.get(id)?.name ?? "";
     const second = (row: FoldedRow, figure: ReturnType<typeof figureOf>) => {
@@ -135,7 +140,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                     </Tabs.List>
                 </Tabs>
             }
-            className={`@4xl:col-span-2 ${setup ? "min-h-[375px]" : ""} ${active ? "ring-primary/55 ring-1" : ""}`}
+            className={`@4xl:col-span-2 ${setup ? "h-[375px]" : ""} ${active ? "ring-primary/55 ring-1" : ""}`}
             footer={
                 setup || every.length === 0 ? undefined : (
                     <>
@@ -145,17 +150,24 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                 ? count(every.length)
                                 : copy.shownOf({ shown: count(ROWS_SHOWN), total: count(every.length) })}
                         </span>
-                        <Link
-                            className="dash-ob ml-auto"
-                            search={(prev) => (tab === "all" ? prev : { ...prev, type: TYPE_OF[tab] })}
-                            to="/app/transactions"
+                        <Button
+                            className="ml-auto"
+                            nativeButton={false}
+                            render={
+                                <Link
+                                    search={(prev) => (tab === "all" ? prev : { ...prev, type: TYPE_OF[tab] })}
+                                    to="/app/transactions"
+                                />
+                            }
+                            size="sm"
+                            variant="outline"
                         >
                             {copy.seeAll}
-                        </Link>
+                        </Button>
                     </>
                 )
             }
-            panelClassName="@container overflow-clip [overflow-anchor:none]"
+            panelClassName="@container min-h-0 overflow-clip [overflow-anchor:none]"
             stackAction
             title={copy.title}
         >
@@ -170,9 +182,13 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                 >
                     <Table.Header className="in-data-[sticky]:bg-card">
                         <Table.Row aria-rowindex={1}>
-                            <Table.Head className={`${HEAD} w-full @2xl:w-[31%]`}>{copy.columns.merchant}</Table.Head>
+                            <Table.Head className={`${HEAD} w-full ${showAccount ? "@2xl:w-[31%]" : "@2xl:w-[48%]"}`}>
+                                {copy.columns.merchant}
+                            </Table.Head>
                             <Table.Head className={`${SIDE_HEAD} w-[18%]`}>{copy.columns.category}</Table.Head>
-                            <Table.Head className={`${SIDE_HEAD} w-[17%]`}>{copy.columns.account}</Table.Head>
+                            {showAccount ? (
+                                <Table.Head className={`${SIDE_HEAD} w-[17%]`}>{copy.columns.account}</Table.Head>
+                            ) : null}
                             <Table.Head className={`${SIDE_HEAD} w-[11%]`}>{copy.columns.date}</Table.Head>
                             <Table.Head align="end" className={`${HEAD} w-px @2xl:w-[23%]`}>
                                 {copy.columns.amount}
@@ -224,7 +240,9 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                         <Table.Cell className={`${SIDE} text-muted-foreground`}>
                                             {copy.transfer}
                                         </Table.Cell>
-                                        <Table.Cell aria-label={copy.columns.account.value} className={SIDE} />
+                                        {showAccount ? (
+                                            <Table.Cell aria-label={copy.columns.account.value} className={SIDE} />
+                                        ) : null}
                                         <Table.Cell className={`${SIDE} dash-figure text-muted-foreground`}>
                                             {day}
                                         </Table.Cell>
@@ -290,9 +308,11 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                             </span>
                                         )}
                                     </Table.Cell>
-                                    <Table.Cell className={`${SIDE} text-muted-foreground`}>
-                                        {row.accountId ? accountName(row.accountId) : copy.noAccount}
-                                    </Table.Cell>
+                                    {showAccount ? (
+                                        <Table.Cell className={`${SIDE} text-muted-foreground`}>
+                                            {row.accountId ? accountName(row.accountId) : copy.noAccount}
+                                        </Table.Cell>
+                                    ) : null}
                                     <Table.Cell className={`${SIDE} dash-figure text-muted-foreground`}>
                                         {day}
                                     </Table.Cell>
@@ -313,12 +333,12 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
             {setup && rows.length > 0 ? <Cover fade={TABLE_FADE} /> : null}
             {setup?.done.entry === false ? (
                 <Cover line={active ? setupCopy.entryLast : setupCopy.entryLine} title={setupCopy.entryTitle}>
-                    <PhoneButton className={active ? "dash-btn" : "dash-ob h-[34px] px-3"}>
-                        <RiAddLine size={active ? 18 : 15} />
+                    <PhoneButton size={active ? "md" : "sm"} variant={active ? "default" : "outline"}>
+                        <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                         {add.entry}
                     </PhoneButton>
-                    <PhoneButton className="dash-ob h-[34px] px-3">
-                        <RiUpload2Line size={15} />
+                    <PhoneButton size="sm" variant="outline">
+                        <HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />
                         {setupCopy.import}
                     </PhoneButton>
                 </Cover>

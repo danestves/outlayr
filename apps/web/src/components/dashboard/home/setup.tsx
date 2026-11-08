@@ -1,5 +1,9 @@
-import { RiAddLine, RiCheckLine } from "@remixicon/react";
-import type { CSSProperties, ReactNode } from "react";
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Button } from "panelui-web/button";
+import { Table } from "panelui-web/table";
+import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import type { SetupState, SetupStep } from "./model";
@@ -29,14 +33,20 @@ export function SetupHero({ setup }: { setup: SetupState }) {
                 <ol className="mt-2.5 flex flex-wrap gap-[18px]">
                     {STEPS.map((step, index) => (
                         <li className="dash-step" data-state={stepState(setup, step)} key={step}>
-                            <u>{setup.done[step] ? <RiCheckLine size={14} /> : index + 1}</u>
+                            <u>
+                                {setup.done[step] ? (
+                                    <HugeiconsIcon icon={Tick02Icon} size={14} strokeWidth={2} />
+                                ) : (
+                                    index + 1
+                                )}
+                            </u>
                             {copy.steps[step]}
                         </li>
                     ))}
                 </ol>
             </div>
-            <PhoneButton className="dash-btn h-11 px-[18px] text-[15px]">
-                <RiAddLine size={18} />
+            <PhoneButton size="lg">
+                <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                 {cta}
             </PhoneButton>
         </section>
@@ -44,13 +54,9 @@ export function SetupHero({ setup }: { setup: SetupState }) {
 }
 
 // Creating things on web isn't built yet, so setup's calls to action say where to go instead of opening a form.
-export function PhoneButton({ children, className }: { children: ReactNode; className: string }) {
+export function PhoneButton(button: ComponentProps<typeof Button>) {
     const { phoneHint } = useIntlayer("dashboard-home").setup;
-    return (
-        <button aria-disabled className={className} title={phoneHint.value} type="button">
-            {children}
-        </button>
-    );
+    return <Button aria-disabled title={phoneHint.value} {...button} />;
 }
 
 export function Cover({
@@ -191,7 +197,7 @@ const GHOST_ACCOUNTS = [50, 70, 34] as const;
 
 export function GhostAccounts() {
     return (
-        <div aria-hidden className="px-5">
+        <div aria-hidden className="px-3.5 pt-2">
             {GHOST_ACCOUNTS.map((width) => (
                 <div className="flex h-10 items-center gap-2.5" key={width}>
                     <i className="dash-gx" />
@@ -214,25 +220,25 @@ const GHOST_ROWS = [
 
 export function GhostRows({ cell, label, side }: { cell: string; label: string; side: string }) {
     return GHOST_ROWS.map(([merchant, category, account, day, amount], index) => (
-        <tr aria-hidden className="group" key={index}>
-            <td aria-label={label} className={cell}>
+        <Table.Row aria-hidden className="border-0" key={index}>
+            <Table.Cell aria-label={label} className={cell}>
                 <span className="flex items-center gap-2.5">
                     <i className="dash-gx" />
                     <i className="dash-gl" style={{ width: merchant }} />
                 </span>
-            </td>
-            <td aria-label={label} className={side}>
+            </Table.Cell>
+            <Table.Cell aria-label={label} className={side}>
                 <i className="dash-gl block" style={{ width: category }} />
-            </td>
-            <td aria-label={label} className={side}>
+            </Table.Cell>
+            <Table.Cell aria-label={label} className={side}>
                 <i className="dash-gl block" style={{ width: account }} />
-            </td>
-            <td aria-label={label} className={side}>
+            </Table.Cell>
+            <Table.Cell aria-label={label} className={side}>
                 <i className="dash-gl block" style={{ width: day }} />
-            </td>
-            <td aria-label={label} className={cell}>
+            </Table.Cell>
+            <Table.Cell aria-label={label} className={cell}>
                 <i className="dash-gl ml-auto block" style={{ width: amount }} />
-            </td>
-        </tr>
+            </Table.Cell>
+        </Table.Row>
     ));
 }

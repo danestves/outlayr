@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { CSSProperties } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
@@ -52,6 +53,11 @@ export function useCategoryName() {
 }
 
 const YEAR_LENGTH = 4;
+
+export function categoryTone(color: string | undefined) {
+    const tone: CSSProperties & { "--pu-color"?: string } = color ? { "--pu-color": color } : {};
+    return tone;
+}
 
 export function usePeriodTitle(firstDayOfMonth: number, currentKey: string) {
     const date = useDateFormat();

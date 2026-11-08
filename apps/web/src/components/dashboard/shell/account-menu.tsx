@@ -1,16 +1,18 @@
-import {
-    RiArrowRightSLine,
-    RiDownload2Line,
-    RiLogoutBoxRLine,
-    RiMoonLine,
-    RiPlugLine,
-    RiSettings2Line,
-    RiUserAddLine,
-    RiVerifiedBadgeFill,
-} from "@remixicon/react";
+import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
+import CheckmarkBadge01Icon from "@hugeicons/core-free-icons/CheckmarkBadge01Icon";
+import Download04Icon from "@hugeicons/core-free-icons/Download04Icon";
+import Logout03Icon from "@hugeicons/core-free-icons/Logout03Icon";
+import Moon02Icon from "@hugeicons/core-free-icons/Moon02Icon";
+import Plug01Icon from "@hugeicons/core-free-icons/Plug01Icon";
+import Settings02Icon from "@hugeicons/core-free-icons/Settings02Icon";
+import UserAdd01Icon from "@hugeicons/core-free-icons/UserAdd01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
+import { Avatar } from "panelui-web/avatar";
 import { Menu } from "panelui-web/menu";
+import { Switch } from "panelui-web/switch";
 import { useSyncExternalStore } from "react";
+import type { CSSProperties } from "react";
 import { useIntlayer } from "react-intlayer";
 import * as Skullet from "skullet";
 
@@ -27,15 +29,10 @@ export async function signOut() {
     window.location.assign("/login");
 }
 
-const INITIALS_SHOWN = 2;
-
-const initialsOf = (name: string) =>
-    name
-        .split(/[\s@._-]+/)
-        .filter((word) => word !== "")
-        .slice(0, INITIALS_SHOWN)
-        .map((word) => word.charAt(0).toUpperCase())
-        .join("");
+const AVATAR: CSSProperties & { "--avatar-color": string; "--avatar-size": string } = {
+    "--avatar-color": "var(--color-app-tint)",
+    "--avatar-size": "34px",
+};
 
 const isDark = () => document.documentElement.dataset.theme === "dark";
 
@@ -45,16 +42,13 @@ function DarkModeItem() {
     return (
         <Menu.Item
             aria-checked={dark}
-            className="dash-menu-item"
             closeOnClick={false}
             onClick={() => chooseTheme(dark ? "light" : "dark")}
             role="menuitemcheckbox"
         >
-            <RiMoonLine className="size-[19px]" />
+            <HugeiconsIcon icon={Moon02Icon} strokeWidth={2} />
             {account.darkMode}
-            <span className={`relative ml-auto h-4 w-7 rounded-full ${dark ? "bg-app-tint" : "bg-app-strong"}`}>
-                <span className={`absolute top-0.5 size-3 rounded-full bg-white ${dark ? "right-0.5" : "left-0.5"}`} />
-            </span>
+            <Switch aria-hidden checked={dark} className="pointer-events-none ml-auto" size="sm" tabIndex={-1} />
         </Menu.Item>
     );
 }
@@ -67,53 +61,61 @@ export function UserMenu({ collapsed, side = "right" }: { collapsed: boolean; si
         <Menu>
             <Menu.Trigger
                 aria-label={account.label.value}
-                className="data-[popup-open]:bg-app-fill mt-auto flex items-center gap-2.5 rounded-xl p-2.5 text-left"
+                className={`hover:bg-app-fill data-[popup-open]:bg-app-fill mt-auto flex items-center gap-2.5 rounded-xl text-left ${collapsed ? "justify-center p-1" : "py-2.5 pr-2 pl-2.5"}`}
             >
-                <span className="flex size-[34px] flex-none items-center justify-center rounded-full bg-[color-mix(in_oklab,var(--color-app-tint)_24%,var(--color-app-group))] text-xs font-medium text-[color-mix(in_oklab,var(--color-app-tint),var(--color-app-ink)_40%)]">
-                    {initialsOf(name)}
-                </span>
+                <Avatar className="flex-none" name={name} style={AVATAR} />
                 {collapsed ? null : (
                     <>
                         <span className="min-w-0 flex-1">
                             <b className="flex items-center gap-1.5 text-[13px] leading-[18px] font-medium">
                                 <span className="truncate">{name}</span>
-                                <RiVerifiedBadgeFill className="text-app-tint shrink-0" size={14} />
+                                <HugeiconsIcon
+                                    className="text-app-tint [&>path:first-child]:fill-app-tint [&>path:last-child]:stroke-primary-foreground shrink-0"
+                                    icon={CheckmarkBadge01Icon}
+                                    size={14}
+                                    strokeWidth={2}
+                                />
                             </b>
                             <small className="text-muted-foreground block truncate text-xs leading-4">
                                 {session?.user.email}
                             </small>
                         </span>
-                        <RiArrowRightSLine className="text-muted-foreground ml-auto shrink-0" size={18} />
+                        <HugeiconsIcon
+                            className="text-muted-foreground ml-auto shrink-0"
+                            icon={ArrowRight01Icon}
+                            size={18}
+                            strokeWidth={2}
+                        />
                     </>
                 )}
             </Menu.Trigger>
             <Menu.Content
                 align={side === "top" ? "start" : "end"}
-                className="app-shell dash-menu ph-no-capture w-[min(300px,calc(100vw-32px))] p-2 max-lg:[&_.dash-menu-item]:h-11!"
+                className="app-shell ph-no-capture w-[min(300px,calc(100vw-32px))] max-lg:[&_[role^=menuitem]]:h-11"
                 side={side}
                 sideOffset={side === "top" ? 8 : 25}
             >
                 <DarkModeItem />
-                <div className="dash-menu-rule" />
-                <Menu.Item aria-disabled className="dash-menu-item" closeOnClick={false}>
-                    <RiPlugLine className="size-[19px]" />
+                <Menu.Separator />
+                <Menu.Item disabled>
+                    <HugeiconsIcon icon={Plug01Icon} strokeWidth={2} />
                     {account.connections}
                 </Menu.Item>
-                <Menu.Item className="dash-menu-item" render={<Link to="/app/settings" />}>
-                    <RiSettings2Line className="size-[19px]" />
+                <Menu.Item render={<Link to="/app/settings" />}>
+                    <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} />
                     {account.settings}
                 </Menu.Item>
-                <Menu.Item aria-disabled className="dash-menu-item" closeOnClick={false}>
-                    <RiDownload2Line className="size-[19px]" />
+                <Menu.Item disabled>
+                    <HugeiconsIcon icon={Download04Icon} strokeWidth={2} />
                     {account.exportData}
                 </Menu.Item>
-                <div className="dash-menu-rule" />
-                <Menu.Item aria-disabled className="dash-menu-item" closeOnClick={false}>
-                    <RiUserAddLine className="size-[19px]" />
+                <Menu.Separator />
+                <Menu.Item disabled>
+                    <HugeiconsIcon icon={UserAdd01Icon} strokeWidth={2} />
                     {account.invite}
                 </Menu.Item>
-                <Menu.Item className="dash-menu-item" onClick={signOut}>
-                    <RiLogoutBoxRLine className="size-[19px]" />
+                <Menu.Item onClick={signOut}>
+                    <HugeiconsIcon icon={Logout03Icon} strokeWidth={2} />
                     {account.signOut}
                 </Menu.Item>
                 <div className="text-muted-foreground p-2 text-[13px] leading-[18px]">
