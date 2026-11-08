@@ -45,7 +45,7 @@ const PAGE_PATHS = [
 ];
 
 export const TRANSLATED: Partial<Record<Locale, ReadonlySet<string>>> = {
-    fr: new Set([...PAGE_PATHS, "/guides/best-budget-apps-france"]),
+    fr: new Set([...PAGE_PATHS, "/guides/best-budget-apps-canada", "/guides/best-budget-apps-france"]),
     pt: new Set([...PAGE_PATHS, "/guides/best-expense-tracker-apps-brazil"]),
 };
 

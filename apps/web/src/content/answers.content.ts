@@ -14,6 +14,7 @@ import {
 const OUTLAYR_LEAD = {
     en: "Outlayr is an open source expense tracker you fill in by sentence, voice, or receipt, free to start.",
     es: "Outlayr es una app de código abierto para controlar tus gastos que llenas con una oración, con tu voz o con un recibo, gratis para empezar.",
+    fr: "Outlayr est une application open source de suivi des dépenses que vous remplissez par une phrase, à la voix ou avec un reçu, gratuite pour commencer.",
 } as const;
 
 const RIVALS = {
@@ -24,10 +25,12 @@ const RIVALS = {
     pocketguard: {
         en: "PocketGuard is a paid budget app that syncs linked bank accounts.",
         es: "PocketGuard es una app de presupuesto de pago que sincroniza cuentas de banco vinculadas.",
+        fr: "PocketGuard est une application de budget payante qui synchronise les comptes bancaires liés.",
     },
     spendee: {
         en: "Spendee is a budget app with cash wallets in several currencies and bank sync in its Premium plan.",
         es: "Spendee es una app de presupuesto con billeteras de efectivo en varias monedas y sincronización bancaria en su plan Premium.",
+        fr: "Spendee est une application de budget avec des portefeuilles d'espèces en plusieurs devises et la synchronisation bancaire dans son offre Premium.",
     },
     wallet: {
         en: "Wallet by BudgetBakers is a money app with a free tier for tracking by hand and bank sync in Premium.",
@@ -44,10 +47,12 @@ const RIVALS = {
     monarch: {
         en: "Monarch is a paid money dashboard that syncs linked accounts in the United States and Canada.",
         es: "Monarch es un panel de finanzas de pago que sincroniza cuentas vinculadas en Estados Unidos y Canadá.",
+        fr: "Monarch est un tableau de bord financier payant qui synchronise les comptes liés aux États-Unis et au Canada.",
     },
     ynab: {
         en: "YNAB is a paid budgeting method built on bank imports.",
         es: "YNAB es un método de presupuesto de pago basado en importar movimientos del banco.",
+        fr: "YNAB est une méthode de budget payante fondée sur l'import des opérations bancaires.",
     },
     fintonic: {
         en: "Fintonic is a free app in Spain that reads your connected Spanish bank accounts, scores your finances with its FinScore, and arranges loans with over 40 lenders.",
@@ -56,6 +61,7 @@ const RIVALS = {
     goodbudget: {
         en: "Goodbudget is an envelope budgeting app for the web, Android, and iPhone, with a free plan and bank sync for US banks in Premium.",
         es: "Goodbudget es una app de presupuesto por sobres para la web, Android y iPhone, con un plan gratis y sincronización con bancos de EE. UU. en Premium.",
+        fr: "Goodbudget est une application de budget par enveloppes pour le Web, Android et iPhone, avec une offre gratuite et la synchronisation des banques américaines dans Premium.",
     },
     monefy: {
         en: "Monefy is an expense tracker for iPhone and Android that records a purchase in two taps, free at its core, with an optional paid upgrade.",
@@ -76,20 +82,27 @@ const OUTLAYR = {
     budgets: t({
         en: "A limit per category or per month, with where the pace ends",
         es: "Un límite por categoría o por mes, y a dónde te lleva el ritmo",
+        fr: "Une limite par catégorie ou par mois, et où votre rythme vous mène",
     }),
-    currencies: t({ en: "165, converted at the rate of the day", es: "165, convertidas con la tasa del día" }),
+    currencies: t({
+        en: "165, converted at the rate of the day",
+        es: "165, convertidas con la tasa del día",
+        fr: "165, converties au taux du jour",
+    }),
     entries: t({
         en: "One sentence, voice, receipt scan, CSV import",
         es: "Una oración, voz, escaneo de recibos, importación de CSV",
+        fr: "Une phrase, la voix, le scan de reçus, l'import CSV",
     }),
     focus: t({
         en: "Daily spending, budgets, and savings goals",
         es: "Gastos diarios, presupuestos y metas de ahorro",
     }),
-    platforms: t({ en: "iPhone and Android", es: "iPhone y Android" }),
+    platforms: t({ en: "iPhone and Android", es: "iPhone y Android", fr: "iPhone et Android" }),
     price: t({
         en: "Free. Pro is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once in the US. Prices vary by country",
         es: "Gratis. Pro cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago en Estados Unidos. Los precios cambian según el país",
+        fr: "Gratuit. Pro coûte 7,99 $ US par mois, 49,99 $ US par an avec 7 jours gratuits ou 129,99 $ US en un seul paiement aux États-Unis. Les prix varient selon le pays",
     }),
 };
 
@@ -127,8 +140,9 @@ const COST_FAQ = {
     answer: t({
         en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
         es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+        fr: "Le suivi des dépenses est gratuit, avec les budgets, les objectifs, les abonnements et les widgets. L'offre gratuite comprend 20 captures vocales ou de reçus tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans une seule devise. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte 7,99 $ US par mois, 49,99 $ US par an avec 7 jours gratuits ou 129,99 $ US en un seul paiement. Votre boutique d'applications affiche le prix de votre pays.",
     }),
-    question: t({ en: "How much does Outlayr cost?", es: "¿Cuánto cuesta Outlayr?" }),
+    question: t({ en: "How much does Outlayr cost?", es: "¿Cuánto cuesta Outlayr?", fr: "Combien coûte Outlayr ?" }),
 };
 
 const RATE_FAQ = {
@@ -159,21 +173,25 @@ const SYNC_ACCOUNTS = t({
 const OUTLAYR_FREE = t({
     en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in one currency",
     es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en una moneda",
+    fr: "3 comptes, 2 budgets par catégorie plus un pour le mois, 20 captures vocales ou de reçus tous les 30 jours et des comptes dans une seule devise",
 });
 
 const LIST_SOURCES = t({
     en: "Each detail about the other apps links to the page it was read on",
     es: "Los datos de las otras apps enlazan a la página donde se leyeron",
+    fr: "Les informations sur les autres applications renvoient à la page où elles ont été lues",
 });
 
 const LIST_PICKED_FACTS = t({
     en: "Every detail about the other apps was read on that app's own site or help center on the date below the table, and links to the page it came from. These are the facts as each app states them, not results of our own testing.",
     es: "Cada dato de las otras apps se leyó en el sitio o el centro de ayuda de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Son los datos tal como los da cada app, no resultados de pruebas nuestras.",
+    fr: "Chaque information sur les autres applications a été lue sur le site ou le centre d'aide de l'application à la date indiquée sous le tableau, avec un lien vers la page d'origine. Ce sont les informations telles que chaque application les donne, pas des résultats de nos propres tests.",
 });
 
 const LIST_PICKED_OURS = t({
     en: "Outlayr is ours. It gets the same facts as the others, including its own Watch out for row.",
     es: "Outlayr es nuestra. Tiene los mismos datos que las demás, incluida su propia fila de Ten en cuenta.",
+    fr: "Outlayr est la nôtre. Elle a les mêmes informations que les autres, y compris sa propre ligne Points d'attention.",
 });
 
 const LATAM = {
@@ -204,6 +222,7 @@ const LISTED_IN_SPANISH = t({
 const OUTLAYR_WATCH = t({
     en: "Voice entry and receipt scans need an account and a connection, with 20 captures every 30 days on the free plan. There is no web app",
     es: "Dictar y escanear recibos requiere una cuenta y conexión, con 20 capturas cada 30 días en el plan gratis. No tiene app web",
+    fr: "La saisie vocale et le scan de reçus demandent un compte et une connexion Internet, avec 20 captures tous les 30 jours en offre gratuite. Pas de version Web",
 });
 
 const CSV_INTO_OUTLAYR = {
@@ -224,12 +243,13 @@ const ACTUAL = {
             text: t({
                 en: "Free. Syncing between devices needs a server you run or rent, such as PikaPods or Fly.io",
                 es: "Gratis. Para sincronizar dispositivos necesitas un servidor propio o rentado, como PikaPods o Fly.io",
+                fr: "Gratuit. Pour synchroniser vos appareils, il faut un serveur que vous hébergez ou louez, comme PikaPods ou Fly.io",
             }),
         },
         {
             label: LABELS.style,
             source: "https://actualbudget.org/",
-            text: t({ en: "Envelopes", es: "Sobres" }),
+            text: t({ en: "Envelopes", es: "Sobres", fr: "Enveloppes" }),
         },
         {
             label: LABELS.entries,
@@ -237,6 +257,7 @@ const ACTUAL = {
             text: t({
                 en: "By hand, QIF, OFX, QFX, CAMT.053, and CSV files, importers for YNAB4 and nYNAB, and bank sync through its server",
                 es: "A mano, archivos QIF, OFX, QFX, CAMT.053 y CSV, importadores para YNAB4 y nYNAB, y sincronización bancaria a través de su servidor",
+                fr: "À la main, fichiers QIF, OFX, QFX, CAMT.053 et CSV, importateurs pour YNAB4 et nYNAB, et synchronisation bancaire par son serveur",
             }),
         },
         {
@@ -245,6 +266,7 @@ const ACTUAL = {
             text: t({
                 en: "One. It does not support multiple currencies, and an experimental rule converts at a fixed rate you type",
                 es: "Una. No admite varias monedas, y una regla experimental convierte con una tasa fija que escribes tú",
+                fr: "Une seule. Il ne gère pas plusieurs devises, et une règle expérimentale convertit à un taux fixe que vous saisissez",
             }),
         },
         {
@@ -253,6 +275,7 @@ const ACTUAL = {
             text: t({
                 en: "Windows, Mac, Linux, and the browser through a server",
                 es: "Windows, Mac, Linux y el navegador, a través de un servidor",
+                fr: "Windows, Mac, Linux et le navigateur, par un serveur",
             }),
         },
         {
@@ -261,6 +284,7 @@ const ACTUAL = {
             text: t({
                 en: "A web page you install, which works offline",
                 es: "Una página web que instalas y que funciona sin conexión",
+                fr: "Une page Web que vous installez et qui fonctionne hors ligne",
             }),
         },
         {
@@ -269,6 +293,7 @@ const ACTUAL = {
             text: t({
                 en: "Devices do not sync until you run or rent a server, and its homepage still lists GoCardless bank sync, which is closed to new accounts",
                 es: "Los dispositivos no se sincronizan hasta que montes o rentes un servidor, y su página principal todavía anuncia GoCardless, que ya no acepta cuentas nuevas",
+                fr: "Les appareils ne se synchronisent pas tant que vous n'hébergez ou ne louez pas un serveur, et sa page d'accueil annonce encore la synchronisation GoCardless, fermée aux nouveaux comptes",
             }),
         },
     ],
@@ -277,6 +302,7 @@ const ACTUAL = {
     summary: t({
         en: "Actual Budget is a free, local-first envelope budgeting app for Windows, Mac, Linux, and the browser, open source under the MIT license.",
         es: "Actual Budget es una app gratis de presupuesto por sobres que guarda tus datos primero en tu equipo, para Windows, Mac, Linux y el navegador, de código abierto con licencia MIT.",
+        fr: "Actual Budget est une application gratuite de budget par enveloppes qui garde vos données d'abord sur votre appareil, pour Windows, Mac, Linux et le navigateur, open source sous licence MIT.",
     }),
 };
 
@@ -354,6 +380,7 @@ const GOODBUDGET = {
             text: t({
                 en: "Free plan. Premium is $10 a month or $80 a year",
                 es: "Plan gratis. Premium cuesta US$10 al mes o US$80 al año",
+                fr: "Offre gratuite. Premium coûte 10 $ US par mois ou 80 $ US par an",
             }),
         },
         {
@@ -362,12 +389,13 @@ const GOODBUDGET = {
             text: t({
                 en: "10 envelopes plus 10 annual or goal envelopes, 1 account, 2 devices, and 1 year of history",
                 es: "10 sobres más 10 sobres anuales o de metas, 1 cuenta, 2 dispositivos y 1 año de historial",
+                fr: "10 enveloppes plus 10 enveloppes annuelles ou d'objectif, 1 compte, 2 appareils et 1 an d'historique",
             }),
         },
         {
             label: LABELS.style,
             source: "https://goodbudget.com/help/billing/subscribe-to-goodbudget/",
-            text: t({ en: "Envelopes", es: "Sobres" }),
+            text: t({ en: "Envelopes", es: "Sobres", fr: "Enveloppes" }),
         },
         {
             label: LABELS.entries,
@@ -375,6 +403,7 @@ const GOODBUDGET = {
             text: t({
                 en: "By hand, or QFX, OFX, and CSV files. Bank sync for US banks in Premium",
                 es: "A mano, o archivos QFX, OFX y CSV. Sincronización con bancos de EE. UU. en Premium",
+                fr: "À la main, ou fichiers QFX, OFX et CSV. Synchronisation avec les banques américaines dans Premium",
             }),
         },
         {
@@ -383,12 +412,13 @@ const GOODBUDGET = {
             text: t({
                 en: "No currency symbols in the app or on the web",
                 es: "No usa símbolos de moneda en la app ni en la web",
+                fr: "Aucun symbole de devise dans l'application ni sur le Web",
             }),
         },
         {
             label: LABELS.platforms,
             source: "https://goodbudget.com/help/mobile-apps/",
-            text: t({ en: "Web, Android, iPhone", es: "Web, Android, iPhone" }),
+            text: t({ en: "Web, Android, iPhone", es: "Web, Android, iPhone", fr: "Web, Android, iPhone" }),
         },
         {
             label: LABELS.watch,
@@ -396,6 +426,7 @@ const GOODBUDGET = {
             text: t({
                 en: "The free plan keeps 1 year of history, 20 envelopes, and 1 account",
                 es: "El plan gratis guarda 1 año de historial, 20 sobres y 1 cuenta",
+                fr: "L'offre gratuite garde 1 an d'historique, 20 enveloppes et 1 compte",
             }),
         },
     ],
@@ -412,6 +443,7 @@ const MONARCH = {
             text: t({
                 en: "$14.99 a month or $99.99 a year, after a 7-day trial. Plus is $199.99 a year",
                 es: "US$14.99 al mes o US$99.99 al año, después de una prueba de 7 días. Plus cuesta US$199.99 al año",
+                fr: "14,99 $ US par mois ou 99,99 $ US par an, après un essai de 7 jours. Plus coûte 199,99 $ US par an",
             }),
         },
         {
@@ -420,6 +452,7 @@ const MONARCH = {
             text: t({
                 en: "Synced from more than 13,000 banks and institutions, manual accounts, or CSV import on the web",
                 es: "Sincronizados desde más de 13,000 bancos e instituciones, cuentas manuales o importación de CSV en la web",
+                fr: "Synchronisation avec plus de 13 000 banques et institutions, comptes manuels ou import CSV sur le Web",
             }),
         },
         {
@@ -428,6 +461,7 @@ const MONARCH = {
             text: t({
                 en: "Everything shows in dollars, with no conversion",
                 es: "Todo se muestra en dólares, sin conversión",
+                fr: "Tout s'affiche en dollars, sans conversion",
             }),
         },
         {
@@ -436,6 +470,7 @@ const MONARCH = {
             text: t({
                 en: "Web, iPhone, iPad, Android, in the US and Canada",
                 es: "Web, iPhone, iPad, Android, en EE. UU. y Canadá",
+                fr: "Web, iPhone, iPad, Android, aux États-Unis et au Canada",
             }),
         },
         {
@@ -444,6 +479,7 @@ const MONARCH = {
             text: t({
                 en: "Accounts in different currencies add up as if they were one: 10,000 CAD and 10,000 USD show as $20,000",
                 es: "Las cuentas en monedas distintas se suman como si fueran una: 10,000 CAD y 10,000 USD aparecen como $20,000",
+                fr: "Les comptes en devises différentes s'additionnent comme s'il n'y en avait qu'une : 10 000 CAD et 10 000 USD donnent 20 000 $",
             }),
         },
     ],
@@ -469,12 +505,17 @@ const POCKETGUARD = {
             text: t({
                 en: "$12.99 a month, $74.99 a year, or $149.99 once, after a 7-day trial",
                 es: "US$12.99 al mes, US$74.99 al año o US$149.99 en un solo pago, después de una prueba de 7 días",
+                fr: "12,99 $ US par mois, 74,99 $ US par an ou 149,99 $ US en un seul paiement, après un essai de 7 jours",
             }),
         },
         {
             label: LABELS.style,
             source: "https://pocketguard.com/pricing/",
-            text: t({ en: "Zero-based, envelopes, or by category", es: "Base cero, sobres o por categoría" }),
+            text: t({
+                en: "Zero-based, envelopes, or by category",
+                es: "Base cero, sobres o por categoría",
+                fr: "Base zéro, enveloppes ou par catégorie",
+            }),
         },
         {
             label: LABELS.entries,
@@ -482,12 +523,17 @@ const POCKETGUARD = {
             text: t({
                 en: "Synced from linked accounts in the US and Canada, cash transactions, or CSV import",
                 es: "Sincronizados desde cuentas vinculadas de EE. UU. y Canadá, movimientos en efectivo o importación de CSV",
+                fr: "Synchronisation des comptes liés aux États-Unis et au Canada, opérations en espèces ou import CSV",
             }),
         },
         {
             label: LABELS.platforms,
             source: "https://pocketguard.com/pricing/",
-            text: t({ en: "Web, iPhone, Apple Watch, Android", es: "Web, iPhone, Apple Watch, Android" }),
+            text: t({
+                en: "Web, iPhone, Apple Watch, Android",
+                es: "Web, iPhone, Apple Watch, Android",
+                fr: "Web, iPhone, Apple Watch, Android",
+            }),
         },
         {
             label: LABELS.watch,
@@ -495,6 +541,7 @@ const POCKETGUARD = {
             text: t({
                 en: "Its pricing page shows no free plan, and its site says it is not available in some regions",
                 es: "Su página de precios no muestra un plan gratis, y su sitio dice que no está disponible en algunas regiones",
+                fr: "Sa page de tarifs n'affiche aucune offre gratuite, et son site indique que l'application n'est pas offerte dans certaines régions",
             }),
         },
     ],
@@ -559,6 +606,7 @@ const SPENDEE = {
             text: t({
                 en: "Free Basic plan with 1 cash wallet and 1 budget. Plus $1.99 a month or $14.99 a year, Premium $5.99 a month or $35.99 a year, after a 7-day trial. Prices vary by country",
                 es: "Plan Basic gratis con 1 billetera de efectivo y 1 presupuesto. Plus US$1.99 al mes o US$14.99 al año, Premium US$5.99 al mes o US$35.99 al año, después de una prueba de 7 días. Los precios cambian según el país",
+                fr: "Offre Basic gratuite avec 1 portefeuille d'espèces et 1 budget. Plus à 1,99 $ US par mois ou 14,99 $ US par an, Premium à 5,99 $ US par mois ou 35,99 $ US par an, après un essai de 7 jours. Les prix varient selon le pays",
             }),
         },
         {
@@ -567,6 +615,7 @@ const SPENDEE = {
             text: t({
                 en: "By hand, bank sync in Premium, or CSV and XLS files on the web, into cash wallets",
                 es: "A mano, sincronización bancaria en Premium, o archivos CSV y XLS en la web, en billeteras de efectivo",
+                fr: "À la main, synchronisation bancaire dans Premium, ou fichiers CSV et XLS sur le Web, dans des portefeuilles d'espèces",
             }),
         },
         {
@@ -575,6 +624,7 @@ const SPENDEE = {
             text: t({
                 en: "A currency per wallet, with your own exchange rate per transaction. A wallet's currency locks once it has transactions",
                 es: "Una moneda por billetera, con tu propia tasa por movimiento. La moneda de una billetera queda fija cuando ya tiene movimientos",
+                fr: "Une devise par portefeuille, avec votre propre taux de change par opération. La devise d'un portefeuille est verrouillée dès qu'il contient des opérations",
             }),
         },
         {
@@ -583,6 +633,7 @@ const SPENDEE = {
             text: t({
                 en: "iPhone, Android, web. Budgets are on the phone only for now",
                 es: "iPhone, Android, web. Por ahora los presupuestos solo están en el celular",
+                fr: "iPhone, Android, Web. Pour l'instant, les budgets sont seulement sur le téléphone",
             }),
         },
         {
@@ -591,6 +642,7 @@ const SPENDEE = {
             text: t({
                 en: "The free plan exports only the last 365 days, and export works on the phone only",
                 es: "El plan gratis exporta solo los últimos 365 días, y exportar solo funciona en el celular",
+                fr: "L'offre gratuite n'exporte que les 365 derniers jours, et l'export ne fonctionne que sur le téléphone",
             }),
         },
     ],
@@ -607,6 +659,7 @@ const YNAB = {
             text: t({
                 en: "$14.99 a month or $109 a year, after a 34-day trial. Students get 365 days free",
                 es: "US$14.99 al mes o US$109 al año, después de una prueba de 34 días. Los estudiantes tienen 365 días gratis",
+                fr: "14,99 $ US par mois ou 109 $ US par an, après un essai de 34 jours. Les étudiants ont 365 jours gratuits",
             }),
         },
         {
@@ -615,6 +668,7 @@ const YNAB = {
             text: t({
                 en: "You decide what your money is for before you spend it",
                 es: "Decides para qué es tu dinero antes de gastarlo",
+                fr: "Vous décidez à quoi sert votre argent avant de le dépenser",
             }),
         },
         {
@@ -623,17 +677,22 @@ const YNAB = {
             text: t({
                 en: "By hand, Direct Import from select US, Canadian, UK, and EU banks, or CSV files",
                 es: "A mano, Direct Import desde algunos bancos de EE. UU., Canadá, Reino Unido y la UE, o archivos CSV",
+                fr: "À la main, Direct Import depuis certaines banques des États-Unis, du Canada, du Royaume-Uni et de l'UE, ou fichiers CSV",
             }),
         },
         {
             label: LABELS.currencies,
             source: "https://www.ynab.com/pricing",
-            text: t({ en: "One per plan", es: "Una por plan" }),
+            text: t({ en: "One per plan", es: "Una por plan", fr: "Une par plan" }),
         },
         {
             label: LABELS.platforms,
             source: "https://www.ynab.com/pricing",
-            text: t({ en: "iPhone, Android, web, Apple Watch", es: "iPhone, Android, web, Apple Watch" }),
+            text: t({
+                en: "iPhone, Android, web, Apple Watch",
+                es: "iPhone, Android, web, Apple Watch",
+                fr: "iPhone, Android, Web, Apple Watch",
+            }),
         },
         {
             label: LABELS.watch,
@@ -641,6 +700,7 @@ const YNAB = {
             text: t({
                 en: "No free plan after the trial, and export is web only, without targets or category notes",
                 es: "Sin plan gratis después de la prueba, y exportar es solo en la web, sin metas ni notas de categoría",
+                fr: "Aucune offre gratuite après l'essai, et l'export se fait seulement sur le Web, sans les cibles ni les notes de catégorie",
             }),
         },
     ],
@@ -3010,6 +3070,7 @@ const answers = {
                                 text: t({
                                     en: "Bank sync through SimpleFIN Bridge, which covers North American banks, set up on your own server",
                                     es: "Sincronización bancaria con SimpleFIN Bridge, que cubre bancos de Norteamérica, configurada en tu propio servidor",
+                                    fr: "Synchronisation bancaire par SimpleFIN Bridge, qui couvre les banques d'Amérique du Nord, à configurer sur votre propre serveur",
                                 }),
                             },
                         ],
@@ -3024,6 +3085,7 @@ const answers = {
                                 text: t({
                                     en: "Bank sync is for US banks, so Canadian accounts go in by hand or from a QFX, OFX, or CSV file",
                                     es: "La sincronización es para bancos de EE. UU., así que las cuentas canadienses entran a mano o desde un archivo QFX, OFX o CSV",
+                                    fr: "La synchronisation vise les banques américaines, donc les comptes canadiens s'ajoutent à la main ou à partir d'un fichier QFX, OFX ou CSV",
                                 }),
                             },
                         ],
@@ -3038,6 +3100,7 @@ const answers = {
                                 text: t({
                                     en: "Available, billed in US dollars, with a 7-day trial to check that your banks connect",
                                     es: "Disponible, con cobro en dólares estadounidenses y una prueba de 7 días para comprobar que tus bancos conectan",
+                                    fr: "Offert, facturé en dollars américains, avec un essai de 7 jours pour vérifier que vos banques se connectent",
                                 }),
                             },
                         ],
@@ -3050,6 +3113,7 @@ const answers = {
                                 text: t({
                                     en: "Set CAD as your main currency. Entries are typed, said, scanned, or imported from your bank's CSV, with no bank login",
                                     es: "Pon CAD como moneda principal. Los registros se escriben, se dictan, se escanean o se importan del CSV de tu banco, sin iniciar sesión en el banco",
+                                    fr: "Choisissez le CAD comme devise principale. Les opérations se saisissent au clavier, à la voix, par scan ou par import du CSV de votre banque, sans connexion bancaire",
                                 }),
                             },
                             { label: LABELS.watch, text: OUTLAYR_WATCH },
@@ -3068,6 +3132,7 @@ const answers = {
                                 text: t({
                                     en: "Supports bank accounts and cards from Canada",
                                     es: "Admite cuentas bancarias y tarjetas de Canadá",
+                                    fr: "Prend en charge les comptes bancaires et les cartes du Canada",
                                 }),
                             },
                         ],
@@ -3082,6 +3147,7 @@ const answers = {
                                 text: t({
                                     en: "A wallet can be in CAD. Bank sync is in Premium, so check that your bank is on its list first",
                                     es: "Una billetera puede estar en CAD. La sincronización bancaria es de Premium, así que revisa antes que tu banco esté en su lista",
+                                    fr: "Un portefeuille peut être en CAD. La synchronisation bancaire fait partie de Premium, alors vérifiez d'abord que votre banque est sur sa liste",
                                 }),
                             },
                         ],
@@ -3096,6 +3162,7 @@ const answers = {
                                 text: t({
                                     en: "Priced in US dollars. Direct Import covers select Canadian banks",
                                     es: "Con precio en dólares estadounidenses. Direct Import cubre algunos bancos canadienses",
+                                    fr: "Prix en dollars américains. Direct Import couvre certaines banques canadiennes",
                                 }),
                             },
                         ],
@@ -3107,6 +3174,7 @@ const answers = {
                         text: t({
                             en: "Best if you want free envelope budgeting on a computer and can run a server for bank sync",
                             es: "Ideal si quieres presupuestar por sobres gratis en la computadora y puedes montar un servidor para sincronizar el banco",
+                            fr: "Idéal si vous voulez un budget par enveloppes gratuit sur ordinateur et pouvez faire tourner un serveur pour la synchronisation bancaire",
                         }),
                     },
                     {
@@ -3114,6 +3182,7 @@ const answers = {
                         text: t({
                             en: "Best if you want envelopes on the web and both phones, starting free, without linking a bank",
                             es: "Ideal si quieres sobres en la web y en los dos celulares, empezando gratis, sin vincular un banco",
+                            fr: "Idéal si vous voulez des enveloppes sur le Web, sur iPhone et sur Android, en commençant gratuitement, sans lier de banque",
                         }),
                     },
                     {
@@ -3121,6 +3190,7 @@ const answers = {
                         text: t({
                             en: "Best if you want budgets next to net worth from linked Canadian accounts, and can pay in US dollars",
                             es: "Ideal si quieres tus presupuestos junto a tu patrimonio desde cuentas canadienses vinculadas, y puedes pagar en dólares estadounidenses",
+                            fr: "Idéal si vous voulez vos budgets à côté de votre valeur nette à partir de comptes canadiens liés, et pouvez payer en dollars américains",
                         }),
                     },
                     {
@@ -3128,6 +3198,7 @@ const answers = {
                         text: t({
                             en: "Best if you want to budget in CAD without a bank login, logging a purchase in one sentence",
                             es: "Ideal si quieres presupuestar en CAD sin iniciar sesión en tu banco, registrando una compra en una oración",
+                            fr: "Idéal si vous voulez faire votre budget en CAD sans connexion bancaire, en notant un achat en une phrase",
                         }),
                     },
                     {
@@ -3135,6 +3206,7 @@ const answers = {
                         text: t({
                             en: "Best if you want zero-based, envelope, or category budgets from linked Canadian accounts",
                             es: "Ideal si quieres presupuestos de base cero, por sobres o por categoría desde cuentas canadienses vinculadas",
+                            fr: "Idéal si vous voulez un budget à base zéro, par enveloppes ou par catégorie à partir de comptes canadiens liés",
                         }),
                     },
                     {
@@ -3142,6 +3214,7 @@ const answers = {
                         text: t({
                             en: "Best if you want a free start with a CAD wallet and other currencies beside it",
                             es: "Ideal si quieres empezar gratis con una billetera en CAD y otras monedas al lado",
+                            fr: "Idéal si vous voulez commencer gratuitement avec un portefeuille en CAD et d'autres devises à côté",
                         }),
                     },
                     {
@@ -3149,6 +3222,7 @@ const answers = {
                         text: t({
                             en: "Best if you want to decide what each dollar is for before you spend it, and are fine paying in US dollars",
                             es: "Ideal si quieres decidir para qué es cada dólar antes de gastarlo y no te molesta pagar en dólares estadounidenses",
+                            fr: "Idéal si vous voulez décider à quoi sert chaque dollar avant de le dépenser, et que payer en dollars américains ne vous dérange pas",
                         }),
                     },
                 ],
@@ -3157,40 +3231,48 @@ const answers = {
                         answer: t({
                             en: "The one that fits how you budget and whether you want to link a bank. To budget without a bank login, Goodbudget and Outlayr start free, and Actual Budget is free on a computer. To link Canadian accounts, Monarch and PocketGuard sync them, and YNAB imports from select Canadian banks.",
                             es: "La que coincide con cómo presupuestas y con si quieres vincular un banco. Para presupuestar sin iniciar sesión en el banco, Goodbudget y Outlayr empiezan gratis, y Actual Budget es gratis en la computadora. Para vincular cuentas canadienses, Monarch y PocketGuard las sincronizan, y YNAB importa desde algunos bancos canadienses.",
+                            fr: "Celle qui correspond à votre façon de faire un budget et à votre choix de lier ou non une banque. Pour un budget sans connexion bancaire, Goodbudget et Outlayr commencent gratuitement, et Actual Budget est gratuit sur ordinateur. Pour lier des comptes canadiens, Monarch et PocketGuard les synchronisent, et YNAB importe depuis certaines banques canadiennes.",
                         }),
                         question: t({
                             en: "What is the best budget app in Canada?",
                             es: "¿Cuál es la mejor app de presupuesto en Canadá?",
+                            fr: "Quelle est la meilleure application de budget au Canada ?",
                         }),
                     },
                     {
                         answer: t({
                             en: "Actual Budget is free software, with a server needed to sync. Goodbudget's free plan has 20 envelopes, 1 account, and 1 year of history. Spendee Basic has 1 wallet and 1 budget. Outlayr's free plan has 2 category budgets plus one for the month, and 3 accounts. Monarch, PocketGuard, and YNAB are paid after a trial.",
                             es: "Actual Budget es software gratis, con un servidor necesario para sincronizar. El plan gratis de Goodbudget tiene 20 sobres, 1 cuenta y 1 año de historial. Spendee Basic tiene 1 billetera y 1 presupuesto. El plan gratis de Outlayr tiene 2 presupuestos por categoría más uno para el mes, y 3 cuentas. Monarch, PocketGuard y YNAB son de pago después de una prueba.",
+                            fr: "Actual Budget est un logiciel gratuit, avec un serveur nécessaire pour synchroniser. L'offre gratuite de Goodbudget comprend 20 enveloppes, 1 compte et 1 an d'historique. Spendee Basic comprend 1 portefeuille et 1 budget. L'offre gratuite d'Outlayr comprend 2 budgets par catégorie plus un pour le mois, et 3 comptes. Monarch, PocketGuard et YNAB sont payants après un essai.",
                         }),
                         question: t({
                             en: "Is there a free budget app in Canada?",
                             es: "¿Hay una app de presupuesto gratis en Canadá?",
+                            fr: "Existe-t-il une application de budget gratuite au Canada ?",
                         }),
                     },
                     {
                         answer: t({
                             en: "Yes. Goodbudget, Outlayr, Spendee, and YNAB all work by hand or from a file your bank exports, and Actual Budget does without its server. Monarch also takes manual accounts. None of them needs your RBC, TD, Scotiabank, BMO, or CIBC login to budget.",
                             es: "Sí. Goodbudget, Outlayr, Spendee y YNAB funcionan a mano o con un archivo que exporta tu banco, y Actual Budget también sin su servidor. Monarch también acepta cuentas manuales. Ninguna necesita tu usuario de RBC, TD, Scotiabank, BMO o CIBC para presupuestar.",
+                            fr: "Oui. Goodbudget, Outlayr, Spendee et YNAB fonctionnent à la main ou avec un fichier exporté par votre banque, et Actual Budget aussi sans son serveur. Monarch accepte aussi les comptes manuels. Aucune n'a besoin de vos identifiants RBC, TD, Banque Scotia, BMO ou CIBC pour faire votre budget.",
                         }),
                         question: t({
                             en: "Can I use a budget app without linking my bank?",
                             es: "¿Puedo usar una app de presupuesto sin vincular mi banco?",
+                            fr: "Puis-je utiliser une application de budget sans lier ma banque ?",
                         }),
                     },
                     {
                         answer: t({
                             en: "Copilot syncs only US financial institutions, and Rocket Money works with US banks. EveryDollar sells its mobile app and Premium in the US only. That is why none of them is on this list.",
                             es: "Copilot solo sincroniza instituciones financieras de EE. UU., y Rocket Money funciona con bancos de EE. UU. EveryDollar vende su app móvil y su Premium solo en EE. UU. Por eso ninguna está en esta lista.",
+                            fr: "Copilot ne synchronise que les institutions financières américaines, et Rocket Money fonctionne avec les banques américaines. EveryDollar ne vend son application mobile et son Premium qu'aux États-Unis. C'est pourquoi aucune d'elles n'est dans cette liste.",
                         }),
                         question: t({
                             en: "Do Copilot, Rocket Money, and EveryDollar work in Canada?",
                             es: "¿Copilot, Rocket Money y EveryDollar funcionan en Canadá?",
+                            fr: "Copilot, Rocket Money et EveryDollar fonctionnent-elles au Canada ?",
                         }),
                     },
                     COST_FAQ,
@@ -3198,15 +3280,18 @@ const answers = {
                 lead: t({
                     en: "Seven budget apps that work in Canada, each best for a different way to budget: Actual Budget, Goodbudget, Monarch Money, Outlayr, PocketGuard, Spendee, and YNAB. Most bill in US dollars and link Canadian banks unevenly, so each one says what it costs and whether it works without your bank login. Outlayr is ours; the other six are not.",
                     es: "Siete apps de presupuesto que funcionan en Canadá, cada una mejor para una forma distinta de presupuestar: Actual Budget, Goodbudget, Monarch Money, Outlayr, PocketGuard, Spendee y YNAB. La mayoría cobra en dólares estadounidenses y conecta bancos canadienses de forma desigual, así que cada una dice cuánto cuesta y si funciona sin tu usuario del banco. Outlayr es nuestra; las otras seis no.",
+                    fr: "Sept applications de budget qui fonctionnent au Canada, chacune meilleure pour une façon différente de faire un budget : Actual Budget, Goodbudget, Monarch Money, Outlayr, PocketGuard, Spendee et YNAB. La plupart facturent en dollars américains et connectent les banques canadiennes de façon inégale, alors chacune indique ce qu'elle coûte et si elle fonctionne sans vos identifiants bancaires. Outlayr est la nôtre ; les six autres non.",
                 }),
                 meta: {
                     description: t({
                         en: "Seven budget apps that work in Canada, with price, free plan, and whether each needs your bank login. Budget in CAD, checked November 2026.",
                         es: "Siete apps de presupuesto que funcionan en Canadá, con precio, plan gratis y si cada una necesita tu usuario del banco. Presupuesto en CAD, revisado en noviembre de 2026.",
+                        fr: "Sept applications de budget qui fonctionnent au Canada, avec le prix, l'offre gratuite et si chacune demande vos identifiants bancaires. Budget en CAD, vérifié en novembre 2026.",
                     }),
                     title: t({
                         en: "Best Budget Apps in Canada (2026), With or Without Your Bank · Outlayr",
                         es: "Mejores apps de presupuesto en Canadá (2026), con o sin tu banco · Outlayr",
+                        fr: "Meilleures applications de budget au Canada (2026) · Outlayr",
                     }),
                 },
                 more: [
@@ -3215,16 +3300,19 @@ const answers = {
                             t({
                                 en: "Linking a bank pulls in transactions on their own, through a third-party connection that has to support your bank. Monarch asks Canadians to use its 7-day trial to check that their institutions connect reliably. If your bank is not covered, a linked app has little left to show.",
                                 es: "Vincular un banco trae los movimientos solos, a través de una conexión de terceros que tiene que admitir tu banco. Monarch le pide a quien vive en Canadá usar su prueba de 7 días para comprobar que sus instituciones conectan bien. Si tu banco no está cubierto, a una app vinculada le queda poco que mostrar.",
+                                fr: "Lier une banque importe les opérations toutes seules, par une connexion tierce qui doit prendre en charge votre banque. Monarch demande aux Canadiens d'utiliser son essai de 7 jours pour vérifier que leurs institutions se connectent bien. Si votre banque n'est pas couverte, une application liée n'a plus grand-chose à montrer.",
                             }),
                             t({
                                 en: "Without a link, you log purchases yourself or import the CSV your bank lets you download from online banking. It takes a minute a day, works with any bank or credit union, and no app holds your banking password.",
                                 es: "Sin vincular, registras tú las compras o importas el CSV que tu banco te deja descargar desde la banca en línea. Toma un minuto al día, funciona con cualquier banco o cooperativa de crédito, y ninguna app guarda tu contraseña del banco.",
+                                fr: "Sans lien, vous notez vous-même vos achats ou importez le CSV que votre banque vous laisse télécharger depuis ses services en ligne. Cela prend une minute par jour, fonctionne avec toute banque ou caisse, et aucune application ne garde votre mot de passe bancaire.",
                             }),
                         ],
                         id: "bank-or-not",
                         title: t({
                             en: "Linking your bank, or not",
                             es: "Vincular tu banco, o no",
+                            fr: "Lier votre banque, ou non",
                         }),
                     },
                     {
@@ -3232,20 +3320,27 @@ const answers = {
                             t({
                                 en: "Monarch, PocketGuard, and YNAB list their prices in US dollars, so what you pay in Canada moves with the exchange rate and your card's foreign transaction fee. When a plan is sold through the App Store or Google Play, the store charges in CAD.",
                                 es: "Monarch, PocketGuard y YNAB publican sus precios en dólares estadounidenses, así que lo que pagas en Canadá cambia con la tasa y con la comisión por compras en el extranjero de tu tarjeta. Cuando un plan se vende por el App Store o Google Play, la tienda cobra en CAD.",
+                                fr: "Monarch, PocketGuard et YNAB affichent leurs prix en dollars américains, donc ce que vous payez au Canada varie avec le taux de change et les frais de transaction en devise étrangère de votre carte. Quand une offre est vendue par l'App Store ou Google Play, la boutique facture en CAD.",
                             }),
                             t({
                                 en: "Monarch adds accounts in different currencies as if they were one, so a US dollar account next to a CAD one gives misleading totals. Outlayr and Spendee keep each account in its own currency.",
                                 es: "Monarch suma cuentas en monedas distintas como si fueran una, así que una cuenta en dólares estadounidenses junto a una en CAD da totales engañosos. Outlayr y Spendee mantienen cada cuenta en su propia moneda.",
+                                fr: "Monarch additionne les comptes en devises différentes comme s'il n'y en avait qu'une, donc un compte en dollars américains à côté d'un compte en CAD donne des totaux trompeurs. Outlayr et Spendee gardent chaque compte dans sa propre devise.",
                             }),
                         ],
                         id: "cad",
-                        title: t({ en: "Paying and budgeting in CAD", es: "Pagar y presupuestar en CAD" }),
+                        title: t({
+                            en: "Paying and budgeting in CAD",
+                            es: "Pagar y presupuestar en CAD",
+                            fr: "Payer et faire son budget en CAD",
+                        }),
                     },
                 ],
                 picked: [
                     t({
                         en: "Each app here plans what you will spend, works for someone living in Canada, and fits a different way to budget. Copilot, EveryDollar, and Rocket Money are left out because they are built for the US. They are in alphabetical order, not ranked.",
                         es: "Cada app de esta lista planea lo que vas a gastar, sirve para quien vive en Canadá y encaja con una forma distinta de presupuestar. Copilot, EveryDollar y Rocket Money quedan fuera porque están hechas para EE. UU. Van en orden alfabético, no por puesto.",
+                        fr: "Chaque application de cette liste planifie ce que vous allez dépenser, convient à quelqu'un qui vit au Canada et correspond à une façon différente de faire un budget. Copilot, EveryDollar et Rocket Money sont exclues parce qu'elles sont conçues pour les États-Unis. Elles sont classées par ordre alphabétique, pas par rang.",
                     }),
                     LIST_PICKED_FACTS,
                     LIST_PICKED_OURS,
@@ -3253,12 +3348,14 @@ const answers = {
                 plateAlt: t({
                     en: "A November budget in Canadian dollars with no bank linked: $1,284.60 left, Groceries $412 of $600, Transit $128 of $156, Eating out over at $171 of $150.",
                     es: "Un presupuesto de noviembre en dólares canadienses sin banco vinculado: quedan $1,284.60, Supermercado $412 de $600, Transporte $128 de $156, Comer fuera pasado con $171 de $150.",
+                    fr: "Un budget de novembre en dollars canadiens sans banque liée : il reste 1 284,60 $, Épicerie 412 $ sur 600 $, Transport 128 $ sur 156 $, Restos dépassé à 171 $ sur 150 $.",
                 }),
                 related: ["/guides/best-budget-apps", "/guides/budget-planner", "/compare/monarch"] satisfies PageRef[],
                 sources: LIST_SOURCES,
                 title: t({
                     en: "The best budget apps in Canada, with or without your bank",
                     es: "Las mejores apps de presupuesto en Canadá, con o sin tu banco",
+                    fr: "Les meilleures applications de budget au Canada, avec ou sans votre banque",
                 }),
             },
             "best-expense-tracker-apps": {

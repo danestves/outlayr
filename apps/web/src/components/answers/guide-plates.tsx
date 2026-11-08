@@ -18,14 +18,17 @@ function Plate({ children, side, title }: { children: ReactNode; side: string; t
     );
 }
 
-function Hero({ amount, label }: { amount: string; label: string }) {
-    const [whole, cents] = amount.split(".");
+const text = (parts: Intl.NumberFormatPart[]) => parts.map(({ value }) => value).join("");
+
+function Hero({ amount, label }: { amount: Intl.NumberFormatPart[]; label: string }) {
+    const decimal = amount.findIndex(({ type }) => type === "decimal");
     return (
         <>
             <p className={LABEL}>{label}</p>
             <p className="mt-1.5 text-4xl font-semibold tracking-tight tabular-nums">
-                {whole}
-                <span className="text-muted text-lg">.{cents}</span>
+                {text(amount.slice(0, decimal))}
+                <span className="text-muted text-lg">{text(amount.slice(decimal, decimal + 2))}</span>
+                {text(amount.slice(decimal + 2))}
             </p>
         </>
     );
@@ -90,16 +93,19 @@ const CANADA_BUDGETS = [
 export function CanadaPlate() {
     const { locale } = useLocale();
     const copy = CANADA[locale];
+    const tag = locale === "fr" ? "fr-CA" : "en-CA";
+    const cad = new Intl.NumberFormat(tag, { currency: "CAD", style: "currency" });
+    const dollars = new Intl.NumberFormat(tag, { currency: "CAD", maximumFractionDigits: 0, style: "currency" });
     return (
         <Plate side={copy.side} title={copy.month}>
-            <Hero amount={formatMoney(1284.6, "CAD")} label={copy.left} />
+            <Hero amount={cad.formatToParts(1284.6)} label={copy.left} />
             <ul className="mt-4">
                 {CANADA_BUDGETS.map(({ limit, spent }, index) => (
                     <li className="border-border border-t py-2.5" key={copy.budgets[index]}>
                         <div className="flex items-baseline justify-between gap-3">
                             <span>{copy.budgets[index]}</span>
                             <span className="text-muted font-mono text-xs uppercase tabular-nums">
-                                ${spent} {copy.of} ${limit}
+                                {dollars.format(spent)} {copy.of} {dollars.format(limit)}
                             </span>
                         </div>
                         <div className="bg-surface mt-2 h-1 overflow-hidden rounded-full">
