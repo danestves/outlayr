@@ -23,7 +23,7 @@ STRIPE_SECRET_KEY=... REVENUECAT_V2_SECRET_KEY=... REVENUECAT_PROJECT_ID=proj479
 
 It is idempotent. A live key also needs `--live`. The RevenueCat key needs write on Products and Entitlements.
 
-Iraq and Jordan have no price: US Stripe accounts cannot charge IQD or JOD, so their checkout answers `unavailable`. Managed Payments also refuses buyers in its restricted countries, Russia and China among them.
+Iraq, Jordan and Ghana have no price: US Stripe accounts cannot charge IQD, JOD or GHS, so the catalog script reports those 9 keys as errors and their checkout answers `unavailable`. Managed Payments also refuses buyers in its restricted countries, Russia and China among them.
 
 ## Environments
 
@@ -40,7 +40,7 @@ Convex needs `STRIPE_SECRET_KEY` and `REVENUECAT_STRIPE_PUBLIC_KEY`, plus the ex
 
 1. Run the script with the live key and `--live`.
 2. In the live Stripe config in RevenueCat, turn on Use Managed Payments, Track new purchases from server notifications with metadata key `app_user_id`, and set the Subscription management URL to the Stripe portal link. Without tracking, a buyer who closes the tab before returning stays locked until Restore.
-3. Add the Stripe app to the `Convex | Production` webhook, which only covers the App Store app today, or live events never reach Convex.
+3. Live events reach Convex through the `Convex | Production (Stripe)` webhook, scoped to the Stripe app. RevenueCat refuses two webhooks with one URL, so it adds `?app=stripe`.
 4. Set the two Convex variables on production.
 5. In Stripe, set the support email, which is where refund requests escalate, and add the Terms and Privacy links in Checkout settings. A refund request left unanswered for 48 hours can be refunded by Stripe without us.
 6. Merge the legal changes and send the [policy email](./policy-change.md) before their effective date.
