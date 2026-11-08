@@ -3255,7 +3255,7 @@ const answers = {
                         answer: t({
                             en: "Yes. Goodbudget, Outlayr, Spendee, and YNAB all work by hand or from a file your bank exports, and Actual Budget does without its server. Monarch also takes manual accounts. None of them needs your RBC, TD, Scotiabank, BMO, or CIBC login to budget.",
                             es: "Sí. Goodbudget, Outlayr, Spendee y YNAB funcionan a mano o con un archivo que exporta tu banco, y Actual Budget también sin su servidor. Monarch también acepta cuentas manuales. Ninguna necesita tu usuario de RBC, TD, Scotiabank, BMO o CIBC para presupuestar.",
-                            fr: "Oui. Goodbudget, Outlayr, Spendee et YNAB fonctionnent à la main ou avec un fichier exporté par votre banque, et Actual Budget aussi sans son serveur. Monarch accepte aussi les comptes manuels. Aucune n'a besoin de vos identifiants Desjardins, Banque Nationale, RBC, TD, Banque Scotia, BMO ou CIBC pour faire votre budget.",
+                            fr: "Oui. Goodbudget, Outlayr, Spendee et YNAB fonctionnent à la main ou avec un fichier exporté par votre banque, et Actual Budget aussi sans son serveur. Monarch accepte aussi les comptes manuels. Aucune n'a besoin de vos identifiants RBC, TD, Banque Scotia, BMO ou CIBC pour faire votre budget.",
                         }),
                         question: t({
                             en: "Can I use a budget app without linking my bank?",
