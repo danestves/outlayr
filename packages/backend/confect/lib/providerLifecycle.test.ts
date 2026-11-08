@@ -2,7 +2,12 @@ import * as Effect from "effect/Effect";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { stubHttp } from "../test.helpers";
-import { appleCredentialLifecycleDependencies, grantAppleCredential } from "./providerLifecycle";
+import {
+    appleCredentialLifecycleDependencies,
+    grantAppleCredential,
+    revokeAppleToken,
+    revokeGoogleToken,
+} from "./providerLifecycle";
 import { runEdge } from "./runEdge";
 
 const input = {
@@ -129,5 +134,40 @@ describe("apple server requests", () => {
             token: "refresh",
             token_type_hint: "refresh_token",
         });
+    });
+});
+
+describe("revoking a stored token", () => {
+    const clients = [
+        { clientId: "com.tryoutlayr.app", clientSecret: Effect.succeed("bundle-secret") },
+        { clientId: "com.tryoutlayr.web", clientSecret: Effect.succeed("web-secret") },
+    ];
+
+    it("falls through to the web client when the bundle id did not issue the token", async () => {
+        const http = stubHttp((request) =>
+            new URLSearchParams(request.body).get("client_id") === "com.tryoutlayr.web"
+                ? new Response(null, { status: 200 })
+                : Response.json({ error: "invalid_client" }, { status: 400 })
+        );
+
+        await runEdge(revokeAppleToken(clients, "refresh").pipe(Effect.provide(http.layer)));
+
+        expect(http.requests).toHaveLength(2);
+    });
+
+    it("fails when no client can revoke the token", async () => {
+        const http = stubHttp(() => Response.json({ error: "invalid_client" }, { status: 400 }));
+
+        await expect(runEdge(revokeAppleToken(clients, "refresh").pipe(Effect.provide(http.layer)))).rejects.toThrow(
+            "Apple token cleanup failed"
+        );
+    });
+
+    it("treats a Google token that is already dead as revoked, and a Google outage as a failure", async () => {
+        const dead = stubHttp(() => Response.json({ error: "invalid_token" }, { status: 400 }));
+        await expect(runEdge(revokeGoogleToken("token").pipe(Effect.provide(dead.layer)))).resolves.toBeUndefined();
+
+        const down = stubHttp(() => new Response(null, { status: 503 }));
+        await expect(runEdge(revokeGoogleToken("token").pipe(Effect.provide(down.layer)))).rejects.toThrow("503");
     });
 });

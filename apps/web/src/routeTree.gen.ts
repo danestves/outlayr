@@ -51,6 +51,7 @@ import { Route as AccountAppAccountsIndexRouteImport } from './routes/_account/a
 import { Route as AccountAppAccountsAccountIdRouteImport } from './routes/_account/app.accounts.$accountId'
 import { Route as AccountAppAccountsNetWorthRouteImport } from './routes/_account/app.accounts.net-worth'
 import { Route as AccountAppSettingsIndexRouteImport } from './routes/_account/app.settings.index'
+import { Route as AccountAppSettingsAccountRouteImport } from './routes/_account/app.settings.account'
 import { Route as AccountAppSettingsCurrencyRouteImport } from './routes/_account/app.settings.currency'
 import { Route as AccountAppSettingsPreferencesRouteImport } from './routes/_account/app.settings.preferences'
 import { Route as AccountAppSettingsTimeRouteImport } from './routes/_account/app.settings.time'
@@ -290,6 +291,12 @@ const AccountAppSettingsIndexRoute = AccountAppSettingsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AccountAppSettingsRoute,
 } as any)
+const AccountAppSettingsAccountRoute =
+  AccountAppSettingsAccountRouteImport.update({
+    id: '/account',
+    path: '/account',
+    getParentRoute: () => AccountAppSettingsRoute,
+  } as any)
 const AccountAppSettingsCurrencyRoute =
   AccountAppSettingsCurrencyRouteImport.update({
     id: '/currency',
@@ -349,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
@@ -393,6 +401,7 @@ export interface FileRoutesByTo {
   '/{-$locale}/tools': typeof Char123LocaleChar125ToolsIndexRoute
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
@@ -441,6 +450,7 @@ export interface FileRoutesById {
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
   '/_account/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/_account/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/_account/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/_account/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/_account/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
   '/_account/app/settings/time': typeof AccountAppSettingsTimeRoute
@@ -490,6 +500,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/tools/'
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
+    | '/app/settings/account'
     | '/app/settings/currency'
     | '/app/settings/preferences'
     | '/app/settings/time'
@@ -534,6 +545,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/tools'
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
+    | '/app/settings/account'
     | '/app/settings/currency'
     | '/app/settings/preferences'
     | '/app/settings/time'
@@ -581,6 +593,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/tools/'
     | '/_account/app/accounts/$accountId'
     | '/_account/app/accounts/net-worth'
+    | '/_account/app/settings/account'
     | '/_account/app/settings/currency'
     | '/_account/app/settings/preferences'
     | '/_account/app/settings/time'
@@ -900,6 +913,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppSettingsIndexRouteImport
       parentRoute: typeof AccountAppSettingsRoute
     }
+    '/_account/app/settings/account': {
+      id: '/_account/app/settings/account'
+      path: '/account'
+      fullPath: '/app/settings/account'
+      preLoaderRoute: typeof AccountAppSettingsAccountRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
     '/_account/app/settings/currency': {
       id: '/_account/app/settings/currency'
       path: '/currency'
@@ -976,6 +996,7 @@ const Char123LocaleChar125RouteRouteWithChildren =
   )
 
 interface AccountAppSettingsRouteChildren {
+  AccountAppSettingsAccountRoute: typeof AccountAppSettingsAccountRoute
   AccountAppSettingsCurrencyRoute: typeof AccountAppSettingsCurrencyRoute
   AccountAppSettingsPreferencesRoute: typeof AccountAppSettingsPreferencesRoute
   AccountAppSettingsTimeRoute: typeof AccountAppSettingsTimeRoute
@@ -983,6 +1004,7 @@ interface AccountAppSettingsRouteChildren {
 }
 
 const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
+  AccountAppSettingsAccountRoute: AccountAppSettingsAccountRoute,
   AccountAppSettingsCurrencyRoute: AccountAppSettingsCurrencyRoute,
   AccountAppSettingsPreferencesRoute: AccountAppSettingsPreferencesRoute,
   AccountAppSettingsTimeRoute: AccountAppSettingsTimeRoute,

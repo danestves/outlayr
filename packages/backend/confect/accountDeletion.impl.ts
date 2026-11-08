@@ -1,6 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -11,6 +12,7 @@ import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import {
+    ActionCtx,
     Auth,
     DatabaseReader,
     DatabaseWriter,
@@ -37,12 +39,18 @@ import type { DeletionJob } from "./accountDeletion";
 import spec from "./accountDeletion.spec";
 import { purgeUserBatch } from "./lib/account";
 import { requireUserId } from "./lib/auth";
+import { appleRevokeClients, decryptStoredToken } from "./lib/betterAuth";
+import { appleConfig } from "./lib/config";
 import { dieAsConvexError } from "./lib/convexError";
 import { outboundHttp } from "./lib/http";
 import { erasePostHogPerson } from "./lib/posthog";
+import { revokeAppleToken, revokeGoogleToken } from "./lib/providerLifecycle";
 import { sha256Hex } from "./lib/sha256Hex";
 import { NOTION_PROVIDER_ID } from "./notion";
 import { eraseUpstreamCustomer, revenuecat } from "./revenuecat";
+
+const GOOGLE_PROVIDER_ID = "google";
+const APPLE_PROVIDER_ID = "apple";
 
 const refusedAsConvexError = Effect.catchTags({ DeletionRefused: dieAsConvexError });
 
@@ -216,7 +224,9 @@ const recordCredentialOnly = FunctionImpl.make(
             if (
                 accounts.page.some(
                     (account: { providerId: string }) =>
-                        account.providerId !== "credential" && account.providerId !== NOTION_PROVIDER_ID
+                        account.providerId !== "credential" &&
+                        account.providerId !== NOTION_PROVIDER_ID &&
+                        account.providerId !== GOOGLE_PROVIDER_ID
                 )
             ) {
                 return yield* new DeletionRefused({ reason: "providerLinked" });
@@ -299,6 +309,58 @@ const revokeNotion = Effect.fn("AccountDeletion.revokeNotion")(function* revokeN
     }
 });
 
+const decodeStoredTokens = Schema.decodeUnknownOption(
+    Schema.Struct({
+        accessToken: Schema.optional(Schema.NullOr(Schema.String)),
+        providerId: Schema.Literals([APPLE_PROVIDER_ID, GOOGLE_PROVIDER_ID]),
+        refreshToken: Schema.optional(Schema.NullOr(Schema.String)),
+    })
+);
+
+const revokeLinkedProviders = Effect.fn("AccountDeletion.revokeLinkedProviders")(function* revokeLinkedProviders(
+    userId: string
+) {
+    const ctx = yield* MutationCtx;
+    const scheduler = yield* Scheduler;
+    const accounts = yield* Effect.promise(() =>
+        ctx.runQuery(components.betterAuth.adapter.findMany, {
+            model: "account",
+            paginationOpts: { cursor: null, numItems: AUTH_DELETE_PAGE },
+            where: [{ field: "userId", operator: "eq", value: userId }],
+        })
+    );
+    for (const account of accounts.page) {
+        const stored = decodeStoredTokens(account);
+        const token = Option.isSome(stored) ? (stored.value.refreshToken ?? stored.value.accessToken) : null;
+        if (Option.isSome(stored) && token) {
+            yield* scheduler.runAfter(Duration.zero, refs.internal.accountDeletion.revokeProviderToken, {
+                provider: stored.value.providerId,
+                token,
+            });
+        }
+    }
+});
+
+const revokeProviderToken = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "revokeProviderToken",
+    Effect.fn("AccountDeletion.revokeProviderToken")(function* revokeProviderToken(args) {
+        const ctx = yield* ActionCtx;
+        const token = yield* Effect.promise(() => decryptStoredToken(ctx, args.token));
+        const apple = yield* appleConfig;
+        const revoked =
+            args.provider === GOOGLE_PROVIDER_ID
+                ? revokeGoogleToken(token)
+                : revokeAppleToken(Option.isSome(apple) ? appleRevokeClients(apple.value) : [], token);
+        yield* revoked.pipe(
+            Effect.provide(outboundHttp),
+            Effect.catchCause((cause) => Console.error("Provider token revocation failed", cause))
+        );
+        return null;
+    }, Effect.orDie)
+);
+
 const revokeAgentConnections = Effect.fn("AccountDeletion.revokeAgentConnections")(function* revokeAgentConnections(
     userId: string
 ) {
@@ -358,6 +420,7 @@ const advance = FunctionImpl.make(
             yield* revokeAgentConnections(userId);
             yield* deleteAuthRows("session", userId);
             yield* revokeNotion(userId);
+            yield* revokeLinkedProviders(userId);
             yield* deleteAuthRows("account", userId);
             // SAFETY: the component types its references against its own generated api, which this app does not
             // import.
@@ -524,6 +587,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(eraseBilling),
     Layer.provide(poll),
     Layer.provide(resumeUserId),
+    Layer.provide(revokeProviderToken),
     Layer.provide(cleanupExpired),
     GroupImpl.finalize
 );

@@ -6,6 +6,7 @@ import { useIntlayer } from "react-intlayer";
 import { Sampled, useSample } from "@/components/dashboard/shell/sampled";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 
+import { Account } from "./account";
 import { Currency } from "./currency";
 import { SettingsNav } from "./nav";
 import { Preferences } from "./preferences";
@@ -26,7 +27,7 @@ export function SettingsLayout({ children }: { children: ReactNode }) {
     );
 }
 
-const SECTIONS = { currency: Currency, preferences: Preferences, time: Time } as const;
+const SECTIONS = { account: Account, currency: Currency, preferences: Preferences, time: Time } as const;
 
 const isSection = (name: string | undefined): name is keyof typeof SECTIONS => name !== undefined && name in SECTIONS;
 

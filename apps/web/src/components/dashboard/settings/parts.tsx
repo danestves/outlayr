@@ -45,14 +45,17 @@ export function Row({
     hint,
     label,
     labelFor,
+    leading,
 }: {
     children?: ReactNode;
     hint?: ReactNode;
     label: ReactNode;
+    leading?: ReactNode;
     labelFor?: string;
 }) {
     return (
         <div className="border-border flex min-h-14 items-center gap-4 border-t px-4 py-2.5 first:border-t-0 max-sm:flex-wrap max-sm:gap-y-2">
+            {leading}
             <div className="min-w-0 flex-1">
                 <label className="block text-sm leading-5 font-medium" htmlFor={labelFor}>
                     {label}
