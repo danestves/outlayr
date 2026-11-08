@@ -14,6 +14,7 @@ interface Movement {
     accountId: string;
     at: number;
     entry: CurrencyEntry;
+    id: string;
     key: string;
 }
 
@@ -44,13 +45,13 @@ function movementsOf(ledger: Ledger): Movements {
         installmentPlans.filter((row) => row.deletedAt === null).map((row) => [row.localId, row.accountId])
     );
     const list: Movement[] = [];
-    const add = (accountId: string, leg: string, entry: CurrencyEntry & { date: Date }) => {
+    const add = (accountId: string, leg: string, id: string, entry: CurrencyEntry & { date: Date }) => {
         const key = `${leg}|${entry.currency ?? null}|${utcDateString(entry.date.getTime())}|${entry.income}`;
-        list.push({ accountId, at: entry.date.getTime(), entry, key });
+        list.push({ accountId, at: entry.date.getTime(), entry, id, key });
     };
     for (const row of transactions) {
         if (row.deletedAt === null && row.accountId) {
-            add(row.accountId, "flow", {
+            add(row.accountId, "flow", row.localId, {
                 amount: row.amount,
                 amountUsd: row.amountUsd,
                 currency: row.currency,
@@ -64,14 +65,14 @@ function movementsOf(ledger: Ledger): Movements {
     for (const row of transfers) {
         if (row.deletedAt === null) {
             const date = new Date(row.date);
-            add(row.fromAccountId, "outbound", {
+            add(row.fromAccountId, "outbound", row.localId, {
                 amount: row.fromAmount,
                 amountUsd: row.fromAmountUsd,
                 currency: row.fromCurrency,
                 date,
                 income: false,
             });
-            add(row.toAccountId, "inbound", {
+            add(row.toAccountId, "inbound", row.localId, {
                 amount: row.toAmount,
                 amountUsd: row.toAmountUsd,
                 currency: row.toCurrency,
@@ -87,7 +88,7 @@ function movementsOf(ledger: Ledger): Movements {
     for (const { accountId, row } of arrivals) {
         const currency = accountId === undefined ? undefined : currencyOf.get(accountId);
         if (row.deletedAt === null && accountId !== undefined && currency !== undefined) {
-            add(accountId, "inbound", {
+            add(accountId, "inbound", row.localId, {
                 amount: row.amount,
                 amountUsd: row.amountUsd,
                 currency,
@@ -113,9 +114,12 @@ function movementsOf(ledger: Ledger): Movements {
     return prepared;
 }
 
-interface NetWorthPoint {
-    accounts: readonly { balance: number; id: string }[];
+export interface NetWorthPoint {
+    /** `balance` is in the main currency, `own` in the account's. */
+    accounts: readonly { balance: number; id: string; own: number }[];
     net: number;
+    owe: number;
+    own: number;
 }
 
 interface Pile {
@@ -133,7 +137,12 @@ export function netWorthPoints(ledger: Ledger, scope: Scope, instants: readonly 
             .map((holder) => [holder.id, { holder, piles: new Map<string, Pile>() }])
     );
     const decimals = decimalsFor(ledger.currency);
-    const results = Array.from({ length: instants.length }, (): NetWorthPoint => ({ accounts: [], net: 0 }));
+    const results = Array.from({ length: instants.length }, (): NetWorthPoint => ({
+        accounts: [],
+        net: 0,
+        owe: 0,
+        own: 0,
+    }));
     const touched = new Set<Pile>();
     let next = 0;
     const ascending = instants.map((instant, index) => ({ index, instant })).toSorted((a, b) => a.instant - b.instant);
@@ -169,12 +178,60 @@ export function netWorthPoints(ledger: Ledger, scope: Scope, instants: readonly 
                 total += pile.value;
             }
             const { value } = restate(total, holder.currency, ledger.currency, rateDay, ledger.rates);
-            return [{ balance: value, id: holder.id, kind: holder.kind }];
+            return [{ balance: value, id: holder.id, kind: holder.kind, own: total, currency: holder.currency }];
         });
+        const worth = netWorth(balances);
         results[index] = {
-            accounts: balances.map(({ balance, id }) => ({ balance: roundMoney(balance, decimals), id })),
-            net: roundMoney(netWorth(balances).net, decimals),
+            accounts: balances.map(({ balance, currency, id, own }) => ({
+                balance: roundMoney(balance, decimals),
+                id,
+                own: roundMoney(own, decimalsFor(currency)),
+            })),
+            net: roundMoney(worth.net, decimals),
+            owe: roundMoney(worth.owe, decimals),
+            own: roundMoney(worth.own, decimals),
         };
     }
     return results;
+}
+
+export type FlowLeg = "flow" | "inbound" | "outbound";
+
+export interface AccountFlow {
+    at: number;
+    day: string;
+    /** The transaction, transfer or outside payment it came from. */
+    id: string;
+    leg: FlowLeg;
+    /** Signed, in the account's currency. */
+    value: number;
+}
+
+const legOf = (key: string): FlowLeg => {
+    const leg = key.slice(0, key.indexOf("|"));
+    return leg === "inbound" || leg === "outbound" ? leg : "flow";
+};
+
+export function accountFlows(ledger: Ledger, accountId: string): AccountFlow[] {
+    const { holders, list } = movementsOf(ledger);
+    const holder = holders.find((each) => each.id === accountId);
+    if (!holder) {
+        return [];
+    }
+    return list.flatMap((movement) => {
+        const [cell] = movement.accountId === accountId ? toCells([movement.entry]) : [];
+        if (!cell || movement.at > ledger.now) {
+            return [];
+        }
+        const value = valueCell(cell, holder.currency, ledger.rates);
+        return [
+            {
+                at: movement.at,
+                id: movement.id,
+                day: localDate(movement.at, ledger.offsetAt(movement.at)),
+                leg: legOf(movement.key),
+                value: roundMoney(cell.income ? value : -value, decimalsFor(holder.currency)),
+            },
+        ];
+    });
 }

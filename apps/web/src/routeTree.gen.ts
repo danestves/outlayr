@@ -45,6 +45,9 @@ import { Route as Char123LocaleChar125GuidesSlugRouteImport } from './routes/{-$
 import { Route as Char123LocaleChar125ICodeRouteImport } from './routes/{-$locale}/i.$code'
 import { Route as Char123LocaleChar125ToolsIndexRouteImport } from './routes/{-$locale}/tools.index'
 import { Route as Char123LocaleChar125ToolsSlugRouteImport } from './routes/{-$locale}/tools.$slug'
+import { Route as AccountAppAccountsIndexRouteImport } from './routes/_account/app.accounts.index'
+import { Route as AccountAppAccountsAccountIdRouteImport } from './routes/_account/app.accounts.$accountId'
+import { Route as AccountAppAccountsNetWorthRouteImport } from './routes/_account/app.accounts.net-worth'
 
 const AccountRoute = AccountRouteImport.update({
   id: '/_account',
@@ -249,6 +252,23 @@ const Char123LocaleChar125ToolsSlugRoute =
     path: '/tools/$slug',
     getParentRoute: () => Char123LocaleChar125RouteRoute,
   } as any)
+const AccountAppAccountsIndexRoute = AccountAppAccountsIndexRouteImport.update({
+  id: '/accounts/',
+  path: '/accounts/',
+  getParentRoute: () => AccountAppRoute,
+} as any)
+const AccountAppAccountsAccountIdRoute =
+  AccountAppAccountsAccountIdRouteImport.update({
+    id: '/accounts/$accountId',
+    path: '/accounts/$accountId',
+    getParentRoute: () => AccountAppRoute,
+  } as any)
+const AccountAppAccountsNetWorthRoute =
+  AccountAppAccountsNetWorthRouteImport.update({
+    id: '/accounts/net-worth',
+    path: '/accounts/net-worth',
+    getParentRoute: () => AccountAppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/{-$locale}': typeof Char123LocaleChar125RouteRouteWithChildren
@@ -287,6 +307,9 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/compare/': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides/': typeof Char123LocaleChar125GuidesIndexRoute
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
+  '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
+  '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/app/accounts/': typeof AccountAppAccountsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AccountRouteWithChildren
@@ -323,6 +346,9 @@ export interface FileRoutesByTo {
   '/{-$locale}/compare': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides': typeof Char123LocaleChar125GuidesIndexRoute
   '/{-$locale}/tools': typeof Char123LocaleChar125ToolsIndexRoute
+  '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
+  '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/app/accounts': typeof AccountAppAccountsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -362,6 +388,9 @@ export interface FileRoutesById {
   '/{-$locale}/compare/': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides/': typeof Char123LocaleChar125GuidesIndexRoute
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
+  '/_account/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
+  '/_account/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
+  '/_account/app/accounts/': typeof AccountAppAccountsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -402,6 +431,9 @@ export interface FileRouteTypes {
     | '/{-$locale}/compare/'
     | '/{-$locale}/guides/'
     | '/{-$locale}/tools/'
+    | '/app/accounts/$accountId'
+    | '/app/accounts/net-worth'
+    | '/app/accounts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -438,6 +470,9 @@ export interface FileRouteTypes {
     | '/{-$locale}/compare'
     | '/{-$locale}/guides'
     | '/{-$locale}/tools'
+    | '/app/accounts/$accountId'
+    | '/app/accounts/net-worth'
+    | '/app/accounts'
   id:
     | '__root__'
     | '/{-$locale}'
@@ -476,6 +511,9 @@ export interface FileRouteTypes {
     | '/{-$locale}/compare/'
     | '/{-$locale}/guides/'
     | '/{-$locale}/tools/'
+    | '/_account/app/accounts/$accountId'
+    | '/_account/app/accounts/net-worth'
+    | '/_account/app/accounts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -748,6 +786,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char123LocaleChar125ToolsSlugRouteImport
       parentRoute: typeof Char123LocaleChar125RouteRoute
     }
+    '/_account/app/accounts/': {
+      id: '/_account/app/accounts/'
+      path: '/accounts'
+      fullPath: '/app/accounts/'
+      preLoaderRoute: typeof AccountAppAccountsIndexRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
+    '/_account/app/accounts/$accountId': {
+      id: '/_account/app/accounts/$accountId'
+      path: '/accounts/$accountId'
+      fullPath: '/app/accounts/$accountId'
+      preLoaderRoute: typeof AccountAppAccountsAccountIdRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
+    '/_account/app/accounts/net-worth': {
+      id: '/_account/app/accounts/net-worth'
+      path: '/accounts/net-worth'
+      fullPath: '/app/accounts/net-worth'
+      preLoaderRoute: typeof AccountAppAccountsNetWorthRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
   }
 }
 
@@ -805,11 +864,17 @@ const Char123LocaleChar125RouteRouteWithChildren =
 interface AccountAppRouteChildren {
   AccountAppInsightsRoute: typeof AccountAppInsightsRoute
   AccountAppIndexRoute: typeof AccountAppIndexRoute
+  AccountAppAccountsAccountIdRoute: typeof AccountAppAccountsAccountIdRoute
+  AccountAppAccountsNetWorthRoute: typeof AccountAppAccountsNetWorthRoute
+  AccountAppAccountsIndexRoute: typeof AccountAppAccountsIndexRoute
 }
 
 const AccountAppRouteChildren: AccountAppRouteChildren = {
   AccountAppInsightsRoute: AccountAppInsightsRoute,
   AccountAppIndexRoute: AccountAppIndexRoute,
+  AccountAppAccountsAccountIdRoute: AccountAppAccountsAccountIdRoute,
+  AccountAppAccountsNetWorthRoute: AccountAppAccountsNetWorthRoute,
+  AccountAppAccountsIndexRoute: AccountAppAccountsIndexRoute,
 }
 
 const AccountAppRouteWithChildren = AccountAppRoute._addFileChildren(

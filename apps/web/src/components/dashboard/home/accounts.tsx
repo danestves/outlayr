@@ -1,4 +1,5 @@
-import { RiAddLine } from "@remixicon/react";
+import { RiAddLine, RiArrowRightUpLine } from "@remixicon/react";
+import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -83,7 +84,12 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
     return (
         <section className="dash-card text-sm @4xl:self-start">
             <div className="dash-card-head">
-                <h2>{copy.accounts}</h2>
+                <h2>
+                    <Link className="hover:text-app-tint inline-flex items-center gap-1" to="/app/accounts">
+                        {copy.accounts}
+                        <RiArrowRightUpLine className="text-muted-foreground" size={15} />
+                    </Link>
+                </h2>
                 {setup ? null : (
                     <span className="dash-figure text-muted-foreground ml-auto min-w-0 truncate text-[13px]">
                         {money(shown.net, ledger.currency)}

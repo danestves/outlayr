@@ -56,7 +56,11 @@ const category = (name: string, seq: number): Doc<"categories"> => ({
     sortOrder: seq,
 });
 
-const ACCOUNTS = ["Checking", "Savings", "Credit card", "Cash", "Brokerage", "Travel card"].map(account);
+const CARD = { creditLimit: 5000, initialBalance: -640, initialBalanceUsd: -640, kind: "liability" } as const;
+const ACCOUNTS = ["Checking", "Savings", "Credit card", "Cash", "Brokerage", "Travel card"].map((name, seq) => ({
+    ...account(name, seq),
+    ...(name.endsWith("card") && CARD),
+}));
 const CATEGORIES = ["Groceries", "Dining out", "Transport", "Home", "Health"].map(category);
 
 const budget = (spentOn: Doc<"categories">, seq: number, startDate: number): Doc<"budgets"> => {

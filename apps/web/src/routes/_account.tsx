@@ -13,6 +13,10 @@ const HomeFirstVisit = lazy(async () => {
     const pending = await import("@/components/dashboard/home/home-pending");
     return { default: pending.HomeFirstVisit };
 });
+const AccountsFirstVisit = lazy(async () => {
+    const pending = await import("@/components/dashboard/accounts/accounts-pending");
+    return { default: pending.AccountsFirstVisit };
+});
 const InsightsFirstVisit = lazy(async () => {
     const pending = await import("@/components/dashboard/insights/insights-pending");
     return { default: pending.InsightsFirstVisit };
@@ -35,16 +39,19 @@ export const Route = createFileRoute("/_account")({
     head: () => ({ meta: [{ content: "noindex", name: "robots" }] }),
 });
 
+const firstVisit = (onAccounts: boolean) => (onAccounts ? <AccountsFirstVisit /> : <HomeFirstVisit />);
+
 function Account() {
     const { token } = Route.useRouteContext();
     const onInsights = useLocation({ select: (location) => location.pathname.endsWith("/insights") });
+    const onAccounts = useLocation({ select: (location) => location.pathname.startsWith("/app/accounts") });
     const appStatus = useMatches({
         select: (matches) => matches.find((match) => match.routeId === "/_account/app")?.status,
     });
     return (
         <ConvexBetterAuthProvider authClient={authClient} client={convexClient()} initialToken={token}>
             {appStatus === "pending" && !hasLedgerCopy() ? (
-                <Suspense>{onInsights ? <InsightsFirstVisit /> : <HomeFirstVisit />}</Suspense>
+                <Suspense>{onInsights ? <InsightsFirstVisit /> : firstVisit(onAccounts)}</Suspense>
             ) : null}
             <Outlet />
         </ConvexBetterAuthProvider>

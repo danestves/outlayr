@@ -75,7 +75,7 @@ function NavLink({
     icon: Icon,
     label,
     to,
-}: NavProps & { exact?: boolean; to: "/app" | "/app/insights" }) {
+}: NavProps & { exact?: boolean; to: "/app" | "/app/accounts" | "/app/insights" }) {
     return (
         <Link activeOptions={{ exact, includeSearch: false }} className="dash-nav" title={label} to={to}>
             <Icon className="shrink-0" size={17} />
@@ -114,7 +114,7 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
             {group(nav.label.value)}
             <NavLink collapsed={collapsed} exact icon={RiLayoutGridLine} label={nav.dashboard.value} to="/app" />
             <Soon collapsed={collapsed} icon={RiHistoryLine} label={nav.transactions.value} />
-            <Soon collapsed={collapsed} icon={RiBankCardLine} label={nav.accounts.value} />
+            <NavLink collapsed={collapsed} icon={RiBankCardLine} label={nav.accounts.value} to="/app/accounts" />
             <NavLink collapsed={collapsed} icon={RiBarChartBoxLine} label={nav.insights.value} to="/app/insights" />
             {group(nav.plan.value)}
             <Soon collapsed={collapsed} icon={RiPieChartLine} label={nav.budgets.value} />
