@@ -14,12 +14,12 @@ import { outboundHttp } from "./lib/http";
 import { decodeProSubscriber, planOfStoreProduct, proTermOf } from "./proTerm";
 import { listsPro, storeSubscriber, syncLimiter } from "./revenuecat";
 import {
+    catalogPrice,
     createCheckoutSession,
     ensureCustomer,
     findCustomer,
     paidSession,
     paidSessionIds,
-    planOfPrice,
     portalUrl,
     postReceipt,
     priceIdForKey,
@@ -190,11 +190,15 @@ const plan = FunctionImpl.make(
             const { productId, ...term } = proTermOf(subscriber, Date.now());
             const isStripe = term.store === "stripe";
             const customerId = isStripe ? yield* findCustomer(user.id) : null;
+            const catalog =
+                isStripe && productId !== null
+                    ? yield* catalogPrice(productId)
+                    : { plan: planOfStoreProduct(productId), price: term.price };
             return {
                 expiresAtMs: term.expiresAtMs,
                 payments: customerId === null ? [] : yield* recentPayments(customerId),
-                plan: isStripe && productId !== null ? yield* planOfPrice(productId) : planOfStoreProduct(productId),
-                price: term.price,
+                plan: catalog.plan,
+                price: catalog.price,
                 state: term.state,
                 store: term.store,
                 trialAvailable: !listsPro(subscriber),

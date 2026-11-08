@@ -4,12 +4,14 @@ import {
     RiEqualizer2Line,
     RiMoneyDollarCircleLine,
     RiUserLine,
+    RiVerifiedBadgeLine,
 } from "@remixicon/react";
 import { Link } from "@tanstack/react-router";
 import { useIntlayer } from "react-intlayer";
 
 const SECTIONS = [
     { icon: RiUserLine, key: "account", to: "/app/settings/account" },
+    { icon: RiVerifiedBadgeLine, key: "plan", to: "/app/settings/plan" },
     { icon: RiEqualizer2Line, key: "preferences", to: "/app/settings/preferences" },
     { icon: RiMoneyDollarCircleLine, key: "currency", to: "/app/settings/currency" },
     { icon: RiCalendarLine, key: "time", to: "/app/settings/time" },
