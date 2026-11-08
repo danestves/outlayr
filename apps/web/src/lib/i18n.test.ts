@@ -35,6 +35,11 @@ const PAGE_CONTENT: Record<string, readonly unknown[]> = {
         about.content.allGuides,
     ],
     "/guides": [...SHELL, answers.content.hubs.guides],
+    "/guides/best-budget-apps-canada": [
+        ...SHELL,
+        answers.content.labels,
+        answers.content.guides["best-budget-apps-canada"],
+    ],
     "/guides/best-budget-apps-france": [
         ...SHELL,
         answers.content.labels,

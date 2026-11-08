@@ -141,6 +141,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - [Accueil](https://tryoutlayr.com/fr): the home page in French
 - [Assistance](https://tryoutlayr.com/fr/support): the support page in French
 - [Modèle de budget mensuel](https://tryoutlayr.com/fr/guides/expense-tracker-template): the expense tracker template guide, with a French Excel workbook and CSV in euros
+- [Meilleures applications de budget au Canada](https://tryoutlayr.com/fr/guides/best-budget-apps-canada): seven budget apps for Canada and Quebec compared, priced in CAD and US dollars, in French
 - [Meilleure application de gestion de budget](https://tryoutlayr.com/fr/guides/best-budget-apps-france): seven budget apps for France, Quebec, and Belgium compared, in French
 - [Calculateurs](https://tryoutlayr.com/fr/tools): the 50/30/20, subscription, installment, and split expenses calculators in French
 - [Politique de confidentialité](https://tryoutlayr.com/fr/privacy): the Privacy Policy in French
