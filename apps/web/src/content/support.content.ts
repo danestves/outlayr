@@ -20,10 +20,10 @@ const support = {
             },
             {
                 answer: t({
-                    en: "Open Settings, tap Outlayr Pro, then Restore. Pro follows the app store account that bought it.",
-                    es: "Abre Configuración, toca Outlayr Pro y luego Restaurar. Pro va con la cuenta de la tienda de apps con la que lo compraste.",
-                    pt: "Abra Ajustes, toque em Outlayr Pro e depois em Restaurar. O Pro fica vinculado à conta da loja de apps que fez a compra.",
-                    fr: "Ouvrez Réglages, touchez Outlayr Pro, puis Restaurer. Pro suit le compte de la boutique d'apps qui l'a acheté.",
+                    en: "Open Settings, tap Outlayr Pro, then Restore. Pro follows the app store account that bought it. If you bought it on the web, signing in is enough.",
+                    es: "Abre Configuración, toca Outlayr Pro y luego Restaurar. Pro va con la cuenta de la tienda de apps con la que lo compraste. Si lo compraste en la web, basta con iniciar sesión.",
+                    pt: "Abra Ajustes, toque em Outlayr Pro e depois em Restaurar. O Pro fica vinculado à conta da loja de apps que fez a compra. Se você comprou na web, basta iniciar sessão.",
+                    fr: "Ouvrez Réglages, touchez Outlayr Pro, puis Restaurer. Pro suit le compte de la boutique d'apps qui l'a acheté. Si vous l'avez acheté sur le web, il suffit de vous connecter.",
                 }),
                 question: t({
                     en: "How do I get Pro back on a new phone?",
@@ -34,10 +34,10 @@ const support = {
             },
             {
                 answer: t({
-                    en: "Cancel from your app store’s subscriptions page. On iPhone: open the Settings app, tap your name, then Subscriptions, then Outlayr. On Android: open the Google Play Store app, tap your profile picture, then Payments & subscriptions, then Subscriptions, then Outlayr. Pro stays on until the period you paid for ends.",
-                    es: "Cancélalo desde la página de suscripciones de tu tienda de apps. En iPhone: abre la app Configuración, toca tu nombre, luego Suscripciones y luego Outlayr. En Android: abre la app Google Play Store, toca tu foto de perfil, luego Pagos y suscripciones, luego Suscripciones y luego Outlayr. Pro sigue activo hasta que termine el período que pagaste.",
-                    pt: "Cancele na página de assinaturas da sua loja de apps. No iPhone: abra o app Ajustes, toque no seu nome, depois em Assinaturas e depois em Outlayr. No Android: abra o app Google Play Store, toque na sua foto de perfil, depois em Pagamentos e assinaturas, depois em Assinaturas e depois em Outlayr. O Pro continua ativo até o fim do período que você pagou.",
-                    fr: "Résiliez depuis la page des abonnements de votre boutique d'apps. Sur iPhone : ouvrez l'app Réglages, touchez votre nom, puis Abonnements, puis Outlayr. Sur Android : ouvrez l'app Google Play Store, touchez votre photo de profil, puis Paiements et abonnements, puis Abonnements, puis Outlayr. Pro reste actif jusqu'à la fin de la période payée.",
+                    en: "If you bought Pro on the web, open Settings › Plan there. Otherwise, cancel from your app store’s subscriptions page. On iPhone: open the Settings app, tap your name, then Subscriptions, then Outlayr. On Android: open the Google Play Store app, tap your profile picture, then Payments & subscriptions, then Subscriptions, then Outlayr. Pro stays on until the period you paid for ends.",
+                    es: "Si compraste Pro en la web, abre Configuración › Plan ahí. Si no, cancélalo desde la página de suscripciones de tu tienda de apps. En iPhone: abre la app Configuración, toca tu nombre, luego Suscripciones y luego Outlayr. En Android: abre la app Google Play Store, toca tu foto de perfil, luego Pagos y suscripciones, luego Suscripciones y luego Outlayr. Pro sigue activo hasta que termine el período que pagaste.",
+                    pt: "Se você comprou o Pro na web, abra Ajustes › Plano lá. Caso contrário, cancele na página de assinaturas da sua loja de apps. No iPhone: abra o app Ajustes, toque no seu nome, depois em Assinaturas e depois em Outlayr. No Android: abra o app Google Play Store, toque na sua foto de perfil, depois em Pagamentos e assinaturas, depois em Assinaturas e depois em Outlayr. O Pro continua ativo até o fim do período que você pagou.",
+                    fr: "Si vous avez acheté Pro sur le web, ouvrez Réglages › Forfait là-bas. Sinon, résiliez depuis la page des abonnements de votre boutique d'apps. Sur iPhone : ouvrez l'app Réglages, touchez votre nom, puis Abonnements, puis Outlayr. Sur Android : ouvrez l'app Google Play Store, touchez votre photo de profil, puis Paiements et abonnements, puis Abonnements, puis Outlayr. Pro reste actif jusqu'à la fin de la période payée.",
                 }),
                 question: t({
                     en: "How do I cancel Pro?",
@@ -48,10 +48,10 @@ const support = {
             },
             {
                 answer: t({
-                    en: "Purchases go through your app store, so refunds do too. On iPhone, request one at reportaproblem.apple.com. On Android, follow Google Play’s steps at support.google.com/googleplay/answer/2479637.",
-                    es: "Las compras pasan por tu tienda de apps, así que los reembolsos también. En iPhone, pide uno en reportaproblem.apple.com. En Android, sigue los pasos de Google Play en support.google.com/googleplay/answer/2479637.",
-                    pt: "As compras passam pela sua loja de apps, então os reembolsos também. No iPhone, peça um em reportaproblem.apple.com. No Android, siga os passos do Google Play em support.google.com/googleplay/answer/2479637.",
-                    fr: "Les achats passent par votre boutique d'apps, les remboursements aussi. Sur iPhone, faites la demande sur reportaproblem.apple.com. Sur Android, suivez les étapes de Google Play sur support.google.com/googleplay/answer/2479637.",
+                    en: "For a purchase on the web, write to support@tryoutlayr.com or to Link support. Purchases in the app go through your app store, so refunds do too. On iPhone, request one at reportaproblem.apple.com. On Android, follow Google Play’s steps at support.google.com/googleplay/answer/2479637.",
+                    es: "Por una compra en la web, escribe a support@tryoutlayr.com o al soporte de Link. Las compras en la app pasan por tu tienda de apps, así que los reembolsos también. En iPhone, pide uno en reportaproblem.apple.com. En Android, sigue los pasos de Google Play en support.google.com/googleplay/answer/2479637.",
+                    pt: "Para uma compra na web, escreva para support@tryoutlayr.com ou para o suporte do Link. As compras no app passam pela sua loja de apps, então os reembolsos também. No iPhone, peça um em reportaproblem.apple.com. No Android, siga os passos do Google Play em support.google.com/googleplay/answer/2479637.",
+                    fr: "Pour un achat sur le web, écrivez à support@tryoutlayr.com ou au support de Link. Les achats dans l'app passent par votre boutique d'apps, les remboursements aussi. Sur iPhone, faites la demande sur reportaproblem.apple.com. Sur Android, suivez les étapes de Google Play sur support.google.com/googleplay/answer/2479637.",
                 }),
                 question: t({
                     en: "Can I get a refund?",

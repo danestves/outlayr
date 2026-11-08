@@ -1,6 +1,6 @@
 ---
 title: "Política de privacidad"
-description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 9 de noviembre de 2026."
+description: "Qué guarda Outlayr en tu celular, qué llega a nuestros servidores, a la IA y a las analíticas, y cómo borrarlo. Vigente desde el 16 de noviembre de 2026."
 intro: "Esta política explica qué recopila Outlayr, adónde va, cuánto tiempo se conserva y qué puedes hacer al respecto. Esta traducción se ofrece para tu comodidad. Si hay alguna diferencia con la versión en inglés, prevalece la versión en inglés."
 ---
 
@@ -50,7 +50,7 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | Nombres, columnas y filas de las bases de datos de Notion que elijas | Importación desde Notion (Pro) | Notion, nuestros servidores, tu dispositivo | No se conservan en nuestros servidores |
 | Nombre del comercio, una dirección web que agregas, una categoría general | Agregar sitio web | Nuestros servidores, compartido con todos | Se actualiza después de 90 días. No vinculado a ti |
 | Dirección web, dirección IP | Logos | Nuestros servidores (Cloudflare) | La dirección web se guarda con el logo; la dirección IP no se conserva |
-| Registros de compra, ID de usuario, nombre, correo electrónico | Al abrir la app, Pro | RevenueCat, Apple o Google, nuestros servidores | Hasta la eliminación de la cuenta |
+| Registros de compra, ID de usuario, nombre, correo electrónico | Al abrir la app, Pro | RevenueCat, Apple, Google o Stripe, nuestros servidores | Hasta la eliminación de la cuenta |
 | Código de invitación, quién invitó a quién, nombres de pila, días registrados hasta tres y la fecha del tercero, meses ganados | Invitaciones | Nuestros servidores, RevenueCat | Hasta la eliminación de la cuenta |
 | ID de instalación, versión de la app, errores | Búsqueda de actualizaciones | Expo | Según la política de Expo |
 | Pantallas, funciones usadas, errores, ID de instalación, modelo del dispositivo | Uso de la app | PostHog | Hasta la eliminación de la cuenta, o según la política de PostHog si nunca inicias sesión |
@@ -233,6 +233,8 @@ Para que la conexión siga funcionando, guardamos el nombre y la dirección web 
 
 Los pagos de Outlayr Pro se hacen a través de tu tienda de apps (el App Store de Apple en iPhone, Google Play en Android). Nunca vemos los datos de tu tarjeta ni los de tu cuenta de la tienda de apps.
 
+En la web, los pagos pasan por Stripe, y su servicio Link es el vendedor. Cuando inicias un pago, le enviamos a Stripe tu nombre, correo electrónico, ID de cuenta y el plan que elegiste. Escribes tus datos de pago y tu dirección de facturación en la página de Stripe, y nunca vemos el número completo de tu tarjeta. Usamos el país desde el que llega tu solicitud para elegir el precio y no lo guardamos. Para mostrar tu plan y tus pagos en la web, nuestro servidor los lee de Stripe y no los conserva.
+
 RevenueCat administra el estado de las suscripciones en nuestro nombre. Cuando se abre la app, el software de RevenueCat verifica si tienes Pro. Antes de que inicies sesión, usa un ID anónimo aleatorio. Después de que inicias sesión, usa tu ID de cuenta de Outlayr, y la app también le envía tu nombre y tu correo electrónico para que podamos encontrar tus compras cuando nos escribas. RevenueCat recibe los registros de compras y suscripciones de tu tienda de apps y datos técnicos básicos, como las versiones de la app y del sistema operativo.
 
 Nuestro servidor consulta a RevenueCat con tu ID de cuenta para confirmar Pro, y RevenueCat le avisa a nuestro servidor cuando tu suscripción cambia. Guardamos una copia de tus registros de suscripción, como el producto, las fechas, el precio y el país de la tienda, y la eliminamos junto con tu cuenta.
@@ -269,6 +271,7 @@ Estas empresas nos ayudan a operar Outlayr. Cada una recibe solo lo que su funci
 - **[RevenueCat](https://www.revenuecat.com/privacy)** lleva el control del estado de las suscripciones. Recibe un ID anónimo, o tu ID de cuenta, nombre y correo electrónico una vez que inicias sesión, y tus registros de compra.
 - **[Apple](https://www.apple.com/legal/privacy/)** proporciona Iniciar sesión con Apple, los pagos del App Store y funciones de iOS como Siri y Atajos, según su propia política.
 - **[Google](https://policies.google.com/privacy)** proporciona Acceder con Google y los pagos de Google Play, según su propia política.
+- **[Stripe](https://stripe.com/es/privacy)** procesa las compras en la web, y su servicio Link las vende. Recibe tu nombre, correo electrónico, ID de cuenta, el plan que elegiste y los datos de pago y la dirección de facturación que escribes al pagar.
 - **[Expo](https://expo.dev/privacy)** distribuye las actualizaciones de la app. Recibe un ID de instalación aleatorio, la versión de la app, tu dirección IP y los mensajes de error de las actualizaciones.
 - **[PostHog](https://posthog.com/privacy)** proporciona las analíticas de uso y los reportes de fallas, desde servidores en Estados Unidos. Recibe los eventos descritos en [Lo que la app envía incluso sin cuenta](#lo-que-la-app-envía-incluso-sin-cuenta), un ID de instalación aleatorio y tu ID de cuenta cuando inicias sesión, además de los [registros de solicitudes de IA](#registros-de-solicitudes-de-ia) que envía nuestro servidor. También recibe las analíticas de este sitio web, descritas en [Este sitio web](#este-sitio-web).
 
@@ -341,7 +344,7 @@ Abre **Configuración › Cuenta › Eliminar cuenta**. Es posible que se te pid
 - Se revoca el acceso de Outlayr a tu inicio de sesión con Apple o Google. En el caso de Apple, nuestro servidor le pide a Apple que lo revoque. En el caso de Google, lo hace la app.
 - Si conectaste Notion, nuestro servidor le pide a Notion que revoque la clave de acceso de Outlayr.
 - Tu registro sincronizado, los registros de eliminación, las fotos respaldadas y las solicitudes de sugerencia pendientes se eliminan de nuestros servidores.
-- Se eliminan tu registro de cliente en RevenueCat y nuestra copia del estado de tu suscripción.
+- Se eliminan tus registros de cliente en RevenueCat y Stripe y nuestra copia del estado de tu suscripción.
 - Se eliminan tu perfil en PostHog y todos los eventos de analíticas vinculados a él. PostHog borra los eventos en un lote posterior, así que pueden seguir ahí un tiempo después de que la app indique que la eliminación terminó.
 - Se eliminan tus contadores de uso, tus conversaciones de voz abiertas, tus sesiones, el acceso de los asistentes de IA, tus enlaces de inicio de sesión, la clave de acceso de Notion, tu código de invitación y tus invitaciones, y tu cuenta. Si la invitación que reclamaste ya le dio un mes a tu amigo, queda en su lista sin tu nombre.
 
@@ -349,7 +352,7 @@ Empieza de inmediato y se ejecuta desde tu dispositivo. Si se interrumpe, abre d
 
 Después, un registro de que hubo una eliminación, sin ningún vínculo contigo, se borra dentro de los dos días siguientes a que termine.
 
-Eliminar tu cuenta no cancela una suscripción a Outlayr Pro, porque la cobra tu tienda de apps (el App Store de Apple en iPhone, Google Play en Android). En iPhone, cancélala en la app Configuración, en tu nombre y luego en Suscripciones. En Android, cancélala en la app Google Play Store, en tu foto de perfil, luego en Pagos y suscripciones y luego en Suscripciones. Tu tienda de apps conserva sus propios registros de compra.
+Eliminar tu cuenta no cancela una suscripción a Outlayr Pro, porque la cobra tu tienda de apps (el App Store de Apple en iPhone, Google Play en Android). En iPhone, cancélala en la app Configuración, en tu nombre y luego en Suscripciones. En Android, cancélala en la app Google Play Store, en tu foto de perfil, luego en Pagos y suscripciones y luego en Suscripciones. Tu tienda de apps conserva sus propios registros de compra. Una suscripción que compraste en la web es distinta: eliminar tu cuenta la cancela y elimina tu registro de cliente en Stripe, y Stripe y Link pueden conservar los registros de compra que exija la ley.
 
 ### Borrar este dispositivo
 
@@ -384,8 +387,8 @@ Si vives en California o en otro estado de EE. UU. con una ley de privacidad, es
 
 | Categoría y ejemplos | Recibida por |
 | --- | --- |
-| **Identificadores:** nombre, correo electrónico, ID de cuenta, ID de instalación, dirección IP | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (correo, logos), Anthropic (lo que muestre un estado de cuenta que importes) |
-| **Información comercial:** registros de suscripciones y compras | Apple, Google, RevenueCat, Hetzner |
+| **Identificadores:** nombre, correo electrónico, ID de cuenta, ID de instalación, dirección IP | Hetzner, RevenueCat, Stripe, Expo, PostHog, Google, Cloudflare (correo, logos), Anthropic (lo que muestre un estado de cuenta que importes) |
+| **Información comercial:** registros de suscripciones y compras | Apple, Google, Stripe, RevenueCat, Hetzner |
 | **Información de audio y visual:** clips de voz, escaneos de recibos, capturas de planes de cuotas, fotos adjuntas | ElevenLabs (clips), Anthropic (escaneos), Cloudflare (fotos) |
 | **Actividad en internet u otras redes:** dirección IP, agente de usuario, registros de solicitudes, uso de la app y del sitio web, reportes de fallas | Hetzner, Expo, PostHog, el proveedor que aloja nuestro sitio web |
 | **Registros que creas:** entradas sincronizadas, montos, comercios, notas, presupuestos | Hetzner; nombres de comercios, categorías y cuentas a Anthropic |
@@ -410,7 +413,7 @@ Ningún sistema es perfectamente seguro. Si encuentras un problema de seguridad,
 
 ## Transferencias internacionales
 
-Nuestros servidores están en Helsinki, Finlandia, en la Unión Europea. danestves LLC es una empresa estadounidense, y Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Apple, Google y Notion tratan los datos que reciben principalmente en Estados Unidos, cuyas leyes pueden protegerlos de forma distinta a las de tu país. Escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com) para conocer los detalles de las garantías que se aplican.
+Nuestros servidores están en Helsinki, Finlandia, en la Unión Europea. danestves LLC es una empresa estadounidense, y Anthropic, ElevenLabs, RevenueCat, Stripe, Expo, PostHog, Cloudflare, Apple, Google y Notion tratan los datos que reciben principalmente en Estados Unidos, cuyas leyes pueden protegerlos de forma distinta a las de tu país. Escribe a [support@tryoutlayr.com](mailto:support@tryoutlayr.com) para conocer los detalles de las garantías que se aplican.
 
 ## Menores
 
