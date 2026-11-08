@@ -3,7 +3,13 @@ import type { ProPlan } from "@outlayr/money/pro-prices";
 import { RiCheckLine, RiCloseLine, RiErrorWarningLine, RiInfinityLine, RiTimeLine } from "@remixicon/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLoaderData, useRouteContext, useSearch } from "@tanstack/react-router";
+import { Alert } from "panelui-web/alert";
+import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
+import { Card } from "panelui-web/card";
+import { Frame } from "panelui-web/frame";
+import { Table } from "panelui-web/table";
+import { Tabs } from "panelui-web/tabs";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -81,30 +87,30 @@ function Compare() {
     const copy = useIntlayer("paywall");
     return (
         <CardFrame title={copy.changes}>
-            <table className="w-full text-[13px]">
-                <thead>
-                    <tr className="text-muted-foreground border-border border-b text-right text-xs">
-                        <th aria-hidden="true" />
-                        <th className="h-9 px-5 font-medium">{copy.free}</th>
-                        <th className="h-9 px-5 font-medium">{copy.pro}</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <Table className="text-[13px]" density="compact" framed>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.Head aria-hidden="true" />
+                        <Table.Head align="end">{copy.free}</Table.Head>
+                        <Table.Head align="end">{copy.pro}</Table.Head>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
                     {TABLE.map(({ free, key, pro }) => (
-                        <tr className="border-border h-[37px] border-b last:border-0" key={key}>
-                            <td className="px-5 text-left">{copy.rows[key]}</td>
-                            <td className="text-muted-foreground w-[88px] px-5 text-right font-mono">
+                        <Table.Row className="h-[37px]" key={key}>
+                            <Table.Cell>{copy.rows[key]}</Table.Cell>
+                            <Table.Cell align="end" className="text-muted-foreground w-[88px] font-mono">
                                 {free ?? <RiCloseLine className="ml-auto" size={16} />}
-                            </td>
-                            <td className="text-primary w-[88px] px-5 text-right font-mono">
+                            </Table.Cell>
+                            <Table.Cell align="end" className="text-primary w-[88px] font-mono">
                                 {pro === "infinity" ? <RiInfinityLine className="ml-auto" size={16} /> : null}
                                 {pro === "check" ? <RiCheckLine className="ml-auto" size={16} /> : null}
                                 {pro === "500" ? pro : null}
-                            </td>
-                        </tr>
+                            </Table.Cell>
+                        </Table.Row>
                     ))}
-                </tbody>
-            </table>
+                </Table.Body>
+            </Table>
         </CardFrame>
     );
 }
@@ -114,15 +120,18 @@ function ComesBack() {
     return (
         <CardFrame title={copy.comesBack}>
             {COMES_BACK.map(([title, hint]) => (
-                <div className="border-border border-t px-5 py-3 first:border-0" key={title}>
-                    <p className="text-sm font-medium">{copy.back[title]}</p>
-                    <p className="text-muted-foreground text-[13px]">{copy.back[hint]}</p>
-                </div>
+                <Frame.Row className="border-border border-t px-5 py-3 first:border-0" key={title}>
+                    <Frame.Content>
+                        <Frame.Title className="text-sm font-medium">{copy.back[title]}</Frame.Title>
+                        <Frame.Description className="text-[13px]">{copy.back[hint]}</Frame.Description>
+                    </Frame.Content>
+                </Frame.Row>
             ))}
         </CardFrame>
     );
 }
 
+// PanelUI's Timeline is a media track editor, not a dated list of what happens next.
 function Timeline({ rows }: { rows: readonly (readonly [ReactNode, ReactNode])[] }) {
     return (
         <div className="border-border mt-5 border-t text-[13px]">
@@ -140,9 +149,13 @@ function Timeline({ rows }: { rows: readonly (readonly [ReactNode, ReactNode])[]
 function Notice({ icon = "warning", text }: { icon?: "time" | "warning"; text: ReactNode }) {
     const Icon = icon === "time" ? RiTimeLine : RiErrorWarningLine;
     return (
-        <output className="border-border flex gap-2 rounded-[10px] border bg-white/[0.024] p-3 text-[13px]">
-            <Icon className="text-muted-foreground mt-0.5 shrink-0" size={16} />
-            <p>{text}</p>
+        <output className="block">
+            <Alert variant="plain">
+                <Alert.Icon>
+                    <Icon />
+                </Alert.Icon>
+                <Alert.Description className="text-[13px]">{text}</Alert.Description>
+            </Alert>
         </output>
     );
 }
@@ -152,9 +165,14 @@ function Links({ onRestore, restoring }: { onRestore?: () => void; restoring?: b
     return (
         <div className="text-muted-foreground mt-3.5 flex justify-center gap-4 text-xs">
             {onRestore ? (
-                <button className="hover:text-foreground" disabled={restoring} onClick={onRestore} type="button">
+                <Button
+                    className="text-muted-foreground hover:text-foreground h-auto p-0 text-xs font-normal hover:no-underline"
+                    disabled={restoring}
+                    onClick={onRestore}
+                    variant="link"
+                >
                     {restoring ? copy.restoring : copy.restore}
-                </button>
+                </Button>
             ) : null}
             <LocalizedLink className="hover:text-foreground" to="/terms">
                 {copy.terms}
@@ -168,7 +186,7 @@ function Links({ onRestore, restoring }: { onRestore?: () => void; restoring?: b
 
 function Panel({ children, terrain = false }: { children: ReactNode; terrain?: boolean }) {
     return (
-        <div className="bg-card border-border relative isolate flex min-h-[480px] flex-col overflow-hidden rounded-2xl border p-5">
+        <Card className="relative isolate flex min-h-[480px] flex-col overflow-hidden rounded-2xl p-5">
             {terrain ? (
                 <img
                     alt=""
@@ -179,7 +197,7 @@ function Panel({ children, terrain = false }: { children: ReactNode; terrain?: b
                 />
             ) : null}
             {children}
-        </div>
+        </Card>
     );
 }
 
@@ -223,29 +241,26 @@ function Offer({
     })();
     return (
         <Panel>
-            <fieldset aria-label={copy.plans.label.value} className="bg-app-fill mb-5 flex rounded-[10px] p-[3px]">
-                {PLANS.map((option) => (
-                    <button
-                        aria-pressed={option === plan}
-                        className="dash-seg flex-1"
-                        data-on={option === plan}
-                        key={option}
-                        onClick={() => setPlan(option)}
-                        type="button"
-                    >
-                        {copy.plans[option]}
-                    </button>
-                ))}
-            </fieldset>
+            <Tabs className="mb-5" onValueChange={(next: ProPlan) => setPlan(next)} value={plan}>
+                <Tabs.List aria-label={copy.plans.label.value} className="w-full">
+                    {PLANS.map((option) => (
+                        <Tabs.Trigger className="flex-1" key={option} value={option}>
+                            {copy.plans[option]}
+                        </Tabs.Trigger>
+                    ))}
+                </Tabs.List>
+            </Tabs>
             {plan === "annual" ? (
                 <>
                     <div className="mb-2 flex gap-1.5 text-xs font-medium">
                         {trial ? (
-                            <span className="text-app-income bg-app-fill rounded-md px-2 py-0.5">{copy.bestValue}</span>
+                            <Badge className="text-app-income bg-app-fill rounded-md" variant="secondary">
+                                {copy.bestValue}
+                            </Badge>
                         ) : null}
-                        <span className="text-app-income bg-app-fill rounded-md px-2 py-0.5">
+                        <Badge className="text-app-income bg-app-fill rounded-md" variant="secondary">
                             {copy.save({ percent: prices.saving })}
-                        </span>
+                        </Badge>
                     </div>
                     <p className="text-[32px] leading-10 font-semibold tracking-[-0.02em]">
                         {prices.annual}{" "}
