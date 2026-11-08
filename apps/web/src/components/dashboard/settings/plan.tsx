@@ -3,8 +3,11 @@ import { api } from "@outlayr/backend/convex/_generated/api";
 import { isPerson } from "@outlayr/money/account-kind";
 import { RiCalendarCheckLine, RiFlashlightLine, RiLoopLeftLine, RiMoneyDollarCircleLine } from "@remixicon/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
+import { Frame } from "panelui-web/frame";
+import { Table } from "panelui-web/table";
 import { useToast } from "panelui-web/toast";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -38,16 +41,10 @@ function Figure({ children }: { children: ReactNode }) {
     return <span className="font-mono text-[13px] tabular-nums">{children}</span>;
 }
 
-function Badge({ children, tone }: { children: ReactNode; tone: "gain" | "warn" }) {
-    return (
-        <span
-            className={`border-border inline-flex h-[22px] items-center gap-1.5 rounded-md border px-[7px] text-xs font-medium whitespace-nowrap ${tone === "gain" ? "text-app-income" : "text-app-warn"}`}
-        >
-            <span className="size-1.5 rounded-full bg-current" />
-            {children}
-        </span>
-    );
-}
+const TONE = {
+    gain: "text-app-income [&>[data-slot=badge-dot]]:text-app-income",
+    warn: "text-app-warn [&>[data-slot=badge-dot]]:text-app-warn",
+} as const;
 
 function useFormat() {
     const { locale } = useLocale();
@@ -86,18 +83,22 @@ function ConfirmCancel({ expiresAtMs, onClose }: { expiresAtMs: number; onClose:
                     <Dialog.Title>{confirm.title}</Dialog.Title>
                     <Dialog.Description>{confirm.body({ date: date(expiresAtMs) })}</Dialog.Description>
                 </Dialog.Header>
-                <div className="px-5 pb-2 text-[13px]">
-                    {[
-                        [confirm.sync, confirm.off],
-                        [confirm.autoLog, "30"],
-                        [confirm.budgets, String(FREE.budgets)],
-                    ].map(([label, value], index) => (
-                        <div className="border-border flex h-10 items-center justify-between border-t" key={index}>
-                            <span className="text-muted-foreground">{label}</span>
-                            <span>{value}</span>
-                        </div>
-                    ))}
-                </div>
+                <Dialog.Body>
+                    <Table className="text-[13px]" density="compact">
+                        <Table.Body>
+                            {[
+                                [confirm.sync, confirm.off],
+                                [confirm.autoLog, "30"],
+                                [confirm.budgets, String(FREE.budgets)],
+                            ].map(([label, value], index) => (
+                                <Table.Row className="h-10" key={index}>
+                                    <Table.Cell className="text-muted-foreground">{label}</Table.Cell>
+                                    <Table.Cell align="end">{value}</Table.Cell>
+                                </Table.Row>
+                            ))}
+                        </Table.Body>
+                    </Table>
+                </Dialog.Body>
                 <Dialog.Footer>
                     <Button onClick={onClose} variant="outline">
                         {keepPro}
@@ -113,10 +114,10 @@ function ConfirmCancel({ expiresAtMs, onClose }: { expiresAtMs: number; onClose:
 
 function Fact({ children, label }: { children?: ReactNode; label: ReactNode }) {
     return (
-        <div className="border-border flex min-h-11 items-center justify-between gap-3 border-t px-4 py-1.5 text-[13px] first:border-t-0">
-            <span className="text-muted-foreground mr-auto">{label}</span>
-            {children}
-        </div>
+        <Frame.Row className="border-border min-h-11 border-t px-4 py-1.5 text-[13px] first:border-t-0">
+            <Frame.Content className="text-muted-foreground">{label}</Frame.Content>
+            {children ? <Frame.Actions>{children}</Frame.Actions> : null}
+        </Frame.Row>
     );
 }
 
@@ -153,7 +154,14 @@ function Term({ plan }: { plan: Held }) {
 
     if (plan.state === "lifetime") {
         return (
-            <SettingsCard action={<Badge tone="gain">{copy.badge.lifetime}</Badge>} title={copy.pro}>
+            <SettingsCard
+                action={
+                    <Badge className={TONE.gain} dot variant="outline">
+                        {copy.badge.lifetime}
+                    </Badge>
+                }
+                title={copy.pro}
+            >
                 {nameRow}
                 {lastPayment ? (
                     <>
@@ -176,7 +184,11 @@ function Term({ plan }: { plan: Held }) {
     if (plan.state === "ends") {
         return (
             <SettingsCard
-                action={<Badge tone="warn">{copy.badge.ends({ date: expires ?? "" })}</Badge>}
+                action={
+                    <Badge className={TONE.warn} dot variant="outline">
+                        {copy.badge.ends({ date: expires ?? "" })}
+                    </Badge>
+                }
                 footer={
                     <div className="flex w-full items-center gap-3 max-sm:flex-wrap">
                         <span className="text-muted-foreground mr-auto text-[13px]">{copy.endsFooter}</span>
@@ -213,7 +225,7 @@ function Term({ plan }: { plan: Held }) {
         <>
             <SettingsCard
                 action={
-                    <Badge tone={trial ? "warn" : "gain"}>
+                    <Badge className={trial ? TONE.warn : TONE.gain} dot variant="outline">
                         {trial ? copy.badge.trial({ date: expires ?? "" }) : copy.badge.renews({ date: expires ?? "" })}
                     </Badge>
                 }
@@ -274,29 +286,44 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
     ];
     return (
         <SettingsCard title={endsSoon ? use.onFree : use.title}>
-            <div className="text-muted-foreground border-border flex h-9 items-center justify-end gap-4 px-4 text-xs font-medium">
-                <span className="w-16 text-right">{use.using}</span>
-                <span className="w-28 text-right">{use.limit}</span>
-            </div>
-            {counted.map(({ label, limit, using }, index) => (
-                <div className="border-border flex h-10 items-center gap-4 border-t px-4 text-[13px]" key={index}>
-                    <span className="mr-auto">{label}</span>
-                    <Figure>{using ?? ""}</Figure>
-                    <span className="text-muted-foreground flex w-28 items-center justify-end gap-2 font-mono">
-                        {endsSoon && using !== null && using > limit ? (
-                            <span className="text-app-warn font-sans text-xs">{use.over}</span>
-                        ) : null}
-                        {limit}
-                    </span>
-                </div>
-            ))}
-            {[use.sync, use.ai].map((label, index) => (
-                <div className="border-border flex h-10 items-center gap-4 border-t px-4 text-[13px]" key={index}>
-                    <span className="mr-auto">{label}</span>
-                    <span>{use.on}</span>
-                    <span className="text-muted-foreground w-28 text-right">{use.off}</span>
-                </div>
-            ))}
+            <Table className="text-[13px]" density="compact" framed>
+                <Table.Header>
+                    <Table.Row>
+                        <Table.Head aria-hidden="true" />
+                        <Table.Head align="end" className="w-16">
+                            {use.using}
+                        </Table.Head>
+                        <Table.Head align="end" className="w-28">
+                            {use.limit}
+                        </Table.Head>
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    {counted.map(({ label, limit, using }, index) => (
+                        <Table.Row className="h-10" key={index}>
+                            <Table.Cell>{label}</Table.Cell>
+                            <Table.Cell align="end" className="font-mono">
+                                {using ?? ""}
+                            </Table.Cell>
+                            <Table.Cell align="end" className="text-muted-foreground font-mono">
+                                {endsSoon && using !== null && using > limit ? (
+                                    <span className="text-app-warn mr-2 font-sans text-xs">{use.over}</span>
+                                ) : null}
+                                {limit}
+                            </Table.Cell>
+                        </Table.Row>
+                    ))}
+                    {[use.sync, use.ai].map((label, index) => (
+                        <Table.Row className="h-10" key={index}>
+                            <Table.Cell>{label}</Table.Cell>
+                            <Table.Cell align="end">{use.on}</Table.Cell>
+                            <Table.Cell align="end" className="text-muted-foreground">
+                                {use.off}
+                            </Table.Cell>
+                        </Table.Row>
+                    ))}
+                </Table.Body>
+            </Table>
         </SettingsCard>
     );
 }
@@ -395,17 +422,18 @@ function Payments({ plan }: { plan: Held }) {
             title={copy.payments}
         >
             {plan.payments.map((payment) => (
-                <div
-                    className="border-border flex h-11 items-center justify-between border-t px-4 first:border-t-0"
-                    key={payment.atMs}
-                >
-                    <Figure>{date(payment.atMs)}</Figure>
-                    {payment.amount === 0 ? (
-                        <span className="text-[13px]">{copy.freeTrial}</span>
-                    ) : (
-                        <Figure>{money(payment.amount, payment.currency)}</Figure>
-                    )}
-                </div>
+                <Frame.Row className="border-border min-h-11 border-t px-4 py-1.5 first:border-t-0" key={payment.atMs}>
+                    <Frame.Content>
+                        <Figure>{date(payment.atMs)}</Figure>
+                    </Frame.Content>
+                    <Frame.Actions>
+                        {payment.amount === 0 ? (
+                            <span className="text-[13px]">{copy.freeTrial}</span>
+                        ) : (
+                            <Figure>{money(payment.amount, payment.currency)}</Figure>
+                        )}
+                    </Frame.Actions>
+                </Frame.Row>
             ))}
         </SettingsCard>
     );

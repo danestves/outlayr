@@ -2,10 +2,13 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 @import "@fontsource-variable/nunito";
+@source "../node_modules/panelui-web/dist/components/alert/index.js";
 @source "../node_modules/panelui-web/dist/components/alert-dialog/index.js";
 @source "../node_modules/panelui-web/dist/components/area-chart/index.js";
+@source "../node_modules/panelui-web/dist/components/badge/index.js";
 @source "../node_modules/panelui-web/dist/components/bar-chart/index.js";
 @source "../node_modules/panelui-web/dist/components/button/index.js";
+@source "../node_modules/panelui-web/dist/components/card/index.js";
 @source "../node_modules/panelui-web/dist/components/chip/index.js";
 @source "../node_modules/panelui-web/dist/components/command/index.js";
 @source "../node_modules/panelui-web/dist/components/day-grid/index.js";
