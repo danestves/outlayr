@@ -86,7 +86,9 @@ function EntryBody({ onStep, row }: { onStep: (by: 1 | -1) => void; row: FoldedR
         return <TransferBody accountName={accountName} fees={fees} row={row} stepper={stepper} when={when} />;
     }
     const top = ledger.categories.get(row.topId);
-    const category = row.categoryId ? ledger.categories.get(row.categoryId) : undefined;
+    const category = row.categoryId
+        ? ledger.books.categories.find((each) => each.localId === row.categoryId)
+        : undefined;
     const name = top ? categoryName(top) : "";
     const merchant = row.note.trim() || name;
     const standsAlone = row.feeFor !== null;
@@ -126,7 +128,9 @@ function EntryBody({ onStep, row }: { onStep: (by: 1 | -1) => void; row: FoldedR
                                 />
                                 <span className="truncate">
                                     {name}
-                                    {category && category.id !== top?.id ? ` · ${categoryName(category)}` : ""}
+                                    {category?.name && category.localId !== top?.id
+                                        ? ` · ${categoryName({ id: category.localId, name: category.name })}`
+                                        : ""}
                                 </span>
                             </>
                         )}

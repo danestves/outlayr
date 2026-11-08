@@ -67,12 +67,13 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     );
     const names = useMemo(() => {
         const account = (id: string | null) => (id === null ? "" : (ledger.accounts.get(id)?.name ?? ""));
+        const books = new Map(ledger.books.categories.map((row) => [row.localId, row]));
         const category = (id: string | null) => {
             if (id === null || id === UNCATEGORIZED_ID) {
                 return id === null ? "" : uncategorized.value;
             }
-            const found = ledger.categories.get(id) ?? ledger.budgetTargets.get(id);
-            return found ? titled(found.name, locale) : "";
+            const found = ledger.categories.get(id) ?? books.get(id);
+            return found?.name ? titled(found.name, locale) : "";
         };
         const merchant = (row: LedgerRow) => row.note.trim() || category(row.topId);
         return { account, category, merchant };

@@ -162,6 +162,11 @@ describe("queryRows", () => {
         expect(ids({ min: 103 })).toStrictEqual(["pay", "amazon", "move"]);
     });
 
+    it("keeps a fee on its entry when a filter would drop the fee itself", () => {
+        const [amazon] = queryRows(ledger, query({ categories: ["food"], q: "amazon" }), textOf);
+        expect(amazon?.fees.map((fee) => fee.id)).toStrictEqual(["foreign fee"]);
+    });
+
     it("searches every day when the range is all time", () => {
         expect(ids({ q: "october" })).toStrictEqual([]);
         expect(ids({ q: "october", range: null })).toStrictEqual(["october"]);
@@ -197,7 +202,7 @@ describe("exportLines", () => {
         };
         const lines = exportLines(ledger, queryRows(ledger, query({ max: 600, min: 100 }), textOf), names);
         expect(lines).toStrictEqual([
-            ["2026-11-05", "chase → savings", "", "chase", "Transfer", 500, "USD", 500],
+            ["2026-11-05", "chase → savings", "", "chase", "Transfer", -500, "USD", -500],
             ["2026-11-05", "wire fee", "uncategorized", "chase", "Fee", -25, "USD", -25],
             ["2026-11-06", "amazon", "food", "chase", "Expense", -100, "USD", -100],
             ["2026-11-06", "foreign fee", "uncategorized", "chase", "Fee", -3, "USD", -3],

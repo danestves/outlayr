@@ -100,9 +100,17 @@ export function queryRows(
             }
         }
     });
+    // A fee rides with what it was charged for, even when its own category, account or kind is filtered out.
+    const kept = new Set(typed.map((row) => row.id));
+    const fees = ledger.rows.filter((row) => row.feeFor !== null && kept.has(row.feeFor) && !kept.has(row.id));
     const needle = query.q.trim().toLocaleLowerCase();
     const amount = AMOUNT.test(needle) ? Math.abs(Number(needle.replace(",", "."))) : null;
-    return foldFees(typed).filter((row) => {
+    const folded = foldFees([...typed, ...fees]);
+    const ordered =
+        query.sort === "largest"
+            ? folded.toSorted((a, b) => figureOf(ledger, b).amount - figureOf(ledger, a).amount || b.at - a.at)
+            : folded;
+    return ordered.filter((row) => {
         const figure = figureOf(ledger, row).amount;
         if ((query.min !== null && figure < query.min) || (query.max !== null && figure > query.max)) {
             return false;
@@ -221,9 +229,9 @@ export function exportLines(ledger: Pick<Ledger, "currency">, rows: readonly Fol
                         "",
                         names.account(row.fromId),
                         names.kind.transfer,
-                        row.sent,
+                        -row.sent,
                         row.sentCurrency,
-                        row.amount,
+                        -row.amount,
                     ],
                     ...row.fees.map((fee) => entry(fee, names.kind.fee)),
                 ];
