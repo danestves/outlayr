@@ -1,7 +1,14 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { isPerson } from "@outlayr/money/account-kind";
-import { RiCalendarCheckLine, RiFlashlightLine, RiLoopLeftLine, RiMoneyDollarCircleLine } from "@remixicon/react";
+import {
+    RiCalendarCheckLine,
+    RiCheckLine,
+    RiFlashlightLine,
+    RiInfinityLine,
+    RiLoopLeftLine,
+    RiMoneyDollarCircleLine,
+} from "@remixicon/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
@@ -19,6 +26,7 @@ import { useLedgerBooks } from "@/lib/ledger-db";
 import { Row, SectionHead, SettingsCard } from "./parts";
 
 const FREE = { accounts: 3, budgets: 2, captures: 20, currencies: 1 } as const;
+const PRO_CAPTURES = 500;
 const STORE_URL = {
     app_store: "https://apps.apple.com/account/subscriptions",
     play_store: "https://play.google.com/store/account/subscriptions",
@@ -274,13 +282,15 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
     const { data: limits } = useQuery(convexQuery(api.limits.mine, {}));
     const accounts = books.accounts.filter((account) => !isPerson(account));
     const captures = limits ? Math.max(0, Math.round(limits.captures.capacity - limits.captures.value)) : null;
+    const unlimited = <RiInfinityLine aria-label={use.unlimited.value} className="ml-auto" size={16} />;
     const counted = [
-        { label: use.captures, limit: FREE.captures, using: captures },
-        { label: use.accounts, limit: FREE.accounts, using: accounts.length },
-        { label: use.budgets, limit: FREE.budgets, using: books.budgets.length },
+        { free: FREE.captures, label: use.captures, pro: PRO_CAPTURES, using: captures },
+        { free: FREE.accounts, label: use.accounts, pro: unlimited, using: accounts.length },
+        { free: FREE.budgets, label: use.budgets, pro: unlimited, using: books.budgets.length },
         {
+            free: FREE.currencies,
             label: use.currencies,
-            limit: FREE.currencies,
+            pro: unlimited,
             using: new Set(accounts.map((account) => account.currency)).size,
         },
     ];
@@ -294,22 +304,22 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
                             {use.using}
                         </Table.Head>
                         <Table.Head align="end" className="w-28">
-                            {use.limit}
+                            {endsSoon ? use.limit : use.proLimit}
                         </Table.Head>
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
-                    {counted.map(({ label, limit, using }, index) => (
+                    {counted.map(({ free, label, pro, using }, index) => (
                         <Table.Row className="h-10" key={index}>
                             <Table.Cell>{label}</Table.Cell>
                             <Table.Cell align="end" className="font-mono">
                                 {using ?? ""}
                             </Table.Cell>
                             <Table.Cell align="end" className="text-muted-foreground font-mono">
-                                {endsSoon && using !== null && using > limit ? (
+                                {endsSoon && using !== null && using > free ? (
                                     <span className="text-app-warn mr-2 font-sans text-xs">{use.over}</span>
                                 ) : null}
-                                {limit}
+                                {endsSoon ? free : pro}
                             </Table.Cell>
                         </Table.Row>
                     ))}
@@ -318,7 +328,11 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
                             <Table.Cell>{label}</Table.Cell>
                             <Table.Cell align="end">{use.on}</Table.Cell>
                             <Table.Cell align="end" className="text-muted-foreground">
-                                {use.off}
+                                {endsSoon ? (
+                                    use.off
+                                ) : (
+                                    <RiCheckLine aria-label={use.on.value} className="ml-auto" size={16} />
+                                )}
                             </Table.Cell>
                         </Table.Row>
                     ))}
