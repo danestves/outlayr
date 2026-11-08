@@ -1,3 +1,11 @@
+import FlashIcon from "@hugeicons/core-free-icons/FlashIcon";
+import Home03Icon from "@hugeicons/core-free-icons/Home03Icon";
+import KeyboardIcon from "@hugeicons/core-free-icons/KeyboardIcon";
+import Mic01Icon from "@hugeicons/core-free-icons/Mic01Icon";
+import ScanIcon from "@hugeicons/core-free-icons/ScanIcon";
+import ShoppingCart01Icon from "@hugeicons/core-free-icons/ShoppingCart01Icon";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { CSSProperties, ReactNode } from "react";
 
 import type { Act } from "@/stageshow/act";
@@ -53,59 +61,26 @@ export function Money({ value, size, sign = "" }: { sign?: string; size: number;
 }
 
 const ICONS = {
-    bolt: ["M13.2 3 5.5 13.4h6.1L10.8 21l7.7-10.4h-6.1z"],
-    cart: ["M2.8 4h2.1l2.2 10.6h10.6L19.8 7H6.1", "M10.2 10.5c1 .9 2.6.9 3.6 0"],
-    check: ["M5 12.6l4.4 4.4L19 7.4"],
-    chevron: ["M9.5 6l6 6-6 6"],
-    house: [
-        "M4.2 10.4 12 4l7.8 6.4v8.4a1.7 1.7 0 0 1-1.7 1.7H5.9a1.7 1.7 0 0 1-1.7-1.7z",
-        "M9.4 15.2c1.5 1.3 3.7 1.3 5.2 0",
-    ],
-    keyboard: [
-        "M3.5 6.5h17a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-17a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z",
-        "M7 10.2h.01M10.3 10.2h.01M13.7 10.2h.01M17 10.2h.01M8 14h8",
-    ],
-    mic: [
-        "M12 3.2a3 3 0 0 1 3 3v5.3a3 3 0 0 1-6 0V6.2a3 3 0 0 1 3-3z",
-        "M5.6 11.2a6.4 6.4 0 0 0 12.8 0",
-        "M12 17.6v3.2",
-    ],
-    scan: [
-        "M3.5 8V5.5a2 2 0 0 1 2-2H8M16 3.5h2.5a2 2 0 0 1 2 2V8M20.5 16v2.5a2 2 0 0 1-2 2H16M8 20.5H5.5a2 2 0 0 1-2-2V16",
-        "M7.5 12h9",
-    ],
-    transfer: ["M16.5 4.5 20 8l-3.5 3.5M20 8H8.5M7.5 12.5 4 16l3.5 3.5M4 16h11.5"],
+    bolt: FlashIcon,
+    cart: ShoppingCart01Icon,
+    check: Tick02Icon,
+    house: Home03Icon,
+    keyboard: KeyboardIcon,
+    mic: Mic01Icon,
+    scan: ScanIcon,
 } as const;
 
 export type FilmIconName = keyof typeof ICONS;
 
 export function FilmIcon({ name, size, stroke = 1.6 }: { name: FilmIconName; size: number; stroke?: number }) {
     return (
-        <svg
+        <HugeiconsIcon
             aria-hidden
-            fill="none"
-            height={size}
+            icon={ICONS[name]}
+            size={size}
+            strokeWidth={stroke}
             style={{ display: "block", flexShrink: 0 }}
-            viewBox="0 0 24 24"
-            width={size}
-        >
-            {ICONS[name].map((d) => (
-                <path
-                    d={d}
-                    key={d}
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={stroke}
-                />
-            ))}
-            {name === "cart" ? (
-                <>
-                    <circle cx="9" cy="19" fill="currentColor" r="1.3" />
-                    <circle cx="16.4" cy="19" fill="currentColor" r="1.3" />
-                </>
-            ) : null}
-        </svg>
+        />
     );
 }
 

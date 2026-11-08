@@ -1,3 +1,7 @@
+import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
+import ArrowUpDownIcon from "@hugeicons/core-free-icons/ArrowUpDownIcon";
+import Eraser01Icon from "@hugeicons/core-free-icons/Eraser01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useId, useReducer, useRef, useState } from "react";
 import type { FocusEvent, KeyboardEvent, ReactNode } from "react";
 import { flushSync } from "react-dom";
@@ -490,51 +494,19 @@ function CodeButton({
 
 function SwapGlyph() {
     return (
-        <svg
+        <HugeiconsIcon
             aria-hidden="true"
             className="ml-[0.12em] inline size-[0.4em] align-[0.12em]"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            icon={ArrowUpDownIcon}
             strokeWidth={2.5}
-            viewBox="0 0 24 24"
-        >
-            <path d="M7 20V4M3 8l4-4 4 4M17 4v16M13 16l4 4 4-4" />
-        </svg>
+        />
     );
 }
 
 function ChevronGlyph() {
-    return (
-        <svg
-            aria-hidden="true"
-            className="size-3"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            viewBox="0 0 24 24"
-        >
-            <path d="m6 9 6 6 6-6" />
-        </svg>
-    );
+    return <HugeiconsIcon aria-hidden="true" className="size-3" icon={ArrowDown01Icon} strokeWidth={2} />;
 }
 
 function DeleteGlyph() {
-    return (
-        <svg
-            aria-hidden="true"
-            className="size-5"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.75}
-            viewBox="0 0 24 24"
-        >
-            <path d="M9 5h11v14H9l-6-7zM13 9l5 6M18 9l-5 6" />
-        </svg>
-    );
+    return <HugeiconsIcon aria-hidden="true" className="size-5" icon={Eraser01Icon} strokeWidth={1.75} />;
 }
