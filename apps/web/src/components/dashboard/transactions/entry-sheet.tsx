@@ -1,4 +1,4 @@
-import { RiArrowDownSLine, RiArrowUpSLine, RiRepeatLine } from "@remixicon/react";
+import { RiArrowDownSLine, RiArrowUpSLine, RiDeleteBinLine, RiRepeatLine } from "@remixicon/react";
 import { Sheet } from "panelui-web/sheet";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -27,12 +27,13 @@ function Field({ children, label }: { children: ReactNode; label: ReactNode }) {
 
 interface EntrySheetProps {
     onClose: () => void;
+    onDelete: ((row: FoldedRow) => void) | null;
     onStep: (by: 1 | -1) => void;
     row: FoldedRow | null;
 }
 
-/** One entry or transfer, read-only: the web cannot write to the ledger yet. */
-export function EntrySheet({ onClose, onStep, row }: EntrySheetProps) {
+/** One entry or transfer. `onDelete` is set only for what the web may delete. */
+export function EntrySheet({ onClose, onDelete, onStep, row }: EntrySheetProps) {
     const wide = useWide();
     return (
         <Sheet
@@ -41,16 +42,16 @@ export function EntrySheet({ onClose, onStep, row }: EntrySheetProps) {
             side={wide ? "right" : "bottom"}
         >
             <Sheet.Content className="app-shell dash-sheet ph-no-capture" detached={wide}>
-                {row ? <EntryBody onStep={onStep} row={row} /> : null}
+                {row ? <EntryBody onDelete={onDelete} onStep={onStep} row={row} /> : null}
             </Sheet.Content>
         </Sheet>
     );
 }
 
-function EntryBody({ onStep, row }: { onStep: (by: 1 | -1) => void; row: FoldedRow }) {
+function EntryBody({ onDelete, onStep, row }: Omit<EntrySheetProps, "onClose" | "row"> & { row: FoldedRow }) {
     const { ledger } = useDashboard();
     const { transactions: copy } = useIntlayer("dashboard-home");
-    const { detail } = useIntlayer("dashboard-transactions");
+    const { bulk, detail } = useIntlayer("dashboard-transactions");
     const categoryName = useCategoryName();
     const date = useDateFormat();
     const { clockTime, money } = useDisplayFormat();
@@ -156,7 +157,19 @@ function EntryBody({ onStep, row }: { onStep: (by: 1 | -1) => void; row: FoldedR
                         </Field>
                     ) : null}
                 </dl>
-                <p className="text-muted-foreground py-4 text-[13px]">{detail.editOnPhone}</p>
+                <div className="flex items-center gap-3 py-4">
+                    <p className="text-muted-foreground text-[13px]">{detail.editOnPhone}</p>
+                    {onDelete ? (
+                        <button
+                            className="dash-ob text-destructive ml-auto gap-1.5"
+                            onClick={() => onDelete(row)}
+                            type="button"
+                        >
+                            <RiDeleteBinLine size={14} />
+                            {bulk.delete}
+                        </button>
+                    ) : null}
+                </div>
             </Sheet.Body>
         </>
     );

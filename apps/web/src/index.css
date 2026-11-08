@@ -22,6 +22,7 @@
 @source "../node_modules/panelui-web/dist/components/switch/index.js";
 @source "../node_modules/panelui-web/dist/components/table/index.js";
 @source "../node_modules/panelui-web/dist/components/tabs/index.js";
+@source "../node_modules/panelui-web/dist/components/checkbox/index.js";
 @source "../node_modules/panelui-web/dist/components/toast/index.js";
 @source "../node_modules/panelui-web/dist/components/usage/index.js";
 @source "../node_modules/panelui-web/dist/components/waterfall-chart/index.js";

@@ -1,8 +1,15 @@
 import { placed } from "@outlayr/backend/confect/lib/ledgerLog";
-import { RiArrowUpDownLine, RiCheckLine, RiSearch2Line } from "@remixicon/react";
+import {
+    RiArrowUpDownLine,
+    RiCheckLine,
+    RiCloseLine,
+    RiDeleteBinLine,
+    RiDownload2Line,
+    RiSearch2Line,
+} from "@remixicon/react";
 import { Menu } from "panelui-web/menu";
 import { Tabs } from "panelui-web/tabs";
-import { useEffect, useEffectEvent, useMemo, useRef } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -15,12 +22,14 @@ import { useCatalog } from "../home/catalog";
 import { titled } from "../home/format";
 import type { FoldedRow, TransactionSort } from "../home/rows";
 import { QuietTable } from "../home/setup";
+import { plainEntries } from "./delete";
 import { EntrySheet } from "./entry-sheet";
 import { LedgerTable } from "./ledger-table";
 import { ENTRY_TYPES, csvOf, exportLines, linesOf, queryRows, rangeOf, tally } from "./model";
 import { pageQueryOf } from "./search";
 import type { PageSearch, SearchPatch } from "./search";
 import { Toolbar } from "./toolbar";
+import { useDeleteEntries } from "./use-delete";
 
 const TABS = ["all", "expenses", "income", "transfers"] as const;
 const SORTS = ["newest", "oldest", "largest"] as const satisfies readonly TransactionSort[];
@@ -124,6 +133,22 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             setSearch({ entry: next.id }, { replace: true });
         }
     };
+    const [pickedIds, setPickedIds] = useState<ReadonlySet<string>>(new Set());
+    const picked = useMemo(() => rows.filter((row) => pickedIds.has(row.id)), [pickedIds, rows]);
+    const pickedTotals = useMemo(() => tally(ledger, picked), [ledger, picked]);
+    const plain = useMemo(() => plainEntries(ledger.books), [ledger.books]);
+    const deleteEntries = useDeleteEntries();
+    const clearPicked = () => setPickedIds(new Set());
+    const deletePicked = () => {
+        const ids = picked.map((row) => row.id).filter((id) => plain.has(id));
+        deleteEntries(ids, picked.length - ids.length);
+        clearPicked();
+    };
+    const onEscape = useEffectEvent(() => {
+        if (selected === null) {
+            clearPicked();
+        }
+    });
     const stepByKey = useEffectEvent(step);
     // oxlint-disable-next-line outlayr/react-effect-budget -- the keyboard is an external system.
     useEffect(() => {
@@ -141,6 +166,8 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                 searchField.current?.focus();
             } else if (event.key === "j" || event.key === "k") {
                 stepByKey(event.key === "j" ? 1 : -1);
+            } else if (event.key === "Escape") {
+                onEscape();
             }
         };
         document.addEventListener("keydown", onKey);
@@ -154,7 +181,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
         query.max !== null ||
         query.type !== undefined;
     const tab = query.type ?? "all";
-    const exportCsv = () => {
+    const exportCsv = (listed: readonly FoldedRow[]) => {
         const header = [
             words.csv.date.value,
             words.csv.merchant.value,
@@ -165,7 +192,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             words.csv.currency.value,
             words.csv.inMain({ currency: ledger.currency }).value,
         ];
-        const exported = exportLines(ledger, rows, {
+        const exported = exportLines(ledger, listed, {
             account: names.account,
             category: (row) => (row.feeFor === null ? names.category(row.topId) : ""),
             currency: (row) => {
@@ -275,7 +302,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const count = (value: number) => value.toLocaleString(locale);
     return (
         <main className="@container min-w-0 px-4 pb-5 sm:px-6">
-            <Toolbar onExport={exportCsv} query={query} setSearch={setSearch} setup={fresh} />
+            <Toolbar onExport={() => exportCsv(rows)} query={query} setSearch={setSearch} setup={fresh} />
             <CardFrame
                 action={fresh ? undefined : header}
                 footer={
@@ -320,11 +347,77 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                         label={home.title.value}
                         lines={lines}
                         onOpen={(row) => setSearch({ entry: row.id })}
+                        picking={{
+                            all: rows.length > 0 && picked.length === rows.length,
+                            ids: pickedIds,
+                            onPick: (id) =>
+                                setPickedIds((current) => {
+                                    const next = new Set(current);
+                                    if (!next.delete(id)) {
+                                        next.add(id);
+                                    }
+                                    return next;
+                                }),
+                            onPickAll: () =>
+                                setPickedIds(new Set(picked.length === rows.length ? [] : rows.map((row) => row.id))),
+                            some: picked.length > 0,
+                        }}
                         selected={selected?.id ?? null}
                     />
                 )}
+                {picked.length > 0 ? (
+                    <div className="sticky bottom-3 z-[2] hidden h-0 items-end justify-center @2xl:flex">
+                        <div
+                            aria-label={words.bulk.selected({ count: String(picked.length) }).value}
+                            className="bg-popover border-border flex h-11 items-center gap-1 rounded-xl border pr-1.5 pl-3.5 text-[13px] whitespace-nowrap shadow-lg"
+                            role="toolbar"
+                        >
+                            <span className="font-medium">{words.bulk.selected({ count: String(picked.length) })}</span>
+                            <span className="dash-figure text-muted-foreground border-border mr-1 border-r pr-3 pl-2">
+                                {money(pickedTotals.in - pickedTotals.out, ledger.currency, "always")}
+                            </span>
+                            <button
+                                className="dash-ob gap-1.5 border-0"
+                                onClick={() => exportCsv(picked)}
+                                type="button"
+                            >
+                                <RiDownload2Line size={14} />
+                                {words.export}
+                            </button>
+                            <button
+                                className="dash-ob gap-1.5 border-0"
+                                disabled={!picked.some((row) => plain.has(row.id))}
+                                onClick={deletePicked}
+                                type="button"
+                            >
+                                <RiDeleteBinLine size={14} />
+                                {words.bulk.delete}
+                            </button>
+                            <button
+                                aria-label={words.bulk.clear.value}
+                                className="dash-icon-btn text-muted-foreground size-8"
+                                onClick={clearPicked}
+                                type="button"
+                            >
+                                <RiCloseLine size={16} />
+                            </button>
+                        </div>
+                    </div>
+                ) : null}
             </CardFrame>
-            <EntrySheet onClose={() => setSearch({ entry: null })} onStep={step} row={selected} />
+            <EntrySheet
+                onClose={() => setSearch({ entry: null })}
+                onDelete={
+                    selected && plain.has(selected.id)
+                        ? (row) => {
+                              setSearch({ entry: null });
+                              deleteEntries([row.id]);
+                          }
+                        : null
+                }
+                onStep={step}
+                row={selected}
+            />
         </main>
     );
 }

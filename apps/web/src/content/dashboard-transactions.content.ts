@@ -8,6 +8,32 @@ const dashboardTransactions = {
             max: t({ en: "At most", es: "Como máximo", fr: "Au plus", pt: "No máximo" }),
             min: t({ en: "At least", es: "Como mínimo", fr: "Au moins", pt: "No mínimo" }),
         },
+        bulk: {
+            clear: t({
+                en: "Clear selection",
+                es: "Quitar selección",
+                fr: "Effacer la sélection",
+                pt: "Limpar seleção",
+            }),
+            delete: t({ en: "Delete", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            selectAll: t({ en: "Select all", es: "Seleccionar todo", fr: "Tout sélectionner", pt: "Selecionar tudo" }),
+            selected: insert(
+                t({
+                    en: "{{count}} selected",
+                    es: "{{count}} seleccionados",
+                    fr: "{{count}} sélectionnées",
+                    pt: "{{count}} selecionados",
+                })
+            ),
+            selectEntry: insert(
+                t({
+                    en: "Select {{name}}",
+                    es: "Seleccionar {{name}}",
+                    fr: "Sélectionner {{name}}",
+                    pt: "Selecionar {{name}}",
+                })
+            ),
+        },
         clearFilters: t({ en: "Clear filters", es: "Quitar filtros", fr: "Effacer les filtres", pt: "Limpar filtros" }),
         csv: {
             account: t({ en: "Account", es: "Cuenta", fr: "Compte", pt: "Conta" }),
@@ -25,6 +51,37 @@ const dashboardTransactions = {
             ),
             merchant: t({ en: "Merchant", es: "Comercio", fr: "Commerçant", pt: "Estabelecimento" }),
             type: t({ en: "Type", es: "Tipo", fr: "Type", pt: "Tipo" }),
+        },
+        deleted: {
+            failed: t({
+                en: "Could not delete. Try again.",
+                es: "No se pudo eliminar. Inténtalo de nuevo.",
+                fr: "Suppression impossible. Réessayez.",
+                pt: "Não foi possível excluir. Tente de novo.",
+            }),
+            many: insert(
+                t({
+                    en: "{{count}} entries deleted",
+                    es: "{{count}} movimientos eliminados",
+                    fr: "{{count}} opérations supprimées",
+                    pt: "{{count}} lançamentos excluídos",
+                })
+            ),
+            one: t({
+                en: "Entry deleted",
+                es: "Movimiento eliminado",
+                fr: "Opération supprimée",
+                pt: "Lançamento excluído",
+            }),
+            skipped: insert(
+                t({
+                    en: "{{count}} kept. Recurring entries, transfers and installments are deleted on your phone.",
+                    es: "{{count}} sin eliminar. Los recurrentes, transferencias y cuotas se eliminan en tu teléfono.",
+                    fr: "{{count}} conservées. Les récurrences, virements et échéances se suppriment sur votre téléphone.",
+                    pt: "{{count}} mantidos. Recorrentes, transferências e parcelas são excluídos no seu celular.",
+                })
+            ),
+            undo: t({ en: "Undo", es: "Deshacer", fr: "Annuler", pt: "Desfazer" }),
         },
         detail: {
             charged: t({ en: "Charged", es: "Cobrado", fr: "Débité", pt: "Cobrado" }),
