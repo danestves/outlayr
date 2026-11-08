@@ -10,7 +10,7 @@ import { useColors } from "@/theme/use-colors";
 import { logScopeActions, pressLogScopeAction } from "./log-scope-actions";
 import type { LogScopeMenuProps } from "./log-scope-actions";
 
-/** The eyebrow over the Log total: picks what it measures and which currency it is shown in. */
+/** The eyebrow over the Log total: picks which currency it is shown in. */
 export function LogScopeMenu(props: LogScopeMenuProps) {
     const t = useTranslation();
     const colors = useColors();

@@ -43,6 +43,11 @@ const instant = (row: DayGroupable): number => (row.date ?? row.day).getTime();
 
 const localDay = (row: DayGroupable): number => new Date(instant(row)).setHours(0, 0, 0, 0);
 
+function localMonth(row: DayGroupable): number {
+    const at = new Date(instant(row));
+    return new Date(at.getFullYear(), at.getMonth(), 1).getTime();
+}
+
 function feeParent(row: DayGroupable): string | null {
     const parent = row.feeForId ?? row.transferId ?? null;
     return parent === row.id ? null : parent;
@@ -100,23 +105,20 @@ export function valueRows<T extends DayGroupable>(
     return rows.map((row) => ({ ...row, valued: valued.get(row) ?? null }));
 }
 
-/**
- * Newest first, keyed on the local day of the row's instant: the stored `day` is midnight in the zone it was
- * saved in, so keying on it splits one day in two after a zone change.
- */
-export function groupByDay<T extends DayGroupable>(
+function groupBy<T extends DayGroupable>(
     rows: readonly T[],
-    globalCurrency: string = DEFAULT_CURRENCY,
-    rates?: RateTable
+    keyOf: (row: DayGroupable) => number,
+    globalCurrency: string,
+    rates: RateTable | undefined
 ): DaySection<WithFee<Valued<T>>>[] {
     const sections: DaySection<T>[] = [];
-    const byDay = new Map<number, DaySection<T>>();
+    const byKey = new Map<number, DaySection<T>>();
     for (const row of rows) {
-        const key = localDay(row);
-        let section = byDay.get(key);
+        const key = keyOf(row);
+        let section = byKey.get(key);
         if (!section) {
             section = { data: [], day: new Date(key), key: String(key), total: 0, totals: [] };
-            byDay.set(key, section);
+            byKey.set(key, section);
             sections.push(section);
         }
         section.data.push(row);
@@ -140,6 +142,27 @@ export function groupByDay<T extends DayGroupable>(
         ...section,
         data: foldFees(valueRows(section.data, globalCurrency, rates)),
     }));
+}
+
+/**
+ * Newest first, keyed on the local day of the row's instant: the stored `day` is midnight in the zone it was
+ * saved in, so keying on it splits one day in two after a zone change.
+ */
+export function groupByDay<T extends DayGroupable>(
+    rows: readonly T[],
+    globalCurrency: string = DEFAULT_CURRENCY,
+    rates?: RateTable
+): DaySection<WithFee<Valued<T>>>[] {
+    return groupBy(rows, localDay, globalCurrency, rates);
+}
+
+/** {@link groupByDay} by local month; each section's `day` is the month's first midnight. */
+export function groupByMonth<T extends DayGroupable>(
+    rows: readonly T[],
+    globalCurrency: string,
+    rates?: RateTable
+): DaySection<WithFee<Valued<T>>>[] {
+    return groupBy(rows, localMonth, globalCurrency, rates);
 }
 
 /** A zone change can push the stored `day` across a local day, so halves that meet or cross regroup whole. */

@@ -14,6 +14,8 @@ import { cn } from "./tw";
 
 interface DaySectionHeaderProps {
     first?: boolean;
+    /** Replaces the day name on a section that spans more than one day. */
+    label?: string;
     onConfirmNew?: () => void;
     newCount?: number;
     onShare?: () => void;
@@ -23,6 +25,7 @@ interface DaySectionHeaderProps {
 export function DaySectionHeader({
     section,
     first = false,
+    label,
     newCount = 0,
     onConfirmNew,
     onShare,
@@ -35,7 +38,7 @@ export function DaySectionHeader({
     const body = (
         <>
             <View className={cn("flex-row items-baseline justify-between gap-2", largeText && "flex-wrap")}>
-                <MonoLabel>{formatDayHeader(section.day, undefined, language)}</MonoLabel>
+                <MonoLabel>{label ?? formatDayHeader(section.day, undefined, language)}</MonoLabel>
                 <DayTotal showCents={showCents} totals={section.totals} />
             </View>
             {newCount > 0 && onConfirmNew ? (

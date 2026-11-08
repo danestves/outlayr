@@ -15,6 +15,7 @@ import { freshEntries } from "@/lib/fresh-entries";
 
 interface SwipeableTransactionRowProps {
     currency: string;
+    dated?: boolean;
     menuItems: readonly ActionMenuItem[];
     onDelete: (id: string) => void;
     onPress: (id: string) => void;
@@ -25,6 +26,7 @@ interface SwipeableTransactionRowProps {
 export function SwipeableTransactionRow({
     transaction,
     currency,
+    dated = false,
     rates,
     onPress,
     menuItems,
@@ -76,6 +78,7 @@ export function SwipeableTransactionRow({
                 <Animated.View className="bg-background">
                     <TransactionRow
                         currency={currency}
+                        dated={dated}
                         menuItems={menuItems}
                         onDelete={onDelete}
                         onPress={onPress}

@@ -1,9 +1,9 @@
 import type { LedgerCell } from "@/components/ledger-head";
 import type { ToolbarIconName } from "@/components/toolbar-icons";
 import type { LogPeriod } from "@/data/log-totals";
-import type { LogFilter } from "@/domain/log-filter";
+import type { LogFilter, LogMenuFilter } from "@/domain/log-filter";
 import { measureAlternatives, measureIsIncome, measureIsPositive, measureMagnitude } from "@/domain/log-measure";
-import type { LogFigures, LogMeasure } from "@/domain/log-measure";
+import type { LogFigures, LogMeasure, NarrowedMeasure } from "@/domain/log-measure";
 import type { TranslationKey } from "@/i18n/catalog";
 import type { TranslateFn } from "@/i18n/context";
 
@@ -15,10 +15,9 @@ export const FILTER_LABEL_KEY = {
     month: "log.filter.month",
     recurring: "log.filter.recurring",
     transfers: "log.filter.transfers",
-    type: "log.filter.type",
     upcoming: "log.filter.upcoming",
     week: "log.filter.week",
-} satisfies Record<LogFilter, TranslationKey>;
+} satisfies Record<LogMenuFilter, TranslationKey>;
 
 export const FILTER_ICON = {
     all: "showAll",
@@ -27,10 +26,9 @@ export const FILTER_ICON = {
     month: "showMonth",
     recurring: "showRecurring",
     transfers: "showTransfers",
-    type: "showType",
     upcoming: "showUpcoming",
     week: "showWeek",
-} satisfies Record<LogFilter, ToolbarIconName>;
+} satisfies Record<LogMenuFilter, ToolbarIconName>;
 
 export const PERIOD_PHRASE_KEY = {
     all: "log.period.all",
@@ -61,6 +59,29 @@ export function measureCells(
     }));
 }
 
+const HEAD_MEASURES: readonly LogMeasure[] = ["in", "out", "net"];
+
+/** Net is the whole list, so tapping it, or the cell already narrowing, puts every entry back. */
+export function headCells(
+    narrowed: NarrowedMeasure | null,
+    figures: LogFigures,
+    t: TranslateFn,
+    onNarrow: (next: NarrowedMeasure | null) => void
+): LedgerCell[] {
+    return HEAD_MEASURES.map((measure) => {
+        const narrowing = measure === "net" || measure === narrowed ? null : measure;
+        return {
+            accessibilityHint: t(narrowing ? "log.ledger.showOnly" : "log.ledger.showAll"),
+            income: measureIsIncome(measure),
+            label: t(MEASURE_WORD_KEY[measure]),
+            magnitude: measureMagnitude(measure, figures),
+            onPress: () => onNarrow(narrowing),
+            positive: measureIsPositive(measure, figures),
+            selected: measure === narrowed,
+        };
+    });
+}
+
 /** `scopeTotals` may fall back to another currency, and COP, MXN and USD all print "$", so a fallback is named. */
 export function scopeMeasureLabel(
     t: TranslateFn,
@@ -75,15 +96,11 @@ export function scopeMeasureLabel(
 export function filterScopeLabel(
     t: TranslateFn,
     filter: LogFilter,
-    categoryName: string | null | undefined,
-    income: boolean
+    categoryName: string | null | undefined
 ): string | null {
     switch (filter) {
         case "category": {
             return categoryName || t("log.filter.category");
-        }
-        case "type": {
-            return income ? t("log.type.income") : t("log.type.expense");
         }
         case "recurring": {
             return t("log.filter.recurring");

@@ -15,6 +15,7 @@ export default function InsightsLayout() {
                 <Stack.Screen name="index" options={{ title: t("insights.title") }} />
                 <Stack.Screen name="breakdown" options={{ title: t("insights.breakdown.title") }} />
                 <Stack.Screen name="cash-flow" />
+                <Stack.Screen name="cash-flow-entries" />
                 <Stack.Screen name="plan/index" options={{ title: t("budgets.plan.action.plan", { year }) }} />
                 <Stack.Screen name="plan/[month]" />
             </Stack>

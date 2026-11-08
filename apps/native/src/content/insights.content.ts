@@ -331,6 +331,20 @@ const insights = {
             fr: "Rien n'est entré ni sorti.",
             pt: "Nada entrou nem saiu.",
         }),
+        "insights.cashFlow.entries": t({
+            en: "Entries",
+            es: "Registros",
+            fr: "Opérations",
+            pt: "Lançamentos",
+            "pt-PT": "Registos",
+        }),
+        "insights.cashFlow.entriesHint": t({
+            en: "Shows the entries behind this figure",
+            es: "Muestra los registros de esta cifra",
+            fr: "Affiche les opérations de ce montant",
+            pt: "Mostra os lançamentos deste valor",
+            "pt-PT": "Mostra os registos deste valor",
+        }),
         "insights.cashFlow.in": t({
             en: "In",
             es: "Entradas",

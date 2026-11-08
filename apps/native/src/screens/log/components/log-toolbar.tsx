@@ -3,15 +3,15 @@ import { Stack } from "expo-router";
 import { toolbarIcon } from "@/components/toolbar-icons";
 import type { LogPeriod } from "@/data/log-totals";
 import { LOG_PERIOD_ORDER } from "@/data/log-totals";
-import type { LogFilter } from "@/domain/log-filter";
+import type { LogMenuFilter } from "@/domain/log-filter";
 import { LOG_FILTER_ORDER } from "@/domain/log-filter";
 import { useTranslation } from "@/i18n/context";
 
 import { FILTER_ICON, FILTER_LABEL_KEY, PERIOD_PHRASE_KEY } from "../labels";
 
 export interface LogToolbarProps {
-    filter: LogFilter;
-    onFilter: (filter: LogFilter) => void;
+    filter: LogMenuFilter;
+    onFilter: (filter: LogMenuFilter) => void;
     onPeriod: (period: LogPeriod) => void;
     onSearch: () => void;
     period: LogPeriod;
