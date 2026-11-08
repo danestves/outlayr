@@ -1,4 +1,4 @@
-import { stripeMajorUnits } from "@outlayr/money/pro-prices";
+import { PRO_PLANS, stripeMajorUnits } from "@outlayr/money/pro-prices";
 import type { ProPlan } from "@outlayr/money/pro-prices";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -187,27 +187,51 @@ export const portalUrl = Effect.fn("Stripe.portalUrl")(function* portalUrl(custo
 
 const LOOKUP_KEY_PLAN = /^pro_(monthly|annual|lifetime)_/u;
 
-export const planOfPrice = Effect.fn("Stripe.planOfPrice")(function* planOfPrice(priceId: string) {
-    const { lookup_key: key } = yield* stripeCall(
-        Schema.Struct({ lookup_key: Schema.NullOr(Schema.String) }),
+export const catalogPrice = Effect.fn("Stripe.catalogPrice")(function* catalogPrice(priceId: string) {
+    const price = yield* stripeCall(
+        Schema.Struct({
+            currency: Schema.String,
+            lookup_key: Schema.NullOr(Schema.String),
+            unit_amount: Schema.NullOr(Schema.Number),
+        }),
         `/prices/${encodeURIComponent(priceId)}`
     );
-    const plan = key?.match(LOOKUP_KEY_PLAN)?.[1];
-    return plan === "monthly" || plan === "annual" || plan === "lifetime" ? plan : null;
+    const planKey = price.lookup_key?.match(LOOKUP_KEY_PLAN)?.[1];
+    const currency = price.currency.toUpperCase();
+    return {
+        plan: PRO_PLANS.find((plan) => plan === planKey) ?? null,
+        price: price.unit_amount === null ? null : { amount: stripeMajorUnits(price.unit_amount, currency), currency },
+    };
 });
 
+const Charge = Schema.Struct({
+    amount: Schema.Number,
+    created: Schema.Number,
+    currency: Schema.String,
+    status: Schema.String,
+});
 const Invoice = Schema.Struct({ created: Schema.Number, currency: Schema.String, total: Schema.Number });
 
+const paymentOf = (amount: number, created: number, rawCurrency: string) => {
+    const currency = rawCurrency.toUpperCase();
+    return { amount: stripeMajorUnits(amount, currency), atMs: created * 1000, currency };
+};
+
 export const recentPayments = Effect.fn("Stripe.recentPayments")(function* recentPayments(customerId: string) {
-    const { data } = yield* stripeCall(
+    const customer = encodeURIComponent(customerId);
+    const { data: invoices } = yield* stripeCall(
         List(Invoice),
-        `/invoices?status=paid&limit=${PAYMENTS_SHOWN}&customer=${encodeURIComponent(customerId)}`
+        `/invoices?status=paid&limit=${PAYMENTS_SHOWN}&customer=${customer}`
     );
-    return data.map((invoice) => {
-        const currency = invoice.currency.toUpperCase();
-        return { amount: stripeMajorUnits(invoice.total, currency), atMs: invoice.created * 1000, currency };
-    });
+    if (invoices.length > 0) {
+        return invoices.map((invoice) => paymentOf(invoice.total, invoice.created, invoice.currency));
+    }
+    const { data: charges } = yield* stripeCall(List(Charge), `/charges?limit=${PAYMENTS_SHOWN}&customer=${customer}`);
+    return charges
+        .filter((charge) => charge.status === "succeeded")
+        .map((charge) => paymentOf(charge.amount, charge.created, charge.currency));
 });
+
 export const eraseStripeCustomer = Effect.fn("Stripe.eraseStripeCustomer")(function* eraseStripeCustomer(
     appUserId: string
 ) {

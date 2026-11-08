@@ -1,23 +1,33 @@
 import { ledgerGlance } from "@outlayr/backend/confect/ledgerView";
+import { api } from "@outlayr/backend/convex/_generated/api";
+import { useQuery } from "@tanstack/react-query";
 import { Outlet, createFileRoute, redirect, useNavigate, useRouter } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { ConvexError } from "convex/values";
+import { Toast, useToast } from "panelui-web/toast";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { useIntlayer, useLocale } from "react-intlayer";
 
-import { LINE_PILL, Muted, SOLID_PILL, Screen } from "@/components/account/parts";
+import { Muted, SOLID_PILL, Screen } from "@/components/account/parts";
 import { AccountFlowsProvider } from "@/components/dashboard/accounts/flows";
 import { DashboardPending } from "@/components/dashboard/pending";
-import { signOut } from "@/components/dashboard/shell/account-menu";
 import { DashboardContext, useFilters } from "@/components/dashboard/shell/dashboard";
 import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filters";
 import type { FilterPatch } from "@/components/dashboard/shell/filters";
 import { mintedPhotos, photoKeys, seedPhotos, usePhotoUrls } from "@/components/dashboard/shell/photos";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
+import { convexClient } from "@/lib/convex";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { dropLedger, hasLedgerCopy, restoreLedger, saveLedger } from "@/lib/ledger-cache";
 import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
 import { currentToken, onSessionChange, userOf } from "@/lib/session";
+
+const Paywall = lazy(async () => {
+    const { Paywall: page } = await import("@/components/dashboard/paywall/paywall");
+    return { default: page };
+});
 
 export const Route = createFileRoute("/_account/app")({
     component: App,
@@ -58,17 +68,57 @@ export const Route = createFileRoute("/_account/app")({
 
 function App() {
     const { synced } = Route.useLoaderData();
-    const router = useRouter();
     if (!synced) {
-        return <TurnOnSync retry={() => router.invalidate()} />;
+        return (
+            <Suspense fallback={null}>
+                <Paywall />
+            </Suspense>
+        );
     }
     return (
         <DashboardShell>
+            <Toast.Provider position="bottom-right">
+                <Unlocked />
+            </Toast.Provider>
             <LiveDashboard>
                 <Outlet />
             </LiveDashboard>
         </DashboardShell>
     );
+}
+
+function Unlocked() {
+    const { checkout } = Route.useSearch();
+    const navigate = useNavigate();
+    const toast = useToast();
+    const { locale } = useLocale();
+    const { managePlan, proIsOn, proIsOnTrial } = useIntlayer("paywall");
+    useQuery({
+        enabled: checkout !== undefined,
+        queryFn: async () => {
+            const plan = await convexClient()
+                .action(api.billing.plan, {})
+                .catch(() => null);
+            const trialEnds =
+                plan?.state === "trial" && plan.expiresAtMs !== null
+                    ? new Date(plan.expiresAtMs).toLocaleDateString(locale, { day: "numeric", month: "short" })
+                    : null;
+            toast.add({
+                actionProps: {
+                    children: managePlan.value,
+                    onClick: () => navigate({ to: "/app/settings/plan" }),
+                },
+                title: trialEnds === null ? proIsOn.value : proIsOnTrial({ date: trialEnds }).value,
+                type: "success",
+            });
+            await navigate({ replace: true, search: ({ checkout: _done, ...rest }) => rest, to: "." });
+            return true;
+        },
+        queryKey: ["billing", "unlocked", checkout],
+        retry: false,
+        staleTime: Number.POSITIVE_INFINITY,
+    });
+    return null;
 }
 
 function Pending() {
@@ -165,7 +215,8 @@ function LiveDashboard({ children }: { children: ReactNode }) {
     );
 }
 
-const proRequired = (error: Error) => error.message.includes("Pro is required");
+const proRequired = (error: Error) =>
+    (error instanceof ConvexError ? String(error.data) : error.message).includes("Pro is required");
 
 async function startOver() {
     await dropLedger();
@@ -173,34 +224,18 @@ async function startOver() {
 }
 
 function NotSynced({ error }: ErrorComponentProps) {
-    const router = useRouter();
     if (error instanceof Error && proRequired(error)) {
-        return <TurnOnSync retry={() => router.invalidate()} />;
+        return (
+            <Suspense fallback={null}>
+                <Paywall />
+            </Suspense>
+        );
     }
     return (
         <Screen title="Could not load your ledger">
             <Muted>Try again in a moment.</Muted>
             <button className={SOLID_PILL} onClick={startOver} type="button">
                 Try again
-            </button>
-        </Screen>
-    );
-}
-
-function TurnOnSync({ retry }: { retry: () => Promise<void> }) {
-    return (
-        <Screen title="Turn on sync">
-            <Muted>Your web ledger shows what Outlayr Pro syncs from your phone.</Muted>
-            <ol className="text-app-muted mb-6 flex flex-col gap-2 text-left text-sm">
-                <li>1 · Open Outlayr on your phone</li>
-                <li>2 · Settings · Sync and backup</li>
-                <li>3 · Turn on Sync this device</li>
-            </ol>
-            <button className={SOLID_PILL} onClick={retry} type="button">
-                Check again
-            </button>
-            <button className={`${LINE_PILL} mt-2.5`} onClick={signOut} type="button">
-                Sign out
             </button>
         </Screen>
     );

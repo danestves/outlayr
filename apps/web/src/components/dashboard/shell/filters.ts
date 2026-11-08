@@ -11,6 +11,7 @@ const Param = Schema.UndefinedOr(Schema.String).pipe(
 const Search = Schema.Struct({
     accounts: Schema.optional(Param),
     category: Schema.optional(Param),
+    checkout: Schema.optional(Param),
     period: Schema.optional(Param),
 });
 
