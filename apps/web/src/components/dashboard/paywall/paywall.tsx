@@ -1,6 +1,11 @@
+import AlertCircleIcon from "@hugeicons/core-free-icons/AlertCircleIcon";
+import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
+import Clock01Icon from "@hugeicons/core-free-icons/Clock01Icon";
+import Infinity01Icon from "@hugeicons/core-free-icons/Infinity01Icon";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import type { ProPlan } from "@outlayr/money/pro-prices";
-import { RiCheckLine, RiCloseLine, RiErrorWarningLine, RiInfinityLine, RiTimeLine } from "@remixicon/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLoaderData, useRouteContext, useSearch } from "@tanstack/react-router";
 import { Alert } from "panelui-web/alert";
@@ -100,11 +105,22 @@ function Compare() {
                         <Table.Row className="h-[37px]" key={key}>
                             <Table.Cell>{copy.rows[key]}</Table.Cell>
                             <Table.Cell align="end" className="text-muted-foreground w-[88px] font-mono">
-                                {free ?? <RiCloseLine className="ml-auto" size={16} />}
+                                {free ?? (
+                                    <HugeiconsIcon className="ml-auto" icon={Cancel01Icon} size={16} strokeWidth={2} />
+                                )}
                             </Table.Cell>
                             <Table.Cell align="end" className="text-primary w-[88px] font-mono">
-                                {pro === "infinity" ? <RiInfinityLine className="ml-auto" size={16} /> : null}
-                                {pro === "check" ? <RiCheckLine className="ml-auto" size={16} /> : null}
+                                {pro === "infinity" ? (
+                                    <HugeiconsIcon
+                                        className="ml-auto"
+                                        icon={Infinity01Icon}
+                                        size={16}
+                                        strokeWidth={2}
+                                    />
+                                ) : null}
+                                {pro === "check" ? (
+                                    <HugeiconsIcon className="ml-auto" icon={Tick02Icon} size={16} strokeWidth={2} />
+                                ) : null}
                                 {pro === "500" ? pro : null}
                             </Table.Cell>
                         </Table.Row>
@@ -147,12 +163,11 @@ function Timeline({ rows }: { rows: readonly (readonly [ReactNode, ReactNode])[]
 }
 
 function Notice({ icon = "warning", text }: { icon?: "time" | "warning"; text: ReactNode }) {
-    const Icon = icon === "time" ? RiTimeLine : RiErrorWarningLine;
     return (
         <output className="block">
             <Alert variant="plain">
                 <Alert.Icon>
-                    <Icon />
+                    <HugeiconsIcon icon={icon === "time" ? Clock01Icon : AlertCircleIcon} size={16} strokeWidth={2} />
                 </Alert.Icon>
                 <Alert.Description className="text-[13px]">{text}</Alert.Description>
             </Alert>
@@ -399,7 +414,7 @@ function AlreadyPro({ plan }: { plan: NonNullable<ReturnType<typeof usePlan>["da
                 )}
                 {unconfirmed ? (
                     <output className="border-border text-app-warn flex gap-2 border-t px-5 py-2.5 text-[13px]">
-                        <RiTimeLine className="mt-0.5 shrink-0" size={16} />
+                        <HugeiconsIcon className="mt-0.5 shrink-0" icon={Clock01Icon} size={16} strokeWidth={2} />
                         {copy.alreadyNotConfirmed}
                     </output>
                 ) : null}
