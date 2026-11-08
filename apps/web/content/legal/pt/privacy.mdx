@@ -1,0 +1,427 @@
+---
+title: "Política de Privacidade"
+description: "O que o Outlayr guarda no seu dispositivo, o que chega aos nossos servidores, aos provedores de IA e às análises, por quanto tempo é guardado e como apagar. Em vigor desde 8 de novembro de 2026."
+intro: "Esta política explica o que o Outlayr coleta, para onde vai, por quanto tempo fica guardado e o que você pode fazer a respeito. Esta tradução é oferecida para sua conveniência. Se houver alguma diferença em relação à versão em inglês, prevalece a versão em inglês."
+---
+
+## A versão resumida
+
+- Seus lançamentos ficam guardados no seu dispositivo. Você pode usar o Outlayr sem conta, e assim seus lançamentos, valores e notas nunca saem do celular.
+- Uma conta (Iniciar sessão com a Apple, com o Google ou com e-mail e senha) ativa as sugestões de estabelecimentos, a leitura de notificações, o lançamento por voz, o escaneamento de recibos e a importação de parcelamentos. Com o Outlayr Pro, ela também ativa a sincronização, que mantém uma cópia dos seus lançamentos e fotos nos nossos servidores até você apagar sua conta.
+- Com uma conta, enviamos por e-mail uma mensagem de boas-vindas, uma mensagem quando o Pro começa e um aviso antes de uma mudança relevante nesta política ou nos nossos Termos. Nada de newsletters nem marketing.
+- Lançamentos por voz, escaneamentos de recibos, importações de parcelamentos, extratos bancários em PDF que você escolhe importar, sugestões de estabelecimentos e notificações do banco que mostram um valor são processados pela Anthropic, e a ElevenLabs transforma gravações de voz em texto. Não guardamos suas gravações, fotos escaneadas, capturas de tela nem notificações e, exceto pelo que aparecer em um extrato que você importar, nunca enviamos a nenhuma das duas empresas seu nome, e-mail ou ID de conta.
+- Nada vai para a Anthropic nem para a ElevenLabs até você permitir. O app pergunta durante a configuração, ou depois que você inicia sessão, e Ditar um lançamento e Escanear um recibo perguntam de novo até você permitir. Importar de uma captura de tela, para parcelamentos, pergunta na primeira vez que você usa, mesmo que você já tenha permitido os outros. Retire a permissão a qualquer momento em **Ajustes › Enviar dados a provedores de IA**. Depois de permitido, as sugestões de estabelecimentos, a leitura de notificações e as buscas na web ficam ativadas, e as três podem ser desativadas em **Ajustes › Preenchimento inteligente**. Ativar o Preenchimento inteligente também permite enviar dados a provedores de IA.
+- O app envia análises de uso e relatórios de falhas ao PostHog: quais telas você abre, quais recursos usa e erros. Nunca valores, estabelecimentos, notas ou nomes. Começa desativado se a região do seu dispositivo estiver no EEE ou no Reino Unido, e ativado em todos os outros lugares. Altere em **Ajustes › Compartilhar análises**. Nosso servidor também informa ao PostHog o tamanho, o custo e a velocidade de cada solicitação à Anthropic, nunca o que ela continha, e só a vincula à sua conta enquanto Compartilhar análises estiver ativado.
+- Este site também usa o PostHog, com um cookie. Se você estiver no EEE ou no Reino Unido, ele pergunta antes. Altere sua resposta no rodapé, em **Cookies**.
+- Com o Outlayr Pro, você pode conectar o Notion para importar despesas dos seus bancos de dados do Notion. Guardamos a chave de acesso do Notion criptografada nos nossos servidores para que você possa importar de novo, até você desconectar o Notion ou apagar sua conta. O que lemos do Notion passa pelo nosso servidor até o seu celular e não é guardado.
+- Você pode conectar um assistente de IA, como o Claude, à sua conta. Depois que você o aprova, ele pode ler o que seus dispositivos sincronizaram e, com o Outlayr Pro, adicionar lançamentos. O que ele lê é tratado conforme a política de privacidade desse assistente.
+- Se você convidar amigos, cada um vê seu primeiro nome no seu convite, e você vê o primeiro nome deles, em quantos dias eles registraram lançamentos, até três, e a data do terceiro. Nunca o que eles registraram.
+- Sem anúncios e sem rastreamento entre apps de outras empresas. Não vendemos nem compartilhamos suas informações pessoais.
+- Você pode apagar sua conta e tudo o que foi sincronizado com ela pelo app a qualquer momento: **Ajustes › Conta › Apagar conta**.
+
+## Quem somos
+
+O Outlayr é feito pela danestves LLC, uma sociedade de responsabilidade limitada de Delaware. Decidimos como os dados pessoais descritos aqui são usados, o que nos torna o controlador deles. Você pode falar conosco em [support@tryoutlayr.com](mailto:support@tryoutlayr.com) ou por correio em 651 N Broad St, Suite 201, Middletown, DE 19709, USA.
+
+Esta política cobre o app Outlayr, os servidores que o fazem funcionar e este site. “Nós” significa a danestves LLC. Nossos [Termos de Uso](/pt/terms) cobrem todo o resto sobre o uso do Outlayr.
+
+## Dados em resumo
+
+Todo tipo de dado que o Outlayr trata, em um só lugar. As seções abaixo explicam cada linha.
+
+| Dados | Quando | Para onde vão | Guardados |
+| --- | --- | --- | --- |
+| Seus lançamentos e as fotos deles | Sempre | Seu dispositivo | Até você apagar |
+| Títulos e texto de notificações | Registro a partir de notificações | Seu dispositivo | No Android, a mais recente de cada app, para até 20 apps. As últimas 5 lidas e as que esperam por terem passado o limite mensal grátis de registro automático |
+| Lançamentos sincronizados, lançamentos apagados, fotos | Sincronização ativada (Pro) | Nossos servidores | Até a exclusão da conta |
+| E-mail, nome, ID do provedor, hash da senha | Início de sessão | Nossos servidores | Até a exclusão da conta |
+| Endereço de e-mail, código de 6 dígitos | Início de sessão por e-mail | Nossos servidores, Cloudflare | Código: 10 minutos. E-mail: política da Cloudflare |
+| Endereço de e-mail, idioma do app, quais dos nossos e-mails você recebeu | E-mails da conta | Nossos servidores, Cloudflare | Até a exclusão da conta. E-mail: política da Cloudflare |
+| Sessões, endereço IP, tipo de dispositivo | Início de sessão | Nossos servidores | Até sair da conta ou até a exclusão da conta |
+| Nomes de estabelecimentos e categorias | Preenchimento inteligente | Nossos servidores, Anthropic | Até a resposta |
+| Título e texto de uma notificação que mostra um valor | Registro a partir de notificações, com Preenchimento inteligente | Nossos servidores, Anthropic | Não guardados |
+| Gravação de voz | Lançamento por voz | Nossos servidores, ElevenLabs | Não guardada |
+| Transcrição e rascunho | Lançamento por voz | Nossos servidores, ElevenLabs, Anthropic | Até fechar, ou 1 hora sem atividade |
+| Foto do recibo | Escaneamento de recibo | Nossos servidores, Anthropic | Não guardada |
+| Captura de tela de parcelamento | Importação de parcelamento | Nossos servidores, Anthropic | Não guardada |
+| Descrições do arquivo | Importação de CSV | Nossos servidores, Anthropic (Pro) | Não guardadas |
+| Um extrato em PDF que você escolhe, e o texto dele | Importação de extrato bancário em PDF | Nossos servidores, Anthropic (Pro) | Apagado após a leitura, no máximo cerca de 75 minutos se a importação nunca terminar |
+| Chave de acesso do Notion (criptografada), ID de usuário do Notion | Conectar o Notion (Pro) | Nossos servidores | Até você desconectar o Notion ou apagar sua conta |
+| Nomes, colunas e linhas dos bancos de dados do Notion que você escolhe | Importação do Notion (Pro) | Notion, nossos servidores, seu dispositivo | Não guardados nos nossos servidores |
+| Nome do estabelecimento, um endereço web que você adiciona, uma categoria geral | Adicionar site | Nossos servidores, compartilhado com todos | Atualizado após 90 dias. Não vinculado a você |
+| Endereço web, endereço IP | Logos | Nossos servidores (Cloudflare) | Endereço web guardado com o logo; endereço IP não guardado |
+| Registros de compra, ID de usuário, nome, e-mail | Abertura do app, Pro | RevenueCat, Apple ou Google, nossos servidores | Até a exclusão da conta |
+| Código de convite, quem convidou quem, primeiros nomes, dias com lançamentos até três e a data do terceiro, meses ganhos | Convites | Nossos servidores, RevenueCat | Até a exclusão da conta |
+| ID de instalação, versão do app, erros | Verificação de atualizações | Expo | Política da Expo |
+| Telas, recursos usados, erros, ID de instalação, modelo do dispositivo | Uso do app | PostHog | Até a exclusão da conta, ou política do PostHog se você nunca iniciar sessão |
+| Recurso, modelo, tokens, custo, velocidade e erros de cada solicitação de IA | Sugestões, leitura de notificações, voz, escaneamentos, importações | PostHog | Com Compartilhar análises ativado, até a exclusão da conta. Caso contrário, política do PostHog |
+| Páginas, cliques, rolagem, erros, velocidade das páginas, gravações de visitas | Visitas ao site | PostHog | Política do PostHog |
+| Lançamentos, saldos, orçamentos, cobranças futuras | Assistente de IA que você aprova | A empresa do assistente | Políticas dela |
+| Nome e endereço do assistente, sua aprovação, chaves de acesso | Assistente de IA que você aprova | Nossos servidores | Até a exclusão da conta |
+| Seus e-mails | Você escreve | Nossa caixa de entrada | Pelo tempo necessário |
+
+## O que fica no seu dispositivo
+
+O Outlayr guarda seus lançamentos em um banco de dados dentro do app no seu dispositivo: seus lançamentos (valor, moeda, data, estabelecimento ou nota, categoria, tags, conta, programação de repetição e eventuais fotos), contas e seus saldos, transferências, orçamentos, metas de economia, categorias, tags e ajustes. Os lançamentos que você apaga esperam em **Apagados recentemente** no celular, onde você pode restaurá-los.
+
+Você não precisa de uma conta para usar o Outlayr. Sem conta, nada dos seus lançamentos é enviado para nós.
+
+### Recursos que ficam no seu dispositivo
+
+- **Widgets** mostram totais, saldos, orçamentos e lançamentos recentes na sua Tela de Início e, no iPhone, também na Tela Bloqueada. Eles leem de um armazenamento compartilhado apenas entre o Outlayr e os próprios widgets dele.
+- **Busca**: no iPhone, o Outlayr adiciona seus 500 lançamentos mais recentes e seus orçamentos ao índice do Spotlight no dispositivo, para que você possa encontrá-los pela Busca. Para impedir isso, desative Mostrar Conteúdo na Busca para o Outlayr no app Ajustes do iOS.
+- **Lembretes** (um aviso diário e cobranças de assinaturas futuras) são programados no seu dispositivo. O Outlayr nunca envia notificações a partir de um servidor e não se registra para notificações push.
+- **Ações da Siri e de Atalhos** no iPhone (registrar uma transação, consultar um orçamento, obter um resumo de gastos) são executadas no dispositivo. A Apple trata as solicitações da Siri conforme a própria política de privacidade. Registrar a partir de uma notificação também pode enviar o texto dela para ser [lido pela Anthropic](#leitura-de-notificações-do-banco).
+- **Bloqueio do app** (Ajustes › Bloqueio biométrico) protege o Outlayr com o bloqueio biométrico do seu dispositivo (Face ID ou Touch ID no iPhone). O sistema verifica seu rosto ou sua impressão digital, e o Outlayr só fica sabendo se a verificação passou.
+
+### O que o app envia mesmo sem conta
+
+- **Taxas de câmbio.** O app baixa taxas de mercado do nosso servidor. A solicitação não exige conta e não leva nenhum dado dos seus lançamentos. Nosso servidor lê as taxas da Open Exchange Rates, da CotizaVE e da Binance, que não recebem nada sobre você.
+- **Logos.** Para mostrar o logo de um estabelecimento ou banco, o app pede ao nosso servidor de logos pelo endereço web (por exemplo, netflix.com). A solicitação nunca inclui valores, notas ou quem você é. Se ainda não temos esse logo, nosso servidor o procura nos serviços de ícones do Google e do DuckDuckGo, no próprio site do estabelecimento e no Wikidata, e guarda uma cópia para todos. Esses serviços veem o endereço web e o nosso servidor, não você. Depois, os logos ficam em cache no celular.
+- **Atualizações do app.** Quando o app inicia, ele pergunta à Expo, a plataforma que usamos para distribuir atualizações, se há uma versão mais nova do código do app. A solicitação inclui um ID aleatório criado para esta instalação (não vinculado à sua conta), a versão do app e seu endereço IP. Se uma atualização não conseguiu iniciar da última vez, ela também inclui uma mensagem de erro curta.
+- **Status da compra.** O app verifica com a RevenueCat se você tem o Outlayr Pro, usando um ID anônimo aleatório até você iniciar sessão e, depois disso, seu ID de conta, nome e e-mail. Veja [Outlayr Pro](#outlayr-pro).
+- **Análises e relatórios de falhas.** O app informa ao PostHog, o serviço de análises que usamos, quando é instalado, atualizado, aberto ou fechado, que tipo de tela você abre (por exemplo, a tela de uma conta, nunca qual conta) e quando você salva um lançamento, transferência, conta, categoria ou orçamento, compartilha um cartão, importa ou exporta dados, altera um ajuste, abre o Outlayr Pro ou abre o app a partir de um widget, atalho ou link. Esses eventos levam detalhes como despesa ou receita, se um lançamento veio de um escaneamento ou da sua voz, se era novo ou uma edição, qual ajuste mudou e se agora está ativado, e quantas linhas uma importação trouxe, arredondado a uma faixa como de 10 a 99. Se o app encontra um erro, ele envia a mensagem de erro e o ponto do código em que aconteceu. Cada evento leva um ID aleatório criado para esta instalação, a versão do app, o modelo do seu dispositivo, o sistema operacional, o idioma, o fuso horário e o tamanho da tela. Nunca inclui valores, estabelecimentos, notas, nomes de contas ou categorias, nem seu e-mail. O PostHog descarta seu endereço IP. Depois que você inicia sessão, esses eventos ficam vinculados ao seu ID de conta do Outlayr. Se a região do seu dispositivo estiver definida para um país do EEE ou o Reino Unido, **Ajustes › Compartilhar análises** começa desativado e nada disso é enviado até você ativá-lo. Desativá-lo interrompe tudo isso naquele dispositivo.
+
+## Sua conta
+
+Você pode iniciar sessão com a Apple, com o Google ou com e-mail e senha. Recebemos:
+
+- **Com a Apple:** seu endereço de e-mail, ou um endereço de retransmissão privado se você escolher Ocultar Meu E-mail, e um identificador da sua conta Apple. O app não nos envia seu nome.
+- **Com o Google:** seu nome, endereço de e-mail, um link para a foto do seu perfil do Google e um identificador da sua conta Google.
+- **Com e-mail:** seu endereço de e-mail e uma senha. Guardamos apenas um hash unidirecional da senha, nunca a própria senha. Para confirmar o endereço ou redefinir a senha, enviamos por e-mail um código de 6 dígitos pela Cloudflare. Um código expira após 10 minutos.
+
+Criamos um ID de conta do Outlayr, uma sequência aleatória, e o vinculamos a essa identidade. Também guardamos os tokens necessários para manter você conectado e para revogar o acesso quando você apagar sua conta. Cada início de sessão cria uma sessão, que pode registrar seu endereço IP e o agente de usuário do seu dispositivo. Uma sessão deixa de funcionar após sete dias sem uso, e sair da conta a apaga.
+
+Iniciar sessão não altera os lançamentos no seu dispositivo. Sair da conta encerra a sessão naquele dispositivo e deixa os lançamentos onde estão.
+
+### E-mails que enviamos
+
+Enviamos alguns e-mails para o endereço da sua conta, no idioma do app:
+
+- Uma mensagem de boas-vindas assim que seu endereço é confirmado, o que acontece na hora com a Apple ou o Google.
+- Uma mensagem quando o Outlayr Pro começa, com seu plano, a data de renovação e onde gerenciá-lo.
+- Um aviso antes de uma mudança relevante nesta política ou nos nossos [Termos de Uso](/pt/terms).
+
+Eles fazem parte da sua conta, por isso não têm link de cancelamento de inscrição, e param quando você a apaga. Não enviamos newsletters nem marketing. Para escrevê-los no seu idioma, o app informa ao nosso servidor o idioma dele quando você inicia sessão e quando ele renova sua sessão. Guardamos esse idioma e um registro de quais desses e-mails você recebeu até você apagar sua conta.
+
+## Sincronização e fotos
+
+A sincronização faz parte do Outlayr Pro. Quando você está conectado com o Pro, o Outlayr copia seus lançamentos para os nossos servidores e os envia para seus outros dispositivos conectados. Você pode impedir que um dispositivo sincronize em **Ajustes › Sincronização**.
+
+### O que é sincronizado
+
+- Lançamentos, transferências, contas, orçamentos, metas de economia, categorias, tags e os valores, moedas, datas, estabelecimentos, notas e taxas de câmbio deles.
+- Fotos anexadas a lançamentos e imagens definidas em contas, enviadas para o nosso armazenamento de arquivos na Cloudflare R2. Cada conta tem um limite de 2 GB para fotos.
+- Ajustes que descrevem você, e não o celular, como sua moeda, preferências de exibição e se as sugestões e as buscas na web estão ativadas.
+- O fuso horário do seu celular, para que um assistente de IA conectado date seus lançamentos do mesmo jeito que o app.
+- Um ID aleatório para cada dispositivo, usado para ordenar as edições feitas em dispositivos diferentes.
+
+Os ajustes ligados a um celular ficam nele: notificações, bloqueio do app, Compartilhar análises, digitação de valores e modo claro ou escuro.
+
+### Lançamentos apagados
+
+Quando você apaga um lançamento em um dispositivo sincronizado, nossos servidores guardam um registro da exclusão para que seus outros dispositivos também possam removê-lo. Esse registro guarda o último conteúdo do lançamento, e qualquer foto que ele tinha, até você apagar sua conta.
+
+### Desativar a sincronização
+
+Desativar a sincronização impede que aquele dispositivo envie alterações. Isso não remove o que já está nos nossos servidores. Para remover, [apague sua conta](#apagar-e-exportar).
+
+## Conectar o Notion
+
+Com o Outlayr Pro, você pode conectar um espaço de trabalho do Notion e importar despesas dos bancos de dados dele. O Notion pergunta quais páginas compartilhar com o Outlayr, e o Outlayr só pode ler essas. Ele não pode alterar, adicionar nem apagar nada no Notion.
+
+Quando você conecta, o Notion entrega ao nosso servidor uma chave de acesso e seu ID de usuário do Notion. Guardamos a chave criptografada nos nossos servidores, vinculada à sua conta, para que você possa importar de novo depois sem conectar outra vez. Nunca vemos sua senha do Notion e não guardamos seu nome nem seu e-mail do Notion.
+
+Quando você importa, nosso servidor usa a chave para ler os bancos de dados que você escolhe: os nomes deles, os nomes das colunas e as linhas, e os nomes das linhas às quais eles se vinculam. Ele os envia para o seu celular, que monta a importação ali. Nada do que é lido do Notion é guardado nos nossos servidores, e seu celular guarda apenas os lançamentos que você importa.
+
+- **Desconecte** em **Ajustes › Importar › Notion** a qualquer momento. Nosso servidor pede ao Notion que revogue a chave e a apaga.
+- Remover o Outlayr nos ajustes do seu Notion também revoga a chave. Nós a apagamos na próxima vez que o app tentar usá-la.
+- Se o Pro terminar, a chave fica guardada até você desconectar, mas importar de novo exige o Pro.
+- Apagar sua conta revoga e apaga a chave.
+
+A Notion Labs, Inc. trata seu espaço de trabalho conforme a [própria política de privacidade](https://www.notion.com/trust/privacy-policy). Ela fica sabendo que seu espaço de trabalho está conectado ao Outlayr, e quando nosso servidor lê dados dele.
+
+## Sugestões, voz e recibos
+
+Esses recursos exigem uma conta, e nenhum deles funciona até você permitir o envio de dados à Anthropic e à ElevenLabs quando o app perguntar. Desativar **Ajustes › Enviar dados a provedores de IA** interrompe todos eles. Cada solicitação vai primeiro para o nosso servidor, que verifica sua conta e seus limites e depois encaminha apenas o conteúdo listado abaixo. Nenhum deles envia à Anthropic ou à ElevenLabs seu nome, e-mail ou ID de conta.
+
+### Sugestões de estabelecimentos (Preenchimento inteligente)
+
+Quando você digita, dita, escaneia ou registra a partir do Apple Pay ou de uma notificação um estabelecimento que o Outlayr não reconhece no dispositivo, o app envia ao nosso servidor o nome do estabelecimento, se o lançamento é uma despesa ou uma receita, o código da moeda, seu idioma e a região do dispositivo, e os nomes das suas categorias. Nunca o valor, a data, as notas ou a conta.
+
+Nosso servidor primeiro consulta uma lista compartilhada de estabelecimentos conhecidos (abaixo). Se o estabelecimento não estiver nela, ele pergunta ao modelo Claude da Anthropic, e a resposta (uma categoria, tags, um emoji e o endereço web do estabelecimento) volta para o seu dispositivo. Lançamentos salvos que ainda não têm logo podem ser consultados de novo em segundo plano. Essas solicitações esperam no nosso servidor apenas até o seu dispositivo buscar a resposta.
+
+Ativado assim que você permite o envio de dados a provedores de IA. Desative em **Ajustes › Preenchimento inteligente**.
+
+### Leitura de notificações do banco
+
+Quando o Outlayr registra uma compra a partir de uma notificação, pela automação de Atalhos no iPhone ou pelo acesso às notificações no Android, o app envia ao nosso servidor o título e o texto da notificação exatamente como o app que a publicou os escreveu, e seu idioma. O modelo Claude da Anthropic identifica se ela informa uma compra, um dinheiro que você recebeu, uma cobrança recusada ou outra coisa, e o valor, a moeda e o estabelecimento. O texto leva o que quer que esse app tenha colocado nele, como o valor, uma data ou os últimos dígitos de um cartão. O nome do app, os nomes de cartões e contas que você definiu no Outlayr e seus outros lançamentos não são enviados.
+
+Só são enviadas notificações que mostram um valor: códigos de login, promoções e repetições de uma notificação que o Outlayr já registrou ficam no seu celular. Não guardamos o texto. A resposta volta direto para o seu celular, que adiciona o lançamento: uma cobrança recusada não é registrada, e qualquer outra coisa é registrada, usando a leitura do próprio celular sempre que o modelo não deu resposta ou a classificou como algo diferente de uma compra ou receita. Se o Preenchimento inteligente estiver desativado, você estiver offline ou a resposta demorar mais de 8 segundos, o celular lê a notificação por conta própria.
+
+Ativado assim que você permite o envio de dados a provedores de IA. Desative em **Ajustes › Preenchimento inteligente**.
+
+### Busca na web de novos estabelecimentos
+
+Se o modelo não conseguir classificar um estabelecimento e você tiver o Pro, nosso servidor pode pedir à Anthropic que o procure na web. O modelo da Anthropic faz as buscas, usando o nome do estabelecimento e às vezes um país ou cidade. Ele recebe o nome do estabelecimento, despesa ou receita, código da moeda, idioma e região e, nas consultas em segundo plano, também os nomes das suas categorias. Uma busca na web geralmente melhora a resposta para o próximo lançamento com esse estabelecimento, e não para o que você está digitando.
+
+Ativado assim que você permite o envio de dados a provedores de IA. Desative em **Ajustes › Preenchimento inteligente**, o que também desativa as sugestões. O app envia sua escolha em cada solicitação, e nosso servidor também respeita o ajuste sincronizado, então nenhuma busca na web é feita para você enquanto ele estiver desativado.
+
+### A lista compartilhada de estabelecimentos
+
+Quando uma resposta identifica uma empresa clara, com endereço web e uma categoria geral, nós a adicionamos a uma lista compartilhada para que a próxima consulta desse estabelecimento seja instantânea. Cada item contém o nome do estabelecimento, o endereço web dele, uma categoria de uma lista geral fixa, um emoji e tags, arquivados pelo nome do estabelecimento e pela moeda. Ele não registra quem perguntou e não está vinculado a nenhuma conta. Os itens são atualizados após 30 dias, ou 90 dias quando confirmados por uma fonte na web.
+
+Quando não encontramos logo para um estabelecimento, você pode adicionar o site dele. Quando você salva o lançamento, o nome do estabelecimento, esse endereço web e uma categoria geral entram nessa lista, para que outras pessoas que registram esse estabelecimento vejam o logo dele, e o logo também aparece nos seus lançamentos anteriores com ele. Se sua categoria não estiver na lista fixa e você permitir os provedores de IA, o modelo Claude da Anthropic escolhe uma a partir do nome do estabelecimento. Verificamos se o endereço tem um logo, e um site que você adiciona nunca substitui um estabelecimento que já está na lista. Ele fica por 90 dias e não é vinculado a você. Não adicione um site se não quiser que ele seja compartilhado.
+
+### Lançamento por voz
+
+Quando você dita um lançamento, o app grava o áudio no seu dispositivo e o envia ao nosso servidor com os nomes das suas contas, os nomes das categorias, a moeda dos seus lançamentos, seu idioma e a data de hoje. A ElevenLabs transcreve o áudio, recebendo apenas o áudio e seu idioma, e o modelo Claude da Anthropic transforma o texto em um rascunho de lançamento para você revisar.
+
+Nunca salvamos o áudio. A transcrição e o rascunho ficam no nosso servidor como uma conversa curta, para que você possa corrigir o lançamento falando de novo. Ela é apagada quando você fecha a tela de voz, ou uma hora depois da sua última mensagem se o app fechar antes.
+
+### Escaneamento de recibos
+
+Quando você escaneia um recibo, o app comprime a foto no seu dispositivo e a envia ao nosso servidor com os nomes das suas contas, os nomes das categorias, a moeda dos seus lançamentos, o idioma, a região e a data de hoje. O modelo Claude da Anthropic lê o estabelecimento, o total, a data e os itens. Não guardamos a foto, e o escaneamento não a anexa ao lançamento. O lançamento criado contém o estabelecimento, o valor, a data e os itens como notas.
+
+### Importação de parcelamentos
+
+Quando você importa um parcelamento, escolhe uma captura de tela do plano de pagamento de um pedido. O app a comprime no seu dispositivo e a envia ao nosso servidor com o nome da conta para a qual você está importando, a moeda dela, seu idioma, a região e a data de hoje. O modelo Claude da Anthropic lê o app ou a loja que fez a venda e, de cada parcela, o valor, a data de vencimento, a multa por atraso e se está paga. Não guardamos a captura de tela. O parcelamento preenchido contém apenas esses detalhes, e nada é salvo até você revisá-lo e tocar em Salvar.
+
+### Importação de CSV
+
+O arquivo é lido no seu dispositivo, assim como uma exportação do Notion: o zip é aberto e o CSV dele é lido no celular. Com o Preenchimento inteligente ativado, as descrições que o Outlayr não consegue associar no dispositivo são enviadas ao nosso servidor e, com o Pro, à Anthropic para sugerir categorias: no máximo 200 por vez, com qualquer sequência de quatro ou mais dígitos removida, junto com os nomes das suas categorias e a região do dispositivo. Valores, datas e o resto do arquivo ficam no seu dispositivo. Com a busca na web ativada, algumas descrições também podem ser procuradas na web, como descrito acima.
+
+### Importação de extratos bancários em PDF
+
+Este recurso faz parte do Pro e funciona de forma diferente da importação de CSV: o arquivo sai do seu dispositivo. Quando você escolhe um extrato, o PDF é enviado ao nosso servidor, que lê o texto dele e apaga o arquivo assim que termina. Se a importação for interrompida, uma tarefa programada apaga o arquivo em cerca de 75 minutos. Nosso servidor mascara sequências longas de dígitos, como IBANs e números de cartão, mantendo os últimos quatro, e envia à Anthropic o restante do texto do extrato, que é tudo o que está impresso nele: seu nome e endereço, se o extrato os mostrar, datas, descrições, valores e saldos. As transações que a Anthropic encontra voltam para o seu dispositivo para você revisar, e as descrições delas são classificadas como na [importação de CSV](#importação-de-csv). Não guardamos o extrato nem o texto dele.
+
+### Quem são a Anthropic e a ElevenLabs
+
+A Anthropic é a empresa dos EUA que faz os modelos de IA Claude. A ElevenLabs faz os modelos de conversão de fala em texto que transcrevem os lançamentos por voz. As duas processam essas solicitações para nós como prestadoras de serviço, conforme os termos de API delas. A Anthropic não treina seus modelos com esses dados, e desativamos o uso deles pela ElevenLabs para treinamento. Nós também não usamos seus dados para treinar modelos de IA.
+
+Se uma solicitação à Anthropic falhar, o registro de erros do nosso servidor pode incluir o nome do estabelecimento envolvido, para que possamos encontrar o problema. Ele nunca inclui o texto de uma notificação.
+
+### Registros de solicitações de IA
+
+Depois de cada solicitação à Anthropic, nosso servidor envia ao PostHog um registro dela: o recurso, o modelo, quantos tokens usou e quanto custou, quanto tempo levou, se falhou e os nomes das ferramentas do modelo que usou, como a busca na web. Os registros de lançamentos por voz também levam um ID da conversa, para que os turnos dela fiquem juntos. Um registro nunca inclui o que você disse, a foto ou a captura de tela, o texto de uma notificação ou qualquer outro texto enviado à Anthropic ou recebido dela. Se **Ajustes › Compartilhar análises** estiver ativado no dispositivo que faz a solicitação, o registro leva seu ID de conta, para que possamos ver quanto os recursos de IA custam para cada conta. Se estiver desativado, o registro leva um ID aleatório que não está vinculado a você.
+
+## Apple Pay e Atalhos
+
+No iPhone, o Outlayr pode registrar compras com cartão para você pelo app Atalhos da Apple. Você instala nosso atalho a partir de um link do iCloud em **Ajustes › Apple Pay** e ativa a automação você mesmo.
+
+Quando a automação é executada, o Atalhos entrega ao Outlayr o valor, o estabelecimento e o nome do cartão de uma compra com Apple Pay, ou o título e o texto de uma notificação de um app que você escolhe, como o do seu banco. O Outlayr lê o valor e o estabelecimento, associa o cartão a uma das suas contas pelo nome e adiciona o lançamento. Uma compra com Apple Pay é lida no seu celular, e nada dela é enviado para nós. Uma notificação que mostra um valor também é [lida pela Anthropic](#leitura-de-notificações-do-banco) quando o Preenchimento inteligente está ativado. A automação é executada para cada notificação dos apps que você escolhe nela, então escolha apenas os apps do seu banco e dos seus cartões. O novo lançamento passa a ser como qualquer outro: ele é sincronizado se a sincronização estiver ativada, e o nome do estabelecimento pode ser usado para uma [sugestão de estabelecimento](#sugestões-voz-e-recibos).
+
+## Acesso às notificações no Android
+
+No Android, o Outlayr pode registrar compras a partir das suas notificações. Nada é lido até você abrir **Ajustes › Registro automático**, tocar em **Permitir acesso às notificações** e ativá-lo para o Outlayr nas configurações do Android.
+
+Com o acesso ativado, o Android mostra ao Outlayr cada notificação que seu celular recebe. O Outlayr verifica cada uma no seu celular em busca de um valor e ignora o resto. Para um app que envia uma notificação com valor, ele guarda o nome do app e o título e o texto da notificação desse tipo mais recente, para até 20 apps, para poder listá-los em **Registrar de**. Ele registra compras apenas dos apps que você ativa ali, e o Google Wallet começa ativado. Desses, ele lê o valor, o estabelecimento e o cartão que uma notificação do Google Wallet indica, associa o cartão ou o app a uma das suas contas, adiciona o lançamento e o confirma com uma notificação própria. Ele também guarda o texto das últimas 5 notificações que registrou.
+
+Notificações de apps que você não ativou nunca são enviadas para nós nem para mais ninguém. Quando o Preenchimento inteligente está ativado, uma notificação que mostra um valor, de um app que você ativou, também é [lida pela Anthropic](#leitura-de-notificações-do-banco) antes de o lançamento ser adicionado. O novo lançamento passa a ser como qualquer outro: ele é sincronizado se a sincronização estiver ativada, e o nome do estabelecimento pode ser usado para uma [sugestão de estabelecimento](#sugestões-voz-e-recibos). Para parar, desative um app em **Registrar de** ou desative o acesso às notificações para o Outlayr nas configurações do Android. Apagar o app remove o que ele guardou.
+
+## Assistentes de IA
+
+Você pode conectar à sua conta do Outlayr um assistente de IA compatível com o Model Context Protocol (MCP), como o Claude. Nada é conectado até você adicionar o Outlayr no assistente, iniciar sessão na sua conta do Outlayr em tryoutlayr.com e aprovar o assistente em uma tela que mostra o nome dele e o site para onde vai o seu acesso. Se o assistente tiver lhe dado um link, essa tela mostra um código para comparar com o que o assistente mostra. Pedimos essa aprovação toda vez que um assistente se conecta.
+
+Depois de aprovado, o assistente pode ler o que seus dispositivos sincronizaram por último: lançamentos, categorias, contas e seus saldos, orçamentos e cobranças futuras. Com o Outlayr Pro, ele também pode adicionar uma despesa ou receita, que chega aos seus dispositivos pela sincronização como qualquer outro lançamento. Sem sincronização, não há nada nos nossos servidores para ele ler.
+
+O que o assistente lê, e o que você diz a ele, vai para a empresa que o opera e é tratado conforme a política de privacidade dessa empresa. Não enviamos isso para nenhum outro lugar.
+
+Para manter a conexão funcionando, guardamos o nome e o endereço web do assistente, sua aprovação e o que ele pode fazer, quando ele usou o acesso pela última vez e as chaves de acesso dele, que guardamos apenas como um hash unidirecional. As chaves de acesso duram uma hora, e o assistente as renova enquanto você continua conectado. Uma chave de renovação que fica 30 dias sem uso expira. Um assistente conectado a partir de um link recebe uma chave de uma hora que não pode ser renovada. Se você remover o Outlayr do assistente, o acesso dele expira em até 30 dias. Apagar sua conta o remove na hora, e você pode escrever para [support@tryoutlayr.com](mailto:support@tryoutlayr.com) para que ele seja removido antes.
+
+## Outlayr Pro
+
+Os pagamentos do Outlayr Pro passam pela sua loja de apps (a App Store da Apple no iPhone, o Google Play no Android). Nunca vemos os dados do seu cartão nem os da sua conta na loja de apps.
+
+A RevenueCat gerencia o status das assinaturas para nós. Quando o app abre, o software da RevenueCat verifica se você tem o Pro. Antes de você iniciar sessão, ele usa um ID anônimo aleatório. Depois que você inicia sessão, ele usa seu ID de conta do Outlayr, e o app também envia seu nome e e-mail para que possamos encontrar suas compras quando você nos escrever. A RevenueCat recebe seus registros de compras e assinaturas da loja de apps e detalhes técnicos básicos, como as versões do app e do sistema operacional.
+
+Nosso servidor consulta a RevenueCat sobre o seu ID de conta para confirmar o Pro, e a RevenueCat avisa nosso servidor quando sua assinatura muda. Guardamos uma cópia dos seus registros de assinatura, como o produto, as datas, o preço e o país da loja, e a apagamos junto com sua conta.
+
+## Convites
+
+Com a sessão iniciada, você recebe um código de convite. Quem abrir seu código ou link no app vê seu primeiro nome.
+
+Quando um amigo o resgata, registramos quem convidou quem, o primeiro nome dele, em quantos dias diferentes ele sincronizou um lançamento novo, até três, e quando chegou o terceiro. Sua página de convites lista o primeiro nome de cada amigo, essa contagem e essa data, nunca os lançamentos ou valores deles. Para verificar se a conta de um amigo é nova e nunca teve o Pro, nosso servidor consulta a RevenueCat sobre ela.
+
+Os meses de Pro ganhos com convites são concedidos pela RevenueCat. Seu código de convite, os convites que você enviou, o convite que você resgatou e os meses que esperam o fim do seu plano pago são apagados junto com sua conta, e seu nome sai das listas dos seus amigos. Se o convite que você resgatou já rendeu um mês ao seu amigo, ele continua na lista dele sem o seu nome, para que ainda conte para o limite anual dele.
+
+## Permissões do dispositivo
+
+O app pede cada permissão na primeira vez que um recurso precisa dela. Você pode alterá-las no app Ajustes do seu celular.
+
+- **Câmera:** tirar a foto de um recibo para escanear.
+- **Fotos:** escolher um recibo para escanear, uma captura de tela de um parcelamento para importar ou uma imagem personalizada para uma transação ou conta.
+- **Microfone:** gravar um lançamento que você dita, apenas enquanto você fala.
+- **Face ID:** desbloquear o Outlayr quando o bloqueio estiver ativado.
+- **Notificações:** os lembretes que você ativa e a confirmação quando o Outlayr registra uma compra para você.
+- **Acesso às notificações** (Android): ler notificações para registrar compras, como descrito em [Acesso às notificações no Android](#acesso-às-notificações-no-android).
+
+O Outlayr não pede sua localização nem seus contatos, nem permissão para rastrear você.
+
+## Provedores de serviço
+
+Estas empresas ajudam a operar o Outlayr. Cada uma recebe apenas o que o trabalho dela exige.
+
+- **[Hetzner](https://www.hetzner.com/legal/privacy-policy)** hospeda os servidores em Helsinque, Finlândia, que executam nosso banco de dados e nossas funções de servidor. Eles guardam sua conta e seus dados sincronizados e tratam cada solicitação ao nosso servidor.
+- **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** armazena as fotos que você anexa a lançamentos e contas (Cloudflare R2), quando o backup de fotos está ativado, e envia nossos e-mails (códigos de início de sessão, as mensagens de boas-vindas e do Pro e os avisos de mudanças), para os quais recebe seu endereço de e-mail e o conteúdo do e-mail.
+- **[Anthropic](https://www.anthropic.com/legal/privacy)** fornece os modelos de IA Claude por trás das sugestões, da leitura de notificações, do lançamento por voz, dos escaneamentos de recibos, das importações de parcelamentos, da importação de CSV, da importação de extratos bancários em PDF e das buscas na web. Ela recebe o conteúdo descrito em [Sugestões, voz e recibos](#sugestões-voz-e-recibos).
+- **[ElevenLabs](https://elevenlabs.io/privacy-policy)** transforma gravações de voz em texto. Ela recebe a gravação e seu idioma.
+- **[RevenueCat](https://www.revenuecat.com/privacy)** acompanha o status das assinaturas. Ela recebe um ID anônimo, ou seu ID de conta, nome e e-mail depois que você inicia sessão, e seus registros de compras.
+- **[Apple](https://www.apple.com/legal/privacy/)** fornece o Iniciar sessão com a Apple, os pagamentos da App Store e recursos do iOS como a Siri e o Atalhos, conforme a própria política.
+- **[Google](https://policies.google.com/privacy)** fornece o Fazer login com o Google e os pagamentos do Google Play, conforme a própria política.
+- **[Expo](https://expo.dev/privacy)** entrega as atualizações do app. Ela recebe um ID de instalação aleatório, a versão do app, seu endereço IP e mensagens de erro de atualização.
+- **[PostHog](https://posthog.com/privacy)** fornece análises de uso e relatórios de falhas, a partir de servidores nos Estados Unidos. Ele recebe os eventos descritos em [O que o app envia mesmo sem conta](#o-que-o-app-envia-mesmo-sem-conta), um ID de instalação aleatório e seu ID de conta depois que você inicia sessão, além dos [registros de solicitações de IA](#registros-de-solicitações-de-ia) que nosso servidor envia. Ele também recebe as análises deste site, descritas em [Este site](#este-site).
+
+A Open Exchange Rates, a CotizaVE e a Binance publicam as taxas de câmbio que nosso servidor lê. Elas não recebem nada sobre você.
+
+## Sem anúncios nem rastreamento
+
+O Outlayr não contém nenhum software de publicidade. As únicas análises dele são os eventos do PostHog descritos [acima](#o-que-o-app-envia-mesmo-sem-conta) e os [registros de solicitações de IA](#registros-de-solicitações-de-ia), que usamos para corrigir falhas, saber quais recursos melhorar e manter os custos de IA sob controle. O Outlayr não usa o identificador de publicidade do seu dispositivo e não rastreia você em apps ou sites de outras empresas.
+
+Publicamos totais desses eventos, dos nossos servidores, da RevenueCat e do GitHub em [tryoutlayr.com/open](https://tryoutlayr.com/open), como quantas instalações abriram o app nesta semana, quantos lançamentos foram salvos e de quantos países. São contagens de todas as pessoas juntas, nunca nada sobre uma pessoa.
+
+Não vendemos suas informações pessoais, não as compartilhamos para publicidade direcionada e não as usamos para criar um perfil seu. Não usamos seus dados para treinar modelos de IA.
+
+## Este site
+
+Este site usa o PostHog para entender como as pessoas o usam. Enquanto você navega, ele envia as páginas que você vê e a página que trouxe você até aqui, cliques, até onde você rola, a velocidade de carregamento das páginas, erros e uma gravação da visita (cliques, rolagem e o que estava na tela, com tudo o que você digita oculto). Cada evento leva seu navegador, sistema operacional, idioma, fuso horário e tamanho da tela. Os eventos chegam ao PostHog por relay.tryoutlayr.com, e o PostHog descarta seu endereço IP. Eles nunca são vinculados à sua conta do Outlayr.
+
+Se você iniciar sessão neste site, para conectar um assistente de IA ou abrir seus lançamentos, ele guarda sua sessão em cookies para que você continue conectado. Esses cookies são necessários para o início de sessão e não são usados para análises.
+
+Com o Outlayr Pro, abrir seus lançamentos aqui salva uma cópia no armazenamento do seu navegador para que a página carregue sem esperar pelo nosso servidor. Ela não é criptografada, assim como os lançamentos no seu celular, então qualquer pessoa que use o seu perfil do navegador poderia lê-la. Um cookie pequeno indica que a cópia existe e não guarda mais nada. Sair da conta neste site apaga a cópia daquele navegador.
+
+Para reconhecer você em visitas posteriores, o PostHog guarda um ID aleatório em um cookie e no armazenamento do seu navegador. Se você estiver no EEE ou no Reino Unido, ou se o seu navegador enviar o Global Privacy Control, o site pergunta antes de defini-lo e não registra nada até você responder. Nos outros lugares, ele é definido na sua primeira visita. Altere sua resposta a qualquer momento no rodapé, em **Cookies**. Sua resposta fica guardada no seu navegador.
+
+Se você recusar, o site ainda conta sua visita sem cookie. O PostHog transforma seu endereço IP e seu navegador em um código que muda todos os dias, de modo que não consegue reconhecer você em outro dia, e a visita não é gravada.
+
+As fontes, imagens e vídeos do site são servidos pelo próprio site. A empresa que o hospeda pode manter registros padrão de solicitações, como seu endereço IP, o agente de usuário do navegador, a página solicitada e o horário, para entregar e proteger o site. Links para outros sites, como a App Store, levam a serviços com políticas próprias.
+
+## Bases legais
+
+Se você estiver no Espaço Econômico Europeu ou no Reino Unido, usamos estas bases legais:
+
+| Finalidade | Base legal |
+| --- | --- |
+| Sua conta, sincronização, armazenamento de fotos, lançamento por voz, escaneamentos de recibos, importações de parcelamentos, importação de CSV, importação de extratos bancários em PDF, a conexão com o Notion, o Pro, os convites e as conexões com assistentes de IA | Contrato: precisamos desses dados para fornecer o que você pede. |
+| As mensagens de boas-vindas e do Pro, e os avisos de mudanças nesta política ou nos nossos Termos | Contrato: elas fazem parte da conta e da assinatura que você pediu. |
+| Envio de lançamentos por voz, fotos de recibos, capturas de tela de parcelamentos, descrições de CSV, extratos em PDF, texto de notificações e nomes de estabelecimentos à Anthropic e à ElevenLabs | Seu consentimento, dado com Permitir quando o app pergunta e retirado em **Ajustes › Enviar dados a provedores de IA**. |
+| Sugestões de estabelecimentos, leitura de notificações, buscas na web, a lista compartilhada de estabelecimentos e os logos | Interesses legítimos: tornar os lançamentos mais rápidos e mais precisos de classificar. Sugestões, leitura de notificações e buscas na web só chegam à Anthropic depois que você permite, e desativar o Preenchimento inteligente é a forma de se opor. |
+| Sessões, limites de uso, registros de erros, verificações de atualização e registros de solicitações de IA não vinculados a você | Interesses legítimos: manter o Outlayr seguro, funcionando e livre de abusos. |
+| Análises de uso, relatórios de falhas e registros de solicitações de IA vinculados à sua conta | Seu consentimento. Compartilhar análises começa desativado quando a região do seu dispositivo está no EEE ou no Reino Unido. Ativá-lo dá o consentimento, e desativá-lo o retira. |
+| Análises do site | Seu consentimento para o cookie e as gravações de visitas, pedido na sua primeira visita. Recusar o retira. Uma visita recusada ainda é contada sem cookie, com base no nosso interesse legítimo em saber quantas pessoas visitam o site. |
+| Câmera, microfone, fotos, bloqueio biométrico, notificações e acesso às notificações | Sua permissão, dada quando o seu dispositivo pergunta e retirada nas configurações dele. |
+| Responder a solicitações legais e manter os registros que a lei exige | Obrigação legal. |
+
+Você pode se opor a qualquer tratamento baseado em interesses legítimos escrevendo para [support@tryoutlayr.com](mailto:support@tryoutlayr.com).
+
+## Por quanto tempo guardamos os dados
+
+A [tabela acima](#dados-em-resumo) lista por quanto tempo cada tipo de dado é guardado. Alguns detalhes por trás dela:
+
+- Os dados sincronizados, incluindo os registros de exclusão dos lançamentos que você apagou, e as fotos com backup são guardados até você apagar sua conta.
+- As conversas de voz são apagadas quando você fecha a tela de voz, ou uma hora depois da sua última mensagem.
+- As gravações passam pelo nosso servidor até a ElevenLabs, e as fotos de recibos, as capturas de tela de parcelamentos e o texto de notificações até a Anthropic. Não guardamos nenhum deles.
+- A chave de acesso do Notion e seu ID de usuário do Notion são guardados até você desconectar o Notion ou apagar sua conta. As linhas lidas do Notion não são guardadas nos nossos servidores.
+- As conexões com assistentes de IA (o nome e o endereço do assistente, sua aprovação e as chaves de acesso dele) são guardadas até você apagar sua conta. As chaves de acesso deixam de funcionar após uma hora, ou após 30 dias sem renovação.
+- As solicitações de sugestão de estabelecimentos não são guardadas depois de respondidas. As que ficam na fila em segundo plano esperam no nosso servidor até o seu dispositivo buscar a resposta.
+- O idioma do seu app e o registro de quais avisos de boas-vindas, do Pro e de mudanças você recebeu são apagados junto com sua conta.
+- Os contadores de uso que aplicam os limites de escaneamentos, lançamentos por voz, sugestões e leitura de notificações guardam apenas contagens, associadas ao seu ID de conta, e são apagados junto com sua conta.
+- Os registros de convites (seu código, quem convidou quem, primeiros nomes, dias com lançamentos e meses ganhos ou em espera) são apagados junto com a conta à qual pertencem. Um convite que rendeu um mês perde o nome do amigo quando a conta do amigo é apagada, e fica até a conta de quem convidou ser apagada.
+- Os itens da lista compartilhada de estabelecimentos não estão vinculados a ninguém. Eles são atualizados após 30 ou 90 dias.
+- Os eventos de análise vinculados à sua conta são apagados junto com ela. Os eventos de uma instalação que nunca iniciou sessão levam apenas um ID de instalação aleatório e são guardados conforme a política de retenção do PostHog. Os registros de solicitações de IA enviados enquanto Compartilhar análises estava desativado levam um ID aleatório em vez do seu ID de conta, além do ID da conversa no lançamento por voz, e são guardados da mesma forma.
+- Os eventos do site levam um ID aleatório do navegador, ou um código que muda diariamente se você recusou os cookies, e são guardados conforme a política de retenção do PostHog.
+- Nossos provedores, incluindo a Anthropic, a ElevenLabs, a Apple, o Google e a Expo, e o Notion se você o conectar, guardam os dados que recebem conforme as próprias políticas de retenção.
+
+## Apagar e exportar
+
+### Apagar sua conta
+
+Abra **Ajustes › Conta › Apagar conta**. Talvez você precise iniciar sessão de novo para confirmar. A exclusão então segue esta ordem:
+
+- O acesso do Outlayr ao seu início de sessão com a Apple ou o Google é revogado. No caso da Apple, nosso servidor pede à Apple que o revogue. No caso do Google, o app faz isso.
+- Se você conectou o Notion, nosso servidor pede ao Notion que revogue a chave de acesso do Outlayr.
+- Seus lançamentos sincronizados, os registros de exclusão, as fotos com backup e as solicitações de sugestão pendentes são apagados dos nossos servidores.
+- Seu registro de cliente na RevenueCat e nossa cópia do status da sua assinatura são apagados.
+- Seu perfil no PostHog e todos os eventos de análise vinculados a ele são apagados.
+- Seus contadores de uso, conversas de voz abertas, sessões, acessos de assistentes de IA, links de início de sessão, chave de acesso do Notion, código de convite e convites, e sua conta são apagados. Se o convite que você resgatou já rendeu um mês ao seu amigo, ele continua na lista dele sem o seu nome.
+
+Ela começa na hora e é executada a partir do seu dispositivo. Se for interrompida, abra Ajustes › Conta de novo e o app continua de onde parou. Se você não conseguir usar o app, escreva para [support@tryoutlayr.com](mailto:support@tryoutlayr.com). [Apague sua conta](/pt/delete-account) reúne estes passos em uma só página.
+
+Depois, um registro de que uma exclusão aconteceu, sem nenhum vínculo com você, é removido em até dois dias após o término dela.
+
+Apagar sua conta não cancela uma assinatura do Outlayr Pro, porque quem a cobra é a sua loja de apps (a App Store da Apple no iPhone, o Google Play no Android). No iPhone, cancele no app Ajustes, tocando no seu nome e depois em Assinaturas. No Android, cancele no app Google Play Store, tocando na sua foto do perfil, depois em Pagamentos e assinaturas e depois em Assinaturas. Sua loja de apps mantém os próprios registros de compras.
+
+### Apagar este dispositivo
+
+Seus lançamentos no celular continuam lá depois que você apaga sua conta, a menos que você escolha **Apagar conta e este dispositivo**. Isso também remove do dispositivo o banco de dados do Outlayr, as fotos, os dados dos widgets, as entradas do Spotlight, os lembretes programados e os dados de início de sessão guardados. O sistema continua controlando as permissões e a posição dos widgets.
+
+### Sem conta
+
+Nada dos seus lançamentos está nos nossos servidores. **Ajustes › Apagar dados** apaga suas transações do celular e, se você escolher, seus orçamentos. Os lançamentos que já estão em Apagados recentemente continuam lá. Apagar o app remove todos os lançamentos.
+
+### Exporte antes
+
+**Ajustes › Exportar dados** oferece dois arquivos. **Exportar CSV** é uma cópia legível das suas transações para uma planilha. **Exportar um arquivo completo** leva cada lançamento, categoria e orçamento por completo e pode restaurar seus lançamentos depois. Você escolhe para onde vai cada arquivo.
+
+## Seus direitos
+
+Dependendo de onde você mora, você tem o direito de:
+
+- saber quais dados pessoais temos sobre você e obter uma cópia;
+- corrigi-los;
+- apagá-los;
+- recebê-los em um formato portátil;
+- restringir a forma como os usamos ou se opor a ela;
+- retirar uma permissão que você deu, sem afetar o que aconteceu antes.
+
+A maior parte disso funciona no app: edite ou apague lançamentos, exporte seus dados, desative recursos ou apague sua conta. Para qualquer outra coisa, escreva para [support@tryoutlayr.com](mailto:support@tryoutlayr.com). Podemos pedir que você escreva do endereço de e-mail da sua conta para confirmarmos que a solicitação é sua. Respondemos em até um mês.
+
+No EEE ou no Reino Unido, você também pode apresentar uma reclamação à autoridade de proteção de dados local ou, no Reino Unido, ao Information Commissioner’s Office. Gostaríamos de ter a chance de ajudar antes.
+
+## Direitos de privacidade em estados dos EUA
+
+Se você mora na Califórnia ou em outro estado dos EUA com uma lei de privacidade, isto é o que coletamos nos últimos 12 meses e quem recebeu para uma finalidade comercial.
+
+| Categoria e exemplos | Recebida por |
+| --- | --- |
+| **Identificadores:** nome, e-mail, ID de conta, ID de instalação, endereço IP | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (e-mail, logos) |
+| **Informações comerciais:** registros de assinaturas e compras | Apple, Google, RevenueCat, Hetzner |
+| **Informações de áudio e visuais:** áudios de voz, escaneamentos de recibos, capturas de tela de parcelamentos, fotos anexadas | ElevenLabs (áudios), Anthropic (escaneamentos), Cloudflare (fotos) |
+| **Atividade na internet ou em outras redes:** endereço IP, agente de usuário, registros de solicitações, uso do app e do site, relatórios de falhas | Hetzner, Expo, PostHog, a empresa que hospeda nosso site |
+| **Registros que você cria:** lançamentos sincronizados, valores, estabelecimentos, notas, orçamentos | Hetzner; nomes de estabelecimentos, categorias e contas para a Anthropic |
+
+Essas informações vêm de você, do seu dispositivo, da Apple e do Google, e as usamos para as finalidades descritas nesta política. Nós as guardamos pelos prazos indicados em [Dados em resumo](#dados-em-resumo).
+
+Não vendemos informações pessoais nem as compartilhamos para publicidade comportamental entre contextos, e não fizemos isso nos últimos 12 meses. Não usamos informações pessoais sensíveis para inferir nada sobre você.
+
+Você pode pedir para saber, apagar ou corrigir suas informações pessoais, e não será tratado de forma diferente por pedir. Um agente autorizado pode fazer o pedido por você se pudermos confirmar que você deu permissão. Se recusarmos um pedido, responda à nossa resposta para recorrer.
+
+Como não vendemos nem compartilhamos, não há nada de que um sinal de Global Privacy Control (GPC) possa excluir você, mas tratamos esse sinal como um pedido de exclusão (opt-out) válido: este site então pergunta antes de definir o cookie de análises, onde quer que você esteja. O Do Not Track (“Não rastrear”) não tem um significado acordado, por isso o site não responde a ele.
+
+## Segurança
+
+- O tráfego entre o app, nossos servidores e nossos provedores passa por conexões HTTPS criptografadas.
+- Cada solicitação dos seus dados está ligada à sua sessão iniciada, e nosso servidor decide em quais dados uma solicitação pode tocar. Uma conta não pode ler nem gravar os lançamentos ou as fotos de outra.
+- Os tokens de atualização de início de sessão e a chave de acesso do Notion são criptografados antes de serem guardados.
+- As solicitações à Anthropic e à ElevenLabs não levam nome, e-mail nem ID de conta.
+- Você pode proteger o Outlayr com o bloqueio biométrico do seu dispositivo (Face ID ou Touch ID no iPhone).
+
+Nenhum sistema é perfeitamente seguro. Se você encontrar um problema de segurança, escreva para [support@tryoutlayr.com](mailto:support@tryoutlayr.com) e, se uma violação afetar seus dados, avisaremos você como a lei exige.
+
+## Transferências internacionais
+
+Nossos servidores ficam em Helsinque, Finlândia, na União Europeia. A danestves LLC é uma empresa dos EUA, e a Anthropic, a ElevenLabs, a RevenueCat, a Expo, o PostHog, a Cloudflare, a Apple, o Google e o Notion processam os dados que recebem principalmente nos Estados Unidos, cujas leis podem protegê-los de forma diferente das leis do seu país. Escreva para [support@tryoutlayr.com](mailto:support@tryoutlayr.com) para saber detalhes das salvaguardas aplicáveis.
+
+## Crianças
+
+O Outlayr não é direcionado a crianças menores de 13 anos, e não coletamos intencionalmente os dados pessoais delas. Se você mora no EEE ou no Reino Unido e tem menos de 16 anos, ou menos que a idade de consentimento digital do lugar onde mora, não crie uma conta sem a permissão de um dos pais ou responsável. Se você acredita que uma criança nos forneceu dados pessoais, escreva para [support@tryoutlayr.com](mailto:support@tryoutlayr.com) e nós os apagaremos.
+
+## Alterações
+
+Quando esta política mudar, publicaremos a nova versão aqui e atualizaremos a data de vigência acima. Antes de uma mudança relevante entrar em vigor, o app mostra o que muda e, se você tiver uma conta, também enviamos um e-mail. Uma mudança é relevante se afetar o que coletamos, quem recebe, como usamos, por quanto tempo guardamos ou seus direitos e obrigações. Outras mudanças, como uma redação mais clara ou um plano grátis melhor, são apenas publicadas aqui.
+
+## Contato
+
+Dúvidas sobre esta política ou sobre seus dados vão para [support@tryoutlayr.com](mailto:support@tryoutlayr.com). Para ajuda com o app em si, veja [Suporte](/pt/support).
+
+Guardamos os e-mails que você nos envia pelo tempo necessário para ajudar você, e os apagamos se você pedir. Falar com o suporte, nos Ajustes, abre um e-mail que já lista a versão do app, a versão do sistema operacional e o tipo de dispositivo, que você pode editar antes de enviar.
