@@ -1,4 +1,4 @@
-import { AreaChart } from "panelui-web/area-chart";
+import { Plot } from "panelui-web/plot";
 import { useMemo } from "react";
 import { useLocale } from "react-intlayer";
 
@@ -7,13 +7,16 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
+import { niceDomain } from "./model";
 import type { WorthRange } from "./model";
 import { useChartRatio } from "./parts";
 
 const TINT = "var(--color-app-tint)";
-const DAILY_TICKS = 6;
+const FILL = "worth-fill";
+/** Plot sizes its gutter for shorter labels; flex-end lets a "$28.0k" run left instead of truncating. */
+export const Y_LABEL = "dash-figure flex justify-end overflow-visible text-[11px]";
+const DAILY_TICKS = 5;
 const THOUSAND = 1000;
-const Y_TICKS = 4;
 const FINE_STEP = 100;
 
 export interface WorthDatum {
@@ -35,20 +38,6 @@ export function useMonthShort() {
 }
 
 const STEPS = 3;
-const NICE = [1, 2, 2.5, 5, 10];
-
-/** Three even steps that hug the data, so a small change still reads as a slope. */
-export function niceDomain(values: readonly number[]): [number, number] {
-    const low = Math.min(...values);
-    const high = Math.max(...values);
-    const raw = (high - low || Math.abs(high) || 1) / STEPS;
-    const power = 10 ** Math.floor(Math.log10(raw));
-    const step = (NICE.find((each) => each * power >= raw) ?? 10) * power;
-    const bottom = Math.floor(low / step) * step;
-    const top = Math.max(bottom + step * STEPS, Math.ceil(high / step) * step);
-    return [bottom, top];
-}
-
 /** One series over time: a tinted band with axes, as the accounts mocks draw it. */
 export function WorthChart({
     aspectRatio,
@@ -72,17 +61,16 @@ export function WorthChart({
     const { compact, whole } = useWholeMoney(shownIn);
     const monthly = range !== "month" && range !== "quarter";
     const ratio = useChartRatio(aspectRatio);
-    const [floor, top] = niceDomain(data.map((datum) => datum.value));
-    // The band always fills down to zero, so values sit on the domain floor to keep it inside the plot.
-    const lifted = useMemo(() => data.map((datum) => ({ ...datum, value: datum.value - floor })), [data, floor]);
-    const axis = (offset: number) => {
-        // The floor label would sit on the first x label, which already marks the bottom edge.
-        if (offset === 0) {
-            return "";
-        }
-        const value = offset + floor;
+    const domain = niceDomain(data.map((datum) => datum.value));
+    const [floor, top] = domain;
+    const last = data.at(-1);
+    const marked = useMemo(
+        () => data.map((datum) => (datum === last ? { ...datum, end: datum.value } : datum)),
+        [data, last]
+    );
+    const axis = (value: number) => {
         // Steps under a hundred would round to the same compact label twice.
-        if ((top - floor) / Y_TICKS < FINE_STEP) {
+        if ((top - floor) / STEPS < FINE_STEP) {
             return whole(value);
         }
         return Math.abs(value) >= THOUSAND
@@ -90,26 +78,32 @@ export function WorthChart({
             : compact(value);
     };
     return (
-        <AreaChart
-            aspectRatio={ratio}
-            curve="linear"
-            data={lifted}
-            label={label}
-            xDataKey="day"
-            yDomain={[0, top - floor]}
-        >
-            <AreaChart.Grid dashArray="0" opacity={1} rows={Y_TICKS} />
-            <AreaChart.Area color={TINT} dataKey="value" fillOpacity={0.22} gradientToOpacity={0} strokeWidth={1.75} />
-            <AreaChart.XAxis
-                format={(datum) => (monthly ? month(String(datum.day)) : date.day(String(datum.day)))}
-                ticks={monthly ? undefined : DAILY_TICKS}
-            />
-            <AreaChart.YAxis format={axis} ticks={Y_TICKS} />
-            <AreaChart.Tooltip
-                formatValue={(value) => money(value + floor, shownIn)}
-                formatX={(datum) => date.day(String(datum.day))}
-                labels={{ value: label }}
-            />
-        </AreaChart>
+        <>
+            <svg aria-hidden className="absolute size-0">
+                <defs>
+                    <linearGradient id={FILL} x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0" style={{ stopColor: TINT, stopOpacity: 0.22 }} />
+                        <stop offset="1" style={{ stopColor: TINT, stopOpacity: 0 }} />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <Plot aspectRatio={ratio} curve="linear" data={marked} label={label} xDataKey="day" yDomain={domain}>
+                <Plot.Grid dashArray="" rows={STEPS} />
+                <Plot.Area color={`url(#${FILL})`} dataKey="value" opacity={1} />
+                <Plot.Line color={TINT} dataKey="value" strokeWidth={1.75} />
+                <Plot.Dots color={TINT} dataKey="end" ringWidth={0} size={3.5} />
+                <Plot.XAxis
+                    className="dash-figure text-[11px]"
+                    format={(datum) => (monthly ? month(String(datum.day)) : date.day(String(datum.day)))}
+                    ticks={monthly ? data.length : DAILY_TICKS}
+                />
+                <Plot.YAxis className={Y_LABEL} format={axis} ticks={STEPS} />
+                <Plot.Cursor showLine={false} />
+                <Plot.Tooltip
+                    formatValue={(value) => money(value, shownIn)}
+                    formatX={(datum) => date.day(String(datum.day))}
+                />
+            </Plot>
+        </>
     );
 }

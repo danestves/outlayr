@@ -26,6 +26,7 @@ const dashboardAccounts = {
                 pt: "Reordenar contas",
             }),
             seeAll: t({ en: "See all", es: "Ver todo", fr: "Tout voir", pt: "Ver tudo" }),
+            payOffBy: t({ en: "Pay off by", es: "Saldar antes del", fr: "Solder avant le", pt: "Quitar até" }),
             newPurchase: t({ en: "New purchase", es: "Nueva compra", fr: "Nouvel achat", pt: "Nova compra" }),
             transfer: t({ en: "Transfer", es: "Transferir", fr: "Virement", pt: "Transferir" }),
             yourOrder: t({ en: "Your order", es: "Tu orden", fr: "Votre ordre", pt: "Sua ordem" }),
@@ -238,6 +239,31 @@ const dashboardAccounts = {
                 })
             ),
             merchant: t({ en: "Merchant", es: "Comercio", fr: "Marchand", pt: "Estabelecimento" }),
+            checkedBand: insert(
+                t({
+                    en: "Checked {{time}} · adjusted {{amount}}",
+                    es: "Revisado {{time}} · ajustado {{amount}}",
+                    fr: "Vérifié {{time}} · ajusté {{amount}}",
+                    pt: "Conferido {{time}} · ajustado {{amount}}",
+                })
+            ),
+            today: t({ en: "Today", es: "Hoy", fr: "Aujourd'hui", pt: "Hoje" }),
+            adjusted: t({ en: "Adjusted", es: "Ajustado", fr: "Ajusté", pt: "Ajustado" }),
+            adjustmentChip: t({ en: "Adjustment", es: "Ajuste", fr: "Ajustement", pt: "Ajuste" }),
+            adjustmentRow: t({
+                en: "Balance adjustment",
+                es: "Ajuste de saldo",
+                fr: "Ajustement du solde",
+                pt: "Ajuste de saldo",
+            }),
+            oneTransferIn: insert(
+                t({
+                    en: "1 transfer in {{period}}",
+                    es: "1 transferencia en {{period}}",
+                    fr: "1 virement en {{period}}",
+                    pt: "1 transferência em {{period}}",
+                })
+            ),
             moved: t({ en: "Moved", es: "Movido", fr: "Virements", pt: "Transferido" }),
             nextClose: insert(
                 t({
@@ -710,6 +736,33 @@ const dashboardAccounts = {
             owe: t({ en: "Owe", es: "Debes", fr: "Dettes", pt: "Devo" }),
         },
         list: {
+            cardCount: insert(
+                t({
+                    en: "{{count}} cards",
+                    es: "{{count}} tarjetas",
+                    fr: "{{count}} cartes",
+                    pt: "{{count}} cartões",
+                })
+            ),
+            inCurrency: insert(
+                t({ en: "In {{currency}}", es: "En {{currency}}", fr: "En {{currency}}", pt: "Em {{currency}}" })
+            ),
+            inMain: insert(
+                t({
+                    en: "In {{currency}}, your main currency",
+                    es: "En {{currency}}, tu moneda principal",
+                    fr: "En {{currency}}, votre devise principale",
+                    pt: "Em {{currency}}, sua moeda principal",
+                })
+            ),
+            oneAccount: t({ en: "1 account", es: "1 cuenta", fr: "1 compte", pt: "1 conta" }),
+            oneCard: t({ en: "1 card", es: "1 tarjeta", fr: "1 carte", pt: "1 cartão" }),
+            nothingScheduled: t({
+                en: "Nothing scheduled.",
+                es: "Nada programado.",
+                fr: "Rien de prévu.",
+                pt: "Nada agendado.",
+            }),
             accounts: t({ en: "Accounts", es: "Cuentas", fr: "Comptes", pt: "Contas" }),
             goals: t({ en: "Goals", es: "Metas", fr: "Objectifs", pt: "Metas" }),
             installments: t({ en: "Installments", es: "Cuotas", fr: "Échéances", pt: "Parcelas" }),

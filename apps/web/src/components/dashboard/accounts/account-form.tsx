@@ -1,9 +1,13 @@
+import Archive02Icon from "@hugeicons/core-free-icons/Archive02Icon";
+import BankIcon from "@hugeicons/core-free-icons/BankIcon";
+import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
+import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
+import Wallet01Icon from "@hugeicons/core-free-icons/Wallet01Icon";
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { toAccountKind } from "@outlayr/money/account-kind";
 import { decimalsFor } from "@outlayr/money/currency";
 import { resolveInstitutionDomain } from "@outlayr/money/institution-map";
 import { merchantKey } from "@outlayr/money/merchant-key";
-import { RiArchiveLine, RiBankCardLine, RiBankLine, RiDeleteBin6Line, RiWallet3Line } from "@remixicon/react";
 import { useForm, useStore } from "@tanstack/react-form";
 import { Button } from "panelui-web/button";
 import { ChoiceCards } from "panelui-web/choice-cards";
@@ -25,6 +29,7 @@ import { ledgerBooks } from "@/lib/ledger-db";
 import { AmountInput, amountText, CurrencyField, FlowDialog } from "./fields";
 import { useLedgerDb } from "./flows";
 import type { AccountFlow, AccountType } from "./flows";
+import { Glyph } from "./glyph";
 import { IdentityPicker, logoIdentity, logoUrl } from "./identity-picker";
 import type { Identity } from "./identity-picker";
 import { accountFacts } from "./model";
@@ -108,7 +113,7 @@ function FormFooter({
             {account ? (
                 <>
                     <Button onClick={() => onSwitch({ accountId: account.localId, kind: "archive" })} variant="outline">
-                        <RiArchiveLine size={16} />
+                        <Glyph icon={Archive02Icon} size={16} />
                         {flows.archive}
                     </Button>
                     <Button
@@ -116,7 +121,7 @@ function FormFooter({
                         onClick={() => onSwitch({ accountId: account.localId, kind: "delete" })}
                         variant="outline"
                     >
-                        <RiDeleteBin6Line size={16} />
+                        <Glyph icon={Delete02Icon} size={16} />
                         {actions.delete}
                     </Button>
                 </>
@@ -241,9 +246,9 @@ export function AccountForm({
     const card = !editing && type === "card";
     const createTitle = card ? flows.newCardTitle : flows.newTitle;
     const types = [
-        { icon: RiBankLine, label: flows.bank, value: "bank" },
-        { icon: RiWallet3Line, label: flows.cash, value: "cash" },
-        { icon: RiBankCardLine, label: flows.cardOrLoan, value: "card" },
+        { icon: BankIcon, label: flows.bank, value: "bank" },
+        { icon: Wallet01Icon, label: flows.cash, value: "cash" },
+        { icon: CreditCardIcon, label: flows.cardOrLoan, value: "card" },
     ] as const;
 
     return (
@@ -274,10 +279,10 @@ export function AccountForm({
                             }}
                             value={type}
                         >
-                            {types.map(({ icon: Icon, label, value }) => (
+                            {types.map(({ icon, label, value }) => (
                                 <ChoiceCards.Item key={value} value={value}>
                                     <ChoiceCards.Media>
-                                        <Icon size={20} />
+                                        <Glyph icon={icon} size={20} />
                                     </ChoiceCards.Media>
                                     <ChoiceCards.Label>{label}</ChoiceCards.Label>
                                 </ChoiceCards.Item>

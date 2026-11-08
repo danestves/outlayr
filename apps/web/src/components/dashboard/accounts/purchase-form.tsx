@@ -1,10 +1,10 @@
+import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
 import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
 import { decimalsFor } from "@outlayr/money/currency";
 import { EVERY_ORDER, MAX_INSTALLMENT_COUNT, newInstallmentDraft } from "@outlayr/money/installment-draft";
 import type { EveryOption } from "@outlayr/money/installment-draft";
 import { installmentAppsIn, installmentRegion } from "@outlayr/money/institution-map";
 import type { InstallmentApp } from "@outlayr/money/institution-map";
-import { RiImageAddLine } from "@remixicon/react";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Field } from "panelui-web/field";
@@ -28,6 +28,7 @@ import type { PurchaseDraft } from "@/lib/plan-writes";
 import { AmountInput, amountText, FlowDialog } from "./fields";
 import { useLedgerDb } from "./flows";
 import type { AccountFlow } from "./flows";
+import { Glyph } from "./glyph";
 import { logoIdentity } from "./identity-picker";
 import { PhoneAction } from "./parts";
 
@@ -475,7 +476,7 @@ export function PurchaseForm({
                 {failed ? <span className="text-destructive mr-auto text-[13px]">{flows.saveFailed}</span> : null}
                 {failed || blocked ? null : (
                     <PhoneAction className="mr-auto">
-                        <RiImageAddLine size={16} />
+                        <Glyph icon={ImageAdd01Icon} size={16} />
                         {purchase.importScreenshot}
                     </PhoneAction>
                 )}

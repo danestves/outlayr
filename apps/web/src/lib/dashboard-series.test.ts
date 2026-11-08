@@ -5,7 +5,7 @@ import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
-import { accountEntries, rangeDays } from "../components/dashboard/accounts/model";
+import { accountEntries, niceDomain, rangeDays, spentByCategory } from "../components/dashboard/accounts/model";
 import {
     budgetParts,
     categoryBudget,
@@ -737,5 +737,34 @@ describe("a transfer between currencies on an account's entries", () => {
         );
         const main = (id: string) => accountEntries(ledger, id, "2026-10-01", "2026-10-31")[0]?.main;
         expect([main("chase"), main("cash")]).toStrictEqual([-100, 98]);
+    });
+});
+
+describe("spentByCategory", () => {
+    it("adds an account's spending in its own currency", () => {
+        const ledger = prepareLedger(
+            books({
+                accounts: [account("euro", "Euro", { currency: "EUR" })],
+                categories: [category("food", { color: null, name: "Food" })],
+                transactions: [
+                    entry("e", "2026-10-10T16:00:00Z", 90, {
+                        accountId: "euro",
+                        amountUsd: 98,
+                        categoryId: "food",
+                        currency: "EUR",
+                    }),
+                ],
+            }),
+            NOW
+        );
+        expect(spentByCategory(ledger, "euro", "2026-10-01", "2026-10-31").map((share) => share.value)).toStrictEqual([
+            90,
+        ]);
+    });
+});
+
+describe("niceDomain", () => {
+    it("widens the step when flooring the bottom would leave the top out", () => {
+        expect(niceDomain([1490, 2900])).toStrictEqual([1000, 4000]);
     });
 });

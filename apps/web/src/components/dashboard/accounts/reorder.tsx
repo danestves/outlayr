@@ -1,4 +1,5 @@
-import { RiArrowLeftLine, RiDraggable } from "@remixicon/react";
+import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
+import DragDropVerticalIcon from "@hugeicons/core-free-icons/DragDropVerticalIcon";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { useMemo, useRef, useState } from "react";
@@ -14,6 +15,7 @@ import { useDisplayFormat, writeSettings } from "@/lib/ledger-settings";
 
 import { AccountsBar, Card } from "./accounts-screen";
 import { useLedgerDb } from "./flows";
+import { Glyph } from "./glyph";
 import { accountRows, groupRows, sortRows, storedSort } from "./model";
 import type { AccountRow, AccountSort } from "./model";
 import { Segments } from "./parts";
@@ -83,7 +85,7 @@ function Rows({ onMove, rows }: { onMove: (id: string, to: number) => void; rows
                             onPointerUp={() => setDragging(null)}
                             type="button"
                         >
-                            <RiDraggable size={17} />
+                            <Glyph icon={DragDropVerticalIcon} size={17} />
                         </button>
                         <span className="dash-figure text-muted-foreground w-4 shrink-0 text-center text-xs">
                             {index + 1}
@@ -192,7 +194,7 @@ export function ReorderAccounts() {
                             className="border-border bg-app-hover inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] border"
                             to="/app/accounts"
                         >
-                            <RiArrowLeftLine className="text-muted-foreground" size={17} />
+                            <Glyph icon={ArrowLeft02Icon} className="text-muted-foreground" size={17} />
                         </Link>
                         <span className="truncate">{actions.reorder}</span>
                     </span>

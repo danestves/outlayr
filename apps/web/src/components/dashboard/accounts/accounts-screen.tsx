@@ -1,19 +1,17 @@
-import {
-    RiAddLine,
-    RiArchiveLine,
-    RiArrowDownSLine,
-    RiArrowLeftDownLine,
-    RiArrowLeftRightLine,
-    RiArrowRightUpLine,
-    RiBankCardLine,
-    RiBankLine,
-    RiCalendarCheckLine,
-    RiDeleteBin6Line,
-    RiHistoryLine,
-    RiMore2Fill,
-    RiUpload2Line,
-    RiSafe2Line,
-} from "@remixicon/react";
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import Archive02Icon from "@hugeicons/core-free-icons/Archive02Icon";
+import ArrowDataTransferHorizontalIcon from "@hugeicons/core-free-icons/ArrowDataTransferHorizontalIcon";
+import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
+import ArrowDownLeft01Icon from "@hugeicons/core-free-icons/ArrowDownLeft01Icon";
+import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
+import BankIcon from "@hugeicons/core-free-icons/BankIcon";
+import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
+import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
+import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
+import HistoryIcon from "@hugeicons/core-free-icons/HistoryIcon";
+import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
+import SafeIcon from "@hugeicons/core-free-icons/SafeIcon";
+import Upload01Icon from "@hugeicons/core-free-icons/Upload01Icon";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useRouteContext } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
@@ -37,6 +35,7 @@ import { commitRows } from "@/lib/ledger-commit";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { useAccountFlows, useLedgerDb } from "./flows";
+import { Glyph } from "./glyph";
 import {
     accountRows,
     archivedRows,
@@ -83,9 +82,9 @@ const UPCOMING_DAYS = 30;
 const UPCOMING_ROWS = 5;
 const TRANSFER_ROWS = 7;
 export const PERCENT = 100;
-const LIST_CHART = 770 / 236;
-const HEAD = "first:ps-3.5 last:pe-3.5 last:text-end";
-const CELL = "h-[51px] py-0 whitespace-nowrap first:ps-3.5 last:pe-3.5 last:text-end";
+const LIST_CHART = 770 / 220;
+const HEAD = "h-9 first:ps-3.5 last:pe-3.5 last:text-end";
+const CELL = "h-11 py-0 whitespace-nowrap first:ps-3.5 last:pe-3.5 last:text-end";
 export const ROW = "flex h-11 items-center gap-2.5 border-b text-[13px] font-medium last:border-0";
 export const ICON_TILE =
     "bg-app-fill text-muted-foreground flex size-[26px] shrink-0 items-center justify-center rounded-lg";
@@ -132,7 +131,8 @@ export function Card({
                     title
                 ) : (
                     <>
-                        {title} <span className="dash-figure text-muted-foreground ms-1 font-normal">{count}</span>
+                        {title}{" "}
+                        <span className="dash-figure text-muted-foreground ms-1 text-[13px] font-normal">{count}</span>
                     </>
                 )
             }
@@ -213,17 +213,22 @@ function useListModel() {
 
 type ListModel = ReturnType<typeof useListModel>;
 
+const quietNote = (children: ReactNode) => (
+    <span className="text-muted-foreground truncate text-[13px] leading-5">{children}</span>
+);
+
 function Kpis({ model }: { model: ListModel }) {
     const { ledger } = useDashboard();
-    const { kpi } = useIntlayer("dashboard-accounts");
+    const { kpi, list } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const { whole } = useWholeMoney(ledger.currency);
-    const { before, months, now, rows } = model;
+    const { before, months, multi, now, rows } = model;
     const credit = creditLine(ledger, groupRows(rows).cards);
     const net = now?.net ?? 0;
     const delta = (key: "net" | "owe" | "own") => (now?.[key] ?? 0) - (before?.[key] ?? 0);
     const quiet = rows.length === 0;
     const growth = before && before.net !== 0 ? delta("net") / Math.abs(before.net) : null;
+    const { assets, cards } = groupRows(rows);
     const line = (key: "net" | "owe" | "own", color?: KpiColor) =>
         quiet ? null : <Spark className="w-24" color={color} height={28} values={months.map((point) => point[key])} />;
     const change = (key: "owe" | "own", goodWhenUp: boolean) =>
@@ -244,42 +249,52 @@ function Kpis({ model }: { model: ListModel }) {
     }
     return (
         <KpiBand>
-            <KpiCell color={MUTED} icon={RiSafe2Line} label={kpi.netWorth} value={money(net, ledger.currency)}>
-                {growth === null || quiet ? (
-                    <span />
+            <KpiCell color={MUTED} icon={SafeIcon} label={kpi.netWorth} value={money(net, ledger.currency)}>
+                {multi ? (
+                    quietNote(list.inMain({ currency: ledger.currency }))
                 ) : (
-                    <Trend value={growth}>{`${growth > 0 ? "+" : ""}${(growth * PERCENT).toFixed(1)}%`}</Trend>
+                    <>
+                        {growth === null ? (
+                            <span />
+                        ) : (
+                            <Trend value={growth}>{`${growth > 0 ? "+" : ""}${(growth * PERCENT).toFixed(1)}%`}</Trend>
+                        )}
+                        {line("net")}
+                    </>
                 )}
-                {line("net")}
             </KpiCell>
             <KpiCell
                 color={INCOME}
-                icon={RiArrowLeftDownLine}
+                icon={ArrowDownLeft01Icon}
                 label={kpi.have}
                 value={money(now?.own ?? 0, ledger.currency)}
             >
-                {change("own", true)}
-                {line("own", "success")}
+                {multi
+                    ? quietNote(assets.length === 1 ? list.oneAccount : kpi.accounts({ count: assets.length }))
+                    : change("own", true)}
+                {multi ? null : line("own", "success")}
             </KpiCell>
             <KpiCell
                 color={SPEND}
-                icon={RiArrowRightUpLine}
+                icon={ArrowUpRight01Icon}
                 label={kpi.owe}
                 value={money(now?.owe ?? 0, ledger.currency)}
             >
-                {change("owe", false)}
-                {line("owe", "destructive")}
+                {multi
+                    ? quietNote(cards.length === 1 ? list.oneCard : list.cardCount({ count: cards.length }))
+                    : change("owe", false)}
+                {multi ? null : line("owe", "destructive")}
             </KpiCell>
             {credit ? (
                 <KpiCell
                     color={MUTED}
-                    icon={RiBankCardLine}
+                    icon={CreditCardIcon}
                     label={kpi.available}
                     value={`${credit.exact ? "" : "~"}${money(credit.available, ledger.currency)}`}
                 >
-                    <span className="dash-figure text-muted-foreground truncate text-[13px]">
+                    <Badge className="dash-figure text-muted-foreground" variant="secondary">
                         {kpi.of({ amount: `${credit.exact ? "" : "~"}${whole(credit.limit)}` })}
-                    </span>
+                    </Badge>
                 </KpiCell>
             ) : null}
         </KpiBand>
@@ -315,17 +330,22 @@ function WorthCard({ model }: { model: ListModel }) {
                     value={range}
                 />
             }
-            aside={list.inPeriod({
-                amount: money(gained, ledger.currency, "always"),
-                period: date.month(ledger.today.slice(0, 7)),
-            })}
-            className="flex-1"
+            className={model.multi ? "" : "flex-1"}
             stackAction
             title={
-                <Link className="hover:text-app-tint inline-flex items-center gap-1" to="/app/accounts/net-worth">
-                    {kpi.netWorth}
-                    <RiArrowRightUpLine className="text-muted-foreground" size={15} />
-                </Link>
+                <span className="flex min-w-0 items-baseline gap-2">
+                    <Link className="hover:text-app-tint" to="/app/accounts/net-worth">
+                        {kpi.netWorth}
+                    </Link>
+                    <span className="dash-figure text-muted-foreground truncate text-[13px] font-normal tracking-normal">
+                        {model.multi
+                            ? list.inCurrency({ currency: ledger.currency })
+                            : list.inPeriod({
+                                  amount: money(gained, ledger.currency, "always"),
+                                  period: date.month(ledger.today.slice(0, 7)),
+                              })}
+                    </span>
+                </span>
             }
         >
             <div className="flex-1 p-3.5">
@@ -579,12 +599,17 @@ function UpcomingLead({ row }: { row: UpcomingRow }) {
     }
     return (
         <span className={ICON_TILE}>
-            {row.source.kind === "statement" ? <RiBankCardLine size={14} /> : <RiCalendarCheckLine size={14} />}
+            {row.source.kind === "statement" ? (
+                <Glyph icon={CreditCardIcon} size={14} />
+            ) : (
+                <Glyph icon={CalendarCheckIn01Icon} size={14} />
+            )}
         </span>
     );
 }
 
-export function UpcomingCard({ accountId }: { accountId?: string }) {
+/** `showEmpty` keeps the card with a quiet line when nothing is due. */
+export function UpcomingCard({ accountId, showEmpty = false }: { accountId?: string; showEmpty?: boolean }) {
     const { ledger, overview } = useDashboard();
     const { list } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
@@ -592,7 +617,11 @@ export function UpcomingCard({ accountId }: { accountId?: string }) {
     const horizon = addDays(ledger.today, UPCOMING_DAYS);
     const rows = upcomingRows(ledger, overview, horizon, accountId).slice(0, UPCOMING_ROWS);
     if (rows.length === 0) {
-        return null;
+        return showEmpty ? (
+            <Card title={list.upcoming}>
+                <p className="text-muted-foreground px-3.5 py-3 text-[13px]">{list.nothingScheduled}</p>
+            </Card>
+        ) : null;
     }
     const unvalued = rows.some((row) => row.value === null);
     const total = rows.reduce((sum, row) => sum + (row.value ?? 0) * (row.income ? -1 : 1), 0);
@@ -632,15 +661,22 @@ export function UpcomingCard({ accountId }: { accountId?: string }) {
 
 function GoalsCard({ model }: { model: ListModel }) {
     const { ledger } = useDashboard();
-    const { list } = useIntlayer("dashboard-accounts");
+    const { actions, list } = useIntlayer("dashboard-accounts");
     const { whole } = useWholeMoney(ledger.currency);
     const goals = goalRows(ledger, model.rows);
     if (goals.length === 0) {
         return null;
     }
     return (
-        <Card title={list.goals}>
-            <div className="flex flex-col gap-4 p-3.5">
+        <Card
+            action={
+                <PhoneAction className="-my-1" size="sm">
+                    {actions.seeAll}
+                </PhoneAction>
+            }
+            title={list.goals}
+        >
+            <div className="flex flex-col gap-4 px-3.5 py-3">
                 {goals.map((goal) => (
                     <div key={goal.id}>
                         <div className="flex items-baseline gap-2 text-[13px] font-medium">
@@ -675,6 +711,7 @@ function TransfersCard() {
         <Card
             action={
                 <Button
+                    className="-my-1"
                     nativeButton={false}
                     render={<Link search={{ span: "all", type: "transfers" }} to="/app/transactions" />}
                     size="sm"
@@ -690,7 +727,7 @@ function TransfersCard() {
                 {transfers.map((transfer) => (
                     <div className={ROW} key={transfer.id}>
                         <span className={ICON_TILE}>
-                            <RiArrowLeftRightLine size={14} />
+                            <Glyph icon={ArrowDataTransferHorizontalIcon} size={14} />
                         </span>
                         <span className="min-w-0 truncate">
                             {list.transferTo({ name: ledger.accounts.get(transfer.toId)?.name ?? "" })}
@@ -849,7 +886,7 @@ export function EmptyAccounts() {
                     <b className="text-[15px] leading-[22px] font-semibold">{empty.title}</b>
                     <p className="text-muted-foreground text-[13px]">{empty.line}</p>
                     <Button className="mt-3" onClick={() => open({ kind: "create", type: "bank" })}>
-                        <RiAddLine />
+                        <Glyph icon={Add01Icon} />
                         {actions.addAccount}
                     </Button>
                 </div>
@@ -881,22 +918,22 @@ function ArchivedMenu({ row }: { row: ArchivedRow }) {
                 aria-label={actions.more({ name: row.name }).value}
                 render={<Button className="text-muted-foreground -mr-1" size="icon-sm" variant="ghost" />}
             >
-                <RiMore2Fill size={17} />
+                <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
             <Menu.Content align="end" className="app-shell ph-no-capture w-[210px]" sideOffset={4}>
                 <Menu.Item onClick={restore}>
-                    <RiArchiveLine size={16} />
+                    <Glyph icon={Archive02Icon} size={16} />
                     {flows.restore}
                 </Menu.Item>
                 <Menu.Item
                     onClick={() => navigate({ search: { accounts: row.id, span: "all" }, to: "/app/transactions" })}
                 >
-                    <RiHistoryLine size={16} />
+                    <Glyph icon={HistoryIcon} size={16} />
                     {flows.seeTransactions}
                 </Menu.Item>
                 <Menu.Separator />
                 <Menu.Item variant="destructive" onClick={() => open({ accountId: row.id, kind: "delete" })}>
-                    <RiDeleteBin6Line size={16} />
+                    <Glyph icon={Delete02Icon} size={16} />
                     {actions.delete}
                 </Menu.Item>
             </Menu.Content>
@@ -956,20 +993,20 @@ function ArchivedCard() {
                 <Button
                     aria-expanded={open}
                     aria-label={flows.archived.value}
-                    className="text-muted-foreground"
+                    className="text-muted-foreground -my-1"
                     onClick={() => setOpen(!open)}
                     size="icon-sm"
                     variant="ghost"
                 >
-                    <RiArrowDownSLine className={open ? "rotate-180" : ""} />
+                    <Glyph icon={ArrowDown01Icon} className={open ? "rotate-180" : ""} />
                 </Button>
             }
             aside={open ? flows.archivedNote : null}
-            count={rows.length}
             title={
-                <span className="inline-flex items-center gap-2">
-                    <RiArchiveLine className="text-muted-foreground shrink-0" size={16} />
+                <span className="inline-flex items-center gap-2 text-[13px] font-medium">
+                    <Glyph icon={Archive02Icon} className="text-muted-foreground shrink-0" size={16} />
                     {flows.archived}
+                    <span className="dash-figure text-muted-foreground font-normal">{rows.length}</span>
                 </span>
             }
         >
@@ -984,20 +1021,20 @@ function AddAccountMenu() {
     return (
         <Menu>
             <Menu.Trigger render={<Button />}>
-                <RiAddLine />
+                <Glyph icon={Add01Icon} />
                 {actions.addAccount}
             </Menu.Trigger>
             <Menu.Content align="end" className="app-shell ph-no-capture w-[232px]" sideOffset={4}>
                 <Menu.Item onClick={() => open({ kind: "create", type: "bank" })}>
-                    <RiBankLine size={16} />
+                    <Glyph icon={BankIcon} size={16} />
                     {columns.account}
                 </Menu.Item>
                 <Menu.Item onClick={() => open({ kind: "create", type: "card" })}>
-                    <RiBankCardLine size={16} />
+                    <Glyph icon={CreditCardIcon} size={16} />
                     {flows.cardOrLoan}
                 </Menu.Item>
                 <Menu.Item onClick={() => open({ kind: "purchase" })}>
-                    <RiCalendarCheckLine size={16} />
+                    <Glyph icon={CalendarCheckIn01Icon} size={16} />
                     {flows.purchaseInInstallments}
                 </Menu.Item>
             </Menu.Content>
@@ -1026,14 +1063,14 @@ export function AccountsScreen() {
             <AccountsBar title={list.title}>
                 {empty ? (
                     <PhoneAction>
-                        <RiUpload2Line />
+                        <Glyph icon={Upload01Icon} />
                         {actions.import}
                     </PhoneAction>
                 ) : (
                     <>
                         <SortMenu onSort={saveSort} sort={sort} />
                         <PhoneAction className="max-sm:hidden">
-                            <RiArrowLeftRightLine />
+                            <Glyph icon={ArrowDataTransferHorizontalIcon} />
                             {actions.transfer}
                         </PhoneAction>
                     </>
