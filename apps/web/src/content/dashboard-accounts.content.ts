@@ -26,6 +26,7 @@ const dashboardAccounts = {
                 pt: "Reordenar contas",
             }),
             seeAll: t({ en: "See all", es: "Ver todo", fr: "Tout voir", pt: "Ver tudo" }),
+            newPurchase: t({ en: "New purchase", es: "Nueva compra", fr: "Nouvel achat", pt: "Nova compra" }),
             transfer: t({ en: "Transfer", es: "Transferir", fr: "Virement", pt: "Transferir" }),
             yourOrder: t({ en: "Your order", es: "Tu orden", fr: "Votre ordre", pt: "Sua ordem" }),
         },
@@ -404,6 +405,12 @@ const dashboardAccounts = {
             balance: t({ en: "Balance", es: "Saldo", fr: "Solde", pt: "Saldo" }),
             bank: t({ en: "Bank", es: "Banco", fr: "Banque", pt: "Banco" }),
             cancel: t({ en: "Cancel", es: "Cancelar", fr: "Annuler", pt: "Cancelar" }),
+            purchaseInInstallments: t({
+                en: "Purchase in installments",
+                es: "Compra en cuotas",
+                fr: "Achat en plusieurs fois",
+                pt: "Compra parcelada",
+            }),
             cardOrLoan: t({
                 en: "Card or loan",
                 es: "Tarjeta o préstamo",
@@ -704,6 +711,34 @@ const dashboardAccounts = {
         },
         list: {
             accounts: t({ en: "Accounts", es: "Cuentas", fr: "Comptes", pt: "Contas" }),
+            goals: t({ en: "Goals", es: "Metas", fr: "Objectifs", pt: "Metas" }),
+            installments: t({ en: "Installments", es: "Cuotas", fr: "Échéances", pt: "Parcelas" }),
+            payment: t({ en: "Payment", es: "Pago", fr: "Paiement", pt: "Pagamento" }),
+            planFallback: t({ en: "Order", es: "Compra", fr: "Achat", pt: "Compra" }),
+            planLeft: insert(
+                t({
+                    en: "{{amount}} left",
+                    es: "faltan {{amount}}",
+                    fr: "reste {{amount}}",
+                    pt: "faltam {{amount}}",
+                })
+            ),
+            planNth: insert(
+                t({
+                    en: "{{name}} {{sequence}} of {{count}}",
+                    es: "{{name}} {{sequence}} de {{count}}",
+                    fr: "{{name}} {{sequence}} sur {{count}}",
+                    pt: "{{name}} {{sequence}} de {{count}}",
+                })
+            ),
+            planPaid: insert(
+                t({
+                    en: "{{count}} paid",
+                    es: "{{count}} pagadas",
+                    fr: "{{count}} payées",
+                    pt: "{{count}} pagas",
+                })
+            ),
             byCurrency: t({ en: "By currency", es: "Por moneda", fr: "Par devise", pt: "Por moeda" }),
             cards: t({
                 en: "Cards and loans",
@@ -777,6 +812,112 @@ const dashboardAccounts = {
                 })
             ),
             started: t({ en: "Started", es: "Inicio", fr: "Début", pt: "Início" }),
+        },
+        purchase: {
+            account: t({ en: "Account", es: "Cuenta", fr: "Compte", pt: "Conta" }),
+            accountRequired: t({
+                en: "Pick an account.",
+                es: "Elige una cuenta.",
+                fr: "Choisissez un compte.",
+                pt: "Escolha uma conta.",
+            }),
+            appsIn: insert(
+                t({
+                    en: "Installments in {{region}}",
+                    es: "Cuotas en {{region}}",
+                    fr: "Paiement fractionné en {{region}}",
+                    pt: "Parcelas em {{region}}",
+                })
+            ),
+            add: t({ en: "Add", es: "Añadir", fr: "Ajouter", pt: "Adicionar" }),
+            category: t({ en: "Category", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
+            count: t({ en: "Installments", es: "Cuotas", fr: "Échéances", pt: "Parcelas" }),
+            each: t({ en: "Each", es: "Cada una", fr: "Chacune", pt: "Cada uma" }),
+            every: t({ en: "Every", es: "Cada", fr: "Tous les", pt: "A cada" }),
+            everyDays14: t({ en: "14 days", es: "14 días", fr: "14 jours", pt: "14 dias" }),
+            everyDays15: t({ en: "15 days", es: "15 días", fr: "15 jours", pt: "15 dias" }),
+            everyFifteenthAndLast: t({
+                en: "15th and last day",
+                es: "Día 15 y último día",
+                fr: "Le 15 et le dernier jour",
+                pt: "Dia 15 e último dia",
+            }),
+            everyFirstAndSixteenth: t({
+                en: "1st and 16th",
+                es: "Día 1 y 16",
+                fr: "Le 1er et le 16",
+                pt: "Dias 1 e 16",
+            }),
+            everyMonthly: t({ en: "Month", es: "Mes", fr: "Mois", pt: "Mês" }),
+            everyWeekly: t({ en: "Week", es: "Semana", fr: "Semaine", pt: "Semana" }),
+            firstDue: t({ en: "First due", es: "Primer pago", fr: "Première échéance", pt: "Primeiro vencimento" }),
+            for: t({ en: "For", es: "Por", fr: "Pour", pt: "Para" }),
+            forPlaceholder: t({
+                en: "What you bought",
+                es: "Lo que compraste",
+                fr: "Ce que vous avez acheté",
+                pt: "O que você comprou",
+            }),
+            importScreenshot: t({
+                en: "Import from a screenshot",
+                es: "Importar de una captura",
+                fr: "Importer une capture",
+                pt: "Importar de uma captura",
+            }),
+            nameRequired: t({
+                en: "Name the purchase.",
+                es: "Ponle nombre a la compra.",
+                fr: "Nommez l'achat.",
+                pt: "Dê um nome à compra.",
+            }),
+            other: t({ en: "Other", es: "Otra", fr: "Autre", pt: "Outra" }),
+            overPrice: insert(
+                t({
+                    en: "{{amount}} over the price",
+                    es: "{{amount}} por encima del precio",
+                    fr: "{{amount}} au-dessus du prix",
+                    pt: "{{amount}} acima do preço",
+                })
+            ),
+            paidNow: t({ en: "Paid now", es: "Pagado ahora", fr: "Payé maintenant", pt: "Pago agora" }),
+            pick: t({ en: "Pick one", es: "Elige una", fr: "Choisir", pt: "Escolher" }),
+            range: insert(
+                t({
+                    en: "{{from}} to {{to}}",
+                    es: "{{from}} a {{to}}",
+                    fr: "{{from}} au {{to}}",
+                    pt: "{{from}} a {{to}}",
+                })
+            ),
+            save: t({ en: "Save", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            thenEach: insert(
+                t({
+                    en: "Then {{count}} × {{amount}}",
+                    es: "Luego {{count}} × {{amount}}",
+                    fr: "Puis {{count}} × {{amount}}",
+                    pt: "Depois {{count}} × {{amount}}",
+                })
+            ),
+            title: t({
+                en: "New purchase in installments",
+                es: "Nueva compra en cuotas",
+                fr: "Nouvel achat en plusieurs fois",
+                pt: "Nova compra parcelada",
+            }),
+            total: t({ en: "Total", es: "Total", fr: "Total", pt: "Total" }),
+            totalRequired: t({
+                en: "Enter the price.",
+                es: "Escribe el precio.",
+                fr: "Saisissez le prix.",
+                pt: "Digite o preço.",
+            }),
+            upfront: t({ en: "Upfront", es: "Inicial", fr: "Acompte", pt: "Entrada" }),
+            upfrontTooHigh: t({
+                en: "The upfront leaves nothing to pay in installments.",
+                es: "La inicial no deja nada para pagar en cuotas.",
+                fr: "L'acompte ne laisse rien à payer en plusieurs fois.",
+                pt: "A entrada não deixa nada para parcelar.",
+            }),
         },
         range: {
             month: t({ en: "Month", es: "Mes", fr: "Mois", pt: "Mês" }),

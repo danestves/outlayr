@@ -7,6 +7,7 @@ import {
     RiArrowRightUpLine,
     RiBankCardLine,
     RiBankLine,
+    RiCalendarCheckLine,
     RiDeleteBin6Line,
     RiHistoryLine,
     RiMore2Fill,
@@ -40,17 +41,19 @@ import {
     checkedAge,
     creditLine,
     flowsOf,
+    goalRows,
     groupRows,
-    hasPlans,
     monthStart,
+    plansOn,
     rangeDays,
     ratesFor,
     recentBalances,
     sortRows,
     storedSort,
+    upcomingRows,
     worthSeries,
 } from "./model";
-import type { AccountRow, AccountSort, ArchivedRow, WorthRange } from "./model";
+import type { AccountRow, AccountSort, ArchivedRow, UpcomingRow, WorthRange } from "./model";
 import {
     AccountCell,
     KpiBand,
@@ -86,7 +89,17 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
     return <section className={`dash-card ${className}`}>{children}</section>;
 }
 
-export function Head({ aside, count, title }: { aside?: ReactNode; count?: number; title: ReactNode }) {
+export function Head({
+    action,
+    aside,
+    count,
+    title,
+}: {
+    action?: ReactNode;
+    aside?: ReactNode;
+    count?: number;
+    title: ReactNode;
+}) {
     return (
         <div className="dash-card-head">
             <h2>{title}</h2>
@@ -96,6 +109,7 @@ export function Head({ aside, count, title }: { aside?: ReactNode; count?: numbe
             {aside ? (
                 <span className="dash-figure text-muted-foreground ml-auto min-w-0 truncate text-[13px]">{aside}</span>
             ) : null}
+            {action ? <span className="ml-auto flex">{action}</span> : null}
         </div>
     );
 }
@@ -406,7 +420,7 @@ export function useStatementText() {
     const { money } = useDisplayFormat();
     const date = useDateFormat();
     return (row: AccountRow) => {
-        const statement = cardStatement(row, flowsOf(ledger, row.id), ledger.today, hasPlans(ledger, row.id));
+        const statement = cardStatement(row, flowsOf(ledger, row.id), ledger.today, plansOn(ledger, row.id));
         if (!statement) {
             return null;
         }
@@ -510,43 +524,96 @@ function CardsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
     );
 }
 
+function UpcomingLead({ row }: { row: UpcomingRow }) {
+    const { photos } = useDashboard();
+    if (row.source.kind === "charge") {
+        return <LookTile look={row.source.charge.look} photos={photos} plain size="lg" />;
+    }
+    return (
+        <span className={ICON_TILE}>
+            {row.source.kind === "statement" ? <RiBankCardLine size={14} /> : <RiCalendarCheckLine size={14} />}
+        </span>
+    );
+}
+
 export function UpcomingCard({ accountId }: { accountId?: string }) {
-    const { ledger, overview, photos } = useDashboard();
+    const { ledger, overview } = useDashboard();
     const { list } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const date = useDateFormat();
     const horizon = addDays(ledger.today, UPCOMING_DAYS);
-    const charges = overview.upcoming.charges
-        .filter((charge) => charge.nextCharge <= horizon && (!accountId || charge.accountId === accountId))
-        .slice(0, UPCOMING_ROWS);
-    if (charges.length === 0) {
+    const rows = upcomingRows(ledger, overview, horizon, accountId).slice(0, UPCOMING_ROWS);
+    if (rows.length === 0) {
         return null;
     }
-    const unvalued = charges.some((charge) => charge.valued === null && charge.currency !== overview.upcoming.currency);
-    const total = charges.reduce(
-        (sum, charge) => sum + (charge.valued ?? charge.amount) * (charge.kind === "income" ? -1 : 1),
-        0
-    );
+    const unvalued = rows.some((row) => row.value === null);
+    const total = rows.reduce((sum, row) => sum + (row.value ?? 0) * (row.income ? -1 : 1), 0);
+    const titleOf = ({ source }: UpcomingRow) => {
+        if (source.kind === "charge") {
+            return source.charge.note;
+        }
+        if (source.kind === "statement") {
+            return accountId ? list.payment : source.accountName;
+        }
+        const name = source.name || list.planFallback.value;
+        return source.sequence > 0 ? list.planNth({ count: source.count, name, sequence: source.sequence }) : name;
+    };
     return (
         <Card>
             <Head aside={unvalued ? null : money(total, overview.upcoming.currency)} title={list.upcoming} />
             <div className="px-5 pb-1.5">
-                {charges.map((charge) => (
-                    <div className={ROW} key={charge.id}>
-                        <LookTile look={charge.look} photos={photos} plain size="lg" />
-                        <span className="min-w-0 truncate">{charge.note}</span>
+                {rows.map((row) => (
+                    <div className={ROW} key={row.id}>
+                        <UpcomingLead row={row} />
+                        <span className="min-w-0 truncate">{titleOf(row)}</span>
                         <span
-                            className={`dash-figure font-normal whitespace-nowrap ${charge.nextCharge < ledger.today ? "text-app-spend" : "text-muted-foreground"}`}
+                            className={`dash-figure font-normal whitespace-nowrap ${row.day < ledger.today ? "text-app-spend" : "text-muted-foreground"}`}
                         >
-                            {date.day(charge.nextCharge)}
+                            {date.day(row.day)}
                         </span>
                         <span
-                            className={`dash-figure ml-auto whitespace-nowrap ${charge.kind === "income" ? "text-app-income" : ""}`}
+                            className={`dash-figure ml-auto whitespace-nowrap ${row.income ? "text-app-income" : ""}`}
                         >
-                            {charge.valued === null
-                                ? money(charge.amount, charge.currency)
-                                : money(charge.valued, overview.upcoming.currency)}
+                            {money(row.amount, row.currency)}
                         </span>
+                    </div>
+                ))}
+            </div>
+        </Card>
+    );
+}
+
+function GoalsCard({ model }: { model: ListModel }) {
+    const { ledger } = useDashboard();
+    const { list } = useIntlayer("dashboard-accounts");
+    const { whole } = useWholeMoney(ledger.currency);
+    const goals = goalRows(ledger, model.rows);
+    if (goals.length === 0) {
+        return null;
+    }
+    return (
+        <Card>
+            <Head title={list.goals} />
+            <div className="flex flex-col gap-4 px-5 pb-[18px]">
+                {goals.map((goal) => (
+                    <div key={goal.id}>
+                        <div className="flex items-baseline gap-2 text-[13px] font-medium">
+                            <span className="min-w-0 truncate">{goal.name}</span>
+                            <span className="dash-figure ml-auto whitespace-nowrap">
+                                {goal.exact ? "" : "~"}
+                                {whole(goal.saved)}
+                                <span className="text-muted-foreground font-normal">
+                                    {" / "}
+                                    {whole(goal.target)}
+                                </span>
+                            </span>
+                        </div>
+                        <div className="bg-app-fill mt-2.5 flex h-2 overflow-hidden rounded-full">
+                            <i
+                                className="bg-foreground block h-full rounded-full"
+                                style={{ width: `${goal.fraction * PERCENT}%` }}
+                            />
+                        </div>
                     </div>
                 ))}
             </div>
@@ -556,7 +623,7 @@ export function UpcomingCard({ accountId }: { accountId?: string }) {
 
 function TransfersCard() {
     const { ledger } = useDashboard();
-    const { list } = useIntlayer("dashboard-accounts");
+    const { actions, list } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const date = useDateFormat();
     const transfers = ledger.transfers.toSorted((a, b) => b.at - a.at).slice(0, TRANSFER_ROWS);
@@ -565,7 +632,14 @@ function TransfersCard() {
     }
     return (
         <Card className="flex-1">
-            <Head title={list.transfers} />
+            <Head
+                action={
+                    <Link className="dash-ob" search={{ span: "all", type: "transfers" }} to="/app/transactions">
+                        {actions.seeAll}
+                    </Link>
+                }
+                title={list.transfers}
+            />
             <div className="px-5 pb-1.5">
                 {transfers.map((transfer) => (
                     <div className={ROW} key={transfer.id}>
@@ -879,6 +953,10 @@ function AddAccountMenu() {
                     <RiBankCardLine size={16} />
                     {flows.cardOrLoan}
                 </Menu.Item>
+                <Menu.Item className="dash-menu-item" onClick={() => open({ kind: "purchase" })}>
+                    <RiCalendarCheckLine size={16} />
+                    {flows.purchaseInInstallments}
+                </Menu.Item>
             </Menu.Content>
         </Menu>
     );
@@ -941,6 +1019,7 @@ export function AccountsScreen() {
                             </>
                         ) : null}
                         <UpcomingCard />
+                        <GoalsCard model={model} />
                         <TransfersCard />
                     </div>
                 </div>

@@ -36,6 +36,7 @@ import {
     AccountsBar,
     BALANCE,
     Card,
+    Head,
     ICON_TILE,
     INCOME,
     MUTED,
@@ -50,12 +51,12 @@ import { useAccountFlows } from "./flows";
 import {
     accountEntries,
     monthsBetween,
+    plansOn,
     accountRows,
     accountSeries,
     cardStatement,
     checkedAge,
     flowsOf,
-    hasPlans,
     inMain,
     monthStart,
     onlyCounterpart,
@@ -262,7 +263,7 @@ function CardKpis({ row }: { row: AccountRow }) {
     const { money } = useDisplayFormat();
     const { whole } = useWholeMoney(row.currency);
     const date = useDateFormat();
-    const statement = cardStatement(row, flowsOf(ledger, row.id), ledger.today, hasPlans(ledger, row.id));
+    const statement = cardStatement(row, flowsOf(ledger, row.id), ledger.today, plansOn(ledger, row.id));
     const limit = row.creditLimit ?? 0;
     const available = Math.max(0, limit + row.balance);
     const used = limit > 0 ? Math.min(1, Math.max(0, -row.balance / limit)) : 0;
@@ -489,6 +490,10 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                             </Menu.Item>
                         ))}
                     </ChipMenu>
+                    <Link className="dash-chip" search={{ accounts: row.id, span: "all" }} to="/app/transactions">
+                        {actions.seeAll}
+                        <RiArrowRightUpLine className="text-muted-foreground" size={14} />
+                    </Link>
                 </div>
             </div>
             {shown.length === 0 ? (
@@ -677,6 +682,55 @@ function CheckCard({ row }: { row: AccountRow }) {
     );
 }
 
+function InstallmentsCard({ row }: { row: AccountRow }) {
+    const { ledger } = useDashboard();
+    const { actions, list } = useIntlayer("dashboard-accounts");
+    const { open } = useAccountFlows();
+    const { money } = useDisplayFormat();
+    const plans = plansOn(ledger, row.id).filter((plan) => plan.left > 0);
+    return (
+        <Card>
+            <Head
+                action={
+                    <button
+                        className="dash-ob"
+                        onClick={() => open({ accountId: row.id, kind: "purchase" })}
+                        type="button"
+                    >
+                        <RiAddLine size={16} />
+                        {actions.newPurchase}
+                    </button>
+                }
+                title={list.installments}
+            />
+            {plans.length === 0 ? null : (
+                <div className="flex flex-col gap-4 px-5 pb-[18px]">
+                    {plans.map((plan) => (
+                        <div key={plan.id}>
+                            <div className="flex items-baseline gap-2 text-[13px] font-medium">
+                                <span className="min-w-0 truncate">{plan.name || list.planFallback}</span>
+                                <span className="dash-figure ml-auto whitespace-nowrap">
+                                    {list.planLeft({ amount: money(plan.left, plan.currency) })}
+                                </span>
+                            </div>
+                            <div className="bg-app-fill mt-2.5 flex h-2 overflow-hidden rounded-full">
+                                <i
+                                    className="bg-foreground block h-full rounded-full"
+                                    style={{ width: `${plan.fraction * PERCENT}%` }}
+                                />
+                            </div>
+                            <div className="dash-figure text-muted-foreground mt-2.5 flex text-xs leading-4">
+                                {plan.count} x {money(plan.each, plan.currency)}
+                                <span className="ml-auto">{list.planPaid({ count: plan.paidCount })}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </Card>
+    );
+}
+
 function SpentCard({ row }: { row: AccountRow }) {
     const { ledger } = useDashboard();
     const { detail } = useIntlayer("dashboard-accounts");
@@ -822,7 +876,7 @@ export function AccountDetail({ accountId }: { accountId: string }) {
                 <div className="flex min-w-0 flex-col gap-4">
                     <CheckCard row={row} />
                     <UpcomingCard accountId={row.id} />
-                    <SpentCard row={row} />
+                    {isCard(row) ? <InstallmentsCard row={row} /> : <SpentCard row={row} />}
                     <DetailsCard row={row} />
                 </div>
             </div>

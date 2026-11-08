@@ -1,8 +1,8 @@
 import { restate } from "@outlayr/money/account-overview";
 import { utcDateString } from "@outlayr/money/dates";
+import type { InstallmentStanding } from "@outlayr/money/installments";
 import type { RateTable } from "@outlayr/money/valuation";
 
-import type { InstallmentStanding } from "@/domain/installments";
 import { addLocalDays } from "@/domain/local-day";
 import { roundToMinorUnits } from "@/domain/money";
 

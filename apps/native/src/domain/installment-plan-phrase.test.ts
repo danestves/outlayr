@@ -1,9 +1,9 @@
+import { EVERY_OPTIONS, EVERY_ORDER } from "@outlayr/money/installment-draft";
+import { generateSchedule } from "@outlayr/money/installments";
+import type { InstallmentInterval } from "@outlayr/money/installments";
 import { describe, expect, it } from "vite-plus/test";
 
-import { EVERY_OPTIONS, EVERY_ORDER } from "./installment-draft";
 import { planFromRows } from "./installment-plan-phrase";
-import { generateSchedule } from "./installments";
-import type { InstallmentInterval } from "./installments";
 
 const day = (year: number, month: number, date: number) => new Date(year, month - 1, date);
 

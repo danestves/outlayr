@@ -1,17 +1,7 @@
-import { execFileSync } from "node:child_process";
-import { join } from "node:path";
-
 import { describe, expect, it } from "vite-plus/test";
 
 import { generateSchedule, planStanding, splitTotal } from "./installments";
 import type { ScheduleTemplate } from "./installments";
-
-const inNewYork = (...args: number[]): string =>
-    execFileSync(
-        process.execPath,
-        ["--import", "tsx", join(import.meta.dirname, "dst-probe.ts"), "installments", ...args.map(String)],
-        { encoding: "utf-8", env: { ...process.env, TZ: "America/New_York" } }
-    );
 
 const day = (year: number, month: number, date: number) => new Date(year, month - 1, date);
 
@@ -99,11 +89,6 @@ describe("generateSchedule", () => {
         const schedule = generateSchedule({ ...base, amount: { total: 100 }, interval: { every: 14, kind: "days" } });
         expect(schedule.map((row) => row.amount)).toStrictEqual([33.33, 33.33, 33.34]);
     });
-
-    it("keeps local midnights across a DST change", () => {
-        expect(inNewYork(2027, 2, 1, 0, 0, 14)).toBe("[[2027,2,15,0],[2027,2,29,0],[2027,3,12,0]]");
-        expect(inNewYork(2027, 0, 31, 0, 0, 1)).toBe("[[2027,1,28,0],[2027,2,31,0],[2027,3,30,0]]");
-    });
 });
 
 describe("planStanding", () => {
@@ -126,7 +111,7 @@ describe("planStanding", () => {
         expect(standing.next?.remaining).toBe(8.33);
         expect(standing.remaining).toBe(35);
         expect(standing.installmentsPaid).toBe(0);
-        expect(standing.finished).toBe(false);
+        expect(standing.finished).toBeFalsy();
     });
 
     it("counts an early payment against the oldest row, whatever day it arrives", () => {

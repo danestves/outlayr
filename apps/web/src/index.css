@@ -1541,6 +1541,7 @@ html[data-theme="dark"]:has(.dash-sheet) body::after {
 /* Outside the layer: panelui's Dialog utilities would otherwise win over the approved frame. */
 .dash-dialog {
     width: min(480px, 100vw - 16px);
+    max-width: none;
     overflow: hidden;
     border: 1px solid var(--color-app-strong);
     border-radius: 20px;
@@ -1550,6 +1551,10 @@ html[data-theme="dark"]:has(.dash-sheet) body::after {
 
 .dash-dialog[data-size="confirm"] {
     width: min(420px, 100vw - 16px);
+}
+
+.dash-dialog[data-size="wide"] {
+    width: min(520px, 100vw - 16px);
 }
 
 .dash-dh {

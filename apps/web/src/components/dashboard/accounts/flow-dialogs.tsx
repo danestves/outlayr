@@ -4,6 +4,7 @@ import { AccountForm } from "./account-form";
 import { CheckDialog } from "./check-dialog";
 import { ArchiveDialog, DeleteDialog } from "./confirm-dialogs";
 import type { AccountFlow } from "./flows";
+import { PurchaseForm } from "./purchase-form";
 
 /** The dialog for one flow; an account gone from under it, deleted on another device, closes it. */
 export default function FlowDialogs({
@@ -18,6 +19,9 @@ export default function FlowDialogs({
     const { ledger } = useDashboard();
     if (flow.kind === "create") {
         return <AccountForm account={null} onClose={onClose} onSwitch={onSwitch} type={flow.type} />;
+    }
+    if (flow.kind === "purchase") {
+        return <PurchaseForm accountId={flow.accountId} onClose={onClose} onSwitch={onSwitch} />;
     }
     const account = ledger.books.accounts.find((row) => row.localId === flow.accountId && row.deletedAt === null);
     if (!account) {

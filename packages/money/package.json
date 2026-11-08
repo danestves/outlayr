@@ -25,6 +25,8 @@
         "./entry-deletion": "./src/entry-deletion.ts",
         "./entry-row": "./src/entry-row.ts",
         "./errors": "./src/errors.ts",
+        "./installment-draft": "./src/installment-draft.ts",
+        "./installments": "./src/installments.ts",
         "./institution-map": "./src/institution-map.ts",
         "./merchant-key": "./src/merchant-key.ts",
         "./occurrence": "./src/occurrence.ts",

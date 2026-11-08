@@ -12,7 +12,8 @@ export type AccountType = "bank" | "card" | "cash";
 
 export type AccountFlow =
     | { accountId: string; kind: "archive" | "check" | "delete" | "edit" }
-    | { kind: "create"; type: AccountType };
+    | { kind: "create"; type: AccountType }
+    | { accountId?: string; kind: "purchase" };
 
 export interface FlowToast {
     /** Runs when the toast leaves without Undo, for a change that waits out its window before it is sent. */

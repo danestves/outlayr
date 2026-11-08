@@ -1,8 +1,5 @@
-import { decimalsFor } from "@outlayr/money/currency";
-
-import type { TranslateFn } from "@/i18n/context";
-
-import { addLocalDays, addLocalMonths, startOfLocalDay } from "./local-day";
+import { addLocalDays, addLocalMonths, startOfLocalDay } from "./calendar";
+import { decimalsFor } from "./currency";
 
 export type MonthDay = number | "last";
 
@@ -221,8 +218,4 @@ export function planStanding<Row extends InstallmentLike>(
         rows: standings,
         scheduled: fromMinor(scheduledMinor, currency),
     };
-}
-
-export function orderName(t: TranslateFn, purchase: { note: string } | null): string {
-    return purchase?.note.trim() || t("installments.order");
 }

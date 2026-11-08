@@ -20,6 +20,7 @@ export function AmountInput({
     autoFocus = false,
     currency,
     id,
+    invalid = false,
     negative,
     onNegative,
     onText,
@@ -28,13 +29,14 @@ export function AmountInput({
     autoFocus?: boolean;
     currency: string;
     id: string;
+    invalid?: boolean;
     negative?: boolean;
     onNegative?: (negative: boolean) => void;
     onText: (text: string) => void;
     text: string;
 }) {
     return (
-        <div className="dash-fi">
+        <div className="dash-fi" data-invalid={invalid ? "true" : undefined}>
             {onNegative ? (
                 <button
                     aria-pressed={negative}
@@ -143,6 +145,7 @@ export function FlowDialog({
     initialFocus,
     label,
     onClose,
+    wide = false,
 }: {
     children: ReactNode;
     confirm?: boolean;
@@ -150,13 +153,15 @@ export function FlowDialog({
     initialFocus?: RefObject<HTMLInputElement | null>;
     label: ReactNode;
     onClose: () => void;
+    wide?: boolean;
 }) {
     const { flows } = useIntlayer("dashboard-accounts");
+    const narrow = confirm ? "confirm" : undefined;
     return (
         <Dialog onOpenChange={(open) => (open ? undefined : onClose())} open>
             <Dialog.Content
                 className="app-shell dash-dialog ph-no-capture"
-                data-size={confirm ? "confirm" : undefined}
+                data-size={wide ? "wide" : narrow}
                 showClose={false}
                 variant="plain"
                 // Content forwards the rest to Base UI's Popup, though its props only declare the div's.

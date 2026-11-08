@@ -10,6 +10,8 @@ import MinusSignIcon from "@hugeicons-pro/core-stroke-rounded/MinusSignIcon";
 import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import type { IconSvgElement } from "@hugeicons/react-native";
+import { EVERY_ORDER, MAX_INSTALLMENT_COUNT, rescheduled } from "@outlayr/money/installment-draft";
+import type { ScheduledInstallment } from "@outlayr/money/installments";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -20,8 +22,6 @@ import { OutlinedDateField } from "@/components/material/outlined-date-field";
 import { OutlinedDropdownField } from "@/components/material/outlined-dropdown-field";
 import { OutlinedSelectField } from "@/components/material/outlined-field";
 import { formatSentenceDate } from "@/domain/dates";
-import { EVERY_ORDER, MAX_INSTALLMENT_COUNT, rescheduled } from "@/domain/installment-draft";
-import type { ScheduledInstallment } from "@/domain/installments";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { withAlpha } from "@/theme/shade";

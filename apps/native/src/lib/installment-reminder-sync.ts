@@ -21,7 +21,7 @@ import {
     installmentReminderCap,
     orphanedInstallmentReminderIds,
 } from "@/domain/installment-reminder";
-import { orderName } from "@/domain/installments";
+import { orderName } from "@/domain/order-name";
 import type { TimeOfDay } from "@/domain/reminder";
 import { reminderReconcile } from "@/domain/reminder";
 import { reminderFireAt } from "@/domain/subscription-reminder";
