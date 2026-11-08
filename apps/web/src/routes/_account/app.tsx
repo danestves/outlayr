@@ -153,9 +153,9 @@ function LiveDashboard({ children }: { children: ReactNode }) {
             overview,
             photos,
             setFilters: (patch: FilterPatch) =>
-                navigate({ resetScroll: false, search: { ...search, ...searchPatch(patch) }, to: "." }),
+                navigate({ resetScroll: false, search: (prev) => ({ ...prev, ...searchPatch(patch) }), to: "." }),
         }),
-        [filters, ledger, navigate, overview, photos, search]
+        [filters, ledger, navigate, overview, photos]
     );
     return <DashboardContext value={dashboard}>{children}</DashboardContext>;
 }

@@ -85,7 +85,7 @@ interface FilterMenuProps {
     width: string;
 }
 
-function FilterMenu({ children, count, icon: Icon, label, onClear, searchLabel, width }: FilterMenuProps) {
+export function FilterMenu({ children, count, icon: Icon, label, onClear, searchLabel, width }: FilterMenuProps) {
     const { filters: copy } = useIntlayer("dashboard");
     const [query, setQuery] = useState("");
     const needle = query.trim().toLocaleLowerCase();
@@ -207,7 +207,7 @@ function AccountRows({
     );
 }
 
-function AccountMenu({ quiet }: { quiet: boolean }) {
+export function AccountMenu({ quiet }: { quiet: boolean }) {
     const { filters, ledger, setFilters } = useDashboard();
     const { filters: copy } = useIntlayer("dashboard");
     const accounts = useMemo(
@@ -232,7 +232,7 @@ function AccountMenu({ quiet }: { quiet: boolean }) {
     );
 }
 
-function CategoryMenu() {
+export function CategoryMenu() {
     const { filters, ledger, setFilters } = useDashboard();
     const { filters: copy } = useIntlayer("dashboard");
     const categoryName = useCategoryName();

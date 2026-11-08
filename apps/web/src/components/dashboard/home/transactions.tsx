@@ -1,4 +1,5 @@
 import { RiAddLine, RiUpload2Line } from "@remixicon/react";
+import { Link } from "@tanstack/react-router";
 import { Table } from "panelui-web/table";
 import { Tabs } from "panelui-web/tabs";
 import { useId, useMemo, useState } from "react";
@@ -14,7 +15,6 @@ import { useCatalog, useImageUrls } from "./catalog";
 import type { Catalog } from "./catalog";
 import { useCategoryName, useDateFormat } from "./format";
 import type { SetupState } from "./model";
-import { ROW_HEIGHT, useRowWindow } from "./row-window";
 import { figureOf, foldFees, viewRows } from "./rows";
 import type { FoldedRow } from "./rows";
 import { Cover, GhostRows, PhoneButton, QuietTable, TABLE_FADE } from "./setup";
@@ -24,9 +24,10 @@ const LONG_FEE = 8;
 const TABS = ["all", "expenses", "incomeTab"] as const;
 type Tab = (typeof TABS)[number];
 const isTab = (value: unknown): value is Tab => TABS.some((tab) => tab === value);
+const TYPE_OF = { expenses: "expenses", incomeTab: "income" } as const;
 
 const ROW =
-    "h-[51px] border-0 [--tile-ring:var(--color-card)] even:[--tile-ring:color-mix(in_oklab,var(--muted)_40%,var(--color-card))] hover:[--tile-ring:color-mix(in_oklab,var(--muted)_40%,var(--color-card))]";
+    "relative h-[51px] border-0 [--tile-ring:var(--color-card)] even:[--tile-ring:color-mix(in_oklab,var(--muted)_40%,var(--color-card))] hover:[--tile-ring:color-mix(in_oklab,var(--muted)_40%,var(--color-card))]";
 const HEAD = "first:ps-3.5 last:pe-3.5";
 const CELL = "h-[51px] overflow-hidden px-1.5 py-0 align-middle first:ps-3.5 last:pe-3.5 @sm:px-3";
 const SIDE = `${CELL} hidden truncate @2xl:table-cell`;
@@ -37,15 +38,14 @@ const SECOND_LINE = "dash-figure text-muted-foreground block text-xs leading-4";
 const ARRIVAL_LINE =
     "dash-figure text-muted-foreground flex justify-end text-xs leading-4 @max-sm:w-0 @max-sm:min-w-full";
 
-const imageKeys = (catalog: Catalog, rows: readonly FoldedRow[], skip: readonly string[] = []) =>
-    [
-        ...new Set(
-            rows.flatMap((row) => {
-                const key = "fromId" in row ? null : catalog.transaction(row.id)?.imageKey;
-                return key ? [key] : [];
-            })
-        ),
-    ].filter((key) => !skip.includes(key));
+const imageKeys = (catalog: Catalog, rows: readonly FoldedRow[]) => [
+    ...new Set(
+        rows.flatMap((row) => {
+            const key = "fromId" in row ? null : catalog.transaction(row.id)?.imageKey;
+            return key ? [key] : [];
+        })
+    ),
+];
 
 export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger, photos: accountPhotos, setFilters } = useDashboard();
@@ -57,7 +57,6 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
     const { money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
     const [tab, setTab] = useState<Tab>("all");
-    const [expanded, setExpanded] = useState(false);
     const every = useMemo(
         () =>
             foldFees(
@@ -69,16 +68,10 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
             ),
         [filters.accounts, filters.categories, filters.period, ledger, tab]
     );
-    const rows = useMemo(() => (expanded ? every : every.slice(0, ROWS_SHOWN)), [every, expanded]);
-    const headKeys = useMemo(() => imageKeys(catalog, every.slice(0, ROWS_SHOWN)), [catalog, every]);
-    const restKeys = useMemo(
-        () => (expanded ? imageKeys(catalog, every.slice(ROWS_SHOWN), headKeys) : []),
-        [catalog, every, expanded, headKeys]
-    );
+    const rows = useMemo(() => every.slice(0, ROWS_SHOWN), [every]);
+    const headKeys = useMemo(() => imageKeys(catalog, rows), [catalog, rows]);
     const headPhotos = useImageUrls(headKeys);
-    const restPhotos = useImageUrls(restKeys);
     const tableId = useId();
-    const { body, first, last } = useRowWindow(rows.length);
     if (quiet) {
         const current = periodOf(filters.currentKey, ledger.firstDayOfMonth);
         const month = date.month(current.key);
@@ -148,15 +141,17 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                     <>
                         <span className="text-muted-foreground text-[13px]">{copy.entries}</span>
                         <span className="dash-figure font-medium">
-                            {expanded || every.length <= ROWS_SHOWN
+                            {every.length <= ROWS_SHOWN
                                 ? count(every.length)
                                 : copy.shownOf({ shown: count(ROWS_SHOWN), total: count(every.length) })}
                         </span>
-                        {every.length > ROWS_SHOWN ? (
-                            <button className="dash-ob ml-auto" onClick={() => setExpanded(!expanded)} type="button">
-                                {expanded ? copy.showLess : copy.seeAll}
-                            </button>
-                        ) : null}
+                        <Link
+                            className="dash-ob ml-auto"
+                            search={(prev) => (tab === "all" ? prev : { ...prev, type: TYPE_OF[tab] })}
+                            to="/app/transactions"
+                        >
+                            {copy.seeAll}
+                        </Link>
                     </>
                 )
             }
@@ -184,7 +179,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                             </Table.Head>
                         </Table.Row>
                     </Table.Header>
-                    <Table.Body ref={body}>
+                    <Table.Body>
                         {rows.length === 0 && !setup ? (
                             <Table.Row aria-rowindex={2} className="border-0">
                                 <Table.Cell className="text-muted-foreground py-8 text-[13px] first:ps-3.5" colSpan={5}>
@@ -192,19 +187,14 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                 </Table.Cell>
                             </Table.Row>
                         ) : null}
-                        {first > 0 ? (
-                            <tr aria-hidden>
-                                <td aria-label={copy.title.value} colSpan={5} style={{ height: first * ROW_HEIGHT }} />
-                            </tr>
-                        ) : null}
-                        {rows.slice(first, last).map((row, index) => {
+                        {rows.map((row, index) => {
                             const figure = figureOf(ledger, row);
                             const line = second(row, figure);
                             const day = date.day(row.day);
                             if ("fromId" in row) {
                                 const names = `${accountName(row.fromId)} → ${accountName(row.toId)}`;
                                 return (
-                                    <Table.Row aria-rowindex={first + index + 2} className={ROW} key={row.id}>
+                                    <Table.Row aria-rowindex={index + 2} className={ROW} key={row.id}>
                                         <Table.Cell className={NAME}>
                                             <span className="flex items-center gap-3 font-medium">
                                                 <TransferTile
@@ -213,7 +203,13 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                                     to={catalog.account(row.toId)}
                                                 />
                                                 <span className="min-w-0">
-                                                    <span className="block truncate">{names}</span>
+                                                    <Link
+                                                        className="block truncate outline-none after:absolute after:inset-0 focus-visible:underline"
+                                                        search={(prev) => ({ ...prev, entry: row.id })}
+                                                        to="/app/transactions"
+                                                    >
+                                                        {names}
+                                                    </Link>
                                                     <span className="text-muted-foreground block truncate text-xs font-normal @2xl:hidden">
                                                         {day}
                                                         <span className="hidden @sm:inline"> · {copy.transfer}</span>
@@ -242,24 +238,26 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                             const standsAlone = row.feeFor !== null;
                             const feeKind = catalog.transaction(row.id)?.feeForId ? copy.cardFee : copy.transferFee;
                             return (
-                                <Table.Row aria-rowindex={first + index + 2} className={ROW} key={row.id}>
+                                <Table.Row aria-rowindex={index + 2} className={ROW} key={row.id}>
                                     <Table.Cell className={NAME}>
                                         <span className="flex items-center gap-3 font-medium">
                                             {standsAlone ? (
                                                 <FeeTile />
                                             ) : (
                                                 <MerchantTile
-                                                    imageUrl={
-                                                        imageKey
-                                                            ? (headPhotos?.get(imageKey) ?? restPhotos?.get(imageKey))
-                                                            : undefined
-                                                    }
+                                                    imageUrl={imageKey ? headPhotos?.get(imageKey) : undefined}
                                                     name={merchant}
                                                     size="lg"
                                                 />
                                             )}
                                             <span className="min-w-0">
-                                                <span className="block truncate">{merchant}</span>
+                                                <Link
+                                                    className="block truncate outline-none after:absolute after:inset-0 focus-visible:underline"
+                                                    search={(prev) => ({ ...prev, entry: row.id })}
+                                                    to="/app/transactions"
+                                                >
+                                                    {merchant}
+                                                </Link>
                                                 <span className="text-muted-foreground block truncate text-xs font-normal @2xl:hidden">
                                                     {day}
                                                     <span className="hidden @sm:inline">
@@ -300,15 +298,6 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                 </Table.Row>
                             );
                         })}
-                        {last < rows.length ? (
-                            <tr aria-hidden className="bg-transparent!">
-                                <td
-                                    aria-label={copy.title.value}
-                                    colSpan={5}
-                                    style={{ height: (rows.length - last) * ROW_HEIGHT }}
-                                />
-                            </tr>
-                        ) : null}
                         {setup ? <GhostRows cell={CELL} label={copy.title.value} side={SIDE} /> : null}
                     </Table.Body>
                 </Table>

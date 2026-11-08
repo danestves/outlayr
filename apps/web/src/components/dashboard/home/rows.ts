@@ -10,7 +10,7 @@ export type TransactionSort = "largest" | "newest" | "oldest";
 export interface RowsView {
     accounts: readonly string[];
     categories: readonly string[];
-    period: Period;
+    period: Pick<Period, "from" | "to">;
 }
 
 export type TableRow = LedgerRow | LedgerTransfer;

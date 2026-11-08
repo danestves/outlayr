@@ -25,6 +25,10 @@ const InsightsFirstVisit = lazy(async () => {
     const pending = await import("@/components/dashboard/insights/insights-pending");
     return { default: pending.InsightsFirstVisit };
 });
+const TransactionsFirstVisit = lazy(async () => {
+    const pending = await import("@/components/dashboard/transactions/transactions-pending");
+    return { default: pending.TransactionsFirstVisit };
+});
 
 export const Route = createFileRoute("/_account")({
     beforeLoad: async ({ context, location }) => {
@@ -49,6 +53,9 @@ function firstVisitFor(page: string | undefined) {
     }
     if (page === "accounts") {
         return <AccountsFirstVisit />;
+    }
+    if (page === "transactions") {
+        return <TransactionsFirstVisit />;
     }
     return page === "settings" ? <SettingsFirstVisit /> : <HomeFirstVisit />;
 }
