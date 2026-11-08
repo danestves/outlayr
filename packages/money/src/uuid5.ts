@@ -26,7 +26,7 @@ export function uuidV5(name: string, namespace: string): string {
     input.set(nameBytes, namespaceBytes.length);
 
     const digest = sha1(input).slice(0, 16);
-    digest[6] = (digest[6] & 0x0f) | 0x50;
-    digest[8] = (digest[8] & 0x3f) | 0x80;
+    digest[6] = ((digest[6] ?? 0) & 0x0f) | 0x50;
+    digest[8] = ((digest[8] ?? 0) & 0x3f) | 0x80;
     return format(digest);
 }

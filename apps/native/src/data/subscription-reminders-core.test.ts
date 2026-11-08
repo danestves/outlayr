@@ -1,4 +1,5 @@
 import { startOfDay } from "@outlayr/money/calendar";
+import { occurrenceId } from "@outlayr/money/occurrence";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { asc, eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -9,7 +10,7 @@ import { accounts, categories, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
 import { setMeta } from "./app-meta-core";
-import { backfillRecurring, occurrenceId } from "./recurrence-backfill";
+import { backfillRecurring } from "./recurrence-backfill";
 import { pendingReminderPlan, reminderCandidates } from "./subscription-reminders-core";
 
 const NOW = new Date(2025, 5, 15, 10, 30);

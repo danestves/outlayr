@@ -1,9 +1,9 @@
-import { addDays, firstOfMonth, startOfDay } from "@outlayr/money/calendar";
-import { canonicalUsd } from "@outlayr/money/canonical-usd";
-import type { CanonicalUsd } from "@outlayr/money/canonical-usd";
+import { addDays, startOfDay } from "@outlayr/money/calendar";
+import { keptFeeValue } from "@outlayr/money/card-fee";
+import type { CardFeeInput } from "@outlayr/money/card-fee";
+import { entryRow, keptAccount, keptCanonical, keptLead } from "@outlayr/money/entry-row";
+import type { EntryInput } from "@outlayr/money/entry-row";
 import { merchantKey } from "@outlayr/money/merchant-key";
-import type { EntryRateType } from "@outlayr/money/rates";
-import { isTransactionRateNeeded } from "@outlayr/money/rates";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, asc, count, desc, eq, gt, gte, inArray, isNotNull, isNull, lt, lte, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -16,12 +16,10 @@ import { newId } from "@/domain/ids";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import type { PaidVia } from "@/domain/paid-via";
 import type { LastEntry } from "@/domain/reminder";
-import { normalizeLead } from "@/domain/subscription-reminder";
 
 import { getMeta, META_KEYS } from "./app-meta-core";
 import type { SpendDb } from "./budget-spent";
 import { cardFeeFor, cardFeeValues, suggestedCardFee } from "./card-fees-core";
-import type { CardFeeInput } from "./card-fees-core";
 import { getCategoryById } from "./categories-core";
 import { ERASED_DATE } from "./erase-core";
 import { restorePlansForTransaction, tombstonePlansForTransaction } from "./installment-cascade";
@@ -151,35 +149,9 @@ export function logTailRowsQuery(db: SpendDb, floorMs: number | null, splitMs: n
 
 export type Transaction = typeof transactions.$inferSelect;
 
-export interface TransactionInput {
-    accountId?: string | null;
-    amount: number;
-    categoryId: string | null;
-    /** null = adopt the ledger's currency, which the write stamps in. */
-    currency: string | null;
-    customColor?: string | null;
-    date: Date;
-    details: string | null;
-    emoji?: string | null;
-    exchangeRate?: number | null;
-    exchangeRateType?: EntryRateType | null;
+export interface TransactionInput extends EntryInput {
     fee?: CardFeeInput | null;
-    icon?: string | null;
-    imageColor?: string | null;
-    /** Logo photo URI; `icon`, `emoji` and this exclude each other. */
-    imageUri?: string | null;
-    income: boolean;
-    note: string;
-    onceRecurring?: boolean;
     paidVia?: PaidVia | null;
-    receipt?: string | null;
-    recurringCoefficient?: number;
-    recurringEndDate?: Date | null;
-    /** Cadence: none=0, daily=1, weekly=2, monthly=3, yearly=4. */
-    recurringType?: number;
-    /** Days of notice for the due-date reminder; null is off, 0 is the day itself. */
-    reminderLeadDays?: number | null;
-    unreviewed?: boolean;
 }
 
 const TransactionsOperation = Schema.Literals([
@@ -214,14 +186,6 @@ const read = <A>(operation: typeof TransactionsOperation.Type, run: () => A) =>
 
 type FeeValues = Effect.Success<ReturnType<typeof cardFeeValues>>;
 
-function keptFeeValue(existing: Transaction, values: FeeValues, moneyKept: boolean) {
-    const sameFee =
-        existing.feeRate === values.feeRate &&
-        existing.currency === values.currency &&
-        (values.feeRate !== null || existing.amount === values.amount);
-    return sameFee && moneyKept ? { amount: existing.amount, amountUsd: existing.amountUsd } : {};
-}
-
 const writeFee = Effect.fn("Transactions.writeFee")(function* writeFee(
     db: Database,
     purchaseId: string,
@@ -252,105 +216,22 @@ const writeFee = Effect.fn("Transactions.writeFee")(function* writeFee(
 });
 
 const toRow = Effect.fn("Transactions.toRow")(function* toRow(db: Database, id: string, input: TransactionInput) {
-    const trimmedNote = input.note.trim();
-    let note = trimmedNote;
-    if (note === "" && input.categoryId != null) {
-        const { categoryId } = input;
-        const category = yield* read("row", () => getCategoryById(db, categoryId));
-        note = category?.name ?? "";
-    }
-    const details = input.details?.trim() ? input.details.trim() : null;
-    const recurring = input.onceRecurring ?? false;
-    const now = new Date();
-    // Stamped even when unpicked: a null currency would follow the setting and restate a $18.50 lunch as €18.50.
+    const { categoryId } = input;
+    const category =
+        input.note.trim() === "" && categoryId != null
+            ? yield* read("row", () => getCategoryById(db, categoryId))
+            : null;
     const currency = input.currency ?? (yield* displayCurrency(db));
-    const canonical = yield* canonicalUsd(localRateLookup(db), {
-        amount: Math.abs(input.amount),
+    return yield* entryRow(localRateLookup(db), id, input, {
+        categoryName: category?.name ?? null,
         currency,
-        date: input.date,
-        displayCurrency: currency,
-        exchangeRate: input.exchangeRate,
-        exchangeRateType: input.exchangeRateType,
+        now: new Date(),
     }).pipe(Effect.mapError((cause) => new TransactionsError({ cause, operation: "row" })));
-    const row: typeof transactions.$inferInsert = {
-        accountId: input.accountId ?? null,
-        amount: Math.abs(input.amount),
-        categoryId: input.categoryId,
-        currency,
-        customColor: input.customColor ?? null,
-        date: input.date,
-        day: startOfDay(input.date),
-        details,
-        emoji: input.emoji ?? null,
-        icon: input.icon ?? null,
-        id,
-        imageColor: input.imageColor ?? null,
-        imageUri: input.imageUri ?? null,
-        income: input.income,
-        month: firstOfMonth(input.date),
-        note,
-        onceRecurring: recurring,
-        paidVia: input.paidVia,
-        receipt: input.receipt,
-        // Re-derived on every write, so an edited first payment re-anchors the chain.
-        recurringAnchorDay: recurring ? input.date.getDate() : null,
-        recurringCoefficient: recurring ? Math.max(1, input.recurringCoefficient ?? 1) : 1,
-        recurringEndDate: recurring ? (input.recurringEndDate ?? null) : null,
-        recurringType: recurring ? (input.recurringType ?? 0) : 0,
-        reminderLeadDays: recurring ? normalizeLead(input.reminderLeadDays ?? null) : null,
-        // Frozen at write; converting at read time would change last month's spending every morning.
-        ...canonical,
-        deletedAt: null,
-        unreviewed: input.unreviewed ?? false,
-        updatedAt: now,
-    };
-    return row;
 });
 
 const displayCurrency = Effect.fn("Transactions.displayCurrency")(function* displayCurrency(db: Database) {
     return (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
 });
-
-/**
- * Keeps the frozen value unless amount, currency or date moved: re-freezing is unsafe, since the rate feed serves
- * 90 days and an older entry would come back unresolvable. A moved field returns null for the backfill to retry.
- */
-function keptCanonical(
-    next: typeof transactions.$inferInsert,
-    previous: Transaction | null,
-    input: TransactionInput
-): CanonicalUsd | null {
-    if (
-        previous == null ||
-        previous.amount !== next.amount ||
-        previous.currency !== next.currency ||
-        previous.date.getTime() !== next.date.getTime()
-    ) {
-        return null;
-    }
-    if (input.exchangeRate === undefined && input.exchangeRateType === undefined) {
-        return {
-            amountUsd: previous.amountUsd,
-            exchangeRate: previous.exchangeRate,
-            exchangeRateType: previous.exchangeRateType,
-        };
-    }
-    const requestedRateType = next.currency === "USD" ? null : (input.exchangeRateType ?? "official");
-    if (previous.exchangeRateType !== requestedRateType) {
-        return null;
-    }
-    if (input.exchangeRate !== undefined && previous.exchangeRate !== input.exchangeRate) {
-        return null;
-    }
-    if (previous.amountUsd === null && !isTransactionRateNeeded(previous)) {
-        return null;
-    }
-    return {
-        amountUsd: previous.amountUsd,
-        exchangeRate: previous.exchangeRate,
-        exchangeRateType: previous.exchangeRateType,
-    };
-}
 
 /**
  * The user taking the photo off, not a synced row still downloading (also a null path); only this clears
@@ -367,28 +248,6 @@ function clearsIdentity(previous: Transaction | null, next: typeof transactions.
         (previous.imageUri != null || previous.icon != null || previous.emoji != null || previous.customColor != null);
     const has = next.imageUri != null || next.icon != null || next.emoji != null || next.customColor != null;
     return had && !has;
-}
-
-/**
- * An absent key keeps the notice: a form with no lead picker omits it, and `toRow`'s null would silently turn
- * it off. An explicit `null` means off; ending the schedule clears it regardless.
- */
-function keptLead(
-    next: typeof transactions.$inferInsert,
-    previous: Transaction | null,
-    input: TransactionInput
-): number | null {
-    if (!next.onceRecurring) {
-        return null;
-    }
-    return input.reminderLeadDays === undefined
-        ? (previous?.reminderLeadDays ?? null)
-        : (next.reminderLeadDays ?? null);
-}
-
-/** Same contract as {@link keptLead}: CSV import and App Intents omit the field; only explicit `null` detaches. */
-function keptAccount(previous: Transaction | null, input: TransactionInput): string | null {
-    return input.accountId === undefined ? (previous?.accountId ?? null) : input.accountId;
 }
 
 export function accountTransactionsQuery(db: SpendDb, accountId: string) {
@@ -687,7 +546,7 @@ export const transactionsRepo = {
                             // Deletion is `remove`/`restore`'s call: `toRow` builds a live row, and spreading it would
                             // revive a peer's delete that arrived while the sheet was open.
                             deletedAt: previous?.deletedAt ?? null,
-                            imageKey: removesPhoto(previous, row) ? null : rest.imageKey,
+                            ...(removesPhoto(previous, row) && { imageKey: null }),
                             reminderLeadDays: keptLead(row, previous, input),
                             unreviewed: false,
                         })

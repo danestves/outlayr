@@ -1,6 +1,5 @@
 import { utcDateString } from "@outlayr/money/dates";
-
-import { uuidV5 } from "@/domain/uuid5";
+import { uuidV5 } from "@outlayr/money/uuid5";
 
 // Spawned with `TZ` forced: V8 caches the host zone on first `Date` use, so only a fresh process sees another. It
 // re-derives instead of importing `recurrence-backfill`, which would pull drizzle and the db layer into bare node.

@@ -1,4 +1,6 @@
 import { addDays, startOfDay } from "@outlayr/money/calendar";
+import { normalizeLead } from "@outlayr/money/entry-row";
+import { occurrenceId } from "@outlayr/money/occurrence";
 import { anchorDayOf, nextLanding, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, eq, gt, isNotNull, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -8,11 +10,10 @@ import type { Database } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import type { TimeOfDay } from "@/domain/reminder";
-import { normalizeLead, reminderFireAt, reminderPlan } from "@/domain/subscription-reminder";
+import { reminderFireAt, reminderPlan } from "@/domain/subscription-reminder";
 import type { ArmedReminder, ReminderCandidate } from "@/domain/subscription-reminder";
 
 import { getMeta, META_KEYS } from "./app-meta-core";
-import { occurrenceId } from "./recurrence-backfill";
 
 const SubscriptionRemindersRead = Schema.Literals(["rows"]);
 

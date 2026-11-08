@@ -1,4 +1,5 @@
-import type { CardFeeInput } from "@/data/card-fees-core";
+import type { CardFeeInput } from "@outlayr/money/card-fee";
+
 import type { Transaction } from "@/data/transactions-core";
 import { cardFeeAmount } from "@/domain/card-fee";
 import type { CardFee } from "@/domain/card-fee";

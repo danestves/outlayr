@@ -1,4 +1,5 @@
 import type { EntryRateType } from "@outlayr/money/rates";
+import type { TransferInput } from "@outlayr/money/transfer-row";
 import { and, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -16,7 +17,6 @@ import { accountsRepo } from "./accounts-core";
 import { frozenUsdAmount } from "./frozen-usd";
 import { transactionsRepo } from "./transactions-core";
 import { transfersRepo } from "./transfers-core";
-import type { TransferInput } from "./transfers-core";
 
 const DebtsOperation = Schema.Literals(["record-outside-move", "delete-outside-move"]);
 

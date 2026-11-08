@@ -1,13 +1,13 @@
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 
+import { normalizeLead } from "@outlayr/money/entry-row";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
     isSubscriptionReminderId,
     leadLabelKey,
     MAX_PENDING_SUBSCRIPTION_REMINDERS,
-    normalizeLead,
     orphanedReminderIds,
     reminderFireAt,
     reminderPlan,

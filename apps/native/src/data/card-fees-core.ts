@@ -1,37 +1,21 @@
-import { utcDateString } from "@outlayr/money/dates";
+import { cardFeeValues as cardFeeRow, savedFeeInput } from "@outlayr/money/card-fee";
+import type { CardFeeInput } from "@outlayr/money/card-fee";
 import { and, desc, eq, gte, isNotNull, isNull, max, ne } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
-import { cardFeeAmount, cardFeeBase } from "@/domain/card-fee";
 import { paidViaMemory } from "@/domain/paid-via";
 import type { PaidViaMemory } from "@/domain/paid-via";
 import { translateNow } from "@/i18n/runtime";
 
 import { getMetaSync, META_KEYS, setMeta } from "./app-meta-core";
 import { getCategoryById } from "./categories-core";
-import { frozenUsdAmount } from "./frozen-usd";
 import { localRateLookup } from "./rates";
 
 type Row = typeof transactions.$inferSelect;
 type Insert = typeof transactions.$inferInsert;
-
-export type CardFeeInput = { categoryId: string | null; currency: string; note: string } & (
-    | { amount: number; rate: null }
-    | { amount: null; rate: number }
-);
-
-interface FeePurchase {
-    accountId?: string | null;
-    amount: number;
-    amountUsd?: number | null;
-    currency?: string | null;
-    date: Date;
-    day: Date;
-    month: Date;
-}
 
 const CardFeesOperation = Schema.Literals(["occurrences", "settle", "values"]);
 
@@ -176,47 +160,15 @@ export function suggestedCardFee(
           };
 }
 
-const percentFee = Effect.fn("CardFees.percentFee")(function* percentFee(
-    db: Database,
-    purchase: FeePurchase,
-    rate: number,
-    currency: string
-) {
-    const entry = purchase.currency ?? currency;
-    const quote =
-        currency === "USD" || currency === entry
-            ? null
-            : yield* localRateLookup(db)(currency, "official", utcDateString(purchase.date.getTime())).pipe(
-                  Effect.mapError((cause) => new CardFeesError({ cause, operation: "values" }))
-              );
-    const cardRate = quote?.rate ?? null;
-    const base = cardFeeBase(purchase.amount, { card: currency, entry }, () => purchase.amountUsd ?? null, cardRate);
-    return base === null ? null : cardFeeAmount({ kind: "percent", rate }, base, currency);
-});
-
-export const cardFeeValues = Effect.fn("CardFees.cardFeeValues")(function* cardFeeValues(
+export const cardFeeValues = (
     db: Database,
     purchaseId: string,
-    purchase: FeePurchase,
+    purchase: Parameters<typeof cardFeeRow>[2],
     fee: CardFeeInput
-) {
-    const charged = fee.rate === null ? fee.amount : yield* percentFee(db, purchase, fee.rate, fee.currency);
-    return {
-        accountId: purchase.accountId ?? null,
-        amount: charged ?? 0,
-        amountUsd: charged === null ? null : yield* frozenUsdAmount(db, charged, fee.currency, purchase.date),
-        categoryId: fee.categoryId,
-        currency: fee.currency,
-        date: purchase.date,
-        day: purchase.day,
-        deletedAt: null,
-        feeForId: purchaseId,
-        feeRate: fee.rate,
-        income: false,
-        month: purchase.month,
-        note: fee.note,
-    };
-});
+) =>
+    cardFeeRow(localRateLookup(db), purchaseId, purchase, fee).pipe(
+        Effect.mapError((cause) => new CardFeesError({ cause, operation: "values" }))
+    );
 
 export const occurrenceFees = Effect.fn("CardFees.occurrenceFees")(function* occurrenceFees(
     db: Database,
@@ -229,11 +181,7 @@ export const occurrenceFees = Effect.fn("CardFees.occurrenceFees")(function* occ
     if (fee === null || fee.currency === null) {
         return [];
     }
-    const shared = { categoryId: fee.categoryId, currency: fee.currency, note: fee.note };
-    const input: CardFeeInput =
-        fee.feeRate === null
-            ? { ...shared, amount: fee.amount, rate: null }
-            : { ...shared, amount: null, rate: fee.feeRate };
+    const input = savedFeeInput({ ...fee, currency: fee.currency });
     return yield* Effect.all(
         occurrences.map((occurrence) =>
             cardFeeValues(db, occurrence.id, occurrence, input).pipe(

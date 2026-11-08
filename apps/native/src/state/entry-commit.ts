@@ -1,3 +1,4 @@
+import type { CardFeeInput } from "@outlayr/money/card-fee";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import * as Cause from "effect/Cause";
@@ -9,7 +10,6 @@ import { getAccountById, rememberLastUsedAccount } from "@/data/accounts-core";
 import { attachmentsRepo } from "@/data/attachments-core";
 import type { AttachmentDraft } from "@/data/attachments-core";
 import { suggestedCardFee } from "@/data/card-fees-core";
-import type { CardFeeInput } from "@/data/card-fees-core";
 import { ensureCategoryByName } from "@/data/categories-core";
 import { queueEnrichment } from "@/data/enrichment-queue-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";

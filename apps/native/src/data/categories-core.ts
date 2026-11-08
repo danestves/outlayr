@@ -1,6 +1,7 @@
 import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
 import type { CanonicalCategoryName } from "@outlayr/money/contract";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
+import { uuidV5 } from "@outlayr/money/uuid5";
 import { and, eq, isNull, max } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -11,7 +12,6 @@ import { budgetPlans, budgets, categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { CATEGORY_ICON_GROUPS } from "@/domain/category-icon-catalog";
 import { newId } from "@/domain/ids";
-import { uuidV5 } from "@/domain/uuid5";
 import type { TranslatableKey } from "@/i18n/catalog";
 import { languageFromTag } from "@/i18n/languages";
 import type { Language } from "@/i18n/languages";

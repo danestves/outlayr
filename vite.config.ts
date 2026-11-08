@@ -218,7 +218,7 @@ export default defineConfig({
                 },
             },
             {
-                files: ["apps/native/src/domain/uuid5.ts", "apps/native/src/domain/confetti.ts"],
+                files: ["packages/money/src/uuid5.ts", "apps/native/src/domain/confetti.ts"],
                 rules: {
                     "no-bitwise": "off",
                 },

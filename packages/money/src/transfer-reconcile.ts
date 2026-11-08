@@ -1,4 +1,4 @@
-import { roundMoney } from "@outlayr/money/round";
+import { roundMoney } from "./round";
 
 export type FeeSide = "source" | "destination";
 export type TransferField = "arrived" | "rate" | "sent" | FeeSide;

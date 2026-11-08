@@ -80,3 +80,26 @@ export const canonicalUsd = Effect.fn("CanonicalUsd.canonicalUsd")(function* can
         Effect.catchTags({ MoneyValidationError: () => Effect.succeed({ ...UNRESOLVED, exchangeRateType }) })
     );
 });
+
+// Frozen at the rate of its own day. Signed: an account can open overdrawn, so the magnitude is canonicalized and the
+// sign restored.
+export const frozenUsd = Effect.fn("CanonicalUsd.frozenUsd")(function* frozenUsd<E>(
+    lookup: RateLookup<E>,
+    amount: number,
+    currency: string,
+    date: Date
+) {
+    if (amount === 0) {
+        return { amountUsd: 0, exchangeRate: null };
+    }
+    const { amountUsd, exchangeRate } = yield* canonicalUsd(lookup, {
+        amount: Math.abs(amount),
+        currency,
+        date,
+        displayCurrency: currency,
+    });
+    return {
+        amountUsd: amountUsd == null ? null : Math.sign(amount) * amountUsd,
+        exchangeRate: exchangeRate ?? null,
+    };
+});

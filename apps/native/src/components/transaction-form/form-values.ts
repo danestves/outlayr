@@ -1,3 +1,4 @@
+import { normalizeLead } from "@outlayr/money/entry-row";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import type { DeepKeys, DeepValue, UpdateMetaOptions, Updater } from "@tanstack/react-form";
 
@@ -13,7 +14,6 @@ import type { InstallmentSeed } from "@/domain/installment-scan";
 import { minorUnitsFor } from "@/domain/money";
 import { numberToNumpad } from "@/domain/numpad";
 import { isPaidVia, paidViaCharge } from "@/domain/paid-via";
-import { normalizeLead } from "@/domain/subscription-reminder";
 import type { LogAgainDraft } from "@/domain/transaction-actions";
 import type { PendingCategory } from "@/hooks/use-transaction-enrichment";
 

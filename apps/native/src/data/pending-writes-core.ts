@@ -1,5 +1,6 @@
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { merchantKey } from "@outlayr/money/merchant-key";
+import { occurrenceId } from "@outlayr/money/occurrence";
 import { anchorDayOf, nextDate, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, between, desc, eq, gt, inArray, isNull, like, or, sql } from "drizzle-orm";
 import * as Cause from "effect/Cause";
@@ -37,7 +38,7 @@ import {
 import type { SpendDb } from "./budget-spent";
 import { suggestedCardFee } from "./card-fees-core";
 import { MIN_KEY_LENGTH, queueEnrichment } from "./enrichment-queue-core";
-import { backfillRecurring, occurrenceId } from "./recurrence-backfill";
+import { backfillRecurring } from "./recurrence-backfill";
 import { readRemoteEnrichment } from "./settings-core";
 import { transactionsRepo } from "./transactions-core";
 

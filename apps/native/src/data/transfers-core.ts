@@ -1,7 +1,20 @@
-import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 import { ENTRY_RATE_TYPES } from "@outlayr/money/rates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
+import { NO_FEES, savedRate } from "@outlayr/money/transfer-reconcile";
+import type { FeeSide, TransferFees } from "@outlayr/money/transfer-reconcile";
+import {
+    carriedUsd,
+    chargedFees,
+    feeColumns,
+    feeCurrency,
+    feeSideOf,
+    freezeTransfer,
+    keptTransferFees,
+    legColumns,
+    transferRejection,
+} from "@outlayr/money/transfer-row";
+import type { TransferFeeInput, TransferInput } from "@outlayr/money/transfer-row";
 import { and, count, desc, eq, inArray, isNull, notInArray, or } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -11,33 +24,8 @@ import { transactions, transfers } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 import { minorUnitsFor } from "@/domain/money";
-import { NO_FEES, savedRate } from "@/domain/transfer-reconcile";
-import type { FeeSide, TransferFees } from "@/domain/transfer-reconcile";
 
-import { frozenUsdAmount } from "./frozen-usd";
-
-interface TransferFeeInput {
-    amount: number;
-    note?: string;
-}
-
-const FEE_SIDES = ["source", "destination"] as const satisfies readonly FeeSide[];
-
-export interface TransferInput {
-    date: Date;
-    exchangeRate: number | null;
-    exchangeRateType: string | null;
-    fees?: Partial<Record<FeeSide, TransferFeeInput>>;
-    fromAccountId: string;
-    fromAmount: number;
-    fromCurrency: string;
-    /** Absent leaves an edited transfer's link alone, so an editor that never shows it cannot unlink it. */
-    installmentPlanId?: string | null;
-    note?: string;
-    toAccountId: string;
-    toAmount: number;
-    toCurrency: string;
-}
+import { localRateLookup } from "./rates";
 
 export type Transfer = typeof transfers.$inferSelect;
 
@@ -84,59 +72,11 @@ const assertMovable = Effect.fn("Transfers.assertMovable")(function* assertMovab
     operation: typeof TransfersOperation.Type,
     input: TransferInput
 ) {
-    if (input.fromAccountId === input.toAccountId) {
-        return yield* new TransfersError({ operation, reason: "same-account" });
-    }
-    if (!(input.fromAmount > 0 && input.toAmount > 0)) {
-        return yield* new TransfersError({ operation, reason: "empty-leg" });
+    const reason = transferRejection(input);
+    if (reason !== null) {
+        return yield* new TransfersError({ operation, reason });
     }
 });
-
-function feeCurrency(input: TransferInput, side: FeeSide): string {
-    return side === "destination" ? input.toCurrency : input.fromCurrency;
-}
-
-function chargedFees(input: TransferInput) {
-    return FEE_SIDES.flatMap((side) => {
-        const fee = input.fees?.[side];
-        return fee === undefined ? [] : [{ fee, side }];
-    });
-}
-
-function legColumns(input: TransferInput, fromAmountUsd: number | null, toAmountUsd: number | null, now: Date) {
-    return {
-        date: input.date,
-        day: startOfDay(input.date),
-        exchangeRate: input.exchangeRate,
-        exchangeRateType: input.exchangeRateType,
-        fromAccountId: input.fromAccountId,
-        fromAmount: input.fromAmount,
-        fromAmountUsd,
-        fromCurrency: input.fromCurrency,
-        month: firstOfMonth(input.date),
-        note: input.note ?? "",
-        toAccountId: input.toAccountId,
-        toAmount: input.toAmount,
-        toAmountUsd,
-        toCurrency: input.toCurrency,
-        updatedAt: now,
-        ...(input.installmentPlanId !== undefined && { installmentPlanId: input.installmentPlanId }),
-    };
-}
-
-function feeColumns(input: TransferInput, side: FeeSide, fee: TransferFeeInput, amountUsd: number | null, now: Date) {
-    return {
-        accountId: side === "destination" ? input.toAccountId : input.fromAccountId,
-        amount: fee.amount,
-        amountUsd,
-        currency: feeCurrency(input, side),
-        date: input.date,
-        day: startOfDay(input.date),
-        month: firstOfMonth(input.date),
-        note: fee.note ?? "",
-        updatedAt: now,
-    };
-}
 
 function liveTransfer(db: Database, id: string): Transfer | null {
     const [row] = db
@@ -169,27 +109,9 @@ const insertFee = Effect.fn("Transfers.insertFee")(function* insertFee(
     );
 });
 
-const frozenFeesUsd = Effect.fn("Transfers.frozenFeesUsd")(function* frozenFeesUsd(db: Database, input: TransferInput) {
-    const frozen = yield* Effect.all(
-        chargedFees(input).map(({ fee, side }) =>
-            Effect.map(
-                frozenUsdAmount(db, fee.amount, feeCurrency(input, side), input.date),
-                (amountUsd) => [side, amountUsd] as const
-            )
-        ),
-        { concurrency: "unbounded" }
-    );
-    return new Map(frozen);
-});
-
-const freezeLegs = (db: Database, input: TransferInput) =>
-    Effect.all(
-        [
-            frozenUsdAmount(db, input.fromAmount, input.fromCurrency, input.date),
-            frozenUsdAmount(db, input.toAmount, input.toCurrency, input.date),
-            frozenFeesUsd(db, input),
-        ],
-        { concurrency: "unbounded" }
+const freezeLegs = (db: Database, operation: typeof TransfersOperation.Type, input: TransferInput) =>
+    freezeTransfer(localRateLookup(db), input).pipe(
+        Effect.mapError((cause) => new TransfersError({ cause, operation }))
     );
 
 function liveFees(db: Database, transferId: string) {
@@ -198,32 +120,6 @@ function liveFees(db: Database, transferId: string) {
         .from(transactions)
         .where(and(eq(transactions.transferId, transferId), isNull(transactions.deletedAt)))
         .all();
-}
-
-function feeSideOf(transfer: Pick<Transfer, "toAccountId">, fee: { accountId: string | null }): FeeSide {
-    return fee.accountId === transfer.toAccountId ? "destination" : "source";
-}
-
-const USD_DECIMALS = 6;
-
-function carriedUsd(
-    previous: { amount: number; amountUsd: number | null; currency: string | null; date: Date } | null,
-    amount: number,
-    currency: string,
-    date: Date
-): number | undefined {
-    if (
-        previous === null ||
-        previous.amountUsd === null ||
-        !(previous.amount > 0) ||
-        previous.currency !== currency ||
-        previous.date.getTime() !== date.getTime()
-    ) {
-        return undefined;
-    }
-    return previous.amount === amount
-        ? previous.amountUsd
-        : roundMoney((previous.amountUsd * amount) / previous.amount, USD_DECIMALS);
 }
 
 export function savedTransfer(db: Database, id: string): SavedTransfer | null {
@@ -317,7 +213,7 @@ export const stageTransfer = Effect.fn("Transfers.stageTransfer")(function* stag
     yield* assertMovable("create", input);
     const now = new Date();
     const id = newId();
-    const [fromAmountUsd, toAmountUsd, feesUsd] = yield* freezeLegs(db, input);
+    const { feesUsd, fromAmountUsd, toAmountUsd } = yield* freezeLegs(db, "create", input);
     const write = Effect.gen(function* write() {
         yield* query("create", () =>
             db.insert(transfers).values({
@@ -344,10 +240,6 @@ export const transfersRepo = {
         );
         return row?.total ?? 0;
     }),
-    /**
-     * Each leg freezes at its own market rate, so an off-market transfer moves net worth by the spread: receiving
-     * 6000 Bs for $100 when the market pays 5550 is $8.11 earned.
-     */
     create: Effect.fn("Transfers.create")(function* create(db: Database, input: TransferInput) {
         const { id, write } = yield* stageTransfer(db, input);
         yield* transaction(db, write, (cause) => new TransfersError({ cause, operation: "create" }));
@@ -392,7 +284,11 @@ export const transfersRepo = {
             return yield* new TransfersError({ operation: "update", reason: "missing" });
         }
         const now = new Date();
-        const [freshFromUsd, freshToUsd, freshFeesUsd] = yield* freezeLegs(db, input);
+        const {
+            feesUsd: freshFeesUsd,
+            fromAmountUsd: freshFromUsd,
+            toAmountUsd: freshToUsd,
+        } = yield* freezeLegs(db, "update", input);
 
         yield* transaction(
             db,
@@ -430,23 +326,9 @@ export const transfersRepo = {
                         .where(and(eq(transfers.id, id), isNull(transfers.deletedAt)))
                 );
 
-                // One live fee per side survives, rewritten in place: a side's own row first, else a row whose side
-                // stopped charging, so a fee moved across keeps its id and the frozen USD that comes with it.
                 const existing = yield* read("update", () => liveFees(db, id));
                 const charged = chargedFees(input);
-                const kept = new Map<FeeSide, (typeof existing)[number]>();
-                for (const { side } of charged) {
-                    const own = existing.find((fee) => feeSideOf(previous, fee) === side);
-                    if (own) {
-                        kept.set(side, own);
-                    }
-                }
-                for (const { side } of charged) {
-                    const spare = existing.find((fee) => ![...kept.values()].includes(fee));
-                    if (!kept.has(side) && spare) {
-                        kept.set(side, spare);
-                    }
-                }
+                const kept = keptTransferFees(previous, existing, charged);
                 const keptIds = [...kept.values()].map((row) => row.id);
                 yield* query("update", () =>
                     db

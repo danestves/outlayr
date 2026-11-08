@@ -1,3 +1,4 @@
+import { uuidV5 } from "@outlayr/money/uuid5";
 import { and, gte, inArray, isNull, lte, eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -5,7 +6,6 @@ import * as Schema from "effect/Schema";
 import type { Database } from "@/db/client";
 import { budgetPlans } from "@/db/schema";
 import { transaction } from "@/db/transaction";
-import { uuidV5 } from "@/domain/uuid5";
 import type { MonthKey } from "@/domain/year-plan";
 
 const BUDGET_PLAN_NAMESPACE = "5b1f0d8e-7c43-4f6a-9e2d-3a8c61b47f09";

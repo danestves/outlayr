@@ -1,8 +1,6 @@
-import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
-import { canonicalUsd } from "@outlayr/money/canonical-usd";
-import { utcDateString } from "@outlayr/money/dates";
-import type { EntryRateType } from "@outlayr/money/rates";
-import { RECURRING_TYPE, anchorDayOf, nextDate, nextLanding } from "@outlayr/money/recurrence";
+import { startOfDay } from "@outlayr/money/calendar";
+import { canonicalOccurrence, occurrenceFeeId, occurrenceRow, successorRow } from "@outlayr/money/occurrence";
+import { RECURRING_TYPE, anchorDayOf, nextDate } from "@outlayr/money/recurrence";
 import { and, eq, gt, isNotNull, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -11,7 +9,6 @@ import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { DEFAULT_CURRENCY } from "@/domain/money";
-import { uuidV5 } from "@/domain/uuid5";
 
 import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import { occurrenceFees } from "./card-fees-core";
@@ -44,29 +41,10 @@ const failedAt = (operation: typeof RecurrenceBackfillOperation.Type) => (cause:
 const query = <A>(operation: typeof RecurrenceBackfillOperation.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: failedAt(operation), try: run });
 
-export function recurrenceRateType(rateType: string | null | undefined): EntryRateType {
-    if (rateType === "custom") {
-        return "custom";
-    }
-    if (rateType === "eur_reference") {
-        return "eur_reference";
-    }
-    return "official";
-}
-
 const loadSource = Effect.fn("RecurrenceBackfill.loadSource")(function* loadSource(db: Database, id: string) {
     const rows = yield* query("backfill", () => db.select().from(transactions).where(eq(transactions.id, id)).limit(1));
     return rows[0] ?? null;
 });
-
-// Never change: a different namespace gives upgraded devices different ids for occurrences the others already hold.
-const OCCURRENCE_NAMESPACE = "0f2b9f1e-6d3a-4c58-9a71-2c8f5d6e4b31";
-
-// Derived, not minted, so two synced devices sweeping one schedule compute one id and the second upserts. The UTC
-// day, not the local one, or devices in different zones derive two ids for one charge.
-export function occurrenceId(parentLocalId: string, holding: Date): string {
-    return uuidV5(`${parentLocalId}:${utcDateString(holding.getTime())}`, OCCURRENCE_NAMESPACE);
-}
 
 const liveLogo = Effect.fn("RecurrenceBackfill.liveLogo")(function* liveLogo(db: Database, carrierId: string) {
     const [row] = yield* query("insert", () =>
@@ -104,7 +82,7 @@ export const insertOccurrences = Effect.fn("RecurrenceBackfill.insertOccurrences
         db,
         carrierId,
         rows.filter((row) => created.has(row.id)),
-        (occurrence) => uuidV5(`${occurrence}:fee`, OCCURRENCE_NAMESPACE),
+        occurrenceFeeId,
         now
     );
     if (fees.length > 0) {
@@ -119,37 +97,6 @@ export const insertOccurrences = Effect.fn("RecurrenceBackfill.insertOccurrences
         yield* rememberLogoCandidates(db, ids, now.getTime(), LOGO_CANDIDATE_KEEP_MS);
     }
 });
-
-function occurrenceRow(source: TransactionRow, holding: Date, carriesSchedule: boolean, now: Date): TransactionInsert {
-    return {
-        accountId: source.accountId,
-        amount: source.amount,
-        categoryId: source.categoryId,
-        currency: source.currency,
-        customColor: source.customColor,
-        date: holding,
-        day: startOfDay(holding),
-        deletedAt: null,
-        details: source.details,
-        emoji: source.emoji,
-        exchangeRateType: source.exchangeRateType ?? "official",
-        icon: source.icon,
-        id: occurrenceId(source.id, holding),
-        imageColor: source.imageColor,
-        imageKey: source.imageKey,
-        imageUri: source.imageUri,
-        income: source.income,
-        month: firstOfMonth(holding),
-        note: source.note,
-        onceRecurring: true,
-        recurringAnchorDay: carriesSchedule ? anchorDayOf(source) : null,
-        recurringCoefficient: carriesSchedule ? source.recurringCoefficient : 1,
-        recurringEndDate: carriesSchedule ? source.recurringEndDate : null,
-        recurringType: carriesSchedule ? source.recurringType : RECURRING_TYPE.none,
-        reminderLeadDays: carriesSchedule ? source.reminderLeadDays : null,
-        updatedAt: now,
-    };
-}
 
 export const backfillRecurring = Effect.fn("RecurrenceBackfill.backfillRecurring")(function* backfillRecurring(
     db: Database,
@@ -168,11 +115,11 @@ export const backfillRecurring = Effect.fn("RecurrenceBackfill.backfillRecurring
     const endLimit = source.recurringEndDate == null ? null : startOfDay(source.recurringEndDate);
     const withinEndLimit = (d: Date): boolean => endLimit == null || startOfDay(d).getTime() <= endLimit.getTime();
 
-    const occurrenceAt = (holding: Date, carriesSchedule: boolean): TransactionInsert =>
+    const occurrenceAt = (holding: Date, carriesSchedule: boolean) =>
         occurrenceRow(source, holding, carriesSchedule, now);
 
     const next = nextDate(source.date, type, coefficient, anchorDay) ?? source.date;
-    const pending: TransactionInsert[] = [];
+    const pending: ReturnType<typeof occurrenceAt>[] = [];
 
     // Inherits the schedule only when its next charge is strictly ahead of today and itself, or the next sweep gets
     // the same charge forever.
@@ -204,24 +151,11 @@ export const backfillRecurring = Effect.fn("RecurrenceBackfill.backfillRecurring
         return;
     }
 
-    // Each occurrence is canonicalized at ITS OWN date, or January's payment is priced at December's rate. Built
-    // outside the write transaction because the rate lookup reads.
+    // Built outside the write transaction because the rate lookup reads.
     const lookup = localRateLookup(db);
     const display = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
     const canonicalized = yield* Effect.all(
-        pending.map((row) =>
-            canonicalUsd(lookup, {
-                amount: row.amount,
-                currency: row.currency ?? null,
-                date: row.date,
-                displayCurrency: display,
-                exchangeRate: null,
-                exchangeRateType: recurrenceRateType(row.exchangeRateType),
-            }).pipe(
-                Effect.mapError(failedAt("backfill")),
-                Effect.map((canonical) => ({ ...row, ...canonical }))
-            )
-        ),
+        pending.map((row) => canonicalOccurrence(lookup, row, display).pipe(Effect.mapError(failedAt("backfill")))),
         { concurrency: "unbounded" }
     );
 
@@ -265,47 +199,17 @@ export const backfillAllRecurring = Effect.fn("RecurrenceBackfill.backfillAllRec
     }
 });
 
-const withCanonicalUsd = Effect.fn("RecurrenceBackfill.withCanonicalUsd")(function* withCanonicalUsd(
-    db: Database,
-    row: TransactionInsert
-) {
-    const display = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
-    const canonical = yield* canonicalUsd(localRateLookup(db), {
-        amount: row.amount,
-        currency: row.currency ?? null,
-        date: row.date,
-        displayCurrency: display,
-        exchangeRate: null,
-        exchangeRateType: recurrenceRateType(row.exchangeRateType),
-    }).pipe(Effect.mapError(failedAt("successor")));
-    return { ...row, ...canonical };
-});
-
-// Anchored at the next occurrence after today, so a stale carrier resumes forward instead of back-charging. A
-// future-dated carrier is the pending charge itself, so removing it means stop: no successor.
 export const scheduleSuccessor = Effect.fn("RecurrenceBackfill.scheduleSuccessor")(function* scheduleSuccessor(
     db: Database,
     carrier: TransactionRow,
     now: Date
 ) {
-    if (!carrier.onceRecurring || carrier.recurringType === RECURRING_TYPE.none) {
+    const row = successorRow(carrier, now);
+    if (row === null) {
         return null;
     }
-    if (startOfDay(carrier.date).getTime() > startOfDay(now).getTime()) {
-        return null;
-    }
-    const landing = nextLanding(
-        carrier.date,
-        carrier.recurringType,
-        carrier.recurringCoefficient,
-        carrier.recurringEndDate,
-        now,
-        anchorDayOf(carrier)
-    );
-    if (landing == null) {
-        return null;
-    }
-    return yield* withCanonicalUsd(db, occurrenceRow(carrier, landing, true, now));
+    const display = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    return yield* canonicalOccurrence(localRateLookup(db), row, display).pipe(Effect.mapError(failedAt("successor")));
 });
 
 // One-shot repair for carriers soft-deleted before the delete handover existed; the tombstone still holds the
