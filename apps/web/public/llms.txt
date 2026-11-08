@@ -132,6 +132,9 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - [Planilha de controle financeiro](https://tryoutlayr.com/pt/guides/expense-tracker-template): the expense tracker template guide, with a Portuguese Excel workbook and CSV in reais
 - [Melhor app de controle financeiro](https://tryoutlayr.com/pt/guides/best-expense-tracker-apps-brazil): seven financial control apps for Brazil compared, in Portuguese
 - [Calculadoras](https://tryoutlayr.com/pt/tools): the 50/30/20, subscription, installment, and split expenses calculators in Portuguese
+- [Política de Privacidade](https://tryoutlayr.com/pt/privacy): the Privacy Policy in Portuguese
+- [Termos de Uso](https://tryoutlayr.com/pt/terms): the Terms of Use in Portuguese
+- [Apague sua conta](https://tryoutlayr.com/pt/delete-account): account deletion in Portuguese
 
 ## Pages in French
 
@@ -140,6 +143,9 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - [Modèle de budget mensuel](https://tryoutlayr.com/fr/guides/expense-tracker-template): the expense tracker template guide, with a French Excel workbook and CSV in euros
 - [Meilleure application de gestion de budget](https://tryoutlayr.com/fr/guides/best-budget-apps-france): seven budget apps for France, Quebec, and Belgium compared, in French
 - [Calculateurs](https://tryoutlayr.com/fr/tools): the 50/30/20, subscription, installment, and split expenses calculators in French
+- [Politique de confidentialité](https://tryoutlayr.com/fr/privacy): the Privacy Policy in French
+- [Conditions d’utilisation](https://tryoutlayr.com/fr/terms): the Terms of Use in French
+- [Supprimer votre compte](https://tryoutlayr.com/fr/delete-account): account deletion in French
 
 ## Links
 

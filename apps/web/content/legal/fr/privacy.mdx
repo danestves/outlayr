@@ -1,0 +1,427 @@
+---
+title: "Politique de confidentialité"
+description: "Ce qu’Outlayr enregistre sur votre appareil, ce qui parvient à nos serveurs, aux fournisseurs d’IA et aux outils d’analyse, combien de temps c’est conservé et comment le supprimer. En vigueur le 8 novembre 2026."
+intro: "Cette politique explique ce qu’Outlayr collecte, où cela va, combien de temps cela reste et ce que vous pouvez y faire. Cette traduction est fournie pour votre commodité. En cas de différence avec la version anglaise, la version anglaise prévaut."
+---
+
+## En bref
+
+- Votre journal est stocké sur votre appareil. Vous pouvez utiliser Outlayr sans compte, et vos opérations, montants et notes ne quittent alors jamais le téléphone.
+- Un compte (Se connecter avec Apple, Google, ou une adresse e-mail et un mot de passe) active les suggestions de commerçants, la lecture des notifications, la saisie vocale, le scan de tickets et l’import d’échéanciers. Avec Outlayr Pro, il active aussi la synchronisation, qui conserve une copie de votre journal et de vos photos sur nos serveurs jusqu’à ce que vous supprimiez votre compte.
+- Avec un compte, nous vous envoyons par e-mail un message de bienvenue, un message lorsque Pro commence, et un préavis avant toute modification importante de cette politique ou de nos Conditions. Pas de lettre d’information ni de marketing.
+- Les saisies vocales, les scans de tickets, les imports d’échéanciers, les relevés bancaires PDF que vous choisissez d’importer, les suggestions de commerçants et les notifications bancaires qui affichent un montant sont traités par Anthropic, et ElevenLabs transforme les enregistrements vocaux en texte. Nous ne conservons pas vos enregistrements, photos scannées, captures d’écran ou notifications et, en dehors de ce que montre un relevé que vous importez, nous n’envoyons jamais à l’une ou l’autre de ces sociétés votre nom, votre adresse e-mail ou votre identifiant de compte.
+- Rien n’est envoyé à Anthropic ou à ElevenLabs tant que vous ne l’avez pas autorisé. L’app vous le demande lors de la configuration, ou après votre connexion, et Dicter une opération et Scanner un ticket vous le redemandent tant que vous ne l’avez pas fait. Importer depuis une capture d’écran, pour les échéanciers, vous le demande la première fois que vous l’utilisez, même si vous avez autorisé les autres. Retirez cette autorisation à tout moment dans **Réglages › Envoyer les données aux fournisseurs d’IA**. Une fois l’autorisation donnée, les suggestions de commerçants, la lecture des notifications et les recherches web sont activées, et toutes trois peuvent être désactivées dans **Réglages › Remplissage intelligent**. Activer le Remplissage intelligent autorise aussi l’envoi de données aux fournisseurs d’IA.
+- L’app envoie des statistiques d’utilisation et des rapports de plantage à PostHog : les écrans que vous ouvrez, les fonctionnalités que vous utilisez et les erreurs. Jamais les montants, les commerçants, les notes ou les noms. Cet envoi est désactivé au départ si la région de votre appareil se trouve dans l’EEE ou au Royaume-Uni, et activé partout ailleurs. Modifiez-le dans **Réglages › Partager les données d’analyse**. Notre serveur indique aussi à PostHog la taille, le coût et la vitesse de chaque requête envoyée à Anthropic, jamais son contenu, et ne la relie à votre compte que tant que Partager les données d’analyse est activé.
+- Ce site web utilise aussi PostHog, avec un cookie. Si vous êtes dans l’EEE ou au Royaume-Uni, il vous demande d’abord votre accord. Modifiez votre réponse dans le pied de page, sous **Cookies**.
+- Avec Outlayr Pro, vous pouvez connecter Notion pour importer des dépenses depuis vos bases de données Notion. Nous conservons la clé d’accès de Notion chiffrée sur nos serveurs afin que vous puissiez importer à nouveau, jusqu’à ce que vous déconnectiez Notion ou supprimiez votre compte. Ce que nous lisons dans Notion transite par notre serveur jusqu’à votre téléphone et n’est pas conservé.
+- Vous pouvez connecter à votre compte un assistant IA comme Claude. Une fois que vous l’avez approuvé, il peut lire ce que vos appareils ont synchronisé et, avec Outlayr Pro, ajouter des opérations. Ce qu’il lit est traité selon la politique de confidentialité de cet assistant.
+- Si vous invitez des amis, chacun voit votre prénom sur votre invitation, et vous voyez son prénom, le nombre de jours où il a saisi des opérations, jusqu’à trois, et la date du troisième. Jamais ce qu’il a saisi.
+- Pas de publicité et pas de pistage à travers les apps d’autres sociétés. Nous ne vendons ni ne partageons vos informations personnelles.
+- Vous pouvez supprimer votre compte et tout ce qui y est synchronisé depuis l’app à tout moment : **Réglages › Compte › Supprimer le compte**.
+
+## Qui nous sommes
+
+Outlayr est conçu par danestves LLC, une limited liability company (société à responsabilité limitée) du Delaware. Nous décidons de l’utilisation des données personnelles décrites ici, ce qui fait de nous leur responsable du traitement. Vous pouvez nous joindre à [support@tryoutlayr.com](mailto:support@tryoutlayr.com) ou par courrier au 651 N Broad St, Suite 201, Middletown, DE 19709, USA.
+
+Cette politique couvre l’app Outlayr, les serveurs qui la font fonctionner et ce site web. « Nous » désigne danestves LLC. Nos [Conditions d’utilisation](/terms) couvrent tout le reste de l’utilisation d’Outlayr.
+
+## Aperçu des données
+
+Chaque type de données traité par Outlayr, au même endroit. Les sections ci-dessous expliquent chaque ligne.
+
+| Données | Quand | Où elles vont | Conservation |
+| --- | --- | --- | --- |
+| Votre journal et ses photos | Toujours | Votre appareil | Jusqu’à ce que vous l’effaciez |
+| Titres et texte des notifications | Saisie depuis les notifications | Votre appareil | Sur Android, la plus récente par app pour 20 apps au maximum. Les 5 dernières lues, et celles en attente au-delà de la limite mensuelle gratuite de saisie automatique |
+| Journal synchronisé, opérations supprimées, photos | Synchronisation activée (Pro) | Nos serveurs | Jusqu’à la suppression du compte |
+| Adresse e-mail, nom, identifiant du fournisseur, empreinte du mot de passe | Connexion | Nos serveurs | Jusqu’à la suppression du compte |
+| Adresse e-mail, code à 6 chiffres | Connexion par e-mail | Nos serveurs, Cloudflare | Code : 10 minutes. E-mail : politique de Cloudflare |
+| Adresse e-mail, langue de l’app, lesquels de nos e-mails vous avez reçus | E-mails liés au compte | Nos serveurs, Cloudflare | Jusqu’à la suppression du compte. E-mail : politique de Cloudflare |
+| Sessions, adresse IP, type d’appareil | Connexion | Nos serveurs | Jusqu’à la déconnexion ou la suppression du compte |
+| Noms de commerçants et de catégories | Remplissage intelligent | Nos serveurs, Anthropic | Jusqu’à la réponse |
+| Titre et texte d’une notification qui affiche un montant | Saisie depuis les notifications, avec le Remplissage intelligent | Nos serveurs, Anthropic | Non conservés |
+| Enregistrement vocal | Saisie vocale | Nos serveurs, ElevenLabs | Non conservé |
+| Transcription et brouillon | Saisie vocale | Nos serveurs, ElevenLabs, Anthropic | Jusqu’à la fermeture, ou 1 heure d’inactivité |
+| Photo du ticket | Scan de ticket | Nos serveurs, Anthropic | Non conservée |
+| Capture d’écran d’un échéancier | Import d’échéancier | Nos serveurs, Anthropic | Non conservée |
+| Libellés du fichier | Import CSV | Nos serveurs, Anthropic (Pro) | Non conservés |
+| Un relevé PDF que vous choisissez, et son texte | Import de relevé bancaire PDF | Nos serveurs, Anthropic (Pro) | Supprimés après lecture, au plus tard environ 75 minutes après si l’import n’aboutit jamais |
+| Clé d’accès Notion (chiffrée), identifiant utilisateur Notion | Connexion de Notion (Pro) | Nos serveurs | Jusqu’à ce que vous déconnectiez Notion ou supprimiez votre compte |
+| Noms, colonnes et lignes des bases de données Notion que vous choisissez | Import Notion (Pro) | Notion, nos serveurs, votre appareil | Non conservés sur nos serveurs |
+| Nom du commerçant, une adresse web que vous ajoutez, une catégorie générale | Ajout d’un site web | Nos serveurs, partagés avec tout le monde | Actualisés après 90 jours. Non liés à vous |
+| Adresse web, adresse IP | Logos | Nos serveurs (Cloudflare) | Adresse web stockée avec le logo ; adresse IP non conservée |
+| Historique des achats, identifiant utilisateur, nom, adresse e-mail | Ouverture de l’app, Pro | RevenueCat, Apple ou Google, nos serveurs | Jusqu’à la suppression du compte |
+| Code d’invitation, qui a invité qui, prénoms, jours de saisie jusqu’à trois et date du troisième, mois obtenus | Invitations | Nos serveurs, RevenueCat | Jusqu’à la suppression du compte |
+| Identifiant d’installation, version de l’app, erreurs | Vérification des mises à jour | Expo | Politique d’Expo |
+| Écrans, fonctionnalités utilisées, erreurs, identifiant d’installation, modèle d’appareil | Utilisation de l’app | PostHog | Jusqu’à la suppression du compte, ou politique de PostHog si vous ne vous connectez jamais |
+| Fonctionnalité, modèle, jetons, coût, vitesse et erreurs de chaque requête d’IA | Suggestions, lecture des notifications, voix, scans, imports | PostHog | Avec Partager les données d’analyse activé, jusqu’à la suppression du compte. Sinon, politique de PostHog |
+| Pages, clics, défilement, erreurs, vitesse des pages, enregistrements de visite | Visites du site web | PostHog | Politique de PostHog |
+| Opérations, soldes, budgets, prélèvements à venir | Assistant IA que vous approuvez | La société de l’assistant | Ses politiques |
+| Nom et adresse de l’assistant, votre approbation, clés d’accès | Assistant IA que vous approuvez | Nos serveurs | Jusqu’à la suppression du compte |
+| Vos e-mails | Vous nous écrivez | Notre boîte de réception | Aussi longtemps que nécessaire |
+
+## Ce qui reste sur votre appareil
+
+Outlayr conserve votre journal dans une base de données à l’intérieur de l’app, sur votre appareil : vos opérations (montant, devise, date, commerçant ou note, catégorie, étiquettes, compte, périodicité et éventuelles photos), les comptes et leurs soldes, les virements, les budgets, les objectifs d’épargne, les catégories, les étiquettes et les réglages. Les opérations que vous supprimez attendent dans **Supprimés récemment** sur le téléphone, où vous pouvez les restaurer.
+
+Vous n’avez pas besoin de compte pour utiliser Outlayr. Sans compte, aucune partie de votre journal ne nous est envoyée.
+
+### Fonctionnalités qui restent sur votre appareil
+
+- Les **widgets** affichent des totaux, des soldes, des budgets et les opérations récentes sur votre écran d’accueil et, sur iPhone, également sur votre écran verrouillé. Ils lisent un stockage partagé uniquement entre Outlayr et ses propres widgets.
+- **Recherche** : sur iPhone, Outlayr ajoute vos 500 opérations les plus récentes et vos budgets à l’index Spotlight de l’appareil afin que vous puissiez les retrouver depuis Recherche. Pour l’empêcher, désactivez Afficher le contenu dans Recherche pour Outlayr dans l’app Réglages d’iOS.
+- Les **rappels** (un rappel quotidien et les prélèvements d’abonnement à venir) sont programmés sur votre appareil. Outlayr n’envoie jamais de notifications depuis un serveur et ne s’inscrit pas aux notifications push.
+- Les **actions Siri et Raccourcis** sur iPhone (enregistrer une opération, consulter un budget, obtenir un résumé des dépenses) s’exécutent sur l’appareil. Apple traite les requêtes Siri selon sa propre politique de confidentialité. La saisie depuis une notification peut aussi envoyer son texte pour être [lu par Anthropic](#lecture-des-notifications-bancaires).
+- Le **verrouillage de l’app** (Réglages › Authentification) protège Outlayr par le verrouillage biométrique de votre appareil (Face ID ou Touch ID sur iPhone). Le système vérifie votre visage ou votre empreinte digitale, et Outlayr apprend seulement si la vérification a réussi.
+
+### Ce que l’app envoie même sans compte
+
+- **Taux de change.** L’app télécharge les taux du marché depuis notre serveur. La requête ne nécessite aucun compte et ne contient aucune donnée du journal. Notre serveur lit les taux auprès d’Open Exchange Rates, CotizaVE et Binance, qui ne reçoivent rien vous concernant.
+- **Logos.** Pour afficher le logo d’un commerçant ou d’une banque, l’app le demande à notre serveur de logos à partir de son adresse web (par exemple netflix.com). Elle n’inclut jamais de montants, de notes ni votre identité. Si nous n’avons pas encore ce logo, notre serveur le cherche sur les services d’icônes de Google et de DuckDuckGo, sur le site web du commerçant lui-même et sur Wikidata, et en garde une copie pour tout le monde. Ces services voient l’adresse web et notre serveur, pas vous. Les logos sont ensuite mis en cache sur le téléphone.
+- **Mises à jour de l’app.** Au démarrage, l’app demande à Expo, la plateforme que nous utilisons pour distribuer les mises à jour, si une version plus récente du code de l’app est disponible. La requête contient un identifiant aléatoire créé pour cette installation (non lié à votre compte), la version de l’app et votre adresse IP. Si une mise à jour n’a pas pu démarrer la fois précédente, elle contient aussi un court message d’erreur.
+- **Statut d’achat.** L’app vérifie auprès de RevenueCat si vous avez Outlayr Pro, en utilisant un identifiant anonyme aléatoire tant que vous n’êtes pas connecté, puis votre identifiant de compte, votre nom et votre adresse e-mail une fois connecté. Voir [Outlayr Pro](#outlayr-pro).
+- **Statistiques et rapports de plantage.** L’app indique à PostHog, le service d’analyse que nous utilisons, quand elle est installée, mise à jour, ouverte ou fermée, quel type d’écran vous ouvrez (par exemple l’écran d’un compte, jamais lequel), et quand vous enregistrez une opération, un virement, un compte, une catégorie ou un budget, partagez une carte, importez ou exportez des données, modifiez un réglage, ouvrez Outlayr Pro, ou ouvrez l’app depuis un widget, un raccourci ou un lien. Ces événements contiennent des détails comme dépense ou revenu, si une opération provient d’un scan ou de votre voix, s’il s’agissait d’une nouvelle opération ou d’une modification, quel réglage a changé et s’il est désormais activé, et combien de lignes un import a ajoutées, arrondi à une fourchette comme 10 à 99. Si l’app rencontre une erreur, elle envoie le message d’erreur et l’endroit du code où elle s’est produite. Chaque événement contient un identifiant aléatoire créé pour cette installation, la version de l’app, le modèle de votre appareil, le système d’exploitation, la langue, le fuseau horaire et la taille de l’écran. Il ne contient jamais de montants, de commerçants, de notes, de noms de comptes ou de catégories, ni votre adresse e-mail. PostHog supprime votre adresse IP. Une fois que vous êtes connecté, ces événements sont liés à votre identifiant de compte Outlayr. Si la région de votre appareil est réglée sur un pays de l’EEE ou le Royaume-Uni, **Réglages › Partager les données d’analyse** est désactivé au départ et rien de tout cela n’est envoyé tant que vous ne l’activez pas. Le désactiver arrête tout envoi depuis cet appareil.
+
+## Votre compte
+
+Vous pouvez vous connecter avec Apple, avec Google, ou avec une adresse e-mail et un mot de passe. Nous recevons :
+
+- **Avec Apple :** votre adresse e-mail, ou une adresse relais privée si vous choisissez Masquer mon adresse e-mail, et un identifiant de votre compte Apple. L’app ne nous envoie pas votre nom.
+- **Avec Google :** votre nom, votre adresse e-mail, un lien vers votre photo de profil Google et un identifiant de votre compte Google.
+- **Avec une adresse e-mail :** votre adresse e-mail et un mot de passe. Nous ne conservons qu’une empreinte à sens unique du mot de passe, jamais le mot de passe lui-même. Pour confirmer l’adresse ou réinitialiser le mot de passe, nous vous envoyons par e-mail un code à 6 chiffres via Cloudflare. Un code expire au bout de 10 minutes.
+
+Nous créons un identifiant de compte Outlayr, une chaîne aléatoire, et le lions à cette identité. Nous conservons aussi les jetons nécessaires pour vous garder connecté et pour révoquer l’accès lorsque vous supprimez votre compte. Chaque connexion crée une session, qui peut enregistrer votre adresse IP et l’agent utilisateur de votre appareil. Une session cesse de fonctionner après sept jours sans utilisation, et la déconnexion la supprime.
+
+La connexion ne modifie pas le journal sur votre appareil. La déconnexion met fin à la session sur cet appareil et laisse le journal où il est.
+
+### Les e-mails que nous envoyons
+
+Nous envoyons quelques e-mails à l’adresse de votre compte, dans la langue de l’app :
+
+- Un message de bienvenue une fois votre adresse confirmée, ce qui est immédiat avec Apple ou Google.
+- Un message lorsque Outlayr Pro commence, avec votre formule, sa date de renouvellement et l’endroit où la gérer.
+- Un préavis avant toute modification importante de cette politique ou de nos [Conditions d’utilisation](/terms).
+
+Ils accompagnent votre compte : il n’y a donc pas de lien de désinscription, et ils s’arrêtent lorsque vous le supprimez. Nous n’envoyons ni lettre d’information ni marketing. Pour les rédiger dans votre langue, l’app indique sa langue à notre serveur lorsque vous vous connectez et lorsqu’elle renouvelle votre session. Nous conservons cette langue et la trace des e-mails que vous avez reçus parmi ceux-ci jusqu’à ce que vous supprimiez votre compte.
+
+## Synchronisation et photos
+
+La synchronisation fait partie d’Outlayr Pro. Lorsque vous êtes connecté avec Pro, Outlayr copie votre journal sur nos serveurs et l’envoie à vos autres appareils connectés. Vous pouvez arrêter la synchronisation d’un appareil dans **Réglages › Synchronisation**.
+
+### Ce qui est synchronisé
+
+- Les opérations, virements, comptes, budgets, objectifs d’épargne, catégories, étiquettes, ainsi que les montants, devises, dates, commerçants, notes et taux de change qui s’y rapportent.
+- Les photos jointes aux opérations et les images définies pour les comptes, téléversées dans notre stockage de fichiers sur Cloudflare R2. Chaque compte dispose d’une limite de 2 GB pour les photos.
+- Les réglages qui vous décrivent plutôt que le téléphone, comme votre devise, vos préférences d’affichage et l’activation ou non des suggestions et des recherches web.
+- Le fuseau horaire de votre téléphone, afin qu’un assistant IA connecté date vos opérations comme le fait l’app.
+- Un identifiant aléatoire pour chaque appareil, utilisé pour ordonner les modifications faites sur différents appareils.
+
+Les réglages propres à un téléphone y restent : notifications, verrouillage de l’app, Partager les données d’analyse, saisie des nombres, et mode clair ou sombre.
+
+### Opérations supprimées
+
+Lorsque vous supprimez une opération sur un appareil synchronisé, nos serveurs conservent une trace de suppression afin que vos autres appareils puissent la supprimer aussi. Cette trace conserve le dernier contenu de l’opération, et toute photo qui y était jointe, jusqu’à ce que vous supprimiez votre compte.
+
+### Désactiver la synchronisation
+
+Désactiver la synchronisation empêche cet appareil d’envoyer des modifications. Cela ne supprime pas ce qui se trouve déjà sur nos serveurs. Pour le supprimer, [supprimez votre compte](#suppression-et-exportation).
+
+## Connecter Notion
+
+Avec Outlayr Pro, vous pouvez connecter un espace de travail Notion et importer des dépenses depuis ses bases de données. Notion vous demande quelles pages partager avec Outlayr, et Outlayr ne peut lire que celles-ci. Il ne peut rien modifier, ajouter ni supprimer dans Notion.
+
+Lorsque vous vous connectez, Notion donne à notre serveur une clé d’accès et votre identifiant utilisateur Notion. Nous conservons la clé chiffrée sur nos serveurs, liée à votre compte, afin que vous puissiez importer à nouveau plus tard sans vous reconnecter. Nous ne voyons jamais votre mot de passe Notion, et nous ne conservons pas votre nom ni votre adresse e-mail Notion.
+
+Lorsque vous importez, notre serveur utilise la clé pour lire les bases de données que vous choisissez : leurs noms, les noms des colonnes et les lignes, ainsi que les noms des lignes auxquelles elles renvoient. Il les envoie à votre téléphone, qui prépare l’import. Rien de ce qui est lu dans Notion n’est stocké sur nos serveurs, et votre téléphone ne garde que les opérations que vous importez.
+
+- **Déconnecter** dans **Réglages › Importer › Notion** à tout moment. Notre serveur demande à Notion de révoquer la clé et la supprime.
+- Retirer Outlayr de vos réglages Notion révoque aussi la clé. Nous la supprimons la prochaine fois que l’app tente de l’utiliser.
+- Si Pro prend fin, la clé reste jusqu’à ce que vous vous déconnectiez, mais importer à nouveau nécessite Pro.
+- Supprimer votre compte révoque et supprime la clé.
+
+Notion Labs, Inc. traite votre espace de travail selon [sa propre politique de confidentialité](https://www.notion.com/trust/privacy-policy). Il apprend que votre espace de travail est connecté à Outlayr, et quand notre serveur y lit des données.
+
+## Suggestions, voix et tickets
+
+Ces fonctionnalités nécessitent un compte, et aucune ne fonctionne tant que vous n’avez pas autorisé l’envoi de données à Anthropic et ElevenLabs lorsque l’app vous le demande. Désactiver **Réglages › Envoyer les données aux fournisseurs d’IA** les arrête toutes. Chaque requête passe d’abord par notre serveur, qui vérifie votre compte et vos limites, puis ne transmet que le contenu indiqué ci-dessous. Aucune n’envoie à Anthropic ou à ElevenLabs votre nom, votre adresse e-mail ou votre identifiant de compte.
+
+### Suggestions de commerçants (Remplissage intelligent)
+
+Lorsque vous tapez, dictez, scannez ou saisissez depuis Apple Pay ou une notification un commerçant qu’Outlayr ne reconnaît pas sur l’appareil, l’app envoie à notre serveur le nom du commerçant, si l’opération est une dépense ou un revenu, son code de devise, votre langue et la région de votre appareil, ainsi que les noms de vos catégories. Jamais le montant, la date, les notes ni le compte.
+
+Notre serveur consulte d’abord une liste partagée de commerçants connus (ci-dessous). Si le commerçant n’y figure pas, il interroge le modèle Claude d’Anthropic, et la réponse (une catégorie, des étiquettes, un emoji et l’adresse web du commerçant) revient sur votre appareil. Les opérations enregistrées qui n’ont toujours pas de logo peuvent être recherchées de nouveau en arrière-plan. Ces requêtes n’attendent sur notre serveur que jusqu’à ce que votre appareil récupère la réponse.
+
+Activé dès que vous autorisez l’envoi de données aux fournisseurs d’IA. Désactivez-le dans **Réglages › Remplissage intelligent**.
+
+### Lecture des notifications bancaires
+
+Lorsque Outlayr enregistre un achat à partir d’une notification, via l’automatisation Raccourcis sur iPhone ou l’accès aux notifications sur Android, l’app envoie à notre serveur le titre et le texte de la notification tels que l’app qui l’a publiée les a rédigés, ainsi que votre langue. Le modèle Claude d’Anthropic détermine si elle signale un achat, de l’argent reçu, un paiement refusé ou autre chose, ainsi que le montant, la devise et le commerçant. Le texte contient tout ce que cette app y a mis, comme le montant, une date ou les derniers chiffres d’une carte. Le nom de l’app, les noms de cartes et de comptes que vous avez définis dans Outlayr et vos autres opérations ne sont pas envoyés.
+
+Seules les notifications qui affichent un montant sont envoyées : les codes de connexion, les promotions et les répétitions d’une notification qu’Outlayr a déjà enregistrée restent sur votre téléphone. Nous ne conservons pas le texte. La réponse revient directement sur votre téléphone, qui ajoute l’opération : un paiement refusé n’est pas enregistré, et tout le reste l’est, en utilisant la lecture propre au téléphone chaque fois que le modèle n’a donné aucune réponse ou a qualifié la notification d’autre chose qu’un achat ou un revenu. Si le Remplissage intelligent est désactivé, si vous êtes hors ligne ou si la réponse prend plus de 8 secondes, le téléphone lit la notification par lui-même.
+
+Activé dès que vous autorisez l’envoi de données aux fournisseurs d’IA. Désactivez-le dans **Réglages › Remplissage intelligent**.
+
+### Recherche web des nouveaux commerçants
+
+Si le modèle ne parvient pas à classer un commerçant et que vous avez Pro, notre serveur peut demander à Anthropic de le rechercher sur le web. Le modèle d’Anthropic effectue les recherches à partir du nom du commerçant et parfois d’un pays ou d’une ville. Il reçoit le nom du commerçant, dépense ou revenu, le code de devise, la langue et la région et, pour les recherches en arrière-plan, également les noms de vos catégories. Une recherche web améliore généralement la réponse pour la prochaine opération avec ce commerçant plutôt que pour celle que vous êtes en train de saisir.
+
+Activée dès que vous autorisez l’envoi de données aux fournisseurs d’IA. Désactivez-la dans **Réglages › Remplissage intelligent**, ce qui désactive aussi les suggestions. L’app envoie votre choix avec chaque requête, et notre serveur respecte aussi le réglage synchronisé : aucune recherche web n’est donc effectuée pour vous tant qu’il est désactivé.
+
+### La liste partagée des commerçants
+
+Lorsqu’une réponse désigne clairement une entreprise avec une adresse web et une catégorie générale, nous l’ajoutons à une liste partagée afin que la prochaine recherche de ce commerçant soit instantanée. Chaque élément contient le nom du commerçant, son adresse web, une catégorie issue d’une liste générale fixe, un emoji et des étiquettes, classés par nom de commerçant et devise. Il n’enregistre pas qui a fait la demande et n’est lié à aucun compte. Les éléments sont actualisés après 30 jours, ou 90 jours lorsqu’ils sont confirmés par une source web.
+
+Lorsque nous ne trouvons pas de logo pour un commerçant, vous pouvez ajouter son site web. Lorsque vous enregistrez l’opération, le nom du commerçant, cette adresse web et une catégorie générale rejoignent cette liste, de sorte que les autres personnes qui saisissent ce commerçant voient son logo, et le logo apparaît aussi sur vos opérations antérieures avec lui. Si votre catégorie ne figure pas sur la liste fixe et que vous autorisez les fournisseurs d’IA, le modèle Claude d’Anthropic en choisit une à partir du nom du commerçant. Nous vérifions que l’adresse a un logo, et un site web que vous ajoutez ne remplace jamais un commerçant déjà présent sur la liste. Il y reste 90 jours et n’est pas lié à vous. N’ajoutez pas de site web si vous ne voulez pas qu’il soit partagé.
+
+### Saisie vocale
+
+Lorsque vous dictez une opération, l’app enregistre l’extrait sur votre appareil et l’envoie à notre serveur avec les noms de vos comptes, les noms de vos catégories, la devise de votre journal, votre langue et la date du jour. ElevenLabs transcrit l’extrait, en ne recevant que l’audio et votre langue, et le modèle Claude d’Anthropic transforme le texte en un brouillon d’opération que vous vérifiez.
+
+Nous n’enregistrons jamais l’audio. La transcription et le brouillon sont conservés sur notre serveur sous la forme d’une courte conversation afin que vous puissiez corriger l’opération en parlant de nouveau. Elle est supprimée lorsque vous fermez l’écran vocal, ou une heure après votre dernier message si l’app se ferme avant.
+
+### Scan de ticket
+
+Lorsque vous scannez un ticket, l’app compresse la photo sur votre appareil et l’envoie à notre serveur avec les noms de vos comptes, les noms de vos catégories, la devise du journal, la langue, la région et la date du jour. Le modèle Claude d’Anthropic lit le commerçant, le total, la date et les articles. Nous ne conservons pas la photo, et le scan ne la joint pas à l’opération. L’opération créée contient le commerçant, le montant, la date et les articles sous forme de notes.
+
+### Import d’échéancier
+
+Lorsque vous importez un échéancier, vous choisissez une capture d’écran du plan de paiement d’une commande. L’app la compresse sur votre appareil et l’envoie à notre serveur avec le nom du compte dans lequel vous importez, sa devise, votre langue, la région et la date du jour. Le modèle Claude d’Anthropic lit l’app ou la boutique qui l’a vendue, ainsi que le montant de chaque échéance, sa date d’échéance, les frais de retard et si elle est payée. Nous ne conservons pas la capture d’écran. L’échéancier qu’il remplit ne contient que ces informations, et rien n’est enregistré tant que vous ne l’avez pas vérifié et n’avez pas touché Enregistrer.
+
+### Import CSV
+
+Le fichier est lu sur votre appareil, tout comme un export Notion : le fichier zip est ouvert et son CSV lu sur le téléphone. Avec le Remplissage intelligent activé, les libellés qu’Outlayr ne peut pas associer sur l’appareil sont envoyés à notre serveur et, avec Pro, transmis à Anthropic pour suggérer des catégories : au plus 200 à la fois, toute suite de quatre chiffres ou plus étant supprimée, avec les noms de vos catégories et la région de votre appareil. Les montants, les dates et le reste du fichier restent sur votre appareil. Avec la recherche web activée, certains libellés peuvent aussi être recherchés sur le web comme décrit ci-dessus.
+
+### Import de relevé bancaire PDF
+
+Cette fonctionnalité fait partie de Pro et fonctionne différemment de l’import CSV : le fichier quitte votre appareil. Lorsque vous choisissez un relevé, le PDF est téléversé sur notre serveur, qui en lit le texte et supprime le fichier dès que c’est fait. Si l’import est interrompu, une tâche programmée supprime le fichier dans un délai d’environ 75 minutes. Notre serveur masque les longues suites de chiffres comme les IBAN et les numéros de carte, en gardant les quatre derniers, et envoie à Anthropic le reste du texte du relevé, c’est-à-dire tout ce qui y est imprimé : votre nom et votre adresse si le relevé les indique, les dates, les libellés, les montants et les soldes. Les transactions qu’Anthropic trouve reviennent sur votre appareil pour que vous les vérifiiez, et leurs libellés sont classés comme dans l’[import CSV](#import-csv). Nous ne conservons ni le relevé ni son texte.
+
+### Qui sont Anthropic et ElevenLabs
+
+Anthropic est la société américaine qui conçoit les modèles d’IA Claude. ElevenLabs conçoit les modèles de reconnaissance vocale qui transcrivent les saisies vocales. Toutes deux traitent ces requêtes pour notre compte en tant que prestataires de services, selon les conditions de leur API. Anthropic n’entraîne pas ses modèles sur ces données, et nous avons désactivé leur utilisation par ElevenLabs pour l’entraînement. Nous n’utilisons pas non plus vos données pour entraîner des modèles d’IA.
+
+Si une requête envoyée à Anthropic échoue, le journal d’erreurs de notre serveur peut contenir le nom du commerçant concerné, afin que nous puissions trouver le problème. Il ne contient jamais le texte d’une notification.
+
+### Enregistrements des requêtes d’IA
+
+Après chaque requête envoyée à Anthropic, notre serveur envoie à PostHog un enregistrement de celle-ci : la fonctionnalité, le modèle, le nombre de jetons utilisés et leur coût, la durée, si elle a échoué, et les noms des outils du modèle qu’elle a utilisés, comme la recherche web. Les enregistrements de saisie vocale contiennent aussi un identifiant de conversation, afin que ses échanges restent regroupés. Un enregistrement ne contient jamais ce que vous avez dit, la photo ou la capture d’écran, le texte d’une notification, ni aucun autre texte envoyé à Anthropic ou reçu de lui. Si **Réglages › Partager les données d’analyse** est activé sur l’appareil qui fait la requête, l’enregistrement contient votre identifiant de compte, afin que nous puissions voir ce que coûtent les fonctionnalités d’IA pour chaque compte. S’il est désactivé, l’enregistrement contient un identifiant aléatoire qui n’est pas lié à vous.
+
+## Apple Pay et Raccourcis
+
+Sur iPhone, Outlayr peut enregistrer vos achats par carte via l’app Raccourcis d’Apple. Vous installez notre raccourci depuis un lien iCloud dans **Réglages › Apple Pay** et activez vous-même l’automatisation.
+
+Lorsque l’automatisation s’exécute, Raccourcis transmet à Outlayr le montant, le commerçant et le nom de la carte d’un achat Apple Pay, ou le titre et le texte d’une notification provenant d’une app que vous choisissez, comme celle de votre banque. Outlayr lit le montant et le commerçant, associe la carte à l’un de vos comptes par son nom et ajoute l’opération. Un achat Apple Pay est lu sur votre téléphone et rien ne nous en est envoyé. Une notification qui affiche un montant est aussi [lue par Anthropic](#lecture-des-notifications-bancaires) lorsque le Remplissage intelligent est activé. L’automatisation s’exécute pour chaque notification des apps que vous y choisissez : ne choisissez donc que les apps de votre banque et de vos cartes. La nouvelle opération est ensuite comme toutes les autres : elle est synchronisée si la synchronisation est activée, et son nom de commerçant peut servir à une [suggestion de commerçant](#suggestions-voix-et-tickets).
+
+## Accès aux notifications sur Android
+
+Sur Android, Outlayr peut enregistrer des achats à partir de vos notifications. Rien n’est lu tant que vous n’avez pas ouvert **Réglages › Saisie automatique**, touché **Autoriser l’accès aux notifications** et activé cet accès pour Outlayr dans les réglages d’Android.
+
+Avec l’accès activé, Android montre à Outlayr chaque notification que reçoit votre téléphone. Outlayr vérifie chacune sur votre téléphone pour y trouver un montant et ignore les autres. Pour une app qui en envoie une avec un montant, il conserve le nom de l’app ainsi que le titre et le texte de sa dernière notification de ce type, pour 20 apps au maximum, afin de pouvoir les lister sous **Saisir depuis**. Il n’enregistre des achats que depuis les apps que vous y activez, et Google Wallet est activé au départ. À partir de celles-ci, il lit le montant, le commerçant et la carte indiquée dans une notification Google Wallet, associe la carte ou l’app à l’un de vos comptes, ajoute l’opération et la confirme par sa propre notification. Il conserve aussi le texte des 5 dernières notifications qu’il a enregistrées.
+
+Les notifications des apps que vous n’avez pas activées ne sont jamais envoyées à nous ni à personne d’autre. Lorsque le Remplissage intelligent est activé, une notification qui affiche un montant provenant d’une app que vous avez activée est aussi [lue par Anthropic](#lecture-des-notifications-bancaires) avant l’ajout de l’opération. La nouvelle opération est ensuite comme toutes les autres : elle est synchronisée si la synchronisation est activée, et son nom de commerçant peut servir à une [suggestion de commerçant](#suggestions-voix-et-tickets). Pour arrêter, désactivez une app sous **Saisir depuis**, ou désactivez l’accès aux notifications pour Outlayr dans les réglages d’Android. Supprimer l’app efface ce qu’elle avait conservé.
+
+## Assistants IA
+
+Vous pouvez connecter à votre compte Outlayr un assistant IA compatible avec le Model Context Protocol (MCP), comme Claude. Rien n’est connecté tant que vous n’avez pas ajouté Outlayr dans l’assistant, ne vous êtes pas connecté à votre compte Outlayr sur tryoutlayr.com et n’avez pas approuvé l’assistant sur un écran qui affiche son nom et le site auquel votre accès est donné. Si l’assistant vous a plutôt donné un lien, cet écran affiche un code à comparer avec celui que montre votre assistant. Nous demandons cette approbation chaque fois qu’un assistant se connecte.
+
+Une fois approuvé, l’assistant peut lire ce que vos appareils ont synchronisé en dernier : opérations, catégories, comptes et leurs soldes, budgets et prélèvements à venir. Avec Outlayr Pro, il peut aussi ajouter une dépense ou un revenu, qui parvient à vos appareils par la synchronisation comme toute autre opération. Sans synchronisation, il n’y a rien sur nos serveurs qu’il puisse lire.
+
+Ce que l’assistant lit, et ce que vous lui dites, est transmis à la société qui l’exploite et traité selon la politique de confidentialité de cette société. Nous ne l’envoyons nulle part ailleurs.
+
+Pour que la connexion fonctionne, nous conservons le nom et l’adresse web de l’assistant, votre approbation et ce qu’il est autorisé à faire, la date de sa dernière utilisation de son accès, ainsi que ses clés d’accès, que nous ne gardons que sous forme d’empreinte à sens unique. Les clés d’accès durent une heure, et l’assistant les renouvelle tant que vous restez connecté. Une clé de renouvellement inutilisée pendant 30 jours expire. Un assistant connecté à partir d’un lien reçoit une clé d’une heure qu’il ne peut pas renouveler. Si vous retirez Outlayr de l’assistant, son accès expire dans un délai de 30 jours. Supprimer votre compte le supprime immédiatement, et vous pouvez écrire à [support@tryoutlayr.com](mailto:support@tryoutlayr.com) pour le faire supprimer plus tôt.
+
+## Outlayr Pro
+
+Les paiements d’Outlayr Pro passent par votre boutique d’applications (l’App Store d’Apple sur iPhone, Google Play sur Android). Nous ne voyons jamais les détails de votre carte ni ceux de votre compte de boutique d’applications.
+
+RevenueCat gère pour nous le statut des abonnements. Lorsque l’app s’ouvre, le logiciel de RevenueCat vérifie si vous avez Pro. Avant votre connexion, il utilise un identifiant anonyme aléatoire. Après votre connexion, il utilise votre identifiant de compte Outlayr, et l’app envoie aussi votre nom et votre adresse e-mail afin que nous puissions retrouver vos achats lorsque vous nous écrivez. RevenueCat reçoit l’historique de vos achats et abonnements de la boutique d’applications ainsi que des informations techniques de base, comme les versions de l’app et du système d’exploitation.
+
+Notre serveur interroge RevenueCat sur votre identifiant de compte pour confirmer Pro, et RevenueCat informe notre serveur lorsque votre abonnement change. Nous conservons une copie de l’historique de votre abonnement, comme le produit, les dates, le prix et le pays de la boutique, et la supprimons avec votre compte.
+
+## Invitations
+
+Une fois connecté, vous obtenez un code d’invitation. Toute personne qui ouvre votre code ou votre lien dans l’app voit votre prénom.
+
+Lorsqu’un ami l’utilise, nous enregistrons qui a invité qui, son prénom, le nombre de jours distincts où il a synchronisé une nouvelle opération, jusqu’à trois, et la date de la troisième. Votre page d’invitations indique le prénom de chaque ami, ce nombre et cette date, jamais ses opérations ni ses montants. Pour vérifier que le compte d’un ami est nouveau et n’a jamais eu Pro, notre serveur interroge RevenueCat à son sujet.
+
+Les mois de Pro obtenus grâce aux invitations sont accordés via RevenueCat. Votre code d’invitation, les invitations que vous avez envoyées, l’invitation que vous avez utilisée et les mois en attente de la fin de votre formule payante sont supprimés avec votre compte, et votre nom disparaît des listes de vos amis. Si l’invitation que vous avez utilisée a déjà valu un mois à votre ami, elle reste sur sa liste sans votre nom, afin qu’elle compte toujours dans sa limite annuelle.
+
+## Autorisations de l’appareil
+
+L’app demande chaque autorisation la première fois qu’une fonctionnalité en a besoin. Vous pouvez les modifier dans l’app Réglages de votre téléphone.
+
+- **Appareil photo :** prendre une photo d’un ticket à scanner.
+- **Photos :** choisir un ticket à scanner, une capture d’écran d’un échéancier à importer, ou une image personnalisée pour une opération ou un compte.
+- **Microphone :** enregistrer une opération que vous dictez, uniquement pendant que vous parlez.
+- **Face ID :** déverrouiller Outlayr lorsque le verrouillage est activé.
+- **Notifications :** les rappels que vous activez, et la confirmation lorsque Outlayr enregistre un achat pour vous.
+- **Accès aux notifications** (Android) : lire les notifications pour enregistrer des achats, comme décrit dans [Accès aux notifications sur Android](#accès-aux-notifications-sur-android).
+
+Outlayr ne demande ni votre position ni vos contacts, ni l’autorisation de vous suivre.
+
+## Prestataires de services
+
+Ces sociétés aident à faire fonctionner Outlayr. Chacune ne reçoit que ce dont sa mission a besoin.
+
+- **[Hetzner](https://www.hetzner.com/legal/privacy-policy)** héberge les serveurs situés à Helsinki, en Finlande, qui exécutent notre base de données et nos fonctions serveur. Ils contiennent votre compte et vos données synchronisées, et traitent chaque requête adressée à notre serveur.
+- **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** stocke les photos que vous joignez aux opérations et aux comptes (Cloudflare R2), lorsque la sauvegarde des photos est activée, et envoie nos e-mails (codes de connexion, messages de bienvenue et de Pro, et préavis de modification), pour lesquels il reçoit votre adresse e-mail et le contenu de l’e-mail.
+- **[Anthropic](https://www.anthropic.com/legal/privacy)** fournit les modèles d’IA Claude derrière les suggestions, la lecture des notifications, la saisie vocale, le scan de tickets, l’import d’échéanciers, l’import CSV, l’import de relevé bancaire PDF et les recherches web. Il reçoit le contenu décrit dans [Suggestions, voix et tickets](#suggestions-voix-et-tickets).
+- **[ElevenLabs](https://elevenlabs.io/privacy-policy)** transforme les enregistrements vocaux en texte. Il reçoit l’enregistrement et votre langue.
+- **[RevenueCat](https://www.revenuecat.com/privacy)** suit le statut des abonnements. Il reçoit un identifiant anonyme, ou votre identifiant de compte, votre nom et votre adresse e-mail une fois que vous êtes connecté, ainsi que l’historique de vos achats.
+- **[Apple](https://www.apple.com/legal/privacy/)** fournit Se connecter avec Apple, les paiements de l’App Store et des fonctionnalités d’iOS comme Siri et Raccourcis, selon sa propre politique.
+- **[Google](https://policies.google.com/privacy)** fournit la connexion avec Google et les paiements Google Play, selon sa propre politique.
+- **[Expo](https://expo.dev/privacy)** distribue les mises à jour de l’app. Il reçoit un identifiant d’installation aléatoire, la version de l’app, votre adresse IP et les messages d’erreur de mise à jour.
+- **[PostHog](https://posthog.com/privacy)** fournit les statistiques d’utilisation et les rapports de plantage, depuis des serveurs situés aux États-Unis. Il reçoit les événements décrits dans [Ce que l’app envoie même sans compte](#ce-que-lapp-envoie-même-sans-compte), un identifiant d’installation aléatoire et votre identifiant de compte une fois que vous êtes connecté, ainsi que les [enregistrements des requêtes d’IA](#enregistrements-des-requêtes-dia) que notre serveur envoie. Il reçoit aussi les statistiques de ce site web, décrites dans [Ce site web](#ce-site-web).
+
+Open Exchange Rates, CotizaVE et Binance publient les taux de change que lit notre serveur. Ils ne reçoivent rien vous concernant.
+
+## Ni publicité ni pistage
+
+Outlayr ne contient aucun logiciel publicitaire. Ses seules statistiques sont les événements PostHog décrits [plus haut](#ce-que-lapp-envoie-même-sans-compte) et les [enregistrements des requêtes d’IA](#enregistrements-des-requêtes-dia), que nous utilisons pour corriger les plantages, savoir quelles fonctionnalités améliorer et maîtriser les coûts de l’IA. Outlayr n’utilise pas l’identifiant publicitaire de votre appareil et ne vous suit pas à travers les apps ou sites web d’autres sociétés.
+
+Nous publions des totaux issus de ces événements, de nos serveurs, de RevenueCat et de GitHub sur [tryoutlayr.com/open](https://tryoutlayr.com/open), comme le nombre d’installations qui ont ouvert l’app cette semaine, le nombre d’opérations enregistrées et le nombre de pays d’où elles proviennent. Ce sont des chiffres agrégés sur l’ensemble des utilisateurs, jamais des informations sur une personne.
+
+Nous ne vendons pas vos informations personnelles, ne les partageons pas à des fins de publicité ciblée et ne les utilisons pas pour établir votre profil. Nous n’utilisons pas vos données pour entraîner des modèles d’IA.
+
+## Ce site web
+
+Ce site web utilise PostHog pour comprendre comment les gens l’utilisent. Pendant votre navigation, il envoie les pages que vous consultez et la page qui vous y a mené, les clics, jusqu’où vous faites défiler, la vitesse de chargement des pages, les erreurs et un enregistrement de la visite (clics, défilement et ce qui était affiché à l’écran, tout ce que vous tapez étant masqué). Chaque événement contient votre navigateur, votre système d’exploitation, votre langue, votre fuseau horaire et la taille de votre écran. Les événements parviennent à PostHog via relay.tryoutlayr.com, et PostHog supprime votre adresse IP. Ils ne sont jamais liés à votre compte Outlayr.
+
+Si vous vous connectez sur ce site, pour connecter un assistant IA ou ouvrir votre journal, il conserve votre session dans des cookies afin que vous restiez connecté. Ces cookies sont nécessaires à la connexion et ne servent pas aux statistiques.
+
+Avec Outlayr Pro, ouvrir votre journal ici en enregistre une copie dans le stockage de votre navigateur afin que la page se charge sans attendre notre serveur. Comme le journal sur votre téléphone, cette copie n’est pas chiffrée : toute personne utilisant votre profil de navigateur pourrait donc la lire. Un petit cookie indique que la copie existe et ne contient rien d’autre. Se déconnecter sur ce site supprime la copie de ce navigateur.
+
+Pour vous reconnaître lors de vos visites suivantes, PostHog conserve un identifiant aléatoire dans un cookie et dans le stockage de votre navigateur. Si vous êtes dans l’EEE ou au Royaume-Uni, ou si votre navigateur envoie le signal Global Privacy Control, le site vous demande votre accord avant de le définir et n’enregistre rien tant que vous n’avez pas répondu. Ailleurs, il est défini dès votre première visite. Modifiez votre réponse à tout moment dans le pied de page, sous **Cookies**. Votre réponse est conservée dans votre navigateur.
+
+Si vous refusez, le site compte quand même votre visite sans cookie. PostHog transforme votre adresse IP et votre navigateur en un code qui change chaque jour, de sorte qu’il ne peut pas vous reconnaître un autre jour, et la visite n’est pas enregistrée.
+
+Les polices, images et vidéos du site sont servies par le site lui-même. La société qui l’héberge peut conserver des journaux de requêtes standard, comme votre adresse IP, l’agent utilisateur de votre navigateur, la page demandée et l’heure, pour fournir et protéger le site. Les liens vers d’autres sites, comme l’App Store, mènent à des services qui ont leurs propres politiques.
+
+## Bases juridiques
+
+Si vous êtes dans l’Espace économique européen ou au Royaume-Uni, nous nous appuyons sur ces bases juridiques :
+
+| Finalité | Base juridique |
+| --- | --- |
+| Votre compte, la synchronisation, le stockage des photos, la saisie vocale, le scan de tickets, l’import d’échéanciers, l’import CSV, l’import de relevé bancaire PDF, la connexion Notion, Pro, les invitations et les connexions d’assistants IA | Contrat : nous avons besoin de ces données pour fournir ce que vous demandez. |
+| Les messages de bienvenue et de Pro, et le préavis de modification de cette politique ou de nos Conditions | Contrat : ils font partie du compte et de l’abonnement que vous avez demandés. |
+| L’envoi des saisies vocales, des photos de tickets, des captures d’écran d’échéanciers, des libellés CSV, des relevés PDF, du texte des notifications et des noms de commerçants à Anthropic et ElevenLabs | Votre consentement, donné avec Autoriser lorsque l’app le demande et retiré dans **Réglages › Envoyer les données aux fournisseurs d’IA**. |
+| Les suggestions de commerçants, la lecture des notifications, les recherches web, la liste partagée des commerçants et les logos | Intérêts légitimes : rendre les opérations plus rapides à saisir et mieux classées. Les suggestions, la lecture des notifications et les recherches web ne parviennent à Anthropic qu’une fois que vous l’avez autorisé, et désactiver le Remplissage intelligent est la façon de vous y opposer. |
+| Les sessions, les limites d’utilisation, les journaux d’erreurs, la vérification des mises à jour et les enregistrements des requêtes d’IA non liés à vous | Intérêts légitimes : garder Outlayr sûr, fonctionnel et à l’abri des abus. |
+| Les statistiques d’utilisation, les rapports de plantage et les enregistrements des requêtes d’IA liés à votre compte | Votre consentement. Partager les données d’analyse est désactivé au départ lorsque la région de votre appareil se trouve dans l’EEE ou au Royaume-Uni. L’activer vaut consentement, et le désactiver le retire. |
+| Les statistiques du site web | Votre consentement pour le cookie et les enregistrements de visite, demandé lors de votre première visite. Refuser le retire. Une visite refusée est quand même comptée sans cookie, au titre de notre intérêt légitime à savoir combien de personnes visitent le site. |
+| L’appareil photo, le microphone, les photos, le verrouillage biométrique, les notifications et l’accès aux notifications | Votre autorisation, donnée lorsque votre appareil la demande et retirée dans ses réglages. |
+| La réponse aux demandes légales et la tenue des registres exigés par la loi | Obligation légale. |
+
+Vous pouvez vous opposer à tout traitement fondé sur des intérêts légitimes en écrivant à [support@tryoutlayr.com](mailto:support@tryoutlayr.com).
+
+## Durée de conservation des données
+
+Le [tableau ci-dessus](#aperçu-des-données) indique combien de temps chaque type de données est conservé. Quelques précisions :
+
+- Les données synchronisées, y compris les traces de suppression des opérations que vous avez supprimées, et les photos sauvegardées sont conservées jusqu’à ce que vous supprimiez votre compte.
+- Les conversations vocales sont supprimées lorsque vous fermez l’écran vocal, ou une heure après votre dernier message.
+- Les enregistrements transitent par notre serveur jusqu’à ElevenLabs, et les photos de tickets, les captures d’écran d’échéanciers et le texte des notifications jusqu’à Anthropic. Nous n’en conservons aucun.
+- La clé d’accès Notion et votre identifiant utilisateur Notion sont conservés jusqu’à ce que vous déconnectiez Notion ou supprimiez votre compte. Les lignes lues dans Notion ne sont pas conservées sur nos serveurs.
+- Les connexions d’assistants IA (le nom et l’adresse de l’assistant, votre approbation et ses clés d’accès) sont conservées jusqu’à ce que vous supprimiez votre compte. Les clés d’accès cessent de fonctionner au bout d’une heure, ou après 30 jours sans renouvellement.
+- Les demandes de suggestion de commerçant ne sont pas conservées une fois la réponse donnée. Celles mises en file d’attente en arrière-plan attendent sur notre serveur jusqu’à ce que votre appareil récupère la réponse.
+- La langue de votre app et la trace des messages de bienvenue, de Pro et de préavis de modification que vous avez reçus sont supprimées avec votre compte.
+- Les compteurs d’utilisation qui appliquent les limites sur les scans, les saisies vocales, les suggestions et la lecture des notifications ne contiennent que des nombres, associés à votre identifiant de compte, et sont supprimés avec votre compte.
+- Les données d’invitation (votre code, qui a invité qui, les prénoms, les jours de saisie et les mois obtenus ou en attente) sont supprimées avec le compte auquel elles appartiennent. Une invitation qui a valu un mois perd le nom de l’ami lorsque le compte de celui-ci est supprimé, et reste jusqu’à la suppression du compte de la personne qui l’a invité.
+- Les éléments de la liste partagée des commerçants ne sont liés à personne. Ils sont actualisés après 30 ou 90 jours.
+- Les événements d’analyse liés à votre compte sont supprimés avec celui-ci. Les événements d’une installation qui ne s’est jamais connectée ne contiennent qu’un identifiant d’installation aléatoire et sont conservés selon la politique de conservation de PostHog. Les enregistrements des requêtes d’IA envoyés alors que Partager les données d’analyse était désactivé contiennent un identifiant aléatoire au lieu de votre identifiant de compte, plus l’identifiant de conversation pour la saisie vocale, et sont conservés de la même façon.
+- Les événements du site web contiennent un identifiant de navigateur aléatoire, ou un code qui change chaque jour si vous avez refusé les cookies, et sont conservés selon la politique de conservation de PostHog.
+- Nos prestataires, dont Anthropic, ElevenLabs, Apple, Google et Expo, ainsi que Notion si vous le connectez, conservent les données qu’ils reçoivent selon leurs propres politiques de conservation.
+
+## Suppression et exportation
+
+### Supprimer votre compte
+
+Ouvrez **Réglages › Compte › Supprimer le compte**. Il peut vous être demandé de vous reconnecter pour confirmer. La suppression se déroule ensuite dans cet ordre :
+
+- L’accès d’Outlayr à votre connexion Apple ou Google est révoqué. Pour Apple, notre serveur demande à Apple de le révoquer. Pour Google, c’est l’app qui le fait.
+- Si vous avez connecté Notion, notre serveur demande à Notion de révoquer la clé d’accès d’Outlayr.
+- Votre journal synchronisé, les traces de suppression, les photos sauvegardées et les demandes de suggestion en attente sont supprimés de nos serveurs.
+- Votre fiche client chez RevenueCat et notre copie du statut de votre abonnement sont supprimées.
+- Votre profil chez PostHog et chaque événement d’analyse qui y est lié sont supprimés.
+- Vos compteurs d’utilisation, conversations vocales ouvertes, sessions, accès d’assistants IA, liens de connexion, clé d’accès Notion, code d’invitation et invitations, ainsi que votre compte, sont supprimés. Si l’invitation que vous avez utilisée a déjà valu un mois à votre ami, elle reste sur sa liste sans votre nom.
+
+Elle commence immédiatement et s’exécute depuis votre appareil. Si elle est interrompue, ouvrez de nouveau Réglages › Compte et l’app reprend là où elle s’était arrêtée. Si vous ne pouvez pas utiliser l’app, écrivez à [support@tryoutlayr.com](mailto:support@tryoutlayr.com). La page [Supprimer votre compte](/delete-account) réunit ces étapes.
+
+Ensuite, une trace indiquant qu’une suppression a eu lieu, sans lien avec vous, est supprimée dans les deux jours suivant la fin de celle-ci.
+
+Supprimer votre compte ne résilie pas un abonnement Outlayr Pro, car c’est votre boutique d’applications (l’App Store d’Apple sur iPhone, Google Play sur Android) qui le facture. Sur iPhone, résiliez-le dans l’app Réglages, sous votre nom, puis Abonnements. Sur Android, résiliez-le dans l’app Google Play Store, sous votre photo de profil, puis Paiements et abonnements, puis Abonnements. Votre boutique d’applications conserve son propre historique d’achats.
+
+### Effacer cet appareil
+
+Votre journal sur le téléphone reste après la suppression de votre compte, sauf si vous choisissez **Supprimer le compte et effacer cet appareil**. Cela supprime aussi de l’appareil la base de données d’Outlayr, les photos, les données des widgets, les entrées Spotlight, les rappels programmés et les informations de connexion enregistrées. Le système garde le contrôle des autorisations et de l’emplacement des widgets.
+
+### Sans compte
+
+Rien de votre journal ne se trouve sur nos serveurs. **Réglages › Effacer les données** efface du téléphone vos transactions, et vos budgets si vous le choisissez. Les opérations déjà présentes dans Supprimés récemment y restent. Supprimer l’app efface tout le journal.
+
+### Exportez d’abord
+
+**Réglages › Exporter les données** propose deux fichiers. **Exporter en CSV** produit une copie lisible de vos transactions pour un tableur. **Exporter une archive complète** contient l’intégralité de chaque opération, catégorie et budget et permet de restaurer votre journal plus tard. Vous choisissez où va chaque fichier.
+
+## Vos droits
+
+Selon l’endroit où vous vivez, vous avez le droit :
+
+- de savoir quelles données personnelles nous détenons sur vous et d’en obtenir une copie ;
+- de les rectifier ;
+- de les supprimer ;
+- de les recevoir dans un format portable ;
+- de limiter la façon dont nous les utilisons ou de vous y opposer ;
+- de retirer une autorisation que vous avez donnée, sans effet sur ce qui s’est passé auparavant.
+
+La plupart de ces droits s’exercent dans l’app : modifiez ou supprimez des opérations, exportez vos données, désactivez des fonctionnalités ou supprimez votre compte. Pour toute autre demande, écrivez à [support@tryoutlayr.com](mailto:support@tryoutlayr.com). Nous pouvons vous demander d’écrire depuis l’adresse e-mail de votre compte afin de confirmer que la demande vient bien de vous. Nous répondons dans un délai d’un mois.
+
+Dans l’EEE ou au Royaume-Uni, vous pouvez aussi déposer une plainte auprès de votre autorité locale de protection des données ou, au Royaume-Uni, auprès de l’Information Commissioner’s Office. Nous aimerions d’abord avoir l’occasion de vous aider.
+
+## Droits prévus par les lois des États américains
+
+Si vous vivez en Californie ou dans un autre État américain doté d’une loi sur la vie privée, voici ce que nous avons collecté au cours des 12 derniers mois et qui l’a reçu à des fins professionnelles.
+
+| Catégorie et exemples | Destinataires |
+| --- | --- |
+| **Identifiants :** nom, adresse e-mail, identifiant de compte, identifiant d’installation, adresse IP | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (e-mail, logos) |
+| **Informations commerciales :** historique des abonnements et des achats | Apple, Google, RevenueCat, Hetzner |
+| **Informations audio et visuelles :** extraits vocaux, scans de tickets, captures d’écran d’échéanciers, photos jointes | ElevenLabs (extraits), Anthropic (scans), Cloudflare (photos) |
+| **Activité sur Internet ou le réseau :** adresse IP, agent utilisateur, journaux de requêtes, utilisation de l’app et du site web, rapports de plantage | Hetzner, Expo, PostHog, notre hébergeur du site web |
+| **Données que vous créez :** opérations synchronisées, montants, commerçants, notes, budgets | Hetzner ; noms de commerçants, de catégories et de comptes à Anthropic |
+
+Ces informations proviennent de vous, de votre appareil, d’Apple et de Google, et nous les utilisons aux fins décrites dans cette politique. Nous les conservons pendant les durées indiquées dans l’[Aperçu des données](#aperçu-des-données).
+
+Nous ne vendons pas d’informations personnelles et ne les partageons pas à des fins de publicité comportementale intercontextuelle, et ne l’avons pas fait au cours des 12 derniers mois. Nous n’utilisons pas d’informations personnelles sensibles pour déduire quoi que ce soit à votre sujet.
+
+Vous pouvez demander à connaître, supprimer ou rectifier vos informations personnelles, et vous ne serez pas traité différemment pour l’avoir demandé. Un mandataire autorisé peut faire la demande pour vous si nous pouvons confirmer que vous lui en avez donné l’autorisation. Si nous refusons une demande, répondez à notre réponse pour faire appel.
+
+Comme nous ne vendons ni ne partageons, un signal Global Privacy Control n’a rien dont vous désinscrire, mais nous le traitons comme une demande d’opposition valide : ce site web vous demande alors votre accord avant de définir son cookie d’analyse, où que vous soyez. Do Not Track n’a pas de signification convenue : le site n’y répond donc pas.
+
+## Sécurité
+
+- Les échanges entre l’app, nos serveurs et nos prestataires passent par des connexions HTTPS chiffrées.
+- Chaque requête portant sur vos données est liée à votre session connectée, et notre serveur décide à quelles données une requête peut accéder. Un compte ne peut ni lire ni modifier le journal ou les photos d’un autre.
+- Les jetons d’actualisation de connexion et la clé d’accès Notion sont chiffrés avant d’être stockés.
+- Les requêtes envoyées à Anthropic et ElevenLabs ne contiennent ni nom, ni adresse e-mail, ni identifiant de compte.
+- Vous pouvez protéger Outlayr par le verrouillage biométrique de votre appareil (Face ID ou Touch ID sur iPhone).
+
+Aucun système n’est parfaitement sûr. Si vous trouvez un problème de sécurité, écrivez à [support@tryoutlayr.com](mailto:support@tryoutlayr.com) et, si une violation touche vos données, nous vous en informerons comme la loi l’exige.
+
+## Transferts internationaux
+
+Nos serveurs sont situés à Helsinki, en Finlande, dans l’Union européenne. danestves LLC est une société américaine, et Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Apple, Google et Notion traitent les données qu’ils reçoivent principalement aux États-Unis, dont les lois peuvent les protéger différemment de celles de votre pays. Écrivez à [support@tryoutlayr.com](mailto:support@tryoutlayr.com) pour connaître le détail des garanties applicables.
+
+## Enfants
+
+Outlayr ne s’adresse pas aux enfants de moins de 13 ans, et nous ne collectons pas sciemment leurs données personnelles. Si vous vivez dans l’EEE ou au Royaume-Uni et avez moins de 16 ans, ou moins que l’âge de la majorité numérique là où vous vivez, ne créez pas de compte sans l’autorisation d’un parent ou d’un tuteur. Si vous pensez qu’un enfant nous a fourni des données personnelles, écrivez à [support@tryoutlayr.com](mailto:support@tryoutlayr.com) et nous les supprimerons.
+
+## Modifications
+
+Lorsque cette politique change, nous publions la nouvelle version ici et mettons à jour la date d’entrée en vigueur ci-dessus. Avant qu’une modification importante prenne effet, l’app indique ce qui change et, si vous avez un compte, nous vous envoyons aussi un e-mail. Une modification est importante si elle touche ce que nous collectons, qui le reçoit, la façon dont nous l’utilisons, la durée pendant laquelle nous le conservons, ou vos droits et obligations. Les autres modifications, comme une formulation plus claire ou une formule gratuite plus avantageuse, sont seulement publiées ici.
+
+## Contact
+
+Les questions sur cette politique ou sur vos données sont à adresser à [support@tryoutlayr.com](mailto:support@tryoutlayr.com). Pour obtenir de l’aide sur l’app elle-même, consultez [Assistance](/support).
+
+Nous conservons les e-mails que vous nous envoyez aussi longtemps que nécessaire pour vous aider, et les supprimons si vous le demandez. Contacter l’assistance, dans les Réglages, ouvre un e-mail qui indique déjà la version de l’app, la version du système d’exploitation et le type d’appareil, que vous pouvez modifier avant l’envoi.
