@@ -1,10 +1,10 @@
+import type { CardFeeInput } from "@outlayr/money/card-fee";
 import { useSelector } from "@tanstack/react-form";
 import { useRouter } from "expo-router";
 import type { ReactNode } from "react";
 
 import type { Account } from "@/data/accounts-core";
 import { recentPaidVia, rememberFeeCategory } from "@/data/card-fees-core";
-import type { CardFeeInput } from "@/data/card-fees-core";
 import type { Category, CategoryWithChildren } from "@/data/categories-core";
 import { useRatesRead } from "@/data/live-query";
 import { transactionRateSuggestions } from "@/data/transaction-entry-rates";

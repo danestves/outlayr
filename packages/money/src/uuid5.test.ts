@@ -18,8 +18,8 @@ describe("uuidV5", () => {
             .update(Buffer.from(DNS_NAMESPACE.replaceAll("-", ""), "hex"))
             .update("café — 日本", "utf-8")
             .digest();
-        expected[6] = (expected[6] & 0x0f) | 0x50;
-        expected[8] = (expected[8] & 0x3f) | 0x80;
+        expected[6] = ((expected[6] ?? 0) & 0x0f) | 0x50;
+        expected[8] = ((expected[8] ?? 0) & 0x3f) | 0x80;
         const hex = expected.subarray(0, 16).toString("hex");
 
         expect(uuidV5("café — 日本", DNS_NAMESPACE).replaceAll("-", "")).toBe(hex);

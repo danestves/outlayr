@@ -15,17 +15,24 @@
         "./budget-window": "./src/budget-window.ts",
         "./calendar": "./src/calendar.ts",
         "./canonical-usd": "./src/canonical-usd.ts",
+        "./card-fee": "./src/card-fee.ts",
         "./catalog": "./src/catalog.generated.ts",
         "./contract": "./src/contract.ts",
         "./currency": "./src/currency.ts",
         "./currency-totals": "./src/currency-totals.ts",
         "./dates": "./src/dates.ts",
+        "./entry-deletion": "./src/entry-deletion.ts",
+        "./entry-row": "./src/entry-row.ts",
         "./errors": "./src/errors.ts",
         "./merchant-key": "./src/merchant-key.ts",
+        "./occurrence": "./src/occurrence.ts",
         "./rates": "./src/rates.ts",
         "./recurrence": "./src/recurrence.ts",
         "./round": "./src/round.ts",
         "./subscription-cost": "./src/subscription-cost.ts",
+        "./transfer-reconcile": "./src/transfer-reconcile.ts",
+        "./transfer-row": "./src/transfer-row.ts",
+        "./uuid5": "./src/uuid5.ts",
         "./valuation": "./src/valuation.ts"
     },
     "scripts": {
@@ -35,6 +42,7 @@
         "test:watch": "vp test"
     },
     "dependencies": {
+        "@noble/hashes": "^2.4.0",
         "dinero.js": "^2.0.2",
         "effect": "catalog:"
     },

@@ -1,3 +1,4 @@
+import type { CardFeeInput } from "@outlayr/money/card-fee";
 import { eq } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import { describe, expect, it, test } from "vite-plus/test";
@@ -15,7 +16,6 @@ import {
     settlePendingFees,
     suggestedCardFee,
 } from "./card-fees-core";
-import type { CardFeeInput } from "./card-fees-core";
 import { backfillRecurring } from "./recurrence-backfill";
 import { deletedTransactionsQuery, transactionsRepo } from "./transactions-core";
 import type { TransactionInput } from "./transactions-core";

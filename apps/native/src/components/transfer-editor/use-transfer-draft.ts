@@ -2,6 +2,8 @@ import { isPerson } from "@outlayr/money/account-kind";
 import { MARKET_RATE_TYPES } from "@outlayr/money/rates";
 import type { MarketRateType } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
+import { solveTransfer, transferGap, transferLegs } from "@outlayr/money/transfer-reconcile";
+import type { FeeSide, TransferFees, TransferLegs, TransferValues } from "@outlayr/money/transfer-reconcile";
 import type { RateTable } from "@outlayr/money/valuation";
 import { useState } from "react";
 
@@ -18,8 +20,6 @@ import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { pairQuotedInverse, quotePairRate, rateEntryText } from "@/domain/transaction-entry-rate";
 import { marketRateFor, transferRateOptions } from "@/domain/transfer-rate-options";
 import type { TransferRateChoice } from "@/domain/transfer-rate-options";
-import { solveTransfer, transferGap, transferLegs } from "@/domain/transfer-reconcile";
-import type { FeeSide, TransferFees, TransferLegs, TransferValues } from "@/domain/transfer-reconcile";
 
 /** `shortfall` is signed, in `side`'s own currency: how far that side's fee overruns what reaches it. */
 type TransferBlock = { kind: "fee"; shortfall: number; side: FeeSide } | { kind: "rate" };

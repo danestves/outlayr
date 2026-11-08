@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { addDays } from "@outlayr/money/calendar";
+import { occurrenceId } from "@outlayr/money/occurrence";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { occurrenceId } from "@/data/recurrence-backfill";
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";

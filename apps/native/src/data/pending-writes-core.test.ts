@@ -1,3 +1,4 @@
+import { occurrenceId } from "@outlayr/money/occurrence";
 import { eq, isNull, ne, sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it, vi, test } from "vite-plus/test";
@@ -26,7 +27,7 @@ import {
     pickCardAccount,
     WALLET_DEDUPE_WINDOW_MS,
 } from "./pending-writes-core";
-import { backfillRecurring, occurrenceId } from "./recurrence-backfill";
+import { backfillRecurring } from "./recurrence-backfill";
 import { setBoolSetting } from "./settings-core";
 import { transactionsRepo } from "./transactions-core";
 

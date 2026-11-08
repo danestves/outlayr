@@ -1,7 +1,8 @@
+import type { FeeSide } from "@outlayr/money/transfer-reconcile";
+
 import { formatAmount } from "@/domain/money";
 import { formatRateFigure, quotePairRate } from "@/domain/transaction-entry-rate";
 import { quotedByBcv, rateDeltaLine } from "@/domain/transaction-form-labels";
-import type { FeeSide } from "@/domain/transfer-reconcile";
 import type { useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 

@@ -493,7 +493,7 @@ lands. S7 is the one genuinely large slice and should not be combined with anyth
 ## 8. Questions for the owner — with a recommendation for each
 
 **Resolved since this was written:** Q1 shipped — `src/data/recurrence-backfill.ts` derives the
-child id with `uuidV5` from `@/domain/uuid5`, so both devices compute the same id. Q3 shipped
+child id with `uuidV5` from `@outlayr/money/uuid5`, so both devices compute the same id. Q3 shipped
 paid — `packages/backend/confect/sync.ts` calls `requirePro` in both the `push` and `pullSince`
 handlers, which is where the recommendation said the check belonged. Both are kept below for
 the reasoning; neither is still open.

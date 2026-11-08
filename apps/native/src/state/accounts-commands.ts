@@ -1,10 +1,10 @@
+import type { TransferInput } from "@outlayr/money/transfer-row";
 import * as Effect from "effect/Effect";
 
 import { openingForBalance } from "@/data/accounts";
 import { accountsRepo } from "@/data/accounts-core";
 import type { Account, AccountInput } from "@/data/accounts-core";
 import { transfersRepo } from "@/data/transfers-core";
-import type { TransferInput } from "@/data/transfers-core";
 import type { Database } from "@/db/client";
 import { appRuntime } from "@/lib/runtime";
 

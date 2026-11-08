@@ -1,4 +1,6 @@
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
+import type { FeeSide } from "@outlayr/money/transfer-reconcile";
+import type { TransferInput } from "@outlayr/money/transfer-row";
 import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { HeaderHeightContext } from "expo-router/react-navigation";
@@ -24,7 +26,7 @@ import { cn } from "@/components/tw";
 import { useDisplaySettings, useSettingNumber } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { usePeople } from "@/data/accounts";
-import type { SavedTransfer, TransferInput } from "@/data/transfers-core";
+import type { SavedTransfer } from "@/data/transfers-core";
 import { useNow } from "@/data/use-now";
 import { formatSignedAmount } from "@/domain/account-display";
 import { rowAmountLabel } from "@/domain/amount-label";
@@ -41,7 +43,6 @@ import {
     rateEntryText,
 } from "@/domain/transaction-entry-rate";
 import { quotedByBcv, rateNameKey, rateSourceWordKey, transactionWhenLabel } from "@/domain/transaction-form-labels";
-import type { FeeSide } from "@/domain/transfer-reconcile";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useCreateAccount } from "@/hooks/use-pro-gate";
 import type { SheetRest } from "@/hooks/use-resting-sheet";

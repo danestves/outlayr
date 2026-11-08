@@ -1,4 +1,5 @@
 import { addDays } from "@outlayr/money/calendar";
+import { normalizeLead } from "@outlayr/money/entry-row";
 
 import type { TimeOfDay } from "./reminder";
 
@@ -14,16 +15,6 @@ export function isSubscriptionReminderId(id: string): boolean {
 }
 
 export const REMINDER_LEAD_OPTIONS: readonly number[] = [0, 1, 2, 3, 7];
-
-const MAX_LEAD_DAYS = 30;
-
-// `null` is off and must stay distinct from `0`, which means "on the due day itself".
-export function normalizeLead(raw: number | null): number | null {
-    if (raw == null || !Number.isFinite(raw)) {
-        return null;
-    }
-    return Math.min(MAX_LEAD_DAYS, Math.max(0, Math.floor(raw)));
-}
 
 // Whole days back, then the wall-clock hour set outright, so a DST change in between does not shift it an hour.
 export function reminderFireAt(landing: Date, leadDays: number, time: TimeOfDay): Date {
