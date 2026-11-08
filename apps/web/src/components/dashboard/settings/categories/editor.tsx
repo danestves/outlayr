@@ -9,7 +9,7 @@ import { Input } from "panelui-web/input";
 import { Label } from "panelui-web/label";
 import { Select } from "panelui-web/select";
 import { useId, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { FormEvent, MouseEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -163,9 +163,11 @@ function SymbolDialog({
     const [query, setQuery] = useState("");
     const needle = query.trim().toLowerCase();
     const keys = needle ? ICON_KEYS.filter((key) => key.toLowerCase().includes(needle)) : ICON_KEYS;
-    const pick = (symbol: CategorySymbol) => {
-        onPick(symbol);
-        onClose();
+    const closeOnPointer = (event: MouseEvent) => {
+        // Arrow keys move the radio selection and must keep the picker open; only a real click finishes.
+        if (event.detail > 0) {
+            onClose();
+        }
     };
     return (
         <Dialog onOpenChange={(open) => open || onClose()} open>
@@ -206,13 +208,19 @@ function SymbolDialog({
                         aspect="1 / 1"
                         className={SYMBOL_GRID}
                         onValueChange={(next) =>
-                            pick(tab === "icons" ? { emoji: null, icon: next } : { emoji: next, icon: null })
+                            onPick(tab === "icons" ? { emoji: null, icon: next } : { emoji: next, icon: null })
                         }
                         value={(tab === "icons" ? value.icon : value.emoji) ?? ""}
                     >
                         {tab === "icons"
                             ? keys.map((key) => (
-                                  <ChoiceCards.Item aria-label={key} className={SYMBOL_CELL} key={key} value={key}>
+                                  <ChoiceCards.Item
+                                      aria-label={key}
+                                      className={SYMBOL_CELL}
+                                      key={key}
+                                      onClick={closeOnPointer}
+                                      value={key}
+                                  >
                                       <ChoiceCards.Media>
                                           <LookTile look={{ color, emoji: null, icon: key }} />
                                       </ChoiceCards.Media>
@@ -223,6 +231,7 @@ function SymbolDialog({
                                       aria-label={emoji}
                                       className={SYMBOL_CELL}
                                       key={emoji}
+                                      onClick={closeOnPointer}
                                       value={emoji}
                                   >
                                       <ChoiceCards.Media className="text-xl">{emoji}</ChoiceCards.Media>
@@ -231,7 +240,14 @@ function SymbolDialog({
                     </ChoiceCards>
                 </Dialog.Body>
                 <Dialog.Footer>
-                    <Button onClick={() => pick({ emoji: null, icon: null })} type="button" variant="outline">
+                    <Button
+                        onClick={() => {
+                            onPick({ emoji: null, icon: null });
+                            onClose();
+                        }}
+                        type="button"
+                        variant="outline"
+                    >
                         {copy.remove}
                     </Button>
                     <Button onClick={onClose} type="button">

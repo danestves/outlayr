@@ -247,7 +247,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                     ) : (
                         <Table
                             aria-label={copy.entries.value}
-                            containerClassName="overflow-clip"
+
                             maxHeight="none"
                             striped
                         >

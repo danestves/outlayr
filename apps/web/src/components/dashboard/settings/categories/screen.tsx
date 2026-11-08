@@ -245,7 +245,7 @@ export function Categories() {
                     ) : (
                         <Table
                             aria-label={copy.title.value}
-                            containerClassName={`overflow-clip ${PHONE_COLUMNS}`}
+                            containerClassName={PHONE_COLUMNS}
                             maxHeight="none"
                             striped
                         >
