@@ -199,9 +199,9 @@ function Kpis({ model }: { model: ListModel }) {
                     color={MUTED}
                     icon={RiBankCardLine}
                     label={kpi.available}
-                    value={money(credit.available, ledger.currency)}
+                    value={`${credit.exact ? "" : "~"}${money(credit.available, ledger.currency)}`}
                 >
-                    <Trend tone="flat">{kpi.of({ amount: whole(credit.limit) })}</Trend>
+                    <Trend tone="flat">{kpi.of({ amount: `${credit.exact ? "" : "~"}${whole(credit.limit)}` })}</Trend>
                 </KpiCell>
             ) : null}
         </KpiBand>
@@ -509,13 +509,14 @@ export function UpcomingCard({ accountId }: { accountId?: string }) {
     if (charges.length === 0) {
         return null;
     }
+    const unvalued = charges.some((charge) => charge.valued === null && charge.currency !== overview.upcoming.currency);
     const total = charges.reduce(
         (sum, charge) => sum + (charge.valued ?? charge.amount) * (charge.kind === "income" ? -1 : 1),
         0
     );
     return (
         <Card>
-            <Head aside={money(total, overview.upcoming.currency)} title={list.upcoming} />
+            <Head aside={unvalued ? null : money(total, overview.upcoming.currency)} title={list.upcoming} />
             <div className="px-5 pb-1.5">
                 {charges.map((charge) => (
                     <div className={ROW} key={charge.id}>

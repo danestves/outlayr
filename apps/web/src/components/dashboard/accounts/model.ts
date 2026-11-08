@@ -319,7 +319,7 @@ const monthEnd = (today: string, back: number) => {
     return last.toISOString().slice(0, 10);
 };
 
-const monthsBetween = (from: string, to: string) => {
+export const monthsBetween = (from: string, to: string) => {
     const [fromYear, fromMonth] = yearMonth(from);
     const [toYear, toMonth] = yearMonth(to);
     return (toYear - fromYear) * 12 + toMonth - fromMonth;
@@ -418,7 +418,7 @@ export interface AccountEntry {
     day: string;
     id: string;
     kind: EntryKind;
-    /** Signed, in the main currency as booked; null for a transfer, which keeps no booked rate. */
+    /** Signed, in the main currency as booked; null for an outside payment, which keeps no booked rate. */
     main: number | null;
     /** The other account of a transfer. */
     other: string | null;
@@ -436,6 +436,7 @@ export function accountEntries(ledger: Ledger, accountId: string, from: string, 
         .map((flow): AccountEntry => {
             const row = rows.get(flow.id);
             const transfer = transfers.get(flow.id);
+            const booked = row?.amount ?? transfer?.amount;
             let other: string | null = null;
             if (transfer) {
                 other = flow.leg === "outbound" ? transfer.toId : transfer.fromId;
@@ -446,7 +447,7 @@ export function accountEntries(ledger: Ledger, accountId: string, from: string, 
                 day: flow.day,
                 id: `${flow.leg}-${flow.id}`,
                 kind: flow.leg === "flow" ? "entry" : flow.leg,
-                main: row ? Math.sign(flow.value) * Math.abs(row.amount) : null,
+                main: booked === undefined ? null : Math.sign(flow.value) * Math.abs(booked),
                 other,
                 title: row?.note ?? "",
                 value: flow.value,

@@ -47,6 +47,7 @@ import {
 } from "./accounts-screen";
 import {
     accountEntries,
+    monthsBetween,
     accountRows,
     accountSeries,
     cardStatement,
@@ -66,7 +67,6 @@ import { KpiBand, KpiCell, PhoneItem, Segments, Trend, toneOf, useCheckedText } 
 import { WorthChart } from "./worth-chart";
 
 const DETAIL_CHART = 770 / 172;
-const YEAR_MONTHS = 12;
 const OB = "dash-ob h-9 gap-1.5 rounded-[10px] px-3 [&>svg]:size-4";
 const ICO = "border-border bg-app-hover inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] border";
 const FIELD = "flex h-9 items-center justify-between border-b text-[13px] last:border-0";
@@ -405,10 +405,10 @@ function TransactionsCard({ row }: { row: AccountRow }) {
     const [category, setCategory] = useState<string | null>(null);
     const months = useMemo(
         () =>
-            Array.from({ length: YEAR_MONTHS }, (_, index) => monthBack(current, index)).filter(
-                (key) => key >= row.openedDay.slice(0, 7)
+            Array.from({ length: monthsBetween(row.openedDay, ledger.today) + 1 }, (_, index) =>
+                monthBack(current, index)
             ),
-        [current, row.openedDay]
+        [current, ledger.today, row.openedDay]
     );
     const entries = useMemo(
         () => accountEntries(ledger, row.id, `${month}-01`, lastDayOf(month)),
@@ -791,7 +791,7 @@ export function AccountDetail({ accountId }: { accountId: string }) {
                     ) : (
                         <>
                             <HistoryCard row={row} />
-                            <TransactionsCard row={row} />
+                            <TransactionsCard key={row.id} row={row} />
                         </>
                     )}
                 </div>
