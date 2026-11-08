@@ -271,6 +271,12 @@ export interface CardStatement {
 }
 
 /** What the last statement asks for: the debt at the close, less what came in since and installments billed later. */
+/** A plan with no purchase day stays whole in the statement, matching `billedLater` below, so none of it is apart. */
+export const billedApart = (
+    plan: Pick<PlanRow, "purchaseDay" | "rows">,
+    { closedOn, dueOn }: Pick<StatementCycle, "closedOn" | "dueOn">
+) => plan.rows.filter((each) => plan.purchaseDay !== null && (plan.purchaseDay > closedOn || each.day > dueOn));
+
 export function cardStatement(
     row: Pick<AccountRow, "currency" | "initialBalance" | "openedDay" | "paymentDay" | "statementDay">,
     flows: readonly Pick<AccountFlow, "day" | "value">[],
@@ -466,7 +472,7 @@ export interface UpcomingRow {
 
 /**
  * Recurring charges, card payments and installments due by `through`, soonest first; a missed one stays listed.
- * The list skips installments of a card with a statement, since that payment already bills them.
+ * The list skips installments of a card with a statement, and a card's own view skips those its payment bills.
  */
 export function upcomingRows(ledger: Ledger, overview: Overview, through: string, accountId?: string): UpcomingRow[] {
     const open = accountRows(ledger, overview);
@@ -491,6 +497,11 @@ export function upcomingRows(ledger: Ledger, overview: Overview, through: string
         ];
     });
     const withStatement = new Set(cards.filter((row) => row.statementDay !== null).map((row) => row.id));
+    const [card] = cards;
+    const cycle =
+        accountId && card?.statementDay != null && card.paymentDay != null
+            ? statementCycle(card.statementDay, card.paymentDay, ledger.today)
+            : null;
     const installments = planRows(ledger)
         .filter(
             (plan) =>
@@ -498,7 +509,7 @@ export function upcomingRows(ledger: Ledger, overview: Overview, through: string
                 (accountId ? plan.accountId === accountId : !withStatement.has(plan.accountId))
         )
         .flatMap((plan) =>
-            plan.rows
+            (cycle ? billedApart(plan, cycle) : plan.rows)
                 .filter((each) => each.remaining > 0 && each.day <= through)
                 .map((each): UpcomingRow => {
                     const main = inMain(ledger, each.remaining, plan.currency);

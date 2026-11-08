@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { cardStatement, checkedAge, statementCycle } from "./model";
+import { billedApart, cardStatement, checkedAge, statementCycle } from "./model";
 
 describe("statement cycle", () => {
     it("closes this month once the statement day has passed", () => {
@@ -65,6 +65,16 @@ describe("card statement", () => {
         expect(cardStatement(card, flows, "2026-11-08", [{ purchaseDay: "2026-10-03", rows }])?.due).toBe(650);
         expect(cardStatement(card, flows, "2026-11-08", [{ purchaseDay: "2026-10-30", rows }])?.due).toBe(800);
         expect(cardStatement(card, flows, "2026-11-08", [{ purchaseDay: null, rows }])?.due).toBe(800);
+    });
+
+    it("lists apart exactly what the payment leaves out, so nothing owed counts twice", () => {
+        const later = { day: "2026-12-14", remaining: 150, sequence: 2 };
+        const billed = { day: "2026-11-14", remaining: 50, sequence: 1 };
+        const rows = [billed, later];
+        const cycle = { closedOn: "2026-10-25", dueOn: "2026-11-20" };
+        expect(billedApart({ purchaseDay: "2026-10-03", rows }, cycle)).toStrictEqual([later]);
+        expect(billedApart({ purchaseDay: "2026-10-30", rows }, cycle)).toStrictEqual(rows);
+        expect(billedApart({ purchaseDay: null, rows }, cycle)).toStrictEqual([]);
     });
 
     it("shows no amount when the card is newer than the close", () => {
