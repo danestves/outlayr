@@ -21,6 +21,10 @@ const InsightsPending = lazy(async () => {
     const pending = await import("./insights/insights-pending");
     return { default: pending.InsightsPending };
 });
+const TransactionsPending = lazy(async () => {
+    const pending = await import("./transactions/transactions-pending");
+    return { default: pending.TransactionsPending };
+});
 
 // A restored ledger lands inside the hold, so a reload never loads, renders or measures the skeleton.
 function useHeld() {
@@ -35,6 +39,9 @@ function pendingFor(page: string | undefined) {
     }
     if (page === "accounts") {
         return <AccountsPending />;
+    }
+    if (page === "transactions") {
+        return <TransactionsPending />;
     }
     return page === "settings" ? <SettingsPending /> : <HomePending />;
 }

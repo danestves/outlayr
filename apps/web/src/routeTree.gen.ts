@@ -35,6 +35,7 @@ import { Route as DotwellKnownMcpServerCardDotjsonRouteImport } from './routes/[
 import { Route as AccountAppIndexRouteImport } from './routes/_account/app.index'
 import { Route as AccountAppInsightsRouteImport } from './routes/_account/app.insights'
 import { Route as AccountAppSettingsRouteImport } from './routes/_account/app.settings'
+import { Route as AccountAppTransactionsRouteImport } from './routes/_account/app.transactions'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as Char123LocaleChar125BlogIndexRouteImport } from './routes/{-$locale}/blog.index'
 import { Route as Char123LocaleChar125BlogSlugRouteImport } from './routes/{-$locale}/blog.$slug'
@@ -197,6 +198,11 @@ const AccountAppSettingsRoute = AccountAppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AccountAppRoute,
 } as any)
+const AccountAppTransactionsRoute = AccountAppTransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
+  getParentRoute: () => AccountAppRoute,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -328,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/app/insights': typeof AccountAppInsightsRoute
   '/app/settings': typeof AccountAppSettingsRouteWithChildren
+  '/app/transactions': typeof AccountAppTransactionsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
   '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
@@ -371,6 +378,7 @@ export interface FileRoutesByTo {
   '/{-$locale}': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/app/insights': typeof AccountAppInsightsRoute
+  '/app/transactions': typeof AccountAppTransactionsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
   '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
@@ -418,6 +426,7 @@ export interface FileRoutesById {
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/_account/app/insights': typeof AccountAppInsightsRoute
   '/_account/app/settings': typeof AccountAppSettingsRouteWithChildren
+  '/_account/app/transactions': typeof AccountAppTransactionsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
   '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
@@ -466,6 +475,7 @@ export interface FileRouteTypes {
     | '/.well-known/mcp/server-card.json'
     | '/app/insights'
     | '/app/settings'
+    | '/app/transactions'
     | '/api/auth/$'
     | '/{-$locale}/blog/$slug'
     | '/{-$locale}/blog/rss.xml'
@@ -509,6 +519,7 @@ export interface FileRouteTypes {
     | '/{-$locale}'
     | '/.well-known/mcp/server-card.json'
     | '/app/insights'
+    | '/app/transactions'
     | '/api/auth/$'
     | '/{-$locale}/blog/$slug'
     | '/{-$locale}/blog/rss.xml'
@@ -555,6 +566,7 @@ export interface FileRouteTypes {
     | '/.well-known/mcp/server-card.json'
     | '/_account/app/insights'
     | '/_account/app/settings'
+    | '/_account/app/transactions'
     | '/api/auth/$'
     | '/{-$locale}/blog/$slug'
     | '/{-$locale}/blog/rss.xml'
@@ -776,6 +788,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppSettingsRouteImport
       parentRoute: typeof AccountAppRoute
     }
+    '/_account/app/transactions': {
+      id: '/_account/app/transactions'
+      path: '/transactions'
+      fullPath: '/app/transactions'
+      preLoaderRoute: typeof AccountAppTransactionsRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -976,6 +995,7 @@ const AccountAppSettingsRouteWithChildren =
 interface AccountAppRouteChildren {
   AccountAppInsightsRoute: typeof AccountAppInsightsRoute
   AccountAppSettingsRoute: typeof AccountAppSettingsRouteWithChildren
+  AccountAppTransactionsRoute: typeof AccountAppTransactionsRoute
   AccountAppIndexRoute: typeof AccountAppIndexRoute
   AccountAppAccountsAccountIdRoute: typeof AccountAppAccountsAccountIdRoute
   AccountAppAccountsNetWorthRoute: typeof AccountAppAccountsNetWorthRoute
@@ -985,6 +1005,7 @@ interface AccountAppRouteChildren {
 const AccountAppRouteChildren: AccountAppRouteChildren = {
   AccountAppInsightsRoute: AccountAppInsightsRoute,
   AccountAppSettingsRoute: AccountAppSettingsRouteWithChildren,
+  AccountAppTransactionsRoute: AccountAppTransactionsRoute,
   AccountAppIndexRoute: AccountAppIndexRoute,
   AccountAppAccountsAccountIdRoute: AccountAppAccountsAccountIdRoute,
   AccountAppAccountsNetWorthRoute: AccountAppAccountsNetWorthRoute,

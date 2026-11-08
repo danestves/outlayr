@@ -85,7 +85,7 @@ interface FilterMenuProps {
     width: string;
 }
 
-function FilterMenu({ children, count, icon: Icon, label, onClear, searchLabel, width }: FilterMenuProps) {
+export function FilterMenu({ children, count, icon: Icon, label, onClear, searchLabel, width }: FilterMenuProps) {
     const { filters: copy } = useIntlayer("dashboard");
     const [query, setQuery] = useState("");
     const needle = query.trim().toLocaleLowerCase();
@@ -111,7 +111,7 @@ function FilterMenu({ children, count, icon: Icon, label, onClear, searchLabel, 
             <RiSearch2Line size={15} />
             <input
                 aria-label={searchLabel}
-                className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
+                className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none pointer-coarse:text-base"
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={(event) => {
                     // Typing stays in the field; the menu's typeahead would otherwise take each letter.
@@ -207,7 +207,7 @@ function AccountRows({
     );
 }
 
-function AccountMenu({ quiet }: { quiet: boolean }) {
+export function AccountMenu({ quiet }: { quiet: boolean }) {
     const { filters, ledger, setFilters } = useDashboard();
     const { filters: copy } = useIntlayer("dashboard");
     const accounts = useMemo(
@@ -232,7 +232,7 @@ function AccountMenu({ quiet }: { quiet: boolean }) {
     );
 }
 
-function CategoryMenu() {
+export function CategoryMenu() {
     const { filters, ledger, setFilters } = useDashboard();
     const { filters: copy } = useIntlayer("dashboard");
     const categoryName = useCategoryName();
