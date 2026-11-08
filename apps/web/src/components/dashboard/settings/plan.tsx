@@ -367,9 +367,16 @@ function AlsoGives() {
     );
 }
 
-function StoreManaged({ store }: { store: keyof typeof STORE_URL }) {
+function StoreManaged({ lifetime, store }: { lifetime: boolean; store: keyof typeof STORE_URL }) {
     const { store: stores } = useIntlayer("plan");
     const copy = stores[store];
+    if (lifetime) {
+        return (
+            <SettingsCard title={copy.lifetime.title}>
+                <p className="text-muted-foreground px-4 py-3 text-[13px]">{copy.lifetime.body}</p>
+            </SettingsCard>
+        );
+    }
     return (
         <SettingsCard
             footer={
@@ -476,7 +483,7 @@ export function Plan() {
                 {plan.data ? (
                     <div className="flex flex-col gap-4">
                         {isManagedStore(plan.data.store) ? (
-                            <StoreManaged store={plan.data.store} />
+                            <StoreManaged lifetime={plan.data.state === "lifetime"} store={plan.data.store} />
                         ) : (
                             <>
                                 {plan.data.state === "lifetime" ? null : <AlsoGives />}
