@@ -1,6 +1,6 @@
 # Web billing
 
-Web Pro is sold through Stripe Checkout with Stripe Managed Payments as merchant of record, and RevenueCat's Stripe integration grants the `pro` entitlement. RevenueCat Web Billing cannot do this: it allows one price per currency, and 70 regions pay different USD amounts.
+Web Pro is sold through Stripe Checkout with Stripe Managed Payments as merchant of record, and RevenueCat's Stripe integration grants the `pro` entitlement. RevenueCat Web Billing cannot do this: it allows one price per currency, and 73 regions pay different USD amounts.
 
 ## How a purchase flows
 
@@ -23,7 +23,7 @@ STRIPE_SECRET_KEY=... REVENUECAT_V2_SECRET_KEY=... REVENUECAT_PROJECT_ID=proj479
 
 It is idempotent. A live key also needs `--live`. The RevenueCat key needs write on Products and Entitlements.
 
-Iraq, Jordan and Ghana have no price: US Stripe accounts cannot charge IQD, JOD or GHS, so the catalog script reports those 9 keys as errors and their checkout answers `unavailable`. Managed Payments also refuses buyers in its restricted countries, Russia and China among them.
+US Stripe accounts cannot charge GHS, IQD or JOD, so Ghana, Iraq and Jordan pay in USD: their local tier converted at the 8 November 2026 rate. Adaptive Pricing does not cover them, so they see USD with no Stripe conversion fee, though their card issuer may charge its own. Managed Payments takes no tax liability for Iraq or Jordan, so any indirect tax there stays with us. It also refuses buyers in its restricted countries, Russia and China among them.
 
 ## Environments
 
