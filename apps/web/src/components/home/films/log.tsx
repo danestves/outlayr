@@ -1,3 +1,4 @@
+import TransactionHistorySolidIcon from "@hugeicons-pro/core-solid-rounded/TransactionHistoryIcon";
 import Analytics01Icon from "@hugeicons/core-free-icons/Analytics01Icon";
 import ArrowDataTransferHorizontalIcon from "@hugeicons/core-free-icons/ArrowDataTransferHorizontalIcon";
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
@@ -22,7 +23,6 @@ import Settings01Icon from "@hugeicons/core-free-icons/Settings01Icon";
 import SparklesIcon from "@hugeicons/core-free-icons/SparklesIcon";
 import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
-import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -90,7 +90,6 @@ const GLYPHS = {
     filter: FilterHorizontalIcon,
     importFile: FileImportIcon,
     insights: Analytics01Icon,
-    ledger: TransactionHistoryIcon,
     mic: Mic01Icon,
     note: File02Icon,
     plus: PlusSignIcon,
@@ -300,7 +299,12 @@ function TabBar() {
     return (
         <div className="log-tabs">
             <span className="log-tab" data-on>
-                <Glyph name="ledger" size={24} />
+                <HugeiconsIcon
+                    aria-hidden
+                    icon={TransactionHistorySolidIcon}
+                    size={24}
+                    style={{ display: "block", flexShrink: 0 }}
+                />
                 <span>{copy.title}</span>
             </span>
             <span className="log-tab">
