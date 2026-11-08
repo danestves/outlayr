@@ -354,6 +354,7 @@ export function PurchaseForm({
     const [firstDueKey, setFirstDueKey] = useState<string | null>(null);
     const [attempted, setAttempted] = useState(false);
     const [failed, setFailed] = useState(false);
+    const [saving, setSaving] = useState(false);
 
     const everyLabels: Record<EveryOption, string> = {
         days14: purchase.everyDays14.value,
@@ -413,7 +414,7 @@ export function PurchaseForm({
     const save = async () => {
         setAttempted(true);
         setFailed(false);
-        if (nameMissing || !account || !plan.schedule || blocked) {
+        if (saving || nameMissing || !account || !plan.schedule || blocked) {
             return;
         }
         const rows = purchaseRows(ledger, {
@@ -426,10 +427,12 @@ export function PurchaseForm({
             purchasedOn: plan.backdated ? plan.firstDue : null,
             schedule: plan.schedule,
         });
+        setSaving(true);
         try {
             await commitRows(db, rows);
             onClose();
         } catch {
+            setSaving(false);
             setFailed(true);
         }
     };
@@ -533,7 +536,11 @@ export function PurchaseForm({
                     <button className="dash-ob" onClick={onClose} type="button">
                         {flows.cancel}
                     </button>
-                    <button className={`dash-btn ${blocked ? "opacity-50" : ""}`} disabled={blocked} type="submit">
+                    <button
+                        className={`dash-btn ${blocked ? "opacity-50" : ""}`}
+                        disabled={blocked || saving}
+                        type="submit"
+                    >
                         {purchase.save}
                     </button>
                 </div>
