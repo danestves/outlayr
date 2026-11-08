@@ -157,6 +157,8 @@ const plan = {
             }),
             using: t({ en: "Using", es: "En uso", fr: "Utilisé", pt: "Em uso" }),
             limit: t({ en: "Free limit", es: "Límite Gratis", fr: "Limite Gratuit", pt: "Limite Grátis" }),
+            proLimit: t({ en: "Pro limit", es: "Límite Pro", fr: "Limite Pro", pt: "Limite Pro" }),
+            unlimited: t({ en: "Unlimited", es: "Ilimitado", fr: "Illimité", pt: "Ilimitado" }),
             over: t({ en: "Over", es: "Excedido", fr: "Dépassé", pt: "Acima" }),
             captures: t({
                 en: "Captures, 30 days",
