@@ -399,6 +399,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "An iCloud or Google backup of your phone can keep a copy of your ledger after you delete the app, and restore it if you reinstall.",
                     label: "Phone backups",
                 },
+                {
+                    detail: "If you buy Pro on the web, Stripe receives your name, email, account ID, and the payment details you enter.",
+                    label: "Stripe, for purchases on the web",
+                },
             ],
             es: [
                 {
@@ -412,6 +416,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Una copia de seguridad de tu celular en iCloud o Google puede conservar una copia de tu registro después de eliminar la app y restaurarla si la vuelves a instalar.",
                     label: "Copias de seguridad del celular",
+                },
+                {
+                    detail: "Si compras Pro en la web, Stripe recibe tu nombre, correo, ID de cuenta y los datos de pago que escribas.",
+                    label: "Stripe, para las compras en la web",
                 },
             ],
             fr: [
@@ -427,6 +435,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Une sauvegarde iCloud ou Google de votre téléphone peut garder une copie de votre journal après la suppression de l'app, et la restaurer si vous la réinstallez.",
                     label: "Sauvegardes du téléphone",
                 },
+                {
+                    detail: "Si vous achetez Pro sur le web, Stripe reçoit votre nom, votre e-mail, votre identifiant de compte et les données de paiement que vous saisissez.",
+                    label: "Stripe, pour les achats sur le web",
+                },
             ],
             pt: [
                 {
@@ -441,32 +453,6 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Um backup do seu celular no iCloud ou no Google pode guardar uma cópia dos seus lançamentos depois que você apagar o app, e restaurá-la se você reinstalar.",
                     label: "Backups do celular",
                 },
-            ],
-        },
-        document: "privacy",
-        effectiveAtMs: Date.UTC(2026, 10, 9),
-    },
-    {
-        changes: {
-            en: [
-                {
-                    detail: "If you buy Pro on the web, Stripe receives your name, email, account ID, and the payment details you enter.",
-                    label: "Stripe, for purchases on the web",
-                },
-            ],
-            es: [
-                {
-                    detail: "Si compras Pro en la web, Stripe recibe tu nombre, correo, ID de cuenta y los datos de pago que escribas.",
-                    label: "Stripe, para las compras en la web",
-                },
-            ],
-            fr: [
-                {
-                    detail: "Si vous achetez Pro sur le web, Stripe reçoit votre nom, votre e-mail, votre identifiant de compte et les données de paiement que vous saisissez.",
-                    label: "Stripe, pour les achats sur le web",
-                },
-            ],
-            pt: [
                 {
                     detail: "Se você comprar o Pro na web, a Stripe recebe seu nome, e-mail, ID de conta e os dados de pagamento que você informar.",
                     label: "Stripe, para as compras na web",
@@ -474,7 +460,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
             ],
         },
         document: "privacy",
-        effectiveAtMs: Date.UTC(2026, 10, 16),
+        effectiveAtMs: Date.UTC(2026, 10, 9),
     },
     {
         changes: {
@@ -504,7 +490,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
             ],
         },
         document: "terms",
-        effectiveAtMs: Date.UTC(2026, 10, 16),
+        effectiveAtMs: Date.UTC(2026, 10, 9),
     },
 ];
 
