@@ -1,6 +1,7 @@
 import { useIntlayer } from "react-intlayer";
 
 import { Sampled, useSample } from "@/components/dashboard/shell/sampled";
+import { DashboardShell } from "@/components/dashboard/shell/shell";
 import { Workspace } from "@/components/dashboard/shell/workspace";
 
 import { InsightsMain } from "./insights-screen";
@@ -25,5 +26,13 @@ export function InsightsPending() {
             }
             title={nav.insights}
         />
+    );
+}
+
+export function InsightsFirstVisit() {
+    return (
+        <DashboardShell>
+            <InsightsPending />
+        </DashboardShell>
     );
 }
