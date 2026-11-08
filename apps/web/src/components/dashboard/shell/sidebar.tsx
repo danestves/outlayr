@@ -59,10 +59,12 @@ interface NavProps {
 }
 
 function Soon({ collapsed, icon: Icon, label }: NavProps) {
+    const { nav } = useIntlayer("dashboard");
     return (
         <span aria-disabled className="dash-nav" title={label}>
             <Icon className="shrink-0" size={17} />
             {collapsed ? null : label}
+            <span className="dash-soon">{nav.soon}</span>
         </span>
     );
 }
@@ -92,7 +94,7 @@ export function SearchButton() {
         >
             <RiSearch2Line size={15} />
             {nav.search}
-            <kbd className="ml-auto text-[11px] leading-4">⌘K</kbd>
+            <kbd className="ml-auto text-[11px] leading-4 pointer-coarse:hidden">⌘K</kbd>
         </button>
     );
 }
@@ -103,7 +105,7 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
         collapsed ? (
             <div className="h-4" />
         ) : (
-            <div className="text-muted-foreground px-2.5 pt-3 pb-1 text-xs leading-4">{label}</div>
+            <div className="dash-group text-muted-foreground px-2.5 pt-3 pb-1 text-xs leading-4">{label}</div>
         );
     return (
         <>

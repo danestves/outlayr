@@ -20,7 +20,7 @@ export function MobileBar() {
                     <RiMenu2Line size={21} />
                 </Sheet.Trigger>
                 <Sheet.Content
-                    className="app-shell dash-drawer ph-no-capture bg-background w-[min(320px,calc(100vw-56px))] px-3 pt-[env(safe-area-inset-top)] pb-[max(12px,env(safe-area-inset-bottom))]"
+                    className="app-shell dash-sheet dash-drawer ph-no-capture bg-background h-auto w-[min(320px,calc(100vw-56px))] px-3 pt-[env(safe-area-inset-top)] pb-[max(12px,env(safe-area-inset-bottom))]"
                     detached={false}
                     showClose={false}
                     onClick={(event) => {
@@ -29,7 +29,7 @@ export function MobileBar() {
                         }
                     }}
                 >
-                    <div className="flex h-[52px] shrink-0 items-center gap-[9px] pr-1.5 pl-2">
+                    <div className="flex h-12 shrink-0 items-center gap-[9px] pr-1.5 pl-2">
                         <Link
                             aria-label={nav.home.value}
                             className="text-app-tint -mx-2.5 flex size-11 items-center justify-center"
@@ -46,7 +46,7 @@ export function MobileBar() {
                         </Sheet.Close>
                     </div>
                     <SearchButton />
-                    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                    <div className="-mx-3 min-h-0 flex-1 overflow-y-auto overscroll-contain px-3">
                         <NavLinks collapsed={false} />
                     </div>
                     <div className="border-border -mx-3 flex flex-col border-t px-3 pt-1">
