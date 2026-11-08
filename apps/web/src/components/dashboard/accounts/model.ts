@@ -6,6 +6,7 @@ import { restate } from "@outlayr/money/account-overview";
 import { decimalsFor } from "@outlayr/money/currency";
 import { utcDateString } from "@outlayr/money/dates";
 import { roundMoney } from "@outlayr/money/round";
+import { valueDatedRowsIn } from "@outlayr/money/valuation";
 
 import { endOfDay, startOfDay } from "../../../lib/dashboard-series-ledger";
 import type { Ledger } from "../../../lib/dashboard-series-ledger";
@@ -427,6 +428,30 @@ export interface AccountEntry {
     value: number;
 }
 
+const receivedMemo = new WeakMap<Ledger, Map<string, number>>();
+
+/** What each transfer booked on arrival, in the main currency; `LedgerTransfer.amount` is the sent leg. */
+function receivedOf(ledger: Ledger) {
+    const kept = receivedMemo.get(ledger);
+    if (kept) {
+        return kept;
+    }
+    const rows = ledger.books.transfers.filter((row) => row.deletedAt === null);
+    const values = valueDatedRowsIn(
+        rows.map((row) => ({
+            amount: row.toAmount,
+            amountUsd: row.toAmountUsd,
+            currency: row.toCurrency,
+            date: new Date(row.date),
+        })),
+        ledger.currency,
+        ledger.rates
+    );
+    const received = new Map(rows.map((row, index) => [row.localId, values[index] ?? 0]));
+    receivedMemo.set(ledger, received);
+    return received;
+}
+
 /** What moved this account between two days, newest first; transfers name the other side. */
 export function accountEntries(ledger: Ledger, accountId: string, from: string, to: string): AccountEntry[] {
     const rows = new Map(ledger.rows.map((row) => [row.id, row]));
@@ -436,7 +461,7 @@ export function accountEntries(ledger: Ledger, accountId: string, from: string, 
         .map((flow): AccountEntry => {
             const row = rows.get(flow.id);
             const transfer = transfers.get(flow.id);
-            const booked = row?.amount ?? transfer?.amount;
+            const booked = row?.amount ?? (flow.leg === "inbound" ? receivedOf(ledger).get(flow.id) : transfer?.amount);
             let other: string | null = null;
             if (transfer) {
                 other = flow.leg === "outbound" ? transfer.toId : transfer.fromId;
@@ -447,7 +472,10 @@ export function accountEntries(ledger: Ledger, accountId: string, from: string, 
                 day: flow.day,
                 id: `${flow.leg}-${flow.id}`,
                 kind: flow.leg === "flow" ? "entry" : flow.leg,
-                main: booked === undefined ? null : Math.sign(flow.value) * Math.abs(booked),
+                main:
+                    booked === undefined
+                        ? null
+                        : roundMoney(Math.sign(flow.value) * Math.abs(booked), decimalsFor(ledger.currency)),
                 other,
                 title: row?.note ?? "",
                 value: flow.value,

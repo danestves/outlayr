@@ -5,7 +5,7 @@ import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
-import { rangeDays } from "../components/dashboard/accounts/model";
+import { accountEntries, rangeDays } from "../components/dashboard/accounts/model";
 import {
     budgetParts,
     categoryBudget,
@@ -715,4 +715,25 @@ describe("net worth over time", () => {
             );
         }
     );
+});
+
+describe("a transfer between currencies on an account's entries", () => {
+    it("books each leg at its own frozen value", () => {
+        const ledger = prepareLedger(
+            books({
+                accounts: [account("chase", "Chase"), account("cash", "Cash", { currency: "EUR" })],
+                transfers: [
+                    {
+                        ...transfer("t", "2026-10-10T16:00:00Z", 100),
+                        toAmount: 90,
+                        toAmountUsd: 98,
+                        toCurrency: "EUR",
+                    },
+                ],
+            }),
+            NOW
+        );
+        const main = (id: string) => accountEntries(ledger, id, "2026-10-01", "2026-10-31")[0]?.main;
+        expect([main("chase"), main("cash")]).toStrictEqual([-100, 98]);
+    });
 });
