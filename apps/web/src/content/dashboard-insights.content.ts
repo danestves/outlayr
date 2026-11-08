@@ -11,27 +11,22 @@ const dashboardInsights = {
             savings: t({ en: "Savings", es: "Ahorros" }),
             title: t({ en: "Cash flow", es: "Flujo de caja" }),
         },
-        categories: {
-            count: insert(t({ en: "{{count}} categories", es: "{{count}} categorías" })),
-            countOne: t({ en: "1 category", es: "1 categoría" }),
-            title: t({ en: "Categories", es: "Categorías" }),
-        },
-        daily: {
-            average: insert(t({ en: "{{amount}} a day", es: "{{amount}} al día" })),
-            averageWithout: insert(
-                t({ en: "{{amount}} a day without {{name}}", es: "{{amount}} al día sin {{name}}" })
-            ),
-            title: t({ en: "Daily spend", es: "Gasto diario" }),
+        changes: {
+            empty: t({
+                en: "Not enough history to compare yet.",
+                es: "Aún no hay historial suficiente para comparar.",
+            }),
+            less: t({ en: "Less than usual", es: "Menos de lo normal" }),
+            more: t({ en: "More than usual", es: "Más de lo normal" }),
+            other: t({ en: "Other", es: "Otros" }),
+            running: t({ en: "Running total", es: "Acumulado" }),
+            title: insert(t({ en: "{{period}} against usual", es: "{{period}} frente a lo normal" })),
+            total: t({ en: "Total", es: "Total" }),
+            usual: t({ en: "Usual", es: "Lo normal" }),
         },
         empty: {
             cashFlow: t({ en: "Nothing came in or went out.", es: "No entró ni salió dinero." }),
             spending: t({ en: "No spending in this period.", es: "Sin gastos en este periodo." }),
-        },
-        everything: {
-            allCategories: t({ en: "All categories", es: "Todas las categorías" }),
-            byDay: t({ en: "By day", es: "Por día" }),
-            incomeNet: t({ en: "Income and net", es: "Ingreso y neto" }),
-            title: t({ en: "Everything", es: "Todo" }),
         },
         headline: {
             asUsual: insert(
@@ -86,8 +81,8 @@ const dashboardInsights = {
             savings: t({ en: "Savings", es: "Ahorros" }),
         },
         months: {
-            average: insert(t({ en: "Avg {{amount}}", es: "Prom. {{amount}}" })),
-            title: t({ en: "6 months", es: "6 meses" }),
+            averageLabel: t({ en: "Avg", es: "Prom." }),
+            title: t({ en: "Spending by month", es: "Gasto por mes" }),
         },
         netWorth: {
             title: t({ en: "Net worth", es: "Patrimonio" }),
@@ -106,6 +101,12 @@ const dashboardInsights = {
                 })
             ),
             empty: t({ en: "Nothing stands out yet.", es: "Nada destaca todavía." }),
+            kept: insert(t({ en: "{{percent}}% of income", es: "{{percent}}% del ingreso" })),
+            keptHighest: insert(t({ en: "Highest in {{count}} months.", es: "El más alto en {{count}} meses." })),
+            keptHighestSince: insert(t({ en: "Highest since {{month}}.", es: "El más alto desde {{month}}." })),
+            keptLowest: insert(t({ en: "Lowest in {{count}} months.", es: "El más bajo en {{count}} meses." })),
+            keptLowestSince: insert(t({ en: "Lowest since {{month}}.", es: "El más bajo desde {{month}}." })),
+            keptUsual: insert(t({ en: "Usually {{percent}}%.", es: "Normalmente {{percent}}%." })),
             less: insert(t({ en: "{{amount}} less", es: "{{amount}} menos" })),
             more: insert(t({ en: "{{amount}} more", es: "{{amount}} más" })),
             over: insert(t({ en: "{{amount}} over", es: "{{amount}} de más" })),
@@ -134,7 +135,19 @@ const dashboardInsights = {
             budget: t({ en: "Budget", es: "Presupuesto" }),
             category: t({ en: "Category", es: "Categoría" }),
             left: t({ en: "Left", es: "Queda" }),
+            same: t({ en: "same", es: "igual" }),
             spent: t({ en: "Spent", es: "Gastado" }),
+            vsUsual: t({ en: "vs usual", es: "vs. lo normal" }),
+        },
+        trend: {
+            income: t({ en: "Income", es: "Ingresos" }),
+            kept: insert(t({ en: "{{percent}}% kept", es: "{{percent}}% ahorrado" })),
+            single: t({
+                en: "Shows up after your second month.",
+                es: "Aparece después de tu segundo mes.",
+            }),
+            spending: t({ en: "Spending", es: "Gastos" }),
+            title: t({ en: "Income and spending", es: "Ingresos y gastos" }),
         },
     },
     key: "dashboard-insights",

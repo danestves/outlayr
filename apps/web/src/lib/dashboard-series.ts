@@ -2,8 +2,7 @@ import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { budgetStanding, wall } from "@outlayr/backend/confect/mcpLedger";
 import { spentForCategory } from "@outlayr/money/budget-spent";
 import { merchantKey } from "@outlayr/money/merchant-key";
-
-import type { ChartDatum } from "@/components/charts/shared";
+import type { AreaChartDatum } from "panelui-web/area-chart";
 
 import { endOfDay, round, rowsBetween, rowsOf, startOfDay, total, UNCATEGORIZED_NAME } from "./dashboard-series-ledger";
 import type { Ledger, LedgerRow, Scope } from "./dashboard-series-ledger";
@@ -104,7 +103,7 @@ interface DashboardScope extends Scope {
 
 interface SpendSeries {
     categories: readonly SeriesCategory[];
-    data: readonly ChartDatum[];
+    data: readonly AreaChartDatum[];
     income: number;
     kept: number;
     keptAt: number;

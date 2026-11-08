@@ -1,10 +1,8 @@
-import ArrowRight from "@hugeicons/core-free-icons/ArrowRight01Icon";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
 import { useContext } from "react";
-import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LedgerSettingsContext } from "@/lib/ledger-settings";
 
@@ -13,6 +11,8 @@ import { CategoryTile } from "./category-tile";
 import { KEPT_COLOR } from "./flow";
 import { useInsightsFormat } from "./format";
 import type { InsightsModel } from "./model";
+
+const CELL = "block min-w-0 px-4 py-3.5 max-md:not-last:border-b md:not-last:border-r";
 
 type Copy = ReturnType<typeof useIntlayer<"dashboard-insights">>;
 type Format = ReturnType<typeof useInsightsFormat>;
@@ -55,7 +55,7 @@ function StandoutCard({ card, model }: { card: Standout; model: InsightsModel })
     const category = target ?? ledger.categories.get(card.categoryId);
     return (
         <Link
-            className="border-border hover:bg-muted block border-b px-5 py-4"
+            className={`${CELL} hover:bg-muted`}
             search={(previous) => ({ ...previous, category: target?.topId ?? card.categoryId })}
             to="/app"
         >
@@ -63,7 +63,11 @@ function StandoutCard({ card, model }: { card: Standout; model: InsightsModel })
                 <CategoryTile color={category?.color ?? KEPT_COLOR} look={model.looks.get(card.categoryId)} />
                 <span className="text-sm font-medium">{category?.name}</span>
             </span>
-            <span className="mt-2 block font-mono text-2xl leading-8 font-medium">{figureOf(card, copy, fmt)}</span>
+            <span
+                className={`mt-2 block font-mono text-xl leading-7 font-medium ${card.kind === "overBudget" || !card.under ? "text-destructive" : "text-success"}`}
+            >
+                {figureOf(card, copy, fmt)}
+            </span>
             <span className="text-muted-foreground mt-1 block text-sm leading-5">
                 {sentenceOf(card, copy, fmt, model.closed)}
             </span>
@@ -71,49 +75,63 @@ function StandoutCard({ card, model }: { card: Standout; model: InsightsModel })
     );
 }
 
-function EverythingRow({ children, hash, value }: { children: ReactNode; hash?: string; value?: string }) {
+function streakLine(model: InsightsModel, copy: Copy, fmt: Format) {
+    const streak = model.keptStreak;
+    if (streak === null) {
+        return null;
+    }
+    const lowest = streak.kind === "lowest";
+    if (streak.since === null) {
+        return (lowest ? copy.standsOut.keptLowest : copy.standsOut.keptHighest)({ count: String(streak.months) })
+            .value;
+    }
+    const month = fmt.month(streak.since);
+    return (lowest ? copy.standsOut.keptLowestSince : copy.standsOut.keptHighestSince)({ month }).value;
+}
+
+function KeptCell({ model }: { model: InsightsModel }) {
+    const { ledger } = useDashboard();
+    const copy = useIntlayer("dashboard-insights");
+    const fmt = useInsightsFormat(ledger);
+    const usual =
+        model.usualKept === null
+            ? null
+            : copy.standsOut.keptUsual({ percent: String(Math.round(model.usualKept * 100)) }).value;
+    const note = [usual, streakLine(model, copy, fmt)].filter(Boolean).join(" ");
+    const { income, kept } = model.flow;
+    const percent = Math.round((kept / income) * 100);
     return (
-        <Link
-            className="border-border hover:bg-muted flex h-9 items-center justify-between gap-3 border-b px-5 text-sm"
-            hash={hash}
-            search={(previous) => ({ ...previous, category: undefined })}
-            to={hash ? "." : "/app"}
-        >
-            <span>{children}</span>
-            <span className="text-muted-foreground flex items-center gap-2 font-mono text-xs">
-                {value}
-                <HugeiconsIcon className="size-3.5" icon={ArrowRight} />
+        <div className={CELL}>
+            <span className="flex items-center gap-2">
+                <span aria-hidden className="size-5 shrink-0 rounded-md" style={{ backgroundColor: KEPT_COLOR }} />
+                <span className="text-sm font-medium">{copy.measures.kept}</span>
             </span>
-        </Link>
+            <span className="mt-2 block font-mono text-xl leading-7 font-medium">
+                {copy.standsOut.kept({ percent: String(percent) })}
+            </span>
+            {note ? <span className="text-muted-foreground mt-1 block text-sm leading-5">{note}</span> : null}
+        </div>
     );
 }
 
-export function InsightsPanel({ model }: { model: InsightsModel }) {
-    const { ledger } = useDashboard();
+export function StandoutsCard({ model }: { model: InsightsModel }) {
     const { incomeTracking } = useContext(LedgerSettingsContext);
     const copy = useIntlayer("dashboard-insights");
-    const fmt = useInsightsFormat(ledger);
-    const { cards, daily, flow, spend } = model;
+    const showKept = incomeTracking && model.flow.income > 0;
+    const cards = model.cards.slice(0, showKept ? 2 : 3);
+    const empty = cards.length === 0 && !showKept;
     return (
-        <div>
-            <h2 className="border-border flex h-13 items-center border-b px-5 text-sm font-medium">
-                {copy.standsOut.title}
-            </h2>
-            {cards.length === 0 ? (
-                <p className="text-muted-foreground border-border border-b px-5 py-4 text-sm">{copy.standsOut.empty}</p>
+        <CardFrame title={copy.standsOut.title}>
+            {empty ? (
+                <p className="text-muted-foreground p-4 text-sm">{copy.standsOut.empty}</p>
             ) : (
-                cards.map((card) => <StandoutCard card={card} key={`${card.kind}:${card.categoryId}`} model={model} />)
+                <div className="grid md:auto-cols-fr md:grid-flow-col">
+                    {cards.map((card) => (
+                        <StandoutCard card={card} key={`${card.kind}:${card.categoryId}`} model={model} />
+                    ))}
+                    {showKept ? <KeptCell model={model} /> : null}
+                </div>
             )}
-            <h3 className="text-muted-foreground px-5 pt-4 pb-2 text-xs">{copy.everything.title}</h3>
-            <EverythingRow value={String(spend.length)}>{copy.everything.allCategories}</EverythingRow>
-            {incomeTracking ? (
-                <EverythingRow hash="cash-flow" value={fmt.signed(flow.kept)}>
-                    {copy.everything.incomeNet}
-                </EverythingRow>
-            ) : null}
-            <EverythingRow hash="daily-spend" value={copy.daily.average({ amount: fmt.amount(daily.average) }).value}>
-                {copy.everything.byDay}
-            </EverythingRow>
-        </div>
+        </CardFrame>
     );
 }

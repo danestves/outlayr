@@ -1,13 +1,15 @@
 import { useContext } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { FilterBar } from "@/components/dashboard/home/filter-bar";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LedgerSettingsContext } from "@/lib/ledger-settings";
 
-import { CashFlowSection } from "./cash-flow";
-import { ChartGrid } from "./chart-grid";
+import { CashFlowCard } from "./cash-flow";
 import { useInsightsFormat } from "./format";
 import type { InsightsModel } from "./model";
+import { StandoutsCard } from "./standouts";
+import { ChangesCard, IncomeSpendingCard, MonthsCard, NetWorthCard } from "./trends";
 
 function useHeadline({ closed, comparison, flow }: InsightsModel) {
     const { headline } = useIntlayer("dashboard-insights");
@@ -30,51 +32,34 @@ function useHeadline({ closed, comparison, flow }: InsightsModel) {
     return (closed ? headline.less : headline.soFarLess)({ ...values, percent }).value;
 }
 
-function Measure({ label, value }: { label: string; value: string }) {
-    return (
-        <div>
-            <dt className="text-muted-foreground text-xs">{label}</dt>
-            <dd className="font-mono text-base font-medium">{value}</dd>
-        </div>
-    );
-}
-
-function Headline({ model }: { model: InsightsModel }) {
-    const { ledger } = useDashboard();
-    const { incomeTracking } = useContext(LedgerSettingsContext);
-    const { measures } = useIntlayer("dashboard-insights");
-    const fmt = useInsightsFormat(ledger);
-    const sentence = useHeadline(model);
-    const { income, kept, spent } = model.flow;
-    return (
-        <section className="border-border flex flex-wrap items-center justify-between gap-x-8 gap-y-3 border-b px-5 py-5">
-            <h2 className="text-xl font-medium tracking-tight">{sentence}</h2>
-            <dl className="flex gap-8">
-                {incomeTracking ? <Measure label={measures.in.value} value={fmt.amount(income)} /> : null}
-                <Measure label={measures.out.value} value={fmt.amount(spent)} />
-                {incomeTracking ? (
-                    <Measure
-                        label={kept < 0 ? measures.savings.value : measures.kept.value}
-                        value={fmt.amount(Math.abs(kept))}
-                    />
-                ) : null}
-            </dl>
-        </section>
-    );
-}
-
-export function InsightsMain({ model }: { model: InsightsModel }) {
+export function InsightsScreen({ model }: { model: InsightsModel }) {
     const { ledger } = useDashboard();
     const { incomeTracking } = useContext(LedgerSettingsContext);
     const { add } = useIntlayer("dashboard");
-    if (ledger.rows.length === 0) {
-        return <p className="text-muted-foreground px-5 py-8 text-sm">{add.hint}</p>;
-    }
+    const sentence = useHeadline(model);
+    const quiet = model.flow.income === 0 && model.flow.spent === 0;
     return (
-        <>
-            <Headline model={model} />
-            {incomeTracking ? <CashFlowSection model={model} /> : null}
-            <ChartGrid model={model} />
-        </>
+        <main className="@container min-w-0 px-4 pb-5 sm:px-6">
+            <FilterBar categories={false} quiet={quiet} setup={null} />
+            {ledger.rows.length === 0 ? (
+                <p className="text-muted-foreground py-4 text-sm">{add.hint}</p>
+            ) : (
+                <>
+                    <h1 className="mb-4 text-xl font-medium tracking-tight sm:text-2xl">{sentence}</h1>
+                    <div className="grid grid-cols-1 gap-4 @3xl:grid-cols-2">
+                        <div className="@3xl:col-span-2">
+                            <StandoutsCard model={model} />
+                        </div>
+                        <div className="@3xl:col-span-2">
+                            <CashFlowCard model={model} />
+                        </div>
+                        <ChangesCard model={model} />
+                        <MonthsCard model={model} />
+                        {incomeTracking ? <IncomeSpendingCard model={model} /> : null}
+                        <NetWorthCard model={model} />
+                    </div>
+                </>
+            )}
+        </main>
     );
 }

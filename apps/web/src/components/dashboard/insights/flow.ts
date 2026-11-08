@@ -1,4 +1,4 @@
-import type { SankeyLink, SankeyNode } from "@/components/charts/sankey-chart";
+import type { SankeyLink, SankeyNode } from "panelui-web/sankey-chart";
 
 export const HUB_COLOR = "var(--color-foreground)";
 export const KEPT_COLOR = "color-mix(in oklab, var(--color-foreground) 18%, var(--color-background))";
@@ -8,6 +8,7 @@ const SPEND_OPACITY = [0.35, 1] as const;
 
 export interface FlowNames {
     hub: string;
+    kept: string;
     savings: string;
 }
 
@@ -32,7 +33,7 @@ function styled(node: SankeyNode, names: FlowNames): SankeyNode {
         return { ...node, bar: false, color: KEPT_COLOR, label: names.savings };
     }
     if (node.id === "kept") {
-        return { ...node, color: KEPT_COLOR };
+        return { ...node, color: KEPT_COLOR, label: names.kept };
     }
     return node.id.startsWith(OUT_PREFIX) ? node : { ...node, bar: false };
 }

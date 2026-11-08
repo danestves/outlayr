@@ -19,7 +19,7 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import type { Dashboard } from "@/components/dashboard/shell/dashboard";
 import { toggledAccounts } from "@/components/dashboard/shell/filters";
-import { usePeriodKeys } from "@/components/dashboard/shell/top-bar";
+import { usePeriodKeys } from "@/components/dashboard/shell/period-keys";
 import { AccountTile } from "@/components/ledger/tiles";
 import { rowsBetween, total } from "@/lib/dashboard-series-ledger";
 import { periodOf } from "@/lib/dashboard-series-period";
@@ -404,7 +404,15 @@ function PeriodSheet() {
     );
 }
 
-export function FilterBar({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
+export function FilterBar({
+    categories = true,
+    quiet,
+    setup,
+}: {
+    categories?: boolean;
+    quiet: boolean;
+    setup: SetupState | null;
+}) {
     const { add } = useIntlayer("dashboard");
     return (
         <div className="flex min-h-16 flex-wrap items-center gap-2 py-3.5 max-lg:-mx-4 max-lg:[scrollbar-width:none] max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:[mask-image:linear-gradient(to_right,#000_calc(100%-16px),transparent)] max-lg:px-4 max-sm:min-h-0 max-sm:py-3">
@@ -412,7 +420,7 @@ export function FilterBar({ quiet, setup }: { quiet: boolean; setup: SetupState 
             {setup ? null : (
                 <>
                     <AccountMenu quiet={quiet} />
-                    <CategoryMenu />
+                    {categories ? <CategoryMenu /> : null}
                 </>
             )}
             <PeriodControl />

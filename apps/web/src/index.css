@@ -2,19 +2,24 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 @import "@fontsource-variable/nunito";
+@source "../node_modules/panelui-web/dist/components/area-chart/index.js";
+@source "../node_modules/panelui-web/dist/components/bar-chart/index.js";
 @source "../node_modules/panelui-web/dist/components/button/index.js";
 @source "../node_modules/panelui-web/dist/components/chip/index.js";
 @source "../node_modules/panelui-web/dist/components/day-grid/index.js";
 @source "../node_modules/panelui-web/dist/components/frame/index.js";
 @source "../node_modules/panelui-web/dist/components/kpi/index.js";
 @source "../node_modules/panelui-web/dist/components/menu/index.js";
+@source "../node_modules/panelui-web/dist/components/mirror-area-chart/index.js";
 @source "../node_modules/panelui-web/dist/components/range-meter/index.js";
 @source "../node_modules/panelui-web/dist/components/rolling-number/index.js";
+@source "../node_modules/panelui-web/dist/components/sankey-chart/index.js";
 @source "../node_modules/panelui-web/dist/components/sheet/index.js";
 @source "../node_modules/panelui-web/dist/components/stat/index.js";
 @source "../node_modules/panelui-web/dist/components/table/index.js";
 @source "../node_modules/panelui-web/dist/components/tabs/index.js";
 @source "../node_modules/panelui-web/dist/components/usage/index.js";
+@source "../node_modules/panelui-web/dist/components/waterfall-chart/index.js";
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
@@ -1036,6 +1041,8 @@
     --success: var(--color-success);
     --info: var(--color-info);
     --warning: var(--color-warning);
+    --chart-1: var(--color-app-ink);
+    --chart-2: color-mix(in oklab, var(--color-app-ink) 30%, var(--color-app-bg));
     background-color: var(--color-app-bg);
     color: var(--color-app-ink);
     font-size: 14px;

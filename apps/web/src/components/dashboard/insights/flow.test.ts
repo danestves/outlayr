@@ -2,7 +2,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import { flowOf } from "./flow";
 
-const NAMES = { hub: "Cash flow", savings: "Savings" };
+const NAMES = { hub: "Cash flow", kept: "Kept", savings: "Savings" };
 
 describe("flowOf", () => {
     const nodes = [
