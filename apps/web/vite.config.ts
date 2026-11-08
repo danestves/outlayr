@@ -32,6 +32,26 @@ const LOADER_SPLIT_ROUTES = new Set([
 const AN_HOUR = { headers: { "cache-control": "public, max-age=3600" } };
 const A_DAY = { headers: { "cache-control": "public, max-age=86400" } };
 const A_YEAR = { headers: { "cache-control": "public, max-age=31536000" } };
+const PUBLIC_FILE_RULES = {
+    // Every file under /assets is content-hashed by Vite, so a URL never changes meaning.
+    "/assets/**": { headers: { "cache-control": "public, max-age=31536000, immutable" } },
+    "/app/iphone.webp": A_YEAR,
+    "/app/iphone-500.webp": A_YEAR,
+    "/app/logos/**": A_YEAR,
+    "/apple-touch-icon.png": A_DAY,
+    "/badges/**": A_YEAR,
+    "/favicon-dark.png": A_DAY,
+    "/favicon-light.png": A_DAY,
+    "/favicon.ico": A_DAY,
+    "/favicon.svg": A_DAY,
+    "/films/logos/**": A_YEAR,
+    "/llms.txt": AN_HOUR,
+    "/og-es.png": A_DAY,
+    "/og.png": A_DAY,
+    "/robots.txt": AN_HOUR,
+    "/screens/**": A_DAY,
+    "/templates/**": A_DAY,
+};
 
 export default defineConfig({
     plugins: [
@@ -60,26 +80,12 @@ export default defineConfig({
                 "/**": { headers: SECURITY_HEADERS },
                 "/connect": UNFRAMEABLE,
                 "/login": UNFRAMEABLE,
-                // Every file under /assets is content-hashed by Vite, so a URL never changes meaning.
-                "/assets/**": { headers: { "cache-control": "public, max-age=31536000, immutable" } },
-                "/app/iphone.webp": A_YEAR,
-                "/app/iphone-500.webp": A_YEAR,
-                "/app/logos/**": A_YEAR,
-                "/apple-touch-icon.png": A_DAY,
-                "/badges/**": A_YEAR,
-                "/favicon-dark.png": A_DAY,
-                "/favicon-light.png": A_DAY,
-                "/favicon.ico": A_DAY,
-                "/favicon.svg": A_DAY,
-                "/films/logos/**": A_YEAR,
-                "/llms.txt": AN_HOUR,
-                "/og-es.png": A_DAY,
-                "/og.png": A_DAY,
-                "/robots.txt": AN_HOUR,
-                "/screens/**": A_DAY,
-                "/templates/**": A_DAY,
+                ...PUBLIC_FILE_RULES,
             },
-            routes: { "/assets/**": "./src/server/missing-asset.ts" },
+            // A file requested before its deploy is live would 404 with these cache headers, and Cloudflare keeps it.
+            routes: Object.fromEntries(
+                Object.keys(PUBLIC_FILE_RULES).map((path) => [path, "./src/server/missing-asset.ts"])
+            ),
         }),
         viteReact(),
         redact(),
