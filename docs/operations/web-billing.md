@@ -47,5 +47,5 @@ Convex needs `STRIPE_SECRET_KEY` and `REVENUECAT_STRIPE_PUBLIC_KEY`, plus the ex
 
 - Managed Payments forces Adaptive Pricing. A buyer whose location differs from the session currency sees a local price with a 4% conversion fee, and can switch back.
 - Prices must set `tax_behavior=inclusive`. The default adds tax on top of the amount shown.
-- A Stripe cancellation can take two hours to reach RevenueCat. Re-posting the receipt updates it at once.
+- A Stripe cancellation can take two hours to reach RevenueCat. Re-posting the receipt updates it at once, which `billing.plan` does for Stripe subscribers, so the plan page is current after the portal.
 - Customers are found through Stripe's search API, which can lag about a minute behind a new customer.

@@ -183,13 +183,19 @@ const plan = FunctionImpl.make(
             if (user === null) {
                 return null;
             }
-            const subscriber = yield* readProSubscriber(user.id);
-            if (subscriber === null) {
+            const stored = yield* readProSubscriber(user.id);
+            if (stored === null) {
                 return null;
             }
-            const { productId, ...term } = proTermOf(subscriber, Date.now());
-            const isStripe = term.store === "stripe";
+            const isStripe = proTermOf(stored, Date.now()).store === "stripe";
             const customerId = isStripe ? yield* findCustomer(user.id) : null;
+            if (customerId !== null && (yield* withinLimit(user.id))) {
+                for (const sessionId of yield* paidSessionIds(customerId)) {
+                    yield* postReceipt(user.id, sessionId);
+                }
+            }
+            const subscriber = customerId === null ? stored : ((yield* readProSubscriber(user.id)) ?? stored);
+            const { productId, ...term } = proTermOf(subscriber, Date.now());
             const catalog =
                 isStripe && productId !== null
                     ? yield* catalogPrice(productId)
