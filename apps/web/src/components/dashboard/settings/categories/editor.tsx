@@ -404,7 +404,7 @@ export function CategoryEditor({ onClose, target }: { onClose: () => void; targe
             color,
             income,
             name,
-            parentId: parent?.localId ?? null,
+            parentId: hasChildren ? null : (parent?.localId ?? null),
             preset: doc?.preset ?? null,
         };
         if (doc) {
