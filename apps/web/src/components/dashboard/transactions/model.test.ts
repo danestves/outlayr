@@ -213,5 +213,6 @@ describe("exportLines", () => {
         expect(csvOf([["Date", 'Joe\'s "diner", NYC', "a\nb", -3.5]])).toBe(
             'Date,"Joe\'s ""diner"", NYC","a\nb",-3.5\r\n'
         );
+        expect(csvOf([["=HYPERLINK(1)", "-2+3", -2]])).toBe("'=HYPERLINK(1),'-2+3,-2\r\n");
     });
 });

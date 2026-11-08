@@ -183,8 +183,13 @@ export function linesOf(ledger: Pick<Ledger, "currency">, rows: readonly FoldedR
 
 const NEEDS_QUOTES = /[",\n\r]/u;
 
+// Text a spreadsheet would run as a formula gets a leading quote; numbers stay numbers.
+const FORMULA = /^[=+\-@\t\r]/u;
+const PLAIN_NUMBER = /^-?\d+(?:\.\d+)?$/u;
+
 const cell = (value: string | number) => {
-    const text = String(value);
+    const raw = String(value);
+    const text = FORMULA.test(raw) && !PLAIN_NUMBER.test(raw) ? `'${raw}` : raw;
     return NEEDS_QUOTES.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 };
 

@@ -111,7 +111,7 @@ export function FilterMenu({ children, count, icon: Icon, label, onClear, search
             <RiSearch2Line size={15} />
             <input
                 aria-label={searchLabel}
-                className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
+                className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none pointer-coarse:text-base"
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={(event) => {
                     // Typing stays in the field; the menu's typeahead would otherwise take each letter.

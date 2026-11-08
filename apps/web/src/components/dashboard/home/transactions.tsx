@@ -205,7 +205,11 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                                 <span className="min-w-0">
                                                     <Link
                                                         className="block truncate outline-none after:absolute after:inset-0 focus-visible:underline"
-                                                        search={(prev) => ({ ...prev, entry: row.id })}
+                                                        search={(prev) => ({
+                                                            ...prev,
+                                                            entry: row.id,
+                                                            type: tab === "all" ? undefined : TYPE_OF[tab],
+                                                        })}
                                                         to="/app/transactions"
                                                     >
                                                         {names}
@@ -253,7 +257,11 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                             <span className="min-w-0">
                                                 <Link
                                                     className="block truncate outline-none after:absolute after:inset-0 focus-visible:underline"
-                                                    search={(prev) => ({ ...prev, entry: row.id })}
+                                                    search={(prev) => ({
+                                                        ...prev,
+                                                        entry: row.id,
+                                                        type: tab === "all" ? undefined : TYPE_OF[tab],
+                                                    })}
                                                     to="/app/transactions"
                                                 >
                                                     {merchant}

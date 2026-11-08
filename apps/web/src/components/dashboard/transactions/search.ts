@@ -46,9 +46,15 @@ export interface PageQuery extends Omit<LedgerQuery, "accounts" | "categories" |
     type: EntryType | undefined;
 }
 
-/** Reads the page's own search params, dropping anything malformed instead of failing the route. */
-const dayOf = (value: string | undefined) => (value !== undefined && DAY.test(value) ? value : undefined);
+const realDay = (value: string) => {
+    const time = Date.parse(`${value}T00:00:00Z`);
+    return !Number.isNaN(time) && new Date(time).toISOString().startsWith(value);
+};
 
+const dayOf = (value: string | undefined) =>
+    value !== undefined && DAY.test(value) && realDay(value) ? value : undefined;
+
+/** Reads the page's own search params, dropping anything malformed instead of failing the route. */
 export function pageQueryOf(search: PageSearch): PageQuery {
     const from = dayOf(search.from);
     const to = dayOf(search.to);

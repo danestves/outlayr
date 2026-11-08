@@ -52,7 +52,11 @@ export function useLineWindow(heights: readonly number[]) {
         () => Math.max(0, Math.floor(-(body.current?.getBoundingClientRect().top ?? 0) / STEP_PX) * STEP_PX),
         () => 0
     );
-    const viewport = typeof window === "undefined" ? 0 : window.innerHeight;
+    const viewport = useSyncExternalStore(
+        subscribeScroll,
+        () => window.innerHeight,
+        () => 0
+    );
     const { first, last } = lineWindow(offsets, hiddenAbove, viewport + STEP_PX);
     const total = offsets.at(-1) ?? 0;
     return {

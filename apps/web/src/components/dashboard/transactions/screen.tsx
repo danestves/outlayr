@@ -78,10 +78,14 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
         const merchant = (row: LedgerRow) => row.note.trim() || category(row.topId);
         return { account, category, merchant };
     }, [ledger, locale, uncategorized.value]);
+    const transferNotes = useMemo(
+        () => new Map(ledger.books.transfers.map((move) => [move.localId, move.note])),
+        [ledger.books.transfers]
+    );
     const text = useMemo(
         () => (row: FoldedRow) =>
             "fromId" in row
-                ? `${names.account(row.fromId)} ${names.account(row.toId)}`
+                ? `${names.account(row.fromId)} ${names.account(row.toId)} ${transferNotes.get(row.id) ?? ""}`
                 : [
                       names.merchant(row),
                       names.category(row.topId),
@@ -89,7 +93,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                       names.account(row.accountId),
                       catalog.transaction(row.id)?.details ?? "",
                   ].join(" "),
-        [catalog, names]
+        [catalog, names, transferNotes]
     );
     const rows = useMemo(
         () => queryRows(ledger, { ...query, accounts: filters.accounts, categories: filters.categories, range }, text),
