@@ -50,7 +50,7 @@ Chaque type de données traité par Outlayr, au même endroit. Les sections ci-d
 | Noms, colonnes et lignes des bases de données Notion que vous choisissez | Import Notion (Pro) | Notion, nos serveurs, votre appareil | Non conservés sur nos serveurs |
 | Nom du commerçant, une adresse web que vous ajoutez, une catégorie générale | Ajout d’un site web | Nos serveurs, partagés avec tout le monde | Actualisés après 90 jours. Non liés à vous |
 | Adresse web, adresse IP | Logos | Nos serveurs (Cloudflare) | Adresse web stockée avec le logo ; adresse IP non conservée |
-| Historique des achats, identifiant utilisateur, nom, adresse e-mail | Ouverture de l’app, Pro | RevenueCat, Apple ou Google, nos serveurs | Jusqu’à la suppression du compte |
+| Historique des achats, identifiant utilisateur, nom, adresse e-mail | Ouverture de l’app, Pro | RevenueCat, Apple, Google ou Stripe, nos serveurs | Jusqu’à la suppression du compte |
 | Code d’invitation, qui a invité qui, prénoms, jours de saisie jusqu’à trois et date du troisième, mois obtenus | Invitations | Nos serveurs, RevenueCat | Jusqu’à la suppression du compte |
 | Identifiant d’installation, version de l’app, erreurs | Vérification des mises à jour | Expo | Politique d’Expo |
 | Écrans, fonctionnalités utilisées, erreurs, identifiant d’installation, modèle d’appareil | Utilisation de l’app | PostHog | Jusqu’à la suppression du compte, ou politique de PostHog si vous ne vous connectez jamais |
@@ -233,6 +233,8 @@ Pour que la connexion fonctionne, nous conservons le nom et l’adresse web de l
 
 Les paiements d’Outlayr Pro passent par votre boutique d’applications (l’App Store d’Apple sur iPhone, Google Play sur Android). Nous ne voyons jamais les détails de votre carte ni ceux de votre compte de boutique d’applications.
 
+Sur le web, les paiements passent par Stripe, et son service Link est le vendeur. Lorsque vous lancez un paiement, nous envoyons à Stripe votre nom, votre adresse e-mail, votre identifiant de compte et la formule choisie. Vous saisissez vos données de paiement et votre adresse de facturation sur la page de Stripe, et nous ne voyons jamais le numéro complet de votre carte. Nous utilisons le pays d’où provient votre requête pour choisir le prix et ne le conservons pas. Pour afficher votre forfait et vos paiements sur le web, notre serveur les lit chez Stripe et ne les conserve pas.
+
 RevenueCat gère pour nous le statut des abonnements. Lorsque l’app s’ouvre, le logiciel de RevenueCat vérifie si vous avez Pro. Avant votre connexion, il utilise un identifiant anonyme aléatoire. Après votre connexion, il utilise votre identifiant de compte Outlayr, et l’app envoie aussi votre nom et votre adresse e-mail afin que nous puissions retrouver vos achats lorsque vous nous écrivez. RevenueCat reçoit l’historique de vos achats et abonnements de la boutique d’applications ainsi que des informations techniques de base, comme les versions de l’app et du système d’exploitation.
 
 Notre serveur interroge RevenueCat sur votre identifiant de compte pour confirmer Pro, et RevenueCat informe notre serveur lorsque votre abonnement change. Nous conservons une copie de l’historique de votre abonnement, comme le produit, les dates, le prix et le pays de la boutique, et la supprimons avec votre compte.
@@ -269,6 +271,7 @@ Ces sociétés aident à faire fonctionner Outlayr. Chacune ne reçoit que ce do
 - **[RevenueCat](https://www.revenuecat.com/privacy)** suit le statut des abonnements. Il reçoit un identifiant anonyme, ou votre identifiant de compte, votre nom et votre adresse e-mail une fois que vous êtes connecté, ainsi que l’historique de vos achats.
 - **[Apple](https://www.apple.com/legal/privacy/)** fournit Se connecter avec Apple, les paiements de l’App Store et des fonctionnalités d’iOS comme Siri et Raccourcis, selon sa propre politique.
 - **[Google](https://policies.google.com/privacy)** fournit la connexion avec Google et les paiements Google Play, selon sa propre politique.
+- **[Stripe](https://stripe.com/fr/privacy)** traite les achats sur le web, et son service Link les vend. Il reçoit votre nom, votre adresse e-mail, votre identifiant de compte, la formule choisie, ainsi que les données de paiement et l’adresse de facturation que vous saisissez au paiement.
 - **[Expo](https://expo.dev/privacy)** distribue les mises à jour de l’app. Il reçoit un identifiant d’installation aléatoire, la version de l’app, votre adresse IP et les messages d’erreur de mise à jour.
 - **[PostHog](https://posthog.com/privacy)** fournit les statistiques d’utilisation et les rapports de plantage, depuis des serveurs situés aux États-Unis. Il reçoit les événements décrits dans [Ce que l’app envoie même sans compte](#ce-que-lapp-envoie-même-sans-compte), un identifiant d’installation aléatoire et votre identifiant de compte une fois que vous êtes connecté, ainsi que les [enregistrements des requêtes d’IA](#enregistrements-des-requêtes-dia) que notre serveur envoie. Il reçoit aussi les statistiques de ce site web, décrites dans [Ce site web](#ce-site-web).
 
@@ -341,7 +344,7 @@ Ouvrez **Réglages › Compte › Supprimer le compte**. Il peut vous être dema
 - L’accès d’Outlayr à votre connexion Apple ou Google est révoqué. Pour Apple, notre serveur demande à Apple de le révoquer. Pour Google, c’est l’app qui le fait.
 - Si vous avez connecté Notion, notre serveur demande à Notion de révoquer la clé d’accès d’Outlayr.
 - Votre journal synchronisé, les traces de suppression, les photos sauvegardées et les demandes de suggestion en attente sont supprimés de nos serveurs.
-- Votre fiche client chez RevenueCat et notre copie du statut de votre abonnement sont supprimées.
+- Vos fiches client chez RevenueCat et Stripe et notre copie du statut de votre abonnement sont supprimées.
 - Votre profil chez PostHog et chaque événement d’analyse qui y est lié sont supprimés. PostHog efface les événements lors d’un traitement ultérieur, ils peuvent donc subsister un moment après que l’app a indiqué la fin de la suppression.
 - Vos compteurs d’utilisation, conversations vocales ouvertes, sessions, accès d’assistants IA, liens de connexion, clé d’accès Notion, code d’invitation et invitations, ainsi que votre compte, sont supprimés. Si l’invitation que vous avez utilisée a déjà valu un mois à votre ami, elle reste sur sa liste sans votre nom.
 
@@ -349,7 +352,7 @@ Elle commence immédiatement et s’exécute depuis votre appareil. Si elle est 
 
 Ensuite, une trace indiquant qu’une suppression a eu lieu, sans lien avec vous, est supprimée dans les deux jours suivant la fin de celle-ci.
 
-Supprimer votre compte ne résilie pas un abonnement Outlayr Pro, car c’est votre boutique d’applications (l’App Store d’Apple sur iPhone, Google Play sur Android) qui le facture. Sur iPhone, résiliez-le dans l’app Réglages, sous votre nom, puis Abonnements. Sur Android, résiliez-le dans l’app Google Play Store, sous votre photo de profil, puis Paiements et abonnements, puis Abonnements. Votre boutique d’applications conserve son propre historique d’achats.
+Supprimer votre compte ne résilie pas un abonnement Outlayr Pro, car c’est votre boutique d’applications (l’App Store d’Apple sur iPhone, Google Play sur Android) qui le facture. Sur iPhone, résiliez-le dans l’app Réglages, sous votre nom, puis Abonnements. Sur Android, résiliez-le dans l’app Google Play Store, sous votre photo de profil, puis Paiements et abonnements, puis Abonnements. Votre boutique d’applications conserve son propre historique d’achats. Un abonnement acheté sur le web est différent : supprimer votre compte le résilie et supprime votre fiche client chez Stripe, et Stripe et Link peuvent conserver l’historique d’achats que la loi exige.
 
 ### Effacer cet appareil
 
@@ -384,8 +387,8 @@ Si vous vivez en Californie ou dans un autre État américain doté d’une loi 
 
 | Catégorie et exemples | Destinataires |
 | --- | --- |
-| **Identifiants :** nom, adresse e-mail, identifiant de compte, identifiant d’installation, adresse IP | Hetzner, RevenueCat, Expo, PostHog, Google, Cloudflare (e-mail, logos), Anthropic (ce que montre un relevé que vous importez) |
-| **Informations commerciales :** historique des abonnements et des achats | Apple, Google, RevenueCat, Hetzner |
+| **Identifiants :** nom, adresse e-mail, identifiant de compte, identifiant d’installation, adresse IP | Hetzner, RevenueCat, Stripe, Expo, PostHog, Google, Cloudflare (e-mail, logos), Anthropic (ce que montre un relevé que vous importez) |
+| **Informations commerciales :** historique des abonnements et des achats | Apple, Google, Stripe, RevenueCat, Hetzner |
 | **Informations audio et visuelles :** extraits vocaux, scans de tickets, captures d’écran d’échéanciers, photos jointes | ElevenLabs (extraits), Anthropic (scans), Cloudflare (photos) |
 | **Activité sur Internet ou le réseau :** adresse IP, agent utilisateur, journaux de requêtes, utilisation de l’app et du site web, rapports de plantage | Hetzner, Expo, PostHog, notre hébergeur du site web |
 | **Données que vous créez :** opérations synchronisées, montants, commerçants, notes, budgets | Hetzner ; noms de commerçants, de catégories et de comptes à Anthropic |
@@ -410,7 +413,7 @@ Aucun système n’est parfaitement sûr. Si vous trouvez un problème de sécur
 
 ## Transferts internationaux
 
-Nos serveurs sont situés à Helsinki, en Finlande, dans l’Union européenne. danestves LLC est une société américaine, et Anthropic, ElevenLabs, RevenueCat, Expo, PostHog, Cloudflare, Apple, Google et Notion traitent les données qu’ils reçoivent principalement aux États-Unis, dont les lois peuvent les protéger différemment de celles de votre pays. Écrivez à [support@tryoutlayr.com](mailto:support@tryoutlayr.com) pour connaître le détail des garanties applicables.
+Nos serveurs sont situés à Helsinki, en Finlande, dans l’Union européenne. danestves LLC est une société américaine, et Anthropic, ElevenLabs, RevenueCat, Stripe, Expo, PostHog, Cloudflare, Apple, Google et Notion traitent les données qu’ils reçoivent principalement aux États-Unis, dont les lois peuvent les protéger différemment de celles de votre pays. Écrivez à [support@tryoutlayr.com](mailto:support@tryoutlayr.com) pour connaître le détail des garanties applicables.
 
 ## Enfants
 

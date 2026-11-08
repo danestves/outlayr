@@ -29,8 +29,8 @@ Iraq and Jordan have no price: US Stripe accounts cannot charge IQD or JOD, so t
 
 | | Sandbox | Live |
 |---|---|---|
-| Stripe account | `acct_1UZX5w6yuuTosy7D` | `acct_1KuMX8G2PTGM0E8f` |
-| RevenueCat app, project `proj4796fe85` | `appd207aa76d6` | `appe2ba9057b8` |
+| Stripe account | `acct_1UZajI6VQIlEIn29` | `acct_1UZaGc5mqHV6IxIj` |
+| RevenueCat app, project `proj4796fe85` | `app0bee759e68` | `app66679adc15` |
 
 Stripe test mode does not support Managed Payments; use the sandbox. Sandbox events go to the `Convex | Staging` webhook, not production. Test with a throwaway user and delete the RevenueCat customer afterwards.
 
@@ -42,6 +42,8 @@ Convex needs `STRIPE_SECRET_KEY` and `REVENUECAT_STRIPE_PUBLIC_KEY`, plus the ex
 2. In the live Stripe config in RevenueCat, turn on Use Managed Payments, Track new purchases from server notifications with metadata key `app_user_id`, and set the Subscription management URL to the Stripe portal link. Without tracking, a buyer who closes the tab before returning stays locked until Restore.
 3. Add the Stripe app to the `Convex | Production` webhook, which only covers the App Store app today, or live events never reach Convex.
 4. Set the two Convex variables on production.
+5. In Stripe, set the support email, which is where refund requests escalate, and add the Terms and Privacy links in Checkout settings. A refund request left unanswered for 48 hours can be refunded by Stripe without us.
+6. Merge the legal changes and send the [policy email](./policy-change.md) before their effective date.
 
 ## Traps
 

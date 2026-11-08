@@ -399,6 +399,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "An iCloud or Google backup of your phone can keep a copy of your ledger after you delete the app, and restore it if you reinstall.",
                     label: "Phone backups",
                 },
+                {
+                    detail: "If you buy Pro on the web, Stripe receives your name, email, account ID, and the payment details you enter.",
+                    label: "Stripe, for purchases on the web",
+                },
             ],
             es: [
                 {
@@ -412,6 +416,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Una copia de seguridad de tu celular en iCloud o Google puede conservar una copia de tu registro después de eliminar la app y restaurarla si la vuelves a instalar.",
                     label: "Copias de seguridad del celular",
+                },
+                {
+                    detail: "Si compras Pro en la web, Stripe recibe tu nombre, correo, ID de cuenta y los datos de pago que escribas.",
+                    label: "Stripe, para las compras en la web",
                 },
             ],
             fr: [
@@ -427,6 +435,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Une sauvegarde iCloud ou Google de votre téléphone peut garder une copie de votre journal après la suppression de l'app, et la restaurer si vous la réinstallez.",
                     label: "Sauvegardes du téléphone",
                 },
+                {
+                    detail: "Si vous achetez Pro sur le web, Stripe reçoit votre nom, votre e-mail, votre identifiant de compte et les données de paiement que vous saisissez.",
+                    label: "Stripe, pour les achats sur le web",
+                },
             ],
             pt: [
                 {
@@ -441,9 +453,43 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Um backup do seu celular no iCloud ou no Google pode guardar uma cópia dos seus lançamentos depois que você apagar o app, e restaurá-la se você reinstalar.",
                     label: "Backups do celular",
                 },
+                {
+                    detail: "Se você comprar o Pro na web, a Stripe recebe seu nome, e-mail, ID de conta e os dados de pagamento que você informar.",
+                    label: "Stripe, para as compras na web",
+                },
             ],
         },
         document: "privacy",
+        effectiveAtMs: Date.UTC(2026, 10, 9),
+    },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "Web purchases are sold through Link, a Stripe service, which charges you and sends your receipts. You cancel in Settings › Plan on the web, and deleting your account cancels a web subscription.",
+                    label: "Buying Pro on the web",
+                },
+            ],
+            es: [
+                {
+                    detail: "Las compras en la web se venden a través de Link, un servicio de Stripe, que te cobra y te envía los recibos. Cancelas en Configuración › Plan en la web, y eliminar tu cuenta cancela una suscripción de la web.",
+                    label: "Comprar Pro en la web",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Les achats sur le web sont vendus via Link, un service de Stripe, qui vous débite et vous envoie les reçus. Vous résiliez dans Réglages › Forfait sur le web, et supprimer votre compte résilie un abonnement acheté sur le web.",
+                    label: "Acheter Pro sur le web",
+                },
+            ],
+            pt: [
+                {
+                    detail: "As compras na web são vendidas pelo Link, um serviço da Stripe, que faz a cobrança e envia os recibos. Você cancela em Ajustes › Plano na web, e apagar sua conta cancela uma assinatura da web.",
+                    label: "Comprar o Pro na web",
+                },
+            ],
+        },
+        document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 9),
     },
 ];
