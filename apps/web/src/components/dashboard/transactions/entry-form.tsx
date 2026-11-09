@@ -628,13 +628,12 @@ export function EntryEditor({
         if (found !== null || key === saved.current) {
             return;
         }
-        const before = saved.current;
         saved.current = key;
         const feeNote = form.feeNote({ merchant: merchantOf(ledger, next) }).value;
         commitRows(db, editedEntry(current, live, { ...draft, feeNote }, at)).catch(() => {
-            // Only the save still on record: a newer one must not be retried over.
+            // Cleared, not restored: the save before this one may have failed too. A repeat send changes nothing.
             if (saved.current === key) {
-                saved.current = before;
+                saved.current = "";
             }
             toast({ failed: true, text: form.saveFailed.value });
         });
