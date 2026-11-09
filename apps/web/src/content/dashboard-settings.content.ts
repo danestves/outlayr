@@ -17,8 +17,152 @@ const dashboardSettings = {
             preferences: t({ en: "Preferences", es: "Preferencias", fr: "Préférences", pt: "Preferências" }),
             currency: t({ en: "Currency", es: "Moneda", fr: "Devise", pt: "Moeda" }),
             time: t({ en: "Time", es: "Tiempo", fr: "Temps", pt: "Tempo" }),
+            about: t({ en: "About", es: "Acerca de", fr: "À propos", pt: "Sobre" }),
+            usage: t({ en: "Usage", es: "Uso", fr: "Utilisation", pt: "Uso" }),
         },
+        usage: {
+            capturesLeft: t({
+                en: "Captures left",
+                es: "Capturas restantes",
+                fr: "Captures restantes",
+                pt: "Capturas restantes",
+            }),
+            capturesKinds: t({
+                en: "Voice and receipts",
+                es: "Voz y recibos",
+                fr: "Voix et reçus",
+                pt: "Voz e recibos",
+            }),
+            ofCapacity: insert(t({ en: "of {{count}}", es: "de {{count}}", fr: "sur {{count}}", pt: "de {{count}}" })),
+            resets: t({ en: "Resets", es: "Se renueva", fr: "Renouvellement", pt: "Renova" }),
+            inDays: insert(
+                t({
+                    en: "in {{count}} days",
+                    es: "en {{count}} días",
+                    fr: "dans {{count}} jours",
+                    pt: "em {{count}} dias",
+                })
+            ),
+            autoLog: t({
+                en: "Auto-log",
+                es: "Registro automático",
+                fr: "Saisie automatique",
+                pt: "Registro automático",
+            }),
+            unlimited: t({ en: "Unlimited", es: "Ilimitado", fr: "Illimité", pt: "Ilimitado" }),
+            friends: t({
+                en: "Months from friends",
+                es: "Meses por amigos",
+                fr: "Mois offerts par des amis",
+                pt: "Meses por amigos",
+            }),
+            thisYear: t({ en: "This year", es: "Este año", fr: "Cette année", pt: "Este ano" }),
+            thisHour: t({ en: "This hour", es: "Esta hora", fr: "Cette heure", pt: "Esta hora" }),
+            feature: t({ en: "Feature", es: "Función", fr: "Fonction", pt: "Recurso" }),
+            left: t({ en: "Left", es: "Quedan", fr: "Restant", pt: "Restam" }),
+            fullIn: t({ en: "Full in", es: "Lleno en", fr: "Plein dans", pt: "Cheio em" }),
+            full: t({ en: "Full", es: "Lleno", fr: "Plein", pt: "Cheio" }),
+            receipts: t({
+                en: "Receipt scans",
+                es: "Escaneos de recibos",
+                fr: "Scans de reçus",
+                pt: "Digitalizações de recibos",
+            }),
+            voice: t({ en: "Voice", es: "Voz", fr: "Voix", pt: "Voz" }),
+            suggestions: t({ en: "Suggestions", es: "Sugerencias", fr: "Suggestions", pt: "Sugestões" }),
+            imports: t({ en: "CSV imports", es: "Importaciones CSV", fr: "Imports CSV", pt: "Importações CSV" }),
+            yourLimits: t({ en: "Your limits", es: "Tus límites", fr: "Vos limites", pt: "Seus limites" }),
+            limit: t({ en: "Limit", es: "Límite", fr: "Limite", pt: "Limite" }),
+            pro: t({ en: "Pro", es: "Pro", fr: "Pro", pt: "Pro" }),
+            free: t({ en: "Free", es: "Gratis", fr: "Gratuit", pt: "Grátis" }),
+            everyOne: t({ en: "Every one", es: "Todas", fr: "Toutes", pt: "Todas" }),
+            accounts: t({ en: "Accounts", es: "Cuentas", fr: "Comptes", pt: "Contas" }),
+            budgets: t({ en: "Budgets", es: "Presupuestos", fr: "Budgets", pt: "Orçamentos" }),
+            currencies: t({ en: "Currencies", es: "Monedas", fr: "Devises", pt: "Moedas" }),
+            people: t({ en: "People", es: "Personas", fr: "Personnes", pt: "Pessoas" }),
+            installmentApps: t({
+                en: "Installment apps",
+                es: "Apps de cuotas",
+                fr: "Apps de paiement en plusieurs fois",
+                pt: "Apps de parcelamento",
+            }),
+            payoffPlans: t({
+                en: "Payoff plans",
+                es: "Planes de pago",
+                fr: "Plans de remboursement",
+                pt: "Planos de quitação",
+            }),
+            autoLogMonth: t({
+                en: "Auto-log, a month",
+                es: "Registro automático, al mes",
+                fr: "Saisie automatique, par mois",
+                pt: "Registro automático, por mês",
+            }),
+            capturesMonth: t({
+                en: "Captures, a month",
+                es: "Capturas, al mes",
+                fr: "Captures, par mois",
+                pt: "Capturas, por mês",
+            }),
+            syncBackup: t({
+                en: "Sync and backup",
+                es: "Sincronización y copia",
+                fr: "Synchro et sauvegarde",
+                pt: "Sincronização e backup",
+            }),
+            yes: t({ en: "Yes", es: "Sí", fr: "Oui", pt: "Sim" }),
+            no: t({ en: "No", es: "No", fr: "Non", pt: "Não" }),
+        },
+        privacy: {
+            title: t({ en: "Privacy", es: "Privacidad", fr: "Confidentialité", pt: "Privacidade" }),
+            analytics: t({
+                en: "Share analytics",
+                es: "Compartir analíticas",
+                fr: "Partager les statistiques",
+                pt: "Compartilhar análises",
+            }),
+            smartFill: t({
+                en: "Smart fill",
+                es: "Autocompletado inteligente",
+                fr: "Remplissage intelligent",
+                pt: "Preenchimento inteligente",
+            }),
+            smartFillHint: t({
+                en: "Sends merchant and category names to an AI provider, never amounts, dates or accounts",
+                es: "Envía nombres de comercios y categorías a un proveedor de IA, nunca importes, fechas ni cuentas",
+                fr: "Envoie les noms de commerçants et de catégories à un fournisseur d'IA, jamais les montants, dates ou comptes",
+                pt: "Envia nomes de comerciantes e categorias a um provedor de IA, nunca valores, datas ou contas",
+            }),
+        },
+        help: {
+            title: t({ en: "Help", es: "Ayuda", fr: "Aide", pt: "Ajuda" }),
+            contact: t({
+                en: "Contact support",
+                es: "Contactar soporte",
+                fr: "Contacter l'assistance",
+                pt: "Falar com o suporte",
+            }),
+        },
+        language: t({ en: "Language", es: "Idioma", fr: "Langue", pt: "Idioma" }),
         account: {
+            of: insert(
+                t({
+                    en: "{{count}} of {{total}}",
+                    es: "{{count}} de {{total}}",
+                    fr: "{{count}} sur {{total}}",
+                    pt: "{{count}} de {{total}}",
+                })
+            ),
+            usage: t({ en: "Usage", es: "Uso", fr: "Utilisation", pt: "Uso" }),
+            device: t({ en: "Device", es: "Dispositivo", fr: "Appareil", pt: "Dispositivo" }),
+            renews: insert(
+                t({
+                    en: "Outlayr Pro, renews {{date}}",
+                    es: "Outlayr Pro, se renueva el {{date}}",
+                    fr: "Outlayr Pro, renouvellement le {{date}}",
+                    pt: "Outlayr Pro, renova em {{date}}",
+                })
+            ),
             signOut: t({ en: "Sign out", es: "Cerrar sesión", fr: "Se déconnecter", pt: "Sair" }),
             profile: t({ en: "Profile", es: "Perfil", fr: "Profil", pt: "Perfil" }),
             name: t({ en: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
@@ -55,7 +199,6 @@ const dashboardSettings = {
             add: t({ en: "Add", es: "Añadir", fr: "Ajouter", pt: "Adicionar" }),
             sessions: t({ en: "Sessions", es: "Sesiones", fr: "Sessions", pt: "Sessões" }),
             active: t({ en: "active", es: "activas", fr: "actives", pt: "ativas" }),
-            device: t({ en: "Device", es: "Dispositivo", fr: "Appareil", pt: "Dispositivo" }),
             lastActive: t({
                 en: "Last active",
                 es: "Última actividad",
@@ -240,10 +383,10 @@ const dashboardSettings = {
                 pt: "Mostrar em Lançamentos",
             }),
             showHint: t({
-                en: "The next few sit at the top of the Log on your phone, above today.",
-                es: "Los próximos aparecen al inicio del registro en tu teléfono, encima de hoy.",
-                fr: "Les prochaines s'affichent en haut du Journal sur votre téléphone, au-dessus d'aujourd'hui.",
-                pt: "Os próximos ficam no topo da aba Lançamentos no seu telefone, acima de hoje.",
+                en: "The next few sit above today",
+                es: "Los próximos aparecen encima de hoy",
+                fr: "Les prochaines s'affichent au-dessus d'aujourd'hui",
+                pt: "Os próximos ficam acima de hoje",
             }),
             soon: t({
                 en: "Limit to 14-Day Outlook",
@@ -330,6 +473,13 @@ const dashboardSettings = {
             clock: t({ en: "Clock", es: "Reloj", fr: "Horloge", pt: "Relógio" }),
             twelveHour: t({ en: "12-hour", es: "12 horas", fr: "12 heures", pt: "12 horas" }),
             twentyFourHour: t({ en: "24-hour", es: "24 horas", fr: "24 heures", pt: "24 horas" }),
+            now: insert(
+                t({ en: "Now: {{time}}", es: "Ahora: {{time}}", fr: "Maintenant : {{time}}", pt: "Agora: {{time}}" })
+            ),
+            zone: t({ en: "Zone", es: "Zona", fr: "Fuseau", pt: "Fuso" }),
+            weekNumber: insert(
+                t({ en: "Week {{week}}", es: "Semana {{week}}", fr: "Semaine {{week}}", pt: "Semana {{week}}" })
+            ),
             timeZone: t({ en: "Time zone", es: "Zona horaria", fr: "Fuseau horaire", pt: "Fuso horário" }),
             timeZoneHint: t({
                 en: "Follows your phone",
@@ -340,7 +490,39 @@ const dashboardSettings = {
             notSet: t({ en: "Not set", es: "Sin definir", fr: "Non défini", pt: "Não definido" }),
         },
         currency: {
-            main: t({ en: "Main currency", es: "Moneda principal", fr: "Devise principale", pt: "Moeda principal" }),
+            main: t({ en: "Native currency", es: "Moneda nativa", fr: "Devise native", pt: "Moeda nativa" }),
+            format: t({ en: "Format", es: "Formato", fr: "Format", pt: "Formato" }),
+            totals: t({ en: "Totals", es: "Totales", fr: "Totaux", pt: "Totais" }),
+            totalsHint: t({
+                en: "Every account converts at the day's rate",
+                es: "Cada cuenta se convierte a la tasa del día",
+                fr: "Chaque compte est converti au taux du jour",
+                pt: "Cada conta é convertida pela taxa do dia",
+            }),
+            account: t({ en: "Account", es: "Cuenta", fr: "Compte", pt: "Conta" }),
+            currencyColumn: t({ en: "Currency", es: "Moneda", fr: "Devise", pt: "Moeda" }),
+            balance: t({ en: "Balance", es: "Saldo", fr: "Solde", pt: "Saldo" }),
+            favourites: t({ en: "Favourites", es: "Favoritas", fr: "Favorites", pt: "Favoritas" }),
+            code: t({ en: "Code", es: "Código", fr: "Code", pt: "Código" }),
+            name: t({ en: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
+            rateDate: insert(
+                t({ en: "{{date}} rate", es: "Tasa del {{date}}", fr: "Taux du {{date}}", pt: "Taxa de {{date}}" })
+            ),
+            starHint: t({
+                en: "Star a currency to keep it here",
+                es: "Marca una moneda para tenerla aquí",
+                fr: "Ajoutez une devise pour la garder ici",
+                pt: "Marque uma moeda para mantê-la aqui",
+            }),
+            add: t({ en: "Add", es: "Añadir", fr: "Ajouter", pt: "Adicionar" }),
+            toggleFavourite: insert(
+                t({
+                    en: "Favourite {{code}}",
+                    es: "Favorita {{code}}",
+                    fr: "Favorite {{code}}",
+                    pt: "Favorita {{code}}",
+                })
+            ),
             mainHint: t({
                 en: "Totals convert to it at each day's rate",
                 es: "Los totales se convierten a ella con la tasa de cada día",
@@ -348,14 +530,32 @@ const dashboardSettings = {
                 pt: "Os totais são convertidos com a cotação de cada dia",
             }),
             change: t({ en: "Change", es: "Cambiar", fr: "Changer", pt: "Alterar" }),
-            format: t({ en: "Format", es: "Formato", fr: "Format", pt: "Formato" }),
             search: t({
                 en: "Search currencies",
                 es: "Buscar monedas",
                 fr: "Rechercher une devise",
                 pt: "Buscar moedas",
             }),
-            inUse: t({ en: "In your accounts", es: "En tus cuentas", fr: "Dans vos comptes", pt: "Nas suas contas" }),
+            use: insert(t({ en: "Use {{code}}", es: "Usar {{code}}", fr: "Utiliser {{code}}", pt: "Usar {{code}}" })),
+            addCode: insert(
+                t({ en: "Add {{code}}", es: "Agregar {{code}}", fr: "Ajouter {{code}}", pt: "Adicionar {{code}}" })
+            ),
+            favouritesCount: insert(
+                t({
+                    en: "{{count}} of {{limit}}",
+                    es: "{{count}} de {{limit}}",
+                    fr: "{{count}} sur {{limit}}",
+                    pt: "{{count}} de {{limit}}",
+                })
+            ),
+            favouritesFull: insert(
+                t({
+                    en: "Favourites full ({{limit}})",
+                    es: "Favoritas llenas ({{limit}})",
+                    fr: "Favorites complètes ({{limit}})",
+                    pt: "Favoritas cheias ({{limit}})",
+                })
+            ),
             all: t({ en: "All currencies", es: "Todas las monedas", fr: "Toutes les devises", pt: "Todas as moedas" }),
             none: t({
                 en: "No currency matches",
@@ -369,8 +569,6 @@ const dashboardSettings = {
                 fr: "Comptes par devise",
                 pt: "Contas por moeda",
             }),
-            account: t({ en: "Account", es: "Cuenta", fr: "Compte", pt: "Conta" }),
-            balance: t({ en: "Balance", es: "Saldo", fr: "Solde", pt: "Saldo" }),
             noAccounts: t({
                 en: "No accounts yet",
                 es: "Aún no hay cuentas",

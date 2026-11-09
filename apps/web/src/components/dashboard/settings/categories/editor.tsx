@@ -1,5 +1,7 @@
+import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
+import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { firstAvailableColor, CATEGORY_PALETTE } from "@outlayr/money/category-rules";
-import { RiAddLine, RiSearchLine } from "@remixicon/react";
 import { Alert } from "panelui-web/alert";
 import { Button } from "panelui-web/button";
 import { ChoiceCards } from "panelui-web/choice-cards";
@@ -173,7 +175,7 @@ function SymbolDialog({
     };
     return (
         <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
-            <Dialog.Content className="app-shell sm:max-w-[560px]">
+            <Dialog.Content className="app-shell" size="lg">
                 <Dialog.Header>
                     <Dialog.Title>{copy.symbol}</Dialog.Title>
                 </Dialog.Header>
@@ -182,7 +184,7 @@ function SymbolDialog({
                         {tab === "icons" ? (
                             <Input.Group className="min-w-0 flex-1">
                                 <Input.Addon>
-                                    <RiSearchLine size={15} />
+                                    <HugeiconsIcon icon={Search01Icon} size={15} />
                                 </Input.Addon>
                                 <Input
                                     aria-label={copy.searchSymbols.value}
@@ -274,7 +276,7 @@ function SymbolButton({ color, onClick, symbol }: { color: string; onClick: () =
         >
             {symbol.emoji ?? null}
             {symbol.icon ? <LookTile look={{ ...symbol, color }} size="lg" /> : null}
-            {symbol.emoji || symbol.icon ? null : <RiAddLine size={22} />}
+            {symbol.emoji || symbol.icon ? null : <HugeiconsIcon icon={PlusSignIcon} size={22} />}
         </Button>
     );
 }

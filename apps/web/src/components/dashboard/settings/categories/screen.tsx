@@ -1,23 +1,24 @@
+import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
+import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
+import DragDropVerticalIcon from "@hugeicons/core-free-icons/DragDropVerticalIcon";
+import Idea01Icon from "@hugeicons/core-free-icons/Idea01Icon";
+import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
+import PencilEdit02Icon from "@hugeicons/core-free-icons/PencilEdit02Icon";
+import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { suggestionsNotAdded } from "@outlayr/money/category-rules";
-import {
-    RiAddLine,
-    RiArrowRightUpLine,
-    RiDeleteBin6Line,
-    RiDraggable,
-    RiLightbulbLine,
-    RiMore2Fill,
-    RiPencilLine,
-} from "@remixicon/react";
 import { Link, useNavigate, useRouteContext } from "@tanstack/react-router";
+import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
+import { Chip } from "panelui-web/chip";
 import { Frame } from "panelui-web/frame";
 import { Menu } from "panelui-web/menu";
 import { Table } from "panelui-web/table";
+import { Tabs } from "panelui-web/tabs";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { OverlayPresence } from "@/components/dashboard/overlay-presence";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -25,7 +26,7 @@ import { LookTile } from "@/components/ledger/tiles";
 import { categoryBudgets } from "@/lib/dashboard-series";
 import { metaFlag, useDisplayFormat, useMeta, writeSettings } from "@/lib/ledger-settings";
 
-import { Choice, SectionHead } from "../parts";
+import { SectionHead, SettingsCard } from "../parts";
 import { CategoryEditor } from "./editor";
 import type { EditorTarget } from "./editor";
 import { categoryLines, categoryTree, INCOME_COLOR, liveCategories, MAX_EXPENSE_CATEGORIES } from "./model";
@@ -40,8 +41,7 @@ const presetKey = (name: string) =>
         .replaceAll(/[^a-z]+(.)/gu, (_, letter: string) => letter.toUpperCase())
         .replaceAll(/[^a-zA-Z]/gu, "") as keyof IntlayerPresets;
 
-const HEAD = "first:ps-3.5 last:pe-3.5";
-const CELL = "h-11 py-0 whitespace-nowrap first:ps-3.5 last:pe-3.5";
+const CELL = "whitespace-nowrap";
 const FIGURE = `${CELL} dash-figure text-muted-foreground`;
 const PHONE_COLUMNS = "max-sm:[&_tr>*:nth-child(2)]:hidden max-sm:[&_tr>*:nth-child(4)]:hidden";
 
@@ -57,7 +57,7 @@ function RowActions({ onEdit, onSubcategory, row }: { onEdit: () => void; onSubc
                 aria-label={copy.more({ name: row.name ?? "" }).value}
                 render={<Button className="text-muted-foreground -mr-1" size="icon-sm" variant="ghost" />}
             >
-                <RiMore2Fill size={17} />
+                <HugeiconsIcon icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
             <Menu.Content align="end" className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
                 <Menu.Item
@@ -65,22 +65,22 @@ function RowActions({ onEdit, onSubcategory, row }: { onEdit: () => void; onSubc
                         navigate({ params: { categoryId: row.localId }, to: "/app/settings/categories/$categoryId" })
                     }
                 >
-                    <RiArrowRightUpLine size={16} />
+                    <HugeiconsIcon icon={ArrowUpRight01Icon} size={16} />
                     {copy.open}
                 </Menu.Item>
                 <Menu.Item onClick={onEdit}>
-                    <RiPencilLine size={16} />
+                    <HugeiconsIcon icon={PencilEdit02Icon} size={16} />
                     {copy.edit}
                 </Menu.Item>
                 {onSubcategory ? (
                     <Menu.Item onClick={onSubcategory}>
-                        <RiAddLine size={16} />
+                        <HugeiconsIcon icon={PlusSignIcon} size={16} />
                         {copy.addSubcategory}
                     </Menu.Item>
                 ) : null}
                 <Menu.Separator />
                 <Menu.Item onClick={() => writes.remove(row.localId)} variant="destructive">
-                    <RiDeleteBin6Line size={16} />
+                    <HugeiconsIcon icon={Delete02Icon} size={16} />
                     {copy.delete}
                 </Menu.Item>
             </Menu.Content>
@@ -90,10 +90,10 @@ function RowActions({ onEdit, onSubcategory, row }: { onEdit: () => void; onSubc
 
 function TabbedCard({ children, footer, tabs }: { children: ReactNode; footer?: ReactNode; tabs: ReactNode }) {
     return (
-        <Frame className="min-w-0 rounded-2xl" variant="band">
-            <Frame.Header className="min-h-10">{tabs}</Frame.Header>
-            <Frame.Panel className="group-data-[variant=band]/frame:rounded-[10px]">{children}</Frame.Panel>
-            {footer ? <Frame.Footer className="min-h-11 flex-wrap text-sm">{footer}</Frame.Footer> : null}
+        <Frame className="min-w-0">
+            <Frame.Header>{tabs}</Frame.Header>
+            <Frame.Panel>{children}</Frame.Panel>
+            {footer ? <Frame.Footer className="flex-wrap text-sm">{footer}</Frame.Footer> : null}
         </Frame>
     );
 }
@@ -101,9 +101,9 @@ function TabbedCard({ children, footer, tabs }: { children: ReactNode; footer?: 
 function Left({ remaining, over, currency }: { currency: string; over: boolean; remaining: number }) {
     const { money } = useDisplayFormat();
     return (
-        <span className={`dash-figure text-[13px] font-medium ${over ? "text-app-spend" : "text-app-income"}`}>
+        <Badge className="dash-figure" variant={over ? "destructive" : "success"}>
             {money(remaining, currency)}
-        </span>
+        </Badge>
     );
 }
 
@@ -145,19 +145,19 @@ export function Categories() {
     const spent = tree.reduce((sum, node) => sum + (lines.get(node.localId)?.spent ?? 0), 0);
 
     const tabs = (
-        <Choice
-            label={copy.type.value}
-            onChange={(side) => setIncome(side === "income")}
-            options={(["expense", "income"] as const).map((side, index) => ({
-                label: (
-                    <>
-                        {copy[side]} <span className="dash-figure text-muted-foreground ml-1">{counts[index]}</span>
-                    </>
-                ),
-                value: side,
-            }))}
+        <Tabs
+            onValueChange={(side) => setIncome(side === "income")}
             value={income ? "income" : "expense"}
-        />
+            variant="underline"
+        >
+            <Tabs.List aria-label={copy.type.value}>
+                {(["expense", "income"] as const).map((side, index) => (
+                    <Tabs.Trigger key={side} value={side}>
+                        {copy[side]} <span className="dash-figure text-muted-foreground ml-1">{counts[index]}</span>
+                    </Tabs.Trigger>
+                ))}
+            </Tabs.List>
+        </Tabs>
     );
 
     if (reordering) {
@@ -213,15 +213,15 @@ export function Categories() {
                             size="sm"
                             variant="outline"
                         >
-                            <RiLightbulbLine size={16} />
+                            <HugeiconsIcon icon={Idea01Icon} size={16} />
                             {copy.suggestions}
                         </Button>
                         <Button onClick={() => setReordering(true)} size="sm" variant="outline">
-                            <RiDraggable size={16} />
+                            <HugeiconsIcon icon={DragDropVerticalIcon} size={16} />
                             <span className="max-sm:sr-only">{copy.reorder}</span>
                         </Button>
                         <Button onClick={() => setEditing({ income, parentId: null })} size="sm">
-                            <RiAddLine size={16} />
+                            <HugeiconsIcon icon={PlusSignIcon} size={16} />
                             <span className="max-sm:sr-only">{copy.newCategory}</span>
                         </Button>
                     </div>
@@ -244,28 +244,15 @@ export function Categories() {
                     {tree.length === 0 ? (
                         <p className="text-muted-foreground px-5 py-8 text-center text-sm">{copy.emptyTitle}</p>
                     ) : (
-                        <Table
-                            aria-label={copy.title.value}
-                            containerClassName={PHONE_COLUMNS}
-                            maxHeight="none"
-                            striped
-                        >
+                        <Table framed aria-label={copy.title.value} containerClassName={PHONE_COLUMNS} maxHeight="none">
                             <Table.Header className="in-data-[sticky]:bg-card">
                                 <Table.Row>
-                                    <Table.Head className={HEAD}>{copy.category}</Table.Head>
-                                    <Table.Head align="end" className={HEAD}>
-                                        {copy.entries}
-                                    </Table.Head>
-                                    <Table.Head align="end" className={HEAD}>
-                                        {date.month(period.key)}
-                                    </Table.Head>
-                                    <Table.Head align="end" className={HEAD}>
-                                        {copy.budget}
-                                    </Table.Head>
-                                    <Table.Head align="end" className={HEAD}>
-                                        {copy.left}
-                                    </Table.Head>
-                                    <Table.Head className={`${HEAD} w-10`} />
+                                    <Table.Head>{copy.category}</Table.Head>
+                                    <Table.Head align="end">{copy.entries}</Table.Head>
+                                    <Table.Head align="end">{date.month(period.key)}</Table.Head>
+                                    <Table.Head align="end">{copy.budget}</Table.Head>
+                                    <Table.Head align="end">{copy.left}</Table.Head>
+                                    <Table.Head className="w-10" />
                                 </Table.Row>
                             </Table.Header>
                             <Table.Body>
@@ -296,7 +283,7 @@ export function Categories() {
                                         <Table.Row key={child.localId}>
                                             <Table.Cell className={CELL}>
                                                 <Link
-                                                    className="flex min-w-0 items-center gap-2.5 pl-8"
+                                                    className="before:border-border relative flex min-w-0 items-center gap-2.5 pl-8 before:absolute before:top-[-9px] before:left-3.5 before:h-[22px] before:w-3.5 before:rounded-bl-md before:border-b before:border-l"
                                                     params={{ categoryId: child.localId }}
                                                     to="/app/settings/categories/$categoryId"
                                                 >
@@ -316,7 +303,7 @@ export function Categories() {
                     )}
                 </TabbedCard>
                 {showSuggestions && suggestions.length > 0 && !atExpenseCap ? (
-                    <CardFrame
+                    <SettingsCard
                         action={
                             <span className="dash-figure text-muted-foreground text-[13px]">{suggestions.length}</span>
                         }
@@ -324,7 +311,7 @@ export function Categories() {
                     >
                         <div className="flex flex-wrap gap-2 p-4">
                             {suggestions.map((preset) => (
-                                <Button
+                                <Chip
                                     key={preset.name}
                                     onClick={() =>
                                         writes.add({
@@ -337,15 +324,13 @@ export function Categories() {
                                             preset: preset.name,
                                         })
                                     }
-                                    size="sm"
-                                    variant="outline"
                                 >
-                                    <RiAddLine size={16} />
+                                    <HugeiconsIcon icon={PlusSignIcon} size={14} />
                                     {labelOf(preset.name)}
-                                </Button>
+                                </Chip>
                             ))}
                         </div>
-                    </CardFrame>
+                    </SettingsCard>
                 ) : null}
             </div>
             <OverlayPresence value={editing}>

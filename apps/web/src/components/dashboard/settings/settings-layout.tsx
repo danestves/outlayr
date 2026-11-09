@@ -6,6 +6,7 @@ import { useIntlayer } from "react-intlayer";
 import { Sampled, useSample } from "@/components/dashboard/shell/sampled";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 
+import { AboutSettings } from "./about/screen";
 import { Account } from "./account";
 import { Categories } from "./categories/screen";
 import { settingsToasts } from "./categories/write";
@@ -13,6 +14,7 @@ import { Currency } from "./currency";
 import { SettingsNav } from "./nav";
 import { Preferences } from "./preferences";
 import { Time } from "./time";
+import { Usage } from "./usage";
 
 export function SettingsLayout({ children }: { children: ReactNode }) {
     const { title } = useIntlayer("dashboard-settings");
@@ -30,11 +32,13 @@ export function SettingsLayout({ children }: { children: ReactNode }) {
 }
 
 const SECTIONS = {
+    about: AboutSettings,
     account: Account,
     categories: Categories,
     currency: Currency,
     preferences: Preferences,
     time: Time,
+    usage: Usage,
 } as const;
 
 const isSection = (name: string | undefined): name is keyof typeof SECTIONS => name !== undefined && name in SECTIONS;

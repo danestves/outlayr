@@ -1,10 +1,22 @@
+import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
+import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { ACCENT_PALETTE } from "@outlayr/money/accent";
-import { useContext, useSyncExternalStore } from "react";
-import { useIntlayer } from "react-intlayer";
+import { ChoiceCards } from "panelui-web/choice-cards";
+import { Select } from "panelui-web/select";
+import { useContext, useId, useState, useSyncExternalStore } from "react";
+import { useIntlayer, useLocale } from "react-intlayer";
 
+import { OverlayPresence } from "@/components/dashboard/overlay-presence";
+import { LocalizedLink } from "@/components/localized-link";
+import { chooseConsent, readConsent, subscribeConsent } from "@/lib/analytics";
+import { DASHBOARD_LOCALES, chooseDashboardLocale } from "@/lib/dashboard-locale";
+import { LANGUAGES } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n";
 import { LedgerSettingsContext, metaFlag, useDisplayFormat, useMeta } from "@/lib/ledger-settings";
 import { chooseTheme, readTheme, subscribeTheme, THEMES } from "@/lib/theme";
 
+import { SuggestDialog } from "./about/suggest";
 import { Choice, Row, SectionHead, SettingsCard, ToggleRow, useSaveSettings } from "./parts";
 
 const SAMPLE_AMOUNT = 1284;
@@ -18,10 +30,11 @@ export function Preferences() {
                 <div className="grid gap-4">
                     <MoneyCard />
                     <UpcomingCard />
+                    <PrivacyCard />
                 </div>
                 <div className="grid gap-4">
                     <AppearanceCard />
-                    <LabCard />
+                    <HelpCard />
                 </div>
             </div>
         </>
@@ -59,7 +72,7 @@ function AppearanceCard() {
     const save = useSaveSettings();
     return (
         <SettingsCard title={copy.title}>
-            <Row hint={copy.themeHint} label={copy.theme}>
+            <Row label={copy.theme}>
                 <Choice
                     label={copy.theme.value}
                     onChange={chooseTheme}
@@ -68,20 +81,31 @@ function AppearanceCard() {
                 />
             </Row>
             <Row hint={copy.accents[accent.key]} label={copy.accent}>
-                <fieldset aria-label={copy.accent.value} className="flex gap-2">
+                <ChoiceCards
+                    aria-label={copy.accent.value}
+                    aspect="1 / 1"
+                    className="flex w-fit shrink-0 gap-2"
+                    onValueChange={(next) => {
+                        const picked = ACCENT_PALETTE.find((option) => option.key === next);
+                        if (picked) {
+                            save({ accentColor: String(picked.value) });
+                        }
+                    }}
+                    value={accent.key}
+                >
                     {ACCENT_PALETTE.map((option) => (
-                        <button
+                        <ChoiceCards.Item
                             aria-label={copy.accents[option.key].value}
-                            aria-pressed={option.key === accent.key}
-                            className="dash-swatch"
+                            className="w-7 shrink-0"
                             key={option.key}
-                            onClick={() => save({ accentColor: String(option.value) })}
-                            style={{ color: `light-dark(${option.light}, ${option.dark})` }}
-                            type="button"
-                        />
+                            value={option.key}
+                        >
+                            <ChoiceCards.Media style={{ background: `light-dark(${option.light}, ${option.dark})` }} />
+                        </ChoiceCards.Item>
                     ))}
-                </fieldset>
+                </ChoiceCards>
             </Row>
+            <LanguageRow />
             <ToggleRow
                 checked={animatedCharts}
                 label={copy.animatedCharts.value}
@@ -117,28 +141,72 @@ function UpcomingCard() {
     );
 }
 
-const LAB = [
-    { fallback: false, key: "confetti", label: "confetti", note: "confettiNote" },
-    { fallback: false, key: "logViewLineGraph", label: "lineGraph", note: undefined },
-    { fallback: true, key: "budgetViewStyle", label: "budgetRows", note: "budgetRowsNote" },
-    { fallback: false, key: "swapTimeLabel", label: "swapTime", note: "swapTimeNote" },
-] as const;
+const LANGUAGE_NAMES: Record<Locale, string> = { en: "English", es: "Español", fr: "Français", pt: "Português" };
 
-function LabCard() {
-    const { lab: copy } = useIntlayer("dashboard-settings");
+function LanguageRow() {
+    const { language } = useIntlayer("dashboard-settings");
+    const { locale } = useLocale();
+    const id = useId();
+    return (
+        <Row label={language} labelFor={id}>
+            <Select
+                items={DASHBOARD_LOCALES.map((value) => ({ label: LANGUAGE_NAMES[value], value }))}
+                onValueChange={(next) => next && chooseDashboardLocale(next)}
+                value={locale}
+            >
+                <Select.Trigger className="w-32" id={id}>
+                    <Select.Value />
+                </Select.Trigger>
+                <Select.Content>
+                    {DASHBOARD_LOCALES.map((value) => (
+                        <Select.Item key={value} lang={LANGUAGES[value].lang} value={value}>
+                            {LANGUAGE_NAMES[value]}
+                        </Select.Item>
+                    ))}
+                </Select.Content>
+            </Select>
+        </Row>
+    );
+}
+
+function PrivacyCard() {
+    const { privacy: copy } = useIntlayer("dashboard-settings");
     const meta = useMeta();
     const save = useSaveSettings();
+    const consent = useSyncExternalStore(subscribeConsent, readConsent, () => null);
     return (
-        <SettingsCard footer={<span className="text-muted-foreground">{copy.experimental}</span>} title={copy.title}>
-            {LAB.map((item) => (
-                <ToggleRow
-                    checked={metaFlag(meta, item.key, item.fallback)}
-                    hint={item.note ? copy[item.note] : undefined}
-                    key={item.key}
-                    label={copy[item.label].value}
-                    onChange={(next) => save({ [item.key]: String(next) })}
-                />
-            ))}
+        <SettingsCard title={copy.title}>
+            <ToggleRow checked={consent === "granted"} label={copy.analytics.value} onChange={chooseConsent} />
+            <ToggleRow
+                checked={metaFlag(meta, "aiEnrichment", true)}
+                hint={copy.smartFillHint}
+                label={copy.smartFill.value}
+                onChange={(next) => save({ aiEnrichment: String(next) })}
+            />
+        </SettingsCard>
+    );
+}
+
+const HELP_ROW =
+    "border-border hover:bg-accent/40 flex min-h-14 w-full items-center gap-3 border-t px-4 text-left text-sm font-medium first:border-t-0";
+
+function HelpCard() {
+    const { help: copy } = useIntlayer("dashboard-settings");
+    const about = useIntlayer("dashboard-about");
+    const [suggesting, setSuggesting] = useState(false);
+    return (
+        <SettingsCard title={copy.title}>
+            <LocalizedLink className={HELP_ROW} rel="noreferrer" target="_blank" to="/support">
+                <span className="min-w-0 flex-1">{copy.contact}</span>
+                <HugeiconsIcon icon={ArrowUpRight01Icon} className="text-muted-foreground size-4" />
+            </LocalizedLink>
+            <button className={HELP_ROW} onClick={() => setSuggesting(true)} type="button">
+                <span className="min-w-0 flex-1">{about.suggest}</span>
+                <HugeiconsIcon icon={ArrowRight01Icon} className="text-muted-foreground size-[18px]" />
+            </button>
+            <OverlayPresence value={suggesting ? true : null}>
+                {() => <SuggestDialog onClose={() => setSuggesting(false)} />}
+            </OverlayPresence>
         </SettingsCard>
     );
 }

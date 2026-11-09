@@ -1,6 +1,8 @@
-import { RiArrowLeftSLine } from "@remixicon/react";
+import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useRouteContext } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
+import { Frame } from "panelui-web/frame";
 import { Label } from "panelui-web/label";
 import { Switch } from "panelui-web/switch";
 import { Tabs } from "panelui-web/tabs";
@@ -9,7 +11,6 @@ import { useId } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { writeSettings } from "@/lib/ledger-settings";
 
 export function SectionHead({ action, title }: { action?: ReactNode; title: ReactNode }) {
@@ -23,7 +24,7 @@ export function SectionHead({ action, title }: { action?: ReactNode; title: Reac
                 size="icon"
                 variant="ghost"
             >
-                <RiArrowLeftSLine size={22} />
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
             </Button>
             <h1 className="mr-auto text-lg font-semibold tracking-[-0.02em]">{title}</h1>
             {action}
@@ -43,9 +44,14 @@ export function SettingsCard({
     title: ReactNode;
 }) {
     return (
-        <CardFrame action={action} footer={footer} title={title}>
-            {children}
-        </CardFrame>
+        <Frame className="min-w-0">
+            <Frame.Header>
+                <Frame.Title as="h2">{title}</Frame.Title>
+                {action ? <Frame.Action>{action}</Frame.Action> : null}
+            </Frame.Header>
+            <Frame.Panel>{children}</Frame.Panel>
+            {footer ? <Frame.Footer className="text-sm">{footer}</Frame.Footer> : null}
+        </Frame>
     );
 }
 
@@ -63,13 +69,13 @@ export function Row({
     labelFor?: string;
 }) {
     return (
-        <div className="border-border flex min-h-14 items-center gap-4 border-t px-4 py-2.5 first:border-t-0 max-sm:flex-wrap max-sm:gap-y-2">
+        <div className="border-border flex items-center gap-3 border-t px-4 py-3 first:border-t-0 max-sm:flex-wrap max-sm:gap-y-2">
             {leading}
             <div className="min-w-0 flex-1">
                 <Label className="block text-sm leading-5 font-medium" htmlFor={labelFor}>
                     {label}
                 </Label>
-                {hint ? <p className="text-muted-foreground text-[13px] leading-[18px]">{hint}</p> : null}
+                {hint ? <p className="text-muted-foreground text-sm leading-5">{hint}</p> : null}
             </div>
             {children}
         </div>
@@ -90,7 +96,7 @@ export function ToggleRow({
     const id = useId();
     return (
         <Row hint={hint} label={label} labelFor={id}>
-            <Switch checked={checked} id={id} onCheckedChange={onChange} size="sm" />
+            <Switch checked={checked} id={id} onCheckedChange={onChange} />
         </Row>
     );
 }
@@ -116,13 +122,9 @@ export function Choice<Value extends string | number>({
             }}
             value={value}
         >
-            <Tabs.List aria-label={label} className="bg-background/40 rounded-[9px] p-0.5">
+            <Tabs.List aria-label={label}>
                 {options.map((option) => (
-                    <Tabs.Trigger
-                        className="h-[26px] rounded-[7px] px-2.5 text-[13px]"
-                        key={option.value}
-                        value={option.value}
-                    >
+                    <Tabs.Trigger key={option.value} value={option.value}>
                         {option.label}
                     </Tabs.Trigger>
                 ))}

@@ -1,14 +1,13 @@
 import { convexQuery } from "@convex-dev/react-query";
+import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
+import DollarCircleIcon from "@hugeicons/core-free-icons/DollarCircleIcon";
+import FlashIcon from "@hugeicons/core-free-icons/FlashIcon";
+import InfinityCircleIcon from "@hugeicons/core-free-icons/InfinityCircleIcon";
+import RepeatIcon from "@hugeicons/core-free-icons/RepeatIcon";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { isPerson } from "@outlayr/money/account-kind";
-import {
-    RiCalendarCheckLine,
-    RiCheckLine,
-    RiFlashlightLine,
-    RiInfinityLine,
-    RiLoopLeftLine,
-    RiMoneyDollarCircleLine,
-} from "@remixicon/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
@@ -284,7 +283,9 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
     const { data: limits } = useQuery(convexQuery(api.limits.mine, {}));
     const accounts = books.accounts.filter((account) => !isPerson(account));
     const captures = limits ? Math.max(0, Math.round(limits.captures.capacity - limits.captures.value)) : null;
-    const unlimited = <RiInfinityLine aria-label={use.unlimited.value} className="ml-auto" size={16} />;
+    const unlimited = (
+        <HugeiconsIcon icon={InfinityCircleIcon} aria-label={use.unlimited.value} className="ml-auto" size={16} />
+    );
     const counted = [
         { free: FREE.captures, label: use.captures, pro: PRO_CAPTURES, using: captures },
         { free: FREE.accounts, label: use.accounts, pro: unlimited, using: accounts.length },
@@ -333,7 +334,12 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
                                 {endsSoon ? (
                                     use.off
                                 ) : (
-                                    <RiCheckLine aria-label={use.on.value} className="ml-auto" size={16} />
+                                    <HugeiconsIcon
+                                        icon={Tick02Icon}
+                                        aria-label={use.on.value}
+                                        className="ml-auto"
+                                        size={16}
+                                    />
                                 )}
                             </Table.Cell>
                         </Table.Row>
@@ -349,10 +355,10 @@ function AlsoGives() {
     return (
         <SettingsCard title={also.title}>
             {[
-                { hint: also.logsHint, icon: RiFlashlightLine, label: also.logs },
-                { hint: also.currenciesHint, icon: RiMoneyDollarCircleLine, label: also.currencies },
-                { hint: also.installmentsHint, icon: RiCalendarCheckLine, label: also.installments },
-                { hint: also.syncHint, icon: RiLoopLeftLine, label: also.sync },
+                { hint: also.logsHint, icon: FlashIcon, label: also.logs },
+                { hint: also.currenciesHint, icon: DollarCircleIcon, label: also.currencies },
+                { hint: also.installmentsHint, icon: CalendarCheckIn01Icon, label: also.installments },
+                { hint: also.syncHint, icon: RepeatIcon, label: also.sync },
             ].map(({ hint, icon: Icon, label }, index) => (
                 <Row
                     hint={hint}
@@ -360,7 +366,7 @@ function AlsoGives() {
                     label={label}
                     leading={
                         <span className="bg-app-fill text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
-                            <Icon size={16} />
+                            <HugeiconsIcon icon={Icon} size={16} />
                         </span>
                     }
                 />

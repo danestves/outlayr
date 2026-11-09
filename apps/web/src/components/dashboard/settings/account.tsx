@@ -1,12 +1,26 @@
 import { convexQuery } from "@convex-dev/react-query";
+import AppleIcon from "@hugeicons/core-free-icons/AppleIcon";
+import CheckmarkBadge01Icon from "@hugeicons/core-free-icons/CheckmarkBadge01Icon";
+import ComputerIcon from "@hugeicons/core-free-icons/ComputerIcon";
+import GoogleIcon from "@hugeicons/core-free-icons/GoogleIcon";
+import Logout03Icon from "@hugeicons/core-free-icons/Logout03Icon";
+import Mail01Icon from "@hugeicons/core-free-icons/Mail01Icon";
+import SmartPhone01Icon from "@hugeicons/core-free-icons/SmartPhone01Icon";
+import SquareLock02Icon from "@hugeicons/core-free-icons/SquareLock02Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { IconSvgElement } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
-import type { RemixiconComponentType } from "@remixicon/react";
-import { RiAppleFill, RiGoogleFill, RiLockLine, RiLogoutBoxRLine } from "@remixicon/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
+import { Alert } from "panelui-web/alert";
 import { AlertDialog } from "panelui-web/alert-dialog";
+import { Avatar } from "panelui-web/avatar";
+import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
+import { Field } from "panelui-web/field";
 import { Input } from "panelui-web/input";
+import { Table } from "panelui-web/table";
 import { useToast } from "panelui-web/toast";
 import { useId, useState } from "react";
 import type { ComponentProps, FormEvent, ReactNode } from "react";
@@ -65,15 +79,12 @@ function useDateText() {
         }).format(new Date(value));
 }
 
-function Field({ label, ...input }: { label: ReactNode } & Omit<ComponentProps<typeof Input>, "id">) {
-    const id = useId();
+function TextField({ label, ...input }: { label: ReactNode } & ComponentProps<typeof Input>) {
     return (
-        <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium" htmlFor={id}>
-                {label}
-            </label>
-            <Input className="max-sm:text-base" id={id} {...input} />
-        </div>
+        <Field>
+            <Field.Label>{label}</Field.Label>
+            <Input className="max-sm:text-base" {...input} />
+        </Field>
     );
 }
 
@@ -93,6 +104,7 @@ function FormDialog({
     title: ReactNode;
 }) {
     const { account } = useIntlayer("dashboard-settings");
+    const formId = useId();
     const [busy, setBusy] = useState(false);
     const [failed, setFailed] = useState(false);
     const shown = useOverlayOpen();
@@ -111,28 +123,26 @@ function FormDialog({
     return (
         <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
             <Dialog.Content className="app-shell">
-                <form onSubmit={handle}>
-                    <Dialog.Header>
-                        <Dialog.Title>{title}</Dialog.Title>
-                        {description ? <Dialog.Description>{description}</Dialog.Description> : null}
-                    </Dialog.Header>
-                    <Dialog.Body className="flex flex-col gap-3">
+                <Dialog.Header>
+                    <Dialog.Title>{title}</Dialog.Title>
+                    {description ? <Dialog.Description>{description}</Dialog.Description> : null}
+                </Dialog.Header>
+                <Dialog.Body>
+                    <form className="flex flex-col gap-3" id={formId} onSubmit={handle}>
                         {children}
                         {failed ? (
-                            <p className="text-destructive text-[13px]" role="alert">
-                                {account.failed}
-                            </p>
+                            <Alert tone="destructive" variant="plain">
+                                <Alert.Description>{account.failed}</Alert.Description>
+                            </Alert>
                         ) : null}
-                    </Dialog.Body>
-                    <Dialog.Footer>
-                        <Button onClick={onClose} type="button" variant="outline">
-                            {account.cancel}
-                        </Button>
-                        <Button loading={busy} type="submit">
-                            {submit}
-                        </Button>
-                    </Dialog.Footer>
-                </form>
+                    </form>
+                </Dialog.Body>
+                <Dialog.Footer>
+                    <Dialog.Close render={<Button variant="secondary" />}>{account.cancel}</Dialog.Close>
+                    <Button form={formId} loading={busy} type="submit">
+                        {submit}
+                    </Button>
+                </Dialog.Footer>
             </Dialog.Content>
         </Dialog>
     );
@@ -152,7 +162,7 @@ function NameDialog({ name, onClose }: { name: string; onClose: () => void }) {
             submit={account.save}
             title={account.nameTitle}
         >
-            <Field autoComplete="name" autoFocus defaultValue={name} label={account.name} name="name" required />
+            <TextField autoComplete="name" autoFocus defaultValue={name} label={account.name} name="name" required />
         </FormDialog>
     );
 }
@@ -172,7 +182,7 @@ function EmailDialog({ onClose }: { onClose: () => void }) {
                 submit={account.sendCode}
                 title={account.emailTitle}
             >
-                <Field autoComplete="email" autoFocus label={account.newEmail} name="email" required type="email" />
+                <TextField autoComplete="email" autoFocus label={account.newEmail} name="email" required type="email" />
             </FormDialog>
         );
     }
@@ -189,7 +199,7 @@ function EmailDialog({ onClose }: { onClose: () => void }) {
             submit={account.confirm}
             title={account.emailTitle}
         >
-            <Field
+            <TextField
                 autoComplete="one-time-code"
                 autoFocus
                 inputMode="numeric"
@@ -218,7 +228,7 @@ function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
             submit={account.save}
             title={account.passwordTitle}
         >
-            <Field
+            <TextField
                 autoComplete="current-password"
                 autoFocus
                 label={account.currentPassword}
@@ -226,7 +236,7 @@ function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
                 required
                 type="password"
             />
-            <Field
+            <TextField
                 autoComplete="new-password"
                 label={account.newPassword}
                 minLength={MIN_PASSWORD}
@@ -275,7 +285,7 @@ function AddPasswordDialog({ email, onClose }: { email: string; onClose: () => v
             submit={account.save}
             title={account.addPasswordTitle}
         >
-            <Field
+            <TextField
                 autoComplete="one-time-code"
                 autoFocus
                 inputMode="numeric"
@@ -283,7 +293,7 @@ function AddPasswordDialog({ email, onClose }: { email: string; onClose: () => v
                 name="code"
                 required
             />
-            <Field
+            <TextField
                 autoComplete="new-password"
                 label={account.newPassword}
                 minLength={MIN_PASSWORD}
@@ -310,22 +320,56 @@ function Profile({ onOpen }: { onOpen: (dialog: OpenDialog) => void }) {
     const { data: session } = authClient.useSession();
     const { data: limits } = useQuery(convexQuery(api.limits.mine, {}));
     const user = session?.user;
+    const dateText = useDateText();
+    const { data: plan } = useQuery({
+        queryFn: () => convexClient().action(api.billing.plan, {}),
+        queryKey: ["billing", "plan"],
+        retry: false,
+    });
+    const tier = limits?.pro ? account.pro : account.free;
+    const renews = plan?.expiresAtMs && plan.state === "renews" ? dateText(plan.expiresAtMs) : null;
     return (
         <SettingsCard title={account.profile}>
-            <Row hint={user?.name} label={account.name}>
+            <Row
+                hint={user?.name}
+                label={account.name}
+                leading={<Avatar name={user?.name ?? ""} size="sm" src={user?.image ?? undefined} />}
+            >
                 <Button onClick={() => onOpen("name")} size="sm" variant="outline">
                     {account.edit}
                 </Button>
             </Row>
-            <Row hint={<span className="ph-no-capture break-all">{user?.email}</span>} label={account.email}>
+            <Row
+                hint={<span className="ph-no-capture break-all">{user?.email}</span>}
+                label={account.email}
+                leading={
+                    <Tile>
+                        <HugeiconsIcon icon={Mail01Icon} size={16} />
+                    </Tile>
+                }
+            >
                 {user?.emailVerified ? (
-                    <span className="text-muted-foreground text-[13px]">{account.verified}</span>
+                    <Badge dot variant="success">
+                        {account.verified}
+                    </Badge>
                 ) : null}
                 <Button onClick={() => onOpen("email")} size="sm" variant="outline">
                     {account.change}
                 </Button>
             </Row>
-            <Row hint={limits?.pro ? account.pro : account.free} label={account.plan} />
+            <Row
+                hint={renews ? account.renews({ date: renews }) : tier}
+                label={account.plan}
+                leading={
+                    <Tile>
+                        <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} />
+                    </Tile>
+                }
+            >
+                <Button render={<Link to="/app/settings/usage" />} size="sm" variant="outline">
+                    {account.usage}
+                </Button>
+            </Row>
         </SettingsCard>
     );
 }
@@ -337,7 +381,7 @@ function ProviderRow({
     lastMethod,
     provider,
 }: {
-    icon: RemixiconComponentType;
+    icon: IconSvgElement;
     label: string;
     lastMethod: boolean;
     linkedAt: Date | string | undefined;
@@ -353,7 +397,7 @@ function ProviderRow({
             label={label}
             leading={
                 <Tile>
-                    <Icon size={16} />
+                    <HugeiconsIcon icon={Icon} size={16} />
                 </Tile>
             }
         >
@@ -413,18 +457,22 @@ function Methods({ onOpen }: { onOpen: (dialog: OpenDialog) => void }) {
     const hasPassword = linkedAt("credential") !== undefined;
     return (
         <SettingsCard
-            action={<span className="text-muted-foreground font-mono text-[13px]">{signIns.length}/3</span>}
+            action={
+                <span className="text-muted-foreground font-mono text-[13px]">
+                    {account.of({ count: signIns.length, total: 3 })}
+                </span>
+            }
             title={account.methods}
         >
             <ProviderRow
-                icon={RiAppleFill}
+                icon={AppleIcon}
                 label="Apple"
                 lastMethod={signIns.length === 1}
                 linkedAt={linkedAt("apple")}
                 provider="apple"
             />
             <ProviderRow
-                icon={RiGoogleFill}
+                icon={GoogleIcon}
                 label="Google"
                 lastMethod={signIns.length === 1}
                 linkedAt={linkedAt("google")}
@@ -435,7 +483,7 @@ function Methods({ onOpen }: { onOpen: (dialog: OpenDialog) => void }) {
                 label={account.password}
                 leading={
                     <Tile>
-                        <RiLockLine size={16} />
+                        <HugeiconsIcon icon={SquareLock02Icon} size={16} />
                     </Tile>
                 }
             >
@@ -498,27 +546,54 @@ function Sessions() {
             }
             title={account.sessions}
         >
-            {sessions.map((item) => (
-                <Row
-                    hint={
-                        item.token === current?.session.token
-                            ? account.thisBrowser
-                            : `${account.lastActive.value}: ${dateText(item.updatedAt)}`
-                    }
-                    key={item.id}
-                    label={deviceLabel(item.userAgent, copy)}
-                >
-                    {item.token === current?.session.token ? null : (
-                        <Button
-                            onClick={() => revoked(authClient.revokeSession({ token: item.token }))}
-                            size="sm"
-                            variant="outline"
-                        >
-                            {account.signOut}
-                        </Button>
-                    )}
-                </Row>
-            ))}
+            <Table framed aria-label={account.sessions.value} maxHeight="none">
+                <Table.Header className="in-data-[sticky]:bg-card">
+                    <Table.Row>
+                        <Table.Head>{account.device}</Table.Head>
+                        <Table.Head>{account.lastActive}</Table.Head>
+                        <Table.Head />
+                    </Table.Row>
+                </Table.Header>
+                <Table.Body>
+                    {sessions.map((item) => {
+                        const isCurrent = item.token === current?.session.token;
+                        const { browser } = sessionDevice(item.userAgent ?? "");
+                        const Icon = browser ? ComputerIcon : SmartPhone01Icon;
+                        return (
+                            <Table.Row key={item.id}>
+                                <Table.Cell>
+                                    <span className="flex min-w-0 items-center gap-2.5 font-medium">
+                                        <Tile>
+                                            <HugeiconsIcon icon={Icon} size={16} />
+                                        </Tile>
+                                        <span className="truncate">{deviceLabel(item.userAgent, copy)}</span>
+                                    </span>
+                                </Table.Cell>
+                                <Table.Cell className="text-muted-foreground whitespace-nowrap">
+                                    {isCurrent ? (
+                                        <Badge dot variant="success">
+                                            {account.thisBrowser}
+                                        </Badge>
+                                    ) : (
+                                        dateText(item.updatedAt)
+                                    )}
+                                </Table.Cell>
+                                <Table.Cell align="end">
+                                    {isCurrent ? null : (
+                                        <Button
+                                            onClick={() => revoked(authClient.revokeSession({ token: item.token }))}
+                                            size="sm"
+                                            variant="outline"
+                                        >
+                                            {account.signOut}
+                                        </Button>
+                                    )}
+                                </Table.Cell>
+                            </Table.Row>
+                        );
+                    })}
+                </Table.Body>
+            </Table>
         </SettingsCard>
     );
 }
@@ -597,7 +672,7 @@ export function Account() {
             <SectionHead
                 action={
                     <Button onClick={signOut} size="sm" variant="outline">
-                        <RiLogoutBoxRLine size={16} />
+                        <HugeiconsIcon icon={Logout03Icon} size={16} />
                         {account.signOut}
                     </Button>
                 }
