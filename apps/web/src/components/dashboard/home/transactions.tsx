@@ -140,7 +140,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                     </Tabs.List>
                 </Tabs>
             }
-            className={`@4xl:col-span-2 ${setup ? "h-[375px]" : ""} ${active ? "ring-primary/55 ring-1" : ""}`}
+            className={`@4xl:col-span-2 ${setup ? "min-h-[375px] @4xl:h-[375px]" : ""} ${active ? "ring-primary/55 ring-1" : ""}`}
             footer={
                 setup || every.length === 0 ? undefined : (
                     <>
@@ -198,7 +198,10 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                     <Table.Body>
                         {rows.length === 0 && !setup ? (
                             <Table.Row aria-rowindex={2} className="border-0">
-                                <Table.Cell className="text-muted-foreground py-8 text-[13px] first:ps-3.5" colSpan={5}>
+                                <Table.Cell
+                                    className="text-muted-foreground py-8 text-[13px] first:ps-3.5"
+                                    colSpan={showAccount ? 5 : 4}
+                                >
                                     {copy.empty}
                                 </Table.Cell>
                             </Table.Row>

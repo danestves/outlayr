@@ -56,6 +56,11 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
             }),
         };
     }, [catalog, filters.accounts, ledger, overview.balances, period, quiet, scoped]);
+    const listed = (
+        shown.rows.length > ACCOUNT_ROWS
+            ? shown.rows.toSorted((a, b) => Number(a.dimmed) - Number(b.dimmed))
+            : shown.rows
+    ).slice(0, ACCOUNT_ROWS);
     const horizon = addDays(ledger.today, UPCOMING_DAYS);
     const charges = overview.upcoming.charges
         .filter(
@@ -104,7 +109,7 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                 {shown.rows.length === 0 && charges.length === 0 ? (
                     <p className="text-muted-foreground py-6 text-[13px]">{copy.noAccounts}</p>
                 ) : null}
-                {shown.rows.slice(0, ACCOUNT_ROWS).map((account) => (
+                {listed.map((account) => (
                     <div
                         className={`flex min-h-10 flex-wrap items-center gap-x-2.5 font-medium ${account.dimmed ? "opacity-40" : ""}`}
                         key={account.key}

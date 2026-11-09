@@ -270,7 +270,9 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
                     max={hasIncome ? income : NO_INCOME_MAX}
                     value={whatIf ?? (hasIncome ? Math.min(spent, income) : Number(spent > 0))}
                     valueText={previewing ? previewText : realText}
-                    style={categoryTone(filters.category ? ledger.categories.get(filters.category)?.color : undefined)}
+                    style={categoryTone(
+                        filters.category && !tone ? ledger.categories.get(filters.category)?.color : undefined
+                    )}
                     {...(hasIncome && !picked ? slider : {})}
                 />
                 <RangeMeter.Scale

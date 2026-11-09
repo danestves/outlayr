@@ -7,6 +7,7 @@ import type { Ledger, LedgerRow, Scope } from "../../../lib/dashboard-series-led
 import { netWorthPoints } from "../../../lib/dashboard-series-net-worth";
 import { daysFrom, periodOf, priorSlice, shiftPeriodKey } from "../../../lib/dashboard-series-period";
 import type { Period } from "../../../lib/dashboard-series-period";
+import { foldFees } from "./rows";
 
 const SPARK_PERIODS = 12;
 const WHAT_IF_STOPS = 400;
@@ -108,7 +109,7 @@ export function everyDay(ledger: Ledger, period: Period, scope: Scope, categorie
     return {
         average,
         cells,
-        entries: rows.length,
+        entries: foldFees(rows).length,
         lead: (new Date(`${period.from}T12:00:00Z`).getUTCDay() - ledger.firstWeekday + 8) % 7,
         measured: cells.slice(0, elapsed),
         runnerUp: second ?? null,
