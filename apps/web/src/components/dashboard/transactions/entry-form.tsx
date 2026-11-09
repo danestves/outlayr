@@ -631,6 +631,10 @@ export function EntryEditor({
         saved.current = key;
         const feeNote = form.feeNote({ merchant: merchantOf(ledger, next) }).value;
         commitRows(db, editedEntry(current, live, { ...draft, feeNote }, at)).catch(() => {
+            // Cleared, not restored: the save before this one may have failed too. A repeat send changes nothing.
+            if (saved.current === key) {
+                saved.current = "";
+            }
             toast({ failed: true, text: form.saveFailed.value });
         });
     };
