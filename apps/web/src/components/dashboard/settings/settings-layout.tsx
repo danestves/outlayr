@@ -12,6 +12,7 @@ import { Categories } from "./categories/screen";
 import { settingsToasts } from "./categories/write";
 import { Currency } from "./currency";
 import { DataSettings } from "./data/screen";
+import { Invite } from "./invite";
 import { SettingsNav } from "./nav";
 import { Preferences } from "./preferences";
 import { Time } from "./time";
@@ -38,6 +39,7 @@ const SECTIONS = {
     categories: Categories,
     currency: Currency,
     data: DataSettings,
+    invite: Invite,
     preferences: Preferences,
     time: Time,
     usage: Usage,

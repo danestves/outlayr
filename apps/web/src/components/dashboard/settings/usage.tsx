@@ -1,6 +1,7 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { formatWait, projectLimit } from "@outlayr/money/limit-projection";
+import { earnedThisYear } from "@outlayr/money/referrals";
 import { useQuery } from "@tanstack/react-query";
 import { Kpi } from "panelui-web/kpi";
 import { Table } from "panelui-web/table";
@@ -17,7 +18,17 @@ const DAY_MS = 86_400_000;
 const FREE = { accounts: 3, autoLog: 30, budgets: 2, currencies: 1, installmentApps: 2, payoffPlans: 2, people: 3 };
 
 // PanelUI meters drag or live in a popover; the bars in this table are static.
-function Stat({ label, note, unit, value }: { label: ReactNode; note: ReactNode; unit?: ReactNode; value: ReactNode }) {
+export function Stat({
+    label,
+    note,
+    unit,
+    value,
+}: {
+    label: ReactNode;
+    note: ReactNode;
+    unit?: ReactNode;
+    value: ReactNode;
+}) {
     return (
         <Kpi>
             <Kpi.Header>
@@ -54,10 +65,7 @@ export function Usage() {
         return <SectionHead title={copy.sections.usage} />;
     }
     const captures = projectLimit(limits.captures, now);
-    const year = new Date(now).getUTCFullYear();
-    const months = (referrals?.friends ?? []).filter(
-        (friend) => friend.rewardedAt !== null && new Date(friend.rewardedAt).getUTCFullYear() === year
-    ).length;
+    const months = earnedThisYear(referrals?.friends ?? [], now);
     const buckets = [
         { bucket: limits.receiptScan, label: text.receipts },
         { bucket: limits.voiceEntry, label: text.voice },

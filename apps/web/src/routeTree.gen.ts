@@ -57,6 +57,7 @@ import { Route as AccountAppSettingsAboutRouteImport } from './routes/_account/a
 import { Route as AccountAppSettingsAccountRouteImport } from './routes/_account/app.settings.account'
 import { Route as AccountAppSettingsCurrencyRouteImport } from './routes/_account/app.settings.currency'
 import { Route as AccountAppSettingsDataRouteImport } from './routes/_account/app.settings.data'
+import { Route as AccountAppSettingsInviteRouteImport } from './routes/_account/app.settings.invite'
 import { Route as AccountAppSettingsPlanRouteImport } from './routes/_account/app.settings.plan'
 import { Route as AccountAppSettingsPreferencesRouteImport } from './routes/_account/app.settings.preferences'
 import { Route as AccountAppSettingsTimeRouteImport } from './routes/_account/app.settings.time'
@@ -333,6 +334,12 @@ const AccountAppSettingsDataRoute = AccountAppSettingsDataRouteImport.update({
   path: '/data',
   getParentRoute: () => AccountAppSettingsRoute,
 } as any)
+const AccountAppSettingsInviteRoute =
+  AccountAppSettingsInviteRouteImport.update({
+    id: '/invite',
+    path: '/invite',
+    getParentRoute: () => AccountAppSettingsRoute,
+  } as any)
 const AccountAppSettingsPlanRoute = AccountAppSettingsPlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -414,6 +421,7 @@ export interface FileRoutesByFullPath {
   '/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/app/settings/data': typeof AccountAppSettingsDataRoute
+  '/app/settings/invite': typeof AccountAppSettingsInviteRoute
   '/app/settings/plan': typeof AccountAppSettingsPlanRoute
   '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
@@ -467,6 +475,7 @@ export interface FileRoutesByTo {
   '/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/app/settings/data': typeof AccountAppSettingsDataRoute
+  '/app/settings/invite': typeof AccountAppSettingsInviteRoute
   '/app/settings/plan': typeof AccountAppSettingsPlanRoute
   '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
@@ -524,6 +533,7 @@ export interface FileRoutesById {
   '/_account/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/_account/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/_account/app/settings/data': typeof AccountAppSettingsDataRoute
+  '/_account/app/settings/invite': typeof AccountAppSettingsInviteRoute
   '/_account/app/settings/plan': typeof AccountAppSettingsPlanRoute
   '/_account/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
   '/_account/app/settings/time': typeof AccountAppSettingsTimeRoute
@@ -582,6 +592,7 @@ export interface FileRouteTypes {
     | '/app/settings/account'
     | '/app/settings/currency'
     | '/app/settings/data'
+    | '/app/settings/invite'
     | '/app/settings/plan'
     | '/app/settings/preferences'
     | '/app/settings/time'
@@ -635,6 +646,7 @@ export interface FileRouteTypes {
     | '/app/settings/account'
     | '/app/settings/currency'
     | '/app/settings/data'
+    | '/app/settings/invite'
     | '/app/settings/plan'
     | '/app/settings/preferences'
     | '/app/settings/time'
@@ -691,6 +703,7 @@ export interface FileRouteTypes {
     | '/_account/app/settings/account'
     | '/_account/app/settings/currency'
     | '/_account/app/settings/data'
+    | '/_account/app/settings/invite'
     | '/_account/app/settings/plan'
     | '/_account/app/settings/preferences'
     | '/_account/app/settings/time'
@@ -1055,6 +1068,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppSettingsDataRouteImport
       parentRoute: typeof AccountAppSettingsRoute
     }
+    '/_account/app/settings/invite': {
+      id: '/_account/app/settings/invite'
+      path: '/invite'
+      fullPath: '/app/settings/invite'
+      preLoaderRoute: typeof AccountAppSettingsInviteRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
     '/_account/app/settings/plan': {
       id: '/_account/app/settings/plan'
       path: '/plan'
@@ -1158,6 +1178,7 @@ interface AccountAppSettingsRouteChildren {
   AccountAppSettingsAccountRoute: typeof AccountAppSettingsAccountRoute
   AccountAppSettingsCurrencyRoute: typeof AccountAppSettingsCurrencyRoute
   AccountAppSettingsDataRoute: typeof AccountAppSettingsDataRoute
+  AccountAppSettingsInviteRoute: typeof AccountAppSettingsInviteRoute
   AccountAppSettingsPlanRoute: typeof AccountAppSettingsPlanRoute
   AccountAppSettingsPreferencesRoute: typeof AccountAppSettingsPreferencesRoute
   AccountAppSettingsTimeRoute: typeof AccountAppSettingsTimeRoute
@@ -1172,6 +1193,7 @@ const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
   AccountAppSettingsAccountRoute: AccountAppSettingsAccountRoute,
   AccountAppSettingsCurrencyRoute: AccountAppSettingsCurrencyRoute,
   AccountAppSettingsDataRoute: AccountAppSettingsDataRoute,
+  AccountAppSettingsInviteRoute: AccountAppSettingsInviteRoute,
   AccountAppSettingsPlanRoute: AccountAppSettingsPlanRoute,
   AccountAppSettingsPreferencesRoute: AccountAppSettingsPreferencesRoute,
   AccountAppSettingsTimeRoute: AccountAppSettingsTimeRoute,
