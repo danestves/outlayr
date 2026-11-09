@@ -1,12 +1,12 @@
 import { accountBalances } from "@outlayr/backend/confect/ledgerView";
 import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
-import { localDate } from "@outlayr/backend/confect/mcpLedger";
 import { toAccountKind } from "@outlayr/money/account-kind";
 import type { AccountKind } from "@outlayr/money/account-kind";
 import { restate } from "@outlayr/money/account-overview";
 import { decimalsFor } from "@outlayr/money/currency";
 import { utcDateString } from "@outlayr/money/dates";
 import { planStanding } from "@outlayr/money/installments";
+import { isoDay } from "@outlayr/money/ledger-zone";
 import { roundMoney } from "@outlayr/money/round";
 import { convertUsdSum, valueDatedRowsIn } from "@outlayr/money/valuation";
 
@@ -70,7 +70,7 @@ export function accountRows(ledger: Ledger, overview: Overview): AccountRow[] {
 
 /** A zero opening balance has no real date, so history starts at the first movement when that is earlier. */
 function openedOn(ledger: Ledger, row: Ledger["books"]["accounts"][number]) {
-    const day = localDate(row.initialBalanceDate, ledger.offsetAt(row.initialBalanceDate));
+    const day = isoDay(row.initialBalanceDate, ledger.offsetAt(row.initialBalanceDate));
     const [first] = row.initialBalance === 0 ? flowsOf(ledger, row.localId) : [];
     return first && first.day < day ? first.day : day;
 }
@@ -175,7 +175,7 @@ export function archivedRows(ledger: Ledger): ArchivedRow[] {
             saw(move.toAccountId, move.date);
         }
     }
-    const dayOf = (at: number) => localDate(at, ledger.offsetAt(at));
+    const dayOf = (at: number) => isoDay(at, ledger.offsetAt(at));
     return shelved
         .toSorted((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0))
         .map((row) => {
@@ -224,7 +224,7 @@ export function checkedAge(checkedAt: number | null, ledger: Pick<Ledger, "offse
     if (checkedAt === null) {
         return { state: "never" };
     }
-    const days = daysBetween(localDate(checkedAt, ledger.offsetAt(checkedAt)), ledger.today);
+    const days = daysBetween(isoDay(checkedAt, ledger.offsetAt(checkedAt)), ledger.today);
     if (days <= 0) {
         return { state: "today" };
     }
@@ -393,7 +393,7 @@ export function planRows(ledger: Ledger): PlanRow[] {
         return kept;
     }
     const { accounts, installmentPlans, installments, outsidePayments, transactions, transfers } = ledger.books;
-    const dayOf = (at: number) => localDate(at, ledger.offsetAt(at));
+    const dayOf = (at: number) => isoDay(at, ledger.offsetAt(at));
     const plans = installmentPlans.flatMap((plan): PlanRow[] => {
         const account = accounts.find((row) => row.localId === plan.accountId && row.deletedAt === null);
         if (plan.deletedAt !== null || !account) {

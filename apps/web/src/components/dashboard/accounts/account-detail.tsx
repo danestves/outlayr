@@ -24,6 +24,7 @@ import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
 import { entryLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { wallNoon } from "@outlayr/money/ledger-zone";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
@@ -112,7 +113,7 @@ function useMonthYear() {
     const { locale } = useLocale();
     return useMemo(() => {
         const format = new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC", year: "numeric" });
-        return (day: string) => format.format(Date.parse(`${day}T12:00:00Z`)).replace(".", "");
+        return (day: string) => format.format(wallNoon(day)).replace(".", "");
     }, [locale]);
 }
 

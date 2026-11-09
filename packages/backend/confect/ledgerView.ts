@@ -6,6 +6,19 @@ import { spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { decimalsFor } from "@outlayr/money/currency";
 import { utcDateString } from "@outlayr/money/dates";
+import {
+    DAY_MS,
+    fixedOffset,
+    fromWall,
+    isoDay,
+    monthWindow,
+    utcDayStart,
+    utcOffsetOf,
+    wall,
+    wallDay,
+    zoneOffsets,
+} from "@outlayr/money/ledger-zone";
+import type { OffsetAt } from "@outlayr/money/ledger-zone";
 import { landingDate, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";
 import { monthlySubscriptionCost } from "@outlayr/money/subscription-cost";
@@ -15,25 +28,8 @@ import type { RateTable } from "@outlayr/money/valuation";
 import type { Doc } from "../convex/_generated/dataModel";
 import { accountLook, buildLog, entryLook, placed } from "./lib/ledgerLog";
 import type { EntrySource } from "./lib/ledgerLog";
-import {
-    budgetStanding,
-    bySeq,
-    customName,
-    DAY_MS,
-    entryKind,
-    fixedOffset,
-    fromWall,
-    groupCells,
-    localDate,
-    MAX_ENTRIES,
-    monthWindow,
-    utcDayStart,
-    utcOffsetOf,
-    wall,
-    wallDay,
-    zoneOffsets,
-} from "./mcpLedger";
-import type { LegEntry, OffsetAt } from "./mcpLedger";
+import { budgetStanding, bySeq, customName, entryKind, groupCells, MAX_ENTRIES } from "./mcpLedger";
+import type { LegEntry } from "./mcpLedger";
 
 type Transaction = Doc<"transactions">;
 type Transfer = Doc<"transfers">;
@@ -134,7 +130,7 @@ export function recentTransactions(
                 amount: row.amount,
                 category: category?.name ?? null,
                 currency: row.currency,
-                date: localDate(row.day, offsetMs),
+                date: isoDay(row.day, offsetMs),
                 emoji: row.emoji ?? category?.emoji ?? null,
                 id: row.localId,
                 imageKey: row.imageKey,
@@ -183,7 +179,7 @@ export function spendingSummary(
             continue;
         }
         spent += value;
-        const day = localDate(row.date, offsetAt(row.date));
+        const day = isoDay(row.date, offsetAt(row.date));
         byDay.set(day, (byDay.get(day) ?? 0) + value);
         const category = row.categoryId ? categoryById.get(row.categoryId) : undefined;
         const top = category?.parentId ? categoryById.get(category.parentId) : category;
@@ -192,7 +188,7 @@ export function spendingSummary(
     }
     return {
         currency,
-        from: localDate(window.start, offsetMs),
+        from: isoDay(window.start, offsetMs),
         income: roundMoney(income, decimals),
         spent: roundMoney(spent, decimals),
         spentByCategory: [...byCategory]
@@ -201,8 +197,8 @@ export function spendingSummary(
         spentByDay: [...byDay]
             .map(([date, amount]) => ({ amount: roundMoney(amount, decimals), date }))
             .sort((a, b) => a.date.localeCompare(b.date)),
-        to: localDate(window.end - 1, offsetMs),
-        today: localDate(now, offsetMs),
+        to: isoDay(window.end - 1, offsetMs),
+        today: isoDay(now, offsetMs),
     };
 }
 
@@ -305,7 +301,7 @@ export function accountBalances(
                 account,
                 groupCells(
                     ledger.get(account.localId) ?? [],
-                    (entry) => `${entry.leg}|${localDate(entry.date.getTime(), offsetAt(entry.date.getTime()))}`
+                    (entry) => `${entry.leg}|${isoDay(entry.date.getTime(), offsetAt(entry.date.getTime()))}`
                 ),
                 rates
             );
@@ -462,8 +458,7 @@ export function upcomingCharges(
             amount: row.amount,
             category: row.categoryId ? (categories.get(row.categoryId)?.name ?? null) : null,
             currency: row.currency,
-            endsOn:
-                row.recurringEndDate === null ? null : localDate(row.recurringEndDate, offsetAt(row.recurringEndDate)),
+            endsOn: row.recurringEndDate === null ? null : isoDay(row.recurringEndDate, offsetAt(row.recurringEndDate)),
             kind: entryKind(row.income),
             nextCharge: wallDay(landsOn),
             note: row.note,
@@ -531,7 +526,7 @@ export function nextChangeAt(
     },
     { now, offsetAt }: LedgerClock
 ) {
-    const tomorrow = Date.parse(`${localDate(now, offsetAt(now))}T00:00:00Z`) + DAY_MS;
+    const tomorrow = Date.parse(`${isoDay(now, offsetAt(now))}T00:00:00Z`) + DAY_MS;
     let next = fromWall(tomorrow, offsetAt);
     for (const row of [...books.transactions, ...books.transfers, ...books.outsidePayments, ...books.outsideMoves]) {
         if (row.deletedAt === null && row.date > now && row.date < next) {
@@ -596,7 +591,7 @@ export function ledgerOverview(books: LedgerBooks, now: number) {
             categories: new Map(live(books.categories).map((row) => [row.localId, row])),
             // Not the stored `day`: that is midnight in the zone the row was saved in, which can split a day.
             clock: {
-                dayOf: (row) => localDate(row.date, offsetAt(row.date)),
+                dayOf: (row) => isoDay(row.date, offsetAt(row.date)),
                 timeOf: (row) => new Date(row.date + offsetAt(row.date)).toISOString().slice(11, 16),
             },
             currency,

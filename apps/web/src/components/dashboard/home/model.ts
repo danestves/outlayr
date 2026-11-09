@@ -1,3 +1,4 @@
+import { wallNoon } from "@outlayr/money/ledger-zone";
 import type { DayLevel } from "panelui-web/day-grid";
 
 import { change, spendSeries } from "../../../lib/dashboard-series";
@@ -110,7 +111,7 @@ export function everyDay(ledger: Ledger, period: Period, scope: Scope, categorie
         average,
         cells,
         entries: foldFees(rows).length,
-        lead: (new Date(`${period.from}T12:00:00Z`).getUTCDay() - ledger.firstWeekday + 8) % 7,
+        lead: (new Date(wallNoon(period.from)).getUTCDay() - ledger.firstWeekday + 8) % 7,
         measured: cells.slice(0, elapsed),
         runnerUp: second ?? null,
         top: first ?? null,

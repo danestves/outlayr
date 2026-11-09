@@ -1,7 +1,7 @@
-import { fromWall } from "@outlayr/backend/confect/mcpLedger";
 import { isPerson } from "@outlayr/money/account-kind";
 import { decimalsFor } from "@outlayr/money/currency";
 import { utcDateString } from "@outlayr/money/dates";
+import { filedOn } from "@outlayr/money/ledger-zone";
 import { roundMoney } from "@outlayr/money/round";
 import { transferLegs } from "@outlayr/money/transfer-reconcile";
 import { chargedFees, feeColumns, freezeTransfer, legColumns, transferRejection } from "@outlayr/money/transfer-row";
@@ -235,18 +235,9 @@ export function newTransferProblem(ledger: Ledger, values: NewTransferValues): N
     return unpriced ? "rateMissing" : null;
 }
 
-function filedOn(offsetAt: Ledger["offsetAt"], date: number) {
-    const wall = new Date(date + offsetAt(date));
-    const [year, month, day] = [wall.getUTCFullYear(), wall.getUTCMonth(), wall.getUTCDate()];
-    return {
-        day: new Date(fromWall(Date.UTC(year, month, day), offsetAt)),
-        month: new Date(fromWall(Date.UTC(year, month, 1), offsetAt)),
-    };
-}
-
 export function createdTransfer(ledger: Ledger, id: string, input: TransferInput, at: number): CommitRow[] {
     const { feesUsd, fromAmountUsd, toAmountUsd } = Effect.runSync(freezeTransfer(ratesLookup(ledger.books), input));
-    const filed = filedOn(ledger.offsetAt, input.date.getTime());
+    const filed = filedOn(input.date.getTime(), ledger.offsetAt);
     const now = new Date(at);
     const legs = legColumns(input, fromAmountUsd, toAmountUsd, now);
     const moved = nextRow(
@@ -256,8 +247,8 @@ export function createdTransfer(ledger: Ledger, id: string, input: TransferInput
             ...legs,
             date: input.date.getTime(),
             dateCreated: at,
-            day: filed.day.getTime(),
-            month: filed.month.getTime(),
+            day: filed.day,
+            month: filed.month,
             updatedAt: at,
         },
         at

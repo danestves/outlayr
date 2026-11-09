@@ -1,6 +1,7 @@
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
-import { budgetStanding, wall } from "@outlayr/backend/confect/mcpLedger";
+import { budgetStanding } from "@outlayr/backend/confect/mcpLedger";
 import { spentForCategory } from "@outlayr/money/budget-spent";
+import { wall } from "@outlayr/money/ledger-zone";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import type { AreaChartDatum } from "panelui-web/area-chart";
 

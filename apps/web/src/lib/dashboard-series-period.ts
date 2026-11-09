@@ -1,5 +1,5 @@
-import { monthWindow } from "@outlayr/backend/confect/mcpLedger";
 import { utcDateString } from "@outlayr/money/dates";
+import { monthWindow, wallMidnight } from "@outlayr/money/ledger-zone";
 
 import { addDays, daysBetween } from "./ledger";
 
@@ -15,14 +15,14 @@ export interface Period {
 export const isPeriodKey = (value: string) => PERIOD_KEY.test(value);
 
 export function periodOf(key: string, firstDayOfMonth: number): Period {
-    const { end, start } = monthWindow(Date.parse(`${key}-28T00:00:00Z`), 0, firstDayOfMonth, 0);
+    const { end, start } = monthWindow(wallMidnight(`${key}-28`), 0, firstDayOfMonth, 0);
     const from = utcDateString(start);
     const to = utcDateString(end - 1);
     return { days: daysBetween(from, to) + 1, from, key, to };
 }
 
 export function periodKeyOf(day: string, firstDayOfMonth: number) {
-    const { start } = monthWindow(Date.parse(`${day}T00:00:00Z`), 0, firstDayOfMonth, 0);
+    const { start } = monthWindow(wallMidnight(day), 0, firstDayOfMonth, 0);
     return utcDateString(start).slice(0, 7);
 }
 

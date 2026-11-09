@@ -1,3 +1,4 @@
+import { wallNoon } from "@outlayr/money/ledger-zone";
 import { useMemo } from "react";
 import type { CSSProperties } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -6,8 +7,6 @@ import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import type { LedgerCategory } from "@/lib/dashboard-series-ledger";
 import type { Period } from "@/lib/dashboard-series-period";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
-
-const noonOf = (day: string) => Date.parse(`${day}T12:00:00Z`);
 
 const WEEKDAY_LEAD = /^([^\s,]+),?\s/;
 
@@ -36,10 +35,10 @@ export function useDateFormat() {
         });
         const month = new Intl.DateTimeFormat(date, { month: "long", timeZone: "UTC" });
         return {
-            day: (day: string) => short.format(noonOf(day)),
-            full: (day: string) => withYear.format(noonOf(day)),
-            month: (key: string) => month.format(noonOf(`${key}-15`)),
-            weekday: (day: string) => withWeekday.format(noonOf(day)).replace(WEEKDAY_LEAD, "$1, "),
+            day: (day: string) => short.format(wallNoon(day)),
+            full: (day: string) => withYear.format(wallNoon(day)),
+            month: (key: string) => month.format(wallNoon(`${key}-15`)),
+            weekday: (day: string) => withWeekday.format(wallNoon(day)).replace(WEEKDAY_LEAD, "$1, "),
         };
     }, [date]);
 }

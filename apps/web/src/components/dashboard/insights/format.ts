@@ -1,3 +1,4 @@
+import { wallNoon } from "@outlayr/money/ledger-zone";
 import { useMemo } from "react";
 import { useLocale } from "react-intlayer";
 
@@ -6,8 +7,6 @@ import type { Period } from "@/lib/dashboard-series-period";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
-
-const noon = (day: string) => Date.parse(`${day}T12:00:00Z`);
 
 export function useInsightsFormat({
     currency,
@@ -28,20 +27,20 @@ export function useInsightsFormat({
             notation: "compact",
             style: "currency",
         });
-        const day = (value: string) => dayFormat.format(noon(value));
+        const day = (value: string) => dayFormat.format(wallNoon(value));
         return {
             amount: (value: number) => money(value, currency),
             compact: (value: number) => compact.format(value).replace(/K$/, "k"),
             day,
             signed: (value: number) => money(value, currency, "always"),
             signedWhole: (value: number) => moneyIn(value, currency, "always", false),
-            month: (key: string) => shortMonth.format(noon(`${key}-15`)),
+            month: (key: string) => shortMonth.format(wallNoon(`${key}-15`)),
             periodName: (period: Period) => {
                 if (firstDayOfMonth !== 1) {
                     return `${day(period.from)} - ${day(period.to)}`;
                 }
                 const sameYear = period.from.slice(0, 4) === today.slice(0, 4);
-                return (sameYear ? longMonth : longMonthYear).format(noon(period.from));
+                return (sameYear ? longMonth : longMonthYear).format(wallNoon(period.from));
             },
         };
     }, [currency, date, firstDayOfMonth, money, today]);

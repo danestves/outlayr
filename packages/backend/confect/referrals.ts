@@ -7,6 +7,7 @@ import {
     REFERRAL_DAYS_TO_EARN,
     REFERRAL_YEARLY_CAP,
 } from "@outlayr/money/contract";
+import { DAY_MS } from "@outlayr/money/ledger-zone";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -15,7 +16,6 @@ import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import { DatabaseReader, DatabaseWriter, MutationCtx, Scheduler } from "./_generated/services";
 import type referrals from "./_generated/tables/referrals";
-import { DAY_MS } from "./mcpLedger";
 import { revenuecat } from "./revenuecat";
 
 export const NEW_ACCOUNT_MS = 7 * DAY_MS;

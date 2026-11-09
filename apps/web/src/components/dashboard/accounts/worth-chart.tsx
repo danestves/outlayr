@@ -1,3 +1,4 @@
+import { wallNoon } from "@outlayr/money/ledger-zone";
 import { Plot } from "panelui-web/plot";
 import { useMemo } from "react";
 import { useLocale } from "react-intlayer";
@@ -32,7 +33,7 @@ export function useMonthShort() {
             month: "short",
             timeZone: "UTC",
         });
-        return (day: string) => short.format(Date.parse(`${day}T12:00:00Z`)).replace(".", "");
+        return (day: string) => short.format(wallNoon(day)).replace(".", "");
     }, [date]);
 }
 
