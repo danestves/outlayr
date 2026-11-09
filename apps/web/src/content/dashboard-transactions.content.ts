@@ -33,6 +33,22 @@ const dashboardTransactions = {
                     pt: "Selecionar {{name}}",
                 })
             ),
+            updated: insert(
+                t({
+                    en: "{{count}} updated",
+                    es: "{{count}} actualizados",
+                    fr: "{{count}} modifiées",
+                    pt: "{{count}} atualizados",
+                })
+            ),
+            updatedSkipped: insert(
+                t({
+                    en: "{{count}} updated, {{skipped}} unchanged",
+                    es: "{{count}} actualizados, {{skipped}} sin cambios",
+                    fr: "{{count}} modifiées, {{skipped}} inchangées",
+                    pt: "{{count}} atualizados, {{skipped}} sem alteração",
+                })
+            ),
         },
         clearFilters: t({ en: "Clear filters", es: "Quitar filtros", fr: "Effacer les filtres", pt: "Limpar filtros" }),
         csv: {

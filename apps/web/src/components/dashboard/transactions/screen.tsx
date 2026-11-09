@@ -25,6 +25,7 @@ import { useCatalog } from "../home/catalog";
 import { titled } from "../home/format";
 import type { FoldedRow, TransactionSort } from "../home/rows";
 import { QuietTable } from "../home/setup";
+import { BulkActions } from "./bulk-actions";
 import { EntrySheet } from "./entry-sheet";
 import { LedgerTable } from "./ledger-table";
 import { ENTRY_TYPES, csvOf, exportLines, linesOf, queryRows, rangeOf, tally } from "./model";
@@ -397,6 +398,11 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                                 {money(pickedTotals.in - pickedTotals.out, ledger.currency, "always")}
                             </span>
                             <Toolbar.Separator />
+                            <BulkActions
+                                className={BULK_ACTION}
+                                ids={picked.map((row) => row.id)}
+                                kinds={picked.flatMap((row) => ("income" in row ? [row.income] : []))}
+                            />
                             <Toolbar.Button className={BULK_ACTION} onClick={() => exportCsv(picked)}>
                                 <HugeiconsIcon icon={Download01Icon} size={14} />
                                 {words.export}

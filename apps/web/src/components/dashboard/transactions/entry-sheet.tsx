@@ -26,6 +26,7 @@ import { figureOf } from "../home/rows";
 import type { FoldedRow } from "../home/rows";
 import { useWide } from "../insights/use-wide";
 import { EntryEditor, useRepeatNames } from "./entry-form";
+import { isFinanced } from "./entry-writes";
 import { installmentTags, transferMoves } from "./model";
 import { TransferEditor } from "./transfer-editor";
 import { useWeekday } from "./use-day-title";
@@ -210,10 +211,7 @@ export function EntrySheet({ onClose, onDelete, onStep, row, start }: EntrySheet
 // Fees follow their purchase, and installment rows follow their plan's rules, which this form does not know yet.
 export function editableDoc(ledger: Ledger, row: Exclude<FoldedRow, { fromId: string }>) {
     const doc = ledger.books.transactions.find((each) => each.localId === row.id);
-    const financed =
-        doc?.installmentId != null ||
-        ledger.books.installmentPlans.some((plan) => plan.deletedAt === null && plan.transactionId === row.id);
-    return row.feeFor !== null || financed ? undefined : doc;
+    return row.feeFor !== null || (doc && isFinanced(ledger.books, doc)) ? undefined : doc;
 }
 
 function ReadTop({

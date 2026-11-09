@@ -186,7 +186,7 @@ export function useRepeatNames() {
 }
 
 /** Parents, each with its children under it. */
-function useCategoryOptions(ledger: Ledger, income: boolean): PickOption[] {
+export function useCategoryOptions(ledger: Ledger, income: boolean): PickOption[] {
     const categoryName = useCategoryName();
     const live = ledger.books.categories
         .filter((row) => row.deletedAt === null && row.income === income)
@@ -496,7 +496,7 @@ function EntryFields({
     );
 }
 
-const merchantOf = (ledger: Ledger, values: EntryValues) =>
+export const merchantOf = (ledger: Ledger, values: EntryValues) =>
     values.note.trim() || (ledger.books.categories.find((row) => row.localId === values.categoryId)?.name ?? "");
 
 /** Add entry. It closes at once: the row shows from the local copy, and a push that fails says so in a toast. */
