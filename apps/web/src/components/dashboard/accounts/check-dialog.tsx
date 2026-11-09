@@ -1,7 +1,7 @@
+import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
-import { RiArrowLeftLine } from "@remixicon/react";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Field } from "panelui-web/field";
@@ -16,6 +16,7 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { AmountInput, amountText, Fact, FlowDialog } from "./fields";
 import { useLedgerDb, useAccountFlows } from "./flows";
+import { Glyph } from "./glyph";
 import { accountFacts } from "./model";
 
 type Account = LedgerBooks["accounts"][number];
@@ -100,7 +101,7 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
                     size="icon-sm"
                     variant="ghost"
                 >
-                    <RiArrowLeftLine size={18} />
+                    <Glyph icon={ArrowLeft02Icon} size={18} />
                 </Button>
             }
             label={flows.checkTitle({ name })}
@@ -132,7 +133,7 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
             </Dialog.Body>
             <Dialog.Footer>
                 {failed ? <span className="text-destructive mr-auto text-[13px]">{flows.saveFailed}</span> : null}
-                <Button onClick={() => setDifferent(false)} variant="outline">
+                <Button className="flex-none! px-6" onClick={() => setDifferent(false)} variant="outline">
                     {flows.checkBack}
                 </Button>
                 <Button onClick={save}>

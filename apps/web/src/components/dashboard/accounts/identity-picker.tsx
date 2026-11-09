@@ -1,8 +1,10 @@
 import { Popover } from "@base-ui/react/popover";
+import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
+import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { searchInstitutions } from "@outlayr/money/institution-map";
-import { RiCheckLine, RiPencilLine, RiSearch2Line } from "@remixicon/react";
 import { useRouteContext } from "@tanstack/react-router";
 import { Input } from "panelui-web/input";
 import { useState } from "react";
@@ -10,6 +12,8 @@ import type { ChangeEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
+
+import { Glyph } from "./glyph";
 
 export interface Identity {
     color: string | null;
@@ -210,7 +214,7 @@ export function IdentityPicker({
             <Popover.Trigger aria-label={label} className="dash-ib" type="button">
                 <IdentityFace identity={identity} initials={initials} />
                 <u>
-                    <RiPencilLine size={12} />
+                    <Glyph icon={PencilEdit01Icon} size={12} />
                 </u>
             </Popover.Trigger>
             <Popover.Portal>
@@ -232,7 +236,7 @@ export function IdentityPicker({
                             <>
                                 <Input.Group className="mt-2.5">
                                     <Input.Addon>
-                                        <RiSearch2Line size={16} />
+                                        <Glyph icon={Search01Icon} size={16} />
                                     </Input.Addon>
                                     <Input
                                         aria-label={flows.logoSearch.value}
@@ -259,7 +263,8 @@ export function IdentityPicker({
                                                 />
                                                 <span className="truncate">{name}</span>
                                                 {chosen ? (
-                                                    <RiCheckLine
+                                                    <Glyph
+                                                        icon={Tick02Icon}
                                                         className="text-app-tint ml-auto flex-none"
                                                         size={16}
                                                     />

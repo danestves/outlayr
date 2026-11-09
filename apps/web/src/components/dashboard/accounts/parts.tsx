@@ -1,16 +1,14 @@
-import type { RemixiconComponentType } from "@remixicon/react";
-import {
-    RiArchiveLine,
-    RiArrowRightUpLine,
-    RiCheckboxCircleLine,
-    RiCheckLine,
-    RiDeleteBin6Line,
-    RiDragMove2Line,
-    RiMore2Fill,
-    RiPencilLine,
-    RiSortAsc,
-    RiSortDesc,
-} from "@remixicon/react";
+import Archive02Icon from "@hugeicons/core-free-icons/Archive02Icon";
+import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
+import CheckmarkCircle02Icon from "@hugeicons/core-free-icons/CheckmarkCircle02Icon";
+import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
+import DragDropIcon from "@hugeicons/core-free-icons/DragDropIcon";
+import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
+import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
+import SortByUp01Icon from "@hugeicons/core-free-icons/SortByUp01Icon";
+import SortingDownIcon from "@hugeicons/core-free-icons/SortingDownIcon";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
+import type { IconSvgElement } from "@hugeicons/react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Kpi } from "panelui-web/kpi";
@@ -26,6 +24,7 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
 
 import { useAccountFlows } from "./flows";
+import { Glyph } from "./glyph";
 import type { AccountRow, AccountSort, CheckedAge } from "./model";
 import { checkedAge } from "./model";
 
@@ -90,7 +89,7 @@ export function Meter({ className = "", max, value }: { className?: string; max:
 export function KpiCell({
     children,
     color,
-    icon: Icon,
+    icon,
     label,
     quiet = false,
     tone = "",
@@ -98,7 +97,7 @@ export function KpiCell({
 }: {
     children?: ReactNode;
     color: string;
-    icon?: RemixiconComponentType;
+    icon?: IconSvgElement;
     label: ReactNode;
     quiet?: boolean;
     /** A text colour class for the figure. */
@@ -106,28 +105,38 @@ export function KpiCell({
     value: string;
 }) {
     return (
-        <Kpi>
-            <Kpi.Header>
-                {Icon ? (
-                    <Kpi.Icon style={{ background: `color-mix(in oklab, ${color} 16%, transparent)`, color }}>
-                        <Icon />
+        <Kpi className="gap-0">
+            <Kpi.Header className={icon ? "min-h-7" : ""}>
+                {icon ? (
+                    <Kpi.Icon
+                        className="size-7 rounded-[10px]"
+                        style={{ background: `color-mix(in oklab, ${color} 16%, transparent)`, color }}
+                    >
+                        <Glyph icon={icon} />
                     </Kpi.Icon>
                 ) : null}
-                <Kpi.Title>{label}</Kpi.Title>
+                <Kpi.Title className="text-[13px]">{label}</Kpi.Title>
             </Kpi.Header>
             <Kpi.Value
-                className={`dash-figure truncate leading-8 font-semibold tracking-[-0.04em] ${quiet ? "text-muted-foreground" : ""} ${tone}`}
+                className={`dash-figure ${icon ? "mt-2" : "mt-1.5"} truncate leading-8 font-semibold tracking-[-0.04em] ${quiet ? "text-muted-foreground" : ""} ${tone}`}
             >
                 {value}
             </Kpi.Value>
-            {quiet ? null : <Kpi.Footer className="h-7 justify-between">{children}</Kpi.Footer>}
+            {quiet ? null : (
+                <Kpi.Footer className={`${icon ? "mt-[3px] h-7" : "mt-1.5 h-[22px]"} justify-between`}>
+                    {children}
+                </Kpi.Footer>
+            )}
         </Kpi>
     );
 }
 
 export function KpiBand({ children }: { children: ReactNode }) {
     return (
-        <Kpi.Group className={`rounded-2xl ${TWO_BY_TWO} ${STACKED}`} surface>
+        <Kpi.Group
+            className={`rounded-3xl lg:grid lg:grid-cols-4 lg:*:not-first:ps-5! ${TWO_BY_TWO} ${STACKED}`}
+            surface
+        >
             {children}
         </Kpi.Group>
     );
@@ -181,15 +190,17 @@ export function AccountCell({ note, row }: { note?: ReactNode; row: AccountRow }
 export function PhoneAction({
     children,
     className,
+    size,
     variant = "outline",
 }: {
     children: ReactNode;
     className?: string;
+    size?: "sm";
     variant?: "default" | "outline";
 }) {
     const { phoneHint } = useIntlayer("dashboard-home").setup;
     return (
-        <Button aria-disabled className={className} title={phoneHint.value} variant={variant}>
+        <Button aria-disabled className={className} size={size} title={phoneHint.value} variant={variant}>
             {children}
         </Button>
     );
@@ -214,28 +225,28 @@ export function RowMenu({ row }: { row: AccountRow }) {
                 aria-label={actions.more({ name: row.name }).value}
                 render={<Button className="text-muted-foreground -mr-1" size="icon-sm" variant="ghost" />}
             >
-                <RiMore2Fill size={17} />
+                <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
             <Menu.Content align="end" className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
                 <Menu.Item onClick={() => navigate({ params: { accountId: row.id }, to: "/app/accounts/$accountId" })}>
-                    <RiArrowRightUpLine size={16} />
+                    <Glyph icon={ArrowUpRight01Icon} size={16} />
                     {actions.open}
                 </Menu.Item>
                 <Menu.Item onClick={() => open({ accountId: row.id, kind: "edit" })}>
-                    <RiPencilLine size={16} />
+                    <Glyph icon={PencilEdit01Icon} size={16} />
                     {actions.edit}
                 </Menu.Item>
                 <Menu.Item onClick={() => open({ accountId: row.id, kind: "check" })}>
-                    <RiCheckboxCircleLine size={16} />
+                    <Glyph icon={CheckmarkCircle02Icon} size={16} />
                     {actions.check}
                 </Menu.Item>
                 <Menu.Item onClick={() => open({ accountId: row.id, kind: "archive" })}>
-                    <RiArchiveLine size={16} />
+                    <Glyph icon={Archive02Icon} size={16} />
                     {flows.archive}
                 </Menu.Item>
                 <Menu.Separator />
                 <Menu.Item variant="destructive" onClick={() => open({ accountId: row.id, kind: "delete" })}>
-                    <RiDeleteBin6Line size={16} />
+                    <Glyph icon={Delete02Icon} size={16} />
                     {actions.delete}
                 </Menu.Item>
             </Menu.Content>
@@ -246,29 +257,30 @@ export function RowMenu({ row }: { row: AccountRow }) {
 export function SortMenu({ onSort, sort }: { onSort: (sort: AccountSort) => void; sort: AccountSort }) {
     const { actions } = useIntlayer("dashboard-accounts");
     const navigate = useNavigate();
-    const Icon = sort === "order" ? RiSortDesc : RiSortAsc;
-    const choice = (value: AccountSort, icon: RemixiconComponentType, label: ReactNode) => {
-        const Glyph = icon;
-        return (
-            <Menu.Item onClick={() => onSort(value)}>
-                <Glyph size={16} />
-                {label}
-                <RiCheckLine className={`text-app-tint! ml-auto ${sort === value ? "" : "invisible"}`} size={16} />
-            </Menu.Item>
-        );
-    };
+    const current = sort === "order" ? SortingDownIcon : SortByUp01Icon;
+    const choice = (value: AccountSort, icon: IconSvgElement, label: ReactNode) => (
+        <Menu.Item onClick={() => onSort(value)}>
+            <Glyph icon={icon} size={16} />
+            {label}
+            <Glyph
+                icon={Tick02Icon}
+                className={`text-app-tint! ml-auto ${sort === value ? "" : "invisible"}`}
+                size={16}
+            />
+        </Menu.Item>
+    );
     return (
         <Menu>
             <Menu.Trigger render={<Button variant="outline" />}>
-                <Icon />
+                <Glyph icon={current} />
                 {sort === "order" ? actions.yourOrder : actions.byBalance}
             </Menu.Trigger>
             <Menu.Content align="end" className="app-shell ph-no-capture w-[188px]" sideOffset={4}>
-                {choice("order", RiSortDesc, actions.yourOrder)}
-                {choice("balance", RiSortAsc, actions.byBalance)}
+                {choice("order", SortingDownIcon, actions.yourOrder)}
+                {choice("balance", SortByUp01Icon, actions.byBalance)}
                 <Menu.Separator />
                 <Menu.Item onClick={() => navigate({ to: "/app/accounts/reorder" })}>
-                    <RiDragMove2Line size={16} />
+                    <Glyph icon={DragDropIcon} size={16} />
                     {actions.reorder}
                 </Menu.Item>
             </Menu.Content>

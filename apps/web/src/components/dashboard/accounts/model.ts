@@ -758,10 +758,12 @@ export function accountSeries(ledger: Ledger, accountId: string, days: readonly 
 export type EntryKind = "entry" | "inbound" | "outbound";
 
 export interface AccountEntry {
+    adjustment: boolean;
     at: number;
     categoryId: string | null;
     day: string;
     id: string;
+    imageKey: string | null;
     kind: EntryKind;
     /** Signed, in the main currency as booked; null for an outside payment, which keeps no booked rate. */
     main: number | null;
@@ -800,6 +802,10 @@ function receivedOf(ledger: Ledger) {
 export function accountEntries(ledger: Ledger, accountId: string, from: string, to: string): AccountEntry[] {
     const rows = new Map(ledger.rows.map((row) => [row.id, row]));
     const transfers = new Map(ledger.transfers.map((transfer) => [transfer.id, transfer]));
+    const images = new Map(ledger.books.transactions.map((row) => [row.localId, row.imageKey]));
+    const adjustments = new Set(
+        ledger.books.outsideMoves.flatMap((row) => (row.adjustment === true ? [row.localId] : []))
+    );
     return flowsOf(ledger, accountId)
         .filter((flow) => flow.day >= from && flow.day <= to)
         .map((flow): AccountEntry => {
@@ -811,10 +817,12 @@ export function accountEntries(ledger: Ledger, accountId: string, from: string, 
                 other = flow.leg === "outbound" ? transfer.toId : transfer.fromId;
             }
             return {
+                adjustment: adjustments.has(flow.id),
                 at: flow.at,
                 categoryId: row?.topId ?? null,
                 day: flow.day,
                 id: `${flow.leg}-${flow.id}`,
+                imageKey: images.get(flow.id) ?? null,
                 kind: flow.leg === "flow" ? "entry" : flow.leg,
                 main:
                     booked === undefined
@@ -835,15 +843,16 @@ export interface CategoryShare {
     value: number;
 }
 
-/** Spending charged to this account by top category, in the main currency, largest first. */
 export function spentByCategory(ledger: Ledger, accountId: string, from: string, to: string): CategoryShare[] {
+    const rows = new Map(ledger.rows.map((row) => [row.id, row]));
     const totals = new Map<string, number>();
-    for (const row of ledger.rows) {
-        if (row.accountId === accountId && !row.income && row.feeFor === null && row.day >= from && row.day <= to) {
-            totals.set(row.topId, (totals.get(row.topId) ?? 0) + row.amount);
+    for (const flow of flowsOf(ledger, accountId)) {
+        const row = rows.get(flow.id);
+        if (flow.leg === "flow" && row && !row.income && row.feeFor === null && flow.day >= from && flow.day <= to) {
+            totals.set(row.topId, (totals.get(row.topId) ?? 0) - flow.value);
         }
     }
-    const decimals = decimalsFor(ledger.currency);
+    const decimals = decimalsFor(ledger.accounts.get(accountId)?.currency ?? ledger.currency);
     return [...totals]
         .flatMap(([id, value]) => {
             const category = ledger.categories.get(id);
@@ -858,4 +867,22 @@ export function onlyCounterpart(entries: readonly Pick<AccountEntry, "kind" | "o
     const [first] = moves;
     const same = first && moves.every((entry) => entry.other === first.other && entry.kind === first.kind);
     return same && first.other ? { id: first.other, outbound: first.kind === "outbound" } : null;
+}
+
+const CHART_STEPS = 3;
+const WIDEST = 20;
+const NICE = [1, 2, 4, 5, 10, WIDEST];
+
+/** Three even steps that hug the data, so a small change still reads as a slope. */
+export function niceDomain(values: readonly number[]): [number, number] {
+    const low = Math.min(...values);
+    const high = Math.max(...values);
+    const raw = (high - low || Math.abs(high) || 1) / CHART_STEPS;
+    const power = 10 ** Math.floor(Math.log10(raw));
+    const step = NICE.map((each) => each * power).find(
+        (each) => each >= raw && Math.floor(low / each) * each + each * CHART_STEPS >= high
+    );
+    const size = step ?? WIDEST * power;
+    const bottom = Math.floor(low / size) * size;
+    return [bottom, bottom + size * CHART_STEPS];
 }

@@ -1,40 +1,43 @@
-import {
-    RiAddLine,
-    RiArchiveLine,
-    RiArrowLeftDownLine,
-    RiArrowLeftLine,
-    RiArrowLeftRightLine,
-    RiArrowRightUpLine,
-    RiBankCardLine,
-    RiCalendarLine,
-    RiCheckboxCircleLine,
-    RiCheckLine,
-    RiDeleteBin6Line,
-    RiErrorWarningLine,
-    RiExchangeDollarLine,
-    RiFileList3Line,
-    RiMore2Fill,
-    RiPencilLine,
-    RiPriceTag3Line,
-    RiSafe2Line,
-    RiUpload2Line,
-    RiWallet3Line,
-} from "@remixicon/react";
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import AlertCircleIcon from "@hugeicons/core-free-icons/AlertCircleIcon";
+import Archive02Icon from "@hugeicons/core-free-icons/Archive02Icon";
+import ArrowDataTransferHorizontalIcon from "@hugeicons/core-free-icons/ArrowDataTransferHorizontalIcon";
+import ArrowDownLeft01Icon from "@hugeicons/core-free-icons/ArrowDownLeft01Icon";
+import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
+import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
+import BalanceScaleIcon from "@hugeicons/core-free-icons/BalanceScaleIcon";
+import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
+import CheckmarkCircle02Icon from "@hugeicons/core-free-icons/CheckmarkCircle02Icon";
+import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
+import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
+import Flag01Icon from "@hugeicons/core-free-icons/Flag01Icon";
+import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
+import Invoice01Icon from "@hugeicons/core-free-icons/Invoice01Icon";
+import MoneyExchange01Icon from "@hugeicons/core-free-icons/MoneyExchange01Icon";
+import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
+import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
+import SafeIcon from "@hugeicons/core-free-icons/SafeIcon";
+import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
+import Upload01Icon from "@hugeicons/core-free-icons/Upload01Icon";
+import Wallet01Icon from "@hugeicons/core-free-icons/Wallet01Icon";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
 import { Menu } from "panelui-web/menu";
 import { Table } from "panelui-web/table";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { timeOfDay, titled, useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
+import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
+import { useImageUrls } from "../home/catalog";
 import {
     AccountsBar,
     Card,
@@ -49,6 +52,7 @@ import {
     rateText,
 } from "./accounts-screen";
 import { useAccountFlows } from "./flows";
+import { Glyph } from "./glyph";
 import {
     accountEntries,
     monthsBetween,
@@ -101,7 +105,7 @@ function useMonthYear() {
 
 function DetailBar({ row }: { row: AccountRow }) {
     const { ledger, photos } = useDashboard();
-    const { actions, detail, flows } = useIntlayer("dashboard-accounts");
+    const { actions, detail, flows, purchase } = useIntlayer("dashboard-accounts");
     const { open } = useAccountFlows();
     const card = isCard(row);
     return (
@@ -115,7 +119,7 @@ function DetailBar({ row }: { row: AccountRow }) {
                         size="icon"
                         variant="outline"
                     >
-                        <RiArrowLeftLine className="text-muted-foreground" />
+                        <Glyph icon={ArrowLeft02Icon} className="text-muted-foreground" />
                     </Button>
                     <AccountTile account={row.look} photos={photos} size="lg" />
                     <span className="truncate">{row.name}</span>
@@ -128,7 +132,7 @@ function DetailBar({ row }: { row: AccountRow }) {
             }
         >
             <PhoneAction className="max-sm:hidden">
-                <RiArrowLeftRightLine />
+                <Glyph icon={ArrowDataTransferHorizontalIcon} />
                 {card ? detail.payCard : actions.transfer}
             </PhoneAction>
             <Button
@@ -136,7 +140,7 @@ function DetailBar({ row }: { row: AccountRow }) {
                 onClick={() => open({ accountId: row.id, kind: "edit" })}
                 variant="outline"
             >
-                <RiPencilLine />
+                <Glyph icon={PencilEdit01Icon} />
                 {actions.edit}
             </Button>
             <Menu>
@@ -144,30 +148,47 @@ function DetailBar({ row }: { row: AccountRow }) {
                     aria-label={actions.more({ name: row.name }).value}
                     render={<Button size="icon" variant="outline" />}
                 >
-                    <RiMore2Fill className="text-muted-foreground" />
+                    <Glyph icon={MoreVerticalIcon} className="text-muted-foreground" />
                 </Menu.Trigger>
                 <Menu.Content align="end" className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
                     <Menu.Item className="sm:hidden" onClick={() => open({ accountId: row.id, kind: "edit" })}>
-                        <RiPencilLine size={16} />
+                        <Glyph icon={PencilEdit01Icon} size={16} />
                         {actions.edit}
                     </Menu.Item>
-                    <Menu.Item onClick={() => open({ accountId: row.id, kind: "check" })}>
-                        <RiCheckboxCircleLine size={16} />
-                        {actions.check}
-                    </Menu.Item>
+                    {card ? (
+                        <>
+                            <Menu.Item onClick={() => open({ accountId: row.id, kind: "purchase" })}>
+                                <Glyph icon={Add01Icon} size={16} />
+                                {actions.newPurchase}
+                            </Menu.Item>
+                            <PhoneItem>
+                                <Glyph icon={ImageAdd01Icon} size={16} />
+                                {purchase.importScreenshot}
+                            </PhoneItem>
+                            <PhoneItem>
+                                <Glyph icon={Flag01Icon} size={16} />
+                                {actions.payOffBy}
+                            </PhoneItem>
+                        </>
+                    ) : (
+                        <Menu.Item onClick={() => open({ accountId: row.id, kind: "check" })}>
+                            <Glyph icon={CheckmarkCircle02Icon} size={16} />
+                            {actions.check}
+                        </Menu.Item>
+                    )}
                     <Menu.Item onClick={() => open({ accountId: row.id, kind: "archive" })}>
-                        <RiArchiveLine size={16} />
+                        <Glyph icon={Archive02Icon} size={16} />
                         {flows.archive}
                     </Menu.Item>
                     <Menu.Separator />
                     <Menu.Item variant="destructive" onClick={() => open({ accountId: row.id, kind: "delete" })}>
-                        <RiDeleteBin6Line size={16} />
+                        <Glyph icon={Delete02Icon} size={16} />
                         {actions.delete}
                     </Menu.Item>
                 </Menu.Content>
             </Menu>
             <PhoneAction variant="default">
-                <RiAddLine />
+                <Glyph icon={Add01Icon} />
                 {detail.addEntry}
             </PhoneAction>
         </AccountsBar>
@@ -190,7 +211,13 @@ function BankKpis({ row }: { row: AccountRow }) {
     const icon = <T,>(glyph: T) => (empty ? undefined : glyph);
     const period = date.month(ledger.today.slice(0, 7));
     const flows = periodFlows(flowsOf(ledger, row.id), from, ledger.today, row.currency);
-    const other = onlyCounterpart(accountEntries(ledger, row.id, from, ledger.today));
+    const inMonth = accountEntries(ledger, row.id, from, ledger.today);
+    const corrections = inMonth.filter((entry) => entry.adjustment);
+    const adjusted = corrections.reduce((sum, entry) => sum + entry.value, 0);
+    const transfers = flows.transfers - corrections.length;
+    const other = onlyCounterpart(inMonth.filter((entry) => !entry.adjustment));
+    const lastCorrected = corrections[0]?.day ?? ledger.today;
+    const adjustedDay = lastCorrected === ledger.today ? detail.today : date.day(lastCorrected);
     const otherName = other ? (ledger.accounts.get(other.id)?.name ?? "") : "";
     const entries = (count: number) => {
         if (count === 0) {
@@ -198,11 +225,15 @@ function BankKpis({ row }: { row: AccountRow }) {
         }
         return count === 1 ? detail.entryIn({ period }) : detail.entriesIn({ count, period });
     };
-    let moved = detail.transfersIn({ count: flows.transfers, period });
-    if (flows.transfers === 0) {
+    let moved = detail.transfersIn({ count: transfers, period });
+    if (transfers === 0) {
         moved = detail.noTransfers({ period });
-    } else if (flows.transfers === 1 && other) {
-        moved = other.outbound ? detail.transferTo({ name: otherName }) : detail.transferFrom({ name: otherName });
+    } else if (transfers === 1) {
+        if (other) {
+            moved = other.outbound ? detail.transferTo({ name: otherName }) : detail.transferFrom({ name: otherName });
+        } else {
+            moved = detail.oneTransferIn({ period });
+        }
     }
     const [rate] = ratesFor(ledger, [row.currency]);
     const main = inMain(ledger, row.balance, row.currency);
@@ -210,7 +241,7 @@ function BankKpis({ row }: { row: AccountRow }) {
         <KpiBand>
             <KpiCell
                 color={MUTED}
-                icon={icon(RiSafe2Line)}
+                icon={icon(SafeIcon)}
                 label={detail.balance}
                 value={money(row.balance, row.currency)}
             >
@@ -224,7 +255,7 @@ function BankKpis({ row }: { row: AccountRow }) {
             {rate ? (
                 <KpiCell
                     color={MUTED}
-                    icon={icon(RiExchangeDollarLine)}
+                    icon={icon(MoneyExchange01Icon)}
                     label={columns.inMain({ currency: ledger.currency })}
                     value={`${main.exact ? "" : "~"}${money(main.value, ledger.currency)}`}
                 >
@@ -233,7 +264,7 @@ function BankKpis({ row }: { row: AccountRow }) {
             ) : null}
             <KpiCell
                 color={INCOME}
-                icon={icon(RiArrowLeftDownLine)}
+                icon={icon(ArrowDownLeft01Icon)}
                 label={detail.cameIn}
                 value={money(flows.cameIn, row.currency)}
             >
@@ -241,7 +272,7 @@ function BankKpis({ row }: { row: AccountRow }) {
             </KpiCell>
             <KpiCell
                 color={SPEND}
-                icon={icon(RiArrowRightUpLine)}
+                icon={icon(ArrowUpRight01Icon)}
                 label={detail.wentOut}
                 value={money(flows.wentOut, row.currency)}
             >
@@ -249,12 +280,12 @@ function BankKpis({ row }: { row: AccountRow }) {
             </KpiCell>
             {rate ? null : (
                 <KpiCell
-                    color={MUTED}
-                    icon={icon(RiArrowLeftRightLine)}
-                    label={detail.moved}
-                    value={money(flows.moved, row.currency)}
+                    color={transfers === 0 && adjusted !== 0 ? "var(--color-app-warn)" : MUTED}
+                    icon={icon(transfers === 0 && adjusted !== 0 ? BalanceScaleIcon : ArrowDataTransferHorizontalIcon)}
+                    label={transfers === 0 && adjusted !== 0 ? detail.adjusted : detail.moved}
+                    value={money(transfers === 0 ? adjusted : flows.moved - adjusted, row.currency)}
                 >
-                    {note(moved)}
+                    {note(transfers === 0 && adjusted !== 0 ? adjustedDay : moved)}
                 </KpiCell>
             )}
         </KpiBand>
@@ -282,7 +313,7 @@ function CardKpis({ row }: { row: AccountRow }) {
         <KpiBand>
             <KpiCell
                 color={MUTED}
-                icon={RiBankCardLine}
+                icon={CreditCardIcon}
                 label={detail.balance}
                 value={money(row.balance, row.currency)}
             >
@@ -290,7 +321,7 @@ function CardKpis({ row }: { row: AccountRow }) {
             </KpiCell>
             <KpiCell
                 color={overdue ? SPEND : "var(--color-app-warn)"}
-                icon={overdue ? RiErrorWarningLine : RiFileList3Line}
+                icon={overdue ? AlertCircleIcon : Invoice01Icon}
                 label={detail.statement}
                 tone={overdue ? "text-app-spend" : ""}
                 value={statement?.due === null || !statement ? "–" : money(statement.due, row.currency)}
@@ -299,7 +330,7 @@ function CardKpis({ row }: { row: AccountRow }) {
             </KpiCell>
             <KpiCell
                 color={SPEND}
-                icon={RiArrowRightUpLine}
+                icon={ArrowUpRight01Icon}
                 label={detail.since}
                 value={statement ? money(statement.since, row.currency) : "–"}
             >
@@ -307,7 +338,7 @@ function CardKpis({ row }: { row: AccountRow }) {
             </KpiCell>
             <KpiCell
                 color={INCOME}
-                icon={RiWallet3Line}
+                icon={Wallet01Icon}
                 label={detail.available}
                 value={limit > 0 ? money(available, row.currency) : "–"}
             >
@@ -331,18 +362,17 @@ function HistoryCard({ row }: { row: AccountRow }) {
     const [range, setRange] = useState<WorthRange>("month");
     const owes = row.kind !== "asset";
     // A debt reads as what is owed, so the line climbs when it grows.
-    const data = useMemo(
-        () =>
-            accountSeries(ledger, row.id, rangeDays(ledger, range)).map((point) => ({
-                ...point,
-                value: owes ? -point.value : point.value,
-            })),
-        [ledger, owes, range, row.id]
-    );
-    const change = ((data.at(-1)?.value ?? 0) - (data[0]?.value ?? 0)) * (owes ? -1 : 1);
-    const pill = owes
-        ? detail.owed({ amount: money(-change, row.currency, "always") }).value
-        : money(change, row.currency, "always");
+    const data = useMemo(() => {
+        const days = rangeDays(ledger, range);
+        const [first = ledger.today] = days;
+        const [opening, ...closes] = accountSeries(ledger, row.id, [addDays(first, -1), ...days]);
+        return [...(opening ? [{ ...opening, day: first }] : []), ...closes].map((point) => ({
+            ...point,
+            value: owes ? -point.value : point.value,
+        }));
+    }, [ledger, owes, range, row.id]);
+    const change = (data.at(-1)?.value ?? 0) - (data[0]?.value ?? 0);
+    const amount = money(change, row.currency, "always");
     return (
         <Card
             action={
@@ -357,9 +387,15 @@ function HistoryCard({ row }: { row: AccountRow }) {
                     value={range}
                 />
             }
-            aside={<Trend value={change}>{pill}</Trend>}
             stackAction
-            title={detail.history}
+            title={
+                <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                    {detail.history}
+                    <Trend goodWhenUp={!owes} value={change}>
+                        {owes ? detail.owed({ amount }).value : amount}
+                    </Trend>
+                </span>
+            }
         >
             <div className="p-3.5">
                 <WorthChart
@@ -374,15 +410,15 @@ function HistoryCard({ row }: { row: AccountRow }) {
     );
 }
 
-function EntryTile({ entry }: { entry: AccountEntry }) {
+function EntryTile({ entry, imageUrl }: { entry: AccountEntry; imageUrl?: string }) {
     if (entry.kind !== "entry") {
         return (
             <span className={ICON_TILE}>
-                <RiArrowLeftRightLine size={14} />
+                <Glyph icon={entry.adjustment ? BalanceScaleIcon : ArrowDataTransferHorizontalIcon} size={14} />
             </span>
         );
     }
-    return <MerchantTile name={entry.title || "?"} size="lg" />;
+    return <MerchantTile imageUrl={imageUrl} name={entry.title || "?"} size="lg" />;
 }
 
 function ChipMenu({
@@ -409,12 +445,14 @@ function ChipMenu({
     );
 }
 
-const check = (on: boolean) => <RiCheckLine className={`text-app-tint! ml-auto ${on ? "" : "invisible"}`} size={16} />;
+const check = (on: boolean) => (
+    <Glyph icon={Tick02Icon} className={`text-app-tint! ml-auto ${on ? "" : "invisible"}`} size={16} />
+);
 
 function TransactionsCard({ row }: { row: AccountRow }) {
     const { ledger } = useDashboard();
     const { actions, columns, detail, list } = useIntlayer("dashboard-accounts");
-    const { money } = useDisplayFormat();
+    const { clockTime, money } = useDisplayFormat();
     const date = useDateFormat();
     const monthName = useMonthName();
     const current = ledger.today.slice(0, 7);
@@ -439,13 +477,14 @@ function TransactionsCard({ row }: { row: AccountRow }) {
         }
     );
     const shown = category ? entries.filter((entry) => entry.categoryId === category) : entries;
+    const photos = useImageUrls([...new Set(shown.flatMap((entry) => entry.imageKey ?? []))]);
     const chosen = category ? ledger.categories.get(category) : undefined;
     return (
         <Card
             action={
                 <span className="flex flex-wrap items-center gap-2">
                     <ChipMenu
-                        icon={<RiCalendarLine className="text-muted-foreground" size={14} />}
+                        icon={<Glyph icon={Calendar03Icon} className="text-muted-foreground" size={14} />}
                         label={monthName(month)}
                         on={false}
                     >
@@ -466,7 +505,7 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                         ))}
                     </ChipMenu>
                     <ChipMenu
-                        icon={<RiPriceTag3Line className={chosen ? "" : "text-muted-foreground"} size={14} />}
+                        icon={<Glyph icon={Tag01Icon} className={chosen ? "" : "text-muted-foreground"} size={14} />}
                         label={chosen?.name ?? detail.category}
                         on={chosen !== undefined}
                     >
@@ -490,7 +529,7 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                         variant="outline"
                     >
                         {actions.seeAll}
-                        <RiArrowRightUpLine className="text-muted-foreground" />
+                        <Glyph icon={ArrowUpRight01Icon} className="text-muted-foreground" />
                     </Button>
                 </span>
             }
@@ -518,71 +557,106 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                         const found = entry.categoryId ? ledger.categories.get(entry.categoryId) : undefined;
                         const otherName = entry.other ? (ledger.accounts.get(entry.other)?.name ?? "") : "";
                         let title: ReactNode = entry.title;
-                        if (entry.kind === "outbound") {
+                        if (entry.adjustment) {
+                            title = detail.adjustmentRow;
+                        } else if (entry.kind === "outbound") {
                             title = list.transferTo({ name: otherName });
                         } else if (entry.kind === "inbound") {
                             title = entry.other ? detail.fromName({ name: otherName }) : detail.transfer;
                         }
+                        const checkedHere =
+                            entry.adjustment && entry.at === row.checkedAt && entry.day === ledger.today;
                         return (
-                            <Table.Row key={entry.id}>
-                                <Cell>
-                                    <span className="flex min-w-0 items-center gap-2.5 text-sm font-medium">
-                                        <EntryTile entry={entry} />
-                                        <span className="max-w-[260px] truncate">{title}</span>
-                                    </span>
-                                </Cell>
-                                <Cell>
-                                    {found ? (
-                                        <Badge variant="outline">
-                                            <i className="size-1.5 rounded-full" style={{ background: found.color }} />
-                                            {found.name}
-                                        </Badge>
-                                    ) : (
-                                        <Badge className="text-muted-foreground" variant="outline">
-                                            {entry.kind === "entry" ? detail.category : detail.transfer}
-                                        </Badge>
-                                    )}
-                                </Cell>
-                                <Cell className="dash-figure text-muted-foreground">{date.day(entry.day)}</Cell>
-                                <Cell className={`font-normal ${entry.value > 0 ? "text-app-income" : ""}`} figure>
-                                    {money(entry.value, row.currency, "always")}
-                                </Cell>
-                                {foreign ? (
-                                    <Cell className="text-muted-foreground font-normal" figure>
-                                        {money(
-                                            entry.main ?? inMain(ledger, entry.value, row.currency).value,
-                                            ledger.currency,
-                                            "always"
+                            <Fragment key={entry.id}>
+                                {checkedHere ? (
+                                    <Table.Row className="bg-app-income/10">
+                                        <Table.Cell
+                                            className="text-muted-foreground py-2! ps-3.5! text-xs!"
+                                            colSpan={foreign ? 6 : 5}
+                                        >
+                                            <span className="flex items-center gap-2">
+                                                <Glyph className="text-app-income" icon={Tick02Icon} size={14} />
+                                                {detail.checkedBand({
+                                                    amount: money(entry.value, row.currency),
+                                                    time: clockTime(timeOfDay(entry.at, ledger.offsetAt(entry.at))),
+                                                })}
+                                            </span>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ) : null}
+                                <Table.Row>
+                                    <Cell>
+                                        <span className="flex min-w-0 items-center gap-2.5 text-sm font-medium">
+                                            <EntryTile
+                                                entry={entry}
+                                                imageUrl={entry.imageKey ? photos.get(entry.imageKey) : undefined}
+                                            />
+                                            <span className="max-w-[260px] truncate">{title}</span>
+                                        </span>
+                                    </Cell>
+                                    <Cell>
+                                        {found ? (
+                                            <Badge variant="outline">
+                                                <i
+                                                    className="size-1.5 rounded-full"
+                                                    style={{ background: found.color }}
+                                                />
+                                                {found.name}
+                                            </Badge>
+                                        ) : (
+                                            <Badge className="text-muted-foreground" variant="outline">
+                                                {entry.adjustment && detail.adjustmentChip}
+                                                {!entry.adjustment &&
+                                                    (entry.kind === "entry" ? detail.category : detail.transfer)}
+                                            </Badge>
                                         )}
                                     </Cell>
-                                ) : null}
-                                <Cell className="w-10">
-                                    <Menu>
-                                        <Menu.Trigger
-                                            aria-label={detail.transactions.value}
-                                            render={
-                                                <Button
-                                                    className="text-muted-foreground -mr-1"
-                                                    size="icon-sm"
-                                                    variant="ghost"
-                                                />
-                                            }
-                                        >
-                                            <RiMore2Fill size={17} />
-                                        </Menu.Trigger>
-                                        <Menu.Content
-                                            align="end"
-                                            className="app-shell ph-no-capture w-[180px]"
-                                            sideOffset={4}
-                                        >
-                                            <PhoneItem>
-                                                <RiPencilLine size={16} />
-                                                {actions.edit}
-                                            </PhoneItem>
-                                        </Menu.Content>
-                                    </Menu>
-                                </Cell>
-                            </Table.Row>
+                                    <Cell className="dash-figure text-muted-foreground text-[13px]">
+                                        {date.day(entry.day)}
+                                    </Cell>
+                                    <Cell
+                                        className={`text-[13px]! font-normal ${entry.value > 0 ? "text-app-income" : ""}`}
+                                        figure
+                                    >
+                                        {money(entry.value, row.currency, "always")}
+                                    </Cell>
+                                    {foreign ? (
+                                        <Cell className="text-muted-foreground text-[13px]! font-normal" figure>
+                                            {money(
+                                                entry.main ?? inMain(ledger, entry.value, row.currency).value,
+                                                ledger.currency,
+                                                "always"
+                                            )}
+                                        </Cell>
+                                    ) : null}
+                                    <Cell className="w-10">
+                                        <Menu>
+                                            <Menu.Trigger
+                                                aria-label={detail.transactions.value}
+                                                render={
+                                                    <Button
+                                                        className="text-muted-foreground -mr-1"
+                                                        size="icon-sm"
+                                                        variant="ghost"
+                                                    />
+                                                }
+                                            >
+                                                <Glyph icon={MoreVerticalIcon} size={17} />
+                                            </Menu.Trigger>
+                                            <Menu.Content
+                                                align="end"
+                                                className="app-shell ph-no-capture w-[180px]"
+                                                sideOffset={4}
+                                            >
+                                                <PhoneItem>
+                                                    <Glyph icon={PencilEdit01Icon} size={16} />
+                                                    {actions.edit}
+                                                </PhoneItem>
+                                            </Menu.Content>
+                                        </Menu>
+                                    </Cell>
+                                </Table.Row>
+                            </Fragment>
                         );
                     })}
                 </DataTable>
@@ -630,11 +704,11 @@ function EmptyEntries() {
                 <p className="text-muted-foreground text-[13px]">{detail.emptyBody}</p>
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
                     <PhoneAction variant="default">
-                        <RiAddLine />
+                        <Glyph icon={Add01Icon} />
                         {detail.addEntry}
                     </PhoneAction>
                     <PhoneAction>
-                        <RiUpload2Line />
+                        <Glyph icon={Upload01Icon} />
                         {detail.importEntries}
                     </PhoneAction>
                 </div>
@@ -653,7 +727,13 @@ function CheckCard({ row }: { row: AccountRow }) {
     const { locale } = useLocale();
     const age = checkedAge(row.checkedAt, ledger);
     const fresh = age.state === "today" || age.state === "yesterday" || age.state === "daysAgo";
-    let line: ReactNode = detail.checkLine;
+    let tone = "var(--color-app-tint)";
+    if (fresh) {
+        tone = INCOME;
+    } else if (age.state === "never") {
+        tone = MUTED;
+    }
+    let line: ReactNode = null;
     if (row.checkedAt !== null) {
         const offset = ledger.offsetAt(row.checkedAt);
         line =
@@ -664,21 +744,21 @@ function CheckCard({ row }: { row: AccountRow }) {
     return (
         <Frame className="min-w-0 rounded-2xl" variant="band">
             <Frame.Panel className="group-data-[variant=band]/frame:rounded-[10px]">
-                <Frame.Row>
+                <Frame.Row className="gap-2.5 px-3">
                     <Frame.Media
                         className="size-8 rounded-[10px]"
                         style={{
-                            background: `color-mix(in oklab, ${fresh ? INCOME : "var(--color-app-tint)"} 16%, transparent)`,
-                            color: fresh ? INCOME : "var(--color-app-tint)",
+                            background: `color-mix(in oklab, ${tone} 16%, transparent)`,
+                            color: tone,
                         }}
                     >
-                        {fresh ? <RiCheckLine size={16} /> : <RiErrorWarningLine size={16} />}
+                        <Glyph icon={fresh || age.state === "never" ? Tick02Icon : AlertCircleIcon} size={16} />
                     </Frame.Media>
                     <Frame.Content>
                         <Frame.Title>
                             {age.state === "never" ? detail.checkTitle : titled(checked(age), locale)}
                         </Frame.Title>
-                        <Frame.Description className="text-xs">{line}</Frame.Description>
+                        {line ? <Frame.Description className="text-xs">{line}</Frame.Description> : null}
                     </Frame.Content>
                     <Frame.Actions>
                         <Button onClick={() => open({ accountId: row.id, kind: "check" })} size="sm" variant="outline">
@@ -700,8 +780,13 @@ function InstallmentsCard({ row }: { row: AccountRow }) {
     return (
         <Card
             action={
-                <Button onClick={() => open({ accountId: row.id, kind: "purchase" })} size="sm" variant="outline">
-                    <RiAddLine />
+                <Button
+                    className="-my-1"
+                    onClick={() => open({ accountId: row.id, kind: "purchase" })}
+                    size="sm"
+                    variant="outline"
+                >
+                    <Glyph icon={Add01Icon} />
                     {actions.newPurchase}
                 </Button>
             }
@@ -733,14 +818,14 @@ function InstallmentsCard({ row }: { row: AccountRow }) {
 function SpentCard({ row }: { row: AccountRow }) {
     const { ledger } = useDashboard();
     const { detail } = useIntlayer("dashboard-accounts");
-    const { money } = useDisplayFormat();
+    const { whole } = useWholeMoney(row.currency);
     const shares = spentByCategory(ledger, row.id, monthStart(ledger.today), ledger.today);
     if (shares.length === 0) {
         return null;
     }
     const total = shares.reduce((sum, share) => sum + share.value, 0);
     return (
-        <Card aside={money(total, ledger.currency)} title={detail.spentFrom({ name: row.name })}>
+        <Card aside={whole(total)} title={detail.spentFrom({ name: row.name })}>
             <div className="p-3.5">
                 <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
                     {shares.map((share) => (
@@ -754,11 +839,9 @@ function SpentCard({ row }: { row: AccountRow }) {
                 <div className="mt-2">
                     {shares.map((share) => (
                         <div className="flex h-9 items-center gap-2 border-b text-[13px] last:border-0" key={share.id}>
-                            <i className="size-1.5 shrink-0 rounded-full" style={{ background: share.color }} />
+                            <i className="size-[7px] shrink-0 rounded-full" style={{ background: share.color }} />
                             <span className="min-w-0 truncate">{share.name}</span>
-                            <span className="dash-figure ml-auto font-medium">
-                                {money(share.value, ledger.currency)}
-                            </span>
+                            <span className="dash-figure ml-auto font-medium">{whole(share.value)}</span>
                             <span className="dash-figure text-muted-foreground w-9 text-right text-xs">
                                 {Math.round((share.value / total) * PERCENT)}%
                             </span>
@@ -788,14 +871,13 @@ function DetailsCard({ row }: { row: AccountRow }) {
     } else if (row.kind !== "asset") {
         type = detail.loan;
     }
-    const fields: [ReactNode, ReactNode][] = [
-        [detail.type, type],
-        [detail.currency, row.currency],
+    const fields: [ReactNode, ReactNode, "words"?][] = [
+        [detail.type, type, "words"],
+        [detail.currency, row.currency, "words"],
     ];
     if (row.currency !== ledger.currency) {
-        fields.push([detail.mainCurrency, ledger.currency]);
+        fields.push([detail.mainCurrency, ledger.currency, "words"]);
     }
-    fields.push([detail.started, monthYear(row.openedDay)]);
     if (card) {
         fields.push(
             [detail.limit, row.creditLimit === null ? "–" : money(row.creditLimit, row.currency)],
@@ -804,7 +886,10 @@ function DetailsCard({ row }: { row: AccountRow }) {
         );
     } else {
         const count = flowsOf(ledger, row.id).length;
-        fields.push([detail.opening, money(row.initialBalance, row.currency)]);
+        fields.push(
+            [detail.started, monthYear(row.openedDay)],
+            [detail.opening, money(row.initialBalance, row.currency)]
+        );
         if (count > 0) {
             fields.push(
                 [detail.entries, count.toLocaleString("en-US")],
@@ -815,10 +900,10 @@ function DetailsCard({ row }: { row: AccountRow }) {
     return (
         <Card className="flex-1" title={detail.details}>
             <div className="px-3.5 py-1">
-                {fields.map(([label, value], index) => (
+                {fields.map(([label, value, words], index) => (
                     <div className={FIELD} key={index}>
                         <span className="text-muted-foreground">{label}</span>
-                        <span className="dash-figure">{value}</span>
+                        <span className={words ? "" : "dash-figure"}>{value}</span>
                     </div>
                 ))}
             </div>
@@ -865,7 +950,7 @@ export function AccountDetail({ accountId }: { accountId: string }) {
                 </div>
                 <div className="flex min-w-0 flex-col gap-4">
                     <CheckCard row={row} />
-                    <UpcomingCard accountId={row.id} />
+                    <UpcomingCard accountId={row.id} showEmpty={!empty} />
                     {isCard(row) ? <InstallmentsCard row={row} /> : <SpentCard row={row} />}
                     <DetailsCard row={row} />
                 </div>

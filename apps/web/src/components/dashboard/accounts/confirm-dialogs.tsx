@@ -1,5 +1,8 @@
+import ArrowDataTransferHorizontalIcon from "@hugeicons/core-free-icons/ArrowDataTransferHorizontalIcon";
+import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
+import HistoryIcon from "@hugeicons/core-free-icons/HistoryIcon";
+import SafeIcon from "@hugeicons/core-free-icons/SafeIcon";
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
-import { RiArrowLeftRightLine, RiCalendarCheckLine, RiHistoryLine, RiSafe2Line } from "@remixicon/react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
@@ -14,6 +17,7 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { Fact, FlowDialog } from "./fields";
 import { useLedgerDb, useAccountFlows } from "./flows";
+import { Glyph } from "./glyph";
 import { accountFacts, netAfterDelete } from "./model";
 
 type Account = LedgerBooks["accounts"][number];
@@ -71,7 +75,7 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
 export function DeleteDialog({ account, onClose }: { account: Account; onClose: () => void }) {
     const { ledger } = useDashboard();
     const db = useLedgerDb();
-    const { flows } = useIntlayer("dashboard-accounts");
+    const { actions, flows } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const { toast } = useAccountFlows();
     const navigate = useNavigate();
@@ -98,12 +102,14 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                     {nothing ? flows.deleteEmptyBody : flows.deleteBody}
                 </p>
                 <div>
-                    {nothing ? null : (
+                    {nothing ? (
+                        <Fact label={flows.balance}>{money(facts.balance, account.currency)}</Fact>
+                    ) : (
                         <>
                             <Fact
                                 label={
                                     <>
-                                        <RiHistoryLine size={16} />
+                                        <Glyph icon={HistoryIcon} size={16} />
                                         {flows.transactionsKeptRow}
                                     </>
                                 }
@@ -113,7 +119,7 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                             <Fact
                                 label={
                                     <>
-                                        <RiArrowLeftRightLine size={16} />
+                                        <Glyph icon={ArrowDataTransferHorizontalIcon} size={16} />
                                         {flows.transfersDeleted}
                                     </>
                                 }
@@ -123,7 +129,7 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                             <Fact
                                 label={
                                     <>
-                                        <RiCalendarCheckLine size={16} />
+                                        <Glyph icon={CalendarCheckIn01Icon} size={16} />
                                         {flows.plansDeleted}
                                     </>
                                 }
@@ -135,7 +141,7 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                     <Fact
                         label={
                             <>
-                                <RiSafe2Line size={16} />
+                                {nothing ? null : <Glyph icon={SafeIcon} size={16} />}
                                 {flows.netWorthAfter}
                             </>
                         }
@@ -149,7 +155,7 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                     {flows.cancel}
                 </Button>
                 <Button onClick={remove} variant="destructive">
-                    {flows.deleteAccount}
+                    {nothing ? actions.delete : flows.deleteAccount}
                 </Button>
             </Dialog.Footer>
         </FlowDialog>

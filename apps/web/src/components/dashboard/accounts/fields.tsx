@@ -1,7 +1,9 @@
 import { Popover } from "@base-ui/react/popover";
+import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
+import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { currencyDisplayFor, decimalsFor } from "@outlayr/money/currency";
-import { RiArrowDownSLine, RiCheckLine, RiSearch2Line } from "@remixicon/react";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Input } from "panelui-web/input";
@@ -12,6 +14,8 @@ import { useIntlayer } from "react-intlayer";
 
 import { parseAmount } from "@/lib/account-writes";
 import { money } from "@/lib/ledger";
+
+import { Glyph } from "./glyph";
 
 export const amountText = (amount: number, currency: string) => money(amount, currency);
 
@@ -104,7 +108,7 @@ export function CurrencyField({
         >
             <span className="dash-figure">{code}</span>
             <span className="truncate">{currencyDisplayFor(code).name}</span>
-            {code === value ? <RiCheckLine className="text-app-tint ml-auto flex-none" size={16} /> : null}
+            {code === value ? <Glyph icon={Tick02Icon} className="text-app-tint ml-auto flex-none" size={16} /> : null}
         </button>
     );
     const heading = "text-muted-foreground px-2 pt-2.5 pb-1 text-xs leading-4";
@@ -118,7 +122,7 @@ export function CurrencyField({
                 >
                     <span className="dash-figure">{value}</span>
                     <span className="text-muted-foreground truncate">{currencyDisplayFor(value).name}</span>
-                    <RiArrowDownSLine className="text-muted-foreground ml-auto flex-none" size={16} />
+                    <Glyph icon={ArrowDown01Icon} className="text-muted-foreground ml-auto flex-none" size={16} />
                 </Popover.Trigger>
             </div>
             <Popover.Portal>
@@ -126,7 +130,7 @@ export function CurrencyField({
                     <Popover.Popup className="app-shell dash-po ph-no-capture flex max-h-[440px] w-[290px] flex-col">
                         <Input.Group className="flex-none">
                             <Input.Addon>
-                                <RiSearch2Line size={16} />
+                                <Glyph icon={Search01Icon} size={16} />
                             </Input.Addon>
                             <Input
                                 aria-label={flows.currencySearch.value}
@@ -168,7 +172,6 @@ export function FlowDialog({
             <Dialog.Content
                 className="app-shell ph-no-capture"
                 size={size}
-                variant="plain"
                 // Content forwards the rest to Base UI's Popup, though its props only declare the div's.
                 {...{ initialFocus }}
             >

@@ -1,4 +1,4 @@
-import { RiCheckLine } from "@remixicon/react";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { useRouteContext } from "@tanstack/react-router";
 import { lazy, Suspense, createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -6,6 +6,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { writeSettings } from "@/lib/ledger-settings";
 
+import { Glyph } from "./glyph";
 import type { AccountSort } from "./model";
 
 export type AccountType = "bank" | "card" | "cash";
@@ -56,7 +57,7 @@ function Toast({ onDone, toast }: { onDone: () => void; toast: FlowToast }) {
     }, [onDone, toast]);
     return (
         <output className="app-shell dash-toast ph-no-capture">
-            <RiCheckLine className="text-app-income flex-none" size={17} />
+            <Glyph icon={Tick02Icon} className="text-app-income flex-none" size={17} />
             <span className="min-w-0 truncate">{toast.text}</span>
             {toast.onUndo ? (
                 <button
