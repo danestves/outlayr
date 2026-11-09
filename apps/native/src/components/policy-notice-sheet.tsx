@@ -8,7 +8,7 @@ import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
 import { cn } from "panelui-native/utils/cn";
 import { useState } from "react";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import { SafeAreaInsetsContext } from "react-native-safe-area-context";
 
 import { useAppLockOpen } from "@/components/app-lock-gate";
@@ -38,12 +38,15 @@ const noticeLanguage = (language: Language) => {
     return subtag === "es" || subtag === "fr" || subtag === "pt" ? subtag : "en";
 };
 
+const LIST_MAX_SCREEN_SHARE = 0.5;
+
 const pendingKey = (notices: readonly PolicyNotice[]) => notices.map(noticeKey).join(",");
 
 export function PolicyNoticeSheet() {
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
+    const { height: screenHeight } = useWindowDimensions();
     const sheetInsets = useSheetInsets();
     const db = useDatabase();
     const onTabs = useSegments()[0] === "(tabs)";
@@ -104,40 +107,44 @@ export function PolicyNoticeSheet() {
                         <MonoLabel>
                             {t("policyNotice.meta", {
                                 date: formatTargetDate(
-                                    new Date(`${utcDateString(only.effectiveAtMs)}T12:00:00`),
+                                    new Date(
+                                        `${utcDateString(Math.max(...shown.map((notice) => notice.effectiveAtMs)))}T12:00:00`
+                                    ),
                                     language
                                 ),
                             })}
                         </MonoLabel>
                     </View>
-                    {shown.map(({ changes: byLanguage, document }, section) => {
-                        const changes = byLanguage[noticeLanguage(language)];
-                        return (
-                            <View className={cn(section > 0 && "pt-4")} key={document}>
-                                {single ? null : (
-                                    <MonoLabel accessibilityRole="header" className="pb-1.5">
-                                        {documentName(document)}
-                                    </MonoLabel>
-                                )}
-                                {changes.map((change, index) => (
-                                    <View
-                                        className={cn(
-                                            "border-border border-t py-2.5",
-                                            index === changes.length - 1 && "border-b"
-                                        )}
-                                        key={change.label}
-                                    >
-                                        <Text className="text-body text-foreground">{change.label}</Text>
-                                        {change.detail ? (
-                                            <Text className="text-footnote text-muted pt-0.5 leading-snug">
-                                                {change.detail}
-                                            </Text>
-                                        ) : null}
-                                    </View>
-                                ))}
-                            </View>
-                        );
-                    })}
+                    <BottomSheet.Body style={{ maxHeight: screenHeight * LIST_MAX_SCREEN_SHARE }}>
+                        {shown.map(({ changes: byLanguage, document }, section) => {
+                            const changes = byLanguage[noticeLanguage(language)];
+                            return (
+                                <View className={cn(section > 0 && "pt-4")} key={document}>
+                                    {single ? null : (
+                                        <MonoLabel accessibilityRole="header" className="pb-1.5">
+                                            {documentName(document)}
+                                        </MonoLabel>
+                                    )}
+                                    {changes.map((change, index) => (
+                                        <View
+                                            className={cn(
+                                                "border-border border-t py-2.5",
+                                                index === changes.length - 1 && "border-b"
+                                            )}
+                                            key={change.label}
+                                        >
+                                            <Text className="text-body text-foreground">{change.label}</Text>
+                                            {change.detail ? (
+                                                <Text className="text-footnote text-muted pt-0.5 leading-snug">
+                                                    {change.detail}
+                                                </Text>
+                                            ) : null}
+                                        </View>
+                                    ))}
+                                </View>
+                            );
+                        })}
+                    </BottomSheet.Body>
                     <Text className="text-footnote text-muted pt-3 pb-5 leading-snug">{t("policyNotice.accept")}</Text>
                     <View className="flex-row gap-2.5">
                         {shown.map(({ document }) => (

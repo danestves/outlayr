@@ -18,6 +18,7 @@ import { outboundHttp } from "./lib/http";
 import spec from "./mailDelivery.spec";
 
 const NOTICE_CONCURRENCY = 5;
+const POLICY_REPLY_TO = "support@tryoutlayr.com";
 
 const unsent = (error: EmailError) => Console.error("[mail] not sent", error.message).pipe(Effect.as(null));
 
@@ -88,7 +89,7 @@ const notifyPolicy = FunctionImpl.make(
                         language,
                     })
                 ).pipe(
-                    Effect.flatMap((message) => sendEmail(email, message)),
+                    Effect.flatMap((message) => sendEmail(email, { ...message, replyTo: POLICY_REPLY_TO })),
                     Effect.andThen(runMutation(refs.internal.mail.recordNotice, { keys: pending, language, userId })),
                     Effect.as(true),
                     Effect.catchTags({ EmailError: (error) => unsent(error).pipe(Effect.as(false)) })

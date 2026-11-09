@@ -492,6 +492,66 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 9),
     },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "Changes that affect your data or rights get at least 30 days' notice in the app and by email, with at most one email a month unless a change can't wait. New optional features are described here from the day they ship and listed in the next email.",
+                    label: "How we tell you about changes",
+                },
+            ],
+            es: [
+                {
+                    detail: "Los cambios que afectan tus datos o derechos se avisan con al menos 30 días en la app y por correo, con un máximo de un correo al mes salvo que un cambio no pueda esperar. Las nuevas funciones opcionales se describen aquí desde el día en que se lanzan y se incluyen en el siguiente correo.",
+                    label: "Cómo te avisamos de los cambios",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Les modifications qui touchent vos données ou vos droits sont annoncées au moins 30 jours à l'avance dans l'app et par e-mail, avec au plus un e-mail par mois sauf si une modification ne peut pas attendre. Les nouvelles fonctions facultatives sont décrites ici dès leur sortie et mentionnées dans le prochain e-mail.",
+                    label: "Comment nous vous informons des modifications",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Mudanças que afetam seus dados ou direitos são avisadas com pelo menos 30 dias no app e por e-mail, com no máximo um e-mail por mês, a menos que uma mudança não possa esperar. Novos recursos opcionais são descritos aqui desde o dia em que são lançados e incluídos no próximo e-mail.",
+                    label: "Como avisamos sobre mudanças",
+                },
+            ],
+        },
+        document: "privacy",
+        effectiveAtMs: Date.UTC(2027, 0, 1),
+    },
+    {
+        changes: {
+            en: [
+                {
+                    detail: "A material change gets at least 30 days' notice in the app and by email. A new optional feature can apply from the day it ships, and a new account follows the version posted when it signs up.",
+                    label: "How these terms change",
+                },
+            ],
+            es: [
+                {
+                    detail: "Un cambio sustancial se avisa con al menos 30 días en la app y por correo. Una nueva función opcional puede aplicarse desde el día en que se lanza, y una cuenta nueva se rige por la versión publicada al registrarse.",
+                    label: "Cómo cambian estos términos",
+                },
+            ],
+            fr: [
+                {
+                    detail: "Une modification importante est annoncée au moins 30 jours à l'avance dans l'app et par e-mail. Une nouvelle fonction facultative peut s'appliquer dès sa sortie, et un nouveau compte suit la version publiée au moment de son inscription.",
+                    label: "Comment ces conditions changent",
+                },
+            ],
+            pt: [
+                {
+                    detail: "Uma mudança relevante é avisada com pelo menos 30 dias no app e por e-mail. Um novo recurso opcional pode valer desde o dia em que é lançado, e uma conta nova segue a versão publicada ao ser criada.",
+                    label: "Como estes termos mudam",
+                },
+            ],
+        },
+        document: "terms",
+        effectiveAtMs: Date.UTC(2027, 0, 1),
+    },
 ];
 
 export const noticeKey = ({ document, effectiveAtMs }: typeof PolicyNotice.Type) => `${document}:${effectiveAtMs}`;

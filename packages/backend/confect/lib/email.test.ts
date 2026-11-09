@@ -35,6 +35,18 @@ describe(sendEmail, () => {
         });
     });
 
+    it("sends the reply address in the field Cloudflare accepts", async () => {
+        const http = stubHttp(() => Response.json({ success: true }));
+
+        await runEdge(
+            sendEmail("owner@example.com", { replyTo: "support@example.com", subject: "Hi", text: "Body" }).pipe(
+                Effect.provide(http.layer)
+            )
+        );
+
+        expect(JSON.parse(http.requests[0]?.body ?? "")).toMatchObject({ reply_to: "support@example.com" });
+    });
+
     it("fails with the provider's status when it refuses the message", async () => {
         const http = stubHttp(() => new Response("bad gateway", { status: 502 }));
 
