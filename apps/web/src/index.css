@@ -1091,6 +1091,11 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
     background: color-mix(in srgb, var(--color-app-bg), #000 50%);
 }
 
+/* A dialog stays mounted through its exit, and a second click on Save in that moment must not submit twice. */
+[role="dialog"][data-ending-style] {
+    pointer-events: none;
+}
+
 .app-shell:has([aria-haspopup="menu"][data-popup-open]) > [data-scroll-restoration-id="dashboard-content"] {
     overflow-y: hidden;
 }

@@ -12,6 +12,7 @@ import { useId, useState } from "react";
 import type { ComponentProps, FormEvent, ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { signOut } from "@/components/dashboard/shell/account-menu";
 import { convexDeletionSteps, deletionProvider, runDeletion, storedDeletion } from "@/lib/account-deletion";
 import { authClient } from "@/lib/auth-client";
@@ -94,6 +95,7 @@ function FormDialog({
     const { account } = useIntlayer("dashboard-settings");
     const [busy, setBusy] = useState(false);
     const [failed, setFailed] = useState(false);
+    const shown = useOverlayOpen();
     const handle = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setBusy(true);
@@ -107,7 +109,7 @@ function FormDialog({
         }
     };
     return (
-        <Dialog onOpenChange={(open) => open || onClose()} open>
+        <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
             <Dialog.Content className="app-shell">
                 <form onSubmit={handle}>
                     <Dialog.Header>
@@ -611,10 +613,18 @@ export function Account() {
                     <DeleteCard />
                 </div>
             </div>
-            {open === "name" ? <NameDialog name={session?.user.name ?? ""} onClose={close} /> : null}
-            {open === "email" ? <EmailDialog onClose={close} /> : null}
-            {open === "password" ? <ChangePasswordDialog onClose={closeRefreshing} /> : null}
-            {open === "addPassword" ? <AddPasswordDialog email={session?.user.email ?? ""} onClose={close} /> : null}
+            <OverlayPresence value={open}>
+                {(dialog) => (
+                    <>
+                        {dialog === "name" ? <NameDialog name={session?.user.name ?? ""} onClose={close} /> : null}
+                        {dialog === "email" ? <EmailDialog onClose={close} /> : null}
+                        {dialog === "password" ? <ChangePasswordDialog onClose={closeRefreshing} /> : null}
+                        {dialog === "addPassword" ? (
+                            <AddPasswordDialog email={session?.user.email ?? ""} onClose={close} />
+                        ) : null}
+                    </>
+                )}
+            </OverlayPresence>
         </>
     );
 }

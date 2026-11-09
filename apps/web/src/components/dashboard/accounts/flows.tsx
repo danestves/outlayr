@@ -5,6 +5,7 @@ import { lazy, Suspense, createContext, useContext, useEffect, useMemo, useRef, 
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { OverlayPresence } from "@/components/dashboard/overlay-presence";
 import { writeSettings } from "@/lib/ledger-settings";
 
 import { Glyph } from "./glyph";
@@ -129,11 +130,13 @@ export function AccountFlowsProvider({ children }: { children: ReactNode }) {
     return (
         <FlowsContext value={flows}>
             {children}
-            {flow ? (
-                <Suspense fallback={null}>
-                    <FlowDialogs flow={flow} onClose={() => setFlow(null)} onSwitch={setFlow} />
-                </Suspense>
-            ) : null}
+            <OverlayPresence value={flow}>
+                {(held) => (
+                    <Suspense fallback={null}>
+                        <FlowDialogs flow={held} onClose={() => setFlow(null)} onSwitch={setFlow} />
+                    </Suspense>
+                )}
+            </OverlayPresence>
             {toast ? <Toast onDone={clearToast} toast={toast} /> : null}
         </FlowsContext>
     );

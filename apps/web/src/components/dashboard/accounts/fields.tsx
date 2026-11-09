@@ -12,6 +12,7 @@ import { useId, useMemo, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { parseAmount } from "@/lib/account-writes";
 import { money } from "@/lib/ledger";
 
@@ -192,8 +193,9 @@ export function FlowDialog({
     onClose: () => void;
     size?: "lg" | "md" | "sm";
 }) {
+    const shown = useOverlayOpen();
     return (
-        <Dialog onOpenChange={(open) => (open ? undefined : onClose())} open>
+        <Dialog onOpenChange={(open) => (open ? undefined : onClose())} open={shown}>
             <Dialog.Content
                 className="app-shell ph-no-capture"
                 size={size}

@@ -178,6 +178,11 @@ interface EntrySheetProps {
 /** One entry or transfer. On a phone it takes the whole screen, and an entry reads first with Edit below. */
 export function EntrySheet({ onClose, onDelete, onStep, row }: EntrySheetProps) {
     const wide = useWide();
+    // The sheet slides out after row clears, and it should carry the entry with it.
+    const [shown, setShown] = useState(row);
+    if (row && row !== shown) {
+        setShown(row);
+    }
     return (
         <Sheet
             onOpenChange={(open) => (open ? undefined : onClose())}
@@ -185,8 +190,8 @@ export function EntrySheet({ onClose, onDelete, onStep, row }: EntrySheetProps) 
             side={wide ? "right" : "bottom"}
         >
             <Sheet.Content className="app-shell ph-no-capture" showGrabber={false} size={wide ? "auto" : "full"}>
-                {row ? (
-                    <EntryBody key={row.id} onClose={onClose} onDelete={onDelete} onStep={onStep} row={row} />
+                {shown ? (
+                    <EntryBody key={shown.id} onClose={onClose} onDelete={onDelete} onStep={onStep} row={shown} />
                 ) : null}
             </Sheet.Content>
         </Sheet>

@@ -19,6 +19,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDateFormat } from "@/components/dashboard/home/format";
+import { OverlayPresence } from "@/components/dashboard/overlay-presence";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
 import { categoryBudgets } from "@/lib/dashboard-series";
@@ -347,7 +348,9 @@ export function Categories() {
                     </CardFrame>
                 ) : null}
             </div>
-            {editing ? <CategoryEditor onClose={() => setEditing(null)} target={editing} /> : null}
+            <OverlayPresence value={editing}>
+                {(target) => <CategoryEditor onClose={() => setEditing(null)} target={target} />}
+            </OverlayPresence>
         </>
     );
 }
