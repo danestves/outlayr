@@ -6,10 +6,28 @@ const dashboardAccounts = {
         actions: {
             addAccount: t({ en: "Add account", es: "Añadir cuenta", fr: "Ajouter un compte", pt: "Adicionar conta" }),
             byBalance: t({ en: "By balance", es: "Por saldo", fr: "Par solde", pt: "Por saldo" }),
+            changeCategory: t({
+                en: "Change category",
+                es: "Cambiar categoría",
+                fr: "Changer de catégorie",
+                pt: "Mudar categoria",
+            }),
             check: t({ en: "Check balance", es: "Revisar saldo", fr: "Vérifier le solde", pt: "Conferir saldo" }),
             delete: t({ en: "Delete", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+            moveToAccount: t({
+                en: "Move to account",
+                es: "Mover a otra cuenta",
+                fr: "Déplacer vers un compte",
+                pt: "Mover para outra conta",
+            }),
             edit: t({ en: "Edit", es: "Editar", fr: "Modifier", pt: "Editar" }),
             import: t({ en: "Import", es: "Importar", fr: "Importer", pt: "Importar" }),
+            importScreenshot: t({
+                en: "Import from screenshot",
+                es: "Importar de una captura",
+                fr: "Importer depuis une capture",
+                pt: "Importar de uma captura",
+            }),
             more: insert(
                 t({
                     en: "More for {{name}}",
@@ -130,6 +148,8 @@ const dashboardAccounts = {
                 fr: "Devise principale",
                 pt: "Moeda principal",
             }),
+            flowIn: t({ en: "In", es: "Entró", fr: "Entrées", pt: "Entrou" }),
+            flowOut: t({ en: "Out", es: "Salió", fr: "Sorties", pt: "Saiu" }),
             noEntries: insert(
                 t({
                     en: "No entries in {{period}}",
@@ -170,6 +190,12 @@ const dashboardAccounts = {
                 fr: "Comparez avec votre banque.",
                 pt: "Compare com seu banco.",
             }),
+            compareBankApp: t({
+                en: "Compare it with your bank app",
+                es: "Compáralo con la app de tu banco",
+                fr: "Comparez avec l'app de votre banque",
+                pt: "Compare com o app do seu banco",
+            }),
             checkTitle: t({
                 en: "Check your balance",
                 es: "Revisa tu saldo",
@@ -205,6 +231,15 @@ const dashboardAccounts = {
                     pt: "{{count}} lançamentos em {{period}}",
                 })
             ),
+            entriesCount: insert(
+                t({
+                    en: "{{count}} entries",
+                    es: "{{count}} movimientos",
+                    fr: "{{count}} opérations",
+                    pt: "{{count}} lançamentos",
+                })
+            ),
+            entryCount: t({ en: "1 entry", es: "1 movimiento", fr: "1 opération", pt: "1 lançamento" }),
             entryIn: insert(
                 t({
                     en: "1 entry in {{period}}",
@@ -279,14 +314,12 @@ const dashboardAccounts = {
                 fr: "Pas de date de relevé",
                 pt: "Sem data de fechamento",
             }),
-            noTransfers: insert(
-                t({
-                    en: "No transfers in {{period}}",
-                    es: "Sin transferencias en {{period}}",
-                    fr: "Aucun virement en {{period}}",
-                    pt: "Sem transferências em {{period}}",
-                })
-            ),
+            noTransfers: t({
+                en: "No transfers",
+                es: "Sin transferencias",
+                fr: "Aucun virement",
+                pt: "Sem transferências",
+            }),
             nothingIn: insert(
                 t({
                     en: "Nothing in {{period}}",
@@ -321,6 +354,7 @@ const dashboardAccounts = {
             }),
             payCard: t({ en: "Pay card", es: "Pagar tarjeta", fr: "Payer la carte", pt: "Pagar cartão" }),
             since: t({ en: "Since statement", es: "Desde el corte", fr: "Depuis le relevé", pt: "Desde a fatura" }),
+            spent: t({ en: "Spent", es: "Gastado", fr: "Dépensé", pt: "Gasto" }),
             spentFrom: insert(
                 t({
                     en: "Spent from {{name}}",
@@ -570,14 +604,12 @@ const dashboardAccounts = {
                     pt: "Excluir {{name}}?",
                 })
             ),
-            deletedToast: insert(
-                t({
-                    en: "{{name}} deleted",
-                    es: "{{name}} eliminada",
-                    fr: "{{name}} supprimé",
-                    pt: "{{name}} excluída",
-                })
-            ),
+            deletedToast: t({
+                en: "Account deleted",
+                es: "Cuenta eliminada",
+                fr: "Compte supprimé",
+                pt: "Conta excluída",
+            }),
             editTitle: t({ en: "Edit account", es: "Editar cuenta", fr: "Modifier le compte", pt: "Editar conta" }),
             emoji: t({ en: "Emoji", es: "Emoji", fr: "Emoji", pt: "Emoji" }),
             icon: t({ en: "Icon", es: "Ícono", fr: "Icône", pt: "Ícone" }),
@@ -856,6 +888,14 @@ const dashboardAccounts = {
                 fr: "Cartes et prêts",
                 pt: "Cartões e empréstimos",
             }),
+            inSixMonths: insert(
+                t({
+                    en: "In {{currency}}, 6 months",
+                    es: "En {{currency}}, 6 meses",
+                    fr: "En {{currency}}, 6 mois",
+                    pt: "Em {{currency}}, 6 meses",
+                })
+            ),
             inPeriod: insert(
                 t({
                     en: "{{amount}} in {{period}}",

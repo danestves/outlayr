@@ -1,6 +1,5 @@
-import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
-import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { useRouteContext } from "@tanstack/react-router";
+import { createToaster, Toast } from "panelui-web/toast";
 import { lazy, Suspense, createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -8,7 +7,6 @@ import { useIntlayer } from "react-intlayer";
 import { OverlayPresence } from "@/components/dashboard/overlay-presence";
 import { writeSettings } from "@/lib/ledger-settings";
 
-import { Glyph } from "./glyph";
 import type { AccountSort } from "./model";
 
 export type AccountType = "bank" | "card" | "cash";
@@ -21,6 +19,8 @@ export type AccountFlow =
     | { accountId?: string; from?: string; kind: "entry" };
 
 export interface FlowToast {
+    /** A second, quieter line under the text. */
+    detail?: string;
     failed?: boolean;
     /** Runs when the toast leaves without Undo, for a change that waits out its window before it is sent. */
     onExpire?: () => void;
@@ -64,37 +64,39 @@ const FlowDialogs = lazy(loadFlowDialogs);
 
 const TOAST_MS = 6000;
 
-function Toast({ onDone, toast }: { onDone: () => void; toast: FlowToast }) {
+// Held outside React: useToast() subscribes its caller.
+const flowToasts = createToaster();
+
+function ShowToast({ onDone, toast }: { onDone: () => void; toast: FlowToast }) {
     const { flows } = useIntlayer("dashboard-accounts");
+    const undo = flows.undo.value;
     // oxlint-disable-next-line outlayr/react-effect-budget -- a timer is an external system.
     useEffect(() => {
+        const id = flowToasts.add({
+            actionProps: toast.onUndo
+                ? {
+                      children: undo,
+                      onClick: () => {
+                          toast.onUndo?.();
+                          onDone();
+                      },
+                  }
+                : undefined,
+            description: toast.detail,
+            timeout: 0,
+            title: toast.text,
+            type: toast.failed ? "destructive" : "success",
+        });
         const timer = setTimeout(() => {
             toast.onExpire?.();
             onDone();
         }, TOAST_MS);
-        return () => clearTimeout(timer);
-    }, [onDone, toast]);
-    return (
-        <output className="app-shell dash-toast ph-no-capture">
-            {toast.failed ? (
-                <Glyph icon={Alert02Icon} className="text-app-spend flex-none" size={17} />
-            ) : (
-                <Glyph icon={Tick02Icon} className="text-app-income flex-none" size={17} />
-            )}
-            <span className="min-w-0 truncate">{toast.text}</span>
-            {toast.onUndo ? (
-                <button
-                    onClick={() => {
-                        toast.onUndo?.();
-                        onDone();
-                    }}
-                    type="button"
-                >
-                    {flows.undo}
-                </button>
-            ) : null}
-        </output>
-    );
+        return () => {
+            clearTimeout(timer);
+            flowToasts.close(id);
+        };
+    }, [onDone, toast, undo]);
+    return null;
 }
 
 /** Holds the dialog that is open and the toast after it. A new toast first settles the one it replaces. */
@@ -138,7 +140,12 @@ export function AccountFlowsProvider({ children }: { children: ReactNode }) {
                     </Suspense>
                 )}
             </OverlayPresence>
-            {toast ? <Toast onDone={clearToast} toast={toast} /> : null}
+            {toast ? <ShowToast onDone={clearToast} toast={toast} /> : null}
+            {/* Inline, because the portal would leave the shell's tokens and the capture mask behind. The wrapper stays
+                see-through and click-through: the inline viewport keeps its height with no toast showing. */}
+            <div className="app-shell ph-no-capture pointer-events-none fixed right-4 bottom-[max(24px,env(safe-area-inset-bottom))] left-4 z-70 flex justify-end bg-transparent! sm:right-6 sm:left-auto sm:w-90 [&_[data-slot=toast]]:pointer-events-auto">
+                <Toast.Provider inline toastManager={flowToasts} />
+            </div>
         </FlowsContext>
     );
 }

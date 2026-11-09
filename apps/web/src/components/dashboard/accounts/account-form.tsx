@@ -1,4 +1,5 @@
 import Archive02Icon from "@hugeicons/core-free-icons/Archive02Icon";
+import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import BankIcon from "@hugeicons/core-free-icons/BankIcon";
 import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
@@ -40,6 +41,10 @@ const DEFAULT_ICON: Record<AccountType, string> = { bank: "Bank", card: "CreditC
 const DAYS = Array.from({ length: 28 }, (_, index) => String(index + 1));
 const DEFAULT_STATEMENT = 25;
 const DEFAULT_PAYMENT = 20;
+const TYPE_ITEM =
+    "border-border bg-foreground/[0.024] hover:bg-muted/60 data-checked:border-primary data-checked:bg-[color-mix(in_oklab,var(--primary)_14%,var(--card))] h-11 flex-row items-center gap-2 rounded-[10px] border px-3 py-0 data-checked:outline-none [&>[data-slot=choice-cards-check]]:hidden [&>[data-slot=choice-cards-text]]:min-w-0 [&>[data-slot=choice-cards-text]]:p-0";
+const TYPE_MEDIA =
+    "text-muted-foreground group-data-checked/choice:text-primary aspect-auto w-auto flex-none rounded-none bg-transparent ring-0 group-data-checked/choice:[&>*]:scale-100 dark:bg-transparent";
 
 const blankIdentity = (type: AccountType): Identity => ({
     color: null,
@@ -75,7 +80,7 @@ function DayField({ label, onChange, value }: { label: ReactNode; onChange: (day
                 onValueChange={(day) => day && onChange(Number(day))}
                 value={String(value)}
             >
-                <Select.Trigger>
+                <Select.Trigger icon={<Glyph icon={ArrowDown01Icon} size={16} />}>
                     <Select.Value className="dash-figure" />
                 </Select.Trigger>
                 <Select.Content className="app-shell z-[60]">
@@ -90,50 +95,106 @@ function DayField({ label, onChange, value }: { label: ReactNode; onChange: (day
     );
 }
 
-function FormFooter({
-    account,
-    dim,
-    failed,
-    formId,
-    label,
-    onClose,
-    onSwitch,
-}: {
-    account: Account | null;
-    dim: boolean;
-    failed: boolean;
-    formId: string;
-    label: ReactNode;
-    onClose: () => void;
-    onSwitch: (flow: AccountFlow) => void;
-}) {
+// Wider than an equal share when the row is full, and the padding the frames give a footer pill.
+const FOOTER_PILL = "min-w-max! px-3.5";
+
+function startValues(account: Account | null, type: AccountType, balance: number, mainCurrency: string) {
+    const currency = account?.currency ?? mainCurrency;
+    const liability = account ? toAccountKind(account.kind) === "liability" : type === "card";
+    return {
+        balanceText: account ? amountText(Math.abs(balance), currency) : "",
+        currency,
+        identity: account ? identityOf(account) : blankIdentity(type),
+        identityByHand: account ? Boolean(account.imageKey || account.emoji || account.icon) : false,
+        limitText: account?.creditLimit ? amountText(account.creditLimit, currency) : "",
+        liability,
+        name: account?.name ?? "",
+        negative: balance < 0 || (balance === 0 && liability),
+        paymentDay: account?.paymentDay ?? DEFAULT_PAYMENT,
+        statementDay: account?.statementDay ?? DEFAULT_STATEMENT,
+        type,
+    };
+}
+
+function accountDraft(
+    value: {
+        currency: string;
+        identity: Identity;
+        liability: boolean;
+        name: string;
+        paymentDay: number;
+        statementDay: number;
+    },
+    limit: number
+) {
+    return {
+        creditLimit: value.liability && limit > 0 ? limit : null,
+        currency: value.currency,
+        customColor: value.identity.color,
+        emoji: value.identity.emoji,
+        icon: value.identity.icon,
+        imageColor: null,
+        imageKey: value.identity.imageKey,
+        kind: value.liability ? ("liability" as const) : ("asset" as const),
+        name: value.name.trim(),
+        paymentDay: value.liability ? value.paymentDay : null,
+        statementDay: value.liability ? value.statementDay : null,
+    };
+}
+
+function TypePicker({ onPick, value }: { onPick: (type: AccountType) => void; value: AccountType }) {
+    const { flows } = useIntlayer("dashboard-accounts");
+    const types = [
+        { icon: BankIcon, label: flows.bank, type: "bank" },
+        { icon: Wallet01Icon, label: flows.cash, type: "cash" },
+        { icon: CreditCardIcon, label: flows.cardOrLoan, type: "card" },
+    ] as const;
+    return (
+        <ChoiceCards
+            aria-label={flows.accountType.value}
+            onValueChange={(next) => {
+                const picked = types.find((each) => each.type === next);
+                if (picked) {
+                    onPick(picked.type);
+                }
+            }}
+            value={value}
+        >
+            {types.map(({ icon, label, type }) => (
+                <ChoiceCards.Item className={TYPE_ITEM} key={type} value={type}>
+                    <ChoiceCards.Media className={TYPE_MEDIA}>
+                        <Glyph icon={icon} size={17} />
+                    </ChoiceCards.Media>
+                    <ChoiceCards.Label className="text-foreground group-data-checked/choice:text-foreground">
+                        {label}
+                    </ChoiceCards.Label>
+                </ChoiceCards.Item>
+            ))}
+        </ChoiceCards>
+    );
+}
+
+function EditActions({ accountId, onSwitch }: { accountId: string; onSwitch: (flow: AccountFlow) => void }) {
     const { actions, flows } = useIntlayer("dashboard-accounts");
     return (
-        <Dialog.Footer>
-            {account ? (
-                <>
-                    <Button onClick={() => onSwitch({ accountId: account.localId, kind: "archive" })} variant="outline">
-                        <Glyph icon={Archive02Icon} size={16} />
-                        {flows.archive}
-                    </Button>
-                    <Button
-                        className="text-destructive mr-auto"
-                        onClick={() => onSwitch({ accountId: account.localId, kind: "delete" })}
-                        variant="outline"
-                    >
-                        <Glyph icon={Delete02Icon} size={16} />
-                        {actions.delete}
-                    </Button>
-                </>
-            ) : null}
-            {failed ? <span className="text-destructive mr-auto text-[13px]">{flows.saveFailed}</span> : null}
-            <Button onClick={onClose} variant="outline">
-                {flows.cancel}
+        <>
+            <Button
+                className={FOOTER_PILL}
+                onClick={() => onSwitch({ accountId, kind: "archive" })}
+                variant="secondary"
+            >
+                <Glyph icon={Archive02Icon} className="text-muted-foreground" size={16} />
+                {flows.archive}
             </Button>
-            <Button className={dim ? "opacity-50" : undefined} form={formId} type="submit">
-                {label}
+            <Button
+                className={`text-destructive ${FOOTER_PILL}`}
+                onClick={() => onSwitch({ accountId, kind: "delete" })}
+                variant="secondary"
+            >
+                <Glyph icon={Delete02Icon} size={16} />
+                {actions.delete}
             </Button>
-        </Dialog.Footer>
+        </>
     );
 }
 
@@ -161,50 +222,23 @@ export function AccountForm({
     const [failed, setFailed] = useState(false);
     const editing = account !== null;
     const startBalance = account ? accountFacts(ledger, account.localId).balance : 0;
-    const startCurrency = account?.currency ?? ledger.currency;
-    const kindOfType = startType === "card" ? "liability" : "asset";
-    const startKind = account ? toAccountKind(account.kind) : kindOfType;
-    const startNegative = startBalance < 0 || (startBalance === 0 && startKind === "liability");
-    const startText = account ? amountText(Math.abs(startBalance), startCurrency) : "";
+    const start = startValues(account, startType, startBalance, ledger.currency);
     const nameInput = useRef<HTMLInputElement>(null);
 
     const form = useForm({
-        defaultValues: {
-            balanceText: startText,
-            currency: startCurrency,
-            identity: account ? identityOf(account) : blankIdentity(startType),
-            identityByHand: account ? Boolean(account.imageKey || account.emoji || account.icon) : false,
-            limitText: account?.creditLimit ? amountText(account.creditLimit, startCurrency) : "",
-            liability: startKind === "liability",
-            name: account?.name ?? "",
-            negative: startNegative,
-            paymentDay: account?.paymentDay ?? DEFAULT_PAYMENT,
-            statementDay: account?.statementDay ?? DEFAULT_STATEMENT,
-            type: startType,
-        },
+        defaultValues: start,
         onSubmit: async ({ value }) => {
             setFailed(false);
             const decimals = decimalsFor(value.currency);
             const magnitude = parseAmount(value.balanceText, decimals);
             const balance = value.negative ? -magnitude : magnitude;
-            const limit = parseAmount(value.limitText, decimals);
-            const draft = {
-                creditLimit: value.liability && limit > 0 ? limit : null,
-                currency: value.currency,
-                customColor: value.identity.color,
-                emoji: value.identity.emoji,
-                icon: value.identity.icon,
-                imageColor: null,
-                imageKey: value.identity.imageKey,
-                kind: value.liability ? ("liability" as const) : ("asset" as const),
-                name: value.name.trim(),
-                paymentDay: value.liability ? value.paymentDay : null,
-                statementDay: value.liability ? value.statementDay : null,
-            };
+            const draft = accountDraft(value, parseAmount(value.limitText, decimals));
             const books = ledgerBooks(db);
             const at = Date.now();
             const moneyTouched =
-                value.balanceText !== startText || value.negative !== startNegative || value.currency !== startCurrency;
+                value.balanceText !== start.balanceText ||
+                value.negative !== start.negative ||
+                value.currency !== start.currency;
             const row = account
                 ? editedAccount(books, account, draft, moneyTouched ? balance : null, at)
                 : createdAccount(books, draft, balance, crypto.randomUUID(), at);
@@ -245,12 +279,7 @@ export function AccountForm({
     };
     const card = !editing && type === "card";
     const createTitle = card ? flows.newCardTitle : flows.newTitle;
-    const types = [
-        { icon: BankIcon, label: flows.bank, value: "bank" },
-        { icon: Wallet01Icon, label: flows.cash, value: "cash" },
-        { icon: CreditCardIcon, label: flows.cardOrLoan, value: "card" },
-    ] as const;
-
+    const dim = name.trim() === "" && !attempted;
     return (
         <FlowDialog
             initialFocus={editing ? undefined : nameInput}
@@ -267,33 +296,15 @@ export function AccountForm({
                         void form.handleSubmit();
                     }}
                 >
-                    {editing ? null : (
-                        <ChoiceCards
-                            aria-label={flows.accountType.value}
-                            aspect="5 / 2"
-                            onValueChange={(next) => {
-                                const picked = types.find((each) => each.value === next);
-                                if (picked) {
-                                    pickType(picked.value);
-                                }
-                            }}
-                            value={type}
-                        >
-                            {types.map(({ icon, label, value }) => (
-                                <ChoiceCards.Item key={value} value={value}>
-                                    <ChoiceCards.Media>
-                                        <Glyph icon={icon} size={20} />
-                                    </ChoiceCards.Media>
-                                    <ChoiceCards.Label>{label}</ChoiceCards.Label>
-                                </ChoiceCards.Item>
-                            ))}
-                        </ChoiceCards>
-                    )}
+                    {editing ? null : <TypePicker onPick={pickType} value={type} />}
                     <form.Field name="name">
                         {(field) => {
                             const [error] = field.state.meta.errors;
                             return (
-                                <div className="flex gap-4" style={{ alignItems: error ? "flex-start" : "flex-end" }}>
+                                <div
+                                    className={editing ? "flex gap-4" : "mt-1 flex gap-4"}
+                                    style={{ alignItems: error ? "flex-start" : "flex-end" }}
+                                >
                                     <IdentityPicker
                                         handPicked={form.state.values.identityByHand}
                                         identity={
@@ -310,8 +321,9 @@ export function AccountForm({
                                         photoError={flows.photoFailed.value}
                                     />
                                     <Field className="flex-1" invalid={Boolean(error)}>
-                                        <Field.Label>{flows.name}</Field.Label>
+                                        <Field.Label className="data-invalid:text-foreground">{flows.name}</Field.Label>
                                         <Input
+                                            className="aria-invalid:ring-[3px]"
                                             onBlur={field.handleBlur}
                                             onChange={(event) => onName(event.target.value)}
                                             placeholder={flows.namePlaceholder.value}
@@ -357,14 +369,15 @@ export function AccountForm({
                     {editing ? (
                         <form.Field name="liability">
                             {(field) => (
-                                <Field>
+                                <Field className="-mb-2 h-9 justify-center">
                                     <Field.Label>
-                                        <Label.Text>{flows.moneyIOwe}</Label.Text>
+                                        <Label.Text className="text-[13px]">{flows.moneyIOwe}</Label.Text>
                                         <Label.Action>
                                             <Switch
+                                                className="[--switch-thumb:white]"
                                                 checked={field.state.value}
                                                 onCheckedChange={field.handleChange}
-                                                size="sm"
+                                                size="xs"
                                             />
                                         </Label.Action>
                                     </Field.Label>
@@ -408,17 +421,30 @@ export function AccountForm({
                             </div>
                         </>
                     ) : null}
+                    {failed && account ? (
+                        <p className="text-destructive text-[13px]" role="alert">
+                            {flows.saveFailed}
+                        </p>
+                    ) : null}
                 </form>
             </Dialog.Body>
-            <FormFooter
-                account={account}
-                dim={name.trim() === "" && !attempted}
-                failed={failed}
-                formId={id}
-                label={card ? flows.saveCard : flows.saveAccount}
-                onClose={onClose}
-                onSwitch={onSwitch}
-            />
+            <Dialog.Footer>
+                {account ? <EditActions accountId={account.localId} onSwitch={onSwitch} /> : null}
+                {failed && !account ? (
+                    <span
+                        className="text-destructive mr-auto h-auto! min-w-0 flex-[0_1_auto]! rounded-none! text-[13px] leading-5"
+                        role="alert"
+                    >
+                        {flows.saveFailed}
+                    </span>
+                ) : null}
+                <Button className={FOOTER_PILL} onClick={onClose} variant="secondary">
+                    {flows.cancel}
+                </Button>
+                <Button className={dim ? `opacity-50 ${FOOTER_PILL}` : FOOTER_PILL} form={id} type="submit">
+                    {card ? flows.saveCard : flows.saveAccount}
+                </Button>
+            </Dialog.Footer>
         </FlowDialog>
     );
 }

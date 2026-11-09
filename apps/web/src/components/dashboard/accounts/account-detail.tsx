@@ -6,34 +6,41 @@ import ArrowDownLeft01Icon from "@hugeicons/core-free-icons/ArrowDownLeft01Icon"
 import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
 import BalanceScaleIcon from "@hugeicons/core-free-icons/BalanceScaleIcon";
+import BankIcon from "@hugeicons/core-free-icons/BankIcon";
 import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
+import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
 import CheckmarkCircle02Icon from "@hugeicons/core-free-icons/CheckmarkCircle02Icon";
+import Clock01Icon from "@hugeicons/core-free-icons/Clock01Icon";
 import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
+import Exchange01Icon from "@hugeicons/core-free-icons/Exchange01Icon";
 import Flag01Icon from "@hugeicons/core-free-icons/Flag01Icon";
 import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
-import Invoice01Icon from "@hugeicons/core-free-icons/Invoice01Icon";
-import MoneyExchange01Icon from "@hugeicons/core-free-icons/MoneyExchange01Icon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
+import Note01Icon from "@hugeicons/core-free-icons/Note01Icon";
 import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
 import SafeIcon from "@hugeicons/core-free-icons/SafeIcon";
 import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
-import Upload01Icon from "@hugeicons/core-free-icons/Upload01Icon";
-import Wallet01Icon from "@hugeicons/core-free-icons/Wallet01Icon";
-import { Link } from "@tanstack/react-router";
+import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
+import type { IconSvgElement } from "@hugeicons/react";
+import { entryLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
+import { Chip } from "panelui-web/chip";
 import { Frame } from "panelui-web/frame";
 import { Menu } from "panelui-web/menu";
 import { Table } from "panelui-web/table";
+import { Toast } from "panelui-web/toast";
 import { Fragment, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { timeOfDay, titled, useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
+import { deleteToasts, useDeleteEntries } from "@/components/dashboard/transactions/use-delete";
+import { AccountTile, LookTile, MerchantTile } from "@/components/ledger/tiles";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -75,8 +82,12 @@ import type { AccountEntry, AccountRow, WorthRange } from "./model";
 import { KpiBand, KpiCell, Meter, PhoneAction, PhoneItem, Segments, Trend, useCheckedText } from "./parts";
 import { WorthChart } from "./worth-chart";
 
-const DETAIL_CHART = 770 / 172;
-const FIELD = "flex h-9 items-center justify-between border-b text-[13px] last:border-0";
+const DETAIL_CHART = 778 / 172;
+const FOREIGN_CHART = 778 / 256;
+const IN_MAIN = "#7C76BC";
+const FIELD = "flex h-9 items-center justify-between gap-3 border-b text-[13px] last:border-0";
+
+const BAR_MENU_OVERHANG = -23;
 
 const monthBack = (key: string, back: number) => {
     const [year, month] = key.split("-").map(Number);
@@ -104,15 +115,16 @@ function useMonthYear() {
 
 function DetailBar({ row }: { row: AccountRow }) {
     const { ledger, photos } = useDashboard();
-    const { actions, detail, flows, purchase } = useIntlayer("dashboard-accounts");
+    const { actions, detail, flows } = useIntlayer("dashboard-accounts");
     const { open } = useAccountFlows();
     const card = isCard(row);
     return (
         <AccountsBar
             title={
-                <span className="flex min-w-0 items-center gap-3">
+                <span className="flex min-w-0 items-center gap-2">
                     <Button
                         aria-label={detail.back.value}
+                        className="mr-1"
                         nativeButton={false}
                         render={<Link to="/app/accounts" />}
                         size="icon"
@@ -123,7 +135,7 @@ function DetailBar({ row }: { row: AccountRow }) {
                     <AccountTile account={row.look} photos={photos} size="lg" />
                     <span className="truncate">{row.name}</span>
                     {row.currency === ledger.currency ? null : (
-                        <Badge className="dash-figure shrink-0" variant="outline">
+                        <Badge className="dash-figure ml-1 shrink-0" variant="outline">
                             {row.currency}
                         </Badge>
                     )}
@@ -135,7 +147,7 @@ function DetailBar({ row }: { row: AccountRow }) {
                 onClick={() => open({ accountId: row.id, kind: "transfer" })}
                 variant="outline"
             >
-                <Glyph icon={ArrowDataTransferHorizontalIcon} />
+                <Glyph icon={ArrowDataTransferHorizontalIcon} className="text-muted-foreground" size={16} />
                 {card ? detail.payCard : actions.transfer}
             </Button>
             <Button
@@ -143,7 +155,7 @@ function DetailBar({ row }: { row: AccountRow }) {
                 onClick={() => open({ accountId: row.id, kind: "edit" })}
                 variant="outline"
             >
-                <Glyph icon={PencilEdit01Icon} />
+                <Glyph icon={PencilEdit01Icon} className="text-muted-foreground" size={16} />
                 {actions.edit}
             </Button>
             <Menu>
@@ -153,7 +165,12 @@ function DetailBar({ row }: { row: AccountRow }) {
                 >
                     <Glyph icon={MoreVerticalIcon} className="text-muted-foreground" />
                 </Menu.Trigger>
-                <Menu.Content align="end" className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
+                <Menu.Content
+                    align="end"
+                    alignOffset={BAR_MENU_OVERHANG}
+                    className={`app-shell ph-no-capture ${card ? "w-[230px]" : "w-[198px]"}`}
+                    sideOffset={4}
+                >
                     <Menu.Item className="sm:hidden" onClick={() => open({ accountId: row.id, kind: "edit" })}>
                         <Glyph icon={PencilEdit01Icon} size={16} />
                         {actions.edit}
@@ -161,12 +178,12 @@ function DetailBar({ row }: { row: AccountRow }) {
                     {card ? (
                         <>
                             <Menu.Item onClick={() => open({ accountId: row.id, kind: "purchase" })}>
-                                <Glyph icon={Add01Icon} size={16} />
+                                <Glyph icon={CalendarCheckIn01Icon} size={16} />
                                 {actions.newPurchase}
                             </Menu.Item>
                             <PhoneItem>
                                 <Glyph icon={ImageAdd01Icon} size={16} />
-                                {purchase.importScreenshot}
+                                {actions.importScreenshot}
                             </PhoneItem>
                             <PhoneItem>
                                 <Glyph icon={Flag01Icon} size={16} />
@@ -179,11 +196,11 @@ function DetailBar({ row }: { row: AccountRow }) {
                             {actions.check}
                         </Menu.Item>
                     )}
+                    <Menu.Separator />
                     <Menu.Item onClick={() => open({ accountId: row.id, kind: "archive" })}>
                         <Glyph icon={Archive02Icon} size={16} />
                         {flows.archive}
                     </Menu.Item>
-                    <Menu.Separator />
                     <Menu.Item variant="destructive" onClick={() => open({ accountId: row.id, kind: "delete" })}>
                         <Glyph icon={Delete02Icon} size={16} />
                         {actions.delete}
@@ -191,7 +208,7 @@ function DetailBar({ row }: { row: AccountRow }) {
                 </Menu.Content>
             </Menu>
             <Button onClick={() => open({ accountId: row.id, kind: "entry" })}>
-                <Glyph icon={Add01Icon} />
+                <Glyph icon={Add01Icon} size={16} />
                 {detail.addEntry}
             </Button>
         </AccountsBar>
@@ -212,6 +229,7 @@ function BankKpis({ row }: { row: AccountRow }) {
     const empty = flowsOf(ledger, row.id).length === 0;
     // A new account reads as a plain band until it has history.
     const icon = <T,>(glyph: T) => (empty ? undefined : glyph);
+    const [rate] = ratesFor(ledger, [row.currency]);
     const period = date.month(ledger.today.slice(0, 7));
     const flows = periodFlows(flowsOf(ledger, row.id), from, ledger.today, row.currency);
     const inMonth = accountEntries(ledger, row.id, from, ledger.today);
@@ -226,11 +244,14 @@ function BankKpis({ row }: { row: AccountRow }) {
         if (count === 0) {
             return detail.noEntries({ period });
         }
+        if (rate) {
+            return count === 1 ? detail.entryCount : detail.entriesCount({ count });
+        }
         return count === 1 ? detail.entryIn({ period }) : detail.entriesIn({ count, period });
     };
-    let moved = detail.transfersIn({ count: transfers, period });
+    let moved: ReactNode = detail.transfersIn({ count: transfers, period });
     if (transfers === 0) {
-        moved = detail.noTransfers({ period });
+        moved = detail.noTransfers;
     } else if (transfers === 1) {
         if (other) {
             moved = other.outbound ? detail.transferTo({ name: otherName }) : detail.transferFrom({ name: otherName });
@@ -238,13 +259,12 @@ function BankKpis({ row }: { row: AccountRow }) {
             moved = detail.oneTransferIn({ period });
         }
     }
-    const [rate] = ratesFor(ledger, [row.currency]);
     const main = inMain(ledger, row.balance, row.currency);
     return (
         <KpiBand>
             <KpiCell
                 color={MUTED}
-                icon={icon(SafeIcon)}
+                icon={icon(rate ? BankIcon : SafeIcon)}
                 label={detail.balance}
                 value={money(row.balance, row.currency)}
             >
@@ -257,8 +277,8 @@ function BankKpis({ row }: { row: AccountRow }) {
             </KpiCell>
             {rate ? (
                 <KpiCell
-                    color={MUTED}
-                    icon={icon(MoneyExchange01Icon)}
+                    color={IN_MAIN}
+                    icon={icon(Exchange01Icon)}
                     label={columns.inMain({ currency: ledger.currency })}
                     value={`${main.exact ? "" : "~"}${money(main.value, ledger.currency)}`}
                 >
@@ -268,7 +288,7 @@ function BankKpis({ row }: { row: AccountRow }) {
             <KpiCell
                 color={INCOME}
                 icon={icon(ArrowDownLeft01Icon)}
-                label={detail.cameIn}
+                label={rate ? detail.flowIn : detail.cameIn}
                 value={money(flows.cameIn, row.currency)}
             >
                 {note(entries(flows.entriesIn))}
@@ -276,7 +296,7 @@ function BankKpis({ row }: { row: AccountRow }) {
             <KpiCell
                 color={SPEND}
                 icon={icon(ArrowUpRight01Icon)}
-                label={detail.wentOut}
+                label={rate ? detail.flowOut : detail.wentOut}
                 value={money(flows.wentOut, row.currency)}
             >
                 {note(entries(flows.entriesOut))}
@@ -324,7 +344,7 @@ function CardKpis({ row }: { row: AccountRow }) {
             </KpiCell>
             <KpiCell
                 color={overdue ? SPEND : "var(--color-app-warn)"}
-                icon={overdue ? AlertCircleIcon : Invoice01Icon}
+                icon={overdue ? AlertCircleIcon : Note01Icon}
                 label={detail.statement}
                 tone={overdue ? "text-app-spend" : ""}
                 value={statement?.due === null || !statement ? "–" : money(statement.due, row.currency)}
@@ -341,7 +361,7 @@ function CardKpis({ row }: { row: AccountRow }) {
             </KpiCell>
             <KpiCell
                 color={INCOME}
-                icon={Wallet01Icon}
+                icon={SafeIcon}
                 label={detail.available}
                 value={limit > 0 ? money(available, row.currency) : "–"}
             >
@@ -394,15 +414,15 @@ function HistoryCard({ row }: { row: AccountRow }) {
             title={
                 <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
                     {detail.history}
-                    <Trend goodWhenUp={!owes} value={change}>
+                    <Trend className="[&_svg]:hidden" goodWhenUp={!owes} value={change}>
                         {owes ? detail.owed({ amount }).value : amount}
                     </Trend>
                 </span>
             }
         >
-            <div className="p-3.5">
+            <div className="p-4 pb-3.5">
                 <WorthChart
-                    aspectRatio={DETAIL_CHART}
+                    aspectRatio={row.currency === ledger.currency ? DETAIL_CHART : FOREIGN_CHART}
                     currency={row.currency}
                     data={data}
                     label={detail.history.value}
@@ -414,6 +434,7 @@ function HistoryCard({ row }: { row: AccountRow }) {
 }
 
 function EntryTile({ entry, imageUrl }: { entry: AccountEntry; imageUrl?: string }) {
+    const { ledger } = useDashboard();
     if (entry.kind !== "entry") {
         return (
             <span className={ICON_TILE}>
@@ -421,7 +442,72 @@ function EntryTile({ entry, imageUrl }: { entry: AccountEntry; imageUrl?: string
             </span>
         );
     }
-    return <MerchantTile imageUrl={imageUrl} name={entry.title || "?"} size="lg" />;
+    const source = ledger.books.transactions.find((row) => row.localId === entry.rowId);
+    const category = ledger.books.categories.find((row) => row.localId === source?.categoryId);
+    const look = source ? entryLook(source, category) : null;
+    if (imageUrl || !(look?.icon || look?.emoji)) {
+        return <MerchantTile imageUrl={imageUrl} name={entry.title || "?"} size="lg" />;
+    }
+    return <LookTile look={look} plain size="lg" />;
+}
+
+function EntryMenu({ accountId, entry, name }: { accountId: string; entry: AccountEntry; name: string }) {
+    const { actions } = useIntlayer("dashboard-accounts");
+    const navigate = useNavigate();
+    const deleteEntries = useDeleteEntries();
+    const openSheet = () =>
+        navigate({ search: { accounts: accountId, entry: entry.rowId, span: "all" }, to: "/app/transactions" });
+    const editable = entry.kind === "entry" && !entry.adjustment;
+    const edit = (icon: IconSvgElement, label: ReactNode) =>
+        editable ? (
+            <Menu.Item onClick={openSheet}>
+                <Glyph icon={icon} size={16} />
+                {label}
+            </Menu.Item>
+        ) : (
+            <PhoneItem>
+                <Glyph icon={icon} size={16} />
+                {label}
+            </PhoneItem>
+        );
+    return (
+        <Menu>
+            <Menu.Trigger
+                aria-label={actions.more({ name }).value}
+                render={<Button className="text-muted-foreground -mx-2 -my-1" size="icon-sm" variant="ghost" />}
+            >
+                <Glyph icon={MoreVerticalIcon} size={17} />
+            </Menu.Trigger>
+            <Menu.Content align="center" className="app-shell ph-no-capture w-[215px]" side="left" sideOffset={-6}>
+                {entry.outside ? (
+                    <PhoneItem>
+                        <Glyph icon={ArrowUpRight01Icon} size={16} />
+                        {actions.open}
+                    </PhoneItem>
+                ) : (
+                    <Menu.Item onClick={openSheet}>
+                        <Glyph icon={ArrowUpRight01Icon} size={16} />
+                        {actions.open}
+                    </Menu.Item>
+                )}
+                {edit(PencilEdit01Icon, actions.edit)}
+                {edit(Tag01Icon, actions.changeCategory)}
+                {edit(BankIcon, actions.moveToAccount)}
+                <Menu.Separator />
+                {entry.outside ? (
+                    <PhoneItem>
+                        <Glyph icon={Delete02Icon} size={16} />
+                        {actions.delete}
+                    </PhoneItem>
+                ) : (
+                    <Menu.Item onClick={() => deleteEntries([entry.rowId])} variant="destructive">
+                        <Glyph icon={Delete02Icon} size={16} />
+                        {actions.delete}
+                    </Menu.Item>
+                )}
+            </Menu.Content>
+        </Menu>
+    );
 }
 
 function ChipMenu({
@@ -437,7 +523,7 @@ function ChipMenu({
 }) {
     return (
         <Menu>
-            <Menu.Trigger render={<Button size="sm" variant={on ? "secondary" : "outline"} />}>
+            <Menu.Trigger render={<Chip className="gap-1.5" pressed={on} size="lg" />}>
                 {icon}
                 {label}
             </Menu.Trigger>
@@ -485,7 +571,7 @@ function TransactionsCard({ row }: { row: AccountRow }) {
     return (
         <Card
             action={
-                <span className="flex flex-wrap items-center gap-2">
+                <span className="-mr-1 flex flex-wrap items-center gap-3">
                     <ChipMenu
                         icon={<Glyph icon={Calendar03Icon} className="text-muted-foreground" size={14} />}
                         label={monthName(month)}
@@ -526,16 +612,18 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                         ))}
                     </ChipMenu>
                     <Button
+                        className="gap-1.5"
                         nativeButton={false}
                         render={<Link search={{ accounts: row.id, span: "all" }} to="/app/transactions" />}
                         size="sm"
                         variant="outline"
                     >
                         {actions.seeAll}
-                        <Glyph icon={ArrowUpRight01Icon} className="text-muted-foreground" />
+                        <Glyph icon={ArrowUpRight01Icon} className="text-muted-foreground" size={16} />
                     </Button>
                 </span>
             }
+            className="flex-1"
             count={shown.length}
             stackAction
             title={detail.transactions}
@@ -555,6 +643,7 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                         "",
                     ]}
                     numbers={foreign ? 2 : 1}
+                    phoneHidden={foreign ? [2, 5] : [2]}
                 >
                     {shown.map((entry) => {
                         const found = entry.categoryId ? ledger.categories.get(entry.categoryId) : undefined;
@@ -567,18 +656,19 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                         } else if (entry.kind === "inbound") {
                             title = entry.other ? detail.fromName({ name: otherName }) : detail.transfer;
                         }
+                        const income = entry.kind === "entry" && entry.value > 0;
                         const checkedHere =
                             entry.adjustment && entry.at === row.checkedAt && entry.day === ledger.today;
                         return (
                             <Fragment key={entry.id}>
                                 {checkedHere ? (
-                                    <Table.Row className="bg-app-income/10">
+                                    <Table.Row>
                                         <Table.Cell
                                             className="text-muted-foreground py-2! ps-3.5! text-xs!"
                                             colSpan={foreign ? 6 : 5}
                                         >
                                             <span className="flex items-center gap-2">
-                                                <Glyph className="text-app-income" icon={Tick02Icon} size={14} />
+                                                <Glyph className="text-app-income" icon={Tick02Icon} size={12} />
                                                 {detail.checkedBand({
                                                     amount: money(entry.value, row.currency),
                                                     time: clockTime(timeOfDay(entry.at, ledger.offsetAt(entry.at))),
@@ -594,16 +684,18 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                                                 entry={entry}
                                                 imageUrl={entry.imageKey ? photos.get(entry.imageKey) : undefined}
                                             />
-                                            <span className="max-w-[260px] truncate">{title}</span>
+                                            <span className="max-w-[120px] truncate sm:max-w-[260px]">{title}</span>
                                         </span>
                                     </Cell>
                                     <Cell>
                                         {found ? (
-                                            <Badge variant="outline">
-                                                <i
-                                                    className="size-1.5 rounded-full"
-                                                    style={{ background: found.color }}
-                                                />
+                                            <Badge className={income ? "text-muted-foreground" : ""} variant="outline">
+                                                {income ? null : (
+                                                    <i
+                                                        className="size-1.5 rounded-full"
+                                                        style={{ background: found.color }}
+                                                    />
+                                                )}
                                                 {found.name}
                                             </Badge>
                                         ) : (
@@ -614,17 +706,12 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                                             </Badge>
                                         )}
                                     </Cell>
-                                    <Cell className="dash-figure text-muted-foreground text-[13px]">
-                                        {date.day(entry.day)}
-                                    </Cell>
-                                    <Cell
-                                        className={`text-[13px]! font-normal ${entry.value > 0 ? "text-app-income" : ""}`}
-                                        figure
-                                    >
+                                    <Cell className="dash-figure text-muted-foreground">{date.day(entry.day)}</Cell>
+                                    <Cell className={`font-normal ${entry.value > 0 ? "text-app-income" : ""}`} figure>
                                         {money(entry.value, row.currency, "always")}
                                     </Cell>
                                     {foreign ? (
-                                        <Cell className="text-muted-foreground text-[13px]! font-normal" figure>
+                                        <Cell className="text-muted-foreground font-normal" figure>
                                             {money(
                                                 entry.main ?? inMain(ledger, entry.value, row.currency).value,
                                                 ledger.currency,
@@ -633,30 +720,11 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                                         </Cell>
                                     ) : null}
                                     <Cell className="w-10">
-                                        <Menu>
-                                            <Menu.Trigger
-                                                aria-label={detail.transactions.value}
-                                                render={
-                                                    <Button
-                                                        className="text-muted-foreground -mr-1"
-                                                        size="icon-sm"
-                                                        variant="ghost"
-                                                    />
-                                                }
-                                            >
-                                                <Glyph icon={MoreVerticalIcon} size={17} />
-                                            </Menu.Trigger>
-                                            <Menu.Content
-                                                align="end"
-                                                className="app-shell ph-no-capture w-[180px]"
-                                                sideOffset={4}
-                                            >
-                                                <PhoneItem>
-                                                    <Glyph icon={PencilEdit01Icon} size={16} />
-                                                    {actions.edit}
-                                                </PhoneItem>
-                                            </Menu.Content>
-                                        </Menu>
+                                        <EntryMenu
+                                            accountId={row.id}
+                                            entry={entry}
+                                            name={entry.title || detail.transfer.value}
+                                        />
                                     </Cell>
                                 </Table.Row>
                             </Fragment>
@@ -677,19 +745,19 @@ const GHOST_ROWS = [
     [88, 90, 64, 30, 50],
     [94, 88, 50, 34, 56],
 ] as const;
-const GHOST_COLUMNS = "grid grid-cols-[30%_18%_17%_1fr_auto] items-center gap-2 px-3.5";
+const GHOST_COLUMNS = "grid grid-cols-[30%_18%_17%_1fr_auto] items-center px-5";
 
 function EmptyEntries({ accountId }: { accountId: string }) {
     const { open } = useAccountFlows();
     const { detail } = useIntlayer("dashboard-accounts");
     return (
         <Card className="flex-1" title={detail.transactions}>
-            <div aria-hidden className={`${GHOST_COLUMNS} h-9 border-b`}>
+            <div aria-hidden className={`${GHOST_COLUMNS} h-[50px] border-b pt-3.5`}>
                 {[48, 44, 42, 40, 40].map((width, index) => (
                     <i className={`dash-gl ${index === 4 ? "justify-self-end" : ""}`} key={index} style={{ width }} />
                 ))}
             </div>
-            <div aria-hidden className="[mask-image:linear-gradient(#000_55%,transparent)]">
+            <div aria-hidden className="[mask-image:linear-gradient(#000_80%,transparent)]">
                 {GHOST_ROWS.map(([name, badge, day, amount, right], index) => (
                     <div className={`${GHOST_COLUMNS} h-[42px] border-b last:border-0`} key={index}>
                         <span className="flex items-center gap-2.5">
@@ -703,16 +771,16 @@ function EmptyEntries({ accountId }: { accountId: string }) {
                     </div>
                 ))}
             </div>
-            <div className="flex flex-col items-center gap-1.5 px-6 pt-6 pb-10 text-center">
+            <div className="flex flex-col items-center gap-1.5 px-6 pt-4 pb-10 text-center">
                 <b className="text-[15px] leading-[22px] font-semibold">{detail.emptyTitle}</b>
                 <p className="text-muted-foreground text-[13px]">{detail.emptyBody}</p>
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
                     <Button onClick={() => open({ accountId, kind: "entry" })}>
-                        <Glyph icon={Add01Icon} />
+                        <Glyph icon={Add01Icon} size={16} />
                         {detail.addEntry}
                     </Button>
-                    <PhoneAction>
-                        <Glyph icon={Upload01Icon} />
+                    <PhoneAction size="sm">
+                        <Glyph icon={Upload04Icon} className="text-muted-foreground" size={16} />
                         {detail.importEntries}
                     </PhoneAction>
                 </div>
@@ -731,6 +799,7 @@ function CheckCard({ row }: { row: AccountRow }) {
     const { locale } = useLocale();
     const age = checkedAge(row.checkedAt, ledger);
     const fresh = age.state === "today" || age.state === "yesterday" || age.state === "daysAgo";
+    const stale = !fresh && age.state !== "never";
     let tone = "var(--color-app-tint)";
     if (fresh) {
         tone = INCOME;
@@ -738,7 +807,9 @@ function CheckCard({ row }: { row: AccountRow }) {
         tone = MUTED;
     }
     let line: ReactNode = null;
-    if (row.checkedAt !== null) {
+    if (stale) {
+        line = detail.compareBankApp;
+    } else if (row.checkedAt !== null) {
         const offset = ledger.offsetAt(row.checkedAt);
         line =
             age.state === "today"
@@ -746,23 +817,23 @@ function CheckCard({ row }: { row: AccountRow }) {
                 : detail.matchedOn({ date: date.day(new Date(row.checkedAt + offset).toISOString().slice(0, 10)) });
     }
     return (
-        <Frame className="min-w-0 rounded-2xl" variant="band">
-            <Frame.Panel className="group-data-[variant=band]/frame:rounded-[10px]">
-                <Frame.Row className="gap-2.5 px-3">
+        <Frame className="min-w-0" variant="plain">
+            <Frame.Panel>
+                <Frame.Row className="py-3.5 pr-3 pl-4">
                     <Frame.Media
                         className="size-8 rounded-[10px]"
                         style={{
-                            background: `color-mix(in oklab, ${tone} 16%, transparent)`,
+                            background: `color-mix(in oklab, ${tone} ${fresh ? 14 : 16}%, transparent)`,
                             color: tone,
                         }}
                     >
-                        <Glyph icon={fresh || age.state === "never" ? Tick02Icon : AlertCircleIcon} size={16} />
+                        <Glyph icon={stale ? Clock01Icon : Tick02Icon} size={17} />
                     </Frame.Media>
-                    <Frame.Content>
-                        <Frame.Title>
+                    <Frame.Content className="gap-0">
+                        <Frame.Title className={`leading-[18px] ${stale ? "text-app-tint!" : ""}`}>
                             {age.state === "never" ? detail.checkTitle : titled(checked(age), locale)}
                         </Frame.Title>
-                        {line ? <Frame.Description className="text-xs">{line}</Frame.Description> : null}
+                        {line ? <Frame.Description className="text-xs leading-4">{line}</Frame.Description> : null}
                     </Frame.Content>
                     <Frame.Actions>
                         <Button onClick={() => open({ accountId: row.id, kind: "check" })} size="sm" variant="outline">
@@ -784,35 +855,36 @@ function InstallmentsCard({ row }: { row: AccountRow }) {
     return (
         <Card
             action={
-                <Button
-                    className="-my-1"
-                    onClick={() => open({ accountId: row.id, kind: "purchase" })}
-                    size="sm"
-                    variant="outline"
-                >
-                    <Glyph icon={Add01Icon} />
+                <Button onClick={() => open({ accountId: row.id, kind: "purchase" })} size="sm" variant="outline">
+                    <Glyph icon={Add01Icon} className="text-muted-foreground" size={16} />
                     {actions.newPurchase}
                 </Button>
             }
             title={list.installments}
         >
             {plans.length === 0 ? null : (
-                <div className="flex flex-col gap-4 p-3.5">
-                    {plans.map((plan) => (
-                        <div key={plan.id}>
-                            <div className="flex items-baseline gap-2 text-[13px] font-medium">
-                                <span className="min-w-0 truncate">{plan.name || list.planFallback}</span>
-                                <span className="dash-figure ml-auto whitespace-nowrap">
-                                    {list.planLeft({ amount: money(plan.left, plan.currency) })}
-                                </span>
+                <div className="flex flex-col gap-4 p-4">
+                    {plans.map((plan) => {
+                        const amount = money(plan.left, plan.currency);
+                        const [before, after] = list.planLeft({ amount }).value.split(amount);
+                        return (
+                            <div key={plan.id}>
+                                <div className="flex items-baseline gap-2 text-[13px] font-medium">
+                                    <span className="min-w-0 truncate">{plan.name || list.planFallback}</span>
+                                    <span className="dash-figure ml-auto whitespace-nowrap">
+                                        <span className="text-muted-foreground font-normal">{before}</span>
+                                        {amount}
+                                        <span className="text-muted-foreground font-normal">{after}</span>
+                                    </span>
+                                </div>
+                                <Meter className="mt-2" max={1} value={plan.fraction} />
+                                <div className="dash-figure text-muted-foreground mt-2 flex text-xs leading-4">
+                                    {plan.count} x {money(plan.each, plan.currency)}
+                                    <span className="ml-auto">{list.planPaid({ count: plan.paidCount })}</span>
+                                </div>
                             </div>
-                            <Meter className="mt-2.5" max={1} value={plan.fraction} />
-                            <div className="dash-figure text-muted-foreground mt-2.5 flex text-xs leading-4">
-                                {plan.count} x {money(plan.each, plan.currency)}
-                                <span className="ml-auto">{list.planPaid({ count: plan.paidCount })}</span>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
         </Card>
@@ -822,15 +894,33 @@ function InstallmentsCard({ row }: { row: AccountRow }) {
 function SpentCard({ row }: { row: AccountRow }) {
     const { ledger } = useDashboard();
     const { detail } = useIntlayer("dashboard-accounts");
+    const { money } = useDisplayFormat();
     const { whole } = useWholeMoney(row.currency);
     const shares = spentByCategory(ledger, row.id, monthStart(ledger.today), ledger.today);
     if (shares.length === 0) {
         return null;
     }
     const total = shares.reduce((sum, share) => sum + share.value, 0);
+    if (row.currency !== ledger.currency) {
+        return (
+            <Card aside={money(total, row.currency)} title={detail.spent}>
+                <div className="px-4 pt-4 pb-1.5">
+                    {shares.map((share) => (
+                        <div className={FIELD} key={share.id}>
+                            <span className="text-muted-foreground flex min-w-0 items-center gap-2">
+                                <i className="size-2 shrink-0 rounded-[2px]" style={{ background: share.color }} />
+                                <span className="truncate">{share.name}</span>
+                            </span>
+                            <span className="dash-figure">{money(share.value, row.currency)}</span>
+                        </div>
+                    ))}
+                </div>
+            </Card>
+        );
+    }
     return (
         <Card aside={whole(total)} title={detail.spentFrom({ name: row.name })}>
-            <div className="p-3.5">
+            <div className="p-4">
                 <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
                     {shares.map((share) => (
                         <i
@@ -842,12 +932,16 @@ function SpentCard({ row }: { row: AccountRow }) {
                 </div>
                 <div className="mt-2">
                     {shares.map((share) => (
-                        <div className="flex h-9 items-center gap-2 border-b text-[13px] last:border-0" key={share.id}>
-                            <i className="size-[7px] shrink-0 rounded-full" style={{ background: share.color }} />
-                            <span className="min-w-0 truncate">{share.name}</span>
-                            <span className="dash-figure ml-auto font-medium">{whole(share.value)}</span>
-                            <span className="dash-figure text-muted-foreground w-9 text-right text-xs">
-                                {Math.round((share.value / total) * PERCENT)}%
+                        <div className={FIELD} key={share.id}>
+                            <span className="flex min-w-0 items-center gap-2">
+                                <i className="size-2 shrink-0 rounded-full" style={{ background: share.color }} />
+                                <span className="truncate">{share.name}</span>
+                            </span>
+                            <span className="dash-figure">
+                                {whole(share.value)}
+                                <span className="text-muted-foreground ml-1.5">
+                                    {Math.round((share.value / total) * PERCENT)}%
+                                </span>
                             </span>
                         </div>
                     ))}
@@ -859,7 +953,7 @@ function SpentCard({ row }: { row: AccountRow }) {
 
 function DetailsCard({ row }: { row: AccountRow }) {
     const { ledger } = useDashboard();
-    const { detail } = useIntlayer("dashboard-accounts");
+    const { detail, flows } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const monthYear = useMonthYear();
     const average = useMemo(() => {
@@ -874,13 +968,19 @@ function DetailsCard({ row }: { row: AccountRow }) {
         type = detail.card;
     } else if (row.kind !== "asset") {
         type = detail.loan;
+    } else if (row.look.icon === "Bank") {
+        type = flows.bank;
+    } else if (row.look.icon === "Wallet01") {
+        type = flows.cash;
     }
+    const count = flowsOf(ledger, row.id).length;
+    const foreign = row.currency !== ledger.currency;
     const fields: [ReactNode, ReactNode, "words"?][] = [
         [detail.type, type, "words"],
-        [detail.currency, row.currency, "words"],
+        [detail.currency, row.currency],
     ];
-    if (row.currency !== ledger.currency) {
-        fields.push([detail.mainCurrency, ledger.currency, "words"]);
+    if (foreign) {
+        fields.push([detail.mainCurrency, ledger.currency]);
     }
     if (card) {
         fields.push(
@@ -888,8 +988,9 @@ function DetailsCard({ row }: { row: AccountRow }) {
             [detail.statementDay, row.statementDay === null ? "–" : detail.day({ day: row.statementDay })],
             [detail.paymentDay, row.paymentDay === null ? "–" : detail.day({ day: row.paymentDay })]
         );
+    } else if (foreign) {
+        fields.push([detail.started, monthYear(row.openedDay)]);
     } else {
-        const count = flowsOf(ledger, row.id).length;
         fields.push(
             [detail.started, monthYear(row.openedDay)],
             [detail.opening, money(row.initialBalance, row.currency)]
@@ -903,11 +1004,13 @@ function DetailsCard({ row }: { row: AccountRow }) {
     }
     return (
         <Card className="flex-1" title={detail.details}>
-            <div className="px-3.5 py-1">
+            <div className="p-4">
                 {fields.map(([label, value, words], index) => (
                     <div className={FIELD} key={index}>
                         <span className="text-muted-foreground">{label}</span>
-                        <span className={words ? "" : "dash-figure"}>{value}</span>
+                        <span className={words ? "" : `dash-figure ${count > 0 ? "text-muted-foreground" : ""}`}>
+                            {value}
+                        </span>
                     </div>
                 ))}
             </div>
@@ -938,27 +1041,29 @@ export function AccountDetail({ accountId }: { accountId: string }) {
     }
     const empty = flowsOf(ledger, row.id).length === 0;
     return (
-        <main className="@container min-w-0 px-4 pb-5 sm:px-6">
-            <DetailBar row={row} />
-            {isCard(row) ? <CardKpis row={row} /> : <BankKpis row={row} />}
-            <div className="mt-4 grid grid-cols-1 gap-4 @5xl:grid-cols-[minmax(0,1fr)_332px]">
-                <div className="flex min-w-0 flex-col gap-4">
-                    {empty ? (
-                        <EmptyEntries accountId={row.id} />
-                    ) : (
-                        <>
-                            <HistoryCard row={row} />
-                            <TransactionsCard key={row.id} row={row} />
-                        </>
-                    )}
+        <Toast.Provider position="bottom-center" toastManager={deleteToasts}>
+            <main className="@container flex min-h-dvh min-w-0 flex-col px-4 pb-5 sm:px-6">
+                <DetailBar row={row} />
+                {isCard(row) ? <CardKpis row={row} /> : <BankKpis row={row} />}
+                <div className="mt-4 grid flex-1 grid-cols-1 gap-4 @5xl:grid-cols-[minmax(0,1fr)_332px]">
+                    <div className="flex min-w-0 flex-col gap-4">
+                        {empty ? (
+                            <EmptyEntries accountId={row.id} />
+                        ) : (
+                            <>
+                                <HistoryCard row={row} />
+                                <TransactionsCard key={row.id} row={row} />
+                            </>
+                        )}
+                    </div>
+                    <div className="flex min-w-0 flex-col gap-4">
+                        <CheckCard row={row} />
+                        <UpcomingCard accountId={row.id} showEmpty={!empty} />
+                        {isCard(row) ? <InstallmentsCard row={row} /> : <SpentCard row={row} />}
+                        <DetailsCard row={row} />
+                    </div>
                 </div>
-                <div className="flex min-w-0 flex-col gap-4">
-                    <CheckCard row={row} />
-                    <UpcomingCard accountId={row.id} showEmpty={!empty} />
-                    {isCard(row) ? <InstallmentsCard row={row} /> : <SpentCard row={row} />}
-                    <DetailsCard row={row} />
-                </div>
-            </div>
-        </main>
+            </main>
+        </Toast.Provider>
     );
 }

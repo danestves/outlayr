@@ -762,6 +762,7 @@ export type EntryKind = "entry" | "inbound" | "outbound";
 
 export interface AccountEntry {
     adjustment: boolean;
+    outside: boolean;
     at: number;
     categoryId: string | null;
     day: string;
@@ -772,6 +773,8 @@ export interface AccountEntry {
     main: number | null;
     /** The other account of a transfer. */
     other: string | null;
+    /** The ledger row behind this leg; `id` alone is not one, since a transfer has two legs. */
+    rowId: string;
     title: string;
     /** Signed, in the account's currency. */
     value: number;
@@ -809,6 +812,7 @@ export function accountEntries(ledger: Ledger, accountId: string, from: string, 
     const adjustments = new Set(
         ledger.books.outsideMoves.flatMap((row) => (row.adjustment === true ? [row.localId] : []))
     );
+    const outside = new Set(ledger.books.outsideMoves.map((row) => row.localId));
     return flowsOf(ledger, accountId)
         .filter((flow) => flow.day >= from && flow.day <= to)
         .map((flow): AccountEntry => {
@@ -832,6 +836,8 @@ export function accountEntries(ledger: Ledger, accountId: string, from: string, 
                         ? null
                         : roundMoney(Math.sign(flow.value) * Math.abs(booked), decimalsFor(ledger.currency)),
                 other,
+                outside: outside.has(flow.id),
+                rowId: flow.id,
                 title: row?.note ?? "",
                 value: flow.value,
             };

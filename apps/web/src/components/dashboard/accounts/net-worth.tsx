@@ -1,6 +1,5 @@
 import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import { Link } from "@tanstack/react-router";
-import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Plot } from "panelui-web/plot";
 import { Table } from "panelui-web/table";
@@ -22,7 +21,9 @@ import type { AccountRow, WorthRange } from "./model";
 import { KpiBand, KpiCell, Segments, Trend, useChartRatio } from "./parts";
 import { useMonthShort, Y_LABEL } from "./worth-chart";
 
-const CHART = 1118 / 326;
+const CHART = 1126 / 330;
+// The frames draw these pills without Kpi.Trend's arrow.
+const BARE = "[&_svg]:hidden";
 const NAMED = 2;
 const THOUSAND = 1000;
 const DAILY_TICKS = 6;
@@ -91,7 +92,10 @@ function Kpis({ model }: { model: NetWorthModel }) {
                 <Note
                     pill={
                         growth === null ? null : (
-                            <Trend value={growth}>{`${growth > 0 ? "+" : ""}${(growth * PERCENT).toFixed(1)}%`}</Trend>
+                            <Trend
+                                className={BARE}
+                                value={growth}
+                            >{`${growth > 0 ? "+" : ""}${(growth * PERCENT).toFixed(1)}%`}</Trend>
                         )
                     }
                 >
@@ -99,7 +103,13 @@ function Kpis({ model }: { model: NetWorthModel }) {
                 </Note>
             </KpiCell>
             <KpiCell color={INCOME} label={kpi.have} value={money(now?.own ?? 0, ledger.currency)}>
-                <Note pill={<Trend value={delta("own")}>{signed(delta("own"))}</Trend>}>
+                <Note
+                    pill={
+                        <Trend className={BARE} value={delta("own")}>
+                            {signed(delta("own"))}
+                        </Trend>
+                    }
+                >
                     {moved(
                         rows.filter((row) => row.kind === "asset"),
                         changes
@@ -109,7 +119,7 @@ function Kpis({ model }: { model: NetWorthModel }) {
             <KpiCell color={SPEND} label={kpi.owe} value={money(now?.owe ?? 0, ledger.currency)}>
                 <Note
                     pill={
-                        <Trend goodWhenUp={false} value={delta("owe")}>
+                        <Trend className={BARE} goodWhenUp={false} value={delta("owe")}>
                             {signed(delta("owe"))}
                         </Trend>
                     }
@@ -122,7 +132,7 @@ function Kpis({ model }: { model: NetWorthModel }) {
             </KpiCell>
             <KpiCell color={INCOME} label={net.keptIn({ period })} value={money(kept.value, ledger.currency)}>
                 {kept.share === null ? null : (
-                    <Note pill={<Badge variant="secondary">{`${Math.round(kept.share * PERCENT)}%`}</Badge>}>
+                    <Note pill={<Trend className={BARE} value={0}>{`${Math.round(kept.share * PERCENT)}%`}</Trend>}>
                         {net.ofIncome({ amount: money(income.value, ledger.currency) })}
                     </Note>
                 )}
@@ -178,14 +188,14 @@ function HaveOweCard({ model, range }: { model: NetWorthModel; range: WorthRange
         <Card
             title={
                 <span className="flex flex-wrap items-center gap-x-3.5 gap-y-1">
-                    {net.haveAndOwe}
-                    <Legend color={`color-mix(in oklab, ${INCOME} 45%, transparent)`} label={kpi.have} />
+                    <span className="me-1.5">{net.haveAndOwe}</span>
+                    <Legend color={`color-mix(in oklab, ${INCOME} 40%, transparent)`} label={kpi.have} />
                     <Legend color={`color-mix(in oklab, ${SPEND} 60%, transparent)`} label={kpi.owe} />
                     <Legend color="var(--color-foreground)" label={kpi.netWorth} line />
                 </span>
             }
         >
-            <div className="p-3.5">
+            <div className="px-4 pt-4 pb-3.5">
                 <Plot
                     aspectRatio={ratio}
                     curve="linear"
@@ -195,10 +205,11 @@ function HaveOweCard({ model, range }: { model: NetWorthModel; range: WorthRange
                     yDomain={domain}
                 >
                     <Plot.Grid dashArray="" rows={rows} />
-                    <Plot.Bars color={INCOME} dataKey="have" gap={0.83} opacity={0.32} radius={3} />
-                    <Plot.Bars color={SPEND} dataKey="owe" gap={0.83} opacity={0.5} radius={3} />
-                    <Plot.Line color="var(--color-foreground)" dataKey="net" strokeWidth={1.5} />
-                    <Plot.Dots color="var(--color-foreground)" dataKey="net" ringWidth={0} size={2.5} />
+                    <Plot.Rule color="var(--color-app-strong)" strokeWidth={1} y={0} />
+                    <Plot.Bars color={INCOME} dataKey="have" gap={0.82} opacity={0.28} radius={4} />
+                    <Plot.Bars color={SPEND} dataKey="owe" gap={0.82} opacity={0.5} radius={4} />
+                    <Plot.Line color="var(--color-foreground)" dataKey="net" strokeWidth={2} />
+                    <Plot.Dots color="var(--color-foreground)" dataKey="net" ringWidth={0} size={3} />
                     <Plot.XAxis
                         className="dash-figure text-[11px]"
                         format={(datum) => (monthly ? month(String(datum.day)) : date.day(String(datum.day)))}
@@ -231,30 +242,35 @@ function MonthsCard({ model }: { model: NetWorthModel }) {
         .toReversed();
     return (
         <Card title={net.byMonth}>
-            <DataTable head={[net.month, net.started, kpi.have, kpi.owe, kpi.netWorth, net.change]} numbers={4}>
+            <DataTable
+                density="comfortable"
+                head={[net.month, net.started, kpi.have, kpi.owe, kpi.netWorth, net.change]}
+                numbers={4}
+                phoneHidden={[2, 3, 4]}
+            >
                 {rows.map(({ point, started }) => {
                     const key = point.day.slice(0, 7);
                     const name = titled(date.month(key), locale);
                     const change = point.net - started;
                     return (
                         <Table.Row key={key}>
-                            <Cell className="dash-figure text-[13px]">
+                            <Cell className="dash-figure">
                                 {key.startsWith(year) ? name : `${name} ${key.slice(0, 4)}`}
                             </Cell>
-                            <Cell className="text-[13px]! font-normal" figure>
+                            <Cell className="font-normal" figure>
                                 {money(started, ledger.currency)}
                             </Cell>
-                            <Cell className="text-[13px]! font-normal" figure>
+                            <Cell className="font-normal" figure>
                                 {money(point.own, ledger.currency)}
                             </Cell>
-                            <Cell className="text-[13px]! font-normal" figure>
+                            <Cell className="font-normal" figure>
                                 {money(point.owe, ledger.currency)}
                             </Cell>
-                            <Cell className="text-[13px]! font-normal" figure>
-                                {money(point.net, ledger.currency)}
-                            </Cell>
+                            <Cell figure>{money(point.net, ledger.currency)}</Cell>
                             <Cell>
-                                <Trend value={change}>{money(change, ledger.currency, "always")}</Trend>
+                                <Trend className={BARE} value={change}>
+                                    {money(change, ledger.currency, "always")}
+                                </Trend>
                             </Cell>
                         </Table.Row>
                     );

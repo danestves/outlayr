@@ -1053,7 +1053,10 @@
     --border: var(--color-app-rule);
     --muted: var(--color-app-fill);
     --muted-foreground: var(--color-app-muted);
+    --card: var(--color-app-group);
+    --input: var(--color-app-rule);
     --popover: var(--color-app-group);
+    --popover-foreground: var(--color-app-ink);
     --primary: var(--color-app-tint);
     --primary-foreground: var(--color-app-on-tint);
     --destructive: var(--color-app-spend);
@@ -1282,14 +1285,6 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
         color: inherit;
     }
 
-    .dash-count {
-        font: 500 11px/18px var(--font-mono);
-        padding: 0 6px;
-        border-radius: 6px;
-        color: color-mix(in oklab, var(--color-app-tint), var(--color-app-ink) 35%);
-        background: color-mix(in oklab, var(--color-app-tint) 18%, var(--color-app-bg));
-    }
-
     .dash-seg {
         height: 30px;
         padding: 0 12px;
@@ -1498,6 +1493,7 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
     }
 }
 
+/* Outside the layer: panelui's Badge utilities would otherwise win over the frame's size. */
 /* Outside the layer: panelui's Menu.Item utilities would otherwise win over this spacing. */
 .dash-menu-item {
     display: flex;
@@ -1543,15 +1539,15 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
     border-radius: 16px;
 }
 
-.dash-ib > img {
+.dash-ib img {
     width: 100%;
     height: 100%;
-    border-radius: inherit;
+    border-radius: 16px;
     background: #fff;
     object-fit: cover;
 }
 
-.dash-ib > u {
+.dash-ib u {
     position: absolute;
     right: -5px;
     bottom: -5px;
@@ -1562,7 +1558,7 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
     height: 22px;
     border: 1px solid var(--color-app-strong);
     border-radius: 50%;
-    background: var(--color-app-float);
+    background: var(--color-app-fill);
     color: var(--color-app-ink);
     text-decoration: none;
 }
@@ -1571,37 +1567,13 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
     padding: 12px;
     border: 1px solid var(--color-app-strong);
     border-radius: 16px;
-    background: var(--color-app-float);
+    background: var(--color-app-fill);
     box-shadow:
         0 16px 32px -12px var(--color-app-shadow-far),
         0 4px 12px var(--color-app-shadow-near);
     font-size: 14px;
     line-height: 20px;
     outline: none;
-}
-
-.dash-po-tabs {
-    display: flex;
-    padding: 3px;
-    border-radius: 10px;
-    background: var(--color-app-group);
-}
-
-.dash-po-tabs button {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    justify-content: center;
-    height: 28px;
-    border-radius: 8px;
-    color: var(--color-app-muted);
-    font-size: 13px;
-    font-weight: 500;
-}
-
-.dash-po-tabs button[aria-pressed="true"] {
-    background: var(--color-app-strong);
-    color: var(--color-app-ink);
 }
 
 .dash-pr {
@@ -1661,43 +1633,6 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
     box-shadow:
         0 0 0 2px var(--color-app-float),
         0 0 0 4px var(--color-app-ink);
-}
-
-.dash-toast {
-    position: fixed;
-    right: 24px;
-    bottom: max(24px, env(safe-area-inset-bottom));
-    z-index: 70;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    max-width: calc(100vw - 32px);
-    min-height: 44px;
-    padding: 0 8px 0 14px;
-    border: 1px solid var(--color-app-strong);
-    border-radius: 12px;
-    background: var(--color-app-float);
-    box-shadow: 0 16px 32px -12px var(--color-app-shadow-far);
-    color: var(--color-app-ink);
-    font-size: 13px;
-}
-
-.dash-toast > button {
-    padding: 4px 8px;
-    border-radius: 6px;
-    background: color-mix(in oklab, var(--color-app-ink) 5%, transparent);
-    font-weight: 500;
-}
-
-@media (max-width: 639px) {
-    .dash-toast {
-        right: 16px;
-        left: 16px;
-    }
-
-    .dash-toast > button {
-        margin-left: auto;
-    }
 }
 
 /* iOS Safari zooms the page on focus under 16px, and PanelUI's Input is smaller. Outside a layer so it beats `text-sm`. */

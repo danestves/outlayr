@@ -1,3 +1,4 @@
+import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
 import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
 import { decimalsFor } from "@outlayr/money/currency";
@@ -35,6 +36,7 @@ import { PhoneAction } from "./parts";
 const COUNTS = Array.from({ length: MAX_INSTALLMENT_COUNT }, (_, index) => String(index + 1));
 const OTHER_APP = "other";
 const CONTENT = "app-shell z-[60]";
+const CHEVRON = <Glyph icon={ArrowDown01Icon} size={16} />;
 
 const pad = (value: number) => String(value).padStart(2, "0");
 const dayKey = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -68,7 +70,7 @@ function ChoiceField<Value extends string>({
         <Field>
             <Field.Label>{label}</Field.Label>
             <Select items={options} onValueChange={(next) => next && onPick(next)} value={value}>
-                <Select.Trigger>
+                <Select.Trigger icon={CHEVRON}>
                     <Select.Value className={figure ? "dash-figure" : undefined} />
                 </Select.Trigger>
                 <Select.Content className={CONTENT}>
@@ -102,7 +104,7 @@ function NoCardsSelect({ onAdd, onOther }: { onAdd: (app: InstallmentApp) => voi
             }}
             value={null}
         >
-            <Select.Trigger>
+            <Select.Trigger icon={CHEVRON}>
                 <Select.Value placeholder={purchase.pick.value} />
             </Select.Trigger>
             <Select.Content className={CONTENT}>
@@ -142,7 +144,7 @@ function CategoryField({ onPick, value }: { onPick: (id: string | null) => void;
                 onValueChange={onPick}
                 value={value}
             >
-                <Select.Trigger>
+                <Select.Trigger icon={CHEVRON}>
                     {chosen ? <CategoryDot color={chosen.color} /> : null}
                     <Select.Value placeholder={purchase.pick.value} />
                 </Select.Trigger>
@@ -186,7 +188,7 @@ function AccountField({
                     onValueChange={onPick}
                     value={value}
                 >
-                    <Select.Trigger>
+                    <Select.Trigger icon={CHEVRON}>
                         {chosen ? <AccountTile account={accountLook(chosen)} photos={photos} size="sm" /> : null}
                         <Select.Value placeholder={purchase.pick.value} />
                     </Select.Trigger>
@@ -462,7 +464,7 @@ export function PurchaseForm({
                         <Field>
                             <Field.Label>{purchase.firstDue}</Field.Label>
                             <Input
-                                className="dash-figure appearance-none"
+                                className="dash-figure appearance-none [&::-webkit-datetime-edit]:font-mono"
                                 onChange={(event) => setFirstDueKey(event.target.value || null)}
                                 type="date"
                                 value={dayKey(plan.firstDue)}
@@ -477,12 +479,12 @@ export function PurchaseForm({
                     <span className="text-destructive flex items-center text-[13px]">{flows.saveFailed}</span>
                 ) : null}
                 {failed || blocked ? null : (
-                    <PhoneAction className="mr-auto">
+                    <PhoneAction className="min-w-max!" variant="secondary">
                         <Glyph icon={ImageAdd01Icon} size={16} />
                         {purchase.importScreenshot}
                     </PhoneAction>
                 )}
-                <Button onClick={onClose} variant="outline">
+                <Button onClick={onClose} variant="secondary">
                     {flows.cancel}
                 </Button>
                 <Button disabled={blocked} form={id} loading={saving} type="submit">

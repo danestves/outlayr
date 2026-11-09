@@ -1,4 +1,3 @@
-import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
@@ -16,7 +15,6 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { AmountInput, amountText, Fact, FlowDialog } from "./fields";
 import { useLedgerDb, useAccountFlows } from "./flows";
-import { Glyph } from "./glyph";
 import { accountFacts } from "./model";
 
 type Account = LedgerBooks["accounts"][number];
@@ -66,21 +64,23 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
         });
     };
 
+    const error = failed ? (
+        <p className="text-destructive text-xs" role="alert">
+            {flows.saveFailed}
+        </p>
+    ) : null;
+
     if (!different) {
         return (
-            <FlowDialog label={flows.checkTitle({ name })} onClose={onClose} size="sm">
-                <Dialog.Body className="text-center">
+            <FlowDialog label={flows.checkTitle({ name })} onClose={onClose}>
+                <Dialog.Body className="gap-5 text-center">
                     <div>
                         <p className="text-muted-foreground text-[13px]">{flows.checkQuestion}</p>
-                        <div className="dash-figure mt-1 text-[32px] leading-10 font-semibold tracking-[-0.04em]">
+                        <div className="dash-figure mt-0.5 text-[32px] leading-11 font-semibold tracking-[-0.04em]">
                             {money(has, currency)}
                         </div>
-                        <p className="text-muted-foreground mt-1 text-[13px]">{flows.checkCompare}</p>
-                        {failed ? (
-                            <p className="text-destructive mt-1.5 text-xs" role="alert">
-                                {flows.saveFailed}
-                            </p>
-                        ) : null}
+                        <p className="text-muted-foreground mt-0.5 text-[13px]">{flows.checkCompare}</p>
+                        {error}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         <Button onClick={() => setDifferent(true)} variant="outline">
@@ -93,23 +93,9 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
         );
     }
     return (
-        <FlowDialog
-            head={
-                <Button
-                    aria-label={flows.checkBack.value}
-                    onClick={() => setDifferent(false)}
-                    size="icon-sm"
-                    variant="ghost"
-                >
-                    <Glyph icon={ArrowLeft02Icon} size={18} />
-                </Button>
-            }
-            label={flows.checkTitle({ name })}
-            onClose={onClose}
-            size="sm"
-        >
-            <Dialog.Body>
-                <Field>
+        <FlowDialog label={flows.checkTitle({ name })} onClose={onClose}>
+            <Dialog.Body className="gap-3">
+                <Field className="[&_.dash-sg]:text-foreground [&_input]:ps-0.5 [&_input]:font-medium">
                     <Field.Label>{flows.checkShows({ name })}</Field.Label>
                     <AmountInput
                         autoFocus
@@ -130,13 +116,13 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
                         </span>
                     </Fact>
                 </div>
+                {error}
             </Dialog.Body>
             <Dialog.Footer>
-                {failed ? <span className="text-destructive mr-auto text-[13px]">{flows.saveFailed}</span> : null}
-                <Button className="flex-none! px-6" onClick={() => setDifferent(false)} variant="outline">
+                <Button className="px-3.5 sm:min-w-max!" onClick={() => setDifferent(false)} variant="secondary">
                     {flows.checkBack}
                 </Button>
-                <Button onClick={save}>
+                <Button className="px-3.5 sm:min-w-max!" onClick={save}>
                     {change === 0
                         ? flows.checkMarkChecked
                         : flows.checkLog({ amount: money(change, currency, "always") })}
