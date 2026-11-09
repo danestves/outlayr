@@ -24,6 +24,12 @@ export const claudeGroundedModelId = Config.String("CLAUDE_GROUNDED_MODEL_ID").p
 
 export const convexSiteUrl = text("CONVEX_SITE_URL");
 
+export const vapidConfig = Config.all({
+    privateKey: Config.Redacted("VAPID_PRIVATE_KEY"),
+    publicKey: Config.String("VAPID_PUBLIC_KEY"),
+    subject: Config.String("VAPID_SUBJECT"),
+}).pipe(Config.option);
+
 export const siteUrl = Config.String("SITE_URL").pipe(
     Config.orElse(() => Config.String("CONVEX_SITE_URL")),
     Config.withDefault(DEFAULT_SITE_URL)

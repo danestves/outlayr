@@ -32,6 +32,7 @@ import transactionSplits from "./tables/transactionSplits";
 import transactionTags from "./tables/transactionTags";
 import transactions from "./tables/transactions";
 import transfers from "./tables/transfers";
+import webPushSubscriptions from "./tables/webPushSubscriptions";
 
 export default $defineSchema({
   accountDeletionJobs: $Table.tableDefinition(accountDeletionJobs),
@@ -65,4 +66,5 @@ export default $defineSchema({
   transactionTags: $Table.tableDefinition(transactionTags),
   transactions: $Table.tableDefinition(transactions),
   transfers: $Table.tableDefinition(transfers),
+  webPushSubscriptions: $Table.tableDefinition(webPushSubscriptions),
 });

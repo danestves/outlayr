@@ -56,6 +56,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Screens, features used, errors, install ID, device model | App use | PostHog | Until account deletion, or PostHog’s policy if you never sign in |
 | Feature, model, tokens, cost, speed, and errors of each AI request | Suggestions, notification reading, voice, scans, imports | PostHog | With Share analytics on, until account deletion. Otherwise PostHog’s policy |
 | Pages, clicks, scrolling, errors, page speed, visit recordings | Website visits | PostHog | PostHog’s policy |
+| Browser push address and keys, time zone, language, reminder time | Daily reminder on the web, if you turn it on | Our servers, your browser’s push service (such as Google, Apple, Mozilla, or Microsoft) | Until you turn it off or delete your account |
 | Entries, balances, budgets, upcoming charges | AI assistant you approve | The assistant’s company | Their policies |
 | Assistant name and address, your approval, access keys | AI assistant you approve | Our servers | Until account deletion |
 | Your emails | You write | Our inbox | As long as needed |
@@ -70,7 +71,7 @@ You don’t need an account to use Outlayr. Without one, none of your ledger is 
 
 - **Widgets** show totals, balances, budgets, and recent entries on your Home Screen, and on iPhone your Lock Screen too. They read from storage shared only between Outlayr and its own widgets.
 - **Search**: on iPhone, Outlayr adds your 500 most recent entries and your budgets to the on-device Spotlight index so you can find them from Search. To stop this, turn off Show Content in Search for Outlayr in the iOS Settings app.
-- **Reminders** (a daily nudge and upcoming subscription charges) are scheduled on your device. Outlayr never sends notifications from a server and doesn’t register for push notifications.
+- **Reminders** (a daily nudge and upcoming subscription charges) are scheduled on your device. The app never gets notifications from a server. If you turn on the daily reminder in a web browser, our servers check whether you logged anything that day and, if not, send it through that browser’s push service. It says only that nothing is logged, with no amounts or entries.
 - **Siri and Shortcuts actions** on iPhone (log a transaction, check a budget, get a spending summary) run on the device. Apple handles Siri requests under its own privacy policy. Logging from a notification can also send its text to be [read by Anthropic](#reading-bank-notifications).
 - **App lock** (Settings › Biometric lock) puts Outlayr behind your device’s biometric lock (Face ID or Touch ID on iPhone). The system checks your face or fingerprint, and Outlayr only learns whether the check passed.
 
@@ -273,6 +274,7 @@ These companies help run Outlayr. Each receives only what its job needs.
 - **[Google](https://policies.google.com/privacy)** provides Sign in with Google and Google Play payments, under its own policy.
 - **[Stripe](https://stripe.com/privacy)** processes purchases on the web, and its Link service sells them. It receives your name, email, account ID, the plan you chose, and the payment details and billing address you enter at checkout.
 - **[Expo](https://expo.dev/privacy)** delivers app updates. It receives a random install ID, the app version, your IP address, and update error messages.
+- **Your browser’s push service**, run by your browser’s maker such as Google, Apple, Mozilla, or Microsoft, delivers the daily web reminder if you turn it on. It receives your browser’s push address and an encrypted message it can’t read.
 - **[PostHog](https://posthog.com/privacy)** provides usage analytics and crash reports, from servers in the United States. It receives the events described in [What the app sends even without an account](#what-the-app-sends-even-without-an-account), a random install ID, and your account ID once you sign in, plus the [records of AI requests](#records-of-ai-requests) our server sends. It also receives this website’s analytics, described in [This website](#this-website).
 
 Open Exchange Rates, CotizaVE, and Binance publish the exchange rates our server reads. They receive nothing about you.
@@ -305,7 +307,7 @@ If you’re in the European Economic Area or the United Kingdom, we rely on thes
 
 | Purpose | Legal basis |
 | --- | --- |
-| Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, bank statement PDF import, the Notion connection, Pro, invites, and AI assistant connections | Contract: we need this data to provide what you ask for. |
+| Your account, sync, photo storage, voice entry, receipt scans, installment plan imports, CSV import, bank statement PDF import, the Notion connection, the daily web reminder, Pro, invites, and AI assistant connections | Contract: we need this data to provide what you ask for. |
 | The welcome and Pro notes, and notice of changes to this policy or our Terms | Contract: they’re part of the account and subscription you asked for. |
 | Sending voice entries, receipt photos, installment plan screenshots, CSV descriptions, PDF statements, notification text, and merchant names to Anthropic and ElevenLabs | Your consent, given with Allow when the app asks and withdrawn in **Settings › Send data to AI providers**. |
 | Merchant suggestions, notification reading, web lookups, the shared merchant list, and logos | Legitimate interests: making entries faster and more accurate to file. Suggestions, notification reading, and web lookups reach Anthropic only once you allow it, and turning off Smart fill is how you object. |

@@ -16,6 +16,7 @@ import { DataSettings } from "./data/screen";
 import { Email } from "./email";
 import { Invite } from "./invite";
 import { SettingsNav } from "./nav";
+import { Notifications } from "./notifications";
 import { Preferences } from "./preferences";
 import { Sync } from "./sync";
 import { Time } from "./time";
@@ -47,6 +48,7 @@ const SECTIONS = {
     preferences: Preferences,
     time: Time,
     email: Email,
+    notifications: Notifications,
     sync: Sync,
     usage: Usage,
 } as const;

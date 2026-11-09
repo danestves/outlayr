@@ -56,6 +56,7 @@ Todo tipo de dado que o Outlayr trata, em um só lugar. As seções abaixo expli
 | Telas, recursos usados, erros, ID de instalação, modelo do dispositivo | Uso do app | PostHog | Até a exclusão da conta, ou política do PostHog se você nunca iniciar sessão |
 | Recurso, modelo, tokens, custo, velocidade e erros de cada solicitação de IA | Sugestões, leitura de notificações, voz, escaneamentos, importações | PostHog | Com Compartilhar análises ativado, até a exclusão da conta. Caso contrário, política do PostHog |
 | Páginas, cliques, rolagem, erros, velocidade das páginas, gravações de visitas | Visitas ao site | PostHog | Política do PostHog |
+| Endereço push do navegador e chaves, fuso horário, idioma, hora do lembrete | Lembrete diário na web, se você ativar | Nossos servidores, o serviço push do seu navegador (como Google, Apple, Mozilla ou Microsoft) | Até você desativar ou excluir sua conta |
 | Lançamentos, saldos, orçamentos, cobranças futuras | Assistente de IA que você aprova | A empresa do assistente | Políticas dela |
 | Nome e endereço do assistente, sua aprovação, chaves de acesso | Assistente de IA que você aprova | Nossos servidores | Até a exclusão da conta |
 | Seus e-mails | Você escreve | Nossa caixa de entrada | Pelo tempo necessário |
@@ -70,7 +71,7 @@ Você não precisa de uma conta para usar o Outlayr. Sem conta, nada dos seus la
 
 - **Widgets** mostram totais, saldos, orçamentos e lançamentos recentes na sua Tela de Início e, no iPhone, também na Tela Bloqueada. Eles leem de um armazenamento compartilhado apenas entre o Outlayr e os próprios widgets dele.
 - **Busca**: no iPhone, o Outlayr adiciona seus 500 lançamentos mais recentes e seus orçamentos ao índice do Spotlight no dispositivo, para que você possa encontrá-los pela Busca. Para impedir isso, desative Mostrar Conteúdo na Busca para o Outlayr no app Ajustes do iOS.
-- **Lembretes** (um aviso diário e cobranças de assinaturas futuras) são programados no seu dispositivo. O Outlayr nunca envia notificações a partir de um servidor e não se registra para notificações push.
+- **Lembretes** (um aviso diário e cobranças de assinaturas futuras) são programados no seu dispositivo. O app nunca recebe notificações de um servidor. Se você ativar o lembrete diário em um navegador web, nossos servidores verificam se você registrou algo naquele dia e, se não, enviam pelo serviço push desse navegador. Ele diz apenas que não há registros, sem valores nem lançamentos.
 - **Ações da Siri e de Atalhos** no iPhone (registrar uma transação, consultar um orçamento, obter um resumo de gastos) são executadas no dispositivo. A Apple trata as solicitações da Siri conforme a própria política de privacidade. Registrar a partir de uma notificação também pode enviar o texto dela para ser [lido pela Anthropic](#leitura-de-notificações-do-banco).
 - **Bloqueio do app** (Ajustes › Bloqueio biométrico) protege o Outlayr com o bloqueio biométrico do seu dispositivo (Face ID ou Touch ID no iPhone). O sistema verifica seu rosto ou sua impressão digital, e o Outlayr só fica sabendo se a verificação passou.
 
@@ -273,6 +274,7 @@ Estas empresas ajudam a operar o Outlayr. Cada uma recebe apenas o que o trabalh
 - **[Google](https://policies.google.com/privacy)** fornece o Fazer login com o Google e os pagamentos do Google Play, conforme a própria política.
 - **[Stripe](https://stripe.com/br/privacy)** processa as compras na web, e o serviço Link dela as vende. Ela recebe seu nome, e-mail, ID de conta, o plano escolhido e os dados de pagamento e o endereço de cobrança que você informa ao pagar.
 - **[Expo](https://expo.dev/privacy)** entrega as atualizações do app. Ela recebe um ID de instalação aleatório, a versão do app, seu endereço IP e mensagens de erro de atualização.
+- **O serviço push do seu navegador**, operado pelo fabricante, como Google, Apple, Mozilla ou Microsoft, entrega o lembrete diário na web se você ativar. Ele recebe o endereço push do seu navegador e uma mensagem criptografada que não consegue ler.
 - **[PostHog](https://posthog.com/privacy)** fornece análises de uso e relatórios de falhas, a partir de servidores nos Estados Unidos. Ele recebe os eventos descritos em [O que o app envia mesmo sem conta](#o-que-o-app-envia-mesmo-sem-conta), um ID de instalação aleatório e seu ID de conta depois que você inicia sessão, além dos [registros de solicitações de IA](#registros-de-solicitações-de-ia) que nosso servidor envia. Ele também recebe as análises deste site, descritas em [Este site](#este-site).
 
 A Open Exchange Rates, a CotizaVE e a Binance publicam as taxas de câmbio que nosso servidor lê. Elas não recebem nada sobre você.
@@ -305,7 +307,7 @@ Se você estiver no Espaço Econômico Europeu ou no Reino Unido, usamos estas b
 
 | Finalidade | Base legal |
 | --- | --- |
-| Sua conta, sincronização, armazenamento de fotos, lançamento por voz, escaneamentos de recibos, importações de parcelamentos, importação de CSV, importação de extratos bancários em PDF, a conexão com o Notion, o Pro, os convites e as conexões com assistentes de IA | Contrato: precisamos desses dados para fornecer o que você pede. |
+| Sua conta, sincronização, armazenamento de fotos, lançamento por voz, escaneamentos de recibos, importações de parcelamentos, importação de CSV, importação de extratos bancários em PDF, a conexão com o Notion, o lembrete diário na web, o Pro, os convites e as conexões com assistentes de IA | Contrato: precisamos desses dados para fornecer o que você pede. |
 | As mensagens de boas-vindas e do Pro, e os avisos de mudanças nesta política ou nos nossos Termos | Contrato: elas fazem parte da conta e da assinatura que você pediu. |
 | Envio de lançamentos por voz, fotos de recibos, capturas de tela de parcelamentos, descrições de CSV, extratos em PDF, texto de notificações e nomes de estabelecimentos à Anthropic e à ElevenLabs | Seu consentimento, dado com Permitir quando o app pergunta e retirado em **Ajustes › Enviar dados a provedores de IA**. |
 | Sugestões de estabelecimentos, leitura de notificações, buscas na web, a lista compartilhada de estabelecimentos e os logos | Interesses legítimos: tornar os lançamentos mais rápidos e mais precisos de classificar. Sugestões, leitura de notificações e buscas na web só chegam à Anthropic depois que você permite, e desativar o Preenchimento inteligente é a forma de se opor. |

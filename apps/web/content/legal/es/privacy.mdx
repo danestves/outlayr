@@ -56,6 +56,7 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | Pantallas, funciones usadas, errores, ID de instalación, modelo del dispositivo | Uso de la app | PostHog | Hasta la eliminación de la cuenta, o según la política de PostHog si nunca inicias sesión |
 | Función, modelo, tokens, costo, velocidad y errores de cada solicitud de IA | Sugerencias, lectura de notificaciones, voz, escaneos, importaciones | PostHog | Con Compartir analíticas activado, hasta la eliminación de la cuenta. Si no, según la política de PostHog |
 | Páginas, clics, desplazamiento, errores, velocidad de carga, grabaciones de visitas | Visitas al sitio web | PostHog | Según la política de PostHog |
+| Dirección push del navegador y claves, zona horaria, idioma, hora del recordatorio | Recordatorio diario en la web, si lo activas | Nuestros servidores, el servicio push de tu navegador (como Google, Apple, Mozilla o Microsoft) | Hasta que lo desactives o borres tu cuenta |
 | Entradas, saldos, presupuestos, próximos cobros | Asistente de IA que apruebas | La empresa del asistente | Según sus políticas |
 | Nombre y dirección del asistente, tu aprobación, claves de acceso | Asistente de IA que apruebas | Nuestros servidores | Hasta la eliminación de la cuenta |
 | Tus correos | Cuando nos escribes | Nuestra bandeja de entrada | Mientras sea necesario |
@@ -70,7 +71,7 @@ No necesitas una cuenta para usar Outlayr. Sin una, no se nos envía nada de tu 
 
 - Los **widgets** muestran totales, saldos, presupuestos y entradas recientes en tu pantalla de inicio y, en iPhone, también en la pantalla bloqueada. Leen de un almacenamiento compartido solo entre Outlayr y sus propios widgets.
 - **Búsqueda**: en iPhone, Outlayr agrega tus 500 entradas más recientes y tus presupuestos al índice de Spotlight del dispositivo para que puedas encontrarlos desde Buscar. Para evitarlo, desactiva Mostrar contenido en Buscar para Outlayr en la app Configuración de iOS.
-- Los **recordatorios** (un aviso diario y los próximos cobros de suscripciones) se programan en tu dispositivo. Outlayr nunca envía notificaciones desde un servidor y no se registra para recibir notificaciones push.
+- Los **recordatorios** (un aviso diario y los próximos cobros de suscripciones) se programan en tu dispositivo. La app nunca recibe notificaciones desde un servidor. Si activas el recordatorio diario en un navegador web, nuestros servidores comprueban si registraste algo ese día y, si no, lo envían por el servicio push de ese navegador. Solo dice que no hay registros, sin montos ni movimientos.
 - Las **acciones de Siri y Atajos** en iPhone (registrar una transacción, consultar un presupuesto, obtener un resumen de gastos) se ejecutan en el dispositivo. Apple gestiona las solicitudes a Siri según su propia política de privacidad. Registrar desde una notificación también puede enviar su texto para que [lo lea Anthropic](#leer-notificaciones-del-banco).
 - El **bloqueo de la app** (Configuración › Bloqueo biométrico) protege Outlayr con el bloqueo biométrico de tu dispositivo (Face ID o Touch ID en iPhone). El sistema verifica tu rostro o tu huella, y Outlayr solo sabe si la verificación salió bien.
 
@@ -273,6 +274,7 @@ Estas empresas nos ayudan a operar Outlayr. Cada una recibe solo lo que su funci
 - **[Google](https://policies.google.com/privacy)** proporciona Acceder con Google y los pagos de Google Play, según su propia política.
 - **[Stripe](https://stripe.com/es/privacy)** procesa las compras en la web, y su servicio Link las vende. Recibe tu nombre, correo electrónico, ID de cuenta, el plan que elegiste y los datos de pago y la dirección de facturación que escribes al pagar.
 - **[Expo](https://expo.dev/privacy)** distribuye las actualizaciones de la app. Recibe un ID de instalación aleatorio, la versión de la app, tu dirección IP y los mensajes de error de las actualizaciones.
+- **El servicio push de tu navegador**, operado por su fabricante, como Google, Apple, Mozilla o Microsoft, entrega el recordatorio diario en la web si lo activas. Recibe la dirección push de tu navegador y un mensaje cifrado que no puede leer.
 - **[PostHog](https://posthog.com/privacy)** proporciona las analíticas de uso y los reportes de fallas, desde servidores en Estados Unidos. Recibe los eventos descritos en [Lo que la app envía incluso sin cuenta](#lo-que-la-app-envía-incluso-sin-cuenta), un ID de instalación aleatorio y tu ID de cuenta cuando inicias sesión, además de los [registros de solicitudes de IA](#registros-de-solicitudes-de-ia) que envía nuestro servidor. También recibe las analíticas de este sitio web, descritas en [Este sitio web](#este-sitio-web).
 
 Open Exchange Rates, CotizaVE y Binance publican las tasas de cambio que lee nuestro servidor. No reciben nada sobre ti.
@@ -305,7 +307,7 @@ Si estás en el Espacio Económico Europeo o en el Reino Unido, estas son las ba
 
 | Finalidad | Base legal |
 | --- | --- |
-| Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, la importación de estados de cuenta en PDF, la conexión con Notion, Pro, las invitaciones y las conexiones con asistentes de IA | Contrato: necesitamos estos datos para darte lo que pides. |
+| Tu cuenta, la sincronización, el almacenamiento de fotos, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, la importación de estados de cuenta en PDF, la conexión con Notion, el recordatorio diario en la web, Pro, las invitaciones y las conexiones con asistentes de IA | Contrato: necesitamos estos datos para darte lo que pides. |
 | Las notas de bienvenida y de Pro, y los avisos de cambios en esta política o nuestros Términos | Contrato: son parte de la cuenta y la suscripción que pediste. |
 | El envío a Anthropic y ElevenLabs de entradas por voz, fotos de recibos, capturas de planes de cuotas, descripciones de CSV, estados de cuenta en PDF, texto de notificaciones y nombres de comercios | Tu consentimiento, dado con Permitir cuando la app lo pregunta y retirado en **Configuración › Enviar datos a proveedores de IA**. |
 | Las sugerencias de comercios, la lectura de notificaciones, las búsquedas web, la lista compartida de comercios y los logos | Intereses legítimos: agilizar el registro de entradas y hacerlo más preciso. Las sugerencias, la lectura de notificaciones y las búsquedas web solo llegan a Anthropic una vez que lo permites, y desactivar Autocompletado es la forma de oponerte. |
