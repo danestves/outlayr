@@ -5,7 +5,7 @@ import { ScrollView, View } from "react-native";
 
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
-import { useSettingBool, useSettingNumber } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useNetWorth } from "@/data/accounts";
 import { useGlobalCurrency } from "@/data/app-meta";
@@ -182,10 +182,10 @@ export function Insights() {
     const nowMs = useNow();
     const { series: netWorth } = useNetWorth(db, nowMs);
 
-    const incomeTracking = useSettingBool("incomeTracking");
-    const period = periodOf(useSettingNumber("insightsTimeFrame"));
-    const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
-    const firstWeekday = useSettingNumber("firstWeekday");
+    const incomeTracking = useSetting("incomeTracking");
+    const period = periodOf(useSetting("insightsTimeFrame"));
+    const firstDayOfMonth = useSetting("firstDayOfMonth");
+    const firstWeekday = useSetting("firstWeekday");
     const calendar: InsightsCalendar = { firstDayOfMonth, firstWeekday };
 
     const [offset, setOffset] = useState(0);

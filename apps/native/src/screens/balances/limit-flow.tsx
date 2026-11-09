@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { CategoryPickerSheet } from "@/components/category-picker-sheet";
 import type { CategoryPickerSheetRef } from "@/components/category-picker-sheet";
-import { useSettingNumber } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import type { CategoryBudgetView } from "@/data/budgets";
 import type { Category } from "@/data/categories-core";
@@ -36,8 +36,8 @@ export function useLimitFlow({ allBudgets, contributions, currency, nowMs }: Lim
     const t = useTranslation();
     const haptics = useHaptics();
     const openPaywall = useOpenPaywall();
-    const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
-    const firstWeekday = useSettingNumber("firstWeekday");
+    const firstDayOfMonth = useSetting("firstDayOfMonth");
+    const firstWeekday = useSetting("firstWeekday");
     const limitSheetRef = useRef<BottomSheetModal>(null);
     const categoryPickerRef = useRef<CategoryPickerSheetRef>(null);
     const [limitTarget, setLimitTarget] = useState<LimitTarget | null>(null);

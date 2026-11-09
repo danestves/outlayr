@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { AccessibilityActionEvent } from "react-native";
 
-import { useSettingNumber } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { currencySymbol, formatFixed, numberLocale } from "@/domain/money";
 import { applyNumpadKey, numpadMode, numpadToNumber } from "@/domain/numpad";
 import type { NumpadKey, NumpadMode, NumpadTileKey } from "@/domain/numpad";
@@ -53,7 +53,7 @@ export function AmountNumpad({
     const haptics = useHaptics();
     const t = useTranslation();
     const { language } = useLanguage();
-    const preference = useSettingNumber("numberEntryType");
+    const preference = useSetting("numberEntryType");
     const mode = modeOverride ?? numpadMode(preference);
     const locale = numberLocale(language);
     const symbol = currencySymbol(code);

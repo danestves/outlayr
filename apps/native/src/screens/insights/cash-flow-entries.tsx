@@ -11,7 +11,7 @@ import { ScreenHeader } from "@/components/screen-header";
 import { Text } from "@/components/text";
 import { TransactionRow } from "@/components/transaction-row";
 import { cn } from "@/components/tw";
-import { useDisplaySettings, useSettingNumber } from "@/contexts/display-settings-context";
+import { useDisplaySettings, useSetting } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { goesWithPendingDelete } from "@/data/card-fees-core";
 import { useCategoryMeta } from "@/data/categories";
@@ -41,10 +41,10 @@ export function CashFlowEntries() {
     const params = useLocalSearchParams<{ categoryId: string; income: string; offset?: string }>();
     const { categoryId } = params;
     const income = params.income === "true";
-    const period = periodOf(useSettingNumber("insightsTimeFrame"));
+    const period = periodOf(useSetting("insightsTimeFrame"));
     const calendar = {
-        firstDayOfMonth: useSettingNumber("firstDayOfMonth"),
-        firstWeekday: useSettingNumber("firstWeekday"),
+        firstDayOfMonth: useSetting("firstDayOfMonth"),
+        firstWeekday: useSetting("firstWeekday"),
     };
     const [offset, setOffset] = useState(() => Math.min(0, Number(params.offset) || 0));
     const result = useInsights(db, nowMs, period, "spent", offset, calendar);

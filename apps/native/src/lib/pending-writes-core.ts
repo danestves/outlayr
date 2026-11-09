@@ -2,28 +2,7 @@ import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-/** Only five fields are required: an extension build older than the app is normal. */
-const PendingWrite = Schema.Struct({
-    amount: Schema.Finite,
-    /** The amount as it arrived (e.g. "€12,40"); the drain reads the currency back out of it. */
-    amountText: Schema.optional(Schema.NullOr(Schema.String)),
-    card: Schema.optional(Schema.NullOr(Schema.String)),
-    category: Schema.NullOr(Schema.String).pipe(Schema.withDecodingDefault(Effect.succeed(null))),
-    categoryId: Schema.optional(Schema.NullOr(Schema.String)),
-    /** Beats `amountText` when the automation pinned one. */
-    currency: Schema.optional(Schema.NullOr(Schema.String)),
-    /** Epoch ms: when the intent ran, not when the app drained it. */
-    date: Schema.Finite,
-    /**
-     * Identifies the purchase, where `id` identifies the enqueue: Wallet fires once on authorize and again on
-     * settle. Carries no timestamp; the window is `WALLET_DEDUPE_WINDOW_MS` in `src/data/pending-writes-core.ts`.
-     */
-    dedupeKey: Schema.optional(Schema.NullOr(Schema.String)),
-    id: Schema.String,
-    income: Schema.Boolean,
-    note: Schema.String,
-    text: Schema.optional(Schema.NullOr(Schema.String)),
-});
+import { PendingWrite } from "@/domain/meta-values";
 
 /** Written by `app-intents/LogTransactionIntent.swift`: the field names are the wire format. */
 export type PendingWrite = typeof PendingWrite.Type;

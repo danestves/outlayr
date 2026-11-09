@@ -10,9 +10,9 @@ import { accounts, exchangeRates, outsideMoves, savingsGoals, transactions } fro
 import { migratedDatabase } from "@/db/test-database";
 
 import { accountsRepo, getAccountById, getLastUsedAccount, rememberLastUsedAccount } from "./accounts-core";
+import { Meta } from "./app-meta-core";
 import { settledAccountCellQuery, toCurrencyCells } from "./cell-query";
 import { candidateLogoIds } from "./logo-backfill-state";
-import { readBoolSetting } from "./settings-core";
 import { deletedTransactionsQuery, transactionsRepo } from "./transactions-core";
 
 const makeDb = () => migratedDatabase({ foreignKeys: false });
@@ -400,7 +400,7 @@ describe("accountsRepo lifecycle", () => {
         const rows = await Effect.runPromise(accountsRepo.listActive(db));
         expect(rows.map((row) => row.id)).toStrictEqual([c, a, b]);
         expect(rows.map((row) => row.sortOrder)).toStrictEqual([0, 1, 2]);
-        await expect(Effect.runPromise(readBoolSetting(db, "accountsByHand"))).resolves.toBe(true);
+        await expect(Effect.runPromise(Meta.get(db, "accountsByHand"))).resolves.toBe(true);
     });
 });
 

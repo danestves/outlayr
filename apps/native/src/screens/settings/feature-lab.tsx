@@ -12,9 +12,9 @@ export function FeatureLab() {
     const t = useTranslation();
     const { state: settings } = useAppSettings();
     const { swapTimeLabel } = useDisplaySettings().state;
-    const confetti = settings.bool("confetti");
-    const lineGraph = settings.bool("logViewLineGraph");
-    const budgetRows = settings.bool("budgetViewStyle");
+    const confetti = settings.get("confetti");
+    const lineGraph = settings.get("logViewLineGraph");
+    const budgetRows = settings.get("budgetViewStyle");
 
     return (
         <SettingsScreen>

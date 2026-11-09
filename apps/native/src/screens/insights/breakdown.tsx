@@ -10,7 +10,7 @@ import { MonoLabel } from "@/components/mono-label";
 import { ScopeChip } from "@/components/scope-chip";
 import { Text } from "@/components/text";
 import { WidgetCard } from "@/components/widget-card";
-import { useDisplaySettings, useSettingBool, useSettingNumber } from "@/contexts/display-settings-context";
+import { useDisplaySettings, useSetting } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useNetWorth } from "@/data/accounts";
 import { useGlobalCurrency } from "@/data/app-meta";
@@ -241,14 +241,14 @@ export function InsightsBreakdown() {
     const nowMs = useNow();
     const { series: netWorth } = useNetWorth(db, nowMs);
 
-    const incomeTracking = useSettingBool("incomeTracking");
-    const period = periodOf(useSettingNumber("insightsTimeFrame"));
+    const incomeTracking = useSetting("incomeTracking");
+    const period = periodOf(useSetting("insightsTimeFrame"));
 
-    const stored = insightsMeasureFromStored(useSettingNumber("insightsMeasure"));
+    const stored = insightsMeasureFromStored(useSetting("insightsMeasure"));
     const measure = incomeTracking ? stored : "spent";
 
-    const firstWeekday = useSettingNumber("firstWeekday");
-    const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
+    const firstWeekday = useSetting("firstWeekday");
+    const firstDayOfMonth = useSetting("firstDayOfMonth");
     const calendar: InsightsCalendar = { firstDayOfMonth, firstWeekday };
 
     const opened = openedWith(useLocalSearchParams<{ category?: string; offset?: string }>());

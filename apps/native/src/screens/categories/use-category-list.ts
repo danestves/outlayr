@@ -35,7 +35,7 @@ export function useCategoryList(income: boolean) {
     const router = useRouter();
     const t = useTranslation();
     const currency = useGlobalCurrency(db);
-    const showSuggestions = useAppSettings().state.bool("categorySuggestions");
+    const showSuggestions = useAppSettings().state.get("categorySuggestions");
     const namespace = useCategoriesByNamespace(db, income);
     const { pendingId, requestDelete } = useDeferredDelete("category");
     const parents = pendingRemoved(namespace, pendingId);

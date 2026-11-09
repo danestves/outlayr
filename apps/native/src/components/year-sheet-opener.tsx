@@ -4,7 +4,8 @@ import { useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 
 import { useUpdateWaiting } from "@/components/update-sheet";
-import { useAiConsent, useNumberSetting } from "@/data/settings";
+import { useMeta } from "@/data/app-meta";
+import { useAiConsent } from "@/data/settings";
 import { useYearSavings } from "@/data/use-month-savings";
 import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
@@ -22,7 +23,7 @@ let openedFor = 0;
 
 export function YearSheetOpener({ db, ready }: { db: Database; ready: boolean }) {
     const held = useHeldSubscription();
-    const seenMs = useNumberSetting(db, "yearSheetSeen");
+    const seenMs = useMeta(db, "yearSheetSeen");
     const nowMs = useNow();
     const segments = useSegments();
     const { gate } = useAuthSession();
@@ -30,8 +31,8 @@ export function YearSheetOpener({ db, ready }: { db: Database; ready: boolean })
     const consentDue = gate === "signed-in" && consent === "unanswered";
     const updateDue = useUpdateWaiting();
     const notices = useAtomValue(policyNoticesAtom);
-    const privacySeen = useNumberSetting(db, "privacyNoticeSeen");
-    const termsSeen = useNumberSetting(db, "termsNoticeSeen");
+    const privacySeen = useMeta(db, "privacyNoticeSeen");
+    const termsSeen = useMeta(db, "termsNoticeSeen");
     const noticeDue = pendingNotices(notices, { privacy: privacySeen, terms: termsSeen }).length > 0;
     const renewal = yearSheetRenewal({ held, now: new Date(nowMs), seenMs });
     const due = ready && segments[0] === "(tabs)" && !consentDue && !updateDue && !noticeDue;

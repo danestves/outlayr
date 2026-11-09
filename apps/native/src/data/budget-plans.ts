@@ -3,7 +3,7 @@ import { addDays, startOfDay } from "@outlayr/money/calendar";
 import { limitIn, valueDatedRowsIn } from "@outlayr/money/valuation";
 import { and, gte, isNotNull, isNull, lte } from "drizzle-orm";
 
-import { useSettingNumber } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import type { Database } from "@/db/client";
 import { budgetPlans, budgets, categories, transactions } from "@/db/schema";
 import { isPayoffPlan } from "@/domain/savings-goal";
@@ -75,7 +75,7 @@ function monthlyLimit(amount: number, type: number): number {
  * behind the running month so each category has a typical month to fall back on.
  */
 export function useYearPlan(db: Database, nowMs: number, year: number): YearPlan {
-    const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
+    const firstDayOfMonth = useSetting("firstDayOfMonth");
     const { displayCurrency, rates } = useValuation(db);
     const now = new Date(nowMs);
     const currentKey = monthKeyAt(now, firstDayOfMonth);

@@ -2,7 +2,6 @@ import type { EnrichmentResult } from "@outlayr/backend/confect/lib/enrichmentRe
 import { merchantKey } from "@outlayr/money/merchant-key";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
@@ -10,7 +9,7 @@ import { categories, transactions } from "@/db/schema";
 import type { CloudError } from "@/lib/cloud-error";
 import type { LogoOutcome, MerchantImageRequest } from "@/lib/logo-fetch";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { ensureCategoryByName, presetForName } from "./categories-core";
 import { rememberMerchant } from "./merchant-book-core";
 import { tagIdsForQuery, tagsRepo } from "./tags-core";
@@ -52,7 +51,6 @@ export interface ApplyDeps {
 
 export const MIN_KEY_LENGTH = 3;
 const MAX_OUTBOX = 100;
-const decodeOutbox = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.mutable(Schema.Array(Schema.String))));
 
 const EnrichmentQueueOperation = Schema.Literals(["apply", "send"]);
 
@@ -68,14 +66,9 @@ export class EnrichmentQueueError extends Schema.TaggedError<EnrichmentQueueErro
 const attempt = <A>(operation: typeof EnrichmentQueueOperation.Type, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: (cause) => new EnrichmentQueueError({ cause, operation }), try: run });
 
-const readOutbox = Effect.fn("EnrichmentQueue.readOutbox")(function* readOutbox(db: Database) {
-    const raw = yield* getMeta(db, META_KEYS.enrichmentOutbox);
-    const ids: string[] = Option.getOrElse(decodeOutbox(raw ?? "[]"), () => []);
-    return ids;
-});
+const readOutbox = (db: Database) => Meta.get(db, "enrichmentOutbox");
 
-const writeOutbox = (db: Database, ids: readonly string[]) =>
-    setMeta(db, META_KEYS.enrichmentOutbox, JSON.stringify(ids.slice(-MAX_OUTBOX)));
+const writeOutbox = (db: Database, ids: readonly string[]) => Meta.set(db, "enrichmentOutbox", ids.slice(-MAX_OUTBOX));
 
 export const queueEnrichment = Effect.fn("EnrichmentQueue.queueEnrichment")(function* queueEnrichment(
     db: Database,

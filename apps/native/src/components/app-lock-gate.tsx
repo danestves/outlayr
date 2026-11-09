@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { AppState, Pressable, View } from "react-native";
 
 import { Text } from "@/components/text";
-import { useSettingBool } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { lockFailureMessage, lockGate, lockIsUnenforceable } from "@/domain/app-lock";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
@@ -28,7 +28,7 @@ export function useAppLockOpen(): boolean {
 // Holds the shield over `children` rather than unmounting them, which would discard the navigation stack.
 export function AppLockGate({ children }: { children: ReactNode }) {
     const t = useTranslation();
-    const enabled = useSettingBool("biometricLock");
+    const enabled = useSetting("biometricLock");
     const [unlocked, setUnlocked] = useState(false);
     const [unenforceable, setUnenforceable] = useState(false);
     const [failure, setFailure] = useState<TranslationKey | null>(null);

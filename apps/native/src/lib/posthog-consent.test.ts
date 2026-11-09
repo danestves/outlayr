@@ -9,7 +9,7 @@ const mockOptIn = vi.fn(async () => undefined);
 const mockOptOut = vi.fn(async () => undefined);
 
 vi.mock("@/contexts/local-data-context", () => ({ useLocalData: () => ({ db: mockState.db }) }));
-vi.mock("@/data/settings", () => ({ useBoolSetting: () => mockState.share }));
+vi.mock("@/data/app-meta", () => ({ useMeta: () => mockState.share }));
 vi.mock("@/lib/posthog", () => ({
     posthog: { optIn: () => mockOptIn(), optOut: () => mockOptOut() },
 }));

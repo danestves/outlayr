@@ -14,7 +14,7 @@ import type { SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
 import { ScreenReaderFocus } from "@/components/screen-reader-focus";
-import { useSettingBool } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import type { Burndown } from "@/domain/budget-burndown";
 import { useChartDraw, useChartPath } from "@/hooks/use-chart-draw";
 import { useTranslation } from "@/i18n/context";
@@ -257,7 +257,7 @@ export function BudgetBurndownChart({
     const colors = useColors();
     const t = useTranslation();
     const reduceMotion = useReducedMotion();
-    const animatedCharts = useSettingBool("animatedCharts") && !reduceMotion;
+    const animatedCharts = useSetting("animatedCharts") && !reduceMotion;
     const [scrubDay, setScrubDay] = useState<number | null>(null);
 
     const scrubX = useSharedValue(-1);

@@ -6,8 +6,7 @@ import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import type { Account } from "@/data/accounts-core";
-import { useGlobalCurrency } from "@/data/app-meta";
-import { useBoolSetting } from "@/data/settings";
+import { useGlobalCurrency, useMeta } from "@/data/app-meta";
 import { pickerOrder } from "@/domain/account-order";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useTranslation } from "@/i18n/context";
@@ -46,7 +45,7 @@ export function StepAccount({
     const largeText = useAccessibilityTextSize();
     const db = useDatabase();
     const ledgerCurrency = useGlobalCurrency(db);
-    const byHand = useBoolSetting(db, "accountsByHand");
+    const byHand = useMeta(db, "accountsByHand");
 
     if (accounts.length === 0 && people.length === 0) {
         return (

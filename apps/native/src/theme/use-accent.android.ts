@@ -2,7 +2,7 @@ import { getMaterialColors, isDynamicColorAvailable } from "@expo/ui/jetpack-com
 import { useLayoutEffect } from "react";
 import { Uniwind } from "uniwind";
 
-import { useSettingNumber } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { accentForValue } from "@/domain/accent";
 import type { Accent } from "@/domain/accent";
 import { materialSeed } from "@/domain/material-accent";
@@ -24,7 +24,7 @@ function composeScheme(theme: MaterialTheme, seedColor: string | undefined): Mat
 
 /** Reads Compose's own scheme and writes both themes; re-reads on foreground, where a wallpaper change lands. */
 export function useAccent(): Accent {
-    const value = useSettingNumber("accentColor");
+    const value = useSetting("accentColor");
     const seedColor = materialSeed(value, isDynamicColorAvailable);
 
     // oxlint-disable-next-line outlayr/react-effect-budget -- writes the Compose scheme into Uniwind before the first paint and again on foreground

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import { autologAccessOf, holdsAutolog, withAutologEntry } from "./autolog-cap";
-import type { AutologUsage } from "./autolog-cap";
+import type { AutologUsage } from "./meta-values";
 import { FREE_AUTOLOG_PER_MONTH } from "./pro-limits";
 
 const OCT_31_LATE = new Date("2026-10-31T23:30:00-04:00").getTime();

@@ -24,8 +24,9 @@ vi.mock<Partial<typeof import("@/contexts/local-data-context")>>(import("@/conte
     // SAFETY: the hook only checks that a database exists.
     useLocalData: () => ({ db: {} }) as ReturnType<typeof import("@/contexts/local-data-context").useLocalData>,
 }));
-vi.mock<Partial<typeof import("@/data/settings")>>(import("@/data/settings"), () => ({
-    useNumberSetting: () => mockLevel.value,
+vi.mock<Partial<typeof import("@/data/app-meta")>>(import("@/data/app-meta"), () => ({
+    // SAFETY: the hook under test reads only the haptics level, a number.
+    useMeta: (() => mockLevel.value) as typeof import("@/data/app-meta").useMeta,
 }));
 
 async function play(event: HapticEvent) {

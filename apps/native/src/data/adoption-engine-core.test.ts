@@ -9,7 +9,7 @@ import { asCloudCall } from "@/lib/fake-cloud";
 
 import { incomingWins } from "../../../../packages/backend/confect/lib/syncTables";
 import { accountLedgerState, discardAccountLedger, replaceLocalFromAccount } from "./adoption-engine-core";
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { candidateLogoIds, rememberLogoCandidate } from "./logo-backfill-state";
 import { drainOutbox, runSync } from "./sync-engine-core";
 import type { PullFn, PulledRow, PushFn } from "./sync-engine-core";
@@ -176,24 +176,24 @@ describe("replaceLocalFromAccount", () => {
 
     it("spends the one-time restore re-read, having just read the whole log", async () => {
         const server = makeServer();
-        await Effect.runPromise(setMeta(db, META_KEYS.syncRestoresReread, "1"));
+        await Effect.runPromise(Meta.set(db, "syncRestoresReread", true));
 
         await Effect.runPromise(replaceLocalFromAccount(db, server.pullFn));
 
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncRestoresReread))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.has(db, "syncRestoresReread"))).resolves.toBe(false);
     });
 
     it("keeps device-local meta that no pull would hand back", async () => {
         const server = makeServer();
-        await Effect.runPromise(setMeta(db, META_KEYS.syncDeviceId, "this-device"));
-        await Effect.runPromise(setMeta(db, META_KEYS.onboardingComplete, "1"));
-        await Effect.runPromise(setMeta(db, META_KEYS.currency, "GBP"));
+        await Effect.runPromise(Meta.set(db, "syncDeviceId", "this-device"));
+        await Effect.runPromise(Meta.set(db, "onboardingComplete", true));
+        await Effect.runPromise(Meta.set(db, "currency", "GBP"));
 
         await Effect.runPromise(replaceLocalFromAccount(db, server.pullFn));
 
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncDeviceId))).resolves.toBe("this-device");
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.onboardingComplete))).resolves.toBe("1");
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.currency))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "syncDeviceId"))).resolves.toBe("this-device");
+        await expect(Effect.runPromise(Meta.get(db, "onboardingComplete"))).resolves.toBe(true);
+        await expect(Effect.runPromise(Meta.has(db, "currency"))).resolves.toBe(false);
     });
 });
 

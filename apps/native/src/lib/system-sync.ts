@@ -8,8 +8,8 @@ import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { getCalendars } from "expo-localization";
 
-import { getMeta, META_KEYS, setMeta } from "@/data/app-meta-core";
-import type { AppMetaError } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
+import type { AppMetaError, CorruptMetaError } from "@/data/app-meta-core";
 import { writeAutologAccess } from "@/data/autolog-cap-core";
 import {
     backfillBudgetUsd,
@@ -25,7 +25,7 @@ import type { PullRatesFn, RateWireRow, RatesError } from "@/data/rates";
 import { mirrorTimeZone } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { autologAccessOf } from "@/domain/autolog-cap";
-import type { AutologAccess } from "@/domain/autolog-cap";
+import type { AutologAccess } from "@/domain/meta-values";
 import { formatAmount } from "@/domain/money";
 import { translateNow } from "@/i18n/runtime";
 import { ratesPuller, watchRecentRates } from "@/lib/cloud-rates";
@@ -135,9 +135,9 @@ const failedStep =
 
 const warnRatesFailed =
     (message: string) =>
-    <R>(effect: Effect.Effect<boolean, AppMetaError | RatesError, R>) =>
+    <R>(effect: Effect.Effect<boolean, AppMetaError | CorruptMetaError | RatesError, R>) =>
         effect.pipe(
-            Effect.catch((error) => Effect.logWarning(message, error.cause).pipe(Effect.as(false))),
+            Effect.catch((error) => Effect.logWarning(message, error.cause ?? error).pipe(Effect.as(false))),
             Effect.catchDefect((defect) => Effect.logWarning(message, defect).pipe(Effect.as(false)))
         );
 
@@ -146,13 +146,13 @@ const surfaceStep = (step: typeof SystemStep.Type, surface: Effect.Effect<void>)
 
 const anyCounted = Effect.fn("SystemSync.anyCounted")(function* anyCounted(
     step: typeof SystemStep.Type,
-    counts: readonly Effect.Effect<number, { readonly cause: unknown }>[]
+    counts: readonly Effect.Effect<number, Error>[]
 ) {
     let changed = false;
     for (const count of counts) {
         const result = yield* Effect.result(
             count.pipe(
-                Effect.mapError((error) => failedAt(step)(error.cause)),
+                Effect.mapError((error) => failedAt(step)(error.cause ?? error)),
                 Effect.catchDefect((defect) => Effect.fail(failedAt(step)(defect)))
             )
         );
@@ -183,11 +183,10 @@ const mirrorWalletRun = Effect.fn("SystemSync.mirrorWalletRun")(function* mirror
     if (at == null) {
         return;
     }
-    const stamp = String(at);
-    if ((yield* getMeta(db, META_KEYS.walletLastRunAt)) === stamp) {
+    if ((yield* Meta.get(db, "walletLastRunAt")) === at) {
         return;
     }
-    yield* setMeta(db, META_KEYS.walletLastRunAt, stamp);
+    yield* Meta.set(db, "walletLastRunAt", at);
 });
 
 const announceRepriced = Effect.fn("SystemSync.announceRepriced")(function* announceRepriced(db: Database) {

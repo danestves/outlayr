@@ -4,11 +4,11 @@ import { createSelectSchema } from "drizzle-orm/effect-schema";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { getMeta } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
 import { bumpRatesRevision } from "@/data/rates-revision";
 import type { Database } from "@/db/client";
-import { appMeta, exchangeRates } from "@/db/schema";
+import { exchangeRates } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { chunkRows } from "@/lib/chunk";
 import type { CloudError } from "@/lib/cloud-error";
@@ -17,8 +17,6 @@ export const RATES_THROTTLE_MS = 43_200_000;
 
 // SQLite caps a statement at 32,766 bound params and a rate row binds 6, so at most 5,461 rows; 2,000 leaves margin.
 export const RATE_ROWS_PER_CHUNK = 2000;
-
-const LAST_PULL_KEY = "lastRatesPullAt";
 
 export const RateWireRow = createSelectSchema(exchangeRates);
 
@@ -60,14 +58,7 @@ export function isThrottled(last: number | null, now: number): boolean {
     return elapsed < RATES_THROTTLE_MS;
 }
 
-const lastPullAt = Effect.fn("Rates.lastPullAt")(function* lastPullAt(db: Database) {
-    const raw = yield* getMeta(db, LAST_PULL_KEY);
-    if (raw === null) {
-        return null;
-    }
-    const last = Number.parseInt(raw, 10);
-    return Number.isNaN(last) ? null : last;
-});
+const lastPullAt = (db: Database) => Meta.get(db, "lastRatesPullAt");
 
 function toRateRow({ date, fetchedAt, quote, rate, rateType, source }: RateWireRow) {
     return { date, fetchedAt, quote, rate, rateType, source };
@@ -122,15 +113,7 @@ export const pullRatesIfDue = Effect.fn("Rates.pullRatesIfDue")(function* pullRa
                 // These inserts share the one open transaction connection, which serialises statements anyway.
                 yield* attempt("replace", () => db.insert(exchangeRates).values(part));
             }
-            yield* attempt("replace", () =>
-                db
-                    .insert(appMeta)
-                    .values({ key: LAST_PULL_KEY, value: String(now) })
-                    .onConflictDoUpdate({
-                        set: { value: String(now) },
-                        target: appMeta.key,
-                    })
-            );
+            yield* Meta.set(db, "lastRatesPullAt", now);
         }),
         (cause) => new RatesError({ cause, operation: "replace" })
     );

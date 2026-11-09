@@ -7,7 +7,7 @@ import { accounts, budgets, categories, mainBudget, outbox, transactions } from 
 import { migratedDatabase } from "@/db/test-database";
 
 import { AdoptionEngineError } from "./adoption-engine-core";
-import { AppMetaError, getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { AppMetaError, Meta } from "./app-meta-core";
 import { localizePresetCategories, seedCategories } from "./categories-core";
 import {
     adoptedAccount,
@@ -147,7 +147,7 @@ describe("adoption marker", () => {
 
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncedAt))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "syncedAt"))).resolves.toBeNull();
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
         await expect(Effect.runPromise(adoptedAccount(db))).resolves.toBe("account-a");
     });
@@ -184,22 +184,22 @@ describe("adoption marker", () => {
 
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncedAt))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "syncedAt"))).resolves.toBeNull();
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 
     it("unmarked-bound-subject-preserves-explicit-sync-off", async () => {
-        await Effect.runPromise(setMeta(db, META_KEYS.syncAccountSubject, "account-a"));
+        await Effect.runPromise(Meta.set(db, "syncAccountSubject", "account-a"));
 
         await Effect.runPromise(prepareAccountAdoption(db, "account-a"));
 
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncAccountSubject))).resolves.toBe("account-a");
+        await expect(Effect.runPromise(Meta.get(db, "syncAccountSubject"))).resolves.toBe("account-a");
     });
 
     it("mismatched-marker-and-metadata-cannot-preserve-queued-writes", async () => {
         await Effect.runPromise(markAdopted(db, "account-a"));
-        await Effect.runPromise(setMeta(db, META_KEYS.syncAccountSubject, "account-b"));
+        await Effect.runPromise(Meta.set(db, "syncAccountSubject", "account-b"));
         await Effect.runPromise(setSyncEnabled(db, true));
         await addTransaction(db, "queued-for-mismatched-subject");
 
@@ -207,7 +207,7 @@ describe("adoption marker", () => {
 
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncAccountSubject))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "syncAccountSubject"))).resolves.toBeNull();
     });
 });
 
@@ -237,7 +237,7 @@ describe("running an adoption", () => {
             runAdoption(db, null, { pushLocal: false, wipeAccount: false, wipeLocal: false }, "account-a")
         );
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(true);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncAccountSubject))).resolves.toBe("account-a");
+        await expect(Effect.runPromise(Meta.get(db, "syncAccountSubject"))).resolves.toBe("account-a");
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
     });
 
@@ -281,10 +281,10 @@ describe("running an adoption", () => {
         ).resolves.toMatchObject({ cause: { cause: { message: expect.stringContaining("queue unavailable") } } });
 
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncAccountSubject))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "syncAccountSubject"))).resolves.toBeNull();
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncedAt))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "syncedAt"))).resolves.toBeNull();
         await expect(Effect.runPromise(adoptedAccount(db))).resolves.toBeNull();
     });
 
@@ -315,13 +315,13 @@ describe("running an adoption", () => {
         ).resolves.toMatchObject({ cause: { cause: { message: expect.stringContaining("queue unavailable") } } });
 
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(true);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncAccountSubject))).resolves.toBe("account-a");
+        await expect(Effect.runPromise(Meta.get(db, "syncAccountSubject"))).resolves.toBe("account-a");
     });
 
     it("rolls back tentative account sync when marker persistence fails", async () => {
         const unavailable = new AppMetaError({
             cause: new Error("marker unavailable"),
-            key: META_KEYS.ledgerAdoption,
+            key: "ledgerAdoption",
             operation: "set",
         });
         await expect(
@@ -339,10 +339,10 @@ describe("running an adoption", () => {
         ).resolves.toBe(unavailable);
 
         await expect(Effect.runPromise(isSyncEnabled(db))).resolves.toBe(false);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncAccountSubject))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "syncAccountSubject"))).resolves.toBeNull();
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(0);
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncedAt))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "syncedAt"))).resolves.toBeNull();
         await expect(Effect.runPromise(adoptedAccount(db))).resolves.toBeNull();
     });
 

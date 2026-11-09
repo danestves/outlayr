@@ -6,7 +6,6 @@ import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Stream from "effect/Stream";
 
-import { META_KEYS } from "@/data/app-meta-core";
 import { subscribeToSettingChanges } from "@/data/database-changes";
 import type { Database } from "@/db/client";
 
@@ -20,7 +19,7 @@ const DAILY_REMINDER_SETTINGS = [
     "notificationOption",
     "notificationHour",
     "notificationMinute",
-    META_KEYS.currency,
+    "currency",
 ] as const;
 
 const RESYNC_DEBOUNCE = Duration.millis(PUBLISH_DEBOUNCE_MS);

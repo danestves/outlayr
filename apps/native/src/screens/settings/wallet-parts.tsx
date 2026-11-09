@@ -10,12 +10,11 @@ import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useBankAccounts } from "@/data/accounts";
-import { useGlobalCurrency } from "@/data/app-meta";
-import { META_KEYS } from "@/data/app-meta-core";
-import { useLiveQuery, useLiveValue } from "@/data/live-query";
-import { cardStatus, parseWalletCards } from "@/data/pending-writes-core";
+import { useGlobalCurrency, useMeta } from "@/data/app-meta";
+import { useLiveQuery } from "@/data/live-query";
+import { cardStatus } from "@/data/pending-writes-core";
 import type { Database } from "@/db/client";
-import { appMeta, transactions } from "@/db/schema";
+import { transactions } from "@/db/schema";
 import { formatChargeDate, formatSentenceDate, formatTime } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import type { TranslationKey } from "@/i18n/catalog";
@@ -88,12 +87,7 @@ export function CardsSection({ db }: { db: Database }) {
     );
     const { language } = useLanguage();
     const accounts = useBankAccounts(db);
-    const raw = useLiveValue(
-        appMeta,
-        () => db.select().from(appMeta).where(eq(appMeta.key, META_KEYS.walletCards)),
-        (rows) => rows[0]?.value ?? null
-    );
-    const cards = parseWalletCards(raw).sort((a, b) => b.lastAt - a.lastAt);
+    const cards = [...useMeta(db, "walletCards")].sort((a, b) => b.lastAt - a.lastAt);
     const options = [
         ...accounts.map((account) => ({ label: account.name, value: account.id })),
         { label: t("settings.wallet.unattached"), value: NO_ACCOUNT },

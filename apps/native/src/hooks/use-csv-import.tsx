@@ -99,12 +99,12 @@ export function useCsvImport(): UseCsvImportResult {
         AsyncResult.isSuccess(stored) && stored.value.parsed === flow.parsed ? stored.value : idleState(flow.parsed);
 
     const requestFor = (parsed: ResolveRequest["parsed"]): ResolveRequest => ({
-        aiEnrichment: remoteEnrichmentOn(settings.bool),
+        aiEnrichment: remoteEnrichmentOn(settings.get),
         categoryIdByKey: buildCategoryIdByKey(meta),
         categoryTree: buildCategoryTree(meta),
         chars: flow.file == null ? 0 : flow.file.chars,
         draft: flow.draft ?? EMPTY_DRAFT,
-        groundedLookup: settings.bool("groundedLookup"),
+        groundedLookup: settings.get("groundedLookup"),
         labels,
         parsed,
         regionCode,

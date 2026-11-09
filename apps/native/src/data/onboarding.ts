@@ -1,32 +1,19 @@
-import { eq } from "drizzle-orm";
-
 import type { Database } from "@/db/client";
-import { appMeta } from "@/db/schema";
 
-import { META_KEYS } from "./app-meta-core";
-import { useLiveValue } from "./live-query";
-import { isAccountDeferred, isOnboardingSettled, isReminderChosen } from "./onboarding-core";
-
-function useGateFlag(db: Database, key: string, isSet: (value: string | null) => boolean): boolean {
-    return useLiveValue(
-        appMeta,
-        () => db.select().from(appMeta).where(eq(appMeta.key, key)),
-        (rows) => isSet(rows[0]?.value ?? null)
-    );
-}
+import { useMeta } from "./app-meta";
 
 export function useOnboardingSettled(db: Database): boolean {
-    return useGateFlag(db, META_KEYS.onboardingComplete, isOnboardingSettled);
+    return useMeta(db, "onboardingComplete");
 }
 
 export function useAccountDeferred(db: Database): boolean {
-    return useGateFlag(db, META_KEYS.accountDeferred, isAccountDeferred);
+    return useMeta(db, "accountDeferred");
 }
 
 export function useFirstEntryOfferShown(db: Database): boolean {
-    return useGateFlag(db, META_KEYS.firstEntryOfferShown, (value) => value === "true");
+    return useMeta(db, "firstEntryOfferShown");
 }
 
 export function useReminderChosen(db: Database): boolean {
-    return useGateFlag(db, META_KEYS.reminderChosen, isReminderChosen);
+    return useMeta(db, "reminderChosen");
 }

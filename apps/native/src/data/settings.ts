@@ -1,5 +1,5 @@
 import { useAtomMount } from "@effect/atom-react/Hooks";
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
 import { useCalendars } from "expo-localization";
@@ -7,50 +7,27 @@ import { useCalendars } from "expo-localization";
 import type { Database } from "@/db/client";
 import { appMeta } from "@/db/schema";
 
-import { useLiveValue } from "./live-query";
+import { useMetaText } from "./app-meta";
+import { Meta } from "./app-meta-core";
+import { SETTING_NAMES } from "./app-meta-registry";
+import type { MetaValue, SettingName } from "./app-meta-registry";
 import type { SyncQuery } from "./live-query";
-import {
-    parseAiConsent,
-    parseBoolSetting,
-    parseIntSetting,
-    SETTING_DEFAULTS,
-    seedClockPreference,
-} from "./settings-core";
-import type { AiConsent, AiConsentKey, BoolSettingKey, NumberSettingKey } from "./settings-core";
+import { aiConsentOf, seedClockPreference } from "./settings-core";
+import type { AiConsent, AiConsentKey } from "./settings-core";
 
 export interface SettingsSnapshot {
-    bool: (key: BoolSettingKey) => boolean;
-    number: (key: NumberSettingKey) => number;
+    get: <K extends SettingName>(key: K) => MetaValue<K>;
 }
 
 type MetaRow = typeof appMeta.$inferSelect;
 
-const SETTING_KEYS = Object.keys(SETTING_DEFAULTS);
-
 export function settingsSnapshot(rows: readonly MetaRow[]): SettingsSnapshot {
     const raw = new Map(rows.map((row) => [row.key, row.value]));
-    return {
-        bool: (key) => parseBoolSetting(raw.get(key) ?? null, SETTING_DEFAULTS[key]),
-        number: (key) => parseIntSetting(raw.get(key) ?? null, SETTING_DEFAULTS[key]),
-    };
-}
-
-export function useBoolSetting(db: Database | null, key: BoolSettingKey): boolean {
-    return useLiveValue(
-        appMeta,
-        () => selectSetting(db, key),
-        (rows) => parseBoolSetting(rows[0]?.value ?? null, SETTING_DEFAULTS[key]),
-        [db, key]
-    );
+    return { get: (key) => Meta.decode(key, raw.get(key) ?? null) };
 }
 
 export function useAiConsent(db: Database | null, key: AiConsentKey = "aiConsentV2"): AiConsent {
-    return useLiveValue(
-        appMeta,
-        () => selectSetting(db, key),
-        (rows) => parseAiConsent(rows[0]?.value ?? null),
-        [db, key]
-    );
+    return aiConsentOf(key, useMetaText(db, key));
 }
 
 const seedClockAtom = Atom.family((input: { db: Database; deviceUses24Hour: boolean | null }) =>
@@ -66,28 +43,9 @@ export function useSeededClockPreference(db: Database): void {
     useAtomMount(seedClockAtom({ db, deviceUses24Hour }));
 }
 
-export function useNumberSetting(db: Database | null, key: NumberSettingKey): number {
-    return useLiveValue(
-        appMeta,
-        () => selectSetting(db, key),
-        (rows) => parseIntSetting(rows[0]?.value ?? null, SETTING_DEFAULTS[key]),
-        [db, key]
-    );
-}
-
-function selectSetting(
-    db: Database | null,
-    key: BoolSettingKey | NumberSettingKey
-): SyncQuery<{ value: string | null }> {
-    if (db == null) {
-        return { all: () => [] };
-    }
-    return db.select({ value: appMeta.value }).from(appMeta).where(eq(appMeta.key, key));
-}
-
 export function selectSettings(db: Database | null): SyncQuery<MetaRow> {
     if (db == null) {
         return { all: () => [] };
     }
-    return db.select().from(appMeta).where(inArray(appMeta.key, SETTING_KEYS));
+    return db.select().from(appMeta).where(inArray(appMeta.key, SETTING_NAMES));
 }

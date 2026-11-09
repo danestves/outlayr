@@ -7,7 +7,7 @@ import { View } from "react-native";
 
 import { ScreenHeader } from "@/components/screen-header";
 import { Text } from "@/components/text";
-import { useSettingNumber } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useBurndown, useCategoryBudget } from "@/data/budgets";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
@@ -56,8 +56,8 @@ export function BudgetDetail({ db, id, onDone }: { db: Database; id: string; onD
     );
     const { requestDelete } = useDeferredDelete("budget");
     const limitSheetRef = useRef<BottomSheetModal>(null);
-    const firstDayOfMonth = useSettingNumber("firstDayOfMonth");
-    const firstWeekday = useSettingNumber("firstWeekday");
+    const firstDayOfMonth = useSetting("firstDayOfMonth");
+    const firstWeekday = useSetting("firstWeekday");
     const calendar = { firstDayOfMonth, firstWeekday };
 
     useLeaveWhenGone(budget === null, onDone);

@@ -1,8 +1,7 @@
 import * as Effect from "effect/Effect";
 import { afterEach, beforeEach, expect, test, vi } from "vite-plus/test";
 
-import { setMeta, META_KEYS } from "@/data/app-meta-core";
-import { setBoolSetting } from "@/data/settings-core";
+import { Meta } from "@/data/app-meta-core";
 import { migratedDatabase } from "@/db/test-database";
 
 import { setCloudAuthenticated } from "./convex";
@@ -38,23 +37,19 @@ afterEach(() => {
 
 test("sends only pushes that show an amount and are not logged yet, once each", async () => {
     const db = migratedDatabase();
-    await Effect.runPromise(setBoolSetting(db, "aiConsentV2", true));
-    await Effect.runPromise(setBoolSetting(db, "aiEnrichment", true));
+    await Effect.runPromise(Meta.set(db, "aiConsentV2", true));
+    await Effect.runPromise(Meta.set(db, "aiEnrichment", true));
     await Effect.runPromise(
-        setMeta(
-            db,
-            META_KEYS.pendingWriteLedger,
-            JSON.stringify([
-                { at: Date.now(), id: "logged", key: null, txId: "tx" },
-                {
-                    at: Date.now(),
-                    date: Date.UTC(2026, 10, 2),
-                    id: "spotify",
-                    key: "notification:expense:spotify",
-                    txId: "tx2",
-                },
-            ])
-        )
+        Meta.set(db, "pendingWriteLedger", [
+            { at: Date.now(), id: "logged", key: null, txId: "tx" },
+            {
+                at: Date.now(),
+                date: Date.UTC(2026, 10, 2),
+                id: "spotify",
+                key: "notification:expense:spotify",
+                txId: "tx2",
+            },
+        ])
     );
 
     await Effect.runPromise(
@@ -73,8 +68,8 @@ test("sends only pushes that show an amount and are not logged yet, once each", 
 
 test("sends nothing while Smart fill is off", async () => {
     const db = migratedDatabase();
-    await Effect.runPromise(setBoolSetting(db, "aiConsentV2", true));
-    await Effect.runPromise(setBoolSetting(db, "aiEnrichment", false));
+    await Effect.runPromise(Meta.set(db, "aiConsentV2", true));
+    await Effect.runPromise(Meta.set(db, "aiEnrichment", false));
 
     await Effect.runPromise(readNotifications(db, [push("buy", "Banco\nYou paid $12.40 at STARBUCKS")]));
 
@@ -83,8 +78,8 @@ test("sends nothing while Smart fill is off", async () => {
 
 test("reads a purchase whose key a login code or a much earlier copy already used", async () => {
     const db = migratedDatabase();
-    await Effect.runPromise(setBoolSetting(db, "aiConsentV2", true));
-    await Effect.runPromise(setBoolSetting(db, "aiEnrichment", true));
+    await Effect.runPromise(Meta.set(db, "aiConsentV2", true));
+    await Effect.runPromise(Meta.set(db, "aiEnrichment", true));
     const key = "notification:expense:shared";
     const later = Date.UTC(2026, 10, 2) + 11 * 60 * 1000;
 
@@ -101,8 +96,8 @@ test("reads a purchase whose key a login code or a much earlier copy already use
 
 test("hands back the read the server answered for each push", async () => {
     const db = migratedDatabase();
-    await Effect.runPromise(setBoolSetting(db, "aiConsentV2", true));
-    await Effect.runPromise(setBoolSetting(db, "aiEnrichment", true));
+    await Effect.runPromise(Meta.set(db, "aiConsentV2", true));
+    await Effect.runPromise(Meta.set(db, "aiEnrichment", true));
     const read = { amount: 22.99, currency: "USD", kind: "purchase", merchant: "SiteGround" } as const;
     sent.mockResolvedValue({ read, status: "ok" });
 

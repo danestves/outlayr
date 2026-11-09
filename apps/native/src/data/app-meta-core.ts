@@ -1,76 +1,16 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import type { Database } from "@/db/client";
 import { appMeta } from "@/db/schema";
+import { afterRollback } from "@/db/transaction";
 
+import { isMetaName, META, SYNCED_META_NAMES } from "./app-meta-registry";
+import type { MetaEntry, MetaName, MetaStored, MetaValue } from "./app-meta-registry";
 import type { SpendDb } from "./budget-spent";
 
-// Kept apart from `app-meta.ts` so it never value-imports `drizzle-orm/expo-sqlite`, which node tests cannot load.
-export const META_KEYS = {
-    accountDeferred: "accountDeferred",
-    autologAccess: "autologAccess",
-    autologUsage: "autologUsage",
-    autologWaiting: "autologWaiting",
-    categoryLanguage: "categoryLanguage",
-    csvImport: "csvImport",
-    currency: "currency",
-    /** `bootstrap` seeds `currency` unconditionally, so only this tells a chosen code from the default. */
-    currencyChosen: "currencyChosen",
-    enrichmentOutbox: "enrichmentOutbox",
-    favouriteCurrencies: "favouriteCurrencies",
-    firstEntryOfferShown: "firstEntryOfferShown",
-    firstLaunch: "firstLaunch",
-    lastTransactionAccount: "lastTransactionAccount",
-    lastTransferFeeCategory: "lastTransferFeeCategory",
-    lastWalletEntry: "lastWalletEntry",
-    notificationTexts: "notificationTexts",
-    /** Holds the account subject, not a flag, so signing into a different account asks again. */
-    ledgerAdoption: "ledgerAdoption",
-    logoBackfillRetries: "logoBackfillRetries",
-    logoCandidates: "logoCandidates",
-    logoDismissals: "logoDismissals",
-    logoPlates: "logoPlates",
-    merchantBook: "merchantBook",
-    /** Device-local: undo must not delete another device's rows. */
-    moneyManagerImport: "moneyManagerImport",
-    /** `firstLaunch` cannot stand in: bootstrap writes it before any screen exists. */
-    onboardingComplete: "onboardingComplete",
-    onboardingGateMigrated: "onboardingGateMigrated",
-    /** Written in the same SQLite transaction as the row it records, so a replayed queue file never logs twice. */
-    pendingWriteLedger: "pendingWriteLedger",
-    repricedSubscriptions: "repricedSubscriptions",
-    recurrenceRepaired: "recurrenceRepaired",
-    referralRewardSeen: "referralRewardSeen",
-    reminderAsked: "reminderAsked",
-    reminderChosen: "reminderChosen",
-    reviewPending: "reviewPending",
-    syncAccountSubject: "syncAccountSubject",
-    syncCursor: "syncCursor",
-    syncRestoresReread: "syncRestoresReread",
-    /** Breaks same-millisecond write ties, so it must stay device-local or every device gets the same one. */
-    syncDeviceId: "syncDeviceId",
-    pdfImport: "pdfImport",
-    /** Comma-separated table names; deleted when the re-read completes. */
-    syncReread: "syncReread",
-    /** The outbox triggers read it, so a ledger that never syncs never queues a row. */
-    syncEnabled: "syncEnabled",
-    syncedAt: "syncedAt",
-    timeZone: "timeZone",
-    timeZoneMirrored: "timeZoneMirrored",
-    walletCards: "walletCards",
-    /** Epoch ms, mirrored from the App Group on foreground. */
-    walletLastRunAt: "walletLastRunAt",
-    walletShortcutAdded: "walletShortcutAdded",
-} as const;
-
-export function getMetaSync(db: Database, key: string): string | null {
-    const rows = db.select().from(appMeta).where(eq(appMeta.key, key)).limit(1).all();
-    return rows[0]?.value ?? null;
-}
-
-const AppMetaOperation = Schema.Literals(["get", "set"]);
+const AppMetaOperation = Schema.Literals(["get", "heal", "remove", "set"]);
 
 export class AppMetaError extends Schema.TaggedError<AppMetaError>()("AppMetaError", {
     cause: Schema.Defect(),
@@ -82,16 +22,181 @@ export class AppMetaError extends Schema.TaggedError<AppMetaError>()("AppMetaErr
     }
 }
 
+/** Carries the key and nothing else: stored values include wallet cards, notification texts and merchant names. */
+export class CorruptMetaError extends Schema.TaggedError<CorruptMetaError>()("CorruptMetaError", {
+    key: Schema.String,
+}) {
+    override get message(): string {
+        return `App meta ${this.key} held a corrupt value`;
+    }
+}
+
+interface Read<A> {
+    readonly dropped: number;
+    readonly value: A;
+}
+
+interface Codec<A, Stored> {
+    readonly missing: () => A;
+    readonly read: (raw: string) => Read<A> | null;
+    readonly write: (value: Stored) => string;
+}
+
+const decodeJsonArray = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Array(Schema.Unknown)));
+
+function codecOf(entry: MetaEntry): Codec<unknown, unknown> {
+    if ("elements" in entry) {
+        const decodeElement = Schema.decodeUnknownOption(entry.elements);
+        const encode = Schema.encodeSync(Schema.Array(entry.elements));
+        return {
+            missing: () => [],
+            read: (raw) =>
+                Option.getOrNull(
+                    Option.map(decodeJsonArray(raw), (parsed) => {
+                        const kept = parsed.flatMap((element) => Option.toArray(decodeElement(element)));
+                        return { dropped: parsed.length - kept.length, value: kept };
+                    })
+                ),
+            // SAFETY: `MetaStored` of a list key is an array of the element type, which is all `Meta.set` passes.
+            write: (value) => JSON.stringify(encode(value as readonly unknown[])),
+        };
+    }
+    const decodeText = Schema.decodeUnknownOption(entry.schema);
+    return {
+        missing: () => entry.default,
+        read: (raw) => Option.getOrNull(Option.map(decodeText(raw), (value) => ({ dropped: 0, value }))),
+        write: Schema.encodeSync(entry.schema),
+    };
+}
+
+const codecs = new Map<MetaName, Codec<unknown, unknown>>();
+
+function codecFor<K extends MetaName>(name: K): Codec<MetaValue<K>, MetaStored<K>> {
+    const codec = codecs.get(name) ?? codecOf(META[name]);
+    codecs.set(name, codec);
+    // SAFETY: built from `META[name]`, the entry `MetaValue<K>` and `MetaStored<K>` derive from.
+    return codec as Codec<MetaValue<K>, MetaStored<K>>;
+}
+
+type Problem = "corrupt value" | "dropped corrupt elements";
+
+const problemLine = (name: MetaName, problem: Problem): string => `[outlayr] app meta ${name}: ${problem}`;
+
+const warned = new Set<string>();
+
+function warnOnce(name: MetaName, problem: Problem): void {
+    const line = problemLine(name, problem);
+    if (!warned.has(line)) {
+        warned.add(line);
+        console.warn(line);
+    }
+}
+
+function readRaw<K extends MetaName>(name: K, raw: string | null): Read<MetaValue<K>> | null {
+    const codec = codecFor(name);
+    return raw === null ? { dropped: 0, value: codec.missing() } : codec.read(raw);
+}
+
+const stored = (db: SpendDb, name: MetaName) =>
+    db.select({ value: appMeta.value }).from(appMeta).where(eq(appMeta.key, name)).limit(1);
+
+// A delete, so its trigger drops the key's outbox entry; registered again because a rollback would undo it.
+function heal(db: SpendDb, name: MetaName): void {
+    const reset = () => {
+        db.delete(appMeta).where(eq(appMeta.key, name)).run();
+    };
+    reset();
+    afterRollback(db, reset);
+}
+
 const query = <A>(operation: typeof AppMetaOperation.Type, key: string, run: () => PromiseLike<A>) =>
     Effect.tryPromise({ catch: (cause) => new AppMetaError({ cause, key, operation }), try: run });
 
-export const getMeta = Effect.fn("AppMeta.getMeta")(function* getMeta(db: SpendDb, key: string) {
-    const rows = yield* query("get", key, () => db.select().from(appMeta).where(eq(appMeta.key, key)).limit(1));
-    return rows[0]?.value ?? null;
+const set = <K extends MetaName>(db: SpendDb, name: K, value: MetaStored<K>): Effect.Effect<void, AppMetaError> =>
+    query("set", name, () => {
+        const text = codecFor(name).write(value);
+        return db
+            .insert(appMeta)
+            .values({ key: name, value: text })
+            .onConflictDoUpdate({ set: { value: text }, target: appMeta.key });
+    }).pipe(Effect.asVoid, Effect.withSpan("AppMeta.set"));
+
+const failCorrupt = Effect.fn("AppMeta.failCorrupt")(function* failCorrupt(db: SpendDb, name: MetaName) {
+    yield* Effect.try({
+        catch: (cause) => new AppMetaError({ cause, key: name, operation: "heal" }),
+        try: () => heal(db, name),
+    });
+    yield* Effect.logWarning(problemLine(name, "corrupt value"));
+    return yield* new CorruptMetaError({ key: name });
 });
 
-export const setMeta = Effect.fn("AppMeta.setMeta")(function* setMeta(db: SpendDb, key: string, value: string) {
-    yield* query("set", key, () =>
-        db.insert(appMeta).values({ key, value }).onConflictDoUpdate({ set: { value }, target: appMeta.key })
+const get = <K extends MetaName>(db: SpendDb, name: K): Effect.Effect<MetaValue<K>, AppMetaError | CorruptMetaError> =>
+    query("get", name, () => stored(db, name)).pipe(
+        Effect.flatMap((rows) => {
+            const found = readRaw(name, rows[0]?.value ?? null);
+            if (found === null) {
+                return failCorrupt(db, name);
+            }
+            if (found.dropped === 0) {
+                return Effect.succeed(found.value);
+            }
+            // SAFETY: only a list key drops elements, and its value is the array its `MetaStored` describes.
+            return set(db, name, found.value as MetaStored<K>).pipe(
+                Effect.andThen(Effect.logWarning(problemLine(name, "dropped corrupt elements"))),
+                Effect.as(found.value)
+            );
+        }),
+        Effect.withSpan("AppMeta.get")
     );
+
+function getSync<K extends MetaName>(db: SpendDb, name: K): MetaValue<K> {
+    const found = readRaw(name, stored(db, name).all()[0]?.value ?? null);
+    if (found === null) {
+        heal(db, name);
+        warnOnce(name, "corrupt value");
+        throw new CorruptMetaError({ key: name });
+    }
+    if (found.dropped > 0) {
+        warnOnce(name, "dropped corrupt elements");
+    }
+    return found.value;
+}
+
+function decode<K extends MetaName>(name: K, raw: string | null): MetaValue<K> {
+    const found = readRaw(name, raw);
+    if (found === null) {
+        warnOnce(name, "corrupt value");
+        return codecFor(name).missing();
+    }
+    if (found.dropped > 0) {
+        warnOnce(name, "dropped corrupt elements");
+    }
+    return found.value;
+}
+
+function check(name: string, raw: string | null): boolean {
+    return isMetaName(name) && readRaw(name, raw)?.dropped === 0;
+}
+
+const has = Effect.fn("AppMeta.has")(function* has(db: SpendDb, name: MetaName) {
+    const rows = yield* query("get", name, () => stored(db, name));
+    return rows.length > 0;
 });
+
+const hasSync = (db: SpendDb, name: MetaName): boolean => stored(db, name).all().length > 0;
+
+const remove = Effect.fn("AppMeta.remove")(function* remove(db: SpendDb, names: readonly MetaName[]) {
+    yield* query("remove", names.join(","), () => db.delete(appMeta).where(inArray(appMeta.key, [...names])));
+});
+
+export const Meta = {
+    check,
+    decode,
+    get,
+    getSync,
+    has,
+    hasSync,
+    remove,
+    set,
+    syncedNames: SYNCED_META_NAMES,
+};

@@ -26,7 +26,7 @@ import {
 } from "../../../../packages/backend/confect/lib/syncTables";
 import { PUSH_BATCH_LIMIT as CONVEX_PUSH_BATCH_LIMIT } from "../../../../packages/backend/confect/sync";
 import { accountsRepo } from "./accounts-core";
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import {
     applyPulledRows,
     drainOutbox,
@@ -413,8 +413,8 @@ describe("drainOutbox", () => {
 
     it("pushes only the account-scoped meta keys", async () => {
         await Effect.runPromise(setSyncEnabled(db, true));
-        await Effect.runPromise(setMeta(db, META_KEYS.currency, "EUR"));
-        await Effect.runPromise(setMeta(db, META_KEYS.firstLaunch, "0"));
+        await Effect.runPromise(Meta.set(db, "currency", "EUR"));
+        await Effect.runPromise(Meta.set(db, "firstLaunch", true));
         let seen: WireRow[] = [];
         await Effect.runPromise(
             drainOutbox(
@@ -426,7 +426,7 @@ describe("drainOutbox", () => {
             )
         );
 
-        expect(seen.map((row) => row.localId)).toStrictEqual([META_KEYS.currency]);
+        expect(seen.map((row) => row.localId)).toStrictEqual(["currency"]);
         expect(seen[0].fields.value).toBe("EUR");
         expect(seen[0].deletedAt).toBeNull();
     });
@@ -467,7 +467,7 @@ describe("applyPulledRows", () => {
 
     it("refuses a page holding a value its column cannot take, writing none of it", async () => {
         const transactional = transactionalDatabase();
-        await Effect.runPromise(setMeta(transactional, META_KEYS.syncEnabled, "true"));
+        await Effect.runPromise(Meta.set(transactional, "syncEnabled", true));
         const failure = await Effect.runPromise(
             Effect.flip(
                 applyPulledRows(transactional, {
@@ -484,7 +484,7 @@ describe("applyPulledRows", () => {
 
     it("commits the whole apply inside one real transaction", async () => {
         const transactional = transactionalDatabase();
-        await Effect.runPromise(setMeta(transactional, META_KEYS.syncEnabled, "true"));
+        await Effect.runPromise(Meta.set(transactional, "syncEnabled", true));
         await transactional.insert(transactions).values({
             amount: 1,
             date: new Date(1),
@@ -706,34 +706,34 @@ describe("applyPulledRows", () => {
 
     it("keeps an unsent local meta value rather than taking the incoming one", async () => {
         await Effect.runPromise(setSyncEnabled(db, true));
-        await Effect.runPromise(setMeta(db, META_KEYS.currency, "GBP"));
+        await Effect.runPromise(Meta.set(db, "currency", "GBP"));
 
         await Effect.runPromise(
             applyPulledRows(db, {
                 cursor: 1,
-                rows: [metaRow(META_KEYS.currency, 1, 9000, "JPY")],
+                rows: [metaRow("currency", 1, 9000, "JPY")],
             })
         );
 
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.currency))).resolves.toBe("GBP");
+        await expect(Effect.runPromise(Meta.get(db, "currency"))).resolves.toBe("GBP");
         await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(1);
     });
 
     it("takes the incoming meta value when nothing local is owed", async () => {
-        await Effect.runPromise(setMeta(db, META_KEYS.currency, "GBP"));
+        await Effect.runPromise(Meta.set(db, "currency", "GBP"));
 
         await Effect.runPromise(
             applyPulledRows(db, {
                 cursor: 1,
-                rows: [metaRow(META_KEYS.currency, 1, 9000, "JPY")],
+                rows: [metaRow("currency", 1, 9000, "JPY")],
             })
         );
 
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.currency))).resolves.toBe("JPY");
+        await expect(Effect.runPromise(Meta.get(db, "currency"))).resolves.toBe("JPY");
     });
 
     it("ignores an incoming meta key the allow-list no longer names", async () => {
-        await Effect.runPromise(setMeta(db, "numberEntryType", "1"));
+        await Effect.runPromise(Meta.set(db, "numberEntryType", 1));
 
         const result = await Effect.runPromise(
             applyPulledRows(db, {
@@ -742,8 +742,28 @@ describe("applyPulledRows", () => {
             })
         );
 
-        await expect(Effect.runPromise(getMeta(db, "numberEntryType"))).resolves.toBe("1");
+        await expect(Effect.runPromise(Meta.get(db, "numberEntryType"))).resolves.toBe(1);
         expect(result.tables).toStrictEqual([]);
+    });
+
+    it("skips an incoming meta value its key's schema rejects and applies the rows beside it", async () => {
+        await Effect.runPromise(Meta.set(db, "firstDayOfMonth", 15));
+
+        await Effect.runPromise(
+            applyPulledRows(db, {
+                cursor: 3,
+                rows: [
+                    metaRow("currency", 1, 9000, "JPY"),
+                    metaRow("firstDayOfMonth", 2, 9000, "the first"),
+                    txRow("t1", 3, 9000),
+                ],
+            })
+        );
+
+        await expect(Effect.runPromise(Meta.get(db, "firstDayOfMonth"))).resolves.toBe(15);
+        await expect(Effect.runPromise(Meta.get(db, "currency"))).resolves.toBe("JPY");
+        await expect(db.select({ id: transactions.id }).from(transactions)).resolves.toStrictEqual([{ id: "t1" }]);
+        await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(3);
     });
 
     it("reports the tables it wrote so the caller can invalidate them", async () => {
@@ -756,7 +776,7 @@ describe("applyPulledRows", () => {
                         deletedAt: null,
                         deviceId: "device-b",
                         fields: { value: "JPY" },
-                        localId: META_KEYS.currency,
+                        localId: "currency",
                         seq: 2,
                         table: "appMeta",
                         updatedAt: 5000,
@@ -787,7 +807,7 @@ describe("the echo of this device's own push", () => {
 
     it("writes nothing but the cursor when every row comes back as it left", async () => {
         await addTransaction(db, "t1", { amountUsd: 0.1 + 0.2, onceRecurring: true, recurringEndDate: AT(4321) });
-        await Effect.runPromise(setMeta(db, META_KEYS.currency, "JPY"));
+        await Effect.runPromise(Meta.set(db, "currency", "JPY"));
         const echo = await pushAndEcho();
         const before = await totalChanges();
 
@@ -1354,7 +1374,7 @@ describe("two devices against one account", () => {
         await addTransaction(db, "deleted", { deletedAt: AT(2000), updatedAt: AT(2000) });
         await Effect.runPromise(setSyncEnabled(db, true));
         await Effect.runPromise(setSyncCursor(db, 5));
-        await Effect.runPromise(setMeta(db, META_KEYS.syncRestoresReread, "1"));
+        await Effect.runPromise(Meta.set(db, "syncRestoresReread", true));
 
         await Effect.runPromise(runSync(db, server.transport));
         await Effect.runPromise(runSync(db, server.transport));
@@ -1367,7 +1387,7 @@ describe("two devices against one account", () => {
         await expect(deletedAt("deleted")).resolves.toBe(2000);
         expect(server.rows.get("transactions restored-here")?.deletedAt).toBeNull();
         expect(server.rows.get("transactions from-archive")?.deletedAt).toBe(2000);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncRestoresReread))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.has(db, "syncRestoresReread"))).resolves.toBe(false);
     });
 
     it("applies a pull without losing an unpushed local edit to another row", async () => {
@@ -1446,8 +1466,8 @@ describe("two devices against one account", () => {
         });
         await addTransaction(db, "restored", { updatedAt: AT(6000) });
         await db.delete(outbox);
-        await Effect.runPromise(setMeta(db, META_KEYS.syncCursor, "9"));
-        await Effect.runPromise(setMeta(db, META_KEYS.syncReread, "installmentPlans,installments,transfers"));
+        await Effect.runPromise(Meta.set(db, "syncCursor", 9));
+        await Effect.runPromise(Meta.set(db, "syncReread", "installmentPlans,installments,transfers"));
 
         await Effect.runPromise(pullAndApply(db, server.pullFn));
 
@@ -1455,7 +1475,7 @@ describe("two devices against one account", () => {
         expect(entry?.deletedAt).toBeNull();
         await expect(db.select().from(installmentPlans)).resolves.toHaveLength(1);
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(9);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncReread))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "syncReread"))).resolves.toBeNull();
     });
 
     it("does not pull while the gate is shut", async () => {

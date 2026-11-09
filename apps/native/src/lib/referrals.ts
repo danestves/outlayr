@@ -3,7 +3,7 @@ import { api } from "@outlayr/backend/convex/_generated/api";
 import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
 
-import { META_KEYS, setMeta } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 import type { TranslationKey } from "@/i18n/catalog";
 import { translateNow } from "@/i18n/runtime";
@@ -59,8 +59,7 @@ const claimInvite = Effect.fn("Referrals.claim")(function* claimInvite(code: str
 export const claimInviteCommand = createCommand({ execute: claimInvite, label: "referrals:claim" });
 
 export const markRewardsSeenCommand = createCommand({
-    execute: ({ db, seenAt }: { db: Database; seenAt: number }) =>
-        setMeta(db, META_KEYS.referralRewardSeen, String(seenAt)),
+    execute: ({ db, seenAt }: { db: Database; seenAt: number }) => Meta.set(db, "referralRewardSeen", seenAt),
     label: "referrals:mark-seen",
 });
 

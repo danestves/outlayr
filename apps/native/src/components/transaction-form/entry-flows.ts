@@ -2,11 +2,10 @@ import { merchantKey } from "@outlayr/money/merchant-key";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 
-import { META_KEYS, setMeta } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import { getCategoryById } from "@/data/categories-core";
 import { recallMerchant, rememberMerchant } from "@/data/merchant-book-core";
 import { applyMerchantToSiblings } from "@/data/merchant-siblings-core";
-import { setBoolSetting } from "@/data/settings-core";
 import { tagIdsForQuery, tagsRepo } from "@/data/tags-core";
 import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
@@ -44,7 +43,7 @@ export const saveEntry = Effect.fn("TransactionForm.saveEntry")(function* saveEn
         return true;
     }
     if (input.onSaved()) {
-        yield* logged("Failed to flag a review ask")(setMeta(input.commit.db, META_KEYS.reviewPending, "1"));
+        yield* logged("Failed to flag a review ask")(Meta.set(input.commit.db, "reviewPending", true));
     }
     return true;
 });
@@ -249,5 +248,5 @@ export const confirmRemindersAllowed = Effect.fn("TransactionForm.confirmReminde
         choice.onDeclined();
         return;
     }
-    yield* setBoolSetting(db, "subscriptionReminders", true);
+    yield* Meta.set(db, "subscriptionReminders", true);
 });

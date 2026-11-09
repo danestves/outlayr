@@ -1,7 +1,7 @@
 import * as Cause from "effect/Cause";
 import type * as Effect from "effect/Effect";
 
-import { getMetaSync } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 import type { TranslatableKey } from "@/i18n/catalog";
 import {
@@ -84,7 +84,7 @@ export function askForInstallmentReminders(
     db: Database,
     question: TranslatableKey = "installments.reminder.ask"
 ): boolean {
-    if (getMetaSync(db, "installmentReminders") !== null) {
+    if (Meta.hasSync(db, "installmentReminders")) {
         return false;
     }
     fireLogged(

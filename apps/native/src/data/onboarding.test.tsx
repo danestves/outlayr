@@ -20,7 +20,7 @@ vi.mock("expo-sqlite", () => ({
     },
 }));
 
-import { META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { useOnboardingSettled } from "./onboarding";
 
 describe("useOnboardingSettled", () => {
@@ -38,7 +38,7 @@ describe("useOnboardingSettled", () => {
     });
 
     it("does not let a chosen currency out of the flow on its own", async () => {
-        await Effect.runPromise(setMeta(db, META_KEYS.currencyChosen, "true"));
+        await Effect.runPromise(Meta.set(db, "currencyChosen", true));
 
         const { result } = await renderHook(() => useOnboardingSettled(db));
 
@@ -46,7 +46,7 @@ describe("useOnboardingSettled", () => {
     });
 
     it("lets a finished run through", async () => {
-        await Effect.runPromise(setMeta(db, META_KEYS.onboardingComplete, "true"));
+        await Effect.runPromise(Meta.set(db, "onboardingComplete", true));
 
         const { result } = await renderHook(() => useOnboardingSettled(db));
 

@@ -10,11 +10,10 @@ import { accounts, outsideMoves, savingsGoals, transactions } from "@/db/schema"
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 
-import { getMetaSync, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { frozenUsdAmount } from "./frozen-usd";
 import { tombstonePlansOnAccount } from "./installment-cascade";
 import { refreshLogoCandidates } from "./logo-backfill-state";
-import { setBoolSetting } from "./settings-core";
 import { tombstoneTransfersTouchingAccount } from "./transfers-core";
 
 export type Account = typeof accounts.$inferSelect;
@@ -50,7 +49,7 @@ export function getAccountById(db: Database, id: string): Account | null {
 // A tombstoned account resolves to null, so the default never revives it. A person or archived account is never the
 // default either.
 export function getLastUsedAccount(db: Database): Account | null {
-    const id = getMetaSync(db, META_KEYS.lastTransactionAccount);
+    const id = Meta.getSync(db, "lastTransactionAccount");
     const account = id == null ? null : getAccountById(db, id);
     return account && !isPerson(account) && account.archivedAt === null ? account : null;
 }
@@ -85,7 +84,7 @@ export const rememberLastUsedAccount = Effect.fn("Accounts.rememberLastUsedAccou
     db: Database,
     id: string
 ) {
-    yield* setMeta(db, META_KEYS.lastTransactionAccount, id);
+    yield* Meta.set(db, "lastTransactionAccount", id);
 });
 
 const nextSortOrder = Effect.fn("Accounts.nextSortOrder")(function* nextSortOrder(db: Database) {
@@ -180,7 +179,7 @@ export const accountsRepo = {
                         db.update(accounts).set({ sortOrder: index, updatedAt: now }).where(eq(accounts.id, id))
                     );
                 }
-                yield* setBoolSetting(db, "accountsByHand", true);
+                yield* Meta.set(db, "accountsByHand", true);
             }),
             (cause) => new AccountsError({ cause, operation: "reorder" })
         );

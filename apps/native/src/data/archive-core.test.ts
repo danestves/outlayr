@@ -15,7 +15,7 @@ import {
 import { migratedDatabase } from "@/db/test-database";
 import { parseArchive, serializeArchive } from "@/domain/archive";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { buildArchive, restoreArchive } from "./archive-core";
 
 const CATEGORY = {
@@ -237,27 +237,27 @@ describe("archiving a ledger", () => {
 describe("archive and the device's own state", () => {
     it("leaves this device's sync identity alone through a restore", async () => {
         const source = migratedDatabase();
-        await Effect.runPromise(setMeta(source, META_KEYS.currency, "EUR"));
-        await Effect.runPromise(setMeta(source, META_KEYS.syncDeviceId, "device-from-the-iphone"));
-        await Effect.runPromise(setMeta(source, META_KEYS.syncCursor, "5000"));
+        await Effect.runPromise(Meta.set(source, "currency", "EUR"));
+        await Effect.runPromise(Meta.set(source, "syncDeviceId", "device-from-the-iphone"));
+        await Effect.runPromise(Meta.set(source, "syncCursor", 5000));
         const document = await Effect.runPromise(buildArchive(source, new Date()));
 
         const target = migratedDatabase();
-        await Effect.runPromise(setMeta(target, META_KEYS.currency, "USD"));
-        await Effect.runPromise(setMeta(target, META_KEYS.syncDeviceId, "device-on-the-ipad"));
-        await Effect.runPromise(setMeta(target, META_KEYS.syncCursor, "200"));
+        await Effect.runPromise(Meta.set(target, "currency", "USD"));
+        await Effect.runPromise(Meta.set(target, "syncDeviceId", "device-on-the-ipad"));
+        await Effect.runPromise(Meta.set(target, "syncCursor", 200));
 
         await Effect.runPromise(restoreArchive(target, document));
 
-        await expect(Effect.runPromise(getMeta(target, META_KEYS.currency))).resolves.toBe("EUR");
+        await expect(Effect.runPromise(Meta.get(target, "currency"))).resolves.toBe("EUR");
         // A copied device id breaks the same-millisecond tie-break; a jumped cursor skips sequences for good.
-        await expect(Effect.runPromise(getMeta(target, META_KEYS.syncDeviceId))).resolves.toBe("device-on-the-ipad");
-        await expect(Effect.runPromise(getMeta(target, META_KEYS.syncCursor))).resolves.toBe("200");
+        await expect(Effect.runPromise(Meta.get(target, "syncDeviceId"))).resolves.toBe("device-on-the-ipad");
+        await expect(Effect.runPromise(Meta.get(target, "syncCursor"))).resolves.toBe(200);
     });
 
     it("does not carry the device keys into the file at all", async () => {
         const db = migratedDatabase();
-        await Effect.runPromise(setMeta(db, META_KEYS.syncDeviceId, "device-from-the-iphone"));
+        await Effect.runPromise(Meta.set(db, "syncDeviceId", "device-from-the-iphone"));
 
         const document = await Effect.runPromise(buildArchive(db, new Date()));
 

@@ -1,8 +1,9 @@
 import * as Effect from "effect/Effect";
 
+import { Meta } from "@/data/app-meta-core";
+import type { BoolSettingKey, NumberSettingKey } from "@/data/app-meta-registry";
 import { toggleFavouriteCurrency } from "@/data/favourite-currencies-core";
-import { saveAiConsent, setBoolSetting, setCurrency, setNumberSetting } from "@/data/settings-core";
-import type { BoolSettingKey, NumberSettingKey } from "@/data/settings-core";
+import { saveAiConsent, setCurrency } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { posthog } from "@/lib/posthog";
 
@@ -14,14 +15,14 @@ const trackSetting = (setting: string, enabled: boolean) =>
 export const setBoolSettingCommand = createCommand({
     execute: (input: { db: Database; key: BoolSettingKey; value: boolean }) =>
         input.key === "shareAnalytics"
-            ? setBoolSetting(input.db, input.key, input.value)
-            : setBoolSetting(input.db, input.key, input.value).pipe(trackSetting(input.key, input.value)),
+            ? Meta.set(input.db, input.key, input.value)
+            : Meta.set(input.db, input.key, input.value).pipe(trackSetting(input.key, input.value)),
     label: "settings:set-bool",
 });
 
 export const setNumberSettingCommand = createCommand({
     execute: (input: { db: Database; key: NumberSettingKey; value: number }) =>
-        setNumberSetting(input.db, input.key, input.value),
+        Meta.set(input.db, input.key, input.value),
     label: "settings:set-number",
 });
 

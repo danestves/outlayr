@@ -3,9 +3,10 @@ import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, outbox, transactions } from "@/db/schema";
-import { migratedDatabase } from "@/db/test-database";
+import { migratedDatabase, storeMetaText } from "@/db/test-database";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { CorruptMetaError, Meta } from "./app-meta-core";
+import { META_NAMES } from "./app-meta-registry";
 import {
     enqueueAllForSync,
     getOrCreateDeviceId,
@@ -15,7 +16,6 @@ import {
     setSyncCursor,
     setSyncEnabled,
 } from "./sync-outbox-core";
-import { SYNCED_META_KEYS } from "./sync-tables";
 
 async function addTransaction(db: Database, id: string): Promise<void> {
     await db.insert(transactions).values({
@@ -41,7 +41,7 @@ describe("sync device identity", () => {
 
         expect(first).toMatch(/^[0-9a-f-]{36}$/);
         await expect(Effect.runPromise(getOrCreateDeviceId(db))).resolves.toBe(first);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.syncDeviceId))).resolves.toBe(first);
+        await expect(Effect.runPromise(Meta.get(db, "syncDeviceId"))).resolves.toBe(first);
     });
 
     it("never queues the device id for replication", async () => {
@@ -59,9 +59,12 @@ describe("sync cursor", () => {
         db = migratedDatabase();
     });
 
-    it("falls back to zero rather than replaying from a corrupt cursor", async () => {
-        await Effect.runPromise(setMeta(db, META_KEYS.syncCursor, "not-a-number"));
+    it("fails one pass on a corrupt cursor, then pulls again from zero", async () => {
+        storeMetaText(db, "syncCursor", "not-a-number");
 
+        await expect(Effect.runPromise(Effect.flip(getSyncCursor(db)))).resolves.toMatchObject({
+            cause: expect.any(CorruptMetaError),
+        });
         await expect(Effect.runPromise(getSyncCursor(db))).resolves.toBe(0);
     });
 
@@ -161,14 +164,13 @@ describe("enqueueAllForSync", () => {
     });
 
     it("queues only account-scoped meta keys", async () => {
-        // Both registries: the synced presentation settings use bare names that META_KEYS does not hold.
-        for (const key of [...Object.values(META_KEYS), ...SYNCED_META_KEYS]) {
-            await Effect.runPromise(setMeta(db, key, "x"));
+        for (const key of META_NAMES) {
+            storeMetaText(db, key, "x");
         }
 
         await Effect.runPromise(enqueueAllForSync(db));
 
-        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(SYNCED_META_KEYS.length);
+        await expect(Effect.runPromise(outboxPendingCount(db))).resolves.toBe(Meta.syncedNames.length);
     });
 
     it("queues a ledger larger than one insert can bind", async () => {

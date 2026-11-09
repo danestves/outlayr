@@ -1,6 +1,5 @@
 import type { ReferralOverview } from "@outlayr/backend/confect/referrals.spec";
 import { REFERRAL_DAYS_TO_EARN, REFERRAL_YEARLY_CAP } from "@outlayr/money/contract";
-import { eq } from "drizzle-orm";
 import { useIsFocused, useRouter } from "expo-router";
 import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
@@ -14,9 +13,7 @@ import { LinkRow } from "@/components/list/list-row";
 import { Text } from "@/components/text";
 import { useSheetInsets } from "@/components/use-sheet-insets";
 import { useDatabase } from "@/contexts/local-data-context";
-import { META_KEYS } from "@/data/app-meta-core";
-import { useLiveValue } from "@/data/live-query";
-import { appMeta } from "@/db/schema";
+import { useMeta } from "@/data/app-meta";
 import { formatSentenceDate } from "@/domain/dates";
 import { earnedThisYear, rewardsToAnnounce } from "@/domain/referrals";
 import type { ReferredFriend } from "@/domain/referrals";
@@ -55,11 +52,7 @@ function SignedInInvite() {
 
 function useRewardSeenAt(): number {
     const db = useDatabase();
-    return useLiveValue(
-        appMeta,
-        () => db.select().from(appMeta).where(eq(appMeta.key, META_KEYS.referralRewardSeen)),
-        (rows) => Number(rows[0]?.value ?? 0)
-    );
+    return useMeta(db, "referralRewardSeen");
 }
 
 function RewardLanded({ overview }: { overview: ReferralOverview }) {

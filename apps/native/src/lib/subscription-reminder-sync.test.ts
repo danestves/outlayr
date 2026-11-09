@@ -3,7 +3,7 @@ import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { setBoolSetting } from "@/data/settings-core";
+import { Meta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
@@ -48,7 +48,7 @@ describe("syncSubscriptionReminders", () => {
         mockReminders.cancel.mockClear();
         mockReminders.schedule.mockClear();
         mockReminders.pendingIds.mockReturnValue(["outlayr.sub-due.a"]);
-        await Effect.runPromise(setBoolSetting(db, "subscriptionReminders", true));
+        await Effect.runPromise(Meta.set(db, "subscriptionReminders", true));
     });
 
     it("leaves the armed queue alone when the permission could not be read", async () => {
@@ -60,7 +60,7 @@ describe("syncSubscriptionReminders", () => {
     });
 
     it("still silences the queue when the switch is off, whatever the permission", async () => {
-        await Effect.runPromise(setBoolSetting(db, "subscriptionReminders", false));
+        await Effect.runPromise(Meta.set(db, "subscriptionReminders", false));
         mockReminders.permission.mockReturnValue("unknown");
 
         await sync(db);

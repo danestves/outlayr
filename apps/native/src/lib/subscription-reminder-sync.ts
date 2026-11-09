@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
 import * as Semaphore from "effect/Semaphore";
 
-import { readBoolSetting, setBoolSetting } from "@/data/settings-core";
+import { Meta } from "@/data/app-meta-core";
 import { pendingReminderPlan } from "@/data/subscription-reminders-core";
 import type { Database } from "@/db/client";
 import { reminderReconcile } from "@/domain/reminder";
@@ -15,7 +15,7 @@ const reconcileSubscriptionReminders = Effect.fn("SubscriptionReminderSync.recon
     function* reconcileSubscriptionReminders(db: Database) {
         const reminders = yield* Reminders;
         const [enabled, permission, hideAmounts] = yield* Effect.all(
-            [readBoolSetting(db, "subscriptionReminders"), reminders.permission(), readBoolSetting(db, "hideAmounts")],
+            [Meta.get(db, "subscriptionReminders"), reminders.permission(), Meta.get(db, "hideAmounts")],
             { concurrency: "unbounded" }
         );
         if (enabled && permission === "unknown") {
@@ -36,7 +36,7 @@ const reconcileSubscriptionReminders = Effect.fn("SubscriptionReminderSync.recon
         yield* armReminders(notices);
 
         if (decision === "disable") {
-            yield* setBoolSetting(db, "subscriptionReminders", false);
+            yield* Meta.set(db, "subscriptionReminders", false);
         }
     }
 );

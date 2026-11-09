@@ -21,7 +21,7 @@ vi.mock("expo-sqlite", () => ({
 }));
 
 import { useGlobalCurrency } from "./app-meta";
-import { META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 
 async function announceMetaWrite(): Promise<void> {
     for (const listener of mockListeners) {
@@ -39,7 +39,7 @@ describe("useGlobalCurrency", () => {
     beforeEach(async () => {
         mockListeners.clear();
         db = migratedDatabase({ foreignKeys: false });
-        await Effect.runPromise(setMeta(db, META_KEYS.currency, "EUR"));
+        await Effect.runPromise(Meta.set(db, "currency", "EUR"));
     });
 
     it("does not re-render its callers when an unrelated setting is written", async () => {
@@ -53,7 +53,7 @@ describe("useGlobalCurrency", () => {
         });
         const before = renders;
 
-        await Effect.runPromise(setMeta(db, META_KEYS.syncedAt, "1700000000000"));
+        await Effect.runPromise(Meta.set(db, "syncedAt", 1_700_000_000_000));
         await act(async () => {
             await announceMetaWrite();
         });
@@ -68,7 +68,7 @@ describe("useGlobalCurrency", () => {
             await announceMetaWrite();
         });
 
-        await Effect.runPromise(setMeta(db, META_KEYS.currency, "JPY"));
+        await Effect.runPromise(Meta.set(db, "currency", "JPY"));
         await act(async () => {
             await announceMetaWrite();
         });

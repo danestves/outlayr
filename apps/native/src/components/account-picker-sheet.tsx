@@ -7,7 +7,7 @@ import { SheetGestureRoot } from "@/components/sheet-gesture-root";
 import { cn } from "@/components/tw";
 import { useBankAccounts } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
-import { useBoolSetting } from "@/data/settings";
+import { useMeta } from "@/data/app-meta";
 import type { Database } from "@/db/client";
 import { pickerOrder } from "@/domain/account-order";
 import { useMergedRef } from "@/hooks/use-merged-ref";
@@ -53,7 +53,7 @@ export function AccountPickerSheet({
     const colors = useColors();
     const sheetSurface = useSheetSurface(colors.surfaceSecondary);
     const bankAccounts = useBankAccounts(db);
-    const accounts = pickerOrder(only ?? bankAccounts, useBoolSetting(db, "accountsByHand"));
+    const accounts = pickerOrder(only ?? bankAccounts, useMeta(db, "accountsByHand"));
     const sheetRef = useRef<BottomSheetModal>(null);
 
     const setRefs = useMergedRef(sheetRef, ref);

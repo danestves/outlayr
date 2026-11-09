@@ -6,7 +6,7 @@ import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue } from "re
 import Svg, { Line } from "react-native-svg";
 import { scheduleOnRN } from "react-native-worklets";
 
-import { useSettingBool } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { bucketDateLabel } from "@/data/insights";
 import type { InsightsBucket, InsightsMeasure, InsightsPeriod } from "@/data/insights";
 import { amountParts, formatAmount, withCurrencySymbol } from "@/domain/money";
@@ -92,7 +92,7 @@ export function InsightsBarChart({
     const ink = useChartInk();
     const { language } = useLanguage();
     const reduceMotion = useReducedMotion();
-    const animated = useSettingBool("animatedCharts") && !reduceMotion;
+    const animated = useSetting("animatedCharts") && !reduceMotion;
 
     const [width, setWidth] = useState(0);
     const [scrubIndex, setScrubIndex] = useState<number | null>(null);

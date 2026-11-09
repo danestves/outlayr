@@ -5,10 +5,10 @@ import * as Semaphore from "effect/Semaphore";
 
 import { settledCellsAt } from "@/data/accounts";
 import { accountsRepo } from "@/data/accounts-core";
+import { Meta } from "@/data/app-meta-core";
 import { cardStatement } from "@/data/card-statement";
 import { readPlans } from "@/data/installments-core";
 import { owedPayoffPlans } from "@/data/payoff-plans";
-import { readBoolSetting, setBoolSetting } from "@/data/settings-core";
 import { loadValuationIn } from "@/data/valuation-source";
 import type { Database } from "@/db/client";
 import { accounts } from "@/db/schema";
@@ -153,7 +153,7 @@ const reconcileInstallmentReminders = Effect.fn("InstallmentReminderSync.reconci
     function* reconcileInstallmentReminders(db: Database) {
         const reminders = yield* Reminders;
         const [enabled, permission, hideAmounts] = yield* Effect.all(
-            [readBoolSetting(db, "installmentReminders"), reminders.permission(), readBoolSetting(db, "hideAmounts")],
+            [Meta.get(db, "installmentReminders"), reminders.permission(), Meta.get(db, "hideAmounts")],
             { concurrency: "unbounded" }
         );
         if (enabled && permission === "unknown") {
@@ -181,7 +181,7 @@ const reconcileInstallmentReminders = Effect.fn("InstallmentReminderSync.reconci
         yield* armReminders(notices);
 
         if (decision === "disable") {
-            yield* setBoolSetting(db, "installmentReminders", false);
+            yield* Meta.set(db, "installmentReminders", false);
         }
     }
 );

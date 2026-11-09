@@ -7,13 +7,12 @@ import { and, asc, desc, isNull, lte } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { getMeta, META_KEYS } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
 import { OVERALL_BUDGET_ID } from "@/data/budgets-core";
 import { aggregateInsightsWindows, loadContributions, windowLabel } from "@/data/insights";
 import type { InsightsCalendar, InsightsContribution, InsightsPeriod, WindowTotals } from "@/data/insights";
 import { writeIdsByTransaction } from "@/data/pending-writes-core";
-import { parseBoolSetting, parseIntSetting, SETTING_DEFAULTS } from "@/data/settings-core";
 import { loadValuation } from "@/data/valuation-source";
 import type { Valuation } from "@/data/valuation-source";
 import {
@@ -25,7 +24,7 @@ import {
 import { budgetPeriodPhrase } from "@/domain/budget-math";
 import { compareBudgetSeverity } from "@/domain/budget-severity";
 import { formatDateHeader, formatDayHeader, formatUpcomingDate, weekdayInitial } from "@/domain/dates";
-import { DEFAULT_CURRENCY, formatAmount } from "@/domain/money";
+import { formatAmount } from "@/domain/money";
 import type { TranslationKey } from "@/i18n/catalog";
 import type { Language } from "@/i18n/languages";
 import { runtimeLanguage, translateIn, translateNow } from "@/i18n/runtime";
@@ -247,26 +246,23 @@ interface CategoryRow {
 }
 
 const loadSettings = Effect.fn("Widgets.loadSettings")(function* loadSettings(db: SpendDb) {
-    const [currencyRaw, showCentsRaw, weekdayRaw, monthDayRaw, periodRaw, clockRaw] = yield* Effect.all(
+    const [currency, showCents, firstWeekday, firstDayOfMonth, period, use24HourClock] = yield* Effect.all(
         [
-            getMeta(db, META_KEYS.currency),
-            getMeta(db, "showCents"),
-            getMeta(db, "firstWeekday"),
-            getMeta(db, "firstDayOfMonth"),
-            getMeta(db, "insightsTimeFrame"),
-            getMeta(db, "use24HourClock"),
+            Meta.get(db, "currency"),
+            Meta.get(db, "showCents"),
+            Meta.get(db, "firstWeekday"),
+            Meta.get(db, "firstDayOfMonth"),
+            Meta.get(db, "insightsTimeFrame"),
+            Meta.get(db, "use24HourClock"),
         ],
         { concurrency: "unbounded" }
     );
     return {
-        calendar: {
-            firstDayOfMonth: parseIntSetting(monthDayRaw, SETTING_DEFAULTS.firstDayOfMonth),
-            firstWeekday: parseIntSetting(weekdayRaw, SETTING_DEFAULTS.firstWeekday),
-        } satisfies InsightsCalendar,
-        currency: currencyRaw ?? DEFAULT_CURRENCY,
-        period: PERIODS.get(parseIntSetting(periodRaw, SETTING_DEFAULTS.insightsTimeFrame)) ?? ("week" as const),
-        showCents: parseBoolSetting(showCentsRaw, SETTING_DEFAULTS.showCents),
-        use24HourClock: parseBoolSetting(clockRaw, SETTING_DEFAULTS.use24HourClock),
+        calendar: { firstDayOfMonth, firstWeekday } satisfies InsightsCalendar,
+        currency,
+        period: PERIODS.get(period) ?? ("week" as const),
+        showCents,
+        use24HourClock,
     };
 });
 

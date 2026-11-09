@@ -19,6 +19,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [Add button beside the tab bar (parked)](./internals/add-button-beside-tab-bar.md)
 - [Referrals](./internals/referrals.md)
 - [Web app: local first](./internals/web-local-first.md)
+- [App meta registry](./internals/app-meta.md)
 
 ### Runbooks
 

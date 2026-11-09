@@ -6,13 +6,14 @@ import * as Equal from "effect/Equal";
 import * as Atom from "effect/reactivity/Atom";
 import { use } from "react";
 
+import { useMeta } from "@/data/app-meta";
+import type { BoolSettingKey, MetaValue, NumberSettingKey, SettingName } from "@/data/app-meta-registry";
 import { subscribeToTableChanges } from "@/data/database-changes";
 import { selectDisplaySettings } from "@/data/display-settings";
 import type { DisplaySettings } from "@/data/display-settings";
 import { sameRows } from "@/data/same-rows";
-import { selectSettings, settingsSnapshot, useBoolSetting, useNumberSetting } from "@/data/settings";
+import { selectSettings, settingsSnapshot } from "@/data/settings";
 import type { SettingsSnapshot } from "@/data/settings";
-import type { BoolSettingKey, NumberSettingKey } from "@/data/settings-core";
 import { appMeta } from "@/db/schema";
 import { SILENT } from "@/state/atom-command";
 import { setBoolSettingCommand, setNumberSettingCommand } from "@/state/settings-commands";
@@ -98,14 +99,9 @@ export function useAppSettings(): AppSettingsValue {
     };
 }
 
-// Prefer these to `useAppSettings` for one key: that republishes on every setting write and re-renders the caller
+// Prefer this to `useAppSettings` for one key: that republishes on every setting write and re-renders the caller
 // for every unrelated toggle.
-export function useSettingBool(key: BoolSettingKey): boolean {
+export function useSetting<K extends SettingName>(key: K): MetaValue<K> {
     const { db } = useLocalData();
-    return useBoolSetting(db, key);
-}
-
-export function useSettingNumber(key: NumberSettingKey): number {
-    const { db } = useLocalData();
-    return useNumberSetting(db, key);
+    return useMeta(db, key);
 }

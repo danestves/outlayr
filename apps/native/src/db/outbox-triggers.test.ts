@@ -1,8 +1,9 @@
 import BetterSqlite3 from "better-sqlite3";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
-import { META_KEYS } from "@/data/app-meta-core";
-import { SYNCED_META_KEYS, SYNCED_SPECS, SYNCED_TABLES } from "@/data/sync-tables";
+import { Meta } from "@/data/app-meta-core";
+import { META_NAMES } from "@/data/app-meta-registry";
+import { SYNCED_SPECS, SYNCED_TABLES } from "@/data/sync-tables";
 import { ensureOutboxTriggers, outboxTriggers } from "@/db/outbox-triggers";
 import { applyMigrations, migratedSqlite, testDatabase } from "@/db/test-database";
 
@@ -161,17 +162,15 @@ describe("outbox triggers", () => {
     it("enqueues only the appMeta keys the allow-list names", () => {
         enableSync(sqlite);
 
-        for (const key of SYNCED_META_KEYS) {
+        for (const key of Meta.syncedNames) {
             setMeta(sqlite, key, "x");
         }
-        const deviceLocal = Object.values(META_KEYS).filter(
-            (key) => !SYNCED_META_KEYS.some((scoped) => scoped === key)
-        );
+        const deviceLocal = META_NAMES.filter((key) => !Meta.syncedNames.includes(key));
         for (const key of deviceLocal) {
             setMeta(sqlite, key, "x");
         }
 
-        expect(outbox(sqlite).map((row) => row.localId)).toStrictEqual([...SYNCED_META_KEYS]);
+        expect(outbox(sqlite).map((row) => row.localId)).toStrictEqual([...Meta.syncedNames]);
     });
 
     it("covers every table the sync layer claims to replicate", () => {

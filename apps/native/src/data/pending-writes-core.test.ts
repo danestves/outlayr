@@ -7,11 +7,11 @@ import type { Database } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
 import { migratedDatabase, transactionalDatabase } from "@/db/test-database";
 import { withAutologEntry } from "@/domain/autolog-cap";
-import type { AutologUsage } from "@/domain/autolog-cap";
+import type { AutologUsage } from "@/domain/meta-values";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import type { PendingWrite } from "@/lib/pending-writes-core";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { readAutologWaiting, writeAutologAccess } from "./autolog-cap-core";
 import { cardFeeFor } from "./card-fees-core";
 import {
@@ -19,16 +19,12 @@ import {
     applyPendingWrites,
     drainPendingWrites,
     fileWaitingPurchases,
-    parseLastWalletEntry,
-    parseNotificationTexts,
-    parseWalletCards,
     pendingWriteTxId,
     takeRepriced,
     pickCardAccount,
     WALLET_DEDUPE_WINDOW_MS,
 } from "./pending-writes-core";
 import { backfillRecurring } from "./recurrence-backfill";
-import { setBoolSetting } from "./settings-core";
 import { transactionsRepo } from "./transactions-core";
 
 const makeDb = migratedDatabase;
@@ -120,7 +116,7 @@ describe("applyPendingWrites", () => {
         db = makeDb();
         await seedCategories(db);
         // The baseline is someone who allowed the AI providers, so an unseen merchant waits on the lookup.
-        await Effect.runPromise(setBoolSetting(db, "aiConsentV2", true));
+        await Effect.runPromise(Meta.set(db, "aiConsentV2", true));
     });
 
     it("counts the expenses Wallet and bank pushes logged on their own, not entries made on purpose or replays", async () => {
@@ -258,7 +254,7 @@ describe("applyPendingWrites", () => {
             { amount: 9.99, note: "Bank notification" },
             { amount: 5, note: "Bank notification" },
         ]);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.logoCandidates))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "logoCandidates"))).resolves.toStrictEqual({});
     });
 
     it("marks the last entry as a push only when a notification logged it", async () => {
@@ -271,12 +267,10 @@ describe("applyPendingWrites", () => {
         });
 
         await Effect.runPromise(applyPendingWrites(db, [push], NOW));
-        expect(parseLastWalletEntry(await Effect.runPromise(getMeta(db, META_KEYS.lastWalletEntry)))?.push).toBe(true);
+        expect((await Effect.runPromise(Meta.get(db, "lastWalletEntry")))?.push).toBe(true);
 
         await Effect.runPromise(applyPendingWrites(db, [walletWrite("tap")], NOW));
-        expect(
-            parseLastWalletEntry(await Effect.runPromise(getMeta(db, META_KEYS.lastWalletEntry)))?.push
-        ).toBeUndefined();
+        expect((await Effect.runPromise(Meta.get(db, "lastWalletEntry")))?.push).toBeUndefined();
     });
 
     it("files a refund push as income", async () => {
@@ -320,9 +314,7 @@ describe("applyPendingWrites", () => {
         const rows = await db.select({ amount: transactions.amount, id: transactions.id }).from(transactions);
         expect(rows).toStrictEqual([{ amount: 22.6, id: rows[0]?.id }]);
         await expect(Effect.runPromise(pendingWriteTxId(db, "push"))).resolves.toBe(rows[0]?.id);
-        expect(
-            parseWalletCards(await Effect.runPromise(getMeta(db, META_KEYS.walletCards))).map((card) => card.text)
-        ).toContain("Payoneer");
+        expect((await Effect.runPromise(Meta.get(db, "walletCards"))).map((card) => card.text)).toContain("Payoneer");
     });
 
     it("keeps a bank push in the tap's currency whose amount differs", async () => {
@@ -443,9 +435,7 @@ describe("applyPendingWrites", () => {
         await Effect.runPromise(applyPendingWrites(db, [push("october")], NOW));
 
         await expect(liveRows(db)).resolves.toStrictEqual([{ id: "sub-netflix", note: "Netflix" }]);
-        expect(parseLastWalletEntry(await Effect.runPromise(getMeta(db, META_KEYS.lastWalletEntry)))?.txId).toBe(
-            "sub-netflix"
-        );
+        expect((await Effect.runPromise(Meta.get(db, "lastWalletEntry")))?.txId).toBe("sub-netflix");
 
         await Effect.runPromise(applyPendingWrites(db, [push("again")], NOW));
 
@@ -484,9 +474,7 @@ describe("applyPendingWrites", () => {
         expect(rows).toHaveLength(2);
         const occurrence = rows.find((row) => row.id !== "sub-netflix");
         expect(occurrence).toMatchObject({ amount: 12.99, recurringType: 3 });
-        expect(parseLastWalletEntry(await Effect.runPromise(getMeta(db, META_KEYS.lastWalletEntry)))?.txId).toBe(
-            occurrence?.id
-        );
+        expect((await Effect.runPromise(Meta.get(db, "lastWalletEntry")))?.txId).toBe(occurrence?.id);
     });
 
     it("dates a subscription's charge at its push, so it shows at once and the chain keeps the time", async () => {
@@ -599,7 +587,7 @@ describe("applyPendingWrites", () => {
 
         await Effect.runPromise(applyPendingWrites(db, jobs, NOW));
 
-        const texts = parseNotificationTexts(await Effect.runPromise(getMeta(db, META_KEYS.notificationTexts)));
+        const texts = await Effect.runPromise(Meta.get(db, "notificationTexts"));
         expect(texts).toHaveLength(5);
         expect(texts.map((entry) => entry.amountText)).toStrictEqual(["$1.00", "$2.00", "$3.00", "$4.00", "$5.00"]);
     });
@@ -613,9 +601,9 @@ describe("applyPendingWrites", () => {
             )
         );
 
-        expect(parseNotificationTexts(await Effect.runPromise(getMeta(db, META_KEYS.notificationTexts)))).toStrictEqual(
-            [{ amountText: null, at: NOW.getTime(), text: "Your statement is ready" }]
-        );
+        await expect(Effect.runPromise(Meta.get(db, "notificationTexts"))).resolves.toStrictEqual([
+            { amountText: null, at: NOW.getTime(), text: "Your statement is ready" },
+        ]);
     });
 
     it("collapses the authorize and settle runs of one purchase", async () => {
@@ -847,7 +835,7 @@ describe("applyPendingWrites", () => {
             applyPendingWrites(db, [walletWrite("a", { card: "Visa", currency: "USD", dedupeKey: null })], NOW)
         );
 
-        const cards = parseWalletCards(await Effect.runPromise(getMeta(db, META_KEYS.walletCards)));
+        const cards = await Effect.runPromise(Meta.get(db, "walletCards"));
         expect(cards.map((card) => card.waiting)).toStrictEqual([undefined]);
     });
 
@@ -924,34 +912,32 @@ describe("applyPendingWrites", () => {
 
         const [row] = await db.select({ categoryId: transactions.categoryId, id: transactions.id }).from(transactions);
         expect(row?.categoryId).toBeNull();
-        expect(JSON.parse((await Effect.runPromise(getMeta(db, META_KEYS.enrichmentOutbox))) ?? "[]")).toStrictEqual([
-            row?.id,
-        ]);
+        await expect(Effect.runPromise(Meta.get(db, "enrichmentOutbox"))).resolves.toStrictEqual([row?.id]);
     });
 
     it("files an unseen merchant under the first category until the AI providers are allowed", async () => {
-        await Effect.runPromise(setBoolSetting(db, "aiConsentV2", false));
+        await Effect.runPromise(Meta.set(db, "aiConsentV2", false));
 
         await Effect.runPromise(applyPendingWrites(db, [walletWrite("a")], NOW));
 
         const [row] = await db.select({ categoryId: transactions.categoryId }).from(transactions);
         expect(row?.categoryId).toBe("cat-expense");
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.enrichmentOutbox))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "enrichmentOutbox"))).resolves.toStrictEqual([]);
     });
 
     it("files an unseen merchant under the first category when lookups are off", async () => {
-        await Effect.runPromise(setBoolSetting(db, "aiEnrichment", false));
+        await Effect.runPromise(Meta.set(db, "aiEnrichment", false));
 
         await Effect.runPromise(applyPendingWrites(db, [walletWrite("a")], NOW));
 
         const [row] = await db.select({ categoryId: transactions.categoryId }).from(transactions);
         expect(row?.categoryId).toBe("cat-expense");
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.enrichmentOutbox))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.get(db, "enrichmentOutbox"))).resolves.toStrictEqual([]);
     });
 
     it("drops an entry with no category to file it under", async () => {
         await db.delete(categories);
-        await Effect.runPromise(setBoolSetting(db, "aiEnrichment", false));
+        await Effect.runPromise(Meta.set(db, "aiEnrichment", false));
 
         const { applied } = await Effect.runPromise(applyPendingWrites(db, [walletWrite("a")], NOW));
 
@@ -1193,7 +1179,7 @@ describe("the free auto-log cap", () => {
         for (let entry = 0; entry < 30; entry += 1) {
             usage = withAutologEntry(usage, NOW.getTime(), "applied");
         }
-        return JSON.stringify(usage);
+        return usage;
     };
 
     const fare = (id: string, note: string, hoursLater: number) =>
@@ -1207,7 +1193,7 @@ describe("the free auto-log cap", () => {
         db = makeDb();
         await seedCategories(db);
         await Effect.runPromise(writeAutologAccess(db, "free"));
-        await Effect.runPromise(setMeta(db, META_KEYS.autologUsage, fullMonth()));
+        await Effect.runPromise(Meta.set(db, "autologUsage", fullMonth()));
     });
 
     it("holds a wallet entry over the cap whole, and still takes one the user made on purpose", async () => {
@@ -1262,15 +1248,15 @@ describe("the free auto-log cap", () => {
         const fresh = fare("w2", "Philz", 1);
         const claimsFresh = () => ({ jobs: [fresh], names: ["claimed-1.jsonl"] });
 
-        const pending = () => Effect.runPromise(getMeta(db, META_KEYS.reviewPending));
+        const pending = () => Effect.runPromise(Meta.get(db, "reviewPending"));
 
         const released = await Effect.runPromise(drainPendingWrites(db, nothingClaimed, () => undefined));
         expect(released).toStrictEqual({ applied: 1, autologged: 0 });
-        await expect(pending()).resolves.toBeNull();
+        await expect(pending()).resolves.toBe(false);
 
         const arrived = await Effect.runPromise(drainPendingWrites(db, claimsFresh, () => undefined));
         expect(arrived).toStrictEqual({ applied: 1, autologged: 1 });
-        await expect(pending()).resolves.toBe("1");
+        await expect(pending()).resolves.toBe(true);
     });
 
     it("leaves what waited alone while the customer is free", async () => {

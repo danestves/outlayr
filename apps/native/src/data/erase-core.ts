@@ -1,14 +1,13 @@
 import { ERASED_DATE, ERASED_TRANSACTION, ERASED_TRANSFER } from "@outlayr/money/erase";
-import { eq, isNotNull, isNull } from "drizzle-orm";
+import { isNotNull, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { META_KEYS } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import { TOMBSTONED_BUDGET, TOMBSTONED_MAIN_BUDGET } from "@/data/budgets-core";
 import type { Database } from "@/db/client";
 import {
     accounts,
-    appMeta,
     budgetPlans,
     budgets,
     installmentPlans,
@@ -91,7 +90,7 @@ export const eraseLedger = Effect.fn("Erase.eraseLedger")(function* eraseLedger(
             yield* query(scope, () =>
                 db.update(accounts).set({ checkedAt: null, updatedAt: now }).where(isNotNull(accounts.checkedAt))
             );
-            yield* query(scope, () => db.delete(appMeta).where(eq(appMeta.key, META_KEYS.autologWaiting)));
+            yield* Meta.remove(db, ["autologWaiting"]);
 
             if (scope !== "everything") {
                 return;

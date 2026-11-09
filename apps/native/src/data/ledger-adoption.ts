@@ -7,7 +7,7 @@ import { accounts, budgets, categories, mainBudget, transactions, transfers } fr
 import type { AdoptionActions } from "@/domain/ledger-adoption";
 
 import type { accountLedgerState, discardAccountLedger, replaceLocalFromAccount } from "./adoption-engine-core";
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { SEEDED_CATEGORY_NAMES } from "./categories-core";
 import {
     enableSyncForAccount,
@@ -82,14 +82,14 @@ export const localLedgerState = Effect.fn("LedgerAdoption.localLedgerState")(fun
 });
 
 export const adoptedAccount = Effect.fn("LedgerAdoption.adoptedAccount")(function* adoptedAccount(db: Database) {
-    return yield* getMeta(db, META_KEYS.ledgerAdoption);
+    return yield* Meta.get(db, "ledgerAdoption");
 });
 
 export const markAdopted = Effect.fn("LedgerAdoption.markAdopted")(function* markAdopted(
     db: Database,
     accountId: string
 ) {
-    yield* setMeta(db, META_KEYS.ledgerAdoption, accountId);
+    yield* Meta.set(db, "ledgerAdoption", accountId);
 });
 
 export const prepareAccountAdoption = Effect.fn("LedgerAdoption.prepareAccountAdoption")(

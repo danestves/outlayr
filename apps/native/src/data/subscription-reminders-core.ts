@@ -8,12 +8,11 @@ import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
-import { DEFAULT_CURRENCY } from "@/domain/money";
 import type { TimeOfDay } from "@/domain/reminder";
 import { reminderFireAt, reminderPlan } from "@/domain/subscription-reminder";
 import type { ArmedReminder, ReminderCandidate } from "@/domain/subscription-reminder";
 
-import { getMeta, META_KEYS } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 
 const SubscriptionRemindersRead = Schema.Literals(["rows"]);
 
@@ -86,7 +85,7 @@ export const reminderCandidates = Effect.fn("SubscriptionReminders.reminderCandi
     }
 
     // Mirrors `transactions-core`: a null `currency` means the ledger's, so a notice resolves it the same way.
-    const ledgerCurrency = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    const ledgerCurrency = yield* Meta.get(db, "currency");
 
     const candidates: SubscriptionReminderCandidate[] = rows.flatMap((row) => {
         const landingAfter = (day: Date) =>

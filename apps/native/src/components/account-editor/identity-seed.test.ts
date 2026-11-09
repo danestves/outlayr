@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import type { BoolSettingKey } from "@/data/settings-core";
+import type { BoolSettingKey } from "@/data/app-meta-registry";
 
 import { accountIdentityLookup, logoMayReplaceIdentity } from "./identity-seed";
 

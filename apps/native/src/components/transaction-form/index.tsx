@@ -15,7 +15,7 @@ import { holdSubmitting, pressSubmit } from "@/components/form/submit-guard";
 import { SubscribeFields } from "@/components/form/subscribe-fields";
 import type { IdentitySelection } from "@/components/identity-picker-shared";
 import { ReceiptLines } from "@/components/receipt/receipt-lines";
-import { useAppSettings, useSettingBool } from "@/contexts/display-settings-context";
+import { useAppSettings, useSetting } from "@/contexts/display-settings-context";
 import { useBankAccounts, usePeople } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
@@ -522,7 +522,7 @@ export function TransactionForm(props: TransactionFormProps) {
     );
     const liabilities = allAccounts.filter((candidate) => toAccountKind(candidate.kind) === "liability");
 
-    const celebrate = useAppSettings().state.bool("confetti");
+    const celebrate = useAppSettings().state.get("confetti");
     const router = useRouter();
     const createAccount = useCreateAccount();
     const containerHeight = useSharedValue(0);
@@ -636,7 +636,7 @@ export function TransactionForm(props: TransactionFormProps) {
     });
 
     // Narrow subscription: `useAppSettings().state` would re-render the form on every unrelated setting write.
-    const coachSeen = useSettingBool("sentenceCoachSeen");
+    const coachSeen = useSetting("sentenceCoachSeen");
     const setSetting = useAppSettings().actions.setBool;
     const showCoach = mode === "create" && !coachSeen;
     const dismissCoach = () => setSetting("sentenceCoachSeen", true);

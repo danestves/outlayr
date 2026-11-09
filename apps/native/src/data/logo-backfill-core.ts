@@ -10,7 +10,6 @@ import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
 import { resolveMerchant } from "@/domain/merchant-resolver";
 import type { LogoOutcome, MerchantImageRequest } from "@/lib/logo-fetch";
 
-import { META_KEYS } from "./app-meta-core";
 import { candidateLogoIds, dismissedLogoIds, readRetryDeadlines, writeRetryDeadlines } from "./logo-backfill-state";
 
 const LogoBackfillOperation = Schema.Literals(["paint", "pending", "persist", "resolve"]);
@@ -143,7 +142,7 @@ const paintRow = Effect.fn("LogoBackfill.paintRow")(function* paintRow(
         db
             .select({ key: appMeta.key })
             .from(appMeta)
-            .where(and(eq(appMeta.key, META_KEYS.logoDismissals), sql`instr(${appMeta.value}, ${`"${row.id}"`}) > 0`))
+            .where(and(eq(appMeta.key, "logoDismissals"), sql`instr(${appMeta.value}, ${`"${row.id}"`}) > 0`))
     );
     const painted = yield* attempt("paint", () =>
         db

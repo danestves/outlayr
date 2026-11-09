@@ -1,6 +1,6 @@
 import { Host, isDynamicColorAvailable } from "@expo/ui/jetpack-compose";
 
-import { useSettingNumber } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { materialSeed } from "@/domain/material-accent";
 import { useMaterialRevision } from "@/theme/material-revision";
 import { useIsDark } from "@/theme/use-is-dark";
@@ -16,7 +16,7 @@ export type { MaterialHostProps } from "./material-host";
  */
 export function MaterialHost(props: MaterialHostProps) {
     const isDark = useIsDark();
-    const seedColor = materialSeed(useSettingNumber("accentColor"), isDynamicColorAvailable);
+    const seedColor = materialSeed(useSetting("accentColor"), isDynamicColorAvailable);
     const revision = useMaterialRevision();
 
     return <Host key={revision} {...props} colorScheme={isDark ? "dark" : "light"} seedColor={seedColor} />;

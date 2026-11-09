@@ -8,9 +8,8 @@ import * as Schema from "effect/Schema";
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
-import { DEFAULT_CURRENCY } from "@/domain/money";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { occurrenceFees } from "./card-fees-core";
 import {
     isLiveLogoCandidate,
@@ -153,7 +152,7 @@ export const backfillRecurring = Effect.fn("RecurrenceBackfill.backfillRecurring
 
     // Built outside the write transaction because the rate lookup reads.
     const lookup = localRateLookup(db);
-    const display = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    const display = yield* Meta.get(db, "currency");
     const canonicalized = yield* Effect.all(
         pending.map((row) => canonicalOccurrence(lookup, row, display).pipe(Effect.mapError(failedAt("backfill")))),
         { concurrency: "unbounded" }
@@ -208,7 +207,7 @@ export const scheduleSuccessor = Effect.fn("RecurrenceBackfill.scheduleSuccessor
     if (row === null) {
         return null;
     }
-    const display = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    const display = yield* Meta.get(db, "currency");
     return yield* canonicalOccurrence(localRateLookup(db), row, display).pipe(Effect.mapError(failedAt("successor")));
 });
 
@@ -216,7 +215,7 @@ export const scheduleSuccessor = Effect.fn("RecurrenceBackfill.scheduleSuccessor
 // schedule. Other orphaned chains are unrecoverable: no column links a chain's rows.
 export const repairOrphanedRecurrence = Effect.fn("RecurrenceBackfill.repairOrphanedRecurrence")(
     function* repairOrphanedRecurrence(db: Database, now: Date = new Date()) {
-        if ((yield* getMeta(db, META_KEYS.recurrenceRepaired)) === "true") {
+        if (yield* Meta.get(db, "recurrenceRepaired")) {
             return 0;
         }
 
@@ -262,7 +261,7 @@ export const repairOrphanedRecurrence = Effect.fn("RecurrenceBackfill.repairOrph
             }
         }
 
-        yield* setMeta(db, META_KEYS.recurrenceRepaired, "true");
+        yield* Meta.set(db, "recurrenceRepaired", true);
         return reinstated;
     }
 );

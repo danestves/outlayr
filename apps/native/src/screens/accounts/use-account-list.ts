@@ -4,10 +4,9 @@ import { useRouter } from "expo-router";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useArchivedAccounts, useBankAccounts } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
-import { useGlobalCurrency } from "@/data/app-meta";
+import { useGlobalCurrency, useMeta } from "@/data/app-meta";
 import { useDebtsOverview } from "@/data/debts";
 import { useSavingsGoals } from "@/data/savings-goals";
-import { useBoolSetting } from "@/data/settings";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import { displayOrder } from "@/domain/account-order";
@@ -26,7 +25,7 @@ export function useAccountList() {
     const debts = useDebtsOverview(db, nowMs);
     const goals = useSavingsGoals(db, nowMs).filter((entry) => entry.goal.id !== pendingGoalId);
     const rows = all.filter((account) => account.id !== pendingId);
-    const byHand = useBoolSetting(db, "accountsByHand");
+    const byHand = useMeta(db, "accountsByHand");
     const balances = new Map(debts.overview?.rows.map((row) => [row.id, row.balance]));
     const assets = rows.filter((account) => toAccountKind(account.kind) === "asset");
 

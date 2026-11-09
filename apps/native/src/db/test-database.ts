@@ -2,12 +2,14 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import BetterSqlite3 from "better-sqlite3";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 
 import type { SpendDb } from "@/data/budget-spent";
 import { SYNCED_SPECS } from "@/data/sync-tables";
 import type { Database } from "@/db/client";
 import { ensureOutboxTriggers } from "@/db/outbox-triggers";
+import { appMeta } from "@/db/schema";
 
 export const testDatabase = (sqlite: BetterSqlite3.Database): Database =>
     drizzle({ client: sqlite }) as unknown as Database;
@@ -72,6 +74,14 @@ export function migratedSqlite({ foreignKeys = true } = {}): BetterSqlite3.Datab
 
 export const migratedDatabase = (options?: { foreignKeys?: boolean }): Database =>
     testDatabase(migratedSqlite(options));
+
+export function storeMetaText(db: Database, key: string, value: string): void {
+    db.insert(appMeta).values({ key, value }).onConflictDoUpdate({ set: { value }, target: appMeta.key }).run();
+}
+
+export function storedMetaText(db: Database, key: string): string | null {
+    return db.select({ value: appMeta.value }).from(appMeta).where(eq(appMeta.key, key)).all()[0]?.value ?? null;
+}
 
 export function withAsyncTransactions(sqlite: BetterSqlite3.Database): void {
     Object.assign(sqlite, {

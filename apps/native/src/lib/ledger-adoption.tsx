@@ -1,5 +1,4 @@
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
-import { eq } from "drizzle-orm";
 import * as Cause from "effect/Cause";
 import { createContext, use, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
@@ -7,9 +6,7 @@ import type { ReactNode } from "react";
 import { useDatabase } from "@/contexts/local-data-context";
 import { createAdoptionSlot } from "@/data/adoption-retry";
 import type { AdoptionSlot } from "@/data/adoption-retry";
-import { META_KEYS } from "@/data/app-meta-core";
-import { useLiveValue } from "@/data/live-query";
-import { appMeta } from "@/db/schema";
+import { useMeta } from "@/data/app-meta";
 import { choiceActions } from "@/domain/ledger-adoption";
 import type { AdoptionChoice } from "@/domain/ledger-adoption";
 import { useProLocked, useProPending } from "@/hooks/use-pro-locked";
@@ -61,11 +58,7 @@ export function LedgerAdoptionProvider({ children }: { children: ReactNode }) {
     const registry = use(RegistryContext);
     const { accountId } = useAuthSession();
     // Read during render rather than awaited, so a reconciled device never shows a frame of the cover.
-    const adoptedAccount = useLiveValue(
-        appMeta,
-        () => db.select().from(appMeta).where(eq(appMeta.key, META_KEYS.ledgerAdoption)),
-        (rows) => rows[0]?.value ?? null
-    );
+    const adoptedAccount = useMeta(db, "ledgerAdoption");
     const settled = accountId != null && adoptedAccount === accountId;
 
     const [reconciled, setReconciled] = useState<AdoptionStatus>("resolving");

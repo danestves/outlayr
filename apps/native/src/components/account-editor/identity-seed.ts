@@ -3,8 +3,8 @@ import { isPerson } from "@outlayr/money/account-kind";
 import type { IdentitySelection } from "@/components/identity-picker-shared";
 import { EMPTY_DRAFT } from "@/contexts/identity-draft-context";
 import type { Account } from "@/data/accounts-core";
+import type { BoolSettingKey } from "@/data/app-meta-registry";
 import { remoteEnrichmentOn } from "@/data/settings-core";
-import type { BoolSettingKey } from "@/data/settings-core";
 
 export function accountIdentitySeed(mode: "create" | "edit", loaded: Account | null): IdentitySelection {
     if (mode !== "edit" || loaded === null) {

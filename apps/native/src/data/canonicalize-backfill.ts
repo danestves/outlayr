@@ -5,7 +5,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { getMeta, META_KEYS } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
 import type { Database } from "@/db/client";
 import { accounts, budgets, exchangeRates, mainBudget, transactions } from "@/db/schema";
@@ -47,15 +47,11 @@ const UI_YIELD = Duration.millis(1);
 // `bootstrap` seeds the default unconditionally, so a stored default proves nothing without the chosen marker; any
 // other code can only have come from the picker.
 const statedCurrency = Effect.fn("CanonicalizeBackfill.statedCurrency")(function* statedCurrency(db: SpendDb) {
-    const stored = yield* getMeta(db, META_KEYS.currency);
-    if (stored === null) {
-        return null;
-    }
+    const stored = yield* Meta.get(db, "currency");
     if (stored !== DEFAULT_CURRENCY) {
         return stored;
     }
-    const chosen = yield* getMeta(db, META_KEYS.currencyChosen);
-    return chosen === "true" ? stored : null;
+    return (yield* Meta.get(db, "currencyChosen")) ? stored : null;
 });
 
 // Stamps only a currency the user stated: the stamp is irreversible, and a stamped USD row freezes at rate 1 unchecked.

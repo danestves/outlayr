@@ -16,7 +16,8 @@ vi.mock<Partial<typeof import("uniwind")>>(import("uniwind"), () => ({
 vi.mock<Partial<typeof import("@/contexts/display-settings-context")>>(
     import("@/contexts/display-settings-context"),
     () => ({
-        useSettingNumber: (key: string) => (key === "colorScheme" ? stored.colorScheme : 0),
+        // SAFETY: the hook under test reads only the colour scheme, a number.
+        useSetting: (() => stored.colorScheme) as typeof import("@/contexts/display-settings-context").useSetting,
     })
 );
 

@@ -19,7 +19,6 @@ import {
 } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
-import { META_KEYS } from "./app-meta-core";
 import { ERASED_TRANSACTION, eraseLedger } from "./erase-core";
 import { deletedTransactionsQuery } from "./transactions-core";
 
@@ -119,13 +118,11 @@ describe("eraseLedger", () => {
     });
 
     it("drops auto-logged charges held over the free cap so going Pro can't bring them back", async () => {
-        await db.insert(appMeta).values({ key: META_KEYS.autologWaiting, value: "[]" });
+        await db.insert(appMeta).values({ key: "autologWaiting", value: "[]" });
 
         await Effect.runPromise(eraseLedger(db, "transactions"));
 
-        await expect(db.select().from(appMeta).where(eq(appMeta.key, META_KEYS.autologWaiting))).resolves.toHaveLength(
-            0
-        );
+        await expect(db.select().from(appMeta).where(eq(appMeta.key, "autologWaiting"))).resolves.toHaveLength(0);
     });
 
     it("keeps the rows it erased out of Recently Deleted", async () => {

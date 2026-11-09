@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 
-import { useSettingBool } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import type { GoalLinePoint } from "@/domain/goal-pace-geometry";
 import { makeGeometry } from "@/domain/goal-pace-geometry";
 import { useChartDraw, useChartPath } from "@/hooks/use-chart-draw";
@@ -36,7 +36,7 @@ export function GoalPaceChart({
 }: GoalPaceChartProps) {
     const colors = useColors();
     const reduceMotion = useReducedMotion();
-    const animatedCharts = useSettingBool("animatedCharts") && !reduceMotion;
+    const animatedCharts = useSetting("animatedCharts") && !reduceMotion;
     const draw = useChartDraw(animatedCharts);
 
     const geometry = makeGeometry({ actual, height, nowMs, required, startTime, target, targetTime, width });
