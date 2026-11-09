@@ -42,6 +42,7 @@ import type * as referrals from "../referrals.js";
 import type * as revenuecat from "../revenuecat.js";
 import type * as sync from "../sync.js";
 import type * as voiceEntry from "../voiceEntry.js";
+import type * as webPush from "../webPush.js";
 
 import type {
   ApiFromModules,
@@ -84,6 +85,7 @@ declare const fullApi: ApiFromModules<{
   revenuecat: typeof revenuecat;
   sync: typeof sync;
   voiceEntry: typeof voiceEntry;
+  webPush: typeof webPush;
 }>;
 
 /**

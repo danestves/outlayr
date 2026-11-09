@@ -499,11 +499,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Changes that affect your data or rights get at least 30 days' notice in the app and by email, with at most one email a month unless a change can't wait. New optional features are described here from the day they ship and listed in the next email.",
                     label: "How we tell you about changes",
                 },
+                {
+                    detail: "If you turn on the daily reminder in a web browser, our servers check whether you logged anything that day and send it through that browser's push service. It holds no amounts or entries.",
+                    label: "Reminders on the web",
+                },
             ],
             es: [
                 {
                     detail: "Los cambios que afectan tus datos o derechos se avisan con al menos 30 días en la app y por correo, con un máximo de un correo al mes salvo que un cambio no pueda esperar. Las nuevas funciones opcionales se describen aquí desde el día en que se lanzan y se incluyen en el siguiente correo.",
                     label: "Cómo te avisamos de los cambios",
+                },
+                {
+                    detail: "Si activas el recordatorio diario en un navegador web, nuestros servidores comprueban si registraste algo ese día y lo envían por el servicio push de ese navegador. No incluye montos ni movimientos.",
+                    label: "Recordatorios en la web",
                 },
             ],
             fr: [
@@ -511,11 +519,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Les modifications qui touchent vos données ou vos droits sont annoncées au moins 30 jours à l'avance dans l'app et par e-mail, avec au plus un e-mail par mois sauf si une modification ne peut pas attendre. Les nouvelles fonctions facultatives sont décrites ici dès leur sortie et mentionnées dans le prochain e-mail.",
                     label: "Comment nous vous informons des modifications",
                 },
+                {
+                    detail: "Si vous activez le rappel quotidien dans un navigateur web, nos serveurs vérifient si vous avez saisi quelque chose ce jour-là et l'envoient via le service push de ce navigateur. Il ne contient ni montants ni opérations.",
+                    label: "Rappels sur le web",
+                },
             ],
             pt: [
                 {
                     detail: "Mudanças que afetam seus dados ou direitos são avisadas com pelo menos 30 dias no app e por e-mail, com no máximo um e-mail por mês, a menos que uma mudança não possa esperar. Novos recursos opcionais são descritos aqui desde o dia em que são lançados e incluídos no próximo e-mail.",
                     label: "Como avisamos sobre mudanças",
+                },
+                {
+                    detail: "Se você ativar o lembrete diário em um navegador web, nossos servidores verificam se você registrou algo naquele dia e enviam pelo serviço push desse navegador. Não inclui valores nem lançamentos.",
+                    label: "Lembretes na web",
                 },
             ],
         },

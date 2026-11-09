@@ -31,6 +31,7 @@ import transactionSplits from "./tables/transactionSplits";
 import transactionTags from "./tables/transactionTags";
 import transactions from "./tables/transactions";
 import transfers from "./tables/transfers";
+import webPushSubscriptions from "./tables/webPushSubscriptions";
 
 const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly accountDeletionJobs: typeof accountDeletionJobs;
@@ -64,6 +65,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly transactionTags: typeof transactionTags;
   readonly transactions: typeof transactions;
   readonly transfers: typeof transfers;
+  readonly webPushSubscriptions: typeof webPushSubscriptions;
 }> = $DatabaseSchema.make({
   accountDeletionJobs,
   accounts,
@@ -96,6 +98,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   transactionTags,
   transactions,
   transfers,
+  webPushSubscriptions,
 });
 
 export default databaseSchema;

@@ -5,6 +5,8 @@ import { getCookie } from "@tanstack/react-start/server";
 
 import type { MintedPhotos } from "@/components/dashboard/shell/photos";
 
+import { forgetPush } from "./web-push";
+
 const DATABASE = "outlayr-ledger";
 const STORE = "snapshots";
 const LATEST = "latest";
@@ -126,5 +128,6 @@ const forgetUnsent = () => {
 export async function forgetLedger() {
     forgotten = true;
     forgetUnsent();
+    await forgetPush();
     await dropLedger();
 }

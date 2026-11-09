@@ -60,6 +60,7 @@ import { Route as AccountAppSettingsCurrencyRouteImport } from './routes/_accoun
 import { Route as AccountAppSettingsDataRouteImport } from './routes/_account/app.settings.data'
 import { Route as AccountAppSettingsEmailRouteImport } from './routes/_account/app.settings.email'
 import { Route as AccountAppSettingsInviteRouteImport } from './routes/_account/app.settings.invite'
+import { Route as AccountAppSettingsNotificationsRouteImport } from './routes/_account/app.settings.notifications'
 import { Route as AccountAppSettingsPlanRouteImport } from './routes/_account/app.settings.plan'
 import { Route as AccountAppSettingsPreferencesRouteImport } from './routes/_account/app.settings.preferences'
 import { Route as AccountAppSettingsSyncRouteImport } from './routes/_account/app.settings.sync'
@@ -354,6 +355,12 @@ const AccountAppSettingsInviteRoute =
     path: '/invite',
     getParentRoute: () => AccountAppSettingsRoute,
   } as any)
+const AccountAppSettingsNotificationsRoute =
+  AccountAppSettingsNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AccountAppSettingsRoute,
+  } as any)
 const AccountAppSettingsPlanRoute = AccountAppSettingsPlanRouteImport.update({
   id: '/plan',
   path: '/plan',
@@ -443,6 +450,7 @@ export interface FileRoutesByFullPath {
   '/app/settings/data': typeof AccountAppSettingsDataRoute
   '/app/settings/email': typeof AccountAppSettingsEmailRoute
   '/app/settings/invite': typeof AccountAppSettingsInviteRoute
+  '/app/settings/notifications': typeof AccountAppSettingsNotificationsRoute
   '/app/settings/plan': typeof AccountAppSettingsPlanRoute
   '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
   '/app/settings/sync': typeof AccountAppSettingsSyncRoute
@@ -500,6 +508,7 @@ export interface FileRoutesByTo {
   '/app/settings/data': typeof AccountAppSettingsDataRoute
   '/app/settings/email': typeof AccountAppSettingsEmailRoute
   '/app/settings/invite': typeof AccountAppSettingsInviteRoute
+  '/app/settings/notifications': typeof AccountAppSettingsNotificationsRoute
   '/app/settings/plan': typeof AccountAppSettingsPlanRoute
   '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
   '/app/settings/sync': typeof AccountAppSettingsSyncRoute
@@ -561,6 +570,7 @@ export interface FileRoutesById {
   '/_account/app/settings/data': typeof AccountAppSettingsDataRoute
   '/_account/app/settings/email': typeof AccountAppSettingsEmailRoute
   '/_account/app/settings/invite': typeof AccountAppSettingsInviteRoute
+  '/_account/app/settings/notifications': typeof AccountAppSettingsNotificationsRoute
   '/_account/app/settings/plan': typeof AccountAppSettingsPlanRoute
   '/_account/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
   '/_account/app/settings/sync': typeof AccountAppSettingsSyncRoute
@@ -623,6 +633,7 @@ export interface FileRouteTypes {
     | '/app/settings/data'
     | '/app/settings/email'
     | '/app/settings/invite'
+    | '/app/settings/notifications'
     | '/app/settings/plan'
     | '/app/settings/preferences'
     | '/app/settings/sync'
@@ -680,6 +691,7 @@ export interface FileRouteTypes {
     | '/app/settings/data'
     | '/app/settings/email'
     | '/app/settings/invite'
+    | '/app/settings/notifications'
     | '/app/settings/plan'
     | '/app/settings/preferences'
     | '/app/settings/sync'
@@ -740,6 +752,7 @@ export interface FileRouteTypes {
     | '/_account/app/settings/data'
     | '/_account/app/settings/email'
     | '/_account/app/settings/invite'
+    | '/_account/app/settings/notifications'
     | '/_account/app/settings/plan'
     | '/_account/app/settings/preferences'
     | '/_account/app/settings/sync'
@@ -1126,6 +1139,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppSettingsInviteRouteImport
       parentRoute: typeof AccountAppSettingsRoute
     }
+    '/_account/app/settings/notifications': {
+      id: '/_account/app/settings/notifications'
+      path: '/notifications'
+      fullPath: '/app/settings/notifications'
+      preLoaderRoute: typeof AccountAppSettingsNotificationsRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
     '/_account/app/settings/plan': {
       id: '/_account/app/settings/plan'
       path: '/plan'
@@ -1239,6 +1259,7 @@ interface AccountAppSettingsRouteChildren {
   AccountAppSettingsDataRoute: typeof AccountAppSettingsDataRoute
   AccountAppSettingsEmailRoute: typeof AccountAppSettingsEmailRoute
   AccountAppSettingsInviteRoute: typeof AccountAppSettingsInviteRoute
+  AccountAppSettingsNotificationsRoute: typeof AccountAppSettingsNotificationsRoute
   AccountAppSettingsPlanRoute: typeof AccountAppSettingsPlanRoute
   AccountAppSettingsPreferencesRoute: typeof AccountAppSettingsPreferencesRoute
   AccountAppSettingsSyncRoute: typeof AccountAppSettingsSyncRoute
@@ -1257,6 +1278,7 @@ const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
   AccountAppSettingsDataRoute: AccountAppSettingsDataRoute,
   AccountAppSettingsEmailRoute: AccountAppSettingsEmailRoute,
   AccountAppSettingsInviteRoute: AccountAppSettingsInviteRoute,
+  AccountAppSettingsNotificationsRoute: AccountAppSettingsNotificationsRoute,
   AccountAppSettingsPlanRoute: AccountAppSettingsPlanRoute,
   AccountAppSettingsPreferencesRoute: AccountAppSettingsPreferencesRoute,
   AccountAppSettingsSyncRoute: AccountAppSettingsSyncRoute,

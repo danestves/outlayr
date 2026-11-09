@@ -1,3 +1,4 @@
+import { convexQuery } from "@convex-dev/react-query";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import CheckmarkBadge01Icon from "@hugeicons/core-free-icons/CheckmarkBadge01Icon";
@@ -7,12 +8,15 @@ import Database01Icon from "@hugeicons/core-free-icons/Database01Icon";
 import DollarCircleIcon from "@hugeicons/core-free-icons/DollarCircleIcon";
 import InformationCircleIcon from "@hugeicons/core-free-icons/InformationCircleIcon";
 import Mail01Icon from "@hugeicons/core-free-icons/Mail01Icon";
+import Notification03Icon from "@hugeicons/core-free-icons/Notification03Icon";
 import Plug01Icon from "@hugeicons/core-free-icons/Plug01Icon";
 import PreferenceHorizontalIcon from "@hugeicons/core-free-icons/PreferenceHorizontalIcon";
 import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import UserAdd01Icon from "@hugeicons/core-free-icons/UserAdd01Icon";
 import UserIcon from "@hugeicons/core-free-icons/UserIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { api } from "@outlayr/backend/convex/_generated/api";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useIntlayer } from "react-intlayer";
 
@@ -22,6 +26,7 @@ const SECTIONS = [
     { icon: PreferenceHorizontalIcon, key: "preferences", to: "/app/settings/preferences" },
     { icon: DollarCircleIcon, key: "currency", to: "/app/settings/currency" },
     { icon: Calendar03Icon, key: "time", to: "/app/settings/time" },
+    { icon: Notification03Icon, key: "notifications", to: "/app/settings/notifications" },
     { icon: Mail01Icon, key: "email", to: "/app/settings/email" },
     { icon: CloudIcon, key: "sync", to: "/app/settings/sync" },
     { icon: DashboardSpeed01Icon, key: "usage", to: "/app/settings/usage" },
@@ -35,9 +40,10 @@ const SECTIONS = [
 // PanelUI has no sidebar nav part, so the frame's metrics are drawn here.
 export function SettingsNav({ list = false }: { list?: boolean }) {
     const { sections } = useIntlayer("dashboard-settings");
+    const { data: push } = useQuery(convexQuery(api.webPush.config, {}));
     return (
         <nav className={list ? "flex flex-col" : "flex flex-col gap-0.5"}>
-            {SECTIONS.map(({ icon: Icon, key, to }) => (
+            {SECTIONS.filter(({ key }) => key !== "notifications" || push?.publicKey).map(({ icon: Icon, key, to }) => (
                 <Link
                     activeProps={{ "data-on": "" }}
                     className={

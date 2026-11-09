@@ -26,7 +26,7 @@ export function SectionHead({ action, title }: { action?: ReactNode; title: Reac
             >
                 <HugeiconsIcon icon={ArrowLeft01Icon} size={22} />
             </Button>
-            <h1 className="mr-auto text-lg font-semibold tracking-[-0.02em]">{title}</h1>
+            <h1 className="mr-auto shrink-0 text-lg font-semibold tracking-[-0.02em]">{title}</h1>
             {action}
         </div>
     );
@@ -84,11 +84,13 @@ export function Row({
 
 export function ToggleRow({
     checked,
+    disabled,
     hint,
     label,
     onChange,
 }: {
     checked: boolean;
+    disabled?: boolean;
     hint?: ReactNode;
     label: string;
     onChange: (next: boolean) => void;
@@ -96,7 +98,7 @@ export function ToggleRow({
     const id = useId();
     return (
         <Row hint={hint} label={label} labelFor={id}>
-            <Switch checked={checked} id={id} onCheckedChange={onChange} />
+            <Switch checked={checked} disabled={disabled} id={id} onCheckedChange={onChange} />
         </Row>
     );
 }

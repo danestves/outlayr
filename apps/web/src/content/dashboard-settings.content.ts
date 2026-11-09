@@ -18,6 +18,7 @@ const dashboardSettings = {
             currency: t({ en: "Currency", es: "Moneda", fr: "Devise", pt: "Moeda" }),
             time: t({ en: "Time", es: "Tiempo", fr: "Temps", pt: "Tempo" }),
             about: t({ en: "About", es: "Acerca de", fr: "À propos", pt: "Sobre" }),
+            notifications: t({ en: "Notifications", es: "Notificaciones", fr: "Notifications", pt: "Notificações" }),
             email: t({ en: "Email", es: "Correo", fr: "E-mail", pt: "E-mail" }),
             sync: t({ en: "Sync", es: "Sincronización", fr: "Synchro", pt: "Sincronização" }),
             usage: t({ en: "Usage", es: "Uso", fr: "Utilisation", pt: "Uso" }),
