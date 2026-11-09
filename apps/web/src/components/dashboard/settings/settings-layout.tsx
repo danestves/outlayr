@@ -10,6 +10,7 @@ import { AboutSettings } from "./about/screen";
 import { Account } from "./account";
 import { Categories } from "./categories/screen";
 import { settingsToasts } from "./categories/write";
+import { Connections } from "./connections";
 import { Currency } from "./currency";
 import { DataSettings } from "./data/screen";
 import { Invite } from "./invite";
@@ -37,6 +38,7 @@ const SECTIONS = {
     about: AboutSettings,
     account: Account,
     categories: Categories,
+    connections: Connections,
     currency: Currency,
     data: DataSettings,
     invite: Invite,
