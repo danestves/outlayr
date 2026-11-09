@@ -2,6 +2,7 @@ import type { PushRow } from "@outlayr/backend/confect/sync";
 import { createTransaction } from "@tanstack/react-db";
 import type { DbClient } from "@tanstack/react-db";
 
+import { UNSENT_PREFIX, keepUnsent } from "./ledger-cache";
 import { ledgerCollections } from "./ledger-db";
 import { pushRows } from "./ledger-write";
 
@@ -67,3 +68,48 @@ export function stageRows(db: DbClient, rows: readonly CommitRow[]) {
 }
 
 export const commitRows = (db: DbClient, rows: readonly CommitRow[]) => stageRows(db, rows).commit();
+
+interface Unsent {
+    rows: CommitRow[];
+    userId: string;
+}
+
+const dropUnsent = (key: string) => {
+    try {
+        localStorage.removeItem(key);
+    } catch {
+        // Storage is off, so nothing was kept.
+    }
+};
+
+/**
+ * `commit()` for staged rows that must survive the page. A socket dies with its page, so the rows wait in storage
+ * until the push lands, and the next load sends what is left.
+ */
+export function commitDurably(transaction: ReturnType<typeof stageRows>, rows: CommitRow[], userId?: string) {
+    const key = `${UNSENT_PREFIX}${transaction.id}`;
+    if (userId !== undefined) {
+        keepUnsent(key, JSON.stringify({ rows, userId } satisfies Unsent));
+    }
+    return transaction.commit().finally(() => dropUnsent(key));
+}
+
+/** Sends what a closed page left behind. A push is idempotent, so one that did land just loses its tie. */
+export function resendUnsent(db: DbClient, userId: string) {
+    try {
+        for (const key of Object.keys(localStorage).filter((name) => name.startsWith(UNSENT_PREFIX))) {
+            // SAFETY: only commitDurably writes this prefix, as JSON of an Unsent.
+            const unsent = JSON.parse(localStorage.getItem(key) ?? "null") as Unsent | null;
+            if (unsent?.userId === userId) {
+                commitRows(db, unsent.rows)
+                    .then(() => dropUnsent(key))
+                    .catch(() => undefined);
+            } else {
+                // Another tab signing out can leave a previous account's rows, which this one must not keep.
+                dropUnsent(key);
+            }
+        }
+    } catch {
+        // Unreadable storage must not take the ledger down with it.
+    }
+}

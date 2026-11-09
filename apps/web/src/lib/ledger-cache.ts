@@ -98,7 +98,33 @@ export async function dropLedger() {
     await window.cookieStore?.delete({ name: COPY_COOKIE, path: "/" }).catch(() => undefined);
 }
 
+export const UNSENT_PREFIX = "outlayr-unsent:";
+
+// A pending delete settles on the pagehide that sign-out's navigation fires, after forgetLedger has run.
+export function keepUnsent(key: string, value: string) {
+    if (forgotten) {
+        return;
+    }
+    try {
+        localStorage.setItem(key, value);
+    } catch {
+        // Storage is off or full: the push is still the normal path.
+    }
+}
+
+// Rows left for the next load hold this account's entries, which must not outlive the session on a shared browser.
+const forgetUnsent = () => {
+    try {
+        for (const key of Object.keys(localStorage).filter((name) => name.startsWith(UNSENT_PREFIX))) {
+            localStorage.removeItem(key);
+        }
+    } catch {
+        // Storage is off, so nothing was kept.
+    }
+};
+
 export async function forgetLedger() {
     forgotten = true;
+    forgetUnsent();
     await dropLedger();
 }
