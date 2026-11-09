@@ -19,6 +19,7 @@ const dashboardSettings = {
             time: t({ en: "Time", es: "Tiempo", fr: "Temps", pt: "Tempo" }),
             about: t({ en: "About", es: "Acerca de", fr: "À propos", pt: "Sobre" }),
             usage: t({ en: "Usage", es: "Uso", fr: "Utilisation", pt: "Uso" }),
+            data: t({ en: "Data", es: "Datos", fr: "Données", pt: "Dados" }),
         },
         usage: {
             capturesLeft: t({

@@ -2,6 +2,7 @@ import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import CheckmarkBadge01Icon from "@hugeicons/core-free-icons/CheckmarkBadge01Icon";
 import DashboardSpeed01Icon from "@hugeicons/core-free-icons/DashboardSpeed01Icon";
+import Database01Icon from "@hugeicons/core-free-icons/Database01Icon";
 import DollarCircleIcon from "@hugeicons/core-free-icons/DollarCircleIcon";
 import InformationCircleIcon from "@hugeicons/core-free-icons/InformationCircleIcon";
 import PreferenceHorizontalIcon from "@hugeicons/core-free-icons/PreferenceHorizontalIcon";
@@ -19,6 +20,7 @@ const SECTIONS = [
     { icon: Calendar03Icon, key: "time", to: "/app/settings/time" },
     { icon: DashboardSpeed01Icon, key: "usage", to: "/app/settings/usage" },
     { icon: Tag01Icon, key: "categories", to: "/app/settings/categories" },
+    { icon: Database01Icon, key: "data", to: "/app/settings/data" },
     { icon: InformationCircleIcon, key: "about", to: "/app/settings/about" },
 ] as const;
 

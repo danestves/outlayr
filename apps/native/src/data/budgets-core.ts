@@ -1,5 +1,6 @@
 import { startOfPeriod } from "@outlayr/money/budget-window";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
+import { TOMBSTONED_BUDGET, TOMBSTONED_MAIN_BUDGET } from "@outlayr/money/erase";
 import { and, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -111,30 +112,7 @@ const anchorFor = Effect.fn("Budgets.anchorFor")(function* anchorFor(
 // The budget tables' AFTER DELETE triggers drop the outbox entry, so a hard delete never reaches a peer, which pushes
 // the row back. Installs before 0038 hold `categoryId` unique on tombstones too, so the tombstone clears it.
 // `erase-core.ts` writes this same shape in bulk.
-export const TOMBSTONED_BUDGET = {
-    amount: 0,
-    amountUsd: null,
-    categoryId: null,
-    currency: null,
-    dateCreated: null,
-    green: false,
-    name: null,
-    rollover: false,
-    startDate: null,
-    type: 0,
-} as const;
-
-export const TOMBSTONED_MAIN_BUDGET = {
-    amount: 0,
-    amountUsd: null,
-    currency: null,
-    dateCreated: null,
-    green: false,
-    name: null,
-    rollover: false,
-    startDate: null,
-    type: 0,
-} as const;
+export { TOMBSTONED_BUDGET, TOMBSTONED_MAIN_BUDGET } from "@outlayr/money/erase";
 
 interface BudgetPatch {
     amount?: number;

@@ -1,3 +1,4 @@
+import { ARCHIVE_FORMAT, ARCHIVE_VERSION } from "@outlayr/money/archive";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Option from "effect/Option";
@@ -7,10 +8,7 @@ import * as Schema from "effect/Schema";
 import { SYNCED_SPECS, SYNCED_TABLES } from "@/data/sync-tables";
 import type { SyncedTable } from "@/data/sync-tables";
 
-/** Rises when a file carries something an older build would drop on restore. */
-export const ARCHIVE_VERSION = 5;
-
-export const ARCHIVE_FORMAT = "outlayr.archive";
+export { ARCHIVE_FORMAT, ARCHIVE_VERSION } from "@outlayr/money/archive";
 
 type ArchiveValue = boolean | number | string | null;
 

@@ -31,11 +31,12 @@ export function webDeviceId() {
     }
 }
 
-export async function pushRows(db: DbClient, rows: readonly PushRow[]) {
+export async function pushRows(db: DbClient, rows: readonly PushRow[], onPushed?: (count: number) => void) {
     const pusher = db.requireDependency<LedgerPusher>(PUSHER);
     const deviceId = webDeviceId();
     for (let start = 0; start < rows.length; start += BATCH) {
         // oxlint-disable-next-line no-await-in-loop -- the server hands out seq in push order, so batches go one at a time.
         await pusher.mutation(api.sync.push, { deviceId, rows: rows.slice(start, start + BATCH) });
+        onPushed?.(Math.min(start + BATCH, rows.length));
     }
 }
