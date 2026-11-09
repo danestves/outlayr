@@ -8,6 +8,7 @@ import { Tabs } from "panelui-web/tabs";
 import { useId, useMemo, useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { FeeTile, MerchantTile, TransferTile } from "@/components/ledger/tiles";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
@@ -54,6 +55,7 @@ const imageKeys = (catalog: Catalog, rows: readonly FoldedRow[]) => [
 export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger, photos: accountPhotos, setFilters } = useDashboard();
     const { add } = useIntlayer("dashboard");
+    const { open } = useAccountFlows();
     const { setup: setupCopy, transactions: copy } = useIntlayer("dashboard-home");
     const { locale } = useLocale();
     const categoryName = useCategoryName();
@@ -336,10 +338,14 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
             {setup && rows.length > 0 ? <Cover fade={TABLE_FADE} /> : null}
             {setup?.done.entry === false ? (
                 <Cover line={active ? setupCopy.entryLast : setupCopy.entryLine} title={setupCopy.entryTitle}>
-                    <PhoneButton size={active ? "md" : "sm"} variant={active ? "default" : "outline"}>
+                    <Button
+                        onClick={() => open({ kind: "entry" })}
+                        size={active ? "md" : "sm"}
+                        variant={active ? "default" : "outline"}
+                    >
                         <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                         {add.entry}
-                    </PhoneButton>
+                    </Button>
                     <PhoneButton size="sm" variant="outline">
                         <HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />
                         {setupCopy.import}

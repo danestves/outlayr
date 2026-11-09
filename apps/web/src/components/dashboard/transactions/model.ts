@@ -248,3 +248,32 @@ export function exportLines(ledger: Pick<Ledger, "currency">, rows: readonly Fol
             ];
         });
 }
+
+/** Where each payment sits among its plan's live payments, by id: sequences start at 1 without a down payment. */
+export function installmentTags(books: Pick<Ledger["books"], "installments">) {
+    const plans = Map.groupBy(
+        books.installments.filter((row) => row.deletedAt === null).toSorted((a, b) => a.sequence - b.sequence),
+        (row) => row.planId
+    );
+    return new Map(
+        [...plans.values()].flatMap((rows) =>
+            rows.map((row, index) => [row.localId, { at: index + 1, of: rows.length }] as const)
+        )
+    );
+}
+
+/**
+ * What left and reached each account. A fee paid from the sending account in the ledger currency joins the amount
+ * sent, as the row's total does; any other fee is in another currency or account, so it stays on its own line.
+ */
+export function transferMoves(
+    move: Pick<Extract<FoldedRow, { fromId: string }>, "fees" | "fromId" | "sent" | "sentCurrency">,
+    currency: string
+) {
+    const joins = (fee: { accountId: string | null }) =>
+        move.sentCurrency === currency && fee.accountId === move.fromId;
+    return {
+        apart: move.fees.filter((fee) => !joins(fee)),
+        sent: move.fees.filter(joins).reduce((sum, fee) => round({ currency }, sum + fee.amount), move.sent),
+    };
+}

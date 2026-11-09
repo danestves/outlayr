@@ -32,6 +32,8 @@
 @source "../node_modules/panelui-web/dist/components/switch/index.js";
 @source "../node_modules/panelui-web/dist/components/table/index.js";
 @source "../node_modules/panelui-web/dist/components/tabs/index.js";
+@source "../node_modules/panelui-web/dist/components/toolbar/index.js";
+@source "../node_modules/panelui-web/dist/components/textarea/index.js";
 @source "../node_modules/panelui-web/dist/components/checkbox/index.js";
 @source "../node_modules/panelui-web/dist/components/toast/index.js";
 @source "../node_modules/panelui-web/dist/components/tooltip/index.js";
@@ -1676,5 +1678,13 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
 
     .dash-toast > button {
         margin-left: auto;
+    }
+}
+
+/* iOS Safari zooms the page on focus under 16px, and PanelUI's Input is smaller. Outside a layer so it beats `text-sm`. */
+@media (pointer: coarse) {
+    input,
+    textarea {
+        font-size: 16px;
     }
 }

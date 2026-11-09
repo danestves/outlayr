@@ -19,6 +19,9 @@ import { Glyph } from "./glyph";
 
 export const amountText = (amount: number, currency: string) => money(amount, currency);
 
+/** One line of a drawer: the label on the left and a control with no box on the right. */
+export const QUIET_ROW = "grid! min-h-11 grid-cols-[6rem_minmax(0,1fr)] items-center gap-x-3 border-b py-1";
+
 // Base UI's trap only places focus when the dialog opens, and the check dialog swaps this field in later.
 const focusNode = (node: HTMLInputElement | null) => node?.select();
 
@@ -29,6 +32,8 @@ export function AmountInput({
     negative,
     onNegative,
     onText,
+    sign,
+    size,
     text,
 }: {
     autoFocus?: boolean;
@@ -36,10 +41,12 @@ export function AmountInput({
     negative?: boolean;
     onNegative?: (negative: boolean) => void;
     onText: (text: string) => void;
+    sign?: string;
+    size?: "lg" | "md" | "sm";
     text: string;
 }) {
     return (
-        <Input.Group>
+        <Input.Group size={size}>
             {onNegative ? (
                 <Input.Addon>
                     <button
@@ -52,6 +59,7 @@ export function AmountInput({
                     </button>
                 </Input.Addon>
             ) : null}
+            {sign ? <Input.Addon className="dash-figure text-foreground pe-1.5!">{sign}</Input.Addon> : null}
             <Input
                 className="dash-figure"
                 inputMode="decimal"
@@ -74,11 +82,13 @@ export function CurrencyField({
     inUse,
     label,
     onPick,
+    quiet = false,
     value,
 }: {
     inUse: readonly string[];
     label: ReactNode;
     onPick: (code: string) => void;
+    quiet?: boolean;
     value: string;
 }) {
     const { flows } = useIntlayer("dashboard-accounts");
@@ -114,15 +124,30 @@ export function CurrencyField({
     const heading = "text-muted-foreground px-2 pt-2.5 pb-1 text-xs leading-4";
     return (
         <Popover.Root onOpenChange={setOpen} open={open}>
-            <div className="flex flex-col gap-2">
-                <Label htmlFor={id}>{label}</Label>
+            <div className={quiet ? QUIET_ROW : "flex flex-col gap-2"}>
+                <Label className={quiet ? "text-muted-foreground font-normal" : undefined} htmlFor={id}>
+                    {label}
+                </Label>
                 <Popover.Trigger
                     id={id}
-                    render={<Button className="w-full justify-start px-3 font-normal" variant="outline" />}
+                    render={
+                        <Button
+                            className={
+                                quiet ? "-me-2 ml-auto px-2 font-normal" : "w-full justify-start px-3 font-normal"
+                            }
+                            variant={quiet ? "ghost" : "outline"}
+                        />
+                    }
                 >
                     <span className="dash-figure">{value}</span>
-                    <span className="text-muted-foreground truncate">{currencyDisplayFor(value).name}</span>
-                    <Glyph icon={ArrowDown01Icon} className="text-muted-foreground ml-auto flex-none" size={16} />
+                    {quiet ? null : (
+                        <span className="text-muted-foreground truncate">{currencyDisplayFor(value).name}</span>
+                    )}
+                    <Glyph
+                        icon={ArrowDown01Icon}
+                        className={`text-muted-foreground flex-none ${quiet ? "" : "ml-auto"}`}
+                        size={16}
+                    />
                 </Popover.Trigger>
             </div>
             <Popover.Portal>

@@ -18,6 +18,7 @@ import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import type { Dashboard } from "@/components/dashboard/shell/dashboard";
 import { toggledAccounts } from "@/components/dashboard/shell/filters";
@@ -460,6 +461,7 @@ export function FilterBar({
     setup: SetupState | null;
 }) {
     const { add } = useIntlayer("dashboard");
+    const { open } = useAccountFlows();
     return (
         <div className="flex min-h-16 flex-wrap items-center gap-2 py-3.5 max-lg:-mx-4 max-lg:[scrollbar-width:none] max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:[mask-image:linear-gradient(to_right,#000_calc(100%-16px),transparent)] max-lg:px-4 max-sm:min-h-0 max-sm:py-3">
             <PeriodSheet />
@@ -470,7 +472,7 @@ export function FilterBar({
                 </>
             )}
             <PeriodControl />
-            <Button aria-disabled className="ml-1 max-lg:hidden" title={add.hint.value}>
+            <Button className="ml-1 max-lg:hidden" onClick={() => open({ kind: "entry" })}>
                 <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                 {add.entry}
             </Button>

@@ -1,17 +1,20 @@
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import ArrowUpDownIcon from "@hugeicons/core-free-icons/ArrowUpDownIcon";
+import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
+import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
+import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
+import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { placed } from "@outlayr/backend/confect/lib/ledgerLog";
-import {
-    RiArrowUpDownLine,
-    RiCheckLine,
-    RiCloseLine,
-    RiDeleteBinLine,
-    RiDownload2Line,
-    RiSearch2Line,
-} from "@remixicon/react";
+import { Button } from "panelui-web/button";
+import { Input } from "panelui-web/input";
 import { Menu } from "panelui-web/menu";
 import { Tabs } from "panelui-web/tabs";
+import { Toolbar } from "panelui-web/toolbar";
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import type { LedgerRow } from "@/lib/dashboard-series-ledger";
@@ -27,12 +30,14 @@ import { LedgerTable } from "./ledger-table";
 import { ENTRY_TYPES, csvOf, exportLines, linesOf, queryRows, rangeOf, tally } from "./model";
 import { pageQueryOf } from "./search";
 import type { PageSearch, SearchPatch } from "./search";
-import { Toolbar } from "./toolbar";
+import { FilterBar } from "./toolbar";
 import { useDeleteEntries } from "./use-delete";
 
+// Toolbar sizes its buttons for an icon; these carry their label too.
+const BULK_ACTION = "text-foreground gap-1.5 px-2.5 text-[13px] font-medium whitespace-nowrap";
 const TABS = ["all", "expenses", "income", "transfers"] as const;
 const SORTS = ["newest", "oldest", "largest"] as const satisfies readonly TransactionSort[];
-const TYPING = "input, textarea, select, [contenteditable=true]";
+const TYPING = "input, textarea, select, [contenteditable=true], [role=listbox], [role=menu], .dash-po";
 
 const CLEARED: SearchPatch = {
     accounts: null,
@@ -64,6 +69,8 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
     const { filters, ledger } = useDashboard();
     const { transactions: home, uncategorized } = useIntlayer("dashboard-home");
     const words = useIntlayer("dashboard-transactions");
+    const { add } = useIntlayer("dashboard");
+    const { open } = useAccountFlows();
     const { locale } = useLocale();
     const { money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
@@ -214,29 +221,54 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             </b>
             <div className="mt-2.5 flex gap-2">
                 {range !== null && query.q.trim() !== "" ? (
-                    <button
-                        className="dash-ob"
+                    <Button
                         onClick={() => setSearch({ from: null, span: "all", to: null })}
-                        type="button"
+                        size="sm"
+                        variant="outline"
                     >
                         {words.noMatch.searchAll}
-                    </button>
+                    </Button>
                 ) : null}
                 {filtered || query.q.trim() !== "" ? (
-                    <button className="dash-ob" onClick={() => setSearch(CLEARED)} type="button">
+                    <Button onClick={() => setSearch(CLEARED)} size="sm" variant="outline">
                         {words.clearFilters}
-                    </button>
+                    </Button>
                 ) : null}
             </div>
         </div>
     );
+    const sortMenu = (
+        <Menu>
+            <Menu.Trigger
+                aria-label={home.sort.label.value}
+                render={<Button className="text-muted-foreground size-5" size="icon-sm" variant="ghost" />}
+            >
+                <HugeiconsIcon icon={ArrowUpDownIcon} size={13} />
+            </Menu.Trigger>
+            <Menu.Content className="app-shell ph-no-capture" sideOffset={8}>
+                <Menu.RadioGroup value={query.sort}>
+                    {SORTS.map((sort) => (
+                        <Menu.RadioItem
+                            closeOnClick
+                            key={sort}
+                            onClick={() => setSearch({ sort: sort === "newest" ? null : sort })}
+                            value={sort}
+                        >
+                            {home.sort[sort]}
+                        </Menu.RadioItem>
+                    ))}
+                </Menu.RadioGroup>
+            </Menu.Content>
+        </Menu>
+    );
     const header = (
         <div className="flex items-center justify-end gap-2 max-sm:flex-wrap">
-            <label className="border-border focus-within:border-app-tint text-muted-foreground flex h-[30px] w-[min(320px,100%)] items-center gap-2 rounded-[9px] border px-2.5 text-[13px] max-sm:w-full">
-                <RiSearch2Line className="shrink-0" size={14} />
-                <input
+            <Input.Group className="w-[300px] max-w-full shrink max-sm:w-[calc(100vw-72px)]" size="sm">
+                <Input.Addon>
+                    <HugeiconsIcon icon={Search01Icon} size={14} />
+                </Input.Addon>
+                <Input
                     aria-label={words.search.value}
-                    className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent outline-none pointer-coarse:text-base"
                     onChange={(event) => setSearch({ q: event.target.value }, { replace: true })}
                     onKeyDown={(event) => {
                         if (event.key === "Escape") {
@@ -248,16 +280,18 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                     type="search"
                     value={query.q}
                 />
-                <kbd className="text-[11px] leading-4 pointer-coarse:hidden">/</kbd>
-            </label>
-            <div className="flex items-center gap-2 max-sm:w-full max-sm:justify-between">
+                <Input.Addon align="end" className="pointer-coarse:hidden">
+                    <kbd className="text-[11px] leading-4">/</kbd>
+                </Input.Addon>
+            </Input.Group>
+            <div className="flex items-center gap-2 max-sm:hidden">
                 <Tabs
                     onValueChange={(value) => setSearch({ type: ENTRY_TYPES.find((type) => type === value) ?? null })}
                     value={tab}
                 >
-                    <Tabs.List className="bg-background/40 rounded-[9px] p-0.5">
+                    <Tabs.List>
                         {TABS.map((each) => (
-                            <Tabs.Trigger className="h-[26px] rounded-[7px] px-2.5 text-[13px]" key={each} value={each}>
+                            <Tabs.Trigger key={each} value={each}>
                                 {
                                     {
                                         all: home.all,
@@ -270,54 +304,36 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                         ))}
                     </Tabs.List>
                 </Tabs>
-                <Menu>
-                    <Menu.Trigger
-                        aria-label={home.sort.label.value}
-                        className="dash-icon-btn text-muted-foreground size-[30px]"
-                    >
-                        <RiArrowUpDownLine size={16} />
-                    </Menu.Trigger>
-                    <Menu.Content className="app-shell dash-menu ph-no-capture" sideOffset={8}>
-                        {SORTS.map((sort) => (
-                            <Menu.Item
-                                className="dash-menu-item"
-                                key={sort}
-                                onClick={() => setSearch({ sort: sort === "newest" ? null : sort })}
-                            >
-                                {home.sort[sort]}
-                                <RiCheckLine
-                                    className={`text-app-tint ml-auto ${query.sort === sort ? "" : "invisible"}`}
-                                    size={16}
-                                />
-                            </Menu.Item>
-                        ))}
-                    </Menu.Content>
-                </Menu>
             </div>
         </div>
     );
     const count = (value: number) => value.toLocaleString(locale);
     return (
-        <main className="@container min-w-0 px-4 pb-5 sm:px-6">
-            <Toolbar onExport={() => exportCsv(rows)} query={query} setSearch={setSearch} setup={fresh} />
+        <main className="@container flex h-[calc(100dvh-52px-env(safe-area-inset-top))] min-w-0 flex-col px-4 pb-5 sm:px-6 lg:h-dvh">
+            <FilterBar onExport={() => exportCsv(rows)} query={query} setSearch={setSearch} setup={fresh} />
             <CardFrame
                 action={fresh ? undefined : header}
+                className="min-h-0 flex-1 max-sm:[&_[data-slot=frame-title]]:hidden"
                 footer={
                     fresh || rows.length === 0 ? undefined : (
                         <span className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-[13px]">
-                            <span>
-                                <span className="text-muted-foreground">{home.entries} </span>
-                                <span className="dash-figure font-medium">{count(totals.count)}</span>
-                            </span>
-                            <span className="ml-auto">
-                                <span className="text-muted-foreground">{words.footer.in} </span>
-                                <span className="dash-figure text-app-income font-medium">
-                                    {money(totals.in, ledger.currency)}
+                            <span className="max-sm:order-last max-sm:ml-auto">
+                                <span className="text-muted-foreground max-sm:hidden">{home.entries} </span>
+                                <span className="dash-figure max-sm:text-muted-foreground font-medium max-sm:font-normal">
+                                    {count(totals.count)}
                                 </span>
                             </span>
-                            <span>
+                            <span className="ml-auto max-sm:hidden">
+                                <span className="text-muted-foreground">{words.footer.in} </span>
+                                <span className="dash-figure text-app-income font-medium">
+                                    {money(totals.in, ledger.currency, "always")}
+                                </span>
+                            </span>
+                            <span className="max-sm:hidden">
                                 <span className="text-muted-foreground">{words.footer.out} </span>
-                                <span className="dash-figure font-medium">{money(totals.out, ledger.currency)}</span>
+                                <span className="dash-figure font-medium">
+                                    {money(-totals.out, ledger.currency, "always")}
+                                </span>
                             </span>
                             <span>
                                 <span className="text-muted-foreground">{words.footer.net} </span>
@@ -328,7 +344,7 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                         </span>
                     )
                 }
-                panelClassName="@container overflow-clip [overflow-anchor:none]"
+                panelClassName="@container min-h-0 overflow-x-clip overflow-y-auto [overflow-anchor:none]"
                 stackAction
                 title={home.title}
             >
@@ -337,6 +353,10 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                         <QuietTable />
                         <b className="text-[15px] font-semibold">{words.empty.title}</b>
                         <p className="text-muted-foreground text-[13px]">{words.empty.line}</p>
+                        <Button className="mt-3" onClick={() => open({ kind: "entry" })}>
+                            <HugeiconsIcon icon={Add01Icon} size={17} />
+                            {add.entry}
+                        </Button>
                     </div>
                 ) : (
                     <LedgerTable
@@ -360,40 +380,32 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
                             some: picked.length > 0,
                         }}
                         selected={selected?.id ?? null}
+                        sort={sortMenu}
                     />
                 )}
                 {picked.length > 0 ? (
                     <div className="sticky bottom-3 z-[2] hidden h-0 items-end justify-center @2xl:flex">
-                        <div
-                            aria-label={words.bulk.selected({ count: String(picked.length) }).value}
-                            className="bg-popover border-border flex h-11 items-center gap-1 rounded-xl border pr-1.5 pl-3.5 text-[13px] whitespace-nowrap shadow-lg"
-                            role="toolbar"
-                        >
-                            <span className="font-medium">{words.bulk.selected({ count: String(picked.length) })}</span>
-                            <span className="dash-figure text-muted-foreground border-border mr-1 border-r pr-3 pl-2">
+                        <Toolbar aria-label={words.bulk.selected({ count: String(picked.length) }).value}>
+                            <span className="ps-2.5 pe-1 text-[13px] font-medium whitespace-nowrap">
+                                {words.bulk.selected({ count: String(picked.length) })}
+                            </span>
+                            <span className="dash-figure text-muted-foreground pe-1 text-[13px] whitespace-nowrap">
                                 {money(pickedTotals.in - pickedTotals.out, ledger.currency, "always")}
                             </span>
-                            <button
-                                className="dash-ob gap-1.5 border-0"
-                                onClick={() => exportCsv(picked)}
-                                type="button"
-                            >
-                                <RiDownload2Line size={14} />
+                            <Toolbar.Separator />
+                            <Toolbar.Button className={BULK_ACTION} onClick={() => exportCsv(picked)}>
+                                <HugeiconsIcon icon={Download01Icon} size={14} />
                                 {words.export}
-                            </button>
-                            <button className="dash-ob gap-1.5 border-0" onClick={deletePicked} type="button">
-                                <RiDeleteBinLine size={14} />
+                            </Toolbar.Button>
+                            <Toolbar.Button className={BULK_ACTION} onClick={deletePicked}>
+                                <HugeiconsIcon icon={Delete02Icon} size={14} />
                                 {words.bulk.delete}
-                            </button>
-                            <button
-                                aria-label={words.bulk.clear.value}
-                                className="dash-icon-btn text-muted-foreground size-8"
-                                onClick={clearPicked}
-                                type="button"
-                            >
-                                <RiCloseLine size={16} />
-                            </button>
-                        </div>
+                            </Toolbar.Button>
+                            <Toolbar.Separator />
+                            <Toolbar.Button label={words.bulk.clear.value} onClick={clearPicked}>
+                                <HugeiconsIcon icon={Cancel01Icon} size={16} />
+                            </Toolbar.Button>
+                        </Toolbar>
                     </div>
                 ) : null}
             </CardFrame>

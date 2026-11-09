@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { accentCss } from "@/lib/accent";
 import { LedgerSettingsContext, useLedgerSettings } from "@/lib/ledger-settings";
 
+import { FlowRoot } from "../accounts/flows";
 import { MobileBar } from "./mobile-bar";
 import { Sidebar } from "./sidebar";
 
@@ -31,8 +32,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                     ref={forwardScrollKeys}
                     tabIndex={-1}
                 >
-                    <MobileBar />
-                    {children}
+                    <FlowRoot>
+                        <MobileBar />
+                        {children}
+                    </FlowRoot>
                 </div>
             </div>
         </LedgerSettingsContext>
