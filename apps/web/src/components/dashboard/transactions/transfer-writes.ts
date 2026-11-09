@@ -212,6 +212,32 @@ const frozenOf = (ledger: Ledger, doc: TransferDoc, input: TransferInput) => {
     };
 };
 
+/** Each charged fee with the row it keeps and its USD: carried from that row, or frozen fresh. */
+function pricedFees(ledger: Ledger, doc: TransferDoc, input: TransferInput) {
+    const { feesUsd } = frozenOf(ledger, doc, input);
+    const existing = liveFeesOf(ledger.books, doc.localId);
+    const charged = chargedFees(input);
+    const kept = keptTransferFees(doc, existing, charged);
+    const fees = charged.map(({ fee, side }) => {
+        const row = kept.get(side);
+        const carried =
+            row &&
+            carriedUsd(
+                {
+                    amount: row.amount,
+                    amountUsd: row.amountUsd ?? null,
+                    currency: row.currency ?? null,
+                    date: new Date(row.date),
+                },
+                fee.amount,
+                feeCurrency(input, side),
+                input.date
+            );
+        return { amountUsd: carried ?? feesUsd.get(side) ?? null, fee, row, side };
+    });
+    return { existing, fees };
+}
+
 /** Why this transfer cannot be saved. Only a phone retries an unresolved rate, so none may be saved from here. */
 export function transferProblem(ledger: Ledger, doc: TransferDoc, input: TransferInput): TransferProblem | null {
     if (Number.isNaN(input.date.getTime())) {
@@ -222,7 +248,8 @@ export function transferProblem(ledger: Ledger, doc: TransferDoc, input: Transfe
         return rejected;
     }
     const { fromUsd, toUsd } = frozenOf(ledger, doc, input);
-    return fromUsd === null || toUsd === null ? "rateMissing" : null;
+    const unpriced = pricedFees(ledger, doc, input).fees.some((fee) => fee.amountUsd === null);
+    return fromUsd === null || toUsd === null || unpriced ? "rateMissing" : null;
 }
 
 /**
@@ -230,7 +257,7 @@ export function transferProblem(ledger: Ledger, doc: TransferDoc, input: Transfe
  * USD, and a fee nobody charges any more is tombstoned. A plan link or anything else the form does not own stays.
  */
 export function editedTransfer(ledger: Ledger, doc: TransferDoc, input: TransferInput, at: number): CommitRow[] {
-    const { feesUsd, fromUsd, toUsd } = frozenOf(ledger, doc, input);
+    const { fromUsd, toUsd } = frozenOf(ledger, doc, input);
     const { anchorDay: _anchor, ...filed } = filedOn(ledger.offsetAt, input.date.getTime());
     const legs = legColumns(input, fromUsd, toUsd, new Date(at));
     const edited = nextRow(
@@ -245,30 +272,12 @@ export function editedTransfer(ledger: Ledger, doc: TransferDoc, input: Transfer
         },
         at
     );
-    const existing = liveFeesOf(ledger.books, doc.localId);
-    const charged = chargedFees(input);
-    const kept = keptTransferFees(doc, existing, charged);
-    const keptIds = new Set([...kept.values()].map((row) => row.localId));
+    const { existing, fees } = pricedFees(ledger, doc, input);
+    const keptIds = new Set(fees.map(({ row }) => row?.localId));
     const gone = existing
         .filter((row) => !keptIds.has(row.localId))
         .map((row) => nextRow("transactions", row, { accountId: row.accountId, deletedAt: at }, at));
-    const written = charged.map(({ fee, side }) => {
-        const row = kept.get(side);
-        const amountUsd =
-            (row &&
-                carriedUsd(
-                    {
-                        amount: row.amount,
-                        amountUsd: row.amountUsd ?? null,
-                        currency: row.currency ?? null,
-                        date: new Date(row.date),
-                    },
-                    fee.amount,
-                    feeCurrency(input, side),
-                    input.date
-                )) ??
-            feesUsd.get(side) ??
-            null;
+    const written = fees.map(({ amountUsd, fee, row, side }) => {
         const columns = { ...feeColumns(input, side, fee, amountUsd, new Date(at)), ...filed };
         return row
             ? nextRow(

@@ -182,7 +182,6 @@ export function TransferEditor({
         ...rateTypes,
         ...(values.rateType !== null && !rateTypes.includes(values.rateType) ? [values.rateType] : []),
     ].map((type) => ({ label: rateNames.get(type) ?? type, value: type }));
-    const hasFee = FEE_SIDES.some((side) => values.feeTexts[side] !== null);
     // Each side gets room for what it holds, so a swap doesn't clip the longer name or amount.
     const widthOf = (id: string, text: string) => Math.max(nameOf(id).length + PICK_CHROME_CHARS, text.length);
     const columns = `minmax(0, ${widthOf(values.fromId, values.sentText)}fr) auto minmax(0, ${widthOf(values.toId, values.arrivedText)}fr)`;
@@ -268,7 +267,7 @@ export function TransferEditor({
                         </Slot>
                     );
                 })}
-                {hasFee ? null : (
+                {values.feeTexts.source === null ? (
                     <Slot label={detail.fee} quiet>
                         <Button
                             className="text-muted-foreground -me-2 ml-auto w-fit"
@@ -280,7 +279,7 @@ export function TransferEditor({
                             {detail.addFee}
                         </Button>
                     </Slot>
-                )}
+                ) : null}
                 <NoteSlot onChange={(note) => change({ note })} quiet text={values.note} />
             </div>
             {children}

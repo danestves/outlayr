@@ -232,6 +232,28 @@ describe("editedTransfer", () => {
 });
 
 describe("transferProblem", () => {
+    it("refuses a new fee with no rate to price it, though the legs carry their frozen USD", () => {
+        const { base, doc, ledger } = baseFor(
+            [],
+            move({
+                fromAccountId: "banco",
+                fromAmount: 50_000,
+                fromCurrency: "VES",
+                toAccountId: "chase",
+                toAmount: 100,
+                toCurrency: "USD",
+            }),
+            []
+        );
+        const unfeed = transferInputOf(ledger, base, { ...base.start, note: "rent" });
+        expect(transferProblem(ledger, doc, unfeed)).toBeNull();
+        const feed = transferInputOf(ledger, base, {
+            ...base.start,
+            feeTexts: { destination: null, source: "1,000.00" },
+        });
+        expect(transferProblem(ledger, doc, feed)).toBe("rateMissing");
+    });
+
     it("refuses an empty leg and the same account on both sides", () => {
         expect(editOf([], (values) => ({ ...values, sentText: "" })).problem).toBe("empty-leg");
         expect(editOf([], (values) => ({ ...values, toId: "chase" })).problem).toBe("same-account");
