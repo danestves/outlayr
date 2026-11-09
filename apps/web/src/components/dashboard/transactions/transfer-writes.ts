@@ -86,9 +86,26 @@ export const swappedTransfer = (values: TransferValues): TransferValues => ({
     toId: values.fromId,
 });
 
-export const currencyOf = (books: Books, { doc }: TransferBase, id: string) =>
-    books.accounts.find((row) => row.localId === id)?.currency ??
-    (id === doc.toAccountId ? doc.toCurrency : doc.fromCurrency);
+/** A leg on its stored account keeps its stored currency: an account can change currency after the money moved. */
+export function currencyOf(books: Books, { doc }: TransferBase, id: string) {
+    if (id === doc.fromAccountId) {
+        return doc.fromCurrency;
+    }
+    if (id === doc.toAccountId) {
+        return doc.toCurrency;
+    }
+    return books.accounts.find((row) => row.localId === id)?.currency ?? doc.fromCurrency;
+}
+
+const isSwap = (doc: TransferDoc, fromId: string, toId: string) =>
+    fromId === doc.toAccountId && toId === doc.fromAccountId;
+
+/** The stored money each leg starts from. A swap moves it with the accounts; any other route leaves it in place. */
+function storedLegs(doc: TransferDoc, fromId: string, toId: string) {
+    const from = { amount: doc.fromAmount, amountUsd: doc.fromAmountUsd ?? null, currency: doc.fromCurrency };
+    const to = { amount: doc.toAmount, amountUsd: doc.toAmountUsd ?? null, currency: doc.toCurrency };
+    return isSwap(doc, fromId, toId) ? { from: to, to: from } : { from, to };
+}
 
 const perUsd = (books: Books, currency: string, rateType: MarketRateType, day: string) => {
     if (currency === "USD") {
@@ -100,6 +117,9 @@ const perUsd = (books: Books, currency: string, rateType: MarketRateType, day: s
 
 /** What one unit of `from` buys in `to` at a published rate of that day, or null when none is published. */
 function marketPairRate(books: Books, from: string, to: string, rateType: MarketRateType, at: number) {
+    if (Number.isNaN(at)) {
+        return null;
+    }
     const day = new Date(at).toISOString().slice(0, 10);
     const [fromPerUsd, toPerUsd] = [perUsd(books, from, rateType, day), perUsd(books, to, rateType, day)];
     return fromPerUsd === null || toPerUsd === null ? null : toPerUsd / fromPerUsd;
@@ -142,15 +162,18 @@ export function transferInputOf(ledger: Ledger, base: TransferBase, values: Tran
     const fromCurrency = currencyOf(books, base, values.fromId);
     const toCurrency = currencyOf(books, base, values.toId);
     const samePair = fromCurrency === doc.fromCurrency && toCurrency === doc.toCurrency;
-    const typedFrom = parseAmount(values.sentText, decimalsFor(fromCurrency));
-    const typedTo = parseAmount(values.arrivedText, decimalsFor(toCurrency));
-    const sameSent = samePair && typedFrom === parseAmount(start.sentText, decimalsFor(fromCurrency));
-    const sameArrived = samePair && typedTo === parseAmount(start.arrivedText, decimalsFor(toCurrency));
-    const fromAmount = sameSent ? doc.fromAmount : typedFrom;
-    const toAmount = sameArrived ? doc.toAmount : typedTo;
+    const stored = storedLegs(doc, values.fromId, values.toId);
+    const amountOf = (leg: typeof stored.from, text: string, currency: string) => {
+        const typed = parseAmount(text, decimalsFor(currency));
+        const same =
+            leg.currency === currency && typed === parseAmount(money(leg.amount, currency), decimalsFor(currency));
+        return same ? leg.amount : typed;
+    };
+    const fromAmount = amountOf(stored.from, values.sentText, fromCurrency);
+    const toAmount = amountOf(stored.to, values.arrivedText, toCurrency);
     const crossed = fromCurrency !== toCurrency;
-    const untouched = sameSent && sameArrived && values.rateType === start.rateType;
-    const sameRoute = values.fromId === start.fromId && values.toId === start.toId;
+    const untouched =
+        samePair && fromAmount === doc.fromAmount && toAmount === doc.toAmount && values.rateType === start.rateType;
     const accountOf = (side: FeeSide) => (side === "destination" ? values.toId : values.fromId);
     const feeOf = (side: FeeSide) => {
         const text = values.feeTexts[side];
@@ -158,9 +181,10 @@ export function transferInputOf(ledger: Ledger, base: TransferBase, values: Tran
             return {};
         }
         const currency = side === "destination" ? toCurrency : fromCurrency;
-        const saved = sameRoute && text === start.feeTexts[side] ? fees.get(side) : undefined;
-        const amount = saved ? saved.amount : parseAmount(text, decimalsFor(currency));
         const owner = [...fees.values()].find((row) => row.accountId === accountOf(side)) ?? fees.get(side);
+        const ownerCurrency = owner?.currency ?? ledger.currency;
+        const same = owner && ownerCurrency === currency && text === money(owner.amount, currency);
+        const amount = same ? owner.amount : parseAmount(text, decimalsFor(currency));
         return amount > 0 ? { [side]: { amount, note: owner?.note ?? "" } } : {};
     };
     return {
@@ -194,21 +218,14 @@ function rateTypeOf(crossed: boolean, rateType: string | null) {
 
 const frozenOf = (ledger: Ledger, doc: TransferDoc, input: TransferInput) => {
     const frozen = Effect.runSync(freezeTransfer(ratesLookup(ledger.books), input));
-    const carried = (
-        amount: number,
-        amountUsd: number | null | undefined,
-        currency: string,
-        next: number,
-        to: string
-    ) => carriedUsd({ amount, amountUsd: amountUsd ?? null, currency, date: new Date(doc.date) }, next, to, input.date);
+    const stored = storedLegs(doc, input.fromAccountId, input.toAccountId);
+    const date = new Date(doc.date);
     return {
         feesUsd: frozen.feesUsd,
         fromUsd:
-            carried(doc.fromAmount, doc.fromAmountUsd, doc.fromCurrency, input.fromAmount, input.fromCurrency) ??
+            carriedUsd({ ...stored.from, date }, input.fromAmount, input.fromCurrency, input.date) ??
             frozen.fromAmountUsd,
-        toUsd:
-            carried(doc.toAmount, doc.toAmountUsd, doc.toCurrency, input.toAmount, input.toCurrency) ??
-            frozen.toAmountUsd,
+        toUsd: carriedUsd({ ...stored.to, date }, input.toAmount, input.toCurrency, input.date) ?? frozen.toAmountUsd,
     };
 };
 
@@ -217,7 +234,12 @@ function pricedFees(ledger: Ledger, doc: TransferDoc, input: TransferInput) {
     const { feesUsd } = frozenOf(ledger, doc, input);
     const existing = liveFeesOf(ledger.books, doc.localId);
     const charged = chargedFees(input);
-    const kept = keptTransferFees(doc, existing, charged);
+    // After a swap a fee's side is read from the new route, so each row stays with its own account's fee and USD.
+    const kept = keptTransferFees(
+        isSwap(doc, input.fromAccountId, input.toAccountId) ? { toAccountId: input.toAccountId } : doc,
+        existing,
+        charged
+    );
     const fees = charged.map(({ fee, side }) => {
         const row = kept.get(side);
         const carried =

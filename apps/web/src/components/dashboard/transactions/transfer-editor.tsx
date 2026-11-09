@@ -44,11 +44,13 @@ const EUR_REFERENCE_CURRENCY = "VES";
 
 function AmountColumn({
     currency,
+    label,
     onText,
     rate,
     text,
 }: {
     currency: string;
+    label: string;
     onText: (text: string) => void;
     rate?: string;
     text: string;
@@ -56,7 +58,7 @@ function AmountColumn({
     return (
         <div className="min-w-0">
             <div className="[&_[data-slot=input-group]]:border-transparent! [&_[data-slot=input-group]]:bg-transparent! [&_[data-slot=input-group]]:shadow-none! [&_input]:px-0! [&_input]:text-xl! [&_input]:font-semibold!">
-                <AmountInput currency={currency} onText={onText} text={text} />
+                <AmountInput currency={currency} label={label} onText={onText} text={text} />
             </div>
             <div className="dash-figure text-muted-foreground text-xs">
                 {currency}
@@ -98,8 +100,13 @@ export function TransferEditor({
         if (found !== null || key === saved.current) {
             return;
         }
+        const before = saved.current;
         saved.current = key;
         commitRows(db, editedTransfer(current, live, input, Date.now())).catch(() => {
+            // Only the save still on record: a newer one must not be retried over.
+            if (saved.current === key) {
+                saved.current = before;
+            }
             toast({ failed: true, text: form.saveFailed.value });
         });
     };
@@ -199,10 +206,16 @@ export function TransferEditor({
                 </div>
             </div>
             <div className="mt-3 grid gap-2" style={{ gridTemplateColumns: columns }}>
-                <AmountColumn currency={sentCurrency} onText={typeSent} text={values.sentText} />
+                <AmountColumn
+                    currency={sentCurrency}
+                    label={detail.from.value}
+                    onText={typeSent}
+                    text={values.sentText}
+                />
                 <span className="w-4" />
                 <AmountColumn
                     currency={arrivedCurrency}
+                    label={detail.to.value}
                     onText={typeArrived}
                     rate={crossed && sent > 0 && arrived > 0 ? perUnit : undefined}
                     text={values.arrivedText}

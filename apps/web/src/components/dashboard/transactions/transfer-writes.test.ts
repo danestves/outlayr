@@ -177,6 +177,54 @@ describe("editedTransfer", () => {
         ]);
     });
 
+    it("swaps with no rate published, each account keeping its stored amount, frozen USD and fee", () => {
+        const fees = [
+            fee(),
+            fee({ ...envelope("f2"), accountId: "banco", amount: 500, amountUsd: 1, currency: "VES" }),
+        ];
+        const transfer = move({ fromAmount: 33.335, fromAmountUsd: 33.3, toAmountUsd: 40 });
+        const { base, doc, ledger } = baseFor(fees, transfer, []);
+        const input = transferInputOf(ledger, base, swappedTransfer(base.start));
+        expect(transferProblem(ledger, doc, input)).toBeNull();
+        const rows = editedTransfer(ledger, doc, input, NOW);
+        expect(Object.fromEntries(fieldsOf(rows, "t1").fields)).toMatchObject({
+            exchangeRate: 33.335 / 50_000,
+            fromAccountId: "banco",
+            fromAmount: 50_000,
+            fromAmountUsd: 40,
+            toAccountId: "chase",
+            toAmount: 33.335,
+            toAmountUsd: 33.3,
+        });
+        expect(Object.fromEntries(fieldsOf(rows, "f1").fields)).toMatchObject({
+            accountId: "chase",
+            amount: 2,
+            amountUsd: 2,
+            currency: "USD",
+        });
+        expect(Object.fromEntries(fieldsOf(rows, "f2").fields)).toMatchObject({
+            accountId: "banco",
+            amount: 500,
+            amountUsd: 1,
+            currency: "VES",
+        });
+    });
+
+    it("keeps a leg's and fee's stored currency when the account has since changed currency", () => {
+        const transfer = move({ fromAmount: 90, fromAmountUsd: 100, fromCurrency: "EUR" });
+        const { rows } = editOf([fee({ currency: "EUR" })], (values) => ({ ...values, note: "rent" }), transfer);
+        expect(Object.fromEntries(fieldsOf(rows, "t1").fields)).toMatchObject({
+            fromAmount: 90,
+            fromAmountUsd: 100,
+            fromCurrency: "EUR",
+        });
+        expect(Object.fromEntries(fieldsOf(rows, "f1").fields)).toMatchObject({
+            amount: 2,
+            amountUsd: 2,
+            currency: "EUR",
+        });
+    });
+
     it("tombstones a removed fee and keeps the note and id of an edited one", () => {
         const removed = fieldsOf(
             editOf([fee()], (values) => ({ ...values, feeTexts: { destination: null, source: null } })).rows,
@@ -268,6 +316,11 @@ describe("repriced and withAccounts", () => {
         const swapped = swappedTransfer(base.start);
         expect(repriced(ledger, base, base.start, "official")?.arrivedText).toBe("Bs\u00A050,000.00");
         expect(repriced(ledger, base, swapped, "official")?.arrivedText).toBe("$100.00");
+    });
+
+    it("offers no rate for a cleared date instead of throwing", () => {
+        const { base, ledger } = baseFor([], move(), [rate("VES", 500)]);
+        expect(repriced(ledger, base, { ...base.start, dateText: "" }, "official")).toBeNull();
     });
 
     it("refuses a rate nobody published", () => {
