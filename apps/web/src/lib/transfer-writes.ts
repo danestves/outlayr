@@ -16,12 +16,12 @@ import {
 import type { TransferInput } from "@outlayr/money/transfer-row";
 import * as Effect from "effect/Effect";
 
-import { nextRow, parseAmount, ratesLookup } from "../../../lib/account-writes";
-import type { Ledger } from "../../../lib/dashboard-series-ledger";
-import { money } from "../../../lib/ledger";
-import type { CommitRow } from "../../../lib/ledger-commit";
-import { entryPush } from "./delete";
+import { nextRow, parseAmount, ratesLookup } from "./account-writes";
+import type { Ledger } from "./dashboard-series-ledger";
+import { entryPush } from "./delete-writes";
 import { filedOn, wallInstant, wallText } from "./entry-writes";
+import { money } from "./ledger";
+import type { CommitRow } from "./ledger-committer";
 
 export type TransferDoc = Ledger["books"]["transfers"][number];
 type Books = Ledger["books"];

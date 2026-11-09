@@ -23,16 +23,11 @@ import { AmountInput, CurrencyField, FlowDialog, QUIET_ROW } from "@/components/
 import { useAccountFlows, useLedgerDb } from "@/components/dashboard/accounts/flows";
 import type { AccountFlow } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
 import { parseAmount } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
-import { money } from "@/lib/ledger";
-import { commitRows } from "@/lib/ledger-commit";
-import { ledgerBooks } from "@/lib/ledger-db";
-import { useDisplayFormat } from "@/lib/ledger-settings";
-
-import { useCategoryName } from "../home/format";
 import {
     baseOf,
     blankValues,
@@ -43,8 +38,13 @@ import {
     logAgainValues,
     parseFee,
     wallText,
-} from "./entry-writes";
-import type { Doc, EntryBase, EntryProblem, EntryValues } from "./entry-writes";
+} from "@/lib/entry-writes";
+import type { Doc, EntryBase, EntryProblem, EntryValues } from "@/lib/entry-writes";
+import { money } from "@/lib/ledger";
+import { ledgerBooks } from "@/lib/ledger-db";
+import { useDisplayFormat } from "@/lib/ledger-settings";
+
+import { useCategoryName } from "../home/format";
 import { useWeekday } from "./use-day-title";
 
 const REPEATS = [
@@ -511,6 +511,7 @@ export function EntryDialog({
 }) {
     const { ledger } = useDashboard();
     const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const { add } = useIntlayer("dashboard");
     const { flows } = useIntlayer("dashboard-accounts");
     const { form } = useIntlayer("dashboard-transactions");
@@ -539,8 +540,10 @@ export function EntryDialog({
         if (found !== null) {
             return;
         }
-        commitRows(db, createdEntry(current, crypto.randomUUID(), dated, at)).catch(() => {
-            toast({ failed: true, text: form.saveFailed.value });
+        void committer.commit(createdEntry(current, crypto.randomUUID(), dated, at)).settled.then((outcome) => {
+            if (outcome.status === "failed") {
+                toast({ failed: true, text: form.saveFailed.value });
+            }
         });
         toast({ text: form.added.value });
         if (another) {
@@ -607,6 +610,7 @@ export function EntryEditor({
 }) {
     const { ledger } = useDashboard();
     const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const { bulk, form } = useIntlayer("dashboard-transactions");
     const { toast } = useAccountFlows();
     const [base] = useState<EntryBase>(() => baseOf(ledger, doc));
@@ -630,7 +634,10 @@ export function EntryEditor({
         }
         saved.current = key;
         const feeNote = form.feeNote({ merchant: merchantOf(ledger, next) }).value;
-        commitRows(db, editedEntry(current, live, { ...draft, feeNote }, at)).catch(() => {
+        void committer.commit(editedEntry(current, live, { ...draft, feeNote }, at)).settled.then((outcome) => {
+            if (outcome.status !== "failed") {
+                return;
+            }
             // Cleared, not restored: the save before this one may have failed too. A repeat send changes nothing.
             if (saved.current === key) {
                 saved.current = "";

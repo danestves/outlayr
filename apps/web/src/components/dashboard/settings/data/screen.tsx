@@ -25,8 +25,8 @@ import { Skeleton } from "skullet/react";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { MerchantTile } from "@/components/ledger/tiles";
-import { stageRows } from "@/lib/ledger-commit";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { pushRows } from "@/lib/ledger-write";
 
@@ -446,7 +446,7 @@ function RestoreTab({ onExport }: { onExport: () => void }) {
 
 function DeletedTab() {
     const copy = useIntlayer("dashboard-data").deleted;
-    const { dbClient } = useRouteContext({ from: "__root__" });
+    const committer = useLedgerCommitter();
     const queryClient = useQueryClient();
     const { ledger } = useDashboard();
     const { money } = useDisplayFormat();
@@ -468,9 +468,8 @@ function DeletedTab() {
         queryClient.setQueryData<readonly PulledRow[]>(DELETED_KEY, (current) =>
             current?.filter((row) => !lifted.has(`${row.table}:${row.localId}`))
         );
-        try {
-            await stageRows(dbClient, push).commit();
-        } catch {
+        const outcome = await committer.commit(push).settled;
+        if (outcome.status === "failed") {
             settingsToasts.add({ title: copy.failed.value, type: "destructive" });
         }
         queryClient.invalidateQueries({ queryKey: DELETED_KEY });
@@ -593,7 +592,7 @@ function DeletedTab() {
 function EraseDialog({ onClose, scope }: { onClose: () => void; scope: EraseScope }) {
     const shown = useOverlayOpen();
     const { erase: copy, restore: restoreCopy } = useIntlayer("dashboard-data");
-    const { dbClient } = useRouteContext({ from: "__root__" });
+    const committer = useLedgerCommitter();
     const queryClient = useQueryClient();
     const count = useLiveEntries().length;
     const [typed, setTyped] = useState("");
@@ -602,14 +601,15 @@ function EraseDialog({ onClose, scope }: { onClose: () => void; scope: EraseScop
     const word = copy.word.value;
     const erase = async () => {
         setBusy(true);
-        try {
-            await stageRows(dbClient, eraseRows(await pullRows(), scope, nowMs())).commit();
-            queryClient.removeQueries({ queryKey: DELETED_KEY });
-            onClose();
-        } catch {
+        const rows = await pullRows().catch(() => null);
+        const outcome = rows && (await committer.commit(eraseRows(rows, scope, nowMs())).settled);
+        if (outcome?.status !== "saved") {
             settingsToasts.add({ title: copy.failed.value, type: "destructive" });
             setBusy(false);
+            return;
         }
+        queryClient.removeQueries({ queryKey: DELETED_KEY });
+        onClose();
     };
     return (
         <Dialog onOpenChange={(open) => !open && !busy && onClose()} open={shown}>

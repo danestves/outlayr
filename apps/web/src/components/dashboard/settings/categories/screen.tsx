@@ -23,13 +23,14 @@ import { useDateFormat } from "@/components/dashboard/home/format";
 import { OverlayPresence } from "@/components/dashboard/overlay-presence";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
+import { liveCategories } from "@/lib/category-writes";
 import { categoryBudgets } from "@/lib/dashboard-series";
 import { metaFlag, useDisplayFormat, useMeta, writeSettings } from "@/lib/ledger-settings";
 
 import { SectionHead, SettingsCard } from "../parts";
 import { CategoryEditor } from "./editor";
 import type { EditorTarget } from "./editor";
-import { categoryLines, categoryTree, INCOME_COLOR, liveCategories, MAX_EXPENSE_CATEGORIES } from "./model";
+import { categoryLines, categoryTree, INCOME_COLOR, MAX_EXPENSE_CATEGORIES } from "./model";
 import type { Category } from "./model";
 import { ReorderList } from "./reorder";
 import { useCategoryWrites } from "./write";

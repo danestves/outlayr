@@ -17,17 +17,16 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
 import { createdAccount, parseAmount } from "@/lib/account-writes";
 import { openAccounts, startOfDay } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
-import { commitRows } from "@/lib/ledger-commit";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { planPurchase, purchaseInInstallments } from "@/lib/plan-writes";
 import type { PurchaseDraft } from "@/lib/plan-writes";
 
 import { AmountInput, amountText, FlowDialog } from "./fields";
-import { useLedgerDb } from "./flows";
 import type { AccountFlow } from "./flows";
 import { Glyph } from "./glyph";
 import { logoIdentity } from "./identity-picker";
@@ -295,7 +294,7 @@ export function PurchaseForm({
 }) {
     const { ledger } = useDashboard();
     const { flows, purchase } = useIntlayer("dashboard-accounts");
-    const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const id = useId();
     const nameInput = useRef<HTMLInputElement>(null);
     const cards = openAccounts(ledger.books).filter((row) => row.kind === "liability");
@@ -359,9 +358,8 @@ export function PurchaseForm({
             Date.now()
         );
         setPicked(row.localId);
-        try {
-            await commitRows(db, [row]);
-        } catch {
+        const outcome = await committer.commit([row]).settled;
+        if (outcome.status === "failed") {
             setPicked(null);
             setFailed(true);
         }
@@ -384,13 +382,13 @@ export function PurchaseForm({
             schedule: plan.schedule,
         });
         setSaving(true);
-        try {
-            await commitRows(db, rows);
-            onClose();
-        } catch {
+        const outcome = await committer.commit(rows).settled;
+        if (outcome.status === "failed") {
             setSaving(false);
             setFailed(true);
+            return;
         }
+        onClose();
     };
 
     return (

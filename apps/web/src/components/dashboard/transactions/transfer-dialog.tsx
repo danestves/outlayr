@@ -12,13 +12,11 @@ import { AmountInput, FlowDialog } from "@/components/dashboard/accounts/fields"
 import { useAccountFlows, useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { accountRows, cardStatement, flowsOf, isCard, plansOn } from "@/components/dashboard/accounts/model";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
-import { commitRows } from "@/lib/ledger-commit";
+import { wallInstant, wallText } from "@/lib/entry-writes";
 import { ledgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
-
-import { DateRow, Pick, Slot } from "./entry-form";
-import { wallInstant, wallText } from "./entry-writes";
 import {
     createdTransfer,
     newTransferInput,
@@ -30,8 +28,10 @@ import {
     transferAccounts,
     withArrived,
     withSent,
-} from "./transfer-create";
-import type { NewTransferProblem, NewTransferValues } from "./transfer-create";
+} from "@/lib/transfer-create";
+import type { NewTransferProblem, NewTransferValues } from "@/lib/transfer-create";
+
+import { DateRow, Pick, Slot } from "./entry-form";
 
 function Balance({ children }: { children: ReactNode }) {
     return <p className="dash-figure text-muted-foreground mt-1.5 text-xs">{children}</p>;
@@ -40,6 +40,7 @@ function Balance({ children }: { children: ReactNode }) {
 export function TransferDialog({ accountId, onClose }: { accountId: string; onClose: () => void }) {
     const { ledger, overview, photos } = useDashboard();
     const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const { flows } = useIntlayer("dashboard-accounts");
     const { detail, form } = useIntlayer("dashboard-transactions");
     const { toast } = useAccountFlows();
@@ -90,11 +91,12 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
             return;
         }
         const date = values.dateText === wallText(at, ledger) ? at : wallInstant(values.dateText, ledger);
-        commitRows(db, createdTransfer(current, crypto.randomUUID(), { ...draft, date: new Date(date) }, at)).catch(
-            () => {
+        const created = createdTransfer(current, crypto.randomUUID(), { ...draft, date: new Date(date) }, at);
+        void committer.commit(created).settled.then((outcome) => {
+            if (outcome.status === "failed") {
                 toast({ failed: true, text: form.saveFailed.value });
             }
-        );
+        });
         toast({ text: flows.transferSaved.value });
         if (another) {
             change({ ...values, arrivedByHand: false, arrivedText: "", feeText: "", note: "", sentText: "" });

@@ -102,7 +102,7 @@ export async function dropLedger() {
 
 export const UNSENT_PREFIX = "outlayr-unsent:";
 
-// A pending delete settles on the pagehide that sign-out's navigation fires, after forgetLedger has run.
+// Sign-out's navigation fires a pagehide, which pushes a held commit after forgetLedger has run.
 export function keepUnsent(key: string, value: string) {
     if (forgotten) {
         return;

@@ -10,13 +10,13 @@ import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { archivedAccount, deletedAccount } from "@/lib/account-writes";
-import { commitRows, stageRows } from "@/lib/ledger-commit";
 import { ledgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { Fact, FlowDialog } from "./fields";
-import { useLedgerDb, useAccountFlows } from "./flows";
+import { UNDO_HOLD_MS, useLedgerDb, useAccountFlows } from "./flows";
 import { Glyph } from "./glyph";
 import { accountFacts, netAfterDelete } from "./model";
 
@@ -25,6 +25,7 @@ type Account = LedgerBooks["accounts"][number];
 export function ArchiveDialog({ account, onClose }: { account: Account; onClose: () => void }) {
     const { ledger } = useDashboard();
     const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const { flows } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const { toast } = useAccountFlows();
@@ -33,9 +34,8 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
     const facts = accountFacts(ledger, account.localId);
     const archive = async () => {
         const at = Date.now();
-        try {
-            await commitRows(db, [archivedAccount(account, at, at)]);
-        } catch {
+        const outcome = await committer.commit([archivedAccount(account, at, at)]).settled;
+        if (outcome.status === "failed") {
             setFailed(true);
             return;
         }
@@ -45,7 +45,11 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
             onUndo: () => {
                 const fresh = ledgerBooks(db).accounts.find((row) => row.localId === account.localId);
                 if (fresh) {
-                    void commitRows(db, [archivedAccount(fresh, null, Date.now())]);
+                    void committer.commit([archivedAccount(fresh, null, Date.now())]).settled.then((undone) => {
+                        if (undone.status === "failed") {
+                            toast({ failed: true, text: flows.restoreFailed({ name: account.name }).value });
+                        }
+                    });
                 }
             },
             text: flows.archivedToast({ name: account.name }).value,
@@ -79,6 +83,7 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
 export function DeleteDialog({ account, onClose }: { account: Account; onClose: () => void }) {
     const { ledger } = useDashboard();
     const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const { actions, flows } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const { toast } = useAccountFlows();
@@ -86,16 +91,21 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
     const facts = accountFacts(ledger, account.localId);
     const nothing = facts.transactions + facts.adjustments + facts.transfers + facts.plans === 0;
     const remove = async () => {
-        const staged = stageRows(db, deletedAccount(ledgerBooks(db), account, Date.now()));
+        const held = committer.commit(deletedAccount(ledgerBooks(db), account, Date.now()), { holdMs: UNDO_HOLD_MS });
+        void held.settled.then((outcome) => {
+            if (outcome.status === "failed") {
+                toast({ text: flows.deleteFailed({ name: account.name }).value });
+            }
+        });
         onClose();
         await navigate({ to: "/app/accounts" });
         toast({
             onExpire: () => {
-                staged.commit().catch(() => {
-                    toast({ text: flows.deleteFailed({ name: account.name }).value });
-                });
+                void held.flush();
             },
-            onUndo: () => staged.rollback(),
+            onUndo: () => {
+                held.undo();
+            },
             detail: nothing ? undefined : flows.deleteBody.value,
             text: flows.deletedToast.value,
         });

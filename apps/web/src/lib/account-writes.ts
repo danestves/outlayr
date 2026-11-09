@@ -7,7 +7,7 @@ import type { RateLookup } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
 import * as Effect from "effect/Effect";
 
-import type { CommitRow } from "./ledger-commit";
+import type { CommitRow } from "./ledger-committer";
 
 type Account = LedgerBooks["accounts"][number];
 

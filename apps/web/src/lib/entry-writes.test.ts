@@ -2,7 +2,7 @@ import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
-import { prepareLedger } from "../../../lib/dashboard-series-ledger";
+import { prepareLedger } from "./dashboard-series-ledger";
 import {
     baseOf,
     blankValues,

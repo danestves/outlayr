@@ -18,6 +18,7 @@ import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile, FeeTile, MerchantTile } from "@/components/ledger/tiles";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
+import { isFinanced } from "@/lib/entry-writes";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { useCatalog, useImageUrls } from "../home/catalog";
@@ -26,7 +27,6 @@ import { figureOf } from "../home/rows";
 import type { FoldedRow } from "../home/rows";
 import { useWide } from "../insights/use-wide";
 import { EntryEditor, useRepeatNames } from "./entry-form";
-import { isFinanced } from "./entry-writes";
 import { installmentTags, transferMoves } from "./model";
 import { TransferEditor } from "./transfer-editor";
 import { useWeekday } from "./use-day-title";

@@ -1,17 +1,23 @@
 import type { PushRow } from "@outlayr/backend/confect/sync";
 import { api } from "@outlayr/backend/convex/_generated/api";
-import { createTransaction } from "@tanstack/react-db";
-import { useRouteContext } from "@tanstack/react-router";
 import { createToaster } from "panelui-web/toast";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
+import {
+    categoryPush,
+    deletedPlans,
+    deletionOf,
+    deletionRows,
+    editedCategory,
+    newCategory,
+    reorderedCategories,
+} from "@/lib/category-writes";
+import type { CategoryDraft, PlanRow } from "@/lib/category-writes";
 import { convexClient } from "@/lib/convex";
-import { ledgerCollections } from "@/lib/ledger-db";
-import { pushRows } from "@/lib/ledger-write";
 
-import { categoryPush, deletionOf, deletionRows, editedCategory, newCategory } from "./model";
-import type { Category, CategoryDraft, PlanRow } from "./model";
+import type { Category } from "./model";
 
 const UNDO_MS = 10_000;
 
@@ -44,120 +50,91 @@ async function budgetPlansOf(categoryId: string) {
     return plans;
 }
 
-let settleHeldDelete: (() => void) | null = null;
+let flushHeldDelete: (() => void) | null = null;
 
 export function useCategoryWrites() {
-    const { dbClient } = useRouteContext({ from: "__root__" });
+    const committer = useLedgerCommitter();
     const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-categories");
-    const collection = dbClient.collection(ledgerCollections.categories);
     const rows = ledger.books.categories;
 
-    const commit = (push: readonly PushRow[], paint: () => void) => {
-        const transaction = createTransaction({
-            autoCommit: false,
-            mutationFn: async () => {
-                await pushRows(dbClient, push);
-                await collection.utils.awaitSync();
-            },
-        });
-        transaction.mutate(paint);
-        transaction.commit().catch(() => {
-            settingsToasts.add({ title: copy.failed.value, type: "destructive" });
-        });
+    const commit = async (push: readonly PushRow[], failed: string) => {
+        const outcome = await committer.commit(push).settled;
+        if (outcome.status === "failed") {
+            settingsToasts.add({ title: failed, type: "destructive" });
+        }
     };
 
     const add = (draft: CategoryDraft) => {
         const made = newCategory(rows, draft, crypto.randomUUID(), Date.now());
-        commit([categoryPush(made)], () => collection.insert(made));
+        void commit([categoryPush(made)], copy.failed.value);
         return made.localId;
     };
 
     const update = (doc: Category, draft: CategoryDraft) => {
-        const edited = editedCategory(rows, doc, draft, Date.now());
-        const push = categoryPush(edited);
-        commit([push], () =>
-            collection.update(doc.localId, (row) => {
-                Object.assign(row, push.fields, { updatedAt: edited.updatedAt });
-            })
-        );
+        void commit([categoryPush(editedCategory(rows, doc, draft, Date.now()))], copy.failed.value);
     };
 
     const reorder = (orderedIds: readonly string[]) => {
-        const now = Date.now();
-        const byId = new Map(rows.map((row) => [row.localId, row]));
-        const changed = orderedIds.flatMap((id, sortOrder) => {
-            const doc = byId.get(id);
-            return doc && doc.sortOrder !== sortOrder ? [{ ...doc, sortOrder, updatedAt: now }] : [];
-        });
-        if (changed.length === 0) {
-            return;
+        const changed = reorderedCategories(rows, orderedIds, Date.now());
+        if (changed.length > 0) {
+            void commit(changed, copy.failed.value);
         }
-        commit(changed.map(categoryPush), () => {
-            for (const doc of changed) {
-                collection.update(doc.localId, (row) => {
-                    row.sortOrder = doc.sortOrder;
-                    row.updatedAt = doc.updatedAt;
-                });
-            }
-        });
     };
 
     const remove = (id: string) => {
-        settleHeldDelete?.();
+        flushHeldDelete?.();
         const deletion = deletionOf(ledger.books, id);
         if (!deletion) {
             return;
         }
-        const entries = dbClient.collection(ledgerCollections.transactions);
-        const budgets = dbClient.collection(ledgerCollections.budgets);
-        const transaction = createTransaction({
-            autoCommit: false,
-            mutationFn: async () => {
-                await pushRows(dbClient, deletionRows(deletion, await budgetPlansOf(id), Date.now()));
-                await Promise.all([collection.utils.awaitSync(), entries.utils.awaitSync(), budgets.utils.awaitSync()]);
-            },
-        });
-        transaction.mutate(() => {
-            if (deletion.entries.length > 0) {
-                entries.delete(deletion.entries.map((row) => row.localId));
-            }
-            if (deletion.budgets.length > 0) {
-                budgets.delete(deletion.budgets.map((row) => row.localId));
-            }
-            for (const child of deletion.children) {
-                collection.update(child.localId, (row) => {
-                    row.parentId = null;
-                });
-            }
-            collection.delete(id);
-        });
+        const now = Date.now();
+        const held = committer.commit(deletionRows(deletion, [], now), { holdMs: UNDO_MS });
         let toastId = "";
-        const finish = () => {
-            clearTimeout(timer);
-            settleHeldDelete = null;
+        const closeToast = () => {
+            clearTimeout(closing);
             settingsToasts.close(toastId);
         };
-        function settle() {
-            finish();
-            transaction.commit().catch(() => {
-                settingsToasts.add({ title: copy.deleteFailed.value, type: "destructive" });
-            });
-        }
-        const timer = setTimeout(settle, UNDO_MS);
-        settleHeldDelete = settle;
+        const closing = setTimeout(closeToast, UNDO_MS);
+        const failed = () => {
+            closeToast();
+            settingsToasts.add({ title: copy.deleteFailed.value, type: "destructive" });
+        };
+        flushHeldDelete = () => {
+            closeToast();
+            void held.flush();
+        };
         toastId = settingsToasts.add({
             actionProps: {
                 children: copy.undo.value,
                 onClick: () => {
-                    finish();
-                    transaction.rollback();
+                    closeToast();
+                    held.undo();
                 },
             },
             description: deletion.children.length > 0 ? copy.undoBodyWithChildren.value : copy.undoBody.value,
             timeout: UNDO_MS,
             title: copy.deleted.value,
         });
+        const settle = async () => {
+            const plans = await budgetPlansOf(id).then(
+                (found) => deletedPlans(found, now),
+                () => null
+            );
+            if (plans === null) {
+                held.undo();
+                failed();
+                return;
+            }
+            const joined = plans.length === 0 || held.add(plans);
+            const outcome = await held.settled;
+            if (outcome.status === "failed") {
+                failed();
+            } else if (outcome.status === "saved" && !joined) {
+                await commit(plans, copy.deleteFailed.value);
+            }
+        };
+        void settle();
     };
 
     return { add, remove, reorder, update };

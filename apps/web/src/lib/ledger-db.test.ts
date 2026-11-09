@@ -1,58 +1,12 @@
-import type { ConvexCollectionClient } from "@tanstack/convex-db-collection";
 import { DbClient } from "@tanstack/react-db";
-import { getFunctionName } from "convex/server";
 import { describe, expect, it } from "vite-plus/test";
 
 import { ledgerDependencies } from "./db";
 import { LEDGER_CACHE_VERSION, snapshotOf, usableSnapshot } from "./ledger-cache";
 import { ledgerBooks, preloadLedger } from "./ledger-db";
-import type { LedgerPusher } from "./ledger-write";
+import { fakeConvex, ledgerRow as row, pagesOf, silentConvex } from "./test-convex";
 
-const row = (id: string) => ({ _id: id, localId: id, note: `entry ${id}` });
 const ROWS = 2500;
-
-type Reply = (name: string, args: Record<string, unknown>) => unknown;
-
-const pagesOf = (rows: readonly ReturnType<typeof row>[]) => (name: string, args: Record<string, unknown>) => {
-    if (name === "sync:pullSince") {
-        return { cursor: 0, hasMore: false, rows: [] };
-    }
-    if (name !== "ledger:transactions") {
-        return name === "ledger:transfers" ? { continueCursor: "", isDone: true, page: [] } : [];
-    }
-    const { cursor, endCursor, numItems } = args.paginationOpts as {
-        cursor: string | null;
-        endCursor?: string;
-        numItems: number;
-    };
-    const start = Number(cursor ?? 0);
-    const end = endCursor === undefined ? Math.min(start + numItems, rows.length) : Number(endCursor);
-    return { continueCursor: String(end), isDone: end >= rows.length, page: rows.slice(start, end) };
-};
-
-const pushed = { accepted: 0, nextSeq: 0, skipped: 0 };
-const mutation = () => Promise.resolve(pushed);
-
-const fakeConvex = (reply: Reply) =>
-    ({
-        mutation,
-        onUpdate: (query, args, callback) => {
-            let current: unknown;
-            queueMicrotask(() => {
-                current = reply(getFunctionName(query), args as Record<string, unknown>);
-                callback(current as never);
-            });
-            return Object.assign(() => undefined, {
-                getCurrentValue: () => current as never,
-                unsubscribe: () => undefined,
-            });
-        },
-    }) satisfies ConvexCollectionClient & LedgerPusher;
-
-const silentConvex = {
-    mutation,
-    onUpdate: () => Object.assign(() => undefined, { getCurrentValue: () => undefined, unsubscribe: () => undefined }),
-} satisfies ConvexCollectionClient & LedgerPusher;
 
 const hydrated = async (rows: readonly ReturnType<typeof row>[]) => {
     const source = new DbClient(ledgerDependencies(fakeConvex(pagesOf(rows))));

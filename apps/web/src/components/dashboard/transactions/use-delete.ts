@@ -1,21 +1,18 @@
-import { useRouteContext } from "@tanstack/react-router";
 import { createToaster } from "panelui-web/toast";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { commitDurably, stageRows } from "@/lib/ledger-commit";
-import { userOf } from "@/lib/session";
-
-import { deletionOf } from "./delete";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
+import { deletionOf } from "@/lib/delete-writes";
 
 const UNDO_MS = 6000;
 
 // Held outside React: useToast() subscribes its caller, and subscribing this screen loops the renderer.
 export const deleteToasts = createToaster();
 
-/** Hides entries at once and pushes when the undo window ends, so Undo is a local rollback. */
+/** Hides entries at once in a held commit, so Undo is a local rollback. */
 export function useDeleteEntries() {
-    const { dbClient, session } = useRouteContext({ from: "__root__" });
+    const committer = useLedgerCommitter();
     const { ledger } = useDashboard();
     const { deleted } = useIntlayer("dashboard-transactions");
     return (ids: Iterable<string>) => {
@@ -23,33 +20,23 @@ export function useDeleteEntries() {
         if (count === 0) {
             return;
         }
-        const transaction = stageRows(dbClient, rows);
-        let toastId = "";
-        const finish = () => {
-            clearTimeout(timer);
-            window.removeEventListener("pagehide", settle);
-        };
-        function settle() {
-            finish();
-            deleteToasts.close(toastId);
-            const userId = session.token === null ? undefined : userOf(session.token);
-            commitDurably(transaction, rows, userId).catch(() => {
-                deleteToasts.add({ title: deleted.failed.value, type: "destructive" });
-            });
-        }
-        const timer = setTimeout(settle, UNDO_MS);
-        window.addEventListener("pagehide", settle);
-        toastId = deleteToasts.add({
+        const held = committer.commit(rows, { holdMs: UNDO_MS });
+        const toastId = deleteToasts.add({
             actionProps: {
                 children: deleted.undo.value,
                 onClick: () => {
-                    finish();
                     deleteToasts.close(toastId);
-                    transaction.rollback();
+                    held.undo();
                 },
             },
             timeout: UNDO_MS,
             title: count === 1 ? deleted.one.value : deleted.many({ count }).value,
+        });
+        setTimeout(() => deleteToasts.close(toastId), UNDO_MS);
+        void held.settled.then((outcome) => {
+            if (outcome.status === "failed") {
+                deleteToasts.add({ title: deleted.failed.value, type: "destructive" });
+            }
         });
     };
 }

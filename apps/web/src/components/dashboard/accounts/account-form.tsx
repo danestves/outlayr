@@ -23,8 +23,8 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { createdAccount, editedAccount, parseAmount } from "@/lib/account-writes";
-import { commitRows } from "@/lib/ledger-commit";
 import { ledgerBooks } from "@/lib/ledger-db";
 
 import { AmountInput, amountText, CurrencyField, FlowDialog } from "./fields";
@@ -212,6 +212,7 @@ export function AccountForm({
 }) {
     const { ledger, overview, photos } = useDashboard();
     const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const { flows } = useIntlayer("dashboard-accounts");
     const { locale } = useLocale();
     const id = useId();
@@ -242,12 +243,12 @@ export function AccountForm({
             const row = account
                 ? editedAccount(books, account, draft, moneyTouched ? balance : null, at)
                 : createdAccount(books, draft, balance, crypto.randomUUID(), at);
-            try {
-                await commitRows(db, [row]);
-                onClose();
-            } catch {
+            const outcome = await committer.commit([row]).settled;
+            if (outcome.status === "failed") {
                 setFailed(true);
+                return;
             }
+            onClose();
         },
         validators: {
             onSubmit: ({ value }) =>

@@ -18,9 +18,10 @@ import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
 import { LookTile } from "@/components/ledger/tiles";
+import { liveCategories } from "@/lib/category-writes";
 
 import { Choice } from "../parts";
-import { categoryProblem, categoryTree, INCOME_COLOR, liveCategories, MAX_EXPENSE_CATEGORIES } from "./model";
+import { categoryProblem, categoryTree, INCOME_COLOR, MAX_EXPENSE_CATEGORIES } from "./model";
 import type { Category } from "./model";
 import { useCategoryWrites } from "./write";
 

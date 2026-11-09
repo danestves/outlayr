@@ -7,10 +7,10 @@ import type { KeyboardEvent, PointerEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
 import { reorderedAccounts } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
-import { commitRows } from "@/lib/ledger-commit";
 import { useDisplayFormat, writeSettings } from "@/lib/ledger-settings";
 
 import { AccountsBar, Card } from "./accounts-screen";
@@ -140,6 +140,7 @@ export function ReorderAccounts() {
     const { ledger, overview } = useDashboard();
     const { actions, detail, flows, list } = useIntlayer("dashboard-accounts");
     const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const navigate = useNavigate();
     const all = useMemo(() => accountRows(ledger, overview), [ledger, overview]);
     // Both stay unset until the first change: a reload paints the local copy, and sync may still move rows under it.
@@ -178,11 +179,15 @@ export function ReorderAccounts() {
         const chosen = [...inGroups.assets, ...inGroups.cards].flatMap((row) => open.get(row.id) ?? []);
         const seen = new Set(chosen.map((row) => row.localId));
         const order = [...chosen, ...openOnes.filter((row) => !seen.has(row.localId)), ...shelved];
-        try {
-            if (sort === "order") {
-                // oxlint-disable-next-line react/purity -- runs on a click, not during render.
-                await commitRows(db, reorderedAccounts(order, Date.now()));
+        if (sort === "order") {
+            // oxlint-disable-next-line react/purity -- runs on a click, not during render.
+            const outcome = await committer.commit(reorderedAccounts(order, Date.now())).settled;
+            if (outcome.status === "failed") {
+                setFailed(true);
+                return;
             }
+        }
+        try {
             await writeSettings(db, { accountsByHand: String(sort === "order") });
             await navigate({ to: "/app/accounts" });
         } catch {
