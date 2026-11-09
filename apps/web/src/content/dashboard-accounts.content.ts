@@ -713,6 +713,63 @@ const dashboardAccounts = {
                 fr: "Virements, supprimés",
                 pt: "Transferências, excluídas",
             }),
+            arrives: t({ en: "Arrives", es: "Llega", fr: "Arrive", pt: "Chega" }),
+            balanceThen: insert(
+                t({
+                    en: "{{before}}, then {{after}}",
+                    es: "{{before}}, luego {{after}}",
+                    fr: "{{before}}, puis {{after}}",
+                    pt: "{{before}}, depois {{after}}",
+                })
+            ),
+            transferFeeNote: insert(
+                t({
+                    en: "Fee · {{from}} → {{to}}",
+                    es: "Comisión · {{from}} → {{to}}",
+                    fr: "Frais · {{from}} → {{to}}",
+                    pt: "Tarifa · {{from}} → {{to}}",
+                })
+            ),
+            newTransfer: t({
+                en: "New transfer",
+                es: "Nueva transferencia",
+                fr: "Nouveau virement",
+                pt: "Nova transferência",
+            }),
+            noFee: t({ en: "No fee", es: "Sin comisión", fr: "Sans frais", pt: "Sem taxa" }),
+            optional: t({ en: "Optional", es: "Opcional", fr: "Facultatif", pt: "Opcional" }),
+            saveTransfer: t({
+                en: "Save transfer",
+                es: "Guardar transferencia",
+                fr: "Enregistrer le virement",
+                pt: "Salvar transferência",
+            }),
+            swap: t({ en: "Swap", es: "Intercambiar", fr: "Inverser", pt: "Inverter" }),
+            transferNeedsAccounts: t({
+                en: "Choose both accounts",
+                es: "Elige las dos cuentas",
+                fr: "Choisissez les deux comptes",
+                pt: "Escolha as duas contas",
+            }),
+            transferNoRate: t({
+                en: "No rate for this date. Pick another date.",
+                es: "No hay tasa para esta fecha. Elige otra fecha.",
+                fr: "Aucun taux pour cette date. Choisissez une autre date.",
+                pt: "Sem taxa para esta data. Escolha outra data.",
+            }),
+            transferSameAccount: t({
+                en: "Choose a different account",
+                es: "Elige otra cuenta",
+                fr: "Choisissez un autre compte",
+                pt: "Escolha outra conta",
+            }),
+            transferSaved: t({
+                en: "Transfer saved",
+                es: "Transferencia guardada",
+                fr: "Virement enregistré",
+                pt: "Transferência salva",
+            }),
+            youSend: t({ en: "You send", es: "Envías", fr: "Vous envoyez", pt: "Você envia" }),
             undo: t({ en: "Undo", es: "Deshacer", fr: "Annuler", pt: "Desfazer" }),
         },
         kpi: {
