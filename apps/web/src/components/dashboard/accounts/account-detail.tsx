@@ -23,9 +23,8 @@ import SafeIcon from "@hugeicons/core-free-icons/SafeIcon";
 import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
-import type { IconSvgElement } from "@hugeicons/react";
 import { entryLook } from "@outlayr/backend/confect/lib/ledgerLog";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Chip } from "panelui-web/chip";
@@ -39,8 +38,12 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { timeOfDay, titled, useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { EntrySheet, editableDoc } from "@/components/dashboard/transactions/entry-sheet";
+import type { EntryStart } from "@/components/dashboard/transactions/entry-sheet";
+import { rowOf } from "@/components/dashboard/transactions/model";
 import { deleteToasts, useDeleteEntries } from "@/components/dashboard/transactions/use-delete";
 import { AccountTile, LookTile, MerchantTile } from "@/components/ledger/tiles";
+import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -451,25 +454,18 @@ function EntryTile({ entry, imageUrl }: { entry: AccountEntry; imageUrl?: string
     return <LookTile look={look} plain size="lg" />;
 }
 
-function EntryMenu({ accountId, entry, name }: { accountId: string; entry: AccountEntry; name: string }) {
+function EntryMenu({
+    entry,
+    name,
+    onDelete,
+    onOpen,
+}: {
+    entry: AccountEntry;
+    name: string;
+    onDelete: () => void;
+    onOpen: (start?: EntryStart) => void;
+}) {
     const { actions } = useIntlayer("dashboard-accounts");
-    const navigate = useNavigate();
-    const deleteEntries = useDeleteEntries();
-    const openSheet = () =>
-        navigate({ search: { accounts: accountId, entry: entry.rowId, span: "all" }, to: "/app/transactions" });
-    const editable = entry.kind === "entry" && !entry.adjustment;
-    const edit = (icon: IconSvgElement, label: ReactNode) =>
-        editable ? (
-            <Menu.Item onClick={openSheet}>
-                <Glyph icon={icon} size={16} />
-                {label}
-            </Menu.Item>
-        ) : (
-            <PhoneItem>
-                <Glyph icon={icon} size={16} />
-                {label}
-            </PhoneItem>
-        );
     return (
         <Menu>
             <Menu.Trigger
@@ -479,32 +475,7 @@ function EntryMenu({ accountId, entry, name }: { accountId: string; entry: Accou
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
             <Menu.Content align="center" className="app-shell ph-no-capture w-[215px]" side="left" sideOffset={-6}>
-                {entry.outside ? (
-                    <PhoneItem>
-                        <Glyph icon={ArrowUpRight01Icon} size={16} />
-                        {actions.open}
-                    </PhoneItem>
-                ) : (
-                    <Menu.Item onClick={openSheet}>
-                        <Glyph icon={ArrowUpRight01Icon} size={16} />
-                        {actions.open}
-                    </Menu.Item>
-                )}
-                {edit(PencilEdit01Icon, actions.edit)}
-                {edit(Tag01Icon, actions.changeCategory)}
-                {edit(BankIcon, actions.moveToAccount)}
-                <Menu.Separator />
-                {entry.outside ? (
-                    <PhoneItem>
-                        <Glyph icon={Delete02Icon} size={16} />
-                        {actions.delete}
-                    </PhoneItem>
-                ) : (
-                    <Menu.Item onClick={() => deleteEntries([entry.rowId])} variant="destructive">
-                        <Glyph icon={Delete02Icon} size={16} />
-                        {actions.delete}
-                    </Menu.Item>
-                )}
+                <EntryActions entry={entry} onDelete={onDelete} onOpen={onOpen} />
             </Menu.Content>
         </Menu>
     );
@@ -538,6 +509,62 @@ const check = (on: boolean) => (
     <Glyph icon={Tick02Icon} className={`text-app-tint! ml-auto ${on ? "" : "invisible"}`} size={16} />
 );
 
+function ActionItem({ children, live, onPress }: { children: ReactNode; live: boolean; onPress: () => void }) {
+    return live ? <Menu.Item onClick={onPress}>{children}</Menu.Item> : <PhoneItem>{children}</PhoneItem>;
+}
+
+function EntryActions({
+    entry,
+    onDelete,
+    onOpen,
+}: {
+    entry: AccountEntry;
+    onDelete: () => void;
+    onOpen: (start?: EntryStart) => void;
+}) {
+    const { ledger } = useDashboard();
+    const { actions } = useIntlayer("dashboard-accounts");
+    const row = rowOf(ledger, entry.rowId);
+    const isEntry = row !== null && !("fromId" in row);
+    const editable = isEntry && editableDoc(ledger, row) !== undefined;
+    return (
+        <>
+            <ActionItem live={!entry.outside} onPress={() => onOpen()}>
+                <Glyph icon={ArrowUpRight01Icon} size={16} />
+                {actions.open}
+            </ActionItem>
+            <ActionItem live={editable} onPress={() => onOpen("edit")}>
+                <Glyph icon={PencilEdit01Icon} size={16} />
+                {actions.edit}
+            </ActionItem>
+            {isEntry || entry.outside ? (
+                <ActionItem live={editable} onPress={() => onOpen("category")}>
+                    <Glyph icon={Tag01Icon} size={16} />
+                    {actions.changeCategory}
+                </ActionItem>
+            ) : null}
+            {(isEntry || entry.outside) && openAccounts(ledger.books).length > 1 ? (
+                <ActionItem live={editable} onPress={() => onOpen("account")}>
+                    <Glyph icon={BankIcon} size={16} />
+                    {actions.moveToAccount}
+                </ActionItem>
+            ) : null}
+            <Menu.Separator />
+            {entry.outside ? (
+                <PhoneItem>
+                    <Glyph icon={Delete02Icon} size={16} />
+                    {actions.delete}
+                </PhoneItem>
+            ) : (
+                <Menu.Item onClick={onDelete} variant="destructive">
+                    <Glyph icon={Delete02Icon} size={16} />
+                    {actions.delete}
+                </Menu.Item>
+            )}
+        </>
+    );
+}
+
 function TransactionsCard({ row }: { row: AccountRow }) {
     const { ledger } = useDashboard();
     const { actions, columns, detail, list } = useIntlayer("dashboard-accounts");
@@ -568,6 +595,21 @@ function TransactionsCard({ row }: { row: AccountRow }) {
     const shown = category ? entries.filter((entry) => entry.categoryId === category) : entries;
     const photos = useImageUrls([...new Set(shown.flatMap((entry) => entry.imageKey ?? []))]);
     const chosen = category ? ledger.categories.get(category) : undefined;
+    const deleteEntries = useDeleteEntries();
+    const [opened, setOpened] = useState<{ id: string; start?: EntryStart } | null>(null);
+    const openedRow = useMemo(() => (opened ? rowOf(ledger, opened.id) : null), [ledger, opened]);
+    const remove = (id: string) => {
+        setOpened(null);
+        deleteEntries([id]);
+    };
+    const step = (by: 1 | -1) => {
+        const stops = shown.filter((entry) => !entry.outside);
+        const at = stops.findIndex((entry) => entry.rowId === opened?.id);
+        const next = stops[at === -1 ? 0 : at + by];
+        if (next) {
+            setOpened({ id: next.rowId });
+        }
+    };
     return (
         <Card
             action={
@@ -677,7 +719,7 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                                         </Table.Cell>
                                     </Table.Row>
                                 ) : null}
-                                <Table.Row>
+                                <Table.Row className="has-data-popup-open:bg-muted/40">
                                     <Cell>
                                         <span className="flex min-w-0 items-center gap-2.5 text-sm font-medium">
                                             <EntryTile
@@ -721,9 +763,10 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                                     ) : null}
                                     <Cell className="w-10">
                                         <EntryMenu
-                                            accountId={row.id}
                                             entry={entry}
                                             name={entry.title || detail.transfer.value}
+                                            onDelete={() => remove(entry.rowId)}
+                                            onOpen={(start) => setOpened({ id: entry.rowId, start })}
                                         />
                                     </Cell>
                                 </Table.Row>
@@ -732,6 +775,13 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                     })}
                 </DataTable>
             )}
+            <EntrySheet
+                onClose={() => setOpened(null)}
+                onDelete={(entry) => remove(entry.id)}
+                onStep={step}
+                row={openedRow}
+                start={opened?.start}
+            />
         </Card>
     );
 }

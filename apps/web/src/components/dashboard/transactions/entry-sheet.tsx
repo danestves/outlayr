@@ -135,11 +135,11 @@ function Chrome({
     );
 }
 
-function MoreMenu({ onDelete, onLogAgain }: { onDelete: () => void; onLogAgain?: () => void }) {
+function MoreMenu({ id, onDelete, onLogAgain }: { id: string; onDelete: () => void; onLogAgain?: () => void }) {
     const { bulk, detail, form } = useIntlayer("dashboard-transactions");
     const { toast } = useAccountFlows();
     const copyLink = async () => {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(`${window.location.origin}/app/transactions?entry=${id}`);
         toast({ text: detail.copied.value });
     };
     return (
@@ -168,15 +168,18 @@ function MoreMenu({ onDelete, onLogAgain }: { onDelete: () => void; onLogAgain?:
     );
 }
 
+export type EntryStart = "account" | "category" | "edit";
+
 interface EntrySheetProps {
     onClose: () => void;
     onDelete: (row: FoldedRow) => void;
     onStep: (by: 1 | -1) => void;
     row: FoldedRow | null;
+    start?: EntryStart;
 }
 
 /** One entry or transfer. On a phone it takes the whole screen, and an entry reads first with Edit below. */
-export function EntrySheet({ onClose, onDelete, onStep, row }: EntrySheetProps) {
+export function EntrySheet({ onClose, onDelete, onStep, row, start }: EntrySheetProps) {
     const wide = useWide();
     // The sheet slides out after row clears, and it should carry the entry with it.
     const [shown, setShown] = useState(row);
@@ -191,7 +194,14 @@ export function EntrySheet({ onClose, onDelete, onStep, row }: EntrySheetProps) 
         >
             <Sheet.Content className="app-shell ph-no-capture" showGrabber={false} size={wide ? "auto" : "full"}>
                 {shown ? (
-                    <EntryBody key={shown.id} onClose={onClose} onDelete={onDelete} onStep={onStep} row={shown} />
+                    <EntryBody
+                        key={shown.id}
+                        onClose={onClose}
+                        onDelete={onDelete}
+                        onStep={onStep}
+                        row={shown}
+                        start={start}
+                    />
                 ) : null}
             </Sheet.Content>
         </Sheet>
@@ -199,7 +209,7 @@ export function EntrySheet({ onClose, onDelete, onStep, row }: EntrySheetProps) 
 }
 
 // Fees follow their purchase, and installment rows follow their plan's rules, which this form does not know yet.
-function editableDoc(ledger: Ledger, row: Exclude<FoldedRow, { fromId: string }>) {
+export function editableDoc(ledger: Ledger, row: Exclude<FoldedRow, { fromId: string }>) {
     const doc = ledger.books.transactions.find((each) => each.localId === row.id);
     const financed =
         doc?.installmentId != null ||
@@ -375,7 +385,11 @@ function ReadEntry({
     );
 }
 
-function useSheetKeys(onDelete: () => void, categoryTrigger: RefObject<HTMLButtonElement | null>) {
+function useSheetKeys(
+    onDelete: () => void,
+    onStep: (by: 1 | -1) => void,
+    categoryTrigger: RefObject<HTMLButtonElement | null>
+) {
     const onKeyEvent = useEffectEvent((event: KeyboardEvent) => {
         if (
             event.metaKey ||
@@ -390,6 +404,8 @@ function useSheetKeys(onDelete: () => void, categoryTrigger: RefObject<HTMLButto
         } else if (event.key === "c") {
             event.preventDefault();
             categoryTrigger.current?.click();
+        } else if (event.key === "j" || event.key === "k") {
+            onStep(event.key === "j" ? 1 : -1);
         }
     });
     // oxlint-disable-next-line outlayr/react-effect-budget -- the keyboard is an external system.
@@ -399,7 +415,27 @@ function useSheetKeys(onDelete: () => void, categoryTrigger: RefObject<HTMLButto
     }, []);
 }
 
-function EntryBody({ onClose, onDelete, onStep, row }: Omit<EntrySheetProps, "row"> & { row: FoldedRow }) {
+function useOpenedPicker(trigger: RefObject<HTMLButtonElement | null> | null) {
+    const openPicker = useEffectEvent(async (isLive: () => boolean) => {
+        await new Promise(requestAnimationFrame);
+        await new Promise(requestAnimationFrame);
+        const animations = trigger?.current?.closest("[role=dialog]")?.getAnimations() ?? [];
+        await Promise.allSettled(animations.map((animation) => animation.finished));
+        if (isLive()) {
+            trigger?.current?.click();
+        }
+    });
+    // oxlint-disable-next-line outlayr/react-effect-budget -- a picker measured mid-slide lands off its trigger.
+    useEffect(() => {
+        let live = true;
+        void openPicker(() => live);
+        return () => {
+            live = false;
+        };
+    }, []);
+}
+
+function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetProps, "row"> & { row: FoldedRow }) {
     const { ledger } = useDashboard();
     const { open } = useAccountFlows();
     const { transactions: copy } = useIntlayer("dashboard-home");
@@ -411,10 +447,13 @@ function EntryBody({ onClose, onDelete, onStep, row }: Omit<EntrySheetProps, "ro
     const raw = "fromId" in row ? undefined : catalog.transaction(row.id);
     const photos = useImageUrls(raw?.imageKey ? [raw.imageKey] : []);
     const figure = figureOf(ledger, row);
+    const accountTrigger = useRef<HTMLButtonElement>(null);
     const categoryTrigger = useRef<HTMLButtonElement>(null);
-    const [editing, setEditing] = useState(false);
+    const [editing, setEditing] = useState(start !== undefined);
     const remove = () => onDelete(row);
-    useSheetKeys(remove, categoryTrigger);
+    useSheetKeys(remove, onStep, categoryTrigger);
+    const pickers = { account: accountTrigger, category: categoryTrigger };
+    useOpenedPicker(start === undefined || start === "edit" ? null : pickers[start]);
     const time = clockTime(timeOfDay(row.at, ledger.offsetAt(row.at)));
     const when = `${weekday(row.day)}, ${time}`;
     if ("fromId" in row) {
@@ -422,7 +461,7 @@ function EntryBody({ onClose, onDelete, onStep, row }: Omit<EntrySheetProps, "ro
             <Chrome
                 body={<TransferBody onDelete={remove} row={row} when={when} />}
                 categoryHint={false}
-                more={<MoreMenu onDelete={remove} />}
+                more={<MoreMenu id={row.id} onDelete={remove} />}
                 onStep={onStep}
                 title={copy.transfer}
             />
@@ -437,12 +476,13 @@ function EntryBody({ onClose, onDelete, onStep, row }: Omit<EntrySheetProps, "ro
               open({ from: row.id, kind: "entry" });
           }
         : undefined;
-    const more = <MoreMenu onDelete={remove} onLogAgain={logAgain} />;
+    const more = <MoreMenu id={row.id} onDelete={remove} onLogAgain={logAgain} />;
     if (doc && (wide || editing)) {
         return (
             <Chrome
                 body={
                     <EntryEditor
+                        accountTrigger={accountTrigger}
                         categoryTrigger={categoryTrigger}
                         doc={doc}
                         imageUrl={imageUrl}

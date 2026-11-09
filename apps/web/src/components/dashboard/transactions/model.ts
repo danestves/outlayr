@@ -69,6 +69,12 @@ const matchesAmount = (needle: number, row: FoldedRow, figure: number) =>
         (each) => Math.abs(each - needle) < CENT
     );
 
+export function rowOf(ledger: Pick<Ledger, "rows" | "transfers">, id: string): FoldedRow | null {
+    const fees = ledger.rows.filter((row) => row.feeFor === id && row.id !== id);
+    const own = [...ledger.rows, ...ledger.transfers].find((row) => row.id === id);
+    return own ? (foldFees([own, ...fees])[0] ?? null) : null;
+}
+
 /**
  * The rows a query lists, fees folded under what they were charged for. `text` gives the words a row is
  * found by, so names stay in the caller's language.

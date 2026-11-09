@@ -1,6 +1,78 @@
+import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { describe, expect, it } from "vite-plus/test";
 
-import { billedApart, cardStatement, checkedAge, statementCycle } from "./model";
+import { prepareLedger } from "../../../lib/dashboard-series-ledger";
+import { accountEntries, billedApart, cardStatement, checkedAge, statementCycle } from "./model";
+
+describe("account entries", () => {
+    const at = Date.parse("2026-11-05T14:00:00Z");
+    const envelope = (localId: string) => ({
+        deletedAt: null,
+        deviceId: "device",
+        localId,
+        seq: 1,
+        updatedAt: 0,
+        userId: "owner",
+    });
+    const ledger = prepareLedger(
+        {
+            accounts: [
+                { ...envelope("chase"), currency: "USD", initialBalance: 0, initialBalanceDate: 0, name: "Chase" },
+            ],
+            appMeta: [{ key: "timeZone", value: "UTC" }],
+            budgets: [],
+            categories: [],
+            exchangeRates: [],
+            installmentPlans: [],
+            installments: [],
+            mainBudget: [],
+            outsideMoves: [
+                {
+                    ...envelope("found"),
+                    accountId: "chase",
+                    adjustment: true,
+                    amount: 5,
+                    amountUsd: 5,
+                    currency: "USD",
+                    date: at,
+                },
+            ],
+            outsidePayments: [],
+            savingsGoals: [],
+            transactions: [
+                {
+                    ...envelope("rent"),
+                    accountId: "chase",
+                    amount: 900,
+                    amountUsd: 900,
+                    categoryId: null,
+                    currency: "USD",
+                    date: at,
+                    day: 0,
+                    exchangeRate: null,
+                    income: false,
+                    note: "Rent",
+                    onceRecurring: false,
+                    recurringCoefficient: 1,
+                    recurringEndDate: null,
+                    recurringType: 0,
+                },
+            ],
+            transfers: [],
+        } as unknown as LedgerBooks,
+        Date.parse("2026-11-08T15:00:00Z")
+    );
+
+    it("points a row back at its ledger id, and only opens what the ledger can act on", () => {
+        const entries = accountEntries(ledger, "chase", "2026-11-01", "2026-11-30");
+        expect(
+            entries.map(({ outside, rowId }) => ({ outside, rowId })).toSorted((a, b) => a.rowId.localeCompare(b.rowId))
+        ).toStrictEqual([
+            { outside: true, rowId: "found" },
+            { outside: false, rowId: "rent" },
+        ]);
+    });
+});
 
 describe("statement cycle", () => {
     it("closes this month once the statement day has passed", () => {

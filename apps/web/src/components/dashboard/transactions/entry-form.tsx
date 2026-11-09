@@ -269,6 +269,7 @@ function NoteSlot({
 }
 
 function EntryFields({
+    accountTrigger,
     amountKey,
     categoryTrigger,
     imageUrl,
@@ -279,6 +280,7 @@ function EntryFields({
     problem,
     values,
 }: {
+    accountTrigger?: RefObject<HTMLButtonElement | null>;
     amountKey?: number;
     categoryTrigger?: RefObject<HTMLButtonElement | null>;
     imageUrl?: string;
@@ -383,6 +385,7 @@ function EntryFields({
                             ),
                         ]}
                         quiet={quiet}
+                        triggerRef={accountTrigger}
                         value={values.accountId ?? NO_ACCOUNT}
                     />
                 </Slot>
@@ -583,6 +586,7 @@ export function EntryDialog({
 
 /** The drawer's editor. There is no Save: a choice saves at once, typing on blur, and whatever is left on close. */
 export function EntryEditor({
+    accountTrigger,
     categoryTrigger,
     doc,
     imageUrl,
@@ -590,6 +594,7 @@ export function EntryEditor({
     onLogAgain,
     total,
 }: {
+    accountTrigger?: RefObject<HTMLButtonElement | null>;
     categoryTrigger?: RefObject<HTMLButtonElement | null>;
     doc: Doc;
     imageUrl?: string;
@@ -632,6 +637,7 @@ export function EntryEditor({
     return (
         <div onBlur={() => save(values)}>
             <EntryFields
+                accountTrigger={accountTrigger}
                 categoryTrigger={categoryTrigger}
                 imageUrl={imageUrl}
                 layout="drawer"
