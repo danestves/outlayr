@@ -38,6 +38,9 @@ export interface AccountRow {
 }
 
 /** `accountBalances` keeps open accounts in `sortOrder` and one row each, so the two line up by index. */
+export const isCard = (row: AccountRow) =>
+    row.kind === "liability" && (row.statementDay !== null || row.creditLimit !== null);
+
 export function accountRows(ledger: Ledger, overview: Overview): AccountRow[] {
     return openAccounts(ledger.books).flatMap((row, index) => {
         const shown = overview.balances.accounts[index];

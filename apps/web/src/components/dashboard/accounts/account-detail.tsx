@@ -63,6 +63,7 @@ import {
     checkedAge,
     flowsOf,
     inMain,
+    isCard,
     monthStart,
     onlyCounterpart,
     periodFlows,
@@ -76,8 +77,6 @@ import { WorthChart } from "./worth-chart";
 
 const DETAIL_CHART = 770 / 172;
 const FIELD = "flex h-9 items-center justify-between border-b text-[13px] last:border-0";
-
-const isCard = (row: AccountRow) => row.kind === "liability" && (row.statementDay !== null || row.creditLimit !== null);
 
 const monthBack = (key: string, back: number) => {
     const [year, month] = key.split("-").map(Number);

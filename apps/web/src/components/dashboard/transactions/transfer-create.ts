@@ -1,6 +1,7 @@
 import { fromWall } from "@outlayr/backend/confect/mcpLedger";
 import { isPerson } from "@outlayr/money/account-kind";
 import { decimalsFor } from "@outlayr/money/currency";
+import { utcDateString } from "@outlayr/money/dates";
 import { roundMoney } from "@outlayr/money/round";
 import { transferLegs } from "@outlayr/money/transfer-reconcile";
 import { chargedFees, feeColumns, freezeTransfer, legColumns, transferRejection } from "@outlayr/money/transfer-row";
@@ -39,7 +40,11 @@ const perUsd = (books: Books, currency: string, day: string) =>
     currency === "USD" ? 1 : (Effect.runSync(ratesLookup(books)(currency, "official", day))?.rate ?? null);
 
 const marketRate = (ledger: Ledger, from: string, to: string, dateText: string) => {
-    const day = dateText.slice(0, 10);
+    const at = wallInstant(dateText, ledger);
+    if (Number.isNaN(at)) {
+        return null;
+    }
+    const day = utcDateString(at);
     const [fromPerUsd, toPerUsd] = [perUsd(ledger.books, from, day), perUsd(ledger.books, to, day)];
     return fromPerUsd === null || toPerUsd === null ? null : toPerUsd / fromPerUsd;
 };
@@ -151,11 +156,10 @@ function usualSource(books: Books, accountId: string) {
 export function newTransferValues(
     ledger: Ledger,
     accountId: string,
-    due: number | null,
+    cardDue: number | null,
     at: number
 ): NewTransferValues {
     const { books } = ledger;
-    const account = books.accounts.find((row) => row.localId === accountId);
     const start = {
         arrivedByHand: false,
         arrivedText: "",
@@ -164,12 +168,12 @@ export function newTransferValues(
         note: "",
         sentText: "",
     };
-    if (account?.kind !== "liability") {
+    if (cardDue === null) {
         const other = transferAccounts(books).find((row) => row.localId !== accountId)?.localId ?? null;
         return { ...start, fromId: accountId, toId: other };
     }
     const payment = { ...start, fromId: usualSource(books, accountId), toId: accountId };
-    return due !== null && due > 0 ? pinnedArrival(ledger, payment, due) : payment;
+    return cardDue > 0 ? pinnedArrival(ledger, payment, cardDue) : payment;
 }
 
 export function newTransferInput(ledger: Ledger, values: NewTransferValues, feeNote = ""): TransferInput | null {

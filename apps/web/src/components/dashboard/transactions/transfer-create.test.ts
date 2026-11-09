@@ -221,6 +221,19 @@ describe("a payment in another currency", () => {
         });
     });
 
+    it("converts late at night on the same day's rate it freezes", () => {
+        const ledger = ledgerOf({
+            accounts: [account("bdv", "VES", "asset", 1_000_000), account("amex", "USD", "liability", -1200, AMEX)],
+            rates: [
+                { date: "2026-11-08", quote: "VES", rate: 500, rateType: "official" },
+                { date: "2026-11-09", quote: "VES", rate: 600, rateType: "official" },
+            ],
+        });
+        const lateNight = Date.parse("2026-11-09T03:30:00Z");
+        const [move] = paid(ledger, newTransferValues(ledger, "amex", 100, lateNight), lateNight);
+        expect(fieldsOf(move)).toMatchObject({ fromAmount: 60_000, fromAmountUsd: 100, toAmountUsd: 100 });
+    });
+
     it("keeps what the bank really paid as a custom rate", () => {
         const ledger = ledgerOf();
         const typed = withArrived(ledger, withSent(ledger, fromBank(ledger), "600000"), "1000");
@@ -236,10 +249,23 @@ describe("a payment in another currency", () => {
     });
 });
 
+describe("an account that is not a card", () => {
+    it("sends from a loan, with no amount, instead of paying into it", () => {
+        const ledger = ledgerOf({
+            accounts: [account("chase", "USD", "asset", 5000), account("loan", "USD", "liability", -900)],
+        });
+        expect(newTransferValues(ledger, "loan", null, NOW)).toMatchObject({
+            fromId: "loan",
+            sentText: "",
+            toId: "chase",
+        });
+    });
+});
+
 describe("what a transfer refuses", () => {
     it("refuses a blank amount, one account on both legs and a fee that takes everything", () => {
         const ledger = ledgerOf();
-        const values = newTransferValues(ledger, "amex", null, NOW);
+        const values = newTransferValues(ledger, "amex", 0, NOW);
         expect(newTransferProblem(ledger, values)).toBe("amount");
         expect(newTransferProblem(ledger, { ...values, fromId: "amex", sentText: "10" })).toBe("same-account");
         expect(newTransferProblem(ledger, { ...values, feeText: "10", sentText: "10" })).toBe("amount");
