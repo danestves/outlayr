@@ -1,17 +1,5 @@
 /** RFC 4180 plus what spreadsheets actually emit: bare `LF`, a trailing newline, and a leading byte order mark. */
-
-const NEEDS_QUOTING = /[",\r\n]/;
-
-function escapeField(value: string): string {
-    if (!NEEDS_QUOTING.test(value)) {
-        return value;
-    }
-    return `"${value.replaceAll('"', '""')}"`;
-}
-
-export function formatCsvRow(fields: readonly string[]): string {
-    return fields.map(escapeField).join(",");
-}
+export { formatCsvRow } from "@outlayr/money/transaction-csv";
 
 /** Blank and all-empty rows are dropped. */
 export function parseCsv(text: string): string[][] {

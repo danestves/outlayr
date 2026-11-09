@@ -11,6 +11,7 @@ import { Account } from "./account";
 import { Categories } from "./categories/screen";
 import { settingsToasts } from "./categories/write";
 import { Currency } from "./currency";
+import { DataSettings } from "./data/screen";
 import { SettingsNav } from "./nav";
 import { Preferences } from "./preferences";
 import { Time } from "./time";
@@ -36,6 +37,7 @@ const SECTIONS = {
     account: Account,
     categories: Categories,
     currency: Currency,
+    data: DataSettings,
     preferences: Preferences,
     time: Time,
     usage: Usage,

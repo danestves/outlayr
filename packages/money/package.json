@@ -6,6 +6,7 @@
     "exports": {
         "./accent": "./src/accent.ts",
         "./account-balance": "./src/account-balance.ts",
+        "./archive": "./src/archive.ts",
         "./account-kind": "./src/account-kind.ts",
         "./account-overview": "./src/account-overview.ts",
         "./assert": "./src/assert.ts",
@@ -22,6 +23,7 @@
         "./currency": "./src/currency.ts",
         "./currency-totals": "./src/currency-totals.ts",
         "./dates": "./src/dates.ts",
+        "./erase": "./src/erase.ts",
         "./entry-deletion": "./src/entry-deletion.ts",
         "./entry-row": "./src/entry-row.ts",
         "./errors": "./src/errors.ts",
@@ -42,7 +44,8 @@
         "./transfer-reconcile": "./src/transfer-reconcile.ts",
         "./transfer-row": "./src/transfer-row.ts",
         "./uuid5": "./src/uuid5.ts",
-        "./valuation": "./src/valuation.ts"
+        "./valuation": "./src/valuation.ts",
+        "./transaction-csv": "./src/transaction-csv.ts"
     },
     "scripts": {
         "check-types": "tsc --noEmit",

@@ -23,6 +23,7 @@
 @source "../node_modules/panelui-web/dist/components/menu/index.js";
 @source "../node_modules/panelui-web/dist/components/mirror-area-chart/index.js";
 @source "../node_modules/panelui-web/dist/components/plot/index.js";
+@source "../node_modules/panelui-web/dist/components/radio-group/index.js";
 @source "../node_modules/panelui-web/dist/components/range-meter/index.js";
 @source "../node_modules/panelui-web/dist/components/rolling-number/index.js";
 @source "../node_modules/panelui-web/dist/components/sankey-chart/index.js";

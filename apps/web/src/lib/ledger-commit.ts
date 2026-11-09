@@ -19,8 +19,10 @@ interface WritableRows {
 
 const COLLECTED = {
     accounts: ledgerCollections.accounts,
+    budgets: ledgerCollections.budgets,
     installmentPlans: ledgerCollections.installmentPlans,
     installments: ledgerCollections.installments,
+    mainBudget: ledgerCollections.mainBudget,
     outsideMoves: ledgerCollections.outsideMoves,
     outsidePayments: ledgerCollections.outsidePayments,
     savingsGoals: ledgerCollections.savingsGoals,
@@ -29,6 +31,8 @@ const COLLECTED = {
 };
 
 export type CommitRow = Extract<PushRow, { table: keyof typeof COLLECTED }>;
+
+const isCollected = (row: PushRow): row is CommitRow => Object.hasOwn(COLLECTED, row.table);
 
 function showRow(db: DbClient, row: CommitRow) {
     // SAFETY: the tables differ only in `fields`, and `row` carries the fields of the table it names.
@@ -57,17 +61,19 @@ function showRow(db: DbClient, row: CommitRow) {
  * Shows `rows` at once and holds the push until `commit()`, so a delete can wait out its Undo:
  * `rollback()` puts everything back, and a closed tab has changed nothing.
  */
-export function stageRows(db: DbClient, rows: readonly CommitRow[]) {
+export function stageRows(db: DbClient, rows: readonly PushRow[]) {
     const transaction = createTransaction({ autoCommit: false, mutationFn: () => pushRows(db, rows) });
     transaction.mutate(() => {
         for (const row of rows) {
-            showRow(db, row);
+            if (isCollected(row)) {
+                showRow(db, row);
+            }
         }
     });
     return transaction;
 }
 
-export const commitRows = (db: DbClient, rows: readonly CommitRow[]) => stageRows(db, rows).commit();
+export const commitRows = (db: DbClient, rows: readonly PushRow[]) => stageRows(db, rows).commit();
 
 interface Unsent {
     rows: CommitRow[];
