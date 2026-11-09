@@ -3,6 +3,7 @@
     "private": true,
     "type": "module",
     "scripts": {
+        "brand-kit": "sh scripts/brand-kit.sh",
         "build": "vp build",
         "check-types": "content-collections build && intlayer build && tsc --noEmit",
         "dev": "vp dev",

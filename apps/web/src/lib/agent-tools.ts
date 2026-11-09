@@ -18,6 +18,7 @@ const SPACES = /\s+/u;
 function sitePages(locale: Locale): SitePage[] {
     const home = getIntlayer("home", locale);
     const about = getIntlayer("about", locale);
+    const brand = getIntlayer("brand", locale);
     const support = getIntlayer("support", locale);
     const open = getIntlayer("open", locale);
     const { notFound } = getIntlayer("site", locale);
@@ -26,6 +27,7 @@ function sitePages(locale: Locale): SitePage[] {
     return [
         { description: home.meta.description, path: "/", title: home.meta.title },
         { description: about.meta.description, path: "/about", title: about.meta.title },
+        { description: brand.meta.description, path: "/brand", title: brand.meta.title },
         { description: support.meta.description, path: "/support", title: support.meta.title },
         { description: open.meta.description, path: "/open", title: open.meta.title },
         { path: "/privacy", title: notFound.pages.privacy },

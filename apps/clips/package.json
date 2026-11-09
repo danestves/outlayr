@@ -7,7 +7,8 @@
         "render": "remotion render BankShortcut-en out/bank-shortcut-en.mp4 && remotion render BankShortcut-es out/bank-shortcut-es.mp4",
         "render:promo": "sh scripts/promo.sh",
         "loops": "sh scripts/loops.sh",
-        "check-types": "tsc --noEmit"
+        "check-types": "tsc --noEmit",
+        "broll": "sh scripts/broll.sh"
     },
     "dependencies": {
         "@remotion/cli": "4.0.539",
