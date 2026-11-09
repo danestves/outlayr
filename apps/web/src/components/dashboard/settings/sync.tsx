@@ -1,6 +1,6 @@
 import ReloadIcon from "@hugeicons/core-free-icons/ReloadIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Link, useRouteContext } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { Alert } from "panelui-web/alert";
 import { Avatar } from "panelui-web/avatar";
 import { Badge } from "panelui-web/badge";
@@ -10,11 +10,10 @@ import { useToast } from "panelui-web/toast";
 import { useSyncExternalStore } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { authClient } from "@/lib/auth-client";
-import { resendUnsent } from "@/lib/ledger-commit";
 import { useLedgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
-import { userOf } from "@/lib/session";
 import { INITIAL_SYNC, readSync, subscribeSync } from "@/lib/sync-status";
 
 import { Row, SectionHead, SettingsCard } from "./parts";
@@ -36,7 +35,7 @@ export function Sync() {
     const { sections } = useIntlayer("dashboard-settings");
     const { locale } = useLocale();
     const { clockTime } = useDisplayFormat();
-    const { dbClient, session: auth } = useRouteContext({ from: "__root__" });
+    const committer = useLedgerCommitter();
     const { data: session } = authClient.useSession();
     const toast = useToast();
     const { transactions } = useLedgerBooks();
@@ -45,10 +44,7 @@ export function Sync() {
     const syncedAt = status === "upToDate" ? Math.max(now, lastSyncedAt ?? 0) : lastSyncedAt;
 
     const sendNow = () => {
-        const userId = auth.token === null ? undefined : userOf(auth.token);
-        if (userId !== undefined) {
-            resendUnsent(dbClient, userId);
-        }
+        committer.resume();
         if (status === "upToDate") {
             toast.add({ title: copy.sent.value });
         }

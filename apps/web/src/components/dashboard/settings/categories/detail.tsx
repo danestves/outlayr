@@ -16,6 +16,7 @@ import { useDateFormat, usePeriodTitle } from "@/components/dashboard/home/forma
 import { OverlayPresence } from "@/components/dashboard/overlay-presence";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
+import { liveCategories } from "@/lib/category-writes";
 import { categoryBudget } from "@/lib/dashboard-series";
 import { periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
@@ -23,7 +24,7 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 import { SettingsCard } from "../parts";
 import { CategoryEditor } from "./editor";
 import type { EditorTarget } from "./editor";
-import { categoryFigures, liveCategories } from "./model";
+import { categoryFigures } from "./model";
 
 const ENTRIES_SHOWN = 10;
 const PERCENT = 100;

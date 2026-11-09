@@ -16,14 +16,12 @@ import { useIntlayer } from "react-intlayer";
 import { AmountInput } from "@/components/dashboard/accounts/fields";
 import { useAccountFlows, useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
 import { parseAmount } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { money } from "@/lib/ledger";
-import { commitRows } from "@/lib/ledger-commit";
 import { ledgerBooks } from "@/lib/ledger-db";
-
-import { DateRow, NoteSlot, Pick, QUIET_INPUT, Slot } from "./entry-form";
 import {
     currencyOf,
     editedTransfer,
@@ -33,8 +31,10 @@ import {
     transferInputOf,
     transferProblem,
     withAccounts,
-} from "./transfer-writes";
-import type { TransferDoc, TransferProblem, TransferValues } from "./transfer-writes";
+} from "@/lib/transfer-writes";
+import type { TransferDoc, TransferProblem, TransferValues } from "@/lib/transfer-writes";
+
+import { DateRow, NoteSlot, Pick, QUIET_INPUT, Slot } from "./entry-form";
 
 const RATE_DIGITS = 2;
 const PICK_CHROME_CHARS = 8;
@@ -80,6 +80,7 @@ export function TransferEditor({
 }) {
     const { ledger, photos } = useDashboard();
     const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const { bulk, detail, form } = useIntlayer("dashboard-transactions");
     const { toast } = useAccountFlows();
     const [base] = useState(() => transferBaseOf(ledger, doc));
@@ -101,7 +102,10 @@ export function TransferEditor({
             return;
         }
         saved.current = key;
-        commitRows(db, editedTransfer(current, live, input, Date.now())).catch(() => {
+        void committer.commit(editedTransfer(current, live, input, Date.now())).settled.then((outcome) => {
+            if (outcome.status !== "failed") {
+                return;
+            }
             // Cleared, not restored: the save before this one may have failed too. A repeat send changes nothing.
             if (saved.current === key) {
                 saved.current = "";

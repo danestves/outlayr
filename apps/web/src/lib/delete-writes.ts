@@ -7,8 +7,8 @@ import { canonicalOccurrence, occurrenceFeeId, successorRow } from "@outlayr/mon
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import * as Effect from "effect/Effect";
 
-import { nextRow, ratesLookup } from "../../../lib/account-writes";
-import type { CommitRow } from "../../../lib/ledger-commit";
+import { nextRow, ratesLookup } from "./account-writes";
+import type { CommitRow } from "./ledger-committer";
 
 type Doc = LedgerBooks["transactions"][number];
 

@@ -24,7 +24,7 @@ import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { LANGUAGES } from "@/lib/i18n";
 import { watchKeyboardInset } from "@/lib/keyboard-inset";
 import { dropLedger, forgetLedger, hasLedgerCopy, restoreLedger, saveLedger } from "@/lib/ledger-cache";
-import { resendUnsent } from "@/lib/ledger-commit";
+import { ledgerCommitter } from "@/lib/ledger-committer";
 import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
 import { currentToken, onSessionChange, userOf } from "@/lib/session";
 import { watchSync } from "@/lib/sync-status";
@@ -51,9 +51,7 @@ export const Route = createFileRoute("/_account/app")({
         const idle = context.dbClient.collection(ledgerCollections.transactions).status === "idle";
         const restored = idle && userId !== undefined ? await restoreLedger(context.dbClient, userId) : undefined;
         const settled = preloadLedger(context.dbClient).then(() => {
-            if (userId !== undefined) {
-                resendUnsent(context.dbClient, userId);
-            }
+            ledgerCommitter(context.dbClient, userId).resume();
             return true;
         });
         if (restored) {

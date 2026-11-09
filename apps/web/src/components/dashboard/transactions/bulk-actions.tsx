@@ -10,13 +10,13 @@ import { useIntlayer } from "react-intlayer";
 
 import { useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
+import { bulkEdited, toAccount, toCategory, toDay } from "@/lib/bulk-writes";
+import type { BulkChange } from "@/lib/bulk-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
-import { commitRows } from "@/lib/ledger-commit";
 import { ledgerBooks } from "@/lib/ledger-db";
 
-import { bulkEdited, toAccount, toCategory, toDay } from "./bulk-writes";
-import type { BulkChange } from "./bulk-writes";
 import { merchantOf, useCategoryOptions } from "./entry-form";
 import { deleteToasts } from "./use-delete";
 
@@ -26,6 +26,7 @@ const LIST = "app-shell ph-no-capture z-[60] max-h-80 overflow-y-auto";
 export function BulkActions({ className, ids, kinds }: { className: string; ids: string[]; kinds: boolean[] }) {
     const { ledger, photos } = useDashboard();
     const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const { bulk, form } = useIntlayer("dashboard-transactions");
     const dayInput = useRef<HTMLInputElement>(null);
     const expense = useCategoryOptions(ledger, false);
@@ -38,8 +39,10 @@ export function BulkActions({ className, ids, kinds }: { className: string; ids:
             change,
             (values) => form.feeNote({ merchant: merchantOf(current, values) }).value
         );
-        commitRows(db, rows).catch(() => {
-            deleteToasts.add({ title: form.saveFailed.value, type: "destructive" });
+        void committer.commit(rows).settled.then((outcome) => {
+            if (outcome.status === "failed") {
+                deleteToasts.add({ title: form.saveFailed.value, type: "destructive" });
+            }
         });
         const counts = { count: String(count), skipped: String(skipped) };
         deleteToasts.add({

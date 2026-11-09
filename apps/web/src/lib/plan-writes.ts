@@ -13,7 +13,7 @@ import type { ScheduledInstallment } from "@outlayr/money/installments";
 import * as Effect from "effect/Effect";
 
 import { frozenUsd, ratesLookup } from "./account-writes";
-import type { CommitRow } from "./ledger-commit";
+import type { CommitRow } from "./ledger-committer";
 
 export interface PurchaseChoices {
     count: number;

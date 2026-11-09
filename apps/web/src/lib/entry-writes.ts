@@ -7,12 +7,12 @@ import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";
 import * as Effect from "effect/Effect";
 
-import { nextRow, parseAmount, ratesLookup } from "../../../lib/account-writes";
-import { openAccounts } from "../../../lib/dashboard-series-ledger";
-import type { Ledger } from "../../../lib/dashboard-series-ledger";
-import { money } from "../../../lib/ledger";
-import type { CommitRow } from "../../../lib/ledger-commit";
-import { entryPush } from "./delete";
+import { nextRow, parseAmount, ratesLookup } from "./account-writes";
+import { openAccounts } from "./dashboard-series-ledger";
+import type { Ledger } from "./dashboard-series-ledger";
+import { entryPush } from "./delete-writes";
+import { money } from "./ledger";
+import type { CommitRow } from "./ledger-committer";
 
 export type Doc = Ledger["books"]["transactions"][number];
 

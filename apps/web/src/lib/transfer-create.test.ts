@@ -1,11 +1,11 @@
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { describe, expect, it } from "vite-plus/test";
 
-import { prepareLedger } from "../../../lib/dashboard-series-ledger";
-import type { Ledger } from "../../../lib/dashboard-series-ledger";
-import type { CommitRow } from "../../../lib/ledger-commit";
-import { cardStatement, flowsOf } from "../accounts/model";
-import type { AccountRow } from "../accounts/model";
+import { cardStatement, flowsOf } from "../components/dashboard/accounts/model";
+import type { AccountRow } from "../components/dashboard/accounts/model";
+import { prepareLedger } from "./dashboard-series-ledger";
+import type { Ledger } from "./dashboard-series-ledger";
+import type { CommitRow } from "./ledger-committer";
 import {
     createdTransfer,
     newTransferInput,

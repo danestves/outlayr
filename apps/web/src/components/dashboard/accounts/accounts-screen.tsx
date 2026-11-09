@@ -29,14 +29,14 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDateFormat, useWholeMoney, titled } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { NO_PHOTOS, photoUrlsQuery, toPhotoUrls } from "@/components/dashboard/shell/photos";
 import { AccountTile, LookTile } from "@/components/ledger/tiles";
 import { archivedAccount } from "@/lib/account-writes";
 import { addDays } from "@/lib/ledger";
-import { commitRows } from "@/lib/ledger-commit";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
-import { useAccountFlows, useLedgerDb } from "./flows";
+import { useAccountFlows } from "./flows";
 import { Glyph } from "./glyph";
 import {
     accountRows,
@@ -979,16 +979,15 @@ function ArchivedMenu({ row }: { row: ArchivedRow }) {
     const { ledger } = useDashboard();
     const { actions, flows } = useIntlayer("dashboard-accounts");
     const { open, toast } = useAccountFlows();
-    const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const navigate = useNavigate();
     const restore = async () => {
         const account = ledger.books.accounts.find((each) => each.localId === row.id);
         if (!account) {
             return;
         }
-        try {
-            await commitRows(db, [archivedAccount(account, null, Date.now())]);
-        } catch {
+        const outcome = await committer.commit([archivedAccount(account, null, Date.now())]).settled;
+        if (outcome.status === "failed") {
             toast({ text: flows.restoreFailed({ name: row.name }).value });
         }
     };

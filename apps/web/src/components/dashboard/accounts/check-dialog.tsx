@@ -8,8 +8,8 @@ import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { checkedAccount, parseAmount, uncheckedAccount } from "@/lib/account-writes";
-import { commitRows } from "@/lib/ledger-commit";
 import { ledgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -22,6 +22,7 @@ type Account = LedgerBooks["accounts"][number];
 export function CheckDialog({ account, onClose }: { account: Account; onClose: () => void }) {
     const { ledger } = useDashboard();
     const db = useLedgerDb();
+    const committer = useLedgerCommitter();
     const { flows } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const { toast } = useAccountFlows();
@@ -41,9 +42,8 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
         const adjustmentId = change === 0 ? null : crypto.randomUUID();
         const adjustment =
             adjustmentId === null ? null : { amount: change, id: adjustmentId, note: flows.checkNote.value };
-        try {
-            await commitRows(db, checkedAccount(ledgerBooks(db), account, adjustment, at));
-        } catch {
+        const outcome = await committer.commit(checkedAccount(ledgerBooks(db), account, adjustment, at)).settled;
+        if (outcome.status === "failed") {
             setFailed(true);
             return;
         }
@@ -54,7 +54,11 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
                 const fresh = books.accounts.find((row) => row.localId === account.localId);
                 if (fresh) {
                     const rows = uncheckedAccount(books, fresh, account.checkedAt ?? null, adjustmentId, Date.now());
-                    void commitRows(db, rows);
+                    void committer.commit(rows).settled.then((undone) => {
+                        if (undone.status === "failed") {
+                            toast({ failed: true, text: flows.saveFailed.value });
+                        }
+                    });
                 }
             },
             text:

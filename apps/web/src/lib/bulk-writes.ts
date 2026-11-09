@@ -1,7 +1,7 @@
-import type { Ledger } from "../../../lib/dashboard-series-ledger";
-import type { CommitRow } from "../../../lib/ledger-commit";
+import type { Ledger } from "./dashboard-series-ledger";
 import { baseOf, draftOf, editedEntry, entryProblem, isFinanced } from "./entry-writes";
 import type { EntryValues } from "./entry-writes";
+import type { CommitRow } from "./ledger-committer";
 
 const MINUTE_MS = 60_000;
 

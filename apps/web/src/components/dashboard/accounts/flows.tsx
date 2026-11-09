@@ -63,6 +63,7 @@ const loadFlowDialogs = () => import("./flow-dialogs");
 const FlowDialogs = lazy(loadFlowDialogs);
 
 const TOAST_MS = 6000;
+export const UNDO_HOLD_MS = TOAST_MS * 2;
 
 // Held outside React: useToast() subscribes its caller.
 const flowToasts = createToaster();
