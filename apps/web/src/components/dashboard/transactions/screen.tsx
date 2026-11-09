@@ -153,7 +153,11 @@ export function TransactionsScreen({ search, setSearch }: TransactionsScreenProp
             clearPicked();
         }
     });
-    const stepByKey = useEffectEvent(step);
+    const stepByKey = useEffectEvent((by: 1 | -1) => {
+        if (selected === null) {
+            step(by);
+        }
+    });
     // oxlint-disable-next-line outlayr/react-effect-budget -- the keyboard is an external system.
     useEffect(() => {
         const onKey = (event: KeyboardEvent) => {

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
 import type { LedgerRow } from "../../../lib/dashboard-series-ledger";
 import type { FoldedRow } from "../home/rows";
-import { csvOf, exportLines, installmentTags, linesOf, queryRows, rangeOf, tally, transferMoves } from "./model";
+import { csvOf, exportLines, installmentTags, linesOf, queryRows, rangeOf, rowOf, tally, transferMoves } from "./model";
 import type { LedgerQuery } from "./model";
 
 const NOW = Date.parse("2026-11-08T15:00:00Z");
@@ -113,6 +113,17 @@ const query = (patch: Partial<LedgerQuery> = {}): LedgerQuery => ({
 
 const textOf = (row: FoldedRow) => ("fromId" in row ? `${row.fromId} ${row.toId}` : row.note);
 const ids = (patch: Partial<LedgerQuery>) => queryRows(ledger, query(patch), textOf).map((row) => row.id);
+
+describe("rowOf", () => {
+    it("folds a fee into the entry it was charged for", () => {
+        expect(rowOf(ledger, "amazon")?.fees.map((fee) => fee.id)).toStrictEqual(["foreign fee"]);
+    });
+
+    it("opens a fee on its own and misses an id it does not hold", () => {
+        expect(rowOf(ledger, "foreign fee")).toMatchObject({ fees: [], id: "foreign fee" });
+        expect(rowOf(ledger, "gone")).toBeNull();
+    });
+});
 
 describe("linesOf", () => {
     it("groups by the day in the ledger's time zone, not UTC", () => {
