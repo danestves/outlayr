@@ -63,7 +63,7 @@ function Dot({ color }: { color: string | null | undefined }) {
     return <i className="size-2 flex-none rounded-full" style={{ backgroundColor: color ?? undefined }} />;
 }
 
-function Slot({
+export function Slot({
     children,
     error,
     label,
@@ -96,7 +96,7 @@ interface PickOption {
     value: string;
 }
 
-function Pick({
+export function Pick({
     onPick,
     options,
     placeholder,
@@ -137,7 +137,7 @@ function Pick({
 }
 
 /** No PanelUI part picks a date and time, so the browser's picker opens under this text. */
-function DateRow({ onChange, quiet, text }: { onChange: (text: string) => void; quiet: boolean; text: string }) {
+export function DateRow({ onChange, quiet, text }: { onChange: (text: string) => void; quiet: boolean; text: string }) {
     const { form } = useIntlayer("dashboard-transactions");
     const weekday = useWeekday();
     const { clockTime } = useDisplayFormat();

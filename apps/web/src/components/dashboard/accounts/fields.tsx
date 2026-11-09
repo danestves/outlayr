@@ -36,6 +36,7 @@ export function AmountInput({
     sign,
     size,
     text,
+    unit,
 }: {
     autoFocus?: boolean;
     currency: string;
@@ -45,6 +46,7 @@ export function AmountInput({
     sign?: string;
     size?: "lg" | "md" | "sm";
     text: string;
+    unit?: string;
 }) {
     return (
         <Input.Group size={size}>
@@ -74,6 +76,11 @@ export function AmountInput({
                 ref={autoFocus ? focusNode : undefined}
                 value={text}
             />
+            {unit ? (
+                <Input.Addon align="end" className="dash-figure text-xs">
+                    {unit}
+                </Input.Addon>
+            ) : null}
         </Input.Group>
     );
 }

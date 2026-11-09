@@ -131,10 +131,14 @@ function DetailBar({ row }: { row: AccountRow }) {
                 </span>
             }
         >
-            <PhoneAction className="max-sm:hidden">
+            <Button
+                className="max-sm:hidden"
+                onClick={() => open({ accountId: row.id, kind: "transfer" })}
+                variant="outline"
+            >
                 <Glyph icon={ArrowDataTransferHorizontalIcon} />
                 {card ? detail.payCard : actions.transfer}
-            </PhoneAction>
+            </Button>
             <Button
                 className="max-sm:hidden"
                 onClick={() => open({ accountId: row.id, kind: "edit" })}

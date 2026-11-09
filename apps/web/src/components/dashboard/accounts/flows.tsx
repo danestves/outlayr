@@ -17,6 +17,7 @@ export type AccountFlow =
     | { accountId: string; kind: "archive" | "check" | "delete" | "edit" }
     | { kind: "create"; type: AccountType }
     | { accountId?: string; kind: "purchase" }
+    | { accountId: string; kind: "transfer" }
     | { accountId?: string; from?: string; kind: "entry" };
 
 export interface FlowToast {
