@@ -606,6 +606,9 @@ importers:
       '@fontsource-variable/nunito':
         specifier: ^5.3.0
         version: 5.3.0
+      '@hugeicons-pro/core-solid-rounded':
+        specifier: ^4.4.0
+        version: 4.4.0
       '@hugeicons/core-free-icons':
         specifier: ^4.4.0
         version: 4.4.0

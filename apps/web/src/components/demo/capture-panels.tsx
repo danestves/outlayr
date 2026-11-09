@@ -1,3 +1,5 @@
+import Mic01Icon from "@hugeicons/core-free-icons/Mic01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -329,18 +331,5 @@ function Blank() {
 }
 
 function MicGlyph() {
-    return (
-        <svg
-            aria-hidden="true"
-            className="text-muted size-9"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            viewBox="0 0 24 24"
-        >
-            <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3ZM5 11a7 7 0 0 0 14 0M12 18v3" />
-        </svg>
-    );
+    return <HugeiconsIcon aria-hidden="true" className="text-muted size-9" icon={Mic01Icon} strokeWidth={1.5} />;
 }

@@ -6,7 +6,11 @@
     },
     "steps": {
         "install": {
-            "commands": ["CI=1 pnpm install --frozen-lockfile --trust-lockfile --filter @outlayr/web..."]
+            "secrets": ["HUGEICONS_PRO_TOKEN"],
+            "commands": [
+                "pnpm config set //npm.hugeicons.com/:_authToken \"$HUGEICONS_PRO_TOKEN\" --global",
+                "CI=1 pnpm install --frozen-lockfile --trust-lockfile --filter @outlayr/web..."
+            ]
         },
         "build": {
             "commands": ["cd apps/web && ./node_modules/.bin/vp build"]
