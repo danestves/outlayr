@@ -7,7 +7,6 @@ vi.mock("@/data/logo-backfill-core", () => ({
     attachMissingLogos: vi.fn(() => Effect.succeed(1)),
 }));
 vi.mock("@/data/settings-core", () => ({
-    readBoolSetting: vi.fn(() => Effect.succeed(false)),
     readRemoteEnrichment: vi.fn(() => Effect.succeed(false)),
 }));
 vi.mock("./convex", () => ({ convex: null, enrichmentTransport: () => null }));

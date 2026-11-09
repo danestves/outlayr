@@ -48,12 +48,12 @@ export const make = Effect.gen(function* make() {
         yield* Effect.try({ catch: failedAt("migrate"), try: () => adoptLegacyMigrationLog(db) });
         yield* Effect.tryPromise({ catch: failedAt("migrate"), try: () => migrate(db, migrationsBundle) });
         yield* Effect.try({ catch: failedAt("migrate"), try: () => ensureOutboxTriggers(db, SYNCED_SPECS) });
-        yield* bootstrapLocalData(db).pipe(Effect.mapError((error) => failedAt("bootstrap")(error.cause)));
+        yield* bootstrapLocalData(db).pipe(Effect.mapError((error) => failedAt("bootstrap")(error.cause ?? error)));
         yield* localizePresetCategories(db, deviceLanguage()).pipe(
             warnAndContinue("Failed to localize the preset categories")
         );
         // Ahead of `ready`, so the onboarding guard's first read already sees post-backfill appMeta.
-        yield* settleLegacyOnboarding(db).pipe(Effect.mapError((error) => failedAt("settle")(error.cause)));
+        yield* settleLegacyOnboarding(db).pipe(Effect.mapError((error) => failedAt("settle")(error.cause ?? error)));
         return db;
     });
 

@@ -519,7 +519,7 @@ const createEntry = (db: Database, entry: ImportEntry) =>
             // said what left the device, and that was decided at import time.
             { logoCandidate: false }
         )
-        .pipe(Effect.mapError((error) => new CsvTransferError({ cause: error.cause, operation: "import" })));
+        .pipe(Effect.mapError((error) => new CsvTransferError({ cause: error.cause ?? error, operation: "import" })));
 
 const createPlannedCategories = Effect.fn("CsvTransfer.createPlannedCategories")(function* createPlannedCategories(
     db: Database,
