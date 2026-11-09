@@ -49,9 +49,6 @@ import type { SheetRest } from "@/hooks/use-resting-sheet";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
-import { freshEntries } from "@/lib/fresh-entries";
-import { notifySaved } from "@/lib/notify";
-import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { saveTransferCommand } from "@/state/accounts-commands";
 import { SILENT } from "@/state/atom-command";
@@ -341,7 +338,24 @@ export default function TransferEditor({
         fireAtomCommand(
             registry,
             saveTransferCommand,
-            { db, id: saved?.id ?? null, input },
+            {
+                db,
+                id: saved?.id ?? null,
+                input,
+                notice: {
+                    actionLabel: t("transfers.saved.another"),
+                    amount: {
+                        label: rowAmountLabel({ amount: draft.sent, code: draft.fromCurrency, income: null }, t),
+                        text: formatAmount(draft.sent, draft.fromCurrency, true, language),
+                    },
+                    body: t("transfers.saved.from", { from: from.name }),
+                    onActionPress: () => router.push("/transactions/transfers/create"),
+                    stamp: t("transfers.saved.title"),
+                    title: to.name,
+                    tone: { ends: { from, to }, kind: "transfer" },
+                },
+                source: "form",
+            },
             {
                 onFailure: (cause) => {
                     console.error("Failed to save the transfer", Cause.squash(cause));
@@ -351,31 +365,7 @@ export default function TransferEditor({
                     setSavingLedger(null);
                     setSaveFailure(t("transfers.save.failed"));
                 },
-                onSuccess: (id) => {
-                    if (!saved) {
-                        freshEntries.mark(id, date);
-                        notifySaved({
-                            actionLabel: t("transfers.saved.another"),
-                            amount: {
-                                label: rowAmountLabel(
-                                    { amount: draft.sent, code: draft.fromCurrency, income: null },
-                                    t
-                                ),
-                                text: formatAmount(draft.sent, draft.fromCurrency, true, language),
-                            },
-                            body: t("transfers.saved.from", { from: from.name }),
-                            onActionPress: () => router.push("/transactions/transfers/create"),
-                            stamp: t("transfers.saved.title"),
-                            title: to.name,
-                            tone: { ends: { from, to }, kind: "transfer" },
-                        });
-                    }
-                    posthog?.capture("transfer_saved", {
-                        cross_currency: crossCurrency,
-                        has_fee: fees.source > 0 || fees.destination > 0,
-                        mode: saved ? "edit" : "create",
-                        source: "form",
-                    });
+                onSuccess: () => {
                     haptics("success");
                     onDone();
                 },

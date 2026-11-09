@@ -36,7 +36,6 @@ import { useGlobalCurrency } from "@/data/app-meta";
 import { getCategoryById } from "@/data/categories-core";
 import { useAiConsent } from "@/data/settings";
 import { lastLoggedEntry } from "@/data/transactions-core";
-import { transfersRepo } from "@/data/transfers-core";
 import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
@@ -71,10 +70,9 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { useAuthSession } from "@/lib/auth-session";
 import type { VoiceDraft, VoiceQuote } from "@/lib/cloud-ai";
-import { freshEntries } from "@/lib/fresh-entries";
-import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
-import { openAppSettings, voidFlowCommand } from "@/state/entry-commands";
+import { saveTransferCommand } from "@/state/accounts-commands";
+import { fromCommand, openAppSettings, voidFlowCommand } from "@/state/entry-commands";
 import { commitEntry } from "@/state/entry-commit";
 import { entryHref } from "@/state/entry-params";
 import { useAtomCommand } from "@/state/use-atom-command";
@@ -604,8 +602,10 @@ const writeTransfer = Effect.fn("VoiceThread.writeTransfer")(function* writeTran
     to: { id: string },
     done: WriteDone
 ) {
-    const created = yield* transfersRepo
-        .create(db, {
+    const created = yield* fromCommand(saveTransferCommand, {
+        db,
+        id: null,
+        input: {
             date: draft.date,
             exchangeRate: 1,
             exchangeRateType: null,
@@ -616,19 +616,13 @@ const writeTransfer = Effect.fn("VoiceThread.writeTransfer")(function* writeTran
             toAccountId: to.id,
             toAmount: draft.amount,
             toCurrency: draft.currency,
-        })
-        .pipe(Effect.exit);
+        },
+        source: "voice",
+    }).pipe(Effect.exit);
     if (Exit.isFailure(created)) {
         done.onFailed();
         return;
     }
-    freshEntries.mark(created.value, draft.date);
-    posthog?.capture("transfer_saved", {
-        cross_currency: false,
-        has_fee: false,
-        mode: "create",
-        source: "voice",
-    });
     done.onSaved();
 });
 
