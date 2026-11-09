@@ -16,18 +16,19 @@ export function useDateFormat() {
     const { date } = LANGUAGES[localeFromParam(locale)];
     return useMemo(() => {
         // The redesign reads "Oct 28" in English; the site's en-GB date locale would flip it.
-        const short = new Intl.DateTimeFormat(date === "en-GB" ? "en-US" : date, {
+        const dated = date === "en-GB" ? "en-US" : date;
+        const short = new Intl.DateTimeFormat(dated, {
             day: "numeric",
             month: "short",
             timeZone: "UTC",
         });
-        const withYear = new Intl.DateTimeFormat(date === "en-GB" ? "en-US" : date, {
+        const withYear = new Intl.DateTimeFormat(dated, {
             day: "numeric",
             month: "short",
             timeZone: "UTC",
             year: "numeric",
         });
-        const withWeekday = new Intl.DateTimeFormat(date, {
+        const withWeekday = new Intl.DateTimeFormat(dated, {
             day: "numeric",
             month: "short",
             timeZone: "UTC",
