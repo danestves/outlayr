@@ -13,9 +13,11 @@ import { settingsToasts } from "./categories/write";
 import { Connections } from "./connections";
 import { Currency } from "./currency";
 import { DataSettings } from "./data/screen";
+import { Email } from "./email";
 import { Invite } from "./invite";
 import { SettingsNav } from "./nav";
 import { Preferences } from "./preferences";
+import { Sync } from "./sync";
 import { Time } from "./time";
 import { Usage } from "./usage";
 
@@ -44,6 +46,8 @@ const SECTIONS = {
     invite: Invite,
     preferences: Preferences,
     time: Time,
+    email: Email,
+    sync: Sync,
     usage: Usage,
 } as const;
 

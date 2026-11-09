@@ -58,9 +58,11 @@ import { Route as AccountAppSettingsAccountRouteImport } from './routes/_account
 import { Route as AccountAppSettingsConnectionsRouteImport } from './routes/_account/app.settings.connections'
 import { Route as AccountAppSettingsCurrencyRouteImport } from './routes/_account/app.settings.currency'
 import { Route as AccountAppSettingsDataRouteImport } from './routes/_account/app.settings.data'
+import { Route as AccountAppSettingsEmailRouteImport } from './routes/_account/app.settings.email'
 import { Route as AccountAppSettingsInviteRouteImport } from './routes/_account/app.settings.invite'
 import { Route as AccountAppSettingsPlanRouteImport } from './routes/_account/app.settings.plan'
 import { Route as AccountAppSettingsPreferencesRouteImport } from './routes/_account/app.settings.preferences'
+import { Route as AccountAppSettingsSyncRouteImport } from './routes/_account/app.settings.sync'
 import { Route as AccountAppSettingsTimeRouteImport } from './routes/_account/app.settings.time'
 import { Route as AccountAppSettingsUsageRouteImport } from './routes/_account/app.settings.usage'
 import { Route as AccountAppSettingsCategoriesIndexRouteImport } from './routes/_account/app.settings.categories.index'
@@ -341,6 +343,11 @@ const AccountAppSettingsDataRoute = AccountAppSettingsDataRouteImport.update({
   path: '/data',
   getParentRoute: () => AccountAppSettingsRoute,
 } as any)
+const AccountAppSettingsEmailRoute = AccountAppSettingsEmailRouteImport.update({
+  id: '/email',
+  path: '/email',
+  getParentRoute: () => AccountAppSettingsRoute,
+} as any)
 const AccountAppSettingsInviteRoute =
   AccountAppSettingsInviteRouteImport.update({
     id: '/invite',
@@ -358,6 +365,11 @@ const AccountAppSettingsPreferencesRoute =
     path: '/preferences',
     getParentRoute: () => AccountAppSettingsRoute,
   } as any)
+const AccountAppSettingsSyncRoute = AccountAppSettingsSyncRouteImport.update({
+  id: '/sync',
+  path: '/sync',
+  getParentRoute: () => AccountAppSettingsRoute,
+} as any)
 const AccountAppSettingsTimeRoute = AccountAppSettingsTimeRouteImport.update({
   id: '/time',
   path: '/time',
@@ -429,9 +441,11 @@ export interface FileRoutesByFullPath {
   '/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
   '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/app/settings/data': typeof AccountAppSettingsDataRoute
+  '/app/settings/email': typeof AccountAppSettingsEmailRoute
   '/app/settings/invite': typeof AccountAppSettingsInviteRoute
   '/app/settings/plan': typeof AccountAppSettingsPlanRoute
   '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
+  '/app/settings/sync': typeof AccountAppSettingsSyncRoute
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/app/accounts/': typeof AccountAppAccountsIndexRoute
@@ -484,9 +498,11 @@ export interface FileRoutesByTo {
   '/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
   '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/app/settings/data': typeof AccountAppSettingsDataRoute
+  '/app/settings/email': typeof AccountAppSettingsEmailRoute
   '/app/settings/invite': typeof AccountAppSettingsInviteRoute
   '/app/settings/plan': typeof AccountAppSettingsPlanRoute
   '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
+  '/app/settings/sync': typeof AccountAppSettingsSyncRoute
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/app/accounts': typeof AccountAppAccountsIndexRoute
@@ -543,9 +559,11 @@ export interface FileRoutesById {
   '/_account/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
   '/_account/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/_account/app/settings/data': typeof AccountAppSettingsDataRoute
+  '/_account/app/settings/email': typeof AccountAppSettingsEmailRoute
   '/_account/app/settings/invite': typeof AccountAppSettingsInviteRoute
   '/_account/app/settings/plan': typeof AccountAppSettingsPlanRoute
   '/_account/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
+  '/_account/app/settings/sync': typeof AccountAppSettingsSyncRoute
   '/_account/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/_account/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/_account/app/accounts/': typeof AccountAppAccountsIndexRoute
@@ -603,9 +621,11 @@ export interface FileRouteTypes {
     | '/app/settings/connections'
     | '/app/settings/currency'
     | '/app/settings/data'
+    | '/app/settings/email'
     | '/app/settings/invite'
     | '/app/settings/plan'
     | '/app/settings/preferences'
+    | '/app/settings/sync'
     | '/app/settings/time'
     | '/app/settings/usage'
     | '/app/accounts/'
@@ -658,9 +678,11 @@ export interface FileRouteTypes {
     | '/app/settings/connections'
     | '/app/settings/currency'
     | '/app/settings/data'
+    | '/app/settings/email'
     | '/app/settings/invite'
     | '/app/settings/plan'
     | '/app/settings/preferences'
+    | '/app/settings/sync'
     | '/app/settings/time'
     | '/app/settings/usage'
     | '/app/accounts'
@@ -716,9 +738,11 @@ export interface FileRouteTypes {
     | '/_account/app/settings/connections'
     | '/_account/app/settings/currency'
     | '/_account/app/settings/data'
+    | '/_account/app/settings/email'
     | '/_account/app/settings/invite'
     | '/_account/app/settings/plan'
     | '/_account/app/settings/preferences'
+    | '/_account/app/settings/sync'
     | '/_account/app/settings/time'
     | '/_account/app/settings/usage'
     | '/_account/app/accounts/'
@@ -1088,6 +1112,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppSettingsDataRouteImport
       parentRoute: typeof AccountAppSettingsRoute
     }
+    '/_account/app/settings/email': {
+      id: '/_account/app/settings/email'
+      path: '/email'
+      fullPath: '/app/settings/email'
+      preLoaderRoute: typeof AccountAppSettingsEmailRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
     '/_account/app/settings/invite': {
       id: '/_account/app/settings/invite'
       path: '/invite'
@@ -1107,6 +1138,13 @@ declare module '@tanstack/react-router' {
       path: '/preferences'
       fullPath: '/app/settings/preferences'
       preLoaderRoute: typeof AccountAppSettingsPreferencesRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
+    '/_account/app/settings/sync': {
+      id: '/_account/app/settings/sync'
+      path: '/sync'
+      fullPath: '/app/settings/sync'
+      preLoaderRoute: typeof AccountAppSettingsSyncRouteImport
       parentRoute: typeof AccountAppSettingsRoute
     }
     '/_account/app/settings/time': {
@@ -1199,9 +1237,11 @@ interface AccountAppSettingsRouteChildren {
   AccountAppSettingsConnectionsRoute: typeof AccountAppSettingsConnectionsRoute
   AccountAppSettingsCurrencyRoute: typeof AccountAppSettingsCurrencyRoute
   AccountAppSettingsDataRoute: typeof AccountAppSettingsDataRoute
+  AccountAppSettingsEmailRoute: typeof AccountAppSettingsEmailRoute
   AccountAppSettingsInviteRoute: typeof AccountAppSettingsInviteRoute
   AccountAppSettingsPlanRoute: typeof AccountAppSettingsPlanRoute
   AccountAppSettingsPreferencesRoute: typeof AccountAppSettingsPreferencesRoute
+  AccountAppSettingsSyncRoute: typeof AccountAppSettingsSyncRoute
   AccountAppSettingsTimeRoute: typeof AccountAppSettingsTimeRoute
   AccountAppSettingsUsageRoute: typeof AccountAppSettingsUsageRoute
   AccountAppSettingsIndexRoute: typeof AccountAppSettingsIndexRoute
@@ -1215,9 +1255,11 @@ const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
   AccountAppSettingsConnectionsRoute: AccountAppSettingsConnectionsRoute,
   AccountAppSettingsCurrencyRoute: AccountAppSettingsCurrencyRoute,
   AccountAppSettingsDataRoute: AccountAppSettingsDataRoute,
+  AccountAppSettingsEmailRoute: AccountAppSettingsEmailRoute,
   AccountAppSettingsInviteRoute: AccountAppSettingsInviteRoute,
   AccountAppSettingsPlanRoute: AccountAppSettingsPlanRoute,
   AccountAppSettingsPreferencesRoute: AccountAppSettingsPreferencesRoute,
+  AccountAppSettingsSyncRoute: AccountAppSettingsSyncRoute,
   AccountAppSettingsTimeRoute: AccountAppSettingsTimeRoute,
   AccountAppSettingsUsageRoute: AccountAppSettingsUsageRoute,
   AccountAppSettingsIndexRoute: AccountAppSettingsIndexRoute,

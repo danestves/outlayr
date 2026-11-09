@@ -26,6 +26,7 @@ import { dropLedger, forgetLedger, hasLedgerCopy, restoreLedger, saveLedger } fr
 import { resendUnsent } from "@/lib/ledger-commit";
 import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
 import { currentToken, onSessionChange, userOf } from "@/lib/session";
+import { watchSync } from "@/lib/sync-status";
 
 const Paywall = lazy(async () => {
     const { Paywall: page } = await import("@/components/dashboard/paywall/paywall");
@@ -195,6 +196,8 @@ function useLedgerCopy(overview: Overview, photos: PhotoUrls, settled: Promise<b
     const [synced, setSynced] = useState(false);
     // oxlint-disable-next-line outlayr/react-effect-budget -- other tabs are an external system.
     useEffect(() => onSessionChange(() => forgetLedger().finally(() => window.location.reload())), []);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- the Convex connection is an external system.
+    useEffect(() => watchSync(convexClient()), []);
     // oxlint-disable-next-line outlayr/react-effect-budget -- the restored copy shows before Convex answers, so a refusal arrives after the first paint.
     useEffect(() => {
         settled.then(setSynced).catch(async (error) => {

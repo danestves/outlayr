@@ -167,7 +167,7 @@ function NameDialog({ name, onClose }: { name: string; onClose: () => void }) {
     );
 }
 
-function EmailDialog({ onClose }: { onClose: () => void }) {
+export function EmailDialog({ onClose }: { onClose: () => void }) {
     const { account } = useIntlayer("dashboard-settings");
     const [newEmail, setNewEmail] = useState<string | null>(null);
     if (newEmail === null) {
@@ -307,7 +307,7 @@ function AddPasswordDialog({ email, onClose }: { email: string; onClose: () => v
 
 type OpenDialog = "addPassword" | "email" | "name" | "password" | null;
 
-function Tile({ children }: { children: ReactNode }) {
+export function Tile({ children }: { children: ReactNode }) {
     return (
         <span className="bg-app-fill text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-lg">
             {children}
