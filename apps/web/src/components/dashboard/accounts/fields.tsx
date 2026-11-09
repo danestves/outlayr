@@ -38,6 +38,7 @@ const focusNode = (node: HTMLInputElement | null) => node?.select();
 export function AmountInput({
     autoFocus = false,
     currency,
+    label,
     negative,
     onNegative,
     onText,
@@ -48,6 +49,7 @@ export function AmountInput({
 }: {
     autoFocus?: boolean;
     currency: string;
+    label?: string;
     negative?: boolean;
     onNegative?: (negative: boolean) => void;
     onText: (text: string) => void;
@@ -73,6 +75,7 @@ export function AmountInput({
             ) : null}
             {sign ? <Input.Addon className="dash-figure text-foreground pe-1.5!">{sign}</Input.Addon> : null}
             <Input
+                aria-label={label}
                 className={onNegative ? "dash-figure ps-0.5" : "dash-figure"}
                 inputMode="decimal"
                 onBlur={() => {

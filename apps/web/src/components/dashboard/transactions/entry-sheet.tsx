@@ -1,6 +1,5 @@
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
-import ArrowRight02Icon from "@hugeicons/core-free-icons/ArrowRight02Icon";
 import ArrowUp01Icon from "@hugeicons/core-free-icons/ArrowUp01Icon";
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
@@ -28,10 +27,10 @@ import type { FoldedRow } from "../home/rows";
 import { useWide } from "../insights/use-wide";
 import { EntryEditor, useRepeatNames } from "./entry-form";
 import { installmentTags, transferMoves } from "./model";
+import { TransferEditor } from "./transfer-editor";
 import { useWeekday } from "./use-day-title";
 
 const ISO_CURRENCY = /^[A-Z]{3}$/u;
-const RATE_DIGITS = 2;
 const HUSHED_TARGETS = "input, textarea, select, [contenteditable=true], [role=listbox], [role=menu], .dash-po";
 
 function Line({ children, label, onPress }: { children: ReactNode; label: ReactNode; onPress?: () => void }) {
@@ -459,7 +458,7 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
     if ("fromId" in row) {
         return (
             <Chrome
-                body={<TransferBody onDelete={remove} row={row} when={when} />}
+                body={<TransferBody onDelete={remove} row={row} />}
                 categoryHint={false}
                 more={<MoreMenu id={row.id} onDelete={remove} />}
                 onStep={onStep}
@@ -528,111 +527,33 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
     );
 }
 
-function TransferBody({
-    onDelete,
-    row,
-    when,
-}: {
-    onDelete: () => void;
-    row: Extract<FoldedRow, { fromId: string }>;
-    when: string;
-}) {
+function TransferBody({ onDelete, row }: { onDelete: () => void; row: Extract<FoldedRow, { fromId: string }> }) {
     const { ledger, photos } = useDashboard();
-    const { bulk, detail, form } = useIntlayer("dashboard-transactions");
+    const { detail } = useIntlayer("dashboard-transactions");
     const { money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
-    const name = (id: string | null) => (id === null ? "" : (ledger.accounts.get(id)?.name ?? ""));
-    const move = ledger.books.transfers.find((each) => each.localId === row.id);
-    const crossed = row.sentCurrency !== row.arrivedCurrency && row.sent > 0;
+    const doc = ledger.books.transfers.find((each) => each.localId === row.id);
+    if (!doc) {
+        return null;
+    }
     const moves = transferMoves(row, ledger.currency);
-    const rateNames = { custom: form.rateCustom, eur_reference: "EUR (BCV)", official: form.rateOfficial };
-    const tile = (id: string | null) => {
+    const side = (id: string | null) => {
         const look = id === null ? null : catalog.account(id);
-        return look ? <AccountTile account={look} photos={photos} size="md" /> : null;
-    };
-    const side = (label: ReactNode, id: string | null) => (
-        <div className="flex min-w-0 flex-col gap-1.5">
-            <span className="text-muted-foreground text-xs">{label}</span>
-            <span className="border-border flex h-11 min-w-0 items-center gap-2 rounded-xl border px-2.5 text-sm font-medium">
-                {tile(id)}
-                <span className="truncate">{name(id)}</span>
+        return (
+            <span className="text-foreground flex items-center gap-2 font-medium whitespace-nowrap">
+                {look ? <AccountTile account={look} photos={photos} size="md" /> : null}
+                {id === null ? "" : ledger.accounts.get(id)?.name}
             </span>
-        </div>
-    );
+        );
+    };
     return (
-        <>
-            <div className="grid grid-cols-[minmax(0,2fr)_auto_minmax(0,3fr)] items-end gap-2">
-                {side(detail.from, row.fromId)}
-                <HugeiconsIcon icon={ArrowRight02Icon} className="text-muted-foreground mb-3" size={16} />
-                {side(detail.to, row.toId)}
-            </div>
-            <div className="mt-3 grid grid-cols-[minmax(0,2fr)_auto_minmax(0,3fr)] gap-2">
-                <div className="min-w-0">
-                    <div className="dash-figure truncate text-xl font-semibold">
-                        {money(row.sent, row.sentCurrency)}
-                    </div>
-                    <div className="dash-figure text-muted-foreground mt-1 text-xs">{row.sentCurrency}</div>
-                </div>
-                <span className="w-4" />
-                <div className="min-w-0">
-                    <div className="dash-figure truncate text-xl font-semibold">
-                        {money(row.arrived, row.arrivedCurrency)}
-                    </div>
-                    <div className="dash-figure text-muted-foreground mt-1 truncate text-xs">
-                        {row.arrivedCurrency}
-                        {crossed
-                            ? ` · ${
-                                  detail.perUnit({
-                                      currency: row.sentCurrency,
-                                      rate: (row.arrived / row.sent).toFixed(RATE_DIGITS),
-                                  }).value
-                              }`
-                            : ""}
-                    </div>
-                </div>
-            </div>
-            <div className="mt-4">
-                <Line label={detail.date}>
-                    <span className="dash-figure">{when}</span>
-                </Line>
-                {move?.exchangeRateType ? (
-                    <Line label={detail.rate}>
-                        <span className="font-medium">
-                            {Object.entries(rateNames).find(([type]) => type === move.exchangeRateType)?.[1] ??
-                                move.exchangeRateType}
-                        </span>
-                    </Line>
-                ) : null}
-                {row.fees.map((fee) => (
-                    <Line key={fee.id} label={detail.fee}>
-                        <span className="dash-figure font-medium">{money(fee.amount, ledger.currency)}</span>
-                        <span className="text-muted-foreground truncate">
-                            {detail.fromAccount({ account: name(fee.accountId) })}
-                        </span>
-                    </Line>
-                ))}
-                {move?.note.trim() ? <Line label={detail.note}>{move.note}</Line> : null}
-            </div>
+        <TransferEditor doc={doc} key={doc.localId} onDelete={onDelete}>
             <div className="text-muted-foreground mt-6 mb-1 text-xs font-medium">{detail.moves}</div>
             <div className="border-border border-t">
-                <Line
-                    label={
-                        <span className="text-foreground flex items-center gap-2 font-medium whitespace-nowrap">
-                            {tile(row.fromId)}
-                            {name(row.fromId)}
-                        </span>
-                    }
-                >
+                <Line label={side(row.fromId)}>
                     <span className="dash-figure">{money(-moves.sent, row.sentCurrency, "always")}</span>
                 </Line>
-                <Line
-                    label={
-                        <span className="text-foreground flex items-center gap-2 font-medium whitespace-nowrap">
-                            {tile(row.toId)}
-                            {name(row.toId)}
-                        </span>
-                    }
-                >
+                <Line label={side(row.toId)}>
                     <span className="dash-figure">{money(row.arrived, row.arrivedCurrency, "always")}</span>
                 </Line>
                 {moves.apart.map((fee) => (
@@ -641,13 +562,6 @@ function TransferBody({
                     </Line>
                 ))}
             </div>
-            <div className="flex items-center gap-2 py-4">
-                <Button onClick={onDelete} size="sm" variant="outline">
-                    <HugeiconsIcon icon={Delete02Icon} size={14} />
-                    {bulk.delete}
-                </Button>
-                <p className="text-muted-foreground ml-auto text-[13px]">{detail.editOnPhone}</p>
-            </div>
-        </>
+        </TransferEditor>
     );
 }
