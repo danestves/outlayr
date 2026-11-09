@@ -5,7 +5,6 @@ const about = {
     content: {
         allComparisons: t({ en: "All comparisons", es: "Todas las comparativas" }),
         allGuides: t({ en: "All guides", es: "Todas las guías", pt: "Todos os guias", fr: "Tous les guides" }),
-        appIcon: t({ en: "App icon", es: "Ícono de la app" }),
         contact: {
             lead: t({
                 en: "For support, press, or a question about the app.",
@@ -134,13 +133,6 @@ const about = {
                 en: "About Outlayr: the expense tracker by danestves LLC",
                 es: "Acerca de Outlayr: la app de gastos de danestves LLC",
             }),
-        },
-        press: t({ en: "Press kit", es: "Kit de prensa" }),
-        shots: {
-            accounts: t({ en: "Accounts", es: "Cuentas" }),
-            budgets: t({ en: "Budgets", es: "Presupuestos" }),
-            insights: t({ en: "Insights", es: "Estadísticas" }),
-            subscriptions: t({ en: "Subscriptions", es: "Suscripciones" }),
         },
         story: {
             body: [

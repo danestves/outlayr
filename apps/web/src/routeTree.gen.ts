@@ -26,6 +26,7 @@ import { Route as AccountLoginRouteImport } from './routes/_account/login'
 import { Route as Char123LocaleChar125IndexRouteImport } from './routes/{-$locale}/index'
 import { Route as Char123LocaleChar125SplatRouteImport } from './routes/{-$locale}/$'
 import { Route as Char123LocaleChar125AboutRouteImport } from './routes/{-$locale}/about'
+import { Route as Char123LocaleChar125BrandRouteImport } from './routes/{-$locale}/brand'
 import { Route as Char123LocaleChar125DeleteAccountRouteImport } from './routes/{-$locale}/delete-account'
 import { Route as Char123LocaleChar125OpenRouteImport } from './routes/{-$locale}/open'
 import { Route as Char123LocaleChar125PrivacyRouteImport } from './routes/{-$locale}/privacy'
@@ -150,6 +151,12 @@ const Char123LocaleChar125AboutRoute =
   Char123LocaleChar125AboutRouteImport.update({
     id: '/about',
     path: '/about',
+    getParentRoute: () => Char123LocaleChar125RouteRoute,
+  } as any)
+const Char123LocaleChar125BrandRoute =
+  Char123LocaleChar125BrandRouteImport.update({
+    id: '/brand',
+    path: '/brand',
     getParentRoute: () => Char123LocaleChar125RouteRoute,
   } as any)
 const Char123LocaleChar125DeleteAccountRoute =
@@ -359,6 +366,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
+  '/{-$locale}/brand': typeof Char123LocaleChar125BrandRoute
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
   '/{-$locale}/open': typeof Char123LocaleChar125OpenRoute
   '/{-$locale}/privacy': typeof Char123LocaleChar125PrivacyRoute
@@ -409,6 +417,7 @@ export interface FileRoutesByTo {
   '/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
+  '/{-$locale}/brand': typeof Char123LocaleChar125BrandRoute
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
   '/{-$locale}/open': typeof Char123LocaleChar125OpenRoute
   '/{-$locale}/privacy': typeof Char123LocaleChar125PrivacyRoute
@@ -461,6 +470,7 @@ export interface FileRoutesById {
   '/_account/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
+  '/{-$locale}/brand': typeof Char123LocaleChar125BrandRoute
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
   '/{-$locale}/open': typeof Char123LocaleChar125OpenRoute
   '/{-$locale}/privacy': typeof Char123LocaleChar125PrivacyRoute
@@ -515,6 +525,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
+    | '/{-$locale}/brand'
     | '/{-$locale}/delete-account'
     | '/{-$locale}/open'
     | '/{-$locale}/privacy'
@@ -565,6 +576,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
+    | '/{-$locale}/brand'
     | '/{-$locale}/delete-account'
     | '/{-$locale}/open'
     | '/{-$locale}/privacy'
@@ -616,6 +628,7 @@ export interface FileRouteTypes {
     | '/_account/login'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
+    | '/{-$locale}/brand'
     | '/{-$locale}/delete-account'
     | '/{-$locale}/open'
     | '/{-$locale}/privacy'
@@ -787,6 +800,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/{-$locale}/about'
       preLoaderRoute: typeof Char123LocaleChar125AboutRouteImport
+      parentRoute: typeof Char123LocaleChar125RouteRoute
+    }
+    '/{-$locale}/brand': {
+      id: '/{-$locale}/brand'
+      path: '/brand'
+      fullPath: '/{-$locale}/brand'
+      preLoaderRoute: typeof Char123LocaleChar125BrandRouteImport
       parentRoute: typeof Char123LocaleChar125RouteRoute
     }
     '/{-$locale}/delete-account': {
@@ -1026,6 +1046,7 @@ declare module '@tanstack/react-router' {
 interface Char123LocaleChar125RouteRouteChildren {
   Char123LocaleChar125SplatRoute: typeof Char123LocaleChar125SplatRoute
   Char123LocaleChar125AboutRoute: typeof Char123LocaleChar125AboutRoute
+  Char123LocaleChar125BrandRoute: typeof Char123LocaleChar125BrandRoute
   Char123LocaleChar125DeleteAccountRoute: typeof Char123LocaleChar125DeleteAccountRoute
   Char123LocaleChar125OpenRoute: typeof Char123LocaleChar125OpenRoute
   Char123LocaleChar125PrivacyRoute: typeof Char123LocaleChar125PrivacyRoute
@@ -1048,6 +1069,7 @@ const Char123LocaleChar125RouteRouteChildren: Char123LocaleChar125RouteRouteChil
   {
     Char123LocaleChar125SplatRoute: Char123LocaleChar125SplatRoute,
     Char123LocaleChar125AboutRoute: Char123LocaleChar125AboutRoute,
+    Char123LocaleChar125BrandRoute: Char123LocaleChar125BrandRoute,
     Char123LocaleChar125DeleteAccountRoute:
       Char123LocaleChar125DeleteAccountRoute,
     Char123LocaleChar125OpenRoute: Char123LocaleChar125OpenRoute,

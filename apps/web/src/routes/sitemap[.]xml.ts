@@ -18,6 +18,7 @@ function pages(): [path: string, updated: Date | null][] {
         ["/", null],
         ["/support", null],
         ["/about", null],
+        ["/brand", null],
         ["/open", null],
         ["/terms", LEGAL_DAYS.terms],
         ["/privacy", LEGAL_DAYS.privacy],

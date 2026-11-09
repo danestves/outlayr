@@ -168,6 +168,7 @@ const site = {
         },
         footer: {
             about: t({ en: "About", es: "Acerca de", pt: "Sobre", fr: "À propos" }),
+            brand: t({ en: "Brand kit", es: "Kit de marca", pt: "Kit de marca", fr: "Kit de marque" }),
             blog: "Blog",
             company: t({ en: "Company", es: "Empresa", pt: "Empresa", fr: "Entreprise" }),
             product: t({ en: "Product", es: "Producto", pt: "Produto", fr: "Produit" }),

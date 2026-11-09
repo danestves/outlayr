@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
-import type { ReactNode } from "react";
-import { useIntlayer, useLocale } from "react-intlayer";
+import { useIntlayer } from "react-intlayer";
 
-import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
 import { LocalizedLink } from "@/components/localized-link";
 import { Page } from "@/components/page";
@@ -26,17 +24,6 @@ const FACT_SPANS = [
     "lg:col-span-8",
     "lg:col-span-4",
 ] as const;
-const SHOTS = [
-    { id: "budgets", name: "04" },
-    { id: "insights", name: "05" },
-    { id: "accounts", name: "06" },
-    { id: "subscriptions", name: "10" },
-] as const;
-const THEMES = [
-    { className: "light-only", source: "src" },
-    { className: "dark-only", source: "dark" },
-] as const;
-
 export const Route = createFileRoute("/{-$locale}/about")({
     component: About,
     head: ({ params }) => {
@@ -64,7 +51,6 @@ function About() {
         <Page lead={entity} title={title}>
             <Story />
             <Facts />
-            <Press />
             <Contact />
         </Page>
     );
@@ -182,70 +168,6 @@ function Maker() {
     );
 }
 
-function Press() {
-    const { appIcon, press, shots } = useIntlayer("about");
-    const { locale } = useLocale();
-    return (
-        <section className={SECTION}>
-            <h2 className={HEADING} data-reveal>
-                {press}
-            </h2>
-            <ul className="mt-16 grid grid-cols-2 gap-4 lg:grid-cols-5">
-                <li className="col-span-2 lg:col-span-1" data-reveal>
-                    <a
-                        className="fluid bg-surface hover:bg-foreground/5 flex h-full items-center gap-4 rounded-3xl p-4 active:scale-[0.98] md:p-6 lg:flex-col lg:items-start lg:justify-between"
-                        href="/apple-touch-icon.png"
-                    >
-                        <img
-                            alt=""
-                            className="size-16 rounded-2xl lg:size-24 lg:rounded-3xl"
-                            height={180}
-                            loading="lazy"
-                            src="/apple-touch-icon.png"
-                            width={180}
-                        />
-                        <PressLabel detail="180 × 180" label={appIcon} />
-                    </a>
-                </li>
-                {SHOTS.map((shot, index) => (
-                    <li className={index % 2 === 0 ? "delay-100" : "delay-150"} data-reveal key={shot.id}>
-                        {THEMES.map((theme) => (
-                            <div className={theme.className} key={theme.source}>
-                                <a
-                                    className="fluid bg-surface hover:bg-foreground/5 flex flex-col gap-4 rounded-3xl p-4 active:scale-[0.98] md:p-6"
-                                    href={screenSources(shot.name, locale)[theme.source]}
-                                >
-                                    <img
-                                        alt=""
-                                        className="w-full rounded-[15.5%/7.1%]"
-                                        height={1912}
-                                        loading="lazy"
-                                        src={screenSources(shot.name, locale)[theme.source]}
-                                        width={880}
-                                    />
-                                    <PressLabel detail="880 × 1912" label={shots[shot.id]} />
-                                </a>
-                            </div>
-                        ))}
-                    </li>
-                ))}
-            </ul>
-        </section>
-    );
-}
-
-function PressLabel({ detail, label }: { detail: string; label: ReactNode }) {
-    return (
-        <span className="flex min-w-0 flex-1 items-start justify-between gap-2 lg:w-full lg:flex-none">
-            <span className="min-w-0">
-                <span className="block text-sm font-semibold">{label}</span>
-                <span className="text-muted tabular mt-1 block font-mono text-xs">{detail}</span>
-            </span>
-            <Icon className="text-muted mt-0.5 shrink-0" name="arrow-up-right" />
-        </span>
-    );
-}
-
 function Contact() {
     const { allComparisons, allGuides, contact } = useIntlayer("about");
     const { footer } = useIntlayer("site");
@@ -253,6 +175,7 @@ function Contact() {
         { label: allGuides, to: "/guides" },
         { label: allComparisons, to: "/compare" },
         { label: footer.support, to: "/support" },
+        { label: footer.brand, to: "/brand" },
     ] as const;
     return (
         <section className="pt-24">

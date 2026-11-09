@@ -39,6 +39,7 @@ const PUBLIC_FILE_RULES = {
     "/app/iphone-500.webp": A_YEAR,
     "/app/logos/**": A_YEAR,
     "/apple-touch-icon.png": A_DAY,
+    "/brand-kit/**": A_DAY,
     "/badges/**": A_YEAR,
     "/favicon-dark.png": A_DAY,
     "/favicon-light.png": A_DAY,
