@@ -23,7 +23,6 @@ import { useIntlayer } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
 import { useDateFormat } from "@/components/dashboard/home/format";
-import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { MerchantTile } from "@/components/ledger/tiles";
@@ -589,72 +588,100 @@ function DeletedTab() {
     );
 }
 
-function EraseDialog({ onClose, scope }: { onClose: () => void; scope: EraseScope }) {
-    const shown = useOverlayOpen();
+function EraseBody({
+    busy,
+    onBusy,
+    onClose,
+    scope,
+}: {
+    busy: boolean;
+    onBusy: (busy: boolean) => void;
+    onClose: () => void;
+    scope: EraseScope;
+}) {
     const { erase: copy, restore: restoreCopy } = useIntlayer("dashboard-data");
     const committer = useLedgerCommitter();
     const queryClient = useQueryClient();
     const count = useLiveEntries().length;
     const [typed, setTyped] = useState("");
-    const [busy, setBusy] = useState(false);
     const formId = useId();
     const word = copy.word.value;
     const erase = async () => {
-        setBusy(true);
+        onBusy(true);
         const rows = await pullRows().catch(() => null);
         const outcome = rows && (await committer.commit(eraseRows(rows, scope, nowMs())).settled);
         if (outcome?.status !== "saved") {
             settingsToasts.add({ title: copy.failed.value, type: "destructive" });
-            setBusy(false);
+            onBusy(false);
             return;
         }
         queryClient.removeQueries({ queryKey: DELETED_KEY });
         onClose();
     };
     return (
-        <Dialog onOpenChange={(open) => !open && !busy && onClose()} open={shown}>
+        <>
+            <Dialog.Header>
+                <Dialog.Title>
+                    {scope === "everything" ? copy.confirmEverythingTitle : copy.confirmTransactionsTitle}
+                </Dialog.Title>
+                <Dialog.Description>
+                    {scope === "everything" ? copy.confirmEverythingBody : copy.confirmTransactionsBody}
+                </Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Body>
+                <form
+                    id={formId}
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        if (typed === word && !busy) {
+                            erase();
+                        }
+                    }}
+                >
+                    <Field>
+                        <Field.Label>
+                            <span>
+                                {copy.typeBefore} <span className="text-destructive">{word}</span> {copy.typeAfter}
+                            </span>
+                        </Field.Label>
+                        <Input
+                            autoComplete="off"
+                            onChange={(event) => setTyped(event.target.value)}
+                            placeholder={word}
+                            value={typed}
+                        />
+                    </Field>
+                </form>
+            </Dialog.Body>
+            <Dialog.Footer>
+                <Dialog.Close disabled={busy} render={<Button variant="secondary" />}>
+                    {restoreCopy.cancel}
+                </Dialog.Close>
+                <Button disabled={typed !== word || busy} form={formId} type="submit" variant="destructive">
+                    {copy.confirmAction({ count })}
+                </Button>
+            </Dialog.Footer>
+        </>
+    );
+}
+
+function EraseDialog({
+    busy,
+    onBusy,
+    onClose,
+    open,
+    scope,
+}: {
+    busy: boolean;
+    onBusy: (busy: boolean) => void;
+    onClose: () => void;
+    open: boolean;
+    scope: EraseScope | null;
+}) {
+    return (
+        <Dialog onOpenChange={(next) => next || busy || onClose()} open={open}>
             <Dialog.Content className="app-shell">
-                <Dialog.Header>
-                    <Dialog.Title>
-                        {scope === "everything" ? copy.confirmEverythingTitle : copy.confirmTransactionsTitle}
-                    </Dialog.Title>
-                    <Dialog.Description>
-                        {scope === "everything" ? copy.confirmEverythingBody : copy.confirmTransactionsBody}
-                    </Dialog.Description>
-                </Dialog.Header>
-                <Dialog.Body>
-                    <form
-                        id={formId}
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            if (typed === word && !busy) {
-                                erase();
-                            }
-                        }}
-                    >
-                        <Field>
-                            <Field.Label>
-                                <span>
-                                    {copy.typeBefore} <span className="text-destructive">{word}</span> {copy.typeAfter}
-                                </span>
-                            </Field.Label>
-                            <Input
-                                autoComplete="off"
-                                onChange={(event) => setTyped(event.target.value)}
-                                placeholder={word}
-                                value={typed}
-                            />
-                        </Field>
-                    </form>
-                </Dialog.Body>
-                <Dialog.Footer>
-                    <Dialog.Close disabled={busy} render={<Button variant="secondary" />}>
-                        {restoreCopy.cancel}
-                    </Dialog.Close>
-                    <Button disabled={typed !== word || busy} form={formId} type="submit" variant="destructive">
-                        {copy.confirmAction({ count })}
-                    </Button>
-                </Dialog.Footer>
+                {scope ? <EraseBody busy={busy} onBusy={onBusy} onClose={onClose} scope={scope} /> : null}
             </Dialog.Content>
         </Dialog>
     );
@@ -664,6 +691,13 @@ function EraseTab({ onExport }: { onExport: () => void }) {
     const copy = useIntlayer("dashboard-data").erase;
     const count = useLiveEntries().length;
     const [scope, setScope] = useState<EraseScope | null>(null);
+    const [open, setOpen] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const show = (next: EraseScope) => {
+        setScope(next);
+        setBusy(false);
+        setOpen(true);
+    };
     return (
         <div className={TWO_UP}>
             <SettingsCard
@@ -676,12 +710,12 @@ function EraseTab({ onExport }: { onExport: () => void }) {
                 title={copy.title}
             >
                 <Row hint={copy.transactionsOnlyHint} label={copy.transactionsOnly}>
-                    <Button onClick={() => setScope("transactions")} size="sm" variant="outline">
+                    <Button onClick={() => show("transactions")} size="sm" variant="outline">
                         <span className="text-destructive">{copy.action}</span>
                     </Button>
                 </Row>
                 <Row hint={copy.everythingHint} label={copy.everything}>
-                    <Button onClick={() => setScope("everything")} size="sm" variant="outline">
+                    <Button onClick={() => show("everything")} size="sm" variant="outline">
                         <span className="text-destructive">{copy.action}</span>
                     </Button>
                 </Row>
@@ -694,9 +728,7 @@ function EraseTab({ onExport }: { onExport: () => void }) {
                     </Button>
                 </Row>
             </SettingsCard>
-            <OverlayPresence value={scope}>
-                {(held) => <EraseDialog onClose={() => setScope(null)} scope={held} />}
-            </OverlayPresence>
+            <EraseDialog busy={busy} onBusy={setBusy} onClose={() => setOpen(false)} open={open} scope={scope} />
         </div>
     );
 }

@@ -56,7 +56,7 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
         });
     };
     return (
-        <FlowDialog label={flows.archiveTitle({ name: account.name })} onClose={onClose}>
+        <FlowDialog label={flows.archiveTitle({ name: account.name })}>
             <Dialog.Body className="gap-3">
                 <Dialog.Description className="text-wrap">{flows.archiveBody}</Dialog.Description>
                 <div>
@@ -111,7 +111,7 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
         });
     };
     return (
-        <FlowDialog label={flows.deleteTitle({ name: account.name })} onClose={onClose}>
+        <FlowDialog label={flows.deleteTitle({ name: account.name })}>
             <Dialog.Body className={nothing ? "gap-3" : "gap-2.5"}>
                 <Dialog.Description className="text-wrap">
                     {nothing ? flows.deleteEmptyBody : flows.deleteBody}

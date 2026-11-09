@@ -27,7 +27,6 @@ import type { FormEvent, ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
-import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { convexClient } from "@/lib/convex";
 
 import { Row, SectionHead, SettingsCard } from "./parts";
@@ -109,7 +108,7 @@ function CopyRow({ label, mono }: { label: ReactNode; mono: string }) {
     );
 }
 
-function ClaimDialog({
+function ClaimBody({
     code,
     name,
     onClose,
@@ -120,7 +119,6 @@ function ClaimDialog({
     onClose: () => void;
     onRefused: (reason: Refusal) => void;
 }) {
-    const shown = useOverlayOpen();
     const copy = useIntlayer("dashboard-invite");
     const toast = useToast();
     const [busy, setBusy] = useState(false);
@@ -138,25 +136,45 @@ function ClaimDialog({
         onRefused(status === "signedOut" ? "offline" : status);
     };
     return (
-        <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
+        <>
+            <Dialog.Header>
+                <Dialog.Title>{name ? copy.claim.title({ name }) : copy.claim.titleFriend}</Dialog.Title>
+                <Dialog.Description>{copy.claim.startsNow}</Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Body>
+                <p className="text-muted-foreground text-sm leading-5">
+                    {name
+                        ? copy.claim.shared({ days: REFERRAL_DAYS_TO_EARN, name })
+                        : copy.claim.sharedFriend({ days: REFERRAL_DAYS_TO_EARN })}
+                </p>
+            </Dialog.Body>
+            <Dialog.Footer>
+                <Dialog.Close render={<Button variant="secondary" />}>{copy.claim.notNow}</Dialog.Close>
+                <Button loading={busy} onClick={claim}>
+                    {copy.claim.confirm}
+                </Button>
+            </Dialog.Footer>
+        </>
+    );
+}
+
+function ClaimDialog({
+    claim,
+    onClose,
+    onRefused,
+    open,
+}: {
+    claim: { code: string; name: string | null } | null;
+    onClose: () => void;
+    onRefused: (reason: Refusal) => void;
+    open: boolean;
+}) {
+    return (
+        <Dialog onOpenChange={(next) => next || onClose()} open={open}>
             <Dialog.Content className="app-shell">
-                <Dialog.Header>
-                    <Dialog.Title>{name ? copy.claim.title({ name }) : copy.claim.titleFriend}</Dialog.Title>
-                    <Dialog.Description>{copy.claim.startsNow}</Dialog.Description>
-                </Dialog.Header>
-                <Dialog.Body>
-                    <p className="text-muted-foreground text-sm leading-5">
-                        {name
-                            ? copy.claim.shared({ days: REFERRAL_DAYS_TO_EARN, name })
-                            : copy.claim.sharedFriend({ days: REFERRAL_DAYS_TO_EARN })}
-                    </p>
-                </Dialog.Body>
-                <Dialog.Footer>
-                    <Dialog.Close render={<Button variant="secondary" />}>{copy.claim.notNow}</Dialog.Close>
-                    <Button loading={busy} onClick={claim}>
-                        {copy.claim.confirm}
-                    </Button>
-                </Dialog.Footer>
+                {claim ? (
+                    <ClaimBody code={claim.code} name={claim.name} onClose={onClose} onRefused={onRefused} />
+                ) : null}
             </Dialog.Content>
         </Dialog>
     );
@@ -169,6 +187,7 @@ function EnterCode() {
     const [problem, setProblem] = useState<ReactNode>(null);
     const [busy, setBusy] = useState(false);
     const [claim, setClaim] = useState<{ code: string; name: string | null } | null>(null);
+    const [claiming, setClaiming] = useState(false);
     const submit = async (event: FormEvent) => {
         event.preventDefault();
         const code = normalizeReferralCode(typed);
@@ -184,6 +203,7 @@ function EnterCode() {
                 setProblem(copy.refusal.invalid);
             } else {
                 setClaim({ code, name: inviter.name });
+                setClaiming(true);
             }
         } catch {
             setProblem(copy.refusal.offline);
@@ -216,22 +236,18 @@ function EnterCode() {
                     {problem ? <Field.Error match>{problem}</Field.Error> : null}
                 </Field>
             </form>
-            <OverlayPresence value={claim}>
-                {(held) => (
-                    <ClaimDialog
-                        code={held.code}
-                        name={held.name}
-                        onClose={() => {
-                            setClaim(null);
-                            setTyped("");
-                        }}
-                        onRefused={(reason) => {
-                            setClaim(null);
-                            setProblem(copy.refusal[reason]);
-                        }}
-                    />
-                )}
-            </OverlayPresence>
+            <ClaimDialog
+                claim={claim}
+                onClose={() => {
+                    setClaiming(false);
+                    setTyped("");
+                }}
+                onRefused={(reason) => {
+                    setClaiming(false);
+                    setProblem(copy.refusal[reason]);
+                }}
+                open={claiming}
+            />
         </SettingsCard>
     );
 }

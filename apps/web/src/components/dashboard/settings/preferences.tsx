@@ -7,7 +7,6 @@ import { Select } from "panelui-web/select";
 import { useContext, useId, useState, useSyncExternalStore } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { OverlayPresence } from "@/components/dashboard/overlay-presence";
 import { LocalizedLink } from "@/components/localized-link";
 import { chooseConsent, readConsent, subscribeConsent } from "@/lib/analytics";
 import { DASHBOARD_LOCALES, chooseDashboardLocale } from "@/lib/dashboard-locale";
@@ -204,9 +203,7 @@ function HelpCard() {
                 <span className="min-w-0 flex-1">{about.suggest}</span>
                 <HugeiconsIcon icon={ArrowRight01Icon} className="text-muted-foreground size-[18px]" />
             </button>
-            <OverlayPresence value={suggesting ? true : null}>
-                {() => <SuggestDialog onClose={() => setSuggesting(false)} />}
-            </OverlayPresence>
+            <SuggestDialog onClose={() => setSuggesting(false)} open={suggesting} />
         </SettingsCard>
     );
 }

@@ -1,0 +1,103 @@
+diff --git a/dist/components/alert-dialog/index.js b/dist/components/alert-dialog/index.js
+index 823e694c2cf09ee4f3662253f18ce484bec32493..baade57305cea0f3c139d1baa0e34cc358304118 100644
+--- a/dist/components/alert-dialog/index.js
++++ b/dist/components/alert-dialog/index.js
+@@ -44,7 +44,8 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
+ // The dialog primitive rather than the alert-dialog one, which refuses every
+ // press outside; the role is still `alertdialog`, set on the popup.
+ import { Dialog as Primitive } from '@base-ui/react/dialog';
+-import { Children, createContext, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, } from 'react';
++import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, } from 'react';
++import { createPortal } from 'react-dom';
+ import { tv } from 'tailwind-variants';
+ import { Button } from '../button/index.js';
+ import { mergeProps } from '@base-ui/react/merge-props';
+@@ -156,16 +157,13 @@ function AlertDialogTrigger({ render, children, ...props }) {
+     return (_jsx(Primitive.Trigger, { render: render, ...props, children: children }));
+ }
+ AlertDialogTrigger.displayName = 'AlertDialog.Trigger';
+-const isFooter = (child) => isValidElement(child) && child.type === AlertDialogFooter;
+ /** The dialog: the panel with the question, in a band that holds the answers. */
+ function AlertDialogContent({ tone = 'neutral', size = 'default', blur = false, inline = false, className, children, ...props }) {
+     const dialog = useAlertDialog('AlertDialog.Content');
+     const slots = alertDialogVariants({ palette: tone, size, blur });
+-    const context = useMemo(() => ({ ...dialog, tone, inline }), [dialog, tone, inline]);
+-    // The footer leaves the panel for the band under it.
+-    const all = Children.toArray(children);
+-    const footer = all.filter(isFooter);
+-    const inside = (_jsxs(AlertDialogContext.Provider, { value: context, children: [_jsx("div", { "data-slot": "alert-dialog-panel", className: slots.panel(), children: all.filter((child) => !isFooter(child)) }), footer] }));
++    const [band, setBand] = useState(null);
++    const context = useMemo(() => ({ ...dialog, tone, inline, band }), [dialog, tone, inline, band]);
++    const inside = (_jsxs(AlertDialogContext.Provider, { value: context, children: [_jsx("div", { "data-slot": "alert-dialog-panel", className: slots.panel(), children: children }), _jsx("div", { "data-slot": "alert-dialog-band", className: "contents", ref: setBand })] }));
+     if (inline) {
+         return (_jsx("div", { "data-slot": "alert-dialog-content", "data-tone": tone, className: slots.shell({ className }), ...props, children: inside }));
+     }
+@@ -208,11 +206,15 @@ AlertDialogDescription.displayName = 'AlertDialog.Description';
+  * Keep it a direct child of `AlertDialog.Content`, so the band can find it.
+  */
+ function AlertDialogFooter({ className, render, ...props }) {
+-    return useRender({
++    const band = useContext(AlertDialogContext)?.band;
++    const footer = useRender({
+         defaultTagName: 'div',
+         render,
+         props: mergeProps({ 'data-slot': 'alert-dialog-footer', className: alertDialogVariants().footer({ className }) }, props),
+     });
++    if (band === undefined)
++        return footer;
++    return band ? createPortal(footer, band) : null;
+ }
+ AlertDialogFooter.displayName = 'AlertDialog.Footer';
+ /** Closes the dialog without doing anything. It reads "Cancel" unless given children. */
+diff --git a/dist/components/dialog/index.js b/dist/components/dialog/index.js
+index b54a7a511358d4a8ca704add3484ca625a4c61d4..d2b4339c518d94ddea30be55c3245276160ef435 100644
+--- a/dist/components/dialog/index.js
++++ b/dist/components/dialog/index.js
+@@ -54,7 +54,8 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
+  */
+ import { Dialog as Primitive } from '@base-ui/react/dialog';
+ import { ScrollArea } from '@base-ui/react/scroll-area';
+-import { Children, createContext, isValidElement, useContext, useEffect, useId, useMemo, useRef, } from 'react';
++import { createContext, useContext, useEffect, useId, useMemo, useRef, useState, } from 'react';
++import { createPortal } from 'react-dom';
+ import { tv } from 'tailwind-variants';
+ import { mergeProps } from '@base-ui/react/merge-props';
+ import { useRender } from '@base-ui/react/use-render';
+@@ -162,16 +163,12 @@ function DialogTrigger({ render, children, ...props }) {
+     return (_jsx(Primitive.Trigger, { render: render, ...props, children: children }));
+ }
+ DialogTrigger.displayName = 'Dialog.Trigger';
+-const isFooter = (child) => isValidElement(child) && child.type === DialogFooter;
+ /** The dialog itself, with the dimmed page behind it. */
+ function DialogContent({ variant = 'inset', size = 'md', showClose = true, blur = false, inline = false, className, children, ...props }) {
+     const slots = dialogVariants({ variant, size, blur });
+-    const context = useMemo(() => ({ inline, showClose, variant }), [inline, showClose, variant]);
+-    // In the inset look the footer leaves the panel for the band under it.
+-    const all = Children.toArray(children);
+-    const footer = variant === 'inset' ? all.filter(isFooter) : [];
+-    const rest = variant === 'inset' ? all.filter((child) => !isFooter(child)) : all;
+-    const inside = (_jsxs(DialogContext.Provider, { value: context, children: [_jsxs("div", { "data-slot": "dialog-panel", className: slots.panel(), children: [rest, showClose ? _jsx(DialogClose, { "aria-label": "Close", className: slots.close(), icon: true }) : null] }), footer] }));
++    const [band, setBand] = useState(null);
++    const context = useMemo(() => ({ inline, showClose, variant, band }), [inline, showClose, variant, band]);
++    const inside = (_jsxs(DialogContext.Provider, { value: context, children: [_jsxs("div", { "data-slot": "dialog-panel", className: slots.panel(), children: [children, showClose ? _jsx(DialogClose, { "aria-label": "Close", className: slots.close(), icon: true }) : null] }), variant === 'inset' ? _jsx("div", { "data-slot": "dialog-band", className: "contents", ref: setBand }) : null] }));
+     if (inline) {
+         return (_jsx("div", { "data-slot": "dialog-content", "data-variant": variant, className: slots.shell({ className }), ...props, children: inside }));
+     }
+@@ -227,12 +224,15 @@ DialogBody.displayName = 'Dialog.Body';
+  * direct child of `Dialog.Content`, so the band can find it.
+  */
+ function DialogFooter({ className, render, ...props }) {
+-    const { variant } = useContext(DialogContext);
+-    return useRender({
++    const { variant, band } = useContext(DialogContext);
++    const footer = useRender({
+         defaultTagName: 'div',
+         render,
+         props: mergeProps({ 'data-slot': 'dialog-footer', className: dialogVariants({ variant }).footer({ className }) }, props),
+     });
++    if (variant !== 'inset' || band === undefined)
++        return footer;
++    return band ? createPortal(footer, band) : null;
+ }
+ DialogFooter.displayName = 'Dialog.Footer';
+ /** Closes the dialog. */

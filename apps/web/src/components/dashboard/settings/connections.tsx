@@ -17,7 +17,6 @@ import { useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
-import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { convexClient } from "@/lib/convex";
 import { LEDGER_MCP_ORIGIN } from "@/lib/site";
 
@@ -67,47 +66,71 @@ function ServerLine() {
     );
 }
 
-function ConnectDialog({ onClose }: { onClose: () => void }) {
+function ConnectBody() {
     const copy = useIntlayer("dashboard-connections");
-    const shown = useOverlayOpen();
     const write = useCopyServer();
     return (
-        <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
+        <>
+            <Dialog.Header>
+                <Dialog.Title>{copy.connect}</Dialog.Title>
+                <Dialog.Description>{copy.connectBody}</Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Body>
+                <Row
+                    hint={<span className="font-mono text-[13px] break-all select-all">{SERVER}</span>}
+                    label={copy.server}
+                >
+                    <Button aria-label={copy.copyServer.value} onClick={write} size="icon-sm" variant="outline">
+                        <HugeiconsIcon icon={Copy01Icon} size={15} />
+                    </Button>
+                </Row>
+            </Dialog.Body>
+            <Dialog.Footer>
+                <Dialog.Close render={<Button variant="secondary" />}>{copy.done}</Dialog.Close>
+            </Dialog.Footer>
+        </>
+    );
+}
+
+function ConnectDialog({ onClose, open }: { onClose: () => void; open: boolean }) {
+    return (
+        <Dialog onOpenChange={(next) => next || onClose()} open={open}>
             <Dialog.Content className="app-shell">
-                <Dialog.Header>
-                    <Dialog.Title>{copy.connect}</Dialog.Title>
-                    <Dialog.Description>{copy.connectBody}</Dialog.Description>
-                </Dialog.Header>
-                <Dialog.Body>
-                    <Row
-                        hint={<span className="font-mono text-[13px] break-all select-all">{SERVER}</span>}
-                        label={copy.server}
-                    >
-                        <Button aria-label={copy.copyServer.value} onClick={write} size="icon-sm" variant="outline">
-                            <HugeiconsIcon icon={Copy01Icon} size={15} />
-                        </Button>
-                    </Row>
-                </Dialog.Body>
-                <Dialog.Footer>
-                    <Dialog.Close render={<Button variant="secondary" />}>{copy.done}</Dialog.Close>
-                </Dialog.Footer>
+                <ConnectBody />
             </Dialog.Content>
         </Dialog>
     );
 }
 
-function DisconnectDialog({ agent, onClose, onConfirm }: { agent: Agent; onClose: () => void; onConfirm: () => void }) {
+function DisconnectBody({ agent, onConfirm }: { agent: Agent; onConfirm: () => void }) {
     const copy = useIntlayer("dashboard-connections");
-    const shown = useOverlayOpen();
     return (
-        <AlertDialog onOpenChange={(open) => open || onClose()} open={shown}>
+        <>
+            <AlertDialog.Title>{copy.disconnectTitle({ name: agent.name ?? copy.agent.value })}</AlertDialog.Title>
+            <AlertDialog.Description>{copy.disconnectBody}</AlertDialog.Description>
+            <AlertDialog.Footer>
+                <AlertDialog.Cancel>{copy.cancel}</AlertDialog.Cancel>
+                <AlertDialog.Action onClick={onConfirm}>{copy.disconnect}</AlertDialog.Action>
+            </AlertDialog.Footer>
+        </>
+    );
+}
+
+function DisconnectDialog({
+    agent,
+    onClose,
+    onConfirm,
+    open,
+}: {
+    agent: Agent | null;
+    onClose: () => void;
+    onConfirm: (agent: Agent) => void;
+    open: boolean;
+}) {
+    return (
+        <AlertDialog onOpenChange={(next) => next || onClose()} open={open}>
             <AlertDialog.Content className="app-shell" tone="destructive">
-                <AlertDialog.Title>{copy.disconnectTitle({ name: agent.name ?? copy.agent.value })}</AlertDialog.Title>
-                <AlertDialog.Description>{copy.disconnectBody}</AlertDialog.Description>
-                <AlertDialog.Footer>
-                    <AlertDialog.Cancel>{copy.cancel}</AlertDialog.Cancel>
-                    <AlertDialog.Action onClick={onConfirm}>{copy.disconnect}</AlertDialog.Action>
-                </AlertDialog.Footer>
+                {agent ? <DisconnectBody agent={agent} onConfirm={() => onConfirm(agent)} /> : null}
             </AlertDialog.Content>
         </AlertDialog>
     );
@@ -133,6 +156,7 @@ export function Connections() {
     const access = useAccessLabel();
     const [connecting, setConnecting] = useState(false);
     const [target, setTarget] = useState<Agent | null>(null);
+    const [disconnecting, setDisconnecting] = useState(false);
     const [gone, setGone] = useState<ReadonlySet<string>>(new Set());
     const [thisYear] = useState(() => new Date().getFullYear());
     const { data } = useQuery(convexQuery(api.mcp.listConnections, {}));
@@ -147,7 +171,7 @@ export function Connections() {
         });
 
     const disconnect = async (agent: Agent) => {
-        setTarget(null);
+        setDisconnecting(false);
         setGone((current) => new Set(current).add(agent.id));
         try {
             await convexClient().mutation(api.mcp.revokeConnection, { id: agent.id });
@@ -266,7 +290,10 @@ export function Connections() {
                                                             sideOffset={4}
                                                         >
                                                             <Menu.Item
-                                                                onClick={() => setTarget(agent)}
+                                                                onClick={() => {
+                                                                    setTarget(agent);
+                                                                    setDisconnecting(true);
+                                                                }}
                                                                 variant="destructive"
                                                             >
                                                                 <HugeiconsIcon icon={Unlink01Icon} size={16} />
@@ -284,14 +311,13 @@ export function Connections() {
                     </SettingsCard>
                 )}
             </div>
-            <OverlayPresence value={connecting ? true : null}>
-                {() => <ConnectDialog onClose={() => setConnecting(false)} />}
-            </OverlayPresence>
-            <OverlayPresence value={target}>
-                {(held) => (
-                    <DisconnectDialog agent={held} onClose={() => setTarget(null)} onConfirm={() => disconnect(held)} />
-                )}
-            </OverlayPresence>
+            <ConnectDialog onClose={() => setConnecting(false)} open={connecting} />
+            <DisconnectDialog
+                agent={target}
+                onClose={() => setDisconnecting(false)}
+                onConfirm={disconnect}
+                open={disconnecting}
+            />
         </>
     );
 }

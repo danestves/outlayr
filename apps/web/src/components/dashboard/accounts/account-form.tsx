@@ -18,7 +18,7 @@ import { Input } from "panelui-web/input";
 import { Label } from "panelui-web/label";
 import { Select } from "panelui-web/select";
 import { Switch } from "panelui-web/switch";
-import { useId, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -27,7 +27,7 @@ import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committe
 import { createdAccount, editedAccount, parseAmount } from "@/lib/account-writes";
 import { ledgerBooks } from "@/lib/ledger-db";
 
-import { AmountInput, amountText, CurrencyField, FlowDialog } from "./fields";
+import { AmountInput, amountText, CurrencyField, FlowDialog, focusNode } from "./fields";
 import { useLedgerDb } from "./flows";
 import type { AccountFlow, AccountType } from "./flows";
 import { Glyph } from "./glyph";
@@ -224,7 +224,6 @@ export function AccountForm({
     const editing = account !== null;
     const startBalance = account ? accountFacts(ledger, account.localId).balance : 0;
     const start = startValues(account, startType, startBalance, ledger.currency);
-    const nameInput = useRef<HTMLInputElement>(null);
 
     const form = useForm({
         defaultValues: start,
@@ -282,11 +281,7 @@ export function AccountForm({
     const createTitle = card ? flows.newCardTitle : flows.newTitle;
     const dim = name.trim() === "" && !attempted;
     return (
-        <FlowDialog
-            initialFocus={editing ? undefined : nameInput}
-            label={editing ? flows.editTitle : createTitle}
-            onClose={onClose}
-        >
+        <FlowDialog label={editing ? flows.editTitle : createTitle}>
             <Dialog.Body>
                 <form
                     className="flex flex-col gap-4"
@@ -328,7 +323,7 @@ export function AccountForm({
                                             onBlur={field.handleBlur}
                                             onChange={(event) => onName(event.target.value)}
                                             placeholder={flows.namePlaceholder.value}
-                                            ref={nameInput}
+                                            ref={editing ? undefined : focusNode}
                                             value={field.state.value}
                                         />
                                         {error ? <Field.Error match>{String(error)}</Field.Error> : null}

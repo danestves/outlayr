@@ -6,7 +6,6 @@ import { Button } from "panelui-web/button";
 import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { OverlayPresence } from "@/components/dashboard/overlay-presence";
 import { authClient } from "@/lib/auth-client";
 
 import { EmailDialog, Tile } from "./account";
@@ -63,9 +62,7 @@ export function Email() {
                     </div>
                 </div>
             </div>
-            <OverlayPresence value={changing ? true : null}>
-                {() => <EmailDialog onClose={() => setChanging(false)} />}
-            </OverlayPresence>
+            <EmailDialog onClose={() => setChanging(false)} open={changing} />
         </>
     );
 }
