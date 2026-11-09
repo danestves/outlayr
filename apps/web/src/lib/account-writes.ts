@@ -242,26 +242,26 @@ export function deletedAccount(books: LedgerBooks, account: Account, at: number)
     const tombstones = (
         table: "installmentPlans" | "installments" | "outsideMoves" | "outsidePayments" | "savingsGoals"
     ) => books[table].filter((row) => plan[table].has(row.localId)).map((row) => nextRow(table, row, gone, at));
+    const entries = books.transactions.flatMap((row) => {
+        const taken = plan.transactions.has(row.localId);
+        const detached = plan.detached.transactions.has(row.localId);
+        if (!(taken || detached)) {
+            return [];
+        }
+        // A person's own entry: a schedule left on its tombstone would be revived.
+        const own = taken && !detached && row.accountId === account.localId;
+        const change = {
+            ...(taken && gone),
+            ...(own && { recurringType: RECURRING_TYPE.none }),
+            ...(detached && { accountId: null }),
+        };
+        return [{ own, row: nextRow("transactions", row, change, at) }];
+    });
     // Push batches commit separately, so each row must stay findable until the rows it leads to are gone: a push that
-    // dies midway leaves the account there, and deleting again rebuilds the rest. Fees before transfers, account last.
+    // dies midway leaves the account there, and deleting again rebuilds the rest. Fees before transfers, a person's
+    // own entries after what goes with them, account last.
     return [
-        ...books.transactions.flatMap((row) => {
-            const taken = plan.transactions.has(row.localId);
-            const detached = plan.detached.transactions.has(row.localId);
-            if (!(taken || detached)) {
-                return [];
-            }
-            // Only a person's own entries go while still on the account, and a schedule left on one would be revived.
-            const retired = taken && row.accountId === account.localId && { recurringType: RECURRING_TYPE.none };
-            return [
-                nextRow(
-                    "transactions",
-                    row,
-                    { ...(taken && gone), ...retired, ...(detached && { accountId: null }) },
-                    at
-                ),
-            ];
-        }),
+        ...entries.filter((entry) => !entry.own).map((entry) => entry.row),
         ...books.transfers.flatMap((row) => {
             const taken = plan.transfers.has(row.localId);
             const detached = plan.detached.transfers.has(row.localId);
@@ -274,6 +274,7 @@ export function deletedAccount(books: LedgerBooks, account: Account, at: number)
         ...tombstones("installmentPlans"),
         ...tombstones("outsideMoves"),
         ...tombstones("savingsGoals"),
+        ...entries.filter((entry) => entry.own).map((entry) => entry.row),
         nextRow("accounts", account, gone, at),
     ];
 }

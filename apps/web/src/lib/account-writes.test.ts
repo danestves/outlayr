@@ -182,14 +182,16 @@ describe("deletedAccount for a person", () => {
                 accounts: [ana],
                 transactions: [
                     entry("loan", { accountId: "ana", recurringType: 3 }),
+                    entry("loan fee", { accountId: "cash", feeForId: "loan" }),
                     entry("settled", { accountId: "ana", deletedAt: EARLIER }),
                 ],
             }),
             ana,
             AT
         );
-        expect(rows.map((row) => row.localId)).toStrictEqual(["loan", "ana"]);
-        expect(rows[0]).toMatchObject({ deletedAt: AT, fields: { accountId: "ana", recurringType: 0 } });
+        // The fee is found through its live loan, so it goes first or a push that dies midway strands it.
+        expect(rows.map((row) => row.localId)).toStrictEqual(["loan fee", "loan", "ana"]);
+        expect(rows[1]).toMatchObject({ deletedAt: AT, fields: { accountId: "ana", recurringType: 0 } });
     });
 });
 
