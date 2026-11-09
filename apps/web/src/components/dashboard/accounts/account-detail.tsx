@@ -187,10 +187,10 @@ function DetailBar({ row }: { row: AccountRow }) {
                     </Menu.Item>
                 </Menu.Content>
             </Menu>
-            <PhoneAction variant="default">
+            <Button onClick={() => open({ accountId: row.id, kind: "entry" })}>
                 <Glyph icon={Add01Icon} />
                 {detail.addEntry}
-            </PhoneAction>
+            </Button>
         </AccountsBar>
     );
 }
@@ -676,7 +676,8 @@ const GHOST_ROWS = [
 ] as const;
 const GHOST_COLUMNS = "grid grid-cols-[30%_18%_17%_1fr_auto] items-center gap-2 px-3.5";
 
-function EmptyEntries() {
+function EmptyEntries({ accountId }: { accountId: string }) {
+    const { open } = useAccountFlows();
     const { detail } = useIntlayer("dashboard-accounts");
     return (
         <Card className="flex-1" title={detail.transactions}>
@@ -703,10 +704,10 @@ function EmptyEntries() {
                 <b className="text-[15px] leading-[22px] font-semibold">{detail.emptyTitle}</b>
                 <p className="text-muted-foreground text-[13px]">{detail.emptyBody}</p>
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
-                    <PhoneAction variant="default">
+                    <Button onClick={() => open({ accountId, kind: "entry" })}>
                         <Glyph icon={Add01Icon} />
                         {detail.addEntry}
-                    </PhoneAction>
+                    </Button>
                     <PhoneAction>
                         <Glyph icon={Upload01Icon} />
                         {detail.importEntries}
@@ -940,7 +941,7 @@ export function AccountDetail({ accountId }: { accountId: string }) {
             <div className="mt-4 grid grid-cols-1 gap-4 @5xl:grid-cols-[minmax(0,1fr)_332px]">
                 <div className="flex min-w-0 flex-col gap-4">
                     {empty ? (
-                        <EmptyEntries />
+                        <EmptyEntries accountId={row.id} />
                     ) : (
                         <>
                             <HistoryCard row={row} />

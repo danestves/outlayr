@@ -260,14 +260,16 @@ const SEPARATORS = /[.,]/g;
 const NOT_AMOUNT = /[^\d.,]/g;
 const GROUP_DIGITS = 3;
 
-/** What a person typed, in any locale's grouping. "1,000" groups unless the currency really has three decimals. */
-export function parseAmount(text: string, decimals: number): number {
+/**
+ * What a person typed, in any locale's grouping. "1,000" groups unless the currency really has three decimals, or
+ * `thousands` is off for a figure where three decimals are ordinary, such as a rate.
+ */
+export function parseAmount(text: string, decimals: number, thousands = decimals !== GROUP_DIGITS): number {
     const clean = text.replaceAll(NOT_AMOUNT, "");
     const marks = clean.match(SEPARATORS) ?? [];
     const last = Math.max(clean.lastIndexOf("."), clean.lastIndexOf(","));
     const tail = clean.slice(last + 1);
-    const onlyGroups =
-        new Set(marks).size === 1 && (marks.length > 1 || (tail.length === GROUP_DIGITS && decimals !== GROUP_DIGITS));
+    const onlyGroups = new Set(marks).size === 1 && (marks.length > 1 || (tail.length === GROUP_DIGITS && thousands));
     const whole = last < 0 || onlyGroups ? clean : clean.slice(0, last);
     const fraction = last < 0 || onlyGroups ? "" : tail;
     const value = Number(`${whole.replaceAll(SEPARATORS, "") || "0"}.${fraction || "0"}`);

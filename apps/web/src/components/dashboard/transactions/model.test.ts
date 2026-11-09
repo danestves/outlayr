@@ -4,7 +4,7 @@ import { describe, expect, it } from "vite-plus/test";
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
 import type { LedgerRow } from "../../../lib/dashboard-series-ledger";
 import type { FoldedRow } from "../home/rows";
-import { csvOf, exportLines, linesOf, queryRows, rangeOf, tally } from "./model";
+import { csvOf, exportLines, installmentTags, linesOf, queryRows, rangeOf, tally, transferMoves } from "./model";
 import type { LedgerQuery } from "./model";
 
 const NOW = Date.parse("2026-11-08T15:00:00Z");
@@ -216,5 +216,52 @@ describe("exportLines", () => {
             'Date,"Joe\'s ""diner"", NYC","a\nb",-3.5\r\n'
         );
         expect(csvOf([["=HYPERLINK(1)", "-2+3", -2]])).toBe("'=HYPERLINK(1),'-2+3,-2\r\n");
+    });
+});
+
+describe("installmentTags", () => {
+    const installment = (localId: string, planId: string, sequence: number, deletedAt: number | null = null) => ({
+        deletedAt,
+        localId,
+        planId,
+        sequence,
+    });
+
+    it("numbers a payment from one within its own plan, leaving deleted installments out of the count", () => {
+        const tags = installmentTags({
+            installments: [
+                installment("a1", "mac", 0),
+                installment("a2", "mac", 1),
+                installment("a3", "mac", 2, 9),
+                installment("b1", "tv", 0),
+            ],
+        } as never);
+        expect(tags.get("a2")).toStrictEqual({ at: 2, of: 2 });
+        expect(tags.get("b1")).toStrictEqual({ at: 1, of: 1 });
+        expect(tags.has("a3")).toBe(false);
+    });
+
+    it("counts from one when a plan has no down payment and its sequences start at one", () => {
+        const tags = installmentTags({
+            installments: [installment("c2", "phone", 2), installment("c1", "phone", 1)],
+        } as never);
+        expect(tags.get("c1")).toStrictEqual({ at: 1, of: 2 });
+        expect(tags.get("c2")).toStrictEqual({ at: 2, of: 2 });
+    });
+});
+
+describe("transferMoves", () => {
+    const fee = (accountId: string | null, amount: number) => ({ accountId, amount, id: `${accountId}-${amount}` });
+
+    it("adds a fee from the sender to what left, in cents and without touching what arrived", () => {
+        const move = { fees: [fee("chase", 0.1), fee("chase", 0.2)], fromId: "chase", sent: 500, sentCurrency: "USD" };
+        expect(transferMoves(move as never, "USD")).toStrictEqual({ apart: [], sent: 500.3 });
+    });
+
+    it("keeps a fee apart when its currency or account differs, so bolivars never get dollars added", () => {
+        const fromVes = { fees: [fee("bdv", 2)], fromId: "bdv", sent: 1000, sentCurrency: "VES" };
+        const fromOther = { fees: [fee("amex", 2)], fromId: "chase", sent: 10, sentCurrency: "USD" };
+        expect(transferMoves(fromVes as never, "USD")).toMatchObject({ apart: [{ amount: 2 }], sent: 1000 });
+        expect(transferMoves(fromOther as never, "USD")).toMatchObject({ apart: [{ amount: 2 }], sent: 10 });
     });
 });

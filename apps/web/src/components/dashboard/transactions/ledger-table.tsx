@@ -1,4 +1,6 @@
-import { RiRepeatLine } from "@remixicon/react";
+import Calendar02Icon from "@hugeicons/core-free-icons/Calendar02Icon";
+import RepeatIcon from "@hugeicons/core-free-icons/RepeatIcon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Checkbox } from "panelui-web/checkbox";
 import { Table } from "panelui-web/table";
 import { memo, useMemo } from "react";
@@ -15,10 +17,11 @@ import { useCategoryName } from "../home/format";
 import { figureOf } from "../home/rows";
 import type { FoldedRow } from "../home/rows";
 import { ROW_HEIGHT, useLineWindow } from "./line-window";
+import { installmentTags } from "./model";
 import type { Line } from "./model";
-import { useDayTitle } from "./use-day-title";
+import { useDayParts } from "./use-day-title";
 
-const DAY_HEIGHT = 32;
+const DAY_HEIGHT = 34;
 const ISO_CURRENCY = /^[A-Z]{3}$/u;
 
 const RING = "[--tile-ring:var(--color-card)]";
@@ -27,14 +30,15 @@ const ROW = "relative h-[51px] border-0 hover:bg-muted/40 has-[button:focus-visi
 const HEAD = "first:ps-3.5 last:pe-3.5";
 // Checkboxes sit above the row's stretched button. Bulk actions are for wider screens; the sheet deletes on a phone.
 const PICK = "relative z-[1] hidden w-10 px-0 align-middle first:ps-3.5 @2xl:table-cell";
-const AFTER_PICK = "@max-2xl:ps-3.5!";
+const AFTER_PICK = "@max-2xl:ps-3.5! @max-2xl:w-full";
 const CELL = "h-[51px] overflow-hidden px-1.5 py-0 align-middle first:ps-3.5 last:pe-3.5 @sm:px-3";
 const SIDE = `${CELL} hidden truncate @2xl:table-cell`;
 const FIGURE = `${CELL} dash-figure whitespace-nowrap`;
 const SECOND_LINE = "dash-figure text-muted-foreground block text-xs leading-4";
-// The column header sticks under the mobile bar below lg, and each day's header sticks under the column header.
-const HEAD_STICKY = "in-data-[sticky]:bg-card max-lg:top-[calc(52px+env(safe-area-inset-top))]!";
-const DAY_STICKY = "sticky top-[calc(92px+env(safe-area-inset-top))] z-[1] lg:top-10";
+// A phone reads each row without column names, so its day headers stick to the top of the list.
+const HEAD_STICKY = "in-data-[sticky]:bg-card max-sm:hidden";
+const DAY_STICKY = "sticky top-0 z-[1] sm:top-10";
+const LIT = "bg-primary/10 hover:bg-primary/10 [--tile-ring:color-mix(in_oklab,var(--primary)_10%,var(--color-card))]";
 
 interface EntryRowProps {
     account: boolean;
@@ -42,6 +46,7 @@ interface EntryRowProps {
     day: string;
     imageUrl: string | undefined;
     index: number;
+    installment: { at: number; of: number } | undefined;
     onOpen: (row: FoldedRow) => void;
     onPick: ((id: string) => void) | null;
     picked: boolean;
@@ -56,6 +61,7 @@ function EntryRowView({
     day,
     imageUrl,
     index,
+    installment,
     onOpen,
     onPick,
     picked,
@@ -65,14 +71,14 @@ function EntryRowView({
 }: EntryRowProps) {
     const { ledger, photos: accountPhotos } = useDashboard();
     const { transactions: copy } = useIntlayer("dashboard-home");
-    const { bulk, recurring: recurringLabel } = useIntlayer("dashboard-transactions");
+    const { bulk, installmentOf, recurring: recurringLabel } = useIntlayer("dashboard-transactions");
     const categoryName = useCategoryName();
     const { money } = useDisplayFormat();
     const figure = figureOf(ledger, row);
     const accountName = (id: string | null) =>
         id === null ? copy.noAccount.value : (ledger.accounts.get(id)?.name ?? "");
     const raw = "fromId" in row ? undefined : catalog.transaction(row.id);
-    const tone = `${ROW} ${stripe ? STRIPE : RING} ${selected ? "bg-muted/70" : ""}`;
+    const tone = `${ROW} ${stripe ? STRIPE : RING} ${selected || picked ? LIT : ""}`;
     const secondLine = () => {
         if (figure.arrived !== null && "fromId" in row) {
             const arrived = money(figure.arrived, row.arrivedCurrency);
@@ -108,6 +114,7 @@ function EntryRowView({
         ) : null;
     const merchantCell = (tile: ReactNode, name: string, kind: string, recurring: boolean) => (
         <Table.Cell className={`${CELL} ${AFTER_PICK} max-w-0 @2xl:max-w-none`}>
+            {selected ? <span aria-hidden className="bg-primary absolute inset-y-0 left-0 w-0.5" /> : null}
             <span className="flex items-center gap-3 font-medium">
                 {tile}
                 <span className="min-w-0">
@@ -119,11 +126,18 @@ function EntryRowView({
                     >
                         <span className="truncate">{name}</span>
                         {recurring ? (
-                            <RiRepeatLine
+                            <HugeiconsIcon
+                                icon={RepeatIcon}
                                 aria-label={recurringLabel.value}
                                 className="text-muted-foreground shrink-0"
                                 size={12}
                             />
+                        ) : null}
+                        {installment ? (
+                            <span className="dash-figure text-muted-foreground ml-1.5 flex shrink-0 items-center gap-1 text-xs font-normal max-sm:hidden">
+                                <HugeiconsIcon icon={Calendar02Icon} aria-hidden size={13} />
+                                {installmentOf({ at: String(installment.at), of: String(installment.of) })}
+                            </span>
                         ) : null}
                     </button>
                     <span
@@ -236,6 +250,8 @@ interface LedgerTableProps {
     onOpen: (row: FoldedRow) => void;
     picking?: TablePicking;
     selected?: string | null;
+    /** Sits beside the Amount column's name. */
+    sort?: ReactNode;
 }
 
 /** The ledger as a table: rows in the ledger currency, fees folded, a header over each day when there is one. */
@@ -247,11 +263,17 @@ export function LedgerTable({
     onOpen,
     picking,
     selected = null,
+    sort,
 }: LedgerTableProps) {
     const { bulk } = useIntlayer("dashboard-transactions");
     const { ledger } = useDashboard();
     const { transactions: copy } = useIntlayer("dashboard-home");
-    const dayTitle = useDayTitle();
+    const dayParts = useDayParts();
+    const dayText = (day: string) => {
+        const { date, lead } = dayParts(day);
+        return lead ? `${lead} · ${date}` : date;
+    };
+    const tags = useMemo(() => installmentTags(ledger.books), [ledger.books]);
     const { money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
     const grouped = lines[0]?.type === "day";
@@ -301,7 +323,10 @@ export function LedgerTable({
                         </Table.Head>
                     ) : null}
                     <Table.Head align="end" className={`${HEAD} w-px @2xl:w-[22%]`}>
-                        {copy.columns.amount}
+                        <span className="inline-flex items-center gap-1">
+                            {copy.columns.amount}
+                            {sort}
+                        </span>
                     </Table.Head>
                 </Table.Row>
             </Table.Header>
@@ -321,14 +346,16 @@ export function LedgerTable({
                 {shown.map((line, offset) => {
                     const index = first + offset;
                     if (line.type === "row") {
-                        const imageKey = catalog.transaction(line.row.id)?.imageKey;
+                        const raw = catalog.transaction(line.row.id);
+                        const imageKey = raw?.imageKey;
                         return (
                             <EntryRow
                                 account={account}
                                 catalog={catalog}
-                                day={grouped ? "" : dayTitle(line.row.day)}
+                                day={grouped ? "" : dayText(line.row.day)}
                                 imageUrl={imageKey ? photos?.get(imageKey) : undefined}
                                 index={index}
+                                installment={raw?.installmentId ? tags.get(raw.installmentId) : undefined}
                                 key={line.row.id}
                                 onOpen={onOpen}
                                 onPick={picking?.onPick ?? null}
@@ -339,18 +366,19 @@ export function LedgerTable({
                             />
                         );
                     }
-                    const title = dayTitle(line.day);
+                    const { date, lead } = dayParts(line.day);
                     return (
-                        <tr aria-rowindex={index + 2} className="h-8" key={line.day}>
+                        <tr aria-rowindex={index + 2} className="h-[34px]" key={line.day}>
                             <th
-                                className={`${DAY_STICKY} bg-card text-muted-foreground border-border h-8 border-b px-3.5 text-left text-xs font-medium`}
-                                aria-label={`${title}, ${money(line.net, ledger.currency, "always")}`}
+                                className={`${DAY_STICKY} bg-card text-muted-foreground border-border h-[34px] border-b px-3.5 text-left text-xs font-medium`}
+                                aria-label={`${dayText(line.day)}, ${money(line.net, ledger.currency, "always")}`}
                                 colSpan={columns}
                                 scope="colgroup"
                             >
                                 <span className="flex items-center gap-2">
-                                    <span className="text-foreground">{title}</span>
-                                    <span className={`dash-figure ml-auto ${line.net > 0 ? "text-app-income" : ""}`}>
+                                    {lead ? <span className="text-foreground">{lead}</span> : null}
+                                    <span className={lead ? "max-sm:hidden" : "text-foreground"}>{date}</span>
+                                    <span className="dash-figure ml-auto">
                                         {money(line.net, ledger.currency, "always")}
                                     </span>
                                 </span>

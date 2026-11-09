@@ -32,7 +32,7 @@ const ENTRY_DEFAULTS = {
 };
 
 /** A shared rule's row, in Dates and under `id`, as the row a push sends. */
-function entryPush<Row extends { id: string }>(row: Row, at: number): CommitRow {
+export function entryPush<Row extends { id: string }>(row: Row, at: number): CommitRow {
     const merged = new Map<string, unknown>(Object.entries({ ...ENTRY_DEFAULTS, ...row }));
     const fields = Object.fromEntries(
         Object.keys(FIELDS_BY_TABLE.transactions).flatMap((key) => {

@@ -6,6 +6,8 @@ import { Table } from "panelui-web/table";
 import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useAccountFlows } from "@/components/dashboard/accounts/flows";
+
 import type { SetupState, SetupStep } from "./model";
 
 const STEPS = ["account", "entry", "budget"] as const;
@@ -19,6 +21,7 @@ const stepState = (setup: SetupState, step: SetupStep) => {
 
 export function SetupHero({ setup }: { setup: SetupState }) {
     const { add } = useIntlayer("dashboard");
+    const { open } = useAccountFlows();
     const copy = useIntlayer("dashboard-home").setup;
     const title = {
         account: setup.done.entry ? copy.titleAccountNext : copy.titleAccount,
@@ -45,10 +48,22 @@ export function SetupHero({ setup }: { setup: SetupState }) {
                     ))}
                 </ol>
             </div>
-            <PhoneButton size="lg">
-                <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
-                {cta}
-            </PhoneButton>
+            {setup.step === "budget" ? (
+                <PhoneButton size="lg">
+                    <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
+                    {cta}
+                </PhoneButton>
+            ) : (
+                <Button
+                    onClick={() =>
+                        open(setup.step === "account" ? { kind: "create", type: "bank" } : { kind: "entry" })
+                    }
+                    size="lg"
+                >
+                    <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
+                    {cta}
+                </Button>
+            )}
         </section>
     );
 }

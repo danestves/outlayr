@@ -1,9 +1,11 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
+import { Button } from "panelui-web/button";
 import { useMemo } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile, LookTile } from "@/components/ledger/tiles";
 import { addDays } from "@/lib/ledger";
@@ -14,7 +16,7 @@ import { useCatalog } from "./catalog";
 import { useDateFormat } from "./format";
 import { accountBalances } from "./model";
 import type { SetupState } from "./model";
-import { Cover, GhostAccounts, PhoneButton } from "./setup";
+import { Cover, GhostAccounts } from "./setup";
 
 const ACCOUNT_ROWS = 6;
 const UPCOMING_ROWS = 5;
@@ -23,6 +25,7 @@ const ROW = "flex h-10 items-center gap-2.5 font-medium";
 
 export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger, overview, photos } = useDashboard();
+    const { open } = useAccountFlows();
     const { panel: copy, setup: setupCopy } = useIntlayer("dashboard-home");
     const date = useDateFormat();
     const { money } = useDisplayFormat();
@@ -81,10 +84,10 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                     }
                     title={setupCopy.accountTitle}
                 >
-                    <PhoneButton>
+                    <Button onClick={() => open({ kind: "create", type: "bank" })}>
                         <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                         {setupCopy.addAccount}
-                    </PhoneButton>
+                    </Button>
                 </Cover>
             </CardFrame>
         );

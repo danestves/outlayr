@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 export const NEUTRAL_TILE = "#767676";
 
 const SIZES = {
+    xl: { box: "size-11 rounded-xl", glyph: 22, initial: "text-base", emoji: "text-xl" },
     lg: { box: "size-[26px] rounded-lg", glyph: 14, initial: "text-[11px]", emoji: "text-sm" },
     md: { box: "size-6 rounded-md", glyph: 14, initial: "text-[11px]", emoji: "text-sm" },
     sm: { box: "size-5 rounded-[5px]", glyph: 12, initial: "text-[10px]", emoji: "text-xs" },

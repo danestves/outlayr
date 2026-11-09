@@ -77,6 +77,18 @@ const dashboardTransactions = {
         },
         detail: {
             charged: t({ en: "Charged", es: "Cobrado", fr: "Débité", pt: "Cobrado" }),
+            copied: t({ en: "Link copied", es: "Enlace copiado", fr: "Lien copié", pt: "Link copiado" }),
+            copyLink: t({ en: "Copy link", es: "Copiar enlace", fr: "Copier le lien", pt: "Copiar link" }),
+            done: t({ en: "Done", es: "Listo", fr: "Terminé", pt: "Concluído" }),
+            edit: t({ en: "Edit", es: "Editar", fr: "Modifier", pt: "Editar" }),
+            feeOf: insert(
+                t({
+                    en: "{{amount}} + {{fee}} card fee",
+                    es: "{{amount}} + {{fee}} de comisión",
+                    fr: "{{amount}} + {{fee}} de frais",
+                    pt: "{{amount}} + {{fee}} de tarifa",
+                })
+            ),
             date: t({ en: "Date", es: "Fecha", fr: "Date", pt: "Data" }),
             editOnPhone: t({
                 en: "Edit this on your phone.",
@@ -86,6 +98,23 @@ const dashboardTransactions = {
             }),
             fee: t({ en: "Fee", es: "Comisión", fr: "Frais", pt: "Tarifa" }),
             from: t({ en: "From", es: "Desde", fr: "De", pt: "De" }),
+            fromAccount: insert(
+                t({
+                    en: "from {{account}}",
+                    es: "desde {{account}}",
+                    fr: "depuis {{account}}",
+                    pt: "de {{account}}",
+                })
+            ),
+            hints: {
+                category: t({ en: "Category", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
+                close: t({ en: "Close", es: "Cerrar", fr: "Fermer", pt: "Fechar" }),
+                delete: t({ en: "Delete", es: "Eliminar", fr: "Supprimer", pt: "Excluir" }),
+                move: t({ en: "Move", es: "Mover", fr: "Parcourir", pt: "Navegar" }),
+            },
+            installments: t({ en: "Installments", es: "Cuotas", fr: "Échéances", pt: "Parcelas" }),
+            more: t({ en: "More", es: "Más", fr: "Plus", pt: "Mais" }),
+            moves: t({ en: "Moves", es: "Movimientos", fr: "Mouvements", pt: "Movimentos" }),
             next: t({
                 en: "Next entry",
                 es: "Movimiento siguiente",
@@ -93,6 +122,15 @@ const dashboardTransactions = {
                 pt: "Próximo lançamento",
             }),
             note: t({ en: "Note", es: "Nota", fr: "Note", pt: "Nota" }),
+            off: t({ en: "Off", es: "No", fr: "Non", pt: "Não" }),
+            perUnit: insert(
+                t({
+                    en: "{{rate}} per {{currency}}",
+                    es: "{{rate}} por {{currency}}",
+                    fr: "{{rate}} pour {{currency}}",
+                    pt: "{{rate}} por {{currency}}",
+                })
+            ),
             previous: t({
                 en: "Previous entry",
                 es: "Movimiento anterior",
@@ -100,15 +138,14 @@ const dashboardTransactions = {
                 pt: "Lançamento anterior",
             }),
             rate: t({ en: "Rate", es: "Tasa", fr: "Taux", pt: "Taxa de câmbio" }),
-            repeats: t({ en: "Repeats", es: "Se repite", fr: "Récurrente", pt: "Repete" }),
             to: t({ en: "To", es: "Hacia", fr: "Vers", pt: "Para" }),
         },
         empty: {
             line: t({
-                en: "Log one on your phone and it shows up here.",
-                es: "Registra uno en tu teléfono y aparece aquí.",
-                fr: "Enregistrez-en une sur votre téléphone et elle s'affichera ici.",
-                pt: "Registre um no celular e ele aparece aqui.",
+                en: "Add your first one here or on your phone.",
+                es: "Añade el primero aquí o en tu teléfono.",
+                fr: "Ajoutez la première ici ou sur votre téléphone.",
+                pt: "Adicione o primeiro aqui ou no celular.",
             }),
             title: t({
                 en: "No entries yet",
@@ -117,6 +154,9 @@ const dashboardTransactions = {
                 pt: "Nenhum lançamento ainda",
             }),
         },
+        installmentOf: insert(
+            t({ en: "{{at}} of {{of}}", es: "{{at}} de {{of}}", fr: "{{at}} sur {{of}}", pt: "{{at}} de {{of}}" })
+        ),
         export: t({ en: "Export", es: "Exportar", fr: "Exporter", pt: "Exportar" }),
         exportFile: t({
             en: "outlayr-transactions",
@@ -128,6 +168,92 @@ const dashboardTransactions = {
             in: t({ en: "In", es: "Entró", fr: "Entrées", pt: "Entrou" }),
             net: t({ en: "Net", es: "Neto", fr: "Solde", pt: "Saldo" }),
             out: t({ en: "Out", es: "Salió", fr: "Sorties", pt: "Saiu" }),
+        },
+        form: {
+            account: t({ en: "Account", es: "Cuenta", fr: "Compte", pt: "Conta" }),
+            addAnother: t({ en: "Add another", es: "Añadir otro", fr: "En ajouter une autre", pt: "Adicionar outro" }),
+            added: t({
+                en: "Entry added",
+                es: "Movimiento añadido",
+                fr: "Opération ajoutée",
+                pt: "Lançamento adicionado",
+            }),
+            amount: t({ en: "Amount", es: "Monto", fr: "Montant", pt: "Valor" }),
+            amountRequired: t({
+                en: "Type an amount first",
+                es: "Primero escribe un monto",
+                fr: "Saisissez d'abord un montant",
+                pt: "Primeiro digite um valor",
+            }),
+            category: t({ en: "Category", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
+            categoryRequired: t({
+                en: "Pick a category first",
+                es: "Primero elige una categoría",
+                fr: "Choisissez d'abord une catégorie",
+                pt: "Primeiro escolha uma categoria",
+            }),
+            createAccount: t({ en: "Create account", es: "Crear cuenta", fr: "Créer un compte", pt: "Criar conta" }),
+            currency: t({ en: "Currency", es: "Moneda", fr: "Devise", pt: "Moeda" }),
+            date: t({ en: "Date", es: "Fecha", fr: "Date", pt: "Data" }),
+            dateRequired: t({
+                en: "Pick a date first",
+                es: "Primero elige una fecha",
+                fr: "Choisissez d'abord une date",
+                pt: "Primeiro escolha uma data",
+            }),
+            fee: t({ en: "Card fee", es: "Comisión", fr: "Frais de carte", pt: "Tarifa do cartão" }),
+            feeNote: insert(
+                t({
+                    en: "Fee · {{merchant}}",
+                    es: "Comisión · {{merchant}}",
+                    fr: "Frais · {{merchant}}",
+                    pt: "Tarifa · {{merchant}}",
+                })
+            ),
+            feePlaceholder: t({ en: "3.72 or 3%", es: "3,72 o 3%", fr: "3,72 ou 3 %", pt: "3,72 ou 3%" }),
+            logAgain: t({ en: "Log again", es: "Registrar de nuevo", fr: "Saisir à nouveau", pt: "Registrar de novo" }),
+            name: t({ en: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
+            noAccountLine: t({
+                en: "Create an account to keep this entry's balance somewhere.",
+                es: "Crea una cuenta para llevar el saldo de este movimiento.",
+                fr: "Créez un compte pour suivre le solde de cette opération.",
+                pt: "Crie uma conta para acompanhar o saldo deste lançamento.",
+            }),
+            none: t({ en: "None", es: "Ninguna", fr: "Aucun", pt: "Nenhuma" }),
+            note: t({ en: "Note", es: "Nota", fr: "Note", pt: "Nota" }),
+            noteAdd: t({ en: "Add a note", es: "Añadir una nota", fr: "Ajouter une note", pt: "Adicionar nota" }),
+            pickDate: t({ en: "Pick a date", es: "Elegir fecha", fr: "Choisir une date", pt: "Escolher data" }),
+            removeFee: t({ en: "Remove fee", es: "Quitar comisión", fr: "Retirer les frais", pt: "Remover tarifa" }),
+            rate: t({ en: "Rate", es: "Tasa", fr: "Taux", pt: "Cotação" }),
+            rateCustom: t({ en: "My rate", es: "Mi tasa", fr: "Mon taux", pt: "Minha cotação" }),
+            rateMissing: t({
+                en: "No rate for this date. Use your own.",
+                es: "No hay tasa para esta fecha. Usa la tuya.",
+                fr: "Aucun taux à cette date. Utilisez le vôtre.",
+                pt: "Sem cotação nesta data. Use a sua.",
+            }),
+            rateOfficial: t({ en: "Official", es: "Oficial", fr: "Officiel", pt: "Oficial" }),
+            ratePerUsd: t({ en: "Per USD", es: "Por USD", fr: "Par USD", pt: "Por USD" }),
+            rateRequired: t({
+                en: "Type a rate first",
+                es: "Primero escribe una tasa",
+                fr: "Saisissez d'abord un taux",
+                pt: "Primeiro digite uma cotação",
+            }),
+            repeat: t({ en: "Repeat", es: "Repetir", fr: "Répéter", pt: "Repetir" }),
+            repeatDaily: t({ en: "Daily", es: "Diario", fr: "Quotidien", pt: "Diário" }),
+            repeatMonthly: t({ en: "Monthly", es: "Mensual", fr: "Mensuel", pt: "Mensal" }),
+            repeatNone: t({ en: "Does not repeat", es: "No se repite", fr: "Ne se répète pas", pt: "Não se repete" }),
+            repeatWeekly: t({ en: "Weekly", es: "Semanal", fr: "Hebdomadaire", pt: "Semanal" }),
+            repeatYearly: t({ en: "Yearly", es: "Anual", fr: "Annuel", pt: "Anual" }),
+            saveFailed: t({
+                en: "Could not save. Try again.",
+                es: "No se pudo guardar. Inténtalo de nuevo.",
+                fr: "Enregistrement impossible. Réessayez.",
+                pt: "Não foi possível salvar. Tente de novo.",
+            }),
+            title: t({ en: "Entry", es: "Movimiento", fr: "Opération", pt: "Lançamento" }),
+            total: t({ en: "Total", es: "Total", fr: "Total", pt: "Total" }),
         },
         kind: {
             expense: t({ en: "Expense", es: "Gasto", fr: "Dépense", pt: "Despesa" }),

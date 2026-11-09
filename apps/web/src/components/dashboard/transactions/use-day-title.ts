@@ -1,26 +1,45 @@
-import { useIntlayer } from "react-intlayer";
+import { useMemo } from "react";
+import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { addDays } from "@/lib/ledger";
 
-import { useDateFormat } from "../home/format";
-
 const YEAR = 4;
+const WEEKDAY_LEAD = /^([^\s,]+),?\s/u;
 
-/** "Today · Sun, Nov 8", "Yesterday · Sat, Nov 7", "Fri, Nov 6", with the year once it isn't this one. */
-export function useDayTitle() {
+/** "Sat, Nov 7" in English: the site's en-GB date locale would flip it to "Sat, 7 Nov". */
+export function useWeekday() {
+    const { locale } = useLocale();
+    const { date } = LANGUAGES[localeFromParam(locale)];
+    return useMemo(() => {
+        const format = new Intl.DateTimeFormat(date === "en-GB" ? "en-US" : date, {
+            day: "numeric",
+            month: "short",
+            timeZone: "UTC",
+            weekday: "short",
+        });
+        return (day: string) => format.format(Date.parse(`${day}T12:00:00Z`)).replace(WEEKDAY_LEAD, "$1, ");
+    }, [date]);
+}
+
+/** A day as `lead` ("Today") and `date` ("Sun, Nov 8"), with the year once it isn't this one. */
+export function useDayParts() {
     const { ledger } = useDashboard();
     const { today, yesterday } = useIntlayer("dashboard-transactions");
-    const date = useDateFormat();
+    const weekday = useWeekday();
     const before = addDays(ledger.today, -1);
     return (day: string) => {
-        const weekday = date.weekday(day);
+        const date = weekday(day);
         if (day === ledger.today) {
-            return `${today.value} · ${weekday}`;
+            return { date, lead: today.value };
         }
         if (day === before) {
-            return `${yesterday.value} · ${weekday}`;
+            return { date, lead: yesterday.value };
         }
-        return day.slice(0, YEAR) === ledger.today.slice(0, YEAR) ? weekday : `${weekday} ${day.slice(0, YEAR)}`;
+        return {
+            date: day.slice(0, YEAR) === ledger.today.slice(0, YEAR) ? date : `${date} ${day.slice(0, YEAR)}`,
+            lead: null,
+        };
     };
 }

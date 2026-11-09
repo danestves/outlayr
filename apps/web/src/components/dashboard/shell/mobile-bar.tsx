@@ -9,6 +9,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useOpenFlow } from "@/components/dashboard/accounts/flows";
 import { LogoMark } from "@/components/logo-mark";
 
 import { UserMenu } from "./account-menu";
@@ -16,6 +17,7 @@ import { NavLinks, SearchButton } from "./sidebar";
 
 export function MobileBar() {
     const { account, add, nav } = useIntlayer("dashboard");
+    const openFlow = useOpenFlow();
     const page = useLocation({ select: (location) => location.pathname.split("/")[2] });
     let title: ReactNode = nav.dashboard;
     if (page === "insights") {
@@ -74,7 +76,12 @@ export function MobileBar() {
             >
                 <HugeiconsIcon icon={Search01Icon} strokeWidth={2} />
             </Button>
-            <Button aria-disabled aria-label={add.entry.value} className="mx-[5px]" size="icon" title={add.hint.value}>
+            <Button
+                aria-label={add.entry.value}
+                className="mx-[5px]"
+                onClick={() => openFlow({ kind: "entry" })}
+                size="icon"
+            >
                 <HugeiconsIcon icon={Add01Icon} size={20} strokeWidth={2} />
             </Button>
         </header>

@@ -1,4 +1,5 @@
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { EntryDialog } from "@/components/dashboard/transactions/entry-form";
 
 import { AccountForm } from "./account-form";
 import { CheckDialog } from "./check-dialog";
@@ -17,6 +18,9 @@ export default function FlowDialogs({
     onSwitch: (flow: AccountFlow) => void;
 }) {
     const { ledger } = useDashboard();
+    if (flow.kind === "entry") {
+        return <EntryDialog flow={flow} onClose={onClose} onSwitch={onSwitch} />;
+    }
     if (flow.kind === "create") {
         return <AccountForm account={null} onClose={onClose} onSwitch={onSwitch} type={flow.type} />;
     }

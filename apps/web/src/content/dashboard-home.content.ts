@@ -139,45 +139,100 @@ const dashboardHome = {
             versus: t({ en: "vs last 3 months", es: "vs los últimos 3 meses" }),
         },
         transactions: {
-            all: t({ en: "All", es: "Todos" }),
-            expenses: t({ en: "Expenses", es: "Gastos" }),
-            incomeTab: t({ en: "Income", es: "Ingresos" }),
-            seeAll: t({ en: "See all", es: "Ver todos" }),
-            showLess: t({ en: "Show less", es: "Ver menos" }),
-            shownOf: insert(t({ en: "{{shown}} of {{total}}", es: "{{shown}} de {{total}}" })),
-            transferFee: t({ en: "Transfer fee", es: "Comisión de transferencia" }),
-            columns: {
-                account: t({ en: "Account", es: "Cuenta" }),
-                amount: t({ en: "Amount", es: "Monto" }),
-                category: t({ en: "Category", es: "Categoría" }),
-                date: t({ en: "Date", es: "Fecha" }),
-                merchant: t({ en: "Merchant", es: "Comercio" }),
-                note: t({ en: "Note", es: "Nota" }),
-            },
-            arrived: insert(t({ en: "{{amount}} arrived", es: "Llegaron {{amount}}" })),
-            cardFee: t({ en: "Card fee", es: "Comisión de tarjeta" }),
-            count: insert(t({ en: "{{count}} entries", es: "{{count}} movimientos" })),
-            entries: t({ en: "Entries", es: "Movimientos" }),
-            feeWord: t({ en: "fee", es: "comisión" }),
-            backTo: insert(t({ en: "Back to {{month}}", es: "Volver a {{month}}" })),
-            countOne: t({ en: "1 entry", es: "1 movimiento" }),
-            noAccount: t({ en: "No account", es: "Sin cuenta" }),
-            quietLine: insert(
-                t({ en: "Nothing logged between {{from}} and {{to}}.", es: "Nada registrado entre {{from}} y {{to}}." })
+            all: t({ en: "All", es: "Todos", fr: "Tout", pt: "Tudo" }),
+            expenses: t({ en: "Expenses", es: "Gastos", fr: "Dépenses", pt: "Despesas" }),
+            incomeTab: t({ en: "Income", es: "Ingresos", fr: "Revenus", pt: "Receitas" }),
+            seeAll: t({ en: "See all", es: "Ver todos", fr: "Tout voir", pt: "Ver tudo" }),
+            showLess: t({ en: "Show less", es: "Ver menos", fr: "Voir moins", pt: "Ver menos" }),
+            shownOf: insert(
+                t({
+                    en: "{{shown}} of {{total}}",
+                    es: "{{shown}} de {{total}}",
+                    fr: "{{shown}} sur {{total}}",
+                    pt: "{{shown}} de {{total}}",
+                })
             ),
-            quietTitle: t({ en: "No entries found", es: "No se encontraron movimientos" }),
-            empty: t({ en: "No entries in this view.", es: "No hay movimientos en esta vista." }),
-            next: t({ en: "Next page", es: "Página siguiente" }),
-            previous: t({ en: "Previous page", es: "Página anterior" }),
-            range: insert(t({ en: "{{from}}-{{to}} of {{total}}", es: "{{from}}-{{to}} de {{total}}" })),
-            sort: {
-                label: t({ en: "Sort", es: "Orden" }),
-                largest: t({ en: "Largest", es: "Mayor monto" }),
-                newest: t({ en: "Newest", es: "Más recientes" }),
-                oldest: t({ en: "Oldest", es: "Más antiguos" }),
+            transferFee: t({
+                en: "Transfer fee",
+                es: "Comisión de transferencia",
+                fr: "Frais de virement",
+                pt: "Tarifa de transferência",
+            }),
+            columns: {
+                account: t({ en: "Account", es: "Cuenta", fr: "Compte", pt: "Conta" }),
+                amount: t({ en: "Amount", es: "Monto", fr: "Montant", pt: "Valor" }),
+                category: t({ en: "Category", es: "Categoría", fr: "Catégorie", pt: "Categoria" }),
+                date: t({ en: "Date", es: "Fecha", fr: "Date", pt: "Data" }),
+                merchant: t({ en: "Merchant", es: "Comercio", fr: "Commerçant", pt: "Comerciante" }),
+                note: t({ en: "Note", es: "Nota", fr: "Note", pt: "Nota" }),
             },
-            title: t({ en: "Transactions", es: "Movimientos" }),
-            transfer: t({ en: "Transfer", es: "Transferencia" }),
+            arrived: insert(
+                t({
+                    en: "{{amount}} arrived",
+                    es: "Llegaron {{amount}}",
+                    fr: "{{amount}} reçus",
+                    pt: "{{amount}} recebidos",
+                })
+            ),
+            cardFee: t({ en: "Card fee", es: "Comisión de tarjeta", fr: "Frais de carte", pt: "Tarifa do cartão" }),
+            count: insert(
+                t({
+                    en: "{{count}} entries",
+                    es: "{{count}} movimientos",
+                    fr: "{{count}} opérations",
+                    pt: "{{count}} lançamentos",
+                })
+            ),
+            entries: t({ en: "Entries", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            feeWord: t({ en: "fee", es: "comisión", fr: "frais", pt: "tarifa" }),
+            backTo: insert(
+                t({
+                    en: "Back to {{month}}",
+                    es: "Volver a {{month}}",
+                    fr: "Retour à {{month}}",
+                    pt: "Voltar para {{month}}",
+                })
+            ),
+            countOne: t({ en: "1 entry", es: "1 movimiento", fr: "1 opération", pt: "1 lançamento" }),
+            noAccount: t({ en: "No account", es: "Sin cuenta", fr: "Sans compte", pt: "Sem conta" }),
+            quietLine: insert(
+                t({
+                    en: "Nothing logged between {{from}} and {{to}}.",
+                    es: "Nada registrado entre {{from}} y {{to}}.",
+                    fr: "Rien d'enregistré entre {{from}} et {{to}}.",
+                    pt: "Nada registrado entre {{from}} e {{to}}.",
+                })
+            ),
+            quietTitle: t({
+                en: "No entries found",
+                es: "No se encontraron movimientos",
+                fr: "Aucune opération trouvée",
+                pt: "Nenhum lançamento encontrado",
+            }),
+            empty: t({
+                en: "No entries in this view.",
+                es: "No hay movimientos en esta vista.",
+                fr: "Aucune opération dans cette vue.",
+                pt: "Nenhum lançamento nesta visão.",
+            }),
+            next: t({ en: "Next page", es: "Página siguiente", fr: "Page suivante", pt: "Próxima página" }),
+            previous: t({ en: "Previous page", es: "Página anterior", fr: "Page précédente", pt: "Página anterior" }),
+            range: insert(
+                t({
+                    en: "{{from}}-{{to}} of {{total}}",
+                    es: "{{from}}-{{to}} de {{total}}",
+                    fr: "{{from}}-{{to}} sur {{total}}",
+                    pt: "{{from}}-{{to}} de {{total}}",
+                })
+            ),
+            sort: {
+                label: t({ en: "Sort", es: "Orden", fr: "Tri", pt: "Ordem" }),
+                largest: t({ en: "Largest", es: "Mayor monto", fr: "Montant le plus élevé", pt: "Maior valor" }),
+                newest: t({ en: "Newest", es: "Más recientes", fr: "Plus récentes", pt: "Mais recentes" }),
+                oldest: t({ en: "Oldest", es: "Más antiguos", fr: "Plus anciennes", pt: "Mais antigos" }),
+            },
+            title: t({ en: "Transactions", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
+            transfer: t({ en: "Transfer", es: "Transferencia", fr: "Virement", pt: "Transferência" }),
         },
         uncategorized: t({ en: "Uncategorized", es: "Sin categoría" }),
     },

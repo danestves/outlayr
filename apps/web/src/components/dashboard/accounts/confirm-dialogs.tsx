@@ -62,7 +62,9 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
                 </div>
             </Dialog.Body>
             <Dialog.Footer>
-                {failed ? <span className="text-destructive mr-auto text-[13px]">{flows.saveFailed}</span> : null}
+                {failed ? (
+                    <span className="text-destructive flex items-center text-[13px]">{flows.saveFailed}</span>
+                ) : null}
                 <Button onClick={onClose} variant="outline">
                     {flows.cancel}
                 </Button>

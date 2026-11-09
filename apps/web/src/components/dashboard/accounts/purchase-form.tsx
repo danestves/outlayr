@@ -473,7 +473,9 @@ export function PurchaseForm({
                 </form>
             </Dialog.Body>
             <Dialog.Footer>
-                {failed ? <span className="text-destructive mr-auto text-[13px]">{flows.saveFailed}</span> : null}
+                {failed ? (
+                    <span className="text-destructive flex items-center text-[13px]">{flows.saveFailed}</span>
+                ) : null}
                 {failed || blocked ? null : (
                     <PhoneAction className="mr-auto">
                         <Glyph icon={ImageAdd01Icon} size={16} />
