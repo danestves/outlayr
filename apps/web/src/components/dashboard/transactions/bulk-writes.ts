@@ -3,6 +3,8 @@ import type { CommitRow } from "../../../lib/ledger-commit";
 import { baseOf, draftOf, editedEntry, entryProblem, isFinanced } from "./entry-writes";
 import type { EntryValues } from "./entry-writes";
 
+const MINUTE_MS = 60_000;
+
 /** What a bulk action asks of one entry's form, or null when it does not apply to that entry. */
 export type BulkChange = (values: EntryValues) => Partial<EntryValues> | null;
 
@@ -47,7 +49,10 @@ export function bulkEdited(
             continue;
         }
         const values = { ...base.start, ...patch };
-        const draft = { ...draftOf(ledger, values, base, ""), feeNote: feeNoteOf(values) };
+        const planned = draftOf(ledger, values, base, "");
+        // The form's text stops at the minute, and entries logged in the same minute order by what is under it.
+        const moved = values.dateText === base.start.dateText ? 0 : doc.date % MINUTE_MS;
+        const draft = { ...planned, date: planned.date + moved, feeNote: feeNoteOf(values) };
         if (entryProblem(ledger, draft, doc, at) === null) {
             rows.push(...editedEntry(ledger, doc, draft, at));
             count += 1;

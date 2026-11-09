@@ -130,10 +130,10 @@ describe("bulkEdited", () => {
 
     it("moves to the ledger's day and keeps each entry's time, across the UTC midnight", () => {
         // 22:30 on Sep 30 in Caracas, already Oct 1 in UTC.
-        const late = entry("late", { date: Date.parse("2026-10-01T02:30:00Z") });
+        const late = entry("late", { date: Date.parse("2026-10-01T02:30:45.500Z") });
         const { rows } = run([late], ["late"], toDay("2026-10-20"));
         const fields = fieldsOf(rows, "late");
-        expect(fields.get("date")).toBe(Date.parse("2026-10-21T02:30:00Z"));
+        expect(fields.get("date")).toBe(Date.parse("2026-10-21T02:30:45.500Z"));
         expect(fields.get("day")).toBe(Date.parse("2026-10-20T04:00:00Z"));
         expect(fields.get("month")).toBe(Date.parse("2026-10-01T04:00:00Z"));
     });
