@@ -1059,7 +1059,7 @@
     --destructive: var(--color-app-spend);
     --success: var(--color-success);
     --info: var(--color-info);
-    --warning: var(--color-warning);
+    --warning: var(--color-app-warn);
     --chart-1: var(--color-app-ink);
     --chart-2: color-mix(in oklab, var(--color-app-ink) 30%, var(--color-app-bg));
     background-color: var(--color-app-bg);
@@ -1115,6 +1115,8 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
     --color-app-muted: #a8a29e;
     --color-app-rule: #2e2d24;
     --color-app-fill: #26251b;
+    --color-app-tint: #e2643f;
+    --color-app-on-tint: #17150f;
     --color-app-strong: #3a392e;
     --color-app-ghost: #4a4839;
     --color-app-float: #26251b;
@@ -1123,6 +1125,18 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
     --color-app-scrim: #0009;
     --color-app-shadow-far: #000c;
     --color-app-shadow-near: #0006;
+    --warning: var(--color-warning);
+}
+
+/* The part tints 10% in light and 16% in dark; the frames use 16% in both. */
+.app-shell
+    [data-slot="badge"]:is(
+        [data-variant="success"],
+        [data-variant="info"],
+        [data-variant="warning"],
+        [data-variant="destructive"]
+    ) {
+    background-color: color-mix(in oklab, var(--badge-color) 16%, var(--background));
 }
 
 @layer components {
@@ -1136,7 +1150,7 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
         position: relative;
         display: flex;
         align-items: center;
-        gap: 11px;
+        gap: 10px;
         height: 34px;
         padding: 0 10px;
         margin-bottom: 2px;

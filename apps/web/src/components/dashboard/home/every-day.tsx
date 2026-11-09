@@ -21,12 +21,23 @@ const GHOST_LEVELS = [
 ] as const;
 const LOGGED_LEVEL = 2;
 const WEEK = 7;
-const CELL = 28;
 const GAP = 4;
-const TRACK = CELL + GAP;
+const WIDTH = 222;
+const TRACK = (WIDTH - (WEEK - 1) * GAP) / WEEK + GAP;
 // 2023-12-31 was a Sunday, the day firstWeekday 1 means.
 const SUNDAY_NOON = Date.UTC(2023, 11, 31, 12);
 const DAY_MS = 86_400_000;
+// The parts size and tint their dots by level with no per-level hook, so these key off the level's own class.
+const DOTS = [
+    "[&_[class*='pu-size:0.2']]:[--pu-size:0.16] [&_[class*='pu-size:0.2']]:bg-app-strong",
+    "[&_[class*='pu-size:0.42']]:[--pu-size:0.36] [&_[class*='pu-size:0.42']]:bg-[color-mix(in_oklab,var(--pu-color)_45%,var(--color-app-fill))]",
+    "[&_[class*='pu-size:0.6']]:[--pu-size:0.56] [&_[class*='pu-size:0.6']]:bg-[color-mix(in_oklab,var(--pu-color)_62%,var(--color-app-fill))]",
+    "[&_[class*='pu-size:0.8']]:[--pu-size:0.78] [&_[class*='pu-size:0.8']]:bg-[color-mix(in_oklab,var(--pu-color)_80%,var(--color-app-fill))]",
+].join(" ");
+const LEGEND = [
+    "gap-1.5 text-[13px] leading-5 [&>:first-child]:mr-0.5 [&>:last-child]:ml-0.5 [&_span_span]:size-3.5 [&_span_span]:shrink-0",
+    "[&>:nth-child(2)]:w-[2.24px] [&>:nth-child(3)]:w-[5.04px] [&>:nth-child(4)]:w-[7.84px] [&>:nth-child(5)]:w-[10.92px] [&>:nth-child(6)]:w-3.5",
+].join(" ");
 const FIRST_DAY_ON_WEEKDAY = "[&>:first-child]:[grid-column-start:var(--first-column)]";
 
 const SEVEN_COLUMNS = `repeat(${WEEK}, minmax(0, 1fr))`;
@@ -35,11 +46,11 @@ const weekLayout = (lead: number, days: number) => {
     const weeks = Math.ceil((lead + days) / WEEK);
     const style: CSSProperties & { "--first-column": number } = {
         "--first-column": lead + 1,
-        aspectRatio: `${WEEK * TRACK - GAP} / ${weeks * TRACK - GAP}`,
+        aspectRatio: `${WIDTH} / ${weeks * TRACK - GAP}`,
         gridTemplateColumns: SEVEN_COLUMNS,
         gridTemplateRows: `repeat(${weeks}, minmax(0, 1fr))`,
     };
-    return { style, width: WEEK * TRACK - GAP };
+    return { style, width: WIDTH };
 };
 
 function useWeekLetters(firstWeekday: number) {
@@ -58,7 +69,7 @@ function useWeekLetters(firstWeekday: number) {
 function Stat({ amount, day, label }: { amount: string; day?: string; label: string }) {
     return (
         <>
-            <div className="text-muted-foreground w-0 min-w-full truncate text-[13px]">{label}</div>
+            <div className="text-muted-foreground w-0 min-w-full truncate text-[13px] leading-5">{label}</div>
             <div className="dash-figure text-base leading-6 font-medium whitespace-nowrap">{amount}</div>
             {day ? <div className="dash-figure text-muted-foreground text-xs leading-5">{day}</div> : null}
         </>
@@ -81,7 +92,7 @@ function Month({
     return (
         <>
             <DayGrid.Weekdays
-                className="dash-figure gap-1 text-center text-[11px]"
+                className="dash-figure gap-1 text-[11px] leading-4 [&>span]:justify-center"
                 labels={letters}
                 style={{ gridTemplateColumns: SEVEN_COLUMNS, gridTemplateRows: "none" }}
             />
@@ -129,7 +140,7 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
         const emptyDayFill = logged ? "var(--color-app-ghost)" : undefined;
         return (
             <CardFrame className="min-h-[363px]" title={copy.title}>
-                <div aria-hidden className="mx-auto flex max-w-full flex-col gap-1.5 pt-3" style={{ width }}>
+                <div aria-hidden className="mx-auto flex max-w-full flex-col gap-1 pt-3" style={{ width }}>
                     <Month
                         days={days}
                         filled={logged ? days.measured.length : days.cells.length}
@@ -181,12 +192,12 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
                 }
                 title={copy.title}
             >
-                <div className="mx-auto my-4 flex max-w-full flex-col gap-1.5" style={{ width }}>
+                <div className="mx-auto my-4 flex max-w-full flex-col gap-1" style={{ width }}>
                     <Month days={days} gridStyle={style} letters={letters}>
                         <DayGrid
                             aria-label={copy.quietDays({ count: days.measured.length }).value}
                             cells={days.measured.map((cell) => ({ label: date.day(cell.day), level: 0 }))}
-                            className={FIRST_DAY_ON_WEEKDAY}
+                            className={`${DOTS} ${FIRST_DAY_ON_WEEKDAY}`}
                             columns={WEEK}
                             style={style}
                         />
@@ -231,16 +242,16 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
     return (
         <CardFrame
             action={
-                <span className="dash-figure text-muted-foreground block truncate text-[13px]">
+                <span className="dash-figure text-muted-foreground block truncate text-[13px] leading-5">
                     {copy.aDay({ amount: money(days.average, ledger.currency) })}
                 </span>
             }
-            footer={<DayGrid.Legend className="text-[13px]" less={copy.less} more={copy.more} style={tone} />}
+            footer={<DayGrid.Legend className={`${LEGEND} ${DOTS}`} less={copy.less} more={copy.more} style={tone} />}
             panelClassName="overflow-visible"
             title={copy.title}
         >
             <div className="flex flex-1 flex-wrap gap-4 p-4">
-                <div className="flex flex-[9_1_140px] flex-col gap-1.5 self-start" style={{ maxWidth: width }}>
+                <div className="flex flex-[9_1_140px] flex-col gap-1 self-start" style={{ maxWidth: width }}>
                     <Month days={days} gridStyle={style} letters={letters}>
                         <DayGrid
                             aria-label={copy.title.value}
@@ -248,7 +259,7 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
                                 label: `${date.day(cell.day)} · ${money(cell.amount, ledger.currency)}`,
                                 level: cell.level,
                             }))}
-                            className={`touch-manipulation ${FIRST_DAY_ON_WEEKDAY}`}
+                            className={`touch-manipulation ${DOTS} ${FIRST_DAY_ON_WEEKDAY}`}
                             onValueChange={(index) => {
                                 const { day } = days.measured[index] ?? {};
                                 setSelectedDay(day === selectedDay ? null : (day ?? null));

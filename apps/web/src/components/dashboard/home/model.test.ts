@@ -166,18 +166,18 @@ describe("budgetRows", () => {
         currency: "USD",
     };
 
-    it("lists overspent budgets first, so a small overrun is not hidden under big spending", () => {
+    it("orders by spending, then the larger limit, whether or not a budget is over", () => {
         const { rows } = budgetRows(
             flat,
             new Map([
-                ["rent", standing(1800, 1800)],
-                ["gym", standing(100, 200)],
                 ["coffee", standing(90, 60)],
+                ["gym", standing(90, 200)],
                 ["food", standing(500, 400)],
+                ["rent", standing(1800, 1800)],
             ])
         );
 
-        expect(rows.map((row) => row.category.id)).toStrictEqual(["food", "coffee", "rent", "gym"]);
+        expect(rows.map((row) => row.category.id)).toStrictEqual(["rent", "food", "gym", "coffee"]);
     });
 
     it("counts a subcategory's spending once when its parent has a budget too", () => {

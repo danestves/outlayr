@@ -18,6 +18,9 @@ const STACK_OVER = 12;
 const TREND = "dash-figure text-[13px] leading-5";
 const LINE = "[&_path]:[vector-effect:non-scaling-stroke]";
 const NOTE = "text-muted-foreground min-w-0 truncate text-[13px] leading-5";
+// Equal cells, padding included: flex-1 alone gives the first and last cell more room.
+const EQUAL_COLUMNS =
+    "lg:grid lg:auto-cols-fr lg:grid-flow-col lg:divide-x-0 lg:*:not-first:border-s lg:*:not-first:border-border";
 export const TWO_BY_TWO =
     "max-lg:grid max-lg:grid-cols-2 max-lg:gap-y-5 max-lg:divide-x-0 max-lg:*:odd:border-e max-lg:*:odd:ps-0 max-lg:*:odd:pe-3 max-lg:*:even:ps-3 max-lg:*:even:pe-0";
 export const STACKED =
@@ -108,7 +111,7 @@ export function KpiGroup({ quiet }: { quiet: boolean }) {
             : [values.netWorth, values.spent]
         ).map((value) => value.length)
     );
-    const layout = `${incomeTracking ? TWO_BY_TWO : ""} ${longest > STACK_OVER ? STACKED : ""}`;
+    const layout = `${EQUAL_COLUMNS} ${incomeTracking ? TWO_BY_TWO : ""} ${longest > STACK_OVER ? STACKED : ""}`;
 
     return (
         <Kpi.Group className={`rounded-2xl ${layout}`} surface>

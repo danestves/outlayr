@@ -125,9 +125,6 @@ function biggestCategory(rows: readonly LedgerRow[]) {
     return [...totals].toSorted((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 }
 
-const overBy = ({ overBudget, remaining }: Pick<CategoryBudget, "overBudget" | "remaining">) =>
-    overBudget ? -remaining : 0;
-
 export function budgetRows(
     ledger: Pick<Ledger, "budgetTargets" | "currency">,
     standings: ReadonlyMap<string, CategoryBudget>
@@ -144,10 +141,7 @@ export function budgetRows(
         limit: round(ledger, limit),
         over: rows.filter((row) => row.standing.overBudget).length,
         rows: rows.toSorted(
-            (a, b) =>
-                overBy(b.standing) - overBy(a.standing) ||
-                b.standing.spent - a.standing.spent ||
-                b.standing.effectiveLimit - a.standing.effectiveLimit
+            (a, b) => b.standing.spent - a.standing.spent || b.standing.effectiveLimit - a.standing.effectiveLimit
         ),
     };
 }

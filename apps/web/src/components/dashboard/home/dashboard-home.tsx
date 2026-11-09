@@ -33,7 +33,9 @@ export function DashboardHome() {
         <main className={`@container min-w-0 px-4 sm:px-6 ${setup ? "pb-3.5" : "pb-5"}`}>
             <FilterBar quiet={quiet} setup={setup} />
             {setup ? <SetupHero setup={setup} /> : <KpiGroup quiet={quiet} />}
-            <div className={`mt-4 grid grid-cols-1 gap-4 @2xl:grid-cols-2 ${incomeTracking ? THREE_CARDS : ""}`}>
+            <div
+                className={`mt-4 grid grid-cols-1 gap-4 @2xl:grid-cols-2 ${incomeTracking ? THREE_CARDS : ""} ${setup ? "" : "@4xl:auto-rows-[minmax(347px,auto)]"}`}
+            >
                 {incomeTracking ? <SpentOfIncome quiet={quiet} setup={setup} /> : null}
                 <EveryDay quiet={quiet} setup={setup} />
                 <Budgets setup={setup} />

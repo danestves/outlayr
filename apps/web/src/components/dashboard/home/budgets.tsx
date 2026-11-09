@@ -27,6 +27,7 @@ const PERCENT = 100;
 const TONE_STRENGTHS = [100, 62, 38, 24] as const;
 const NEVER_CRITICAL = 1.1;
 const USAGE_LOCALE = "en-US";
+const OVER_BADGE = "normal-nums [&>[data-slot=badge-dot]]:text-inherit";
 
 function BudgetRow({ category, standing }: { category: BudgetTarget; standing: CategoryBudget }) {
     const { filters, ledger, setFilters } = useDashboard();
@@ -53,7 +54,7 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
     const filter = () => setFilters({ category: category.topId });
     const percent = Math.round((standing.spent / Math.max(standing.effectiveLimit, 1)) * PERCENT);
     const badge = (
-        <Badge className="dash-figure ml-auto shrink-0" dot size="sm" variant="destructive">
+        <Badge className={`ml-auto shrink-0 ${OVER_BADGE}`} dot variant="destructive">
             {overAmount}
         </Badge>
     );
@@ -137,7 +138,7 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
                 {over ? (
                     badge
                 ) : (
-                    <span className="dash-figure text-muted-foreground ml-auto text-xs leading-4 whitespace-nowrap">
+                    <span className="dash-figure text-muted-foreground ml-auto text-xs leading-4 font-normal whitespace-nowrap">
                         <b className="text-foreground font-medium">{whole(standing.spent)}</b> /{" "}
                         {whole(standing.effectiveLimit)}
                     </span>
@@ -180,7 +181,7 @@ export function Budgets({ setup }: { setup: SetupState | null }) {
         <CardFrame
             footer={
                 <>
-                    <span className="text-muted-foreground text-[13px]">{copy.onTrackLabel}</span>
+                    <span className="text-muted-foreground text-[13px] leading-5">{copy.onTrackLabel}</span>
                     <span className="dash-figure font-medium">
                         {copy.onTrackCount({ count: rows.length - over, total: rows.length })}
                     </span>
@@ -203,13 +204,13 @@ export function Budgets({ setup }: { setup: SetupState | null }) {
                         size="sm"
                     >
                         {whole(Math.abs(left))}
-                        <Stat.Unit className="font-sans tracking-normal">
+                        <Stat.Unit className="ms-1.5 font-sans text-[13px] leading-none tracking-normal normal-nums">
                             {copy.of} {whole(limit)}
                         </Stat.Unit>
                     </Stat.Value>
                 </Stat.Content>
                 {over > 0 ? (
-                    <Badge className="dash-figure" dot size="sm" variant="destructive">
+                    <Badge className={OVER_BADGE} dot variant="destructive">
                         {copy.overCount({ count: over })}
                     </Badge>
                 ) : null}

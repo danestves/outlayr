@@ -46,7 +46,9 @@ const SHEET_LABEL = "text-muted-foreground px-2 pt-1.5 pb-0.5 text-xs leading-4"
 
 const SHEET_ROW = "hover:bg-app-hover flex h-11 w-full shrink-0 items-center gap-2 rounded-lg px-2 text-sm";
 const FIGURE = "dash-figure text-muted-foreground min-w-0 flex-1 pl-2 text-right text-[13px] whitespace-nowrap";
-const CHIP = "relative gap-1.5 text-[13px] max-lg:after:absolute max-lg:after:-inset-x-0.5 max-lg:after:-inset-y-1.5";
+// The part's collapsed tick box still takes a flex gap, which would pad the chip's start.
+const CHIP =
+    "relative gap-1.5 not-data-pressed:[&>[data-slot=chip-check]]:-me-1.5 max-lg:text-[13px] max-lg:after:absolute max-lg:after:-inset-x-0.5 max-lg:after:-inset-y-1.5";
 
 function CheckRow({ children, figure, on, onToggle }: CheckRowProps) {
     const inSheet = useContext(InSheet);
@@ -88,7 +90,7 @@ export function FilterMenu({ children, count, label, onClear, searchLabel, width
     };
     const chip = (
         <>
-            {count > 0 ? null : <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />}
+            {count > 0 ? null : <HugeiconsIcon icon={Add01Icon} strokeWidth={1.5} />}
             {label}
             {count > 0 ? (
                 <Badge className="dash-figure ml-1.5" size="sm" variant="secondary">
@@ -337,7 +339,7 @@ function PeriodControl() {
     const keys = usePeriodKeys(dashboard);
     return (
         <Tabs className="ml-auto max-lg:hidden" value="month">
-            <Tabs.List className="p-0.5">
+            <Tabs.List>
                 <Menu>
                     <Menu.Trigger render={<Tabs.Trigger value="month" />}>{title(filters.period)}</Menu.Trigger>
                     <Menu.Content className="app-shell ph-no-capture max-h-80 overflow-y-auto" sideOffset={8}>
@@ -355,10 +357,10 @@ function PeriodControl() {
                         </Menu.RadioGroup>
                     </Menu.Content>
                 </Menu>
-                <Tabs.Trigger disabled value="quarter">
+                <Tabs.Trigger className="data-disabled:opacity-100" disabled value="quarter">
                     {copy.quarter}
                 </Tabs.Trigger>
-                <Tabs.Trigger disabled value="year">
+                <Tabs.Trigger className="data-disabled:opacity-100" disabled value="year">
                     {copy.year}
                 </Tabs.Trigger>
             </Tabs.List>
@@ -463,7 +465,7 @@ export function FilterBar({
     const { add } = useIntlayer("dashboard");
     const { open } = useAccountFlows();
     return (
-        <div className="flex min-h-16 flex-wrap items-center gap-2 py-3.5 max-lg:-mx-4 max-lg:[scrollbar-width:none] max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:[mask-image:linear-gradient(to_right,#000_calc(100%-16px),transparent)] max-lg:px-4 max-sm:min-h-0 max-sm:py-3">
+        <div className="flex min-h-16 flex-wrap items-center gap-2 py-3 max-lg:-mx-4 max-lg:[scrollbar-width:none] max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:[mask-image:linear-gradient(to_right,#000_calc(100%-16px),transparent)] max-lg:px-4 max-sm:min-h-0">
             <PeriodSheet />
             {setup ? null : (
                 <>
@@ -473,7 +475,7 @@ export function FilterBar({
             )}
             <PeriodControl />
             <Button className="ml-1 max-lg:hidden" onClick={() => open({ kind: "entry" })}>
-                <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
+                <HugeiconsIcon icon={Add01Icon} strokeWidth={1.5} />
                 {add.entry}
             </Button>
         </div>

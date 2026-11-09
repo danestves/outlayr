@@ -34,6 +34,9 @@ const AVATAR: CSSProperties & { "--avatar-color": string; "--avatar-size": strin
     "--avatar-size": "34px",
 };
 
+const AVATAR_INITIALS =
+    "flex-none [&_[data-slot=avatar-face]>span]:bg-[color-mix(in_oklab,var(--avatar-color)_24%,var(--color-app-group))] [&_[data-slot=avatar-face]>span]:text-[color-mix(in_oklab,var(--avatar-color),var(--foreground)_40%)] [&_[data-slot=avatar-face]>span]:text-xs [&_[data-slot=avatar-face]>span]:tracking-normal [&_[data-slot=avatar-face]]:after:hidden";
+
 const isDark = () => document.documentElement.dataset.theme === "dark";
 
 function DarkModeItem() {
@@ -61,19 +64,19 @@ export function UserMenu({ collapsed, side = "right" }: { collapsed: boolean; si
         <Menu>
             <Menu.Trigger
                 aria-label={account.label.value}
-                className={`hover:bg-app-fill data-[popup-open]:bg-app-fill mt-auto flex items-center gap-2.5 rounded-xl text-left ${collapsed ? "justify-center p-1" : "py-2.5 pr-2 pl-2.5"}`}
+                className={`hover:bg-app-fill data-[popup-open]:bg-app-fill mt-auto flex items-center gap-2.5 rounded-xl text-left ${collapsed ? "justify-center p-1" : "p-2.5"}`}
             >
-                <Avatar className="flex-none" name={name} style={AVATAR} />
+                <Avatar className={AVATAR_INITIALS} name={name} style={AVATAR} />
                 {collapsed ? null : (
                     <>
                         <span className="min-w-0 flex-1">
                             <b className="flex items-center gap-1.5 text-[13px] leading-[18px] font-medium">
                                 <span className="truncate">{name}</span>
                                 <HugeiconsIcon
-                                    className="text-app-tint [&>path:first-child]:fill-app-tint [&>path:last-child]:stroke-primary-foreground shrink-0"
+                                    className="text-app-tint shrink-0"
                                     icon={CheckmarkBadge01Icon}
                                     size={14}
-                                    strokeWidth={2}
+                                    strokeWidth={1.5}
                                 />
                             </b>
                             <small className="text-muted-foreground block truncate text-xs leading-4">
@@ -84,7 +87,7 @@ export function UserMenu({ collapsed, side = "right" }: { collapsed: boolean; si
                             className="text-muted-foreground ml-auto shrink-0"
                             icon={ArrowRight01Icon}
                             size={18}
-                            strokeWidth={2}
+                            strokeWidth={1.5}
                         />
                     </>
                 )}
