@@ -14,6 +14,7 @@ export const EMAIL_CODE_TTL_SECONDS = 10 * 60;
 
 interface Email {
     html?: string;
+    replyTo?: string;
     subject: string;
     text: string;
 }
@@ -123,7 +124,10 @@ const decodeFailure = HttpIncomingMessage.schemaBodyJson(
     Schema.Struct({ errors: Schema.Array(Schema.Struct({ code: Schema.Number })) })
 );
 
-export const sendEmail = Effect.fn("Email.send")(function* sendEmail(to: string, { html, subject, text }: Email) {
+export const sendEmail = Effect.fn("Email.send")(function* sendEmail(
+    to: string,
+    { html, replyTo, subject, text }: Email
+) {
     const config = yield* emailConfig;
     if (Option.isNone(config)) {
         return yield* new EmailError({ reason: "unconfigured" });
@@ -133,7 +137,14 @@ export const sendEmail = Effect.fn("Email.send")(function* sendEmail(to: string,
         `https://api.cloudflare.com/client/v4/accounts/${accountId}/email/sending/send`
     ).pipe(
         HttpClientRequest.bearerToken(token),
-        HttpClientRequest.bodyJson({ from: { address: from, name: "Outlayr" }, html, subject, text, to }),
+        HttpClientRequest.bodyJson({
+            from: { address: from, name: "Outlayr" },
+            html,
+            reply_to: replyTo,
+            subject,
+            text,
+            to,
+        }),
         Effect.catchTags({ HttpBodyError: transport })
     );
     const response = yield* HttpClient.execute(request).pipe(

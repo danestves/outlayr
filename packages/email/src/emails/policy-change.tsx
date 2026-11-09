@@ -25,8 +25,10 @@ interface PolicyChangeCopy {
     both: Announcement;
     documents: Record<LegalDocument, Announcement & { intro: string }>;
     footer: (email: string) => string;
+    keepUsing: (date: string) => string;
     link: string;
     preview: string;
+    reply: string;
     takesEffect: string;
 }
 
@@ -50,8 +52,11 @@ const COPY = {
             },
         },
         footer: (email) => `A service notice sent to ${email} and every other Outlayr account.`,
+        keepUsing: (date) =>
+            `If you keep using Outlayr on or after ${date}, the new terms apply. If you don't agree, cancel any subscription and delete your account before then.`,
         link: "Read the new version",
         preview: "What changes, and when.",
+        reply: "Questions? Reply to this email.",
         takesEffect: "Takes effect",
     },
     es: {
@@ -73,8 +78,11 @@ const COPY = {
             },
         },
         footer: (email) => `Aviso de servicio enviado a ${email} y a todas las cuentas de Outlayr.`,
+        keepUsing: (date) =>
+            `Si sigues usando Outlayr a partir del ${date}, se te aplican los nuevos términos. Si no estás de acuerdo, cancela cualquier suscripción y elimina tu cuenta antes de esa fecha.`,
         link: "Leer la nueva versión",
         preview: "Qué cambia y desde cuándo.",
+        reply: "¿Preguntas? Responde a este correo.",
         takesEffect: "Entra en vigor",
     },
     fr: {
@@ -96,8 +104,11 @@ const COPY = {
             },
         },
         footer: (email) => `Avis de service envoyé à ${email} et à tous les comptes Outlayr.`,
+        keepUsing: (date) =>
+            `Si vous continuez à utiliser Outlayr à partir du ${date}, les nouvelles conditions s'appliquent. Si vous ne les acceptez pas, résiliez tout abonnement et supprimez votre compte avant cette date.`,
         link: "Lire la nouvelle version",
         preview: "Ce qui change, et à partir de quand.",
+        reply: "Des questions ? Répondez à cet e-mail.",
         takesEffect: "Entrée en vigueur",
     },
     pt: {
@@ -119,14 +130,17 @@ const COPY = {
             },
         },
         footer: (email) => `Aviso de serviço enviado para ${email} e todas as contas do Outlayr.`,
+        keepUsing: (date) =>
+            `Se você continuar usando o Outlayr a partir de ${date}, os novos termos se aplicam. Se não concordar, cancele qualquer assinatura e apague sua conta antes dessa data.`,
         link: "Ler a nova versão",
         preview: "O que muda e a partir de quando.",
+        reply: "Dúvidas? Responda a este e-mail.",
         takesEffect: "Entra em vigor",
     },
 } satisfies Record<Language, PolicyChangeCopy>;
 
 const documentUrl = (document: LegalDocument, language: Language) =>
-    `https://tryoutlayr.com${language === "es" ? "/es" : ""}/${document}`;
+    `https://tryoutlayr.com${language === "en" ? "" : `/${language}`}/${document}`;
 
 const announcement = (copy: PolicyChangeCopy, documents: PolicyChangeEmailProps["documents"]) =>
     documents.length === 1 && documents[0] ? copy.documents[documents[0].document] : copy.both;
@@ -142,7 +156,13 @@ export default function PolicyChangeEmail({
     const date = formatDate(effectiveAtMs, language, timeZone);
     return (
         <Note
-            after={copy.after}
+            after={[
+                copy.after,
+                documents.some(({ document }) => document === "terms") ? copy.keepUsing(date) : null,
+                copy.reply,
+            ]
+                .filter((sentence) => sentence !== null)
+                .join(" ")}
             facts={[[copy.takesEffect, date]]}
             footer={copy.footer(email)}
             language={language}
