@@ -174,6 +174,25 @@ describe("deletedAccount", () => {
     });
 });
 
+describe("deletedAccount for a person", () => {
+    it("takes their entries with them, schedule retired, where a bank's would only be detached", () => {
+        const ana = account("ana", { kind: "person" });
+        const rows = deletedAccount(
+            books({
+                accounts: [ana],
+                transactions: [
+                    entry("loan", { accountId: "ana", recurringType: 3 }),
+                    entry("settled", { accountId: "ana", deletedAt: EARLIER }),
+                ],
+            }),
+            ana,
+            AT
+        );
+        expect(rows.map((row) => row.localId)).toStrictEqual(["loan", "ana"]);
+        expect(rows[0]).toMatchObject({ deletedAt: AT, fields: { accountId: "ana", recurringType: 0 } });
+    });
+});
+
 describe("rows the server must not drop", () => {
     it("carries restoredAt, or a restored row reads as an older era and loses", () => {
         const restored = account("chase", { restoredAt: EARLIER });

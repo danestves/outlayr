@@ -11,6 +11,7 @@ import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 
 import { Meta } from "./app-meta-core";
+import { tombstonesWithEntries } from "./entry-tombstones";
 import { frozenUsdAmount } from "./frozen-usd";
 import { tombstonePlansOnAccount } from "./installment-cascade";
 import { refreshLogoCandidates } from "./logo-backfill-state";
@@ -188,6 +189,7 @@ export const accountsRepo = {
     /**
      * `onDelete: "set null"` never fires for a tombstone, so entries are detached here. A person's entries are the debt
      * itself, so they go with them (no schedule left for the orphan repair to revive), and so do the account's goals.
+     * A test holds this to `accountDeletionPlan`.
      */
     softDelete: Effect.fn("Accounts.softDelete")(function* softDelete(
         db: Database,
@@ -252,6 +254,10 @@ export const accountsRepo = {
                         })
                         .where(and(eq(transactions.accountId, id), isNull(transactions.deletedAt)))
                 );
+                const taken = and(eq(transactions.accountId, id), eq(transactions.deletedAt, now));
+                for (const statement of tombstonesWithEntries(db, taken, now)) {
+                    yield* query("delete", statement);
+                }
             }),
             (cause) => new AccountsError({ cause, operation: "delete" })
         );

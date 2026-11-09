@@ -60,7 +60,11 @@ describe("deleting a category", () => {
             category("rent"),
             category("gone", { deletedAt: 5, parentId: "food" }),
         ],
+        installmentPlans: [],
+        installments: [],
+        outsidePayments: [],
         transactions: [entry("t1", "food"), entry("t2", "coffee"), entry("t3", "food", { deletedAt: 9 })],
+        transfers: [],
     };
     const plans = [{ fields: { amount: 5, categoryId: "food", currency: "USD", month: 202_610 }, localId: "p1" }];
     // SAFETY: fixtures carry only the fields deletion reads and writes.
@@ -82,6 +86,45 @@ describe("deleting a category", () => {
         const child = rows.find((row) => row.localId === "coffee");
         expect(child?.deletedAt).toBeNull();
         expect(child?.fields).toMatchObject({ parentId: null });
+    });
+
+    it("takes what each entry's own delete takes, before the entry a second try would find it through", () => {
+        const child = (localId: string, extra: Record<string, string>) => ({
+            deletedAt: null,
+            localId,
+            updatedAt: 2,
+            ...extra,
+        });
+        const financed = deletionOf(
+            {
+                ...books,
+                installmentPlans: [child("plan", { transactionId: "t1" })],
+                installments: [child("slot", { planId: "plan" })],
+                outsidePayments: [child("outside", { planId: "plan" })],
+                transactions: [
+                    entry("t1", "food"),
+                    entry("fee", "fees", { feeForId: "t1" }),
+                    entry("paid", "rent", { installmentId: "slot" }),
+                ],
+            } as never,
+            "food"
+        );
+        if (!financed) {
+            throw new Error("the category is live");
+        }
+        expect(
+            deletionRows(financed, [], NOW).map((row) => `${row.table}:${row.localId}:${row.deletedAt}`)
+        ).toStrictEqual([
+            `transactions:fee:${NOW}`,
+            `transactions:paid:${NOW}`,
+            `installments:slot:${NOW}`,
+            `outsidePayments:outside:${NOW}`,
+            `installmentPlans:plan:${NOW}`,
+            `transactions:t1:${NOW}`,
+            `budgets:b1:${NOW}`,
+            "categories:coffee:null",
+            `categories:food:${NOW}`,
+        ]);
     });
 
     it("retires schedules, drops photos and blanks the budget like the phone", () => {
