@@ -5,6 +5,7 @@ import DashboardSpeed01Icon from "@hugeicons/core-free-icons/DashboardSpeed01Ico
 import Database01Icon from "@hugeicons/core-free-icons/Database01Icon";
 import DollarCircleIcon from "@hugeicons/core-free-icons/DollarCircleIcon";
 import InformationCircleIcon from "@hugeicons/core-free-icons/InformationCircleIcon";
+import Plug01Icon from "@hugeicons/core-free-icons/Plug01Icon";
 import PreferenceHorizontalIcon from "@hugeicons/core-free-icons/PreferenceHorizontalIcon";
 import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import UserAdd01Icon from "@hugeicons/core-free-icons/UserAdd01Icon";
@@ -22,6 +23,7 @@ const SECTIONS = [
     { icon: DashboardSpeed01Icon, key: "usage", to: "/app/settings/usage" },
     { icon: UserAdd01Icon, key: "invite", to: "/app/settings/invite" },
     { icon: Tag01Icon, key: "categories", to: "/app/settings/categories" },
+    { icon: Plug01Icon, key: "connections", to: "/app/settings/connections" },
     { icon: Database01Icon, key: "data", to: "/app/settings/data" },
     { icon: InformationCircleIcon, key: "about", to: "/app/settings/about" },
 ] as const;

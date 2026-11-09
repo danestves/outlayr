@@ -20,6 +20,7 @@ const dashboardSettings = {
             about: t({ en: "About", es: "Acerca de", fr: "À propos", pt: "Sobre" }),
             usage: t({ en: "Usage", es: "Uso", fr: "Utilisation", pt: "Uso" }),
             invite: t({ en: "Invite", es: "Invitar", fr: "Inviter", pt: "Convidar" }),
+            connections: t({ en: "Connections", es: "Conexiones", fr: "Connexions", pt: "Conexões" }),
             data: t({ en: "Data", es: "Datos", fr: "Données", pt: "Dados" }),
         },
         usage: {

@@ -55,6 +55,7 @@ import { Route as AccountAppAccountsReorderRouteImport } from './routes/_account
 import { Route as AccountAppSettingsIndexRouteImport } from './routes/_account/app.settings.index'
 import { Route as AccountAppSettingsAboutRouteImport } from './routes/_account/app.settings.about'
 import { Route as AccountAppSettingsAccountRouteImport } from './routes/_account/app.settings.account'
+import { Route as AccountAppSettingsConnectionsRouteImport } from './routes/_account/app.settings.connections'
 import { Route as AccountAppSettingsCurrencyRouteImport } from './routes/_account/app.settings.currency'
 import { Route as AccountAppSettingsDataRouteImport } from './routes/_account/app.settings.data'
 import { Route as AccountAppSettingsInviteRouteImport } from './routes/_account/app.settings.invite'
@@ -323,6 +324,12 @@ const AccountAppSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AccountAppSettingsRoute,
   } as any)
+const AccountAppSettingsConnectionsRoute =
+  AccountAppSettingsConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => AccountAppSettingsRoute,
+  } as any)
 const AccountAppSettingsCurrencyRoute =
   AccountAppSettingsCurrencyRouteImport.update({
     id: '/currency',
@@ -419,6 +426,7 @@ export interface FileRoutesByFullPath {
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
   '/app/settings/about': typeof AccountAppSettingsAboutRoute
   '/app/settings/account': typeof AccountAppSettingsAccountRoute
+  '/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
   '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/app/settings/data': typeof AccountAppSettingsDataRoute
   '/app/settings/invite': typeof AccountAppSettingsInviteRoute
@@ -473,6 +481,7 @@ export interface FileRoutesByTo {
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
   '/app/settings/about': typeof AccountAppSettingsAboutRoute
   '/app/settings/account': typeof AccountAppSettingsAccountRoute
+  '/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
   '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/app/settings/data': typeof AccountAppSettingsDataRoute
   '/app/settings/invite': typeof AccountAppSettingsInviteRoute
@@ -531,6 +540,7 @@ export interface FileRoutesById {
   '/_account/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
   '/_account/app/settings/about': typeof AccountAppSettingsAboutRoute
   '/_account/app/settings/account': typeof AccountAppSettingsAccountRoute
+  '/_account/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
   '/_account/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
   '/_account/app/settings/data': typeof AccountAppSettingsDataRoute
   '/_account/app/settings/invite': typeof AccountAppSettingsInviteRoute
@@ -590,6 +600,7 @@ export interface FileRouteTypes {
     | '/app/accounts/reorder'
     | '/app/settings/about'
     | '/app/settings/account'
+    | '/app/settings/connections'
     | '/app/settings/currency'
     | '/app/settings/data'
     | '/app/settings/invite'
@@ -644,6 +655,7 @@ export interface FileRouteTypes {
     | '/app/accounts/reorder'
     | '/app/settings/about'
     | '/app/settings/account'
+    | '/app/settings/connections'
     | '/app/settings/currency'
     | '/app/settings/data'
     | '/app/settings/invite'
@@ -701,6 +713,7 @@ export interface FileRouteTypes {
     | '/_account/app/accounts/reorder'
     | '/_account/app/settings/about'
     | '/_account/app/settings/account'
+    | '/_account/app/settings/connections'
     | '/_account/app/settings/currency'
     | '/_account/app/settings/data'
     | '/_account/app/settings/invite'
@@ -1054,6 +1067,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppSettingsAccountRouteImport
       parentRoute: typeof AccountAppSettingsRoute
     }
+    '/_account/app/settings/connections': {
+      id: '/_account/app/settings/connections'
+      path: '/connections'
+      fullPath: '/app/settings/connections'
+      preLoaderRoute: typeof AccountAppSettingsConnectionsRouteImport
+      parentRoute: typeof AccountAppSettingsRoute
+    }
     '/_account/app/settings/currency': {
       id: '/_account/app/settings/currency'
       path: '/currency'
@@ -1176,6 +1196,7 @@ const Char123LocaleChar125RouteRouteWithChildren =
 interface AccountAppSettingsRouteChildren {
   AccountAppSettingsAboutRoute: typeof AccountAppSettingsAboutRoute
   AccountAppSettingsAccountRoute: typeof AccountAppSettingsAccountRoute
+  AccountAppSettingsConnectionsRoute: typeof AccountAppSettingsConnectionsRoute
   AccountAppSettingsCurrencyRoute: typeof AccountAppSettingsCurrencyRoute
   AccountAppSettingsDataRoute: typeof AccountAppSettingsDataRoute
   AccountAppSettingsInviteRoute: typeof AccountAppSettingsInviteRoute
@@ -1191,6 +1212,7 @@ interface AccountAppSettingsRouteChildren {
 const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
   AccountAppSettingsAboutRoute: AccountAppSettingsAboutRoute,
   AccountAppSettingsAccountRoute: AccountAppSettingsAccountRoute,
+  AccountAppSettingsConnectionsRoute: AccountAppSettingsConnectionsRoute,
   AccountAppSettingsCurrencyRoute: AccountAppSettingsCurrencyRoute,
   AccountAppSettingsDataRoute: AccountAppSettingsDataRoute,
   AccountAppSettingsInviteRoute: AccountAppSettingsInviteRoute,
