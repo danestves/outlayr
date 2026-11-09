@@ -812,7 +812,7 @@ export function accountEntries(ledger: Ledger, accountId: string, from: string, 
     const adjustments = new Set(
         ledger.books.outsideMoves.flatMap((row) => (row.adjustment === true ? [row.localId] : []))
     );
-    const outside = new Set(ledger.books.outsideMoves.map((row) => row.localId));
+    const outside = new Set([...ledger.books.outsideMoves, ...ledger.books.outsidePayments].map((row) => row.localId));
     return flowsOf(ledger, accountId)
         .filter((flow) => flow.day >= from && flow.day <= to)
         .map((flow): AccountEntry => {

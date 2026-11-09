@@ -136,7 +136,7 @@ export function KpiCell({
 export function KpiBand({ children }: { children: ReactNode }) {
     return (
         <Kpi.Group
-            className={`rounded-3xl lg:grid lg:grid-cols-4 lg:*:not-first:ps-4! ${TWO_BY_TWO} ${STACKED}`}
+            className={`rounded-3xl lg:grid lg:auto-cols-fr lg:grid-flow-col lg:*:not-first:ps-4! ${TWO_BY_TWO} ${STACKED}`}
             surface
         >
             {children}

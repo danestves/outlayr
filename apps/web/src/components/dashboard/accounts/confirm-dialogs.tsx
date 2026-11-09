@@ -96,7 +96,7 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                 });
             },
             onUndo: () => staged.rollback(),
-            detail: flows.deleteBody.value,
+            detail: nothing ? undefined : flows.deleteBody.value,
             text: flows.deletedToast.value,
         });
     };
