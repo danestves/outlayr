@@ -4,6 +4,7 @@ import * as Schema from "effect/Schema";
 import type { Database } from "@/db/client";
 
 import { LEGACY_MIGRATION_NAMES } from "./legacy-migration-names";
+import { bootTransaction } from "./transaction";
 
 const LOG_TABLE = sql.identifier("__drizzle_migrations");
 
@@ -21,8 +22,7 @@ export function adoptLegacyMigrationLog(db: Database): void {
     if (columns.length === 0 || columns.some((column) => column.name === "name")) {
         return;
     }
-    db.run(sql`BEGIN`);
-    try {
+    bootTransaction(db, () => {
         db.run(sql`ALTER TABLE ${LOG_TABLE} ADD COLUMN "name" text`);
         db.run(sql`ALTER TABLE ${LOG_TABLE} ADD COLUMN "applied_at" TEXT`);
         for (const [createdAt, name] of LEGACY_MIGRATION_NAMES) {
@@ -36,12 +36,5 @@ export function adoptLegacyMigrationLog(db: Database): void {
         if (unmatched.length > 0) {
             throw new UnmatchedMigrationLogError({ createdAt: unmatched.map((row) => row.created_at) });
         }
-        db.run(sql`COMMIT`);
-    } catch (error) {
-        try {
-            db.run(sql`ROLLBACK`);
-            // oxlint-disable-next-line no-empty -- SQLite already rolled back after a disk or I/O failure, so keep the original error
-        } catch {}
-        throw error;
-    }
+    });
 }

@@ -7,9 +7,11 @@ import * as Schema from "effect/Schema";
 import { bootstrapLocalData } from "@/data/bootstrap";
 import { localizePresetCategories } from "@/data/categories-core";
 import { settleLegacyOnboarding } from "@/data/onboarding-core";
+import { SYNCED_SPECS } from "@/data/sync-tables";
 import { openDatabase } from "@/db/client";
 import type { Database } from "@/db/client";
 import { adoptLegacyMigrationLog } from "@/db/legacy-migration-log";
+import { ensureOutboxTriggers } from "@/db/outbox-triggers";
 import { deviceLanguage } from "@/i18n/device-language";
 import { warnAndContinue } from "@/lib/warn-and-continue";
 
@@ -45,6 +47,7 @@ export const make = Effect.gen(function* make() {
         const db = yield* Effect.try({ catch: failedAt("open"), try: openConnection });
         yield* Effect.try({ catch: failedAt("migrate"), try: () => adoptLegacyMigrationLog(db) });
         yield* Effect.tryPromise({ catch: failedAt("migrate"), try: () => migrate(db, migrationsBundle) });
+        yield* Effect.try({ catch: failedAt("migrate"), try: () => ensureOutboxTriggers(db, SYNCED_SPECS) });
         yield* bootstrapLocalData(db).pipe(Effect.mapError((error) => failedAt("bootstrap")(error.cause)));
         yield* localizePresetCategories(db, deviceLanguage()).pipe(
             warnAndContinue("Failed to localize the preset categories")

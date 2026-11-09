@@ -488,8 +488,7 @@ export const appMeta = sqliteTable("appMeta", {
 
 /**
  * Filled by triggers, not repos, since writes happen outside the repos. `seq` is AUTOINCREMENT so a re-queued row
- * gets a new seq that a draining push cannot delete. drizzle-kit ignores triggers and drops them on a table
- * rebuild, so such a migration must re-declare them by hand.
+ * gets a new seq that a draining push cannot delete.
  */
 export const outbox = sqliteTable(
     "outbox",

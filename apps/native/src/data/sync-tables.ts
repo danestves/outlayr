@@ -27,10 +27,7 @@ import {
 import { META_KEYS } from "./app-meta-core";
 import type { BoolSettingKey, NumberSettingKey } from "./settings-core";
 
-/**
- * Allow-list of account-level `appMeta` keys, so a new key stays device-local by default. Mirrored in the
- * `appMeta` triggers' `WHEN` clause; `outbox-triggers.test.ts` fails if the two disagree.
- */
+/** Allow-list of account-level `appMeta` keys, so a new key stays device-local by default. */
 export const SYNCED_META_KEYS = [
     META_KEYS.currency,
     META_KEYS.currencyChosen,
