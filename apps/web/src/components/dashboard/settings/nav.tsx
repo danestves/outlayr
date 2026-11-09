@@ -1,10 +1,12 @@
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import CheckmarkBadge01Icon from "@hugeicons/core-free-icons/CheckmarkBadge01Icon";
+import CloudIcon from "@hugeicons/core-free-icons/CloudIcon";
 import DashboardSpeed01Icon from "@hugeicons/core-free-icons/DashboardSpeed01Icon";
 import Database01Icon from "@hugeicons/core-free-icons/Database01Icon";
 import DollarCircleIcon from "@hugeicons/core-free-icons/DollarCircleIcon";
 import InformationCircleIcon from "@hugeicons/core-free-icons/InformationCircleIcon";
+import Mail01Icon from "@hugeicons/core-free-icons/Mail01Icon";
 import Plug01Icon from "@hugeicons/core-free-icons/Plug01Icon";
 import PreferenceHorizontalIcon from "@hugeicons/core-free-icons/PreferenceHorizontalIcon";
 import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
@@ -20,6 +22,8 @@ const SECTIONS = [
     { icon: PreferenceHorizontalIcon, key: "preferences", to: "/app/settings/preferences" },
     { icon: DollarCircleIcon, key: "currency", to: "/app/settings/currency" },
     { icon: Calendar03Icon, key: "time", to: "/app/settings/time" },
+    { icon: Mail01Icon, key: "email", to: "/app/settings/email" },
+    { icon: CloudIcon, key: "sync", to: "/app/settings/sync" },
     { icon: DashboardSpeed01Icon, key: "usage", to: "/app/settings/usage" },
     { icon: UserAdd01Icon, key: "invite", to: "/app/settings/invite" },
     { icon: Tag01Icon, key: "categories", to: "/app/settings/categories" },
