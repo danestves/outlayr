@@ -5,6 +5,7 @@ import type { ConvexCollectionClient } from "@tanstack/convex-db-collection";
 import { collectionOptions, useLiveQuery } from "@tanstack/react-db";
 import type { Collection, DbClient } from "@tanstack/react-db";
 import type { FunctionReturnType } from "convex/server";
+import { ConvexError } from "convex/values";
 import { useMemo } from "react";
 
 import { CONVEX } from "./db";
@@ -169,8 +170,31 @@ export const ledgerCollections = {
     ),
 };
 
-const load = (collection: Pick<Collection, "preload" | "reload" | "status">) =>
-    collection.status === "error" ? collection.reload() : collection.preload();
+type Loadable = Pick<Collection, "preload" | "reload" | "status">;
+
+const start = (collection: Loadable) => (collection.status === "error" ? collection.reload() : collection.preload());
+
+const RETRY_WAITS_MS = [500, 1500, 4000, 8000];
+
+// A busy server can time one of these queries out at Convex's 1 s limit, and one failure must not sink the page.
+// A ConvexError is a refusal (no Pro, signed out), which would only say the same thing again.
+const load = async (collection: Loadable) => {
+    for (const wait of RETRY_WAITS_MS) {
+        try {
+            // oxlint-disable-next-line no-await-in-loop -- each try waits on the one before it.
+            return await start(collection);
+        } catch (error) {
+            if (error instanceof ConvexError) {
+                throw error;
+            }
+            // oxlint-disable-next-line no-await-in-loop -- the wait is the point.
+            await new Promise((resolve) => {
+                setTimeout(resolve, wait);
+            });
+        }
+    }
+    return start(collection);
+};
 
 export const preloadLedger = (db: DbClient) =>
     Promise.all([

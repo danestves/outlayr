@@ -20,7 +20,8 @@ import { DashboardShell } from "@/components/dashboard/shell/shell";
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 import { convexClient } from "@/lib/convex";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
-import { dropLedger, hasLedgerCopy, restoreLedger, saveLedger } from "@/lib/ledger-cache";
+import { dropLedger, forgetLedger, hasLedgerCopy, restoreLedger, saveLedger } from "@/lib/ledger-cache";
+import { resendUnsent } from "@/lib/ledger-commit";
 import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
 import { currentToken, onSessionChange, userOf } from "@/lib/session";
 
@@ -45,7 +46,12 @@ export const Route = createFileRoute("/_account/app")({
         const userId = userOf(token);
         const idle = context.dbClient.collection(ledgerCollections.transactions).status === "idle";
         const restored = idle && userId !== undefined ? await restoreLedger(context.dbClient, userId) : undefined;
-        const settled = preloadLedger(context.dbClient).then(() => true);
+        const settled = preloadLedger(context.dbClient).then(() => {
+            if (userId !== undefined) {
+                resendUnsent(context.dbClient, userId);
+            }
+            return true;
+        });
         if (restored) {
             seedPhotos(context.queryClient, restored.photos);
             return { asOf, settled, synced: true, userId };
@@ -165,12 +171,15 @@ function useLedgerCopy(overview: Overview, photos: PhotoUrls, settled: Promise<b
     const router = useRouter();
     const [synced, setSynced] = useState(false);
     // oxlint-disable-next-line outlayr/react-effect-budget -- other tabs are an external system.
-    useEffect(() => onSessionChange(() => window.location.reload()), []);
+    useEffect(() => onSessionChange(() => forgetLedger().finally(() => window.location.reload())), []);
     // oxlint-disable-next-line outlayr/react-effect-budget -- the restored copy shows before Convex answers, so a refusal arrives after the first paint.
     useEffect(() => {
-        settled.then(setSynced).catch(async () => {
-            await dropLedger();
-            await router.invalidate();
+        settled.then(setSynced).catch(async (error) => {
+            // Only a refusal ends the copy: a server that stays busy past the retries leaves the books on screen.
+            if (error instanceof ConvexError) {
+                await dropLedger();
+                await router.invalidate();
+            }
         });
     }, [router, settled]);
     // oxlint-disable-next-line outlayr/react-effect-budget -- IndexedDB is an external system.
