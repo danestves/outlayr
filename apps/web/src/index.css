@@ -1648,3 +1648,10 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
         font-size: 16px;
     }
 }
+
+@media (width < 40rem) {
+    [data-slot="dialog-content"] {
+        margin-bottom: var(--keyboard-inset, 0px);
+        max-height: calc(100dvh - 1rem - var(--keyboard-inset, 0px));
+    }
+}

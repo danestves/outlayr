@@ -22,6 +22,7 @@ import { convexClient } from "@/lib/convex";
 import { readDashboardLocale, serverDashboardLocale, subscribeDashboardLocale } from "@/lib/dashboard-locale";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { LANGUAGES } from "@/lib/i18n";
+import { watchKeyboardInset } from "@/lib/keyboard-inset";
 import { dropLedger, forgetLedger, hasLedgerCopy, restoreLedger, saveLedger } from "@/lib/ledger-cache";
 import { resendUnsent } from "@/lib/ledger-commit";
 import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
@@ -198,6 +199,8 @@ function useLedgerCopy(overview: Overview, photos: PhotoUrls, settled: Promise<b
     useEffect(() => onSessionChange(() => forgetLedger().finally(() => window.location.reload())), []);
     // oxlint-disable-next-line outlayr/react-effect-budget -- the Convex connection is an external system.
     useEffect(() => watchSync(convexClient()), []);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- the on-screen keyboard is an external system
+    useEffect(() => watchKeyboardInset(), []);
     // oxlint-disable-next-line outlayr/react-effect-budget -- the restored copy shows before Convex answers, so a refusal arrives after the first paint.
     useEffect(() => {
         settled.then(setSynced).catch(async (error) => {
