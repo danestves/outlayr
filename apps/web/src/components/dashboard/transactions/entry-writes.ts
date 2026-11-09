@@ -148,6 +148,11 @@ export const logAgainValues = (ledger: Ledger, doc: Doc, at: number): EntryValue
     recurringType: RECURRING_TYPE.none,
 });
 
+/** A plan's purchase or one of its charges: their amounts and dates belong to the plan. */
+export const isFinanced = (books: Ledger["books"], doc: Doc) =>
+    doc.installmentId != null ||
+    books.installmentPlans.some((plan) => plan.deletedAt === null && plan.transactionId === doc.localId);
+
 export const baseOf = (ledger: Ledger, doc: Doc): EntryBase => ({
     doc,
     fee: liveFeeOf(ledger.books, doc.localId),
