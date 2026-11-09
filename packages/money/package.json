@@ -45,6 +45,7 @@
         "./transfer-row": "./src/transfer-row.ts",
         "./uuid5": "./src/uuid5.ts",
         "./valuation": "./src/valuation.ts",
+        "./referrals": "./src/referrals.ts",
         "./transaction-csv": "./src/transaction-csv.ts"
     },
     "scripts": {

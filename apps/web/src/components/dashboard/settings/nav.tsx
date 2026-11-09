@@ -7,6 +7,7 @@ import DollarCircleIcon from "@hugeicons/core-free-icons/DollarCircleIcon";
 import InformationCircleIcon from "@hugeicons/core-free-icons/InformationCircleIcon";
 import PreferenceHorizontalIcon from "@hugeicons/core-free-icons/PreferenceHorizontalIcon";
 import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
+import UserAdd01Icon from "@hugeicons/core-free-icons/UserAdd01Icon";
 import UserIcon from "@hugeicons/core-free-icons/UserIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
@@ -19,6 +20,7 @@ const SECTIONS = [
     { icon: DollarCircleIcon, key: "currency", to: "/app/settings/currency" },
     { icon: Calendar03Icon, key: "time", to: "/app/settings/time" },
     { icon: DashboardSpeed01Icon, key: "usage", to: "/app/settings/usage" },
+    { icon: UserAdd01Icon, key: "invite", to: "/app/settings/invite" },
     { icon: Tag01Icon, key: "categories", to: "/app/settings/categories" },
     { icon: Database01Icon, key: "data", to: "/app/settings/data" },
     { icon: InformationCircleIcon, key: "about", to: "/app/settings/about" },
