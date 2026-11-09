@@ -17,8 +17,9 @@ import { formatAmount, maskedAmount } from "@/domain/money";
 import type { BarPeriod, PeriodBar } from "@/domain/period-bars";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
-import { headCells, PERIOD_PHRASE_KEY } from "../labels";
+import { headCells, MEASURE_WORD_KEY, PERIOD_PHRASE_KEY } from "../labels";
 import { AmountsEyeButton } from "./amounts-eye-button";
+import { LogHeroNumber } from "./log-hero-number";
 import { LogLimit } from "./log-limit";
 import { LogPeriodBars } from "./log-period-bars";
 import { LogScopeMenu } from "./log-scope-menu";
@@ -73,12 +74,12 @@ export function LogInsights({
 
     return (
         <View className="pt-3.5 pb-1.5">
-            <View className="flex-row items-center justify-between gap-2 pb-3">
+            <View className="flex-row items-center justify-between gap-2">
                 <LogScopeMenu
                     currencies={currencyOptions}
                     // The figures' own currency, which may be a fallback from the request.
                     currency={figures.currencyCode}
-                    label={`${t(PERIOD_PHRASE_KEY[period])} · ${figures.currencyCode}`}
+                    label={`${t(MEASURE_WORD_KEY[measure])} · ${t(PERIOD_PHRASE_KEY[period])} · ${figures.currencyCode}`}
                     // The ledger's own currency leads, so choosing it clears the override.
                     onCurrency={(code) => onDisplayCurrency(code === currencyOptions[0] ? null : code)}
                     onManageCurrencies={onManageCurrencies}
@@ -86,6 +87,15 @@ export function LogInsights({
                 <GlassContainer style={LOG_CONTROLS}>
                     <AmountsEyeButton />
                 </GlassContainer>
+            </View>
+
+            <View className="pt-1 pb-3">
+                <LogHeroNumber
+                    code={figures.currencyCode}
+                    magnitude={measureMagnitude(measure, figures)}
+                    positive={measureIsPositive(measure, figures)}
+                    showCents={showCents}
+                />
             </View>
 
             <LedgerHead cells={headCells(narrowed, figures, t, onNarrow)} code={figures.currencyCode} />

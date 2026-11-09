@@ -1,15 +1,16 @@
 import { use, useState } from "react";
-import { useWindowDimensions, View } from "react-native";
+import { View } from "react-native";
 
 import { useDisplaySettings } from "@/contexts/display-settings-context";
-import { amountParts, currencySymbol, formatAmount, symbolPrefix } from "@/domain/money";
+import { currencySymbol, formatAmount, maskedAmount, symbolPrefix } from "@/domain/money";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
-import { AmountsHiddenContext, fittedHeroSize, FlowAmount } from "./amount-text";
+import { AmountsHiddenContext, FlowAmount } from "./amount-text";
 import { MonoLabel } from "./mono-label";
 import { RowPressable } from "./row-pressable";
 import { ROW_TYPE } from "./row-type";
+import { Text } from "./text";
 import { cn } from "./tw";
 
 export interface LedgerCell {
@@ -30,6 +31,7 @@ const CELL_FONT_SIZE = 16;
 const CELL_FONT_FLOOR = 11;
 /** `pl-3.5`, which every cell but the first gives up. */
 const CELL_INSET = 14;
+const NUMBER_FLOW_SLACK = 1.04;
 
 interface LedgerHeadProps {
     cells: readonly LedgerCell[];
@@ -43,27 +45,43 @@ export function LedgerHead({ cells, code }: LedgerHeadProps) {
     const { language } = useLanguage();
     const hidden = use(AmountsHiddenContext);
     const stacked = useAccessibilityTextSize();
-    const { fontScale } = useWindowDimensions();
     const [width, setWidth] = useState(0);
+    const [widestFigure, setWidestFigure] = useState(0);
     const anySelected = cells.some((cell) => cell.selected);
     const cellWidth = stacked ? width : width / cells.length - CELL_INSET;
     // One size for the row: a NumberFlow cannot shrink itself, and clipping a figure would misstate it.
-    const size = Math.min(
-        ...cells.map(({ magnitude }) =>
-            fittedHeroSize(
-                CELL_FONT_SIZE,
-                magnitude,
-                amountParts(magnitude, code, showCents, language).minorUnits,
-                cellWidth,
-                fontScale,
-                CELL_FONT_FLOOR
-            )
-        )
-    );
-    const spokenCell = (cell: LedgerCell) =>
-        `${cell.label}, ${hidden ? t("log.amounts.hidden") : `${cell.positive ? "+" : "-"}${formatAmount(cell.magnitude, code, showCents, language)}`}`;
+    const size =
+        width > 0 && widestFigure > 0
+            ? Math.max(
+                  CELL_FONT_FLOOR,
+                  Math.min(
+                      CELL_FONT_SIZE,
+                      Math.floor((CELL_FONT_SIZE * cellWidth) / (widestFigure * NUMBER_FLOW_SLACK))
+                  )
+              )
+            : CELL_FONT_SIZE;
+    const signedAmount = (cell: LedgerCell) =>
+        `${cell.positive ? "+" : "-"}${formatAmount(cell.magnitude, code, showCents, language)}`;
+    const spokenCell = (cell: LedgerCell) => `${cell.label}, ${hidden ? t("log.amounts.hidden") : signedAmount(cell)}`;
+    const drawnFigures = cells
+        .map((cell) => (hidden ? `${cell.positive ? "+" : "-"}${maskedAmount(code)}` : signedAmount(cell)))
+        .join("\n");
     return (
         <View onLayout={({ nativeEvent }) => setWidth(nativeEvent.layout.width)}>
+            <View
+                accessibilityElementsHidden
+                className="absolute top-0 left-0 w-[9999px] opacity-0"
+                importantForAccessibility="no-hide-descendants"
+                pointerEvents="none"
+            >
+                <Text
+                    className={cn(ROW_TYPE.cell, "self-start tabular-nums")}
+                    onLayout={({ nativeEvent }) => setWidestFigure(nativeEvent.layout.width)}
+                    style={{ fontSize: CELL_FONT_SIZE }}
+                >
+                    {drawnFigures}
+                </Text>
+            </View>
             <View className="bg-border h-px w-full" />
             <View className={stacked ? undefined : "flex-row"}>
                 {cells.map((cell, index) => (

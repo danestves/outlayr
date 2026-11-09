@@ -76,7 +76,7 @@ function MonthLimit({
                     />
                 )}
             </View>
-            <View className="flex-row justify-between gap-2">
+            <View className="flex-row flex-wrap justify-between gap-x-2">
                 <Text className={cn("text-footnote tabular-nums", over ? "text-over-budget" : "text-muted")}>
                     {status}
                 </Text>
