@@ -3,9 +3,10 @@ import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { isPerson, toAccountKind } from "@outlayr/money/account-kind";
 import type { AccountKind } from "@outlayr/money/account-kind";
 import { useForm, useSelector } from "@tanstack/react-form";
+import * as Cause from "effect/Cause";
 import { useRouter } from "expo-router";
 import { use, useRef, useState } from "react";
-import { Keyboard } from "react-native";
+import { Alert, Keyboard } from "react-native";
 
 import { holdAfterSuccess, pressSubmit } from "@/components/form/submit-guard";
 import { useAppSettings } from "@/contexts/display-settings-context";
@@ -31,9 +32,10 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { personDeleteNotice } from "@/screens/debts/debts-wording";
-import { saveAccountCommand } from "@/state/accounts-commands";
+import { saveAccountCommand, setAccountArchivedCommand } from "@/state/accounts-commands";
 import { runAtomCommand, SILENT } from "@/state/atom-command";
 import { askForInstallmentReminders, rearmInstallmentReminders } from "@/state/surfaces-commands";
+import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
 
 import { accountIdentityLookup, accountIdentitySeed, draftHasIdentity, logoMayReplaceIdentity } from "./identity-seed";
@@ -333,7 +335,36 @@ export function useAccountForm(props: AccountEditorProps) {
                   router.back();
               };
 
+    const setArchived = useAtomAction(
+        setAccountArchivedCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to archive the account", Cause.squash(cause));
+                haptics("error");
+                setFailure(t("accounts.error.archiveFailed"));
+            },
+            onSuccess: () => {
+                haptics("success");
+                router.back();
+            },
+        },
+        SILENT
+    );
+    const archiveAccount =
+        loaded == null || person || loaded.archivedAt !== null
+            ? null
+            : () => {
+                  Alert.alert(t("accounts.archive.title", { name: loaded.name }), t("accounts.archive.body"), [
+                      { style: "cancel", text: t("common.cancel") },
+                      {
+                          onPress: () => setArchived({ archived: true, db, id: loaded.id }),
+                          text: t("accounts.archive"),
+                      },
+                  ]);
+              };
+
     return {
+        archiveAccount,
         balanceSheet: {
             code: currency,
             minorUnits: minorUnitsFor(currency),
