@@ -59,9 +59,9 @@ export function measureCells(
     }));
 }
 
-const HEAD_MEASURES: readonly LogMeasure[] = ["in", "out", "net"];
+const HEAD_MEASURES: readonly NarrowedMeasure[] = ["in", "out"];
 
-/** Net is the whole list, so tapping it, or the cell already narrowing, puts every entry back. */
+/** Tapping the cell already narrowing puts every entry back. */
 export function headCells(
     narrowed: NarrowedMeasure | null,
     figures: LogFigures,
@@ -69,7 +69,7 @@ export function headCells(
     onNarrow: (next: NarrowedMeasure | null) => void
 ): LedgerCell[] {
     return HEAD_MEASURES.map((measure) => {
-        const narrowing = measure === "net" || measure === narrowed ? null : measure;
+        const narrowing = measure === narrowed ? null : measure;
         return {
             accessibilityHint: t(narrowing ? "log.ledger.showOnly" : "log.ledger.showAll"),
             income: measureIsIncome(measure),
