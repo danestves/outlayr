@@ -177,8 +177,37 @@ streams into one causally-ordered log.
 
 1. **Outbox.** A local `outbox` table — `(tableName, localId, enqueuedAt)`, primary key
    `(tableName, localId)` — populated by `AFTER INSERT` / `AFTER UPDATE` SQLite triggers on
-   the replicated user tables. Added by a hand-written `drizzle/*/migration.sql` migration (drizzle-kit does
-   not generate triggers).
+   the replicated user tables, plus an `AFTER DELETE` trigger that drops the row's entry.
+
+   No migration declares these triggers. `ensureOutboxTriggers` (`src/db/outbox-triggers.ts`)
+   builds them from `SYNCED_SPECS` in `LocalDatabase.open`, after `migrate` and before the
+   first-launch seed, so a table added to `SYNCED_SPECS` replicates with no trigger migration
+   and a table drizzle-kit rebuilt gets its triggers back. It reads `sqlite_master` once and
+   rewrites only a trigger whose text differs, so a launch with nothing to change costs one
+   query. The `appMeta` triggers take their `WHEN` key list from `SYNCED_META_KEYS` the same
+   way. The migrations up to `0044` that declared triggers by hand stay as shipped; the
+   generator writes the same text, so an install that has them is not rebuilt.
+
+   **A migration queues what it writes.** The triggers are built after the whole pending
+   batch commits (`migrate` runs every pending migration in one transaction), so a new table
+   has no trigger during its own migration, a rebuilt table has none for the rest of the
+   batch, and an install that skipped a build runs two releases' migrations as one batch.
+   Never count on a trigger inside a migration: one that inserts, updates or tombstones a
+   replicated row enqueues those rows itself, gated on `syncEnabled` as the triggers are and
+   skipping rows already queued so a pending edit keeps its `seq`:
+
+   ```sql
+   INSERT INTO `outbox` (`tableName`, `localId`, `enqueuedAt`)
+   SELECT 'tags', `id`, CAST(strftime('%s', 'now') AS INTEGER) * 1000
+   FROM `tags`
+   WHERE (SELECT `value` FROM `appMeta` WHERE `key` = 'syncEnabled') = '1'
+     AND NOT EXISTS (SELECT 1 FROM `outbox` WHERE `tableName` = 'tags' AND `localId` = `tags`.`id`);
+   ```
+
+   Where a trigger does exist it has already queued the row and the `NOT EXISTS` skips it.
+   The same holds for a key added to `SYNCED_META_KEYS`: the rebuilt trigger sees later
+   writes only, so a value already stored is pushed on its next change unless a migration
+   queues it.
 
    Triggers, not repo calls, because writes already happen outside the repos:
    `src/data/recurrence-backfill.ts`, `src/data/canonicalize-backfill.ts`, and the App

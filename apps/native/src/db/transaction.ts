@@ -1,7 +1,22 @@
+import { sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 
 import type { Database } from "./client";
+
+export function bootTransaction(db: Database, task: () => void): void {
+    db.run(sql`BEGIN`);
+    try {
+        task();
+        db.run(sql`COMMIT`);
+    } catch (error) {
+        try {
+            db.run(sql`ROLLBACK`);
+            // oxlint-disable-next-line no-empty -- SQLite already rolled back after a disk or I/O failure, so keep the original error
+        } catch {}
+        throw error;
+    }
+}
 
 /**
  * Not drizzle's `db.transaction()`: on expo-sqlite it never awaits the callback, so an async body commits empty.

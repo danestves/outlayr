@@ -5,7 +5,9 @@ import BetterSqlite3 from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 
 import type { SpendDb } from "@/data/budget-spent";
+import { SYNCED_SPECS } from "@/data/sync-tables";
 import type { Database } from "@/db/client";
+import { ensureOutboxTriggers } from "@/db/outbox-triggers";
 
 export const testDatabase = (sqlite: BetterSqlite3.Database): Database =>
     drizzle({ client: sqlite }) as unknown as Database;
@@ -61,6 +63,7 @@ export function applyMigrations(sqlite: BetterSqlite3.Database, include: (file: 
 export function migratedSqlite({ foreignKeys = true } = {}): BetterSqlite3.Database {
     const sqlite = new BetterSqlite3(":memory:");
     applyMigrations(sqlite);
+    ensureOutboxTriggers(testDatabase(sqlite), SYNCED_SPECS);
     if (!foreignKeys) {
         sqlite.pragma("foreign_keys = OFF");
     }

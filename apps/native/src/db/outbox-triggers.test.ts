@@ -2,14 +2,19 @@ import BetterSqlite3 from "better-sqlite3";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import { META_KEYS } from "@/data/app-meta-core";
-import { SYNCED_META_KEYS, SYNCED_TABLES } from "@/data/sync-tables";
-import { applyMigrations } from "@/db/test-database";
+import { SYNCED_META_KEYS, SYNCED_SPECS, SYNCED_TABLES } from "@/data/sync-tables";
+import { ensureOutboxTriggers, outboxTriggers } from "@/db/outbox-triggers";
+import { applyMigrations, migratedSqlite, testDatabase } from "@/db/test-database";
 
-function migrated(): BetterSqlite3.Database {
-    const sqlite = new BetterSqlite3(":memory:");
-    applyMigrations(sqlite);
-    return sqlite;
+function declaredTriggers(sqlite: BetterSqlite3.Database): Record<string, string> {
+    const rows = sqlite.prepare("SELECT name, sql FROM sqlite_master WHERE type = 'trigger'").all() as {
+        name: string;
+        sql: string;
+    }[];
+    return Object.fromEntries(rows.map((row) => [row.name, row.sql]));
 }
+
+const QUOTED = /'([^']+)'/g;
 
 interface OutboxRow {
     localId: string;
@@ -71,7 +76,7 @@ describe("outbox triggers", () => {
     let sqlite: BetterSqlite3.Database;
 
     beforeEach(() => {
-        sqlite = migrated();
+        sqlite = migratedSqlite();
     });
 
     it("enqueues nothing until sync is switched on", () => {
@@ -170,10 +175,7 @@ describe("outbox triggers", () => {
     });
 
     it("covers every table the sync layer claims to replicate", () => {
-        const declared = sqlite.prepare("SELECT name FROM sqlite_master WHERE type = 'trigger'").all() as {
-            name: string;
-        }[];
-        const names = new Set(declared.map((row) => row.name));
+        const names = new Set(Object.keys(declaredTriggers(sqlite)));
 
         const missing = SYNCED_TABLES.flatMap((table) =>
             ["insert", "update", "delete"]
@@ -236,5 +238,65 @@ describe("outbox triggers", () => {
             .all() as { name: string }[];
 
         expect(stale.map((row) => row.name)).toStrictEqual([]);
+    });
+
+    it("builds each trigger exactly as the migrations that shipped it wrote it", () => {
+        const shipped = new BetterSqlite3(":memory:");
+        applyMigrations(shipped);
+        const declared = declaredTriggers(shipped);
+        const [allowList = "", syncGate = ""] = (declared.outbox_after_insert_appMeta ?? "").split(" AND (SELECT");
+        expect(syncGate).not.toBe("");
+        const shippedKeys = [...allowList.matchAll(QUOTED)].map(([, key]) => key);
+
+        const built = new Map(
+            outboxTriggers({
+                ...SYNCED_SPECS,
+                appMeta: { ...SYNCED_SPECS.appMeta, syncedIds: shippedKeys },
+            }).map((trigger) => [trigger.name, trigger.sql])
+        );
+
+        expect(Object.keys(declared).length).toBeGreaterThan(0);
+        expect(Object.fromEntries(Object.keys(declared).map((name) => [name, built.get(name)]))).toStrictEqual(
+            declared
+        );
+    });
+
+    it("puts back the triggers a table rebuild dropped", () => {
+        sqlite.exec("ALTER TABLE tags RENAME TO old_tags");
+        sqlite.exec("CREATE TABLE tags AS SELECT * FROM old_tags");
+        sqlite.exec("DROP TABLE old_tags");
+        enableSync(sqlite);
+        sqlite.prepare("INSERT INTO tags (id, name, updatedAt) VALUES ('before', 'before', 1)").run();
+        expect(outbox(sqlite)).toStrictEqual([]);
+
+        ensureOutboxTriggers(testDatabase(sqlite), SYNCED_SPECS);
+        sqlite.prepare("INSERT INTO tags (id, name, updatedAt) VALUES ('after', 'after', 1)").run();
+        sqlite.prepare("UPDATE tags SET name = 'renamed' WHERE id = 'before'").run();
+
+        expect(outbox(sqlite).map((row) => [row.tableName, row.localId])).toStrictEqual([
+            ["tags", "after"],
+            ["tags", "before"],
+        ]);
+    });
+
+    it("follows the allow-list when it changes, and leaves every other trigger in place", () => {
+        const rowids = () =>
+            sqlite
+                .prepare("SELECT rowid FROM sqlite_master WHERE type = 'trigger' AND tbl_name != 'appMeta'")
+                .pluck()
+                .all();
+        const before = rowids();
+        enableSync(sqlite);
+
+        ensureOutboxTriggers(testDatabase(sqlite), {
+            ...SYNCED_SPECS,
+            appMeta: { ...SYNCED_SPECS.appMeta, syncedIds: ["showCents", "colorScheme"] },
+        });
+        setMeta(sqlite, "colorScheme", "dark");
+        setMeta(sqlite, "haptics", "false");
+        setMeta(sqlite, "showCents", "false");
+
+        expect(outbox(sqlite).map((row) => row.localId)).toStrictEqual(["colorScheme", "showCents"]);
+        expect(rowids()).toStrictEqual(before);
     });
 });
