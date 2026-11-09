@@ -1039,7 +1039,8 @@
     --color-warning: #fdcc41;
 }
 
-.app-shell {
+.app-shell,
+[data-slot="toast-viewport"] {
     --color-app-on-tint: #ffffff;
     --color-app-scrim: #17150f59;
     --color-app-shadow-far: #1c191738;
@@ -1065,13 +1066,16 @@
     --warning: var(--color-app-warn);
     --chart-1: var(--color-app-ink);
     --chart-2: color-mix(in oklab, var(--color-app-ink) 30%, var(--color-app-bg));
-    background-color: var(--color-app-bg);
     color: var(--color-app-ink);
     font-size: 14px;
     line-height: 20px;
     font-family: var(--font-sans);
     --skullet-base: var(--color-app-fill);
     --skullet-animation: pulse;
+}
+
+.app-shell:where(:not([data-slot], [role="dialog"])) {
+    background-color: var(--color-app-bg);
 }
 
 html:has(.app-shell) {
@@ -1105,13 +1109,14 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
 
 @layer base {
     .app-shell,
-    .app-shell * {
+    .app-shell *,
+    [data-slot="toast-viewport"] * {
         border-color: var(--color-border);
     }
 }
 
 /* The web redesign's dark surfaces are the site's, not the phone's, so the shell re-points app-* here only. */
-:root[data-theme="dark"] .app-shell {
+:root[data-theme="dark"] :is(.app-shell, [data-slot="toast-viewport"]) {
     --color-app-bg: #131209;
     --color-app-group: #1c1b13;
     --color-app-ink: #fafaf9;

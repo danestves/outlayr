@@ -719,7 +719,7 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                                         </Table.Cell>
                                     </Table.Row>
                                 ) : null}
-                                <Table.Row>
+                                <Table.Row className="has-data-popup-open:bg-muted/40">
                                     <Cell>
                                         <span className="flex min-w-0 items-center gap-2.5 text-sm font-medium">
                                             <EntryTile

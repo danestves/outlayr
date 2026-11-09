@@ -66,9 +66,7 @@ describe("account entries", () => {
     it("points a row back at its ledger id, and only opens what the ledger can act on", () => {
         const entries = accountEntries(ledger, "chase", "2026-11-01", "2026-11-30");
         expect(
-            entries
-                .map(({ outside, rowId }) => ({ outside, rowId }))
-                .toSorted((a, b) => a.rowId.localeCompare(b.rowId))
+            entries.map(({ outside, rowId }) => ({ outside, rowId })).toSorted((a, b) => a.rowId.localeCompare(b.rowId))
         ).toStrictEqual([
             { outside: true, rowId: "found" },
             { outside: false, rowId: "rent" },
