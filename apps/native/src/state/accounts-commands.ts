@@ -12,6 +12,7 @@ import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand, tapFailure } from "./atom-command";
+import { logged } from "./entry-save";
 
 const accountsCommand = <W, A, E>(label: string, execute: (input: W) => Effect.Effect<A, E>) =>
     createRuntimeCommand(appRuntime, { execute, label: `accounts:${label}` });
@@ -65,18 +66,22 @@ export const saveTransferCommand = accountsCommand(
             id == null
                 ? yield* transfersRepo.create(db, input)
                 : yield* transfersRepo.update(db, id, input).pipe(Effect.as(id));
-        if (mode === "create") {
-            freshEntries.mark(savedId, input.date);
-            if (notice) {
-                notifySaved(notice);
-            }
-        }
-        posthog?.capture("transfer_saved", {
-            cross_currency: input.fromCurrency !== input.toCurrency,
-            has_fee: Object.values(input.fees ?? {}).some((fee) => fee.amount > 0),
-            mode,
-            source,
-        });
+        yield* logged("Failed to finish the transfer save")(
+            Effect.sync(() => {
+                if (mode === "create") {
+                    freshEntries.mark(savedId, input.date);
+                    if (notice) {
+                        notifySaved(notice);
+                    }
+                }
+                posthog?.capture("transfer_saved", {
+                    cross_currency: input.fromCurrency !== input.toCurrency,
+                    has_fee: Object.values(input.fees ?? {}).some((fee) => fee.amount > 0),
+                    mode,
+                    source,
+                });
+            })
+        );
         return savedId;
     })
 );
