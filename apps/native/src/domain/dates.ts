@@ -57,6 +57,10 @@ export function formatRelativeDay(date: Date, now: Date = new Date(), language: 
     return relativeDayName(date, now, language) ?? formatChargeDate(date, now, language);
 }
 
+export function formatMonthHeader(date: Date, language: Language = runtimeLanguage()): string {
+    return `${dateName(`dates.monthLong.${date.getMonth()}`, language)} ${date.getFullYear()}`.toUpperCase();
+}
+
 export function formatDateHeader(day: Date, now: Date = new Date(), language: Language = runtimeLanguage()): string {
     const weekday = dateName(`dates.weekday.${day.getDay()}`, language).toUpperCase();
     const base = `${weekday}, ${day.getDate()} ${monthAbbrev(day, language)}`;

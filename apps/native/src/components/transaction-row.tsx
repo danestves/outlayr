@@ -12,7 +12,7 @@ import type { AccessibilityActionEvent } from "react-native";
 
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import type { TransactionWithCategory } from "@/data/transactions";
-import { formatTime, formatUpcomingDate } from "@/domain/dates";
+import { formatChargeDate, formatTime, formatUpcomingDate } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import { FALLBACK_IDENTITY_COLOR, resolveTransactionIdentity } from "@/domain/transaction-identity";
 import type { TransferLogRow, TransferMove } from "@/domain/transfer-log-rows";
@@ -232,6 +232,8 @@ function rowFigure(transaction: TransactionRowProps["transaction"], currency: st
 
 interface TransactionRowProps {
     currency: string;
+    /** For a list grouped wider than a day: the subtitle carries the date, since no header does. */
+    dated?: boolean;
     /** A scheduled entry whose stored date is past is still upcoming: its next occurrence is. */
     future?: boolean;
     menuItems?: readonly ActionMenuItem[];
@@ -291,6 +293,7 @@ function withGuessedCategory(
 export function TransactionRow({
     transaction,
     currency,
+    dated = false,
     rates,
     onPress,
     menuItems,
@@ -335,9 +338,10 @@ export function TransactionRow({
         );
 
     const timeLabel = swapTimeLabel ? (transaction.categoryName ?? "") : formatTime(date, use24Hour, language);
-    const subtitle = future
-        ? (upcomingLabel ?? formatUpcomingDate(date, language))
+    const pastLabel = dated
+        ? withGuessedCategory(formatChargeDate(date, undefined, language), transaction, false)
         : withGuessedCategory(timeLabel, transaction, swapTimeLabel);
+    const subtitle = future ? (upcomingLabel ?? formatUpcomingDate(date, language)) : pastLabel;
 
     const amount = (
         <View className={stacked ? "items-start" : "items-end"}>

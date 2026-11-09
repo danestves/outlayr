@@ -33,13 +33,14 @@ import { useValuationIn } from "@/data/use-valuation";
 import { useValuedCurrencies } from "@/data/valued-currencies";
 import type { Database } from "@/db/client";
 import { BALANCES_ACCOUNTS } from "@/domain/balances";
-import { groupByDay, groupByDayAsItGrows, joinDaySections } from "@/domain/day-sections";
+import { formatMonthHeader } from "@/domain/dates";
+import { groupByDay, groupByDayAsItGrows, groupByMonth, joinDaySections } from "@/domain/day-sections";
 import type { DayGroupable } from "@/domain/day-sections";
 import { logCurrencyOptions } from "@/domain/log-currency-options";
-import type { LogFilter } from "@/domain/log-filter";
+import type { LogFilter, LogMenuFilter } from "@/domain/log-filter";
 import { filterDetail, filterPeriodUnit } from "@/domain/log-filter";
 import { logMeasureFromStored, storedLogMeasure } from "@/domain/log-measure";
-import type { LogMeasure } from "@/domain/log-measure";
+import type { LogMeasure, NarrowedMeasure } from "@/domain/log-measure";
 import { cursorStart } from "@/domain/log-period-cursor";
 import type { CursorUnit } from "@/domain/log-period-cursor";
 import { scopeHasFigures, scopeTotals } from "@/domain/log-scope-figures";
@@ -178,6 +179,16 @@ function useTailGrouping<T extends DayGroupable>(currency: string, rates: RateTa
     return next.group;
 }
 
+function nothingToList(sectionCount: number, filter: LogMenuFilter, upcomingCount: number) {
+    return sectionCount === 0 && (filter !== "upcoming" || upcomingCount === 0);
+}
+
+function listScope(filter: LogMenuFilter, narrowed: NarrowedMeasure | null) {
+    const listFilter: LogFilter = narrowed ? "type" : filter;
+    const headMeasure: LogMeasure = narrowed ?? "net";
+    return { headMeasure, income: narrowed === "in", listFilter, monthly: narrowed !== null };
+}
+
 export function Log() {
     const db = useDatabase();
     useReviewAsk(db);
@@ -217,9 +228,11 @@ export function Log() {
     const period = logPeriodFromStored(useSettingNumber("logInsightsTimeFrame"));
     const measure = logMeasureFromStored(useSettingNumber("logInsightsType"));
 
-    const [filter, setFilter] = useState<LogFilter>("all");
+    const [filter, setFilter] = useState<LogMenuFilter>("all");
     const [categoryId, setCategoryId] = useState<string | null>(null);
-    const [income, setIncome] = useState(false);
+    // Screen state, not a setting: a Log that reopens narrowed looks like it lost the other half of the money.
+    const [narrowed, setNarrowed] = useState<NarrowedMeasure | null>(null);
+    const { headMeasure, income, listFilter, monthly } = listScope(filter, narrowed);
     // Seeded once: re-seeding as the clock ticks would step the calendar filters out from under the user.
     const [cursors, setCursors] = useState<Record<CursorUnit, Date>>(() => ({
         day: new Date(nowMs),
@@ -229,7 +242,7 @@ export function Log() {
 
     const [days, setDays] = useState(LOG_PAGE_DAYS);
     // One flag behind every `not all` branch: the head/tail reads are Log's money, and filters read none of them.
-    const readingHead = filter === "all";
+    const readingHead = listFilter === "all";
 
     const categoryMeta = useCategoryMeta(db);
     const filterableCategories = [...categoryMeta]
@@ -240,13 +253,13 @@ export function Log() {
     const cursorUnit: CursorUnit = filter === "week" || filter === "month" ? filter : "day";
     const cursor = cursors[cursorUnit];
     const detail = filterPeriodUnit(filter)
-        ? filterDetail(filter, { cursor, firstWeekday, income })
-        : filterScopeLabel(t, filter, activeCategoryId ? categoryMeta.get(activeCategoryId)?.name : null, income);
+        ? filterDetail(filter, { cursor, firstWeekday })
+        : filterScopeLabel(t, filter, activeCategoryId ? categoryMeta.get(activeCategoryId)?.name : null);
 
     const { head, reachedEnd, splitMs, tail } = useLoggedTransactions(db, nowMs, days, readingHead);
     const transferBounds = logTransferBounds({
         cursor,
-        filter,
+        filter: listFilter,
         firstWeekday,
         page: { floor: (tail.at(-1) ?? head.at(-1))?.day ?? null, reachedEnd },
     });
@@ -254,12 +267,12 @@ export function Log() {
     const filteredRows = useFilteredTransactions(db, nowMs, {
         categoryId: activeCategoryId,
         cursor,
-        filter,
+        filter: listFilter,
         firstWeekday,
         income,
     });
     // The section renders only under its own filter or the all view's setting, so the scan waits for either.
-    const showUpcomingSection = filter === "upcoming" || (filter === "all" && showUpcoming);
+    const showUpcomingSection = filter === "upcoming" || (listFilter === "all" && showUpcoming);
     const upcoming = useUpcomingTransactions(db, nowMs, showUpcomingSoon, showUpcomingSection);
     const insights = useLogInsights(db, nowMs, period, firstWeekday, currency, rates);
     const mainBudget = useCurrentMainBudget(db, nowMs, period === "month");
@@ -270,12 +283,12 @@ export function Log() {
         global: globalCurrency,
         produced: insights.perCurrency.map((figures) => figures.currencyCode),
     });
-    const sparkline = useSparkline(db, nowMs, logViewLineGraph, measure, period, firstWeekday, currency, rates);
+    const sparkline = useSparkline(db, nowMs, logViewLineGraph, headMeasure, period, firstWeekday, currency, rates);
     const bars = usePeriodBars(
         db,
         nowMs,
         filter === "all",
-        measure,
+        headMeasure,
         period,
         firstWeekday,
         currency,
@@ -294,19 +307,21 @@ export function Log() {
         ? upcoming.rows.filter((row) => !goesWithPendingDelete(row, pendingId))
         : [];
     const today = startOfDay(new Date(nowMs)).getTime();
-    const view = { ...cardOptions, language };
+    const view = { ...cardOptions, language, monthly };
 
     const tailTransfers = transferRows.filter((transfer) => transfer.day.getTime() < splitMs);
-    const listRows = headListRows(filter, head, filteredRows, transferRows, splitMs);
-    const tailRows = filter === "all" ? mergeByRecency(tail, tailTransfers) : [];
+    const listRows = headListRows(listFilter, head, filteredRows, transferRows, splitMs);
+    const tailRows = listFilter === "all" ? mergeByRecency(tail, tailTransfers) : [];
     const visibleRows = listRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
     const keptTail = tailRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
     const visibleTail = keptTail.length === tailRows.length ? tailRows : keptTail;
     const headSections = groupByDay(visibleRows, currency, rates);
     const tailSections = groupTail(visibleTail);
-    const sections = joinDaySections(headSections, tailSections, () =>
-        groupByDay([...visibleRows, ...visibleTail], currency, rates)
-    );
+    const sections = monthly
+        ? groupByMonth(visibleRows, currency, rates)
+        : joinDaySections(headSections, tailSections, () =>
+              groupByDay([...visibleRows, ...visibleTail], currency, rates)
+          );
     // LegendList's SectionList keeps `extraData` to itself, so what rows read rides on each section.
     const listSections = sections.map((section, index) => ({
         ...section,
@@ -314,7 +329,7 @@ export function Log() {
         today,
         view,
     }));
-    const emptyResult = sections.length === 0 && (filter !== "upcoming" || upcomingRows.length === 0);
+    const emptyResult = nothingToList(sections.length, filter, upcomingRows.length);
     // Over the unwindowed filtered read and the sections' own rows, so the day subtotals agree to the cent.
     const scopeFigures =
         filter === "all" || !scopeHasFigures(visibleRows) ? null : scopeTotals(visibleRows, currency, rates);
@@ -327,7 +342,7 @@ export function Log() {
     const rowMenu = (transaction: TransactionWithCategory, scheduled: boolean) =>
         transferIds.has(transaction.id) ? [] : openRowActions(transaction, scheduled);
 
-    // One setting behind both headers, so a filter never changes the promoted figure.
+    // The promoted figure under a filter chip; the Log's own head shows all three.
     const onMeasure = (next: LogMeasure) => {
         setNumberSetting({ db, key: "logInsightsType", value: storedLogMeasure(next) });
     };
@@ -350,12 +365,15 @@ export function Log() {
                 setNumberSetting({ db, key: "logInsightsTimeFrame", value: storedLogPeriod(next) });
             }}
             filter={filter}
-            onFilter={setFilter}
+            onFilter={(next) => {
+                setNarrowed(null);
+                setFilter(next);
+            }}
             onSearch={() => router.push("/search")}
         />
     );
 
-    if (listRows.length === 0 && tailRows.length === 0 && filter === "all") {
+    if (listRows.length === 0 && tailRows.length === 0 && listFilter === "all") {
         return (
             <AmountsHiddenContext value={amountsHidden}>
                 {accountsOverview || debts ? (
@@ -389,7 +407,7 @@ export function Log() {
                 recycleItems
                 onEndReachedThreshold={0.5}
                 onEndReached={() => {
-                    if (filter === "all" && !reachedEnd) {
+                    if (listFilter === "all" && !reachedEnd) {
                         setDays((current) => current + LOG_PAGE_DAYS);
                     }
                 }}
@@ -412,8 +430,8 @@ export function Log() {
                                     nowMs,
                                     onPress: () => router.push("/balances/overall"),
                                 }}
-                                measure={measure}
-                                onMeasure={onMeasure}
+                                narrowed={narrowed}
+                                onNarrow={setNarrowed}
                                 period={period}
                                 displayCurrency={currency}
                                 currencyOptions={currencyOptions}
@@ -436,8 +454,6 @@ export function Log() {
                                         [cursorUnit]: cursorStart(cursorUnit, next, firstWeekday),
                                     }))
                                 }
-                                income={income}
-                                onIncome={setIncome}
                                 firstWeekday={firstWeekday}
                                 nowMs={nowMs}
                                 onClear={() => setFilter("all")}
@@ -447,7 +463,7 @@ export function Log() {
                                 displayCurrency={currency}
                             />
                         )}
-                        {filter === "all" ? (
+                        {listFilter === "all" ? (
                             <LogShelf
                                 upcoming={upcomingRows}
                                 accounts={accountRows}
@@ -462,7 +478,7 @@ export function Log() {
                                 onOpenDebts={() => router.navigate(BALANCES_ACCOUNTS)}
                             />
                         ) : null}
-                        {filter === "all" && waiting > 0 ? (
+                        {listFilter === "all" && waiting > 0 ? (
                             <LogAutologPaused onPress={() => router.push(paywallHref("autolog"))} waiting={waiting} />
                         ) : null}
                         {filter === "upcoming" ? (
@@ -484,9 +500,10 @@ export function Log() {
                         <DaySectionHeader
                             section={section}
                             first={section.first}
+                            label={monthly ? formatMonthHeader(section.day, language) : undefined}
                             newCount={newIds.length}
                             onConfirmNew={() => markReviewed({ db, ids: newIds })}
-                            onShare={() => shareDay(section)}
+                            onShare={monthly ? undefined : () => shareDay(section)}
                         />
                     );
                 }}
@@ -494,6 +511,7 @@ export function Log() {
                     <SwipeableTransactionRow
                         transaction={item}
                         currency={currency}
+                        dated={monthly}
                         rates={rates}
                         onPress={openRow}
                         menuItems={rowMenu(item, false)}

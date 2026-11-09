@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { SankeyChart } from "panelui-native/components/sankey-chart";
 import { use, useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -7,6 +7,7 @@ import { AmountsHiddenContext } from "@/components/amount-text";
 import { CategoryIconTile } from "@/components/category-icon-tile";
 import { LedgerHead } from "@/components/ledger-head";
 import { MonoLabel } from "@/components/mono-label";
+import { RowPressable } from "@/components/row-pressable";
 import { ROW_TYPE } from "@/components/row-type";
 import { ScreenHeader } from "@/components/screen-header";
 import { Text } from "@/components/text";
@@ -34,6 +35,7 @@ function percent(part: number, whole: number) {
 
 export function CashFlow() {
     const db = useDatabase();
+    const router = useRouter();
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
@@ -89,6 +91,12 @@ export function CashFlow() {
             sentence += ` ${t("insights.cashFlow.topSentence", { name: targets[0].name, percent: percent(targets[0].amount, income) })}`;
         }
     }
+
+    const openEntries = (categoryId: string, incoming: boolean) =>
+        router.push({
+            params: { categoryId, income: String(incoming), offset: String(offset) },
+            pathname: "/insights/cash-flow-entries",
+        });
 
     const basisLabel = t(over ? "insights.cashFlow.ofOut" : "insights.cashFlow.ofIncome");
 
@@ -175,6 +183,7 @@ export function CashFlow() {
                                 icon={entry.icon}
                                 key={entry.id}
                                 name={entry.name}
+                                onPress={() => openEntries(entry.id, false)}
                                 share={entry.amount / basis}
                             />
                         ))}
@@ -194,6 +203,7 @@ export function CashFlow() {
                                         income
                                         key={entry.id}
                                         name={entry.name}
+                                        onPress={() => openEntries(entry.id, true)}
                                         share={entry.amount / income}
                                     />
                                 ))}
@@ -222,13 +232,17 @@ interface FlowRowProps {
     icon: string | null;
     income?: boolean;
     name: string;
+    /** Absent on a row with no entries behind it, which is Kept. */
+    onPress?: () => void;
     share: number;
 }
 
-function FlowRow({ amount, color, emoji = null, icon, income = false, name, share }: FlowRowProps) {
+function FlowRow({ amount, color, emoji = null, icon, income = false, name, onPress, share }: FlowRowProps) {
+    const t = useTranslation();
     const pct = Math.round(share * 100);
-    return (
-        <View accessibilityLabel={`${name}, ${amount}, ${pct}%`} accessible className="gap-1.5 py-1.5">
+    const label = `${name}, ${amount}, ${pct}%`;
+    const body = (
+        <>
             <View className="flex-row items-center gap-2.5">
                 <CategoryIconTile color={color} emoji={emoji} icon={icon} size={26} />
                 <Text className={cn(ROW_TYPE.subtitle, "text-foreground flex-1")} numberOfLines={1}>
@@ -241,6 +255,9 @@ function FlowRow({ amount, color, emoji = null, icon, income = false, name, shar
                     {amount}
                 </Text>
                 <Text className="text-label text-muted min-w-[34px] text-right font-mono">{`${pct}%`}</Text>
+                <Text className="text-muted w-2 text-right" importantForAccessibility="no">
+                    {onPress ? "›" : ""}
+                </Text>
             </View>
             <View className="bg-border ml-9 h-1 overflow-hidden rounded-full">
                 <View
@@ -248,6 +265,24 @@ function FlowRow({ amount, color, emoji = null, icon, income = false, name, shar
                     style={{ backgroundColor: color, width: `${Math.min(100, pct)}%` }}
                 />
             </View>
-        </View>
+        </>
+    );
+    if (!onPress) {
+        return (
+            <View accessibilityLabel={label} accessible className="gap-1.5 py-1.5">
+                {body}
+            </View>
+        );
+    }
+    return (
+        <RowPressable
+            accessibilityHint={t("insights.cashFlow.entriesHint")}
+            accessibilityLabel={label}
+            accessibilityRole="button"
+            className="gap-1.5 py-1.5"
+            onPress={onPress}
+        >
+            {body}
+        </RowPressable>
     );
 }

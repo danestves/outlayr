@@ -23,6 +23,10 @@ export default function InsightsLayout() {
                     <Stack.Header transparent />
                     <Stack.Screen.BackButton displayMode="minimal" />
                 </Stack.Screen>
+                <Stack.Screen name="cash-flow-entries">
+                    <Stack.Header transparent />
+                    <Stack.Screen.BackButton displayMode="minimal" />
+                </Stack.Screen>
                 <Stack.Screen name="plan/index">
                     <Stack.Header transparent />
                     <Stack.Screen.Title large>{t("budgets.plan.action.plan", { year })}</Stack.Screen.Title>

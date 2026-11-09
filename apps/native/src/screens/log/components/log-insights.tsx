@@ -11,23 +11,20 @@ import { cn } from "@/components/tw";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import type { LogInsights as LogInsightsData, LogPeriod } from "@/data/log-totals";
 import { measureIsIncome, measureIsPositive, measureMagnitude } from "@/domain/log-measure";
-import type { LogFigures, LogMeasure } from "@/domain/log-measure";
+import type { LogFigures, LogMeasure, NarrowedMeasure } from "@/domain/log-measure";
 import type { SparklinePoint } from "@/domain/log-sparkline";
 import { formatAmount, maskedAmount } from "@/domain/money";
 import type { BarPeriod, PeriodBar } from "@/domain/period-bars";
-import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
-import { measureCells, MEASURE_WORD_KEY, PERIOD_PHRASE_KEY } from "../labels";
+import { headCells, PERIOD_PHRASE_KEY } from "../labels";
 import { AmountsEyeButton } from "./amounts-eye-button";
-import { LogHeroNumber } from "./log-hero-number";
 import { LogLimit } from "./log-limit";
 import { LogPeriodBars } from "./log-period-bars";
 import { LogScopeMenu } from "./log-scope-menu";
 import { LogSparkline } from "./log-sparkline";
 
 const LOG_CONTROLS = { alignItems: "center", flexDirection: "row", gap: 8 } as const;
-const LOG_CONTROLS_UNDER_HERO = { ...LOG_CONTROLS, alignSelf: "flex-end" } as const;
 
 interface LogInsightsProps {
     bars?: { period: BarPeriod; rows: PeriodBar[] } | null;
@@ -35,12 +32,12 @@ interface LogInsightsProps {
     displayCurrency: string;
     insights: LogInsightsData;
     limit?: ComponentProps<typeof LogLimit> | null;
-    measure: LogMeasure;
+    narrowed: NarrowedMeasure | null;
     nowMs: number;
     /** Null puts the screen back in the ledger's own currency. */
     onDisplayCurrency: (code: string | null) => void;
     onManageCurrencies: () => void;
-    onMeasure: (measure: LogMeasure) => void;
+    onNarrow: (next: NarrowedMeasure | null) => void;
     period: LogPeriod;
     sparkline?: SparklineData | null;
 }
@@ -55,8 +52,8 @@ export interface SparklineData {
 /** No currency arithmetic here: `useLogInsights` does it. */
 export function LogInsights({
     insights,
-    measure,
-    onMeasure,
+    narrowed,
+    onNarrow,
     period,
     displayCurrency,
     currencyOptions,
@@ -69,38 +66,29 @@ export function LogInsights({
 }: LogInsightsProps) {
     const { showCents } = useDisplaySettings().state;
     const t = useTranslation();
-    const largeText = useAccessibilityTextSize();
     // Falls back to the dominant bucket only when nothing could be placed in `displayCurrency`.
     const figures = insights.perCurrency.find((f) => f.currencyCode === displayCurrency) ?? insights.dominant;
     const alsoThisPeriod = insights.perCurrency.filter((f) => f.currencyCode !== figures.currencyCode);
+    const measure: LogMeasure = narrowed ?? "net";
 
     return (
         <View className="pt-3.5 pb-1.5">
-            <LogScopeMenu
-                currencies={currencyOptions}
-                // The figures' own currency, which may be a fallback from the request.
-                currency={figures.currencyCode}
-                label={`${t(MEASURE_WORD_KEY[measure])} · ${t(PERIOD_PHRASE_KEY[period])} · ${figures.currencyCode}`}
-                measure={measure}
-                // The ledger's own currency leads, so choosing it clears the override.
-                onCurrency={(code) => onDisplayCurrency(code === currencyOptions[0] ? null : code)}
-                onManageCurrencies={onManageCurrencies}
-                onMeasure={onMeasure}
-            />
-
-            <View className={largeText ? "gap-2 pt-1" : "flex-row items-center gap-2 pt-1"}>
-                <View className={largeText ? undefined : "flex-1"}>
-                    <LogHeroNumber
-                        code={figures.currencyCode}
-                        magnitude={measureMagnitude(measure, figures)}
-                        positive={measureIsPositive(measure, figures)}
-                        showCents={showCents}
-                    />
-                </View>
-                <GlassContainer style={largeText ? LOG_CONTROLS_UNDER_HERO : LOG_CONTROLS}>
+            <View className="flex-row items-center justify-between gap-2 pb-3">
+                <LogScopeMenu
+                    currencies={currencyOptions}
+                    // The figures' own currency, which may be a fallback from the request.
+                    currency={figures.currencyCode}
+                    label={`${t(PERIOD_PHRASE_KEY[period])} · ${figures.currencyCode}`}
+                    // The ledger's own currency leads, so choosing it clears the override.
+                    onCurrency={(code) => onDisplayCurrency(code === currencyOptions[0] ? null : code)}
+                    onManageCurrencies={onManageCurrencies}
+                />
+                <GlassContainer style={LOG_CONTROLS}>
                     <AmountsEyeButton />
                 </GlassContainer>
             </View>
+
+            <LedgerHead cells={headCells(narrowed, figures, t, onNarrow)} code={figures.currencyCode} />
 
             {limit && period === "month" ? <LogLimit {...limit} figureCurrency={figures.currencyCode} /> : null}
 
@@ -108,15 +96,11 @@ export function LogInsights({
                 <LogPeriodBars
                     bars={bars.rows}
                     code={figures.currencyCode}
-                    income={measure === "in"}
+                    income={narrowed === "in"}
                     nowMs={nowMs}
                     period={bars.period}
                 />
-            ) : (
-                <View className="pt-3">
-                    <LedgerHead cells={measureCells(measure, figures, t, onMeasure)} code={figures.currencyCode} />
-                </View>
-            )}
+            ) : null}
 
             {alsoThisPeriod.length > 0 ? (
                 <View className="gap-2 pt-3">

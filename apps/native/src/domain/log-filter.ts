@@ -4,9 +4,11 @@ import { cursorLabel } from "./log-period-cursor";
 // Labels are the Swift `FilterType` raw values: SwiftUI renders the untranslated key itself, lowercase and all.
 export type LogFilter = "all" | "type" | "day" | "week" | "month" | "category" | "recurring" | "transfers" | "upcoming";
 
-export const LOG_FILTER_ORDER: readonly LogFilter[] = [
+/** "type" is the Log head's In and Out cells, so the filter menu and its chip never see it. */
+export type LogMenuFilter = Exclude<LogFilter, "type">;
+
+export const LOG_FILTER_ORDER: readonly LogMenuFilter[] = [
     "all",
-    "type",
     "day",
     "week",
     "month",
@@ -23,10 +25,9 @@ const LOG_FILTER_LABEL = {
     month: "by month",
     recurring: "recurring",
     transfers: "transfers",
-    type: "by type",
     upcoming: "upcoming",
     week: "by week",
-} satisfies Record<LogFilter, string>;
+} satisfies Record<LogMenuFilter, string>;
 
 export function filterPeriodUnit(filter: LogFilter): CursorUnit | null {
     switch (filter) {
@@ -46,14 +47,13 @@ export function filterPeriodUnit(filter: LogFilter): CursorUnit | null {
 }
 
 export function filterHasMenu(filter: LogFilter): boolean {
-    return filterPeriodUnit(filter) !== null || filter === "category" || filter === "type";
+    return filterPeriodUnit(filter) !== null || filter === "category";
 }
 
 export interface FilterScopeLabels {
     categoryName?: string | null;
     cursor: Date;
     firstWeekday?: number;
-    income: boolean;
 }
 
 export function filterDetail(filter: LogFilter, scope: FilterScopeLabels): string | null {
@@ -64,9 +64,6 @@ export function filterDetail(filter: LogFilter, scope: FilterScopeLabels): strin
     switch (filter) {
         case "category": {
             return scope.categoryName || LOG_FILTER_LABEL.category;
-        }
-        case "type": {
-            return scope.income ? "Income" : "Expense";
         }
         case "recurring": {
             return LOG_FILTER_LABEL.recurring;

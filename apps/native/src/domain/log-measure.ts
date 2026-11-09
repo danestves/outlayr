@@ -1,6 +1,9 @@
 // Stored numbers match the Swift app's `logInsightsType` preference, so a carried-over install keeps its choice.
 export type LogMeasure = "net" | "in" | "out";
 
+/** Net has no entries of its own, so only these can narrow the list. */
+export type NarrowedMeasure = Exclude<LogMeasure, "net">;
+
 const LOG_MEASURE_ORDER: readonly LogMeasure[] = ["net", "in", "out"];
 
 const STORED = { in: 2, net: 1, out: 3 } satisfies Record<LogMeasure, number>;

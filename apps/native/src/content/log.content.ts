@@ -194,12 +194,6 @@ const log = {
             fr: "Virements",
             pt: "Transferências",
         }),
-        "log.filter.type": t({
-            en: "by type",
-            es: "por tipo",
-            fr: "par type",
-            pt: "por tipo",
-        }),
         "log.filter.upcoming": t({
             en: "upcoming",
             es: "próximos",
@@ -230,11 +224,25 @@ const log = {
             fr: "Modifier les favorites…",
             pt: "Editar favoritas…",
         }),
+        "log.ledger.showAll": t({
+            en: "Shows every entry",
+            es: "Muestra todos los registros",
+            fr: "Affiche toutes les opérations",
+            pt: "Mostra todos os lançamentos",
+            "pt-PT": "Mostra todos os registos",
+        }),
         "log.ledger.showFigure": t({
             en: "Show this figure",
             es: "Mostrar esta cifra",
             fr: "Afficher ce montant",
             pt: "Mostrar este valor",
+        }),
+        "log.ledger.showOnly": t({
+            en: "Shows only these entries",
+            es: "Muestra solo estos registros",
+            fr: "Affiche seulement ces opérations",
+            pt: "Mostra só estes lançamentos",
+            "pt-PT": "Mostra só estes registos",
         }),
         "log.limit.a11y": t({
             en: "Monthly limit {limit}, {status}. Opens the budget",
@@ -476,18 +484,6 @@ const log = {
             es: "Mostrar",
             fr: "Afficher",
             pt: "Mostrar",
-        }),
-        "log.type.expense": t({
-            en: "Expense",
-            es: "Gasto",
-            fr: "Dépense",
-            pt: "Despesa",
-        }),
-        "log.type.income": t({
-            en: "Income",
-            es: "Ingreso",
-            fr: "Revenu",
-            pt: "Receita",
         }),
         "log.undo.deleted": t({
             en: "Log deleted",

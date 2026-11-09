@@ -7,7 +7,7 @@ import { MonoLabel } from "@/components/mono-label";
 import { ScopeChip } from "@/components/scope-chip";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import type { CategoryMetaRow } from "@/data/categories";
-import type { LogFilter } from "@/domain/log-filter";
+import type { LogMenuFilter } from "@/domain/log-filter";
 import { filterHasMenu, filterPeriodUnit } from "@/domain/log-filter";
 import { measureIsIncome, measureIsPositive, measureMagnitude } from "@/domain/log-measure";
 import type { LogFigures, LogMeasure } from "@/domain/log-measure";
@@ -27,15 +27,13 @@ interface LogFilterChipProps {
     cursor: Date;
     detail: string | null;
     displayCurrency: string;
-    filter: LogFilter;
+    filter: LogMenuFilter;
     firstWeekday: number;
-    income: boolean;
     measure: LogMeasure;
     nowMs: number;
     onCategory: (id: string) => void;
     onClear: () => void;
     onCursor: (date: Date) => void;
-    onIncome: (income: boolean) => void;
     onMeasure: (measure: LogMeasure) => void;
     /** Null when the scope holds nothing. */
     totals: ScopeTotals | null;
@@ -49,8 +47,6 @@ export function LogFilterChip({
     onCategory,
     cursor,
     onCursor,
-    income,
-    onIncome,
     firstWeekday,
     nowMs,
     onClear,
@@ -76,7 +72,6 @@ export function LogFilterChip({
                                   cursor,
                                   filter,
                                   firstWeekday,
-                                  income,
                                   nowMs,
                                   t,
                               })
@@ -90,7 +85,6 @@ export function LogFilterChip({
                             firstWeekday,
                             onCategory,
                             onCursor,
-                            onIncome,
                         })
                     }
                     onClear={onClear}
@@ -190,9 +184,8 @@ interface MenuContext {
     categories: { id: string; meta: CategoryMetaRow }[];
     categoryId: string | null;
     cursor: Date;
-    filter: LogFilter;
+    filter: LogMenuFilter;
     firstWeekday: number;
-    income: boolean;
     nowMs: number;
     t: TranslateFn;
 }
@@ -247,44 +240,21 @@ function menuActions(ctx: MenuContext): MenuAction[] {
         ];
     }
 
-    return [
-        {
-            displayInline: true,
-            id: "type-section",
-            subactions: [
-                {
-                    id: "expense",
-                    state: ctx.income ? "off" : "on",
-                    title: ctx.t("log.type.expense"),
-                },
-                {
-                    id: "income",
-                    state: ctx.income ? "on" : "off",
-                    title: ctx.t("log.type.income"),
-                },
-            ],
-            title: ctx.t("log.filter.type"),
-        },
-    ];
+    return [];
 }
 
 function handleAction(
     event: string,
     ctx: {
-        filter: LogFilter;
+        filter: LogMenuFilter;
         cursor: Date;
         firstWeekday: number;
         onCursor: (date: Date) => void;
         onCategory: (id: string) => void;
-        onIncome: (income: boolean) => void;
     }
 ) {
     if (event.startsWith(CATEGORY_PREFIX)) {
         ctx.onCategory(event.slice(CATEGORY_PREFIX.length));
-        return;
-    }
-    if (event === "expense" || event === "income") {
-        ctx.onIncome(event === "income");
         return;
     }
 

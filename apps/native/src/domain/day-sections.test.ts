@@ -1,7 +1,7 @@
 import { buildRateTable } from "@outlayr/money/valuation";
 import { describe, expect, it } from "vite-plus/test";
 
-import { capAtDayEnd, groupByDay, groupByDayAsItGrows, joinDaySections } from "./day-sections";
+import { capAtDayEnd, groupByDay, groupByDayAsItGrows, groupByMonth, joinDaySections } from "./day-sections";
 
 function row(day: string, amount: number, income = false) {
     return { amount, day: new Date(`${day}T00:00:00`), income };
@@ -72,6 +72,23 @@ describe("groupByDay", () => {
 });
 
 const eurRates = buildRateTable([{ date: "2026-07-01", quote: "EUR", rate: 0.9 }]);
+
+describe("groupByMonth", () => {
+    it("files a row under the month of its instant, not its stored day", () => {
+        const savedElsewhere = {
+            amount: 20,
+            date: new Date("2026-10-01T00:30:00"),
+            day: new Date("2026-09-30T00:00:00"),
+            income: true,
+        };
+        const sections = groupByMonth(
+            [row("2026-10-20", 100, true), savedElsewhere, row("2026-09-15", 7, true)],
+            "USD"
+        );
+        expect(sections.map((section) => section.total)).toStrictEqual([120, 7]);
+        expect(sections.map((section) => section.day.getMonth())).toStrictEqual([9, 8]);
+    });
+});
 
 describe("groupByDay with rates", () => {
     it("reads a mixed-currency day as one figure in the global currency", () => {
