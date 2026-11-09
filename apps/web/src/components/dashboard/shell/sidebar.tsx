@@ -75,7 +75,7 @@ function Soon({ collapsed, icon, label }: NavProps) {
     const item = (
         <span aria-disabled className="dash-nav" title={collapsed ? undefined : label}>
             <HugeiconsIcon className="shrink-0" icon={icon} size={17} strokeWidth={2} />
-            {collapsed ? null : label}
+            {collapsed ? <span className="sr-only">{label}</span> : label}
             <span className="dash-soon">{nav.soon}</span>
         </span>
     );
@@ -92,7 +92,7 @@ function NavLink({
     const item = (
         <Link activeOptions={{ exact, includeSearch: false }} className="dash-nav" to={to}>
             <HugeiconsIcon className="shrink-0" icon={icon} size={17} strokeWidth={2} />
-            {collapsed ? null : label}
+            {collapsed ? <span className="sr-only">{label}</span> : label}
         </Link>
     );
     return collapsed ? <RailTip label={label}>{item}</RailTip> : item;
