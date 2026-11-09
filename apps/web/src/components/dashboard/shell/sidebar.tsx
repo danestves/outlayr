@@ -88,7 +88,10 @@ function NavLink({
     icon,
     label,
     to,
-}: NavProps & { exact?: boolean; to: "/app" | "/app/accounts" | "/app/insights" | "/app/transactions" }) {
+}: NavProps & {
+    exact?: boolean;
+    to: "/app" | "/app/accounts" | "/app/insights" | "/app/transactions";
+}) {
     const item = (
         <Link activeOptions={{ exact, includeSearch: false }} className="dash-nav" to={to}>
             <HugeiconsIcon className="shrink-0" icon={icon} size={17} strokeWidth={1.5} />
@@ -171,7 +174,7 @@ export function Sidebar() {
     const toggle = (
         <Button
             aria-label={nav.collapse.value}
-            className="text-muted-foreground"
+            className={collapsed ? "text-muted-foreground" : "text-muted-foreground -mr-2"}
             onClick={toggleCollapsed}
             size={collapsed ? "icon" : "icon-sm"}
             variant="ghost"

@@ -2,12 +2,13 @@ import { Popover } from "@base-ui/react/popover";
 import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
-import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { searchInstitutions } from "@outlayr/money/institution-map";
 import { useRouteContext } from "@tanstack/react-router";
+import { Button } from "panelui-web/button";
 import { Input } from "panelui-web/input";
-import { useState } from "react";
+import { Tabs } from "panelui-web/tabs";
+import { useRef, useState } from "react";
 import type { ChangeEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -47,6 +48,12 @@ const ICONS = [
     "Mortarboard01",
     "Airplane01",
 ] as const;
+// The tile lies on the panel, so a picked colour tints it and draws the glyph.
+const tinted = (color: string) => ({
+    background: `color-mix(in oklab, ${color} 22%, var(--card))`,
+    color: `color-mix(in oklab, ${color} 70%, white)`,
+});
+
 const COLORS = ["#B26C43", "#53915A", "#4D84BD", "#7C76BC", "#B16482", "#A97332"] as const;
 const EMOJI = [
     "💵",
@@ -147,10 +154,10 @@ function IdentityFace({ identity, initials }: { identity: Identity; initials: Re
     }
     return (
         <span
-            className="text-app-muted bg-app-fill flex size-full items-center justify-center rounded-[inherit] text-2xl"
-            style={identity.color ? { background: identity.color, color: "#131209" } : undefined}
+            className="text-app-muted bg-app-fill flex size-full items-center justify-center rounded-2xl text-2xl"
+            style={identity.color ? tinted(identity.color) : undefined}
         >
-            {glyph ? <HugeiconsIcon icon={glyph} size={26} strokeWidth={1.75} /> : (identity.emoji ?? initials)}
+            {glyph ? <Glyph icon={glyph} className="size-6" /> : (identity.emoji ?? initials)}
         </span>
     );
 }
@@ -159,13 +166,14 @@ function Swatches({ identity, onChange }: { identity: Identity; onChange: (ident
     return (
         <div className="dash-swatches">
             {COLORS.map((color) => (
-                <button
+                <Button
                     aria-label={color}
                     aria-pressed={identity.color === color}
                     key={color}
                     onClick={() => onChange({ ...identity, color })}
+                    size="icon-sm"
                     style={{ background: color }}
-                    type="button"
+                    variant="ghost"
                 />
             ))}
         </div>
@@ -192,6 +200,8 @@ export function IdentityPicker({
     const [query, setQuery] = useState("");
     const [failed, setFailed] = useState(false);
     const upload = useUploadPhoto();
+    const trigger = useRef<HTMLButtonElement>(null);
+    const fileInput = useRef<HTMLInputElement>(null);
     const found = searchInstitutions(query).slice(0, 6);
     const titles = { emoji: flows.emoji, icon: flows.icon, logo: flows.logo, photo: flows.photo } as const;
 
@@ -211,29 +221,43 @@ export function IdentityPicker({
 
     return (
         <Popover.Root>
-            <Popover.Trigger aria-label={label} className="dash-ib" type="button">
+            <Popover.Trigger
+                aria-label={label}
+                ref={trigger}
+                render={<Button className="dash-ib" size="icon" variant="ghost" />}
+            >
                 <IdentityFace identity={identity} initials={initials} />
                 <u>
-                    <Glyph icon={PencilEdit01Icon} size={12} />
+                    <Glyph icon={PencilEdit01Icon} className="size-3" />
                 </u>
             </Popover.Trigger>
             <Popover.Portal>
-                <Popover.Positioner align="start" className="z-[60]" side="left" sideOffset={37}>
+                <Popover.Positioner
+                    align="start"
+                    anchor={() => trigger.current?.closest("[role=dialog]") ?? null}
+                    className="z-[60]"
+                    side="left"
+                    sideOffset={16}
+                >
                     <Popover.Popup className="app-shell dash-po ph-no-capture w-[232px]">
-                        <div className="dash-po-tabs">
-                            {TABS.map((each) => (
-                                <button
-                                    aria-pressed={tab === each}
-                                    key={each}
-                                    onClick={() => setTab(each)}
-                                    type="button"
-                                >
-                                    {titles[each]}
-                                </button>
-                            ))}
-                        </div>
-                        {tab === "logo" ? (
-                            <>
+                        <Tabs
+                            className="gap-0"
+                            onValueChange={(next) => {
+                                const picked = TABS.find((each) => each === next);
+                                if (picked) {
+                                    setTab(picked);
+                                }
+                            }}
+                            value={tab}
+                        >
+                            <Tabs.List className="w-full">
+                                {TABS.map((each) => (
+                                    <Tabs.Trigger className="flex-1 px-1" key={each} value={each}>
+                                        {titles[each]}
+                                    </Tabs.Trigger>
+                                ))}
+                            </Tabs.List>
+                            <Tabs.Content value="logo">
                                 <Input.Group className="mt-2.5">
                                     <Input.Addon>
                                         <Glyph icon={Search01Icon} size={16} />
@@ -249,12 +273,12 @@ export function IdentityPicker({
                                     {found.map(({ domain, label: name }) => {
                                         const chosen = identity.imageKey === `merchants/${domain}`;
                                         return (
-                                            <button
+                                            <Button
                                                 aria-pressed={chosen}
-                                                className="dash-pr"
+                                                className="dash-pr justify-start font-normal"
                                                 key={domain}
                                                 onClick={() => onChange(logoIdentity(domain))}
-                                                type="button"
+                                                variant="ghost"
                                             >
                                                 <img
                                                     alt=""
@@ -269,19 +293,17 @@ export function IdentityPicker({
                                                         size={16}
                                                     />
                                                 ) : null}
-                                            </button>
+                                            </Button>
                                         );
                                     })}
                                 </div>
-                            </>
-                        ) : null}
-                        {tab === "icon" ? (
-                            <>
+                            </Tabs.Content>
+                            <Tabs.Content value="icon">
                                 <div className="dash-pg grid-cols-5">
                                     {ICONS.map((key) => {
                                         const glyph = CATEGORY_ICONS.get(key);
                                         return glyph ? (
-                                            <button
+                                            <Button
                                                 aria-label={key}
                                                 aria-pressed={identity.icon === key}
                                                 key={key}
@@ -294,21 +316,20 @@ export function IdentityPicker({
                                                         preview: null,
                                                     })
                                                 }
-                                                type="button"
+                                                size="icon"
+                                                variant="ghost"
                                             >
-                                                <HugeiconsIcon icon={glyph} size={18} strokeWidth={1.75} />
-                                            </button>
+                                                <Glyph icon={glyph} size={16} />
+                                            </Button>
                                         ) : null;
                                     })}
                                 </div>
                                 <Swatches identity={identity} onChange={onChange} />
-                            </>
-                        ) : null}
-                        {tab === "emoji" ? (
-                            <>
+                            </Tabs.Content>
+                            <Tabs.Content value="emoji">
                                 <div className="dash-pg grid-cols-7">
                                     {EMOJI.map((emoji) => (
-                                        <button
+                                        <Button
                                             aria-pressed={identity.emoji === emoji}
                                             key={emoji}
                                             onClick={() =>
@@ -320,28 +341,27 @@ export function IdentityPicker({
                                                     preview: null,
                                                 })
                                             }
-                                            type="button"
+                                            size="icon"
+                                            variant="ghost"
                                         >
                                             {emoji}
-                                        </button>
+                                        </Button>
                                     ))}
                                 </div>
                                 <Swatches identity={identity} onChange={onChange} />
-                            </>
-                        ) : null}
-                        {tab === "photo" ? (
-                            <div className="mt-2.5">
-                                <label className="dash-ob h-9 w-full cursor-pointer justify-center rounded-[10px]">
+                            </Tabs.Content>
+                            <Tabs.Content className="mt-2.5" value="photo">
+                                <Button className="w-full" onClick={() => fileInput.current?.click()} variant="outline">
                                     {flows.choosePhoto}
-                                    <input accept="image/*" className="sr-only" onChange={onFile} type="file" />
-                                </label>
+                                </Button>
+                                <Input accept="image/*" hidden onChange={onFile} ref={fileInput} type="file" />
                                 {failed ? (
                                     <p className="text-destructive mt-1.5 text-xs" role="alert">
                                         {photoError}
                                     </p>
                                 ) : null}
-                            </div>
-                        ) : null}
+                            </Tabs.Content>
+                        </Tabs>
                     </Popover.Popup>
                 </Popover.Positioner>
             </Popover.Portal>

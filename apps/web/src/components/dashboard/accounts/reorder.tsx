@@ -69,12 +69,12 @@ function Rows({ onMove, rows }: { onMove: (id: string, to: number) => void; rows
                 const lifted = dragging === row.id;
                 return (
                     <div
-                        className={`flex h-14 items-center gap-3 border-b pr-5 pl-5 last:border-0 ${lifted ? "border-border bg-app-hover relative z-10 -mx-1.5 rounded-xl border px-[26px] shadow-lg" : ""}`}
+                        className={`flex h-14 items-center gap-3 px-4 last:border-b-0 ${lifted ? "bg-card border-app-ghost relative z-10 -mx-1.5 rounded-xl border shadow-[0_16px_32px_-12px_#000c,0_4px_12px_#0006]" : "border-b"}`}
                         key={row.id}
                     >
-                        <button
+                        <Button
                             aria-label={flows.reorderMove({ name: row.name }).value}
-                            className={`-ml-1 flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded ${lifted ? "text-app-tint" : "text-muted-foreground"}`}
+                            className={`-mx-[3px] size-6 cursor-grab touch-none ${lifted ? "text-app-tint hover:not-disabled:text-app-tint hover:not-disabled:bg-transparent" : "text-muted-foreground"}`}
                             onKeyDown={(event) => onKey(event, row.id, index)}
                             onPointerCancel={() => setDragging(null)}
                             onPointerDown={(event) => {
@@ -83,17 +83,18 @@ function Rows({ onMove, rows }: { onMove: (id: string, to: number) => void; rows
                             }}
                             onPointerMove={(event) => onDrag(event, row.id)}
                             onPointerUp={() => setDragging(null)}
-                            type="button"
+                            size="icon-sm"
+                            variant="ghost"
                         >
-                            <Glyph icon={DragDropVerticalIcon} size={17} />
-                        </button>
-                        <span className="dash-figure text-muted-foreground w-4 shrink-0 text-center text-xs">
+                            <Glyph icon={DragDropVerticalIcon} size={18} strokeWidth={2.5} />
+                        </Button>
+                        <span className="dash-figure text-muted-foreground w-[18px] shrink-0 text-end text-xs">
                             {index + 1}
                         </span>
                         <AccountTile account={row.look} photos={photos} size="lg" />
                         <div className="min-w-0 flex-1">
                             <b className="block truncate text-sm leading-[18px] font-medium">{row.name}</b>
-                            <small className="text-muted-foreground block truncate text-xs leading-4">
+                            <small className="text-muted-foreground block truncate text-sm leading-5">
                                 {row.currency}
                             </small>
                         </div>
@@ -122,7 +123,13 @@ function Group({
         return null;
     }
     return (
-        <Card aside={aside} count={rows.length} panelClassName="overflow-visible" title={title}>
+        <Card
+            aside={aside}
+            className="overflow-visible"
+            count={rows.length}
+            panelClassName="overflow-visible rounded-b-3xl"
+            title={title}
+        >
             <Rows onMove={onMove} rows={rows} />
         </Card>
     );
@@ -183,19 +190,22 @@ export function ReorderAccounts() {
         }
     };
 
-    const hint = <span className="font-sans">{flows.reorderHint}</span>;
+    const hint = <span className="font-sans tracking-normal">{flows.reorderHint}</span>;
     return (
         <main className="@container min-w-0 px-4 pb-5 sm:px-6">
             <AccountsBar
                 title={
                     <span className="flex min-w-0 items-center gap-3">
-                        <Link
+                        <Button
                             aria-label={detail.back.value}
-                            className="border-border bg-app-hover inline-flex size-9 shrink-0 items-center justify-center rounded-[10px] border"
-                            to="/app/accounts"
+                            className="shrink-0 rounded-[10px]"
+                            nativeButton={false}
+                            render={<Link to="/app/accounts" />}
+                            size="icon"
+                            variant="outline"
                         >
                             <Glyph icon={ArrowLeft02Icon} className="text-muted-foreground" size={17} />
-                        </Link>
+                        </Button>
                         <span className="truncate">{actions.reorder}</span>
                     </span>
                 }

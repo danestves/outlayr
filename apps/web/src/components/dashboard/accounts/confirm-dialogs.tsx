@@ -1,7 +1,7 @@
 import ArrowDataTransferHorizontalIcon from "@hugeicons/core-free-icons/ArrowDataTransferHorizontalIcon";
 import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
-import HistoryIcon from "@hugeicons/core-free-icons/HistoryIcon";
 import SafeIcon from "@hugeicons/core-free-icons/SafeIcon";
+import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
@@ -52,20 +52,22 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
         });
     };
     return (
-        <FlowDialog label={flows.archiveTitle({ name: account.name })} onClose={onClose} size="sm">
-            <Dialog.Body>
-                <p className="text-muted-foreground text-[13px]">{flows.archiveBody}</p>
+        <FlowDialog label={flows.archiveTitle({ name: account.name })} onClose={onClose}>
+            <Dialog.Body className="gap-3">
+                <Dialog.Description className="text-wrap">{flows.archiveBody}</Dialog.Description>
                 <div>
                     <Fact label={flows.balance}>{money(facts.balance, account.currency)}</Fact>
                     <Fact label={flows.transactionsKept}>{facts.transactions}</Fact>
                     <Fact label={flows.netWorthAfter}>{money(facts.netAfter, ledger.currency)}</Fact>
                 </div>
+                {failed ? (
+                    <p className="text-destructive text-xs" role="alert">
+                        {flows.saveFailed}
+                    </p>
+                ) : null}
             </Dialog.Body>
             <Dialog.Footer>
-                {failed ? (
-                    <span className="text-destructive flex items-center text-[13px]">{flows.saveFailed}</span>
-                ) : null}
-                <Button onClick={onClose} variant="outline">
+                <Button onClick={onClose} variant="secondary">
                     {flows.cancel}
                 </Button>
                 <Button onClick={archive}>{flows.archive}</Button>
@@ -94,15 +96,16 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                 });
             },
             onUndo: () => staged.rollback(),
-            text: flows.deletedToast({ name: account.name }).value,
+            detail: nothing ? undefined : flows.deleteBody.value,
+            text: flows.deletedToast.value,
         });
     };
     return (
-        <FlowDialog label={flows.deleteTitle({ name: account.name })} onClose={onClose} size="sm">
-            <Dialog.Body>
-                <p className="text-muted-foreground text-[13px]">
+        <FlowDialog label={flows.deleteTitle({ name: account.name })} onClose={onClose}>
+            <Dialog.Body className={nothing ? "gap-3" : "gap-2.5"}>
+                <Dialog.Description className="text-wrap">
                     {nothing ? flows.deleteEmptyBody : flows.deleteBody}
-                </p>
+                </Dialog.Description>
                 <div>
                     {nothing ? (
                         <Fact label={flows.balance}>{money(facts.balance, account.currency)}</Fact>
@@ -111,8 +114,12 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                             <Fact
                                 label={
                                     <>
-                                        <Glyph icon={HistoryIcon} size={16} />
-                                        {flows.transactionsKeptRow}
+                                        <Glyph
+                                            className="text-muted-foreground"
+                                            icon={TransactionHistoryIcon}
+                                            size={15}
+                                        />
+                                        <span className="text-foreground">{flows.transactionsKeptRow}</span>
                                     </>
                                 }
                             >
@@ -121,8 +128,12 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                             <Fact
                                 label={
                                     <>
-                                        <Glyph icon={ArrowDataTransferHorizontalIcon} size={16} />
-                                        {flows.transfersDeleted}
+                                        <Glyph
+                                            className="text-muted-foreground"
+                                            icon={ArrowDataTransferHorizontalIcon}
+                                            size={15}
+                                        />
+                                        <span className="text-foreground">{flows.transfersDeleted}</span>
                                     </>
                                 }
                             >
@@ -131,8 +142,12 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                             <Fact
                                 label={
                                     <>
-                                        <Glyph icon={CalendarCheckIn01Icon} size={16} />
-                                        {flows.plansDeleted}
+                                        <Glyph
+                                            className="text-muted-foreground"
+                                            icon={CalendarCheckIn01Icon}
+                                            size={15}
+                                        />
+                                        <span className="text-foreground">{flows.plansDeleted}</span>
                                     </>
                                 }
                             >
@@ -142,10 +157,14 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                     )}
                     <Fact
                         label={
-                            <>
-                                {nothing ? null : <Glyph icon={SafeIcon} size={16} />}
-                                {flows.netWorthAfter}
-                            </>
+                            nothing ? (
+                                flows.netWorthAfter
+                            ) : (
+                                <>
+                                    <Glyph className="text-muted-foreground" icon={SafeIcon} size={15} />
+                                    <span className="text-foreground">{flows.netWorthAfter}</span>
+                                </>
+                            )
                         }
                     >
                         {money(netAfterDelete(ledger, account), ledger.currency)}
@@ -153,7 +172,7 @@ export function DeleteDialog({ account, onClose }: { account: Account; onClose: 
                 </div>
             </Dialog.Body>
             <Dialog.Footer>
-                <Button onClick={onClose} variant="outline">
+                <Button onClick={onClose} variant="secondary">
                     {flows.cancel}
                 </Button>
                 <Button onClick={remove} variant="destructive">

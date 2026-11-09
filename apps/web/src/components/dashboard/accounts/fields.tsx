@@ -1,5 +1,6 @@
 import { Popover } from "@base-ui/react/popover";
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
+import ArrowUp01Icon from "@hugeicons/core-free-icons/ArrowUp01Icon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
@@ -19,6 +20,13 @@ import { money } from "@/lib/ledger";
 import { Glyph } from "./glyph";
 
 export const amountText = (amount: number, currency: string) => money(amount, currency);
+
+// The catalog title-cases every name, and the picker reads as a sentence: "US dollar", "Hong Kong dollar".
+const currencyName = (code: string) => {
+    const { name } = currencyDisplayFor(code);
+    const last = name.lastIndexOf(" ") + 1;
+    return last === 0 ? name : name.slice(0, last) + name.slice(last).toLowerCase();
+};
 
 /** One line of a drawer: the label on the left and a control with no box on the right. */
 export const QUIET_ROW = "grid! min-h-11 grid-cols-[6rem_minmax(0,1fr)] items-center gap-x-3 border-b py-1";
@@ -52,19 +60,20 @@ export function AmountInput({
         <Input.Group size={size}>
             {onNegative ? (
                 <Input.Addon>
-                    <button
+                    <Button
                         aria-pressed={negative}
                         className="dash-sg dash-figure"
                         onClick={() => onNegative(!negative)}
-                        type="button"
+                        size="icon-sm"
+                        variant="ghost"
                     >
                         {negative ? "-" : "+"}
-                    </button>
+                    </Button>
                 </Input.Addon>
             ) : null}
             {sign ? <Input.Addon className="dash-figure text-foreground pe-1.5!">{sign}</Input.Addon> : null}
             <Input
-                className="dash-figure"
+                className={onNegative ? "dash-figure ps-0.5" : "dash-figure"}
                 inputMode="decimal"
                 onBlur={() => {
                     if (text.trim() !== "") {
@@ -106,28 +115,28 @@ export function CurrencyField({
     const groups = useMemo(() => {
         const needle = query.trim().toLowerCase();
         const matches = (code: string) =>
-            needle === "" || `${code} ${currencyDisplayFor(code).name}`.toLowerCase().includes(needle);
+            needle === "" || `${code} ${currencyName(code)}`.toLowerCase().includes(needle);
         return {
             all: PICKABLE_CURRENCY_CODES.filter((code) => !inUse.includes(code) && matches(code)),
             yours: inUse.filter(matches),
         };
     }, [inUse, query]);
     const row = (code: string) => (
-        <button
+        <Button
             aria-pressed={code === value}
-            className="dash-pr"
+            className="dash-pr justify-start font-normal"
             key={code}
             onClick={() => {
                 onPick(code);
                 setOpen(false);
                 setQuery("");
             }}
-            type="button"
+            variant="ghost"
         >
             <span className="dash-figure">{code}</span>
-            <span className="truncate">{currencyDisplayFor(code).name}</span>
+            <span className="truncate">{currencyName(code)}</span>
             {code === value ? <Glyph icon={Tick02Icon} className="text-app-tint ml-auto flex-none" size={16} /> : null}
-        </button>
+        </Button>
     );
     const heading = "text-muted-foreground px-2 pt-2.5 pb-1 text-xs leading-4";
     return (
@@ -141,25 +150,25 @@ export function CurrencyField({
                     render={
                         <Button
                             className={
-                                quiet ? "-me-2 ml-auto px-2 font-normal" : "w-full justify-start px-3 font-normal"
+                                quiet
+                                    ? "-me-2 ml-auto px-2 font-normal"
+                                    : "data-popup-open:border-ring data-popup-open:ring-ring/30 w-full justify-start px-3 font-normal data-popup-open:ring-[3px]"
                             }
                             variant={quiet ? "ghost" : "outline"}
                         />
                     }
                 >
                     <span className="dash-figure">{value}</span>
-                    {quiet ? null : (
-                        <span className="text-muted-foreground truncate">{currencyDisplayFor(value).name}</span>
-                    )}
+                    {quiet ? null : <span className="text-muted-foreground truncate">{currencyName(value)}</span>}
                     <Glyph
-                        icon={ArrowDown01Icon}
+                        icon={open ? ArrowUp01Icon : ArrowDown01Icon}
                         className={`text-muted-foreground flex-none ${quiet ? "" : "ml-auto"}`}
                         size={16}
                     />
                 </Popover.Trigger>
             </div>
             <Popover.Portal>
-                <Popover.Positioner align="start" className="z-[60]" sideOffset={6}>
+                <Popover.Positioner align="start" alignOffset={-8} className="z-[60]" sideOffset={6}>
                     <Popover.Popup className="app-shell dash-po ph-no-capture flex max-h-[440px] w-[290px] flex-col">
                         <Input.Group className="flex-none">
                             <Input.Addon>

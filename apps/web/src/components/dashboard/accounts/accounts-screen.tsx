@@ -3,15 +3,17 @@ import Archive02Icon from "@hugeicons/core-free-icons/Archive02Icon";
 import ArrowDataTransferHorizontalIcon from "@hugeicons/core-free-icons/ArrowDataTransferHorizontalIcon";
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import ArrowDownLeft01Icon from "@hugeicons/core-free-icons/ArrowDownLeft01Icon";
+import ArrowUp01Icon from "@hugeicons/core-free-icons/ArrowUp01Icon";
 import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
 import BankIcon from "@hugeicons/core-free-icons/BankIcon";
 import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
 import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
-import HistoryIcon from "@hugeicons/core-free-icons/HistoryIcon";
+import InboxUploadIcon from "@hugeicons/core-free-icons/InboxUploadIcon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import SafeIcon from "@hugeicons/core-free-icons/SafeIcon";
-import Upload01Icon from "@hugeicons/core-free-icons/Upload01Icon";
+import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
+import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useRouteContext } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
@@ -19,12 +21,12 @@ import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
 import type { KpiColor } from "panelui-web/kpi";
 import { Menu } from "panelui-web/menu";
+import { Plot } from "panelui-web/plot";
 import { Table } from "panelui-web/table";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDateFormat, useWholeMoney, titled } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { NO_PHOTOS, photoUrlsQuery, toPhotoUrls } from "@/components/dashboard/shell/photos";
@@ -48,6 +50,7 @@ import {
     goalRows,
     groupRows,
     monthStart,
+    niceDomain,
     plansOn,
     rangeDays,
     ratesFor,
@@ -70,9 +73,11 @@ import {
     Spark,
     Trend,
     stretch,
+    useChartRatio,
     useCheckedText,
 } from "./parts";
 import { WorthChart } from "./worth-chart";
+import type { WorthDatum } from "./worth-chart";
 
 export const MUTED = "var(--color-app-muted)";
 export const INCOME = "var(--color-app-income)";
@@ -82,22 +87,22 @@ const UPCOMING_DAYS = 30;
 const UPCOMING_ROWS = 5;
 const TRANSFER_ROWS = 7;
 export const PERCENT = 100;
-const LIST_CHART = 770 / 220;
-const HEAD = "h-9 first:ps-3.5 last:pe-3.5 last:text-end";
-const CELL = "h-11 py-0 whitespace-nowrap first:ps-3.5 last:pe-3.5 last:text-end";
+const LIST_CHART = 778 / 200;
+const LINE_CHART = 778 / 190;
+const TINT = "var(--color-app-tint)";
 export const ROW = "flex h-11 items-center gap-2.5 border-b text-[13px] font-medium last:border-0";
 export const ICON_TILE =
     "bg-app-fill text-muted-foreground flex size-[26px] shrink-0 items-center justify-center rounded-lg";
 
-/** A band with its count beside the title and a quiet figure, the action or both at the end. */
+/** A tray with its count beside the title and a quiet figure, the action or both at the end. */
 export function Card({
     action,
     aside,
     children,
-    className,
+    className = "",
     count,
-    panelClassName,
-    stackAction,
+    panelClassName = "",
+    stackAction = false,
     title,
 }: {
     action?: ReactNode;
@@ -110,56 +115,67 @@ export function Card({
     title: ReactNode;
 }) {
     return (
-        <CardFrame
-            action={
-                aside || action ? (
-                    <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:justify-end">
-                        {aside ? (
-                            <span className="dash-figure text-muted-foreground min-w-0 truncate text-[13px]">
-                                {aside}
-                            </span>
-                        ) : null}
-                        {action}
-                    </span>
-                ) : null
-            }
-            className={className}
-            panelClassName={panelClassName}
-            stackAction={stackAction}
-            title={
-                count === undefined ? (
-                    title
-                ) : (
-                    <>
-                        {title}{" "}
-                        <span className="dash-figure text-muted-foreground ms-1 text-[13px] font-normal">{count}</span>
-                    </>
-                )
-            }
-        >
-            {children}
-        </CardFrame>
+        <Frame className={`min-w-0 ${className}`}>
+            <Frame.Header
+                className={`has-data-[slot=frame-action]:grid-cols-[auto_minmax(0,1fr)] sm:[&>[data-slot=frame-title]]:row-span-2 ${stackAction ? "max-sm:grid-cols-[minmax(0,1fr)]!" : ""}`}
+            >
+                <Frame.Title as="h2" className="flex items-center whitespace-nowrap">
+                    {title}
+                    {count === undefined ? null : (
+                        <span className="dash-figure ms-3 text-[13px] font-normal">{count}</span>
+                    )}
+                </Frame.Title>
+                {aside || action ? (
+                    <Frame.Action
+                        className={`min-w-0 justify-self-end ${stackAction ? "max-sm:col-start-1 max-sm:row-start-2 max-sm:mt-2 max-sm:justify-self-start" : ""}`}
+                    >
+                        <span className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 sm:justify-end">
+                            {aside ? <span className="dash-figure min-w-0 truncate text-[13px]">{aside}</span> : null}
+                            {action}
+                        </span>
+                    </Frame.Action>
+                ) : null}
+            </Frame.Header>
+            {children ? <Frame.Panel className={`relative flex-1 ${panelClassName}`}>{children}</Frame.Panel> : null}
+        </Frame>
     );
 }
 
 /** `numbers` counts the right-aligned figure columns that sit before the trailing column. */
+const PHONE_HIDDEN = {
+    2: "max-sm:[&_tr>*:nth-child(2)]:hidden",
+    3: "max-sm:[&_tr>*:nth-child(3)]:hidden",
+    4: "max-sm:[&_tr>*:nth-child(4)]:hidden",
+    5: "max-sm:[&_tr>*:nth-child(5)]:hidden",
+} as const;
+
 export function DataTable({
     children,
+    density = "compact",
     head,
     numbers = 1,
+    phoneHidden,
 }: {
     children: ReactNode;
+    density?: "comfortable" | "compact";
     head: readonly ReactNode[];
     numbers?: number;
+    /** 1-based columns dropped on a phone, so the table never scrolls sideways there. */
+    phoneHidden?: readonly (keyof typeof PHONE_HIDDEN)[];
 }) {
     return (
-        <Table containerClassName="overflow-x-auto" striped>
+        <Table
+            className={phoneHidden?.map((column) => PHONE_HIDDEN[column]).join(" ") ?? ""}
+            containerClassName="overflow-x-auto"
+            density={density}
+            framed
+        >
             <Table.Header>
-                <Table.Row>
+                <Table.Row className="border-b-0">
                     {head.map((cell, index) => (
                         <Table.Head
                             align={index >= head.length - 1 - numbers && index < head.length - 1 ? "end" : "start"}
-                            className={HEAD}
+                            className="last:text-end"
                             key={index}
                         >
                             {cell}
@@ -185,7 +201,7 @@ export function Cell({
     return (
         <Table.Cell
             align={figure ? "end" : "start"}
-            className={`${CELL} ${figure ? "dash-figure text-sm font-medium" : ""} ${className}`}
+            className={`whitespace-nowrap last:text-end ${figure ? "dash-figure text-sm font-medium" : ""} ${className}`}
         >
             {children}
         </Table.Cell>
@@ -233,7 +249,7 @@ function Kpis({ model }: { model: ListModel }) {
         quiet ? null : <Spark className="w-24" color={color} height={28} values={months.map((point) => point[key])} />;
     const change = (key: "owe" | "own", goodWhenUp: boolean) =>
         quiet ? null : (
-            <Trend goodWhenUp={goodWhenUp} value={delta(key)}>
+            <Trend className="[&_svg]:hidden" goodWhenUp={goodWhenUp} value={delta(key)}>
                 {money(delta(key), ledger.currency, "always")}
             </Trend>
         );
@@ -247,21 +263,42 @@ function Kpis({ model }: { model: ListModel }) {
             </KpiBand>
         );
     }
+    if (multi) {
+        return (
+            <KpiBand>
+                <KpiCell color={MUTED} label={kpi.netWorth} value={money(net, ledger.currency)}>
+                    {quietNote(list.inMain({ currency: ledger.currency }))}
+                </KpiCell>
+                <KpiCell color={INCOME} label={kpi.have} value={money(now?.own ?? 0, ledger.currency)}>
+                    {quietNote(assets.length === 1 ? list.oneAccount : kpi.accounts({ count: assets.length }))}
+                </KpiCell>
+                <KpiCell color={SPEND} label={kpi.owe} value={money(now?.owe ?? 0, ledger.currency)}>
+                    {quietNote(cards.length === 1 ? list.oneCard : list.cardCount({ count: cards.length }))}
+                </KpiCell>
+                {credit ? (
+                    <KpiCell
+                        color={MUTED}
+                        label={kpi.available}
+                        value={`${credit.exact ? "" : "~"}${money(credit.available, ledger.currency)}`}
+                    >
+                        {quietNote(kpi.of({ amount: `${credit.exact ? "" : "~"}${whole(credit.limit)}` }))}
+                    </KpiCell>
+                ) : null}
+            </KpiBand>
+        );
+    }
     return (
         <KpiBand>
             <KpiCell color={MUTED} icon={SafeIcon} label={kpi.netWorth} value={money(net, ledger.currency)}>
-                {multi ? (
-                    quietNote(list.inMain({ currency: ledger.currency }))
+                {growth === null ? (
+                    <span />
                 ) : (
-                    <>
-                        {growth === null ? (
-                            <span />
-                        ) : (
-                            <Trend value={growth}>{`${growth > 0 ? "+" : ""}${(growth * PERCENT).toFixed(1)}%`}</Trend>
-                        )}
-                        {line("net")}
-                    </>
+                    <Trend
+                        className="[&_svg]:hidden"
+                        value={growth}
+                    >{`${growth > 0 ? "+" : ""}${(growth * PERCENT).toFixed(1)}%`}</Trend>
                 )}
+                {line("net")}
             </KpiCell>
             <KpiCell
                 color={INCOME}
@@ -269,10 +306,8 @@ function Kpis({ model }: { model: ListModel }) {
                 label={kpi.have}
                 value={money(now?.own ?? 0, ledger.currency)}
             >
-                {multi
-                    ? quietNote(assets.length === 1 ? list.oneAccount : kpi.accounts({ count: assets.length }))
-                    : change("own", true)}
-                {multi ? null : line("own", "success")}
+                {change("own", true)}
+                {line("own", "success")}
             </KpiCell>
             <KpiCell
                 color={SPEND}
@@ -280,10 +315,8 @@ function Kpis({ model }: { model: ListModel }) {
                 label={kpi.owe}
                 value={money(now?.owe ?? 0, ledger.currency)}
             >
-                {multi
-                    ? quietNote(cards.length === 1 ? list.oneCard : list.cardCount({ count: cards.length }))
-                    : change("owe", false)}
-                {multi ? null : line("owe", "destructive")}
+                {change("owe", false)}
+                {line("owe", "destructive")}
             </KpiCell>
             {credit ? (
                 <KpiCell
@@ -292,12 +325,48 @@ function Kpis({ model }: { model: ListModel }) {
                     label={kpi.available}
                     value={`${credit.exact ? "" : "~"}${money(credit.available, ledger.currency)}`}
                 >
-                    <Badge className="dash-figure text-muted-foreground" variant="secondary">
+                    <Badge
+                        className="dash-figure text-muted-foreground h-5 rounded-full px-2 text-xs font-medium"
+                        variant="secondary"
+                    >
                         {kpi.of({ amount: `${credit.exact ? "" : "~"}${whole(credit.limit)}` })}
                     </Badge>
                 </KpiCell>
             ) : null}
         </KpiBand>
+    );
+}
+
+/** The bare line a mixed-currency list draws: its figures sit in the tables below, so it carries no axes. */
+function WorthLine({ data, label }: { data: readonly WorthDatum[]; label: string }) {
+    const { ledger } = useDashboard();
+    const { money } = useDisplayFormat();
+    const date = useDateFormat();
+    const ratio = useChartRatio(LINE_CHART);
+    return (
+        <Plot
+            aspectRatio={ratio}
+            compact
+            curve="linear"
+            data={data}
+            label={label}
+            xDataKey="day"
+            yDomain={niceDomain(data.map((datum) => datum.value))}
+        >
+            <Plot.Line color={TINT} dataKey="value" strokeWidth={1.75} />
+            <Plot.Cursor showLine={false} />
+            <Plot.Tooltip
+                formatValue={(value) => money(value, ledger.currency)}
+                formatX={(datum) => date.day(String(datum.day))}
+            >
+                {(datum) => (
+                    <>
+                        <div className="text-muted-foreground">{date.day(String(datum.day))}</div>
+                        <div className="dash-figure">{money(Number(datum.value), ledger.currency)}</div>
+                    </>
+                )}
+            </Plot.Tooltip>
+        </Plot>
     );
 }
 
@@ -319,27 +388,29 @@ function WorthCard({ model }: { model: ListModel }) {
     return (
         <Card
             action={
-                <Segments
-                    onPick={setRange}
-                    options={[
-                        { label: copy.month, value: "month" },
-                        { label: copy.quarter, value: "quarter" },
-                        { label: copy.sixMonths, value: "sixMonths" },
-                        { label: copy.year, value: "year" },
-                    ]}
-                    value={range}
-                />
+                model.multi ? null : (
+                    <Segments
+                        onPick={setRange}
+                        options={[
+                            { label: copy.month, value: "month" },
+                            { label: copy.quarter, value: "quarter" },
+                            { label: copy.sixMonths, value: "sixMonths" },
+                            { label: copy.year, value: "year" },
+                        ]}
+                        value={range}
+                    />
+                )
             }
             className={model.multi ? "" : "flex-1"}
             stackAction
             title={
-                <span className="flex min-w-0 items-baseline gap-2">
-                    <Link className="hover:text-app-tint" to="/app/accounts/net-worth">
+                <span className="flex min-w-0 items-center gap-3">
+                    <Link className="hover:text-foreground" to="/app/accounts/net-worth">
                         {kpi.netWorth}
                     </Link>
-                    <span className="dash-figure text-muted-foreground truncate text-[13px] font-normal tracking-normal">
+                    <span className="dash-figure truncate text-[13px] font-normal">
                         {model.multi
-                            ? list.inCurrency({ currency: ledger.currency })
+                            ? list.inSixMonths({ currency: ledger.currency })
                             : list.inPeriod({
                                   amount: money(gained, ledger.currency, "always"),
                                   period: date.month(ledger.today.slice(0, 7)),
@@ -348,16 +419,24 @@ function WorthCard({ model }: { model: ListModel }) {
                 </span>
             }
         >
-            <div className="flex-1 p-3.5">
-                <WorthChart aspectRatio={LIST_CHART} data={data} label={kpi.netWorth.value} range={range} />
+            <div className="flex-1 p-4 pb-3.5">
+                {model.multi ? (
+                    <WorthLine data={data} label={kpi.netWorth.value} />
+                ) : (
+                    <WorthChart aspectRatio={LIST_CHART} data={data} label={kpi.netWorth.value} range={range} />
+                )}
             </div>
         </Card>
     );
 }
 
-function Balance({ row }: { row: AccountRow }) {
+function Balance({ className, row }: { className?: string; row: AccountRow }) {
     const { money } = useDisplayFormat();
-    return <Cell figure>{money(row.balance, row.currency)}</Cell>;
+    return (
+        <Cell className={className} figure>
+            {money(row.balance, row.currency)}
+        </Cell>
+    );
 }
 
 function InMain({ row }: { row: AccountRow }) {
@@ -374,9 +453,9 @@ function InMain({ row }: { row: AccountRow }) {
 function CurrencyCell({ row }: { row: AccountRow }) {
     return (
         <Cell>
-            {row.currency}
+            <span className="dash-figure">{row.currency}</span>
             {row.exact ? null : (
-                <Badge className="ms-2 font-mono" variant="outline">
+                <Badge className="dash-figure text-muted-foreground ms-1" variant="outline">
                     {row.currency}?
                 </Badge>
             )}
@@ -416,6 +495,7 @@ function AssetsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
                         "",
                     ]}
                     numbers={2}
+                    phoneHidden={[2, 4]}
                 >
                     {assets.map((row) => (
                         <Table.Row key={row.id}>
@@ -425,14 +505,17 @@ function AssetsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
                                 </AccountLink>
                             </Cell>
                             <CurrencyCell row={row} />
-                            <Balance row={row} />
+                            <Balance className="font-normal" row={row} />
                             <InMain row={row} />
                             <MenuCell row={row} />
                         </Table.Row>
                     ))}
                 </DataTable>
             ) : (
-                <DataTable head={[columns.account, columns.last30, monthName, columns.balance, ""]}>
+                <DataTable
+                    head={[columns.account, columns.last30, monthName, columns.balance, ""]}
+                    phoneHidden={[2, 3]}
+                >
                     {assets.map((row) => {
                         const line = model.recent.get(row.id) ?? [];
                         const change = model.changes.get(row.id) ?? 0;
@@ -452,7 +535,9 @@ function AssetsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
                                     />
                                 </Cell>
                                 <Cell>
-                                    <Trend value={change}>{money(change, row.currency, "always")}</Trend>
+                                    <Trend className="[&_svg]:hidden" value={change}>
+                                        {money(change, row.currency, "always")}
+                                    </Trend>
                                 </Cell>
                                 <Balance row={row} />
                                 <MenuCell row={row} />
@@ -556,6 +641,7 @@ function CardsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
                         "",
                     ]}
                     numbers={2}
+                    phoneHidden={[2, 4]}
                 >
                     {cards.map((row) => (
                         <Table.Row key={row.id}>
@@ -565,14 +651,17 @@ function CardsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
                                 </AccountLink>
                             </Cell>
                             <CurrencyCell row={row} />
-                            <Balance row={row} />
+                            <Balance className="font-normal" row={row} />
                             <InMain row={row} />
                             <MenuCell row={row} />
                         </Table.Row>
                     ))}
                 </DataTable>
             ) : (
-                <DataTable head={[columns.card, columns.used, columns.statement, columns.balance, ""]}>
+                <DataTable
+                    head={[columns.card, columns.used, columns.statement, columns.balance, ""]}
+                    phoneHidden={[2, 3]}
+                >
                     {cards.map((row) => (
                         <Table.Row key={row.id}>
                             <Cell>
@@ -618,7 +707,7 @@ export function UpcomingCard({ accountId, showEmpty = false }: { accountId?: str
     if (rows.length === 0) {
         return showEmpty ? (
             <Card title={list.upcoming}>
-                <p className="text-muted-foreground px-3.5 py-3 text-[13px]">{list.nothingScheduled}</p>
+                <p className="text-muted-foreground p-4 text-[13px]">{list.nothingScheduled}</p>
             </Card>
         ) : null;
     }
@@ -636,7 +725,7 @@ export function UpcomingCard({ accountId, showEmpty = false }: { accountId?: str
     };
     return (
         <Card aside={unvalued ? null : money(total, overview.upcoming.currency)} title={list.upcoming}>
-            <div className="px-3.5 py-1">
+            <div className="px-4 pb-1.5">
                 {rows.map((row) => (
                     <div className={ROW} key={row.id}>
                         <UpcomingLead row={row} />
@@ -647,7 +736,7 @@ export function UpcomingCard({ accountId, showEmpty = false }: { accountId?: str
                             {date.day(row.day)}
                         </span>
                         <span
-                            className={`dash-figure ml-auto whitespace-nowrap ${row.income ? "text-app-income" : ""}`}
+                            className={`dash-figure ml-auto whitespace-nowrap ${row.income ? "text-app-income" : ""} ${row.day < ledger.today ? "text-app-spend" : ""}`}
                         >
                             {money(row.amount, row.currency)}
                         </span>
@@ -667,15 +756,8 @@ function GoalsCard({ model }: { model: ListModel }) {
         return null;
     }
     return (
-        <Card
-            action={
-                <PhoneAction className="-my-1" size="sm">
-                    {actions.seeAll}
-                </PhoneAction>
-            }
-            title={list.goals}
-        >
-            <div className="flex flex-col gap-4 px-3.5 py-3">
+        <Card action={<PhoneAction size="sm">{actions.seeAll}</PhoneAction>} title={list.goals}>
+            <div className="flex flex-col gap-4 p-4">
                 {goals.map((goal) => (
                     <div key={goal.id}>
                         <div className="flex items-baseline gap-2 text-[13px] font-medium">
@@ -689,7 +771,7 @@ function GoalsCard({ model }: { model: ListModel }) {
                                 </span>
                             </span>
                         </div>
-                        <Meter className="mt-2.5" max={1} value={goal.fraction} />
+                        <Meter className="mt-2" max={1} value={goal.fraction} />
                     </div>
                 ))}
             </div>
@@ -710,7 +792,6 @@ function TransfersCard() {
         <Card
             action={
                 <Button
-                    className="-my-1"
                     nativeButton={false}
                     render={<Link search={{ span: "all", type: "transfers" }} to="/app/transactions" />}
                     size="sm"
@@ -722,7 +803,7 @@ function TransfersCard() {
             className="flex-1"
             title={list.transfers}
         >
-            <div className="px-3.5 py-1">
+            <div className="px-4 pb-1.5">
                 {transfers.map((transfer) => (
                     <div className={ROW} key={transfer.id}>
                         <span className={ICON_TILE}>
@@ -744,8 +825,8 @@ function TransfersCard() {
     );
 }
 
-const shade = (index: number) =>
-    `color-mix(in oklab, var(--color-foreground) ${Math.max(20, 100 - index * 35)}%, transparent)`;
+const SHARE_COLORS = ["var(--color-foreground)", MUTED, "var(--color-app-ghost)"] as const;
+const shade = (index: number) => SHARE_COLORS[Math.min(index, SHARE_COLORS.length - 1)];
 
 function CurrencyCard({ model }: { model: ListModel }) {
     const { ledger } = useDashboard();
@@ -756,7 +837,7 @@ function CurrencyCard({ model }: { model: ListModel }) {
     const whole = positive.reduce((sum, share) => sum + share.value, 0);
     return (
         <Card aside={money(model.now?.net ?? 0, ledger.currency)} title={list.byCurrency}>
-            <div className="p-3.5">
+            <div className="p-4">
                 <div className="flex h-2 gap-0.5 overflow-hidden rounded-full">
                     {positive.map((share, index) => (
                         <i
@@ -773,7 +854,7 @@ function CurrencyCard({ model }: { model: ListModel }) {
                             key={share.code}
                         >
                             <i
-                                className="size-1.5 rounded-full"
+                                className="size-2 rounded-full"
                                 style={{ background: share.value > 0 ? shade(index) : SPEND }}
                             />
                             <span className="dash-figure">{share.code}</span>
@@ -807,7 +888,7 @@ function RatesCard({ model }: { model: ListModel }) {
         .map((rate) => (rate.from === ledger.currency ? rate.to : rate.from));
     return (
         <Card aside={date.day(ledger.today)} title={list.rates}>
-            <div className="p-3.5">
+            <div className="p-4">
                 {rates.map((rate) => (
                     <div
                         className="dash-figure flex h-10 items-center border-b text-[13px] last:border-0"
@@ -828,14 +909,14 @@ function RatesCard({ model }: { model: ListModel }) {
 }
 
 const GHOST_LINE =
-    "M0 34L22 33L44 31L66 32L88 32L110 31L128 29L150 31L172 31L194 32L216 30L238 28L260 27L282 27L304 26L326 25L348 25L370 26L392 26L414 25L436 23L458 22L480 22L500 22";
+    "M0 34L22 33.4L44 32.2L66 32.8L88 32.8L110 32.2L128 31L150 32.2L172 32.2L194 32.8L216 31.6L238 30.4L260 29.8L282 29.8L304 29.2L326 28.6L348 28.6L370 29.2L392 29.2L414 28.6L436 27.4L458 26.8L480 26.8L500 26.8";
 const GHOST_SPARK = "M0 9L14 8L26 10L40 6L54 7L68 5L82 7L96 9L110 5L124 6L138 3L152 6L166 4L184 5";
 const GHOST_TABLE = [
     [82, 40, 48],
     [76, 40, 64],
     [56, 34, 64],
 ] as const;
-const GHOST_GRID = "grid grid-cols-[34%_21%_1fr_auto] items-center px-3.5";
+const GHOST_GRID = "grid grid-cols-[34%_22%_1fr_auto] items-center px-5";
 function GhostSpark() {
     return (
         <svg className="block h-3.5 w-[184px] max-w-full" ref={stretch} viewBox="0 0 184 14">
@@ -848,11 +929,11 @@ export function EmptyAccounts() {
     const { actions, empty } = useIntlayer("dashboard-accounts");
     const { open } = useAccountFlows();
     return (
-        <Frame className="min-h-[760px] min-w-0 flex-1 rounded-2xl" variant="band">
-            <Frame.Panel className="flex-1 group-data-[variant=band]/frame:rounded-[10px]">
-                <div aria-hidden className="px-3.5 pt-3.5">
+        <Frame className="min-h-[760px] min-w-0 flex-1" variant="plain">
+            <Frame.Panel className="flex-1 divide-y-0">
+                <div aria-hidden className="px-5 pt-3">
                     <svg
-                        className="block h-[192px] w-full [&_*]:[vector-effect:non-scaling-stroke]"
+                        className="block h-[196px] w-full [&_*]:[vector-effect:non-scaling-stroke]"
                         ref={stretch}
                         viewBox="0 0 500 40"
                     >
@@ -862,7 +943,7 @@ export function EmptyAccounts() {
                         <path className="stroke-app-ghost" d={GHOST_LINE} fill="none" strokeDasharray="2 3" />
                     </svg>
                 </div>
-                <div aria-hidden className={`${GHOST_GRID} mt-6 h-9 border-b`}>
+                <div aria-hidden className={`${GHOST_GRID} mt-4 h-9 border-b`}>
                     <i className="dash-gl w-[52px]" />
                     <i className="dash-gl w-[38px]" />
                     <i className="dash-gl w-[46px]" />
@@ -881,11 +962,11 @@ export function EmptyAccounts() {
                         </div>
                     ))}
                 </div>
-                <div className="flex flex-col items-center gap-1.5 px-6 pt-6 pb-10 text-center">
+                <div className="flex flex-col items-center gap-1.5 px-6 pt-3.5 pb-10 text-center">
                     <b className="text-[15px] leading-[22px] font-semibold">{empty.title}</b>
                     <p className="text-muted-foreground text-[13px]">{empty.line}</p>
-                    <Button className="mt-3" onClick={() => open({ kind: "create", type: "bank" })}>
-                        <Glyph icon={Add01Icon} />
+                    <Button className="mt-2.5" onClick={() => open({ kind: "create", type: "bank" })}>
+                        <Glyph icon={Add01Icon} size={16} />
                         {actions.addAccount}
                     </Button>
                 </div>
@@ -915,19 +996,19 @@ function ArchivedMenu({ row }: { row: ArchivedRow }) {
         <Menu>
             <Menu.Trigger
                 aria-label={actions.more({ name: row.name }).value}
-                render={<Button className="text-muted-foreground -mr-1" size="icon-sm" variant="ghost" />}
+                render={<Button className="text-muted-foreground -mx-2" size="icon-sm" variant="ghost" />}
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell ph-no-capture w-[210px]" sideOffset={4}>
+            <Menu.Content align="end" alignOffset={-4} className="app-shell ph-no-capture w-[220px]" sideOffset={4}>
                 <Menu.Item onClick={restore}>
-                    <Glyph icon={Archive02Icon} size={16} />
+                    <Glyph icon={InboxUploadIcon} size={16} />
                     {flows.restore}
                 </Menu.Item>
                 <Menu.Item
                     onClick={() => navigate({ search: { accounts: row.id, span: "all" }, to: "/app/transactions" })}
                 >
-                    <Glyph icon={HistoryIcon} size={16} />
+                    <Glyph icon={TransactionHistoryIcon} size={16} />
                     {flows.seeTransactions}
                 </Menu.Item>
                 <Menu.Separator />
@@ -949,14 +1030,22 @@ function ArchivedRows({ rows }: { rows: readonly ArchivedRow[] }) {
     const keys = [...new Set(rows.flatMap((row) => (row.look?.imageKey ? [row.look.imageKey] : [])))].toSorted();
     const { data: photos = NO_PHOTOS } = useQuery({ ...photoUrlsQuery(convex, keys), select: toPhotoUrls });
     return (
-        <DataTable head={[columns.account, flows.lastEntry, columns.balance, ""]}>
+        <DataTable
+            density="comfortable"
+            head={[columns.account, flows.lastEntry, columns.balance, ""]}
+            phoneHidden={[2]}
+        >
             {rows.map((row) => (
                 <Table.Row key={row.id}>
                     <Cell>
-                        <div className="flex min-w-0 items-center gap-2.5 opacity-60">
-                            <AccountTile account={row.look} photos={photos} size="lg" />
+                        <div className="flex min-w-0 items-center gap-2.5">
+                            <span className="shrink-0 opacity-60">
+                                <AccountTile account={row.look} photos={photos} size="lg" />
+                            </span>
                             <div className="min-w-0">
-                                <b className="block truncate text-sm leading-[18px] font-medium">{row.name}</b>
+                                <b className="text-muted-foreground block truncate text-sm leading-[18px] font-medium">
+                                    {row.name}
+                                </b>
                                 <small className="text-muted-foreground block truncate text-xs leading-4">
                                     {row.currency} · {flows.archivedOn({ date: date.day(row.archivedDay) })}
                                 </small>
@@ -986,30 +1075,44 @@ function ArchivedCard() {
     if (rows.length === 0) {
         return null;
     }
+    const toggle = (
+        <Button
+            aria-expanded={open}
+            aria-label={flows.archived.value}
+            className="text-muted-foreground -my-1.5"
+            onClick={() => setOpen(!open)}
+            size="icon-sm"
+            variant="ghost"
+        >
+            <Glyph icon={open ? ArrowUp01Icon : ArrowDown01Icon} size={18} />
+        </Button>
+    );
+    if (!open) {
+        return (
+            <Frame className="min-w-0" variant="plain">
+                <Frame.Panel className="h-12 flex-row items-center gap-2 divide-y-0 ps-5 pe-3">
+                    <Glyph icon={Archive02Icon} className="text-muted-foreground shrink-0" size={16} />
+                    <h2 className="text-[13px] font-medium">{flows.archived}</h2>
+                    <span className="dash-figure text-muted-foreground text-[13px]">{rows.length}</span>
+                    <span className="ms-auto">{toggle}</span>
+                </Frame.Panel>
+            </Frame>
+        );
+    }
     return (
         <Card
-            action={
-                <Button
-                    aria-expanded={open}
-                    aria-label={flows.archived.value}
-                    className="text-muted-foreground -my-1"
-                    onClick={() => setOpen(!open)}
-                    size="icon-sm"
-                    variant="ghost"
-                >
-                    <Glyph icon={ArrowDown01Icon} className={open ? "rotate-180" : ""} />
-                </Button>
-            }
-            aside={open ? flows.archivedNote : null}
+            action={toggle}
+            aside={<span className="font-sans tracking-normal">{flows.archivedNote}</span>}
+            className="flex-1"
+            count={rows.length}
             title={
-                <span className="inline-flex items-center gap-2 text-[13px] font-medium">
-                    <Glyph icon={Archive02Icon} className="text-muted-foreground shrink-0" size={16} />
+                <span className="inline-flex items-center gap-3">
+                    <Glyph icon={Archive02Icon} className="shrink-0" size={16} />
                     {flows.archived}
-                    <span className="dash-figure text-muted-foreground font-normal">{rows.length}</span>
                 </span>
             }
         >
-            {open ? <ArchivedRows rows={rows} /> : null}
+            <ArchivedRows rows={rows} />
         </Card>
     );
 }
@@ -1020,7 +1123,7 @@ function AddAccountMenu() {
     return (
         <Menu>
             <Menu.Trigger render={<Button />}>
-                <Glyph icon={Add01Icon} />
+                <Glyph icon={Add01Icon} size={16} />
                 {actions.addAccount}
             </Menu.Trigger>
             <Menu.Content align="end" className="app-shell ph-no-capture w-[232px]" sideOffset={4}>
@@ -1043,7 +1146,7 @@ function AddAccountMenu() {
 
 export function AccountsBar({ children, title }: { children?: ReactNode; title: ReactNode }) {
     return (
-        <div className="flex min-h-16 flex-wrap items-center gap-2 py-3.5 max-sm:py-3">
+        <div className="flex min-h-16 flex-wrap items-center gap-2 py-3">
             <h1 className="mr-auto text-lg leading-6 font-semibold tracking-[-0.02em]">{title}</h1>
             {children}
         </div>
@@ -1058,18 +1161,18 @@ export function AccountsScreen() {
     const sort = storedSort(ledger);
     const empty = model.rows.length === 0;
     return (
-        <main className="@container min-w-0 px-4 pb-5 sm:px-6">
+        <main className="@container flex min-h-full min-w-0 flex-col px-4 pb-5 sm:px-6">
             <AccountsBar title={list.title}>
                 {empty ? (
                     <PhoneAction>
-                        <Glyph icon={Upload01Icon} />
+                        <Glyph icon={Upload04Icon} className="text-muted-foreground" size={16} />
                         {actions.import}
                     </PhoneAction>
                 ) : (
                     <>
                         <SortMenu onSort={saveSort} sort={sort} />
                         <PhoneAction className="max-sm:hidden">
-                            <Glyph icon={ArrowDataTransferHorizontalIcon} />
+                            <Glyph icon={ArrowDataTransferHorizontalIcon} className="text-muted-foreground" size={16} />
                             {actions.transfer}
                         </PhoneAction>
                     </>
@@ -1078,12 +1181,12 @@ export function AccountsScreen() {
             </AccountsBar>
             <Kpis model={model} />
             {empty ? (
-                <div className="mt-4 flex flex-col gap-4">
+                <div className="mt-4 flex flex-1 flex-col gap-4">
                     <EmptyAccounts />
                     <ArchivedCard />
                 </div>
             ) : (
-                <div className="mt-4 grid grid-cols-1 gap-4 @5xl:grid-cols-[minmax(0,1fr)_332px]">
+                <div className="mt-4 grid flex-1 grid-cols-1 gap-4 @5xl:grid-cols-[minmax(0,1fr)_332px]">
                     <div className="flex min-w-0 flex-col gap-4">
                         <WorthCard model={model} />
                         <AssetsCard model={model} sort={sort} />

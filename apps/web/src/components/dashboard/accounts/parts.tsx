@@ -2,11 +2,10 @@ import Archive02Icon from "@hugeicons/core-free-icons/Archive02Icon";
 import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
 import CheckmarkCircle02Icon from "@hugeicons/core-free-icons/CheckmarkCircle02Icon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
-import DragDropIcon from "@hugeicons/core-free-icons/DragDropIcon";
+import DragDropVerticalIcon from "@hugeicons/core-free-icons/DragDropVerticalIcon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
-import SortByUp01Icon from "@hugeicons/core-free-icons/SortByUp01Icon";
-import SortingDownIcon from "@hugeicons/core-free-icons/SortingDownIcon";
+import Sorting05Icon from "@hugeicons/core-free-icons/Sorting05Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import type { IconSvgElement } from "@hugeicons/react";
 import { useNavigate } from "@tanstack/react-router";
@@ -31,17 +30,19 @@ import { checkedAge } from "./model";
 /** `children` is the change as written, since Kpi.Trend only speaks percentages on its own. */
 export function Trend({
     children,
+    className = "",
     goodWhenUp = true,
     value,
 }: {
     children: string;
+    className?: string;
     goodWhenUp?: boolean;
     value: number;
 }) {
     return (
         <Kpi.Trend
             aria-label={children}
-            className="dash-figure"
+            className={`dash-figure ${className}`}
             format={() => children}
             goodDirection={goodWhenUp ? "up" : "down"}
             value={value}
@@ -82,7 +83,13 @@ export function Spark({
 
 /** A bar in the ink colour: how far along, with no good or bad reading of it. */
 export function Meter({ className = "", max, value }: { className?: string; max: number; value: number }) {
-    return <Kpi.Progress className={`[--pu-color:var(--foreground)] ${className}`} maxValue={max} value={value} />;
+    return (
+        <Kpi.Progress
+            className={`[&_[role=progressbar]]:bg-muted [--pu-color:var(--foreground)] ${className}`}
+            maxValue={max}
+            value={value}
+        />
+    );
 }
 
 /** `quiet` is the empty band: label and a muted zero, no footer. */
@@ -106,26 +113,21 @@ export function KpiCell({
 }) {
     return (
         <Kpi className="gap-0">
-            <Kpi.Header className={icon ? "min-h-7" : ""}>
+            <Kpi.Header>
                 {icon ? (
-                    <Kpi.Icon
-                        className="size-7 rounded-[10px]"
-                        style={{ background: `color-mix(in oklab, ${color} 16%, transparent)`, color }}
-                    >
-                        <Glyph icon={icon} />
+                    <Kpi.Icon style={{ background: `color-mix(in oklab, ${color} 16%, transparent)`, color }}>
+                        <Glyph icon={icon} size={16} />
                     </Kpi.Icon>
                 ) : null}
-                <Kpi.Title className="text-[13px]">{label}</Kpi.Title>
+                <Kpi.Title>{label}</Kpi.Title>
             </Kpi.Header>
             <Kpi.Value
-                className={`dash-figure ${icon ? "mt-2" : "mt-1.5"} truncate leading-8 font-semibold tracking-[-0.04em] ${quiet ? "text-muted-foreground" : ""} ${tone}`}
+                className={`dash-figure ${icon ? "mt-2" : "mt-1"} truncate leading-8 font-semibold tracking-[-0.04em] ${quiet ? "text-muted-foreground" : ""} ${tone}`}
             >
                 {value}
             </Kpi.Value>
             {quiet ? null : (
-                <Kpi.Footer className={`${icon ? "mt-[3px] h-7" : "mt-1.5 h-[22px]"} justify-between`}>
-                    {children}
-                </Kpi.Footer>
+                <Kpi.Footer className={`${icon ? "h-7" : "h-5"} mt-1 justify-between`}>{children}</Kpi.Footer>
             )}
         </Kpi>
     );
@@ -134,7 +136,7 @@ export function KpiCell({
 export function KpiBand({ children }: { children: ReactNode }) {
     return (
         <Kpi.Group
-            className={`rounded-3xl lg:grid lg:grid-cols-4 lg:*:not-first:ps-5! ${TWO_BY_TWO} ${STACKED}`}
+            className={`rounded-3xl lg:grid lg:auto-cols-fr lg:grid-flow-col lg:*:not-first:ps-4! ${TWO_BY_TWO} ${STACKED}`}
             surface
         >
             {children}
@@ -196,7 +198,7 @@ export function PhoneAction({
     children: ReactNode;
     className?: string;
     size?: "sm";
-    variant?: "default" | "outline";
+    variant?: "default" | "outline" | "secondary";
 }) {
     const { phoneHint } = useIntlayer("dashboard-home").setup;
     return (
@@ -223,11 +225,11 @@ export function RowMenu({ row }: { row: AccountRow }) {
         <Menu>
             <Menu.Trigger
                 aria-label={actions.more({ name: row.name }).value}
-                render={<Button className="text-muted-foreground -mr-1" size="icon-sm" variant="ghost" />}
+                render={<Button className="text-muted-foreground -mx-2" size="icon-sm" variant="ghost" />}
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
-            <Menu.Content align="end" className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
+            <Menu.Content align="end" alignOffset={-4} className="app-shell ph-no-capture w-[200px]" sideOffset={4}>
                 <Menu.Item onClick={() => navigate({ params: { accountId: row.id }, to: "/app/accounts/$accountId" })}>
                     <Glyph icon={ArrowUpRight01Icon} size={16} />
                     {actions.open}
@@ -240,11 +242,11 @@ export function RowMenu({ row }: { row: AccountRow }) {
                     <Glyph icon={CheckmarkCircle02Icon} size={16} />
                     {actions.check}
                 </Menu.Item>
+                <Menu.Separator />
                 <Menu.Item onClick={() => open({ accountId: row.id, kind: "archive" })}>
                     <Glyph icon={Archive02Icon} size={16} />
                     {flows.archive}
                 </Menu.Item>
-                <Menu.Separator />
                 <Menu.Item variant="destructive" onClick={() => open({ accountId: row.id, kind: "delete" })}>
                     <Glyph icon={Delete02Icon} size={16} />
                     {actions.delete}
@@ -257,7 +259,6 @@ export function RowMenu({ row }: { row: AccountRow }) {
 export function SortMenu({ onSort, sort }: { onSort: (sort: AccountSort) => void; sort: AccountSort }) {
     const { actions } = useIntlayer("dashboard-accounts");
     const navigate = useNavigate();
-    const current = sort === "order" ? SortingDownIcon : SortByUp01Icon;
     const choice = (value: AccountSort, icon: IconSvgElement, label: ReactNode) => (
         <Menu.Item onClick={() => onSort(value)}>
             <Glyph icon={icon} size={16} />
@@ -272,15 +273,15 @@ export function SortMenu({ onSort, sort }: { onSort: (sort: AccountSort) => void
     return (
         <Menu>
             <Menu.Trigger render={<Button variant="outline" />}>
-                <Glyph icon={current} />
+                <Glyph icon={Sorting05Icon} className="text-muted-foreground" size={16} />
                 {sort === "order" ? actions.yourOrder : actions.byBalance}
             </Menu.Trigger>
             <Menu.Content align="end" className="app-shell ph-no-capture w-[188px]" sideOffset={4}>
-                {choice("order", SortingDownIcon, actions.yourOrder)}
-                {choice("balance", SortByUp01Icon, actions.byBalance)}
+                {choice("order", Sorting05Icon, actions.yourOrder)}
+                {choice("balance", Sorting05Icon, actions.byBalance)}
                 <Menu.Separator />
                 <Menu.Item onClick={() => navigate({ to: "/app/accounts/reorder" })}>
-                    <Glyph icon={DragDropIcon} size={16} />
+                    <Glyph icon={DragDropVerticalIcon} size={16} />
                     {actions.reorder}
                 </Menu.Item>
             </Menu.Content>
@@ -307,13 +308,9 @@ export function Segments<Value extends string>({
             }}
             value={value}
         >
-            <Tabs.List className="bg-background/40 rounded-[9px] p-0.5">
+            <Tabs.List>
                 {options.map((option) => (
-                    <Tabs.Trigger
-                        className="h-[26px] rounded-[7px] px-2.5 text-[13px]"
-                        key={option.value}
-                        value={option.value}
-                    >
+                    <Tabs.Trigger key={option.value} value={option.value}>
                         {option.label}
                     </Tabs.Trigger>
                 ))}
