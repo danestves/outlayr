@@ -9,7 +9,7 @@ import { kpis } from "@/lib/dashboard-series";
 import { netWorthPoints } from "@/lib/dashboard-series-net-worth";
 import { LedgerSettingsContext, useDisplayFormat } from "@/lib/ledger-settings";
 
-import { sparks } from "./model";
+import { categorySpend, sparks } from "./model";
 
 const PERCENT = 100;
 const TENTHS = 10;
@@ -84,6 +84,11 @@ export function KpiGroup({ quiet }: { quiet: boolean }) {
     const scope = useMemo(() => ({ accounts: filters.accounts }), [filters.accounts]);
     const figures = useMemo(() => kpis(ledger, filters.period, scope), [filters.period, ledger, scope]);
     const lines = useMemo(() => sparks(ledger, filters.period, scope), [filters.period, ledger, scope]);
+    const picked = useMemo(
+        () => (filters.categories.length > 0 ? categorySpend(ledger, filters.period, scope, filters.categories) : null),
+        [filters.categories, filters.period, ledger, scope]
+    );
+    const spentNow = picked ? { ...figures.spent, delta: picked.delta, value: picked.value } : figures.spent;
     const shown = (value: number) => money(value, ledger.currency);
     // A period with nothing in it has no history worth drawing, and its closing balance says nothing either.
     const now = useMemo(
@@ -95,7 +100,7 @@ export function KpiGroup({ quiet }: { quiet: boolean }) {
         income: shown(figures.income.value),
         kept: shown(figures.kept.value),
         netWorth: shown(now ?? figures.netWorth.value),
-        spent: shown(figures.spent.value),
+        spent: shown(spentNow.value),
     };
     const longest = Math.max(
         ...(incomeTracking
@@ -128,11 +133,30 @@ export function KpiGroup({ quiet }: { quiet: boolean }) {
                 color="primary"
                 label={copy.spent}
                 longest={longest}
-                points={quiet ? null : lines.spent}
-                trend={quiet ? zero : <Change delta={figures.spent.delta} goodDirection="down" />}
+                points={quiet ? null : (picked?.spentPoints ?? lines.spent)}
+                trend={quiet ? zero : <Change delta={spentNow.delta} goodDirection="down" />}
                 value={values.spent}
             />
-            {incomeTracking ? (
+            {incomeTracking && picked ? (
+                <Figure
+                    label={copy.ofSpending}
+                    longest={longest}
+                    points={quiet ? null : picked.sharePoints}
+                    trend={
+                        quiet ? (
+                            zero
+                        ) : (
+                            <span className={NOTE}>
+                                {copy.points({
+                                    points: `${picked.shareChange > 0 ? "+" : ""}${(picked.shareChange * PERCENT).toFixed(1)}`,
+                                })}
+                            </span>
+                        )
+                    }
+                    value={`${Math.round(picked.share * PERCENT)}%`}
+                />
+            ) : null}
+            {incomeTracking && !picked ? (
                 <Figure
                     label={copy.kept}
                     longest={longest}

@@ -5,7 +5,9 @@ const dashboardHome = {
     content: {
         everyDay: {
             aDay: insert(t({ en: "{{amount}} a day", es: "{{amount}} al día" })),
+            biggest: t({ en: "Biggest", es: "El mayor" }),
             biggestAfter: t({ en: "Biggest after", es: "El mayor después" }),
+            entries: t({ en: "Entries", es: "Entradas" }),
             emptyLine: t({
                 en: "Days fill in as you log entries.",
                 es: "Los días se llenan al registrar movimientos.",
@@ -20,6 +22,8 @@ const dashboardHome = {
         kpi: {
             income: t({ en: "Income", es: "Ingresos" }),
             kept: t({ en: "Kept", es: "Ahorrado" }),
+            ofSpending: t({ en: "Of spending", es: "Del gasto" }),
+            points: insert(t({ en: "{{points}} pts", es: "{{points}} pts" })),
             netWorth: t({ en: "Net worth", es: "Patrimonio" }),
             now: t({ en: "Now", es: "Ahora" }),
             share: insert(t({ en: "{{percent}}% of income", es: "{{percent}}% de los ingresos" })),
@@ -82,14 +86,19 @@ const dashboardHome = {
                 en: "Preview only, nothing is saved. Escape returns to the real amount.",
                 es: "Solo una vista previa, no se guarda nada. Escape vuelve al monto real.",
             }),
+            shareOfSpent: t({ en: "Share of spent", es: "Parte del gasto" }),
             whatIfTag: t({ en: "If", es: "Si" }),
             wouldKeep: t({ en: "Would keep", es: "Ahorrarías" }),
         },
         panel: {
             accounts: t({ en: "Accounts", es: "Cuentas" }),
+            addAnAccount: t({ en: "Add an account", es: "Añadir una cuenta" }),
             average: insert(t({ en: "Avg {{amount}}", es: "Prom. {{amount}}" })),
             budgets: t({ en: "Budgets", es: "Presupuestos" }),
-            budgetsEmptyLine: t({ en: "Set one on your phone.", es: "Crea uno en tu teléfono." }),
+            budgetsEmptyLine: t({
+                en: "Set a monthly limit on a category and track it here.",
+                es: "Pon un límite mensual a una categoría y síguelo aquí.",
+            }),
             budgetsEmptyTitle: t({ en: "No budgets yet", es: "Aún no hay presupuestos" }),
             budgetEnded: insert(t({ en: "Ended {{day}}", es: "Terminó el {{day}}" })),
             budgetFilter: t({ en: "Filter", es: "Filtrar" }),

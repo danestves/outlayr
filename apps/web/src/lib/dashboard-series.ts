@@ -157,7 +157,7 @@ interface Kpis {
     spent: Kpi;
 }
 
-const change = (value: number, prior: number) => (prior === 0 ? null : (value - prior) / Math.abs(prior));
+export const change = (value: number, prior: number) => (prior === 0 ? null : (value - prior) / Math.abs(prior));
 
 export function kpis(ledger: Ledger, period: Period, scope: Scope): Kpis {
     const through = ledger.today < period.to ? ledger.today : period.to;

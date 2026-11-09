@@ -41,7 +41,7 @@ export function EntrySheet({ onClose, onDelete, onStep, row }: EntrySheetProps) 
             open={row !== null}
             side={wide ? "right" : "bottom"}
         >
-            <Sheet.Content className="app-shell dash-sheet ph-no-capture" detached={wide}>
+            <Sheet.Content className="app-shell ph-no-capture" detached={wide}>
                 {row ? <EntryBody onDelete={onDelete} onStep={onStep} row={row} /> : null}
             </Sheet.Content>
         </Sheet>

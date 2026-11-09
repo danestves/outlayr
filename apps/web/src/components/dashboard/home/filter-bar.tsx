@@ -1,17 +1,19 @@
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
+import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
+import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
+import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
-import {
-    RiAddLine,
-    RiArrowDownSLine,
-    RiBankCardLine,
-    RiCalendarLine,
-    RiCheckLine,
-    RiCloseLine,
-    RiPriceTag3Line,
-    RiSearch2Line,
-} from "@remixicon/react";
-import type { RemixiconComponentType } from "@remixicon/react";
+import { Badge } from "panelui-web/badge";
+import { Button } from "panelui-web/button";
+import { Checkbox } from "panelui-web/checkbox";
+import { Chip } from "panelui-web/chip";
+import { Input } from "panelui-web/input";
 import { Menu } from "panelui-web/menu";
 import { Sheet } from "panelui-web/sheet";
+import { Tabs } from "panelui-web/tabs";
 import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -33,59 +35,47 @@ type LiveAccount = Dashboard["ledger"]["books"]["accounts"][number];
 
 interface CheckRowProps {
     children: ReactNode;
-    className?: string;
     figure: string;
     on: boolean;
     onToggle: () => void;
 }
 
 const InSheet = createContext(false);
+const SHEET_LABEL = "text-muted-foreground px-2 pt-1.5 pb-0.5 text-xs leading-4";
 
-function CheckRow({ children, className = "", figure, on, onToggle }: CheckRowProps) {
+const SHEET_ROW = "hover:bg-app-hover flex h-11 w-full shrink-0 items-center gap-2 rounded-lg px-2 text-sm";
+const FIGURE = "dash-figure text-muted-foreground min-w-0 flex-1 pl-2 text-right text-[13px] whitespace-nowrap";
+const CHIP = "relative gap-1.5 text-[13px] max-lg:after:absolute max-lg:after:-inset-x-0.5 max-lg:after:-inset-y-1.5";
+
+function CheckRow({ children, figure, on, onToggle }: CheckRowProps) {
     const inSheet = useContext(InSheet);
-    const inner = (
-        <>
-            <span className="dash-check" data-on={on}>
-                {on ? <RiCheckLine className="absolute -inset-px" size={16} /> : null}
-            </span>
-            {children}
-            <span className="dash-figure text-muted-foreground ml-auto shrink-0 pl-2 text-[13px] whitespace-nowrap">
-                {figure}
-            </span>
-        </>
-    );
     if (inSheet) {
         return (
-            <label className="dash-menu-item has-focus-visible:ring-app-tint h-11! w-full shrink-0 has-focus-visible:ring-2">
-                <input checked={on} className="sr-only" onChange={onToggle} type="checkbox" />
-                {inner}
+            <label className={SHEET_ROW}>
+                <Checkbox checked={on} onCheckedChange={onToggle} />
+                {children}
+                <span className={FIGURE}>{figure}</span>
             </label>
         );
     }
     return (
-        <Menu.Item
-            aria-checked={on}
-            className={`dash-menu-item shrink-0 ${className}`}
-            closeOnClick={false}
-            onClick={onToggle}
-            role="menuitemcheckbox"
-        >
-            {inner}
-        </Menu.Item>
+        <Menu.CheckboxItem checked={on} className="shrink-0" onCheckedChange={onToggle}>
+            {children}
+            <span className={FIGURE}>{figure}</span>
+        </Menu.CheckboxItem>
     );
 }
 
 interface FilterMenuProps {
     children: (matches: (name: string) => boolean) => ReactNode;
     count: number;
-    icon: RemixiconComponentType;
     label: ReactNode;
     onClear: () => void;
     searchLabel: string;
     width: string;
 }
 
-export function FilterMenu({ children, count, icon: Icon, label, onClear, searchLabel, width }: FilterMenuProps) {
+export function FilterMenu({ children, count, label, onClear, searchLabel, width }: FilterMenuProps) {
     const { filters: copy } = useIntlayer("dashboard");
     const [query, setQuery] = useState("");
     const needle = query.trim().toLocaleLowerCase();
@@ -97,21 +87,23 @@ export function FilterMenu({ children, count, icon: Icon, label, onClear, search
     };
     const chip = (
         <>
-            {count > 0 ? <Icon size={14} /> : <RiAddLine className="-ml-0.5" size={14} />}
+            {count > 0 ? null : <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />}
             {label}
             {count > 0 ? (
-                <span className="dash-count bg-[color-mix(in_oklab,var(--color-app-tint)_30%,var(--color-app-bg))]">
+                <Badge className="dash-figure ml-1.5" size="sm" variant="secondary">
                     {count}
-                </span>
+                </Badge>
             ) : null}
         </>
     );
     const search = (focus: boolean) => (
-        <label className="border-border focus-within:border-app-tint text-muted-foreground mb-1.5 flex h-9 shrink-0 items-center gap-2 rounded-[10px] border px-2.5 text-[13px] focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-app-tint)_22%,transparent)]">
-            <RiSearch2Line size={15} />
-            <input
+        <Input.Group className="mb-1.5 shrink-0">
+            <Input.Addon>
+                <HugeiconsIcon icon={Search01Icon} size={15} strokeWidth={2} />
+            </Input.Addon>
+            <Input
                 aria-label={searchLabel}
-                className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none pointer-coarse:text-base"
+                className="pointer-coarse:text-base"
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={(event) => {
                     // Typing stays in the field; the menu's typeahead would otherwise take each letter.
@@ -127,43 +119,54 @@ export function FilterMenu({ children, count, icon: Icon, label, onClear, search
                 }}
                 value={query}
             />
-        </label>
+        </Input.Group>
     );
     return (
         <>
             <Menu onOpenChange={forget}>
-                <Menu.Trigger className="dash-chip max-lg:hidden" data-on={count > 0}>
+                <Menu.Trigger
+                    render={
+                        <Chip
+                            className={`${CHIP} max-lg:hidden`}
+                            data-pressed={count > 0 ? "" : undefined}
+                            pressed={count > 0}
+                            size="lg"
+                        />
+                    }
+                >
                     {chip}
                 </Menu.Trigger>
-                <Menu.Content className={`app-shell dash-menu ph-no-capture gap-0.5 p-2 ${width}`} sideOffset={8}>
+                <Menu.Content className={`app-shell ph-no-capture ${width}`} sideOffset={8}>
                     {search(true)}
                     {children(matches)}
-                    <div className="dash-menu-rule my-1" />
-                    <Menu.Item className="dash-menu-item text-muted-foreground" closeOnClick={false} onClick={onClear}>
-                        <RiCloseLine size={16} />
+                    <Menu.Separator />
+                    <Menu.Item closeOnClick={false} onClick={onClear}>
+                        <HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} />
                         {copy.clear}
-                        <span className="dash-figure ml-auto text-xs">{copy.selected({ count })}</span>
+                        <span className="dash-figure text-muted-foreground ml-auto text-xs">
+                            {copy.selected({ count })}
+                        </span>
                     </Menu.Item>
                 </Menu.Content>
             </Menu>
             <Sheet onOpenChange={forget}>
-                <Sheet.Trigger className="dash-chip lg:hidden" data-on={count > 0}>
+                <Sheet.Trigger render={<Chip className={`${CHIP} lg:hidden`} pressed={count > 0} size="lg" />}>
                     {chip}
                 </Sheet.Trigger>
-                <Sheet.Content className="app-shell dash-sheet ph-no-capture" detached={false}>
+                <Sheet.Content className="app-shell ph-no-capture">
                     <Sheet.Header title={label} />
                     <div className="px-4">{search(false)}</div>
                     <Sheet.Body className="px-2 [&_.dash-menu-list]:max-h-none [&_.dash-menu-list]:overflow-visible">
                         <InSheet value>{children(matches)}</InSheet>
                     </Sheet.Body>
-                    <Sheet.Footer className="flex-row">
-                        <button className="dash-ob h-11 flex-1 justify-center text-sm" onClick={onClear} type="button">
+                    <Sheet.Footer>
+                        <Sheet.Close render={<Button size="lg" />}>{copy.done}</Sheet.Close>
+                        <Button onClick={onClear} size="lg" variant="ghost">
                             {copy.clear}
                             {count > 0 ? (
                                 <span className="dash-figure text-muted-foreground text-xs">{count}</span>
                             ) : null}
-                        </button>
-                        <Sheet.Close className="dash-btn h-11 flex-1 justify-center">{copy.done}</Sheet.Close>
+                        </Button>
                     </Sheet.Footer>
                 </Sheet.Content>
             </Sheet>
@@ -193,7 +196,6 @@ function AccountRows({
                 .filter((account) => matches(account.name))
                 .map((account) => (
                     <CheckRow
-                        className="h-[34px]!"
                         figure={money(balances.get(account.localId) ?? 0, ledger.currency)}
                         key={account.localId}
                         on={filters.accounts.includes(account.localId)}
@@ -217,7 +219,6 @@ export function AccountMenu({ quiet }: { quiet: boolean }) {
     return (
         <FilterMenu
             count={filters.accounts.length}
-            icon={RiBankCardLine}
             label={copy.accountsChip}
             onClear={() => setFilters({ accounts: [] })}
             searchLabel={copy.searchAccounts.value}
@@ -225,6 +226,52 @@ export function AccountMenu({ quiet }: { quiet: boolean }) {
         >
             {(matches) => <AccountRows accounts={accounts} matches={matches} quiet={quiet} />}
         </FilterMenu>
+    );
+}
+
+function CategoryRows({
+    all,
+    allLabel,
+    recent,
+    recentLabel,
+}: {
+    all: ReactNode[];
+    allLabel: ReactNode;
+    recent: ReactNode[];
+    recentLabel: ReactNode;
+}) {
+    const inSheet = useContext(InSheet);
+    const list = <div className="dash-menu-list flex max-h-72 flex-col gap-0.5 overflow-y-auto">{all}</div>;
+    if (inSheet) {
+        return (
+            <>
+                {recent.length > 0 ? (
+                    <>
+                        <div className={SHEET_LABEL}>{recentLabel}</div>
+                        {recent}
+                    </>
+                ) : null}
+                <div className={SHEET_LABEL}>{allLabel}</div>
+                {list}
+            </>
+        );
+    }
+    return (
+        <>
+            {recent.length > 0 ? (
+                <>
+                    <Menu.Group>
+                        <Menu.GroupLabel>{recentLabel}</Menu.GroupLabel>
+                        {recent}
+                    </Menu.Group>
+                    <Menu.Separator />
+                </>
+            ) : null}
+            <Menu.Group>
+                <Menu.GroupLabel>{allLabel}</Menu.GroupLabel>
+                {list}
+            </Menu.Group>
+        </>
     );
 }
 
@@ -260,7 +307,6 @@ export function CategoryMenu() {
     return (
         <FilterMenu
             count={filters.categories.length}
-            icon={RiPriceTag3Line}
             label={copy.categoryChip}
             onClear={() => setFilters({ categories: [] })}
             searchLabel={copy.searchCategories.value}
@@ -270,23 +316,12 @@ export function CategoryMenu() {
                 const recent = choices.recent.filter((each) => matches(categoryName(each)));
                 const all = choices.all.filter((each) => matches(categoryName(each)));
                 return (
-                    <>
-                        {recent.length > 0 ? (
-                            <>
-                                <div className="text-muted-foreground px-2 pt-1.5 pb-0.5 text-xs leading-4">
-                                    {copy.recent}
-                                </div>
-                                {recent.map(row)}
-                                <div className="dash-menu-rule my-1" />
-                            </>
-                        ) : null}
-                        <div className="text-muted-foreground px-2 pt-1.5 pb-0.5 text-xs leading-4">
-                            {copy.allCategories}
-                        </div>
-                        <div className="dash-menu-list flex max-h-72 flex-col gap-0.5 overflow-y-auto">
-                            {all.map(row)}
-                        </div>
-                    </>
+                    <CategoryRows
+                        all={all.map(row)}
+                        recent={recent.map(row)}
+                        recentLabel={copy.recent}
+                        allLabel={copy.allCategories}
+                    />
                 );
             }}
         </FilterMenu>
@@ -300,30 +335,33 @@ function PeriodControl() {
     const title = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
     const keys = usePeriodKeys(dashboard);
     return (
-        <div className="bg-app-group ml-auto inline-flex rounded-[10px] p-[3px] max-lg:hidden">
-            <Menu>
-                <Menu.Trigger className="dash-seg" data-on>
-                    {title(filters.period)}
-                </Menu.Trigger>
-                <Menu.Content className="app-shell dash-menu ph-no-capture max-h-80 overflow-y-auto" sideOffset={8}>
-                    {keys.map((key) => (
-                        <Menu.Item
-                            className="dash-menu-item"
-                            key={key}
-                            onClick={() => setFilters({ period: key === filters.currentKey ? null : key })}
+        <Tabs className="ml-auto max-lg:hidden" value="month">
+            <Tabs.List className="p-0.5">
+                <Menu>
+                    <Menu.Trigger render={<Tabs.Trigger value="month" />}>{title(filters.period)}</Menu.Trigger>
+                    <Menu.Content className="app-shell ph-no-capture max-h-80 overflow-y-auto" sideOffset={8}>
+                        <Menu.RadioGroup
+                            onValueChange={(key: string) =>
+                                setFilters({ period: key === filters.currentKey ? null : key })
+                            }
+                            value={filters.period.key}
                         >
-                            {title(periodOf(key, ledger.firstDayOfMonth))}
-                        </Menu.Item>
-                    ))}
-                </Menu.Content>
-            </Menu>
-            <span aria-disabled className="dash-seg">
-                {copy.quarter}
-            </span>
-            <span aria-disabled className="dash-seg">
-                {copy.year}
-            </span>
-        </div>
+                            {keys.map((key) => (
+                                <Menu.RadioItem closeOnClick key={key} value={key}>
+                                    {title(periodOf(key, ledger.firstDayOfMonth))}
+                                </Menu.RadioItem>
+                            ))}
+                        </Menu.RadioGroup>
+                    </Menu.Content>
+                </Menu>
+                <Tabs.Trigger disabled value="quarter">
+                    {copy.quarter}
+                </Tabs.Trigger>
+                <Tabs.Trigger disabled value="year">
+                    {copy.year}
+                </Tabs.Trigger>
+            </Tabs.List>
+        </Tabs>
     );
 }
 
@@ -331,7 +369,7 @@ function PeriodRows({ onPick }: { onPick: (key: string) => void }) {
     const dashboard = useDashboard();
     const { filters, ledger } = dashboard;
     const { money } = useDisplayFormat();
-    const title = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
+    const title = usePeriodTitle(ledger.firstDayOfMonth, "");
     const keys = usePeriodKeys(dashboard);
     const periods = useMemo(
         () =>
@@ -347,7 +385,7 @@ function PeriodRows({ onPick }: { onPick: (key: string) => void }) {
         return (
             <button
                 aria-pressed={on}
-                className="dash-menu-item h-11! w-full text-left"
+                className={`${SHEET_ROW} text-left`}
                 key={period.key}
                 onClick={() => onPick(period.key)}
                 type="button"
@@ -356,7 +394,12 @@ function PeriodRows({ onPick }: { onPick: (key: string) => void }) {
                 <span className="dash-figure text-muted-foreground ml-auto text-[13px]">
                     {money(spent, ledger.currency)}
                 </span>
-                <RiCheckLine className={`text-app-tint shrink-0 ${on ? "" : "invisible"}`} size={18} />
+                <HugeiconsIcon
+                    className={on ? "text-app-tint" : "invisible"}
+                    icon={Tick02Icon}
+                    size={18}
+                    strokeWidth={2}
+                />
             </button>
         );
     });
@@ -365,27 +408,34 @@ function PeriodRows({ onPick }: { onPick: (key: string) => void }) {
 function PeriodSheet() {
     const { filters, ledger, setFilters } = useDashboard();
     const { filters: copy } = useIntlayer("dashboard");
+    const { spent } = useIntlayer("dashboard-home").kpi;
     const title = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
     const [open, setOpen] = useState(false);
     return (
         <Sheet onOpenChange={setOpen} open={open}>
-            <Sheet.Trigger className="dash-chip lg:hidden">
-                <RiCalendarLine className="text-muted-foreground" size={14} />
+            <Sheet.Trigger render={<Chip className={`${CHIP} lg:hidden`} pressed={false} size="lg" />}>
+                <HugeiconsIcon className="text-muted-foreground" icon={Calendar03Icon} strokeWidth={2} />
                 {title(filters.period)}
-                <RiArrowDownSLine className="text-muted-foreground" size={15} />
+                <HugeiconsIcon className="text-muted-foreground" icon={ArrowDown01Icon} strokeWidth={2} />
             </Sheet.Trigger>
-            <Sheet.Content className="app-shell dash-sheet ph-no-capture" detached={false}>
+            <Sheet.Content className="app-shell ph-no-capture max-h-[60dvh]">
                 <Sheet.Header title={copy.period} />
-                <div className="bg-app-fill mx-4 mb-2 flex rounded-[10px] p-[3px]">
-                    <span className="dash-seg bg-app-group text-foreground h-9 flex-1 justify-center">
-                        {copy.month}
-                    </span>
-                    <span aria-disabled className="dash-seg h-9 flex-1 justify-center opacity-60">
-                        {copy.quarter}
-                    </span>
-                    <span aria-disabled className="dash-seg h-9 flex-1 justify-center opacity-60">
-                        {copy.year}
-                    </span>
+                <Tabs className="mx-4 mb-2" value="month">
+                    <Tabs.List className="w-full">
+                        <Tabs.Trigger className="flex-1" value="month">
+                            {copy.month}
+                        </Tabs.Trigger>
+                        <Tabs.Trigger className="flex-1" disabled value="quarter">
+                            {copy.quarter}
+                        </Tabs.Trigger>
+                        <Tabs.Trigger className="flex-1" disabled value="year">
+                            {copy.year}
+                        </Tabs.Trigger>
+                    </Tabs.List>
+                </Tabs>
+                <div className="text-muted-foreground flex justify-between px-4 pr-[42px] pb-1 text-xs leading-4">
+                    <span>{copy.month}</span>
+                    <span>{spent}</span>
                 </div>
                 <Sheet.Body className="px-2">
                     <PeriodRows
@@ -420,10 +470,10 @@ export function FilterBar({
                 </>
             )}
             <PeriodControl />
-            <button aria-disabled className="dash-btn ml-1 max-lg:hidden" title={add.hint.value} type="button">
-                <RiAddLine size={18} />
+            <Button aria-disabled className="ml-1 max-lg:hidden" title={add.hint.value}>
+                <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                 {add.entry}
-            </button>
+            </Button>
         </div>
     );
 }

@@ -1,8 +1,11 @@
-import { RiArrowRightUpLine } from "@remixicon/react";
+import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
+import { Badge } from "panelui-web/badge";
+import { Button } from "panelui-web/button";
 import { RangeMeter } from "panelui-web/range-meter";
 import { useMemo, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { KeyboardEvent } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -13,8 +16,8 @@ import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { CardFrame } from "./card-frame";
-import { percentChange, useDateFormat } from "./format";
-import { snapWhatIf, whatIfStep } from "./model";
+import { categoryTone, percentChange, useDateFormat } from "./format";
+import { categorySpend, snapWhatIf, whatIfStep } from "./model";
 import type { SetupState } from "./model";
 import { Cover, GhostRuler, LATE_FADE, QuietBars } from "./setup";
 
@@ -63,6 +66,140 @@ function useWhatIf(income: number) {
     };
 }
 
+function SpentSetup({ spent }: { spent: number }) {
+    const { ledger } = useDashboard();
+    const copy = useIntlayer("dashboard-home");
+    const { money } = useDisplayFormat();
+    const shown = (value: number) => money(value, ledger.currency);
+    const { title } = copy.spentOfIncome;
+    return (
+        <CardFrame className="min-h-[363px]" title={title}>
+            <div className="px-4">
+                <GhostRuler />
+            </div>
+            {spent > 0 ? (
+                <Cover
+                    fade={LATE_FADE}
+                    line={copy.setup.logIncome}
+                    title={copy.setup.spent({ amount: shown(spent) })}
+                />
+            ) : (
+                <Cover fade={LATE_FADE} line={copy.setup.fillsIn} title={copy.setup.spentTitle} />
+            )}
+        </CardFrame>
+    );
+}
+
+function SpentQuiet() {
+    const { ledger } = useDashboard();
+    const copy = useIntlayer("dashboard-home");
+    const { money } = useDisplayFormat();
+    const shown = (value: number) => money(value, ledger.currency);
+    const { title } = copy.spentOfIncome;
+    return (
+        <CardFrame
+            footer={
+                <>
+                    <span className="text-muted-foreground text-[13px]">{copy.kpi.kept}</span>
+                    <span className="dash-figure font-medium">{shown(0)}</span>
+                    <Badge className="dash-figure" size="sm" variant="secondary">
+                        0%
+                    </Badge>
+                </>
+            }
+            title={title}
+        >
+            <div className="dash-empty relative isolate min-h-[248px] justify-end pt-0 pb-7">
+                <QuietBars />
+                <b className="text-[15px] font-semibold">{copy.quiet.spentTitle}</b>
+                <p className="text-muted-foreground mb-2.5 text-[13px]">{copy.quiet.spentLine}</p>
+            </div>
+        </CardFrame>
+    );
+}
+
+function SpentAction({ delta, previewing }: { delta: number | null; previewing: boolean }) {
+    const { whatIf } = useIntlayer("dashboard-home").spentOfIncome;
+    if (previewing) {
+        return (
+            <Badge size="sm" variant="secondary">
+                {whatIf}
+            </Badge>
+        );
+    }
+    if (delta === null) {
+        return null;
+    }
+    return (
+        <Badge className="dash-figure" size="sm" variant={delta > 0 ? "destructive" : "success"}>
+            {percentChange(delta)}
+        </Badge>
+    );
+}
+
+function SpentFooter({
+    income,
+    kept,
+    previewing,
+    share,
+    spent,
+}: {
+    income: number;
+    kept: number;
+    previewing: boolean;
+    share: number | null;
+    spent: number;
+}) {
+    const { ledger } = useDashboard();
+    const copy = useIntlayer("dashboard-home");
+    const { money } = useDisplayFormat();
+    const shown = (value: number) => money(value, ledger.currency);
+    const picked = share !== null;
+    const keptShare = income > 0 ? kept / income : null;
+    return (
+        <>
+            <span className="text-muted-foreground text-[13px] whitespace-nowrap">
+                {picked ? copy.spentOfIncome.shareOfSpent : null}
+                {!picked && previewing ? copy.spentOfIncome.wouldKeep : null}
+                {!picked && !previewing ? copy.kpi.kept : null}
+            </span>
+            <span
+                className={`dash-figure font-medium whitespace-nowrap ${previewing ? "decoration-muted-foreground underline decoration-dashed underline-offset-3" : ""}`}
+            >
+                {shown(picked ? spent : kept)}
+            </span>
+            {picked ? (
+                <Badge
+                    className="dash-figure text-muted-foreground font-normal max-[480px]:hidden"
+                    size="sm"
+                    variant="secondary"
+                >
+                    {Math.round((share ?? 0) * PERCENT)}%
+                </Badge>
+            ) : null}
+            {keptShare === null || picked ? null : (
+                <Badge
+                    className={`dash-figure max-[480px]:hidden ${kept < 0 ? "" : "text-muted-foreground font-normal"}`}
+                    size="sm"
+                    variant={kept < 0 ? "destructive" : "secondary"}
+                >
+                    {Math.round(keptShare * PERCENT)}%
+                </Badge>
+            )}
+            <Button
+                className={`ml-auto ${previewing ? "max-[480px]:hidden" : ""}`}
+                nativeButton={false}
+                render={<Link to="/app/insights" />}
+                size="sm"
+                variant="outline"
+            >
+                {copy.spentOfIncome.cashFlow}
+                <HugeiconsIcon icon={ArrowUpRight01Icon} strokeWidth={2} />
+            </Button>
+        </>
+    );
+}
+
 export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger } = useDashboard();
     const copy = useIntlayer("dashboard-home");
@@ -73,59 +210,31 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
         () => kpis(ledger, period, { accounts: filters.accounts }),
         [filters.accounts, ledger, period]
     );
+    const picked = useMemo(
+        () =>
+            filters.categories.length > 0
+                ? categorySpend(ledger, period, { accounts: filters.accounts }, filters.categories)
+                : null,
+        [filters.accounts, filters.categories, ledger, period]
+    );
     const income = figures.income.value;
-    const spent = figures.spent.value;
-    const { prior } = figures.spent;
-    const { delta } = figures.spent;
+    const spent = picked?.value ?? figures.spent.value;
+    const prior = picked?.prior ?? figures.spent.prior;
+    const delta = picked ? picked.delta : figures.spent.delta;
     const { amount: whatIf, slider } = useWhatIf(income);
     const shown = (value: number) => money(value, ledger.currency);
     const { title } = copy.spentOfIncome;
     if (setup && (income === 0 || spent === 0)) {
-        return (
-            <CardFrame className="min-h-[363px]" title={title}>
-                <div className="px-4">
-                    <GhostRuler />
-                </div>
-                {spent > 0 ? (
-                    <Cover
-                        fade={LATE_FADE}
-                        line={copy.setup.logIncome}
-                        title={copy.setup.spent({ amount: shown(spent) })}
-                    />
-                ) : (
-                    <Cover fade={LATE_FADE} line={copy.setup.fillsIn} title={copy.setup.spentTitle} />
-                )}
-            </CardFrame>
-        );
+        return <SpentSetup spent={spent} />;
     }
     if (quiet) {
-        return (
-            <CardFrame
-                footer={
-                    <>
-                        <span className="text-muted-foreground text-[13px]">{copy.kpi.kept}</span>
-                        <span className="dash-figure font-medium">{shown(0)}</span>
-                        <span className="dash-trend" data-tone="flat">
-                            0%
-                        </span>
-                    </>
-                }
-                title={title}
-            >
-                <div className="dash-empty relative isolate min-h-[248px] justify-end pt-0 pb-7">
-                    <QuietBars />
-                    <b className="text-[15px] font-semibold">{copy.quiet.spentTitle}</b>
-                    <p className="text-muted-foreground mb-2.5 text-[13px]">{copy.quiet.spentLine}</p>
-                </div>
-            </CardFrame>
-        );
+        return <SpentQuiet />;
     }
     const priorMonth = periodOf(shiftPeriodKey(period.key, -1), ledger.firstDayOfMonth).key;
     const hasIncome = income > 0;
     const over = hasIncome && spent > income;
     const previewing = whatIf !== null;
     const kept = previewing ? round(ledger, income - whatIf) : figures.kept.value;
-    const keptShare = hasIncome ? kept / income : null;
     const overBy = over ? `${shown(round(ledger, spent - income))} ${copy.spentOfIncome.over.value}` : null;
     const realText = overBy ? `${shown(spent)}, ${overBy}` : shown(spent);
     const previewText = `${copy.spentOfIncome.whatIf.value} ${shown(whatIf ?? 0)}, ${copy.spentOfIncome.wouldKeep.value} ${shown(kept)}`;
@@ -135,47 +244,23 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
     } else if (over || (!hasIncome && spent > 0)) {
         tone = OVER_TONE;
     }
-    let action: ReactNode = null;
-    if (previewing) {
-        action = (
-            <span className="dash-trend bg-app-strong text-foreground font-sans">{copy.spentOfIncome.whatIf}</span>
-        );
-    } else if (delta !== null) {
-        action = (
-            <span className="dash-trend" data-tone={delta > 0 ? "poor" : "good"}>
-                {percentChange(delta)}
-            </span>
-        );
-    }
     return (
         <CardFrame
-            action={action}
+            action={<SpentAction delta={delta} previewing={previewing} />}
             footer={
-                <>
-                    <span className="text-muted-foreground text-[13px] whitespace-nowrap">
-                        {previewing ? copy.spentOfIncome.wouldKeep : copy.kpi.kept}
-                    </span>
-                    <span
-                        className={`dash-figure font-medium whitespace-nowrap ${previewing ? "decoration-muted-foreground underline decoration-dashed underline-offset-3" : ""}`}
-                    >
-                        {shown(kept)}
-                    </span>
-                    {keptShare === null ? null : (
-                        <span className="dash-trend max-[480px]:hidden" data-tone={kept < 0 ? "poor" : "flat"}>
-                            {Math.round(keptShare * PERCENT)}%
-                        </span>
-                    )}
-                    <Link className={`dash-ob ml-auto ${previewing ? "max-[480px]:hidden" : ""}`} to="/app/insights">
-                        {copy.spentOfIncome.cashFlow}
-                        <RiArrowRightUpLine size={15} />
-                    </Link>
-                </>
+                <SpentFooter
+                    income={income}
+                    kept={kept}
+                    previewing={previewing}
+                    share={picked?.share ?? null}
+                    spent={spent}
+                />
             }
             title={title}
         >
             <div className="flex-1 px-4 pt-2 pb-[18px]">
                 <RangeMeter
-                    aria-description={hasIncome ? copy.spentOfIncome.whatIfHint.value : undefined}
+                    aria-description={hasIncome && !picked ? copy.spentOfIncome.whatIfHint.value : undefined}
                     className={`dash-figure touch-pan-y [&>[aria-hidden]]:h-16 ${tone}`}
                     formatValue={(value) =>
                         previewing ? `${copy.spentOfIncome.whatIfTag.value} ${shown(value)}` : shown(spent)
@@ -185,7 +270,10 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
                     max={hasIncome ? income : NO_INCOME_MAX}
                     value={whatIf ?? (hasIncome ? Math.min(spent, income) : Number(spent > 0))}
                     valueText={previewing ? previewText : realText}
-                    {...(hasIncome ? slider : {})}
+                    style={categoryTone(
+                        filters.category && !tone ? ledger.categories.get(filters.category)?.color : undefined
+                    )}
+                    {...(hasIncome && !picked ? slider : {})}
                 />
                 <RangeMeter.Scale
                     className="dash-figure mt-5 text-[13px]"

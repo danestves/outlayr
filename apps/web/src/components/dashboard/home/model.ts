@@ -1,22 +1,54 @@
 import type { DayLevel } from "panelui-web/day-grid";
 
-import { spendSeries } from "../../../lib/dashboard-series";
+import { change, spendSeries } from "../../../lib/dashboard-series";
 import type { CategoryBudget } from "../../../lib/dashboard-series";
 import { endOfDay, rowsBetween, round, total } from "../../../lib/dashboard-series-ledger";
 import type { Ledger, LedgerRow, Scope } from "../../../lib/dashboard-series-ledger";
 import { netWorthPoints } from "../../../lib/dashboard-series-net-worth";
-import { daysFrom, periodOf, shiftPeriodKey } from "../../../lib/dashboard-series-period";
+import { daysFrom, periodOf, priorSlice, shiftPeriodKey } from "../../../lib/dashboard-series-period";
 import type { Period } from "../../../lib/dashboard-series-period";
+import { foldFees } from "./rows";
 
 const SPARK_PERIODS = 12;
 const WHAT_IF_STOPS = 400;
 const NICE_STEPS = [1, 2, 5, 10];
 const CENT = 0.01;
 
-export function sparks(ledger: Ledger, period: Period, scope: Scope) {
-    const periods = Array.from({ length: SPARK_PERIODS }, (_, index) =>
+const sparkPeriods = (ledger: Ledger, period: Period) =>
+    Array.from({ length: SPARK_PERIODS }, (_, index) =>
         periodOf(shiftPeriodKey(period.key, index + 1 - SPARK_PERIODS), ledger.firstDayOfMonth)
     );
+
+export function categorySpend(ledger: Ledger, period: Period, scope: Scope, categories: readonly string[]) {
+    const picked = new Set(categories);
+    const split = (from: string, to: string) => {
+        const rows = rowsBetween(ledger, scope, from, to, false);
+        const value = total(
+            ledger,
+            rows.filter((row) => picked.has(row.topId))
+        );
+        const all = total(ledger, rows);
+        return { share: all > 0 ? value / all : 0, value };
+    };
+    const now = split(period.from, ledger.today < period.to ? ledger.today : period.to);
+    const slice = priorSlice(period, ledger.today, ledger.firstDayOfMonth);
+    const before = split(slice.from, slice.to);
+    const finished = sparkPeriods(ledger, period)
+        .filter((each) => each.to < ledger.today)
+        .map((each) => split(each.from, each.to));
+    return {
+        delta: change(now.value, before.value),
+        prior: before.value,
+        share: now.share,
+        shareChange: now.share - before.share,
+        sharePoints: finished.map((each) => each.share),
+        spentPoints: finished.map((each) => each.value),
+        value: now.value,
+    };
+}
+
+export function sparks(ledger: Ledger, period: Period, scope: Scope) {
+    const periods = sparkPeriods(ledger, period);
     const figure = (each: Period, income: boolean) =>
         total(ledger, rowsBetween(ledger, scope, each.from, each.to, income));
     const finished = periods.filter((each) => each.to < ledger.today);
@@ -77,6 +109,7 @@ export function everyDay(ledger: Ledger, period: Period, scope: Scope, categorie
     return {
         average,
         cells,
+        entries: foldFees(rows).length,
         lead: (new Date(`${period.from}T12:00:00Z`).getUTCDay() - ledger.firstWeekday + 8) % 7,
         measured: cells.slice(0, elapsed),
         runnerUp: second ?? null,

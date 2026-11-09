@@ -9,7 +9,7 @@ import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { CardFrame } from "./card-frame";
-import { useCategoryName, useDateFormat } from "./format";
+import { categoryTone, useCategoryName, useDateFormat } from "./format";
 import { everyDay } from "./model";
 import type { SetupState } from "./model";
 import { Cover, LATE_FADE } from "./setup";
@@ -24,22 +24,22 @@ const WEEK = 7;
 const CELL = 28;
 const GAP = 4;
 const TRACK = CELL + GAP;
-const WEEKDAY_GUTTER = 18;
 // 2023-12-31 was a Sunday, the day firstWeekday 1 means.
 const SUNDAY_NOON = Date.UTC(2023, 11, 31, 12);
 const DAY_MS = 86_400_000;
-const FIRST_DAY_ON_WEEKDAY = "[&>:first-child]:[grid-row-start:var(--first-row)]";
-const DOTS_CLEAR_OF_NEIGHBOURS = "[&>:not([aria-hidden])]:p-[18%] [&>*>span]:shadow-none";
+const FIRST_DAY_ON_WEEKDAY = "[&>:first-child]:[grid-column-start:var(--first-column)]";
+
+const SEVEN_COLUMNS = `repeat(${WEEK}, minmax(0, 1fr))`;
 
 const weekLayout = (lead: number, days: number) => {
     const weeks = Math.ceil((lead + days) / WEEK);
-    const style: CSSProperties & { "--first-row": number } = {
-        "--first-row": lead + 1,
-        aspectRatio: `${weeks * TRACK - GAP} / ${WEEK * TRACK - GAP}`,
-        gridTemplateColumns: `repeat(${weeks}, minmax(0, 1fr))`,
-        gridTemplateRows: `repeat(${WEEK}, minmax(0, 1fr))`,
+    const style: CSSProperties & { "--first-column": number } = {
+        "--first-column": lead + 1,
+        aspectRatio: `${WEEK * TRACK - GAP} / ${weeks * TRACK - GAP}`,
+        gridTemplateColumns: SEVEN_COLUMNS,
+        gridTemplateRows: `repeat(${weeks}, minmax(0, 1fr))`,
     };
-    return { style, width: weeks * TRACK - GAP + WEEKDAY_GUTTER };
+    return { style, width: WEEK * TRACK - GAP };
 };
 
 function useWeekLetters(firstWeekday: number) {
@@ -55,12 +55,12 @@ function useWeekLetters(firstWeekday: number) {
     }, [firstWeekday, locale]);
 }
 
-function Stat({ amount, day, label }: { amount: string; day: string; label: string }) {
+function Stat({ amount, day, label }: { amount: string; day?: string; label: string }) {
     return (
         <>
             <div className="text-muted-foreground w-0 min-w-full truncate text-[13px]">{label}</div>
             <div className="dash-figure text-base leading-6 font-medium whitespace-nowrap">{amount}</div>
-            <div className="dash-figure text-muted-foreground text-xs leading-5">{day}</div>
+            {day ? <div className="dash-figure text-muted-foreground text-xs leading-5">{day}</div> : null}
         </>
     );
 }
@@ -80,13 +80,13 @@ function Month({
 }) {
     return (
         <>
-            <DayGrid.Weekdays className="dash-figure w-3 flex-none text-[11px]" labels={letters} />
+            <DayGrid.Weekdays
+                className="dash-figure gap-1 text-center text-[11px]"
+                labels={letters}
+                style={{ gridTemplateColumns: SEVEN_COLUMNS, gridTemplateRows: "none" }}
+            />
             <div className="grid min-w-0 flex-1 grid-cols-1 *:self-start *:[grid-area:1/1]">
-                <div
-                    aria-hidden
-                    className={`grid w-full grid-flow-col gap-1 ${FIRST_DAY_ON_WEEKDAY}`}
-                    style={gridStyle}
-                >
+                <div aria-hidden className={`grid w-full gap-1 ${FIRST_DAY_ON_WEEKDAY}`} style={gridStyle}>
                     {days.cells.map((cell, index) => (
                         <span className="flex aspect-square items-center justify-center" key={cell.day}>
                             {index < filled ? null : (
@@ -129,23 +129,20 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
         const emptyDayFill = logged ? "var(--color-app-ghost)" : undefined;
         return (
             <CardFrame className="min-h-[363px]" title={copy.title}>
-                <div aria-hidden className="mx-auto flex max-w-full gap-1.5 pt-3" style={{ width }}>
+                <div aria-hidden className="mx-auto flex max-w-full flex-col gap-1.5 pt-3" style={{ width }}>
                     <Month
                         days={days}
                         filled={logged ? days.measured.length : days.cells.length}
                         gridStyle={style}
                         letters={letters}
                     >
-                        <div className={`grid w-full grid-flow-col gap-1 ${FIRST_DAY_ON_WEEKDAY}`} style={style}>
+                        <div className={`grid w-full gap-1 ${FIRST_DAY_ON_WEEKDAY}`} style={style}>
                             {(logged ? days.measured : days.cells).map((cell, index) => {
                                 const loggedLevel = cell.amount > 0 ? LOGGED_LEVEL : 0;
                                 const level = logged ? loggedLevel : (GHOST_LEVELS[index] ?? 0);
                                 const today = !logged && cell.day === ledger.today;
                                 return (
-                                    <span
-                                        className="flex aspect-square items-center justify-center p-[18%]"
-                                        key={cell.day}
-                                    >
+                                    <span className="flex aspect-square items-center justify-center" key={cell.day}>
                                         <u
                                             className="block min-h-1 min-w-1 rounded-full border"
                                             style={{
@@ -184,13 +181,13 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
                 }
                 title={copy.title}
             >
-                <div className="mx-auto my-4 flex max-w-full gap-1.5" style={{ width }}>
+                <div className="mx-auto my-4 flex max-w-full flex-col gap-1.5" style={{ width }}>
                     <Month days={days} gridStyle={style} letters={letters}>
                         <DayGrid
                             aria-label={copy.quietDays({ count: days.measured.length }).value}
                             cells={days.measured.map((cell) => ({ label: date.day(cell.day), level: 0 }))}
-                            className={`${DOTS_CLEAR_OF_NEIGHBOURS} ${FIRST_DAY_ON_WEEKDAY}`}
-                            rows={WEEK}
+                            className={FIRST_DAY_ON_WEEKDAY}
+                            columns={WEEK}
                             style={style}
                         />
                     </Month>
@@ -198,7 +195,16 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
             </CardFrame>
         );
     }
-    const periodStats = days.top ? (
+    const tone = categoryTone(filters.category ? ledger.categories.get(filters.category)?.color : undefined);
+    const pickedStats = days.top ? (
+        <>
+            <Stat amount={trimmed(days.top.amount)} day={date.day(days.top.day)} label={copy.biggest.value} />
+            <div className="mt-4">
+                <Stat amount={String(days.entries)} label={copy.entries.value} />
+            </div>
+        </>
+    ) : null;
+    const allStats = days.top ? (
         <>
             <Stat
                 amount={trimmed(days.top.amount)}
@@ -215,7 +221,8 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
                 </div>
             ) : null}
         </>
-    ) : (
+    ) : null;
+    const periodStats = (filters.categories.length > 0 ? pickedStats : allStats) ?? (
         <>
             <div className="text-[13px] font-medium">{copy.emptyTitle}</div>
             <div className="text-muted-foreground text-[13px]">{copy.emptyLine}</div>
@@ -228,12 +235,12 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
                     {copy.aDay({ amount: money(days.average, ledger.currency) })}
                 </span>
             }
-            footer={<DayGrid.Legend className="text-[13px]" less={copy.less} more={copy.more} />}
+            footer={<DayGrid.Legend className="text-[13px]" less={copy.less} more={copy.more} style={tone} />}
             panelClassName="overflow-visible"
             title={copy.title}
         >
             <div className="flex flex-1 flex-wrap gap-4 p-4">
-                <div className="flex flex-[9_1_140px] gap-1.5 self-start" style={{ maxWidth: width }}>
+                <div className="flex flex-[9_1_140px] flex-col gap-1.5 self-start" style={{ maxWidth: width }}>
                     <Month days={days} gridStyle={style} letters={letters}>
                         <DayGrid
                             aria-label={copy.title.value}
@@ -241,13 +248,13 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
                                 label: `${date.day(cell.day)} · ${money(cell.amount, ledger.currency)}`,
                                 level: cell.level,
                             }))}
-                            className={`touch-manipulation ${DOTS_CLEAR_OF_NEIGHBOURS} ${FIRST_DAY_ON_WEEKDAY}`}
+                            className={`touch-manipulation ${FIRST_DAY_ON_WEEKDAY}`}
                             onValueChange={(index) => {
                                 const { day } = days.measured[index] ?? {};
                                 setSelectedDay(day === selectedDay ? null : (day ?? null));
                             }}
-                            rows={WEEK}
-                            style={style}
+                            columns={WEEK}
+                            style={{ ...style, ...tone }}
                             value={selected ? selectedIndex : null}
                         />
                     </Month>

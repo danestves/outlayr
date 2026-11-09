@@ -1,4 +1,7 @@
-import { RiAddLine } from "@remixicon/react";
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Badge } from "panelui-web/badge";
+import { Button } from "panelui-web/button";
 import { Stat } from "panelui-web/stat";
 import { Usage } from "panelui-web/usage";
 import { useMemo, useState } from "react";
@@ -43,16 +46,16 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
         [category.id, filters.period, ledger, standing]
     );
     const name = categoryName(category);
+    const dimmed = filters.categories.length > 0 && !filters.categories.includes(category.topId);
     const over = standing.overBudget;
     const overAmount = copy.overAmount({ amount: money(-standing.remaining, ledger.currency) });
     const figures = { critical: over ? 0 : NEVER_CRITICAL, format, label: name, limit: standing.effectiveLimit };
     const filter = () => setFilters({ category: category.topId });
     const percent = Math.round((standing.spent / Math.max(standing.effectiveLimit, 1)) * PERCENT);
     const badge = (
-        <span className="dash-badge ml-auto h-5 shrink-0" data-tone="bad">
-            <u />
+        <Badge className="dash-figure ml-auto shrink-0" dot size="sm" variant="destructive">
             {overAmount}
-        </span>
+        </Badge>
     );
     const summary = (
         <>
@@ -81,7 +84,7 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
         note = copy.budgetResets({ day: date.day(addDays(standing.to, 1)) });
     }
     return (
-        <div className="flex min-h-9 items-center gap-1.5 max-lg:min-h-11">
+        <div className={`flex min-h-9 items-center gap-1.5 max-lg:min-h-11 ${dimmed ? "opacity-40" : ""}`}>
             <Usage {...figures} locales={USAGE_LOCALE} onOpenChange={setOpen} open={open} value={standing.spent}>
                 <Usage.Trigger
                     aria-label={
@@ -112,16 +115,16 @@ function BudgetRow({ category, standing }: { category: BudgetTarget; standing: C
                     )}
                     <Usage.Footer>
                         <span>{note}</span>
-                        <button
-                            className="dash-ob text-foreground"
+                        <Button
                             onClick={() => {
                                 setOpen(false);
                                 filter();
                             }}
-                            type="button"
+                            size="sm"
+                            variant="outline"
                         >
                             {copy.budgetFilter}
-                        </button>
+                        </Button>
                     </Usage.Footer>
                 </Usage.Content>
             </Usage>
@@ -154,31 +157,22 @@ export function Budgets({ setup }: { setup: SetupState | null }) {
         () => budgetRows(ledger, categoryBudgets(ledger, filters.period)),
         [filters.period, ledger]
     );
-    if (setup && rows.length === 0) {
-        const active = setup.step === "budget";
-        const first = setup.firstSpendTopId ? ledger.categories.get(setup.firstSpendTopId) : undefined;
+    if (rows.length === 0) {
+        const active = !setup || setup.step === "budget";
+        const first = setup?.firstSpendTopId ? ledger.categories.get(setup.firstSpendTopId) : undefined;
+        const setupLine = first ? setupCopy.budgetFirstSpend({ name: categoryName(first) }) : setupCopy.budgetLine;
         return (
-            <CardFrame className={`min-h-[363px] ${active ? "ring-primary/55 ring-1" : ""}`} title={copy.budgets}>
+            <CardFrame
+                className={`min-h-[363px] ${setup && active ? "ring-primary/55 ring-1" : ""}`}
+                title={copy.budgets}
+            >
                 <GhostBudgets />
-                <Cover
-                    line={first ? setupCopy.budgetFirstSpend({ name: categoryName(first) }) : setupCopy.budgetLine}
-                    title={copy.budgetsEmptyTitle}
-                >
-                    <PhoneButton className={active ? "dash-btn" : "dash-ob h-[34px] px-3"}>
-                        <RiAddLine size={active ? 18 : 15} />
+                <Cover line={setup ? setupLine : copy.budgetsEmptyLine} title={copy.budgetsEmptyTitle}>
+                    <PhoneButton size={active ? "md" : "sm"} variant={active ? "default" : "outline"}>
+                        <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                         {setupCopy.addBudget}
                     </PhoneButton>
                 </Cover>
-            </CardFrame>
-        );
-    }
-    if (rows.length === 0) {
-        return (
-            <CardFrame title={copy.budgets}>
-                <div className="dash-empty h-full">
-                    <b className="text-[15px] font-semibold">{copy.budgetsEmptyTitle}</b>
-                    <p className="text-muted-foreground text-[13px]">{copy.budgetsEmptyLine}</p>
-                </div>
             </CardFrame>
         );
     }
@@ -191,9 +185,9 @@ export function Budgets({ setup }: { setup: SetupState | null }) {
                         {copy.onTrackCount({ count: rows.length - over, total: rows.length })}
                     </span>
                     {rows.length > ROWS_SHOWN ? (
-                        <button className="dash-ob ml-auto" onClick={() => setExpanded(!expanded)} type="button">
+                        <Button className="ml-auto" onClick={() => setExpanded(!expanded)} size="sm" variant="outline">
                             {expanded ? copy.budgetShowLess : transactions.seeAll}
-                        </button>
+                        </Button>
                     ) : null}
                 </>
             }
@@ -215,10 +209,9 @@ export function Budgets({ setup }: { setup: SetupState | null }) {
                     </Stat.Value>
                 </Stat.Content>
                 {over > 0 ? (
-                    <span className="dash-badge" data-tone="bad">
-                        <u />
+                    <Badge className="dash-figure" dot size="sm" variant="destructive">
                         {copy.overCount({ count: over })}
-                    </span>
+                    </Badge>
                 ) : null}
             </Stat>
             <div className="px-2 pb-0.5">

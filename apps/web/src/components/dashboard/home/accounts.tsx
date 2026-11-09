@@ -1,4 +1,5 @@
-import { RiAddLine, RiArrowRightUpLine } from "@remixicon/react";
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -8,6 +9,7 @@ import { AccountTile, LookTile } from "@/components/ledger/tiles";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
+import { CardFrame } from "./card-frame";
 import { useCatalog } from "./catalog";
 import { useDateFormat } from "./format";
 import { accountBalances } from "./model";
@@ -35,21 +37,30 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                 net,
                 rows: accounts.map((account, index) => ({
                     balance: account.balanceInMainCurrency,
+                    dimmed: false,
                     key: `${index}-${account.name}`,
                     look: account.look,
                     name: account.name,
                 })),
             };
         }
-        const end = accountBalances(ledger, period, quiet, filters.accounts);
+        const every = accountBalances(ledger, period, quiet, []);
+        const picked = filters.accounts;
+        const end = picked.length > 0 ? accountBalances(ledger, period, quiet, picked) : every;
         return {
             net: end.net,
-            rows: end.accounts.flatMap(({ balance, id }) => {
+            rows: every.accounts.flatMap(({ balance, id }) => {
                 const look = catalog.account(id);
-                return look ? [{ balance, key: id, look, name: ledger.accounts.get(id)?.name ?? "" }] : [];
+                const dimmed = picked.length > 0 && !picked.includes(id);
+                return look ? [{ balance, dimmed, key: id, look, name: ledger.accounts.get(id)?.name ?? "" }] : [];
             }),
         };
     }, [catalog, filters.accounts, ledger, overview.balances, period, quiet, scoped]);
+    const listed = (
+        shown.rows.length > ACCOUNT_ROWS
+            ? shown.rows.toSorted((a, b) => Number(a.dimmed) - Number(b.dimmed))
+            : shown.rows
+    ).slice(0, ACCOUNT_ROWS);
     const horizon = addDays(ledger.today, UPCOMING_DAYS);
     const charges = overview.upcoming.charges
         .filter(
@@ -60,10 +71,7 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
         .slice(0, UPCOMING_ROWS);
     if (setup?.step === "account") {
         return (
-            <section className="dash-card relative min-h-[375px] text-sm" data-active>
-                <div className="dash-card-head">
-                    <h2>{copy.accounts}</h2>
-                </div>
+            <CardFrame className="ring-primary/55 relative min-h-[375px] text-sm ring-1" title={copy.accounts}>
                 <GhostAccounts />
                 <Cover
                     line={
@@ -73,35 +81,39 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                     }
                     title={setupCopy.accountTitle}
                 >
-                    <PhoneButton className="dash-btn">
-                        <RiAddLine size={18} />
+                    <PhoneButton>
+                        <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
                         {setupCopy.addAccount}
                     </PhoneButton>
                 </Cover>
-            </section>
+            </CardFrame>
         );
     }
     return (
-        <section className="dash-card text-sm @4xl:self-start">
-            <div className="dash-card-head">
-                <h2>
-                    <Link className="hover:text-app-tint inline-flex items-center gap-1" to="/app/accounts">
-                        {copy.accounts}
-                        <RiArrowRightUpLine className="text-muted-foreground" size={15} />
-                    </Link>
-                </h2>
-                {setup ? null : (
-                    <span className="dash-figure text-muted-foreground ml-auto min-w-0 truncate text-[13px]">
+        <CardFrame
+            action={
+                setup ? null : (
+                    <span className="dash-figure text-muted-foreground block truncate text-[13px]">
                         {money(shown.net, ledger.currency)}
                     </span>
-                )}
-            </div>
-            <div className="flex-1 px-5 pb-2">
+                )
+            }
+            className={`text-sm ${setup ? "" : "@4xl:self-start"}`}
+            title={
+                <Link className="hover:text-app-tint" to="/app/accounts">
+                    {copy.accounts}
+                </Link>
+            }
+        >
+            <div className="px-3.5 py-1.5">
                 {shown.rows.length === 0 && charges.length === 0 ? (
                     <p className="text-muted-foreground py-6 text-[13px]">{copy.noAccounts}</p>
                 ) : null}
-                {shown.rows.slice(0, ACCOUNT_ROWS).map((account) => (
-                    <div className="flex min-h-10 flex-wrap items-center gap-x-2.5 font-medium" key={account.key}>
+                {listed.map((account) => (
+                    <div
+                        className={`flex min-h-10 flex-wrap items-center gap-x-2.5 font-medium ${account.dimmed ? "opacity-40" : ""}`}
+                        key={account.key}
+                    >
                         <AccountTile account={account.look} photos={photos} size="lg" />
                         <span className="min-w-18 flex-[1_1_0] truncate">{account.name}</span>
                         <span className="dash-figure ml-auto whitespace-nowrap">
@@ -114,9 +126,17 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                         {copy.moreAccounts({ count: shown.rows.length - ACCOUNT_ROWS })}
                     </p>
                 ) : null}
+                {shown.rows.length === 1 && !setup ? (
+                    <Link className={`${ROW} text-muted-foreground hover:text-foreground`} to="/app/accounts">
+                        <span className="bg-app-fill flex size-[26px] items-center justify-center rounded-lg">
+                            <HugeiconsIcon icon={Add01Icon} size={15} strokeWidth={2} />
+                        </span>
+                        {copy.addAnAccount}
+                    </Link>
+                ) : null}
                 {charges.length > 0 ? (
                     <>
-                        <div className="bg-border -mx-5 my-2 h-px" />
+                        <div className="bg-border -mx-3.5 my-1.5 h-px" />
                         <div className="text-muted-foreground pt-1.5 pb-0.5 text-xs leading-4">{copy.upcoming}</div>
                         {charges.map((charge) => {
                             const value =
@@ -141,6 +161,6 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                     </>
                 ) : null}
             </div>
-        </section>
+        </CardFrame>
     );
 }
