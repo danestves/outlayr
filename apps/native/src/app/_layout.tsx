@@ -7,7 +7,7 @@ import { InstrumentSerif_400Regular } from "@expo-google-fonts/instrument-serif/
 import { useConvexAuth } from "convex/react";
 import { useFonts } from "expo-font";
 import { setNotificationHandler } from "expo-notifications";
-import type { ErrorBoundaryProps } from "expo-router";
+import type { ErrorBoundaryProps, NativeStackNavigationOptions } from "expo-router";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, usePathname } from "expo-router";
 import { hideAsync, preventAutoHideAsync } from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -36,14 +36,8 @@ import { useSeededClockPreference } from "@/data/settings";
 import { DeferredDeleteProvider } from "@/data/use-deferred-delete";
 import type { Database } from "@/db/client";
 import { rootStackGroup } from "@/domain/auth-gate";
-import {
-    GROUP_ENTRY,
-    IMPORT_SCREENS,
-    MODAL_SCREENS,
-    ONBOARDING_IMPORT_SCREENS,
-    SHEET_SCREENS,
-    TITLED_SCREENS,
-} from "@/domain/root-stack";
+import { GROUP_ENTRY, ROOT_STACK, SUGGEST_SCREEN } from "@/domain/root-stack";
+import type { RootScreen } from "@/domain/root-stack";
 import { localShellReady, routeSettled } from "@/domain/splash-gate";
 import { LanguageProvider, useTranslation } from "@/i18n/context";
 import { translateNow } from "@/i18n/runtime";
@@ -267,11 +261,31 @@ function RootStack() {
     const { status: adoption } = useLedgerAdoption();
     const { height: windowHeight } = useWindowDimensions();
     const pickerDetent = identityPickerDetent(windowHeight);
+    // Header chrome comes from `useStackChrome`, which has an Android sibling.
     const chrome = useStackChrome();
-    const importOptions = (screen: (typeof IMPORT_SCREENS)[number]) =>
+    const chromeOptions = (screen: RootScreen): NativeStackNavigationOptions => {
+        switch (screen.chrome) {
+            case "titled":
+            case "modal":
+            case "search": {
+                return chrome[screen.chrome](t(screen.titleKey));
+            }
+            case "sheet": {
+                return chrome.sheet({ detent: screen.detent, title: t(screen.titleKey) });
+            }
+            case "pickerSheet":
+            case "identityPicker": {
+                return chrome[screen.chrome](pickerDetent);
+            }
+            default: {
+                return chrome[screen.chrome];
+            }
+        }
+    };
+    const screenOptions = (screen: RootScreen): NativeStackNavigationOptions =>
         screen.locked
-            ? { ...chrome.titled(t(screen.titleKey)), gestureEnabled: false, headerBackVisible: false }
-            : chrome.titled(t(screen.titleKey));
+            ? { ...chromeOptions(screen), gestureEnabled: false, headerBackVisible: false }
+            : chromeOptions(screen);
     const lockOpen = useAppLockOpen();
     const covered = useAuthCovered();
     useSeededClockPreference(db);
@@ -293,80 +307,18 @@ function RootStack() {
             <PaywallOpeners db={db} ready={tapsReady} />
             <YearSheetOpener db={db} ready={tapsReady} />
             <Stack>
-                <Stack.Protected guard={group === "onboarding"} redirectTo={GROUP_ENTRY[group]}>
-                    <Stack.Screen name="onboarding/index" options={{ headerShown: false }} />
-                    {/* Transparent: the stock theme card differs from `--fr-ground`, so an opaque bar bands the
-                    top. */}
-                    <Stack.Screen name="onboarding/currency" options={chrome.firstRunStep} />
-                    <Stack.Screen name="onboarding/auto-log" options={chrome.firstRunStep} />
-                    <Stack.Screen name="onboarding/smart-features" options={chrome.firstRunStep} />
-                    <Stack.Screen name="onboarding/rhythm" options={chrome.firstRunStep} />
-                    <Stack.Screen name="onboarding/first-entry" options={chrome.firstRunStep} />
-                    {ONBOARDING_IMPORT_SCREENS.map((screen) => (
-                        <Stack.Screen key={screen.name} name={screen.name} options={importOptions(screen)} />
-                    ))}
-                </Stack.Protected>
-
-                {/* Behind onboarding: only the currency step writes `currencyChosen`, and canonicalization declines
-                every row on a ledger that lacks it (`docs/internals/convex-sync.md` §1.7). */}
-                <Stack.Protected guard={group === "sign-in"} redirectTo={GROUP_ENTRY[group]}>
-                    <Stack.Screen name="auth/sign-in" options={{ headerShown: false }} />
-                    <Stack.Screen name="auth/email" options={chrome.firstRunStep} />
-                </Stack.Protected>
-
-                <Stack.Protected guard={group === "adopt"} redirectTo={GROUP_ENTRY[group]}>
-                    <Stack.Screen name="auth/adopt" options={{ gestureEnabled: false, headerShown: false }} />
-                </Stack.Protected>
-
-                {/* Every root screen must sit in exactly one of these four groups: one outside them all survives a
-                guard flip and strands the stack on it, with no tab bar and no way back. */}
+                {ROOT_STACK.map(({ group: name, screens }) => (
+                    <Stack.Protected guard={group === name} key={name} redirectTo={GROUP_ENTRY[group]}>
+                        {screens.map((screen) => (
+                            <Stack.Screen key={screen.name} name={screen.name} options={screenOptions(screen)} />
+                        ))}
+                    </Stack.Protected>
+                ))}
                 <Stack.Protected guard={group === "ledger"} redirectTo={GROUP_ENTRY[group]}>
-                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-
-                    {/* Header chrome comes from `useStackChrome`, which has an Android sibling. */}
-                    <Stack.Screen name="search" options={chrome.search(t("nav.search"))} />
-                    <Stack.Screen name="paywall" options={chrome.paywall} />
-
-                    {TITLED_SCREENS.map((screen) => (
-                        <Stack.Screen
-                            key={screen.name}
-                            name={screen.name}
-                            options={chrome.titled(t(screen.titleKey))}
-                        />
-                    ))}
-                    {IMPORT_SCREENS.map((screen) => (
-                        <Stack.Screen key={screen.name} name={screen.name} options={importOptions(screen)} />
-                    ))}
-                    <Stack.Screen name="accounts/reorder" options={chrome.pushed} />
-                    <Stack.Screen name="accounts/archived" options={chrome.pushed} />
-                    <Stack.Screen name="accounts/[accountId]/index" options={chrome.pushed} />
-                    <Stack.Screen name="i/[code]" options={{ headerShown: false }} />
-                    <Stack.Screen name="installments/[planId]" options={chrome.pushed} />
-                    <Stack.Screen name="installments/scan" options={chrome.bareModal} />
-                    <Stack.Screen name="settings/categories/reorder" options={chrome.pushed} />
-                    <Stack.Screen name="settings/licenses/[name]" options={chrome.pushed} />
-                    {SHEET_SCREENS.map((sheet) => (
-                        <Stack.Screen
-                            key={sheet.name}
-                            name={sheet.name}
-                            options={chrome.sheet({ detent: sheet.detent, title: t(sheet.titleKey) })}
-                        />
-                    ))}
-                    <Stack.Screen name="settings/category-symbol" options={chrome.pickerSheet(pickerDetent)} />
                     <Stack.Screen
-                        name="settings/suggest"
+                        name={SUGGEST_SCREEN}
                         options={{ ...chrome.pickerSheet(1), sheetAllowedDetents: LARGE_ONLY }}
                     />
-                    <Stack.Screen name="settings/email" options={chrome.firstRunStep} />
-
-                    {MODAL_SCREENS.map((modal) => (
-                        <Stack.Screen key={modal.name} name={modal.name} options={chrome.modal(t(modal.titleKey))} />
-                    ))}
-                    <Stack.Screen name="transactions/[id]" options={chrome.entrySheet} />
-                    <Stack.Screen name="transactions/transfers/[id]" options={chrome.entrySheet} />
-                    <Stack.Screen name="transactions/voice" options={chrome.bareModal} />
-                    <Stack.Screen name="transactions/scan" options={chrome.bareModal} />
-                    <Stack.Screen name="transactions/identity" options={chrome.identityPicker(pickerDetent)} />
                 </Stack.Protected>
             </Stack>
         </>
