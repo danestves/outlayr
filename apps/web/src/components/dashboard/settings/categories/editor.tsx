@@ -12,6 +12,7 @@ import { useId, useState } from "react";
 import type { FormEvent, MouseEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
 import { LookTile } from "@/components/ledger/tiles";
@@ -159,6 +160,7 @@ function SymbolDialog({
     value: CategorySymbol;
 }) {
     const copy = useIntlayer("dashboard-categories");
+    const shown = useOverlayOpen();
     const [tab, setTab] = useState<"emoji" | "icons">(value.emoji ? "emoji" : "icons");
     const [query, setQuery] = useState("");
     const needle = query.trim().toLowerCase();
@@ -170,7 +172,7 @@ function SymbolDialog({
         }
     };
     return (
-        <Dialog onOpenChange={(open) => open || onClose()} open>
+        <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
             <Dialog.Content className="app-shell sm:max-w-[560px]">
                 <Dialog.Header>
                     <Dialog.Title>{copy.symbol}</Dialog.Title>
@@ -372,6 +374,7 @@ export function CategoryEditor({ onClose, target }: { onClose: () => void; targe
     const copy = useIntlayer("dashboard-categories");
     const { ledger } = useDashboard();
     const writes = useCategoryWrites();
+    const shown = useOverlayOpen();
     const rows = ledger.books.categories;
     const live = liveCategories(rows);
     const doc = "doc" in target ? target.doc : null;
@@ -437,7 +440,7 @@ export function CategoryEditor({ onClose, target }: { onClose: () => void; targe
     };
 
     return (
-        <Dialog onOpenChange={(open) => open || onClose()} open>
+        <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
             <Dialog.Content className="app-shell">
                 <Dialog.Header>
                     <Dialog.Title>{titles[mode]}</Dialog.Title>
@@ -516,9 +519,16 @@ export function CategoryEditor({ onClose, target }: { onClose: () => void; targe
                         {submitLabel}
                     </Button>
                 </Dialog.Footer>
-                {picking ? (
-                    <SymbolDialog color={color} onClose={() => setPicking(false)} onPick={setSymbol} value={symbol} />
-                ) : null}
+                <OverlayPresence value={picking ? true : null}>
+                    {() => (
+                        <SymbolDialog
+                            color={color}
+                            onClose={() => setPicking(false)}
+                            onPick={setSymbol}
+                            value={symbol}
+                        />
+                    )}
+                </OverlayPresence>
             </Dialog.Content>
         </Dialog>
     );

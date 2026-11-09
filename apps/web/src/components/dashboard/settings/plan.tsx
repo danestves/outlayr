@@ -20,6 +20,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { convexClient } from "@/lib/convex";
 import { useLedgerBooks } from "@/lib/ledger-db";
 
@@ -84,8 +85,9 @@ function ConfirmCancel({ expiresAtMs, onClose }: { expiresAtMs: number; onClose:
     const { confirm, keepPro } = useIntlayer("plan");
     const { date } = useFormat();
     const portal = usePortal();
+    const shown = useOverlayOpen();
     return (
-        <Dialog onOpenChange={(open) => open || onClose()} open>
+        <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
             <Dialog.Content className="app-shell">
                 <Dialog.Header>
                     <Dialog.Title>{confirm.title}</Dialog.Title>
@@ -269,9 +271,9 @@ function Term({ plan }: { plan: Held }) {
                 ) : null}
                 {billedBy}
             </SettingsCard>
-            {confirming && plan.expiresAtMs !== null ? (
-                <ConfirmCancel expiresAtMs={plan.expiresAtMs} onClose={() => setConfirming(false)} />
-            ) : null}
+            <OverlayPresence value={confirming ? plan.expiresAtMs : null}>
+                {(expiresAtMs) => <ConfirmCancel expiresAtMs={expiresAtMs} onClose={() => setConfirming(false)} />}
+            </OverlayPresence>
         </>
     );
 }
