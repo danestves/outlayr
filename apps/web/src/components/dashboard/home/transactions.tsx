@@ -32,7 +32,7 @@ const isTab = (value: unknown): value is Tab => TABS.some((tab) => tab === value
 const TYPE_OF = { expenses: "expenses", incomeTab: "income" } as const;
 
 const ROW =
-    "relative h-[51px] border-0 [--tile-ring:var(--color-card)] even:[--tile-ring:color-mix(in_oklab,var(--muted)_40%,var(--color-card))] hover:[--tile-ring:color-mix(in_oklab,var(--muted)_40%,var(--color-card))]";
+    "relative h-[51px] border-0 [--stripe:color-mix(in_oklab,var(--color-app-fill)_40%,var(--color-app-group))] [--tile-ring:var(--color-app-group)] even:bg-(--stripe) even:[--tile-ring:var(--stripe)] hover:bg-(--stripe) hover:[--tile-ring:var(--stripe)]";
 const HEAD = "first:ps-3.5 last:pe-3.5";
 const CELL = "h-[51px] overflow-hidden px-1.5 py-0 align-middle first:ps-3.5 last:pe-3.5 @sm:px-3";
 const SIDE = `${CELL} hidden truncate @2xl:table-cell`;
@@ -115,7 +115,9 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
         if (figure.fee === null) {
             return null;
         }
-        const fee = money(figure.fee, ledger.currency);
+        const [charged, ...more] = row.fees;
+        const chargedIn = charged && more.length === 0 ? catalog.transaction(charged.id)?.currency : null;
+        const fee = charged && chargedIn ? money(charged.original, chargedIn) : money(figure.fee, ledger.currency);
         return (
             <span className={SECOND_LINE}>
                 +{fee}
@@ -127,12 +129,12 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
         <CardFrame
             action={
                 <Tabs onValueChange={(value) => isTab(value) && setTab(value)} value={tab}>
-                    <Tabs.List className="bg-background/40 rounded-[9px] p-0.5">
+                    <Tabs.List className="bg-background/40 gap-0 rounded-[9px] p-0.5 [&>[data-slot=tabs-indicator]]:rounded-[7px] [&>[data-slot=tabs-indicator]]:shadow-none">
                         {TABS.map((each) => (
                             <Tabs.Trigger
                                 aria-controls={tableId}
                                 id={`${tableId}-${each}`}
-                                className="h-[26px] rounded-[7px] px-2.5 text-[13px]"
+                                className="h-[26px] rounded-[7px] px-2.5 text-[13px] leading-5"
                                 key={each}
                                 value={each}
                             >
@@ -146,7 +148,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
             footer={
                 setup || every.length === 0 ? undefined : (
                     <>
-                        <span className="text-muted-foreground text-[13px]">{copy.entries}</span>
+                        <span className="text-muted-foreground text-[13px] leading-5">{copy.entries}</span>
                         <span className="dash-figure font-medium">
                             {every.length <= ROWS_SHOWN
                                 ? count(every.length)
@@ -169,6 +171,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                     </>
                 )
             }
+            headerClassName="sm:min-h-11 sm:group-data-[variant=band]/frame:py-0 sm:group-data-[variant=band]/frame:pe-1.5"
             panelClassName="@container min-h-0 overflow-clip [overflow-anchor:none]"
             stackAction
             title={copy.title}
@@ -180,19 +183,19 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                     className="@2xl:table-fixed"
                     containerClassName="overflow-clip"
                     maxHeight="none"
-                    striped
+                    striped={Boolean(setup)}
                 >
                     <Table.Header className="in-data-[sticky]:bg-card">
-                        <Table.Row aria-rowindex={1}>
-                            <Table.Head className={`${HEAD} w-full ${showAccount ? "@2xl:w-[31%]" : "@2xl:w-[48%]"}`}>
+                        <Table.Row aria-rowindex={1} className="border-0">
+                            <Table.Head className={`${HEAD} w-full ${showAccount ? "@2xl:w-[33%]" : "@2xl:w-[50%]"}`}>
                                 {copy.columns.merchant}
                             </Table.Head>
-                            <Table.Head className={`${SIDE_HEAD} w-[18%]`}>{copy.columns.category}</Table.Head>
+                            <Table.Head className={`${SIDE_HEAD} w-[19%]`}>{copy.columns.category}</Table.Head>
                             {showAccount ? (
                                 <Table.Head className={`${SIDE_HEAD} w-[17%]`}>{copy.columns.account}</Table.Head>
                             ) : null}
-                            <Table.Head className={`${SIDE_HEAD} w-[11%]`}>{copy.columns.date}</Table.Head>
-                            <Table.Head align="end" className={`${HEAD} w-px @2xl:w-[23%]`}>
+                            <Table.Head className={`${SIDE_HEAD} w-[10%]`}>{copy.columns.date}</Table.Head>
+                            <Table.Head align="end" className={`${HEAD} w-px @2xl:w-[21%]`}>
                                 {copy.columns.amount}
                             </Table.Head>
                         </Table.Row>
@@ -303,7 +306,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                         {standsAlone ? (
                                             <span className="text-muted-foreground">{feeKind}</span>
                                         ) : (
-                                            <span className="flex min-w-0 items-center gap-2">
+                                            <span className="flex min-w-0 items-center gap-[7px]">
                                                 <span
                                                     aria-hidden
                                                     className="size-1.5 shrink-0 rounded-full bg-current"

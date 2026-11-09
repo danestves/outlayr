@@ -74,7 +74,7 @@ function Soon({ collapsed, icon, label }: NavProps) {
     const { nav } = useIntlayer("dashboard");
     const item = (
         <span aria-disabled className="dash-nav" title={collapsed ? undefined : label}>
-            <HugeiconsIcon className="shrink-0" icon={icon} size={17} strokeWidth={2} />
+            <HugeiconsIcon className="shrink-0" icon={icon} size={17} strokeWidth={1.5} />
             {collapsed ? <span className="sr-only">{label}</span> : label}
             <span className="dash-soon">{nav.soon}</span>
         </span>
@@ -91,7 +91,7 @@ function NavLink({
 }: NavProps & { exact?: boolean; to: "/app" | "/app/accounts" | "/app/insights" | "/app/transactions" }) {
     const item = (
         <Link activeOptions={{ exact, includeSearch: false }} className="dash-nav" to={to}>
-            <HugeiconsIcon className="shrink-0" icon={icon} size={17} strokeWidth={2} />
+            <HugeiconsIcon className="shrink-0" icon={icon} size={17} strokeWidth={1.5} />
             {collapsed ? <span className="sr-only">{label}</span> : label}
         </Link>
     );
@@ -110,7 +110,7 @@ export function SearchButton({ collapsed = false }: { collapsed?: boolean }) {
                     size="icon"
                     variant="ghost"
                 >
-                    <HugeiconsIcon icon={Search01Icon} size={17} strokeWidth={2} />
+                    <HugeiconsIcon icon={Search01Icon} size={17} strokeWidth={1.5} />
                 </Button>
             </RailTip>
         );
@@ -118,12 +118,14 @@ export function SearchButton({ collapsed = false }: { collapsed?: boolean }) {
     return (
         <Button
             aria-disabled
-            className="text-muted-foreground mb-1 h-[34px] w-full shrink-0 justify-start gap-[9px] px-2.5 text-[13px] font-normal"
+            className="text-muted-foreground mb-1 w-full shrink-0 justify-start gap-2 px-3 font-normal"
             variant="outline"
         >
-            <HugeiconsIcon icon={Search01Icon} size={15} strokeWidth={2} />
+            <HugeiconsIcon icon={Search01Icon} size={16} strokeWidth={1.5} />
             {nav.search}
-            <kbd className="ml-auto text-[11px] leading-4 pointer-coarse:hidden">⌘K</kbd>
+            <kbd className="border-border bg-app-fill ml-auto rounded-[4px] border px-1.5 font-mono text-xs leading-4 pointer-coarse:hidden">
+                ⌘K
+            </kbd>
         </Button>
     );
 }
@@ -174,7 +176,7 @@ export function Sidebar() {
             size={collapsed ? "icon" : "icon-sm"}
             variant="ghost"
         >
-            <HugeiconsIcon icon={SidebarLeftIcon} size={17} strokeWidth={2} />
+            <HugeiconsIcon className="size-[17px]" icon={SidebarLeftIcon} strokeWidth={1.5} />
         </Button>
     );
     return (
@@ -189,7 +191,7 @@ export function Sidebar() {
                     <LogoMark className="size-6 shrink-0" />
                 </Link>
                 {collapsed ? null : "Outlayr"}
-                {collapsed ? null : <span className="ml-auto">{toggle}</span>}
+                {collapsed ? null : <span className="-mr-[7.5px] ml-auto">{toggle}</span>}
             </div>
             {collapsed ? (
                 <div className="-mt-1.5 flex flex-col items-center">

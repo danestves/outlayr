@@ -26,6 +26,11 @@ const NO_INCOME_MAX = 1;
 const OVER_TONE = "[--pu-color:var(--destructive)] [--pu-on-color:var(--color-app-float)]";
 const WHAT_IF_TONE = "[--pu-color:var(--muted-foreground)] [--pu-on-color:var(--color-app-float)]";
 
+const TREND = "dash-figure flex h-auto rounded-full border-0 px-2 py-0.5 text-xs leading-4 font-medium";
+const TREND_FLAT = `${TREND} bg-app-fill text-muted-foreground`;
+const TREND_POOR = `${TREND} text-app-spend bg-[color-mix(in_oklab,var(--color-app-spend)_16%,transparent)]!`;
+const TREND_GOOD = `${TREND} text-app-income bg-[color-mix(in_oklab,var(--color-app-income)_14%,transparent)]!`;
+
 const capitalize = (text: string) => `${text.charAt(0).toLocaleUpperCase()}${text.slice(1)}`;
 
 function useWhatIf(income: number) {
@@ -100,9 +105,9 @@ function SpentQuiet() {
         <CardFrame
             footer={
                 <>
-                    <span className="text-muted-foreground text-[13px]">{copy.kpi.kept}</span>
+                    <span className="text-muted-foreground text-[13px] leading-5">{copy.kpi.kept}</span>
                     <span className="dash-figure font-medium">{shown(0)}</span>
-                    <Badge className="dash-figure" size="sm" variant="secondary">
+                    <Badge className={TREND_FLAT} size="sm" variant="secondary">
                         0%
                     </Badge>
                 </>
@@ -122,7 +127,7 @@ function SpentAction({ delta, previewing }: { delta: number | null; previewing: 
     const { whatIf } = useIntlayer("dashboard-home").spentOfIncome;
     if (previewing) {
         return (
-            <Badge size="sm" variant="secondary">
+            <Badge className={TREND_FLAT} size="sm" variant="secondary">
                 {whatIf}
             </Badge>
         );
@@ -131,7 +136,11 @@ function SpentAction({ delta, previewing }: { delta: number | null; previewing: 
         return null;
     }
     return (
-        <Badge className="dash-figure" size="sm" variant={delta > 0 ? "destructive" : "success"}>
+        <Badge
+            className={delta > 0 ? TREND_POOR : TREND_GOOD}
+            size="sm"
+            variant={delta > 0 ? "destructive" : "success"}
+        >
             {percentChange(delta)}
         </Badge>
     );
@@ -158,7 +167,7 @@ function SpentFooter({
     const keptShare = income > 0 ? kept / income : null;
     return (
         <>
-            <span className="text-muted-foreground text-[13px] whitespace-nowrap">
+            <span className="text-muted-foreground text-[13px] leading-5 whitespace-nowrap">
                 {picked ? copy.spentOfIncome.shareOfSpent : null}
                 {!picked && previewing ? copy.spentOfIncome.wouldKeep : null}
                 {!picked && !previewing ? copy.kpi.kept : null}
@@ -169,17 +178,13 @@ function SpentFooter({
                 {shown(picked ? spent : kept)}
             </span>
             {picked ? (
-                <Badge
-                    className="dash-figure text-muted-foreground font-normal max-[480px]:hidden"
-                    size="sm"
-                    variant="secondary"
-                >
+                <Badge className={`${TREND_FLAT} max-[480px]:hidden`} size="sm" variant="secondary">
                     {Math.round((share ?? 0) * PERCENT)}%
                 </Badge>
             ) : null}
             {keptShare === null || picked ? null : (
                 <Badge
-                    className={`dash-figure max-[480px]:hidden ${kept < 0 ? "" : "text-muted-foreground font-normal"}`}
+                    className={`${kept < 0 ? TREND_POOR : TREND_FLAT} max-[480px]:hidden`}
                     size="sm"
                     variant={kept < 0 ? "destructive" : "secondary"}
                 >
@@ -187,14 +192,14 @@ function SpentFooter({
                 </Badge>
             )}
             <Button
-                className={`ml-auto ${previewing ? "max-[480px]:hidden" : ""}`}
+                className={`[&_svg]:text-muted-foreground ml-auto gap-1.5 rounded-[6px] ${previewing ? "max-[480px]:hidden" : ""}`}
                 nativeButton={false}
                 render={<Link to="/app/insights" />}
                 size="sm"
                 variant="outline"
             >
                 {copy.spentOfIncome.cashFlow}
-                <HugeiconsIcon icon={ArrowUpRight01Icon} strokeWidth={2} />
+                <HugeiconsIcon icon={ArrowUpRight01Icon} strokeWidth={1.5} />
             </Button>
         </>
     );
@@ -258,10 +263,10 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
             }
             title={title}
         >
-            <div className="flex-1 px-4 pt-2 pb-[18px]">
+            <div className="flex-1 px-4 pt-0.5 pb-3.5">
                 <RangeMeter
                     aria-description={hasIncome && !picked ? copy.spentOfIncome.whatIfHint.value : undefined}
-                    className={`dash-figure touch-pan-y [&>[aria-hidden]]:h-16 ${tone}`}
+                    className={`dash-figure touch-pan-y [--pu-on-color:white] [&_[data-tag]]:shadow-none [&>[aria-hidden]]:h-16 ${tone}`}
                     formatValue={(value) =>
                         previewing ? `${copy.spentOfIncome.whatIfTag.value} ${shown(value)}` : shown(spent)
                     }
@@ -276,19 +281,19 @@ export function SpentOfIncome({ quiet, setup }: { quiet: boolean; setup: SetupSt
                     {...(hasIncome && !picked ? slider : {})}
                 />
                 <RangeMeter.Scale
-                    className="dash-figure mt-5 text-[13px]"
+                    className="dash-figure mt-3.5 text-[13px]"
                     end={hasIncome ? shown(income) : copy.spentOfIncome.noIncome}
                     start={moneyIn(0, ledger.currency, "auto", false)}
                 />
-                <div className="mt-3.5 flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
-                    <span className="text-muted-foreground flex items-center gap-2 text-[13px]">
+                <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
+                    <span className="text-muted-foreground flex items-center gap-2 text-[13px] leading-5">
                         <u aria-hidden className="bg-foreground block size-[7px] rotate-45 rounded-[1px]" />
                         {capitalize(date.month(priorMonth))}
                     </span>
                     <span className="dash-figure ml-auto whitespace-nowrap">{shown(prior)}</span>
                 </div>
                 <div className="mt-1.5 flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
-                    <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-[13px]">
+                    <span className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-[13px] leading-5">
                         {capitalize(date.month(period.key))}
                         {overBy ? <span className="text-app-spend">{overBy}</span> : null}
                     </span>

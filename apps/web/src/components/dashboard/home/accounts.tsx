@@ -7,7 +7,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { AccountTile, LookTile } from "@/components/ledger/tiles";
+import { AccountTile, LookTile, MerchantTile } from "@/components/ledger/tiles";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -96,19 +96,19 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
         <CardFrame
             action={
                 setup ? null : (
-                    <span className="dash-figure text-muted-foreground block truncate text-[13px]">
+                    <span className="dash-figure text-muted-foreground block truncate text-[13px] leading-5">
                         {money(shown.net, ledger.currency)}
                     </span>
                 )
             }
-            className={`text-sm ${setup ? "" : "@4xl:self-start"}`}
+            className="text-sm"
             title={
                 <Link className="hover:text-app-tint" to="/app/accounts">
                     {copy.accounts}
                 </Link>
             }
         >
-            <div className="px-3.5 py-1.5">
+            <div className="px-4 pt-1.5 pb-2">
                 {shown.rows.length === 0 && charges.length === 0 ? (
                     <p className="text-muted-foreground py-6 text-[13px]">{copy.noAccounts}</p>
                 ) : null}
@@ -139,7 +139,7 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                 ) : null}
                 {charges.length > 0 ? (
                     <>
-                        <div className="bg-border -mx-3.5 my-1.5 h-px" />
+                        <div className="bg-border -mx-4 my-2 h-px" />
                         <div className="text-muted-foreground pt-1.5 pb-0.5 text-xs leading-4">{copy.upcoming}</div>
                         {charges.map((charge) => {
                             const value =
@@ -148,9 +148,19 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                                     : { amount: charge.valued, currency: overview.upcoming.currency };
                             return (
                                 <div className={ROW} key={charge.id}>
-                                    <LookTile look={charge.look} photos={photos} plain size="lg" />
+                                    {charge.look.icon || charge.look.emoji ? (
+                                        <LookTile look={charge.look} photos={photos} plain size="lg" />
+                                    ) : (
+                                        <MerchantTile
+                                            imageUrl={
+                                                charge.look.imageKey ? photos?.get(charge.look.imageKey) : undefined
+                                            }
+                                            name={charge.note}
+                                            size="lg"
+                                        />
+                                    )}
                                     <span className="min-w-0 truncate">{charge.note}</span>
-                                    <span className="dash-figure text-muted-foreground text-[13px] font-normal whitespace-nowrap">
+                                    <span className="dash-figure text-muted-foreground text-[13px] leading-5 font-normal whitespace-nowrap">
                                         {date.day(charge.nextCharge)}
                                     </span>
                                     <span

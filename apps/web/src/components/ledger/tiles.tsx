@@ -106,6 +106,13 @@ function initialsOf(name: string, locale: string) {
         .toLocaleUpperCase(locale);
 }
 
+function accountInitials(account: AccountLook, locale: string) {
+    if (account.person) {
+        return initialsOf(account.name, locale);
+    }
+    return account.icon || account.emoji ? null : [...account.name.trim()][0]?.toLocaleUpperCase(locale);
+}
+
 export function AccountTile({
     account,
     photos,
@@ -117,6 +124,7 @@ export function AccountTile({
 }) {
     const { locale } = useLocale();
     const imageUrl = account.imageKey ? photos?.get(account.imageKey) : undefined;
+    const initials = accountInitials(account, locale);
     return (
         <Tile
             color={account.color ?? "var(--color-muted)"}
@@ -124,8 +132,8 @@ export function AccountTile({
             ink={account.color ? "light" : "plain"}
             size={size}
         >
-            {account.person ? (
-                <span className={cn("font-semibold", SIZES[size].initial)}>{initialsOf(account.name, locale)}</span>
+            {initials ? (
+                <span className={cn("font-semibold", SIZES[size].initial, "leading-5")}>{initials}</span>
             ) : (
                 <SymbolGlyph look={account} size={size} />
             )}
@@ -167,8 +175,8 @@ export function FeeTile() {
 export function MerchantTile({ imageUrl, name, size = "sm" }: { imageUrl?: string; name: string; size?: TileSize }) {
     const { locale } = useLocale();
     return (
-        <Tile color="var(--color-muted)" imageUrl={imageUrl} ink="plain" size={size}>
-            <span className={cn("font-semibold", SIZES[size].initial)}>
+        <Tile color="var(--color-border)" imageUrl={imageUrl} ink="plain" size={size}>
+            <span className={cn("font-mono font-semibold", SIZES[size].initial, "leading-5")}>
                 {[...name.trim()][0]?.toLocaleUpperCase(locale)}
             </span>
         </Tile>
