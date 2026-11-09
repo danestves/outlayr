@@ -13,7 +13,6 @@ import { useChartRatio } from "./parts";
 
 const TINT = "var(--color-app-tint)";
 const FILL = "worth-fill";
-/** Plot sizes its gutter for shorter labels; flex-end lets a "$28.0k" run left instead of truncating. */
 export const Y_LABEL = "dash-figure flex justify-end overflow-visible text-[11px]";
 const DAILY_TICKS = 5;
 const THOUSAND = 1000;
@@ -102,7 +101,14 @@ export function WorthChart({
                 <Plot.Tooltip
                     formatValue={(value) => money(value, shownIn)}
                     formatX={(datum) => date.day(String(datum.day))}
-                />
+                >
+                    {(datum) => (
+                        <>
+                            <div className="text-muted-foreground">{date.day(String(datum.day))}</div>
+                            <div className="dash-figure">{money(Number(datum.value), shownIn)}</div>
+                        </>
+                    )}
+                </Plot.Tooltip>
             </Plot>
         </>
     );

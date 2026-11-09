@@ -608,7 +608,6 @@ function UpcomingLead({ row }: { row: UpcomingRow }) {
     );
 }
 
-/** `showEmpty` keeps the card with a quiet line when nothing is due. */
 export function UpcomingCard({ accountId, showEmpty = false }: { accountId?: string; showEmpty?: boolean }) {
     const { ledger, overview } = useDashboard();
     const { list } = useIntlayer("dashboard-accounts");

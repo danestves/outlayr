@@ -758,7 +758,6 @@ export function accountSeries(ledger: Ledger, accountId: string, days: readonly 
 export type EntryKind = "entry" | "inbound" | "outbound";
 
 export interface AccountEntry {
-    /** A correction logged by a balance check, not a real move of money. */
     adjustment: boolean;
     at: number;
     categoryId: string | null;
@@ -844,7 +843,6 @@ export interface CategoryShare {
     value: number;
 }
 
-/** Spending charged to this account by top category, in its own currency, largest first. */
 export function spentByCategory(ledger: Ledger, accountId: string, from: string, to: string): CategoryShare[] {
     const rows = new Map(ledger.rows.map((row) => [row.id, row]));
     const totals = new Map<string, number>();
@@ -881,7 +879,6 @@ export function niceDomain(values: readonly number[]): [number, number] {
     const high = Math.max(...values);
     const raw = (high - low || Math.abs(high) || 1) / CHART_STEPS;
     const power = 10 ** Math.floor(Math.log10(raw));
-    // Flooring can cost a step, so the first step that still reaches the top wins: the labels stay even.
     const step = NICE.map((each) => each * power).find(
         (each) => each >= raw && Math.floor(low / each) * each + each * CHART_STEPS >= high
     );

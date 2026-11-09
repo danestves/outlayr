@@ -365,7 +365,6 @@ function HistoryCard({ row }: { row: AccountRow }) {
     const data = useMemo(() => {
         const days = rangeDays(ledger, range);
         const [first = ledger.today] = days;
-        // Opens on the close of the day before, or a change on the first day never shows and the pill misses it.
         const [opening, ...closes] = accountSeries(ledger, row.id, [addDays(first, -1), ...days]);
         return [...(opening ? [{ ...opening, day: first }] : []), ...closes].map((point) => ({
             ...point,
