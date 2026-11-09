@@ -218,6 +218,17 @@ export function entryProblem(ledger: Ledger, draft: EntryDraft, doc: Doc | null,
     return frozen.amountUsd === null && kept === null ? "rateMissing" : null;
 }
 
+/** The shared rules read the device's calendar, and a browser abroad must still file on the ledger's day. */
+export function filedOn(offsetAt: Ledger["offsetAt"], at: number) {
+    const wall = new Date(at + offsetAt(at));
+    const [year, month, day] = [wall.getUTCFullYear(), wall.getUTCMonth(), wall.getUTCDate()];
+    return {
+        anchorDay: day,
+        day: new Date(fromWall(Date.UTC(year, month, day), offsetAt)),
+        month: new Date(fromWall(Date.UTC(year, month, 1), offsetAt)),
+    };
+}
+
 function entryOf(ledger: Ledger, id: string, draft: EntryDraft, at: number) {
     const { books, offsetAt } = ledger;
     const category = books.categories.find((row) => row.localId === draft.categoryId);
@@ -245,15 +256,8 @@ function entryOf(ledger: Ledger, id: string, draft: EntryDraft, at: number) {
             { categoryName: category?.name ?? null, currency: ledger.currency, now: new Date(at) }
         )
     );
-    // The shared rule reads the device's calendar, and a browser abroad must still file the entry on the ledger's day.
-    const wall = new Date(draft.date + offsetAt(draft.date));
-    const [year, month, day] = [wall.getUTCFullYear(), wall.getUTCMonth(), wall.getUTCDate()];
-    return {
-        ...row,
-        day: new Date(fromWall(Date.UTC(year, month, day), offsetAt)),
-        month: new Date(fromWall(Date.UTC(year, month, 1), offsetAt)),
-        recurringAnchorDay: recurring ? day : null,
-    };
+    const { anchorDay, ...filed } = filedOn(offsetAt, draft.date);
+    return { ...row, ...filed, recurringAnchorDay: recurring ? anchorDay : null };
 }
 
 type Entry = ReturnType<typeof entryOf>;

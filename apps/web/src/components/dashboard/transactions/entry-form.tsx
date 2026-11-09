@@ -57,7 +57,7 @@ const REPEATS = [
 
 const POPUP = "app-shell z-[60]";
 const NO_ACCOUNT = "none";
-const QUIET_INPUT = "border-transparent! bg-transparent! text-right shadow-none! focus-visible:border-ring!";
+export const QUIET_INPUT = "border-transparent! bg-transparent! text-right shadow-none! focus-visible:border-ring!";
 
 function Dot({ color }: { color: string | null | undefined }) {
     return <i className="size-2 flex-none rounded-full" style={{ backgroundColor: color ?? undefined }} />;
@@ -97,6 +97,7 @@ interface PickOption {
 }
 
 export function Pick({
+    bare = false,
     onPick,
     options,
     placeholder,
@@ -104,6 +105,7 @@ export function Pick({
     triggerRef,
     value,
 }: {
+    bare?: boolean;
     onPick: (value: string) => void;
     options: readonly PickOption[];
     placeholder?: string;
@@ -119,6 +121,7 @@ export function Pick({
         >
             <Select.Trigger
                 className={quiet ? "-me-2 ml-auto w-auto" : undefined}
+                icon={bare ? null : undefined}
                 ref={triggerRef}
                 variant={quiet ? "ghost" : "default"}
             >
@@ -244,12 +247,12 @@ function AmountField({
     );
 }
 
-function NoteSlot({
+export function NoteSlot({
     onChange,
     quiet,
     text,
 }: {
-    onChange: (patch: Partial<EntryValues>) => void;
+    onChange: (text: string) => void;
     quiet: boolean;
     text: string;
 }) {
@@ -259,7 +262,7 @@ function NoteSlot({
             <Textarea
                 className={quiet ? "text-muted-foreground focus:text-foreground min-h-0! py-0! text-right" : undefined}
                 minRows={quiet ? 1 : 2}
-                onChange={(event) => onChange({ details: event.target.value })}
+                onChange={(event) => onChange(event.target.value)}
                 placeholder={quiet ? form.noteAdd.value : undefined}
                 value={text}
                 variant={quiet ? "ghost" : "default"}
@@ -487,7 +490,7 @@ function EntryFields({
                         value={String(values.recurringType)}
                     />
                 </Slot>
-                <NoteSlot onChange={onChange} quiet={quiet} text={values.details} />
+                <NoteSlot onChange={(details) => onChange({ details })} quiet={quiet} text={values.details} />
             </div>
         </>
     );

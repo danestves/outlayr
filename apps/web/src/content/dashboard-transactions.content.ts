@@ -90,6 +90,7 @@ const dashboardTransactions = {
                 })
             ),
             date: t({ en: "Date", es: "Fecha", fr: "Date", pt: "Data" }),
+            addFee: t({ en: "Add a fee", es: "Añadir comisión", fr: "Ajouter des frais", pt: "Adicionar taxa" }),
             editOnPhone: t({
                 en: "Edit this on your phone.",
                 es: "Edítalo en tu teléfono.",
@@ -138,6 +139,7 @@ const dashboardTransactions = {
                 pt: "Lançamento anterior",
             }),
             rate: t({ en: "Rate", es: "Tasa", fr: "Taux", pt: "Taxa de câmbio" }),
+            swap: t({ en: "Swap", es: "Intercambiar", fr: "Inverser", pt: "Inverter" }),
             to: t({ en: "To", es: "Hacia", fr: "Vers", pt: "Para" }),
         },
         empty: {
