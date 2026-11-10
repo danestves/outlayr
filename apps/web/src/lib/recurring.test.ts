@@ -220,6 +220,24 @@ describe("recurring writes", () => {
         expect(back?.next?.day).toBe("2027-02-25");
     });
 
+    it("resumes an open pause on the charge it withdrew when that charge is still ahead", () => {
+        const ledger = ledgerWith([doc("tmo", "2026-11-25T18:00:00Z", monthly)]);
+        const [tmo] = modelOf(ledger).schedules;
+        if (!tmo) {
+            throw new Error("expected a schedule");
+        }
+        const pause = pausedSchedule(ledger, tmo, "open", "", NOW);
+        const book = pause.book?.(EMPTY_RECURRING) ?? EMPTY_RECURRING;
+        const paused = applied(ledger, pause.rows);
+        const [held] = modelOf(paused, book).schedules;
+        if (!held) {
+            throw new Error("expected a paused schedule");
+        }
+        const resumed = resumedSchedule(paused, held, NOW);
+        const [back] = modelOf(applied(paused, resumed.rows), resumed.book?.(book) ?? book).schedules;
+        expect(back?.next?.day).toBe("2026-11-25");
+    });
+
     it("deletes a chain with its entries without handing the schedule to a successor", () => {
         const ledger = ledgerWith([
             doc("t0", "2026-09-25T18:00:00Z", { onceRecurring: true }),

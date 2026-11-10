@@ -271,7 +271,11 @@ export function resumedSchedule(ledger: Ledger, schedule: Schedule, at: number):
     if (!pause) {
         return { rows: [] };
     }
-    const resume = firstFrom(chainOf(pause.seed, ledger.offsetAt), addDays(ledger.today, 1), ledger.offsetAt);
+    const chain = chainOf(pause.seed, ledger.offsetAt);
+    const tomorrow = addDays(ledger.today, 1);
+    // A walk starts after its seed, and the seed of a pause is the charge it withdrew, which may still be ahead.
+    const withdrawnCharge = chargeAt(chain.start, ledger.offsetAt);
+    const resume = withdrawnCharge.day >= tomorrow ? withdrawnCharge : firstFrom(chain, tomorrow, ledger.offsetAt);
     const book = withoutPause(pause.fromId);
     if (resume === null) {
         return { book, rows: carrier ? withdrawn(ledger, carrier, at) : [] };
