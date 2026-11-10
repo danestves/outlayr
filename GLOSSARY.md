@@ -18,9 +18,21 @@ _Avoid_: staged rows, pending delete
 Rows of a ledger commit that have been shown but have no answer from the server yet. They outlive the page and are sent again on the next load.
 _Avoid_: outbox (web), queue
 
+**Notice**:
+What the person is told about a ledger commit on the web: that it was saved, that it failed, or that it can still be undone.
+_Avoid_: toast (for the message), alert
+
+**Entry draft**:
+The plain values an entry is committed from, whichever screen gathered them: the form, a scanned receipt or a spoken entry.
+_Avoid_: form values, payload
+
 **Pending write**:
 An entry captured outside the app (a notification, a shortcut, the wallet, the watch) that waits to be filed into the ledger.
 _Avoid_: queued entry, autolog write
+
+**Pending write decision**:
+What happens to one pending write: it is filed as a new entry, skipped as a duplicate, merged into the entry for the same charge, settled against a subscription's charge, held for the autolog cap, or dropped when nothing can categorize it.
+_Avoid_: dedupe result, apply step
 
 **Wallet state**:
 What the device remembers about wallet capture: the cards it has seen, the last wallet entry, recent notification texts and repriced subscriptions.
@@ -29,6 +41,16 @@ _Avoid_: wallet meta, autolog state
 **Autolog**:
 The feature that files entries from wallet payments and bank notifications without the person opening the app, and the cap on how many it files.
 _Avoid_: pending writes (for the feature), auto-log
+
+### Reading the ledger
+
+**Books**:
+The ledger's rows held in memory, one list per table. The web app's screens read from the books and never wait on the server.
+_Avoid_: store, cache, state
+
+**Ledger view**:
+The pure code that turns books into what a screen or an MCP tool shows: balances, the log, budgets, the overview.
+_Avoid_: selector, read API, dashboard query
 
 ### Deleting
 
@@ -67,6 +89,16 @@ _Avoid_: date, timestamp
 **Ledger zone**:
 The time zone a ledger's calendar days are counted in. On a phone it is the device's zone; the web app and the server use the zone the phone last reported.
 _Avoid_: user time zone, local time
+
+**Ledger calendar**:
+The rule that names the calendar day and month an instant is filed on. The phone uses its own clock; the web app and the server count in the ledger zone.
+_Avoid_: date helper, start of day
+
+### AI
+
+**AI gate**:
+The one check every AI feature passes before a model exists: a signed-in caller, the current AI consent, and the feature's own limits. A request that fails it is refused with a named reason.
+_Avoid_: capture gate, guard, auth check
 
 ### Sync
 
