@@ -10,6 +10,8 @@ import {
     skipConditionOf,
     statsOf,
     suggestionsOf,
+    toggled,
+    unresolved,
 } from "./rules";
 import type { Condition, Rule, RuleBook, RuleEntry } from "./rules";
 
@@ -152,6 +154,19 @@ describe("conflictsOf", () => {
         );
         expect(next.rules.map((row) => row.id)).toEqual(["top", "amazon", "fresh"]);
         expect(conflictsOf(next.rules, [freshOrder], KINDS, next.settled)).toHaveLength(0);
+    });
+
+    it("undoes a resolution without touching a rule changed after it", () => {
+        const start = { ...book, rules: [...book.rules, rule("shell", [merchant("shell")], "shopping")] };
+        const picks = [{ choice: "second" as const, conflict: found() }];
+        const later = toggled(resolved(start, found(), "second"), "shell", false);
+        const back = unresolved(later, start, picks);
+        expect(back.rules.map((row) => [row.id, row.on])).toEqual([
+            ["fresh", true],
+            ["amazon", true],
+            ["shell", false],
+        ]);
+        expect(back.settled).toEqual([]);
     });
 
     it("makes the second rule skip the first one's text, which ends the overlap", () => {

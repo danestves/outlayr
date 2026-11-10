@@ -12,8 +12,18 @@ import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useDisplayFormat } from "@/lib/ledger-settings";
-import { dismissed, removed, reordered, resolved, ruleFromSuggestion, runOf, saved, toggled } from "@/lib/rules";
-import type { Change, ConflictChoice, Rule } from "@/lib/rules";
+import {
+    dismissed,
+    removed,
+    reordered,
+    resolved,
+    ruleFromSuggestion,
+    runOf,
+    saved,
+    toggled,
+    unresolved,
+} from "@/lib/rules";
+import type { ConflictChoice, Rule } from "@/lib/rules";
 
 import { KpiBand } from "../accounts/parts";
 import { QuietTable } from "../home/setup";
@@ -123,22 +133,23 @@ export function RulesScreen({ data, search, setSearch }: ScreenProps) {
 
     const saveChoices = () => {
         const picks = conflicts.map((conflict) => ({ choice: choices[conflict.key] ?? "first", conflict }));
-        const before = book;
         const live = new Set(data.tagNames.keys());
-        const changes: Change[] = picks.flatMap(({ choice, conflict }) =>
-            choice === "second"
-                ? runOf([conflict.second], conflict.entries, data.kinds, live).changes.filter(
-                      (change) => change.categoryId !== null
-                  )
-                : []
-        );
-        writes.update((current) =>
-            picks.reduce((next, { choice, conflict }) => resolved(next, conflict, choice), current)
+        const next = writes.update((current) =>
+            picks.reduce((made, { choice, conflict }) => resolved(made, conflict, choice), current)
         );
         setChoices({});
+        const refiled = new Map(
+            picks.flatMap(({ choice, conflict }) =>
+                choice === "second" ? conflict.entries.map((entry) => [entry.id, entry] as const) : []
+            )
+        );
+        const active = next.rules.filter((rule) => rule.on);
+        const changes = runOf(active, [...refiled.values()], data.kinds, live).changes.flatMap((change) =>
+            change.categoryId === null ? [] : [{ ...change, tagIds: [] }]
+        );
         if (changes.length > 0) {
             writes.apply(changes, categoryName, () => {
-                writes.update(() => before);
+                writes.update((current) => unresolved(current, book, picks));
             });
         }
     };

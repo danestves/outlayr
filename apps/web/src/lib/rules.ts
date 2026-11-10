@@ -372,6 +372,25 @@ export function saved(book: RuleBook, rule: Rule, position: number): RuleBook {
     return { ...book, rules: [...rest.slice(0, at), rule, ...rest.slice(at)] };
 }
 
+export function unresolved(
+    book: RuleBook,
+    before: RuleBook,
+    picks: readonly { choice: ConflictChoice; conflict: Conflict }[]
+): RuleBook {
+    const keys = new Set(picks.map(({ conflict }) => conflict.key));
+    const changed = new Set(
+        picks.flatMap(({ choice, conflict }) => (choice === "second" || choice === "skip" ? [conflict.second.id] : []))
+    );
+    const here = new Set(book.rules.map((rule) => rule.id));
+    let next = book;
+    for (const [index, rule] of before.rules.entries()) {
+        if (changed.has(rule.id) && here.has(rule.id)) {
+            next = saved(next, rule, index);
+        }
+    }
+    return { ...next, settled: next.settled.filter((key) => !keys.has(key)) };
+}
+
 export function removed(book: RuleBook, id: string): RuleBook {
     return {
         ...book,

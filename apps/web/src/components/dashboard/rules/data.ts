@@ -81,6 +81,7 @@ export function useRuleWrites() {
             title,
             type: "success",
         });
+        return id;
     };
     const apply = (changes: readonly Change[], categoryName: (id: string) => string, alsoUndo?: () => void) => {
         const current = { ...ledger, books: ledgerBooks(db) };
@@ -107,10 +108,12 @@ export function useRuleWrites() {
         const category = single ? categoryName(only) : "";
         const plain = one ? toast.changedOne.value : toast.changed({ count: String(count) }).value;
         const named = one ? toast.movedOne({ category }).value : toast.moved({ category, count: String(count) }).value;
-        undoable(single ? named : plain, () => {
-            held.undo();
-            alsoUndo?.();
+        const toastId = undoable(single ? named : plain, () => {
+            if (held.undo()) {
+                alsoUndo?.();
+            }
         });
+        setTimeout(() => ruleToasts.close(toastId), UNDO_MS);
     };
     return { apply, undoable, update };
 }
