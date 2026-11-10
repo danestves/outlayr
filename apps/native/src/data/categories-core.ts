@@ -2,6 +2,8 @@ import {
     capitalizeCategoryName,
     detectCategoryCollision,
     formatCategoryName,
+    SEEDED_CATEGORY_NAMES,
+    seededCategoryId,
     SUGGESTED_CATEGORY_PRESETS,
     suggestionsNotAdded,
 } from "@outlayr/money/category-rules";
@@ -9,7 +11,6 @@ import type { SuggestedCategoryPreset } from "@outlayr/money/category-rules";
 import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
 import type { CanonicalCategoryName } from "@outlayr/money/contract";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
-import { uuidV5 } from "@outlayr/money/uuid5";
 import { and, eq, isNull, max } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -71,34 +72,11 @@ export {
     capitalizeCategoryName,
     CATEGORY_PALETTE,
     formatCategoryName,
+    SEEDED_CATEGORY_NAMES,
+    seededCategoryId,
     SUGGESTED_CATEGORY_PRESETS,
 } from "@outlayr/money/category-rules";
 export type { SuggestedCategoryPreset } from "@outlayr/money/category-rules";
-
-// Names only: a seed with its own icon would shadow the preset, since `suggestedCategoriesNotAdded` filters by name.
-export const SEEDED_CATEGORY_NAMES = {
-    expense: [
-        "Groceries",
-        "Dining Out",
-        "Transport",
-        "Fuel",
-        "Rent",
-        "Home",
-        "Utilities",
-        "Phone & Internet",
-        "Healthcare",
-        "Entertainment",
-    ],
-    income: ["Paycheck", "Freelance", "Business", "Gifts"],
-} as const satisfies { [Kind in "expense" | "income"]: readonly CanonicalCategoryName<Kind>[] };
-
-// Never change: a different namespace gives upgraded devices different ids for the same seeded categories.
-const SEEDED_CATEGORY_NAMESPACE = "04ed4302-1c98-46af-999e-930ae1b19e0e";
-
-// Derived, not minted, so two installs signing into one account compute one id per seeded category and upsert (#326).
-export function seededCategoryId(name: string, income: boolean): string {
-    return uuidV5(`${income ? "income" : "expense"}:${name}`, SEEDED_CATEGORY_NAMESPACE);
-}
 
 // Inspects the table, not the `firstLaunch` marker: `bootstrap.ts` writes that after this returns, so a crash between
 // them would seed a second full set.

@@ -31,21 +31,13 @@ import { CategoryEditor } from "./editor";
 import type { EditorTarget } from "./editor";
 import { categoryLines, categoryTree, INCOME_COLOR, MAX_EXPENSE_CATEGORIES } from "./model";
 import type { Category } from "./model";
+import { usePresetLabel } from "./preset-label";
 import { ReorderList } from "./reorder";
 import { useCategoryWrites } from "./write";
-
-// SAFETY: category-presets is generated from these names by this same camelCase rule.
-const presetKey = (name: string) =>
-    name
-        .toLowerCase()
-        .replaceAll(/[^a-z]+(.)/gu, (_, letter: string) => letter.toUpperCase())
-        .replaceAll(/[^a-zA-Z]/gu, "") as keyof IntlayerPresets;
 
 const CELL = "whitespace-nowrap";
 const FIGURE = `${CELL} dash-figure text-muted-foreground`;
 const PHONE_COLUMNS = "max-sm:[&_tr>*:nth-child(2)]:hidden max-sm:[&_tr>*:nth-child(4)]:hidden";
-
-type IntlayerPresets = ReturnType<typeof useIntlayer<"category-presets">>;
 
 function RowActions({ onEdit, onSubcategory, row }: { onEdit: () => void; onSubcategory?: () => void; row: Category }) {
     const copy = useIntlayer("dashboard-categories");
@@ -109,7 +101,7 @@ function Left({ remaining, over, currency }: { currency: string; over: boolean; 
 
 export function Categories() {
     const copy = useIntlayer("dashboard-categories");
-    const presets = useIntlayer("category-presets");
+    const labelOf = usePresetLabel();
     const { dbClient } = useRouteContext({ from: "__root__" });
     const { filters, ledger } = useDashboard();
     const { money } = useDisplayFormat();
@@ -139,7 +131,6 @@ export function Categories() {
     const budgets = useMemo(() => categoryBudgets(ledger, period), [ledger, period]);
     const showSuggestions = metaFlag(meta, "categorySuggestions", true);
     const atExpenseCap = !income && liveCategories(rows).filter((row) => !row.income).length >= MAX_EXPENSE_CATEGORIES;
-    const labelOf = (name: string) => presets[presetKey(name)]?.value ?? name;
     const suggestions = suggestionsNotAdded(
         income,
         rows.filter((row) => row.deletedAt === null && row.income === income),

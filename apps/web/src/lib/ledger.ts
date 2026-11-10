@@ -10,6 +10,11 @@ export function shortDay(day: string) {
     return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }).format(wallNoon(day));
 }
 
+const pad = (value: number) => String(value).padStart(2, "0");
+
+/** A minute of the day as the "HH:MM" a time input reads and writes. */
+export const clockOf = (minute: number) => `${pad(Math.floor(minute / 60))}:${pad(minute % 60)}`;
+
 export function clockTime(time: string, use24HourClock = false) {
     const [hours = 0, minutes = 0] = time.split(":").map(Number);
     return new Intl.DateTimeFormat("en-US", {

@@ -11,6 +11,7 @@ import { useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { convexClient } from "@/lib/convex";
+import { clockOf } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { currentPush, pushAccess, subscribePush } from "@/lib/web-push";
 import type { PushAccess } from "@/lib/web-push";
@@ -21,8 +22,6 @@ const MORNING = 480;
 const EVENING = 1200;
 const DEFAULT_CUSTOM = 1290;
 
-const pad = (value: number) => String(value).padStart(2, "0");
-const clockOf = (minute: number) => `${pad(Math.floor(minute / 60))}:${pad(minute % 60)}`;
 const minuteOf = (clock: string) => {
     const [hours = 0, minutes = 0] = clock.split(":").map(Number);
     return hours * 60 + minutes;

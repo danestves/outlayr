@@ -1,6 +1,11 @@
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import type { PushRow } from "@outlayr/backend/confect/sync";
-import { formatCategoryName } from "@outlayr/money/category-rules";
+import {
+    formatCategoryName,
+    SEEDED_CATEGORY_NAMES,
+    seededCategoryId,
+    SUGGESTED_CATEGORY_PRESETS,
+} from "@outlayr/money/category-rules";
 import { categoryDeletionPlan } from "@outlayr/money/entry-deletion";
 
 import { planBooks, withId } from "./account-writes";
@@ -92,6 +97,27 @@ export function newCategory(rows: readonly Category[], draft: CategoryDraft, loc
         updatedAt: now,
         userId: "",
     } as Category;
+}
+
+/** The starter set a phone seeds, under the same ids, so a phone that syncs later folds into this one. */
+export function seededCategories(labelOf: (preset: string) => string, now: number): Category[] {
+    return (["expense", "income"] as const).flatMap((kind) => {
+        const income = kind === "income";
+        return SEEDED_CATEGORY_NAMES[kind].flatMap((name, sortOrder) => {
+            const preset = SUGGESTED_CATEGORY_PRESETS[kind].find((candidate) => candidate.name === name);
+            if (!preset) {
+                return [];
+            }
+            const draft = { color: preset.color, emoji: null, icon: preset.icon, income, name: labelOf(name) };
+            const row = newCategory(
+                [],
+                { ...draft, parentId: null, preset: name },
+                seededCategoryId(name, income),
+                now
+            );
+            return [{ ...row, sortOrder }];
+        });
+    });
 }
 
 export function editedCategory(rows: readonly Category[], doc: Category, draft: CategoryDraft, now: number): Category {
