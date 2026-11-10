@@ -277,6 +277,12 @@ const dashboardImport = {
                 pt: "Importação desfeita",
             }),
             imports: t({ en: "Imports", es: "Importaciones", fr: "Importations", pt: "Importações" }),
+            undoFailed: t({
+                en: "Couldn't undo the import. Its entries are still in your ledger.",
+                es: "No se pudo deshacer la importación. Sus movimientos siguen en tu registro.",
+                fr: "Impossible d'annuler l'importation. Ses opérations sont toujours dans votre registre.",
+                pt: "Não foi possível desfazer a importação. Os lançamentos continuam no seu registro.",
+            }),
             in: t({ en: "In", es: "Entró", fr: "Entrées", pt: "Entrou" }),
             last30: t({ en: "Last 30 days", es: "Últimos 30 días", fr: "30 derniers jours", pt: "Últimos 30 dias" }),
             lastImport: t({

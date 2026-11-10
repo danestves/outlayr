@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import { usePresetLabel } from "@/components/dashboard/settings/categories/preset-label";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import type { CommitOutcome } from "@/lib/ledger-committer";
 import { keepImported } from "@/lib/money-manager/extras";
 import { outlayrLedgerState } from "@/lib/money-manager/ledger-state";
 import { readBackupFile } from "@/lib/money-manager/read-backup";
@@ -85,7 +84,7 @@ export function MoneyManagerImport() {
         const plan = planOf(draft);
         const at = nowMs();
         const { imported, rows } = moneyManagerRows(dashboard.ledger, plan, at);
-        await land(draft, plan, at, imported, committer.commit(rows).settled);
+        await land(draft, plan, at, imported, rows);
     };
 
     const land = async (
@@ -93,14 +92,13 @@ export function MoneyManagerImport() {
         plan: ReturnType<typeof planOf>,
         at: number,
         imported: MoneyManagerImported,
-        settled: Promise<CommitOutcome>
+        rows: ReturnType<typeof moneyManagerRows>["rows"]
     ) => {
-        const outcome = await settled;
-        if (outcome.status === "failed") {
+        if (!(await committer.commit(rows))) {
             // Pushes go in batches, so earlier ones may have landed; resending the same rows can't double them.
             const retry = () => {
                 setPhase({ draft, kind: "importing" });
-                void land(draft, plan, at, imported, outcome.retry());
+                void land(draft, plan, at, imported, rows);
             };
             setPhase({ draft, kind: "failed", retry });
             return;
@@ -143,8 +141,7 @@ export function MoneyManagerImport() {
 
     const undo = async (imported: MoneyManagerImported) => {
         const { rows } = undoMoneyManagerRows(dashboard.ledger, imported, Date.now());
-        const outcome = await committer.commit(rows).settled;
-        if (outcome.status === "failed") {
+        if (!(await committer.commit(rows))) {
             return false;
         }
         if (userId !== undefined && record.current !== null) {

@@ -1,7 +1,7 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
-import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { accountLook } from "@outlayr/money/ledger-log";
 import { isoDay } from "@outlayr/money/ledger-zone";
 import { Menu } from "panelui-web/menu";
 import type { ReactNode } from "react";

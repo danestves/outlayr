@@ -149,7 +149,6 @@ function Wizard({
                 store.clear();
                 onFinished(finished);
             },
-            undone: () => setRun({ kind: "idle" }),
         });
     };
     return (

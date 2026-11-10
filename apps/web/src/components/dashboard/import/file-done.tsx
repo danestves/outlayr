@@ -20,7 +20,6 @@ import type { FaultyRow, FileRow, StatementCheck } from "@/lib/import-file";
 import { planOf } from "@/lib/import-plan";
 import type { AccountChoice, PlanRow } from "@/lib/import-plan";
 import { importRows } from "@/lib/import-writes";
-import type { CommitOutcome } from "@/lib/ledger-committer";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import type { Draft } from "./draft";
@@ -83,7 +82,7 @@ export function useRunImport() {
     return (
         draft: Draft,
         model: FileModel,
-        on: { failed: (retry: () => void) => void; saved: (finished: Finished) => void; undone: () => void }
+        on: { failed: (retry: () => void) => void; saved: (finished: Finished) => void }
     ) => {
         const rows = importable(model);
         const accountChoices = new Map(model.accounts.map((account) => [account.value, account.choice]));
@@ -119,28 +118,27 @@ export function useRunImport() {
             undoneAt: null,
             ...totals(plan.entries),
         };
-        const land = (settled: Promise<CommitOutcome>) => {
-            void settled.then((outcome) => {
-                if (outcome.status === "saved") {
-                    records?.add(record);
-                    on.saved({
-                        accountChoices,
-                        accountOf,
-                        categoryOf,
-                        draft,
-                        faulty: model.faulty,
-                        recordId: record.id,
-                        statement: model.statement,
-                    });
-                } else if (outcome.status === "undone") {
-                    on.undone();
-                } else {
-                    // Pushes go in batches, so earlier ones may have landed; resending the same rows can't double them.
-                    on.failed(() => land(outcome.retry()));
-                }
+        const written = importRows(ledger, plan, now);
+        const land = async () => {
+            if (await committer.commit(written)) {
+                records?.add(record);
+                on.saved({
+                    accountChoices,
+                    accountOf,
+                    categoryOf,
+                    draft,
+                    faulty: model.faulty,
+                    recordId: record.id,
+                    statement: model.statement,
+                });
+                return;
+            }
+            // Pushes go in batches, so earlier ones may have landed; resending the same rows can't double them.
+            on.failed(() => {
+                void land();
             });
         };
-        land(committer.commit(importRows(ledger, plan, now)).settled);
+        void land();
     };
 }
 
@@ -494,9 +492,9 @@ export function DoneStep({ finished, onAnother }: { finished: Finished; onAnothe
             rows,
         });
         setRetrying(true);
-        void committer.commit(importRows(ledger, plan, nowMs())).settled.then((outcome) => {
+        void committer.commit(importRows(ledger, plan, nowMs())).then((saved) => {
             setRetrying(false);
-            if (outcome.status !== "saved") {
+            if (!saved) {
                 return;
             }
             const added = totals(plan.entries);

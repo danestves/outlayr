@@ -4,7 +4,7 @@ import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import Note01Icon from "@hugeicons/core-free-icons/Note01Icon";
 import Undo02Icon from "@hugeicons/core-free-icons/Undo02Icon";
 import type { IconSvgElement } from "@hugeicons/react";
-import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { accountLook } from "@outlayr/money/ledger-log";
 import { isoDay } from "@outlayr/money/ledger-zone";
 import { useNavigate } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";

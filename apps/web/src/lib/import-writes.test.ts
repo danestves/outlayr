@@ -1,7 +1,7 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { describe, expect, it } from "vite-plus/test";
 
 import { undoRows } from "./import-writes";
+import type { LedgerBooks } from "./ledger-books";
 
 const NOW = Date.parse("2026-11-08T15:00:00Z");
 const DAY = Date.parse("2026-10-15T15:00:00Z");

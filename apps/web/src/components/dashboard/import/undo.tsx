@@ -71,11 +71,11 @@ export function useUndoImport() {
             actionProps: { children: history.dismiss.value, onClick: () => importToasts.close(toastId) },
             title: history.importUndone.value,
         });
-        void committer.commit(rows).settled.then((outcome) => {
-            if (outcome.status === "failed") {
+        void committer.commit(rows).then((saved) => {
+            if (!saved) {
                 store.change(record.id, { undoneAt: null });
                 importToasts.close(toastId);
-                importToasts.add({ title: outcome.error.message, type: "destructive" });
+                importToasts.add({ title: history.undoFailed.value, type: "destructive" });
             }
         });
     };

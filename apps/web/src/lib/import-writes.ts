@@ -1,4 +1,3 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { firstAvailableColor } from "@outlayr/money/category-rules";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 
@@ -7,6 +6,7 @@ import { categoryPush, liveCategories, newCategory } from "./category-writes";
 import type { Ledger } from "./dashboard-series-ledger";
 import { deletionOf } from "./delete-writes";
 import { createdEntry } from "./entry-writes";
+import type { LedgerBooks } from "./ledger-books";
 import type { CommitRow } from "./ledger-committer";
 
 export interface PlannedEntry {
