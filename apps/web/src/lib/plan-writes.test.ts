@@ -1,14 +1,16 @@
+import { fixedOffset } from "@outlayr/money/ledger-zone";
 import { describe, expect, it } from "vite-plus/test";
 
 import { planPurchase, purchaseInInstallments } from "./plan-writes";
 
 const NOW = Date.UTC(2026, 10, 8, 15);
 const DAY = 86_400_000;
+const HOUR = 3_600_000;
 
-function rows(paidBefore: number) {
+function rows(paidBefore: number, offsetAt = fixedOffset(0)) {
     let next = 0;
     return purchaseInInstallments(
-        { exchangeRates: [] },
+        { books: { exchangeRates: [] }, offsetAt },
         {
             accountId: "card",
             categoryId: null,
@@ -46,6 +48,14 @@ describe("purchaseInInstallments", () => {
             rows(count).flatMap((row) => (row.table === "outsidePayments" ? [row.fields] : []));
         expect(paid(0)).toStrictEqual([{ amount: 100, amountUsd: 100, date: NOW - 30 * DAY, planId: "id-1" }]);
         expect(paid(1).at(-1)).toStrictEqual({ amount: 250, amountUsd: 250, date: NOW - 10 * DAY, planId: "id-1" });
+    });
+
+    it("files the charge on the ledger's day and month, not the browser's", () => {
+        const charge = rows(0, fixedOffset(14 * HOUR)).find((row) => row.table === "transactions");
+        expect(charge?.fields).toMatchObject({
+            day: Date.parse("2026-10-09T10:00:00Z"),
+            month: Date.parse("2026-09-30T10:00:00Z"),
+        });
     });
 
     it("never dates an outside payment in the future", () => {

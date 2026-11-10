@@ -1,6 +1,6 @@
 import { decimalsFor } from "@outlayr/money/currency";
 import { entryRow } from "@outlayr/money/entry-row";
-import { filedOn } from "@outlayr/money/ledger-zone";
+import { zoneCalendar } from "@outlayr/money/ledger-zone";
 import { roundMoney } from "@outlayr/money/round";
 import * as Effect from "effect/Effect";
 
@@ -71,13 +71,13 @@ export function feeRows(
                 note: current?.note ?? fee.note,
             },
             {
+                calendar: zoneCalendar(ledger.offsetAt),
                 categoryName: books.categories.find((row) => row.localId === plan.categoryId)?.name ?? null,
                 currency: plan.currency,
                 now: new Date(at),
             }
         )
     );
-    const filed = filedOn(date.getTime(), ledger.offsetAt);
     const charged = current
         ? nextRow(
               "transactions",
@@ -85,7 +85,7 @@ export function feeRows(
               { accountId: plan.account.id, amount: entry.amount, amountUsd: entry.amountUsd, updatedAt: at },
               at
           )
-        : entryPush({ ...entry, ...filed, id: entry.id, installmentId, transferId: null }, at);
+        : entryPush({ ...entry, id: entry.id, installmentId, transferId: null }, at);
     return [charged, ...gone(extra)];
 }
 

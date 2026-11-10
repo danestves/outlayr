@@ -1,7 +1,7 @@
 import { isPerson } from "@outlayr/money/account-kind";
 import { decimalsFor } from "@outlayr/money/currency";
 import { utcDateString } from "@outlayr/money/dates";
-import { filedOn } from "@outlayr/money/ledger-zone";
+import { zoneCalendar } from "@outlayr/money/ledger-zone";
 import { roundMoney } from "@outlayr/money/round";
 import { transferLegs } from "@outlayr/money/transfer-reconcile";
 import { chargedFees, feeColumns, freezeTransfer, legColumns, transferRejection } from "@outlayr/money/transfer-row";
@@ -237,9 +237,8 @@ export function newTransferProblem(ledger: Ledger, values: NewTransferValues): N
 
 export function createdTransfer(ledger: Ledger, id: string, input: TransferInput, at: number): CommitRow[] {
     const { feesUsd, fromAmountUsd, toAmountUsd } = Effect.runSync(freezeTransfer(ratesLookup(ledger.books), input));
-    const filed = filedOn(input.date.getTime(), ledger.offsetAt);
-    const now = new Date(at);
-    const legs = legColumns(input, fromAmountUsd, toAmountUsd, now);
+    const filing = { calendar: zoneCalendar(ledger.offsetAt), now: new Date(at) };
+    const legs = legColumns(input, fromAmountUsd, toAmountUsd, filing);
     const moved = nextRow(
         "transfers",
         { deletedAt: null, localId: id, updatedAt: 0 },
@@ -247,8 +246,8 @@ export function createdTransfer(ledger: Ledger, id: string, input: TransferInput
             ...legs,
             date: input.date.getTime(),
             dateCreated: at,
-            day: filed.day,
-            month: filed.month,
+            day: legs.day.getTime(),
+            month: legs.month.getTime(),
             updatedAt: at,
         },
         at
@@ -256,8 +255,7 @@ export function createdTransfer(ledger: Ledger, id: string, input: TransferInput
     const fees = chargedFees(input).map(({ fee, side }) =>
         entryPush(
             {
-                ...feeColumns(input, side, fee, feesUsd.get(side) ?? null, now),
-                ...filed,
+                ...feeColumns(input, side, fee, feesUsd.get(side) ?? null, filing),
                 categoryId: null,
                 id: crypto.randomUUID(),
                 income: false,

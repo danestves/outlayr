@@ -23,6 +23,14 @@ export function firstOfMonth(date: Date): Date {
     return d;
 }
 
+export type LedgerCalendar = (date: Date) => { day: Date; dayOfMonth: number; month: Date };
+
+export const deviceCalendar: LedgerCalendar = (date) => ({
+    day: startOfDay(date),
+    dayOfMonth: date.getDate(),
+    month: firstOfMonth(date),
+});
+
 export function startOfWeek(date: Date, firstWeekday = 1): Date {
     const d = startOfDay(date);
     const offset = (d.getDay() - (firstWeekday - 1) + 7) % 7;

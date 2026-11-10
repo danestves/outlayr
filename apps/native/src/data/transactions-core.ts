@@ -1,4 +1,4 @@
-import { addDays, startOfDay } from "@outlayr/money/calendar";
+import { addDays, deviceCalendar, startOfDay } from "@outlayr/money/calendar";
 import { keptFeeValue } from "@outlayr/money/card-fee";
 import type { CardFeeInput } from "@outlayr/money/card-fee";
 import { entryRow, keptAccount, keptCanonical, keptLead } from "@outlayr/money/entry-row";
@@ -222,6 +222,7 @@ const toRow = Effect.fn("Transactions.toRow")(function* toRow(db: Database, id: 
             : null;
     const currency = input.currency ?? (yield* displayCurrency(db));
     return yield* entryRow(localRateLookup(db), id, input, {
+        calendar: deviceCalendar,
         categoryName: category?.name ?? null,
         currency,
         now: new Date(),

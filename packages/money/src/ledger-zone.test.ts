@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import { CALENDAR_DAY_VECTORS } from "./calendar-vectors";
-import { filedOn, fixedOffset, fromWall, isoDay, monthWindow, utcOffsetOf, wallNoon, zoneOffsets } from "./ledger-zone";
+import {
+    filedOn,
+    fixedOffset,
+    fromWall,
+    isoDay,
+    monthWindow,
+    utcOffsetOf,
+    wallNoon,
+    zoneCalendar,
+    zoneOffsets,
+} from "./ledger-zone";
 
 const HOUR = 3_600_000;
 const at = (iso: string) => Date.parse(iso);
@@ -21,6 +31,14 @@ describe("calendar day vectors in the ledger zone", () => {
         const offsetAt = offsetsOf(zone);
         expect(filedOn(at(instant), offsetAt)).toStrictEqual({ day: at(day), month: at(month) });
         expect(isoDay(at(instant), offsetAt(at(instant)))).toBe(iso);
+    });
+
+    it.each(CALENDAR_DAY_VECTORS)("zone calendar: $name", ({ day, instant, iso, month, zone }) => {
+        expect(zoneCalendar(offsetsOf(zone))(new Date(at(instant)))).toStrictEqual({
+            day: new Date(at(day)),
+            dayOfMonth: Number(iso.slice(-2)),
+            month: new Date(at(month)),
+        });
     });
 
     it.each(WINDOW_VECTORS)("month window: $name", ({ instant, window, zone }) => {

@@ -1,5 +1,5 @@
 import { decimalsFor } from "@outlayr/money/currency";
-import { filedOn } from "@outlayr/money/ledger-zone";
+import { zoneCalendar } from "@outlayr/money/ledger-zone";
 import type { MarketRateType } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
 import type { FeeSide } from "@outlayr/money/transfer-reconcile";
@@ -281,16 +281,16 @@ export function transferProblem(ledger: Ledger, doc: TransferDoc, input: Transfe
  */
 export function editedTransfer(ledger: Ledger, doc: TransferDoc, input: TransferInput, at: number): CommitRow[] {
     const { fromUsd, toUsd } = frozenOf(ledger, doc, input);
-    const filed = filedOn(input.date.getTime(), ledger.offsetAt);
-    const legs = legColumns(input, fromUsd, toUsd, new Date(at));
+    const filing = { calendar: zoneCalendar(ledger.offsetAt), now: new Date(at) };
+    const legs = legColumns(input, fromUsd, toUsd, filing);
     const edited = nextRow(
         "transfers",
         doc,
         {
             ...legs,
             date: legs.date.getTime(),
-            day: filed.day,
-            month: filed.month,
+            day: legs.day.getTime(),
+            month: legs.month.getTime(),
             updatedAt: at,
         },
         at
@@ -301,7 +301,7 @@ export function editedTransfer(ledger: Ledger, doc: TransferDoc, input: Transfer
         .filter((row) => !keptIds.has(row.localId))
         .map((row) => nextRow("transactions", row, { accountId: row.accountId, deletedAt: at }, at));
     const written = fees.map(({ amountUsd, fee, row, side }) => {
-        const columns = { ...feeColumns(input, side, fee, amountUsd, new Date(at)), ...filed };
+        const columns = feeColumns(input, side, fee, amountUsd, filing);
         return row
             ? nextRow(
                   "transactions",
@@ -312,8 +312,8 @@ export function editedTransfer(ledger: Ledger, doc: TransferDoc, input: Transfer
                       amountUsd: columns.amountUsd,
                       currency: columns.currency,
                       date: columns.date.getTime(),
-                      day: columns.day,
-                      month: columns.month,
+                      day: columns.day.getTime(),
+                      month: columns.month.getTime(),
                       note: columns.note,
                   },
                   at

@@ -1,7 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { decimalsFor, isPickableCurrency } from "@outlayr/money/currency";
-import { filedOn, fixedOffset, isoDay, utcOffsetOf } from "@outlayr/money/ledger-zone";
+import { entryRow } from "@outlayr/money/entry-row";
+import { fixedOffset, isoDay, utcOffsetOf, zoneCalendar } from "@outlayr/money/ledger-zone";
 import type { RateLookup } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
 import * as Clock from "effect/Clock";
@@ -165,41 +165,53 @@ const logEntry = FunctionImpl.make(
                         .first()
                 );
             const counter = yield* seqCounter(userId);
-            const valuation = yield* canonicalUsd(lookup, {
-                amount,
-                currency,
-                date: new Date(date),
-                displayCurrency: currency,
-            });
+            const row = yield* entryRow(
+                lookup,
+                localId,
+                {
+                    accountId: account?.localId ?? null,
+                    amount,
+                    categoryId: category.localId,
+                    currency,
+                    date: new Date(date),
+                    details: null,
+                    income,
+                    note,
+                },
+                { calendar: zoneCalendar(offsetAt), categoryName: category.name, currency, now: new Date(now) }
+            );
             yield* writer.table("transactions").insert({
-                ...valuation,
-                ...filedOn(date, offsetAt),
-                accountId: account?.localId ?? null,
-                amount,
-                categoryId: category.localId,
-                currency,
-                customColor: null,
+                accountId: row.accountId,
+                amount: row.amount,
+                amountUsd: row.amountUsd,
+                categoryId: row.categoryId,
+                currency: row.currency,
+                customColor: row.customColor,
                 date,
+                day: row.day.getTime(),
                 deletedAt: null,
-                details: null,
+                details: row.details,
                 deviceId: MCP_DEVICE_ID,
-                emoji: null,
+                emoji: row.emoji,
+                exchangeRate: row.exchangeRate,
+                exchangeRateType: row.exchangeRateType,
                 feeForId: null,
                 feeRate: null,
-                icon: null,
-                imageColor: null,
+                icon: row.icon,
+                imageColor: row.imageColor,
                 imageKey: null,
-                income,
+                income: row.income,
                 installmentId: null,
                 localId,
-                note: entry.note,
-                onceRecurring: false,
+                month: row.month.getTime(),
+                note: row.note,
+                onceRecurring: row.onceRecurring,
                 paidVia: null,
                 receipt: null,
-                recurringAnchorDay: null,
-                recurringCoefficient: 1,
+                recurringAnchorDay: row.recurringAnchorDay,
+                recurringCoefficient: row.recurringCoefficient,
                 recurringEndDate: null,
-                recurringType: 0,
+                recurringType: row.recurringType,
                 seq: counter.nextSeq,
                 transferId: null,
                 updatedAt: now,
