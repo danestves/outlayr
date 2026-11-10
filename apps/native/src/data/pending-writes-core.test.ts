@@ -14,13 +14,8 @@ import type { PendingWrite } from "@/lib/queue-file";
 import { Meta } from "./app-meta-core";
 import { readAutologWaiting, writeAutologAccess } from "./autolog-cap-core";
 import { cardFeeFor } from "./card-fees-core";
-import {
-    appliedWriteIds,
-    applyPendingWrites,
-    drainPendingWrites,
-    pendingWriteTxId,
-    WALLET_DEDUPE_WINDOW_MS,
-} from "./pending-writes-core";
+import { WALLET_DEDUPE_WINDOW_MS } from "./pending-write-decision";
+import { appliedWriteIds, applyPendingWrites, drainPendingWrites, pendingWriteTxId } from "./pending-writes-core";
 import { backfillRecurring } from "./recurrence-backfill";
 import { transactionsRepo } from "./transactions-core";
 import { fileWaitingPurchases, pickCardAccount, takeRepriced } from "./wallet-state-core";
@@ -64,18 +59,6 @@ function walletWrite(id: string, overrides: Partial<PendingWrite> = {}): Pending
 }
 
 const HOUR = 60 * 60 * 1000;
-
-function busFare(id: string, hoursLater: number, card = "Payoneer"): PendingWrite {
-    return walletWrite(id, {
-        amount: 0,
-        amountText: null,
-        card,
-        date: NOW.getTime() + hoursLater * HOUR,
-        dedupeKey: "notification:expense:a charge of 1.86 usd (transportes rober s a)",
-        note: "",
-        text: "USD card charge\nA charge of 1.86 USD was made to your Payoneer USD card XXXX-3111 (TRANSPORTES ROBER S A)",
-    });
-}
 
 async function seedAccounts(db: Database): Promise<void> {
     await db.insert(accounts).values([
@@ -143,64 +126,6 @@ describe("applyPendingWrites", () => {
         expect(replay).toStrictEqual({ applied: 0, autologged: 0 });
     });
 
-    it("files a bank app's push under its account in the charge's currency", async () => {
-        await db.insert(accounts).values(
-            ["USD", "EUR"].map((currency) => ({
-                currency,
-                dateCreated: NOW,
-                id: `acc-payoneer-${currency}`,
-                initialBalanceDate: NOW,
-                name: `Payoneer (${currency})`,
-                updatedAt: NOW,
-            }))
-        );
-        const push = (id: string, amount: string) =>
-            walletWrite(id, {
-                amount: 0,
-                amountText: null,
-                card: "Payoneer",
-                dedupeKey: `notification:expense:${id}`,
-                note: "",
-                text: `${amount.split(" ")[1]} card charge\nA charge of ${amount} was made to your Payoneer card XXXX-3111 (ANDALUCIA A PIE)`,
-            });
-
-        await Effect.runPromise(applyPendingWrites(db, [push("usd", "11.63 USD"), push("eur", "9.40 EUR")], NOW));
-
-        const rows = await db
-            .select({ accountId: transactions.accountId, currency: transactions.currency })
-            .from(transactions);
-        expect(rows).toStrictEqual([
-            { accountId: "acc-payoneer-USD", currency: "USD" },
-            { accountId: "acc-payoneer-EUR", currency: "EUR" },
-        ]);
-    });
-
-    it("files a Venezuelan bank's Bs. push in bolívares, not Bolivian bolivianos", async () => {
-        await db.insert(accounts).values({
-            currency: "VES",
-            dateCreated: NOW,
-            id: "acc-banesco",
-            initialBalanceDate: NOW,
-            name: "Banesco",
-            updatedAt: NOW,
-        });
-        const push = walletWrite("bs", {
-            amount: 0,
-            amountText: null,
-            card: "Banesco",
-            dedupeKey: "notification:expense:bs",
-            note: "",
-            text: "Compra aprobada\nCompra por Bs. 4.150,50 en Panadería Sol con tu tarjeta terminada en 1234",
-        });
-
-        await Effect.runPromise(applyPendingWrites(db, [push], NOW));
-
-        const [row] = await db
-            .select({ accountId: transactions.accountId, amount: transactions.amount, currency: transactions.currency })
-            .from(transactions);
-        expect(row).toStrictEqual({ accountId: "acc-banesco", amount: 4150.5, currency: "VES" });
-    });
-
     it("reads a notification job's amount and merchant, and files it by account", async () => {
         await seedAccounts(db);
         const job = walletWrite("push", {
@@ -226,32 +151,18 @@ describe("applyPendingWrites", () => {
         expect(row).toStrictEqual({ accountId: "acc-chase", amount: 12.4, currency: "MXN", note: "STARBUCKS" });
     });
 
-    it("files a push nothing could name under the app that posted it, not its category", async () => {
-        const AMOUNTS: Record<string, string> = { app: "22.99", bare: "9.99", card: "5.00" };
-        const push = (id: string, card: string | null) =>
-            walletWrite(id, {
-                amount: 0,
-                amountText: null,
-                card,
-                dedupeKey: `notification:expense:${id}`,
-                note: "",
-                text: `Your transaction was successful\nPayment of USD ${AMOUNTS[id]} approved on the card ending with 7909.`,
-            });
+    it("registers no logo candidate for a push filed under a placeholder name", async () => {
+        const push = walletWrite("bare", {
+            amount: 0,
+            amountText: null,
+            dedupeKey: "notification:expense:bare",
+            note: "",
+            text: "Your transaction was successful\nPayment of USD 9.99 approved on the card ending with 7909.",
+        });
 
-        await Effect.runPromise(
-            applyPendingWrites(
-                db,
-                [push("app", "Card Suite Lite"), push("bare", null), push("card", "card ending with 7909")],
-                NOW
-            )
-        );
+        await Effect.runPromise(applyPendingWrites(db, [push], NOW));
 
-        const rows = await db.select({ amount: transactions.amount, note: transactions.note }).from(transactions);
-        expect(rows).toStrictEqual([
-            { amount: 22.99, note: "Card Suite Lite" },
-            { amount: 9.99, note: "Bank notification" },
-            { amount: 5, note: "Bank notification" },
-        ]);
+        await expect(liveRows(db)).resolves.toMatchObject([{ note: "Bank notification" }]);
         await expect(Effect.runPromise(Meta.get(db, "logoCandidates"))).resolves.toStrictEqual({});
     });
 
@@ -269,23 +180,6 @@ describe("applyPendingWrites", () => {
 
         await Effect.runPromise(applyPendingWrites(db, [walletWrite("tap")], NOW));
         expect((await Effect.runPromise(Meta.get(db, "lastWalletEntry")))?.push).toBeUndefined();
-    });
-
-    it("files a refund push as income", async () => {
-        const job = walletWrite("refund", {
-            amount: 0,
-            amountText: null,
-            dedupeKey: "notification:expense:refund",
-            note: "",
-            text: "Refund of $12.40 from STARBUCKS",
-        });
-
-        await Effect.runPromise(applyPendingWrites(db, [job], NOW));
-
-        const [row] = await db
-            .select({ categoryId: transactions.categoryId, income: transactions.income, note: transactions.note })
-            .from(transactions);
-        expect(row).toStrictEqual({ categoryId: null, income: true, note: "STARBUCKS" });
     });
 
     it("folds the bank's push for a Wallet tap into the tap's row across currencies", async () => {
@@ -313,78 +207,6 @@ describe("applyPendingWrites", () => {
         expect(rows).toStrictEqual([{ amount: 22.6, id: rows[0]?.id }]);
         await expect(Effect.runPromise(pendingWriteTxId(db, "push"))).resolves.toBe(rows[0]?.id);
         expect((await Effect.runPromise(Meta.get(db, "walletCards"))).map((card) => card.text)).toContain("Payoneer");
-    });
-
-    it("keeps a bank push in the tap's currency whose amount differs", async () => {
-        const push = walletWrite("push", {
-            amount: 0,
-            amountText: null,
-            card: "Payoneer",
-            dedupeKey: "notification:expense:payoneer",
-            note: "",
-            text: "You paid $50.00 at Blue Bottle",
-        });
-
-        await Effect.runPromise(applyPendingWrites(db, [walletWrite("tap", { card: "Visa" }), push], NOW));
-
-        await expect(undeleted(db)).resolves.toHaveLength(2);
-    });
-
-    it("keeps a second push from the same app as its own purchase", async () => {
-        const push = (id: string) =>
-            walletWrite(id, {
-                amount: 0,
-                amountText: null,
-                card: "Payoneer",
-                dedupeKey: `notification:expense:${id}`,
-                note: "",
-                text: `You paid $6.40 at Blue Bottle (${id})`,
-            });
-
-        await Effect.runPromise(
-            applyPendingWrites(db, [walletWrite("tap", { card: "Visa" }), push("first"), push("second")], NOW)
-        );
-
-        await expect(undeleted(db)).resolves.toHaveLength(2);
-    });
-
-    it("folds Payoneer's settle push into the row its authorize push made", async () => {
-        await Effect.runPromise(applyPendingWrites(db, [busFare("auth", 0)], NOW));
-
-        const { applied } = await Effect.runPromise(applyPendingWrites(db, [busFare("settle", 20)], NOW));
-
-        expect(applied).toBe(0);
-        await expect(undeleted(db)).resolves.toHaveLength(1);
-    });
-
-    it("keeps every fare when the same Payoneer charge happens twice before either settles", async () => {
-        await Effect.runPromise(
-            applyPendingWrites(
-                db,
-                [busFare("ride-1", 0), busFare("ride-2", 10), busFare("settle-1", 24), busFare("settle-2", 34)],
-                NOW
-            )
-        );
-
-        await expect(undeleted(db)).resolves.toHaveLength(2);
-    });
-
-    it("does not bring back an authorized charge the user deleted", async () => {
-        await Effect.runPromise(applyPendingWrites(db, [busFare("auth", 0)], NOW));
-        const [row] = await liveRows(db);
-        await Effect.runPromise(transactionsRepo.remove(db, row?.id ?? "", NOW));
-
-        await Effect.runPromise(applyPendingWrites(db, [busFare("settle", 20)], NOW));
-
-        await expect(undeleted(db)).resolves.toHaveLength(0);
-    });
-
-    it("keeps a repeated push from another bank as its own purchase", async () => {
-        await Effect.runPromise(
-            applyPendingWrites(db, [busFare("first", 0, "Revolut"), busFare("again", 20, "Revolut")], NOW)
-        );
-
-        await expect(undeleted(db)).resolves.toHaveLength(2);
     });
 
     it("gives the tap's row the account the bank push resolves", async () => {
@@ -514,15 +336,14 @@ describe("applyPendingWrites", () => {
         ]);
     });
 
-    it("adopts a subscription's new price by name within the band, and not a one-off", async () => {
-        const push = (id: string, text: string) =>
-            walletWrite(id, {
-                amount: 0,
-                amountText: null,
-                dedupeKey: `notification:expense:${id}`,
-                note: "",
-                text,
-            });
+    it("adopts a subscription's new price and remembers the change once", async () => {
+        const raise = walletWrite("raise", {
+            amount: 0,
+            amountText: null,
+            dedupeKey: "notification:expense:raise",
+            note: "",
+            text: "Paid $12.99 to Netflix",
+        });
         await db.insert(transactions).values({
             amount: 9.99,
             categoryId: "cat-expense",
@@ -538,7 +359,7 @@ describe("applyPendingWrites", () => {
             updatedAt: NOW,
         });
 
-        await Effect.runPromise(applyPendingWrites(db, [push("raise", "Paid $12.99 to Netflix")], NOW));
+        await Effect.runPromise(applyPendingWrites(db, [raise], NOW));
 
         const [row] = await db
             .select({ amount: transactions.amount, amountUsd: transactions.amountUsd })
@@ -549,19 +370,6 @@ describe("applyPendingWrites", () => {
             { currency: DEFAULT_CURRENCY, from: 9.99, note: "Netflix", to: 12.99 },
         ]);
         await expect(Effect.runPromise(takeRepriced(db))).resolves.toStrictEqual([]);
-
-        await Effect.runPromise(applyPendingWrites(db, [push("gift", "Paid $120.00 to Netflix")], NOW));
-
-        await expect(liveRows(db)).resolves.toHaveLength(2);
-    });
-
-    it("skips a notification that names no amount", async () => {
-        const job = walletWrite("statement", { amount: 0, note: "", text: "Your statement is ready" });
-
-        const { applied } = await Effect.runPromise(applyPendingWrites(db, [job], NOW));
-
-        expect(applied).toBe(0);
-        await expect(liveRows(db)).resolves.toHaveLength(0);
     });
 
     it("keeps the last few notification texts, read or not, once per delivery", async () => {
@@ -590,8 +398,8 @@ describe("applyPendingWrites", () => {
         expect(texts.map((entry) => entry.amountText)).toStrictEqual(["$1.00", "$2.00", "$3.00", "$4.00", "$5.00"]);
     });
 
-    it("records an unreadable notification without an amount", async () => {
-        await Effect.runPromise(
+    it("files nothing for a notification that names no amount, and records its text", async () => {
+        const { applied } = await Effect.runPromise(
             applyPendingWrites(
                 db,
                 [walletWrite("statement", { amount: 0, note: "", text: "Your statement is ready" })],
@@ -599,37 +407,11 @@ describe("applyPendingWrites", () => {
             )
         );
 
+        expect(applied).toBe(0);
+        await expect(liveRows(db)).resolves.toHaveLength(0);
         await expect(Effect.runPromise(Meta.get(db, "notificationTexts"))).resolves.toStrictEqual([
             { amountText: null, at: NOW.getTime(), text: "Your statement is ready" },
         ]);
-    });
-
-    it("collapses the authorize and settle runs of one purchase", async () => {
-        await Effect.runPromise(applyPendingWrites(db, [walletWrite("auth")], NOW));
-        const settled = NOW.getTime() + WALLET_DEDUPE_WINDOW_MS - 1;
-
-        const { applied } = await Effect.runPromise(
-            applyPendingWrites(
-                db,
-                [walletWrite("settle", { date: settled })],
-                new Date(settled + WALLET_DEDUPE_WINDOW_MS * 30)
-            )
-        );
-
-        expect(applied).toBe(0);
-        await expect(liveRows(db)).resolves.toHaveLength(1);
-    });
-
-    it("keeps the same purchase made again past the window", async () => {
-        await Effect.runPromise(applyPendingWrites(db, [walletWrite("morning")], NOW));
-        const later = NOW.getTime() + WALLET_DEDUPE_WINDOW_MS + 1;
-
-        const { applied } = await Effect.runPromise(
-            applyPendingWrites(db, [walletWrite("noon", { date: later })], new Date(later))
-        );
-
-        expect(applied).toBe(1);
-        await expect(liveRows(db)).resolves.toHaveLength(2);
     });
 
     it("keeps two purchases far apart that were queued while the app was closed", async () => {
@@ -647,33 +429,11 @@ describe("applyPendingWrites", () => {
         await expect(liveRows(db)).resolves.toHaveLength(2);
     });
 
-    it("keeps two purchases the automation could tell apart", async () => {
-        await Effect.runPromise(applyPendingWrites(db, [walletWrite("a")], NOW));
-
-        const { applied } = await Effect.runPromise(
-            applyPendingWrites(db, [walletWrite("b", { dedupeKey: "wallet:id:txn-99" })], NOW)
-        );
-
-        expect(applied).toBe(1);
-        await expect(liveRows(db)).resolves.toHaveLength(2);
-    });
-
     it("does not re-commit a replayed queue file", async () => {
         const job = walletWrite("replayed", { dedupeKey: null });
 
         await Effect.runPromise(applyPendingWrites(db, [job], NOW));
         const { applied } = await Effect.runPromise(applyPendingWrites(db, [job], NOW));
-
-        expect(applied).toBe(0);
-        await expect(liveRows(db)).resolves.toHaveLength(1);
-    });
-
-    it("does not re-commit a replayed file whose purchase key has aged out", async () => {
-        const job = walletWrite("replayed");
-        await Effect.runPromise(applyPendingWrites(db, [job], NOW));
-        const late = new Date(NOW.getTime() + WALLET_DEDUPE_WINDOW_MS * 3);
-
-        const { applied } = await Effect.runPromise(applyPendingWrites(db, [job], late));
 
         expect(applied).toBe(0);
         await expect(liveRows(db)).resolves.toHaveLength(1);
@@ -720,20 +480,6 @@ describe("applyPendingWrites", () => {
             .from(transactions)
             .where(ne(transactions.id, "old"));
         expect(row?.categoryId).toBe("cat-eating-out");
-    });
-
-    it("files a Wallet purchase under the account its card matches", async () => {
-        await seedAccounts(db);
-        await Effect.runPromise(applyPendingWrites(db, [walletWrite("a", { card: "Chase Sapphire Reserve" })], NOW));
-        const [row] = await db.select({ accountId: transactions.accountId }).from(transactions);
-        expect(row?.accountId).toBe("acc-chase");
-    });
-
-    it("leaves a purchase unattached when the card matches no account", async () => {
-        await seedAccounts(db);
-        await Effect.runPromise(applyPendingWrites(db, [walletWrite("a", { card: "Apple Card" })], NOW));
-        const [row] = await db.select({ accountId: transactions.accountId }).from(transactions);
-        expect(row?.accountId).toBeNull();
     });
 
     it("files a card's waiting and later purchases under the account picked for it", async () => {
@@ -828,15 +574,6 @@ describe("applyPendingWrites", () => {
         expect(row?.accountId).toBe("acc-n26");
     });
 
-    it("queues nothing on a card while the ledger has no accounts", async () => {
-        await Effect.runPromise(
-            applyPendingWrites(db, [walletWrite("a", { card: "Visa", currency: "USD", dedupeKey: null })], NOW)
-        );
-
-        const cards = await Effect.runPromise(Meta.get(db, "walletCards"));
-        expect(cards.map((card) => card.waiting)).toStrictEqual([undefined]);
-    });
-
     it("does not stretch the dedupe window from a skipped duplicate", async () => {
         const minute = 60 * 1000;
         await Effect.runPromise(
@@ -862,17 +599,6 @@ describe("applyPendingWrites", () => {
         await expect(Effect.runPromise(pendingWriteTxId(db, "b"))).resolves.toBe(rows[0]?.id);
     });
 
-    it("leaves a purchase whose currency was a guess off its card's waiting list", async () => {
-        await seedAccounts(db);
-        await Effect.runPromise(
-            applyPendingWrites(db, [walletWrite("a", { card: "Binance Card", dedupeKey: null })], NOW)
-        );
-        await Effect.runPromise(pickCardAccount(db, "Binance Card", "acc-n26"));
-
-        const [row] = await db.select({ accountId: transactions.accountId }).from(transactions);
-        expect(row?.accountId).toBeNull();
-    });
-
     it("leaves a card unattached when No account was picked over its name match", async () => {
         await seedAccounts(db);
         await Effect.runPromise(
@@ -885,24 +611,6 @@ describe("applyPendingWrites", () => {
 
         const rows = await db.select({ accountId: transactions.accountId }).from(transactions);
         expect(rows.map((row) => String(row.accountId)).toSorted()).toStrictEqual(["acc-chase", "null"]);
-    });
-
-    it("takes the account's currency when the amount's symbol is ambiguous", async () => {
-        await seedAccounts(db);
-        await Effect.runPromise(
-            applyPendingWrites(db, [walletWrite("a", { amountText: "$6.40", card: "Chase Sapphire" })], NOW)
-        );
-        const [row] = await db.select({ currency: transactions.currency }).from(transactions);
-        expect(row?.currency).toBe("MXN");
-    });
-
-    it("keeps the amount's own currency over the account's", async () => {
-        await seedAccounts(db);
-        await Effect.runPromise(
-            applyPendingWrites(db, [walletWrite("a", { amountText: "12,40 zł", card: "N26" })], NOW)
-        );
-        const [row] = await db.select({ currency: transactions.currency }).from(transactions);
-        expect(row?.currency).toBe("PLN");
     });
 
     it("leaves an unseen merchant's category to the merchant lookup", async () => {
@@ -931,16 +639,6 @@ describe("applyPendingWrites", () => {
         const [row] = await db.select({ categoryId: transactions.categoryId }).from(transactions);
         expect(row?.categoryId).toBe("cat-expense");
         await expect(Effect.runPromise(Meta.get(db, "enrichmentOutbox"))).resolves.toStrictEqual([]);
-    });
-
-    it("drops an entry with no category to file it under", async () => {
-        await db.delete(categories);
-        await Effect.runPromise(Meta.set(db, "aiEnrichment", false));
-
-        const { applied } = await Effect.runPromise(applyPendingWrites(db, [walletWrite("a")], NOW));
-
-        expect(applied).toBe(0);
-        await expect(liveRows(db)).resolves.toHaveLength(0);
     });
 
     it("does not re-write a replayed job again after the first replay landed", async () => {

@@ -81,7 +81,7 @@ export const PendingWrite = Schema.Struct({
     date: Schema.Finite,
     /**
      * Identifies the purchase, where `id` identifies the enqueue: Wallet fires once on authorize and again on
-     * settle. Carries no timestamp; the window is `WALLET_DEDUPE_WINDOW_MS` in `src/data/pending-writes-core.ts`.
+     * settle. Carries no timestamp; the window is `WALLET_DEDUPE_WINDOW_MS` in `src/data/pending-write-decision.ts`.
      */
     dedupeKey: Schema.optional(Schema.NullOr(Schema.String)),
     id: Schema.String,
