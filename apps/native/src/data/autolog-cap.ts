@@ -11,6 +11,7 @@ export function useAutologUsage(db: Database) {
     return {
         cap: FREE_AUTOLOG_PER_MONTH,
         queued,
+        total: Object.values(usage).reduce((sum, month) => sum + month.used, 0),
         used: monthUsage(usage, useNow()).used,
         waiting: queued.length,
     };

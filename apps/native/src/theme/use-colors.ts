@@ -17,6 +17,8 @@ const COLOR_VARIABLES = {
     muted: "--muted",
     overBudget: "--over-budget",
     primaryForeground: "--color-primary-foreground",
+    pro: "--pro",
+    proForeground: "--pro-foreground",
     /** An `rgba()`, not a hex: not safe for `withAlpha`. */
     railTrack: "--rail-track",
     separator: "--separator",

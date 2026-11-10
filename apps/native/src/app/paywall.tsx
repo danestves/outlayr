@@ -5,6 +5,7 @@ import { CloseToolbar } from "@/components/close-toolbar";
 import { paywallTriggerOf } from "@/domain/paywall-trigger";
 import { paywallVariant, posthog } from "@/lib/posthog";
 import { Paywall } from "@/screens/paywall";
+import { BandChrome } from "@/screens/paywall/band-chrome";
 import { PaywallRedesign } from "@/screens/paywall/redesign";
 
 export default function PaywallScreen() {
@@ -18,7 +19,14 @@ export default function PaywallScreen() {
     return (
         <>
             <CloseToolbar placement="right" />
-            {variant === "redesign" ? <PaywallRedesign /> : <Paywall />}
+            {variant === "redesign" ? (
+                <>
+                    <BandChrome />
+                    <PaywallRedesign />
+                </>
+            ) : (
+                <Paywall />
+            )}
         </>
     );
 }
