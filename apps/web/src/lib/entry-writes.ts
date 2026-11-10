@@ -1,7 +1,7 @@
-import { fromWall } from "@outlayr/backend/confect/mcpLedger";
 import { cardFeeValues, keptFeeValue } from "@outlayr/money/card-fee";
 import { decimalsFor } from "@outlayr/money/currency";
 import { entryRow, keptCanonical } from "@outlayr/money/entry-row";
+import { filedOn, fromWall, wall } from "@outlayr/money/ledger-zone";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";
@@ -223,17 +223,6 @@ export function entryProblem(ledger: Ledger, draft: EntryDraft, doc: Doc | null,
     return frozen.amountUsd === null && kept === null ? "rateMissing" : null;
 }
 
-/** The shared rules read the device's calendar, and a browser abroad must still file on the ledger's day. */
-export function filedOn(offsetAt: Ledger["offsetAt"], at: number) {
-    const wall = new Date(at + offsetAt(at));
-    const [year, month, day] = [wall.getUTCFullYear(), wall.getUTCMonth(), wall.getUTCDate()];
-    return {
-        anchorDay: day,
-        day: new Date(fromWall(Date.UTC(year, month, day), offsetAt)),
-        month: new Date(fromWall(Date.UTC(year, month, 1), offsetAt)),
-    };
-}
-
 function entryOf(ledger: Ledger, id: string, draft: EntryDraft, at: number) {
     const { books, offsetAt } = ledger;
     const category = books.categories.find((row) => row.localId === draft.categoryId);
@@ -261,8 +250,14 @@ function entryOf(ledger: Ledger, id: string, draft: EntryDraft, at: number) {
             { categoryName: category?.name ?? null, currency: ledger.currency, now: new Date(at) }
         )
     );
-    const { anchorDay, ...filed } = filedOn(offsetAt, draft.date);
-    return { ...row, ...filed, recurringAnchorDay: recurring ? anchorDay : null };
+    // The shared rules read the device's calendar, and a browser abroad must still file on the ledger's day.
+    const filed = filedOn(draft.date, offsetAt);
+    return {
+        ...row,
+        day: new Date(filed.day),
+        month: new Date(filed.month),
+        recurringAnchorDay: recurring ? wall(draft.date, offsetAt(draft.date)).getUTCDate() : null,
+    };
 }
 
 type Entry = ReturnType<typeof entryOf>;

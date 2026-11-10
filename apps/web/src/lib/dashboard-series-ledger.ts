@@ -1,8 +1,9 @@
 import { rateTableOf, settingsOf, zoneOf } from "@outlayr/backend/confect/ledgerView";
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
-import { bySeq, fromWall, localDate, wall, DAY_MS } from "@outlayr/backend/confect/mcpLedger";
+import { bySeq } from "@outlayr/backend/confect/mcpLedger";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { decimalsFor } from "@outlayr/money/currency";
+import { DAY_MS, fromWall, isoDay, wall, wallMidnight } from "@outlayr/money/ledger-zone";
 import { roundMoney } from "@outlayr/money/round";
 import { valueDatedRowsIn } from "@outlayr/money/valuation";
 
@@ -76,10 +77,10 @@ export const openAccounts = (books: Pick<LedgerBooks, "accounts">) =>
         .toSorted((a, b) => a.sortOrder - b.sortOrder);
 
 export const startOfDay = (ledger: Pick<Ledger, "offsetAt">, day: string) =>
-    fromWall(Date.parse(`${day}T00:00:00Z`), ledger.offsetAt);
+    fromWall(wallMidnight(day), ledger.offsetAt);
 
 export const endOfDay = (ledger: Pick<Ledger, "offsetAt">, day: string) =>
-    fromWall(Date.parse(`${day}T00:00:00Z`) + DAY_MS, ledger.offsetAt) - 1;
+    fromWall(wallMidnight(day) + DAY_MS, ledger.offsetAt) - 1;
 
 export function prepareLedger(books: LedgerBooks, now: number): Ledger {
     const settings = settingsOf(books.appMeta);
@@ -111,7 +112,7 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
             amount: values[index] ?? 0,
             at: row.date,
             categoryId: row.categoryId,
-            day: localDate(row.date, offsetAt(row.date)),
+            day: isoDay(row.date, offsetAt(row.date)),
             feeFor: row.feeForId ?? row.transferId ?? null,
             id: row.localId,
             income: row.income,
@@ -137,7 +138,7 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
         arrived: row.toAmount,
         arrivedCurrency: row.toCurrency,
         at: row.date,
-        day: localDate(row.date, offsetAt(row.date)),
+        day: isoDay(row.date, offsetAt(row.date)),
         fromId: row.fromAccountId,
         id: row.localId,
         sent: row.fromAmount,
@@ -204,7 +205,7 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
         offsetAt,
         rates,
         rows,
-        today: localDate(now, offsetAt(now)),
+        today: isoDay(now, offsetAt(now)),
         transfers,
     };
 }

@@ -1,10 +1,11 @@
+import { fromWall, isoDay, wallNoon } from "@outlayr/money/ledger-zone";
+import type { OffsetAt } from "@outlayr/money/ledger-zone";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import { sha256Hex } from "./lib/sha256Hex";
-import { EntryKind, fromWall, localDate } from "./mcpLedger";
-import type { OffsetAt } from "./mcpLedger";
+import { EntryKind } from "./mcpLedger";
 
 export const MCP_DEVICE_ID = "mcp";
 
@@ -132,22 +133,14 @@ export function entryInstant(
     offsetAt: OffsetAt
 ): Effect.Effect<number, InvalidDate> {
     const wanted = date?.trim();
-    if (!wanted || wanted === localDate(now, offsetAt(now))) {
+    if (!wanted || wanted === isoDay(now, offsetAt(now))) {
         return Effect.succeed(now);
     }
-    const noon = Date.parse(`${wanted}T12:00:00Z`);
-    if (!ISO_DATE.test(wanted) || Number.isNaN(noon) || localDate(noon, 0) !== wanted) {
+    const noon = wallNoon(wanted);
+    if (!ISO_DATE.test(wanted) || Number.isNaN(noon) || isoDay(noon, 0) !== wanted) {
         return Effect.fail(new InvalidDate({ date: wanted }));
     }
     return Effect.succeed(fromWall(noon, offsetAt));
-}
-
-export function localMidnights(instant: number, offsetAt: OffsetAt) {
-    const local = new Date(instant + offsetAt(instant));
-    return {
-        day: fromWall(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()), offsetAt),
-        month: fromWall(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), 1), offsetAt),
-    };
 }
 
 export const keyedLocalId = Effect.fn("McpEntries.keyedLocalId")(function* keyedLocalId(userId: string, key: string) {

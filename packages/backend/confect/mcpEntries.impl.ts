@@ -1,6 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { decimalsFor, isPickableCurrency } from "@outlayr/money/currency";
+import { filedOn, fixedOffset, isoDay, utcOffsetOf } from "@outlayr/money/ledger-zone";
 import type { RateLookup } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
 import * as Clock from "effect/Clock";
@@ -23,14 +24,12 @@ import {
     IdempotencyKeyReused,
     InvalidAmount,
     keyedLocalId,
-    localMidnights,
     MCP_DEVICE_ID,
     MEMORY_WINDOW,
     named,
     UnknownCurrency,
 } from "./mcpEntries";
 import spec from "./mcpEntries.spec";
-import { fixedOffset, localDate, utcOffsetOf } from "./mcpLedger";
 import { setting, storedZone } from "./mcpLedger.impl";
 import { isPro } from "./revenuecat";
 
@@ -139,7 +138,7 @@ const logEntry = FunctionImpl.make(
                 amount,
                 category: category.name,
                 currency,
-                date: localDate(date, offsetAt(date)),
+                date: isoDay(date, offsetAt(date)),
                 kind: args.kind,
                 note: note || (category.name ?? ""),
             };
@@ -152,7 +151,7 @@ const logEntry = FunctionImpl.make(
                 if (logged.amount !== amount || logged.currency !== currency || logged.income !== income) {
                     return yield* new IdempotencyKeyReused();
                 }
-                return { ...entry, date: localDate(logged.date, offsetAt(logged.date)), note: logged.note };
+                return { ...entry, date: isoDay(logged.date, offsetAt(logged.date)), note: logged.note };
             }
 
             const lookup: RateLookup = (quote, rateType, day) =>
@@ -174,7 +173,7 @@ const logEntry = FunctionImpl.make(
             });
             yield* writer.table("transactions").insert({
                 ...valuation,
-                ...localMidnights(date, offsetAt),
+                ...filedOn(date, offsetAt),
                 accountId: account?.localId ?? null,
                 amount,
                 categoryId: category.localId,

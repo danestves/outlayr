@@ -1,6 +1,6 @@
 import { text } from "node:stream/consumers";
 
-import { startOfDay } from "@outlayr/money/calendar";
+import { addMonths, firstOfMonth, monthPeriodStart, startOfDay } from "@outlayr/money/calendar";
 import { utcDateString } from "@outlayr/money/dates";
 import { generateSchedule } from "@outlayr/money/installments";
 import { buildRateTable } from "@outlayr/money/valuation";
@@ -184,6 +184,25 @@ async function answer(): Promise<string> {
                 daysInMonth: days.length,
                 logged: days.flatMap((flag, index) => (flag ? [index + 1] : [])),
             });
+        }
+        case "calendar-days": {
+            const cases: { firstDayOfMonth: number | null; instant: string }[] = JSON.parse(await text(process.stdin));
+            return JSON.stringify(
+                cases.map(({ firstDayOfMonth, instant }) => {
+                    const at = new Date(instant);
+                    const start = firstDayOfMonth === null ? null : monthPeriodStart(at, firstDayOfMonth);
+                    return {
+                        day: startOfDay(at).toISOString(),
+                        iso: localDayKey(at.getTime()),
+                        month: firstOfMonth(at).toISOString(),
+                        window: start && {
+                            end: addMonths(start, 1).toISOString(),
+                            firstDayOfMonth,
+                            start: start.toISOString(),
+                        },
+                    };
+                })
+            );
         }
         case "installments": {
             const every = parts[5] ?? 0;

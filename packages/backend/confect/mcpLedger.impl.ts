@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { DAY_MS, fixedOffset, monthWindow, utcDayStart, utcOffsetOf, zoneOffsets } from "@outlayr/money/ledger-zone";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { buildRateTable } from "@outlayr/money/valuation";
 import * as Clock from "effect/Clock";
@@ -15,7 +16,7 @@ import {
     spendingSummary as spendingSummaryFrom,
     upcomingCharges as upcomingChargesFrom,
 } from "./ledgerView";
-import { DAY_MS, fixedOffset, monthWindow, SCAN_WINDOW, utcDayStart, utcOffsetOf, zoneOffsets } from "./mcpLedger";
+import { SCAN_WINDOW } from "./mcpLedger";
 import spec from "./mcpLedger.spec";
 
 export const setting = Effect.fn("McpLedger.setting")(function* setting(userId: string, key: string) {

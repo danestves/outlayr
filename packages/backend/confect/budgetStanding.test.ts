@@ -1,9 +1,10 @@
 // @vitest-environment node
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
+import { wall } from "@outlayr/money/ledger-zone";
 import { buildRateTable } from "@outlayr/money/valuation";
 import { afterAll, beforeAll, describe, expect, it } from "vite-plus/test";
 
-import { budgetStanding, wall } from "./mcpLedger";
+import { budgetStanding } from "./mcpLedger";
 
 const HOUR_MS = 3_600_000;
 

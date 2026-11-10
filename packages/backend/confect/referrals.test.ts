@@ -3,6 +3,7 @@
 import { HOUR } from "@convex-dev/rate-limiter";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import { normalizeReferralCode } from "@outlayr/money/contract";
+import { DAY_MS } from "@outlayr/money/ledger-zone";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import type { TestConvex } from "convex-test";
@@ -12,7 +13,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test"
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { runEdge } from "./lib/runEdge";
-import { DAY_MS } from "./mcpLedger";
 import {
     addMonthsUtc,
     codeFromBytes,

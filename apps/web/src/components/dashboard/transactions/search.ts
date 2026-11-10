@@ -1,3 +1,4 @@
+import { wallMidnight } from "@outlayr/money/ledger-zone";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -47,7 +48,7 @@ export interface PageQuery extends Omit<LedgerQuery, "accounts" | "categories" |
 }
 
 const realDay = (value: string) => {
-    const time = Date.parse(`${value}T00:00:00Z`);
+    const time = wallMidnight(value);
     return !Number.isNaN(time) && new Date(time).toISOString().startsWith(value);
 };
 

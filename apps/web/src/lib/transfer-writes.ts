@@ -1,4 +1,5 @@
 import { decimalsFor } from "@outlayr/money/currency";
+import { filedOn } from "@outlayr/money/ledger-zone";
 import type { MarketRateType } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
 import type { FeeSide } from "@outlayr/money/transfer-reconcile";
@@ -19,7 +20,7 @@ import * as Effect from "effect/Effect";
 import { nextRow, parseAmount, ratesLookup } from "./account-writes";
 import type { Ledger } from "./dashboard-series-ledger";
 import { entryPush } from "./delete-writes";
-import { filedOn, wallInstant, wallText } from "./entry-writes";
+import { wallInstant, wallText } from "./entry-writes";
 import { money } from "./ledger";
 import type { CommitRow } from "./ledger-committer";
 
@@ -280,7 +281,7 @@ export function transferProblem(ledger: Ledger, doc: TransferDoc, input: Transfe
  */
 export function editedTransfer(ledger: Ledger, doc: TransferDoc, input: TransferInput, at: number): CommitRow[] {
     const { fromUsd, toUsd } = frozenOf(ledger, doc, input);
-    const { anchorDay: _anchor, ...filed } = filedOn(ledger.offsetAt, input.date.getTime());
+    const filed = filedOn(input.date.getTime(), ledger.offsetAt);
     const legs = legColumns(input, fromUsd, toUsd, new Date(at));
     const edited = nextRow(
         "transfers",
@@ -288,8 +289,8 @@ export function editedTransfer(ledger: Ledger, doc: TransferDoc, input: Transfer
         {
             ...legs,
             date: legs.date.getTime(),
-            day: filed.day.getTime(),
-            month: filed.month.getTime(),
+            day: filed.day,
+            month: filed.month,
             updatedAt: at,
         },
         at
@@ -311,8 +312,8 @@ export function editedTransfer(ledger: Ledger, doc: TransferDoc, input: Transfer
                       amountUsd: columns.amountUsd,
                       currency: columns.currency,
                       date: columns.date.getTime(),
-                      day: columns.day.getTime(),
-                      month: columns.month.getTime(),
+                      day: columns.day,
+                      month: columns.month,
                       note: columns.note,
                   },
                   at

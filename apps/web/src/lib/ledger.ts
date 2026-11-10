@@ -1,15 +1,13 @@
-const DAY_MS = 86_400_000;
+import { DAY_MS, wallNoon } from "@outlayr/money/ledger-zone";
 
-const dayMs = (day: string) => Date.parse(`${day}T12:00:00Z`);
-
-export const daysBetween = (from: string, to: string) => Math.round((dayMs(to) - dayMs(from)) / DAY_MS);
+export const daysBetween = (from: string, to: string) => Math.round((wallNoon(to) - wallNoon(from)) / DAY_MS);
 
 export function addDays(day: string, days: number) {
-    return new Date(dayMs(day) + days * DAY_MS).toISOString().slice(0, 10);
+    return new Date(wallNoon(day) + days * DAY_MS).toISOString().slice(0, 10);
 }
 
 export function shortDay(day: string) {
-    return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }).format(dayMs(day));
+    return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }).format(wallNoon(day));
 }
 
 export function clockTime(time: string, use24HourClock = false) {

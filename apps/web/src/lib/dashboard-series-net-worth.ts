@@ -1,4 +1,3 @@
-import { localDate } from "@outlayr/backend/confect/mcpLedger";
 import { netWorth, toAccountKind } from "@outlayr/money/account-kind";
 import type { AccountKind } from "@outlayr/money/account-kind";
 import { restate } from "@outlayr/money/account-overview";
@@ -6,6 +5,7 @@ import { decimalsFor } from "@outlayr/money/currency";
 import { toCells, valueCell } from "@outlayr/money/currency-totals";
 import type { CurrencyEntry } from "@outlayr/money/currency-totals";
 import { utcDateString } from "@outlayr/money/dates";
+import { isoDay } from "@outlayr/money/ledger-zone";
 import { roundMoney } from "@outlayr/money/round";
 
 import { openAccounts } from "./dashboard-series-ledger";
@@ -107,7 +107,7 @@ function movementsOf(ledger: Ledger): Movements {
             opened:
                 row.initialBalance === 0
                     ? null
-                    : localDate(row.initialBalanceDate, ledger.offsetAt(row.initialBalanceDate)),
+                    : isoDay(row.initialBalanceDate, ledger.offsetAt(row.initialBalanceDate)),
         })),
         list: list.toSorted((a, b) => a.at - b.at),
     };
@@ -169,7 +169,7 @@ export function netWorthPoints(ledger: Ledger, scope: Scope, instants: readonly 
         }
         touched.clear();
         const rateDay = utcDateString(instant);
-        const day = localDate(instant, ledger.offsetAt(instant));
+        const day = isoDay(instant, ledger.offsetAt(instant));
         const balances = [...accounts.values()].flatMap(({ holder, piles }) => {
             if (holder.opened !== null && holder.opened > day && instant < ledger.now) {
                 return [];
@@ -229,7 +229,7 @@ export function accountFlows(ledger: Ledger, accountId: string): AccountFlow[] {
             {
                 at: movement.at,
                 id: movement.id,
-                day: localDate(movement.at, ledger.offsetAt(movement.at)),
+                day: isoDay(movement.at, ledger.offsetAt(movement.at)),
                 leg: legOf(movement.key),
                 value: roundMoney(cell.income ? value : -value, decimalsFor(holder.currency)),
             },

@@ -1,3 +1,4 @@
+import { wallNoon } from "@outlayr/money/ledger-zone";
 import { useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -19,7 +20,7 @@ export function useWeekday() {
             timeZone: "UTC",
             weekday: "short",
         });
-        return (day: string) => format.format(Date.parse(`${day}T12:00:00Z`)).replace(WEEKDAY_LEAD, "$1, ");
+        return (day: string) => format.format(wallNoon(day)).replace(WEEKDAY_LEAD, "$1, ");
     }, [date]);
 }
 
