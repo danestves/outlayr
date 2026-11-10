@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { CurrencyField, Fact, FlowDialog } from "@/components/dashboard/accounts/fields";
-import { UNDO_HOLD_MS, useAccountFlows, useLedgerDb } from "@/components/dashboard/accounts/flows";
+import { useLedgerDb } from "@/components/dashboard/accounts/flows";
 import type { AccountRow } from "@/components/dashboard/accounts/model";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -85,27 +85,12 @@ const signedBy = (verb: DebtVerb | NewVerb, amount: number) =>
 function useWrite() {
     const committer = useLedgerCommitter();
     const { form } = useIntlayer("dashboard-debts");
-    const { toast } = useAccountFlows();
     return (rows: readonly CommitRow[], text: string, undoable = false) => {
-        const held = committer.commit(rows, undoable ? { holdMs: UNDO_HOLD_MS } : undefined);
-        void held.settled.then((outcome) => {
-            if (outcome.status === "failed") {
-                toast({ failed: true, text: form.saveFailed.value });
-            }
-        });
-        if (!undoable) {
-            toast({ text });
+        if (undoable) {
+            committer.commitWithUndo(rows, { failed: form.saveFailed.value, text });
             return;
         }
-        toast({
-            onExpire: () => {
-                void held.flush();
-            },
-            onUndo: () => {
-                held.undo();
-            },
-            text,
-        });
+        void committer.commit(rows, { failed: form.saveFailed.value, saved: text });
     };
 }
 
@@ -1422,36 +1407,21 @@ function DeleteDebt({ onClose, row }: { onClose: () => void; row: DebtRow }) {
     const db = useLedgerDb();
     const committer = useLedgerCommitter();
     const { cancel, delete: copy } = useIntlayer("dashboard-debts");
-    const { toast } = useAccountFlows();
     const { money } = useDisplayFormat();
     const navigate = useNavigate();
     const onDetail = useLocation({ select: (location) => location.pathname !== "/app/debts" });
     const count = row.facts.movements.length;
     const amount = money(row.amount, row.account.currency);
-    const remove = async () => {
+    const remove = () => {
         const books = ledgerBooks(db);
         const account = books.accounts.find((each) => each.localId === row.account.id);
+        onClose();
         if (!account) {
-            onClose();
             return;
         }
-        const held = committer.commit(deletedAccount(books, account, Date.now()), { holdMs: UNDO_HOLD_MS });
-        void held.settled.then((outcome) => {
-            if (outcome.status === "failed") {
-                toast({ failed: true, text: copy.failed.value });
-            }
-        });
-        onClose();
-        if (onDetail) {
-            await navigate({ to: "/app/debts" });
-        }
-        toast({
-            onExpire: () => {
-                void held.flush();
-            },
-            onUndo: () => {
-                held.undo();
-            },
+        committer.commitWithUndo(deletedAccount(books, account, Date.now()), {
+            after: onDetail ? navigate({ to: "/app/debts" }) : undefined,
+            failed: copy.failed.value,
             text: copy.toast({ name: row.account.name }).value,
         });
     };

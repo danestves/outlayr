@@ -102,7 +102,6 @@ const dashboardCategories = {
             fr: "Suppression impossible. Elle est de retour.",
             pt: "Não foi possível apagar. Ela voltou.",
         }),
-        undo: t({ en: "Undo", es: "Deshacer", fr: "Annuler", pt: "Desfazer" }),
         undoBody: t({
             en: "Its transactions go with it.",
             es: "Sus transacciones se borran con ella.",

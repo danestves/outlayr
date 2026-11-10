@@ -14,14 +14,12 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { AmountInput } from "@/components/dashboard/accounts/fields";
-import { useAccountFlows, useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
 import { parseAmount } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { money } from "@/lib/ledger";
-import { ledgerBooks } from "@/lib/ledger-db";
 import {
     currencyOf,
     editedTransfer,
@@ -79,21 +77,18 @@ export function TransferEditor({
     onDelete: () => void;
 }) {
     const { ledger, photos } = useDashboard();
-    const db = useLedgerDb();
     const committer = useLedgerCommitter();
     const { bulk, detail, form } = useIntlayer("dashboard-transactions");
-    const { toast } = useAccountFlows();
     const [base] = useState(() => transferBaseOf(ledger, doc));
     const [values, setValues] = useState(base.start);
     const [problem, setProblem] = useState<TransferProblem | null>(null);
     const saved = useRef(JSON.stringify(transferInputOf(ledger, base, base.start)));
     const save = (next: TransferValues) => {
-        const books = ledgerBooks(db);
-        const live = books.transfers.find((row) => row.localId === doc.localId);
+        const current = committer.current();
+        const live = current.books.transfers.find((row) => row.localId === doc.localId);
         if (!live || live.deletedAt !== null) {
             return;
         }
-        const current = { ...ledger, books };
         const input = transferInputOf(current, base, next);
         const key = JSON.stringify(input);
         const found = transferProblem(current, live, input);
@@ -102,15 +97,12 @@ export function TransferEditor({
             return;
         }
         saved.current = key;
-        void committer.commit(editedTransfer(current, live, input, Date.now())).settled.then((outcome) => {
-            if (outcome.status !== "failed") {
-                return;
-            }
+        const rows = editedTransfer(current, live, input, Date.now());
+        void committer.commit(rows, { failed: form.saveFailed.value }).then((kept) => {
             // Cleared, not restored: the save before this one may have failed too. A repeat send changes nothing.
-            if (saved.current === key) {
+            if (!kept && saved.current === key) {
                 saved.current = "";
             }
-            toast({ failed: true, text: form.saveFailed.value });
         });
     };
     const flush = useEffectEvent(() => save(values));

@@ -12,11 +12,9 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { archivedAccount, deletedAccount } from "@/lib/account-writes";
-import { ledgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { Fact, FlowDialog } from "./fields";
-import { UNDO_HOLD_MS, useLedgerDb, useAccountFlows } from "./flows";
 import { Glyph } from "./glyph";
 import { accountFacts, netAfterDelete } from "./model";
 
@@ -24,31 +22,26 @@ type Account = LedgerBooks["accounts"][number];
 
 export function ArchiveDialog({ account, onClose }: { account: Account; onClose: () => void }) {
     const { ledger } = useDashboard();
-    const db = useLedgerDb();
     const committer = useLedgerCommitter();
     const { flows } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
-    const { toast } = useAccountFlows();
     const navigate = useNavigate();
     const [failed, setFailed] = useState(false);
     const facts = accountFacts(ledger, account.localId);
     const archive = async () => {
         const at = Date.now();
-        const outcome = await committer.commit([archivedAccount(account, at, at)]).settled;
-        if (outcome.status === "failed") {
+        if (!(await committer.commit([archivedAccount(account, at, at)]))) {
             setFailed(true);
             return;
         }
         onClose();
         await navigate({ to: "/app/accounts" });
-        toast({
+        committer.notify({
             onUndo: () => {
-                const fresh = ledgerBooks(db).accounts.find((row) => row.localId === account.localId);
+                const fresh = committer.current().books.accounts.find((row) => row.localId === account.localId);
                 if (fresh) {
-                    void committer.commit([archivedAccount(fresh, null, Date.now())]).settled.then((undone) => {
-                        if (undone.status === "failed") {
-                            toast({ failed: true, text: flows.restoreFailed({ name: account.name }).value });
-                        }
+                    void committer.commit([archivedAccount(fresh, null, Date.now())], {
+                        failed: flows.restoreFailed({ name: account.name }).value,
                     });
                 }
             },
@@ -82,31 +75,19 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
 
 export function DeleteDialog({ account, onClose }: { account: Account; onClose: () => void }) {
     const { ledger } = useDashboard();
-    const db = useLedgerDb();
     const committer = useLedgerCommitter();
     const { actions, flows } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
-    const { toast } = useAccountFlows();
     const navigate = useNavigate();
     const facts = accountFacts(ledger, account.localId);
     const nothing = facts.transactions + facts.adjustments + facts.transfers + facts.plans === 0;
-    const remove = async () => {
-        const held = committer.commit(deletedAccount(ledgerBooks(db), account, Date.now()), { holdMs: UNDO_HOLD_MS });
-        void held.settled.then((outcome) => {
-            if (outcome.status === "failed") {
-                toast({ text: flows.deleteFailed({ name: account.name }).value });
-            }
-        });
+    const remove = () => {
+        const rows = deletedAccount(committer.current().books, account, Date.now());
         onClose();
-        await navigate({ to: "/app/accounts" });
-        toast({
-            onExpire: () => {
-                void held.flush();
-            },
-            onUndo: () => {
-                held.undo();
-            },
+        committer.commitWithUndo(rows, {
+            after: navigate({ to: "/app/accounts" }),
             detail: nothing ? undefined : flows.deleteBody.value,
+            failed: flows.deleteFailed({ name: account.name }).value,
             text: flows.deletedToast.value,
         });
     };

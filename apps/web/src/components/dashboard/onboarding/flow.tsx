@@ -3,9 +3,9 @@ import { api } from "@outlayr/backend/convex/_generated/api";
 import { useQuery } from "@tanstack/react-query";
 import { useLoaderData, useNavigate } from "@tanstack/react-router";
 import { useContext, useState, useSyncExternalStore } from "react";
-import { useIntlayer, useLocale } from "react-intlayer";
+import { useLocale } from "react-intlayer";
 
-import { useAccountFlows, useLedgerDb } from "@/components/dashboard/accounts/flows";
+import { useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { usePresetLabel } from "@/components/dashboard/settings/categories/preset-label";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -14,7 +14,6 @@ import { categoryPush, seededCategories } from "@/lib/category-writes";
 import { convexClient } from "@/lib/convex";
 import { wallText } from "@/lib/entry-writes";
 import { clockOf } from "@/lib/ledger";
-import type { CommitOutcome } from "@/lib/ledger-committer";
 import { LedgerSettingsContext, useDisplayFormat, writeSettings } from "@/lib/ledger-settings";
 import { freshProgress, readProgress, screenOf, stepIndex, subscribeProgress, writeProgress } from "@/lib/onboarding";
 import type { OnboardingProgress, OnboardingScreen } from "@/lib/onboarding";
@@ -44,12 +43,10 @@ export function Onboarding({ step }: { step: string | undefined }) {
     const committer = useLedgerCommitter();
     const { ledger } = useDashboard();
     const settings = useContext(LedgerSettingsContext);
-    const flows = useAccountFlows();
     const labelOf = usePresetLabel();
     const date = useDateFormat();
     const { clockTime } = useDisplayFormat();
     const { locale } = useLocale();
-    const copy = useIntlayer("dashboard-onboarding");
     const { data: push } = useQuery(convexQuery(api.webPush.config, {}));
     const stored = useSyncExternalStore(subscribeProgress, () => readProgress(userId), noProgress);
     const [begunAt] = useState(() => Date.now());
@@ -81,8 +78,12 @@ export function Onboarding({ step }: { step: string | undefined }) {
         };
         setCurrencyFailed(false);
         if (ledger.books.categories.length === 0) {
-            const seeded = committer.commit(seededCategories(labelOf, Date.now()).map((row) => categoryPush(row)));
-            void seeded.settled.then((outcome) => (outcome.status === "failed" ? refused() : undefined));
+            const seeded = seededCategories(labelOf, Date.now()).map((row) => categoryPush(row));
+            void committer.commit(seeded).then((saved) => {
+                if (!saved) {
+                    refused();
+                }
+            });
         }
         go("auto-log");
         writeSettings(db, { currency, currencyChosen: "true" }).catch(refused);
@@ -131,14 +132,9 @@ export function Onboarding({ step }: { step: string | undefined }) {
             void remind(minute);
         }
     };
-    const leaveEntry = (settled?: Promise<CommitOutcome>) => {
+    const leaveEntry = () => {
         go("done");
         askToRemind(progress.reminderMinute);
-        void settled?.then((outcome) => {
-            if (outcome.status === "failed") {
-                flows.toast({ failed: true, text: copy.firstEntry.failed.value });
-            }
-        });
     };
 
     switch (screen) {
@@ -186,7 +182,7 @@ export function Onboarding({ step }: { step: string | undefined }) {
             );
         }
         case "first-entry": {
-            return <FirstEntry onLater={() => leaveEntry()} onSaved={leaveEntry} onStep={go} />;
+            return <FirstEntry onLater={leaveEntry} onSaved={leaveEntry} onStep={go} />;
         }
         default: {
             return (

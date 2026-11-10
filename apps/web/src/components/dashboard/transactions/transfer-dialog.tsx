@@ -9,13 +9,11 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { AmountInput, FlowDialog } from "@/components/dashboard/accounts/fields";
-import { useAccountFlows, useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { accountRows, cardStatement, flowsOf, isCard, plansOn } from "@/components/dashboard/accounts/model";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
 import { wallInstant, wallText } from "@/lib/entry-writes";
-import { ledgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import {
     createdTransfer,
@@ -39,11 +37,9 @@ function Balance({ children }: { children: ReactNode }) {
 
 export function TransferDialog({ accountId, onClose }: { accountId: string; onClose: () => void }) {
     const { ledger, overview, photos } = useDashboard();
-    const db = useLedgerDb();
     const committer = useLedgerCommitter();
     const { flows } = useIntlayer("dashboard-accounts");
     const { detail, form } = useIntlayer("dashboard-transactions");
-    const { toast } = useAccountFlows();
     const { money } = useDisplayFormat();
     const rows = accountRows(ledger, overview);
     const [values, setValues] = useState<NewTransferValues>(() => {
@@ -81,7 +77,7 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
     const fee = input?.fees?.source?.amount ?? 0;
     const submit = (another: boolean) => {
         const at = Date.now();
-        const current = { ...ledger, books: ledgerBooks(db) };
+        const current = committer.current();
         const found = newTransferProblem(current, values);
         setProblem(found);
         const name = (id: string | null) => current.books.accounts.find((row) => row.localId === id)?.name ?? "";
@@ -92,12 +88,7 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
         }
         const date = values.dateText === wallText(at, ledger) ? at : wallInstant(values.dateText, ledger);
         const created = createdTransfer(current, crypto.randomUUID(), { ...draft, date: new Date(date) }, at);
-        void committer.commit(created).settled.then((outcome) => {
-            if (outcome.status === "failed") {
-                toast({ failed: true, text: form.saveFailed.value });
-            }
-        });
-        toast({ text: flows.transferSaved.value });
+        void committer.commit(created, { failed: form.saveFailed.value, saved: flows.transferSaved.value });
         if (another) {
             change({ ...values, arrivedByHand: false, arrivedText: "", feeText: "", note: "", sentText: "" });
             setRound((count) => count + 1);

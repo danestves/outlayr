@@ -8,7 +8,6 @@ import { Select } from "panelui-web/select";
 import { useId, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { SettingsCard } from "@/components/dashboard/settings/parts";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -17,8 +16,6 @@ import { useCategoryOptions } from "@/components/dashboard/transactions/entry-fo
 import { parseAmount } from "@/lib/account-writes";
 import { blankValues, createdEntry, draftOf, entryProblem, wallText } from "@/lib/entry-writes";
 import type { EntryProblem } from "@/lib/entry-writes";
-import type { CommitOutcome } from "@/lib/ledger-committer";
-import { ledgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import type { OnboardingStep } from "@/lib/onboarding";
 
@@ -41,12 +38,11 @@ export function FirstEntry({
     onStep,
 }: {
     onLater: () => void;
-    onSaved: (settled: Promise<CommitOutcome>) => void;
+    onSaved: () => void;
     onStep: (step: OnboardingStep) => void;
 }) {
     const { firstEntry } = useIntlayer("dashboard-onboarding");
     const { ledger } = useDashboard();
-    const db = useLedgerDb();
     const committer = useLedgerCommitter();
     const { money } = useDisplayFormat();
     const date = useDateFormat();
@@ -66,13 +62,16 @@ export function FirstEntry({
 
     const save = () => {
         const at = Date.now();
-        const current = { ...ledger, books: ledgerBooks(db) };
+        const current = committer.current();
         const values = { ...blankValues(current, null, at), amountText, categoryId };
         const draft = { ...draftOf(current, values, null, ""), date: at };
         const found = entryProblem(current, draft, null, at);
         setProblem(found);
         if (found === null) {
-            onSaved(committer.commit(createdEntry(current, crypto.randomUUID(), draft, at)).settled);
+            void committer.commit(createdEntry(current, crypto.randomUUID(), draft, at), {
+                failed: firstEntry.failed.value,
+            });
+            onSaved();
         }
     };
 

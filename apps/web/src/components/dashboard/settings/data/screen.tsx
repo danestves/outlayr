@@ -29,7 +29,7 @@ import { MerchantTile } from "@/components/ledger/tiles";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { pushRows } from "@/lib/ledger-write";
 
-import { settingsToasts } from "../categories/write";
+import { settingsNotices, settingsToasts } from "../categories/write";
 import { Row, SectionHead, SettingsCard } from "../parts";
 import {
     archiveFileName,
@@ -444,7 +444,7 @@ function RestoreTab({ onExport }: { onExport: () => void }) {
 
 function DeletedTab() {
     const copy = useIntlayer("dashboard-data").deleted;
-    const committer = useLedgerCommitter();
+    const committer = useLedgerCommitter(settingsNotices);
     const queryClient = useQueryClient();
     const { ledger } = useDashboard();
     const { money } = useDisplayFormat();
@@ -466,10 +466,7 @@ function DeletedTab() {
         queryClient.setQueryData<readonly PulledRow[]>(DELETED_KEY, (current) =>
             current?.filter((row) => !lifted.has(`${row.table}:${row.localId}`))
         );
-        const outcome = await committer.commit(push).settled;
-        if (outcome.status === "failed") {
-            settingsToasts.add({ title: copy.failed.value, type: "destructive" });
-        }
+        await committer.commit(push, { failed: copy.failed.value });
         queryClient.invalidateQueries({ queryKey: DELETED_KEY });
     };
     if (query.isError) {
@@ -599,7 +596,7 @@ function EraseBody({
     scope: EraseScope;
 }) {
     const { erase: copy, restore: restoreCopy } = useIntlayer("dashboard-data");
-    const committer = useLedgerCommitter();
+    const committer = useLedgerCommitter(settingsNotices);
     const queryClient = useQueryClient();
     const count = useLiveEntries().length;
     const [typed, setTyped] = useState("");
@@ -608,9 +605,8 @@ function EraseBody({
     const erase = async () => {
         onBusy(true);
         const rows = await pullRows().catch(() => null);
-        const outcome = rows && (await committer.commit(eraseRows(rows, scope, nowMs())).settled);
-        if (outcome?.status !== "saved") {
-            settingsToasts.add({ title: copy.failed.value, type: "destructive" });
+        if (rows === null || !(await committer.commit(eraseRows(rows, scope, nowMs())))) {
+            committer.notify({ failed: true, text: copy.failed.value });
             onBusy(false);
             return;
         }

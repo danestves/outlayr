@@ -20,7 +20,6 @@ import type { ReactNode, RefObject } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { AmountInput, CurrencyField, FlowDialog, QUIET_ROW } from "@/components/dashboard/accounts/fields";
-import { useAccountFlows, useLedgerDb } from "@/components/dashboard/accounts/flows";
 import type { AccountFlow } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
@@ -41,7 +40,6 @@ import {
 } from "@/lib/entry-writes";
 import type { Doc, EntryBase, EntryProblem, EntryValues } from "@/lib/entry-writes";
 import { money } from "@/lib/ledger";
-import { ledgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { newLink } from "@/lib/rule-writes";
 
@@ -515,12 +513,10 @@ export function EntryDialog({
     onSwitch: (flow: AccountFlow) => void;
 }) {
     const { ledger } = useDashboard();
-    const db = useLedgerDb();
     const committer = useLedgerCommitter();
     const { add } = useIntlayer("dashboard");
     const { flows } = useIntlayer("dashboard-accounts");
     const { form } = useIntlayer("dashboard-transactions");
-    const { toast } = useAccountFlows();
     const [values, setValues] = useState(() => {
         const source = ledger.books.transactions.find((row) => row.localId === flow.from);
         return source
@@ -544,7 +540,7 @@ export function EntryDialog({
     };
     const submit = (another: boolean) => {
         const at = Date.now();
-        const current = { ...ledger, books: ledgerBooks(db) };
+        const current = committer.current();
         const draft = draftOf(current, filled, null, form.feeNote({ merchant: merchantOf(ledger, filled) }).value);
         // The default minute keeps its seconds, so entries added back to back stay in the order they were typed.
         const dated = values.dateText === wallText(at, ledger) ? { ...draft, date: at } : draft;
@@ -555,12 +551,10 @@ export function EntryDialog({
         }
         const id = crypto.randomUUID();
         const links = ruled.tagIds.map((tagId) => newLink(id, tagId, at));
-        void committer.commit([...createdEntry(current, id, dated, at), ...links]).settled.then((outcome) => {
-            if (outcome.status === "failed") {
-                toast({ failed: true, text: form.saveFailed.value });
-            }
+        void committer.commit([...createdEntry(current, id, dated, at), ...links], {
+            failed: form.saveFailed.value,
+            saved: form.added.value,
         });
-        toast({ text: form.added.value });
         if (another) {
             change({ amountText: "", details: "", feeText: "", note: "" });
             setRound((count) => count + 1);
@@ -624,21 +618,18 @@ export function EntryEditor({
     total: ReactNode;
 }) {
     const { ledger } = useDashboard();
-    const db = useLedgerDb();
     const committer = useLedgerCommitter();
     const { bulk, form } = useIntlayer("dashboard-transactions");
-    const { toast } = useAccountFlows();
     const [base] = useState<EntryBase>(() => baseOf(ledger, doc));
     const [values, setValues] = useState(base.start);
     const [problem, setProblem] = useState<EntryProblem | null>(null);
     const saved = useRef(JSON.stringify(draftOf(ledger, base.start, base, "")));
     const save = (next: EntryValues) => {
-        const books = ledgerBooks(db);
-        const live = books.transactions.find((row) => row.localId === doc.localId);
+        const current = committer.current();
+        const live = current.books.transactions.find((row) => row.localId === doc.localId);
         if (!live || live.deletedAt !== null) {
             return;
         }
-        const current = { ...ledger, books };
         const at = Date.now();
         const draft = draftOf(current, next, base, "");
         const key = JSON.stringify(draft);
@@ -649,15 +640,12 @@ export function EntryEditor({
         }
         saved.current = key;
         const feeNote = form.feeNote({ merchant: merchantOf(ledger, next) }).value;
-        void committer.commit(editedEntry(current, live, { ...draft, feeNote }, at)).settled.then((outcome) => {
-            if (outcome.status !== "failed") {
-                return;
-            }
+        const rows = editedEntry(current, live, { ...draft, feeNote }, at);
+        void committer.commit(rows, { failed: form.saveFailed.value }).then((kept) => {
             // Cleared, not restored: the save before this one may have failed too. A repeat send changes nothing.
-            if (saved.current === key) {
+            if (!kept && saved.current === key) {
                 saved.current = "";
             }
-            toast({ failed: true, text: form.saveFailed.value });
         });
     };
     const flush = useEffectEvent(() => save(values));

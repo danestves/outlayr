@@ -24,7 +24,17 @@
 
 ## How a write works
 
-Every ledger commit goes through `ledgerCommitter(db, userId)` in `lib/ledger-committer.ts`; a component reaches it with `useLedgerCommitter()`. `commit(rows)` shows the rows at once and pushes them. It never rejects: `settled` resolves to `saved`, `failed` or `undone`, and the caller decides how a failure looks.
+Every ledger commit goes through `ledgerCommitter(db, userId)` in `lib/ledger-committer.ts`. `commit(rows)` shows the rows at once and pushes them. It never rejects: `settled` resolves to `saved`, `failed` or `undone`.
+
+A component reaches it with `useLedgerCommitter()`, which also owns how an outcome reads (`lib/commit-notices.ts`). A caller states its rows and its copy:
+
+- `commit(rows, { failed, saved })` resolves to whether the rows were saved. With `failed` it tells the person when they were not, and with `saved` it says so at once. A form that shows its own inline error passes no copy and reads the answer.
+- `commitWithUndo(rows, { text, failed })` is a held commit with its Undo notice. The notice leaves when the hold runs out, a failure takes its place, and `onUndone` runs only if Undo still worked. `after` keeps the notice back until a navigation has landed.
+- `current()` is the ledger with the books as the local copy holds them right now, for rows built in a handler.
+- `notify(notice)` speaks through the same host, for a notice that is not a commit's own.
+- Notices go to the shell's host unless the page has its own toast region. Such a page passes its surface (`entryNotices`, `ruleNotices`, `settingsNotices`), which also says how long its Undo lasts: do not add a second hold constant or a hand-made failure toast.
+
+Under the hook:
 
 - Unsent rows are written to `localStorage` when their push starts and removed when it is answered. `resume()`, run after each signed-in load, sends what a closed page left and drops rows of another account. Sign-out clears them with the copy.
 - A failed commit leaves nothing shown and nothing stored. `retry()` on its outcome shows and pushes the same rows again.
