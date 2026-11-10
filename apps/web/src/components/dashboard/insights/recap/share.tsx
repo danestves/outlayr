@@ -89,25 +89,33 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
         if (!open) {
             return;
         }
-        let url: string | null = null;
         let stale = false;
         renderCard(input, size, LOGO)
             .then((blob) => {
                 if (stale) {
                     return;
                 }
-                url = URL.createObjectURL(blob);
                 setFailed(false);
-                setMade({ blob, url });
+                setMade({ blob, url: URL.createObjectURL(blob) });
             })
-            .catch(() => setFailed(true));
+            .catch(() => {
+                if (!stale) {
+                    setMade(null);
+                    setFailed(true);
+                }
+            });
         return () => {
             stale = true;
-            if (url !== null) {
-                URL.revokeObjectURL(url);
-            }
         };
     }, [input, open, size]);
+
+    // oxlint-disable-next-line outlayr/react-effect-budget -- the last card stays on screen until the next is drawn, so its URL lives as long as it is held.
+    useEffect(() => {
+        if (made === null) {
+            return;
+        }
+        return () => URL.revokeObjectURL(made.url);
+    }, [made]);
 
     const file = made === null ? null : new File([made.blob], `${input.monthLabel}.png`, { type: "image/png" });
     const canShare = file !== null && "canShare" in navigator && navigator.canShare({ files: [file] });

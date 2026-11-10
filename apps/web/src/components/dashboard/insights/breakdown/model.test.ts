@@ -75,6 +75,17 @@ describe("tagged spending", () => {
         expect(split.untagged).toHaveLength(1);
         expect(split.groups.map((group) => group.amount)).toEqual([50, 50]);
     });
+
+    it("counts an entry whose only tag was deleted as untagged", () => {
+        const flows = flowsOf(ledger, scope, "spent", "2026-09-01", "2026-10-20", null);
+        const split = splitByTag(ledger, flows, {
+            links: [{ deletedAt: null, tagId: "gone", transactionId: "oct" }],
+            tags: [{ color: null, deletedAt: 1, localId: "gone", name: "gone", sortOrder: 0 }],
+        });
+
+        expect(split.tagged).toHaveLength(0);
+        expect(split.untagged).toHaveLength(2);
+    });
 });
 
 describe("axisFor", () => {

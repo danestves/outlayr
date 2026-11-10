@@ -42,7 +42,7 @@ export interface ChartNode {
     name: string;
     note: string;
     tip: ChartTip;
-    tone: "category" | "kept" | "savings";
+    tone: "category" | "kept" | "other" | "savings";
 }
 
 interface Hub {

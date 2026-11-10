@@ -11,6 +11,7 @@ const dashboardInsightsFlow = {
             en: "Income flowing into spending and savings",
             es: "Ingresos que fluyen hacia gastos y ahorro",
         }),
+        other: t({ en: "Other", es: "Otros" }),
         drill: {
             chartLabel: insert(
                 t({ en: "{{category}} flowing into merchants", es: "{{category}} fluyendo hacia comercios" })

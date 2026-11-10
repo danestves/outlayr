@@ -2,6 +2,10 @@ export const NODE_WIDTH = 12;
 export const RIGHT_LABEL = 132;
 const HUB_AT = 330 / 760;
 const BOTTOM = { drill: 20, flow: 8 } as const;
+/** What the hub's name and note need above it. */
+const HUB_HEAD = 38;
+/** How many bars the right side keeps before the smallest fold into one, so every label has room. */
+const MOST_TARGETS = 12;
 const SETTINGS = {
     drill: { gap: 32, left: 86, top: 20 },
     flow: { gap: 20, left: 112, top: 6 },
@@ -43,7 +47,8 @@ export function sankeyLayout(
     const { gap, left, top } = SETTINGS[mode];
     const room = height - top - BOTTOM[mode];
     const whole = Math.max(sum(sources), sum(targets));
-    const scale = whole > 0 ? (room - gap * Math.max(targets.length - 1, 0)) / whole : 0;
+    const spare = Math.max(gap * Math.max(targets.length - 1, 0), 2 * (HUB_HEAD - top));
+    const scale = whole > 0 ? Math.max(room - spare, 0) / whole : 0;
     const hubHeight = whole * scale;
     const hubY = top + (room - hubHeight) / 2;
     const hubX = Math.round(width * HUB_AT);
@@ -71,6 +76,15 @@ export function sankeyLayout(
         sources: placedSources,
         targets: placedTargets,
     };
+}
+
+/** The largest targets as they are and the rest as one. A lone leftover stays itself. */
+export function foldTail<Node extends { amount: number }>(nodes: readonly Node[], other: (amount: number) => Node) {
+    if (nodes.length <= MOST_TARGETS + 1) {
+        return [...nodes];
+    }
+    const rest = nodes.slice(MOST_TARGETS).reduce((all, node) => all + node.amount, 0);
+    return [...nodes.slice(0, MOST_TARGETS), other(rest)];
 }
 
 /** A ribbon between two bars as a closed path, easing from one height to the other across the gap. */

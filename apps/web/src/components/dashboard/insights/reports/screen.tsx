@@ -75,12 +75,13 @@ function csvOfReport({ definition: target, job, ledger, report: exportReport, wo
             : "",
     };
     const table = tableRows(exportReport, names, job.averages && target.columns !== "none");
+    const categoryNames = new Map(ledger.books.categories.map((row) => [row.localId, row.name ?? ""]));
     const entries = job.entries
         ? [
               [],
               ...entryRows(exportReport, {
                   account: (id) => (id === null ? "" : (ledger.accounts.get(id)?.name ?? "")),
-                  category: (id) => (id === null ? "" : (ledger.categories.get(id)?.name ?? "")),
+                  category: (id) => (id === null ? "" : (categoryNames.get(id) ?? "")),
                   headers: [
                       copy.csv.date.value,
                       copy.csv.description.value,

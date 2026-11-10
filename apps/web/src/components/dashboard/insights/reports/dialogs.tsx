@@ -13,7 +13,7 @@ import type { FormEvent } from "react";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 
 import type { Definition, Report } from "./model";
-import { monthsIn, spanOf } from "./model";
+import { MAX_ROLLING_MONTHS, monthsIn, spanOf } from "./model";
 import type { ReportWords } from "./words";
 
 const SLUG_BREAK = /[^\p{L}\p{N}]+/gu;
@@ -89,9 +89,9 @@ export function SaveDialog({ currentKey, definition, name, onClose, onSave, open
     const { copy } = words;
     const span = spanOf(definition.range, currentKey);
     const rolling = "last" in definition.range;
-    const canRoll = rolling || span.to === currentKey;
-    const [keep, setKeep] = useState<"fixed" | "rolling">(rolling ? "rolling" : "fixed");
     const months = monthsIn(span);
+    const canRoll = rolling || (span.to === currentKey && months <= MAX_ROLLING_MONTHS);
+    const [keep, setKeep] = useState<"fixed" | "rolling">(rolling ? "rolling" : "fixed");
     const chosen: Definition = {
         ...definition,
         range: keep === "rolling" ? { last: months } : { from: span.from, to: span.to },

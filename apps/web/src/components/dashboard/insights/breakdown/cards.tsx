@@ -177,7 +177,8 @@ export function TagWeeks({ color, compact, label, rangeOf, weeks, whole }: TagWe
     const [hovered, setHovered] = useState<number | null>(null);
     const values = weeks.map((week) => Math.abs(week.value));
     const top = Math.max(...values, 0);
-    const cap = Math.max(Math.ceil((top * WEEK_HEADROOM) / WEEK_CAP_STEP) * WEEK_CAP_STEP, WEEK_CAP_STEP);
+    const axis = axisFor([top]);
+    const cap = Math.max(Math.ceil((top * WEEK_HEADROOM) / WEEK_CAP_STEP) * WEEK_CAP_STEP, WEEK_CAP_STEP, axis.cap);
     const base = WEEK_HEIGHT - WEEK_FOOT;
     const yOf = (value: number) => base - (value / cap) * (base - WEEK_TOP);
     const lit = hovered ?? values.indexOf(top);
@@ -193,7 +194,7 @@ export function TagWeeks({ color, compact, label, rangeOf, weeks, whole }: TagWe
                     role="img"
                     width={width}
                 >
-                    {axisFor([top]).ticks.map((tick) => (
+                    {axis.ticks.map((tick) => (
                         <g key={tick}>
                             <path d={`M${WEEK_GUTTER} ${yOf(tick)}H${width}`} stroke="var(--color-border)" />
                             <text
@@ -468,7 +469,7 @@ export function EntriesCard({ accountName, action, categoryId, dateOf, flows, fo
                     </Row>
                 </thead>
                 <tbody>
-                    {shown.map(({ row, value }) => {
+                    {shown.map(({ row }) => {
                         const merchant = row.note || subName(row);
                         return (
                             <Row className="hover:bg-app-hover relative transition-colors" key={row.id}>
@@ -487,7 +488,9 @@ export function EntriesCard({ accountName, action, categoryId, dateOf, flows, fo
                                     {accountName(row.accountId)}
                                 </td>
                                 <td className={`${CELL_BASE} ${FIGURE} text-muted-foreground`}>{dateOf(row.day)}</td>
-                                <td className={`${CELL_BASE} ${NUM}`}>{format(-value)}</td>
+                                <td className={`${CELL_BASE} ${NUM}`}>
+                                    {format(row.income ? row.amount : -row.amount)}
+                                </td>
                             </Row>
                         );
                     })}

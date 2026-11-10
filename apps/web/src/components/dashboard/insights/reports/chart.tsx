@@ -58,7 +58,10 @@ export function Chart({ fixedWidth, grouping, kind, label, report, words }: Char
     const { fmt } = words;
     const show = (value: number) => words.measureValue(measure, value);
     const geometry = useMemo(() => {
-        const highest = Math.max(0, ...totals.values);
+        const stacks = stacked
+            ? columns.map((_, index) => rows.reduce((all, row) => all + Math.max(row.values[index] ?? 0, 0), 0))
+            : [];
+        const highest = Math.max(0, ...totals.values, ...stacks);
         const lowest = Math.min(0, ...totals.values);
         const axis = axisOf(highest);
         const plot = HEIGHT - BASE - TOP;
@@ -69,7 +72,7 @@ export function Chart({ fixedWidth, grouping, kind, label, report, words }: Char
         const slot = (width - LEFT) / Math.max(columns.length, 1);
         const ticks = floor < 0 ? [floor, 0, top] : [0, top / 2, top];
         return { floor, slot, ticks, top, y };
-    }, [columns.length, totals.values, width]);
+    }, [columns, rows, stacked, totals.values, width]);
     const { slot, ticks, y } = geometry;
     const bar = slot * BAR_SHARE;
     const labelEvery = Math.max(1, Math.ceil(MIN_LABEL_SLOT / slot));
@@ -101,6 +104,12 @@ export function Chart({ fixedWidth, grouping, kind, label, report, words }: Char
                     const x = LEFT + index * slot + (slot - bar) / 2;
                     const last = index === columns.length - 1;
                     const total = totals.values[index] ?? 0;
+                    const peak = stacked
+                        ? Math.max(
+                              total,
+                              rows.reduce((all, row) => all + Math.max(row.values[index] ?? 0, 0), 0)
+                          )
+                        : total;
                     let carried = 0;
                     return (
                         <g key={column.key} opacity={hovered === null || hovered === index ? 1 : 0.55}>
@@ -136,7 +145,7 @@ export function Chart({ fixedWidth, grouping, kind, label, report, words }: Char
                                     className={`${FIGURE} fill-foreground`}
                                     style={{ fontSize: 12, textAnchor: "middle" }}
                                     x={x + bar / 2}
-                                    y={Math.min(y(total), y(0)) - 6}
+                                    y={Math.min(y(peak), y(0)) - 6}
                                 >
                                     {show(total)}
                                 </text>

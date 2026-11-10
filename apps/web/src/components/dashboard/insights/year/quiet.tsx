@@ -19,7 +19,7 @@ export function QuietYear() {
             {HEIGHTS.map((height, index) => (
                 <rect
                     height={height}
-                    key={height}
+                    key={index}
                     rx={3}
                     style={GHOST}
                     width={46.6}

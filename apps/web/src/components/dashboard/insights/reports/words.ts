@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useIntlayer } from "react-intlayer";
+import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useCategoryName } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -16,6 +16,7 @@ export function useReportWords() {
     const categoryName = useCategoryName();
     const { ledger } = useDashboard();
     const fmt = useInsightsFormat(ledger);
+    const { locale } = useLocale();
     return useMemo(() => {
         const rowName = (label: Label, kind: Definition["rows"]) => {
             switch (label.special) {
@@ -66,7 +67,7 @@ export function useReportWords() {
                 ? `${copy.range.until({ from: fmt.month(from), to: fmt.month(to) }).value} ${yearOf(to)}`
                 : copy.range.until({ from: monthYear(from), to: monthYear(to) }).value;
         };
-        const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 });
+        const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
         const measureValue = (measure: Measure, value: number) =>
             measure === "count" ? number.format(value) : fmt.whole(value);
         return {
@@ -92,7 +93,7 @@ export function useReportWords() {
                           rows: copy.dimensions[definition.rows].value.toLocaleLowerCase(),
                       }).value,
         };
-    }, [categoryName, copy, fmt]);
+    }, [categoryName, copy, fmt, locale]);
 }
 
 export type ReportWords = ReturnType<typeof useReportWords>;

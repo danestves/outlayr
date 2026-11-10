@@ -14,9 +14,11 @@ import { periodKindOf } from "@/lib/dashboard-series-period";
 import { LedgerSettingsContext } from "@/lib/ledger-settings";
 
 import { InsightsBar, PeriodControls } from "../bar";
+import { OTHER_COLOR } from "../flow";
 import { useInsightsFormat } from "../format";
 import { Card, onwardSearch } from "../parts";
 import { Drill } from "./drill";
+import { foldTail } from "./layout";
 import { FlowList } from "./lists";
 import type { ListRow } from "./lists";
 import { flowMap } from "./model";
@@ -120,7 +122,17 @@ function useNodes(map: FlowMap, budgets: ReadonlyMap<string, CategoryBudget>, fm
             hubName,
             nameOf,
             sources: map.sources.map(nodeOf(true)),
-            targets: map.targets.map(nodeOf(false)),
+            targets: foldTail(map.targets.map(nodeOf(false)), (amount): ChartNode => ({
+                amount,
+                categoryId: null,
+                color: OTHER_COLOR,
+                id: "other",
+                label: "",
+                name: copy.other.value,
+                note: fmt.amount(amount),
+                tip: { rows: [], title: copy.other.value, value: fmt.amount(amount) },
+                tone: "other",
+            })),
         };
     }, [budgets, categoryName, copy, fmt, map]);
 }

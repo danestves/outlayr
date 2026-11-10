@@ -14,7 +14,7 @@ import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { useCategoryName } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { categoryBudgets } from "@/lib/dashboard-series";
-import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
+import { UNCATEGORIZED_ID, rowsBetween, total } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKindOf, periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import type { Period, PeriodKind } from "@/lib/dashboard-series-period";
@@ -74,7 +74,10 @@ function usableBasis(ledger: Ledger, span: Period, kind: PeriodKind, compare: Ba
     if (compare === null) {
         return null;
     }
-    return baselineOf(ledger, span, kind, compare) ? compare : "prior";
+    if (baselineOf(ledger, span, kind, compare)) {
+        return compare;
+    }
+    return baselineOf(ledger, span, kind, "prior") ? "prior" : null;
 }
 
 function useView() {
@@ -239,13 +242,10 @@ function Nothing({ metric }: { metric: Metric }) {
     const { open } = useAccountFlows();
     const fmt = useInsightsFormat(ledger);
     const kind = periodKindOf(filters.span.key) ?? "month";
-    const income = useMemo(
-        () =>
-            ledger.rows
-                .filter((row) => row.income && row.day >= filters.span.from && row.day <= filters.span.to)
-                .reduce((all, row) => all + row.amount, 0),
-        [filters.span, ledger.rows]
-    );
+    const income = useMemo(() => {
+        const last = ledger.today < filters.span.to ? ledger.today : filters.span.to;
+        return total(ledger, rowsBetween(ledger, { accounts: filters.accounts }, filters.span.from, last, true));
+    }, [filters.accounts, filters.span, ledger]);
     const lines = {
         income: copy.empty.nothingIncome,
         net: copy.empty.nothingNet,
@@ -779,7 +779,7 @@ function TagBody({ against, baseline, data, fmt, format, setView, view }: TagBod
     const mover = largestMover(data.rows);
     const chosen = data.rows.find((row) => row.id === view.tag) ?? data.rows[0];
     const weeks = useMemo(
-        () => (chosen ? weeksOf(ledger, span, data.split.byTag.get(chosen.id) ?? [], 1) : []),
+        () => (chosen ? weeksOf(ledger, span, data.split.byTag.get(chosen.id) ?? [], ledger.firstWeekday) : []),
         [chosen, data.split.byTag, ledger, span]
     );
     const sentence =

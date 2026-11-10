@@ -423,8 +423,8 @@ export function CompareTable({ baseLabel, baseTotal, currentLabel, format, metri
     return (
         <Table className="table-fixed">
             <colgroup>
-                {COMPARE_COLUMNS.map((width) => (
-                    <col key={width} style={{ width }} />
+                {COMPARE_COLUMNS.map((width, index) => (
+                    <col key={index} style={{ width }} />
                 ))}
             </colgroup>
             <thead>

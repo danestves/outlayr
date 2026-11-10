@@ -15,8 +15,10 @@ import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
 import { periodKindOf } from "@/lib/dashboard-series-period";
 
 import { PeriodStepper } from "../bar";
+import { OTHER_COLOR } from "../flow";
 import { useInsightsFormat } from "../format";
 import { Card, Change } from "../parts";
+import { foldTail } from "./layout";
 import { drillOf } from "./model";
 import type { Drill as DrillModel } from "./model";
 import { Sankey } from "./sankey";
@@ -234,6 +236,17 @@ export function Drill({ categoryId }: { categoryId: string }) {
         },
         tone: "category",
     }));
+    const drawn = foldTail(targets, (amount): ChartNode => ({
+        amount,
+        categoryId: null,
+        color: OTHER_COLOR,
+        id: "other",
+        label: "",
+        name: copy.other.value,
+        note: fmt.amount(amount),
+        tip: { rows: [], title: copy.other.value, value: fmt.amount(amount) },
+        tone: "other",
+    }));
     return (
         <>
             <Header categoryId={categoryId} name={name} />
@@ -267,7 +280,7 @@ export function Drill({ categoryId }: { categoryId: string }) {
                             mode="drill"
                             onActive={setActive}
                             sources={sources}
-                            targets={targets}
+                            targets={drawn}
                         />
                     </Card>
                     <Entries categoryId={categoryId} drill={drill} />

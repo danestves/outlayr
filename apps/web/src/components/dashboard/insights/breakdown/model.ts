@@ -154,9 +154,10 @@ export interface TagSplit {
 
 /** Flows split by tag. An entry with two tags is in both groups and counted once as tagged. */
 export function splitByTag(ledger: Ledger, flows: readonly Flow[], { links, tags }: TagBooks): TagSplit {
+    const live = new Set(tags.filter((tag) => tag.deletedAt === null).map((tag) => tag.localId));
     const tagsOf = new Map<string, string[]>();
     for (const { deletedAt, tagId, transactionId } of links) {
-        if (deletedAt !== null) {
+        if (deletedAt !== null || !live.has(tagId)) {
             continue;
         }
         const same = tagsOf.get(transactionId);
@@ -183,7 +184,7 @@ export function splitByTag(ledger: Ledger, flows: readonly Flow[], { links, tags
     const groups = tags
         .flatMap((tag): TagGroup[] => {
             const members = byTag.get(tag.localId);
-            if (!members || tag.deletedAt !== null) {
+            if (!members) {
                 return [];
             }
             return [

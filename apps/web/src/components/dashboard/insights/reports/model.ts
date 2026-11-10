@@ -12,7 +12,7 @@ export const DIMENSIONS = ["category", "subcategory", "merchant", "tag", "accoun
 export const GROUPINGS = ["week", "month", "quarter", "year", "none"] as const;
 
 const MONTH_KEY = /^\d{4}-(0[1-9]|1[0-2])$/;
-const MAX_ROLLING_MONTHS = 120;
+export const MAX_ROLLING_MONTHS = 120;
 const MONTHS_IN_QUARTER = 3;
 const DAYS_IN_WEEK = 7;
 const MIN_COLUMNS_TO_COMPARE = 3;

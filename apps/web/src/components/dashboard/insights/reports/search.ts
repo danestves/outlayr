@@ -3,7 +3,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import { shiftPeriodKey } from "../../../../lib/dashboard-series-period";
-import { DIMENSIONS, GROUPINGS, MEASURES } from "./model";
+import { DIMENSIONS, GROUPINGS, MAX_ROLLING_MONTHS, MEASURES } from "./model";
 import type { Definition, ReportRange } from "./model";
 
 const Param = Schema.UndefinedOr(Schema.String).pipe(
@@ -34,7 +34,6 @@ export type ReportsPatch = Partial<ReportsSearch>;
 
 const MONTH_KEY = /^\d{4}-(0[1-9]|1[0-2])$/;
 const DEFAULT_MONTHS = 5;
-const MAX_ROLLING_MONTHS = 120;
 
 const oneOf = <const Value extends string>(values: readonly Value[], value: string | undefined) =>
     values.find((each) => each === value);
