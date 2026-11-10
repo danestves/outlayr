@@ -125,12 +125,7 @@ export const spendingSummaryOf = Effect.fn("McpLedger.spendingSummary")(function
     const currency = (yield* setting(userId, "currency")) ?? "USD";
     const firstDayOfMonth = Number(yield* setting(userId, "firstDayOfMonth")) || 1;
     const clock = yield* ledgerClock(userId);
-    const window = monthWindow(
-        clock.now,
-        clock.offsetAt(clock.now),
-        firstDayOfMonth,
-        Math.max(0, Math.trunc(monthsAgo))
-    );
+    const window = monthWindow(clock.now, clock.offsetAt, firstDayOfMonth, Math.max(0, Math.trunc(monthsAgo)));
     const [transactions, categories, rates] = yield* Effect.all(
         [
             reader

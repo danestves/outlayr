@@ -4,7 +4,10 @@ import { join } from "node:path";
 import { CALENDAR_DAY_VECTORS } from "@outlayr/money/calendar-vectors";
 import { expect, test } from "vite-plus/test";
 
-const onDeviceIn = (zone: string, cases: { firstDayOfMonth: number | null; instant: string }[]): unknown =>
+const onDeviceIn = (
+    zone: string,
+    cases: { firstDayOfMonth: number | null; instant: string; monthsAgo: number }[]
+): unknown =>
     JSON.parse(
         execFileSync(
             process.execPath,
@@ -24,8 +27,21 @@ test.each([...new Set(CALENDAR_DAY_VECTORS.map((vector) => vector.zone))])(
         expect(
             onDeviceIn(
                 zone,
-                vectors.map(({ instant, window }) => ({ firstDayOfMonth: window?.firstDayOfMonth ?? null, instant }))
+                vectors.map(({ instant, window }) => ({
+                    firstDayOfMonth: window?.firstDayOfMonth ?? null,
+                    instant,
+                    monthsAgo: window?.monthsAgo ?? 0,
+                }))
             )
-        ).toStrictEqual(vectors.map(({ day, iso, month, window }) => ({ day, iso, month, window: window ?? null })));
+        ).toStrictEqual(
+            vectors.map(({ day, iso, month, window }) => ({
+                day,
+                iso,
+                month,
+                window: window
+                    ? { end: window.end, firstDayOfMonth: window.firstDayOfMonth, start: window.start }
+                    : null,
+            }))
+        );
     }
 );

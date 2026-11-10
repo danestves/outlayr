@@ -69,19 +69,23 @@ export function utcOffsetOf(calendarDay: number, hintMs?: number): number {
     return sinceUtcMidnight <= FARTHEST_WEST_MS ? west : east;
 }
 
-export function monthWindow(nowMs: number, offsetMs: number, firstDayOfMonth: number, monthsAgo: number) {
-    const local = new Date(nowMs + offsetMs);
+export const wallDay = (date: Date) => date.toISOString().slice(0, 10);
+
+export function monthWindow(now: number, offsetAt: OffsetAt, firstDayOfMonth: number, monthsAgo: number) {
+    const local = new Date(now + offsetAt(now));
     const anchor = Math.min(Math.max(1, firstDayOfMonth), LATEST_PAYDAY);
     const month = local.getUTCMonth() - monthsAgo - (local.getUTCDate() < anchor ? 1 : 0);
+    const first = Date.UTC(local.getUTCFullYear(), month, anchor);
+    const next = Date.UTC(local.getUTCFullYear(), month + 1, anchor);
     return {
-        end: Date.UTC(local.getUTCFullYear(), month + 1, anchor) - offsetMs,
-        start: Date.UTC(local.getUTCFullYear(), month, anchor) - offsetMs,
+        end: fromWall(next, offsetAt),
+        from: wallDay(new Date(first)),
+        start: fromWall(first, offsetAt),
+        to: wallDay(new Date(next - DAY_MS)),
     };
 }
 
-// ponytail: monthWindow takes the offset at now, so a month across a DST change is cut an hour off; use offsetAt.
 export const wall = (instant: number, offsetMs: number) => new Date(instant + offsetMs);
-export const wallDay = (date: Date) => date.toISOString().slice(0, 10);
 export const isoDay = (instant: number, offsetMs: number) => wallDay(wall(instant, offsetMs));
 export const wallMidnight = (day: string) => Date.parse(`${day}T00:00:00Z`);
 export const wallNoon = (day: string) => Date.parse(`${day}T12:00:00Z`);

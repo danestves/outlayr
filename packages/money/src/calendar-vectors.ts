@@ -4,7 +4,7 @@ export interface CalendarDayVector {
     iso: string;
     month: string;
     name: string;
-    window?: { end: string; firstDayOfMonth: number; start: string };
+    window?: { end: string; firstDayOfMonth: number; monthsAgo?: number; start: string };
     zone: string;
 }
 
@@ -114,6 +114,7 @@ export const CALENDAR_DAY_VECTORS: CalendarDayVector[] = [
         iso: "2026-03-08",
         month: "2026-03-01T05:00:00.000Z",
         name: "New York, half an hour before the clocks go forward",
+        window: { end: "2026-04-01T04:00:00.000Z", firstDayOfMonth: 1, start: "2026-03-01T05:00:00.000Z" },
         zone: "America/New_York",
     },
     {
@@ -122,6 +123,7 @@ export const CALENDAR_DAY_VECTORS: CalendarDayVector[] = [
         iso: "2026-03-08",
         month: "2026-03-01T05:00:00.000Z",
         name: "New York, half an hour after the clocks go forward",
+        window: { end: "2026-04-01T04:00:00.000Z", firstDayOfMonth: 1, start: "2026-03-01T05:00:00.000Z" },
         zone: "America/New_York",
     },
     {
@@ -130,6 +132,7 @@ export const CALENDAR_DAY_VECTORS: CalendarDayVector[] = [
         iso: "2026-03-08",
         month: "2026-03-01T05:00:00.000Z",
         name: "New York, the last minute of the 23-hour day",
+        window: { end: "2026-04-01T04:00:00.000Z", firstDayOfMonth: 1, start: "2026-03-01T05:00:00.000Z" },
         zone: "America/New_York",
     },
     {
@@ -138,6 +141,7 @@ export const CALENDAR_DAY_VECTORS: CalendarDayVector[] = [
         iso: "2026-03-09",
         month: "2026-03-01T05:00:00.000Z",
         name: "New York, the midnight after the clocks go forward",
+        window: { end: "2026-04-01T04:00:00.000Z", firstDayOfMonth: 1, start: "2026-03-01T05:00:00.000Z" },
         zone: "America/New_York",
     },
     {
@@ -146,6 +150,7 @@ export const CALENDAR_DAY_VECTORS: CalendarDayVector[] = [
         iso: "2026-11-01",
         month: "2026-11-01T04:00:00.000Z",
         name: "New York, the first 01:30 on the day the clocks go back",
+        window: { end: "2026-12-01T05:00:00.000Z", firstDayOfMonth: 1, start: "2026-11-01T04:00:00.000Z" },
         zone: "America/New_York",
     },
     {
@@ -154,6 +159,7 @@ export const CALENDAR_DAY_VECTORS: CalendarDayVector[] = [
         iso: "2026-11-01",
         month: "2026-11-01T04:00:00.000Z",
         name: "New York, the second 01:30 on the day the clocks go back",
+        window: { end: "2026-12-01T05:00:00.000Z", firstDayOfMonth: 1, start: "2026-11-01T04:00:00.000Z" },
         zone: "America/New_York",
     },
     {
@@ -162,6 +168,7 @@ export const CALENDAR_DAY_VECTORS: CalendarDayVector[] = [
         iso: "2026-11-01",
         month: "2026-11-01T04:00:00.000Z",
         name: "New York, the last half hour of the 25-hour day",
+        window: { end: "2026-12-01T05:00:00.000Z", firstDayOfMonth: 1, start: "2026-11-01T04:00:00.000Z" },
         zone: "America/New_York",
     },
     {
@@ -170,6 +177,71 @@ export const CALENDAR_DAY_VECTORS: CalendarDayVector[] = [
         iso: "2026-11-02",
         month: "2026-11-01T04:00:00.000Z",
         name: "New York, the midnight after the clocks go back",
+        window: { end: "2026-12-01T05:00:00.000Z", firstDayOfMonth: 1, start: "2026-11-01T04:00:00.000Z" },
         zone: "America/New_York",
+    },
+    {
+        day: "2026-11-09T05:00:00.000Z",
+        instant: "2026-11-09T17:00:00.000Z",
+        iso: "2026-11-09",
+        month: "2026-11-01T04:00:00.000Z",
+        name: "New York, a week after the clocks go back, the month that opened before them",
+        window: { end: "2026-12-01T05:00:00.000Z", firstDayOfMonth: 1, start: "2026-11-01T04:00:00.000Z" },
+        zone: "America/New_York",
+    },
+    {
+        day: "2026-11-09T05:00:00.000Z",
+        instant: "2026-11-09T17:00:00.000Z",
+        iso: "2026-11-09",
+        month: "2026-11-01T04:00:00.000Z",
+        name: "New York, a week after the clocks go back, the month before",
+        window: {
+            end: "2026-11-01T04:00:00.000Z",
+            firstDayOfMonth: 1,
+            monthsAgo: 1,
+            start: "2026-10-01T04:00:00.000Z",
+        },
+        zone: "America/New_York",
+    },
+    {
+        day: "2026-03-10T04:00:00.000Z",
+        instant: "2026-03-10T16:00:00.000Z",
+        iso: "2026-03-10",
+        month: "2026-03-01T05:00:00.000Z",
+        name: "New York, a payday month the clocks go forward in",
+        window: { end: "2026-03-15T04:00:00.000Z", firstDayOfMonth: 15, start: "2026-02-15T05:00:00.000Z" },
+        zone: "America/New_York",
+    },
+    {
+        day: "2026-04-19T14:00:00.000Z",
+        instant: "2026-04-20T02:00:00.000Z",
+        iso: "2026-04-20",
+        month: "2026-03-31T13:00:00.000Z",
+        name: "Sydney, the month the clocks go back in",
+        window: { end: "2026-04-30T14:00:00.000Z", firstDayOfMonth: 1, start: "2026-03-31T13:00:00.000Z" },
+        zone: "Australia/Sydney",
+    },
+    {
+        day: "2026-10-19T13:00:00.000Z",
+        instant: "2026-10-20T01:00:00.000Z",
+        iso: "2026-10-20",
+        month: "2026-09-30T14:00:00.000Z",
+        name: "Sydney, the month the clocks go forward in",
+        window: { end: "2026-10-31T13:00:00.000Z", firstDayOfMonth: 1, start: "2026-09-30T14:00:00.000Z" },
+        zone: "Australia/Sydney",
+    },
+    {
+        day: "2026-10-19T13:00:00.000Z",
+        instant: "2026-10-20T01:00:00.000Z",
+        iso: "2026-10-20",
+        month: "2026-09-30T14:00:00.000Z",
+        name: "Sydney, a winter payday month read from summer time",
+        window: {
+            end: "2026-09-14T14:00:00.000Z",
+            firstDayOfMonth: 15,
+            monthsAgo: 2,
+            start: "2026-08-14T14:00:00.000Z",
+        },
+        zone: "Australia/Sydney",
     },
 ];

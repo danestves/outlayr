@@ -186,11 +186,14 @@ async function answer(): Promise<string> {
             });
         }
         case "calendar-days": {
-            const cases: { firstDayOfMonth: number | null; instant: string }[] = JSON.parse(await text(process.stdin));
+            const cases: { firstDayOfMonth: number | null; instant: string; monthsAgo: number }[] = JSON.parse(
+                await text(process.stdin)
+            );
             return JSON.stringify(
-                cases.map(({ firstDayOfMonth, instant }) => {
+                cases.map(({ firstDayOfMonth, instant, monthsAgo }) => {
                     const at = new Date(instant);
-                    const start = firstDayOfMonth === null ? null : monthPeriodStart(at, firstDayOfMonth);
+                    const start =
+                        firstDayOfMonth === null ? null : addMonths(monthPeriodStart(at, firstDayOfMonth), -monthsAgo);
                     return {
                         day: startOfDay(at).toISOString(),
                         iso: localDayKey(at.getTime()),
