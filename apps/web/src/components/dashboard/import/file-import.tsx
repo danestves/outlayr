@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { chooseAiConsent, hasAiConsent, useAiConsent } from "@/lib/ai-consent";
+import { allowAi, hasAiConsent, useAiConsent } from "@/lib/ai-consent";
 import { scrubLabel } from "@/lib/import-file";
 import { metaFlag, useMeta } from "@/lib/ledger-settings";
 
@@ -126,7 +126,7 @@ function Wizard({
                 model={model}
                 onCancel={onCancel}
                 onRetryAi={ai.retry}
-                onTurnOnAi={() => chooseAiConsent(true)}
+                onTurnOnAi={allowAi}
                 store={store}
             />
         );
@@ -280,7 +280,7 @@ export function FileImport({ kind }: { kind: Kind }) {
                 void toKind(next);
             }}
             onTurnOnAi={(file) => {
-                chooseAiConsent(true);
+                allowAi();
                 void read(file, "csv");
             }}
             upload={upload}

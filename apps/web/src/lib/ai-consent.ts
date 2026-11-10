@@ -53,17 +53,27 @@ function changed() {
     }
 }
 
-/** Consent is per device, like the phone's, and its switch answers for every AI feature, screenshots included. */
+/** Consent is per device, like the phone's. The Settings switch answers for every AI feature, screenshots included. */
 export function chooseAiConsent(granted: boolean) {
     store(KEY, granted ? "granted" : null);
     store(PLAN_SCAN_KEY, granted ? String(AI_CONSENT_VERSION) : null);
     changed();
 }
 
-/** An installment screenshot asks on its own, even with the rest allowed, as the privacy policy promises. */
+/** A feature's own prompt grants only its own consent: a screenshot still asks first, as the privacy policy says. */
+export function allowAi() {
+    store(KEY, "granted");
+    changed();
+}
+
 export function allowPlanScan() {
     store(PLAN_SCAN_KEY, String(AI_CONSENT_VERSION));
     changed();
 }
 
 export const useAiConsent = () => useSyncExternalStore(subscribe, hasAiConsent, () => false);
+
+const anyAiConsent = () => hasAiConsent() || hasPlanScanConsent();
+
+/** Settings shows on while anything is allowed, so its switch can always take a consent back. */
+export const useAnyAiConsent = () => useSyncExternalStore(subscribe, anyAiConsent, () => false);
