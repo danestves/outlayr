@@ -17,6 +17,8 @@ interface ProCopy {
         granted: string;
         lifetime: (store: StoreName) => string;
         subscription: (store: StoreName, date: string) => string;
+        webLifetime: string;
+        webSubscription: (date: string) => string;
     };
     billedBy: string;
     ends: string;
@@ -41,6 +43,8 @@ const COPY = {
             lifetime: (store) => `${store} sends the receipt. It's a one-time purchase, so there's nothing to cancel.`,
             subscription: (store, date) =>
                 `${store} sends the receipt. Cancel any time before ${date} and Pro stays on until then.`,
+            webLifetime: "It's a one-time purchase, so there's nothing to cancel.",
+            webSubscription: (date) => `Cancel any time before ${date} and Pro stays on until then.`,
         },
         billedBy: "Billed by",
         ends: "Ends",
@@ -68,6 +72,8 @@ const COPY = {
             lifetime: (store) => `${store} te envía el recibo. Es un pago único, así que no hay nada que cancelar.`,
             subscription: (store, date) =>
                 `${store} te envía el recibo. Cancela cuando quieras antes del ${date} y Pro sigue activo hasta entonces.`,
+            webLifetime: "Es un pago único, así que no hay nada que cancelar.",
+            webSubscription: (date) => `Cancela cuando quieras antes del ${date} y Pro sigue activo hasta entonces.`,
         },
         billedBy: "Cobrado por",
         ends: "Termina",
@@ -95,6 +101,8 @@ const COPY = {
             lifetime: (store) => `${store} vous envoie le reçu. C'est un achat unique, il n'y a donc rien à résilier.`,
             subscription: (store, date) =>
                 `${store} vous envoie le reçu. Résiliez quand vous voulez avant le ${date} et Pro reste actif jusque-là.`,
+            webLifetime: "C'est un achat unique, il n'y a donc rien à résilier.",
+            webSubscription: (date) => `Résiliez quand vous voulez avant le ${date} et Pro reste actif jusque-là.`,
         },
         billedBy: "Facturé par",
         ends: "Fin",
@@ -123,6 +131,8 @@ const COPY = {
                 `A loja (${store}) envia o recibo. É uma compra única, então não há nada para cancelar.`,
             subscription: (store, date) =>
                 `A loja (${store}) envia o recibo. Cancele quando quiser antes de ${date} e o Pro continua ativo até lá.`,
+            webLifetime: "É uma compra única, então não há nada para cancelar.",
+            webSubscription: (date) => `Cancele quando quiser antes de ${date} e o Pro continua ativo até lá.`,
         },
         billedBy: "Cobrado por",
         ends: "Termina em",
@@ -151,7 +161,10 @@ function details(plan: Billing, copy: ProCopy, date: (ms: number) => string): De
     switch (plan.kind) {
         case "subscription": {
             return {
-                after: copy.after.subscription(plan.storeName, date(plan.renewsAtMs)),
+                after:
+                    plan.storeName === "Stripe"
+                        ? copy.after.webSubscription(date(plan.renewsAtMs))
+                        : copy.after.subscription(plan.storeName, date(plan.renewsAtMs)),
                 facts: [
                     [copy.renews, date(plan.renewsAtMs)],
                     [copy.billedBy, plan.storeName],
@@ -161,7 +174,7 @@ function details(plan: Billing, copy: ProCopy, date: (ms: number) => string): De
         }
         case "lifetime": {
             return {
-                after: copy.after.lifetime(plan.storeName),
+                after: plan.storeName === "Stripe" ? copy.after.webLifetime : copy.after.lifetime(plan.storeName),
                 facts: [
                     [copy.plan, copy.lifetime],
                     [copy.billedBy, plan.storeName],

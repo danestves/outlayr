@@ -14,6 +14,15 @@ describe("billing", () => {
         });
     });
 
+    it("sends a web subscription to the plan page, since Stripe has no store account to manage it", () => {
+        expect(billing({ expiresAtMs: 1, familyShared: false, store: "STRIPE" })).toStrictEqual({
+            kind: "subscription",
+            manageUrl: "https://tryoutlayr.com/app/settings/plan",
+            renewsAtMs: 1,
+            storeName: "Stripe",
+        });
+    });
+
     it("leaves nothing to cancel for family members, lifetime buyers and granted Pro", () => {
         expect(billing({ expiresAtMs: 1, familyShared: true, store: "APP_STORE" }).kind).toBe("family");
         expect(billing({ familyShared: false, store: "APP_STORE" }).kind).toBe("lifetime");
