@@ -1,9 +1,7 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { createElevenLabs } from "@ai-sdk/elevenlabs";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { createThread, getThreadMetadata, saveMessage } from "@convex-dev/agent";
-import { isRateLimitError } from "@convex-dev/rate-limiter";
-import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
+import type { UserIdentity } from "convex/server";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -16,12 +14,12 @@ import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
 import { ActionCtx, MutationCtx, MutationRunner, Scheduler } from "./_generated/services";
-import { traced } from "./lib/aiTracing";
+import { openAiGate, refuse } from "./lib/aiGate";
 import { liveIdentity } from "./lib/auth";
-import { admitCapture } from "./lib/captures";
-import { anthropicApiKey, claudeModelId, elevenLabsApiKey } from "./lib/config";
+import { admitCapture, withinCaptureAllowance } from "./lib/captures";
+import { claudeModelId, elevenLabsApiKey } from "./lib/config";
 import type { LedgerContext } from "./lib/ledgerPrompt";
-import { fixedBurst, perUserBurst } from "./lib/limits";
+import { fixedBurst } from "./lib/limits";
 import { modelCallError } from "./lib/modelCall";
 import { ELEVENLABS_TRANSCRIPTION_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
@@ -145,108 +143,93 @@ const speak = FunctionImpl.make(
     databaseSchema,
     spec,
     "speak",
-    Effect.fn("VoiceEntry.speak")(function* speak(args) {
-        const identity = yield* liveIdentity(yield* ActionCtx);
-        if (identity === null) {
-            return failure("unauthenticated");
-        }
-
-        // Read per call, so clearing a key with `npx convex env set` takes effect on the next clip.
-        const apiKey = yield* anthropicApiKey;
-        const transcriptionKey = yield* elevenLabsApiKey;
-        if (Option.isNone(apiKey) || Option.isNone(transcriptionKey) || args.aiConsent !== AI_CONSENT_VERSION) {
-            return failure("notConfigured");
-        }
-
-        if (!isVoiceEntryInput(args)) {
-            return failure("invalid");
-        }
-
-        const ctx = yield* ActionCtx;
-        const userId = yield* ownsThread(ctx, args.threadId);
-        if (userId === null) {
-            return failure("invalid");
-        }
-
-        const pro = yield* isPro(ctx, identity.subject);
-        const burst = yield* perUserBurst("voiceEntry", pro);
-        const perUser = yield* Effect.promise(() =>
-            rateLimiter.limit(ctx, "voiceEntryPerUser", { config: burst, key: identity.tokenIdentifier })
-        );
-        if (!perUser.ok) {
-            return failure("rateLimited");
-        }
-
-        const { runMutation } = yield* MutationRunner;
-        const admitted = yield* runMutation(refs.internal.voiceEntry.admit).pipe(
-            Effect.catchDefect((defect) =>
-                isRateLimitError(defect) ? Effect.succeed("rateLimited" as const) : Effect.die(defect)
-            )
-        );
-        if (admitted !== "ok") {
-            return failure(admitted);
-        }
-
-        const heard = yield* transcribeClip(
-            createElevenLabs({ apiKey: Redacted.value(transcriptionKey.value) }).transcription(
-                ELEVENLABS_TRANSCRIPTION_MODEL_ID
-            ),
-            args.audio,
-            args.language
-        );
-        if ("error" in heard) {
-            return failure(heard.error === "empty" ? "unclear" : "providerError");
-        }
-
-        const context: LedgerContext = {
-            accounts: args.accounts,
-            categoryTree: args.categoryTree,
-            currency: args.currency,
-            language: args.language,
-            today: args.today,
-        };
-        const modelId = yield* claudeModelId;
-        const agent = voiceAgent(
-            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "voice_entry", {
-                distinctId: args.shareAnalytics === true ? identity.subject : undefined,
-                sessionId: args.threadId,
-            }),
-            context,
-            heard.text
-        );
-        const { message, messageId } = yield* Effect.promise(() =>
-            saveMessage(ctx, components.agent, {
-                prompt: heard.text,
-                threadId: args.threadId,
-                userId,
-            })
-        );
-        const parsed = yield* Effect.tryPromise({
-            catch: modelCallError,
-            try: async () => {
-                const result = await agent.streamText(
-                    ctx,
-                    { threadId: args.threadId, userId },
-                    {
-                        abortSignal: AbortSignal.timeout(PARSE_TIMEOUT_MS),
-                        maxRetries: 0,
-                        promptMessageId: messageId,
-                        reasoning: "low",
-                        system: buildPrompt(context),
-                    },
-                    {
-                        contextOptions: { recentMessages: CONTEXT_TURNS * 2 },
-                        saveStreamDeltas: true,
+    Effect.fn("VoiceEntry.speak")(
+        function* speak(args) {
+            const ctx = yield* ActionCtx;
+            const {
+                admitted: { transcriptionKey, userId },
+                model,
+            } = yield* openAiGate(ctx, {
+                admit: Effect.fn("VoiceEntry.speakRungs")(function* speakRungs(caller: UserIdentity) {
+                    const key = yield* elevenLabsApiKey;
+                    if (Option.isNone(key)) {
+                        return yield* refuse("notConfigured");
                     }
-                );
-                await result.consumeStream();
-            },
-        }).pipe(Effect.as(true), Effect.catchTags({ ModelCallError: () => Effect.succeed(false) }));
-        if (!parsed) {
-            return failure("providerError", heard.text);
-        }
-        return { order: message.order, status: "ok" as const, transcript: heard.text };
-    }, Effect.orDie)
+                    if (!isVoiceEntryInput(args)) {
+                        return yield* refuse("invalid");
+                    }
+                    const owner = yield* ownsThread(ctx, args.threadId);
+                    if (owner === null) {
+                        return yield* refuse("invalid");
+                    }
+                    const { runMutation } = yield* MutationRunner;
+                    yield* withinCaptureAllowance(ctx, caller, {
+                        admit: runMutation(refs.internal.voiceEntry.admit),
+                        burst: "voiceEntry",
+                    });
+                    return { transcriptionKey: key.value, userId: owner };
+                }),
+                args,
+                feature: "voice_entry",
+                modelId: claudeModelId,
+                sessionId: args.threadId,
+            });
+
+            const heard = yield* transcribeClip(
+                createElevenLabs({ apiKey: Redacted.value(transcriptionKey) }).transcription(
+                    ELEVENLABS_TRANSCRIPTION_MODEL_ID
+                ),
+                args.audio,
+                args.language
+            );
+            if ("error" in heard) {
+                return failure(heard.error === "empty" ? "unclear" : "providerError");
+            }
+
+            const context: LedgerContext = {
+                accounts: args.accounts,
+                categoryTree: args.categoryTree,
+                currency: args.currency,
+                language: args.language,
+                today: args.today,
+            };
+            const agent = voiceAgent(model, context, heard.text);
+            const { message, messageId } = yield* Effect.promise(() =>
+                saveMessage(ctx, components.agent, {
+                    prompt: heard.text,
+                    threadId: args.threadId,
+                    userId,
+                })
+            );
+            const parsed = yield* Effect.tryPromise({
+                catch: modelCallError,
+                try: async () => {
+                    const result = await agent.streamText(
+                        ctx,
+                        { threadId: args.threadId, userId },
+                        {
+                            abortSignal: AbortSignal.timeout(PARSE_TIMEOUT_MS),
+                            maxRetries: 0,
+                            promptMessageId: messageId,
+                            reasoning: "low",
+                            system: buildPrompt(context),
+                        },
+                        {
+                            contextOptions: { recentMessages: CONTEXT_TURNS * 2 },
+                            saveStreamDeltas: true,
+                        }
+                    );
+                    await result.consumeStream();
+                },
+            }).pipe(Effect.as(true), Effect.catchTags({ ModelCallError: () => Effect.succeed(false) }));
+            if (!parsed) {
+                return failure("providerError", heard.text);
+            }
+            return { order: message.order, status: "ok" as const, transcript: heard.text };
+        },
+        Effect.catchTags({ AiRefused: ({ status }) => Effect.succeed(failure(status)) }),
+        Effect.orDie
+    )
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(

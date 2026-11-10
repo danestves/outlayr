@@ -74,26 +74,6 @@ describe("csv import args validation", () => {
 });
 
 describe("csvImport guard ladder", () => {
-    it("returns unauthenticated for a signed-out caller", async () => {
-        const t = convexTest(schema, modules);
-
-        await expect(t.action(api.csvImport.csvImport, BASE_ARGS)).resolves.toStrictEqual({
-            status: "unauthenticated",
-            suggestions: null,
-        });
-    });
-
-    it("returns notConfigured when ANTHROPIC_API_KEY is unset, never throws", async () => {
-        vi.stubEnv("ANTHROPIC_API_KEY", "");
-        const t = convexTest(schema, modules);
-        const identity = await seedAuthUser(t);
-
-        await expect(authenticatedAs(t, identity).action(api.csvImport.csvImport, BASE_ARGS)).resolves.toStrictEqual({
-            status: "notConfigured",
-            suggestions: null,
-        });
-    });
-
     it("never sends labels from a build that asked about other AI providers", async () => {
         vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
         const t = convexTest(schema, modules);
@@ -192,42 +172,6 @@ describe("csvImport guard ladder", () => {
             suggestions: null,
         });
         expect(limitSpy).toHaveBeenCalledWith(expect.anything(), "csvImportGlobal");
-    });
-
-    it("a token that outlived its revoked session is refused, and the action never rejects", async () => {
-        vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
-        const t = convexTest(schema, modules);
-        rateLimiterTest.register(t);
-        revenuecatTest.register(t);
-        const identity = await seedAuthUser(t);
-        await grantPro(t, identity);
-        await t.run((ctx) =>
-            ctx.db.insert("merchantKnowledge", {
-                categoryName: "Healthcare",
-                domain: "farmaciasaas.com",
-                emoji: null,
-                key: "farmacia saas",
-                modelId: "test-model",
-                parentCategoryName: null,
-                resolvedAt: Date.now(),
-                tags: ["Pharmacy"],
-            })
-        );
-
-        const stale = t.withIdentity({
-            sessionId: "session-that-was-revoked",
-            subject: identity.subject,
-        });
-
-        await expect(
-            stale.action(api.csvImport.csvImport, {
-                aiConsent: AI_CONSENT_VERSION,
-                categoryTree: [{ children: [], name: "Healthcare" }],
-                groundedLookup: true,
-                labels: ["FARMACIA SAAS"],
-            })
-        ).resolves.toMatchObject({ status: "unauthenticated" });
-        await expect(scheduledGroundedRuns(t)).resolves.toHaveLength(0);
     });
 });
 

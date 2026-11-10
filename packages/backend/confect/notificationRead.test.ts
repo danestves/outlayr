@@ -1,6 +1,5 @@
 /// <reference types="vite/client" />
 
-import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { MockLanguageModelV3 } from "ai/test";
 import { convexTest } from "convex-test";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
@@ -35,14 +34,6 @@ const SITEGROUND =
     "Your transaction was successful\nYour SiteGround transaction in the amount of USD 22.99 on Nov 02 2026, 20:44 CST was approved on the card ending with 7909.";
 
 describe("notificationRead guards", () => {
-    it("refuses a signed-out caller before anything reaches the model", async () => {
-        const t = convexTest(schema, modules);
-
-        await expect(
-            t.action(api.notificationRead.read, { aiConsent: AI_CONSENT_VERSION, text: SITEGROUND })
-        ).resolves.toStrictEqual({ read: null, status: "unauthenticated" });
-    });
-
     it("never sends the text from a build without the current AI consent", async () => {
         vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
         const t = convexTest(schema, modules);

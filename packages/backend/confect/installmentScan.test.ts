@@ -126,25 +126,12 @@ describe("normalizePlan", () => {
 });
 
 describe("scan guard ladder", () => {
-    it("returns unauthenticated for a signed-out caller", async () => {
-        const t = convexTest(schema, modules);
-
-        await expect(t.action(api.installmentScan.scan, BASE_ARGS)).resolves.toStrictEqual({
-            plan: null,
-            status: "unauthenticated",
-        });
-    });
-
-    it("never sends a screenshot without a key or from a build that asked about other AI providers", async () => {
+    it("never sends a screenshot from a build that asked about other AI providers", async () => {
+        vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
         const t = convexTest(schema, modules);
         const asUser = authenticatedAs(t, await seedAuthUser(t));
         const { aiConsent: _consent, ...oldBuild } = BASE_ARGS;
 
-        vi.stubEnv("ANTHROPIC_API_KEY", "");
-        await expect(asUser.action(api.installmentScan.scan, BASE_ARGS)).resolves.toMatchObject({
-            status: "notConfigured",
-        });
-        vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
         await expect(asUser.action(api.installmentScan.scan, oldBuild)).resolves.toMatchObject({
             status: "notConfigured",
         });

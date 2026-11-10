@@ -1,6 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { WorkId } from "@convex-dev/workpool";
-import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -11,6 +10,7 @@ import { Auth, DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx, QueryRunne
 import { MAX_NAME_LENGTH, rateLimiter, sanitizeCurrencyCode, sanitizeLocale, sanitizeRegionCode } from "./enrichment";
 import { MAX_ACK_IDS, MAX_RESULTS, MIN_NAME_LENGTH, pool, settled, work } from "./enrichmentQueue";
 import spec from "./enrichmentQueue.spec";
+import { hasAiConsent } from "./lib/aiGate";
 import { optionalUserId, requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { isPro } from "./revenuecat";
@@ -24,11 +24,7 @@ const enqueue = FunctionImpl.make(
             const ctx = yield* MutationCtx;
             const userId = yield* requireUserId(ctx);
             const name = args.name.trim();
-            if (
-                args.aiConsent !== AI_CONSENT_VERSION ||
-                name.length < MIN_NAME_LENGTH ||
-                name.length > MAX_NAME_LENGTH
-            ) {
+            if (!hasAiConsent(args) || name.length < MIN_NAME_LENGTH || name.length > MAX_NAME_LENGTH) {
                 return false;
             }
             const gate = yield* Effect.promise(() => rateLimiter.limit(ctx, "enrichmentQueue", { key: userId }));

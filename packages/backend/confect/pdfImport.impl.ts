@@ -1,14 +1,11 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import type { LanguageModel } from "ai";
+import type { UserIdentity } from "convex/server";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -16,9 +13,9 @@ import { ActionCtx, MutationCtx, QueryCtx, QueryRunner, Scheduler } from "./_gen
 import { classify, MAX_LABELS, scheduleImportGrounded } from "./csvImport";
 import type { LabelSuggestion } from "./csvImport.spec";
 import { sanitizeRegionCode } from "./enrichment";
-import { traced } from "./lib/aiTracing";
+import { openAiGate, proOnly, refuse, withinLimit } from "./lib/aiGate";
 import { liveIdentity } from "./lib/auth";
-import { anthropicApiKey, claudeFastModelId } from "./lib/config";
+import { claudeFastModelId } from "./lib/config";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst, perUserBurst } from "./lib/limits";
 import { failure, isIsoDay, rateLimiter, readStatement } from "./pdfImport";
@@ -166,77 +163,65 @@ const extract = FunctionImpl.make(
     databaseSchema,
     spec,
     "extract",
-    Effect.fn("PdfImport.extract")(function* extract(args) {
-        const identity = yield* liveIdentity(yield* ActionCtx);
-        if (identity === null) {
-            return failure("unauthenticated");
-        }
+    Effect.fn("PdfImport.extract")(
+        function* extract(args) {
+            const ctx = yield* ActionCtx;
+            const { caller, distinctId, model } = yield* openAiGate(ctx, {
+                admit: Effect.fn("PdfImport.extractRungs")(function* extractRungs(identity: UserIdentity) {
+                    if (!isIsoDay(args.today)) {
+                        return yield* refuse("invalid");
+                    }
+                    yield* proOnly(ctx, identity);
+                    const quota = {
+                        config: yield* perUserBurst("pdfImport", true),
+                        key: identity.tokenIdentifier,
+                    };
+                    yield* withinLimit(() => rateLimiter.check(ctx, "pdfImportPerUser", quota));
+                    // Before the per-user token: a month's token must not go on a read the global window refuses.
+                    yield* withinLimit(() => rateLimiter.limit(ctx, "pdfImportGlobal"));
+                    yield* withinLimit(() => rateLimiter.limit(ctx, "pdfImportPerUser", quota));
 
-        const apiKey = yield* anthropicApiKey;
-        if (Option.isNone(apiKey) || args.aiConsent !== AI_CONSENT_VERSION) {
-            return failure("notConfigured");
-        }
-        if (!isIsoDay(args.today)) {
-            return failure("invalid");
-        }
-
-        const ctx = yield* ActionCtx;
-        if (!(yield* isPro(ctx, identity.subject))) {
-            return failure("notEntitled");
-        }
-
-        const burst = yield* perUserBurst("pdfImport", true);
-        const quota = { config: burst, key: identity.tokenIdentifier };
-        const allowance = yield* Effect.promise(() => rateLimiter.check(ctx, "pdfImportPerUser", quota));
-        if (!allowance.ok) {
-            return failure("rateLimited");
-        }
-        // Before the per-user token: a month's token must not go on a read the global window refuses.
-        const global = yield* Effect.promise(() => rateLimiter.limit(ctx, "pdfImportGlobal"));
-        if (!global.ok) {
-            return failure("rateLimited");
-        }
-        const perUser = yield* Effect.promise(() => rateLimiter.limit(ctx, "pdfImportPerUser", quota));
-        if (!perUser.ok) {
-            return failure("rateLimited");
-        }
-
-        // Checked before anything is deleted: a client also holds the storage ids of its own photos.
-        const { runQuery } = yield* QueryRunner;
-        const contentType = yield* runQuery(refs.internal.pdfImport.uploadContentType, { storageId: args.storageId });
-        if (contentType !== PDF_CONTENT_TYPE) {
-            return failure("invalid");
-        }
-
-        return yield* Effect.gen(function* readAndClassify() {
-            const bytes = yield* readUpload(args.storageId);
-            if (bytes === null) {
-                return failure("invalid");
-            }
-            const distinctId = args.shareAnalytics === true ? identity.subject : undefined;
-            const modelId = yield* claudeFastModelId;
-            const model = traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "pdf_import", {
-                distinctId,
+                    // Checked before anything is deleted: a client also holds the storage ids of its own photos.
+                    const { runQuery } = yield* QueryRunner;
+                    const contentType = yield* runQuery(refs.internal.pdfImport.uploadContentType, {
+                        storageId: args.storageId,
+                    });
+                    if (contentType !== PDF_CONTENT_TYPE) {
+                        return yield* refuse("invalid");
+                    }
+                }),
+                args,
+                feature: "pdf_import",
+                modelId: claudeFastModelId,
             });
-            const regionCode = sanitizeRegionCode(args.regionCode);
-            const statement = yield* readStatement(model, bytes, { regionCode, today: args.today });
-            if (statement.status !== "ok") {
-                return failure(statement.status);
-            }
-            // The file is about to go, so losing the rows to a failed lookup would cost a re-upload and a token.
-            const { degraded, suggestions } = yield* suggestCategories({
-                categoryTree: args.categoryTree,
-                distinctId,
-                groundedLookup: args.groundedLookup === true,
-                labels: [...new Set(statement.rows.map((row) => row.label))],
-                model,
-                regionCode,
-                tokenIdentifier: identity.tokenIdentifier,
-            }).pipe(Effect.catchCause(() => Effect.succeed({ degraded: true, suggestions: [] })));
-            const read = { rows: statement.rows, status: "ok" as const, suggestions };
-            return degraded ? { ...read, degraded } : read;
-        }).pipe(Effect.ensuring(Effect.promise(() => ctx.storage.delete(args.storageId))));
-    }, Effect.orDie)
+
+            return yield* Effect.gen(function* readAndClassify() {
+                const bytes = yield* readUpload(args.storageId);
+                if (bytes === null) {
+                    return failure("invalid");
+                }
+                const regionCode = sanitizeRegionCode(args.regionCode);
+                const statement = yield* readStatement(model, bytes, { regionCode, today: args.today });
+                if (statement.status !== "ok") {
+                    return failure(statement.status);
+                }
+                // The file is about to go, so losing the rows to a failed lookup would cost a re-upload and a token.
+                const { degraded, suggestions } = yield* suggestCategories({
+                    categoryTree: args.categoryTree,
+                    distinctId,
+                    groundedLookup: args.groundedLookup === true,
+                    labels: [...new Set(statement.rows.map((row) => row.label))],
+                    model,
+                    regionCode,
+                    tokenIdentifier: caller.tokenIdentifier,
+                }).pipe(Effect.catchCause(() => Effect.succeed({ degraded: true, suggestions: [] })));
+                const read = { rows: statement.rows, status: "ok" as const, suggestions };
+                return degraded ? { ...read, degraded } : read;
+            }).pipe(Effect.ensuring(Effect.promise(() => ctx.storage.delete(args.storageId))));
+        },
+        Effect.catchTags({ AiRefused: ({ status }) => Effect.succeed(failure(status)) }),
+        Effect.orDie
+    )
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(

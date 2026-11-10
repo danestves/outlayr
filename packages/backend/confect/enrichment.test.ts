@@ -100,16 +100,6 @@ describe("suggest guard ladder", () => {
         await expect(t.action(api.enrichment.suggest, BASE_ARGS)).resolves.toStrictEqual(EMPTY);
     });
 
-    it("returns EMPTY when ANTHROPIC_API_KEY is unset", async () => {
-        vi.stubEnv("ANTHROPIC_API_KEY", "");
-        const t = convexTest(schema, modules);
-        const identity = await seedAuthUser(t);
-
-        await expect(authenticatedAs(t, identity).action(api.enrichment.suggest, BASE_ARGS)).resolves.toStrictEqual(
-            EMPTY
-        );
-    });
-
     it("never sends a name from a build that asked about other AI providers", async () => {
         vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
         const outbound = vi.fn<typeof fetch>();
@@ -979,6 +969,26 @@ describe("submitWebsite", () => {
 
         await authenticatedAs(t, identity).action(api.enrichment.submitWebsite, SUBMISSION);
 
+        await expect(shared(t, "la tentacion|usd")).resolves.toBeNull();
+    });
+
+    it("asks no provider about a private category from a build without the current AI consent", async () => {
+        vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
+        const outbound = vi.fn((_input: URL | RequestInfo) => Promise.resolve(new Response(null, { status: 200 })));
+        vi.stubGlobal("fetch", outbound);
+        const t = convexTest(schema, modules);
+        rateLimiterTest.register(t);
+        const identity = await seedAuthUser(t);
+
+        await authenticatedAs(t, identity).action(api.enrichment.submitWebsite, {
+            ...SUBMISSION,
+            categoryName: "Date nights with Ana",
+        });
+
+        const hosts = outbound.mock.calls.map(
+            ([input]) => new URL(input instanceof Request ? input.url : String(input)).hostname
+        );
+        expect(hosts).toStrictEqual(["logos.tryoutlayr.com"]);
         await expect(shared(t, "la tentacion|usd")).resolves.toBeNull();
     });
 

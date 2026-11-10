@@ -1,4 +1,4 @@
-import { HOUR, isRateLimitError, RateLimiter } from "@convex-dev/rate-limiter";
+import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { generateText, Output } from "ai";
 import type { LanguageModel } from "ai";
 import type { UserIdentity } from "convex/server";
@@ -8,13 +8,12 @@ import * as Schema from "effect/Schema";
 import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import { ActionCtx, MutationRunner } from "./_generated/services";
+import { withinCaptureAllowance } from "./lib/captures";
 import { clampDate, describeTree, draftCurrency, normalizeDomain, pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
-import { perUserBurst } from "./lib/limits";
 import { modelCallError, modelSchema } from "./lib/modelCall";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import type { ReceiptDraft, ReceiptItem, ScanResult, ScanStatus } from "./receiptScan.spec";
-import { isPro } from "./revenuecat";
 
 const MAX_MERCHANT_LENGTH = 80;
 const MAX_ITEM_NAME_LENGTH = 80;
@@ -189,21 +188,11 @@ export const readReceipt = Effect.fn("ReceiptScan.readReceipt")(
 );
 
 export const admitScan = Effect.fn("ReceiptScan.admitScan")(function* admitScan(
-    identity: Pick<UserIdentity, "subject" | "tokenIdentifier">
+    caller: Pick<UserIdentity, "subject" | "tokenIdentifier">
 ) {
-    const ctx = yield* ActionCtx;
     const { runMutation } = yield* MutationRunner;
-    const pro = yield* isPro(ctx, identity.subject);
-    const config = yield* perUserBurst("receiptScan", pro);
-    const perUser = yield* Effect.promise(() =>
-        rateLimiter.limit(ctx, "receiptScanPerUser", { config, key: identity.tokenIdentifier })
-    );
-    if (!perUser.ok) {
-        return "rateLimited" as const;
-    }
-    return yield* runMutation(refs.internal.receiptScan.admit).pipe(
-        Effect.catchDefect((defect) =>
-            isRateLimitError(defect) ? Effect.succeed("rateLimited" as const) : Effect.die(defect)
-        )
-    );
+    yield* withinCaptureAllowance(yield* ActionCtx, caller, {
+        admit: runMutation(refs.internal.receiptScan.admit),
+        burst: "receiptScan",
+    });
 });

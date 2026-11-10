@@ -1,15 +1,13 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { AI_CONSENT_VERSION, CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
+import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
+import type { UserIdentity } from "convex/server";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
-import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -32,9 +30,9 @@ import {
 } from "./enrichment";
 import spec from "./enrichment.spec";
 import { isForbiddenLogoOrigin } from "./groundedLookup";
-import { traced } from "./lib/aiTracing";
+import { openAiGateFor, withinLimit } from "./lib/aiGate";
 import { liveIdentity, optionalUserId } from "./lib/auth";
-import { anthropicApiKey, claudeFastModelId } from "./lib/config";
+import { claudeFastModelId } from "./lib/config";
 import { outboundHttp } from "./lib/http";
 import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
 import { isPro } from "./revenuecat";
@@ -51,36 +49,30 @@ const logoExists = (domain: string) =>
         Effect.provide(outboundHttp)
     );
 
-const sharedCategory = Effect.fn("Enrichment.sharedCategory")(function* sharedCategory(
-    args: {
-        readonly aiConsent?: number | undefined;
-        readonly categoryName: string | null;
-        readonly income: boolean;
-        readonly name: string;
-        readonly shareAnalytics?: boolean | undefined;
-    },
-    currency: string | undefined,
-    locale: string | undefined,
-    subject: string
-) {
-    if (args.categoryName !== null && CANONICAL_CATEGORIES.has(args.categoryName)) {
-        return args.categoryName;
-    }
-    const apiKey = yield* anthropicApiKey;
-    if (Option.isNone(apiKey) || args.aiConsent !== AI_CONSENT_VERSION) {
-        return null;
-    }
-    const ctx = yield* ActionCtx;
-    const global = yield* Effect.promise(() => rateLimiter.limit(ctx, "enrichmentGlobal"));
-    if (!global.ok) {
-        return null;
-    }
-    const modelId = yield* claudeFastModelId;
-    const classified = yield* runSuggest(
-        traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "category_suggest", {
-            distinctId: args.shareAnalytics === true ? subject : undefined,
-        }),
-        {
+const sharedCategory = Effect.fn("Enrichment.sharedCategory")(
+    function* sharedCategory(
+        args: {
+            readonly aiConsent?: number | undefined;
+            readonly categoryName: string | null;
+            readonly income: boolean;
+            readonly name: string;
+            readonly shareAnalytics?: boolean | undefined;
+        },
+        currency: string | undefined,
+        locale: string | undefined,
+        caller: UserIdentity
+    ) {
+        if (args.categoryName !== null && CANONICAL_CATEGORIES.has(args.categoryName)) {
+            return args.categoryName;
+        }
+        const ctx = yield* ActionCtx;
+        const { model } = yield* openAiGateFor(caller, {
+            admit: () => withinLimit(() => rateLimiter.limit(ctx, "enrichmentGlobal")),
+            args,
+            feature: "category_suggest",
+            modelId: claudeFastModelId,
+        });
+        const classified = yield* runSuggest(model, {
             categoryTree: CANONICAL_CATEGORY_NAMES[args.income ? "income" : "expense"].map((name) => ({
                 children: [],
                 name,
@@ -89,11 +81,12 @@ const sharedCategory = Effect.fn("Enrichment.sharedCategory")(function* sharedCa
             income: args.income,
             locale,
             name: args.name,
-        }
-    ).pipe(Effect.catchTags({ ModelCallError: () => Effect.succeed(null) }));
-    const categoryName = classified?.categoryName ?? null;
-    return categoryName !== null && CANONICAL_CATEGORIES.has(categoryName) ? categoryName : null;
-});
+        }).pipe(Effect.catchTags({ ModelCallError: () => Effect.succeed(null) }));
+        const categoryName = classified?.categoryName ?? null;
+        return categoryName !== null && CANONICAL_CATEGORIES.has(categoryName) ? categoryName : null;
+    },
+    Effect.catchTags({ AiRefused: () => Effect.succeed(null) })
+);
 
 /**
  * Keyed by the Better Auth user id, as `sync.ts` writes it. An absent row means consented; a lost session answers
@@ -118,113 +111,105 @@ const groundedConsent = FunctionImpl.make(
     }, Effect.orDie)
 );
 
-/** Read live so `npx convex env set ANTHROPIC_API_KEY=""` takes effect on the next call. */
 const suggest = FunctionImpl.make(
     databaseSchema,
     spec,
     "suggest",
-    Effect.fn("Enrichment.suggest")(function* suggest(args) {
-        const identity = yield* liveIdentity(yield* ActionCtx);
-        if (identity === null) {
-            return EMPTY;
-        }
+    Effect.fn("Enrichment.suggest")(
+        function* suggest(args) {
+            const identity = yield* liveIdentity(yield* ActionCtx);
+            if (identity === null) {
+                return EMPTY;
+            }
 
-        const trimmedName = args.name.trim();
-        if (trimmedName.length < MIN_NAME_LENGTH || trimmedName.length > MAX_NAME_LENGTH) {
-            return EMPTY;
-        }
+            const trimmedName = args.name.trim();
+            if (trimmedName.length < MIN_NAME_LENGTH || trimmedName.length > MAX_NAME_LENGTH) {
+                return EMPTY;
+            }
 
-        const regionCode = sanitizeRegionCode(args.regionCode);
-        const currency = sanitizeCurrencyCode(args.currency);
-        const locale = sanitizeLocale(args.locale);
+            const regionCode = sanitizeRegionCode(args.regionCode);
+            const currency = sanitizeCurrencyCode(args.currency);
+            const locale = sanitizeLocale(args.locale);
 
-        const { runQuery } = yield* QueryRunner;
-        // Tier 1.5 spends no rate limit and runs before the API key check, so a hit works without the key.
-        const cached = yield* runQuery(refs.internal.merchantKnowledge.lookup, {
-            keys: knowledgeKeys(trimmedName, currency),
-            now: yield* Clock.currentTimeMillis,
-        });
-        if (cached !== null) {
-            return {
-                ...applyToTree(args.categoryTree, cached),
-                grounding: false,
-            };
-        }
+            const { runQuery } = yield* QueryRunner;
+            // Tier 1.5 spends no rate limit and runs before the API key check, so a hit works without the key.
+            const cached = yield* runQuery(refs.internal.merchantKnowledge.lookup, {
+                keys: knowledgeKeys(trimmedName, currency),
+                now: yield* Clock.currentTimeMillis,
+            });
+            if (cached !== null) {
+                return {
+                    ...applyToTree(args.categoryTree, cached),
+                    grounding: false,
+                };
+            }
 
-        if (args.knowledgeOnly === true) {
-            return EMPTY;
-        }
+            if (args.knowledgeOnly === true) {
+                return EMPTY;
+            }
 
-        const apiKey = yield* anthropicApiKey;
-        if (Option.isNone(apiKey) || args.aiConsent !== AI_CONSENT_VERSION) {
-            return EMPTY;
-        }
+            const ctx = yield* ActionCtx;
+            const { distinctId, model } = yield* openAiGateFor(identity, {
+                admit: Effect.fn("Enrichment.suggestRungs")(function* suggestRungs(caller: UserIdentity) {
+                    yield* withinLimit(() =>
+                        rateLimiter.limit(ctx, args.background ? "enrichmentBackground" : "enrichmentPerUser", {
+                            key: caller.tokenIdentifier,
+                        })
+                    );
+                    yield* withinLimit(() => rateLimiter.limit(ctx, "enrichmentGlobal"));
+                }),
+                args,
+                feature: "category_suggest",
+                modelId: claudeFastModelId,
+            });
 
-        const ctx = yield* ActionCtx;
-        const perUser = yield* Effect.promise(() =>
-            rateLimiter.limit(ctx, args.background ? "enrichmentBackground" : "enrichmentPerUser", {
-                key: identity.tokenIdentifier,
-            })
-        );
-        if (!perUser.ok) {
-            return EMPTY;
-        }
-
-        const global = yield* Effect.promise(() => rateLimiter.limit(ctx, "enrichmentGlobal"));
-        if (!global.ok) {
-            return EMPTY;
-        }
-
-        const scheduleGrounded = args.groundedLookup
-            ? isPro(ctx, identity.subject).pipe(
-                  Effect.flatMap((pro) =>
-                      pro
-                          ? maybeScheduleGrounded(ctx, identity.tokenIdentifier, {
-                                currency,
-                                distinctId: args.shareAnalytics === true ? identity.subject : undefined,
-                                groundedLookup: args.groundedLookup,
-                                income: args.income,
-                                locale,
-                                name: trimmedName,
-                                regionCode,
-                            })
-                          : Effect.succeed(false)
+            const scheduleGrounded = args.groundedLookup
+                ? isPro(ctx, identity.subject).pipe(
+                      Effect.flatMap((pro) =>
+                          pro
+                              ? maybeScheduleGrounded(ctx, identity.tokenIdentifier, {
+                                    currency,
+                                    distinctId,
+                                    groundedLookup: args.groundedLookup,
+                                    income: args.income,
+                                    locale,
+                                    name: trimmedName,
+                                    regionCode,
+                                })
+                              : Effect.succeed(false)
+                      )
                   )
-              )
-            : Effect.succeed(false);
+                : Effect.succeed(false);
 
-        const modelId = yield* claudeFastModelId;
-        const result = yield* runSuggest(
-            traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "category_suggest", {
-                distinctId: args.shareAnalytics === true ? identity.subject : undefined,
-            }),
-            {
+            const result = yield* runSuggest(model, {
                 categoryTree: args.categoryTree,
                 currency,
                 income: args.income,
                 locale,
                 name: trimmedName,
                 regionCode,
+            }).pipe(
+                Effect.catchTags({
+                    ModelCallError: ({ cause }) =>
+                        Console.warn(
+                            `[enrichment] model call threw for "${trimmedName}":`,
+                            cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause)
+                        ).pipe(Effect.as(null)),
+                })
+            );
+            if (result === null) {
+                // Not a thrown ConvexError: an ordinary timeout should not fill the logs with stack traces.
+                return { ...EMPTY, grounding: yield* scheduleGrounded };
             }
-        ).pipe(
-            Effect.catchTags({
-                ModelCallError: ({ cause }) =>
-                    Console.warn(
-                        `[enrichment] model call threw for "${trimmedName}":`,
-                        cause instanceof Error ? `${cause.name}: ${cause.message}` : String(cause)
-                    ).pipe(Effect.as(null)),
-            })
-        );
-        if (result === null) {
-            // Not a thrown ConvexError: an ordinary timeout should not fill the logs with stack traces.
-            return { ...EMPTY, grounding: yield* scheduleGrounded };
-        }
 
-        // Never awaited: it fills Tier 1.5 for the NEXT lookup.
-        const scheduled = needsGroundedLookup(result) && (yield* scheduleGrounded);
-        // `grounding: true` stops the client caching this as final.
-        return scheduled ? { ...result, grounding: true } : result;
-    }, Effect.orDie)
+            // Never awaited: it fills Tier 1.5 for the NEXT lookup.
+            const scheduled = needsGroundedLookup(result) && (yield* scheduleGrounded);
+            // `grounding: true` stops the client caching this as final.
+            return scheduled ? { ...result, grounding: true } : result;
+        },
+        Effect.catchTags({ AiRefused: () => Effect.succeed(EMPTY) }),
+        Effect.orDie
+    )
 );
 
 const submitWebsite = FunctionImpl.make(
@@ -256,7 +241,7 @@ const submitWebsite = FunctionImpl.make(
         if (!allowed.ok || !(yield* logoExists(domain))) {
             return null;
         }
-        const categoryName = yield* sharedCategory(args, currency, sanitizeLocale(args.locale), identity.subject);
+        const categoryName = yield* sharedCategory(args, currency, sanitizeLocale(args.locale), identity);
         if (categoryName === null) {
             return null;
         }
