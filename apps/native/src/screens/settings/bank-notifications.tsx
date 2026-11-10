@@ -9,7 +9,7 @@ import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { onOffLabel } from "@/data/settings-core";
-import { useWalletMeta } from "@/data/use-wallet-meta";
+import { useWalletState } from "@/data/use-wallet-state";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { SILENT } from "@/state/atom-command";
@@ -31,7 +31,7 @@ const LINE_BREAKS = /\s*\n\s*/g;
 export function BankNotifications() {
     const db = useDatabase();
     const t = useTranslation();
-    const { lastNotification } = useWalletMeta(db);
+    const { lastNotification } = useWalletState(db);
     const openBankShortcut = useAtomAction(
         openBankShortcutCommand,
         {

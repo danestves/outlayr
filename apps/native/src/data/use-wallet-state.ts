@@ -1,7 +1,7 @@
 import { useMeta } from "@/data/app-meta";
 import type { Database } from "@/db/client";
 
-export function useWalletMeta(db: Database) {
+export function useWalletState(db: Database) {
     const added = useMeta(db, "walletShortcutAdded");
     const lastEntry = useMeta(db, "lastWalletEntry");
     const lastRunAt = useMeta(db, "walletLastRunAt");
