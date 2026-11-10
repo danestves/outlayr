@@ -547,20 +547,22 @@ const isOnCredit = (verb: NewVerb) => verb === "bought" || verb === "sold";
 /** The person, when new, then whatever moved: an entry on credit, a transfer, or only an opening balance. */
 function newDebtRows(ledger: Ledger, draft: NewDebtDraft, id: string, at: number): MovedRows {
     const { amount, currency, move, person, usd, verb } = draft;
-    const fresh = (opening: number) =>
-        createdPerson(
-            ledger.books,
-            {
-                currency,
-                name: draft.name,
-                opening,
-                openingUsd: opening === 0 ? null : usd,
-                openedAt: instantOf(ledger, move.state.day, at),
-            },
-            id,
-            at
-        );
-    const opened = person ? [] : [fresh(0)];
+    const opened = person
+        ? []
+        : [
+              createdPerson(
+                  ledger.books,
+                  {
+                      currency,
+                      name: draft.name,
+                      opening: 0,
+                      openingUsd: null,
+                      openedAt: instantOf(ledger, move.state.day, at),
+                  },
+                  id,
+                  at
+              ),
+          ];
     if (isOnCredit(verb)) {
         const made = onCreditRows(
             ledger,
@@ -582,12 +584,6 @@ function newDebtRows(ledger: Ledger, draft: NewDebtDraft, id: string, at: number
             return { problem: made.problem === "rateMissing" ? "rateMissing" : "saveFailed" };
         }
         return { rows: [...opened, ...made.rows] };
-    }
-    if (person === null && move.account === null) {
-        const row = fresh(signedBy(verb, amount));
-        return row.table === "accounts" && row.fields.initialBalanceUsd === null
-            ? { problem: "rateMissing" }
-            : { rows: [row] };
     }
     const moved = movedRows(ledger, {
         amount,
@@ -799,6 +795,10 @@ function NewDebt({
                       crypto.randomUUID(),
                       at
                   );
+        if (planDay !== null && !onCredit && after !== 0 && planned === null) {
+            setProblem("rateMissing");
+            return;
+        }
         const settles = person !== null && before !== 0 && after === 0;
         write(
             [...made.rows, ...(planned ?? [])],
@@ -816,6 +816,7 @@ function NewDebt({
                     <VerbTabs
                         onVerb={(next) => {
                             set.verb(next);
+                            set.categoryId(null);
                             setProblem(null);
                         }}
                         verb={verb}
@@ -996,14 +997,18 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
         const planned =
             payDay === null || after >= 0
                 ? []
-                : (payoffPlanRows(
+                : payoffPlanRows(
                       current.books,
                       { accountId: id, balance: after, currency, name: trimmed },
                       planFor(current, person),
                       targetInstant(ledger, days[payDay]),
                       crypto.randomUUID(),
                       at
-                  ) ?? []);
+                  );
+        if (planned === null) {
+            setProblem("rateMissing");
+            return;
+        }
         write([...made.rows, ...planned], owe.saved({ amount: money(amount, currency), name: trimmed }).value);
         onClose();
     };
