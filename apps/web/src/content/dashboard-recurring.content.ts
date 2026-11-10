@@ -537,6 +537,14 @@ const dashboardRecurring = {
                 pt: "Vence hoje, ainda sem lançamento correspondente.",
             }),
             skip: t({ en: "Skip this one", es: "Omitir este", fr: "Passer celui-ci", pt: "Pular este" }),
+            skipAll: insert(
+                t({
+                    en: "Skip {{count}} due",
+                    es: "Omitir los {{count}} pendientes",
+                    fr: "Passer les {{count}} échéances",
+                    pt: "Pular os {{count}} pendentes",
+                })
+            ),
         },
         paused: {
             emptyLine: t({

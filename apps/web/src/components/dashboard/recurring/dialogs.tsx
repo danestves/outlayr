@@ -210,7 +210,9 @@ export function LogDialog({
                 </Dialog.Body>
                 <Dialog.Footer>
                     <Button className="me-auto" onClick={onSkip} variant="outline">
-                        {copy.log.skip}
+                        {schedule.due.length > 1
+                            ? copy.log.skipAll({ count: String(schedule.due.length) })
+                            : copy.log.skip}
                     </Button>
                     <Button onClick={onClose} variant="outline">
                         {copy.cancel}

@@ -16,7 +16,7 @@ rows it writes come from `apps/web/src/lib/recurring-writes.ts`.
 
 ## Known edges
 
-- "Skip this one" skips every charge still due, not only the oldest.
+- Skip drops every charge still due, not only the oldest: the chain can only move past a date by logging it. With more than one due, the button says how many it skips.
 - Logging a due charge drops the due charges older than it.
 - A pending carrier with a card fee loses the fee when it is paused and resumed.
 - Detection groups entries by merchant, kind and currency, and skips a merchant that already has a chain.
