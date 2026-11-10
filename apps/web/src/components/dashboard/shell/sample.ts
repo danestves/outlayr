@@ -61,6 +61,19 @@ const ACCOUNTS = ["Checking", "Savings", "Credit card", "Cash", "Brokerage", "Tr
     ...account(name, seq),
     ...(name.endsWith("card") && CARD),
 }));
+// Kept out of ACCOUNTS, which entries index into, so no sample entry lands on a person.
+const PEOPLE = (
+    [
+        ["Ana", 120],
+        ["Elena", -1200],
+        ["Luis", -260],
+    ] as const
+).map(([name, balance], index) => ({
+    ...account(name, ACCOUNTS.length + index),
+    initialBalance: balance,
+    initialBalanceUsd: balance,
+    kind: "person" as const,
+}));
 const CATEGORIES = ["Groceries", "Dining out", "Transport", "Home", "Health"].map(category);
 
 const budget = (spentOn: Doc<"categories">, seq: number, startDate: number): Doc<"budgets"> => {
@@ -147,7 +160,7 @@ function sampleBooks(now: number): LedgerBooks {
         })
     );
     return {
-        accounts: ACCOUNTS,
+        accounts: [...ACCOUNTS, ...PEOPLE],
         // Without a stored zone the ledger infers one from each row's `day`, which these rows do not model.
         appMeta: [{ key: "timeZone", value: "UTC" }],
         budgets: CATEGORIES.slice(0, 3).map((each, index) => budget(each, index, now - PAST_MONTHS * MONTH_MS)),

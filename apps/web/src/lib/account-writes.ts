@@ -21,7 +21,7 @@ export interface AccountDraft {
     icon: string | null;
     imageColor: string | null;
     imageKey: string | null;
-    kind: "asset" | "liability";
+    kind: "asset" | "liability" | "person";
     name: string;
     paymentDay: number | null;
     statementDay: number | null;

@@ -56,6 +56,8 @@ import { Route as AccountAppAccountsIndexRouteImport } from './routes/_account/a
 import { Route as AccountAppAccountsAccountIdRouteImport } from './routes/_account/app.accounts.$accountId'
 import { Route as AccountAppAccountsNetWorthRouteImport } from './routes/_account/app.accounts.net-worth'
 import { Route as AccountAppAccountsReorderRouteImport } from './routes/_account/app.accounts.reorder'
+import { Route as AccountAppDebtsIndexRouteImport } from './routes/_account/app.debts.index'
+import { Route as AccountAppDebtsAccountIdRouteImport } from './routes/_account/app.debts.$accountId'
 import { Route as AccountAppGoalsIndexRouteImport } from './routes/_account/app.goals.index'
 import { Route as AccountAppGoalsGoalIdRouteImport } from './routes/_account/app.goals.$goalId'
 import { Route as AccountAppInsightsIndexRouteImport } from './routes/_account/app.insights.index'
@@ -344,6 +346,17 @@ const AccountAppAccountsReorderRoute =
     path: '/accounts/reorder',
     getParentRoute: () => AccountAppRoute,
   } as any)
+const AccountAppDebtsIndexRoute = AccountAppDebtsIndexRouteImport.update({
+  id: '/debts/',
+  path: '/debts/',
+  getParentRoute: () => AccountAppRoute,
+} as any)
+const AccountAppDebtsAccountIdRoute =
+  AccountAppDebtsAccountIdRouteImport.update({
+    id: '/debts/$accountId',
+    path: '/debts/$accountId',
+    getParentRoute: () => AccountAppRoute,
+  } as any)
 const AccountAppGoalsIndexRoute = AccountAppGoalsIndexRouteImport.update({
   id: '/goals/',
   path: '/goals/',
@@ -523,6 +536,7 @@ export interface FileRoutesByFullPath {
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
   '/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
   '/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
   '/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
@@ -543,6 +557,7 @@ export interface FileRoutesByFullPath {
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/app/accounts/': typeof AccountAppAccountsIndexRoute
+  '/app/debts/': typeof AccountAppDebtsIndexRoute
   '/app/goals/': typeof AccountAppGoalsIndexRoute
   '/app/insights/': typeof AccountAppInsightsIndexRoute
   '/app/settings/': typeof AccountAppSettingsIndexRoute
@@ -592,6 +607,7 @@ export interface FileRoutesByTo {
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
   '/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
   '/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
   '/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
@@ -612,6 +628,7 @@ export interface FileRoutesByTo {
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/app/accounts': typeof AccountAppAccountsIndexRoute
+  '/app/debts': typeof AccountAppDebtsIndexRoute
   '/app/goals': typeof AccountAppGoalsIndexRoute
   '/app/insights': typeof AccountAppInsightsIndexRoute
   '/app/settings': typeof AccountAppSettingsIndexRoute
@@ -666,6 +683,7 @@ export interface FileRoutesById {
   '/_account/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/_account/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/_account/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/_account/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
   '/_account/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
   '/_account/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
   '/_account/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
@@ -686,6 +704,7 @@ export interface FileRoutesById {
   '/_account/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/_account/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/_account/app/accounts/': typeof AccountAppAccountsIndexRoute
+  '/_account/app/debts/': typeof AccountAppDebtsIndexRoute
   '/_account/app/goals/': typeof AccountAppGoalsIndexRoute
   '/_account/app/insights/': typeof AccountAppInsightsIndexRoute
   '/_account/app/settings/': typeof AccountAppSettingsIndexRoute
@@ -741,6 +760,7 @@ export interface FileRouteTypes {
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
     | '/app/accounts/reorder'
+    | '/app/debts/$accountId'
     | '/app/goals/$goalId'
     | '/app/insights/breakdown'
     | '/app/insights/cash-flow'
@@ -761,6 +781,7 @@ export interface FileRouteTypes {
     | '/app/settings/time'
     | '/app/settings/usage'
     | '/app/accounts/'
+    | '/app/debts/'
     | '/app/goals/'
     | '/app/insights/'
     | '/app/settings/'
@@ -810,6 +831,7 @@ export interface FileRouteTypes {
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
     | '/app/accounts/reorder'
+    | '/app/debts/$accountId'
     | '/app/goals/$goalId'
     | '/app/insights/breakdown'
     | '/app/insights/cash-flow'
@@ -830,6 +852,7 @@ export interface FileRouteTypes {
     | '/app/settings/time'
     | '/app/settings/usage'
     | '/app/accounts'
+    | '/app/debts'
     | '/app/goals'
     | '/app/insights'
     | '/app/settings'
@@ -883,6 +906,7 @@ export interface FileRouteTypes {
     | '/_account/app/accounts/$accountId'
     | '/_account/app/accounts/net-worth'
     | '/_account/app/accounts/reorder'
+    | '/_account/app/debts/$accountId'
     | '/_account/app/goals/$goalId'
     | '/_account/app/insights/breakdown'
     | '/_account/app/insights/cash-flow'
@@ -903,6 +927,7 @@ export interface FileRouteTypes {
     | '/_account/app/settings/time'
     | '/_account/app/settings/usage'
     | '/_account/app/accounts/'
+    | '/_account/app/debts/'
     | '/_account/app/goals/'
     | '/_account/app/insights/'
     | '/_account/app/settings/'
@@ -1257,6 +1282,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppAccountsReorderRouteImport
       parentRoute: typeof AccountAppRoute
     }
+    '/_account/app/debts/': {
+      id: '/_account/app/debts/'
+      path: '/debts'
+      fullPath: '/app/debts/'
+      preLoaderRoute: typeof AccountAppDebtsIndexRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
+    '/_account/app/debts/$accountId': {
+      id: '/_account/app/debts/$accountId'
+      path: '/debts/$accountId'
+      fullPath: '/app/debts/$accountId'
+      preLoaderRoute: typeof AccountAppDebtsAccountIdRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
     '/_account/app/goals/': {
       id: '/_account/app/goals/'
       path: '/goals'
@@ -1558,8 +1597,10 @@ interface AccountAppRouteChildren {
   AccountAppAccountsAccountIdRoute: typeof AccountAppAccountsAccountIdRoute
   AccountAppAccountsNetWorthRoute: typeof AccountAppAccountsNetWorthRoute
   AccountAppAccountsReorderRoute: typeof AccountAppAccountsReorderRoute
+  AccountAppDebtsAccountIdRoute: typeof AccountAppDebtsAccountIdRoute
   AccountAppGoalsGoalIdRoute: typeof AccountAppGoalsGoalIdRoute
   AccountAppAccountsIndexRoute: typeof AccountAppAccountsIndexRoute
+  AccountAppDebtsIndexRoute: typeof AccountAppDebtsIndexRoute
   AccountAppGoalsIndexRoute: typeof AccountAppGoalsIndexRoute
 }
 
@@ -1574,8 +1615,10 @@ const AccountAppRouteChildren: AccountAppRouteChildren = {
   AccountAppAccountsAccountIdRoute: AccountAppAccountsAccountIdRoute,
   AccountAppAccountsNetWorthRoute: AccountAppAccountsNetWorthRoute,
   AccountAppAccountsReorderRoute: AccountAppAccountsReorderRoute,
+  AccountAppDebtsAccountIdRoute: AccountAppDebtsAccountIdRoute,
   AccountAppGoalsGoalIdRoute: AccountAppGoalsGoalIdRoute,
   AccountAppAccountsIndexRoute: AccountAppAccountsIndexRoute,
+  AccountAppDebtsIndexRoute: AccountAppDebtsIndexRoute,
   AccountAppGoalsIndexRoute: AccountAppGoalsIndexRoute,
 }
 
