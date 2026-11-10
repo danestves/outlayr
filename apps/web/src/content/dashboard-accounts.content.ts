@@ -1048,6 +1048,14 @@ const dashboardAccounts = {
                     pt: "Depois {{count}} × {{amount}}",
                 })
             ),
+            thenMixed: insert(
+                t({
+                    en: "Then {{count}} installments",
+                    es: "Luego {{count}} cuotas",
+                    fr: "Puis {{count}} échéances",
+                    pt: "Depois {{count}} parcelas",
+                })
+            ),
             title: t({
                 en: "New purchase in installments",
                 es: "Nueva compra en cuotas",

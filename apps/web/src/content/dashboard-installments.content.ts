@@ -73,6 +73,12 @@ const dashboardInstallments = {
                 fr: "Politique de confidentialité",
                 pt: "Política de privacidade",
             }),
+            privacyHash: t({
+                en: "suggestions-voice-and-receipts",
+                es: "sugerencias-voz-y-recibos",
+                fr: "suggestions-voix-et-tickets",
+                pt: "sugestões-voz-e-recibos",
+            }),
             title: t({
                 en: "Send data to third-party AI providers?",
                 es: "¿Enviar datos a proveedores de IA externos?",

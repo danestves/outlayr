@@ -55,14 +55,21 @@ function Consent() {
     return (
         <div className="flex flex-col gap-3 text-[13px] leading-5">
             <h3 className="text-[15px] leading-[22px] font-semibold">{consent.title}</h3>
-            <div className="rounded-xl border px-3 py-2.5">
+            <div className="border-y py-2.5">
                 <p className="font-medium">{consent.planScan}</p>
                 <p className="text-muted-foreground">{consent.planScanSends}</p>
             </div>
-            <p className="text-muted-foreground">{consent.fine}</p>
-            <LocalizedLink className="text-foreground w-fit underline underline-offset-2" target="_blank" to="/privacy">
-                {consent.privacy}
-            </LocalizedLink>
+            <p className="text-muted-foreground">
+                {consent.fine}{" "}
+                <LocalizedLink
+                    className="text-foreground underline underline-offset-2"
+                    hash={consent.privacyHash.value}
+                    target="_blank"
+                    to="/privacy"
+                >
+                    {consent.privacy}
+                </LocalizedLink>
+            </p>
         </div>
     );
 }

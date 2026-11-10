@@ -212,7 +212,15 @@ function AccountField({
 
 const SUMMARY_ROW = "flex h-[33px] items-center text-[13px]";
 
-function Summary({ currency, plan }: { currency: string; plan: ReturnType<typeof planPurchase> }) {
+function Summary({
+    currency,
+    plan,
+    scanned,
+}: {
+    currency: string;
+    plan: ReturnType<typeof planPurchase>;
+    scanned: boolean;
+}) {
     const { purchase } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const date = useDateFormat();
@@ -236,7 +244,9 @@ function Summary({ currency, plan }: { currency: string; plan: ReturnType<typeof
                 {first ? (
                     <div className={`${SUMMARY_ROW} border-b`}>
                         <span className="text-muted-foreground">
-                            {purchase.thenEach({ amount: money(first.amount, currency), count: ahead.length })}
+                            {!scanned || ahead.every((row) => row.amount === first.amount)
+                                ? purchase.thenEach({ amount: money(first.amount, currency), count: ahead.length })
+                                : purchase.thenMixed({ count: ahead.length })}
                         </span>
                         <span className="dash-figure ml-auto">
                             {over > 0 ? money(total - paidNow, currency) : dates()}
@@ -554,7 +564,7 @@ export function PurchaseForm({
                             />
                         </Field>
                     </div>
-                    <Summary currency={currency} plan={plan} />
+                    <Summary currency={currency} plan={plan} scanned={scanned !== null} />
                 </form>
             </Dialog.Body>
             <Dialog.Footer>
