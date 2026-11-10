@@ -13,7 +13,7 @@ intro: "This policy explains what Outlayr collects, where it goes, how long it s
 - Nothing goes to Anthropic or ElevenLabs until you allow it. The app asks during setup, or after you sign in, and Speak an entry and Scan a receipt ask again until you do. Import from a screenshot, for installment plans, asks the first time you use it, even if you allowed the others. Withdraw it any time in **Settings › Send data to AI providers**. Once allowed, merchant suggestions, notification reading, and web lookups are on, and all three can be turned off in **Settings › Smart fill**. Turning Smart fill on also allows sending data to AI providers.
 - The app sends usage analytics and crash reports to PostHog: which screens you open, which features you use, and errors. Never amounts, merchants, notes, or names. It starts off if your device’s region is in the EEA or UK, and on everywhere else. Change it in **Settings › Share analytics**. Our server also tells PostHog the size, cost, and speed of each request to Anthropic, never what it contained, and links it to your account only while Share analytics is on.
 - This website uses PostHog too, with a cookie. If you’re in the EEA or UK, it asks first. Change your answer in the footer under **Cookies**.
-- With Outlayr Pro you can connect Notion to import expenses from your Notion databases. We keep Notion’s access key encrypted on our servers so you can import again, until you disconnect Notion or delete your account. What we read from Notion passes through our server to your phone and isn’t stored.
+- With Outlayr Pro you can connect Notion to import expenses from your Notion databases. We keep Notion’s access key encrypted on our servers so you can import again, until you disconnect Notion or delete your account. What we read from Notion passes through our server to your device and isn’t stored.
 - You can connect an AI assistant such as Claude to your account. Once you approve it, it can read what your devices synced, and with Outlayr Pro add entries. What it reads is handled under that assistant’s privacy policy.
 - If you invite friends, each one sees your first name on your invite, and you see their first name, how many days they have logged up to three, and the date of the third. Never what they logged.
 - No ads and no tracking across other companies’ apps. We don’t sell your personal information or share it for advertising.
@@ -137,7 +137,7 @@ With Outlayr Pro, you can connect a Notion workspace and import expenses from it
 
 When you connect, Notion gives our server an access key and your Notion user ID. We keep the key encrypted on our servers, linked to your account, so you can import again later without connecting again. We never see your Notion password, and we don’t keep your Notion name or email.
 
-When you import, our server uses the key to read the databases you pick: their names, column names, and rows, and the names of the rows they link to. It sends them to your phone, which builds the import there. Nothing read from Notion is stored on our servers, and your phone keeps only the entries you import.
+When you import, our server uses the key to read the databases you pick: their names, column names, and rows, and the names of the rows they link to. It sends them to your device, which builds the import there. Nothing read from Notion is stored on our servers, and your device keeps only the entries you import.
 
 - **Disconnect** in **Settings › Import › Notion** at any time. Our server asks Notion to revoke the key and deletes it.
 - Removing Outlayr from your Notion settings revokes the key too. We delete it the next time the app tries to use it.
@@ -194,7 +194,7 @@ When you import an installment plan, you choose a screenshot of an order’s pay
 
 ### CSV import
 
-The file is read on your device, and so is a Notion export: the zip is opened and its CSV read on the phone. With Smart fill on, descriptions Outlayr can’t match on the device are sent to our server, and with Pro, on to Anthropic to suggest categories: at most 200 at a time, with any run of four or more digits removed, together with your category names and device region. Amounts, dates, and the rest of the file stay on your device. With web lookup on, some descriptions may also be looked up on the web as described above.
+The file is read on your device, and so is a Notion export: the zip is opened and its CSV read on the device. With Smart fill on, descriptions Outlayr can’t match on the device are sent to our server, and with Pro, on to Anthropic to suggest categories: at most 200 at a time, with any run of four or more digits removed, together with your category names and device region. Amounts, dates, and the rest of the file stay on your device. With web lookup on, some descriptions may also be looked up on the web as described above.
 
 ### Bank statement PDF import
 
