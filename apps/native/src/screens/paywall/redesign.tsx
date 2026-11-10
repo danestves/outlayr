@@ -3,12 +3,14 @@ import Tick02Icon from "@hugeicons-pro/core-solid-rounded/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Button } from "panelui-native/components/button";
-import type { ReactNode } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
 import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
+import { useDatabase } from "@/contexts/local-data-context";
 import { useRevenueCat } from "@/contexts/revenuecat-context";
+import { useLedgerStats } from "@/data/ledger-stats";
+import type { LedgerStats } from "@/data/ledger-stats";
 import { useNow } from "@/data/use-now";
 import { formatChargeDate } from "@/domain/dates";
 import type { ProStatus } from "@/domain/pro-status";
@@ -24,56 +26,71 @@ import { useAccountLimit } from "./account-top";
 import type { AccountTrigger } from "./account-top";
 import { FeatureRows } from "./feature-rows";
 import { LegalRow } from "./legal-row";
+import { MonthAhead } from "./month-ahead";
+import { daysLeftInMonth } from "./month-grid";
 import { PaywallCta } from "./paywall-cta";
 import { PaywallHero } from "./paywall-hero";
-import { PlanCards } from "./plan-cards";
 import { ctaLabel, thenLabel } from "./plan-copy";
 import { PlanPicker } from "./plan-picker";
+import { PlanRows } from "./plan-rows";
+import { ProBand } from "./pro-band";
 import { PurchaseFailure, SaleBlockers, UnconfirmedNotice } from "./sale-notices";
 import { StoreTerms } from "./store-terms";
 import type { TopBlock } from "./top-block";
-import { TrialTimeline } from "./trial-timeline";
 import { usePaywallFlow } from "./use-paywall-flow";
 
-function Header({ subtitle, children }: { children?: ReactNode; subtitle: string }) {
-    const t = useTranslation();
-    return (
-        <View className="pt-5">
-            <Text
-                accessibilityRole="header"
-                className="text-foreground font-sans-bold text-[28px] leading-[34px] tracking-tight"
-            >
-                {t("pro.entry.title")}
-            </Text>
-            <View className="flex-row items-center gap-1.5 pt-1">
-                {children}
-                <Text className="text-muted text-subtitle flex-1">{subtitle}</Text>
-            </View>
-        </View>
-    );
+function statsLine(stats: LedgerStats, autologged: number, t: TranslateFn): string | null {
+    if (stats.entries === 0) {
+        return null;
+    }
+    return [
+        t("pro.stats.entries", { count: stats.entries }),
+        t("pro.stats.days", { count: stats.days }),
+        autologged > 0 ? t("pro.stats.autolog", { count: autologged }) : null,
+    ]
+        .filter((part): part is string => part !== null)
+        .join(" · ");
 }
 
-function AccountHeader({ trigger }: { trigger: AccountTrigger }) {
-    return <Header subtitle={useAccountLimit(trigger).title} />;
+interface BandCopy {
+    stats: string | null;
+    title: string;
 }
 
-/** The pitch stays the same for every trigger; only the line under the title says why the user is here. */
-function PitchHeader({ autologUsed, block }: { autologUsed: number; block: TopBlock }) {
+function AccountBand({ trigger, ...band }: BandCopy & { trigger: AccountTrigger }) {
+    return <ProBand {...band} subtitle={useAccountLimit(trigger).title} />;
+}
+
+function PitchBand({
+    autolog,
+    block,
+    daysLeft,
+    stats,
+}: {
+    autolog: { cap: number; total: number; used: number };
+    block: TopBlock;
+    daysLeft: number;
+    stats: LedgerStats;
+}) {
     const t = useTranslation();
+    const band: BandCopy = {
+        stats: statsLine(stats, autolog.total, t),
+        title: block === "autolog" && daysLeft > 0 ? t("pro.band.month", { count: daysLeft }) : t("pro.band.moment"),
+    };
     switch (block) {
-        case "autolog": {
-            return <Header subtitle={t("pro.top.autolog.title", { count: autologUsed })} />;
-        }
         case "accounts":
         case "currencies":
         case "installment_apps": {
-            return <AccountHeader trigger={block} />;
+            return <AccountBand trigger={block} {...band} />;
+        }
+        case "autolog": {
+            return <ProBand {...band} subtitle={t("pro.band.monthUsed", { cap: autolog.cap, used: autolog.used })} />;
         }
         case "first_entry": {
-            return <Header subtitle={t("pro.top.firstEntry")} />;
+            return <ProBand {...band} subtitle={t("pro.top.firstEntry")} />;
         }
         default: {
-            return <Header subtitle={t("pro.subtitle")} />;
+            return <ProBand {...band} subtitle={t("pro.subtitle")} />;
         }
     }
 }
@@ -93,15 +110,29 @@ function useProTerm() {
     return AsyncResult.getOrElse(useAtomValue(proTermAtom(configured)), () => UNKNOWN_PRO_TERM);
 }
 
-function ProHeader({ confirmed, status }: { confirmed: boolean; status: ProStatus | null }) {
+function ProStatusBand({ confirmed, status }: { confirmed: boolean; status: ProStatus | null }) {
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
     const nowMs = useNow();
     return (
-        <Header subtitle={statusLine(status, new Date(nowMs), t, language)}>
-            {confirmed ? <HugeiconsIcon color={colors.income} icon={Tick02Icon} size={16} /> : null}
-        </Header>
+        <ProBand
+            eyebrow={false}
+            lead={confirmed ? <HugeiconsIcon color={colors.proForeground} icon={Tick02Icon} size={16} /> : null}
+            subtitle={statusLine(status, new Date(nowMs), t, language)}
+            title={t("pro.entry.title")}
+        />
+    );
+}
+
+function KeepsLine() {
+    const t = useTranslation();
+    const colors = useColors();
+    return (
+        <View className="flex-row items-center justify-center gap-2 pb-3">
+            <HugeiconsIcon color={colors.income} icon={Tick02Icon} size={16} />
+            <Text className="text-foreground text-body shrink">{t("pro.band.keeps")}</Text>
+        </View>
     );
 }
 
@@ -109,9 +140,16 @@ export function PaywallRedesign() {
     const t = useTranslation();
     const largeText = useAccessibilityTextSize();
     const flow = usePaywallFlow("redesign");
+    const now = useNow();
+    const stats = useLedgerStats(useDatabase(), now);
     const { manageUrl, status } = useProTerm();
     const then = thenLabel(flow.plan, t);
-    const trialDays = flow.canBuy ? (flow.plan?.trialDays ?? null) : null;
+    const daysLeft = daysLeftInMonth(new Date(now));
+    const showMonth = flow.block === "autolog" && daysLeft > 0;
+    const monthLabel =
+        flow.autolog.used >= flow.autolog.cap
+            ? t("pro.band.ranOut")
+            : t("pro.band.freeLeft", { count: flow.autolog.cap - flow.autolog.used });
 
     const purchaseFooter = (
         <>
@@ -120,19 +158,19 @@ export function PaywallRedesign() {
                 <View className="px-5">
                     <PlanPicker
                         empty={flow.empty}
-                        Choices={PlanCards}
+                        Choices={PlanRows}
                         onRetry={flow.retry}
                         onSelect={flow.select}
                         plans={flow.plans}
                         selected={flow.selected}
                     />
-                    {trialDays === null ? null : <TrialTimeline trialDays={trialDays} />}
                 </View>
             ) : null}
             {flow.canBuy ? <StoreTerms plan={flow.plan} /> : null}
             {flow.failure === null ? null : <PurchaseFailure message={t(flow.failure)} />}
             {flow.canBuy ? (
-                <View className="px-5 pt-4">
+                <View className="px-5 pt-3">
+                    <KeepsLine />
                     <PaywallCta
                         busy={flow.busy === "buy"}
                         busyLabel={t("pro.cta.unlocking")}
@@ -201,27 +239,31 @@ export function PaywallRedesign() {
 
     return (
         <View className="bg-background flex-1">
+            <View className="bg-pro absolute inset-x-0 top-0 h-1/2" />
             <ScrollView
                 className="flex-1"
-                contentContainerClassName={largeText ? "pb-4" : "pb-2"}
+                contentContainerClassName={largeText ? "grow pb-4" : "grow"}
                 contentInsetAdjustmentBehavior="automatic"
             >
-                <View className="px-5">
-                    {flow.isPro ? (
-                        <ProHeader confirmed={flow.isMirrored} status={status} />
-                    ) : (
-                        <>
-                            <PaywallHero />
-                            <PitchHeader autologUsed={flow.autolog.used} block={flow.block} />
-                        </>
-                    )}
-                    <FeatureRows />
+                {flow.isPro ? (
+                    <ProStatusBand confirmed={flow.isMirrored} status={status} />
+                ) : (
+                    <PitchBand autolog={flow.autolog} block={flow.block} daysLeft={daysLeft} stats={stats} />
+                )}
+                <View className="bg-background grow px-5 pb-4">
+                    {flow.isPro ? <FeatureRows /> : null}
+                    {!flow.isPro && showMonth ? <MonthAhead label={monthLabel} now={now} /> : null}
+                    {!flow.isPro && !showMonth ? <PaywallHero /> : null}
                 </View>
-                {largeText ? footer : null}
+                {largeText ? <View className="bg-background">{footer}</View> : null}
             </ScrollView>
 
             {largeText ? null : (
-                <ScrollView bounces={false} className="shrink grow-0" contentContainerClassName="pb-safe-offset-4">
+                <ScrollView
+                    bounces={false}
+                    className="bg-background shrink grow-0"
+                    contentContainerClassName="pb-safe-offset-4"
+                >
                     {footer}
                 </ScrollView>
             )}

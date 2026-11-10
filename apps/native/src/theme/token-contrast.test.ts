@@ -56,6 +56,8 @@ const NON_TEXT_TOKENS = [
     "border",
     "separator",
     "warning",
+    "pro",
+    "pro-wash",
     "chip",
     "danger-fill",
     "gold-fill",

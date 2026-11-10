@@ -23,6 +23,9 @@ export const INVERSE_TOKENS = {
     background: "accent",
     "surface-foreground": "surface",
     "surface-secondary-foreground": "surface-secondary",
+    "pro-foreground": "pro",
+    "pro-muted": "pro",
+    "pro-wash-foreground": "pro-wash",
 } as const satisfies Record<string, string>;
 
 export const M3_SURFACES = [

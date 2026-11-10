@@ -103,6 +103,12 @@
 			   moment a `text-warning` appears and makes that untrue. */
             --warning: #fdcc41;
 
+            --pro: #edae3c;
+            --pro-foreground: #17150f;
+            --pro-muted: #57410f;
+            --pro-wash: #f0cf93;
+            --pro-wash-foreground: #17150f;
+
             --chip: #201d15;
 
             /* The budget rail's washes. Declared outright rather than written as
@@ -280,6 +286,12 @@
 
             --warning: #fdcc41;
 
+            --pro: #f0b346;
+            --pro-foreground: #17150f;
+            --pro-muted: #57410f;
+            --pro-wash: #7a5b1f;
+            --pro-wash-foreground: #f2efe8;
+
             --chip: #2a251b;
 
             /* See the light-mode note. */
@@ -397,6 +409,11 @@
     --color-danger-fill: var(--danger-fill);
     --color-over-budget: var(--over-budget);
     --color-warning: var(--warning);
+    --color-pro: var(--pro);
+    --color-pro-foreground: var(--pro-foreground);
+    --color-pro-muted: var(--pro-muted);
+    --color-pro-wash: var(--pro-wash);
+    --color-pro-wash-foreground: var(--pro-wash-foreground);
     --color-chip: var(--chip);
     --color-rail-over: var(--rail-over);
     --color-rail-track: var(--rail-track);
