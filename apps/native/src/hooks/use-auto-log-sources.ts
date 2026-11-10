@@ -1,7 +1,7 @@
 import * as Cause from "effect/Cause";
 
 import type { SettingsIconName } from "@/components/settings/settings-icons";
-import { useWalletMeta } from "@/data/use-wallet-meta";
+import { useWalletState } from "@/data/use-wallet-state";
 import type { Database } from "@/db/client";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
@@ -24,7 +24,7 @@ const SIRI_PHRASE = "“Log an expense in Outlayr”";
 
 export function useAutoLogSources(db: Database): AutoLogSource[] {
     const t = useTranslation();
-    const { applePayOn, lastNotification } = useWalletMeta(db);
+    const { applePayOn, lastNotification } = useWalletState(db);
     const openWalletShortcut = useAtomAction(
         getWalletShortcutCommand,
         {

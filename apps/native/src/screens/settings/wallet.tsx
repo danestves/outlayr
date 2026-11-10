@@ -13,7 +13,7 @@ import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { onOffLabel } from "@/data/settings-core";
-import { useWalletMeta } from "@/data/use-wallet-meta";
+import { useWalletState } from "@/data/use-wallet-state";
 import type { Database } from "@/db/client";
 import { formatChargeDate, formatTime } from "@/domain/dates";
 import type { LastWalletEntry } from "@/domain/meta-values";
@@ -72,7 +72,7 @@ export function Wallet() {
         SILENT
     );
     const getShortcut = () => openShortcut(db);
-    const { added, applePayOn: working, lastEntry, lastRunAt } = useWalletMeta(db);
+    const { added, applePayOn: working, lastEntry, lastRunAt } = useWalletState(db);
     const [stepsShown, setStepsShown] = useState(false);
     // `added` is only set by the shared link, so an older inline setup stays inline.
     const linked = HAS_SHARED_SHORTCUT && added;

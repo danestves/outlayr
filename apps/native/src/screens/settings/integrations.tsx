@@ -4,7 +4,7 @@ import { LinkRow, SettingsSection } from "@/components/list/list-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { useDatabase } from "@/contexts/local-data-context";
 import { onOffLabel } from "@/data/settings-core";
-import { useWalletMeta } from "@/data/use-wallet-meta";
+import { useWalletState } from "@/data/use-wallet-state";
 import { formatSentenceDate } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { TRIGGERS_IN_SHORTCUTS } from "@/lib/wallet-shortcut";
@@ -16,7 +16,7 @@ export function Integrations() {
     const router = useRouter();
     const t = useTranslation();
     const { language } = useLanguage();
-    const { applePayOn, lastEntry, lastNotification, lastRunAt } = useWalletMeta(db);
+    const { applePayOn, lastEntry, lastNotification, lastRunAt } = useWalletState(db);
     const lastUsed = (at: number | undefined) =>
         at === undefined
             ? undefined
