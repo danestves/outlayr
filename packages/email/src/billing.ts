@@ -1,6 +1,13 @@
 const ANDROID_PACKAGE = "com.tryoutlayr.app";
 
-const STORE_NAMES = { APP_STORE: "App Store", MAC_APP_STORE: "App Store", PLAY_STORE: "Google Play" } as const;
+const STORE_NAMES = {
+    APP_STORE: "App Store",
+    MAC_APP_STORE: "App Store",
+    PLAY_STORE: "Google Play",
+    STRIPE: "Stripe",
+} as const;
+
+const WEB_PLAN_URL = "https://tryoutlayr.com/app/settings/plan";
 
 type PaidStore = keyof typeof STORE_NAMES;
 
@@ -23,6 +30,9 @@ const isPaidStore = (store: string | undefined): store is PaidStore =>
     store !== undefined && Object.hasOwn(STORE_NAMES, store);
 
 function manageUrl(store: PaidStore, productId: string | undefined) {
+    if (store === "STRIPE") {
+        return WEB_PLAN_URL;
+    }
     if (store !== "PLAY_STORE") {
         return "https://apps.apple.com/account/subscriptions";
     }
