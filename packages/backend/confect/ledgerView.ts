@@ -149,8 +149,7 @@ export function spendingSummary(
     monthsAgo = 0
 ) {
     const { currency } = settings;
-    const offsetMs = offsetAt(now);
-    const window = monthWindow(now, offsetMs, settings.firstDayOfMonth, Math.max(0, Math.trunc(monthsAgo)));
+    const window = monthWindow(now, offsetAt, settings.firstDayOfMonth, Math.max(0, Math.trunc(monthsAgo)));
     // Whole UTC days around the window: a valuation cell is one UTC day, and a cell cut at the edge values
     // differently.
     const from = utcDayStart(window.start);
@@ -188,7 +187,7 @@ export function spendingSummary(
     }
     return {
         currency,
-        from: isoDay(window.start, offsetMs),
+        from: window.from,
         income: roundMoney(income, decimals),
         spent: roundMoney(spent, decimals),
         spentByCategory: [...byCategory]
@@ -197,8 +196,8 @@ export function spendingSummary(
         spentByDay: [...byDay]
             .map(([date, amount]) => ({ amount: roundMoney(amount, decimals), date }))
             .sort((a, b) => a.date.localeCompare(b.date)),
-        to: isoDay(window.end - 1, offsetMs),
-        today: isoDay(now, offsetMs),
+        to: window.to,
+        today: isoDay(now, offsetAt(now)),
     };
 }
 

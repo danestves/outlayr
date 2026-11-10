@@ -277,6 +277,58 @@ describe("ledgerOverview", () => {
         expect(summary.spentByDay.map((bar) => bar.date)).toStrictEqual([first?.date]);
     });
 
+    it("counts the first hour of a month the clocks go back in", () => {
+        const { summary } = ledgerOverview(
+            {
+                ...NO_BOOKS,
+                appMeta: zone("America/New_York"),
+                transactions: [
+                    entry("last night", {
+                        amount: 100,
+                        date: Date.UTC(2026, 10, 1, 3, 30),
+                        day: Date.UTC(2026, 9, 31, 4),
+                    }),
+                    entry("after midnight", {
+                        amount: 7,
+                        date: Date.UTC(2026, 10, 1, 4, 30),
+                        day: Date.UTC(2026, 10, 1, 4),
+                    }),
+                ],
+            },
+            Date.UTC(2026, 10, 9, 17)
+        );
+
+        expect(summary).toMatchObject({
+            from: "2026-11-01",
+            spent: 7,
+            spentByDay: [{ amount: 7, date: "2026-11-01" }],
+            to: "2026-11-30",
+        });
+    });
+
+    it("cuts the month at the latest entry's offset when no zone is stored", () => {
+        const { summary } = ledgerOverview(
+            {
+                ...NO_BOOKS,
+                transactions: [
+                    entry("last month", {
+                        amount: 100,
+                        date: Date.UTC(2026, 9, 31, 20),
+                        day: Date.UTC(2026, 9, 31, 4),
+                    }),
+                    entry("this month", {
+                        amount: 7,
+                        date: Date.UTC(2026, 10, 9, 15),
+                        day: Date.UTC(2026, 10, 9, 5),
+                    }),
+                ],
+            },
+            Date.UTC(2026, 10, 9, 17)
+        );
+
+        expect(summary).toMatchObject({ from: "2026-11-01", spent: 7, to: "2026-11-30", today: "2026-11-09" });
+    });
+
     it("turns over at the owner's midnight unless an entry lands first", () => {
         const now = Date.UTC(2026, 9, 9, 15);
         const books = { ...NO_BOOKS, appMeta: zone("America/Caracas") };

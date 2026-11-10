@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import { CALENDAR_DAY_VECTORS } from "./calendar-vectors";
-import { filedOn, isoDay, monthWindow, utcOffsetOf, zoneOffsets } from "./ledger-zone";
+import { filedOn, fixedOffset, fromWall, isoDay, monthWindow, utcOffsetOf, wallNoon, zoneOffsets } from "./ledger-zone";
 
 const HOUR = 3_600_000;
 const at = (iso: string) => Date.parse(iso);
@@ -14,6 +14,8 @@ function offsetsOf(timeZone: string) {
     return offsetAt;
 }
 
+const WINDOW_VECTORS = CALENDAR_DAY_VECTORS.flatMap(({ window, ...vector }) => (window ? [{ ...vector, window }] : []));
+
 describe("calendar day vectors in the ledger zone", () => {
     it.each(CALENDAR_DAY_VECTORS)("$name", ({ day, instant, iso, month, zone }) => {
         const offsetAt = offsetsOf(zone);
@@ -21,16 +23,25 @@ describe("calendar day vectors in the ledger zone", () => {
         expect(isoDay(at(instant), offsetAt(at(instant)))).toBe(iso);
     });
 
-    it.each(CALENDAR_DAY_VECTORS.flatMap(({ window, ...vector }) => (window ? [{ ...vector, window }] : [])))(
-        "month window: $name",
-        ({ instant, window, zone }) => {
-            const now = at(instant);
-            expect(monthWindow(now, offsetsOf(zone)(now), window.firstDayOfMonth, 0)).toStrictEqual({
-                end: at(window.end),
-                start: at(window.start),
-            });
-        }
-    );
+    it.each(WINDOW_VECTORS)("month window: $name", ({ instant, window, zone }) => {
+        const { end, start } = monthWindow(at(instant), offsetsOf(zone), window.firstDayOfMonth, window.monthsAgo ?? 0);
+        expect({ end, start }).toStrictEqual({ end: at(window.end), start: at(window.start) });
+    });
+
+    it.each(WINDOW_VECTORS)("month window ends are stored midnights: $name", ({ instant, window, zone }) => {
+        const offsetAt = offsetsOf(zone);
+        const { end, from, start, to } = monthWindow(
+            at(instant),
+            offsetAt,
+            window.firstDayOfMonth,
+            window.monthsAgo ?? 0
+        );
+        const noonOn = (day: string) => fromWall(wallNoon(day), offsetAt);
+        expect(filedOn(start, offsetAt).day).toBe(start);
+        expect(filedOn(noonOn(from), offsetAt).day).toBe(start);
+        expect(filedOn(end, offsetAt).day).toBe(end);
+        expect(filedOn(end - 1, offsetAt).day).toBe(filedOn(noonOn(to), offsetAt).day);
+    });
 });
 
 describe("utcOffsetOf", () => {
@@ -128,13 +139,55 @@ describe("zoneOffsets", () => {
 });
 
 describe("monthWindow", () => {
-    const caracas = -4 * HOUR;
+    const caracas = fixedOffset(-4 * HOUR);
 
     it("starts on payday and steps back across the year", () => {
         expect(monthWindow(at("2026-01-05T10:00:00Z"), caracas, 15, 0)).toStrictEqual({
             end: at("2026-01-15T04:00:00Z"),
+            from: "2025-12-15",
             start: at("2025-12-15T04:00:00Z"),
+            to: "2026-01-14",
         });
         expect(monthWindow(at("2026-01-05T10:00:00Z"), caracas, 15, 1).start).toBe(at("2025-11-15T04:00:00Z"));
+    });
+
+    it("names the days of a month whose clocks change by the wall calendar", () => {
+        expect(monthWindow(at("2026-11-09T17:00:00Z"), offsetsOf("America/New_York"), 1, 0)).toMatchObject({
+            from: "2026-11-01",
+            to: "2026-11-30",
+        });
+    });
+
+    it.each(["America/New_York", "Europe/London", "Australia/Sydney", "Australia/Lord_Howe"])(
+        "reads one month as the same window from either side of a clock change (%s)",
+        (timeZone) => {
+            const offsetAt = offsetsOf(timeZone);
+            const readIn = (month: number) => Date.UTC(2026, month, 20, 12);
+            const wrong: string[] = [];
+            for (const firstDayOfMonth of [1, 15]) {
+                for (let month = 0; month < 18; month += 1) {
+                    const own = monthWindow(readIn(month), offsetAt, firstDayOfMonth, 0);
+                    for (let later = 1; later <= 7; later += 1) {
+                        const back = monthWindow(readIn(month + later), offsetAt, firstDayOfMonth, later);
+                        if (back.start !== own.start || back.end !== own.end) {
+                            wrong.push(`${own.from} read ${later} months later`);
+                        }
+                    }
+                    if (monthWindow(readIn(month + 1), offsetAt, firstDayOfMonth, 0).start !== own.end) {
+                        wrong.push(`${own.from} does not meet the next month`);
+                    }
+                }
+            }
+            expect(wrong).toStrictEqual([]);
+        }
+    );
+
+    it("keeps the one offset a ledger with no known zone has", () => {
+        expect(monthWindow(at("2026-11-09T17:00:00Z"), fixedOffset(-5 * HOUR), 1, 0)).toStrictEqual({
+            end: at("2026-12-01T05:00:00Z"),
+            from: "2026-11-01",
+            start: at("2026-11-01T05:00:00Z"),
+            to: "2026-11-30",
+        });
     });
 });

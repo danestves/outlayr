@@ -1,9 +1,9 @@
-import { utcDateString } from "@outlayr/money/dates";
-import { monthWindow, wallMidnight } from "@outlayr/money/ledger-zone";
+import { fixedOffset, monthWindow, wallMidnight } from "@outlayr/money/ledger-zone";
 
 import { addDays, daysBetween } from "./ledger";
 
 const PERIOD_KEY = /^(\d{4})-(0[1-9]|1[0-2])$/;
+const WALL_CLOCK = fixedOffset(0);
 
 export interface Period {
     days: number;
@@ -15,15 +15,12 @@ export interface Period {
 export const isPeriodKey = (value: string) => PERIOD_KEY.test(value);
 
 export function periodOf(key: string, firstDayOfMonth: number): Period {
-    const { end, start } = monthWindow(wallMidnight(`${key}-28`), 0, firstDayOfMonth, 0);
-    const from = utcDateString(start);
-    const to = utcDateString(end - 1);
+    const { from, to } = monthWindow(wallMidnight(`${key}-28`), WALL_CLOCK, firstDayOfMonth, 0);
     return { days: daysBetween(from, to) + 1, from, key, to };
 }
 
 export function periodKeyOf(day: string, firstDayOfMonth: number) {
-    const { start } = monthWindow(wallMidnight(day), 0, firstDayOfMonth, 0);
-    return utcDateString(start).slice(0, 7);
+    return monthWindow(wallMidnight(day), WALL_CLOCK, firstDayOfMonth, 0).from.slice(0, 7);
 }
 
 export function shiftPeriodKey(key: string, months: number) {
