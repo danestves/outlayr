@@ -507,6 +507,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Rules you create on the web to file entries sync with your ledger: their names, what they look for, and the category and tags they set.",
                     label: "Rules on the web",
                 },
+                {
+                    detail: "If you turn on a link for a report on the web, our servers keep a copy of that report, with percentages in place of amounts if you choose, and show it to anyone with the link until you turn it off, it expires, or you delete your account.",
+                    label: "Sharing a report with a link",
+                },
             ],
             es: [
                 {
@@ -520,6 +524,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Las reglas que creas en la web para clasificar entradas se sincronizan con tu registro: su nombre, lo que buscan, y la categoría y las etiquetas que asignan.",
                     label: "Reglas en la web",
+                },
+                {
+                    detail: "Si activas un enlace para un informe en la web, nuestros servidores guardan una copia de ese informe, con porcentajes en lugar de montos si lo prefieres, y la muestran a cualquiera que tenga el enlace hasta que lo desactives, caduque o borres tu cuenta.",
+                    label: "Compartir un informe con un enlace",
                 },
             ],
             fr: [
@@ -535,6 +543,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Les règles que vous créez sur le web pour classer vos opérations sont synchronisées avec votre journal : leur nom, ce qu'elles recherchent, ainsi que la catégorie et les étiquettes qu'elles attribuent.",
                     label: "Règles sur le web",
                 },
+                {
+                    detail: "Si vous activez un lien pour un rapport sur le web, nos serveurs gardent une copie de ce rapport, avec des pourcentages à la place des montants si vous le choisissez, et la montrent à toute personne disposant du lien jusqu'à ce que vous le désactiviez, qu'il expire ou que vous supprimiez votre compte.",
+                    label: "Partager un rapport avec un lien",
+                },
             ],
             pt: [
                 {
@@ -548,6 +560,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "As regras que você cria na web para classificar lançamentos são sincronizadas com os seus lançamentos: o nome, o que procuram, e a categoria e as tags que atribuem.",
                     label: "Regras na web",
+                },
+                {
+                    detail: "Se você ativar um link para um relatório na web, nossos servidores guardam uma cópia desse relatório, com porcentagens no lugar dos valores se você preferir, e a mostram a qualquer pessoa com o link até você desativá-lo, ele expirar ou você excluir sua conta.",
+                    label: "Compartilhar um relatório com um link",
                 },
             ],
         },

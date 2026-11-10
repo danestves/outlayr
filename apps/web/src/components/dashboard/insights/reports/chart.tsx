@@ -4,9 +4,11 @@ import { axisOf } from "../overview/model";
 import { Swatch } from "../parts";
 import { useBox } from "../use-box";
 import type { Dimension, Grouping, Report } from "./model";
-import type { ReportWords } from "./words";
+import type { Reading } from "./reading";
 
 const HEIGHT = 330;
+const SMALL_HEIGHT = 240;
+const SMALL_WIDTH = 480;
 const BASE = 22;
 const LEFT = 30;
 const TOP = 8;
@@ -15,11 +17,12 @@ const BAR_SHARE = 0.66;
 const SEGMENT_GAP = 1;
 const CORNER = 3;
 const MIN_TOTAL_SLOT = 64;
+const SMALL_TOTAL_SLOT = 52;
 const MIN_LABEL_SLOT = 40;
 const UNMEASURED = { height: 0, width: 872 };
 const FIGURE = "dash-figure";
 
-export function Legend({ kind, report, words }: { kind: Dimension; report: Report; words: ReportWords }) {
+export function Legend({ kind, report, words }: { kind: Dimension; report: Report; words: Reading }) {
     if (report.measure === "net" || report.measure === "average") {
         return null;
     }
@@ -45,13 +48,15 @@ interface ChartProps {
     kind: Dimension;
     label: string;
     report: Report;
-    words: ReportWords;
+    words: Reading;
 }
 
 /** Stacked columns when the measure adds up across rows; a single column per period when it cannot. */
 export function Chart({ fixedWidth, grouping, kind, label, report, words }: ChartProps) {
     const [holder, { width: measured }] = useBox(UNMEASURED);
     const width = fixedWidth ?? measured;
+    const small = width < SMALL_WIDTH;
+    const height = small ? SMALL_HEIGHT : HEIGHT;
     const [hovered, setHovered] = useState<number | null>(null);
     const { columns, measure, rows, totals } = report;
     const stacked = measure !== "net" && measure !== "average";
@@ -64,15 +69,15 @@ export function Chart({ fixedWidth, grouping, kind, label, report, words }: Char
         const highest = Math.max(0, ...totals.values, ...stacks);
         const lowest = Math.min(0, ...totals.values);
         const axis = axisOf(highest);
-        const plot = HEIGHT - BASE - TOP;
+        const plot = height - BASE - TOP;
         const tight = (highest / axis.top) * plot > plot - LABEL_CLEARANCE + TOP;
         const top = tight ? axis.roomy : axis.top;
         const floor = lowest < 0 ? -axisOf(-lowest).top : 0;
-        const y = (value: number) => HEIGHT - BASE - ((value - floor) / (top - floor || 1)) * plot;
+        const y = (value: number) => height - BASE - ((value - floor) / (top - floor || 1)) * plot;
         const slot = (width - LEFT) / Math.max(columns.length, 1);
         const ticks = floor < 0 ? [floor, 0, top] : [0, top / 2, top];
         return { floor, slot, ticks, top, y };
-    }, [columns, rows, stacked, totals.values, width]);
+    }, [columns, height, rows, stacked, totals.values, width]);
     const { slot, ticks, y } = geometry;
     const bar = slot * BAR_SHARE;
     const labelEvery = Math.max(1, Math.ceil(MIN_LABEL_SLOT / slot));
@@ -82,7 +87,7 @@ export function Chart({ fixedWidth, grouping, kind, label, report, words }: Char
             <svg
                 aria-label={label}
                 className="block"
-                height={HEIGHT}
+                height={height}
                 // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an img element cannot hold the drawn chart, so the container is named by role.
                 role="img"
                 width={width}
@@ -140,10 +145,10 @@ export function Chart({ fixedWidth, grouping, kind, label, report, words }: Char
                                     y={Math.min(y(total), y(0))}
                                 />
                             )}
-                            {slot >= MIN_TOTAL_SLOT ? (
+                            {slot >= (small ? SMALL_TOTAL_SLOT : MIN_TOTAL_SLOT) ? (
                                 <text
                                     className={`${FIGURE} fill-foreground`}
-                                    style={{ fontSize: 12, textAnchor: "middle" }}
+                                    style={{ fontSize: small ? 10.5 : 12, textAnchor: "middle" }}
                                     x={x + bar / 2}
                                     y={Math.min(y(peak), y(0)) - 6}
                                 >
@@ -155,14 +160,14 @@ export function Chart({ fixedWidth, grouping, kind, label, report, words }: Char
                                     className={`${FIGURE} ${last ? "fill-foreground" : "fill-muted-foreground"}`}
                                     style={{ fontSize: 12, textAnchor: "middle" }}
                                     x={x + bar / 2}
-                                    y={HEIGHT - 4}
+                                    y={height - 4}
                                 >
                                     {words.columnName(grouping, column, columns)}
                                 </text>
                             ) : null}
                             <rect
                                 fill="transparent"
-                                height={HEIGHT - BASE}
+                                height={height - BASE}
                                 onPointerEnter={() => setHovered(index)}
                                 onPointerLeave={() => setHovered(null)}
                                 width={slot}

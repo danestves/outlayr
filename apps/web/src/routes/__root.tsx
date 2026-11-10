@@ -185,11 +185,14 @@ export const Route = createRootRouteWithContext<{
     staleTime: Number.POSITIVE_INFINITY,
 });
 
+/** Routes that draw their own top bar, so the site header and footer stay out. */
+const OWN_CHROME: ReadonlySet<string> = new Set(["/_account", "/{-$locale}/r/$slug"]);
+
 function RootDocument({ children }: { children: ReactNode }) {
     const locale = localeFromParam(useParams({ strict: false }).locale);
     const country = Route.useLoaderData();
-    const inAccount = useMatches({
-        select: (matches) => matches.some((match) => match.routeId === "/_account"),
+    const ownChrome = useMatches({
+        select: (matches) => matches.some((match) => OWN_CHROME.has(match.routeId)),
     });
     // oxlint-disable-next-line outlayr/react-effect-budget -- starts the analytics SDK once after hydration, with the visitor's country
     useEffect(() => {
@@ -208,9 +211,9 @@ function RootDocument({ children }: { children: ReactNode }) {
             </head>
             <body className="flex min-h-dvh flex-col" ref={startMotion}>
                 <IntlayerProvider locale={locale}>
-                    {inAccount ? null : <SiteHeader />}
+                    {ownChrome ? null : <SiteHeader />}
                     <div className="flex-1">{children}</div>
-                    {inAccount ? null : <SiteFooter />}
+                    {ownChrome ? null : <SiteFooter />}
                     <ConsentBanner />
                 </IntlayerProvider>
                 <Scripts />

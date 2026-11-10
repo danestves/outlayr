@@ -118,6 +118,17 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
         { concurrency: "unbounded", discard: true }
     );
 
+    const sharedRows = yield* Effect.promise(() =>
+        ctx.db
+            .query("sharedReports")
+            .withIndex("by_userId_and_reportId", (q) => q.eq("userId", userId))
+            .collect()
+    );
+    yield* Effect.all(
+        sharedRows.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
+        { concurrency: "unbounded", discard: true }
+    );
+
     const mail = yield* Effect.promise(() =>
         ctx.db
             .query("mailState")

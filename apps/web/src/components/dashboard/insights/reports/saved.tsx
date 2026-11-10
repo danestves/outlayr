@@ -1,6 +1,7 @@
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import Download04Icon from "@hugeicons/core-free-icons/Download04Icon";
+import Link01Icon from "@hugeicons/core-free-icons/Link01Icon";
 import LinkSquare02Icon from "@hugeicons/core-free-icons/LinkSquare02Icon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
@@ -21,6 +22,7 @@ export interface ReportActions {
     open: (id: string) => void;
     remove: (id: string) => void;
     rename: (id: string) => void;
+    share: (id: string) => void;
 }
 
 export function RowMenu({
@@ -63,6 +65,10 @@ export function RowMenu({
                     {rowMenu.duplicate}
                 </Menu.Item>
                 <Menu.Separator />
+                <Menu.Item onClick={() => actions.share(report.id)}>
+                    <Glyph icon={Link01Icon} size={16} />
+                    {rowMenu.share}
+                </Menu.Item>
                 <Menu.Item onClick={() => actions.export(report.id)}>
                     <Glyph icon={Download04Icon} size={16} />
                     {rowMenu.export}
