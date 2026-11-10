@@ -1,6 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Language } from "@outlayr/email/language";
-import { PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
+import { PRO_ENTITLEMENT_ID, TRIAL_REMINDER_LEAD_MS, TRIAL_REMINDERS_FROM_MS } from "@outlayr/money/contract";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
@@ -130,8 +130,15 @@ const claimPro = FunctionImpl.make(
         if (state?.proSentAt != null) {
             return null;
         }
-        yield* saveState(userId, state, { proSentAt: yield* Clock.currentTimeMillis });
+        const now = yield* Clock.currentTimeMillis;
+        yield* saveState(userId, state, { proSentAt: now });
         const scheduler = yield* Scheduler;
+        const remindAt = args.expiresAtMs === undefined ? null : args.expiresAtMs - TRIAL_REMINDER_LEAD_MS;
+        if (args.store === "STRIPE" && remindAt !== null && remindAt > now && remindAt >= TRIAL_REMINDERS_FROM_MS) {
+            yield* scheduler.runAfter(Duration.millis(remindAt - now), refs.internal.mailDelivery.sendTrialReminder, {
+                userId,
+            });
+        }
         yield* scheduler.runAfter(Duration.zero, refs.internal.mailDelivery.sendPro, {
             expiresAtMs: args.expiresAtMs,
             familyShared: args.ownershipType === "FAMILY_SHARED",
