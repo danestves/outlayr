@@ -78,6 +78,7 @@ import { entryHref } from "@/state/entry-params";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
+import { voiceEntryDraft } from "./entry-drafts";
 import { usePromptLedger } from "./use-prompt-ledger";
 import { useResolvedPhase } from "./use-resolved-phase";
 
@@ -567,25 +568,7 @@ const writeEntry = Effect.fn("VoiceThread.writeEntry")(function* writeEntry(
     categoryId: string,
     done: WriteDone
 ) {
-    const { recurrence } = draft;
-    const outcome = yield* commitEntry({
-        db,
-        draft: {
-            accountId: draft.accountId,
-            amount: draft.amount,
-            categoryId,
-            currency: draft.currency,
-            date: draft.date,
-            details: draft.details,
-            income: draft.income,
-            merchant: draft.merchant,
-            schedule:
-                recurrence === null
-                    ? null
-                    : { coefficient: recurrence.coefficient, endDate: null, leadDays: null, type: recurrence.type },
-        },
-        source: "voice",
-    });
+    const outcome = yield* commitEntry({ db, draft: voiceEntryDraft(draft, categoryId), source: "voice" });
     if (outcome.kind === "failed") {
         // The row did not land; the form has the failure strip this screen lacks.
         done.onFailed();
