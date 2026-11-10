@@ -45,7 +45,7 @@ export function feeRows(
     ledger: Pick<Ledger, "books" | "offsetAt">,
     plan: Plan,
     installmentId: string,
-    fee: { amount: number; note: string },
+    fee: { amount: number; date?: number; note: string },
     at: number
 ): CommitRow[] {
     const { books } = ledger;
@@ -55,7 +55,7 @@ export function feeRows(
     if (!(fee.amount > 0)) {
         return gone(current ? [current, ...extra] : []);
     }
-    const date = new Date(current?.date ?? at);
+    const date = new Date(current?.date ?? fee.date ?? at);
     const entry = Effect.runSync(
         entryRow(
             ratesLookup(books),

@@ -258,6 +258,14 @@ export function ScanDialog({
         onSwitch({ accountId: account.localId, kind: "purchase", seed });
     };
 
+    // oxlint-disable-next-line outlayr/react-effect-budget -- a scan still running when the dialog goes must not reopen a flow.
+    useEffect(
+        () => () => {
+            latest.current += 1;
+        },
+        []
+    );
+
     const takesImage = phase.kind === "pick" || phase.kind === "failed";
     // oxlint-disable-next-line outlayr/react-effect-budget -- the clipboard is an external system.
     useEffect(() => {

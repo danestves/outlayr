@@ -23,7 +23,7 @@ import { createdAccount, parseAmount } from "@/lib/account-writes";
 import { openAccounts, startOfDay } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import type { PurchaseSeed } from "@/lib/installment-scan";
-import { feeRows } from "@/lib/installment-writes";
+import { feeRows, outsidePayment } from "@/lib/installment-writes";
 import type { CommitRow } from "@/lib/ledger-committer";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { planPurchase, purchaseInInstallments } from "@/lib/plan-writes";
@@ -295,24 +295,25 @@ function seededFees(
         currency,
         fees,
         note,
-    }: { categoryId: string | null; currency: string; fees: PurchaseSeed["fees"]; note: string }
+        paidBefore,
+    }: { categoryId: string | null; currency: string; fees: PurchaseSeed["fees"]; note: string; paidBefore: number }
 ) {
     const plan = rows.find((row) => row.table === "installmentPlans");
     if (plan?.table !== "installmentPlans") {
         return [];
     }
     const at = Date.now();
+    const view = { account: { id: plan.fields.accountId }, categoryId, currency, id: plan.localId };
     return fees.flatMap((fee) => {
         const due = rows.find((row) => row.table === "installments" && row.fields.sequence === fee.sequence);
-        return due
-            ? feeRows(
-                  ledger,
-                  { account: { id: plan.fields.accountId }, categoryId, currency, id: plan.localId },
-                  due.localId,
-                  { amount: fee.amount, note },
-                  at
-              )
-            : [];
+        if (due?.table !== "installments") {
+            return [];
+        }
+        const date = Math.min(due.fields.dueDate, at);
+        const charged = feeRows(ledger, view, due.localId, { amount: fee.amount, date, note }, at);
+        return fee.sequence <= paidBefore
+            ? [...charged, outsidePayment(ledger.books, view, { amount: fee.amount, date }, crypto.randomUUID(), at)]
+            : charged;
     });
 }
 
@@ -462,6 +463,7 @@ export function PurchaseForm({
                   currency,
                   fees: scanned.fees,
                   note: fee.note({ order: name.trim() }).value,
+                  paidBefore: plan.paidBefore,
               })
             : [];
         setSaving(true);
