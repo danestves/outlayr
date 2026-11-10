@@ -8,6 +8,7 @@ import { useContext, useId, useState, useSyncExternalStore } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { LocalizedLink } from "@/components/localized-link";
+import { chooseAiConsent, readAiConsent, subscribeAiConsent } from "@/lib/ai-consent";
 import { chooseConsent, readConsent, subscribeConsent } from "@/lib/analytics";
 import { DASHBOARD_LOCALES, chooseDashboardLocale } from "@/lib/dashboard-locale";
 import { LANGUAGES } from "@/lib/i18n";
@@ -173,6 +174,7 @@ function PrivacyCard() {
     const meta = useMeta();
     const save = useSaveSettings();
     const consent = useSyncExternalStore(subscribeConsent, readConsent, () => null);
+    const aiConsent = useSyncExternalStore(subscribeAiConsent, readAiConsent, () => false);
     return (
         <SettingsCard title={copy.title}>
             <ToggleRow checked={consent === "granted"} label={copy.analytics.value} onChange={chooseConsent} />
@@ -181,6 +183,12 @@ function PrivacyCard() {
                 hint={copy.smartFillHint}
                 label={copy.smartFill.value}
                 onChange={(next) => save({ aiEnrichment: String(next) })}
+            />
+            <ToggleRow
+                checked={aiConsent}
+                hint={copy.sendToAiHint}
+                label={copy.sendToAi.value}
+                onChange={chooseAiConsent}
             />
         </SettingsCard>
     );

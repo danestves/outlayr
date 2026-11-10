@@ -18,6 +18,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
 import { LocalizedLink } from "@/components/localized-link";
+import { chooseAiConsent, readAiConsent } from "@/lib/ai-consent";
 import { convexClient } from "@/lib/convex";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { scanImage, scannedSeed } from "@/lib/installment-scan";
@@ -26,29 +27,10 @@ import { FlowDialog } from "./fields";
 import type { AccountFlow } from "./flows";
 import { Glyph } from "./glyph";
 
-const CONSENT_KEY = "outlayr.aiConsentPlanScan";
-
 type Phase =
     | { kind: "consent" | "pick" }
     | { file: File; kind: "reading"; run: number }
     | { file: File; kind: "failed"; message: ReactNode };
-
-function consented() {
-    try {
-        return localStorage.getItem(CONSENT_KEY) === String(AI_CONSENT_VERSION);
-    } catch {
-        return false;
-    }
-}
-
-function remember() {
-    try {
-        localStorage.setItem(CONSENT_KEY, String(AI_CONSENT_VERSION));
-        return true;
-    } catch {
-        return false;
-    }
-}
 
 function browserRegion() {
     try {
@@ -190,7 +172,7 @@ export function ScanDialog({
     const [picked, setPicked] = useState(
         cards.find((row) => row.localId === accountId)?.localId ?? cards[0]?.localId ?? null
     );
-    const [phase, setPhase] = useState<Phase>(() => ({ kind: consented() ? "pick" : "consent" }));
+    const [phase, setPhase] = useState<Phase>(() => ({ kind: readAiConsent() ? "pick" : "consent" }));
     const input = useRef<HTMLInputElement>(null);
     const latest = useRef(0);
     const account = cards.find((row) => row.localId === picked) ?? null;
@@ -333,7 +315,7 @@ export function ScanDialog({
                 </Button>
                 <Button
                     onClick={() => {
-                        remember();
+                        chooseAiConsent(true);
                         setPhase({ kind: "pick" });
                     }}
                 >
