@@ -1,7 +1,6 @@
 import { firstOfMonth, startOfDay } from "@outlayr/money/calendar";
-import { merchantKey } from "@outlayr/money/merchant-key";
 import { occurrenceId } from "@outlayr/money/occurrence";
-import { anchorDayOf, nextDate, RECURRING_TYPE } from "@outlayr/money/recurrence";
+import { anchorDayOf, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, between, desc, eq, gt, inArray, isNull, like, or, sql } from "drizzle-orm";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -10,15 +9,9 @@ import * as Schema from "effect/Schema";
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
-import { autologExpenseCount, countsAsAutolog, holdsAutolog } from "@/domain/autolog-cap";
-import { detectCurrency } from "@/domain/detect-currency";
-import { matchCardAccount } from "@/domain/match-card-account";
+import { autologExpenseCount, countsAsAutolog } from "@/domain/autolog-cap";
 import type { AutologAccess, PendingWriteLedgerEntry as LedgerEntry } from "@/domain/meta-values";
-import { cleanMerchant, mergeNotificationRead, parseNotification } from "@/domain/parse-notification";
-import { translateNow } from "@/i18n/runtime";
 import type { NotificationReader, NotificationReads } from "@/lib/notification-read";
-import { posthog } from "@/lib/posthog";
-import { autologSourceOf } from "@/lib/queue-file";
 import type { ClaimedWrites, PendingWrite } from "@/lib/queue-file";
 
 import { accountsRepo, getAccountById } from "./accounts-core";
@@ -32,18 +25,21 @@ import {
     writeAutologWaiting,
 } from "./autolog-cap-core";
 import type { SpendDb } from "./budget-spent";
-import { suggestedCardFee } from "./card-fees-core";
-import { MIN_KEY_LENGTH, queueEnrichment } from "./enrichment-queue-core";
+import { queueEnrichment } from "./enrichment-queue-core";
+import { captureEntrySaved, usualCardFee } from "./entry-filed-core";
+import {
+    alreadyApplied,
+    AMOUNT_EPSILON,
+    decidePendingWrite,
+    readNotification,
+    settleWindow,
+    WALLET_DEDUPE_WINDOW_MS,
+} from "./pending-write-decision";
+import type { PendingWriteDecision, PendingWriteFacts, SettledOccurrence } from "./pending-write-decision";
 import { backfillRecurring } from "./recurrence-backfill";
 import { readRemoteEnrichment } from "./settings-core";
 import { transactionsRepo } from "./transactions-core";
-import {
-    cardStatus,
-    rememberCard,
-    rememberNotification,
-    rememberRepriced,
-    rememberWalletEntry,
-} from "./wallet-state-core";
+import { rememberCard, rememberNotification, rememberRepriced, rememberWalletEntry } from "./wallet-state-core";
 
 const PendingWritesOperation = Schema.Literals(["read", "write", "account", "claim", "release"]);
 
@@ -67,57 +63,7 @@ const listBanks = (db: Database) =>
 const attemptSync = <A>(operation: typeof PendingWritesOperation.Type, run: () => A) =>
     Effect.try({ catch: (cause) => new PendingWritesError({ cause, operation }), try: run });
 
-// One purchase can fire twice (authorize, then settle) as two intents; ten minutes covers that and a retry, and
-// `PushLedger` in `app-intents/SharedStore.swift` copies it. Not widened to next-day settlement: that would collapse
-// a real second purchase, and a missing row is unrecoverable where a duplicate isn't.
-export const WALLET_DEDUPE_WINDOW_MS = 10 * 60 * 1000;
-
-const SETTLE_REPEAT_WINDOW_MS = 4 * 24 * 60 * 60 * 1000;
-const REPEATS_ON_SETTLE = /payoneer/i;
-
 export const filedNote = sql<string>`lower(${transactions.note})`;
-
-const SUBSCRIPTION_SETTLE_WINDOW_MS = 4 * 24 * 60 * 60 * 1000;
-const SUBSCRIPTION_PRICE_BAND = { max: 2, min: 0.5 } as const;
-const AMOUNT_EPSILON = 0.005;
-const MAX_MISSED_LANDINGS = 60;
-
-// The card is the sure sign; the key prefixes cover automations built before the card parameter existed.
-function fromAutomation(job: PendingWrite): boolean {
-    return Boolean(job.card?.trim()) || /^(?:wallet|notification):/.test(job.dedupeKey ?? "");
-}
-
-function sourceOf(job: PendingWrite): string | null {
-    const kind = /^(wallet|notification):/.exec(job.dedupeKey ?? "")?.[1];
-    return kind ? `${kind}:${job.card?.trim().toLowerCase() ?? ""}` : null;
-}
-
-// A push nothing could name files under the app that posted it, never under its category. A card the text names
-// (Google Wallet's "Visa ••1234") is not an app. The name is a placeholder, so no merchant or logo lookup sees it.
-function filedName(job: PendingWrite): string {
-    if (!job.text || job.note.trim()) {
-        return job.note;
-    }
-    const app = job.card?.trim();
-    return app && !job.text.includes(app) ? app : translateNow("settings.integrations.unnamedPush");
-}
-
-function readNotification(job: PendingWrite, reads: NotificationReads | undefined): PendingWrite | null {
-    if (!job.text) {
-        return job;
-    }
-    const parsed = mergeNotificationRead(job.text, parseNotification(job.text), reads?.get(job.id) ?? null);
-    if (!parsed) {
-        return null;
-    }
-    return {
-        ...job,
-        amount: parsed.amount,
-        amountText: parsed.amountText,
-        income: job.income || parsed.income,
-        note: parsed.merchant ?? "",
-    };
-}
 
 const LEDGER_LIMIT = 100;
 const LEDGER_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
@@ -141,28 +87,10 @@ const readLedger = (db: SpendDb) => Meta.get(db, "pendingWriteLedger");
 
 // Replaces, not appends: `alreadyApplied` answers with the FIRST entry, so a stale one would keep re-checking a
 // deleted transaction and re-writing it on every replay.
-function remember(ledger: LedgerEntry[], entry: LedgerEntry, at: number): LedgerEntry[] {
+function remember(ledger: readonly LedgerEntry[], entry: LedgerEntry, at: number): LedgerEntry[] {
     return [...ledger.filter((kept) => kept.id !== entry.id), entry]
         .filter((kept) => at - kept.at <= LEDGER_RETENTION_MS)
         .slice(-LEDGER_LIMIT);
-}
-
-// The enqueue id matches with no window (the same id means a replayed queue file); the purchase key is windowed
-// because two runs naming one purchase are separate intents.
-function alreadyApplied(ledger: LedgerEntry[], job: PendingWrite): LedgerEntry | null {
-    const replayed = ledger.find((entry) => entry.id === job.id);
-    if (replayed) {
-        return replayed;
-    }
-    const key = job.dedupeKey?.trim();
-    if (!key) {
-        return null;
-    }
-    return (
-        ledger.find(
-            (entry) => entry.key === key && Math.abs(job.date - (entry.date ?? entry.at)) <= WALLET_DEDUPE_WINDOW_MS
-        ) ?? null
-    );
 }
 
 // The pushes a drain would still write: a replayed claim, a repeat of a logged purchase, or a second copy of one in
@@ -185,28 +113,6 @@ export const unloggedPushes = Effect.fn("PendingWrites.unloggedPushes")(function
     }
     return kept;
 });
-
-const dateOf = (entry: LedgerEntry) => entry.date ?? entry.at;
-
-function settleRepeatOf(ledger: LedgerEntry[], job: PendingWrite): LedgerEntry | null {
-    const key = job.dedupeKey?.trim();
-    if (!key || !REPEATS_ON_SETTLE.test(job.card ?? "")) {
-        return null;
-    }
-    const repeated = (first: LedgerEntry) =>
-        ledger.some(
-            (other) =>
-                other.txId === first.txId &&
-                other.id !== first.id &&
-                dateOf(other) - dateOf(first) > WALLET_DEDUPE_WINDOW_MS
-        );
-    return (
-        ledger.find(
-            (entry) =>
-                entry.key === key && Math.abs(job.date - dateOf(entry)) <= SETTLE_REPEAT_WINDOW_MS && !repeated(entry)
-        ) ?? null
-    );
-}
 
 // A tombstone must not block: re-running the automation after deleting a duplicate has to put the charge back.
 const stillOnLedger = Effect.fn("PendingWrites.stillOnLedger")(function* stillOnLedger(db: Database, txId: string) {
@@ -236,8 +142,238 @@ interface DrainResult {
 
 const NOTHING_DRAINED: DrainResult = { applied: 0, autologged: 0 };
 
-// Each job is recorded against its row in the same SQLite transaction as the insert, which collapses the queue's
-// at-least-once delivery to exactly once.
+type Batch = Pick<PendingWriteFacts, "access" | "ledger" | "usage">;
+
+const filedRows = Effect.fn("PendingWrites.filedRows")(function* filedRows(db: Database, ledger: Batch["ledger"]) {
+    const ids = [...new Set(ledger.map((entry) => entry.txId))];
+    if (ids.length === 0) {
+        return [];
+    }
+    return yield* attempt("read", () =>
+        db
+            .select({
+                accountId: transactions.accountId,
+                amount: transactions.amount,
+                currency: transactions.currency,
+                date: transactions.date,
+                id: transactions.id,
+                income: transactions.income,
+                note: transactions.note,
+            })
+            .from(transactions)
+            .where(and(inArray(transactions.id, ids), isNull(transactions.deletedAt)))
+    );
+});
+
+const openSubscriptions = (db: Database, write: PendingWrite) => {
+    const { hi, lo } = settleWindow(write.date);
+    return attempt("read", () =>
+        db
+            .select({
+                accountId: transactions.accountId,
+                amount: transactions.amount,
+                currency: transactions.currency,
+                date: transactions.date,
+                id: transactions.id,
+                note: transactions.note,
+                recurringAnchorDay: transactions.recurringAnchorDay,
+                recurringCoefficient: transactions.recurringCoefficient,
+                recurringEndDate: transactions.recurringEndDate,
+                recurringType: transactions.recurringType,
+            })
+            .from(transactions)
+            .where(
+                and(
+                    eq(transactions.onceRecurring, true),
+                    isNull(transactions.deletedAt),
+                    isNull(transactions.feeForId),
+                    eq(transactions.income, write.income),
+                    or(
+                        between(transactions.date, new Date(lo), new Date(hi)),
+                        gt(transactions.recurringType, RECURRING_TYPE.none)
+                    )
+                )
+            )
+    );
+};
+
+const gatherFacts = Effect.fn("PendingWrites.gatherFacts")(function* gatherFacts(
+    db: Database,
+    write: PendingWrite,
+    batch: Batch
+) {
+    return {
+        ...batch,
+        banks: yield* listBanks(db),
+        cards: yield* Meta.get(db, "walletCards"),
+        category: {
+            fallback: yield* firstCategory(db, write.income),
+            known: yield* knownCategory(db, write),
+            lookups: yield* readRemoteEnrichment(db),
+        },
+        filed: yield* filedRows(db, batch.ledger),
+        ledgerCurrency: yield* Meta.get(db, "currency"),
+        subscriptions: yield* openSubscriptions(db, write),
+    } satisfies PendingWriteFacts;
+});
+
+type Landing = Extract<PendingWriteDecision, { kind: "land" }>;
+
+const writeLanding = Effect.fn("PendingWrites.writeLanding")(function* writeLanding(
+    db: Database,
+    { currency, landing, parentId }: Landing,
+    now: Date
+) {
+    yield* backfillRecurring(db, parentId, new Date(Math.max(now.getTime(), landing.getTime())));
+    const id = occurrenceId(parentId, landing);
+    const [written] = yield* attempt("read", () =>
+        db
+            .select({
+                amount: transactions.amount,
+                date: transactions.date,
+                note: transactions.note,
+                recurringAnchorDay: transactions.recurringAnchorDay,
+            })
+            .from(transactions)
+            .where(and(eq(transactions.id, id), isNull(transactions.deletedAt)))
+            .limit(1)
+    );
+    return written ? { ...written, currency, id } : null;
+});
+
+const decide = Effect.fn("PendingWrites.decide")(function* decide(
+    db: Database,
+    write: PendingWrite,
+    batch: Batch,
+    now: Date
+) {
+    const decision = decidePendingWrite(write, yield* gatherFacts(db, write, batch));
+    if (decision.kind !== "land") {
+        return decision;
+    }
+    const occurrence = yield* writeLanding(db, decision, now);
+    return occurrence ? ({ filing: decision.filing, kind: "settle", occurrence } as const) : decision.otherwise;
+});
+
+const settleOccurrence = Effect.fn("PendingWrites.settleOccurrence")(function* settleOccurrence(
+    db: Database,
+    write: PendingWrite,
+    settled: SettledOccurrence,
+    now: Date
+) {
+    if (settled.date.getTime() !== write.date) {
+        const date = new Date(write.date);
+        yield* attempt("write", () =>
+            db
+                .update(transactions)
+                .set({
+                    amountUsd: null,
+                    date,
+                    day: startOfDay(date),
+                    month: firstOfMonth(date),
+                    recurringAnchorDay: anchorDayOf(settled),
+                    updatedAt: now,
+                })
+                .where(eq(transactions.id, settled.id))
+        );
+    }
+    if (Math.abs(settled.amount - write.amount) > AMOUNT_EPSILON) {
+        yield* attempt("write", () =>
+            db
+                .update(transactions)
+                .set({ amount: write.amount, amountUsd: null, updatedAt: now })
+                .where(eq(transactions.id, settled.id))
+        );
+        yield* rememberRepriced(db, {
+            currency: settled.currency,
+            from: settled.amount,
+            note: settled.note,
+            to: write.amount,
+        });
+    }
+    return settled.id;
+});
+
+type Filed = Extract<PendingWriteDecision, { kind: "file" | "merge" | "settle" }>;
+
+const createEntry = Effect.fn("PendingWrites.createEntry")(function* createEntry(
+    db: Database,
+    write: PendingWrite,
+    { account, autolog, categoryId, currency, logoCandidate, lookup, note }: Extract<Filed, { kind: "file" }>
+) {
+    const fee = yield* attemptSync("read", () =>
+        usualCardFee(db, { account, categoryId, currency, income: write.income, merchant: note })
+    );
+    const id = yield* transactionsRepo.create(
+        db,
+        {
+            accountId: account?.id ?? null,
+            amount: write.amount,
+            categoryId,
+            currency,
+            date: new Date(write.date),
+            details: null,
+            fee,
+            income: write.income,
+            note,
+        },
+        { logoCandidate }
+    );
+    if (lookup) {
+        yield* queueEnrichment(db, id);
+    }
+    if (countsAsAutolog(autolog)) {
+        yield* attempt("write", () => db.update(transactions).set({ unreviewed: true }).where(eq(transactions.id, id)));
+    }
+    return id;
+});
+
+const filedRow = Effect.fn("PendingWrites.filedRow")(function* filedRow(
+    db: Database,
+    write: PendingWrite,
+    decision: Filed,
+    now: Date
+) {
+    if (decision.kind === "merge") {
+        return decision.txId;
+    }
+    if (decision.kind === "settle") {
+        return yield* settleOccurrence(db, write, decision.occurrence, now);
+    }
+    return yield* createEntry(db, write, decision);
+});
+
+const fileDecision = Effect.fn("PendingWrites.fileDecision")(function* fileDecision(
+    db: Database,
+    write: PendingWrite,
+    decision: Filed,
+    batch: Pick<Batch, "ledger" | "usage">,
+    now: Date
+) {
+    const at = now.getTime();
+    const { card, key, source, wallet } = decision.filing;
+    return yield* transaction(
+        db,
+        Effect.gen(function* file() {
+            const txId = yield* filedRow(db, write, decision, now);
+            const counted = decision.kind === "file" && countsAsAutolog(decision.autolog);
+            const usage = counted ? yield* countAutologEntry(db, batch.usage, write.date) : batch.usage;
+            const ledger = remember(batch.ledger, { at, date: write.date, id: write.id, key, source, txId }, at);
+            yield* Meta.set(db, "pendingWriteLedger", ledger);
+            if (wallet) {
+                yield* rememberWalletEntry(db, txId, at, wallet.push);
+            }
+            if (card) {
+                yield* rememberCard(db, card.text, write.date, card.waits ? txId : null);
+            }
+            return { ledger, usage };
+        }),
+        (cause) => new PendingWritesError({ cause, operation: "write" })
+    );
+});
+
+// Each pending write is recorded against its row in the same SQLite transaction as the insert, which collapses the
+// queue's at-least-once delivery to exactly once.
 export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(function* applyPendingWrites(
     db: Database,
     jobs: PendingWrite[],
@@ -255,351 +391,55 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     const access = knownAccess ?? (yield* readAutologAccess(db));
     let usage = yield* readAutologUsage(db);
 
-    // Exactly-once depends on this job seeing the ledger row the previous job's SQLite transaction committed, so the
-    // jobs must land one at a time.
+    // Exactly-once depends on this pending write seeing the ledger row the previous one's SQLite transaction
+    // committed, so they must land one at a time.
     for (const queued of jobs) {
-        const job = readNotification(queued, reads);
+        const write = readNotification(queued, reads);
         if (queued.text) {
             yield* rememberNotification(
                 db,
-                { amountText: job?.amountText ?? null, at: queued.date, text: queued.text },
+                { amountText: write?.amountText ?? null, at: queued.date, text: queued.text },
                 WALLET_DEDUPE_WINDOW_MS
             );
         }
-        if (!job) {
+        if (!write) {
             continue;
         }
-        const seen = alreadyApplied(ledger, job);
-        const repeat = seen ? null : settleRepeatOf(ledger, job);
-        const duplicate = repeat ?? (seen && (yield* stillOnLedger(db, seen.txId)) ? seen : null);
-        if (duplicate) {
-            if (duplicate.id !== job.id) {
-                ledger = remember(ledger, { at, date: job.date, id: job.id, key: null, txId: duplicate.txId }, at);
+        const decision = yield* decide(db, write, { access, ledger, usage }, now);
+        if (decision.kind === "duplicate") {
+            if (decision.relink) {
+                const entry = { at, date: write.date, id: write.id, key: null, txId: decision.txId };
+                ledger = remember(ledger, entry, at);
                 yield* Meta.set(db, "pendingWriteLedger", ledger);
             }
             continue;
         }
-        const known = yield* knownCategory(db, job);
-        const lookup =
-            known == null && merchantKey(job.note).length >= MIN_KEY_LENGTH && (yield* readRemoteEnrichment(db));
-        const categoryId = known ?? (lookup ? null : yield* firstCategory(db, job.income));
-        if (categoryId == null && !lookup) {
+        if (decision.kind === "drop") {
             // Dropping beats inventing a category the user never made.
             yield* Effect.logWarning("[outlayr] dropped a queued entry with no category");
             continue;
         }
-        const { account, asks } = yield* resolveAccount(db, job);
-        const currency = resolveWriteCurrency(job, account);
-        const twin = fromAutomation(job) ? yield* sameCharge(db, job, account, currency, ledger) : null;
-        const settled =
-            fromAutomation(job) && !twin ? yield* settledOccurrence(db, job, account, currency, ledger, now) : null;
-        const autolog = autologSourceOf(queued);
-        const filed = filedName(job);
-        const creates = !twin && !settled;
-        if (creates && holdsAutolog(usage, access, autolog, job.date)) {
-            usage = yield* holdAutologWrite(db, usage, queued, job.date);
+        if (decision.kind === "hold") {
+            usage = yield* holdAutologWrite(db, usage, queued, write.date);
             continue;
         }
-        yield* transaction(
-            db,
-            // oxlint-disable-next-line no-loop-func -- run in place, so nothing outlives the iteration whose `job` and `categoryId` it reads
-            Effect.gen(function* write() {
-                if (settled && settled.date.getTime() !== job.date) {
-                    const date = new Date(job.date);
-                    yield* attempt("write", () =>
-                        db
-                            .update(transactions)
-                            .set({
-                                amountUsd: null,
-                                date,
-                                day: startOfDay(date),
-                                month: firstOfMonth(date),
-                                recurringAnchorDay: anchorDayOf(settled),
-                                updatedAt: now,
-                            })
-                            .where(eq(transactions.id, settled.id))
-                    );
-                }
-                if (settled && Math.abs(settled.amount - job.amount) > AMOUNT_EPSILON) {
-                    yield* attempt("write", () =>
-                        db
-                            .update(transactions)
-                            .set({ amount: job.amount, amountUsd: null, updatedAt: now })
-                            .where(eq(transactions.id, settled.id))
-                    );
-                    yield* rememberRepriced(db, {
-                        currency: settled.currency,
-                        from: settled.amount,
-                        note: settled.note,
-                        to: job.amount,
-                    });
-                }
-                const txId =
-                    twin?.id ??
-                    settled?.id ??
-                    (yield* transactionsRepo.create(
-                        db,
-                        {
-                            accountId: account?.id ?? null,
-                            amount: job.amount,
-                            categoryId,
-                            currency,
-                            date: new Date(job.date),
-                            details: null,
-                            fee: job.income
-                                ? null
-                                : yield* attemptSync("read", () =>
-                                      suggestedCardFee(db, { account, categoryId, currency, merchant: filed })
-                                  ),
-                            income: job.income,
-                            note: filed,
-                        },
-                        { logoCandidate: filed === job.note }
-                    ));
-                if (lookup && creates) {
-                    yield* queueEnrichment(db, txId);
-                }
-                if (creates && countsAsAutolog(autolog)) {
-                    yield* attempt("write", () =>
-                        db.update(transactions).set({ unreviewed: true }).where(eq(transactions.id, txId))
-                    );
-                    usage = yield* countAutologEntry(db, usage, job.date);
-                }
-                const source = sourceOf(job) ?? undefined;
-                ledger = remember(
-                    ledger,
-                    { at, date: job.date, id: job.id, key: job.dedupeKey?.trim() || null, source, txId },
-                    at
-                );
-                yield* Meta.set(db, "pendingWriteLedger", ledger);
-                if (fromAutomation(job)) {
-                    yield* rememberWalletEntry(db, txId, at, Boolean(job.text));
-                }
-                const card = job.card?.trim();
-                if (card) {
-                    yield* rememberCard(db, card, job.date, asks && currency ? txId : null);
-                }
-            }),
-            (cause) => new PendingWritesError({ cause, operation: "write" })
-        );
-        if (creates) {
-            posthog?.capture("transaction_saved", {
-                mode: "create",
-                source: autolog,
-                transaction_type: job.income ? "income" : "expense",
-            });
-            autologged += autologExpenseCount(autolog, job.income);
+        ({ ledger, usage } = yield* fileDecision(db, write, decision, { ledger, usage }, now));
+        if (decision.kind === "file") {
+            captureEntrySaved({ income: write.income, mode: "create", source: decision.autolog });
+            autologged += autologExpenseCount(decision.autolog, write.income);
         }
-        const opened =
-            twin && !twin.accountId && account
-                ? yield* attemptSync("account", () => getAccountById(db, account.id))
-                : null;
-        if (twin && opened) {
-            yield* transactionsRepo.attachAccount(db, twin.id, opened, now);
+        if (decision.kind === "merge" && decision.attach !== null) {
+            const { attach, txId } = decision;
+            const opened = yield* attemptSync("account", () => getAccountById(db, attach));
+            if (opened) {
+                yield* transactionsRepo.attachAccount(db, txId, opened, now);
+            }
         }
         applied += 1;
     }
 
     return { applied, autologged } satisfies DrainResult;
 });
-
-interface MatchedAccount {
-    currency: string;
-    id: string;
-}
-
-function merchantOf(note: string): string {
-    return cleanMerchant(note)?.toLowerCase() ?? "";
-}
-
-const sameCharge = Effect.fn("PendingWrites.sameCharge")(function* sameCharge(
-    db: Database,
-    job: PendingWrite,
-    account: MatchedAccount | null,
-    currency: string | null,
-    ledger: readonly LedgerEntry[]
-) {
-    const source = sourceOf(job);
-    if (!source) {
-        return null;
-    }
-    const fed = new Set(ledger.filter((entry) => entry.source === source).map((entry) => entry.txId));
-    const ids = ledger
-        .filter(
-            (entry) =>
-                entry.source !== undefined &&
-                entry.source !== source &&
-                !fed.has(entry.txId) &&
-                Math.abs(job.date - (entry.date ?? entry.at)) <= WALLET_DEDUPE_WINDOW_MS
-        )
-        .map((entry) => entry.txId);
-    if (ids.length === 0) {
-        return null;
-    }
-    const code = currency ?? (yield* Meta.get(db, "currency"));
-    const rows = yield* attempt("read", () =>
-        db
-            .select({
-                accountId: transactions.accountId,
-                amount: transactions.amount,
-                currency: transactions.currency,
-                date: transactions.date,
-                id: transactions.id,
-                note: transactions.note,
-            })
-            .from(transactions)
-            .where(
-                and(inArray(transactions.id, ids), isNull(transactions.deletedAt), eq(transactions.income, job.income))
-            )
-    );
-    const merchant = merchantOf(job.note);
-    const [match] = rows
-        .filter((row) => {
-            if (account && row.accountId && row.accountId !== account.id) {
-                return false;
-            }
-            if (row.currency === code) {
-                return Math.abs(row.amount - job.amount) <= AMOUNT_EPSILON;
-            }
-            const filed = merchantOf(row.note);
-            return merchant !== "" && filed !== "" && (filed.includes(merchant) || merchant.includes(filed));
-        })
-        .sort((a, b) => Math.abs(a.date.getTime() - job.date) - Math.abs(b.date.getTime() - job.date));
-    return match ? { accountId: match.accountId, id: match.id } : null;
-});
-
-const settledOccurrence = Effect.fn("PendingWrites.settledOccurrence")(function* settledOccurrence(
-    db: Database,
-    job: PendingWrite,
-    account: MatchedAccount | null,
-    currency: string | null,
-    ledger: readonly LedgerEntry[],
-    now: Date
-) {
-    const code = currency ?? (yield* Meta.get(db, "currency"));
-    const taken = new Set(ledger.map((entry) => entry.txId));
-    const lo = job.date - SUBSCRIPTION_SETTLE_WINDOW_MS;
-    const hi = job.date + SUBSCRIPTION_SETTLE_WINDOW_MS;
-    const rows = yield* attempt("read", () =>
-        db
-            .select({
-                accountId: transactions.accountId,
-                amount: transactions.amount,
-                date: transactions.date,
-                id: transactions.id,
-                note: transactions.note,
-                recurringAnchorDay: transactions.recurringAnchorDay,
-                recurringCoefficient: transactions.recurringCoefficient,
-                recurringEndDate: transactions.recurringEndDate,
-                recurringType: transactions.recurringType,
-            })
-            .from(transactions)
-            .where(
-                and(
-                    eq(transactions.onceRecurring, true),
-                    isNull(transactions.deletedAt),
-                    isNull(transactions.feeForId),
-                    eq(transactions.income, job.income),
-                    eq(transactions.currency, code),
-                    or(
-                        between(transactions.date, new Date(lo), new Date(hi)),
-                        gt(transactions.recurringType, RECURRING_TYPE.none)
-                    )
-                )
-            )
-    );
-    const inWindow = (at: Date) => at.getTime() >= lo && at.getTime() <= hi;
-    const stored = rows.filter((row) => inWindow(row.date)).map((row) => ({ ...row, landing: null }));
-    const landings = rows.flatMap((row) => {
-        if (row.recurringType === RECURRING_TYPE.none) {
-            return [];
-        }
-        let landing = nextDate(row.date, row.recurringType, row.recurringCoefficient, anchorDayOf(row));
-        for (let missed = 0; landing && landing.getTime() < lo && missed < MAX_MISSED_LANDINGS; missed += 1) {
-            landing = nextDate(landing, row.recurringType, row.recurringCoefficient, anchorDayOf(row));
-        }
-        const ended = row.recurringEndDate != null && landing != null && landing > row.recurringEndDate;
-        return landing && inWindow(landing) && !ended ? [{ ...row, date: landing, landing }] : [];
-    });
-    const merchant = job.note.trim().toLowerCase();
-    const named = (note: string) => {
-        const filed = note.trim().toLowerCase();
-        return merchant !== "" && filed !== "" && (filed.includes(merchant) || merchant.includes(filed));
-    };
-    const open = [...stored, ...landings].filter(
-        (row) => !taken.has(row.id) && (!account || !row.accountId || row.accountId === account.id)
-    );
-    const byDate = (a: { date: Date }, b: { date: Date }) =>
-        Math.abs(a.date.getTime() - job.date) - Math.abs(b.date.getTime() - job.date);
-    const samePrice = open
-        .filter((row) => Math.abs(row.amount - job.amount) <= AMOUNT_EPSILON)
-        .sort((a, b) => Number(named(b.note)) - Number(named(a.note)) || byDate(a, b));
-    const repriced = open
-        .filter((row) => {
-            const ratio = job.amount / row.amount;
-            return named(row.note) && ratio >= SUBSCRIPTION_PRICE_BAND.min && ratio <= SUBSCRIPTION_PRICE_BAND.max;
-        })
-        .sort(byDate);
-    const match = samePrice[0] ?? repriced[0];
-    if (!match) {
-        return null;
-    }
-    if (!match.landing) {
-        return {
-            amount: match.amount,
-            currency: code,
-            date: match.date,
-            id: match.id,
-            note: match.note,
-            recurringAnchorDay: match.recurringAnchorDay,
-        };
-    }
-    const { landing } = match;
-    yield* backfillRecurring(db, match.id, new Date(Math.max(now.getTime(), landing.getTime())));
-    const id = occurrenceId(match.id, landing);
-    const [written] = yield* attempt("read", () =>
-        db
-            .select({
-                amount: transactions.amount,
-                date: transactions.date,
-                note: transactions.note,
-                recurringAnchorDay: transactions.recurringAnchorDay,
-            })
-            .from(transactions)
-            .where(and(eq(transactions.id, id), isNull(transactions.deletedAt)))
-            .limit(1)
-    );
-    return written ? { ...written, currency: code, id } : null;
-});
-
-const resolveAccount = Effect.fn("PendingWrites.resolveAccount")(function* resolveAccount(
-    db: Database,
-    job: PendingWrite
-) {
-    const card = job.card?.trim();
-    if (!card) {
-        return { account: null, asks: false };
-    }
-    const rows = yield* listBanks(db);
-    const status = cardStatus(card, yield* Meta.get(db, "walletCards"), rows);
-    const charged = job.currency?.trim().toUpperCase() || detectCurrency(job.amountText);
-    const same = charged ? rows.filter((row) => row.currency === charged) : [];
-    const account =
-        status.account ?? (status.asks ? same.find((row) => row.id === matchCardAccount(card, same)) : undefined);
-    return {
-        account: account ? { currency: account.currency, id: account.id } : null,
-        asks: status.asks && !account,
-    };
-});
-
-// "$" is on 22 currencies, so an ambiguous symbol defers to the card's account currency before staying null.
-function resolveWriteCurrency(job: PendingWrite, account: MatchedAccount | null): string | null {
-    const pinned = job.currency?.trim().toUpperCase();
-    if (pinned) {
-        return pinned;
-    }
-    return detectCurrency(job.amountText) ?? account?.currency ?? null;
-}
 
 // The intent's category (case-insensitive: Siri picks the casing), else where this merchant was filed last time.
 const knownCategory = Effect.fn("PendingWrites.knownCategory")(function* knownCategory(

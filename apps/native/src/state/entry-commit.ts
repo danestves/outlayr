@@ -9,9 +9,9 @@ import * as Schema from "effect/Schema";
 import { getAccountById, rememberLastUsedAccount } from "@/data/accounts-core";
 import { attachmentsRepo } from "@/data/attachments-core";
 import type { AttachmentDraft } from "@/data/attachments-core";
-import { suggestedCardFee } from "@/data/card-fees-core";
 import { ensureCategoryByName } from "@/data/categories-core";
 import { queueEnrichment } from "@/data/enrichment-queue-core";
+import { captureEntrySaved, usualCardFee } from "@/data/entry-filed-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
 import { readRemoteEnrichment } from "@/data/settings-core";
 import { splitsRepo } from "@/data/splits-core";
@@ -24,7 +24,6 @@ import type { Allocation } from "@/domain/split";
 import type { PendingCategory } from "@/hooks/use-transaction-enrichment";
 import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
 import { freshEntries } from "@/lib/fresh-entries";
-import { posthog } from "@/lib/posthog";
 import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
 
 import { logged } from "./entry-save";
@@ -91,13 +90,11 @@ export interface EntryCommit {
 }
 
 function rememberedFee(db: Database, draft: EntryDraft, categoryId: string | null): CardFeeInput | null {
-    if (draft.income) {
-        return null;
-    }
-    return suggestedCardFee(db, {
+    return usualCardFee(db, {
         account: draft.accountId ? getAccountById(db, draft.accountId) : null,
         categoryId,
         currency: draft.currency,
+        income: draft.income,
         merchant: draft.merchant,
     });
 }
@@ -232,12 +229,11 @@ export const commitEntry = Effect.fn("EntryCommit.commit")(function* commitEntry
     if (mode === "create") {
         freshEntries.mark(id, draft.date);
     }
-    posthog?.capture("transaction_saved", {
-        has_split: (commit.splits?.allocations.length ?? 0) > 0,
-        is_subscription: draft.schedule !== null,
+    captureEntrySaved({
+        income: draft.income,
         mode,
+        inApp: { has_split: (commit.splits?.allocations.length ?? 0) > 0, is_subscription: draft.schedule !== null },
         source: commit.source,
-        transaction_type: draft.income ? "income" : "expense",
     });
     // The row is committed: nothing below may reopen a form that would write it twice.
     if (draft.accountId !== null) {
