@@ -3,7 +3,7 @@ import { api } from "@outlayr/backend/convex/_generated/api";
 import { convexCollectionOptions, convexPaginatedCollectionOptions } from "@tanstack/convex-db-collection";
 import type { ConvexCollectionClient } from "@tanstack/convex-db-collection";
 import { collectionOptions, useLiveQuery } from "@tanstack/react-db";
-import type { Collection, DbClient } from "@tanstack/react-db";
+import type { Collection, CollectionOptions, DbClient, NonSingleResult, UtilsRecord } from "@tanstack/react-db";
 import type { FunctionReturnType } from "convex/server";
 import { ConvexError } from "convex/values";
 import { useMemo } from "react";
@@ -45,150 +45,6 @@ const pushMeta = (db: DbClient, mutations: readonly { modified: MetaRow }[]) =>
         }))
     );
 
-export const ledgerCollections = {
-    accounts: collectionOptions("ledger.accounts", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.accounts",
-            query: api.ledger.accounts,
-        })
-    ),
-    appMeta: collectionOptions("ledger.appMeta", (db) =>
-        convexCollectionOptions<typeof api.sync.pullSince, MetaRow, string>({
-            client: convexOf(db),
-            getKey: (row) => row.key,
-            id: "ledger.appMeta",
-            query: api.sync.pullSince,
-            queryArgs: { cursor: 0, tables: ["appMeta"] },
-            select: (page) => page.rows.map(metaOf),
-            onInsert: ({ transaction }) => pushMeta(db, transaction.mutations),
-            onUpdate: ({ transaction }) => pushMeta(db, transaction.mutations),
-        })
-    ),
-    budgets: collectionOptions("ledger.budgets", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.budgets",
-            query: api.ledger.budgets,
-        })
-    ),
-    categories: collectionOptions("ledger.categories", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.categories",
-            query: api.ledger.categories,
-        })
-    ),
-    exchangeRates: collectionOptions("ledger.exchangeRates", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row._id,
-            queryArgs: {},
-            id: "ledger.exchangeRates",
-            query: api.ledger.exchangeRates,
-        })
-    ),
-    installmentPlans: collectionOptions("ledger.installmentPlans", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.installmentPlans",
-            query: api.ledger.installmentPlans,
-        })
-    ),
-    installments: collectionOptions("ledger.installments", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.installments",
-            query: api.ledger.installments,
-        })
-    ),
-    mainBudget: collectionOptions("ledger.mainBudget", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.mainBudget",
-            query: api.ledger.mainBudget,
-        })
-    ),
-    outsideMoves: collectionOptions("ledger.outsideMoves", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.outsideMoves",
-            query: api.ledger.outsideMoves,
-        })
-    ),
-    outsidePayments: collectionOptions("ledger.outsidePayments", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.outsidePayments",
-            query: api.ledger.outsidePayments,
-        })
-    ),
-    savingsGoals: collectionOptions("ledger.savingsGoals", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.savingsGoals",
-            query: api.ledger.savingsGoals,
-        })
-    ),
-    tags: collectionOptions("ledger.tags", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.tags",
-            query: api.ledger.tags,
-        })
-    ),
-    transactionTags: collectionOptions("ledger.transactionTags", (db) =>
-        convexPaginatedCollectionOptions({
-            ...paged,
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.transactionTags",
-            query: api.ledger.transactionTags,
-        })
-    ),
-    transactions: collectionOptions("ledger.transactions", (db) =>
-        convexPaginatedCollectionOptions({
-            ...paged,
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.transactions",
-            query: api.ledger.transactions,
-        })
-    ),
-    transfers: collectionOptions("ledger.transfers", (db) =>
-        convexPaginatedCollectionOptions({
-            ...paged,
-            client: convexOf(db),
-            getKey: (row) => row.localId,
-            queryArgs: {},
-            id: "ledger.transfers",
-            query: api.ledger.transfers,
-        })
-    ),
-};
-
 type Loadable = Pick<Collection, "preload" | "reload" | "status">;
 
 const start = (collection: Loadable) => (collection.status === "error" ? collection.reload() : collection.preload());
@@ -215,119 +71,234 @@ const load = async (collection: Loadable) => {
     return start(collection);
 };
 
-export const preloadLedger = (db: DbClient) =>
-    Promise.all([
-        load(db.collection(ledgerCollections.accounts)),
-        load(db.collection(ledgerCollections.appMeta)),
-        load(db.collection(ledgerCollections.budgets)),
-        load(db.collection(ledgerCollections.categories)),
-        load(db.collection(ledgerCollections.exchangeRates)),
-        load(db.collection(ledgerCollections.installmentPlans)),
-        load(db.collection(ledgerCollections.installments)),
-        load(db.collection(ledgerCollections.mainBudget)),
-        load(db.collection(ledgerCollections.outsideMoves)),
-        load(db.collection(ledgerCollections.outsidePayments)),
-        load(db.collection(ledgerCollections.savingsGoals)),
-        load(db.collection(ledgerCollections.tags)),
-        load(db.collection(ledgerCollections.transactionTags)),
-        load(db.collection(ledgerCollections.transactions)),
-        load(db.collection(ledgerCollections.transfers)),
-    ]);
+type TagTable = "tags" | "transactionTags";
+
+const openers: ((db: DbClient) => Loadable)[] = [];
+
+const ledgerTable = <Row extends object, Key extends string | number, Utils extends UtilsRecord>(
+    options: CollectionOptions<Row, Key, never, Utils> & NonSingleResult
+) => {
+    openers.push((db) => db.collection(options));
+    return options;
+};
+
+export const ledgerCollections = {
+    accounts: ledgerTable(
+        collectionOptions("ledger.accounts", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.accounts",
+                query: api.ledger.accounts,
+            })
+        )
+    ),
+    appMeta: ledgerTable(
+        collectionOptions("ledger.appMeta", (db) =>
+            convexCollectionOptions<typeof api.sync.pullSince, MetaRow, string>({
+                client: convexOf(db),
+                getKey: (row) => row.key,
+                id: "ledger.appMeta",
+                query: api.sync.pullSince,
+                queryArgs: { cursor: 0, tables: ["appMeta"] },
+                select: (page) => page.rows.map(metaOf),
+                onInsert: ({ transaction }) => pushMeta(db, transaction.mutations),
+                onUpdate: ({ transaction }) => pushMeta(db, transaction.mutations),
+            })
+        )
+    ),
+    budgets: ledgerTable(
+        collectionOptions("ledger.budgets", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.budgets",
+                query: api.ledger.budgets,
+            })
+        )
+    ),
+    categories: ledgerTable(
+        collectionOptions("ledger.categories", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.categories",
+                query: api.ledger.categories,
+            })
+        )
+    ),
+    exchangeRates: ledgerTable(
+        collectionOptions("ledger.exchangeRates", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row._id,
+                queryArgs: {},
+                id: "ledger.exchangeRates",
+                query: api.ledger.exchangeRates,
+            })
+        )
+    ),
+    installmentPlans: ledgerTable(
+        collectionOptions("ledger.installmentPlans", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.installmentPlans",
+                query: api.ledger.installmentPlans,
+            })
+        )
+    ),
+    installments: ledgerTable(
+        collectionOptions("ledger.installments", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.installments",
+                query: api.ledger.installments,
+            })
+        )
+    ),
+    mainBudget: ledgerTable(
+        collectionOptions("ledger.mainBudget", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.mainBudget",
+                query: api.ledger.mainBudget,
+            })
+        )
+    ),
+    outsideMoves: ledgerTable(
+        collectionOptions("ledger.outsideMoves", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.outsideMoves",
+                query: api.ledger.outsideMoves,
+            })
+        )
+    ),
+    outsidePayments: ledgerTable(
+        collectionOptions("ledger.outsidePayments", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.outsidePayments",
+                query: api.ledger.outsidePayments,
+            })
+        )
+    ),
+    savingsGoals: ledgerTable(
+        collectionOptions("ledger.savingsGoals", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.savingsGoals",
+                query: api.ledger.savingsGoals,
+            })
+        )
+    ),
+    tags: ledgerTable(
+        collectionOptions("ledger.tags", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.tags",
+                query: api.ledger.tags,
+            })
+        )
+    ),
+    transactionTags: ledgerTable(
+        collectionOptions("ledger.transactionTags", (db) =>
+            convexPaginatedCollectionOptions({
+                ...paged,
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.transactionTags",
+                query: api.ledger.transactionTags,
+            })
+        )
+    ),
+    transactions: ledgerTable(
+        collectionOptions("ledger.transactions", (db) =>
+            convexPaginatedCollectionOptions({
+                ...paged,
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.transactions",
+                query: api.ledger.transactions,
+            })
+        )
+    ),
+    transfers: ledgerTable(
+        collectionOptions("ledger.transfers", (db) =>
+            convexPaginatedCollectionOptions({
+                ...paged,
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.transfers",
+                query: api.ledger.transfers,
+            })
+        )
+    ),
+} satisfies Record<keyof LedgerBooks | TagTable, { id: string }>;
+
+export const preloadLedger = (db: DbClient) => Promise.all(openers.map((open) => load(open(db))));
+
+const rowsOf = <Row extends object, Key extends string | number, Utils extends UtilsRecord>(
+    db: DbClient,
+    options: CollectionOptions<Row, Key, never, Utils> & NonSingleResult
+) => db.collection(options).toArray;
+
+function useRows<Row extends object, Key extends string | number, Utils extends UtilsRecord>(
+    options: CollectionOptions<Row, Key, never, Utils> & NonSingleResult
+) {
+    return useLiveQuery({ query: (q) => q.from({ row: options }), queryKey: [options.id] }).data;
+}
 
 export const ledgerBooks = (db: DbClient): LedgerBooks => ({
-    accounts: db.collection(ledgerCollections.accounts).toArray,
-    appMeta: db.collection(ledgerCollections.appMeta).toArray,
-    budgets: db.collection(ledgerCollections.budgets).toArray,
-    categories: db.collection(ledgerCollections.categories).toArray,
-    exchangeRates: db.collection(ledgerCollections.exchangeRates).toArray,
-    installmentPlans: db.collection(ledgerCollections.installmentPlans).toArray,
-    installments: db.collection(ledgerCollections.installments).toArray,
-    mainBudget: db.collection(ledgerCollections.mainBudget).toArray,
-    outsideMoves: db.collection(ledgerCollections.outsideMoves).toArray,
-    outsidePayments: db.collection(ledgerCollections.outsidePayments).toArray,
-    savingsGoals: db.collection(ledgerCollections.savingsGoals).toArray,
-    transactions: db.collection(ledgerCollections.transactions).toArray,
-    transfers: db.collection(ledgerCollections.transfers).toArray,
+    accounts: rowsOf(db, ledgerCollections.accounts),
+    appMeta: rowsOf(db, ledgerCollections.appMeta),
+    budgets: rowsOf(db, ledgerCollections.budgets),
+    categories: rowsOf(db, ledgerCollections.categories),
+    exchangeRates: rowsOf(db, ledgerCollections.exchangeRates),
+    installmentPlans: rowsOf(db, ledgerCollections.installmentPlans),
+    installments: rowsOf(db, ledgerCollections.installments),
+    mainBudget: rowsOf(db, ledgerCollections.mainBudget),
+    outsideMoves: rowsOf(db, ledgerCollections.outsideMoves),
+    outsidePayments: rowsOf(db, ledgerCollections.outsidePayments),
+    savingsGoals: rowsOf(db, ledgerCollections.savingsGoals),
+    transactions: rowsOf(db, ledgerCollections.transactions),
+    transfers: rowsOf(db, ledgerCollections.transfers),
 });
-
-export type Tag = FunctionReturnType<typeof api.ledger.tags>[number];
-export type TagLink = FunctionReturnType<typeof api.ledger.transactionTags>["page"][number];
-
-export interface TagBooks {
-    links: readonly TagLink[];
-    tags: readonly Tag[];
-}
-
-export const tagBooks = (db: DbClient): TagBooks => ({
-    links: db.collection(ledgerCollections.transactionTags).toArray,
-    tags: db.collection(ledgerCollections.tags).toArray,
-});
-
-export function useTagBooks(): TagBooks {
-    const tags = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.tags }),
-        queryKey: ["ledger.tags"],
-    }).data;
-    const links = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.transactionTags }),
-        queryKey: ["ledger.transactionTags"],
-    }).data;
-    return useMemo(() => ({ links, tags }), [links, tags]);
-}
 
 export function useLedgerBooks(): LedgerBooks {
-    const accounts = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.accounts }),
-        queryKey: ["ledger.accounts"],
-    }).data;
-    const appMeta = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.appMeta }),
-        queryKey: ["ledger.appMeta"],
-    }).data;
-    const budgets = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.budgets }),
-        queryKey: ["ledger.budgets"],
-    }).data;
-    const categories = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.categories }),
-        queryKey: ["ledger.categories"],
-    }).data;
-    const exchangeRates = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.exchangeRates }),
-        queryKey: ["ledger.exchangeRates"],
-    }).data;
-    const installmentPlans = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.installmentPlans }),
-        queryKey: ["ledger.installmentPlans"],
-    }).data;
-    const installments = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.installments }),
-        queryKey: ["ledger.installments"],
-    }).data;
-    const mainBudget = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.mainBudget }),
-        queryKey: ["ledger.mainBudget"],
-    }).data;
-    const outsideMoves = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.outsideMoves }),
-        queryKey: ["ledger.outsideMoves"],
-    }).data;
-    const outsidePayments = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.outsidePayments }),
-        queryKey: ["ledger.outsidePayments"],
-    }).data;
-    const savingsGoals = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.savingsGoals }),
-        queryKey: ["ledger.savingsGoals"],
-    }).data;
-    const transactions = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.transactions }),
-        queryKey: ["ledger.transactions"],
-    }).data;
-    const transfers = useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.transfers }),
-        queryKey: ["ledger.transfers"],
-    }).data;
+    const accounts = useRows(ledgerCollections.accounts);
+    const appMeta = useRows(ledgerCollections.appMeta);
+    const budgets = useRows(ledgerCollections.budgets);
+    const categories = useRows(ledgerCollections.categories);
+    const exchangeRates = useRows(ledgerCollections.exchangeRates);
+    const installmentPlans = useRows(ledgerCollections.installmentPlans);
+    const installments = useRows(ledgerCollections.installments);
+    const mainBudget = useRows(ledgerCollections.mainBudget);
+    const outsideMoves = useRows(ledgerCollections.outsideMoves);
+    const outsidePayments = useRows(ledgerCollections.outsidePayments);
+    const savingsGoals = useRows(ledgerCollections.savingsGoals);
+    const transactions = useRows(ledgerCollections.transactions);
+    const transfers = useRows(ledgerCollections.transfers);
     return useMemo(
         () => ({
             accounts,
@@ -360,4 +331,23 @@ export function useLedgerBooks(): LedgerBooks {
             transfers,
         ]
     );
+}
+
+export type Tag = FunctionReturnType<typeof api.ledger.tags>[number];
+export type TagLink = FunctionReturnType<typeof api.ledger.transactionTags>["page"][number];
+
+export interface TagBooks {
+    links: readonly TagLink[];
+    tags: readonly Tag[];
+}
+
+export const tagBooks = (db: DbClient): TagBooks => ({
+    links: rowsOf(db, ledgerCollections.transactionTags),
+    tags: rowsOf(db, ledgerCollections.tags),
+});
+
+export function useTagBooks(): TagBooks {
+    const links = useRows(ledgerCollections.transactionTags);
+    const tags = useRows(ledgerCollections.tags);
+    return useMemo(() => ({ links, tags }), [links, tags]);
 }

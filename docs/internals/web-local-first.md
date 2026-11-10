@@ -11,7 +11,7 @@
 
 ## Rules for new work
 
-- Read ledger data from the collections in `lib/ledger-db.ts`, through the dashboard context. A new table is a new collection there, added to `preloadLedger`, `ledgerBooks` and `useLedgerBooks`: a collection the load does not start is not in the copy.
+- Read ledger data from the collections in `lib/ledger-db.ts`, through the dashboard context. A new table is one entry in `ledgerCollections`, declared with `ledgerTable(...)`: that starts its load, and what the load starts is in the copy. The entry must be one of the backend's `LedgerBooks` or a tag table, and the build fails until `ledgerBooks` and `useLedgerBooks` read it. Tags are a second group (`tagBooks`, `useTagBooks`), read by the few screens that need them, so a tag change does not rebuild every screen's ledger.
 - No server function, `beforeLoad` round trip or awaited query between a click and its paint. Filters are search params over data already in memory, and the session token is kept in the router context until it expires.
 - A loader under `/app` awaits nothing when a copy was restored. Anything the first paint needs from Convex goes in the snapshot, as minted photo URLs do.
 - Set `pendingMs: 0` and `pendingMinMs: 0` on a route with a pending component: the router's default holds it on screen for 500 ms, whatever the data does.

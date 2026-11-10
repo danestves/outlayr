@@ -3,7 +3,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 import { ledgerDependencies } from "./db";
 import { LEDGER_CACHE_VERSION, snapshotOf, usableSnapshot } from "./ledger-cache";
-import { ledgerBooks, preloadLedger } from "./ledger-db";
+import { ledgerBooks, ledgerCollections, preloadLedger } from "./ledger-db";
 import { fakeConvex, ledgerRow as row, pagesOf, silentConvex } from "./test-convex";
 
 const ROWS = 2500;
@@ -25,6 +25,14 @@ describe("ledger snapshot", () => {
 
         expect(new Set(ledgerBooks(restored).transactions.map((entry) => entry._id))).toStrictEqual(
             new Set(rows.map((entry) => entry._id))
+        );
+    });
+
+    it("holds every ledger table, so a table declared outside the load is caught", async () => {
+        const snapshot = await hydrated([row("kept")]);
+
+        expect(new Set(snapshot.collections.map((chunk) => chunk.collectionId))).toStrictEqual(
+            new Set(Object.values(ledgerCollections).map((options) => options.id))
         );
     });
 
