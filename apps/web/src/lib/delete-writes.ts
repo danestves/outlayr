@@ -1,14 +1,14 @@
-import { settingsOf } from "@outlayr/backend/confect/ledgerView";
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { FIELDS_BY_TABLE } from "@outlayr/backend/confect/lib/syncTables";
 import { cardFeeValues, savedFeeInput } from "@outlayr/money/card-fee";
 import { deletionPlan } from "@outlayr/money/entry-deletion";
+import { settingsOf } from "@outlayr/money/ledger-view";
 import { canonicalOccurrence, occurrenceFeeId, successorRow } from "@outlayr/money/occurrence";
 import type { occurrenceRow } from "@outlayr/money/occurrence";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import * as Effect from "effect/Effect";
 
 import { nextRow, planBooks, ratesLookup } from "./account-writes";
+import type { LedgerBooks } from "./ledger-books";
 import type { CommitRow } from "./ledger-committer";
 
 type Doc = LedgerBooks["transactions"][number];

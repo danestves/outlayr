@@ -1,4 +1,4 @@
-import type { LedgerGlance } from "@outlayr/backend/confect/ledgerView";
+import type { LedgerGlance } from "@outlayr/money/ledger-view";
 
 export type Overview = LedgerGlance;
 

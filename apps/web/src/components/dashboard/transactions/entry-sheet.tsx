@@ -6,7 +6,7 @@ import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import Link01Icon from "@hugeicons/core-free-icons/Link01Icon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { accountLook } from "@outlayr/money/ledger-log";
 import { Button } from "panelui-web/button";
 import { Menu } from "panelui-web/menu";
 import { Sheet } from "panelui-web/sheet";

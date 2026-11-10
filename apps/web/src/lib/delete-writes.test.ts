@@ -1,8 +1,8 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { occurrenceFeeId, occurrenceId } from "@outlayr/money/occurrence";
 import { describe, expect, it } from "vite-plus/test";
 
 import { deletionOf } from "./delete-writes";
+import type { LedgerBooks } from "./ledger-books";
 
 const NOW = Date.parse("2026-11-08T15:00:00Z");
 const LAST_CHARGE = Date.parse("2026-10-15T15:00:00Z");

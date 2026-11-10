@@ -2,7 +2,7 @@ import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
 import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { accountLook } from "@outlayr/money/ledger-log";
 import { Menu } from "panelui-web/menu";
 import { Toolbar } from "panelui-web/toolbar";
 import { useRef } from "react";

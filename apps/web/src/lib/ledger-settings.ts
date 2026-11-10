@@ -1,5 +1,5 @@
-import { settingsOf } from "@outlayr/backend/confect/ledgerView";
-import type { LedgerSettings } from "@outlayr/backend/confect/ledgerView";
+import { settingsOf } from "@outlayr/money/ledger-view";
+import type { LedgerSettings } from "@outlayr/money/ledger-view";
 import { useLiveQuery } from "@tanstack/react-db";
 import type { DbClient } from "@tanstack/react-db";
 import { createContext, useContext, useMemo } from "react";

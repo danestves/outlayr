@@ -1,8 +1,8 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { describe, expect, it } from "vite-plus/test";
 
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { pendingDeletion } from "@/lib/installment-writes";
+import type { LedgerBooks } from "@/lib/ledger-books";
 
 import { cadenceOf, installmentsSummary, planViews } from "./model";
 

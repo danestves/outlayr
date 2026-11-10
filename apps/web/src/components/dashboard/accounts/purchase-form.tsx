@@ -1,11 +1,11 @@
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
-import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
 import { decimalsFor } from "@outlayr/money/currency";
 import { EVERY_ORDER, MAX_INSTALLMENT_COUNT, newInstallmentDraft } from "@outlayr/money/installment-draft";
 import type { EveryOption } from "@outlayr/money/installment-draft";
 import { installmentAppsIn, installmentRegion } from "@outlayr/money/institution-map";
 import type { InstallmentApp } from "@outlayr/money/institution-map";
+import { accountLook } from "@outlayr/money/ledger-log";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Field } from "panelui-web/field";

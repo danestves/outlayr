@@ -1,7 +1,7 @@
 import FALLBACK_ICON from "@hugeicons/core-free-icons/MoreHorizontalCircle01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
-import type { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import type { accountLook } from "@outlayr/money/ledger-log";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useLocale } from "react-intlayer";

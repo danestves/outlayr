@@ -1,3 +1,4 @@
+import { EntryKind } from "@outlayr/money/ledger-view";
 import { fromWall, isoDay, wallNoon } from "@outlayr/money/ledger-zone";
 import type { OffsetAt } from "@outlayr/money/ledger-zone";
 import * as Effect from "effect/Effect";
@@ -5,7 +6,6 @@ import * as Schema from "effect/Schema";
 
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import { sha256Hex } from "./lib/sha256Hex";
-import { EntryKind } from "./mcpLedger";
 
 export const MCP_DEVICE_ID = "mcp";
 

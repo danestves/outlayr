@@ -1,8 +1,9 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import type { Doc, TableNames } from "@outlayr/backend/convex/_generated/dataModel";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
+
+import type { LedgerBooks } from "@/lib/ledger-books";
 
 import { categoryBudgets } from "../../../lib/dashboard-series";
 import type { CategoryBudget } from "../../../lib/dashboard-series";

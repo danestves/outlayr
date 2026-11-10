@@ -1,10 +1,10 @@
-import { isPerson } from "@outlayr/money/account-kind";
-import { decimalsFor } from "@outlayr/money/currency";
-import { currencyTotals } from "@outlayr/money/currency-totals";
-import { utcDateString } from "@outlayr/money/dates";
-import { roundMoney } from "@outlayr/money/round";
-import { isExact, valueRowsIn } from "@outlayr/money/valuation";
-import type { RateTable } from "@outlayr/money/valuation";
+import { isPerson } from "./account-kind";
+import { decimalsFor } from "./currency";
+import { currencyTotals } from "./currency-totals";
+import { utcDateString } from "./dates";
+import { roundMoney } from "./round";
+import { isExact, valueRowsIn } from "./valuation";
+import type { RateTable } from "./valuation";
 
 export interface LookSource {
     customColor: string | null;
@@ -199,7 +199,7 @@ export function buildLog(input: LogInput) {
         input.entriesFull ? entries.at(-1) : undefined,
         input.transfersFull ? transfers.at(-1) : undefined,
     ].flatMap((row) => (row ? [clock.dayOf(row)] : []));
-    const floor = floors.toSorted().at(-1);
+    const floor = [...floors].sort().at(-1);
     const items = [
         ...entries
             .filter((row) => parentOf(row) === null)
@@ -212,7 +212,7 @@ export function buildLog(input: LogInput) {
         })),
     ]
         .filter((item) => floor === undefined || item.day > floor)
-        .toSorted((a, b) => b.day.localeCompare(a.day) || b.at - a.at);
+        .sort((a, b) => b.day.localeCompare(a.day) || b.at - a.at);
     const lastDay = items[limit - 1]?.day;
     const shown = lastDay === undefined ? items : items.filter((item, index) => index < limit || item.day === lastDay);
 

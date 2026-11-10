@@ -4,7 +4,6 @@ import BankIcon from "@hugeicons/core-free-icons/BankIcon";
 import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import Wallet01Icon from "@hugeicons/core-free-icons/Wallet01Icon";
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { toAccountKind } from "@outlayr/money/account-kind";
 import { decimalsFor } from "@outlayr/money/currency";
 import { resolveInstitutionDomain } from "@outlayr/money/institution-map";
@@ -25,6 +24,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { createdAccount, editedAccount, parseAmount } from "@/lib/account-writes";
+import type { LedgerBooks } from "@/lib/ledger-books";
 
 import { AmountInput, amountText, CurrencyField, FlowDialog, focusNode } from "./fields";
 import type { AccountFlow, AccountType } from "./flows";

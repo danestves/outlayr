@@ -1,11 +1,19 @@
-import { accentOf } from "@outlayr/money/accent";
-import type { AccentColors } from "@outlayr/money/accent";
-import { accountBalance } from "@outlayr/money/account-balance";
-import { accountsOverview } from "@outlayr/money/account-overview";
-import { spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
-import type { ExpenseContribution } from "@outlayr/money/budget-spent";
-import { decimalsFor } from "@outlayr/money/currency";
-import { utcDateString } from "@outlayr/money/dates";
+import * as Schema from "effect/Schema";
+
+import { accentOf } from "./accent";
+import type { AccentColors } from "./accent";
+import { accountBalance } from "./account-balance";
+import { accountsOverview } from "./account-overview";
+import { spentForCategory, spentForMain } from "./budget-spent";
+import type { ExpenseContribution } from "./budget-spent";
+import { budgetStanding } from "./budget-standing";
+import type { StoredBudget } from "./budget-standing";
+import { decimalsFor } from "./currency";
+import { toCells } from "./currency-totals";
+import type { CurrencyCell, CurrencyEntry } from "./currency-totals";
+import { utcDateString } from "./dates";
+import { accountLook, buildLog, entryLook, placed } from "./ledger-log";
+import type { AccountSource, CategorySource, EntrySource, TransferSource } from "./ledger-log";
 import {
     DAY_MS,
     fixedOffset,
@@ -17,24 +25,111 @@ import {
     wall,
     wallDay,
     zoneOffsets,
-} from "@outlayr/money/ledger-zone";
-import type { OffsetAt } from "@outlayr/money/ledger-zone";
-import { landingDate, RECURRING_TYPE } from "@outlayr/money/recurrence";
-import { roundMoney } from "@outlayr/money/round";
-import { monthlySubscriptionCost } from "@outlayr/money/subscription-cost";
-import { buildRateTable, isExact, valueDatedRowsIn } from "@outlayr/money/valuation";
-import type { RateTable } from "@outlayr/money/valuation";
+} from "./ledger-zone";
+import type { OffsetAt } from "./ledger-zone";
+import { landingDate, RECURRING_TYPE } from "./recurrence";
+import { roundMoney } from "./round";
+import { monthlySubscriptionCost } from "./subscription-cost";
+import { buildRateTable, isExact, valueDatedRowsIn } from "./valuation";
+import type { RateTable } from "./valuation";
 
-import type { Doc } from "../convex/_generated/dataModel";
-import { accountLook, buildLog, entryLook, placed } from "./lib/ledgerLog";
-import type { EntrySource } from "./lib/ledgerLog";
-import { budgetStanding, bySeq, customName, entryKind, groupCells, MAX_ENTRIES } from "./mcpLedger";
-import type { LegEntry } from "./mcpLedger";
+interface Transaction extends EntrySource {
+    deletedAt: number | null;
+    recurringAnchorDay?: number | null;
+    recurringCoefficient: number;
+    recurringEndDate: number | null;
+    seq: number;
+}
 
-type Transaction = Doc<"transactions">;
-type Transfer = Doc<"transfers">;
-type Account = Doc<"accounts">;
-type Category = Doc<"categories">;
+interface Transfer extends TransferSource {
+    deletedAt: number | null;
+    fromAmountUsd: number | null;
+    seq: number;
+    toAmountUsd: number | null;
+}
+
+interface Account extends AccountSource {
+    archivedAt?: number | null;
+    currency: string;
+    deletedAt: number | null;
+    initialBalance: number;
+    sortOrder: number;
+}
+
+interface Category extends CategorySource {
+    deletedAt: number | null;
+    localId: string;
+    parentId: string | null;
+}
+
+interface Budget extends StoredBudget {
+    categoryId: string | null;
+    deletedAt: number | null;
+    name: string | null;
+}
+
+interface MainBudget extends StoredBudget {
+    deletedAt: number | null;
+    name: string | null;
+}
+
+interface InstallmentPlan {
+    accountId: string;
+    deletedAt: number | null;
+    localId: string;
+}
+
+interface OutsidePayment {
+    amount: number;
+    amountUsd: number | null;
+    date: number;
+    deletedAt: number | null;
+    planId: string;
+    seq: number;
+}
+
+interface OutsideMove {
+    accountId: string;
+    amount: number;
+    amountUsd: number | null;
+    date: number;
+    deletedAt: number | null;
+    seq: number;
+}
+
+interface Setting {
+    key: string;
+    value: string | null;
+}
+
+type Rates = Parameters<typeof buildRateTable>[0];
+
+export const EntryKind = Schema.Literals(["expense", "income"]);
+
+const entryKind = (income: boolean): typeof EntryKind.Type => (income ? "income" : "expense");
+
+const MAX_ENTRIES = 50;
+
+// Valuation rounds per cell in input order, so rows read by date go back into the seq order a full scan gave.
+export const bySeq = (a: { seq: number }, b: { seq: number }) => a.seq - b.seq;
+
+type LegEntry = CurrencyEntry & { date: Date; leg: "flow" | "inbound" | "outbound" };
+
+function groupCells(entries: readonly LegEntry[], key: (entry: LegEntry) => string): CurrencyCell[] {
+    const groups = new Map<string, LegEntry[]>();
+    for (const entry of entries) {
+        const name = key(entry);
+        const group = groups.get(name);
+        if (group) {
+            group.push(entry);
+        } else {
+            groups.set(name, [entry]);
+        }
+    }
+    return [...groups.values()].flatMap((group) => toCells(group));
+}
+
+const customName = (name: string | null) => (name?.trim() ? name.trim() : null);
 
 export interface LedgerClock {
     now: number;
@@ -65,7 +160,7 @@ export interface LedgerSettings {
     use24HourClock: boolean;
 }
 
-export function settingsOf(rows: readonly Pick<Doc<"appMeta">, "key" | "value">[]): LedgerSettings {
+export function settingsOf(rows: readonly Setting[]): LedgerSettings {
     const value = (key: (typeof LEDGER_SETTING_KEYS)[number]) => rows.find((row) => row.key === key)?.value ?? null;
     const flag = (key: (typeof LEDGER_SETTING_KEYS)[number], fallback: boolean) => {
         const raw = value(key);
@@ -106,7 +201,7 @@ export function zoneOf(timeZone: string | null, transactions: readonly Transacti
     return fixedOffset(latest === undefined ? 0 : utcOffsetOf(latest.day));
 }
 
-export const rateTableOf = (rows: readonly Doc<"exchangeRates">[]): RateTable => buildRateTable(rows);
+export const rateTableOf = (rows: Rates): RateTable => buildRateTable(rows);
 
 export function recentTransactions(
     {
@@ -204,9 +299,9 @@ export function spendingSummary(
 export function accountBalances(
     books: {
         accounts: readonly Account[];
-        installmentPlans: readonly Doc<"installmentPlans">[];
-        outsideMoves: readonly Doc<"outsideMoves">[];
-        outsidePayments: readonly Doc<"outsidePayments">[];
+        installmentPlans: readonly InstallmentPlan[];
+        outsideMoves: readonly OutsideMove[];
+        outsidePayments: readonly OutsidePayment[];
         transactions: readonly Transaction[];
         transfers: readonly Transfer[];
     },
@@ -245,7 +340,7 @@ export function accountBalances(
     // A payment made outside Outlayr arrives on its order's account from nowhere.
     const planAccount = new Map(live(books.installmentPlans).map((row) => [row.localId, row.accountId]));
     const currencyOf = new Map(accounts.map((account) => [account.localId, account.currency]));
-    for (const row of books.outsidePayments.toSorted(bySeq)) {
+    for (const row of [...books.outsidePayments].sort(bySeq)) {
         const accountId = planAccount.get(row.planId);
         const accountCurrency = accountId === undefined ? undefined : currencyOf.get(accountId);
         if (row.deletedAt !== null || row.date > now || accountId === undefined || accountCurrency === undefined) {
@@ -260,7 +355,7 @@ export function accountBalances(
             leg: "inbound",
         });
     }
-    for (const row of books.outsideMoves.toSorted(bySeq)) {
+    for (const row of [...books.outsideMoves].sort(bySeq)) {
         const accountCurrency = currencyOf.get(row.accountId);
         if (row.deletedAt !== null || row.date > now || accountCurrency === undefined) {
             continue;
@@ -329,9 +424,9 @@ export function accountBalances(
 
 export function budgetStatus(
     books: {
-        budgets: readonly Doc<"budgets">[];
+        budgets: readonly Budget[];
         categories: readonly Category[];
-        mainBudget: readonly Doc<"mainBudget">[];
+        mainBudget: readonly MainBudget[];
         transactions: readonly Transaction[];
     },
     currency: string,
@@ -518,8 +613,8 @@ function ledgerUpcoming(
 
 export function nextChangeAt(
     books: {
-        outsideMoves: readonly Doc<"outsideMoves">[];
-        outsidePayments: readonly Doc<"outsidePayments">[];
+        outsideMoves: readonly OutsideMove[];
+        outsidePayments: readonly OutsidePayment[];
         transactions: readonly Transaction[];
         transfers: readonly Transfer[];
     },
@@ -535,23 +630,21 @@ export function nextChangeAt(
     return next;
 }
 
-export interface LedgerBooks {
+export interface LedgerRows {
     accounts: readonly Account[];
-    appMeta: readonly Pick<Doc<"appMeta">, "key" | "value">[];
-    budgets: readonly Doc<"budgets">[];
+    appMeta: readonly Setting[];
+    budgets: readonly Budget[];
     categories: readonly Category[];
-    exchangeRates: readonly Doc<"exchangeRates">[];
-    installmentPlans: readonly Doc<"installmentPlans">[];
-    installments: readonly Doc<"installments">[];
-    mainBudget: readonly Doc<"mainBudget">[];
-    outsideMoves: readonly Doc<"outsideMoves">[];
-    outsidePayments: readonly Doc<"outsidePayments">[];
-    savingsGoals: readonly Doc<"savingsGoals">[];
+    exchangeRates: Rates;
+    installmentPlans: readonly InstallmentPlan[];
+    mainBudget: readonly MainBudget[];
+    outsideMoves: readonly OutsideMove[];
+    outsidePayments: readonly OutsidePayment[];
     transactions: readonly Transaction[];
     transfers: readonly Transfer[];
 }
 
-function viewOf(books: LedgerBooks, now: number) {
+function viewOf(books: LedgerRows, now: number) {
     const settings = settingsOf(books.appMeta);
     const offsetAt = zoneOf(settings.timeZone, books.transactions, now);
     return {
@@ -562,7 +655,7 @@ function viewOf(books: LedgerBooks, now: number) {
     };
 }
 
-function glanceOf(books: LedgerBooks, { clock, currency, rates }: ReturnType<typeof viewOf>) {
+function glanceOf(books: LedgerRows, { clock, currency, rates }: ReturnType<typeof viewOf>) {
     const balances = accountBalances(books, currency, rates, clock);
     return {
         balances: {
@@ -574,11 +667,11 @@ function glanceOf(books: LedgerBooks, { clock, currency, rates }: ReturnType<typ
     };
 }
 
-export function ledgerGlance(books: LedgerBooks, now: number) {
+export function ledgerGlance(books: LedgerRows, now: number) {
     return glanceOf(books, viewOf(books, now));
 }
 
-export function ledgerOverview(books: LedgerBooks, now: number) {
+export function ledgerOverview(books: LedgerRows, now: number) {
     const view = viewOf(books, now);
     const { clock, currency, rates, settings } = view;
     const { offsetAt } = clock;

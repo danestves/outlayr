@@ -1,6 +1,7 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import type { Doc, TableNames } from "@outlayr/backend/convex/_generated/dataModel";
 import { describe, expect, it } from "vite-plus/test";
+
+import type { LedgerBooks } from "@/lib/ledger-books";
 
 import { prepareLedger } from "../../../../lib/dashboard-series-ledger";
 import { buildReport, columnsOf, spanOf } from "./model";

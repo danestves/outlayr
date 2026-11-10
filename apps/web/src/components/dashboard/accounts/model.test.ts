@@ -1,5 +1,6 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { describe, expect, it } from "vite-plus/test";
+
+import type { LedgerBooks } from "@/lib/ledger-books";
 
 import { prepareLedger } from "../../../lib/dashboard-series-ledger";
 import { accountEntries, billedApart, cardStatement, checkedAge, statementCycle } from "./model";

@@ -1,7 +1,7 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { describe, expect, it } from "vite-plus/test";
 
 import { deletionOf, deletionRows, newCategory } from "./category-writes";
+import type { LedgerBooks } from "./ledger-books";
 
 type Category = LedgerBooks["categories"][number];
 

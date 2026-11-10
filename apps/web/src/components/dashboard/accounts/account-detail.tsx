@@ -23,7 +23,7 @@ import SafeIcon from "@hugeicons/core-free-icons/SafeIcon";
 import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
-import { entryLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { entryLook } from "@outlayr/money/ledger-log";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";

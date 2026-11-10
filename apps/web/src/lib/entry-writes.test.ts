@@ -1,4 +1,3 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -15,6 +14,7 @@ import {
     wallText,
 } from "./entry-writes";
 import type { EntryDraft } from "./entry-writes";
+import type { LedgerBooks } from "./ledger-books";
 
 const NOW = Date.parse("2026-11-08T15:00:00Z");
 // 22:30 on Nov 7 in Caracas (UTC-4), already Nov 8 in UTC.

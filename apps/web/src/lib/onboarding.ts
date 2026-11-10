@@ -1,6 +1,7 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
+
+import type { LedgerBooks } from "./ledger-books";
 
 export const ONBOARDING_STEPS = ["currency", "auto-log", "rhythm", "first-entry"] as const;
 export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];

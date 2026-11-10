@@ -1,4 +1,3 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
 import { Button } from "panelui-web/button";
@@ -10,6 +9,7 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { checkedAccount, parseAmount, uncheckedAccount } from "@/lib/account-writes";
+import type { LedgerBooks } from "@/lib/ledger-books";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { AmountInput, amountText, Fact, FlowDialog } from "./fields";

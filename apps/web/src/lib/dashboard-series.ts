@@ -1,6 +1,5 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
-import { budgetStanding } from "@outlayr/backend/confect/mcpLedger";
 import { spentForCategory } from "@outlayr/money/budget-spent";
+import { budgetStanding } from "@outlayr/money/budget-standing";
 import { wall } from "@outlayr/money/ledger-zone";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import type { AreaChartDatum } from "panelui-web/area-chart";
@@ -11,6 +10,7 @@ import { netWorthPoints } from "./dashboard-series-net-worth";
 import { daysFrom, priorSlice, periodOf, shiftPeriodKey } from "./dashboard-series-period";
 import type { Period } from "./dashboard-series-period";
 import { addDays, daysBetween } from "./ledger";
+import type { LedgerBooks } from "./ledger-books";
 
 export interface SeriesCategory {
     color: string;

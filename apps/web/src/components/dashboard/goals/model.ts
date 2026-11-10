@@ -1,4 +1,3 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { frozenUsd } from "@outlayr/money/canonical-usd";
 import { decimalsFor } from "@outlayr/money/currency";
 import { utcDateString } from "@outlayr/money/dates";
@@ -8,6 +7,8 @@ import { goalProgress } from "@outlayr/money/savings-goal";
 import type { GoalProgress } from "@outlayr/money/savings-goal";
 import { convertUsdSum } from "@outlayr/money/valuation";
 import * as Effect from "effect/Effect";
+
+import type { LedgerBooks } from "@/lib/ledger-books";
 
 import { nextRow, parseAmount, ratesLookup } from "../../../lib/account-writes";
 import { cashFlow } from "../../../lib/dashboard-series-insights";

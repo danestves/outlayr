@@ -1,7 +1,6 @@
-import { accountBalances, ledgerOverview } from "@outlayr/backend/confect/ledgerView";
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import type { Doc, TableNames } from "@outlayr/backend/convex/_generated/dataModel";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
+import { accountBalances, ledgerOverview } from "@outlayr/money/ledger-view";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -20,6 +19,7 @@ import { endOfDay, prepareLedger } from "./dashboard-series-ledger";
 import type { Ledger } from "./dashboard-series-ledger";
 import { netWorthPoints } from "./dashboard-series-net-worth";
 import { periodOf } from "./dashboard-series-period";
+import type { LedgerBooks } from "./ledger-books";
 
 const at = (iso: string) => Date.parse(iso);
 const NOW = at("2026-10-20T15:00:00Z");

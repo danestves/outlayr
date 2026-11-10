@@ -1,4 +1,3 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { convexCollectionOptions, convexPaginatedCollectionOptions } from "@tanstack/convex-db-collection";
 import type { ConvexCollectionClient } from "@tanstack/convex-db-collection";
@@ -9,6 +8,7 @@ import { ConvexError } from "convex/values";
 import { useMemo } from "react";
 
 import { CONVEX } from "./db";
+import type { LedgerBooks } from "./ledger-books";
 import { pushRows } from "./ledger-write";
 
 const PAGE_SIZE = 1000;
