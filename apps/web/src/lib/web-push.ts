@@ -21,12 +21,29 @@ export async function currentPush() {
     return (await registration?.pushManager.getSubscription()) ?? null;
 }
 
+// Not `serviceWorker.ready`: it never settles in a document first loaded at /app, outside the worker's scope.
+function activated(registration: ServiceWorkerRegistration) {
+    const worker = registration.installing ?? registration.waiting;
+    if (registration.active || !worker) {
+        return Promise.resolve();
+    }
+    return new Promise<void>((resolve, reject) => {
+        worker.addEventListener("statechange", () => {
+            if (worker.state === "activated") {
+                resolve();
+            } else if (worker.state === "redundant") {
+                reject(new Error("The service worker did not install"));
+            }
+        });
+    });
+}
+
 export async function subscribePush(publicKey: string) {
     if ((await Notification.requestPermission()) !== "granted") {
         return null;
     }
     const registration = await navigator.serviceWorker.register(WORKER, { scope: SCOPE });
-    await navigator.serviceWorker.ready;
+    await activated(registration);
     return registration.pushManager.subscribe({ applicationServerKey: keyBytes(publicKey), userVisibleOnly: true });
 }
 
