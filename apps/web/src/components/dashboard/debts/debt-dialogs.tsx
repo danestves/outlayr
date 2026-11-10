@@ -660,14 +660,12 @@ function CurrencyRow({
 /** Shown before an amount is typed too, with the label read from which way the verb moves the balance. */
 function PlanSection({
     after,
-    currency,
     day,
     invalid,
     onDay,
     verb,
 }: {
     after: number | null;
-    currency: string;
     day: string | null;
     invalid: boolean;
     onDay: (day: string | null) => void;
@@ -679,17 +677,12 @@ function PlanSection({
     }
     const owing = (after ?? signedBy(verb, 1)) < 0;
     return (
-        <>
-            <PlanDayField
-                day={day}
-                invalid={invalid}
-                label={owing ? form.payBackBy.value : form.getBackBy.value}
-                onDay={onDay}
-            />
-            {day === null || invalid || after === null ? null : (
-                <PlanHint balance={after} currency={currency} day={day} />
-            )}
-        </>
+        <PlanDayField
+            day={day}
+            invalid={invalid}
+            label={owing ? form.payBackBy.value : form.getBackBy.value}
+            onDay={onDay}
+        />
     );
 }
 
@@ -845,7 +838,7 @@ function NewDebt({
                             }}
                             people={people.choices}
                             placeholder={form.namePlaceholder.value}
-                            quick={people.quick}
+                            quick={onCredit ? undefined : people.quick}
                             text={nameText}
                         />
                         {shown?.name ? <Field.Error match>{form.nameRequired}</Field.Error> : null}
@@ -878,7 +871,6 @@ function NewDebt({
                             <NoteField onText={set.note} text={draft.note} />
                             <PlanSection
                                 after={amount > 0 ? after : null}
-                                currency={currency}
                                 day={planDay}
                                 invalid={shown?.plan ?? false}
                                 onDay={setPlanDay}
@@ -892,11 +884,6 @@ function NewDebt({
             <Footer dim={dim} formId={formId} label={form.save} onClose={onClose} />
         </FlowDialog>
     );
-}
-
-function PlanHint({ balance, currency, day }: { balance: number; currency: string; day: string }) {
-    const text = usePlanAsk()(balance, currency, day);
-    return <p className="text-muted-foreground text-[13px] leading-5">{text}</p>;
 }
 
 function usePlanAsk() {
@@ -950,7 +937,7 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
     const { money } = useDisplayFormat();
     const weekdayDay = useWeekdayDay();
     const formId = useId();
-    const { choices, people, quick } = usePeopleChoices();
+    const { choices, people } = usePeopleChoices();
     const [amountText, setAmountText] = useState("");
     const [name, setName] = useState("");
     const [note, setNote] = useState("");
@@ -1045,7 +1032,6 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
                             onText={setName}
                             people={choices}
                             placeholder={owe.whoPlaceholder.value}
-                            quick={quick}
                             text={name}
                         />
                         {shown?.name ? <Field.Error match>{owe.whoRequired}</Field.Error> : null}
@@ -1077,12 +1063,7 @@ function SomethingIOwe({ onClose }: { onClose: () => void }) {
                         <Field.Label className={LABEL}>{owe.illPay}</Field.Label>
                         <Chips>
                             {payChoices.map(({ label, value }) => (
-                                <Pick
-                                    key={value ?? "none"}
-                                    onPress={() => setPayDay(value)}
-                                    pressed={payDay === value}
-                                    size="md"
-                                >
+                                <Pick key={value ?? "none"} onPress={() => setPayDay(value)} pressed={payDay === value}>
                                     {label}
                                 </Pick>
                             ))}
@@ -1341,12 +1322,7 @@ function PlanDialog({ onClose, row }: { onClose: () => void; row: DebtRow }) {
                             {PLAN_MONTHS.map((months) => {
                                 const target = addMonths(ledger.today, months);
                                 return (
-                                    <Pick
-                                        key={months}
-                                        onPress={() => setDay(target)}
-                                        pressed={day === target}
-                                        size="md"
-                                    >
+                                    <Pick key={months} onPress={() => setDay(target)} pressed={day === target}>
                                         {months === YEAR_MONTHS ? plan.year : plan.months({ count: months })}
                                     </Pick>
                                 );
@@ -1470,7 +1446,7 @@ function DeleteDebt({ onClose, row }: { onClose: () => void; row: DebtRow }) {
     return (
         <FlowDialog label={copy.title({ name: row.account.name })}>
             <Dialog.Body>
-                <Dialog.Description className="text-wrap">
+                <Dialog.Description className="text-foreground text-wrap">
                     {count === 1 ? copy.bodyOne({ amount }) : copy.body({ amount, count })}
                 </Dialog.Description>
             </Dialog.Body>

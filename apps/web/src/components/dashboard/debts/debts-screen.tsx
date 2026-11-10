@@ -31,6 +31,8 @@ const quiet = (children: ReactNode) => (
     <span className="text-muted-foreground min-w-0 truncate text-xs leading-5">{children}</span>
 );
 
+const tone = (value: number) => (value === 0 ? "text-muted-foreground" : "");
+
 function Kpis({ model }: { model: DebtsModel }) {
     const { ledger } = useDashboard();
     const { kpi } = useIntlayer("dashboard-debts");
@@ -59,16 +61,16 @@ function Kpis({ model }: { model: DebtsModel }) {
     const figure = (value: number) => money(value, ledger.currency);
     return (
         <KpiBand>
-            <KpiCell color={MUTED} label={kpi.owesYou} quiet={totals.owesYou === 0} value={figure(totals.owesYou)}>
+            <KpiCell color={MUTED} label={kpi.owesYou} tone={tone(totals.owesYou)} value={figure(totals.owesYou)}>
                 {people(owesYou.length)}
             </KpiCell>
-            <KpiCell color={MUTED} label={kpi.youOwe} quiet={totals.youOwe === 0} value={figure(totals.youOwe)}>
+            <KpiCell color={MUTED} label={kpi.youOwe} tone={tone(totals.youOwe)} value={figure(totals.youOwe)}>
                 {people(youOwe.length)}
             </KpiCell>
-            <KpiCell color={MUTED} label={kpi.net} quiet={net === 0} value={figure(net)}>
+            <KpiCell color={MUTED} label={kpi.net} tone={tone(net)} value={figure(net)}>
                 {netNote}
             </KpiCell>
-            <KpiCell color={MUTED} label={kpi.cards} quiet={totals.cards === 0} value={figure(totals.cards)}>
+            <KpiCell color={MUTED} label={kpi.cards} tone={tone(totals.cards)} value={figure(totals.cards)}>
                 {quiet(cardsNote)}
             </KpiCell>
         </KpiBand>
@@ -163,7 +165,7 @@ function TabBar({ counts, onTab, tab }: { counts: Record<Tab, number | null>; on
     const { tabs } = useIntlayer("dashboard-debts");
     return (
         <Tabs onValueChange={(next: Tab) => onTab(next)} value={tab} variant="underline">
-            <Tabs.List aria-label={tabs.all.value}>
+            <Tabs.List aria-label={tabs.all.value} className="max-w-full overflow-x-auto">
                 {TABS.map((each) => (
                     <Tabs.Trigger key={each} value={each}>
                         {tabs[each]}
@@ -195,7 +197,7 @@ function DebtsTable({ model }: { model: DebtsModel }) {
             <Frame.Header className="pb-0">
                 <TabBar counts={tabCounts(model)} onTab={setTab} tab={tab} />
             </Frame.Header>
-            <Frame.Panel className="p-0">
+            <Frame.Panel className="flex-1 p-0">
                 <DataTable
                     head={[columns.name, columns.last, columns.plan, columns.balance]}
                     numbers={0}
@@ -231,7 +233,7 @@ const GHOST_ROWS = [
 
 const pill = (width: number) => <i className="border-app-strong block h-2 rounded-full border" style={{ width }} />;
 
-const GHOST_GRID = "grid grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,2fr)_minmax(0,0.7fr)] items-center px-4";
+const GHOST_GRID = "grid grid-cols-[minmax(0,336px)_minmax(0,268px)_minmax(0,1fr)_auto] items-center px-4";
 
 function EmptyDebts() {
     const { empty, newDebt } = useIntlayer("dashboard-debts");
@@ -277,7 +279,7 @@ function EmptyCard({ model }: { model: DebtsModel }) {
             <Frame.Header className="pb-0">
                 <TabBar counts={tabCounts(model)} onTab={setTab} tab={tab} />
             </Frame.Header>
-            <Frame.Panel className="p-0">
+            <Frame.Panel className="flex-1 p-0">
                 <EmptyDebts />
             </Frame.Panel>
         </Frame>

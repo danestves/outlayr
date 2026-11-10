@@ -123,7 +123,7 @@ function PlanKpi({ row }: { row: DebtRow }) {
     const { line } = row;
     if (line === null) {
         return (
-            <KpiCell color={MUTED} label={detail.plan} quiet value="–">
+            <KpiCell color={MUTED} label={detail.plan} tone="text-muted-foreground" value="–">
                 {note(plan.none)}
             </KpiCell>
         );
@@ -132,7 +132,7 @@ function PlanKpi({ row }: { row: DebtRow }) {
         const early = daysBetween(line.endedOn, line.targetDay);
         const day = date.day(line.endedOn);
         return (
-            <KpiCell color={MUTED} label={detail.plan} quiet value={money(0, currency)}>
+            <KpiCell color={MUTED} label={detail.plan} value={money(0, currency)}>
                 {note(early > 0 ? plan.early({ count: early, date: day }) : plan.paidBack({ date: day }))}
             </KpiCell>
         );
@@ -182,7 +182,7 @@ function Kpis({ row }: { row: DebtRow }) {
             <KpiCell
                 color={MUTED}
                 label={lent ? detail.lent : detail.borrowed}
-                quiet={added.count === 0}
+                tone={added.count === 0 ? "text-muted-foreground" : ""}
                 value={money(added.total, currency)}
             >
                 {note(times(added.count))}
@@ -190,7 +190,7 @@ function Kpis({ row }: { row: DebtRow }) {
             <KpiCell
                 color={MUTED}
                 label={detail.paidBack}
-                quiet={repaid.count === 0}
+                tone={repaid.count === 0 ? "text-muted-foreground" : ""}
                 value={money(repaid.total, currency)}
             >
                 {note(times(repaid.count))}

@@ -47,17 +47,19 @@ export function MoneyField({
     text: string;
 }) {
     const decimals = decimalsFor(currency);
-    const size = big ? "h-[52px] text-[28px] leading-9 font-semibold tracking-[-0.04em]" : "";
+    const size = big ? "h-[52px] text-sm font-semibold" : "";
     return (
         <Input.Group className={`has-[input[aria-invalid=true]]:ring-3 ${big ? "h-[52px]" : ""}`}>
-            <Input.Addon className={`dash-figure pe-0.5! ${big ? `${size} text-foreground` : "text-muted-foreground"}`}>
+            <Input.Addon
+                className={`dash-figure pe-0.5! ${big && text.trim() !== "" ? `${size} text-foreground` : `${size} text-muted-foreground`}`}
+            >
                 {currencyDisplayFor(currency).symbol}
             </Input.Addon>
             <Input
                 aria-invalid={invalid || undefined}
                 aria-label={label}
                 autoFocus={autoFocus}
-                className={`dash-figure ps-0 ${size}`}
+                className={`dash-figure ps-1 ${size}`}
                 inputMode="decimal"
                 onBlur={() => {
                     if (text.trim() !== "") {
@@ -159,23 +161,23 @@ export function AccountPick({
 }
 
 export function Chips({ children }: { children: ReactNode }) {
-    return <div className="mt-2 flex flex-wrap gap-1.5">{children}</div>;
+    return <div className="flex flex-wrap gap-1.5">{children}</div>;
 }
 
 export function Pick({
     children,
     onPress,
     pressed,
-    size = "sm",
+    size = "lg",
 }: {
     children: ReactNode;
     onPress: () => void;
     pressed: boolean;
-    size?: "md" | "sm";
+    size?: "lg" | "md" | "sm";
 }) {
     return (
         <Chip
-            className="dash-figure px-2.5 font-sans [&>[data-slot=chip-check]]:hidden"
+            className="dash-figure font-sans [&>[data-slot=chip-check]]:hidden"
             onClick={onPress}
             pressed={pressed}
             size={size}
@@ -190,6 +192,8 @@ export interface PersonChoice {
     name: string;
 }
 
+const NO_PEOPLE: readonly PersonChoice[] = [];
+
 /** Typed like a name: a match picks that person, anything else becomes a new one on save. */
 export function PersonField({
     invalid,
@@ -197,7 +201,7 @@ export function PersonField({
     onText,
     people,
     placeholder,
-    quick,
+    quick = NO_PEOPLE,
     text,
 }: {
     invalid: boolean;
@@ -205,7 +209,7 @@ export function PersonField({
     onText: (text: string) => void;
     people: readonly PersonChoice[];
     placeholder: string;
-    quick: readonly PersonChoice[];
+    quick?: readonly PersonChoice[];
     text: string;
 }) {
     const { form } = useIntlayer("dashboard-debts");

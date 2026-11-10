@@ -30,7 +30,7 @@ import type { DebtRow, DebtsModel } from "./model";
 import { removedPlans } from "./writes";
 
 const PERCENT = 100;
-const BADGE = "dash-figure h-[22px] rounded-md px-2 text-xs font-medium normal-nums";
+const BADGE = "h-[22px] rounded-md px-2 text-xs font-medium normal-nums";
 
 export function useDebts() {
     const { ledger, overview } = useDashboard();
