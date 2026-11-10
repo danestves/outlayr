@@ -19,7 +19,6 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { convexClient } from "@/lib/convex";
 import { useLedgerBooks } from "@/lib/ledger-db";
 
@@ -80,42 +79,57 @@ function usePortal() {
     });
 }
 
-function ConfirmCancel({ expiresAtMs, onClose }: { expiresAtMs: number; onClose: () => void }) {
+function ConfirmCancelBody({ expiresAtMs, onClose }: { expiresAtMs: number; onClose: () => void }) {
     const { confirm, keepPro } = useIntlayer("plan");
     const { date } = useFormat();
     const portal = usePortal();
-    const shown = useOverlayOpen();
     return (
-        <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
+        <>
+            <Dialog.Header>
+                <Dialog.Title>{confirm.title}</Dialog.Title>
+                <Dialog.Description>{confirm.body({ date: date(expiresAtMs) })}</Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Body>
+                <Table className="text-[13px]" density="compact">
+                    <Table.Body>
+                        {[
+                            [confirm.sync, confirm.off],
+                            [confirm.autoLog, "30"],
+                            [confirm.budgets, String(FREE.budgets)],
+                        ].map(([label, value], index) => (
+                            <Table.Row className="h-10" key={index}>
+                                <Table.Cell className="text-muted-foreground">{label}</Table.Cell>
+                                <Table.Cell align="end">{value}</Table.Cell>
+                            </Table.Row>
+                        ))}
+                    </Table.Body>
+                </Table>
+            </Dialog.Body>
+            <Dialog.Footer>
+                <Button onClick={onClose} variant="outline">
+                    {keepPro}
+                </Button>
+                <Button loading={portal.isPending} onClick={() => portal.mutate()} variant="destructive">
+                    {confirm.toStripe}
+                </Button>
+            </Dialog.Footer>
+        </>
+    );
+}
+
+function ConfirmCancel({
+    expiresAtMs,
+    onClose,
+    open,
+}: {
+    expiresAtMs: number | null;
+    onClose: () => void;
+    open: boolean;
+}) {
+    return (
+        <Dialog onOpenChange={(next) => next || onClose()} open={open && expiresAtMs !== null}>
             <Dialog.Content className="app-shell">
-                <Dialog.Header>
-                    <Dialog.Title>{confirm.title}</Dialog.Title>
-                    <Dialog.Description>{confirm.body({ date: date(expiresAtMs) })}</Dialog.Description>
-                </Dialog.Header>
-                <Dialog.Body>
-                    <Table className="text-[13px]" density="compact">
-                        <Table.Body>
-                            {[
-                                [confirm.sync, confirm.off],
-                                [confirm.autoLog, "30"],
-                                [confirm.budgets, String(FREE.budgets)],
-                            ].map(([label, value], index) => (
-                                <Table.Row className="h-10" key={index}>
-                                    <Table.Cell className="text-muted-foreground">{label}</Table.Cell>
-                                    <Table.Cell align="end">{value}</Table.Cell>
-                                </Table.Row>
-                            ))}
-                        </Table.Body>
-                    </Table>
-                </Dialog.Body>
-                <Dialog.Footer>
-                    <Button onClick={onClose} variant="outline">
-                        {keepPro}
-                    </Button>
-                    <Button loading={portal.isPending} onClick={() => portal.mutate()} variant="destructive">
-                        {confirm.toStripe}
-                    </Button>
-                </Dialog.Footer>
+                {expiresAtMs === null ? null : <ConfirmCancelBody expiresAtMs={expiresAtMs} onClose={onClose} />}
             </Dialog.Content>
         </Dialog>
     );
@@ -270,9 +284,7 @@ function Term({ plan }: { plan: Held }) {
                 ) : null}
                 {billedBy}
             </SettingsCard>
-            <OverlayPresence value={confirming ? plan.expiresAtMs : null}>
-                {(expiresAtMs) => <ConfirmCancel expiresAtMs={expiresAtMs} onClose={() => setConfirming(false)} />}
-            </OverlayPresence>
+            <ConfirmCancel expiresAtMs={plan.expiresAtMs} onClose={() => setConfirming(false)} open={confirming} />
         </>
     );
 }

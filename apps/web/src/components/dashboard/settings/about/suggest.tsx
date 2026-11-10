@@ -11,7 +11,6 @@ import { useId, useState } from "react";
 import type { FormEvent } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { readConsent } from "@/lib/analytics";
 import { convexClient } from "@/lib/convex";
 
@@ -37,8 +36,7 @@ export function browserName(userAgent: string) {
     return userAgent.includes("Safari/") ? "Safari" : "Browser";
 }
 
-function SuggestDialog({ onClose }: { onClose: () => void }) {
-    const shown = useOverlayOpen();
+function SuggestForm({ onClose }: { onClose: () => void }) {
     const copy = useIntlayer("dashboard-about");
     const { locale } = useLocale();
     const formId = useId();
@@ -77,63 +75,67 @@ function SuggestDialog({ onClose }: { onClose: () => void }) {
             setBusy(false);
         }
     };
+    return sent ? (
+        <>
+            <Dialog.Header>
+                <Dialog.Title>{copy.sent}</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>
+                <p className="text-muted-foreground text-sm leading-5">
+                    {
+                        copy.echo({
+                            tail: sent.reason ? copy.echoTail({ reason: sent.reason }).value : "",
+                            wish: sent.wish,
+                        }).value
+                    }
+                </p>
+            </Dialog.Body>
+            <Dialog.Footer>
+                <Button onClick={onClose}>{copy.done}</Button>
+            </Dialog.Footer>
+        </>
+    ) : (
+        <>
+            <Dialog.Header>
+                <Dialog.Title>{copy.suggest}</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>
+                <form className="flex flex-col gap-4" id={formId} onSubmit={submit}>
+                    <Field>
+                        <Field.Label>{copy.wish}</Field.Label>
+                        <Input autoFocus maxLength={MAX_TEXT} name="wish" required />
+                    </Field>
+                    <Field>
+                        <Field.Label>{copy.reason}</Field.Label>
+                        <Input maxLength={MAX_TEXT} name="reason" />
+                    </Field>
+                    <label className="flex items-center gap-2 text-[13px] font-medium">
+                        <Checkbox checked={notify} onCheckedChange={setNotify} />
+                        {copy.notify}
+                    </label>
+                    <p className="text-muted-foreground text-[13px] leading-[18px]">{copy.privacy}</p>
+                    {failure ? (
+                        <Alert tone="destructive" variant="plain">
+                            <Alert.Description>{failure}</Alert.Description>
+                        </Alert>
+                    ) : null}
+                </form>
+            </Dialog.Body>
+            <Dialog.Footer>
+                <Dialog.Close render={<Button variant="secondary" />}>{copy.cancel}</Dialog.Close>
+                <Button form={formId} loading={busy} type="submit">
+                    {copy.send}
+                </Button>
+            </Dialog.Footer>
+        </>
+    );
+}
+
+function SuggestDialog({ onClose, open }: { onClose: () => void; open: boolean }) {
     return (
-        <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
+        <Dialog onOpenChange={(next) => next || onClose()} open={open}>
             <Dialog.Content className="app-shell">
-                {sent ? (
-                    <>
-                        <Dialog.Header>
-                            <Dialog.Title>{copy.sent}</Dialog.Title>
-                        </Dialog.Header>
-                        <Dialog.Body>
-                            <p className="text-muted-foreground text-sm leading-5">
-                                {
-                                    copy.echo({
-                                        tail: sent.reason ? copy.echoTail({ reason: sent.reason }).value : "",
-                                        wish: sent.wish,
-                                    }).value
-                                }
-                            </p>
-                        </Dialog.Body>
-                        <Dialog.Footer>
-                            <Button onClick={onClose}>{copy.done}</Button>
-                        </Dialog.Footer>
-                    </>
-                ) : (
-                    <>
-                        <Dialog.Header>
-                            <Dialog.Title>{copy.suggest}</Dialog.Title>
-                        </Dialog.Header>
-                        <Dialog.Body>
-                            <form className="flex flex-col gap-4" id={formId} onSubmit={submit}>
-                                <Field>
-                                    <Field.Label>{copy.wish}</Field.Label>
-                                    <Input autoFocus maxLength={MAX_TEXT} name="wish" required />
-                                </Field>
-                                <Field>
-                                    <Field.Label>{copy.reason}</Field.Label>
-                                    <Input maxLength={MAX_TEXT} name="reason" />
-                                </Field>
-                                <label className="flex items-center gap-2 text-[13px] font-medium">
-                                    <Checkbox checked={notify} onCheckedChange={setNotify} />
-                                    {copy.notify}
-                                </label>
-                                <p className="text-muted-foreground text-[13px] leading-[18px]">{copy.privacy}</p>
-                                {failure ? (
-                                    <Alert tone="destructive" variant="plain">
-                                        <Alert.Description>{failure}</Alert.Description>
-                                    </Alert>
-                                ) : null}
-                            </form>
-                        </Dialog.Body>
-                        <Dialog.Footer>
-                            <Dialog.Close render={<Button variant="secondary" />}>{copy.cancel}</Dialog.Close>
-                            <Button form={formId} loading={busy} type="submit">
-                                {copy.send}
-                            </Button>
-                        </Dialog.Footer>
-                    </>
-                )}
+                <SuggestForm onClose={onClose} />
             </Dialog.Content>
         </Dialog>
     );
@@ -148,9 +150,7 @@ export function SuggestButton() {
                 <HugeiconsIcon icon={Idea01Icon} size={16} />
                 <span className="max-sm:sr-only">{copy.suggest}</span>
             </Button>
-            <OverlayPresence value={open ? true : null}>
-                {() => <SuggestDialog onClose={() => setOpen(false)} />}
-            </OverlayPresence>
+            <SuggestDialog onClose={() => setOpen(false)} open={open} />
         </>
     );
 }

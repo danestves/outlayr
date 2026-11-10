@@ -76,7 +76,7 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
 
     if (!different) {
         return (
-            <FlowDialog label={flows.checkTitle({ name })} onClose={onClose}>
+            <FlowDialog label={flows.checkTitle({ name })}>
                 <Dialog.Body className="gap-5 text-center">
                     <div>
                         <p className="text-muted-foreground text-[13px]">{flows.checkQuestion}</p>
@@ -97,7 +97,7 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
         );
     }
     return (
-        <FlowDialog label={flows.checkTitle({ name })} onClose={onClose}>
+        <FlowDialog label={flows.checkTitle({ name })}>
             <Dialog.Body className="gap-3">
                 <Field className="[&_.dash-sg]:text-foreground [&_input]:ps-0.5 [&_input]:font-medium">
                     <Field.Label>{flows.checkShows({ name })}</Field.Label>

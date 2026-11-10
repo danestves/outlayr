@@ -26,7 +26,6 @@ import { useId, useState } from "react";
 import type { ComponentProps, FormEvent, ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { signOut } from "@/components/dashboard/shell/account-menu";
 import { convexDeletionSteps, deletionProvider, runDeletion, storedDeletion } from "@/lib/account-deletion";
 import { authClient } from "@/lib/auth-client";
@@ -88,17 +87,15 @@ function TextField({ label, ...input }: { label: ReactNode } & ComponentProps<ty
     );
 }
 
-function FormDialog({
+function FormBody({
     children,
     description,
     onSubmit,
-    onClose,
     submit,
     title,
 }: {
     children: ReactNode;
     description?: ReactNode;
-    onClose: () => void;
     onSubmit: (data: FormData) => Promise<void>;
     submit: ReactNode;
     title: ReactNode;
@@ -107,7 +104,6 @@ function FormDialog({
     const formId = useId();
     const [busy, setBusy] = useState(false);
     const [failed, setFailed] = useState(false);
-    const shown = useOverlayOpen();
     const handle = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setBusy(true);
@@ -121,40 +117,45 @@ function FormDialog({
         }
     };
     return (
-        <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
-            <Dialog.Content className="app-shell">
-                <Dialog.Header>
-                    <Dialog.Title>{title}</Dialog.Title>
-                    {description ? <Dialog.Description>{description}</Dialog.Description> : null}
-                </Dialog.Header>
-                <Dialog.Body>
-                    <form className="flex flex-col gap-3" id={formId} onSubmit={handle}>
-                        {children}
-                        {failed ? (
-                            <Alert tone="destructive" variant="plain">
-                                <Alert.Description>{account.failed}</Alert.Description>
-                            </Alert>
-                        ) : null}
-                    </form>
-                </Dialog.Body>
-                <Dialog.Footer>
-                    <Dialog.Close render={<Button variant="secondary" />}>{account.cancel}</Dialog.Close>
-                    <Button form={formId} loading={busy} type="submit">
-                        {submit}
-                    </Button>
-                </Dialog.Footer>
-            </Dialog.Content>
+        <>
+            <Dialog.Header>
+                <Dialog.Title>{title}</Dialog.Title>
+                {description ? <Dialog.Description>{description}</Dialog.Description> : null}
+            </Dialog.Header>
+            <Dialog.Body>
+                <form className="flex flex-col gap-3" id={formId} onSubmit={handle}>
+                    {children}
+                    {failed ? (
+                        <Alert tone="destructive" variant="plain">
+                            <Alert.Description>{account.failed}</Alert.Description>
+                        </Alert>
+                    ) : null}
+                </form>
+            </Dialog.Body>
+            <Dialog.Footer>
+                <Dialog.Close render={<Button variant="secondary" />}>{account.cancel}</Dialog.Close>
+                <Button form={formId} loading={busy} type="submit">
+                    {submit}
+                </Button>
+            </Dialog.Footer>
+        </>
+    );
+}
+
+function FormShell({ children, onClose, open }: { children: ReactNode; onClose: () => void; open: boolean }) {
+    return (
+        <Dialog onOpenChange={(next) => next || onClose()} open={open}>
+            <Dialog.Content className="app-shell">{children}</Dialog.Content>
         </Dialog>
     );
 }
 
 const text = (data: FormData, key: string) => String(data.get(key) ?? "").trim();
 
-function NameDialog({ name, onClose }: { name: string; onClose: () => void }) {
+function NameBody({ name, onClose }: { name: string; onClose: () => void }) {
     const { account } = useIntlayer("dashboard-settings");
     return (
-        <FormDialog
-            onClose={onClose}
+        <FormBody
             onSubmit={async (data) => {
                 await succeed(authClient.updateUser({ name: text(data, "name") }));
                 onClose();
@@ -163,17 +164,16 @@ function NameDialog({ name, onClose }: { name: string; onClose: () => void }) {
             title={account.nameTitle}
         >
             <TextField autoComplete="name" autoFocus defaultValue={name} label={account.name} name="name" required />
-        </FormDialog>
+        </FormBody>
     );
 }
 
-export function EmailDialog({ onClose }: { onClose: () => void }) {
+function EmailBody({ onClose }: { onClose: () => void }) {
     const { account } = useIntlayer("dashboard-settings");
     const [newEmail, setNewEmail] = useState<string | null>(null);
     if (newEmail === null) {
         return (
-            <FormDialog
-                onClose={onClose}
+            <FormBody
                 onSubmit={async (data) => {
                     const address = text(data, "email");
                     await succeed(authClient.emailOtp.requestEmailChange({ newEmail: address }));
@@ -183,14 +183,13 @@ export function EmailDialog({ onClose }: { onClose: () => void }) {
                 title={account.emailTitle}
             >
                 <TextField autoComplete="email" autoFocus label={account.newEmail} name="email" required type="email" />
-            </FormDialog>
+            </FormBody>
         );
     }
     return (
-        <FormDialog
+        <FormBody
             description={account.codeSent}
             key={newEmail}
-            onClose={onClose}
             onSubmit={async (data) => {
                 await succeed(authClient.emailOtp.changeEmail({ newEmail, otp: text(data, "code") }));
                 authClient.$store.notify("$sessionSignal");
@@ -207,15 +206,14 @@ export function EmailDialog({ onClose }: { onClose: () => void }) {
                 name="code"
                 required
             />
-        </FormDialog>
+        </FormBody>
     );
 }
 
-function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
+function ChangePasswordBody({ onClose }: { onClose: () => void }) {
     const { account } = useIntlayer("dashboard-settings");
     return (
-        <FormDialog
-            onClose={onClose}
+        <FormBody
             onSubmit={async (data) => {
                 await succeed(
                     authClient.changePassword({
@@ -244,18 +242,17 @@ function ChangePasswordDialog({ onClose }: { onClose: () => void }) {
                 required
                 type="password"
             />
-        </FormDialog>
+        </FormBody>
     );
 }
 
-function AddPasswordDialog({ email, onClose }: { email: string; onClose: () => void }) {
+function AddPasswordBody({ email }: { email: string }) {
     const { account } = useIntlayer("dashboard-settings");
     const [sent, setSent] = useState(false);
     if (!sent) {
         return (
-            <FormDialog
+            <FormBody
                 description={account.addPasswordBody}
-                onClose={onClose}
                 onSubmit={async () => {
                     await succeed(authClient.emailOtp.requestPasswordReset({ email }));
                     setSent(true);
@@ -264,14 +261,13 @@ function AddPasswordDialog({ email, onClose }: { email: string; onClose: () => v
                 title={account.addPasswordTitle}
             >
                 <p className="text-sm">{email}</p>
-            </FormDialog>
+            </FormBody>
         );
     }
     return (
-        <FormDialog
+        <FormBody
             description={account.addPasswordBody}
             key="code"
-            onClose={onClose}
             onSubmit={async (data) => {
                 await succeed(
                     authClient.emailOtp.resetPassword({
@@ -301,7 +297,15 @@ function AddPasswordDialog({ email, onClose }: { email: string; onClose: () => v
                 required
                 type="password"
             />
-        </FormDialog>
+        </FormBody>
+    );
+}
+
+export function EmailDialog({ onClose, open }: { onClose: () => void; open: boolean }) {
+    return (
+        <FormShell onClose={onClose} open={open}>
+            <EmailBody onClose={onClose} />
+        </FormShell>
     );
 }
 
@@ -688,18 +692,16 @@ export function Account() {
                     <DeleteCard />
                 </div>
             </div>
-            <OverlayPresence value={open}>
-                {(dialog) => (
-                    <>
-                        {dialog === "name" ? <NameDialog name={session?.user.name ?? ""} onClose={close} /> : null}
-                        {dialog === "email" ? <EmailDialog onClose={close} /> : null}
-                        {dialog === "password" ? <ChangePasswordDialog onClose={closeRefreshing} /> : null}
-                        {dialog === "addPassword" ? (
-                            <AddPasswordDialog email={session?.user.email ?? ""} onClose={close} />
-                        ) : null}
-                    </>
-                )}
-            </OverlayPresence>
+            <FormShell onClose={close} open={open === "name"}>
+                <NameBody name={session?.user.name ?? ""} onClose={close} />
+            </FormShell>
+            <EmailDialog onClose={close} open={open === "email"} />
+            <FormShell onClose={closeRefreshing} open={open === "password"}>
+                <ChangePasswordBody onClose={closeRefreshing} />
+            </FormShell>
+            <FormShell onClose={close} open={open === "addPassword"}>
+                <AddPasswordBody email={session?.user.email ?? ""} />
+            </FormShell>
         </>
     );
 }

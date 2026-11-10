@@ -11,10 +11,9 @@ import { Input } from "panelui-web/input";
 import { Label } from "panelui-web/label";
 import { Select } from "panelui-web/select";
 import { useId, useState } from "react";
-import type { FormEvent, MouseEvent, ReactNode } from "react";
+import type { ComponentProps, FormEvent, MouseEvent, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { OverlayPresence, useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
 import { LookTile } from "@/components/ledger/tiles";
@@ -151,7 +150,7 @@ interface CategorySymbol {
     icon: string | null;
 }
 
-function SymbolDialog({
+function SymbolPicker({
     color,
     onClose,
     onPick,
@@ -163,7 +162,6 @@ function SymbolDialog({
     value: CategorySymbol;
 }) {
     const copy = useIntlayer("dashboard-categories");
-    const shown = useOverlayOpen();
     const [tab, setTab] = useState<"emoji" | "icons">(value.emoji ? "emoji" : "icons");
     const [query, setQuery] = useState("");
     const needle = query.trim().toLowerCase();
@@ -175,90 +173,98 @@ function SymbolDialog({
         }
     };
     return (
-        <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
+        <>
+            <Dialog.Header>
+                <Dialog.Title>{copy.symbol}</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 max-sm:flex-wrap">
+                    {tab === "icons" ? (
+                        <Input.Group className="min-w-0 flex-1">
+                            <Input.Addon>
+                                <HugeiconsIcon icon={Search01Icon} size={15} />
+                            </Input.Addon>
+                            <Input
+                                aria-label={copy.searchSymbols.value}
+                                className="max-sm:text-base"
+                                onChange={(event) => setQuery(event.target.value)}
+                                placeholder={copy.searchSymbols.value}
+                                value={query}
+                            />
+                        </Input.Group>
+                    ) : (
+                        <span className="flex-1" />
+                    )}
+                    <Choice
+                        label={copy.symbol.value}
+                        onChange={setTab}
+                        options={[
+                            { label: copy.icons, value: "icons" },
+                            { label: copy.emoji, value: "emoji" },
+                        ]}
+                        value={tab}
+                    />
+                </div>
+                <ChoiceCards
+                    aria-label={copy.symbol.value}
+                    aspect="1 / 1"
+                    className={SYMBOL_GRID}
+                    onValueChange={(next) =>
+                        onPick(tab === "icons" ? { emoji: null, icon: next } : { emoji: next, icon: null })
+                    }
+                    value={(tab === "icons" ? value.icon : value.emoji) ?? ""}
+                >
+                    {tab === "icons"
+                        ? keys.map((key) => (
+                              <ChoiceCards.Item
+                                  aria-label={key}
+                                  className={SYMBOL_CELL}
+                                  key={key}
+                                  onClick={closeOnPointer}
+                                  value={key}
+                              >
+                                  <ChoiceCards.Media>
+                                      <LookTile look={{ color, emoji: null, icon: key }} />
+                                  </ChoiceCards.Media>
+                              </ChoiceCards.Item>
+                          ))
+                        : EMOJI.map((emoji) => (
+                              <ChoiceCards.Item
+                                  aria-label={emoji}
+                                  className={SYMBOL_CELL}
+                                  key={emoji}
+                                  onClick={closeOnPointer}
+                                  value={emoji}
+                              >
+                                  <ChoiceCards.Media className="text-xl">{emoji}</ChoiceCards.Media>
+                              </ChoiceCards.Item>
+                          ))}
+                </ChoiceCards>
+            </Dialog.Body>
+            <Dialog.Footer>
+                <Button
+                    onClick={() => {
+                        onPick({ emoji: null, icon: null });
+                        onClose();
+                    }}
+                    type="button"
+                    variant="outline"
+                >
+                    {copy.remove}
+                </Button>
+                <Button onClick={onClose} type="button">
+                    {copy.done}
+                </Button>
+            </Dialog.Footer>
+        </>
+    );
+}
+
+function SymbolDialog({ open, ...picker }: { open: boolean } & ComponentProps<typeof SymbolPicker>) {
+    return (
+        <Dialog onOpenChange={(next) => next || picker.onClose()} open={open}>
             <Dialog.Content className="app-shell" size="lg">
-                <Dialog.Header>
-                    <Dialog.Title>{copy.symbol}</Dialog.Title>
-                </Dialog.Header>
-                <Dialog.Body className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2 max-sm:flex-wrap">
-                        {tab === "icons" ? (
-                            <Input.Group className="min-w-0 flex-1">
-                                <Input.Addon>
-                                    <HugeiconsIcon icon={Search01Icon} size={15} />
-                                </Input.Addon>
-                                <Input
-                                    aria-label={copy.searchSymbols.value}
-                                    className="max-sm:text-base"
-                                    onChange={(event) => setQuery(event.target.value)}
-                                    placeholder={copy.searchSymbols.value}
-                                    value={query}
-                                />
-                            </Input.Group>
-                        ) : (
-                            <span className="flex-1" />
-                        )}
-                        <Choice
-                            label={copy.symbol.value}
-                            onChange={setTab}
-                            options={[
-                                { label: copy.icons, value: "icons" },
-                                { label: copy.emoji, value: "emoji" },
-                            ]}
-                            value={tab}
-                        />
-                    </div>
-                    <ChoiceCards
-                        aria-label={copy.symbol.value}
-                        aspect="1 / 1"
-                        className={SYMBOL_GRID}
-                        onValueChange={(next) =>
-                            onPick(tab === "icons" ? { emoji: null, icon: next } : { emoji: next, icon: null })
-                        }
-                        value={(tab === "icons" ? value.icon : value.emoji) ?? ""}
-                    >
-                        {tab === "icons"
-                            ? keys.map((key) => (
-                                  <ChoiceCards.Item
-                                      aria-label={key}
-                                      className={SYMBOL_CELL}
-                                      key={key}
-                                      onClick={closeOnPointer}
-                                      value={key}
-                                  >
-                                      <ChoiceCards.Media>
-                                          <LookTile look={{ color, emoji: null, icon: key }} />
-                                      </ChoiceCards.Media>
-                                  </ChoiceCards.Item>
-                              ))
-                            : EMOJI.map((emoji) => (
-                                  <ChoiceCards.Item
-                                      aria-label={emoji}
-                                      className={SYMBOL_CELL}
-                                      key={emoji}
-                                      onClick={closeOnPointer}
-                                      value={emoji}
-                                  >
-                                      <ChoiceCards.Media className="text-xl">{emoji}</ChoiceCards.Media>
-                                  </ChoiceCards.Item>
-                              ))}
-                    </ChoiceCards>
-                </Dialog.Body>
-                <Dialog.Footer>
-                    <Button
-                        onClick={() => {
-                            onPick({ emoji: null, icon: null });
-                            onClose();
-                        }}
-                        type="button"
-                        variant="outline"
-                    >
-                        {copy.remove}
-                    </Button>
-                    <Button onClick={onClose} type="button">
-                        {copy.done}
-                    </Button>
-                </Dialog.Footer>
+                <SymbolPicker {...picker} />
             </Dialog.Content>
         </Dialog>
     );
@@ -373,11 +379,10 @@ function editorMode(doc: Category | null, startParent: string | null, forcedInco
     return forcedIncome ? "newIncome" : "newCategory";
 }
 
-export function CategoryEditor({ onClose, target }: { onClose: () => void; target: EditorTarget }) {
+function CategoryEditorBody({ onClose, target }: { onClose: () => void; target: EditorTarget }) {
     const copy = useIntlayer("dashboard-categories");
     const { ledger } = useDashboard();
     const writes = useCategoryWrites();
-    const shown = useOverlayOpen();
     const rows = ledger.books.categories;
     const live = liveCategories(rows);
     const doc = "doc" in target ? target.doc : null;
@@ -443,95 +448,108 @@ export function CategoryEditor({ onClose, target }: { onClose: () => void; targe
     };
 
     return (
-        <Dialog onOpenChange={(open) => open || onClose()} open={shown}>
-            <Dialog.Content className="app-shell">
-                <Dialog.Header>
-                    <Dialog.Title>{titles[mode]}</Dialog.Title>
-                </Dialog.Header>
-                <Dialog.Body>
-                    <form className="flex flex-col gap-4" id={formId} onSubmit={submit}>
-                        {forcedIncome ? (
-                            <Alert variant="plain">
-                                <Alert.Description>
-                                    {copy.atLimit({ max: MAX_EXPENSE_CATEGORIES, used: expenseCount })}
-                                </Alert.Description>
-                            </Alert>
-                        ) : null}
-                        <div className="flex items-start gap-3">
-                            <SymbolButton color={color} onClick={() => setPicking(true)} symbol={symbol} />
-                            <Field className="min-w-0 flex-1" invalid={problem !== null}>
-                                <Field.Label>{copy.name}</Field.Label>
-                                <Input
-                                    autoFocus
-                                    className="max-sm:text-base"
-                                    name="name"
-                                    onChange={(event) => setName(event.target.value)}
-                                    value={name}
-                                />
-                                {problem ? <Field.Error match>{copy.problems[problem]}</Field.Error> : null}
-                            </Field>
-                        </div>
-                        {forcedIncome || startParent !== null || doc ? null : (
-                            <div className="flex flex-col gap-1.5">
-                                <Label render={<span />}>{copy.type}</Label>
-                                <div>
-                                    <Choice
-                                        label={copy.type.value}
-                                        onChange={(value) => {
-                                            setIncome(value === "income");
-                                            setParentId(null);
-                                        }}
-                                        options={[
-                                            { label: copy.expense, value: "expense" },
-                                            { label: copy.income, value: "income" },
-                                        ]}
-                                        value={income ? "income" : "expense"}
-                                    />
-                                </div>
-                            </div>
-                        )}
-                        {hasChildren || forcedIncome ? null : (
-                            <ParentField onChange={setParentId} parents={parents} value={parentId} />
-                        )}
-                        {parent ? (
-                            <p className="text-muted-foreground text-[13px]">
-                                {copy.inheritsColor({ parent: parent.name ?? "" })}
-                            </p>
-                        ) : null}
-                        {income || parent ? null : <ColorField onPick={setPicked} value={color} />}
-                    </form>
-                </Dialog.Body>
-                <Dialog.Footer>
-                    {doc ? (
-                        <Button
-                            className="mr-auto"
-                            onClick={() => {
-                                writes.remove(doc.localId);
-                                onClose();
-                            }}
-                            type="button"
-                            variant="destructive"
-                        >
-                            {copy.delete}
-                        </Button>
+        <>
+            <Dialog.Header>
+                <Dialog.Title>{titles[mode]}</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>
+                <form className="flex flex-col gap-4" id={formId} onSubmit={submit}>
+                    {forcedIncome ? (
+                        <Alert variant="plain">
+                            <Alert.Description>
+                                {copy.atLimit({ max: MAX_EXPENSE_CATEGORIES, used: expenseCount })}
+                            </Alert.Description>
+                        </Alert>
                     ) : null}
-                    <Button onClick={onClose} type="button" variant="outline">
-                        {copy.cancel}
-                    </Button>
-                    <Button form={formId} type="submit">
-                        {submitLabel}
-                    </Button>
-                </Dialog.Footer>
-                <OverlayPresence value={picking ? true : null}>
-                    {() => (
-                        <SymbolDialog
-                            color={color}
-                            onClose={() => setPicking(false)}
-                            onPick={setSymbol}
-                            value={symbol}
-                        />
+                    <div className="flex items-start gap-3">
+                        <SymbolButton color={color} onClick={() => setPicking(true)} symbol={symbol} />
+                        <Field className="min-w-0 flex-1" invalid={problem !== null}>
+                            <Field.Label>{copy.name}</Field.Label>
+                            <Input
+                                autoFocus
+                                className="max-sm:text-base"
+                                name="name"
+                                onChange={(event) => setName(event.target.value)}
+                                value={name}
+                            />
+                            {problem ? <Field.Error match>{copy.problems[problem]}</Field.Error> : null}
+                        </Field>
+                    </div>
+                    {forcedIncome || startParent !== null || doc ? null : (
+                        <div className="flex flex-col gap-1.5">
+                            <Label render={<span />}>{copy.type}</Label>
+                            <div>
+                                <Choice
+                                    label={copy.type.value}
+                                    onChange={(value) => {
+                                        setIncome(value === "income");
+                                        setParentId(null);
+                                    }}
+                                    options={[
+                                        { label: copy.expense, value: "expense" },
+                                        { label: copy.income, value: "income" },
+                                    ]}
+                                    value={income ? "income" : "expense"}
+                                />
+                            </div>
+                        </div>
                     )}
-                </OverlayPresence>
+                    {hasChildren || forcedIncome ? null : (
+                        <ParentField onChange={setParentId} parents={parents} value={parentId} />
+                    )}
+                    {parent ? (
+                        <p className="text-muted-foreground text-[13px]">
+                            {copy.inheritsColor({ parent: parent.name ?? "" })}
+                        </p>
+                    ) : null}
+                    {income || parent ? null : <ColorField onPick={setPicked} value={color} />}
+                </form>
+            </Dialog.Body>
+            <Dialog.Footer>
+                {doc ? (
+                    <Button
+                        className="mr-auto"
+                        onClick={() => {
+                            writes.remove(doc.localId);
+                            onClose();
+                        }}
+                        type="button"
+                        variant="destructive"
+                    >
+                        {copy.delete}
+                    </Button>
+                ) : null}
+                <Button onClick={onClose} type="button" variant="outline">
+                    {copy.cancel}
+                </Button>
+                <Button form={formId} type="submit">
+                    {submitLabel}
+                </Button>
+            </Dialog.Footer>
+            <SymbolDialog
+                color={color}
+                onClose={() => setPicking(false)}
+                onPick={setSymbol}
+                open={picking}
+                value={symbol}
+            />
+        </>
+    );
+}
+
+export function CategoryEditor({
+    onClose,
+    open,
+    target,
+}: {
+    onClose: () => void;
+    open: boolean;
+    target: EditorTarget | null;
+}) {
+    return (
+        <Dialog onOpenChange={(next) => next || onClose()} open={open}>
+            <Dialog.Content className="app-shell">
+                {target ? <CategoryEditorBody onClose={onClose} target={target} /> : null}
             </Dialog.Content>
         </Dialog>
     );

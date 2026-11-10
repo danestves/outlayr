@@ -20,7 +20,6 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDateFormat } from "@/components/dashboard/home/format";
-import { OverlayPresence } from "@/components/dashboard/overlay-presence";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
 import { liveCategories } from "@/lib/category-writes";
@@ -120,6 +119,11 @@ export function Categories() {
     const [income, setIncome] = useState(false);
     const [reordering, setReordering] = useState(false);
     const [editing, setEditing] = useState<EditorTarget | null>(null);
+    const [editorOpen, setEditorOpen] = useState(false);
+    const edit = (target: EditorTarget) => {
+        setEditing(target);
+        setEditorOpen(true);
+    };
 
     const { period } = filters;
     const rows = ledger.books.categories;
@@ -221,7 +225,7 @@ export function Categories() {
                             <HugeiconsIcon icon={DragDropVerticalIcon} size={16} />
                             <span className="max-sm:sr-only">{copy.reorder}</span>
                         </Button>
-                        <Button onClick={() => setEditing({ income, parentId: null })} size="sm">
+                        <Button onClick={() => edit({ income, parentId: null })} size="sm">
                             <HugeiconsIcon icon={PlusSignIcon} size={16} />
                             <span className="max-sm:sr-only">{copy.newCategory}</span>
                         </Button>
@@ -272,9 +276,9 @@ export function Categories() {
                                         {lineCells(node)}
                                         <Table.Cell align="end" className={CELL}>
                                             <RowActions
-                                                onEdit={() => setEditing({ doc: node })}
+                                                onEdit={() => edit({ doc: node })}
                                                 onSubcategory={() =>
-                                                    setEditing({ income: node.income, parentId: node.localId })
+                                                    edit({ income: node.income, parentId: node.localId })
                                                 }
                                                 row={node}
                                             />
@@ -294,7 +298,7 @@ export function Categories() {
                                             </Table.Cell>
                                             {lineCells(child)}
                                             <Table.Cell align="end" className={CELL}>
-                                                <RowActions onEdit={() => setEditing({ doc: child })} row={child} />
+                                                <RowActions onEdit={() => edit({ doc: child })} row={child} />
                                             </Table.Cell>
                                         </Table.Row>
                                     )),
@@ -334,9 +338,7 @@ export function Categories() {
                     </SettingsCard>
                 ) : null}
             </div>
-            <OverlayPresence value={editing}>
-                {(target) => <CategoryEditor onClose={() => setEditing(null)} target={target} />}
-            </OverlayPresence>
+            <CategoryEditor onClose={() => setEditorOpen(false)} open={editorOpen} target={editing} />
         </>
     );
 }

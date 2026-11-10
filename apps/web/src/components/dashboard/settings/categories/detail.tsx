@@ -13,7 +13,6 @@ import type { CSSProperties, ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDateFormat, usePeriodTitle } from "@/components/dashboard/home/format";
-import { OverlayPresence } from "@/components/dashboard/overlay-presence";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
 import { liveCategories } from "@/lib/category-writes";
@@ -67,6 +66,11 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
     const periodTitle = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
     const [key, setKey] = useState(filters.currentKey);
     const [editing, setEditing] = useState<EditorTarget | null>(null);
+    const [editorOpen, setEditorOpen] = useState(false);
+    const edit = (target: EditorTarget) => {
+        setEditing(target);
+        setEditorOpen(true);
+    };
     const period = useMemo(() => periodOf(key, ledger.firstDayOfMonth), [key, ledger.firstDayOfMonth]);
 
     const live = liveCategories(ledger.books.categories);
@@ -143,7 +147,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                         <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
                     </Button>
                 </div>
-                <Button onClick={() => setEditing({ doc: category })} size="sm" variant="outline">
+                <Button onClick={() => edit({ doc: category })} size="sm" variant="outline">
                     <HugeiconsIcon icon={PencilEdit02Icon} size={16} />
                     {copy.edit}
                 </Button>
@@ -217,7 +221,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                             ) : null}
                             <Button
                                 className="text-muted-foreground h-11 w-full justify-start rounded-none px-4"
-                                onClick={() => setEditing({ income: category.income, parentId: category.localId })}
+                                onClick={() => edit({ income: category.income, parentId: category.localId })}
                                 size="sm"
                                 variant="ghost"
                             >
@@ -290,9 +294,7 @@ export function CategoryDetail({ categoryId }: { categoryId: string }) {
                     )}
                 </SettingsCard>
             </div>
-            <OverlayPresence value={editing}>
-                {(target) => <CategoryEditor onClose={() => setEditing(null)} target={target} />}
-            </OverlayPresence>
+            <CategoryEditor onClose={() => setEditorOpen(false)} open={editorOpen} target={editing} />
         </>
     );
 }

@@ -1,10 +1,11 @@
 import { useRouteContext } from "@tanstack/react-router";
+import { Dialog } from "panelui-web/dialog";
 import { createToaster, Toast } from "panelui-web/toast";
-import { lazy, Suspense, createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { OverlayPresence } from "@/components/dashboard/overlay-presence";
+import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { writeSettings } from "@/lib/ledger-settings";
 
 import type { AccountSort } from "./model";
@@ -42,15 +43,25 @@ const FlowsContext = createContext<AccountFlows>({
 
 export const useAccountFlows = () => useContext(FlowsContext);
 
-const OpenFlowContext = createContext<[AccountFlow | null, (flow: AccountFlow | null) => void]>([
-    null,
+interface OpenFlow {
+    flow: AccountFlow | null;
+    open: boolean;
+}
+
+const OpenFlowContext = createContext<[OpenFlow, (flow: AccountFlow | null) => void]>([
+    { flow: null, open: false },
     () => undefined,
 ]);
 
 /** Holds the open flow above the ledger's providers, for the mobile bar, which renders outside them. */
 export function FlowRoot({ children }: { children: ReactNode }) {
-    const state = useState<AccountFlow | null>(null);
-    return <OpenFlowContext value={state}>{children}</OpenFlowContext>;
+    const [state, setState] = useState<OpenFlow>({ flow: null, open: false });
+    const setFlow = useCallback(
+        (next: AccountFlow | null) => setState((last) => ({ flow: next ?? last.flow, open: next !== null })),
+        []
+    );
+    const value = useMemo((): [OpenFlow, typeof setFlow] => [state, setFlow], [state, setFlow]);
+    return <OpenFlowContext value={value}>{children}</OpenFlowContext>;
 }
 
 export const useOpenFlow = () => useContext(OpenFlowContext)[1];
@@ -102,7 +113,8 @@ function ShowToast({ onDone, toast }: { onDone: () => void; toast: FlowToast }) 
 
 /** Holds the dialog that is open and the toast after it. A new toast first settles the one it replaces. */
 export function AccountFlowsProvider({ children }: { children: ReactNode }) {
-    const [flow, setFlow] = useContext(OpenFlowContext);
+    const [{ flow, open }, setFlow] = useContext(OpenFlowContext);
+    const { ledger } = useDashboard();
     const [toast, setToast] = useState<FlowToast | null>(null);
     const db = useLedgerDb();
     const shown = useRef<FlowToast | null>(null);
@@ -110,6 +122,9 @@ export function AccountFlowsProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         void loadFlowDialogs();
     }, []);
+    const targetGone =
+        (flow?.kind === "archive" || flow?.kind === "check" || flow?.kind === "delete" || flow?.kind === "edit") &&
+        !ledger.books.accounts.some((row) => row.localId === flow.accountId && row.deletedAt === null);
     const flows = useMemo(
         () => ({
             open: setFlow,
@@ -134,13 +149,16 @@ export function AccountFlowsProvider({ children }: { children: ReactNode }) {
     return (
         <FlowsContext value={flows}>
             {children}
-            <OverlayPresence value={flow}>
-                {(held) => (
+            <Dialog onOpenChange={(next) => next || setFlow(null)} open={open && !targetGone}>
+                <Dialog.Content
+                    className="app-shell ph-no-capture"
+                    size={flow?.kind === "entry" || flow?.kind === "purchase" ? "lg" : "md"}
+                >
                     <Suspense fallback={null}>
-                        <FlowDialogs flow={held} onClose={() => setFlow(null)} onSwitch={setFlow} />
+                        {flow ? <FlowDialogs flow={flow} onClose={() => setFlow(null)} onSwitch={setFlow} /> : null}
                     </Suspense>
-                )}
-            </OverlayPresence>
+                </Dialog.Content>
+            </Dialog>
             {toast ? <ShowToast onDone={clearToast} toast={toast} /> : null}
             {/* Inline, because the portal would leave the shell's tokens and the capture mask behind. The wrapper stays
                 see-through and click-through: the inline viewport keeps its height with no toast showing. */}

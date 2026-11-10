@@ -10,10 +10,9 @@ import { Dialog } from "panelui-web/dialog";
 import { Input } from "panelui-web/input";
 import { Label } from "panelui-web/label";
 import { useId, useMemo, useState } from "react";
-import type { ReactNode, RefObject } from "react";
+import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { useOverlayOpen } from "@/components/dashboard/overlay-presence";
 import { parseAmount } from "@/lib/account-writes";
 import { money } from "@/lib/ledger";
 
@@ -32,7 +31,7 @@ const currencyName = (code: string) => {
 export const QUIET_ROW = "grid! min-h-11 grid-cols-[6rem_minmax(0,1fr)] items-center gap-x-3 border-b py-1";
 
 // Base UI's trap only places focus when the dialog opens, and the check dialog swaps this field in later.
-const focusNode = (node: HTMLInputElement | null) => node?.select();
+export const focusNode = (node: HTMLInputElement | null) => node?.select();
 
 /** Formats on blur and leaves typing alone, so a half-typed "12." is not rewritten under the caret. */
 export function AmountInput({
@@ -197,39 +196,17 @@ export function CurrencyField({
     );
 }
 
-export function FlowDialog({
-    children,
-    head,
-    initialFocus,
-    label,
-    onClose,
-    size = "md",
-}: {
-    children: ReactNode;
-    head?: ReactNode;
-    initialFocus?: RefObject<HTMLInputElement | null>;
-    label: ReactNode;
-    onClose: () => void;
-    size?: "lg" | "md" | "sm";
-}) {
-    const shown = useOverlayOpen();
+export function FlowDialog({ children, head, label }: { children: ReactNode; head?: ReactNode; label: ReactNode }) {
     return (
-        <Dialog onOpenChange={(open) => (open ? undefined : onClose())} open={shown}>
-            <Dialog.Content
-                className="app-shell ph-no-capture"
-                size={size}
-                // Content forwards the rest to Base UI's Popup, though its props only declare the div's.
-                {...{ initialFocus }}
-            >
-                <Dialog.Header>
-                    <div className="flex items-center gap-2">
-                        {head}
-                        <Dialog.Title>{label}</Dialog.Title>
-                    </div>
-                </Dialog.Header>
-                {children}
-            </Dialog.Content>
-        </Dialog>
+        <>
+            <Dialog.Header>
+                <div className="flex items-center gap-2">
+                    {head}
+                    <Dialog.Title>{label}</Dialog.Title>
+                </div>
+            </Dialog.Header>
+            {children}
+        </>
     );
 }
 

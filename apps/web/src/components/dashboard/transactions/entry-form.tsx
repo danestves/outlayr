@@ -554,7 +554,7 @@ export function EntryDialog({
         }
     };
     return (
-        <FlowDialog label={add.entry} onClose={onClose} size="lg">
+        <FlowDialog label={add.entry}>
             <Dialog.Body>
                 <form
                     id={formId}

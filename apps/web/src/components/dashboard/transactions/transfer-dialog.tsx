@@ -106,7 +106,7 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
         }
     };
     return (
-        <FlowDialog label={flows.newTransfer} onClose={onClose} size="md">
+        <FlowDialog label={flows.newTransfer}>
             <Dialog.Body>
                 <form
                     className="flex flex-col gap-3.5"

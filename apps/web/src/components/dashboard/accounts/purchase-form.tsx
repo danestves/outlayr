@@ -11,7 +11,7 @@ import { Dialog } from "panelui-web/dialog";
 import { Field } from "panelui-web/field";
 import { Input } from "panelui-web/input";
 import { Select } from "panelui-web/select";
-import { useId, useRef, useState } from "react";
+import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -26,7 +26,7 @@ import { useDisplayFormat } from "@/lib/ledger-settings";
 import { planPurchase, purchaseInInstallments } from "@/lib/plan-writes";
 import type { PurchaseDraft } from "@/lib/plan-writes";
 
-import { AmountInput, amountText, FlowDialog } from "./fields";
+import { AmountInput, amountText, FlowDialog, focusNode } from "./fields";
 import type { AccountFlow } from "./flows";
 import { Glyph } from "./glyph";
 import { logoIdentity } from "./identity-picker";
@@ -296,7 +296,6 @@ export function PurchaseForm({
     const { flows, purchase } = useIntlayer("dashboard-accounts");
     const committer = useLedgerCommitter();
     const id = useId();
-    const nameInput = useRef<HTMLInputElement>(null);
     const cards = openAccounts(ledger.books).filter((row) => row.kind === "liability");
     const [name, setName] = useState("");
     const [categoryId, setCategoryId] = useState<string | null>(null);
@@ -392,7 +391,7 @@ export function PurchaseForm({
     };
 
     return (
-        <FlowDialog initialFocus={nameInput} label={purchase.title} onClose={onClose} size="lg">
+        <FlowDialog label={purchase.title}>
             <Dialog.Body>
                 <form
                     className="flex flex-col gap-4"
@@ -409,7 +408,7 @@ export function PurchaseForm({
                             <Input
                                 onChange={(event) => setName(event.target.value)}
                                 placeholder={purchase.forPlaceholder.value}
-                                ref={nameInput}
+                                ref={focusNode}
                                 value={name}
                             />
                             {attempted && nameMissing ? <Field.Error match>{purchase.nameRequired}</Field.Error> : null}
