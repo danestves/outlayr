@@ -24,7 +24,7 @@ enum SharedStore {
 
     /// Where an intent leaves work for the app to commit, one JSON line per
     /// write. Mirrored by `QUEUE_DIRECTORY` / `QUEUE_FILE` in
-    /// `src/lib/pending-writes-core.ts`.
+    /// `src/lib/queue-file.ts`.
     static let queueDirectory = "pending-writes"
     static let queueFile = "queue.jsonl"
 
@@ -181,7 +181,7 @@ extension String {
     var nilIfEmpty: String? { isEmpty ? nil : self }
 }
 
-/// Mirrors `PendingWrite` in `src/lib/pending-writes-core.ts`; the field names
+/// Mirrors `PendingWrite` in `src/domain/meta-values.ts`; the field names
 /// are the wire format and cannot be renamed on one side alone.
 struct PendingWrite: Codable {
     let id: String

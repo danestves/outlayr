@@ -18,7 +18,7 @@ enum LedgerSide: String, AppEnum {
 /// category name, category resolution, recurrence projection — is TypeScript in
 /// `transactionsRepo`. The intent validates, parks the request in the App Group,
 /// and the app commits it through `applyPendingWrites` in
-/// `src/lib/use-widget-sync.ts`.
+/// `src/data/pending-writes-core.ts`.
 struct LogTransactionIntent: AppIntent {
     static var title: LocalizedStringResource = "Log a Transaction"
 
