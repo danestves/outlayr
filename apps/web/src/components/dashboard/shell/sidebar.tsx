@@ -90,7 +90,7 @@ function NavLink({
     to,
 }: NavProps & {
     exact?: boolean;
-    to: "/app" | "/app/accounts" | "/app/goals" | "/app/insights" | "/app/rules" | "/app/transactions";
+    to: "/app" | "/app/accounts" | "/app/goals" | "/app/insights" | "/app/recurring" | "/app/rules" | "/app/transactions";
 }) {
     const item = (
         <Link activeOptions={{ exact, includeSearch: false }} className="dash-nav" to={to}>
@@ -158,7 +158,7 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
             {group(nav.plan.value)}
             <Soon collapsed={collapsed} icon={PieChartIcon} label={nav.budgets.value} />
             <NavLink collapsed={collapsed} icon={Flag02Icon} label={nav.goals.value} to="/app/goals" />
-            <Soon collapsed={collapsed} icon={RepeatIcon} label={nav.recurring.value} />
+            <NavLink collapsed={collapsed} icon={RepeatIcon} label={nav.recurring.value} to="/app/recurring" />
             <Soon collapsed={collapsed} icon={HandCoinsIcon} label={nav.debts.value} />
             <Soon collapsed={collapsed} icon={CalendarCheckIn01Icon} label={nav.installments.value} />
             {group(nav.tools.value)}
