@@ -37,7 +37,7 @@ A row marked deleted and kept, so the deletion reaches every device. A synced ro
 _Avoid_: soft delete, hard delete
 
 **Deletion plan**:
-Every row that goes with a deleted entry, transfer, account or category: its fees, transfer legs, installment plans and payments.
+Every row that goes with a deleted entry, transfer, account or category: its fees, transfer legs, installment plans and payments, and an account's or category's own budgets, goals and adjustments. It also names what stays but is detached: a deleted account's entries, a deleted category's subcategories.
 _Avoid_: cascade, cleanup
 
 ### Settings and device memory

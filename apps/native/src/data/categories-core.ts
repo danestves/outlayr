@@ -26,6 +26,7 @@ import type { Language } from "@/i18n/languages";
 import { translateIn, translateNow } from "@/i18n/runtime";
 
 import { Meta } from "./app-meta-core";
+import { tombstonesWithEntries } from "./entry-tombstones";
 
 export type Category = typeof categories.$inferSelect;
 
@@ -542,11 +543,10 @@ export const categoriesRepo = {
         return id;
     }),
 
-    // Cascaded by hand: `foreign_keys` isn't enabled on the connection, so the schema's `ON DELETE` never fires. The
+    // By hand, and held to `categoryDeletionPlan` by a test: `foreign_keys` is off, so `ON DELETE` never fires. The
     // budget is fully tombstoned for peers before 0038, whose `budgets.categoryId` stays UNIQUE when deleted. Schedules
     // retire so `repairOrphanedRecurrence` mints no successor, and photos drop so `reconcilePhotos` collects them.
-    remove: Effect.fn("Categories.remove")(function* remove(db: Database, id: string) {
-        const now = new Date();
+    remove: Effect.fn("Categories.remove")(function* remove(db: Database, id: string, now: Date = new Date()) {
         yield* transaction(
             db,
             Effect.gen(function* write() {
@@ -562,6 +562,10 @@ export const categoriesRepo = {
                         })
                         .where(and(eq(transactions.categoryId, id), isNull(transactions.deletedAt)))
                 );
+                const taken = and(eq(transactions.categoryId, id), eq(transactions.deletedAt, now));
+                for (const statement of tombstonesWithEntries(db, taken, now)) {
+                    yield* query("remove", statement);
+                }
                 yield* query("remove", () =>
                     db
                         .update(budgets)

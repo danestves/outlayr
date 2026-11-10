@@ -174,6 +174,27 @@ describe("deletedAccount", () => {
     });
 });
 
+describe("deletedAccount for a person", () => {
+    it("takes their entries with them, schedule retired, where a bank's would only be detached", () => {
+        const ana = account("ana", { kind: "person" });
+        const rows = deletedAccount(
+            books({
+                accounts: [ana],
+                transactions: [
+                    entry("loan", { accountId: "ana", recurringType: 3 }),
+                    entry("loan fee", { accountId: "cash", feeForId: "loan" }),
+                    entry("settled", { accountId: "ana", deletedAt: EARLIER }),
+                ],
+            }),
+            ana,
+            AT
+        );
+        // The fee is found through its live loan, so it goes first or a push that dies midway strands it.
+        expect(rows.map((row) => row.localId)).toStrictEqual(["loan fee", "loan", "ana"]);
+        expect(rows[1]).toMatchObject({ deletedAt: AT, fields: { accountId: "ana", recurringType: 0 } });
+    });
+});
+
 describe("rows the server must not drop", () => {
     it("carries restoredAt, or a restored row reads as an older era and loses", () => {
         const restored = account("chase", { restoredAt: EARLIER });

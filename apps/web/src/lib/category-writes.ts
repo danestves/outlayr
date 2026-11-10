@@ -1,6 +1,10 @@
 import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import type { PushRow } from "@outlayr/backend/confect/sync";
 import { formatCategoryName } from "@outlayr/money/category-rules";
+import { categoryDeletionPlan } from "@outlayr/money/entry-deletion";
+
+import { planBooks, withId } from "./account-writes";
+import { takenWith, tombstonesOf } from "./delete-writes";
 
 type Category = LedgerBooks["categories"][number];
 type Budget = LedgerBooks["budgets"][number];
@@ -107,15 +111,24 @@ export function editedCategory(rows: readonly Category[], doc: Category, draft: 
     };
 }
 
-export function deletionOf(books: Pick<LedgerBooks, "budgets" | "categories" | "transactions">, id: string) {
+type DeletionBooks = Pick<LedgerBooks, "budgets" | "categories"> & Parameters<typeof planBooks>[0];
+
+export function deletionOf(books: DeletionBooks, id: string) {
     const target = books.categories.find((row) => row.localId === id && row.deletedAt === null);
     if (!target) {
         return null;
     }
+    // Budget plans are not in the browser's books: the caller fetches this category's and adds `deletedPlans`.
+    const plan = categoryDeletionPlan(
+        { ...planBooks(books), budgetPlans: [], budgets: withId(books.budgets), categories: withId(books.categories) },
+        id
+    );
+    const entries = books.transactions.filter((row) => row.categoryId === id && plan.transactions.has(row.localId));
     return {
-        budgets: books.budgets.filter((row) => row.categoryId === id && row.deletedAt === null),
-        children: books.categories.filter((row) => row.parentId === id && row.deletedAt === null),
-        entries: books.transactions.filter((row) => row.categoryId === id && row.deletedAt === null),
+        budgets: books.budgets.filter((row) => plan.budgets.has(row.localId)),
+        children: books.categories.filter((row) => plan.detached.categories.has(row.localId)),
+        entries,
+        taken: takenWith(books, plan, new Set(entries.map((row) => row.localId))),
         target,
     };
 }
@@ -135,6 +148,7 @@ export const deletedPlans = (plans: readonly PlanRow[], now: number) =>
 export function deletionRows(deletion: Deletion, plans: readonly PlanRow[], now: number): PushRow[] {
     const stamp = { deletedAt: now, updatedAt: now };
     return [
+        ...tombstonesOf(deletion.taken, now),
         ...deletion.entries.map((doc): PushRow => {
             const fields = wireFields<Entry>(doc);
             return {

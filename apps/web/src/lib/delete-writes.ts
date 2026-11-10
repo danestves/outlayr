@@ -7,13 +7,10 @@ import { canonicalOccurrence, occurrenceFeeId, successorRow } from "@outlayr/mon
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import * as Effect from "effect/Effect";
 
-import { nextRow, ratesLookup } from "./account-writes";
+import { nextRow, planBooks, ratesLookup } from "./account-writes";
 import type { CommitRow } from "./ledger-committer";
 
 type Doc = LedgerBooks["transactions"][number];
-
-const withId = <Row extends { localId: string }>(rows: readonly Row[]) =>
-    rows.map((row) => ({ ...row, id: row.localId }));
 
 // The columns native's database fills in by default, which a push must spell out.
 const ENTRY_DEFAULTS = {
@@ -91,49 +88,50 @@ function successorPush(books: LedgerBooks, carrier: Doc, at: number): CommitRow[
     return [entryPush({ ...values, id: occurrenceFeeId(row.id) }, at), entryPush(row, at)];
 }
 
+type Taken = Pick<LedgerBooks, "installmentPlans" | "installments" | "outsidePayments" | "transactions" | "transfers">;
+
+/** What a deletion plan takes besides the entries `asked` for, which their own caller writes. */
+export const takenWith = (books: Taken, gone: ReturnType<typeof deletionPlan>, asked: ReadonlySet<string>): Taken => ({
+    installmentPlans: books.installmentPlans.filter((row) => gone.installmentPlans.has(row.localId)),
+    installments: books.installments.filter((row) => gone.installments.has(row.localId)),
+    outsidePayments: books.outsidePayments.filter((row) => gone.outsidePayments.has(row.localId)),
+    transactions: books.transactions.filter((row) => gone.transactions.has(row.localId) && !asked.has(row.localId)),
+    transfers: books.transfers.filter((row) => gone.transfers.has(row.localId)),
+});
+
 /**
- * The rows that delete these entries and transfers, as native's delete does. Push batches commit separately, so what
- * was asked for goes last: a push that dies midway leaves it in the list, and deleting again finishes the rest.
+ * Their tombstones. Push batches commit separately, so these go before what was asked for: a push that dies midway
+ * leaves that in the list, and deleting again finds the rest through it.
  */
+export function tombstonesOf(taken: Taken, at: number): CommitRow[] {
+    const tombstone = { deletedAt: at };
+    return [
+        ...taken.transactions.map((row) =>
+            nextRow("transactions", row, { ...tombstone, accountId: row.accountId ?? null }, at)
+        ),
+        ...taken.transfers.map((row) => nextRow("transfers", row, tombstone, at)),
+        ...taken.installments.map((row) => nextRow("installments", row, tombstone, at)),
+        ...taken.outsidePayments.map((row) => nextRow("outsidePayments", row, tombstone, at)),
+        ...taken.installmentPlans.map((row) => nextRow("installmentPlans", row, tombstone, at)),
+    ];
+}
+
+/** The rows that delete these entries and transfers, as native's delete does, with what was asked for last. */
 export function deletionOf(books: LedgerBooks, ids: Iterable<string>, at: number) {
     const wanted = new Set(ids);
-    const gone = deletionPlan(
-        {
-            installmentPlans: withId(books.installmentPlans),
-            installments: withId(books.installments),
-            outsidePayments: withId(books.outsidePayments),
-            transactions: withId(books.transactions),
-            transfers: withId(books.transfers),
-        },
-        wanted
-    );
+    const gone = deletionPlan(planBooks(books), wanted);
     const asked = books.transactions.filter((row) => gone.transactions.has(row.localId) && wanted.has(row.localId));
-    const tombstone = { deletedAt: at };
     return {
         count: [...wanted].filter((id) => gone.transactions.has(id) || gone.transfers.has(id)).length,
         rows: [
             ...asked.flatMap((row) => successorPush(books, row, at)),
-            ...books.transactions
-                .filter((row) => gone.transactions.has(row.localId) && !wanted.has(row.localId))
-                .map((row) => nextRow("transactions", row, { ...tombstone, accountId: row.accountId ?? null }, at)),
-            ...books.transfers
-                .filter((row) => gone.transfers.has(row.localId))
-                .map((row) => nextRow("transfers", row, tombstone, at)),
-            ...books.installments
-                .filter((row) => gone.installments.has(row.localId))
-                .map((row) => nextRow("installments", row, tombstone, at)),
-            ...books.outsidePayments
-                .filter((row) => gone.outsidePayments.has(row.localId))
-                .map((row) => nextRow("outsidePayments", row, tombstone, at)),
-            ...books.installmentPlans
-                .filter((row) => gone.installmentPlans.has(row.localId))
-                .map((row) => nextRow("installmentPlans", row, tombstone, at)),
+            ...tombstonesOf(takenWith(books, gone, wanted), at),
             // The tombstone retires to `none`, which is how deleting the pending charge stops a subscription.
             ...asked.map((row) =>
                 nextRow(
                     "transactions",
                     row,
-                    { ...tombstone, accountId: row.accountId ?? null, recurringType: RECURRING_TYPE.none },
+                    { accountId: row.accountId ?? null, deletedAt: at, recurringType: RECURRING_TYPE.none },
                     at
                 )
             ),

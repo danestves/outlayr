@@ -3,7 +3,9 @@ import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { FIELDS_BY_TABLE } from "@outlayr/backend/confect/lib/syncTables";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { decimalsFor } from "@outlayr/money/currency";
+import { accountDeletionPlan } from "@outlayr/money/entry-deletion";
 import type { RateLookup } from "@outlayr/money/rates";
+import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";
 import * as Effect from "effect/Effect";
 
@@ -54,6 +56,20 @@ export function nextRow(table: CommitRow["table"], doc: SyncedDoc, change: Chang
 }
 
 const isLive = <Row extends { deletedAt: number | null }>(row: Row) => row.deletedAt === null;
+
+export const withId = <Row extends { localId: string }>(rows: readonly Row[]) =>
+    rows.map((row) => ({ ...row, id: row.localId }));
+
+type PlanTable = "installmentPlans" | "installments" | "outsidePayments" | "transactions" | "transfers";
+
+/** The tables every deletion plan reads, each row under `id` as the plan names it. */
+export const planBooks = (books: Pick<LedgerBooks, PlanTable>) => ({
+    installmentPlans: withId(books.installmentPlans),
+    installments: withId(books.installments),
+    outsidePayments: withId(books.outsidePayments),
+    transactions: withId(books.transactions),
+    transfers: withId(books.transfers),
+});
 
 export const ratesLookup =
     (books: Pick<LedgerBooks, "exchangeRates">): RateLookup =>
@@ -211,47 +227,54 @@ export const reorderedAccounts = (order: readonly Account[], at: number) =>
         account.sortOrder === sortOrder ? [] : [nextRow("accounts", account, { sortOrder }, at)]
     );
 
-/** What `softDelete` touches on native. Entries stay detached, tombstoned ones too, or a restore re-links them. */
+/** The rows of an account's deletion plan, which a test holds equal to native's `softDelete`. */
 export function deletedAccount(books: LedgerBooks, account: Account, at: number): CommitRow[] {
-    const id = account.localId;
-    const gone = { deletedAt: at };
-    const plans = books.installmentPlans.filter((row) => isLive(row) && row.accountId === id);
-    const planIds = new Set(plans.map((row) => row.localId));
-    const doomedTransfers = new Set(
-        books.transfers
-            .filter((row) => isLive(row) && (row.fromAccountId === id || row.toAccountId === id))
-            .map((row) => row.localId)
+    const plan = accountDeletionPlan(
+        {
+            ...planBooks(books),
+            accounts: withId(books.accounts),
+            outsideMoves: withId(books.outsideMoves),
+            savingsGoals: withId(books.savingsGoals),
+        },
+        account.localId
     );
+    const gone = { deletedAt: at };
+    const tombstones = (
+        table: "installmentPlans" | "installments" | "outsideMoves" | "outsidePayments" | "savingsGoals"
+    ) => books[table].filter((row) => plan[table].has(row.localId)).map((row) => nextRow(table, row, gone, at));
+    const entries = books.transactions.flatMap((row) => {
+        const taken = plan.transactions.has(row.localId);
+        const detached = plan.detached.transactions.has(row.localId);
+        if (!(taken || detached)) {
+            return [];
+        }
+        // A person's own entry: a schedule left on its tombstone would be revived.
+        const own = taken && !detached && row.accountId === account.localId;
+        const change = {
+            ...(taken && gone),
+            ...(own && { recurringType: RECURRING_TYPE.none }),
+            ...(detached && { accountId: null }),
+        };
+        return [{ own, row: nextRow("transactions", row, change, at) }];
+    });
     // Push batches commit separately, so each row must stay findable until the rows it leads to are gone: a push that
-    // dies midway leaves the account there, and deleting again rebuilds the rest. Fees before transfers, account last.
+    // dies midway leaves the account there, and deleting again rebuilds the rest. Fees before transfers, a person's
+    // own entries after what goes with them, account last.
     return [
-        ...books.transactions.flatMap((row) => {
-            const fee = isLive(row) && doomedTransfers.has(row.transferId ?? "");
-            const attached = row.accountId === id;
-            return fee || attached
-                ? [nextRow("transactions", row, { ...(fee && gone), ...(attached && { accountId: null }) }, at)]
-                : [];
-        }),
+        ...entries.filter((entry) => !entry.own).map((entry) => entry.row),
         ...books.transfers.flatMap((row) => {
-            const doomed = doomedTransfers.has(row.localId);
-            const planned = planIds.has(row.installmentPlanId ?? "");
-            return doomed || planned
-                ? [nextRow("transfers", row, { ...(doomed && gone), ...(planned && { installmentPlanId: null }) }, at)]
+            const taken = plan.transfers.has(row.localId);
+            const detached = plan.detached.transfers.has(row.localId);
+            return taken || detached
+                ? [nextRow("transfers", row, { ...(taken && gone), ...(detached && { installmentPlanId: null }) }, at)]
                 : [];
         }),
-        ...books.installments
-            .filter((row) => isLive(row) && planIds.has(row.planId))
-            .map((row) => nextRow("installments", row, gone, at)),
-        ...books.outsidePayments
-            .filter((row) => isLive(row) && planIds.has(row.planId))
-            .map((row) => nextRow("outsidePayments", row, gone, at)),
-        ...plans.map((row) => nextRow("installmentPlans", row, gone, at)),
-        ...books.outsideMoves
-            .filter((row) => isLive(row) && row.accountId === id)
-            .map((row) => nextRow("outsideMoves", row, gone, at)),
-        ...books.savingsGoals
-            .filter((row) => isLive(row) && row.accountId === id)
-            .map((row) => nextRow("savingsGoals", row, gone, at)),
+        ...tombstones("installments"),
+        ...tombstones("outsidePayments"),
+        ...tombstones("installmentPlans"),
+        ...tombstones("outsideMoves"),
+        ...tombstones("savingsGoals"),
+        ...entries.filter((entry) => entry.own).map((entry) => entry.row),
         nextRow("accounts", account, gone, at),
     ];
 }
