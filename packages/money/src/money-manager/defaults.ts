@@ -1,5 +1,3 @@
-import { presetLabel } from "@/data/categories-core";
-
 import { iconFamilyPreset, normalizeLabel, presetForMoneyManager } from "./matching";
 import type { AccountTarget, CategoryTarget, MmAnalysis, MmChoices, MmSnapshot, OutlayrLedgerState } from "./types";
 
@@ -50,7 +48,7 @@ function matchCategories(snapshot: MmSnapshot, analysis: MmAnalysis, ledger: Out
                     category.income === view.income &&
                     (category.preset === preset ||
                         normalizeLabel(category.name) === normalizeLabel(preset) ||
-                        normalizeLabel(category.name) === normalizeLabel(presetLabel(preset)))
+                        normalizeLabel(category.name) === normalizeLabel(ledger.presetLabel(preset)))
             );
             choices.set(
                 view.uid,

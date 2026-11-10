@@ -1,7 +1,8 @@
+import { keptCategoryNames, matchedKey } from "@outlayr/money/money-manager/plan";
+
 import { presetLabel, SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
 import { formatSignedAmount } from "@/domain/account-display";
 import { formatFixed } from "@/domain/money";
-import { keptCategoryNames, matchedKey } from "@/domain/money-manager/plan";
 import type { TranslateFn } from "@/i18n/context";
 import type { MoneyManagerDraft } from "@/lib/money-manager-session";
 

@@ -1,3 +1,5 @@
+import { defaultChoices } from "@outlayr/money/money-manager/defaults";
+import type { CategoryTarget, MmCategoryView } from "@outlayr/money/money-manager/types";
 import { useRef, useState } from "react";
 import { View } from "react-native";
 
@@ -12,8 +14,6 @@ import {
     SUGGESTED_CATEGORY_PRESETS,
 } from "@/data/categories-core";
 import { tc } from "@/domain/money-manager/count-labels";
-import { defaultChoices } from "@/domain/money-manager/defaults";
-import type { CategoryTarget, MmCategoryView } from "@/domain/money-manager/types";
 import { useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";

@@ -1,3 +1,4 @@
+import type { MmOverlap, StartChoice } from "@outlayr/money/money-manager/types";
 import { View } from "react-native";
 
 import { ChoiceRow, SettingsSection } from "@/components/list/list-row";
@@ -5,7 +6,6 @@ import { MonoLabel } from "@/components/mono-label";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { formatTargetDate, monthAbbrev } from "@/domain/dates";
-import type { MmOverlap, StartChoice } from "@/domain/money-manager/types";
 import { useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";
 import { withAlpha } from "@/theme/shade";

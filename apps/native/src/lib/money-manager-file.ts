@@ -1,12 +1,12 @@
+import { readMoneyManagerArchive } from "@outlayr/money/money-manager/archive";
+import { readMoneyManagerSnapshot } from "@outlayr/money/money-manager/snapshot";
+import type { MmArchiveError, MmSnapshot } from "@outlayr/money/money-manager/types";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { getDocumentAsync } from "expo-document-picker";
 import { File } from "expo-file-system";
 import { deserializeDatabaseSync } from "expo-sqlite";
 
-import { readMoneyManagerArchive } from "@/domain/money-manager/archive";
-import { readMoneyManagerSnapshot } from "@/domain/money-manager/snapshot";
-import type { MmArchiveError, MmSnapshot } from "@/domain/money-manager/types";
 import { duringHandoff } from "@/lib/app-handoff";
 
 export class MoneyManagerFileError extends Schema.TaggedError<MoneyManagerFileError>()("MoneyManagerFileError", {

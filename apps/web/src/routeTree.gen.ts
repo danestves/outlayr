@@ -34,6 +34,7 @@ import { Route as Char123LocaleChar125SupportRouteImport } from './routes/{-$loc
 import { Route as Char123LocaleChar125TermsRouteImport } from './routes/{-$locale}/terms'
 import { Route as DotwellKnownMcpServerCardDotjsonRouteImport } from './routes/[.]well-known.mcp.server-card[.]json'
 import { Route as AccountAppIndexRouteImport } from './routes/_account/app.index'
+import { Route as AccountAppImportRouteImport } from './routes/_account/app.import'
 import { Route as AccountAppInsightsRouteImport } from './routes/_account/app.insights'
 import { Route as AccountAppOnboardingRouteImport } from './routes/_account/app.onboarding'
 import { Route as AccountAppRecurringRouteImport } from './routes/_account/app.recurring'
@@ -60,6 +61,9 @@ import { Route as AccountAppDebtsIndexRouteImport } from './routes/_account/app.
 import { Route as AccountAppDebtsAccountIdRouteImport } from './routes/_account/app.debts.$accountId'
 import { Route as AccountAppGoalsIndexRouteImport } from './routes/_account/app.goals.index'
 import { Route as AccountAppGoalsGoalIdRouteImport } from './routes/_account/app.goals.$goalId'
+import { Route as AccountAppImportIndexRouteImport } from './routes/_account/app.import.index'
+import { Route as AccountAppImportFileRouteImport } from './routes/_account/app.import.file'
+import { Route as AccountAppImportMoneyManagerRouteImport } from './routes/_account/app.import.money-manager'
 import { Route as AccountAppInsightsIndexRouteImport } from './routes/_account/app.insights.index'
 import { Route as AccountAppInsightsBreakdownRouteImport } from './routes/_account/app.insights.breakdown'
 import { Route as AccountAppInsightsCashFlowRouteImport } from './routes/_account/app.insights.cash-flow'
@@ -224,6 +228,11 @@ const AccountAppIndexRoute = AccountAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AccountAppRoute,
 } as any)
+const AccountAppImportRoute = AccountAppImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => AccountAppRoute,
+} as any)
 const AccountAppInsightsRoute = AccountAppInsightsRouteImport.update({
   id: '/insights',
   path: '/insights',
@@ -369,6 +378,22 @@ const AccountAppGoalsGoalIdRoute = AccountAppGoalsGoalIdRouteImport.update({
   path: '/goals/$goalId',
   getParentRoute: () => AccountAppRoute,
 } as any)
+const AccountAppImportIndexRoute = AccountAppImportIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountAppImportRoute,
+} as any)
+const AccountAppImportFileRoute = AccountAppImportFileRouteImport.update({
+  id: '/file',
+  path: '/file',
+  getParentRoute: () => AccountAppImportRoute,
+} as any)
+const AccountAppImportMoneyManagerRoute =
+  AccountAppImportMoneyManagerRouteImport.update({
+    id: '/money-manager',
+    path: '/money-manager',
+    getParentRoute: () => AccountAppImportRoute,
+  } as any)
 const AccountAppInsightsIndexRoute = AccountAppInsightsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -528,6 +553,7 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
+  '/app/import': typeof AccountAppImportRouteWithChildren
   '/app/insights': typeof AccountAppInsightsRouteWithChildren
   '/app/onboarding': typeof AccountAppOnboardingRoute
   '/app/recurring': typeof AccountAppRecurringRoute
@@ -552,6 +578,8 @@ export interface FileRoutesByFullPath {
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
   '/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
   '/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
+  '/app/import/file': typeof AccountAppImportFileRoute
+  '/app/import/money-manager': typeof AccountAppImportMoneyManagerRoute
   '/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
   '/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
   '/app/insights/recap': typeof AccountAppInsightsRecapRoute
@@ -574,6 +602,7 @@ export interface FileRoutesByFullPath {
   '/app/accounts/': typeof AccountAppAccountsIndexRoute
   '/app/debts/': typeof AccountAppDebtsIndexRoute
   '/app/goals/': typeof AccountAppGoalsIndexRoute
+  '/app/import/': typeof AccountAppImportIndexRoute
   '/app/insights/': typeof AccountAppInsightsIndexRoute
   '/app/installments/': typeof AccountAppInstallmentsIndexRoute
   '/app/settings/': typeof AccountAppSettingsIndexRoute
@@ -625,6 +654,8 @@ export interface FileRoutesByTo {
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
   '/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
   '/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
+  '/app/import/file': typeof AccountAppImportFileRoute
+  '/app/import/money-manager': typeof AccountAppImportMoneyManagerRoute
   '/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
   '/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
   '/app/insights/recap': typeof AccountAppInsightsRecapRoute
@@ -647,6 +678,7 @@ export interface FileRoutesByTo {
   '/app/accounts': typeof AccountAppAccountsIndexRoute
   '/app/debts': typeof AccountAppDebtsIndexRoute
   '/app/goals': typeof AccountAppGoalsIndexRoute
+  '/app/import': typeof AccountAppImportIndexRoute
   '/app/insights': typeof AccountAppInsightsIndexRoute
   '/app/installments': typeof AccountAppInstallmentsIndexRoute
   '/app/settings': typeof AccountAppSettingsIndexRoute
@@ -679,6 +711,7 @@ export interface FileRoutesById {
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
+  '/_account/app/import': typeof AccountAppImportRouteWithChildren
   '/_account/app/insights': typeof AccountAppInsightsRouteWithChildren
   '/_account/app/onboarding': typeof AccountAppOnboardingRoute
   '/_account/app/recurring': typeof AccountAppRecurringRoute
@@ -703,6 +736,8 @@ export interface FileRoutesById {
   '/_account/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
   '/_account/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
   '/_account/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
+  '/_account/app/import/file': typeof AccountAppImportFileRoute
+  '/_account/app/import/money-manager': typeof AccountAppImportMoneyManagerRoute
   '/_account/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
   '/_account/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
   '/_account/app/insights/recap': typeof AccountAppInsightsRecapRoute
@@ -725,6 +760,7 @@ export interface FileRoutesById {
   '/_account/app/accounts/': typeof AccountAppAccountsIndexRoute
   '/_account/app/debts/': typeof AccountAppDebtsIndexRoute
   '/_account/app/goals/': typeof AccountAppGoalsIndexRoute
+  '/_account/app/import/': typeof AccountAppImportIndexRoute
   '/_account/app/insights/': typeof AccountAppInsightsIndexRoute
   '/_account/app/installments/': typeof AccountAppInstallmentsIndexRoute
   '/_account/app/settings/': typeof AccountAppSettingsIndexRoute
@@ -758,6 +794,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/terms'
     | '/{-$locale}/'
     | '/.well-known/mcp/server-card.json'
+    | '/app/import'
     | '/app/insights'
     | '/app/onboarding'
     | '/app/recurring'
@@ -782,6 +819,8 @@ export interface FileRouteTypes {
     | '/app/accounts/reorder'
     | '/app/debts/$accountId'
     | '/app/goals/$goalId'
+    | '/app/import/file'
+    | '/app/import/money-manager'
     | '/app/insights/breakdown'
     | '/app/insights/cash-flow'
     | '/app/insights/recap'
@@ -804,6 +843,7 @@ export interface FileRouteTypes {
     | '/app/accounts/'
     | '/app/debts/'
     | '/app/goals/'
+    | '/app/import/'
     | '/app/insights/'
     | '/app/installments/'
     | '/app/settings/'
@@ -855,6 +895,8 @@ export interface FileRouteTypes {
     | '/app/accounts/reorder'
     | '/app/debts/$accountId'
     | '/app/goals/$goalId'
+    | '/app/import/file'
+    | '/app/import/money-manager'
     | '/app/insights/breakdown'
     | '/app/insights/cash-flow'
     | '/app/insights/recap'
@@ -877,6 +919,7 @@ export interface FileRouteTypes {
     | '/app/accounts'
     | '/app/debts'
     | '/app/goals'
+    | '/app/import'
     | '/app/insights'
     | '/app/installments'
     | '/app/settings'
@@ -908,6 +951,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/terms'
     | '/{-$locale}/'
     | '/.well-known/mcp/server-card.json'
+    | '/_account/app/import'
     | '/_account/app/insights'
     | '/_account/app/onboarding'
     | '/_account/app/recurring'
@@ -932,6 +976,8 @@ export interface FileRouteTypes {
     | '/_account/app/accounts/reorder'
     | '/_account/app/debts/$accountId'
     | '/_account/app/goals/$goalId'
+    | '/_account/app/import/file'
+    | '/_account/app/import/money-manager'
     | '/_account/app/insights/breakdown'
     | '/_account/app/insights/cash-flow'
     | '/_account/app/insights/recap'
@@ -954,6 +1000,7 @@ export interface FileRouteTypes {
     | '/_account/app/accounts/'
     | '/_account/app/debts/'
     | '/_account/app/goals/'
+    | '/_account/app/import/'
     | '/_account/app/insights/'
     | '/_account/app/installments/'
     | '/_account/app/settings/'
@@ -1154,6 +1201,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppIndexRouteImport
       parentRoute: typeof AccountAppRoute
     }
+    '/_account/app/import': {
+      id: '/_account/app/import'
+      path: '/import'
+      fullPath: '/app/import'
+      preLoaderRoute: typeof AccountAppImportRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
     '/_account/app/insights': {
       id: '/_account/app/insights'
       path: '/insights'
@@ -1335,6 +1389,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/app/goals/$goalId'
       preLoaderRoute: typeof AccountAppGoalsGoalIdRouteImport
       parentRoute: typeof AccountAppRoute
+    }
+    '/_account/app/import/': {
+      id: '/_account/app/import/'
+      path: '/'
+      fullPath: '/app/import/'
+      preLoaderRoute: typeof AccountAppImportIndexRouteImport
+      parentRoute: typeof AccountAppImportRoute
+    }
+    '/_account/app/import/file': {
+      id: '/_account/app/import/file'
+      path: '/file'
+      fullPath: '/app/import/file'
+      preLoaderRoute: typeof AccountAppImportFileRouteImport
+      parentRoute: typeof AccountAppImportRoute
+    }
+    '/_account/app/import/money-manager': {
+      id: '/_account/app/import/money-manager'
+      path: '/money-manager'
+      fullPath: '/app/import/money-manager'
+      preLoaderRoute: typeof AccountAppImportMoneyManagerRouteImport
+      parentRoute: typeof AccountAppImportRoute
     }
     '/_account/app/insights/': {
       id: '/_account/app/insights/'
@@ -1562,6 +1637,21 @@ const Char123LocaleChar125RouteRouteWithChildren =
     Char123LocaleChar125RouteRouteChildren,
   )
 
+interface AccountAppImportRouteChildren {
+  AccountAppImportFileRoute: typeof AccountAppImportFileRoute
+  AccountAppImportMoneyManagerRoute: typeof AccountAppImportMoneyManagerRoute
+  AccountAppImportIndexRoute: typeof AccountAppImportIndexRoute
+}
+
+const AccountAppImportRouteChildren: AccountAppImportRouteChildren = {
+  AccountAppImportFileRoute: AccountAppImportFileRoute,
+  AccountAppImportMoneyManagerRoute: AccountAppImportMoneyManagerRoute,
+  AccountAppImportIndexRoute: AccountAppImportIndexRoute,
+}
+
+const AccountAppImportRouteWithChildren =
+  AccountAppImportRoute._addFileChildren(AccountAppImportRouteChildren)
+
 interface AccountAppInsightsRouteChildren {
   AccountAppInsightsBreakdownRoute: typeof AccountAppInsightsBreakdownRoute
   AccountAppInsightsCashFlowRoute: typeof AccountAppInsightsCashFlowRoute
@@ -1627,6 +1717,7 @@ const AccountAppSettingsRouteWithChildren =
   AccountAppSettingsRoute._addFileChildren(AccountAppSettingsRouteChildren)
 
 interface AccountAppRouteChildren {
+  AccountAppImportRoute: typeof AccountAppImportRouteWithChildren
   AccountAppInsightsRoute: typeof AccountAppInsightsRouteWithChildren
   AccountAppOnboardingRoute: typeof AccountAppOnboardingRoute
   AccountAppRecurringRoute: typeof AccountAppRecurringRoute
@@ -1647,6 +1738,7 @@ interface AccountAppRouteChildren {
 }
 
 const AccountAppRouteChildren: AccountAppRouteChildren = {
+  AccountAppImportRoute: AccountAppImportRouteWithChildren,
   AccountAppInsightsRoute: AccountAppInsightsRouteWithChildren,
   AccountAppOnboardingRoute: AccountAppOnboardingRoute,
   AccountAppRecurringRoute: AccountAppRecurringRoute,

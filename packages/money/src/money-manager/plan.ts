@@ -1,14 +1,9 @@
-import {
-    CATEGORY_PALETTE,
-    capitalizeCategoryName,
-    presetFor,
-    presetLabel,
-    SUGGESTED_CATEGORY_PRESETS,
-} from "@/data/categories-core";
-
+import { CATEGORY_PALETTE, capitalizeCategoryName, SUGGESTED_CATEGORY_PRESETS } from "../category-rules";
+import { CANONICAL_CATEGORY_NAMES } from "../contract";
 import { matchedEntryUids } from "./analysis";
 import { nearestPaletteColor, normalizeLabel, outlayrIconFor, suggestAccountKind } from "./matching";
 import type {
+    CategoryPreset,
     CategoryTarget,
     MmAnalysis,
     MmChoices,
@@ -23,6 +18,24 @@ import type {
     PlannedEntry,
     PlannedTransfer,
 } from "./types";
+
+type PresetLabel = OutlayrLedgerState["presetLabel"];
+
+/** The planned categories by key, carrying the ledger's localized preset names. */
+class PlannedCategories extends Map<string, PlannedCategory> {
+    readonly presetLabel: PresetLabel;
+
+    constructor(presetLabel: PresetLabel) {
+        super();
+        this.presetLabel = presetLabel;
+    }
+}
+
+function presetFor(name: string, income: boolean): CategoryPreset | null {
+    const key = capitalizeCategoryName(name);
+    const pool: readonly CategoryPreset[] = CANONICAL_CATEGORY_NAMES[income ? "income" : "expense"];
+    return pool.find((preset) => capitalizeCategoryName(preset) === key) ?? null;
+}
 
 const OTHER_ICON = "MoreHorizontalCircle01";
 
@@ -117,7 +130,7 @@ function categoryChoiceKey(
     uid: string,
     income: boolean,
     choices: Record<string, CategoryTarget>,
-    planned: Map<string, PlannedCategory>
+    planned: PlannedCategories
 ): string | null {
     const choice = choices[uid];
     if (choice == null || choice.kind === "skip") {
@@ -145,16 +158,16 @@ function plannedLabels(choices: MmChoices, ledger: OutlayrLedgerState, income: b
         .map((category) => category.name);
     for (const target of Object.values(choices.categories)) {
         if (target.kind === "preset" && presetKey(target.presetName, income) !== own) {
-            labels.push(presetLabel(target.presetName));
+            labels.push(ledger.presetLabel(target.presetName));
         }
         if (target.kind === "sub" && "presetName" in target.parent) {
-            labels.push(presetLabel(target.parent.presetName));
+            labels.push(ledger.presetLabel(target.parent.presetName));
         }
     }
     return new Set(labels.map(capitalizeCategoryName));
 }
 
-function untouchedPreset(row: OutlayrLedgerState["categories"][number] | undefined): boolean {
+function untouchedPreset(row: OutlayrLedgerState["categories"][number] | undefined, presetLabel: PresetLabel): boolean {
     return (
         row?.preset != null &&
         !row.customName &&
@@ -187,7 +200,7 @@ export function keptCategoryNames(
         }
         if (key.startsWith("existing:")) {
             const row = ledger.categories.find((category) => `existing:${category.id}` === key);
-            if (!untouchedPreset(row) || capitalizeCategoryName(row?.name ?? "") === name) {
+            if (!untouchedPreset(row, ledger.presetLabel) || capitalizeCategoryName(row?.name ?? "") === name) {
                 continue;
             }
         }
@@ -205,7 +218,7 @@ export function keptCategoryNames(
     return kept;
 }
 
-function ensurePreset(name: string, income: boolean, planned: Map<string, PlannedCategory>): string {
+function ensurePreset(name: string, income: boolean, planned: PlannedCategories): string {
     const key = presetKey(name, income);
     if (!planned.has(key)) {
         const pool = income ? SUGGESTED_CATEGORY_PRESETS.income : SUGGESTED_CATEGORY_PRESETS.expense;
@@ -216,7 +229,7 @@ function ensurePreset(name: string, income: boolean, planned: Map<string, Planne
             icon: preset?.icon ?? OTHER_ICON,
             income,
             key,
-            name: presetLabel(name),
+            name: planned.presetLabel(name),
             parent: null,
             preset: presetFor(name, income),
         });
@@ -224,12 +237,7 @@ function ensurePreset(name: string, income: boolean, planned: Map<string, Planne
     return key;
 }
 
-function ensureExisting(
-    id: string,
-    income: boolean,
-    planned: Map<string, PlannedCategory>,
-    ledger?: OutlayrLedgerState
-): string {
+function ensureExisting(id: string, income: boolean, planned: PlannedCategories, ledger?: OutlayrLedgerState): string {
     const key = `existing:${id}`;
     if (!planned.has(key)) {
         const row = ledger?.categories.find((category) => category.id === id);
@@ -250,7 +258,7 @@ function ensureExisting(
 function parentOf(
     choice: Extract<CategoryTarget, { kind: "sub" }>,
     income: boolean,
-    planned: Map<string, PlannedCategory>,
+    planned: PlannedCategories,
     choices: Record<string, CategoryTarget>
 ): PlannedCategory["parent"] {
     if ("categoryId" in choice.parent) {
@@ -387,8 +395,8 @@ function planCategories(
     analysis: MmAnalysis,
     choices: MmChoices,
     ledger: OutlayrLedgerState
-): Map<string, PlannedCategory> {
-    const planned = new Map<string, PlannedCategory>();
+): PlannedCategories {
+    const planned = new PlannedCategories(ledger.presetLabel);
     const categoryByUid = new Map(snapshot.categories.map((category) => [category.uid, category]));
     const kept = keptCategoryNames(analysis, choices, ledger);
     for (const view of analysis.categories) {
@@ -479,7 +487,7 @@ function planPlainEntries(
     snapshot: MmSnapshot,
     analysis: MmAnalysis,
     choices: MmChoices,
-    planned: Map<string, PlannedCategory>,
+    planned: PlannedCategories,
     matched: ReadonlySet<string>,
     consumed: ReadonlySet<string>
 ): PlannedEntry[] {
@@ -565,7 +573,7 @@ function planBudgets(
     analysis: MmAnalysis,
     choices: MmChoices,
     ledger: OutlayrLedgerState,
-    planned: Map<string, PlannedCategory>
+    planned: PlannedCategories
 ): MmImportPlan["budgets"] {
     const budgetSums = new Map<string, number>();
     for (const view of analysis.categories) {
@@ -643,7 +651,7 @@ function transferEntry(
 function applyUncategorized(
     entries: PlannedEntry[],
     choice: MmChoices["uncategorized"],
-    planned: Map<string, PlannedCategory>,
+    planned: PlannedCategories,
     ledger: OutlayrLedgerState
 ): void {
     if (choice === "leave") {
@@ -683,7 +691,7 @@ function applyUncategorized(
     }
 }
 
-function otherKey(income: boolean, planned: Map<string, PlannedCategory>, ledger: OutlayrLedgerState): string {
+function otherKey(income: boolean, planned: PlannedCategories, ledger: OutlayrLedgerState): string {
     const name = income ? "Other income" : "Other";
     const label = normalizeLabel(name);
     for (const category of planned.values()) {

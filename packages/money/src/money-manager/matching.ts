@@ -1,6 +1,5 @@
-import type { AccountKind } from "@outlayr/money/account-kind";
-
-import { CATEGORY_PALETTE, SUGGESTED_CATEGORY_PRESETS } from "@/data/categories-core";
+import type { AccountKind } from "../account-kind";
+import { CATEGORY_PALETTE, SUGGESTED_CATEGORY_PRESETS } from "../category-rules";
 
 const FALLBACK_ICON = "MoreHorizontalCircle01";
 

@@ -38,6 +38,13 @@
         "./ledger-view": "./src/ledger-view.ts",
         "./ledger-zone": "./src/ledger-zone.ts",
         "./limit-projection": "./src/limit-projection.ts",
+        "./money-manager/analysis": "./src/money-manager/analysis.ts",
+        "./money-manager/archive": "./src/money-manager/archive.ts",
+        "./money-manager/defaults": "./src/money-manager/defaults.ts",
+        "./money-manager/matching": "./src/money-manager/matching.ts",
+        "./money-manager/plan": "./src/money-manager/plan.ts",
+        "./money-manager/snapshot": "./src/money-manager/snapshot.ts",
+        "./money-manager/types": "./src/money-manager/types.ts",
         "./merchant-key": "./src/merchant-key.ts",
         "./occurrence": "./src/occurrence.ts",
         "./pattern-index": "./src/pattern-index.ts",
@@ -64,7 +71,8 @@
     "dependencies": {
         "@noble/hashes": "^2.4.0",
         "dinero.js": "^2.0.2",
-        "effect": "catalog:"
+        "effect": "catalog:",
+        "fflate": "^0.8.3"
     },
     "devDependencies": {
         "@outlayr/config": "workspace:*",

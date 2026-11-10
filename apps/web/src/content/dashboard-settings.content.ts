@@ -146,10 +146,10 @@ const dashboardSettings = {
                 pt: "Enviar dados a provedores de IA",
             }),
             sendToAiHint: t({
-                en: "Lets this browser send installment plan screenshots to an AI provider to read them",
-                es: "Permite que este navegador envíe capturas de planes de cuotas a un proveedor de IA para leerlas",
-                fr: "Permet à ce navigateur d'envoyer des captures de plans de paiement à un fournisseur d'IA pour les lire",
-                pt: "Permite que este navegador envie capturas de planos de parcelamento a um provedor de IA para lê-las",
+                en: "Lets this browser send bank statement PDFs, unmatched merchants from an import and installment plan screenshots to an AI provider",
+                es: "Permite que este navegador envíe estados de cuenta en PDF, comercios sin asignar de una importación y capturas de planes de cuotas a un proveedor de IA",
+                fr: "Permet à ce navigateur d'envoyer des relevés PDF, les commerçants non associés d'une importation et des captures de plans de paiement à un fournisseur d'IA",
+                pt: "Permite que este navegador envie extratos em PDF, estabelecimentos sem associação de uma importação e capturas de planos de parcelamento a um provedor de IA",
             }),
         },
         help: {

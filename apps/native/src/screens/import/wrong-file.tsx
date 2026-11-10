@@ -1,5 +1,6 @@
 import File01Icon from "@hugeicons-pro/core-stroke-rounded/File01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import type { MmArchiveError } from "@outlayr/money/money-manager/types";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -9,7 +10,6 @@ import { SettingsAction } from "@/components/settings/settings-action";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
-import type { MmArchiveError } from "@/domain/money-manager/types";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { useMoneyManagerSession } from "@/lib/money-manager-session";

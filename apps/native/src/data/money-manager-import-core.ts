@@ -1,6 +1,14 @@
 import { accountBalance } from "@outlayr/money/account-balance";
 import { toAccountKind } from "@outlayr/money/account-kind";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
+import type {
+    MmBalanceCheck,
+    MmImportPlan,
+    MmImportRecord,
+    MmUndoCounts,
+    OutlayrLedgerState,
+    PlannedCategory,
+} from "@outlayr/money/money-manager/types";
 import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -8,7 +16,7 @@ import * as Schema from "effect/Schema";
 import { getAccountById, accountsRepo } from "@/data/accounts-core";
 import { Meta } from "@/data/app-meta-core";
 import { TOMBSTONED_BUDGET, budgetsRepo } from "@/data/budgets-core";
-import { pickFreeCategoryIcon, categoriesRepo } from "@/data/categories-core";
+import { pickFreeCategoryIcon, categoriesRepo, presetLabel } from "@/data/categories-core";
 import { settledAccountCellQuery, toCurrencyCell } from "@/data/cell-query";
 import { ERASED_TRANSACTION, ERASED_TRANSFER } from "@/data/erase-core";
 import { transactionsRepo } from "@/data/transactions-core";
@@ -24,14 +32,6 @@ import { loadValuationIn } from "@/data/valuation-source";
 import type { Database } from "@/db/client";
 import { accounts, budgetPlans, budgets, categories, transactions, transfers } from "@/db/schema";
 import { transaction } from "@/db/transaction";
-import type {
-    MmBalanceCheck,
-    MmImportPlan,
-    MmImportRecord,
-    MmUndoCounts,
-    OutlayrLedgerState,
-    PlannedCategory,
-} from "@/domain/money-manager/types";
 import { chunkRows } from "@/lib/chunk";
 
 const ImportOperation = Schema.Literals(["apply", "last", "read", "undo", "verify"]);
@@ -140,6 +140,7 @@ export const readLedgerState = Effect.fn("MoneyManagerImport.readLedgerState")(f
             date: row.date.getTime(),
             income: row.income,
         })),
+        presetLabel: (preset) => presetLabel(preset),
     } satisfies OutlayrLedgerState;
 });
 

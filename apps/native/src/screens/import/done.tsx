@@ -1,5 +1,6 @@
 import Tick02Icon from "@hugeicons-pro/core-stroke-rounded/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import type { MmBalanceCheck } from "@outlayr/money/money-manager/types";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Pressable, View } from "react-native";
@@ -12,7 +13,6 @@ import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { flyleafDate } from "@/domain/flyleaf";
 import { tc } from "@/domain/money-manager/count-labels";
-import type { MmBalanceCheck } from "@/domain/money-manager/types";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";
 import { notifyFailure } from "@/lib/notify";
