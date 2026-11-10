@@ -129,9 +129,9 @@ function KeepsLine() {
     const t = useTranslation();
     const colors = useColors();
     return (
-        <View className="flex-row items-center gap-2 pt-5">
+        <View className="flex-row items-center justify-center gap-2 pb-3">
             <HugeiconsIcon color={colors.income} icon={Tick02Icon} size={16} />
-            <Text className="text-foreground text-body flex-1">{t("pro.band.keeps")}</Text>
+            <Text className="text-foreground text-body shrink">{t("pro.band.keeps")}</Text>
         </View>
     );
 }
@@ -170,6 +170,7 @@ export function PaywallRedesign() {
             {flow.failure === null ? null : <PurchaseFailure message={t(flow.failure)} />}
             {flow.canBuy ? (
                 <View className="px-5 pt-3">
+                    <KeepsLine />
                     <PaywallCta
                         busy={flow.busy === "buy"}
                         busyLabel={t("pro.cta.unlocking")}
@@ -249,11 +250,10 @@ export function PaywallRedesign() {
                 ) : (
                     <PitchBand autolog={flow.autolog} block={flow.block} daysLeft={daysLeft} stats={stats} />
                 )}
-                <View className="bg-background grow px-5 pb-2">
+                <View className="bg-background grow px-5 pb-4">
                     {flow.isPro ? <FeatureRows /> : null}
                     {!flow.isPro && showMonth ? <MonthAhead label={monthLabel} now={now} /> : null}
                     {!flow.isPro && !showMonth ? <PaywallHero /> : null}
-                    {flow.isPro ? null : <KeepsLine />}
                 </View>
                 {largeText ? <View className="bg-background">{footer}</View> : null}
             </ScrollView>
