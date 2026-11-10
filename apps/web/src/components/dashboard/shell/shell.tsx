@@ -19,8 +19,19 @@ function forwardScrollKeys(content: HTMLDivElement | null) {
     return () => document.removeEventListener("keydown", forward);
 }
 
-export function DashboardShell({ children }: { children: ReactNode }) {
+/** `bare` drops the sidebar and the scroll pane: onboarding owns the whole window. */
+export function DashboardShell({ bare = false, children }: { bare?: boolean; children: ReactNode }) {
     const settings = useLedgerSettings();
+    if (bare) {
+        return (
+            <LedgerSettingsContext value={settings}>
+                <style>{accentCss(settings.accent)}</style>
+                <div className="app-shell ph-no-capture min-h-dvh text-sm">
+                    <FlowRoot>{children}</FlowRoot>
+                </div>
+            </LedgerSettingsContext>
+        );
+    }
     return (
         <LedgerSettingsContext value={settings}>
             <style>{accentCss(settings.accent)}</style>

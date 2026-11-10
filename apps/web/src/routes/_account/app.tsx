@@ -1,7 +1,16 @@
 import { ledgerGlance } from "@outlayr/backend/confect/ledgerView";
+import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { useQuery } from "@tanstack/react-query";
-import { Outlet, createFileRoute, redirect, useNavigate, useRouter } from "@tanstack/react-router";
+import {
+    Navigate,
+    Outlet,
+    createFileRoute,
+    redirect,
+    useLocation,
+    useNavigate,
+    useRouter,
+} from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { ConvexError } from "convex/values";
 import { Toast, useToast } from "panelui-web/toast";
@@ -26,6 +35,7 @@ import { watchKeyboardInset } from "@/lib/keyboard-inset";
 import { dropLedger, forgetLedger, hasLedgerCopy, restoreLedger, saveLedger } from "@/lib/ledger-cache";
 import { ledgerCommitter } from "@/lib/ledger-committer";
 import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
+import { onboardingDue, readProgress, subscribeProgress } from "@/lib/onboarding";
 import { currentToken, onSessionChange, userOf } from "@/lib/session";
 import { watchSync } from "@/lib/sync-status";
 
@@ -102,12 +112,30 @@ function SyncedApp() {
             </Suspense>
         );
     }
+    return <Ledgered />;
+}
+
+const onOnboarding = (pathname: string) => pathname.startsWith("/app/onboarding");
+const noProgress = () => null;
+
+function Ledgered() {
+    const { userId } = Route.useLoaderData();
+    const books = useLedgerBooks();
+    const progress = useSyncExternalStore(subscribeProgress, () => readProgress(userId), noProgress);
+    const onboarding = useLocation({ select: (location) => onOnboarding(location.pathname) });
+    const due = onboardingDue(progress, books);
+    if (due && !onboarding) {
+        return <Navigate replace search to="/app/onboarding" />;
+    }
+    if (onboarding && !due) {
+        return <Navigate replace to="/app" />;
+    }
     return (
-        <DashboardShell>
+        <DashboardShell bare={onboarding}>
             <Toast.Provider position="bottom-right">
                 <Unlocked />
             </Toast.Provider>
-            <LiveDashboard>
+            <LiveDashboard books={books}>
                 <Outlet />
             </LiveDashboard>
         </DashboardShell>
@@ -149,7 +177,8 @@ function Unlocked() {
 }
 
 function Pending() {
-    if (!hasLedgerCopy()) {
+    const onboarding = useLocation({ select: (location) => onOnboarding(location.pathname) });
+    if (!hasLedgerCopy() || onboarding) {
         return null;
     }
     return (
@@ -221,12 +250,11 @@ function useLedgerCopy(overview: Overview, photos: PhotoUrls, settled: Promise<b
     }, [dbClient, overview, photos, queryClient, synced, userId]);
 }
 
-function LiveDashboard({ children }: { children: ReactNode }) {
+function LiveDashboard({ books, children }: { books: LedgerBooks; children: ReactNode }) {
     const loaded = Route.useLoaderData();
     const search = Route.useSearch();
     const navigate = useNavigate();
     const [asOf, setAsOf] = useState(loaded.asOf);
-    const books = useLedgerBooks();
     const overview = useMemo(() => ledgerGlance(books, asOf), [books, asOf]);
     useTurnover(overview.nextChangeAt, setAsOf);
     const ledger = useMemo(() => prepareLedger(books, asOf), [books, asOf]);

@@ -52,6 +52,9 @@ export const Route = createFileRoute("/_account")({
 });
 
 function firstVisitFor(page: string | undefined) {
+    if (page === "onboarding") {
+        return null;
+    }
     if (page === "insights") {
         return <InsightsFirstVisit />;
     }
