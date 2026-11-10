@@ -57,6 +57,7 @@ import { entryHref } from "@/state/entry-params";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
+import { scanEntryDraft } from "./entry-drafts";
 import { usePromptLedger } from "./use-prompt-ledger";
 import { useResolvedPhase } from "./use-resolved-phase";
 
@@ -461,18 +462,7 @@ const writeEntry = Effect.fn("ReceiptScan.writeEntry")(function* writeEntry(db: 
     const outcome = yield* commitEntry({
         attachments: attachment === null ? [] : [{ id: null, imageKey: null, imageUri: attachment, name: null }],
         db,
-        draft: {
-            accountId: draft.accountId,
-            amount: draft.amount,
-            categoryId: input.categoryId,
-            currency: draft.currency,
-            date: draft.date,
-            details: null,
-            income: draft.income,
-            merchant: draft.merchant,
-            receipt: serializeReceipt(draft),
-            schedule: null,
-        },
+        draft: scanEntryDraft(draft, input.categoryId),
         source: "scan",
     });
     if (outcome.kind === "failed") {

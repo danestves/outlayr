@@ -32,11 +32,10 @@ import type { Database } from "@/db/client";
 import { rowAmountLabel } from "@/domain/amount-label";
 import { computeCurtainHues } from "@/domain/curtain-hues";
 import { suggestMerchants } from "@/domain/merchant-suggest";
-import { formatAmount, minorUnitsFor, roundToMinorUnits } from "@/domain/money";
+import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
 import { parseReceipt } from "@/domain/receipt-items";
 import type { Allocation } from "@/domain/split";
-import { isRealSplit } from "@/domain/split-draft";
 import type { LogAgainDraft } from "@/domain/transaction-actions";
 import { ctaKey, transactionWhenLabel } from "@/domain/transaction-form-labels";
 import { transactionFormErrors } from "@/domain/transaction-form-validate";
@@ -63,6 +62,7 @@ import { ThinkingOrb } from "../thinking-orb/thinking-orb";
 import { TransactionFormAmountPad } from "./amount-pad";
 import { AttachmentStrip } from "./attachment-strip";
 import { TransactionFormCta } from "./cta";
+import { formEntry } from "./entry-draft";
 import { saveEntry } from "./entry-flows";
 import { entryRateOf } from "./entry-rate";
 import { FormScroll, FormScrollItem, FormScrollStageTarget } from "./form-scroll";
@@ -182,9 +182,18 @@ export function TransactionForm(props: TransactionFormProps) {
     const submitEntry = (value: TransactionFormValues): Effect.Effect<boolean> | null => {
         setSaveFailure(null);
 
-        const entryCurrency = value.txCurrency ?? globalCurrency;
-        const amount = roundToMinorUnits(numpadToNumber(value.amount), entryCurrency);
-        const refusal = split.refusal(amount, entryCurrency) ?? installmentOrder.problem(amount);
+        const entry = formEntry(value, {
+            allocations: split.allocations,
+            details: note.read(),
+            fee: cardFee.input,
+            identity,
+            ledgerCurrency: globalCurrency,
+            paidVia: cardFee.savedPaidVia(value.paidVia),
+            receipt: seed?.receipt,
+            siblings: categoriesForNamespace,
+        });
+        const { amount } = entry;
+        const refusal = split.refusal(amount, entry.currency) ?? installmentOrder.problem(amount);
         if (refusal !== null) {
             haptics("error");
             setSaveFailure(refusal);
@@ -194,50 +203,14 @@ export function TransactionForm(props: TransactionFormProps) {
         return saveEntry({
             commit: {
                 attachments,
-                carry: (savedId) => lookup.carry(savedId, value, entryCurrency),
+                carry: (savedId) => lookup.carry(savedId, value, entry.currency),
                 db,
-                draft: {
-                    accountId: value.account?.id ?? null,
-                    // Rounded to the currency's units at save: switching currency mid-entry leaves the typed digits
-                    // alone, so 12.34 typed in USD would show as ¥12 while the row kept 12.34.
-                    amount,
-                    categoryId: value.category?.id ?? null,
-                    currency: value.txCurrency,
-                    customColor: identity.color,
-                    date: value.date,
-                    details: note.read(),
-                    emoji: identity.emoji,
-                    exchangeRate: value.exchangeRateType == null ? null : entryRateOf(value.rateEntry, entryCurrency),
-                    exchangeRateType: value.exchangeRateType,
-                    fee: (categoryId) =>
-                        cardFee.input(value.merchant.trim() || (value.category?.name ?? ""), categoryId, amount),
-                    icon: identity.icon,
-                    imageColor: identity.photoColor,
-                    imageUri: identity.photoUri,
-                    income: value.income,
-                    merchant: value.merchant,
-                    paidVia: cardFee.savedPaidVia(value.paidVia),
-                    receipt: seed?.receipt,
-                    schedule: value.isSubscription
-                        ? {
-                              coefficient: value.coefficient,
-                              endDate: value.hasEndDate ? value.endDate : null,
-                              leadDays: value.leadDays,
-                              type: value.recurringType,
-                          }
-                        : null,
-                },
+                draft: entry.draft,
                 initial,
-                installments: (entry, writeExtras) => installmentOrder.save(entry, amount, writeExtras),
-                pendingCategory:
-                    value.category || !value.pendingCategory
-                        ? undefined
-                        : { siblings: categoriesForNamespace, value: value.pendingCategory },
+                installments: (input, writeExtras) => installmentOrder.save(input, amount, writeExtras),
+                pendingCategory: entry.pendingCategory,
                 source: "form",
-                splits: {
-                    allocations: isRealSplit(split.allocations) ? split.allocations : [],
-                    decimals: minorUnitsFor(entryCurrency),
-                },
+                splits: entry.splits,
                 tags: tags.commitOf(value),
             },
             onMissingCategory: () => flags.flag("category"),
