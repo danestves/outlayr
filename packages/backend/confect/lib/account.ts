@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import { components } from "../../convex/_generated/api";
 import type { MutationCtx } from "../../convex/_generated/server";
 import { usingR2 } from "../photos";
+import { COPY_BATCH } from "../sharedReports";
 import { SYNCED_TABLES } from "./syncTables";
 
 const r2 = new R2(components.r2);
@@ -122,12 +123,15 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
         ctx.db
             .query("sharedReports")
             .withIndex("by_userId_and_reportId", (q) => q.eq("userId", userId))
-            .collect()
+            .take(COPY_BATCH)
     );
-    yield* Effect.all(
-        sharedRows.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
-        { concurrency: "unbounded", discard: true }
-    );
+    if (sharedRows.length > 0) {
+        yield* Effect.all(
+            sharedRows.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
+            { concurrency: "unbounded", discard: true }
+        );
+        return { done: false, removed: sharedRows.length };
+    }
 
     const mail = yield* Effect.promise(() =>
         ctx.db

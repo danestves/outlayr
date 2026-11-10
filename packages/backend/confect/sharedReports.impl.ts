@@ -8,10 +8,8 @@ import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx } from "./_generated/services";
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
-import { fits, LIFETIMES, MAX_LINKS, newSlug, SLUG } from "./sharedReports";
+import { COPY_BATCH, fits, LIFETIMES, MAX_LINKS, newSlug, SLUG } from "./sharedReports";
 import spec from "./sharedReports.spec";
-
-const EXPIRED_BATCH = 200;
 
 const live = (row: { expiresAt: number | null }, now: number) => row.expiresAt === null || row.expiresAt > now;
 
@@ -127,7 +125,7 @@ const dropExpired = FunctionImpl.make(
         const rows = yield* (yield* DatabaseReader)
             .table("sharedReports")
             .index("by_expiresAt", (q) => q.gte("expiresAt", 0).lte("expiresAt", now))
-            .take(EXPIRED_BATCH);
+            .take(COPY_BATCH);
         for (const row of rows) {
             yield* table.delete(row._id);
         }

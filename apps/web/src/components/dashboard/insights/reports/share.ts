@@ -1,3 +1,4 @@
+import { plainColor } from "@outlayr/backend/confect/sharedReports";
 import type { SharedReport as SharedReportSchema } from "@outlayr/backend/confect/sharedReports.spec";
 
 import type { Arrangement } from "./card";
@@ -51,9 +52,17 @@ export function snapshotOf({
         measure: definition.measure,
         name,
         rise: report.rise
-            ? { color: report.rise.label.color, delta: shown(report.rise.delta), name: rowName(report.rise.label) }
+            ? {
+                  color: plainColor(report.rise.label.color),
+                  delta: shown(report.rise.delta),
+                  name: rowName(report.rise.label),
+              }
             : null,
-        rows: report.rows.map((row) => ({ ...figures(row), color: row.label.color, name: rowName(row.label) })),
+        rows: report.rows.map((row) => ({
+            ...figures(row),
+            color: plainColor(row.label.color),
+            name: rowName(row.label),
+        })),
         rowsBy: definition.rows,
         totals: figures(report.totals),
         unit: amounts ? "amount" : "percent",

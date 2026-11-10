@@ -195,7 +195,9 @@ function useSharing({ books, ledger, words }: SharingInput) {
     return {
         forget: (ids: readonly string[]) => {
             setForgotten((before) => new Set([...before, ...ids]));
-            Promise.all(ids.map((id) => removeLink(id))).catch(() => setForgotten(new Set()));
+            Promise.all(ids.map((id) => removeLink(id))).catch(() =>
+                setForgotten((before) => new Set([...before].filter((id) => !ids.includes(id))))
+            );
         },
         linkOf,
         links: all.filter((link) => !forgotten.has(link.reportId)),

@@ -74,7 +74,7 @@ test("an expired link shows nothing, and sharing again makes a new address", asy
     await expect(t.query(api.sharedReports.view, { slug: first.slug })).resolves.toBeNull();
 });
 
-test("the daily sweep deletes expired copies and keeps the rest", async () => {
+test("the sweep deletes expired copies and keeps the rest", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-11-01T12:00:00Z"));
     const t = convexTest(schema, modules);
@@ -159,4 +159,19 @@ test("a report with a row for every category is shared, and one too large to sto
     // The site redirects every public path to its lower-case form, so an address must survive that.
     expect(slug).toBe(slug.toLowerCase());
     await expect(authenticatedAs(t, owner).mutation(api.sharedReports.publish, sized(400, 200))).rejects.toThrow();
+});
+
+test("a colour that could load another site on the public page is refused", async () => {
+    const t = convexTest(schema, modules);
+    const owner = await seedAuthUser(t);
+
+    await expect(
+        authenticatedAs(t, owner).mutation(api.sharedReports.publish, {
+            ...shared,
+            report: {
+                ...report,
+                rows: report.rows.map((row) => ({ ...row, color: "url(https://example.com/pixel)" })),
+            },
+        })
+    ).rejects.toThrow();
 });
