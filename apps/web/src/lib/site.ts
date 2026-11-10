@@ -87,6 +87,10 @@ export const LEGAL_DAYS = {
     terms: new Date(Date.UTC(2027, 0, 1)),
 } as const;
 
+export function legalInForce(document: keyof typeof LEGAL_DAYS): Date | null {
+    return LEGAL_DAYS[document].getTime() > Date.now() ? null : LEGAL_DAYS[document];
+}
+
 export function legalDate(document: keyof typeof LEGAL_DAYS, dateLocale: string): string {
     return longDate(LEGAL_DAYS[document], dateLocale);
 }

@@ -6,15 +6,23 @@ import type { Locale } from "./i18n";
 import {
     APP_LANGUAGES,
     APP_STORE_URL,
-    LEGAL_DAYS,
     PLAY_STORE_URL,
     SITE_URL,
     SOURCE_URL,
     WIKIDATA_URL,
     X_URL,
+    legalInForce,
 } from "./site";
+import type { LEGAL_DAYS } from "./site";
 
 type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json | undefined };
+
+const TITLE_LIMIT = 60;
+
+export function branded(title: string): string {
+    const full = `${title} · Outlayr`;
+    return full.length > TITLE_LIMIT ? title : full;
+}
 
 export function pageMeta(title: string, description: string): JSX.IntrinsicElements["meta"][] {
     return [
@@ -118,13 +126,13 @@ export function mobileApp(locale: Locale, description: string, fields: { readonl
 
 export function legalPage(locale: Locale, slug: keyof typeof LEGAL_DAYS, name: string) {
     return webPage(locale, `/${slug}`, {
-        dateModified: LEGAL_DAYS[slug].toISOString().slice(0, 10),
+        dateModified: legalInForce(slug)?.toISOString().slice(0, 10),
         name,
         publisher: { "@id": ORGANIZATION_ID },
     });
 }
 
-export function webPage(locale: Locale, path: string, fields: { readonly [key: string]: Json }) {
+export function webPage(locale: Locale, path: string, fields: { readonly [key: string]: Json | undefined }) {
     return {
         "@context": "https://schema.org",
         "@type": "WebPage",

@@ -46,9 +46,8 @@ import {
     serializeArchive,
 } from "./model";
 import type { ArchiveDocument, EraseScope, PulledRow, Range, RangeKey } from "./model";
+import { DATA_TABS } from "./tabs";
 import { download, pullRows } from "./write";
-
-export const DATA_TABS = ["export", "restore", "deleted", "erase"] as const;
 
 const DELETED_TABLES = ["transactions", "installmentPlans", "installments", "outsidePayments"] as const;
 const DELETED_KEY = ["settings.deletedEntries"];

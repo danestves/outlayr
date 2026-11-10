@@ -3,7 +3,7 @@ import { defaultLocale, getIntlayer } from "intlayer";
 
 import { LANGUAGES, pageUrl, publishedLocales } from "@/lib/i18n";
 import { postDay, postsIn } from "@/lib/posts";
-import { LEGAL_DAYS, compareUpdated, guideUpdated } from "@/lib/site";
+import { compareUpdated, guideUpdated, legalInForce } from "@/lib/site";
 
 function pages(): [path: string, updated: Date | null][] {
     const { compare, guides } = getIntlayer("answers");
@@ -20,9 +20,9 @@ function pages(): [path: string, updated: Date | null][] {
         ["/about", null],
         ["/brand", null],
         ["/open", null],
-        ["/terms", LEGAL_DAYS.terms],
-        ["/privacy", LEGAL_DAYS.privacy],
-        ["/delete-account", LEGAL_DAYS["delete-account"]],
+        ["/terms", legalInForce("terms")],
+        ["/privacy", legalInForce("privacy")],
+        ["/delete-account", legalInForce("delete-account")],
         ["/guides", new Date(Math.max(...answers.map(([, updated]) => updated.getTime())))],
         ["/compare", new Date(Math.max(...rivals.map(([, checked]) => checked.getTime())))],
         ["/tools", null],

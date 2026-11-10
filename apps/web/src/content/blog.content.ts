@@ -9,8 +9,8 @@ const blog = {
         }),
         meta: {
             title: t({
-                en: "Outlayr build log: how an open source expense tracker gets made",
-                es: "Bitácora de Outlayr: cómo se hace una app de gastos de código abierto",
+                en: "Outlayr build log: how an open source expense app gets made",
+                es: "Bitácora de Outlayr: cómo se hace una app de código abierto",
             }),
         },
         minutes: insert(t({ en: "{{minutes}} min read", es: "{{minutes}} min de lectura" })),

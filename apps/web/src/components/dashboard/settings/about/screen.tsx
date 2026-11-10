@@ -22,10 +22,10 @@ import packageJson from "../../../../../../native/package.json";
 import licenses from "../../../../../../native/src/screens/settings/licenses.json";
 import { SectionHead, SettingsCard, ToggleRow, useSaveSettings } from "../parts";
 import { SuggestButton } from "./suggest";
+import type { ABOUT_TABS } from "./tabs";
 
 const LicensesTab = lazy(() => import("./licenses").then((module) => ({ default: module.LicensesTab })));
 
-export const ABOUT_TABS = ["about", "licenses", "lab"] as const;
 type AboutTab = (typeof ABOUT_TABS)[number];
 
 const X_PROFILE = "https://x.com/tryoutlayr";

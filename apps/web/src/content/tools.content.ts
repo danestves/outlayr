@@ -32,7 +32,7 @@ const tools = {
                     en: "Split a paycheck, add up your subscriptions, see what an installment plan really costs, or settle a shared bill. Free, and nothing you type leaves your browser.",
                     es: "Reparte tu sueldo, suma tus suscripciones, mira cuánto cuesta un plan de cuotas o salda una cuenta compartida. Gratis, y nada sale de tu navegador.",
                     pt: "Calculadoras financeiras grátis: divida seu salário, some suas assinaturas, veja quanto custa um parcelamento ou divida uma conta. Nada sai do seu navegador.",
-                    fr: "Calculateurs de budget gratuits : répartissez votre salaire, additionnez vos abonnements, voyez ce que coûte un paiement en plusieurs fois ou partagez une addition. Rien ne quitte votre navigateur.",
+                    fr: "Calculateurs de budget gratuits : salaire, abonnements, paiement en plusieurs fois, addition à partager. Rien ne quitte votre navigateur.",
                 }),
                 title: t({
                     en: "Free Money Calculators · Outlayr",
@@ -648,7 +648,7 @@ const tools = {
                 },
                 related: [
                     "/tools/loan-calculator",
-                    "/guides/budget-planner",
+                    "/guides/how-to-pay-cashea",
                     "/tools/split-expenses-calculator",
                 ] satisfies PageRef[],
                 title: t({
@@ -732,7 +732,7 @@ const tools = {
                 }),
                 meta: {
                     title: t({
-                        en: "Split Bill Calculator: Split Expenses and See Who Owes Whom · Outlayr",
+                        en: "Split Bill Calculator: Split Expenses and See Who Owes Whom",
                         es: "Calculadora para dividir gastos: quién le debe a quién",
                         pt: "Dividir conta: calculadora de quem deve a quem · Outlayr",
                         fr: "Partager les dépenses : qui doit combien à qui · Outlayr",
@@ -956,8 +956,8 @@ const tools = {
                 }),
                 meta: {
                     title: t({
-                        en: "BCV Dollar Rate Today and USD to Bolívar Calculator · Outlayr",
-                        es: "Calculadora dólar BCV: convertir bolívares a dólares hoy · Outlayr",
+                        en: "BCV Dollar Rate Today and USD to Bolívar Calculator",
+                        es: "Calculadora dólar BCV: convertir bolívares a dólares hoy",
                     }),
                 },
                 method: [
@@ -975,7 +975,7 @@ const tools = {
                     }),
                 ],
                 related: [
-                    "/guides/multi-currency-expense-tracker",
+                    "/guides/how-to-pay-cashea",
                     "/guides/best-expense-tracker-apps-latin-america",
                     "/tools/dolar-hoy-bolivia",
                 ] satisfies PageRef[],
@@ -1031,7 +1031,7 @@ const tools = {
                 }),
                 meta: {
                     title: t({
-                        en: "Dollar Rate Today in Argentina: Blue, Official, MEP, Card · Outlayr",
+                        en: "Dollar Rate Today in Argentina: Blue, Official, MEP, Card",
                         es: "Dólar hoy Argentina: blue, oficial, MEP y tarjeta · Outlayr",
                     }),
                 },
@@ -1054,7 +1054,7 @@ const tools = {
                     }),
                 ],
                 related: [
-                    "/guides/multi-currency-expense-tracker",
+                    "/guides/track-money-sent-home",
                     "/guides/best-expense-tracker-apps-latin-america",
                     "/tools/dolar-hoy-bolivia",
                 ] satisfies PageRef[],
@@ -1103,8 +1103,8 @@ const tools = {
                 }),
                 meta: {
                     title: t({
-                        en: "Dollar Rate Today in Bolivia: Parallel (Blue) and Official · Outlayr",
-                        es: "Dólar blue Bolivia hoy: paralelo, oficial y calculadora · Outlayr",
+                        en: "Dollar Rate Today in Bolivia: Parallel (Blue) and Official",
+                        es: "Dólar blue Bolivia hoy: paralelo, oficial y calculadora",
                     }),
                 },
                 method: [
@@ -1122,7 +1122,7 @@ const tools = {
                     }),
                 ],
                 related: [
-                    "/guides/multi-currency-expense-tracker",
+                    "/tools/dolar-bcv-hoy",
                     "/guides/best-expense-tracker-apps-latin-america",
                     "/tools/dolar-hoy-argentina",
                 ] satisfies PageRef[],

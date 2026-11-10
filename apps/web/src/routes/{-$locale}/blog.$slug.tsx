@@ -11,7 +11,7 @@ import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
 import { scanMotion } from "@/lib/motion";
 import { getPost, postDay } from "@/lib/posts";
-import { answerTrail, article, ldJson, pageMeta } from "@/lib/seo";
+import { answerTrail, article, branded, ldJson, pageMeta } from "@/lib/seo";
 import { SOURCE_URL } from "@/lib/site";
 
 export const Route = createFileRoute("/{-$locale}/blog/$slug")({
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/{-$locale}/blog/$slug")({
         const published = postDay(loaderData.published);
         return {
             meta: [
-                ...pageMeta(`${loaderData.title} · Outlayr`, loaderData.description),
+                ...pageMeta(branded(loaderData.title), loaderData.description),
                 { content: loaderData.published, property: "article:published_time" },
             ],
             scripts: [

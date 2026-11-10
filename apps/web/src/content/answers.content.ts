@@ -1018,7 +1018,7 @@ const answers = {
                     }),
                     title: t({
                         en: "Fintonic Alternative: Outlayr vs Fintonic",
-                        es: "Alternativa a Fintonic sin conectar tu banco: Outlayr vs Fintonic",
+                        es: "Alternativa a Fintonic sin conectar tu banco: Outlayr",
                     }),
                 },
                 moving: [
@@ -1493,7 +1493,7 @@ const answers = {
                     },
                 ],
                 related: [
-                    "/guides/best-expense-tracker-apps",
+                    "/compare/money-lover",
                     "/guides/multi-currency-expense-tracker",
                     "/compare/spendee",
                 ] satisfies PageRef[],
@@ -2072,7 +2072,7 @@ const answers = {
                 ],
                 related: [
                     "/guides/best-expense-tracker-apps",
-                    "/compare/wallet",
+                    "/compare/money-lover",
                     "/compare/monefy",
                 ] satisfies PageRef[],
                 rival: "Spendee",
@@ -3048,9 +3048,9 @@ const answers = {
                     LIST_PICKED_OURS,
                 ],
                 related: [
-                    "/guides/budget-planner",
+                    "/guides/best-budget-apps-canada",
                     "/guides/ynab-alternatives",
-                    "/compare/goodbudget",
+                    "/guides/best-budget-apps-france",
                 ] satisfies PageRef[],
                 sources: LIST_SOURCES,
                 title: t({
@@ -3285,12 +3285,12 @@ const answers = {
                 meta: {
                     description: t({
                         en: "Seven budget apps that work in Canada, with price, free plan, and whether each needs your bank login. Budget in CAD, checked November 2026.",
-                        es: "Siete apps de presupuesto que funcionan en Canadá, con precio, plan gratis y si cada una necesita tu usuario del banco. Presupuesto en CAD, revisado en noviembre de 2026.",
-                        fr: "Sept applications de budget qui fonctionnent au Canada, avec le prix, l'offre gratuite et si chacune demande vos identifiants bancaires. Budget en CAD, vérifié en novembre 2026.",
+                        es: "Siete apps de presupuesto que funcionan en Canadá, con precio, plan gratis y si piden tu usuario del banco. Presupuesto en CAD, revisado en noviembre de 2026.",
+                        fr: "Sept applications de budget qui fonctionnent au Canada : prix, offre gratuite et identifiants bancaires requis ou non. Budget en CAD, vérifié en novembre 2026.",
                     }),
                     title: t({
-                        en: "Best Budget Apps in Canada (2026), With or Without Your Bank · Outlayr",
-                        es: "Mejores apps de presupuesto en Canadá (2026), con o sin tu banco · Outlayr",
+                        en: "Best Budget Apps in Canada (2026), With or Without Your Bank",
+                        es: "Mejores apps de presupuesto en Canadá (2026), con o sin banco",
                         fr: "Meilleures applications de budget au Canada (2026) · Outlayr",
                     }),
                 },
@@ -3350,7 +3350,11 @@ const answers = {
                     es: "Un presupuesto de noviembre en dólares canadienses sin banco vinculado: quedan $1,284.60, Supermercado $412 de $600, Transporte $128 de $156, Comer fuera pasado con $171 de $150.",
                     fr: "Un budget de novembre en dollars canadiens sans banque liée : il reste 1 284,60 $, Épicerie 412 $ sur 600 $, Transport 128 $ sur 156 $, Restos dépassé à 171 $ sur 150 $.",
                 }),
-                related: ["/guides/best-budget-apps", "/guides/budget-planner", "/compare/monarch"] satisfies PageRef[],
+                related: [
+                    "/guides/best-budget-apps",
+                    "/guides/best-budget-apps-france",
+                    "/compare/monarch",
+                ] satisfies PageRef[],
                 sources: LIST_SOURCES,
                 title: t({
                     en: "The best budget apps in Canada, with or without your bank",
@@ -4255,8 +4259,8 @@ const answers = {
                         es: "Compara 7 apps para controlar gastos en Argentina y México y elige tu gestor de gastos: pesos y dólares, cuotas, efectivo y precio. Outlayr es nuestra.",
                     }),
                     title: t({
-                        en: "Best Expense Tracker Apps in Argentina and Mexico (2026) · Outlayr",
-                        es: "Mejores apps para controlar gastos en Argentina y México (2026) · Outlayr",
+                        en: "Best Expense Tracker Apps in Argentina and Mexico (2026)",
+                        es: "Mejores apps para controlar gastos en Argentina y México (2026)",
                     }),
                 },
                 picked: [
@@ -4271,7 +4275,7 @@ const answers = {
                     LIST_PICKED_OURS,
                 ],
                 related: [
-                    "/guides/multi-currency-expense-tracker",
+                    "/guides/best-expense-tracker-apps-brazil",
                     "/tools/installment-calculator",
                     "/tools/dolar-hoy-bolivia",
                 ] satisfies PageRef[],
@@ -4904,7 +4908,7 @@ const answers = {
                     }),
                     title: t({
                         en: "Best Financial Control Apps in Brazil (2026) · Outlayr",
-                        es: "Mejores apps de control financiero en Brasil (2026) · Outlayr",
+                        es: "Mejores apps de control financiero en Brasil (2026)",
                         pt: "Melhor app de controle financeiro (2026) · Outlayr",
                     }),
                 },
@@ -5554,7 +5558,7 @@ const answers = {
                     }),
                     title: t({
                         en: "Best Budget Apps in France and Quebec (2026) · Outlayr",
-                        es: "Mejores apps de presupuesto en Francia y Quebec (2026) · Outlayr",
+                        es: "Mejores apps de presupuesto en Francia y Quebec (2026)",
                         fr: "Meilleure application de gestion de budget 2026 · Outlayr",
                     }),
                 },
@@ -5578,7 +5582,7 @@ const answers = {
                 related: [
                     "/guides/expense-tracker-template",
                     "/tools/50-30-20-budget-calculator",
-                    "/guides/best-budget-apps",
+                    "/guides/best-budget-apps-canada",
                 ] satisfies PageRef[],
                 sources: t({
                     en: "Each detail about the other apps links to the page it was read on",
@@ -6538,8 +6542,8 @@ const answers = {
                         es: "Seis apps de suscripciones según cómo encuentran los cobros: banco, recibos de Gmail o tu propia lista. Precios, planes gratis y privacidad. Outlayr es nuestra.",
                     }),
                     title: t({
-                        en: "Best Subscription Tracker Apps (2026), Free and Paid · Outlayr",
-                        es: "Mejores apps de suscripciones (2026), gratis y de pago · Outlayr",
+                        en: "Best Subscription Tracker Apps (2026), Free and Paid",
+                        es: "Mejores apps de suscripciones (2026), gratis y de pago",
                     }),
                 },
                 more: [
@@ -6954,12 +6958,12 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "How to pay a Cashea installment step by step: payment methods, reporting the reference, paying early, and what a late payment costs, from Cashea's own help center.",
-                        es: "Cómo pagar una cuota de Cashea paso a paso: métodos de pago, cómo reportar la referencia, adelantar cuotas y cuánto cuesta un atraso, según el centro de ayuda de Cashea.",
+                        en: "How to pay a Cashea installment step by step: payment methods, reporting the reference, paying early, and what a late payment costs, per Cashea's help center.",
+                        es: "Cómo pagar una cuota de Cashea paso a paso: métodos de pago, cómo reportar la referencia, adelantar cuotas y cuánto cuesta un atraso, según la ayuda de Cashea.",
                     }),
                     title: t({
-                        en: "How to Pay Cashea: Installments, Methods, and Late Fees · Outlayr",
-                        es: "Cómo pagar Cashea: cuotas, métodos de pago y atrasos · Outlayr",
+                        en: "How to Pay Cashea: Installments, Methods, and Late Fees",
+                        es: "Cómo pagar Cashea: cuotas, métodos de pago y atrasos",
                     }),
                 },
                 more: [
@@ -7015,7 +7019,7 @@ const answers = {
                 }),
                 related: [
                     "/tools/installment-calculator",
-                    "/guides/multi-currency-expense-tracker",
+                    "/tools/dolar-bcv-hoy",
                     "/guides/best-expense-tracker-apps-latin-america",
                 ] satisfies PageRef[],
                 steps: [
@@ -7715,7 +7719,7 @@ const answers = {
                 related: [
                     "/tools/split-expenses-calculator",
                     "/compare/spendee",
-                    "/guides/expense-tracker-template",
+                    "/guides/track-money-sent-home",
                 ] satisfies PageRef[],
                 steps: [
                     {
@@ -7838,12 +7842,12 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Paid in dollars or euros and sending money home? Budget in the currency you earn and log what you send as a transfer or an expense in Outlayr, in 165 currencies.",
-                        es: "¿Cobras en dólares o euros y envías dinero a tu familia? Haz tu presupuesto en la moneda en que cobras y registra lo que envías como transferencia o gasto en Outlayr, en 165 monedas.",
+                        en: "Paid in dollars or euros and sending money home? Budget in the currency you earn and log what you send as a transfer or expense in Outlayr, in 165 currencies.",
+                        es: "¿Cobras en dólares o euros y envías dinero a tu familia? Haz tu presupuesto en la moneda en que cobras y registra cada envío como transferencia o gasto.",
                     }),
                     title: t({
                         en: "Budget and Track the Money You Send Home · Outlayr",
-                        es: "Presupuesto y control del dinero que envías a tu familia · Outlayr",
+                        es: "Presupuesto y control del dinero que envías a tu familia",
                     }),
                 },
                 more: [
@@ -8505,7 +8509,7 @@ const answers = {
                 related: [
                     "/guides/mint-alternative",
                     "/guides/how-to-track-expenses",
-                    "/guides/multi-currency-expense-tracker",
+                    "/guides/best-expense-tracker-apps-brazil",
                 ] satisfies PageRef[],
                 steps: [
                     {

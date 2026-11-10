@@ -239,14 +239,14 @@ const support = {
             description: t({
                 en: "Restore or cancel Outlayr Pro, get a refund, export your data, or delete your account. Answers to common questions and how to reach support.",
                 es: "Restaura o cancela Outlayr Pro, pide un reembolso, exporta tus datos o elimina tu cuenta. Respuestas a preguntas frecuentes y cómo contactar a soporte.",
-                pt: "Ajuda do Outlayr: restaure ou cancele o Outlayr Pro, peça reembolso, exporte seus dados ou apague sua conta. Respostas para perguntas frequentes e como falar com o suporte.",
-                fr: "Aide Outlayr : restaurez ou résiliez Outlayr Pro, obtenez un remboursement, exportez vos données ou supprimez votre compte. Réponses aux questions fréquentes et comment contacter l'assistance.",
+                pt: "Restaure ou cancele o Outlayr Pro, peça reembolso, exporte seus dados ou apague sua conta. Perguntas frequentes e como falar com o suporte.",
+                fr: "Restaurez ou résiliez Outlayr Pro, obtenez un remboursement, exportez vos données ou supprimez votre compte. Questions fréquentes et contact de l'assistance.",
             }),
             title: t({
                 en: "Outlayr Support: Restore Pro, Export or Delete Your Data",
                 es: "Soporte de Outlayr: restaura Pro, exporta o borra tus datos",
-                pt: "Suporte do Outlayr: restaure o Pro, exporte ou apague seus dados",
-                fr: "Aide et assistance Outlayr : restaurer Pro, exporter ou supprimer vos données",
+                pt: "Ajuda Outlayr: restaure o Pro, exporte ou apague seus dados",
+                fr: "Aide Outlayr : restaurer Pro, exporter, effacer vos données",
             }),
         },
         title: t({
