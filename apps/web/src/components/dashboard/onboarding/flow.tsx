@@ -18,7 +18,7 @@ import type { CommitOutcome } from "@/lib/ledger-committer";
 import { LedgerSettingsContext, useDisplayFormat, writeSettings } from "@/lib/ledger-settings";
 import { freshProgress, readProgress, screenOf, stepIndex, subscribeProgress, writeProgress } from "@/lib/onboarding";
 import type { OnboardingProgress, OnboardingScreen } from "@/lib/onboarding";
-import { pushAccess, subscribePush } from "@/lib/web-push";
+import { currentPush, pushAccess, subscribePush } from "@/lib/web-push";
 
 import { AutoLog } from "./auto-log";
 import { Currency } from "./currency";
@@ -75,21 +75,23 @@ export function Onboarding({ step }: { step: string | undefined }) {
     };
 
     const saveCurrency = () => {
-        setCurrencyFailed(false);
-        if (ledger.books.categories.length === 0) {
-            committer.commit(seededCategories(labelOf, Date.now()).map((row) => categoryPush(row)));
-        }
-        go("auto-log");
-        writeSettings(db, { currency, currencyChosen: "true" }).catch(() => {
+        const refused = () => {
             setCurrencyFailed(true);
             void show("currency");
-        });
+        };
+        setCurrencyFailed(false);
+        if (ledger.books.categories.length === 0) {
+            const seeded = committer.commit(seededCategories(labelOf, Date.now()).map((row) => categoryPush(row)));
+            void seeded.settled.then((outcome) => (outcome.status === "failed" ? refused() : undefined));
+        }
+        go("auto-log");
+        writeSettings(db, { currency, currencyChosen: "true" }).catch(refused);
     };
 
-    const forgetReminder = () => {
+    const keepReminder = (reminderMinute: number | null) => {
         const latest = readProgress(userId);
         if (latest) {
-            writeProgress(userId, { ...latest, reminderMinute: null });
+            writeProgress(userId, { ...latest, reminderMinute });
         }
     };
     // Asked for from the click that leaves the last step: a browser only shows the prompt to a fresh gesture.
@@ -97,7 +99,7 @@ export function Onboarding({ step }: { step: string | undefined }) {
         try {
             const subscription = push?.publicKey ? await subscribePush(push.publicKey) : null;
             if (subscription === null) {
-                forgetReminder();
+                keepReminder(null);
                 return;
             }
             const { auth, p256dh } = subscription.toJSON().keys ?? {};
@@ -110,7 +112,18 @@ export function Onboarding({ step }: { step: string | undefined }) {
                 timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             });
         } catch {
-            forgetReminder();
+            keepReminder(null);
+        }
+    };
+    // A reminder saved on an earlier pass keeps firing unless the server forgets it too.
+    const stopReminding = async (previous: number | null) => {
+        try {
+            const subscription = await currentPush();
+            if (subscription) {
+                await convexClient().mutation(api.webPush.remove, { endpoint: subscription.endpoint });
+            }
+        } catch {
+            keepReminder(previous);
         }
     };
     const askToRemind = (minute: number | null) => {
@@ -161,7 +174,9 @@ export function Onboarding({ step }: { step: string | undefined }) {
                 <Rhythm
                     onAnswer={(reminderMinute) => {
                         go(entered ? "done" : "first-entry", { reminderMinute });
-                        if (entered) {
+                        if (reminderMinute === null) {
+                            void stopReminding(progress.reminderMinute);
+                        } else if (entered) {
                             askToRemind(reminderMinute);
                         }
                     }}
