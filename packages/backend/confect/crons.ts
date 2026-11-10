@@ -17,6 +17,7 @@ export default CronJobs.make()
     .add(CronJob.make("prune stale exchange rates", Duration.hours(24), refs.internal.exchangeRates.pruneStale, {}))
     .add(CronJob.make("drop expired deletion jobs", Duration.hours(24), refs.internal.accountDeletion.cleanupExpired))
     .add(CronJob.make("refresh open stats", Cron.parseUnsafe("10 0 * * *"), refs.internal.openStats.refresh))
+    .add(CronJob.make("drop expired shared reports", Duration.hours(1), refs.internal.sharedReports.dropExpired, {}))
     .add(CronJob.make("send due web reminders", Duration.minutes(5), refs.internal.webPush.sendDue, {}))
     .add(
         CronJob.make("resend open referral grants", Duration.hours(24), refs.internal.referrals.sweepGrants, {

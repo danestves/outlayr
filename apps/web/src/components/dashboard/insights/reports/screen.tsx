@@ -1,6 +1,7 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import BookmarkAdd01Icon from "@hugeicons/core-free-icons/BookmarkAdd01Icon";
 import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
+import Link01Icon from "@hugeicons/core-free-icons/Link01Icon";
 import { useMatch, useNavigate, useSearch } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { useCallback, useMemo, useState } from "react";
@@ -13,23 +14,28 @@ import { periodKeyOf } from "@/lib/dashboard-series-period";
 import { useTagBooks } from "@/lib/ledger-db";
 
 import { InsightsBar } from "../bar";
-import { ReportCard } from "./card";
-import type { Figure } from "./card";
+import { ReportCard, reportFigures } from "./card";
 import { Chart } from "./chart";
 import { DeleteDialog, ExportDialog, RenameDialog, SaveDialog } from "./dialogs";
 import type { ExportJob } from "./dialogs";
-import { Landing } from "./empty";
+import { Landing, NoData } from "./empty";
 import { csvOf, entryRows, tableRows } from "./export";
 import { Library } from "./library";
+import { publishLink, removeLink, useSharedLinks } from "./links";
 import { buildReport } from "./model";
 import type { Definition, Report } from "./model";
 import { Pivot } from "./pivot";
 import { PrintSheet } from "./print";
+import { monthsOf } from "./reading";
 import { SavedList } from "./saved";
 import type { ReportActions } from "./saved";
 import { definitionOf, isBuilding, searchOf } from "./search";
 import type { ReportsPatch, ReportsSearch } from "./search";
+import { canHideAmounts, snapshotOf } from "./share";
+import { ShareDialog } from "./share-dialog";
+import type { ShareOptions } from "./share-dialog";
 import { reportStore, useSavedReports } from "./store";
+import type { SavedReport } from "./store";
 import { Toolbar } from "./toolbar";
 import { useReportWords } from "./words";
 import type { ReportWords } from "./words";
@@ -37,9 +43,11 @@ import type { ReportWords } from "./words";
 const ROUTE = "/_account/app/insights/reports";
 const PATH = "/app/insights/reports";
 const CHART_PRINT_WIDTH = 720;
-const RISE_TONES = { average: "flat", count: "flat", income: "good", net: "flat", spending: "poor" } as const;
 
-type Modal = { id: string | null; kind: "delete" | "export" | "rename" } | { kind: "save" };
+type Modal =
+    | { id: string | null; kind: "delete" | "export" | "rename" }
+    | { id: string; kind: "share" }
+    | { kind: "save"; share: boolean };
 
 const sameDefinition = (a: Definition, b: Definition) =>
     JSON.stringify([searchOf(a), a.accounts]) === JSON.stringify([searchOf(b), b.accounts]);
@@ -99,53 +107,6 @@ function csvOfReport({ definition: target, job, ledger, report: exportReport, wo
     return csvOf([...table, ...entries]);
 }
 
-interface FiguresInput {
-    definition: Definition;
-    empty: boolean;
-    report: Report;
-    words: ReportWords;
-}
-
-function reportFigures({ definition, empty, report, words }: FiguresInput) {
-    const { copy } = words;
-    const span = report.columns.length;
-    const [first] = report.columns;
-    const last = report.columns.at(-1);
-    const columnLabel = (column: typeof first) =>
-        column ? words.columnName(definition.columns, column, report.columns) : "";
-    const unit = copy.groupings[definition.columns];
-    const figures: Figure[] = [
-        {
-            label:
-                definition.columns === "none"
-                    ? copy.kpi.totalPlain
-                    : copy.kpi.total({ count: String(span), unit: (span === 1 ? unit.one : unit.many).value }),
-            value: words.measureValue(definition.measure, report.totals.total),
-        },
-        ...(definition.columns === "none"
-            ? []
-            : [{ label: unit.average, value: words.measureValue(definition.measure, report.totals.average) }]),
-        empty
-            ? { label: copy.kpi.entries, value: "0" }
-            : {
-                  label: report.rise
-                      ? copy.kpi.rise({ from: columnLabel(first), to: columnLabel(last) })
-                      : copy.kpi.riseNone,
-                  value: report.rise ? (
-                      <span className="flex items-center gap-2">
-                          {words.rowName(report.rise.label, definition.rows)}
-                          <span className="dash-trend" data-tone={RISE_TONES[definition.measure]}>
-                              {`+${words.measureValue(definition.measure, report.rise.delta)}`}
-                          </span>
-                      </span>
-                  ) : (
-                      "–"
-                  ),
-              },
-    ].slice(0, 3);
-    return figures;
-}
-
 function PrintedReport({ onDone, printing, words }: { onDone: () => void; printing: Printing; words: ReportWords }) {
     const { copy } = words;
     return (
@@ -200,14 +161,84 @@ function noDataBodyOf({ definition, ledger, rangeName, tags, words }: NoDataInpu
 const savedFor = <Saved extends { id: string }>(modal: Modal | null, saved: readonly Saved[]) =>
     modal && "id" in modal ? saved.find((each) => each.id === modal.id) : undefined;
 
-const rangeOf = (report: Report, currentKey: string, words: ReportWords) => {
-    const [first] = report.columns;
-    const last = report.columns.at(-1);
-    return words.rangeName({
-        from: first?.from.slice(0, 7) ?? currentKey,
-        to: last?.to.slice(0, 7) ?? currentKey,
-    });
-};
+const rangeOf = (report: Report, currentKey: string, words: ReportWords) =>
+    words.rangeName(monthsOf(report.columns, currentKey));
+
+const sharedFor = (modal: Modal | null, report: SavedReport | undefined) =>
+    modal?.kind === "share" ? report : undefined;
+
+interface SharingInput {
+    books: ReturnType<typeof useTagBooks>;
+    ledger: Ledger;
+    words: ReportWords;
+}
+
+/** A link's copy is built here, in the browser, from the ledger the owner is looking at. */
+function useSharing({ books, ledger, words }: SharingInput) {
+    const all = useSharedLinks();
+    const [forgotten, setForgotten] = useState<ReadonlySet<string>>(new Set());
+    const linkOf = (id: string) => all.find((each) => each.reportId === id);
+    const publish = async (target: SavedReport, { amounts, expires }: ShareOptions) => {
+        const report = snapshotOf({
+            amounts,
+            currency: ledger.currency,
+            definition: target.definition,
+            name: target.name,
+            report: buildReport({ books, definition: target.definition, ledger }),
+            rowName: (label) => words.rowName(label, target.definition.rows),
+        });
+        if (report === null) {
+            throw new Error("This report has no percentages to share");
+        }
+        await publishLink({ expires, report, reportId: target.id });
+    };
+    return {
+        forget: (ids: readonly string[]) => {
+            setForgotten((before) => new Set([...before, ...ids]));
+            Promise.all(ids.map((id) => removeLink(id))).catch(() =>
+                setForgotten((before) => new Set([...before].filter((id) => !ids.includes(id))))
+            );
+        },
+        linkOf,
+        links: all.filter((link) => !forgotten.has(link.reportId)),
+        publish,
+        refresh: (target: SavedReport) => {
+            const link = linkOf(target.id);
+            if (link) {
+                publish(target, { amounts: link.unit === "amount", expires: "keep" }).catch(() => undefined);
+            }
+        },
+        remove: async (id: string) => {
+            await removeLink(id);
+        },
+    };
+}
+
+interface ShareModalProps {
+    hideable: boolean;
+    now: number;
+    onClose: () => void;
+    sharing: ReturnType<typeof useSharing>;
+    target: SavedReport | undefined;
+    words: ReportWords;
+}
+
+function ShareModal({ hideable, now, onClose, sharing, target, words }: ShareModalProps) {
+    return (
+        <ShareDialog
+            hideable={hideable}
+            key={target?.id ?? "share"}
+            link={target ? sharing.linkOf(target.id) : undefined}
+            name={target?.name ?? ""}
+            now={now}
+            onClose={onClose}
+            onPublish={(options) => (target ? sharing.publish(target, options) : Promise.resolve())}
+            onRemove={() => (target ? sharing.remove(target.id) : Promise.resolve())}
+            open={target !== undefined}
+            words={words}
+        />
+    );
+}
 
 export function ReportsScreen() {
     const { filters, ledger, setFilters } = useDashboard();
@@ -218,6 +249,7 @@ export function ReportsScreen() {
     const store = reportStore(userId ?? "");
     const saved = useSavedReports(store);
     const words = useReportWords();
+    const sharing = useSharing({ books, ledger, words });
     const { copy } = words;
     const [modal, setModal] = useState<Modal | null>(null);
     const [printing, setPrinting] = useState<Printing | null>(null);
@@ -263,6 +295,16 @@ export function ReportsScreen() {
         setFilters({ accounts: next.accounts });
         return patch({ ...searchOf(next), report: reportId, view: undefined });
     };
+    const share = (target: SavedReport) => {
+        sharing.refresh(target);
+        setModal({ id: target.id, kind: "share" });
+    };
+    const shareOpen = (current: SavedReport) => {
+        if (dirty) {
+            store.change(current.id, { definition });
+        }
+        share({ ...current, definition });
+    };
     const open = (id: string) => {
         const target = saved.find((each) => each.id === id);
         if (target) {
@@ -281,8 +323,17 @@ export function ReportsScreen() {
         open,
         remove: (id) => setModal({ id, kind: "delete" }),
         rename: (id) => setModal({ id, kind: "rename" }),
+        share: (id) => {
+            const target = saved.find((each) => each.id === id);
+            if (target && search.view !== "all" && target.id === active?.id) {
+                shareOpen(target);
+            } else if (target) {
+                share(target);
+            }
+        },
     };
     const modalReport = savedFor(modal, saved);
+    const showing = modal?.kind;
     const exportDefinition = modalReport?.definition ?? definition;
     const exportReport = useMemo(
         () => (modalReport ? buildReport({ books, definition: modalReport.definition, ledger }) : report),
@@ -319,7 +370,7 @@ export function ReportsScreen() {
             {copy.bar.update}
         </Button>
     ) : (
-        <Button disabled={empty} onClick={() => setModal({ kind: "save" })}>
+        <Button disabled={empty} onClick={() => setModal({ kind: "save", share: false })}>
             <Glyph icon={BookmarkAdd01Icon} size={16} />
             {copy.bar.saveReport}
         </Button>
@@ -331,7 +382,9 @@ export function ReportsScreen() {
             books={books}
             currentKey={currentKey}
             ledger={ledger}
+            links={sharing.links}
             now={ledger.now}
+            onForget={sharing.forget}
             reports={saved}
             words={words}
         />
@@ -339,13 +392,26 @@ export function ReportsScreen() {
         <ReportCard
             averages
             definition={definition}
-            empty={empty}
             figures={figures}
-            noDataBody={noDataBody}
-            onClear={() => {
-                setFilters({ accounts: [] });
-                patch({ tags: undefined });
-            }}
+            noData={
+                empty ? (
+                    <NoData
+                        body={noDataBody}
+                        columns={[
+                            ...report.columns.map((column) =>
+                                words.columnName(definition.columns, column, report.columns)
+                            ),
+                            ...(definition.columns === "none" ? [] : [copy.table.average.value]),
+                        ]}
+                        corner={copy.dimensions[definition.rows].value}
+                        onClear={() => {
+                            setFilters({ accounts: [] });
+                            patch({ tags: undefined });
+                        }}
+                        words={words}
+                    />
+                ) : undefined
+            }
             report={report}
             words={words}
         />
@@ -362,6 +428,20 @@ export function ReportsScreen() {
             <Button disabled={empty} onClick={() => setModal({ id: null, kind: "export" })} variant="outline">
                 <Glyph icon={Download01Icon} size={16} />
                 {copy.bar.export}
+            </Button>
+            <Button
+                disabled={empty}
+                onClick={() => {
+                    if (active === undefined) {
+                        setModal({ kind: "save", share: true });
+                        return;
+                    }
+                    shareOpen(active);
+                }}
+                variant="outline"
+            >
+                <Glyph icon={Link01Icon} size={16} />
+                {copy.bar.share}
             </Button>
             {saving}
         </>
@@ -412,15 +492,15 @@ export function ReportsScreen() {
             <SaveDialog
                 currentKey={currentKey}
                 definition={definition}
-                key={modal?.kind === "save" ? "save-open" : "save"}
+                key={showing === "save" ? "save-open" : "save"}
                 name={words.title(definition)}
                 onClose={close}
                 onSave={(name, chosen) => {
                     const created = store.save(name, chosen, ledger.now);
-                    close();
+                    setModal(modal?.kind === "save" && modal.share ? { id: created.id, kind: "share" } : null);
                     build(chosen, created.id);
                 }}
-                open={modal?.kind === "save"}
+                open={showing === "save"}
                 words={words}
             />
             <RenameDialog
@@ -433,7 +513,7 @@ export function ReportsScreen() {
                     }
                     close();
                 }}
-                open={modal?.kind === "rename" && modalReport !== undefined}
+                open={showing === "rename" && modalReport !== undefined}
                 words={words}
             />
             <DeleteDialog
@@ -442,13 +522,16 @@ export function ReportsScreen() {
                 onDelete={() => {
                     if (modalReport) {
                         store.remove(modalReport.id);
+                        if (sharing.linkOf(modalReport.id)) {
+                            sharing.forget([modalReport.id]);
+                        }
                         if (modalReport.id === search.report) {
                             patch({ report: undefined });
                         }
                     }
                     close();
                 }}
-                open={modal?.kind === "delete" && modalReport !== undefined}
+                open={showing === "delete" && modalReport !== undefined}
                 words={words}
             />
             <ExportDialog
@@ -457,9 +540,17 @@ export function ReportsScreen() {
                 name={modalReport?.name ?? words.title(exportDefinition)}
                 onClose={close}
                 onExport={run}
-                open={modal?.kind === "export"}
+                open={showing === "export"}
                 rangeName={rangeOf(exportReport, currentKey, words)}
                 report={exportReport}
+                words={words}
+            />
+            <ShareModal
+                hideable={canHideAmounts(exportReport)}
+                now={ledger.now}
+                onClose={close}
+                sharing={sharing}
+                target={sharedFor(modal, modalReport)}
                 words={words}
             />
             {printing ? <PrintedReport onDone={stopPrinting} printing={printing} words={words} /> : null}

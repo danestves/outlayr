@@ -1374,6 +1374,12 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
         border-color: color-mix(in oklab, var(--color-app-spend) 28%, var(--color-app-bg));
     }
 
+    .dash-badge[data-tone="good"] {
+        color: color-mix(in oklab, var(--color-app-income), var(--color-app-ink) 30%);
+        background: color-mix(in oklab, var(--color-app-income) 14%, var(--color-app-bg));
+        border-color: color-mix(in oklab, var(--color-app-income) 22%, var(--color-app-bg));
+    }
+
     .dash-menu {
         display: flex;
         flex-direction: column;

@@ -1,14 +1,18 @@
 import { Table } from "panelui-web/table";
 
 import type { Dimension, Grouping, Report, ReportRow } from "./model";
-import type { ReportWords } from "./words";
+import type { Reading } from "./reading";
 
 const HEAT_FLOOR = 6;
 const HEAT_RANGE = 44;
 const SMALL_CHANGE = 0.005;
 const PERCENT = 100;
 
-const HEAD = "text-muted-foreground h-10 px-3.5 text-xs font-medium first:ps-5 last:pe-3.5";
+const HEAD = "bg-card text-muted-foreground h-10 px-3.5 text-xs font-medium first:ps-5 last:pe-3.5";
+// Under a phone width the table scrolls sideways, so the column that stays put gets an edge.
+const PINNED = "sticky left-0 max-sm:shadow-[inset_-1px_0_var(--color-border)]";
+// The total's first cell stays put while the rest scrolls under it, so it needs a fill nothing shows through.
+const TOTAL_FILL = "bg-[color-mix(in_oklab,var(--color-foreground)_3%,var(--color-card))]";
 const CELL = "dash-figure h-10 px-3.5 py-0 text-sm tracking-[-0.02em] whitespace-nowrap first:ps-5 last:pe-3.5";
 
 function heat(color: string | null, value: number, low: number, high: number) {
@@ -36,7 +40,7 @@ interface PivotProps {
     grouping: Grouping;
     kind: Dimension;
     report: Report;
-    words: ReportWords;
+    words: Reading;
 }
 
 export function Pivot({ averages, grouping, kind, report, words }: PivotProps) {
@@ -79,7 +83,7 @@ export function Pivot({ averages, grouping, kind, report, words }: PivotProps) {
         <Table className="w-full min-w-max" containerClassName="overflow-x-auto" maxHeight="none">
             <Table.Header>
                 <Table.Row>
-                    <Table.Head className={`${HEAD} bg-card sticky left-0`}>{copy.dimensions[kind]}</Table.Head>
+                    <Table.Head className={`${HEAD} ${PINNED}`}>{copy.dimensions[kind]}</Table.Head>
                     {columns.map((column) => (
                         <Table.Head align="end" className={HEAD} key={column.key}>
                             {words.columnName(grouping, column, columns)}
@@ -102,7 +106,7 @@ export function Pivot({ averages, grouping, kind, report, words }: PivotProps) {
             <Table.Body>
                 {rows.map((row) => (
                     <Table.Row className="hover:bg-muted/40" key={row.label.id}>
-                        <Table.Cell className={`${CELL} bg-card sticky left-0 font-sans font-medium tracking-normal`}>
+                        <Table.Cell className={`${CELL} bg-card ${PINNED} font-sans font-medium tracking-normal`}>
                             <span className="flex items-center gap-[9px]">
                                 <span
                                     aria-hidden
@@ -116,8 +120,8 @@ export function Pivot({ averages, grouping, kind, report, words }: PivotProps) {
                         {trailing(row, false)}
                     </Table.Row>
                 ))}
-                <Table.Row className="bg-foreground/[0.03] font-semibold">
-                    <Table.Cell className={`${CELL} sticky left-0 font-sans tracking-normal`}>
+                <Table.Row className={`${TOTAL_FILL} font-semibold`}>
+                    <Table.Cell className={`${CELL} ${TOTAL_FILL} ${PINNED} font-sans tracking-normal`}>
                         {copy.table.total}
                     </Table.Cell>
                     {cells(totals, false)}

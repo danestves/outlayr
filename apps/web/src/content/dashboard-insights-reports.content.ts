@@ -12,6 +12,7 @@ const dashboardInsightsReports = {
             export: t({ en: "Export", es: "Exportar" }),
             newReport: t({ en: "New report", es: "Nuevo reporte" }),
             saveReport: t({ en: "Save report", es: "Guardar reporte" }),
+            share: t({ en: "Share", es: "Compartir" }),
             update: t({ en: "Update report", es: "Actualizar reporte" }),
         },
         by: insert(t({ en: "{{columns}} by {{rows}}", es: "{{columns}} por {{rows}}" })),
@@ -135,12 +136,32 @@ const dashboardInsightsReports = {
                 range: t({ en: "Range", es: "Rango" }),
                 report: t({ en: "Report", es: "Reporte" }),
                 rowsByColumns: t({ en: "Rows by columns", es: "Filas por columnas" }),
+                sharing: t({ en: "Sharing", es: "Compartido" }),
                 total: t({ en: "Total", es: "Total" }),
             },
             count: insert(t({ en: "{{count}} reports", es: "{{count}} reportes" })),
             countOne: t({ en: "1 report", es: "1 reporte" }),
             noMatch: t({ en: "No report is called that.", es: "Ningún reporte se llama así." }),
             search: t({ en: "Search reports", es: "Buscar reportes" }),
+            sharing: {
+                all: t({ en: "All reports", es: "Todos los reportes" }),
+                elsewhere: insert(
+                    t({
+                        en: "{{count}} links are on for reports saved in another browser.",
+                        es: "Hay {{count}} enlaces activos de reportes guardados en otro navegador.",
+                    })
+                ),
+                elsewhereOne: t({
+                    en: "1 link is on for a report saved in another browser.",
+                    es: "Hay 1 enlace activo de un reporte guardado en otro navegador.",
+                }),
+                filter: t({ en: "Shared", es: "Compartidos" }),
+                linkOn: t({ en: "Link on", es: "Enlace activo" }),
+                none: t({ en: "No report matches this filter.", es: "Ningún reporte coincide con este filtro." }),
+                private: t({ en: "Private", es: "Privado" }),
+                turnOff: t({ en: "Turn them off", es: "Desactivarlos" }),
+                turnOffOne: t({ en: "Turn it off", es: "Desactivarlo" }),
+            },
             today: t({ en: "Today", es: "Hoy" }),
         },
         measures: {
@@ -182,6 +203,7 @@ const dashboardInsightsReports = {
             more: insert(t({ en: "Actions for {{name}}", es: "Acciones de {{name}}" })),
             open: t({ en: "Open", es: "Abrir" }),
             rename: t({ en: "Rename", es: "Renombrar" }),
+            share: t({ en: "Share link", es: "Compartir enlace" }),
         },
         saved: {
             all: t({ en: "All reports", es: "Todos los reportes" }),
@@ -199,6 +221,34 @@ const dashboardInsightsReports = {
             rolling: insert(t({ en: "Always last {{count}} months", es: "Siempre los últimos {{count}} meses" })),
             save: t({ en: "Save report", es: "Guardar reporte" }),
             title: t({ en: "Save report", es: "Guardar reporte" }),
+        },
+        sharing: {
+            amounts: t({ en: "Show amounts", es: "Mostrar montos" }),
+            amountsHeld: t({
+                en: "This report has no percentages now. The link keeps its last copy.",
+                es: "Este reporte ya no tiene porcentajes. El enlace conserva su última copia.",
+            }),
+            amountsNote: t({ en: "Off shows percentages only.", es: "Desactivado muestra solo porcentajes." }),
+            copied: t({ en: "Copied", es: "Copiado" }),
+            copy: t({ en: "Copy", es: "Copiar" }),
+            done: t({ en: "Done", es: "Listo" }),
+            expires: t({ en: "Expires", es: "Vence" }),
+            failed: t({
+                en: "The link could not be updated. Try again.",
+                es: "No se pudo actualizar el enlace. Inténtalo de nuevo.",
+            }),
+            lifetimes: {
+                month: t({ en: "30 days", es: "30 días" }),
+                never: t({ en: "Never", es: "Nunca" }),
+                week: t({ en: "7 days", es: "7 días" }),
+            },
+            link: t({ en: "Link on", es: "Enlace activo" }),
+            linkNote: t({
+                en: "Anyone with it can view this report.",
+                es: "Cualquiera que lo tenga puede ver este reporte.",
+            }),
+            title: insert(t({ en: "Share {{name}}", es: "Compartir {{name}}" })),
+            url: t({ en: "Link to this report", es: "Enlace a este reporte" }),
         },
         specials: {
             noAccount: t({ en: "No account", es: "Sin cuenta" }),

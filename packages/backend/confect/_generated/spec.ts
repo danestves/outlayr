@@ -29,6 +29,7 @@ import photos from "../photos.spec";
 import receiptScan from "../receiptScan.spec";
 import referrals from "../referrals.spec";
 import revenuecat from "../revenuecat.spec";
+import sharedReports from "../sharedReports.spec";
 import sync from "../sync.spec";
 import voiceEntry from "../voiceEntry.spec";
 import webPush from "../webPush.spec";
@@ -64,6 +65,7 @@ const spec: Spec.Spec<{
   readonly receiptScan: GroupSpec.NamedAt<typeof receiptScan, "receiptScan">;
   readonly referrals: GroupSpec.NamedAt<typeof referrals, "referrals">;
   readonly revenuecat: GroupSpec.NamedAt<typeof revenuecat, "revenuecat">;
+  readonly sharedReports: GroupSpec.NamedAt<typeof sharedReports, "sharedReports">;
   readonly sync: GroupSpec.NamedAt<typeof sync, "sync">;
   readonly voiceEntry: GroupSpec.NamedAt<typeof voiceEntry, "voiceEntry">;
   readonly webPush: GroupSpec.NamedAt<typeof webPush, "webPush">;
@@ -98,6 +100,7 @@ const spec: Spec.Spec<{
   ["receiptScan"]: receiptScan,
   ["referrals"]: referrals,
   ["revenuecat"]: revenuecat,
+  ["sharedReports"]: sharedReports,
   ["sync"]: sync,
   ["voiceEntry"]: voiceEntry,
   ["webPush"]: webPush,
