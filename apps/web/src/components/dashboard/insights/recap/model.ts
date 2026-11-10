@@ -1,4 +1,4 @@
-import { categoryBudgets } from "../../../../lib/dashboard-series";
+import { monthlyBudgets } from "../../../../lib/dashboard-series";
 import { UNCATEGORIZED_ID, round, rowsBetween, total } from "../../../../lib/dashboard-series-ledger";
 import type { Ledger, LedgerRow, Scope } from "../../../../lib/dashboard-series-ledger";
 import { daysFrom, periodOf, shiftPeriodKey } from "../../../../lib/dashboard-series-period";
@@ -8,7 +8,6 @@ const PRIOR_MONTHS = 3;
 const MIN_PRIOR_MONTHS_WITH_SPEND = 2;
 const SHOWN_CATEGORIES = 6;
 const DAYS_IN_WEEK = 7;
-const MS_PER_DAY = 86_400_000;
 
 export interface CategoryRow {
     amount: number;
@@ -76,13 +75,8 @@ function savingsOf(ledger: Ledger, scope: Scope, month: Period, spentNow: Map<st
     if (month.to >= ledger.today || scope.accounts.length > 0) {
         return NO_SAVINGS;
     }
-    // A budget window may end on the month's last day or on the first day after it.
-    const nextDay = new Date(Date.parse(`${month.to}T12:00:00Z`) + MS_PER_DAY).toISOString().slice(0, 10);
     const parents = new Map(ledger.books.categories.map((row) => [row.localId, row.parentId]));
-    const counted = [...categoryBudgets(ledger, month)].filter(
-        ([, standing]) =>
-            standing.from === month.from && (standing.to === month.to || standing.to === nextDay) && standing.spent > 0
-    );
+    const counted = monthlyBudgets(ledger, month).filter(([, standing]) => standing.spent > 0);
     const kept = counted.filter(([, standing]) => !standing.overBudget);
     const keptIds = new Set(kept.map(([id]) => id));
     const standing = kept.filter(([id]) => {
@@ -118,7 +112,11 @@ function savingsOf(ledger: Ledger, scope: Scope, month: Period, spentNow: Map<st
         kept: round(ledger, underBudgets + (drop?.amount ?? 0)),
         over: counted
             .filter(([, each]) => each.overBudget)
-            .map(([id, each]) => ({ by: round(ledger, each.spent - each.limit), id, name: nameOf(ledger, id) })),
+            .map(([id, each]) => ({
+                by: round(ledger, each.spent - each.effectiveLimit),
+                id,
+                name: nameOf(ledger, id),
+            })),
         underBudgets,
     };
 }

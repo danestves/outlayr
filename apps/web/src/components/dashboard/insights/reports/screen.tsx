@@ -1,7 +1,7 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import BookmarkAdd01Icon from "@hugeicons/core-free-icons/BookmarkAdd01Icon";
 import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useMatch, useNavigate, useSearch } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { useCallback, useMemo, useState } from "react";
 
@@ -29,7 +29,7 @@ import { SavedList } from "./saved";
 import type { ReportActions } from "./saved";
 import { definitionOf, isBuilding, searchOf } from "./search";
 import type { ReportsPatch, ReportsSearch } from "./search";
-import { changeReport, deleteReport, duplicateReport, saveReport, useSavedReports } from "./store";
+import { reportStore, useSavedReports } from "./store";
 import { Toolbar } from "./toolbar";
 import { useReportWords } from "./words";
 import type { ReportWords } from "./words";
@@ -212,7 +212,9 @@ export function ReportsScreen() {
     const search: ReportsSearch = useSearch({ from: ROUTE });
     const navigate = useNavigate({ from: PATH });
     const books = useTagBooks();
-    const saved = useSavedReports();
+    const userId = useMatch({ from: "/_account/app", select: (match) => match.loaderData?.userId });
+    const store = reportStore(userId ?? "");
+    const saved = useSavedReports(store);
     const words = useReportWords();
     const { copy } = words;
     const [modal, setModal] = useState<Modal | null>(null);
@@ -262,7 +264,7 @@ export function ReportsScreen() {
     const open = (id: string) => {
         const target = saved.find((each) => each.id === id);
         if (target) {
-            changeReport(id, { openedAt: ledger.now });
+            store.change(id, { openedAt: ledger.now });
             build(target.definition, id);
         }
     };
@@ -270,7 +272,7 @@ export function ReportsScreen() {
         duplicate: (id) => {
             const source = saved.find((each) => each.id === id);
             if (source) {
-                duplicateReport(id, copy.saved.copy({ name: source.name }).value, ledger.now);
+                store.duplicate(id, copy.saved.copy({ name: source.name }).value, ledger.now);
             }
         },
         export: (id) => setModal({ id, kind: "export" }),
@@ -310,7 +312,7 @@ export function ReportsScreen() {
     const noDataBody = noDataBodyOf({ definition, ledger, rangeName, tags, words });
 
     const saving = active ? (
-        <Button disabled={!dirty} onClick={() => changeReport(active.id, { definition })}>
+        <Button disabled={!dirty} onClick={() => store.change(active.id, { definition })}>
             <Glyph icon={BookmarkAdd01Icon} size={16} />
             {copy.bar.update}
         </Button>
@@ -412,7 +414,7 @@ export function ReportsScreen() {
                 name={words.title(definition)}
                 onClose={close}
                 onSave={(name, chosen) => {
-                    const created = saveReport(name, chosen, ledger.now);
+                    const created = store.save(name, chosen, ledger.now);
                     close();
                     build(chosen, created.id);
                 }}
@@ -425,7 +427,7 @@ export function ReportsScreen() {
                 onClose={close}
                 onRename={(name) => {
                     if (modalReport) {
-                        changeReport(modalReport.id, { name });
+                        store.change(modalReport.id, { name });
                     }
                     close();
                 }}
@@ -437,7 +439,7 @@ export function ReportsScreen() {
                 onClose={close}
                 onDelete={() => {
                     if (modalReport) {
-                        deleteReport(modalReport.id);
+                        store.remove(modalReport.id);
                         if (modalReport.id === search.report) {
                             patch({ report: undefined });
                         }

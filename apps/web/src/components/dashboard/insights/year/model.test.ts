@@ -134,6 +134,32 @@ describe("yearOf", () => {
         expect(year.keptHere).toEqual({ budgeted: 1600, count: 4, kept: 600 });
     });
 
+    it("counts neither a weekly budget nor a budget under a budgeted parent", () => {
+        const base = books([...rows, entry("produce-10", "2026-10-09T12:00:00Z", 50, "produce")]);
+        const [food] = base.budgets;
+        const budget = (localId: string, categoryId: string, type: number) =>
+            docOf<"budgets">({ ...food, ...envelope(localId), categoryId, type } as Doc<"budgets">);
+        const more = yearOf(
+            prepareLedger(
+                {
+                    ...base,
+                    budgets: [
+                        ...base.budgets,
+                        budget("budget-rent", "rent", BUDGET_TYPE.week),
+                        budget("budget-produce", "produce", BUDGET_TYPE.month),
+                    ],
+                    categories: [...base.categories, { ...category("produce", "Produce"), parentId: "food" }],
+                },
+                NOW
+            ),
+            { accounts: [] },
+            null,
+            true
+        );
+
+        expect(more.keptHere).toEqual({ budgeted: 1600, count: 4, kept: 550 });
+    });
+
     it("measures the latest closed month against the category's average month", () => {
         expect(year.latest).toBe("2026-09");
         expect(year.below).toEqual([{ delta: -200, id: "food", label: "Groceries" }]);

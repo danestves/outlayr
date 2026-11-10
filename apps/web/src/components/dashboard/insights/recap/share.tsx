@@ -78,10 +78,11 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
     const { dialog } = useIntlayer("dashboard-insights-recap");
     const [amounts, setAmounts] = useState(false);
     const [size, setSize] = useState<CardSize>("4:5");
-    const [made, setMade] = useState<{ blob: Blob; url: string } | null>(null);
+    const [made, setMade] = useState<{ blob: Blob; of: object; url: string } | null>(null);
     const [failed, setFailed] = useState(false);
     const [copied, setCopied] = useState(false);
     const input = useCardInput(rest, amounts);
+    const drawn = useMemo(() => [input, size] as const, [input, size]);
     const canCopy = "ClipboardItem" in globalThis && "clipboard" in navigator && "write" in navigator.clipboard;
 
     // oxlint-disable-next-line outlayr/react-effect-budget -- draws the card on a canvas and owns the object URL it hands out.
@@ -90,13 +91,13 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
             return;
         }
         let stale = false;
-        renderCard(input, size, LOGO)
+        renderCard(...drawn, LOGO)
             .then((blob) => {
                 if (stale) {
                     return;
                 }
                 setFailed(false);
-                setMade({ blob, url: URL.createObjectURL(blob) });
+                setMade({ blob, of: drawn, url: URL.createObjectURL(blob) });
             })
             .catch(() => {
                 if (!stale) {
@@ -107,7 +108,7 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
         return () => {
             stale = true;
         };
-    }, [input, open, size]);
+    }, [drawn, open]);
 
     // oxlint-disable-next-line outlayr/react-effect-budget -- the last card stays on screen until the next is drawn, so its URL lives as long as it is held.
     useEffect(() => {
@@ -117,24 +118,26 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
         return () => URL.revokeObjectURL(made.url);
     }, [made]);
 
-    const file = made === null ? null : new File([made.blob], `${input.monthLabel}.png`, { type: "image/png" });
+    // The last card stays on screen while the next is drawn, but only the card for the current choices may leave.
+    const ready = made?.of === drawn ? made : null;
+    const file = ready === null ? null : new File([ready.blob], `${input.monthLabel}.png`, { type: "image/png" });
     const canShare = file !== null && "canShare" in navigator && navigator.canShare({ files: [file] });
     const [width, height] = CARD_SIZES[size];
 
     const copy = async () => {
-        if (made === null) {
+        if (ready === null) {
             return;
         }
-        await navigator.clipboard.write([new ClipboardItem({ "image/png": made.blob })]);
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": ready.blob })]);
         setCopied(true);
         setTimeout(() => setCopied(false), COPIED_MS);
     };
     const download = () => {
-        if (made === null || file === null) {
+        if (ready === null || file === null) {
             return;
         }
         const link = document.createElement("a");
-        link.href = made.url;
+        link.href = ready.url;
         link.download = file.name;
         link.click();
     };
@@ -191,7 +194,7 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
                     </div>
                 </Dialog.Body>
                 <Dialog.Footer className="flex gap-3 *:flex-1">
-                    <Button disabled={made === null || !canCopy} onClick={copy} variant="outline">
+                    <Button disabled={ready === null || !canCopy} onClick={copy} variant="outline">
                         <Glyph icon={Copy01Icon} size={16} />
                         {copied ? dialog.copied : dialog.copy}
                     </Button>
@@ -201,7 +204,7 @@ export function ShareDialog({ onClose, open, ...rest }: ShareDialogProps) {
                             {dialog.share}
                         </Button>
                     ) : null}
-                    <Button disabled={made === null} onClick={download}>
+                    <Button disabled={ready === null} onClick={download}>
                         <Glyph icon={Download01Icon} size={16} />
                         {dialog.download}
                     </Button>

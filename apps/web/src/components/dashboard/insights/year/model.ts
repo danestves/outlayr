@@ -1,4 +1,4 @@
-import { categoryBudgets } from "../../../../lib/dashboard-series";
+import { monthlyBudgets } from "../../../../lib/dashboard-series";
 import { categorySpend } from "../../../../lib/dashboard-series-insights";
 import { inScope, round, rowsBetween, total } from "../../../../lib/dashboard-series-ledger";
 import type { Ledger, Scope } from "../../../../lib/dashboard-series-ledger";
@@ -77,6 +77,7 @@ const firstDayOf = (ledger: Ledger, scope: Scope) =>
     ledger.rows.filter(inScope(scope)).reduce((first, row) => (row.day < first ? row.day : first), ledger.today);
 
 function monthOf(ledger: Ledger, scope: Scope, key: string, budgeted: boolean, firstDay: string): YearMonth {
+    const parents = new Map(ledger.books.categories.map((row) => [row.localId, row.parentId]));
     const period = periodOf(key, ledger.firstDayOfMonth);
     const active = period.from <= ledger.today && period.to >= firstDay;
     if (!active) {
@@ -84,7 +85,10 @@ function monthOf(ledger: Ledger, scope: Scope, key: string, budgeted: boolean, f
     }
     const last = ledger.today < period.to ? ledger.today : period.to;
     const spent = total(ledger, rowsBetween(ledger, scope, period.from, last, false));
-    const standings = budgeted ? [...categoryBudgets(ledger, period).values()] : [];
+    // A parent's budget already counts what its children spent, so a child under a budgeted parent is left out.
+    const monthly = budgeted ? monthlyBudgets(ledger, period) : [];
+    const ids = new Set(monthly.map(([id]) => id));
+    const standings = monthly.filter(([id]) => !ids.has(parents.get(id) ?? "")).map(([, standing]) => standing);
     if (standings.length === 0) {
         return { active, budget: null, key, over: null, spent };
     }
