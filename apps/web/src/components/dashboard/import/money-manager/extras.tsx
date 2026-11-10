@@ -11,7 +11,7 @@ import { LookTile } from "@/components/ledger/tiles";
 import { money } from "@/lib/ledger";
 
 import { Card, Columns, ImportPage } from "../parts";
-import { accountOf, fill, spentThisMonth, targetName } from "./model";
+import { accountOf, fill, planOf, spentThisMonth, targetName } from "./model";
 import type { Draft } from "./model";
 import { MmBar, RadioLine } from "./parts";
 
@@ -110,8 +110,8 @@ export function Budgets({ draft, onBack, onChoices }: Props) {
         (view) => view.limit !== null && choices.categories[view.uid]?.kind !== "skip"
     );
     const monthKey = ledger.today.slice(0, 7);
-    const brought = rows.filter((view) => choices.budgets[view.uid] === true);
-    const broughtTotal = brought.reduce((sum, view) => sum + (view.limit ?? 0), 0);
+    const brought = planOf(draft).budgets;
+    const broughtTotal = brought.reduce((sum, budget) => sum + budget.amount, 0);
     return (
         <ImportPage>
             <MmBar onBack={onBack} title={copy.title}>
