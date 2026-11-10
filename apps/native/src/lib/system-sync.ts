@@ -19,10 +19,11 @@ import {
 } from "@/data/canonicalize-backfill";
 import { settlePendingFees } from "@/data/card-fees-core";
 import { subscribeToSettingChanges } from "@/data/database-changes";
-import { drainPendingWrites, fileWaitingPurchases, takeRepriced } from "@/data/pending-writes-core";
+import { drainDevicePendingWrites } from "@/data/pending-writes";
 import { applyRecentRates, pullRatesIfDue } from "@/data/rates";
 import type { PullRatesFn, RateWireRow, RatesError } from "@/data/rates";
 import { mirrorTimeZone } from "@/data/settings-core";
+import { fileWaitingPurchases, takeRepriced } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
 import { autologAccessOf } from "@/domain/autolog-cap";
 import type { AutologAccess } from "@/domain/meta-values";
@@ -32,7 +33,6 @@ import { ratesPuller, watchRecentRates } from "@/lib/cloud-rates";
 import { convex } from "@/lib/convex";
 import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
 import { armLogoBackfill, backfillLogos } from "@/lib/logo-backfill";
-import { readNotifications } from "@/lib/notification-read";
 import { notifyWarning } from "@/lib/notify";
 import { RevenueCat } from "@/lib/revenuecat-service";
 import { onWatchPendingWrite } from "@/lib/watch-link";
@@ -40,7 +40,7 @@ import { onWatchPendingWrite } from "@/lib/watch-link";
 import { appStates, launchAndForegrounds, listen, signals, WatchAppState, WatchTableWrites } from "./app-events";
 import type { Signal, Watch } from "./app-events";
 import { affectsSpotlight, affectsWidgets, PUBLISH_DEBOUNCE_MS, SPOTLIGHT_DEBOUNCE_MS } from "./sync-cadence";
-import { claimPendingWrites, readWalletLastRun, releasePendingWrites } from "./widget-bridge";
+import { readWalletLastRun } from "./widget-bridge";
 
 const PUBLISH_DEBOUNCE = Duration.millis(PUBLISH_DEBOUNCE_MS);
 const SPOTLIGHT_DEBOUNCE = Duration.millis(SPOTLIGHT_DEBOUNCE_MS);
@@ -226,7 +226,7 @@ export const make = Effect.gen(function* make() {
             failedStep("wallet"),
             Effect.catchTags({ SystemSyncError: (error) => warn(error) })
         );
-        const drainRun = drainPendingWrites(db, claimPendingWrites, releasePendingWrites, readNotifications).pipe(
+        const drainRun = drainDevicePendingWrites(db).pipe(
             failedStep("drain"),
             Effect.flatMap(({ applied }) => publishIf(applied === 0)),
             Effect.catchTags({ SystemSyncError: (error) => warn(error).pipe(Effect.andThen(publishSoon)) }),

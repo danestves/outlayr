@@ -3,8 +3,8 @@ import * as Effect from "effect/Effect";
 import type { Database } from "@/db/client";
 import { monthUsage, withAutologEntry } from "@/domain/autolog-cap";
 import type { AutologAccess, AutologUsage } from "@/domain/meta-values";
-import type { PendingWrite } from "@/lib/pending-writes-core";
 import { posthog } from "@/lib/posthog";
+import type { PendingWrite } from "@/lib/queue-file";
 
 import { Meta } from "./app-meta-core";
 

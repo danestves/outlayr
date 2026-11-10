@@ -12,7 +12,7 @@ import { hasChargeAmount } from "@/domain/parse-notification";
 import { firstLocale } from "@/i18n/device-language";
 
 import { aiConsentArgs, cloudAction, isCloudAuthenticated } from "./convex";
-import type { PendingWrite } from "./pending-writes-core";
+import type { PendingWrite } from "./queue-file";
 
 export type NotificationReads = ReadonlyMap<string, NotificationRead>;
 

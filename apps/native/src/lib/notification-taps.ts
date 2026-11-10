@@ -4,15 +4,15 @@ import * as Schema from "effect/Schema";
 import type { Href } from "expo-router";
 
 import { readPlans } from "@/data/installments-core";
-import { cardStillAsks, drainPendingWrites, fileWaitingPurchases, pendingWriteTxId } from "@/data/pending-writes-core";
+import { drainDevicePendingWrites } from "@/data/pending-writes";
+import { pendingWriteTxId } from "@/data/pending-writes-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
 import { getTransactionById } from "@/data/transactions-core";
+import { cardStillAsks, fileWaitingPurchases } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
 import { paywallHref } from "@/domain/paywall-trigger";
 
-import { readNotifications } from "./notification-read";
 import { warnAndContinue } from "./warn-and-continue";
-import { claimPendingWrites, releasePendingWrites } from "./widget-bridge";
 
 const SubscriptionTap = Schema.Struct({ charge: Schema.String, subscription: Schema.String });
 const ReminderTap = Schema.Union([
@@ -80,7 +80,7 @@ export const resolveReminderTap = Effect.fn("NotificationTaps.resolveReminder")(
 });
 
 const settleWalletWrites = (db: Database, walletWrite: string) =>
-    drainPendingWrites(db, claimPendingWrites, releasePendingWrites, readNotifications).pipe(
+    drainDevicePendingWrites(db).pipe(
         warnAndContinue("[outlayr] pending writes failed to apply"),
         Effect.andThen(fileWaitingPurchases(db).pipe(warnAndContinue("[outlayr] waiting purchases failed to file"))),
         Effect.andThen(pendingWriteTxId(db, walletWrite))

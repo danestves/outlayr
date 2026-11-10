@@ -8,8 +8,8 @@ import {
     parseQueue,
     QUEUE_FILE,
     releasePendingWrites,
-} from "./pending-writes-core";
-import type { PendingWrite, QueueFiles } from "./pending-writes-core";
+} from "./queue-file";
+import type { PendingWrite, QueueFiles } from "./queue-file";
 
 function write(id: string, overrides: Partial<PendingWrite> = {}): PendingWrite {
     return {

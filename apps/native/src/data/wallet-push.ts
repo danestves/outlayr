@@ -10,7 +10,8 @@ import type { WalletPushSnapshot } from "@/lib/widget-bridge";
 
 import { accountsRepo } from "./accounts-core";
 import { Meta } from "./app-meta-core";
-import { cardStatus, filedNote } from "./pending-writes-core";
+import { filedNote } from "./pending-writes-core";
+import { cardStatus } from "./wallet-state-core";
 
 export class WalletPushError extends Schema.TaggedError<WalletPushError>()("WalletPushError", {
     cause: Schema.Defect(),

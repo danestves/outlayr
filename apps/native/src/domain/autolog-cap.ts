@@ -1,4 +1,4 @@
-import type { AutologSource } from "@/lib/pending-writes-core";
+import type { AutologSource } from "@/lib/queue-file";
 import type { Entitlement } from "@/lib/revenuecat-service";
 
 import type { AutologAccess, AutologUsage } from "./meta-values";

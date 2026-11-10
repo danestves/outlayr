@@ -12,7 +12,7 @@ import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useBankAccounts } from "@/data/accounts";
 import { useGlobalCurrency, useMeta } from "@/data/app-meta";
 import { useLiveQuery } from "@/data/live-query";
-import { cardStatus } from "@/data/pending-writes-core";
+import { cardStatus } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { formatChargeDate, formatSentenceDate, formatTime } from "@/domain/dates";

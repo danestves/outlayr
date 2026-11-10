@@ -9,7 +9,7 @@ import { migratedDatabase, transactionalDatabase } from "@/db/test-database";
 import { withAutologEntry } from "@/domain/autolog-cap";
 import type { AutologUsage } from "@/domain/meta-values";
 import { DEFAULT_CURRENCY } from "@/domain/money";
-import type { PendingWrite } from "@/lib/pending-writes-core";
+import type { PendingWrite } from "@/lib/queue-file";
 
 import { Meta } from "./app-meta-core";
 import { readAutologWaiting, writeAutologAccess } from "./autolog-cap-core";
@@ -18,14 +18,12 @@ import {
     appliedWriteIds,
     applyPendingWrites,
     drainPendingWrites,
-    fileWaitingPurchases,
     pendingWriteTxId,
-    takeRepriced,
-    pickCardAccount,
     WALLET_DEDUPE_WINDOW_MS,
 } from "./pending-writes-core";
 import { backfillRecurring } from "./recurrence-backfill";
 import { transactionsRepo } from "./transactions-core";
+import { fileWaitingPurchases, pickCardAccount, takeRepriced } from "./wallet-state-core";
 
 const makeDb = migratedDatabase;
 

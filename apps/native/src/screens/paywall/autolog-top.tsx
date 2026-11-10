@@ -10,8 +10,8 @@ import { useNow } from "@/data/use-now";
 import { formatDayHeader } from "@/domain/dates";
 import { detectCurrency } from "@/domain/detect-currency";
 import { useLanguage, useTranslation } from "@/i18n/context";
-import { autologSourceOf } from "@/lib/pending-writes-core";
-import type { PendingWrite } from "@/lib/pending-writes-core";
+import { autologSourceOf } from "@/lib/queue-file";
+import type { PendingWrite } from "@/lib/queue-file";
 
 import { meterSegments } from "./top-block";
 
