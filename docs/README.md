@@ -21,6 +21,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [Web app: local first](./internals/web-local-first.md)
 - [App meta registry](./internals/app-meta.md)
 - [Web rules](./internals/web-rules.md)
+- [Web recurring](./internals/web-recurring.md)
 
 ### Runbooks
 

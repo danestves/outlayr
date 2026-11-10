@@ -36,6 +36,7 @@ import { Route as DotwellKnownMcpServerCardDotjsonRouteImport } from './routes/[
 import { Route as AccountAppIndexRouteImport } from './routes/_account/app.index'
 import { Route as AccountAppInsightsRouteImport } from './routes/_account/app.insights'
 import { Route as AccountAppOnboardingRouteImport } from './routes/_account/app.onboarding'
+import { Route as AccountAppRecurringRouteImport } from './routes/_account/app.recurring'
 import { Route as AccountAppRulesRouteImport } from './routes/_account/app.rules'
 import { Route as AccountAppSettingsRouteImport } from './routes/_account/app.settings'
 import { Route as AccountAppTransactionsRouteImport } from './routes/_account/app.transactions'
@@ -227,6 +228,11 @@ const AccountAppInsightsRoute = AccountAppInsightsRouteImport.update({
 const AccountAppOnboardingRoute = AccountAppOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => AccountAppRoute,
+} as any)
+const AccountAppRecurringRoute = AccountAppRecurringRouteImport.update({
+  id: '/recurring',
+  path: '/recurring',
   getParentRoute: () => AccountAppRoute,
 } as any)
 const AccountAppRulesRoute = AccountAppRulesRouteImport.update({
@@ -497,6 +503,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/app/insights': typeof AccountAppInsightsRouteWithChildren
   '/app/onboarding': typeof AccountAppOnboardingRoute
+  '/app/recurring': typeof AccountAppRecurringRoute
   '/app/rules': typeof AccountAppRulesRoute
   '/app/settings': typeof AccountAppSettingsRouteWithChildren
   '/app/transactions': typeof AccountAppTransactionsRoute
@@ -566,6 +573,7 @@ export interface FileRoutesByTo {
   '/{-$locale}': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/app/onboarding': typeof AccountAppOnboardingRoute
+  '/app/recurring': typeof AccountAppRecurringRoute
   '/app/rules': typeof AccountAppRulesRoute
   '/app/transactions': typeof AccountAppTransactionsRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -638,6 +646,7 @@ export interface FileRoutesById {
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
   '/_account/app/insights': typeof AccountAppInsightsRouteWithChildren
   '/_account/app/onboarding': typeof AccountAppOnboardingRoute
+  '/_account/app/recurring': typeof AccountAppRecurringRoute
   '/_account/app/rules': typeof AccountAppRulesRoute
   '/_account/app/settings': typeof AccountAppSettingsRouteWithChildren
   '/_account/app/transactions': typeof AccountAppTransactionsRoute
@@ -712,6 +721,7 @@ export interface FileRouteTypes {
     | '/.well-known/mcp/server-card.json'
     | '/app/insights'
     | '/app/onboarding'
+    | '/app/recurring'
     | '/app/rules'
     | '/app/settings'
     | '/app/transactions'
@@ -781,6 +791,7 @@ export interface FileRouteTypes {
     | '/{-$locale}'
     | '/.well-known/mcp/server-card.json'
     | '/app/onboarding'
+    | '/app/recurring'
     | '/app/rules'
     | '/app/transactions'
     | '/api/auth/$'
@@ -852,6 +863,7 @@ export interface FileRouteTypes {
     | '/.well-known/mcp/server-card.json'
     | '/_account/app/insights'
     | '/_account/app/onboarding'
+    | '/_account/app/recurring'
     | '/_account/app/rules'
     | '/_account/app/settings'
     | '/_account/app/transactions'
@@ -1103,6 +1115,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/app/onboarding'
       preLoaderRoute: typeof AccountAppOnboardingRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
+    '/_account/app/recurring': {
+      id: '/_account/app/recurring'
+      path: '/recurring'
+      fullPath: '/app/recurring'
+      preLoaderRoute: typeof AccountAppRecurringRouteImport
       parentRoute: typeof AccountAppRoute
     }
     '/_account/app/rules': {
@@ -1531,6 +1550,7 @@ const AccountAppSettingsRouteWithChildren =
 interface AccountAppRouteChildren {
   AccountAppInsightsRoute: typeof AccountAppInsightsRouteWithChildren
   AccountAppOnboardingRoute: typeof AccountAppOnboardingRoute
+  AccountAppRecurringRoute: typeof AccountAppRecurringRoute
   AccountAppRulesRoute: typeof AccountAppRulesRoute
   AccountAppSettingsRoute: typeof AccountAppSettingsRouteWithChildren
   AccountAppTransactionsRoute: typeof AccountAppTransactionsRoute
@@ -1546,6 +1566,7 @@ interface AccountAppRouteChildren {
 const AccountAppRouteChildren: AccountAppRouteChildren = {
   AccountAppInsightsRoute: AccountAppInsightsRouteWithChildren,
   AccountAppOnboardingRoute: AccountAppOnboardingRoute,
+  AccountAppRecurringRoute: AccountAppRecurringRoute,
   AccountAppRulesRoute: AccountAppRulesRoute,
   AccountAppSettingsRoute: AccountAppSettingsRouteWithChildren,
   AccountAppTransactionsRoute: AccountAppTransactionsRoute,

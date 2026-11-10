@@ -515,6 +515,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "If you start a Pro free trial on the web, we email you two days before the first charge with its date, the amount, and how to cancel.",
                     label: "A reminder before a trial ends",
                 },
+                {
+                    detail: "Recurring charges you pause on the web, and until when, sync with your ledger, as do the repeating merchants you mark as not recurring.",
+                    label: "Recurring on the web",
+                },
             ],
             es: [
                 {
@@ -536,6 +540,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Si empiezas una prueba gratis de Pro en la web, te enviamos un correo dos días antes del primer cobro con la fecha, el monto y cómo cancelar.",
                     label: "Un recordatorio antes de que termine la prueba",
+                },
+                {
+                    detail: "Los cargos recurrentes que pausas en la web, y hasta cuándo, se sincronizan con tu registro, al igual que los comercios repetidos que marcas como no recurrentes.",
+                    label: "Recurrentes en la web",
                 },
             ],
             fr: [
@@ -559,6 +567,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Si vous commencez un essai gratuit de Pro sur le web, nous vous écrivons deux jours avant le premier paiement avec sa date, le montant et comment résilier.",
                     label: "Un rappel avant la fin de l'essai",
                 },
+                {
+                    detail: "Les paiements récurrents que vous mettez en pause sur le web, et jusqu'à quand, sont synchronisés avec votre journal, tout comme les commerçants répétés que vous marquez comme non récurrents.",
+                    label: "Paiements récurrents sur le web",
+                },
             ],
             pt: [
                 {
@@ -580,6 +592,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Se você começar um teste grátis do Pro na web, enviamos um e-mail dois dias antes da primeira cobrança com a data, o valor e como cancelar.",
                     label: "Um lembrete antes do fim do teste",
+                },
+                {
+                    detail: "As cobranças recorrentes que você pausa na web, e até quando, são sincronizadas com os seus lançamentos, assim como os estabelecimentos repetidos que você marca como não recorrentes.",
+                    label: "Recorrentes na web",
                 },
             ],
         },
