@@ -378,17 +378,42 @@ export function unresolved(
     picks: readonly { choice: ConflictChoice; conflict: Conflict }[]
 ): RuleBook {
     const keys = new Set(picks.map(({ conflict }) => conflict.key));
-    const changed = new Set(
-        picks.flatMap(({ choice, conflict }) => (choice === "second" || choice === "skip" ? [conflict.second.id] : []))
-    );
-    const here = new Set(book.rules.map((rule) => rule.id));
-    let next = book;
-    for (const [index, rule] of before.rules.entries()) {
-        if (changed.has(rule.id) && here.has(rule.id)) {
-            next = saved(next, rule, index);
+    const moved = new Set(picks.flatMap(({ choice, conflict }) => (choice === "second" ? [conflict.second.id] : [])));
+    const skips = picks.flatMap(({ choice, conflict }) => {
+        const skip = choice === "skip" ? skipConditionOf(conflict.first, conflict.second) : null;
+        return skip === null ? [] : [{ id: conflict.second.id, skip }];
+    });
+    const current = new Map(book.rules.map((rule) => [rule.id, rule]));
+    const rules = book.rules.filter((rule) => !moved.has(rule.id));
+    for (const [index, old] of before.rules.entries()) {
+        const rule = current.get(old.id);
+        if (rule && moved.has(old.id)) {
+            rules.splice(Math.min(index, rules.length), 0, rule);
         }
     }
-    return { ...next, settled: next.settled.filter((key) => !keys.has(key)) };
+    const was = new Map(before.rules.map((rule) => [rule.id, rule]));
+    return {
+        ...book,
+        rules: rules.map((rule) => {
+            const added = skips.filter(({ id }) => id === rule.id).map(({ skip }) => skip);
+            return added.length === 0
+                ? rule
+                : {
+                      ...rule,
+                      conditions: rule.conditions.filter(
+                          (condition) =>
+                              !added.some(
+                                  (skip) =>
+                                      skip.field === condition.field &&
+                                      skip.op === condition.op &&
+                                      skip.value === condition.value
+                              )
+                      ),
+                      match: was.get(rule.id)?.match ?? rule.match,
+                  };
+        }),
+        settled: book.settled.filter((key) => !keys.has(key)),
+    };
 }
 
 export function removed(book: RuleBook, id: string): RuleBook {

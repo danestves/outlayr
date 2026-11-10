@@ -18,6 +18,7 @@ import type { Condition, Rule, RuleBook, RuleEntry } from "./rules";
 const KINDS = new Map([
     ["groceries", false],
     ["shopping", false],
+    ["fun", false],
     ["salary", true],
 ]);
 
@@ -156,17 +157,38 @@ describe("conflictsOf", () => {
         expect(conflictsOf(next.rules, [freshOrder], KINDS, next.settled)).toHaveLength(0);
     });
 
-    it("undoes a resolution without touching a rule changed after it", () => {
-        const start = { ...book, rules: [...book.rules, rule("shell", [merchant("shell")], "shopping")] };
-        const picks = [{ choice: "second" as const, conflict: found() }];
-        const later = toggled(resolved(start, found(), "second"), "shell", false);
-        const back = unresolved(later, start, picks);
+    it("undoes overlapping resolutions in order and keeps a later edit to a moved rule", () => {
+        const start: RuleBook = {
+            ...EMPTY_BOOK,
+            rules: [
+                rule("a", [merchant("amazon")], "groceries"),
+                rule("b", [merchant("amazon")], "shopping"),
+                rule("c", [merchant("amazon")], "fun"),
+            ],
+        };
+        const picks = conflictsOf(start.rules, [plainOrder], KINDS).map((conflict) => ({
+            choice: "second" as const,
+            conflict,
+        }));
+        expect(picks).toHaveLength(3);
+        const made = picks.reduce((next, { choice, conflict }) => resolved(next, conflict, choice), start);
+        expect(made.rules[0]?.id).toBe("c");
+        const back = unresolved(toggled(made, "b", false), start, picks);
         expect(back.rules.map((row) => [row.id, row.on])).toEqual([
-            ["fresh", true],
-            ["amazon", true],
-            ["shell", false],
+            ["a", true],
+            ["b", false],
+            ["c", true],
         ]);
         expect(back.settled).toEqual([]);
+    });
+
+    it("takes back the skip it added and nothing else", () => {
+        const picks = [{ choice: "skip" as const, conflict: found() }];
+        const made = resolved(book, found(), "skip");
+        expect(unresolved(toggled(made, "amazon", false), book, picks).rules).toEqual([
+            fresh,
+            { ...amazon, on: false },
+        ]);
     });
 
     it("makes the second rule skip the first one's text, which ends the overlap", () => {
