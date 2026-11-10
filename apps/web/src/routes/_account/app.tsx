@@ -143,13 +143,13 @@ function Ledgered() {
 }
 
 function Unlocked() {
-    const { checkout } = Route.useSearch();
+    const { checkout, restore } = Route.useSearch();
     const navigate = useNavigate();
     const toast = useToast();
     const { locale } = useLocale();
     const { managePlan, proIsOn, proIsOnTrial } = useIntlayer("paywall");
     useQuery({
-        enabled: checkout !== undefined,
+        enabled: checkout !== undefined || restore !== undefined,
         queryFn: async () => {
             const plan = await convexClient()
                 .action(api.billing.plan, {})
@@ -166,10 +166,14 @@ function Unlocked() {
                 title: trialEnds === null ? proIsOn.value : proIsOnTrial({ date: trialEnds }).value,
                 type: "success",
             });
-            await navigate({ replace: true, search: ({ checkout: _done, ...rest }) => rest, to: "." });
+            await navigate({
+                replace: true,
+                search: ({ checkout: _checkout, restore: _restore, ...rest }) => rest,
+                to: ".",
+            });
             return true;
         },
-        queryKey: ["billing", "unlocked", checkout],
+        queryKey: ["billing", "unlocked", checkout, restore],
         retry: false,
         staleTime: Number.POSITIVE_INFINITY,
     });
