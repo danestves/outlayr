@@ -10,6 +10,10 @@ const Param = Schema.UndefinedOr(Schema.String).pipe(
     Schema.catchDecoding(() => Effect.succeed(Option.some(undefined)))
 );
 
+const RestoreParam = Schema.UndefinedOr(Schema.Literal("confirmed")).pipe(
+    Schema.catchDecoding(() => Effect.succeed(Option.some(undefined)))
+);
+
 // The router reads a bare year in the address as a number.
 const PeriodParam = Schema.UndefinedOr(Schema.Union([Schema.String, Schema.Number])).pipe(
     Schema.decodeTo(Schema.UndefinedOr(Schema.String), {
@@ -24,7 +28,7 @@ const Search = Schema.Struct({
     category: Schema.optional(Param),
     checkout: Schema.optional(Param),
     period: Schema.optional(PeriodParam),
-    restore: Schema.optional(Param),
+    restore: Schema.optional(RestoreParam),
 });
 
 export const dashboardSearch = Schema.toStandardSchemaV1(Search);
