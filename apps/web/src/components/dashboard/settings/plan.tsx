@@ -2,6 +2,7 @@ import { convexQuery } from "@convex-dev/react-query";
 import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
 import FlashIcon from "@hugeicons/core-free-icons/FlashIcon";
+import InformationCircleIcon from "@hugeicons/core-free-icons/InformationCircleIcon";
 import LinkSquare02Icon from "@hugeicons/core-free-icons/LinkSquare02Icon";
 import MoneyExchange01Icon from "@hugeicons/core-free-icons/MoneyExchange01Icon";
 import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
@@ -15,6 +16,7 @@ import { Dialog } from "panelui-web/dialog";
 import { Frame } from "panelui-web/frame";
 import { Table } from "panelui-web/table";
 import { useToast } from "panelui-web/toast";
+import { Tooltip } from "panelui-web/tooltip";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -352,6 +354,27 @@ function Usage({ endsSoon }: { endsSoon: boolean }) {
                     </Table.Row>
                 </Table.Header>
                 <Table.Body>
+                    <Table.Row>
+                        <Table.Cell>{use.autoLog}</Table.Cell>
+                        <Table.Cell align="end">
+                            <Tooltip>
+                                <Tooltip.Trigger
+                                    aria-label={use.autoLogOnPhone.value}
+                                    className="text-muted-foreground hover:text-foreground inline-flex size-5 items-center justify-center rounded-md align-middle"
+                                >
+                                    <HugeiconsIcon icon={InformationCircleIcon} size={14} />
+                                </Tooltip.Trigger>
+                                <Tooltip.Content className="max-w-60" variant="outline">
+                                    {use.autoLogOnPhone}
+                                </Tooltip.Content>
+                            </Tooltip>
+                        </Table.Cell>
+                        <Table.Cell align="end">
+                            <span className="text-muted-foreground font-mono text-[13px] tabular-nums">
+                                {FREE_AUTO_LOG}
+                            </span>
+                        </Table.Cell>
+                    </Table.Row>
                     {counted.map(({ free, label, using }) => (
                         <Table.Row key={label.value}>
                             <Table.Cell>{label}</Table.Cell>

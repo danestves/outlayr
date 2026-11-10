@@ -178,6 +178,18 @@ const plan = {
             using: t({ en: "Using", es: "En uso", fr: "Utilisé", pt: "Em uso" }),
             limit: t({ en: "Free limit", es: "Límite Gratis", fr: "Limite Gratuit", pt: "Limite Grátis" }),
             over: t({ en: "Over", es: "Excedido", fr: "Dépassé", pt: "Acima" }),
+            autoLog: t({
+                en: "Auto-log this month",
+                es: "Registro automático este mes",
+                fr: "Saisie auto ce mois-ci",
+                pt: "Registro automático este mês",
+            }),
+            autoLogOnPhone: t({
+                en: "Auto-log runs on your phone, and only the phone counts it for now.",
+                es: "El registro automático funciona en tu teléfono, y por ahora solo el teléfono lo cuenta.",
+                fr: "La saisie auto fonctionne sur votre téléphone, et pour l'instant seul le téléphone la compte.",
+                pt: "O registro automático funciona no seu celular, e por enquanto só o celular o conta.",
+            }),
             captures: t({
                 en: "Captures, 30 days",
                 es: "Capturas, 30 días",
