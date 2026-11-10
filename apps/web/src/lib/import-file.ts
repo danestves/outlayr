@@ -386,12 +386,15 @@ const LONG_DIGIT_RUN = /\p{Nd}{4,}/gu;
 /** What leaves the device for a suggestion: card and account numbers never do. */
 export const scrubLabel = (raw: string) => raw.replaceAll(LONG_DIGIT_RUN, "").replaceAll(/\s+/g, " ").trim();
 
-const CODE_TAIL = /(?:\s*[#*]\s*\S*|\s+\p{Nd}+)+$/u;
+// Pieces of the tail must not overlap, or a label of many "#" backtracks for minutes.
+const CODE_GAP = /([#*]) /gu;
+const CODE_TAIL = /(?:\s?[#*][^\s#*]*|\s\p{Nd}+)+$/u;
 const SMALL_WORD = /^(?:de|del|la|el|los|las|y|of|and|the|do|da)$/u;
 
 /** A readable merchant from bank text, when nothing better names it: "TRADER JOE S #552" reads "Trader Joe S". */
 export function tidyLabel(raw: string): string {
-    const trimmed = scrubLabel(raw).replace(CODE_TAIL, "").trim() || scrubLabel(raw) || raw.trim();
+    const trimmed =
+        scrubLabel(raw).replaceAll(CODE_GAP, "$1").replace(CODE_TAIL, "").trim() || scrubLabel(raw) || raw.trim();
     if (trimmed !== trimmed.toUpperCase()) {
         return trimmed;
     }

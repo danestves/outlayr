@@ -1,7 +1,7 @@
 import { fixedOffset } from "@outlayr/money/ledger-zone";
 import { describe, expect, it } from "vite-plus/test";
 
-import { matchDuplicates, readCsvText, readDates, readRows, repairRow, statementOf } from "./import-file";
+import { matchDuplicates, readCsvText, readDates, readRows, repairRow, statementOf, tidyLabel } from "./import-file";
 import type { ExistingEntry, FaultyRow, Target } from "./import-file";
 
 const HOUR = 3_600_000;
@@ -177,5 +177,15 @@ describe("repairRow", () => {
 
     it("refuses a zero amount", () => {
         expect(repairRow(faultyRow({}), { amount: "0", date: "" }, DAY_FIRST)).toBeNull();
+    });
+});
+
+describe("tidyLabel", () => {
+    it("drops store codes from a shouted label", () => {
+        expect(tidyLabel("TRADER JOE S # 552 12")).toBe("Trader Joe S");
+    });
+
+    it("returns on a label of many code marks instead of hanging the tab", () => {
+        expect(tidyLabel(`${"#".repeat(40)} a b`)).toBe(`${"#".repeat(40)}a b`);
     });
 });
