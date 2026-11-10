@@ -7,13 +7,15 @@ export const ledgerRow = (id: string) => ({ _id: id, localId: id, note: `entry $
 
 type Reply = (name: string, args: Record<string, unknown>) => unknown;
 
+const EMPTY_PAGED = new Set(["ledger:transactionTags", "ledger:transfers"]);
+
 export const pagesOf =
     (rows: readonly ReturnType<typeof ledgerRow>[]) => (name: string, args: Record<string, unknown>) => {
         if (name === "sync:pullSince") {
             return { cursor: 0, hasMore: false, rows: [] };
         }
         if (name !== "ledger:transactions") {
-            return name === "ledger:transfers" ? { continueCursor: "", isDone: true, page: [] } : [];
+            return EMPTY_PAGED.has(name) ? { continueCursor: "", isDone: true, page: [] } : [];
         }
         const { cursor, endCursor, numItems } = args.paginationOpts as {
             cursor: string | null;

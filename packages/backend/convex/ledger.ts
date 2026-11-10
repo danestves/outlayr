@@ -11,5 +11,7 @@ export const mainBudget = registeredFunctions.mainBudget;
 export const outsideMoves = registeredFunctions.outsideMoves;
 export const outsidePayments = registeredFunctions.outsidePayments;
 export const savingsGoals = registeredFunctions.savingsGoals;
+export const tags = registeredFunctions.tags;
+export const transactionTags = registeredFunctions.transactionTags;
 export const transactions = registeredFunctions.transactions;
 export const transfers = registeredFunctions.transfers;

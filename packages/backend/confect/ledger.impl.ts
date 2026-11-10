@@ -141,6 +141,28 @@ const transfersQuery = FunctionImpl.make(databaseSchema, spec, "transfers", ({ p
     }).pipe(Effect.orDie)
 );
 
+const tagsQuery = FunctionImpl.make(databaseSchema, spec, "tags", () =>
+    Effect.gen(function* tags() {
+        const userId = yield* syncedUser();
+        const reader = yield* DatabaseReader;
+        return yield* reader
+            .table("tags")
+            .index("by_user_and_seq", (q) => q.eq("userId", userId))
+            .collect();
+    }).pipe(Effect.orDie)
+);
+
+const transactionTagsQuery = FunctionImpl.make(databaseSchema, spec, "transactionTags", ({ paginationOpts }) =>
+    Effect.gen(function* transactionTags() {
+        const userId = yield* syncedUser();
+        const reader = yield* DatabaseReader;
+        return yield* reader
+            .table("transactionTags")
+            .index("by_user_and_seq", (q) => q.eq("userId", userId))
+            .paginate(paginationOpts);
+    }).pipe(Effect.orDie)
+);
+
 const appMetaQuery = FunctionImpl.make(databaseSchema, spec, "appMeta", () =>
     Effect.gen(function* appMeta() {
         const userId = yield* syncedUser();
@@ -207,5 +229,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(mainBudgetQuery),
     Layer.provide(outsideMovesQuery),
     Layer.provide(outsidePaymentsQuery),
+    Layer.provide(tagsQuery),
+    Layer.provide(transactionTagsQuery),
     GroupImpl.finalize
 );

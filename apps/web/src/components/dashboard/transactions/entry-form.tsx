@@ -43,8 +43,10 @@ import type { Doc, EntryBase, EntryProblem, EntryValues } from "@/lib/entry-writ
 import { money } from "@/lib/ledger";
 import { ledgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { newLink } from "@/lib/rule-writes";
 
 import { useCategoryName } from "../home/format";
+import { useIncomingRules } from "../rules/incoming";
 import { useWeekday } from "./use-day-title";
 
 const REPEATS = [
@@ -98,6 +100,7 @@ interface PickOption {
 
 export function Pick({
     bare = false,
+    invalid = false,
     onPick,
     options,
     placeholder,
@@ -106,6 +109,7 @@ export function Pick({
     value,
 }: {
     bare?: boolean;
+    invalid?: boolean;
     onPick: (value: string) => void;
     options: readonly PickOption[];
     placeholder?: string;
@@ -120,7 +124,8 @@ export function Pick({
             value={value}
         >
             <Select.Trigger
-                className={quiet ? "-me-2 ml-auto w-auto" : undefined}
+                aria-invalid={invalid || undefined}
+                className={quiet ? "-me-2 ml-auto w-auto" : "aria-invalid:border-destructive"}
                 icon={bare ? null : undefined}
                 ref={triggerRef}
                 variant={quiet ? "ghost" : "default"}
@@ -525,6 +530,14 @@ export function EntryDialog({
     const [problem, setProblem] = useState<EntryProblem | null>(null);
     const [round, setRound] = useState(0);
     const formId = useId();
+    const ruled = useIncomingRules()({
+        amount: parseAmount(values.amountText, decimalsFor(values.currency)),
+        details: values.details,
+        income: values.income,
+        note: values.note,
+    });
+    const filled =
+        values.categoryId === null && ruled.categoryId !== null ? { ...values, categoryId: ruled.categoryId } : values;
     const change = (patch: Partial<EntryValues>) => {
         setValues((current) => ({ ...current, ...patch }));
         setProblem(null);
@@ -532,7 +545,7 @@ export function EntryDialog({
     const submit = (another: boolean) => {
         const at = Date.now();
         const current = { ...ledger, books: ledgerBooks(db) };
-        const draft = draftOf(current, values, null, form.feeNote({ merchant: merchantOf(ledger, values) }).value);
+        const draft = draftOf(current, filled, null, form.feeNote({ merchant: merchantOf(ledger, filled) }).value);
         // The default minute keeps its seconds, so entries added back to back stay in the order they were typed.
         const dated = values.dateText === wallText(at, ledger) ? { ...draft, date: at } : draft;
         const found = entryProblem(current, dated, null, at);
@@ -540,7 +553,9 @@ export function EntryDialog({
         if (found !== null) {
             return;
         }
-        void committer.commit(createdEntry(current, crypto.randomUUID(), dated, at)).settled.then((outcome) => {
+        const id = crypto.randomUUID();
+        const links = ruled.tagIds.map((tagId) => newLink(id, tagId, at));
+        void committer.commit([...createdEntry(current, id, dated, at), ...links]).settled.then((outcome) => {
             if (outcome.status === "failed") {
                 toast({ failed: true, text: form.saveFailed.value });
             }
@@ -571,7 +586,7 @@ export function EntryDialog({
                         onCreateAccount={() => onSwitch({ kind: "create", type: "bank" })}
                         onPick={change}
                         problem={problem}
-                        values={values}
+                        values={filled}
                     />
                 </form>
             </Dialog.Body>

@@ -12,7 +12,9 @@ import mainBudget from "./_generated/tables/mainBudget";
 import outsideMoves from "./_generated/tables/outsideMoves";
 import outsidePayments from "./_generated/tables/outsidePayments";
 import savingsGoals from "./_generated/tables/savingsGoals";
+import tags from "./_generated/tables/tags";
 import transactions from "./_generated/tables/transactions";
+import transactionTags from "./_generated/tables/transactionTags";
 import transfers from "./_generated/tables/transfers";
 
 export default GroupSpec.make()
@@ -32,6 +34,8 @@ export default GroupSpec.make()
     )
     .addFunction(FunctionSpec.publicPaginatedQuery({ item: () => transactions.Doc, name: "transactions" }))
     .addFunction(FunctionSpec.publicPaginatedQuery({ item: () => transfers.Doc, name: "transfers" }))
+    .addFunction(FunctionSpec.publicPaginatedQuery({ item: () => transactionTags.Doc, name: "transactionTags" }))
+    .addFunction(FunctionSpec.publicQuery({ args: () => ({}), name: "tags", returns: () => Schema.Array(tags.Doc) }))
     .addFunction(
         FunctionSpec.publicQuery({ args: () => ({}), name: "accounts", returns: () => Schema.Array(accounts.Doc) })
     )

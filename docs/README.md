@@ -20,6 +20,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [Referrals](./internals/referrals.md)
 - [Web app: local first](./internals/web-local-first.md)
 - [App meta registry](./internals/app-meta.md)
+- [Web rules](./internals/web-rules.md)
 
 ### Runbooks
 
