@@ -22,7 +22,6 @@ export class AppMetaError extends Schema.TaggedError<AppMetaError>()("AppMetaErr
     }
 }
 
-/** Carries the key and nothing else: stored values include wallet cards, notification texts and merchant names. */
 export class CorruptMetaError extends Schema.TaggedError<CorruptMetaError>()("CorruptMetaError", {
     key: Schema.String,
 }) {
@@ -100,7 +99,6 @@ function readRaw<K extends MetaName>(name: K, raw: string | null): Read<MetaValu
 const stored = (db: SpendDb, name: MetaName) =>
     db.select({ value: appMeta.value }).from(appMeta).where(eq(appMeta.key, name)).limit(1);
 
-// A delete, so its trigger drops the key's outbox entry; registered again because a rollback would undo it.
 function heal(db: SpendDb, name: MetaName): void {
     const reset = () => {
         db.delete(appMeta).where(eq(appMeta.key, name)).run();

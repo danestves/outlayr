@@ -47,7 +47,6 @@ const noop = () => undefined;
 
 const repairs = new WeakMap<SpendDb, (() => void)[]>();
 
-/** Runs `repair` again once the open transaction has rolled back, so it must be idempotent. */
 export function afterRollback(db: SpendDb, repair: () => void): void {
     repairs.get(db)?.push(repair);
 }

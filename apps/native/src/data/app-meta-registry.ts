@@ -162,7 +162,6 @@ const BOOKKEEPING = defineMeta({
     walletShortcutAdded: { default: false, schema: BitText, scope: "device" },
 });
 
-/** The property name is the stored `appMeta.key`, so renaming one orphans the row on every install. */
 export const META = { ...SETTINGS, ...BOOKKEEPING };
 
 type ValueOf<E> = E extends { readonly elements: infer S extends Schema.Top }

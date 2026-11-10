@@ -3,8 +3,6 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 
-// A leaf: every feature imports the registry and the registry imports this, so a feature import here is a cycle.
-
 export const BoolText = Schema.Literals(["true", "false"]).pipe(
     Schema.decodeTo(
         Schema.Boolean,
@@ -25,7 +23,6 @@ export const BitText = Schema.Literals(["1", "0"]).pipe(
     )
 );
 
-// `Number("")` is 0, so the pattern is what rejects an empty or padded value.
 export const NumberText = Schema.String.check(Schema.isPattern(/^-?\d+(\.\d+)?$/)).pipe(
     Schema.decodeTo(
         Schema.Finite,
