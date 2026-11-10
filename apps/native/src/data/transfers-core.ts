@@ -1,3 +1,4 @@
+import { deviceCalendar } from "@outlayr/money/calendar";
 import { ENTRY_RATE_TYPES } from "@outlayr/money/rates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { roundMoney } from "@outlayr/money/round";
@@ -100,7 +101,7 @@ const insertFee = Effect.fn("Transfers.insertFee")(function* insertFee(
 ) {
     yield* query(operation, () =>
         db.insert(transactions).values({
-            ...feeColumns(input, side, fee, amountUsd, now),
+            ...feeColumns(input, side, fee, amountUsd, { calendar: deviceCalendar, now }),
             categoryId: null,
             id: newId(),
             income: false,
@@ -217,7 +218,7 @@ export const stageTransfer = Effect.fn("Transfers.stageTransfer")(function* stag
     const write = Effect.gen(function* write() {
         yield* query("create", () =>
             db.insert(transfers).values({
-                ...legColumns(input, fromAmountUsd, toAmountUsd, now),
+                ...legColumns(input, fromAmountUsd, toAmountUsd, { calendar: deviceCalendar, now }),
                 dateCreated: now,
                 deletedAt: null,
                 id,
@@ -322,7 +323,12 @@ export const transfersRepo = {
                 yield* query("update", () =>
                     db
                         .update(transfers)
-                        .set(legColumns(input, fromUsd ?? freshFromUsd, toUsd ?? freshToUsd, now))
+                        .set(
+                            legColumns(input, fromUsd ?? freshFromUsd, toUsd ?? freshToUsd, {
+                                calendar: deviceCalendar,
+                                now,
+                            })
+                        )
                         .where(and(eq(transfers.id, id), isNull(transfers.deletedAt)))
                 );
 
@@ -352,7 +358,7 @@ export const transfersRepo = {
                         ? query("update", () =>
                               db
                                   .update(transactions)
-                                  .set(feeColumns(input, side, fee, feeUsd, now))
+                                  .set(feeColumns(input, side, fee, feeUsd, { calendar: deviceCalendar, now }))
                                   .where(eq(transactions.id, row.id))
                           )
                         : insertFee("update", db, input, side, fee, feeUsd, now, id);

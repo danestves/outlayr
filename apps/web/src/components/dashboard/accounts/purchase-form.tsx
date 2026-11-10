@@ -283,7 +283,7 @@ function purchaseRows(
 ) {
     const at = Date.now();
     return purchaseInInstallments(
-        ledger.books,
+        ledger,
         {
             ...draft,
             categoryId,

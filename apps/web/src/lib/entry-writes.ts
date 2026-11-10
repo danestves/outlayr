@@ -1,7 +1,7 @@
 import { cardFeeValues, keptFeeValue } from "@outlayr/money/card-fee";
 import { decimalsFor } from "@outlayr/money/currency";
 import { entryRow, keptCanonical } from "@outlayr/money/entry-row";
-import { filedOn, fromWall, wall } from "@outlayr/money/ledger-zone";
+import { fromWall, zoneCalendar } from "@outlayr/money/ledger-zone";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";
@@ -249,19 +249,15 @@ function entryOf(ledger: Ledger, id: string, draft: EntryDraft, at: number) {
                 recurringEndDate: draft.recurringEndDate === null ? null : new Date(draft.recurringEndDate),
                 recurringType: draft.recurringType,
             },
-            { categoryName: category?.name ?? null, currency: ledger.currency, now: new Date(at) }
+            {
+                calendar: zoneCalendar(offsetAt),
+                categoryName: category?.name ?? null,
+                currency: ledger.currency,
+                now: new Date(at),
+            }
         )
     );
-    // The shared rules read the device's calendar, and a browser abroad must still file on the ledger's day.
-    const filed = filedOn(draft.date, offsetAt);
-    return {
-        ...row,
-        day: new Date(filed.day),
-        month: new Date(filed.month),
-        recurringAnchorDay: recurring
-            ? (draft.recurringAnchorDay ?? wall(draft.date, offsetAt(draft.date)).getUTCDate())
-            : null,
-    };
+    return { ...row, recurringAnchorDay: recurring ? (draft.recurringAnchorDay ?? row.recurringAnchorDay) : null };
 }
 
 type Entry = ReturnType<typeof entryOf>;

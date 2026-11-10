@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
 
-import { firstOfMonth, startOfDay } from "./calendar";
+import type { LedgerCalendar } from "./calendar";
 import { frozenUsd } from "./canonical-usd";
 import type { RateLookup } from "./rates";
 import { roundMoney } from "./round";
@@ -48,17 +48,28 @@ export function chargedFees(input: TransferInput) {
     });
 }
 
-export function legColumns(input: TransferInput, fromAmountUsd: number | null, toAmountUsd: number | null, now: Date) {
+export interface TransferFiling {
+    calendar: LedgerCalendar;
+    now: Date;
+}
+
+export function legColumns(
+    input: TransferInput,
+    fromAmountUsd: number | null,
+    toAmountUsd: number | null,
+    { calendar, now }: TransferFiling
+) {
+    const filed = calendar(input.date);
     return {
         date: input.date,
-        day: startOfDay(input.date),
+        day: filed.day,
         exchangeRate: input.exchangeRate,
         exchangeRateType: input.exchangeRateType,
         fromAccountId: input.fromAccountId,
         fromAmount: input.fromAmount,
         fromAmountUsd,
         fromCurrency: input.fromCurrency,
-        month: firstOfMonth(input.date),
+        month: filed.month,
         note: input.note ?? "",
         toAccountId: input.toAccountId,
         toAmount: input.toAmount,
@@ -74,16 +85,17 @@ export function feeColumns(
     side: FeeSide,
     fee: TransferFeeInput,
     amountUsd: number | null,
-    now: Date
+    { calendar, now }: TransferFiling
 ) {
+    const filed = calendar(input.date);
     return {
         accountId: side === "destination" ? input.toAccountId : input.fromAccountId,
         amount: fee.amount,
         amountUsd,
         currency: feeCurrency(input, side),
         date: input.date,
-        day: startOfDay(input.date),
-        month: firstOfMonth(input.date),
+        day: filed.day,
+        month: filed.month,
         note: fee.note ?? "",
         updatedAt: now,
     };

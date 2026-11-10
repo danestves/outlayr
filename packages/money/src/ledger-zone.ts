@@ -1,3 +1,5 @@
+import type { LedgerCalendar } from "./calendar";
+
 export const DAY_MS = 86_400_000;
 const FARTHEST_WEST_MS = 10 * 3_600_000;
 const LATEST_PAYDAY = 28;
@@ -99,3 +101,15 @@ export function filedOn(instant: number, offsetAt: OffsetAt) {
         month: fromWall(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), 1), offsetAt),
     };
 }
+
+export const zoneCalendar =
+    (offsetAt: OffsetAt): LedgerCalendar =>
+    (date) => {
+        const instant = date.getTime();
+        const filed = filedOn(instant, offsetAt);
+        return {
+            day: new Date(filed.day),
+            dayOfMonth: wall(instant, offsetAt(instant)).getUTCDate(),
+            month: new Date(filed.month),
+        };
+    };

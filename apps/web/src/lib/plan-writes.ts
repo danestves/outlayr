@@ -10,6 +10,8 @@ import {
 import type { EveryOption, InstallmentDraft } from "@outlayr/money/installment-draft";
 import { generateSchedule } from "@outlayr/money/installments";
 import type { ScheduledInstallment } from "@outlayr/money/installments";
+import { zoneCalendar } from "@outlayr/money/ledger-zone";
+import type { OffsetAt } from "@outlayr/money/ledger-zone";
 import * as Effect from "effect/Effect";
 
 import { frozenUsd, ratesLookup } from "./account-writes";
@@ -106,7 +108,7 @@ export interface PurchaseDraft {
  * an outside payment for the upfront and each installment already settled. Nothing leaves another account.
  */
 export function purchaseInInstallments(
-    books: Pick<LedgerBooks, "exchangeRates">,
+    { books, offsetAt }: { books: Pick<LedgerBooks, "exchangeRates">; offsetAt: OffsetAt },
     draft: PurchaseDraft,
     newId: () => string,
     at: number
@@ -129,7 +131,12 @@ export function purchaseInInstallments(
                 income: false,
                 note: draft.name,
             },
-            { categoryName: draft.categoryName, currency: draft.currency, now: new Date(at) }
+            {
+                calendar: zoneCalendar(offsetAt),
+                categoryName: draft.categoryName,
+                currency: draft.currency,
+                now: new Date(at),
+            }
         )
     );
     const paid = (amount: number, paidAt: number): CommitRow => ({

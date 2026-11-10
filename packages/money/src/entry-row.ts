@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
 
-import { firstOfMonth, startOfDay } from "./calendar";
+import type { LedgerCalendar } from "./calendar";
 import { canonicalUsd } from "./canonical-usd";
 import type { CanonicalUsd } from "./canonical-usd";
 import { isTransactionRateNeeded } from "./rates";
@@ -54,6 +54,7 @@ export const entryRow = Effect.fn("EntryRow.entryRow")(function* entryRow<E>(
     id: string,
     input: EntryInput,
     ledger: {
+        calendar: LedgerCalendar;
         categoryName: string | null;
         // Stamped when unpicked: a null currency would follow the setting and restate a $18.50 lunch as €18.50.
         currency: string;
@@ -64,6 +65,7 @@ export const entryRow = Effect.fn("EntryRow.entryRow")(function* entryRow<E>(
     const recurring = input.onceRecurring ?? false;
     const { now } = ledger;
     const currency = input.currency ?? ledger.currency;
+    const filed = ledger.calendar(input.date);
     const canonical = yield* canonicalUsd(lookup, {
         amount: Math.abs(input.amount),
         currency,
@@ -79,7 +81,7 @@ export const entryRow = Effect.fn("EntryRow.entryRow")(function* entryRow<E>(
         currency,
         customColor: input.customColor ?? null,
         date: input.date,
-        day: startOfDay(input.date),
+        day: filed.day,
         details,
         emoji: input.emoji ?? null,
         icon: input.icon ?? null,
@@ -87,13 +89,13 @@ export const entryRow = Effect.fn("EntryRow.entryRow")(function* entryRow<E>(
         imageColor: input.imageColor ?? null,
         imageUri: input.imageUri ?? null,
         income: input.income,
-        month: firstOfMonth(input.date),
+        month: filed.month,
         note: noteOf(input, ledger.categoryName),
         onceRecurring: recurring,
         paidVia: input.paidVia,
         receipt: input.receipt,
         // Re-derived on every write, so an edited first payment re-anchors the chain.
-        recurringAnchorDay: recurring ? input.date.getDate() : null,
+        recurringAnchorDay: recurring ? filed.dayOfMonth : null,
         recurringCoefficient: recurring ? Math.max(1, input.recurringCoefficient ?? 1) : 1,
         recurringEndDate: recurring ? (input.recurringEndDate ?? null) : null,
         recurringType: recurring ? (input.recurringType ?? 0) : 0,
