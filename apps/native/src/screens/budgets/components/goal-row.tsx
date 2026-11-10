@@ -4,7 +4,7 @@ import Animated, { useAnimatedStyle, useReducedMotion } from "react-native-reani
 import { MONO_LABEL_CLASS } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
-import { useDisplaySettings, useSettingBool } from "@/contexts/display-settings-context";
+import { useDisplaySettings, useSetting } from "@/contexts/display-settings-context";
 import type { SavingsGoalWithProgress } from "@/data/savings-goals";
 import { formatTargetMonth } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
@@ -142,7 +142,7 @@ export function GoalRail({
     reached: boolean;
 }) {
     const reduceMotion = useReducedMotion();
-    const animated = useSettingBool("animatedCharts") && !reduceMotion;
+    const animated = useSetting("animatedCharts") && !reduceMotion;
     const fill = useChartDraw(animated, Math.min(1, Math.max(0, fraction)));
     const fillStyle = useAnimatedStyle(() => ({ width: `${fill.get() * 100}%` }));
     const tick = expected == null || reached ? null : Math.min(1, Math.max(0, expected));

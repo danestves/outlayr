@@ -2,9 +2,8 @@ import * as Effect from "effect/Effect";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
-import { migratedDatabase } from "@/db/test-database";
+import { migratedDatabase, storedMetaText, storeMetaText } from "@/db/test-database";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
 import { readFavourites, toggleFavouriteCurrency } from "./favourite-currencies-core";
 
 const makeDb = migratedDatabase;
@@ -43,15 +42,15 @@ describe("favourite currencies storage", () => {
     });
 
     it("hides a retired code on read and leaves it stored until a toggle", async () => {
-        await Effect.runPromise(setMeta(db, META_KEYS.favouriteCurrencies, "EUR,XXX,GBP"));
+        storeMetaText(db, "favouriteCurrencies", "EUR,XXX,GBP");
         await expect(Effect.runPromise(readFavourites(db))).resolves.toStrictEqual(["EUR", "GBP"]);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.favouriteCurrencies))).resolves.toBe("EUR,XXX,GBP");
+        expect(storedMetaText(db, "favouriteCurrencies")).toBe("EUR,XXX,GBP");
 
         await expect(Effect.runPromise(toggleFavouriteCurrency(db, "JPY"))).resolves.toStrictEqual([
             "EUR",
             "GBP",
             "JPY",
         ]);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.favouriteCurrencies))).resolves.toBe("EUR,GBP,JPY");
+        expect(storedMetaText(db, "favouriteCurrencies")).toBe("EUR,GBP,JPY");
     });
 });

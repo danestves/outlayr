@@ -9,9 +9,8 @@ import { createCommand } from "@/state/atom-command";
 import { appAtomRegistry } from "@/state/atom-registry";
 import { fireAtomCommand } from "@/state/use-atom-action";
 
-import type { META_KEYS } from "./app-meta-core";
-import { SETTING_KEYS } from "./settings-core";
-import type { BoolSettingKey, NumberSettingKey } from "./settings-core";
+import { SETTING_NAMES } from "./app-meta-registry";
+import type { SettingName } from "./app-meta-registry";
 import { invalidateAll, subscribeToTable } from "./table-invalidation";
 
 const pending = new Set<string>();
@@ -21,10 +20,10 @@ let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let nativeListener: { remove: () => void } | null = null;
 let subscriberCount = 0;
 
-type SettingKey = BoolSettingKey | NumberSettingKey | (typeof META_KEYS)["currency" | "walletCards"];
+const SETTINGS: ReadonlySet<string> = new Set(SETTING_NAMES);
 
 interface SettingListener {
-    keys: readonly SettingKey[] | undefined;
+    keys: readonly SettingName[] | undefined;
     run: () => void;
 }
 
@@ -67,7 +66,7 @@ const changedSettings = Effect.fn("DatabaseChanges.changedSettings")(function* c
     if (rows.length < rowIds.length) {
         return null;
     }
-    return new Set(rows.map((row) => row.key).filter((key) => SETTING_KEYS.has(key)));
+    return new Set(rows.map((row) => row.key).filter((key) => SETTINGS.has(key)));
 });
 
 export const wakeSettingListeners = Effect.fn("DatabaseChanges.wakeSettingListeners")(
@@ -145,7 +144,7 @@ export function subscribeToTableChanges(tableName: string, listener: () => void)
 export function subscribeToSettingChanges(
     db: Database,
     listener: () => void,
-    keys?: readonly SettingKey[]
+    keys?: readonly SettingName[]
 ): () => void {
     const release = retainNativeListener();
     const listeners = settingListeners.get(db) ?? new Set<SettingListener>();

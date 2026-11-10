@@ -1,26 +1,8 @@
-import { eq } from "drizzle-orm";
-
 import type { Database } from "@/db/client";
-import { appMeta } from "@/db/schema";
-import { parseFavourites } from "@/domain/favourite-currencies";
 
-import { META_KEYS } from "./app-meta-core";
-import { useLiveValue } from "./live-query";
+import { useMeta } from "./app-meta";
 
 // `db` is nullable: the picker is mounted by forms that can sit above the splash gate, where `useDatabase()` throws.
-export function useFavouriteCurrencies(db: Database | null): string[] {
-    const stored = useLiveValue(
-        appMeta,
-        () =>
-            db === null
-                ? { all: (): { value: string | null }[] => [] }
-                : db
-                      .select({ value: appMeta.value })
-                      .from(appMeta)
-                      .where(eq(appMeta.key, META_KEYS.favouriteCurrencies)),
-        (rows) => rows[0]?.value ?? null,
-        [db]
-    );
-    // Keyed on the stored string so the parsed array keeps its identity, or a memoised picker rebuilds every keystroke.
-    return parseFavourites(stored);
+export function useFavouriteCurrencies(db: Database | null): readonly string[] {
+    return useMeta(db, "favouriteCurrencies");
 }

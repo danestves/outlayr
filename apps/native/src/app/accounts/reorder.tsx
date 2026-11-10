@@ -3,7 +3,7 @@ import { Stack, useRouter } from "expo-router";
 import { ScreenHeader } from "@/components/screen-header";
 import { toolbarIcon } from "@/components/toolbar-icons";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useBoolSetting } from "@/data/settings";
+import { useMeta } from "@/data/app-meta";
 import { useTranslation } from "@/i18n/context";
 import { AccountReorder } from "@/screens/accounts/reorder";
 import { setBoolSettingCommand } from "@/state/settings-commands";
@@ -13,7 +13,7 @@ export default function AccountReorderScreen() {
     const router = useRouter();
     const t = useTranslation();
     const db = useDatabase();
-    const byHand = useBoolSetting(db, "accountsByHand");
+    const byHand = useMeta(db, "accountsByHand");
     const setBoolSetting = useAtomCommand(setBoolSettingCommand);
 
     return (

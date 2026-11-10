@@ -148,7 +148,7 @@ runs against the local SQLite replica.
 | `transactionTags` one live link per `(transactionId, tagId)` (`transactionTags_pair_idx`, partial on `deletedAt IS NULL`) | ⚠️ same | Two devices tagging the same entry offline each mint their own link id. Reconciled client-side at the write — see §4. Before `0029` made the index partial, a tombstoned link still held the slot and the second link wedged every later pull. |
 | `imageUri` (`:57`) | ❌ **never** — device-local | A `file://` path whose container uuid changes on every app update. Replicating it lost photos: the receiver could not resolve the path, its launch reconciliation nulled the column, and the resulting push tie-broke on `deviceId` back onto the *originating* device. Removed from the wire in S11. |
 | `imageKey` | ✅ verbatim | The photo's R2 object key. Not a url — `r2.getUrl` signs one with a 15-minute default lifetime, so a stored url rots; every read re-mints from the key. The bytes travel out of band (`packages/backend/confect/photos.ts`, `apps/native/src/data/photo-sync-core.ts`), never in a `push` batch. |
-| `appMeta` key/value (`:166-169`) | partly | No `updatedAt`/`deletedAt` locally. Only `SYNCED_META_KEYS` (`src/data/sync-tables.ts`) sync: the currency and how the ledger reads, which belong to the person. `colorScheme` stays local because an OLED phone at night and a tablet in daylight want different answers; `numberEntryType` because a phone typed one-handed and a tablet typed with both do (syncing it let a second device reverse a choice). `biometricLock` and `notification*` describe a permission this handset holds; `sync*` and `ledgerAdoption` are this device's replication identity; `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` record this install's first run. `timeZone` is the one synced key a device writes on its own: the MCP tools need it to date entries. Each device writes it only when its own zone changes, tracked in the device-local `timeZoneMirrored`, so a zone pulled from another device is never written back and two devices in different zones don't trade it on every foreground. |
+| `appMeta` key/value (`:166-169`) | partly | No `updatedAt`/`deletedAt` locally. Only the meta keys whose sync scope is `synced` in the registry (`src/data/app-meta-registry.ts`, read as `Meta.syncedNames`) sync: the currency and how the ledger reads, which belong to the person. `colorScheme` stays local because an OLED phone at night and a tablet in daylight want different answers; `numberEntryType` because a phone typed one-handed and a tablet typed with both do (syncing it let a second device reverse a choice). `biometricLock` and `notification*` describe a permission this handset holds; `sync*` and `ledgerAdoption` are this device's replication identity; `firstLaunch`, `onboardingComplete` and `recurrenceRepaired` record this install's first run. `timeZone` is the one synced key a device writes on its own: the MCP tools need it to date entries. Each device writes it only when its own zone changes, tracked in the device-local `timeZoneMirrored`, so a zone pulled from another device is never written back and two devices in different zones don't trade it on every foreground. |
 | `exchangeRates` local replica (`:180-194`) | ❌ never | One-way server→device, wiped and replaced by `src/data/rates.ts`. Not user data. Do not sync it. |
 
 ---
@@ -184,9 +184,12 @@ streams into one causally-ordered log.
    first-launch seed, so a table added to `SYNCED_SPECS` replicates with no trigger migration
    and a table drizzle-kit rebuilt gets its triggers back. It reads `sqlite_master` once and
    rewrites only a trigger whose text differs, so a launch with nothing to change costs one
-   query. The `appMeta` triggers take their `WHEN` key list from `SYNCED_META_KEYS` the same
+   query. The `appMeta` triggers take their `WHEN` key list from `Meta.syncedNames` the same
    way. The migrations up to `0044` that declared triggers by hand stay as shipped; the
-   generator writes the same text, so an install that has them is not rebuilt.
+   generator writes the same text for every row table, so an install that has them is not
+   rebuilt. The two `appMeta` triggers are the exception: their key list now follows the
+   registry's order, so an install from before the registry rewrites them once, to the
+   same set of keys.
 
    **A migration queues what it writes.** The triggers are built after the whole pending
    batch commits (`migrate` runs every pending migration in one transaction), so a new table
@@ -205,7 +208,7 @@ streams into one causally-ordered log.
    ```
 
    Where a trigger does exist it has already queued the row and the `NOT EXISTS` skips it.
-   The same holds for a key added to `SYNCED_META_KEYS`: the rebuilt trigger sees later
+   The same holds for a meta key whose sync scope becomes `synced`: the rebuilt trigger sees later
    writes only, so a value already stored is pushed on its next change unless a migration
    queues it.
 

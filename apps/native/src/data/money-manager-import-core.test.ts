@@ -15,7 +15,7 @@ import { readMoneyManagerSnapshot } from "@/domain/money-manager/snapshot";
 import type { SqlAll } from "@/domain/money-manager/snapshot";
 import type { OutlayrLedgerState } from "@/domain/money-manager/types";
 
-import { getMeta, META_KEYS } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { budgetsRepo } from "./budgets-core";
 import {
     applyMoneyManagerImport,
@@ -65,8 +65,8 @@ describe("applyMoneyManagerImport", () => {
         expect(record.transactionIds).toHaveLength(9);
         expect(record.transferIds).toHaveLength(2);
         expect(record.adjustedAccountIds).toStrictEqual([record.accountKeys.spare]);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.currency))).resolves.toBe("USD");
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.currencyChosen))).resolves.toBe("true");
+        await expect(Effect.runPromise(Meta.get(db, "currency"))).resolves.toBe("USD");
+        await expect(Effect.runPromise(Meta.get(db, "currencyChosen"))).resolves.toBe(true);
 
         const checks = await Effect.runPromise(verifyImportedBalances(db, record));
         expect(checks.length).toBeGreaterThan(0);
@@ -204,7 +204,7 @@ describe("applyMoneyManagerImport", () => {
             MoneyManagerImportError
         );
         await expect(db.select({ id: accounts.id }).from(accounts)).resolves.toHaveLength(0);
-        await expect(Effect.runPromise(getMeta(db, META_KEYS.currency))).resolves.toBeNull();
+        await expect(Effect.runPromise(Meta.has(db, "currency"))).resolves.toBe(false);
         await expect(Effect.runPromise(readLedgerState(db))).resolves.toMatchObject({ currencyChosen: false });
     });
 });

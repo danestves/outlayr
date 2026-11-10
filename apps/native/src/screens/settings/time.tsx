@@ -37,8 +37,8 @@ export function TimeFrames() {
     const t = useTranslation();
     const { language } = useLanguage();
     const { state: settings } = useAppSettings();
-    const firstWeekday = settings.number("firstWeekday");
-    const firstDayOfMonth = settings.number("firstDayOfMonth");
+    const firstWeekday = settings.get("firstWeekday");
+    const firstDayOfMonth = settings.get("firstDayOfMonth");
     // Displayed and overridden here; the device's convention is seeded at the root.
     const { use24Hour: use24HourClock } = useDisplaySettings().state;
 

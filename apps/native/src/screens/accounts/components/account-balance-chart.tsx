@@ -4,7 +4,7 @@ import { View } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
 
 import { MonoLabel } from "@/components/mono-label";
-import { useSettingBool } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { useNow } from "@/data/use-now";
 import { accountBalanceSeries } from "@/domain/account-balance-series";
 import { formatSignedAmount } from "@/domain/account-display";
@@ -55,7 +55,7 @@ export function AccountBalanceChart({ account, cells, now, rates, showCents }: A
     const t = useTranslation();
     const { language } = useLanguage();
     const reduceMotion = useReducedMotion();
-    const animated = useSettingBool("animatedCharts") && !reduceMotion;
+    const animated = useSetting("animatedCharts") && !reduceMotion;
     const at = now ?? new Date(clock);
     const data = accountBalanceSeries(account, cells, rates, at).map(({ date, exact, value }) => ({
         date,

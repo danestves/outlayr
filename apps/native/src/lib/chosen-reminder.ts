@@ -1,9 +1,7 @@
 import * as Effect from "effect/Effect";
 import * as Semaphore from "effect/Semaphore";
 
-import { getMeta, META_KEYS, setMeta } from "@/data/app-meta-core";
-import { isReminderChosen } from "@/data/onboarding-core";
-import { setBoolSetting } from "@/data/settings-core";
+import { Meta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 
 import { freshEntries } from "./fresh-entries";
@@ -11,16 +9,16 @@ import { Reminders } from "./reminders";
 
 const arm = Effect.fn("ChosenReminder.arm")(function* arm(db: Database) {
     const reminders = yield* Reminders;
-    const [chosen, asked, stored] = yield* Effect.all(
-        [getMeta(db, META_KEYS.reminderChosen), getMeta(db, META_KEYS.reminderAsked), getMeta(db, "showNotifications")],
+    const [chosen, asked, answered] = yield* Effect.all(
+        [Meta.get(db, "reminderChosen"), Meta.get(db, "reminderAsked"), Meta.has(db, "showNotifications")],
         { concurrency: "unbounded" }
     );
-    if (!isReminderChosen(chosen) || asked === "true") {
+    if (!chosen || asked) {
         return;
     }
-    if (stored !== null) {
+    if (answered) {
         // A switch set since the offer is the user's own answer and outranks the onboarding one.
-        yield* setMeta(db, META_KEYS.reminderAsked, "true");
+        yield* Meta.set(db, "reminderAsked", true);
         return;
     }
     const existing = yield* reminders.permission();
@@ -28,13 +26,13 @@ const arm = Effect.fn("ChosenReminder.arm")(function* arm(db: Database) {
         // The read failed or a row is still arriving; the next save tries again rather than spending the ask.
         return;
     }
-    yield* setMeta(db, META_KEYS.reminderAsked, "true");
+    yield* Meta.set(db, "reminderAsked", true);
     if (existing === "denied") {
         return;
     }
     const granted = existing === "granted" ? existing : yield* reminders.request();
     if (granted === "granted") {
-        yield* setBoolSetting(db, "showNotifications", true);
+        yield* Meta.set(db, "showNotifications", true);
     }
 });
 

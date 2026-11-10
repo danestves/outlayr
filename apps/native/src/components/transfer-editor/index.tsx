@@ -23,7 +23,7 @@ import { StepFee } from "@/components/transaction-form/stage/step-fee";
 import { StepRate, StepRateField } from "@/components/transaction-form/stage/step-rate";
 import { StepWhen } from "@/components/transaction-form/stage/step-when";
 import { cn } from "@/components/tw";
-import { useDisplaySettings, useSettingNumber } from "@/contexts/display-settings-context";
+import { useDisplaySettings, useSetting } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { usePeople } from "@/data/accounts";
 import type { SavedTransfer } from "@/data/transfers-core";
@@ -230,7 +230,7 @@ export default function TransferEditor({
     const colors = useColors();
     const sheetSurface = useSheetSurface(colors.background);
     const haptics = useHaptics();
-    const entryMode = numpadMode(useSettingNumber("numberEntryType"));
+    const entryMode = numpadMode(useSetting("numberEntryType"));
     const { use24Hour } = useDisplaySettings().state;
     const draft = useTransferDraft(db, seed, saved, restore?.draft);
     const people = usePeople(db);

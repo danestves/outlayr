@@ -3,10 +3,9 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
-import { appMeta } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 
-import { META_KEYS } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { refreshLogoCandidate } from "./logo-backfill-state";
 import { PULL_PAGE_LIMIT, PUSH_BATCH_LIMIT, withForeignKeysOff, writePulledRows } from "./sync-engine-core";
 import type { LocalValue, PulledRow, PullFn, PushFn, WireRow } from "./sync-engine-core";
@@ -109,11 +108,7 @@ export const replaceLocalFromAccount = Effect.fn("AdoptionEngine.replaceLocalFro
                     }
                     yield* setSyncCursor(db, 0);
                     // The write below covers the whole log under the merge that knows `restoredAt`.
-                    yield* attempt("replace", () =>
-                        db
-                            .delete(appMeta)
-                            .where(inArray(appMeta.key, [META_KEYS.syncRestoresReread, META_KEYS.autologWaiting]))
-                    );
+                    yield* Meta.remove(db, ["syncRestoresReread", "autologWaiting"]);
                     if (rows.length > 0) {
                         yield* writePulledRows(db, { cursor, rows }, now, false);
                     }

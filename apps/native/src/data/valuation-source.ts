@@ -4,7 +4,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { getMeta, META_KEYS } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
 import { exchangeRates } from "@/db/schema";
 import { DEFAULT_CURRENCY } from "@/domain/money";
@@ -69,8 +69,7 @@ export const loadValuationIn = Effect.fn("ValuationSource.loadValuationIn")(func
 });
 
 export const loadValuation = Effect.fn("ValuationSource.loadValuation")(function* loadValuation(db: SpendDb) {
-    const currency = yield* getMeta(db, META_KEYS.currency);
-    return yield* loadValuationIn(db, currency ?? DEFAULT_CURRENCY);
+    return yield* loadValuationIn(db, yield* Meta.get(db, "currency"));
 });
 
 export { RATE_TYPE as VALUATION_RATE_TYPE };

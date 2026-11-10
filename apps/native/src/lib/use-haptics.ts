@@ -7,7 +7,7 @@ import {
 } from "expo-haptics";
 
 import { useLocalData } from "@/contexts/local-data-context";
-import { useNumberSetting } from "@/data/settings";
+import { useMeta } from "@/data/app-meta";
 import { hapticPlay } from "@/domain/haptics";
 import type { HapticEvent } from "@/domain/haptics";
 
@@ -25,11 +25,11 @@ const NOTIFICATION = {
 
 /**
  * Nullable `db`: a caller above the splash gate, where `useDatabase()` throws, gets null. Null resolves to silence,
- * never the default, which is why this is not `useSettingNumber`.
+ * never the default, which is why this is not `useSetting`.
  */
 function useHapticsLevel(): number | null {
     const { db } = useLocalData();
-    const level = useNumberSetting(db, "haptics");
+    const level = useMeta(db, "haptics");
     return db === null ? null : level;
 }
 

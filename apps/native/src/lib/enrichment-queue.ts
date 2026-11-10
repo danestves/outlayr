@@ -2,8 +2,9 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Semaphore from "effect/Semaphore";
 
+import { Meta } from "@/data/app-meta-core";
 import { sendQueuedEnrichment } from "@/data/enrichment-queue-core";
-import { readBoolSetting, readRemoteEnrichment } from "@/data/settings-core";
+import { readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { firstLocale } from "@/i18n/device-language";
 
@@ -19,7 +20,7 @@ const sendOnce = Effect.fn("EnrichmentQueue.sendOnce")(function* sendOnce(db: Da
     const device = firstLocale();
     return yield* sendQueuedEnrichment(db, {
         enqueue: enrichmentQueueTransport().enqueue,
-        groundedLookup: yield* readBoolSetting(db, "groundedLookup"),
+        groundedLookup: yield* Meta.get(db, "groundedLookup"),
         locale: device?.languageTag?.trim() || undefined,
         regionCode: device?.regionCode?.trim() || undefined,
     });

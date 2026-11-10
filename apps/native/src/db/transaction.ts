@@ -2,6 +2,8 @@ import { sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 
+import type { SpendDb } from "@/data/budget-spent";
+
 import type { Database } from "./client";
 
 export function bootTransaction(db: Database, task: () => void): void {
@@ -43,19 +45,34 @@ const queue = new WeakMap<object, Promise<void>>();
 
 const noop = () => undefined;
 
+const repairs = new WeakMap<SpendDb, (() => void)[]>();
+
+export function afterRollback(db: SpendDb, repair: () => void): void {
+    repairs.get(db)?.push(repair);
+}
+
 async function runTransaction(db: Database, task: () => Promise<void>): Promise<void> {
     // SAFETY: drizzle types `$client` per driver; only the optional method is read, and its absence is checked.
     const client = db.$client as {
         withTransactionAsync?: (t: () => Promise<void>) => Promise<void>;
     };
-
-    // better-sqlite3 test clients lack the async API; a test needing rollback injects one (`transfers-core.test.ts`).
-    if (!client.withTransactionAsync) {
-        await task();
-        return;
+    const pending: (() => void)[] = [];
+    repairs.set(db, pending);
+    try {
+        // better-sqlite3 test clients lack the async API; a test needing rollback injects `withAsyncTransactions`.
+        await (client.withTransactionAsync ? client.withTransactionAsync(task) : task());
+    } catch (error) {
+        repairs.delete(db);
+        for (const repair of pending) {
+            try {
+                repair();
+                // oxlint-disable-next-line no-empty -- the transaction's own failure is the one to report; the next read repairs again
+            } catch {}
+        }
+        throw error;
+    } finally {
+        repairs.delete(db);
     }
-
-    await client.withTransactionAsync(task);
 }
 
 class BodyFailedError extends Error {

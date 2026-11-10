@@ -3,11 +3,10 @@ import { toAccountKind } from "@outlayr/money/account-kind";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { and, eq, inArray, isNull, or } from "drizzle-orm";
 import * as Effect from "effect/Effect";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import { getAccountById, accountsRepo } from "@/data/accounts-core";
-import { getMeta, META_KEYS, setMeta } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import { TOMBSTONED_BUDGET, budgetsRepo } from "@/data/budgets-core";
 import { pickFreeCategoryIcon, categoriesRepo } from "@/data/categories-core";
 import { settledAccountCellQuery, toCurrencyCell } from "@/data/cell-query";
@@ -23,9 +22,8 @@ import {
 import { stageTransfer } from "@/data/transfers-core";
 import { loadValuationIn } from "@/data/valuation-source";
 import type { Database } from "@/db/client";
-import { accounts, appMeta, budgetPlans, budgets, categories, transactions, transfers } from "@/db/schema";
+import { accounts, budgetPlans, budgets, categories, transactions, transfers } from "@/db/schema";
 import { transaction } from "@/db/transaction";
-import { DEFAULT_CURRENCY } from "@/domain/money";
 import type {
     MmBalanceCheck,
     MmImportPlan,
@@ -52,25 +50,6 @@ const fail =
     (cause: unknown): MoneyManagerImportError =>
         cause instanceof MoneyManagerImportError ? cause : new MoneyManagerImportError({ cause, operation });
 
-const ImportRecord = Schema.Struct({
-    accountIds: Schema.mutable(Schema.Array(Schema.String)),
-    accountKeys: Schema.Record(Schema.String, Schema.String),
-    adjustedAccountIds: Schema.mutable(Schema.Array(Schema.String)),
-    budgetIds: Schema.mutable(Schema.Array(Schema.String)),
-    categoryIds: Schema.mutable(Schema.Array(Schema.String)),
-    expectedBalances: Schema.Record(Schema.String, Schema.Number),
-    importedAt: Schema.Number,
-    renamedCategories: Schema.optionalKey(
-        Schema.mutable(
-            Schema.Array(Schema.Struct({ id: Schema.String, imported: Schema.String, previous: Schema.String }))
-        )
-    ),
-    transactionIds: Schema.mutable(Schema.Array(Schema.String)),
-    transferIds: Schema.mutable(Schema.Array(Schema.String)),
-});
-
-const decodeRecord = Schema.decodeUnknownOption(Schema.fromJsonString(ImportRecord));
-
 const CHUNK = 400;
 
 function parentId(category: PlannedCategory, ids: ReadonlyMap<string, string>): string | null {
@@ -84,9 +63,8 @@ function parentId(category: PlannedCategory, ids: ReadonlyMap<string, string>): 
 }
 
 export const readLedgerState = Effect.fn("MoneyManagerImport.readLedgerState")(function* readLedgerState(db: Database) {
-    const currency = (yield* getMeta(db, META_KEYS.currency).pipe(Effect.mapError(fail("read")))) ?? DEFAULT_CURRENCY;
-    const currencyChosen =
-        (yield* getMeta(db, META_KEYS.currencyChosen).pipe(Effect.mapError(fail("read")))) === "true";
+    const currency = yield* Meta.get(db, "currency").pipe(Effect.mapError(fail("read")));
+    const currencyChosen = yield* Meta.get(db, "currencyChosen").pipe(Effect.mapError(fail("read")));
     const accountRows = yield* Effect.tryPromise({
         catch: fail("read"),
         try: () =>
@@ -165,27 +143,8 @@ export const readLedgerState = Effect.fn("MoneyManagerImport.readLedgerState")(f
     } satisfies OutlayrLedgerState;
 });
 
-export const lastMoneyManagerImport = Effect.fn("MoneyManagerImport.last")(function* lastMoneyManagerImport(
-    db: Database
-) {
-    const raw = yield* getMeta(db, META_KEYS.moneyManagerImport).pipe(Effect.mapError(fail("last")));
-    return parseImportRecord(raw);
-});
-
-export function parseImportRecord(raw: string | null | undefined): MmImportRecord | null {
-    if (raw == null || raw === "") {
-        return null;
-    }
-    const decoded = Option.getOrNull(decodeRecord(raw));
-    if (decoded == null) {
-        return null;
-    }
-    return {
-        ...decoded,
-        accountKeys: { ...decoded.accountKeys },
-        expectedBalances: { ...decoded.expectedBalances },
-    } satisfies MmImportRecord;
-}
+export const lastMoneyManagerImport = (db: Database) =>
+    Meta.get(db, "moneyManagerImport").pipe(Effect.mapError(fail("last")));
 
 const renameMatchedCategories = Effect.fn("MoneyManagerImport.renameMatchedCategories")(
     function* renameMatchedCategories(db: Database, planned: readonly PlannedCategory[]) {
@@ -223,8 +182,8 @@ export const applyMoneyManagerImport = Effect.fn("MoneyManagerImport.apply")(fun
         db,
         Effect.gen(function* write() {
             if (plan.ledgerCurrency != null) {
-                yield* setMeta(db, META_KEYS.currency, plan.ledgerCurrency).pipe(Effect.mapError(fail("apply")));
-                yield* setMeta(db, META_KEYS.currencyChosen, "true").pipe(Effect.mapError(fail("apply")));
+                yield* Meta.set(db, "currency", plan.ledgerCurrency).pipe(Effect.mapError(fail("apply")));
+                yield* Meta.set(db, "currencyChosen", true).pipe(Effect.mapError(fail("apply")));
             }
 
             const accountIds: string[] = [];
@@ -403,9 +362,7 @@ export const applyMoneyManagerImport = Effect.fn("MoneyManagerImport.apply")(fun
                 transactionIds,
                 transferIds,
             } satisfies MmImportRecord;
-            yield* setMeta(db, META_KEYS.moneyManagerImport, JSON.stringify(record)).pipe(
-                Effect.mapError(fail("apply"))
-            );
+            yield* Meta.set(db, "moneyManagerImport", record).pipe(Effect.mapError(fail("apply")));
             return record;
         }).pipe(Effect.mapError(fail("apply"))),
         fail("apply")
@@ -429,7 +386,7 @@ export const undoMoneyManagerImport = Effect.fn("MoneyManagerImport.undo")(funct
     if (record == null) {
         return NOTHING_UNDONE;
     }
-    return yield* undoRecordedImport(db, record, META_KEYS.moneyManagerImport);
+    return yield* undoRecordedImport(db, record, "moneyManagerImport");
 });
 
 export const undoRecordedImport = Effect.fn("MoneyManagerImport.undoRecorded")(function* undoRecordedImport(
@@ -438,7 +395,7 @@ export const undoRecordedImport = Effect.fn("MoneyManagerImport.undoRecorded")(f
         MmImportRecord,
         "accountIds" | "budgetIds" | "categoryIds" | "renamedCategories" | "transactionIds" | "transferIds"
     >,
-    metaKey: string
+    metaKey: "csvImport" | "moneyManagerImport" | "pdfImport"
 ) {
     // Repo deletes open their own transaction, which this one cannot nest.
     return yield* transaction(
@@ -488,7 +445,7 @@ export const undoRecordedImport = Effect.fn("MoneyManagerImport.undoRecorded")(f
                         )
                 );
             }
-            yield* undoQuery(() => db.delete(appMeta).where(eq(appMeta.key, metaKey)));
+            yield* Meta.remove(db, [metaKey]);
             return {
                 accounts: removedAccounts,
                 budgets: removedBudgets,

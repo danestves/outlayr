@@ -7,7 +7,7 @@ import * as Semaphore from "effect/Semaphore";
 import { isAvailableAsync, requestReview } from "expo-store-review";
 import { AppState } from "react-native";
 
-import { getMeta, META_KEYS, setMeta } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { posthog } from "@/lib/posthog";
@@ -66,9 +66,9 @@ export const askForReview = Effect.fn("ReviewPrompt.ask")(function* askForReview
 export const askForReviewIfPending = Effect.fn("ReviewPrompt.askIfPending")(function* askForReviewIfPending(
     db: Database
 ) {
-    if (AppState.currentState !== "active" || (yield* getMeta(db, META_KEYS.reviewPending)) !== "1") {
+    if (AppState.currentState !== "active" || !(yield* Meta.get(db, "reviewPending"))) {
         return;
     }
-    yield* setMeta(db, META_KEYS.reviewPending, "0");
+    yield* Meta.set(db, "reviewPending", false);
     yield* askForReview(db);
 });

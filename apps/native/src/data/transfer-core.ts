@@ -2,18 +2,17 @@ import { ENTRY_RATE_TYPES } from "@outlayr/money/rates";
 import type { EntryRateType } from "@outlayr/money/rates";
 import { desc, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { parseCsv } from "@/domain/csv";
-import { DEFAULT_CURRENCY } from "@/domain/money";
 import { parseCsvAmount, parseCsvDate, parseCsvType, transactionsToCsv } from "@/domain/transaction-csv";
 import type { DecimalSeparator } from "@/domain/transaction-csv";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
+import type { MetaName } from "./app-meta-registry";
 import { capitalizeCategoryName, ensureCategoryByName, formatCategoryName, presetForName } from "./categories-core";
 import { NOTHING_UNDONE, undoRecordedImport } from "./money-manager-import-core";
 import { transactionsRepo } from "./transactions-core";
@@ -53,7 +52,7 @@ export const exportTransactionsCsv = Effect.fn("CsvTransfer.exportTransactionsCs
             .orderBy(desc(transactions.date))
     );
 
-    const ledgerCurrency = (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    const ledgerCurrency = yield* Meta.get(db, "currency");
     return transactionsToCsv(rows, ledgerCurrency);
 });
 
@@ -520,7 +519,7 @@ const createEntry = (db: Database, entry: ImportEntry) =>
             // said what left the device, and that was decided at import time.
             { logoCandidate: false }
         )
-        .pipe(Effect.mapError((error) => new CsvTransferError({ cause: error.cause, operation: "import" })));
+        .pipe(Effect.mapError((error) => new CsvTransferError({ cause: error.cause ?? error, operation: "import" })));
 
 const createPlannedCategories = Effect.fn("CsvTransfer.createPlannedCategories")(function* createPlannedCategories(
     db: Database,
@@ -547,26 +546,9 @@ const createPlannedCategories = Effect.fn("CsvTransfer.createPlannedCategories")
     return { created: [...created], ids };
 });
 
-const CsvImportRecord = Schema.Struct({
-    categoryIds: Schema.mutable(Schema.Array(Schema.String)),
-    importedAt: Schema.Number,
-    transactionIds: Schema.mutable(Schema.Array(Schema.String)),
-});
-
-type CsvImportRecord = typeof CsvImportRecord.Type;
-
-const decodeImportRecord = Schema.decodeUnknownOption(Schema.fromJsonString(CsvImportRecord));
-
-export function parseCsvImportRecord(raw: string | null | undefined): CsvImportRecord | null {
-    return raw == null || raw === "" ? null : Option.getOrNull(decodeImportRecord(raw));
-}
-
 export type FileImportKind = "csv" | "pdf";
 
-const FILE_IMPORT_META = { csv: META_KEYS.csvImport, pdf: META_KEYS.pdfImport } satisfies Record<
-    FileImportKind,
-    string
->;
+const FILE_IMPORT_META = { csv: "csvImport", pdf: "pdfImport" } as const satisfies Record<FileImportKind, MetaName>;
 
 export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyImport(
     db: Database,
@@ -591,8 +573,8 @@ export const applyImport = Effect.fn("CsvTransfer.applyImport")(function* applyI
                 });
                 transactionIds.push(id);
             }
-            const record = { categoryIds: created, importedAt: Date.now(), transactionIds } satisfies CsvImportRecord;
-            yield* setMeta(db, FILE_IMPORT_META[kind], JSON.stringify(record)).pipe(
+            const record = { categoryIds: created, importedAt: Date.now(), transactionIds };
+            yield* Meta.set(db, FILE_IMPORT_META[kind], record).pipe(
                 Effect.mapError((cause) => new CsvTransferError({ cause, operation: "import" }))
             );
         }),
@@ -606,10 +588,9 @@ export const lastFileImport = Effect.fn("CsvTransfer.lastFileImport")(function* 
     db: Database,
     kind: FileImportKind = "csv"
 ) {
-    const raw = yield* getMeta(db, FILE_IMPORT_META[kind]).pipe(
+    return yield* Meta.get(db, FILE_IMPORT_META[kind]).pipe(
         Effect.mapError((cause) => new CsvTransferError({ cause, operation: "undo" }))
     );
-    return parseCsvImportRecord(raw);
 });
 
 export const undoFileImport = Effect.fn("CsvTransfer.undoFileImport")(function* undoFileImport(

@@ -11,7 +11,7 @@ import { WatchAppState, WatchTableWrites } from "@/lib/app-events";
 import { appRuntime } from "@/lib/runtime";
 import { watchable } from "@/lib/test-watch";
 
-import { META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import type { PhotoReconciliation } from "./photo-store-core";
 import { layer as photoSyncLayer, PhotoPasses, PhotoSync } from "./photo-sync";
 import type { PhotoSyncResult } from "./photo-sync-core";
@@ -53,7 +53,7 @@ describe("photo sync", () => {
     beforeEach(async () => {
         vi.useFakeTimers();
         db = migratedDatabase();
-        await Effect.runPromise(setMeta(db, META_KEYS.syncEnabled, "1"));
+        await Effect.runPromise(Meta.set(db, "syncEnabled", true));
         reconciles.mockReset();
         reconciles.mockResolvedValue(NOTHING_REPAIRED);
         cycles.mockReset();

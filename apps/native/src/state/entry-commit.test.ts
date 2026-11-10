@@ -2,8 +2,7 @@ import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import * as Effect from "effect/Effect";
 import { describe, expect, it, vi } from "vite-plus/test";
 
-import { getMeta, META_KEYS } from "@/data/app-meta-core";
-import { setBoolSetting } from "@/data/settings-core";
+import { Meta } from "@/data/app-meta-core";
 import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { tags, transactions } from "@/db/schema";
@@ -49,7 +48,7 @@ function commit(input: EntryCommit, reminders: { cancelled?: (ids: readonly stri
     );
 }
 
-const lookupOutbox = (db: Database) => Effect.runPromise(getMeta(db, META_KEYS.enrichmentOutbox));
+const lookupOutbox = (db: Database) => Effect.runPromise(Meta.get(db, "enrichmentOutbox"));
 
 describe("commitEntry", () => {
     it("keeps a custom rate freeze when an edit leaves the rate untouched", async () => {
@@ -133,18 +132,18 @@ describe("commitEntry", () => {
 
     it("sends no merchant to the lookup while AI enrichment is off", async () => {
         const { db } = ledger();
-        await Effect.runPromise(setBoolSetting(db, "aiConsentV2", false));
+        await Effect.runPromise(Meta.set(db, "aiConsentV2", false));
 
         await commit({ db, draft: DRAFT, source: "form" });
 
-        await expect(lookupOutbox(db)).resolves.toBeNull();
+        await expect(lookupOutbox(db)).resolves.toStrictEqual([]);
     });
 
     it.each(["form", "voice", "scan"] as const)(
         "queues a %s entry for the merchant lookup and syncs reminders",
         async (source) => {
             const { db } = ledger();
-            await Effect.runPromise(setBoolSetting(db, "aiConsentV2", true));
+            await Effect.runPromise(Meta.set(db, "aiConsentV2", true));
             const synced = Promise.withResolvers<readonly string[]>();
 
             const outcome = await commit({ db, draft: DRAFT, source }, { cancelled: synced.resolve });
@@ -152,7 +151,7 @@ describe("commitEntry", () => {
             if (outcome.kind !== "saved") {
                 throw new Error("The entry did not save");
             }
-            await expect(lookupOutbox(db)).resolves.toBe(JSON.stringify([outcome.id]));
+            await expect(lookupOutbox(db)).resolves.toStrictEqual([outcome.id]);
             await expect(synced.promise).resolves.toStrictEqual(["outlayr.sub-due.gone"]);
         }
     );

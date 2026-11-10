@@ -4,7 +4,7 @@ import * as Schema from "effect/Schema";
 
 import { accounts, transactions } from "@/db/schema";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import type { SpendDb } from "./budget-spent";
 
 export interface CachedOriginal {
@@ -64,7 +64,7 @@ export const replateStoredLogos = Effect.fn("LogoReplate.replateStoredLogos")(fu
     db: SpendDb,
     deps: LogoReplateDeps
 ) {
-    if ((yield* getMeta(db, META_KEYS.logoPlates)) != null) {
+    if (yield* Meta.get(db, "logoPlates")) {
         return 0;
     }
 
@@ -103,6 +103,6 @@ export const replateStoredLogos = Effect.fn("LogoReplate.replateStoredLogos")(fu
         }
     }
 
-    yield* setMeta(db, META_KEYS.logoPlates, "1");
+    yield* Meta.set(db, "logoPlates", true);
     return replaced.size;
 });

@@ -6,7 +6,7 @@ import { GestureDetector } from "react-native-gesture-handler";
 import { useDerivedValue, useReducedMotion, useSharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-import { useSettingBool } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { bucketDateLabel } from "@/data/insights";
 import type { InsightsBucket, InsightsPeriod } from "@/data/insights";
 import { formatAmount } from "@/domain/money";
@@ -104,7 +104,7 @@ export function InsightsNetChart({
     const t = useTranslation();
     const { language } = useLanguage();
     const reduceMotion = useReducedMotion();
-    const animated = useSettingBool("animatedCharts") && !reduceMotion;
+    const animated = useSetting("animatedCharts") && !reduceMotion;
 
     const [width, setWidth] = useState(0);
     const [scrubIndex, setScrubIndex] = useState<number | null>(null);

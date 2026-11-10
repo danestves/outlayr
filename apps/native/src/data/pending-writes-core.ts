@@ -6,18 +6,22 @@ import { and, between, desc, eq, gt, inArray, isNull, like, or, sql } from "driz
 import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { autologExpenseCount, countsAsAutolog, holdsAutolog } from "@/domain/autolog-cap";
-import type { AutologAccess } from "@/domain/autolog-cap";
 import { detectCurrency } from "@/domain/detect-currency";
 import type { CardAccountCandidate } from "@/domain/match-card-account";
 import { matchCardAccount } from "@/domain/match-card-account";
-import { DEFAULT_CURRENCY } from "@/domain/money";
+import type {
+    AutologAccess,
+    LastWalletEntry,
+    NotificationText,
+    PendingWriteLedgerEntry as LedgerEntry,
+    WalletCard,
+} from "@/domain/meta-values";
 import { cleanMerchant, mergeNotificationRead, parseNotification } from "@/domain/parse-notification";
 import { translateNow } from "@/i18n/runtime";
 import type { NotificationReader, NotificationReads } from "@/lib/notification-read";
@@ -26,7 +30,7 @@ import type { ClaimedWrites, PendingWrite } from "@/lib/pending-writes-core";
 import { posthog } from "@/lib/posthog";
 
 import { accountsRepo, getAccountById } from "./accounts-core";
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import {
     countAutologEntry,
     holdAutologWrite,
@@ -79,121 +83,28 @@ export const SUBSCRIPTION_PRICE_BAND = { max: 2, min: 0.5 } as const;
 const AMOUNT_EPSILON = 0.005;
 const MAX_MISSED_LANDINGS = 60;
 
-function orNullOnFailure<S extends Schema.Top>(schema: S) {
-    return Schema.NullOr(schema).pipe(Schema.catchDecoding(() => Effect.succeedSome(null)));
-}
-
-const RepricedSubscription = Schema.Struct({
-    currency: Schema.String,
-    from: Schema.Finite,
-    note: Schema.String,
-    to: Schema.Finite,
-});
-
-export type RepricedSubscription = typeof RepricedSubscription.Type;
-
-const decodeRepriced = Schema.decodeUnknownOption(Schema.Array(orNullOnFailure(RepricedSubscription)));
-
-export function parseRepriced(raw: string | null | undefined): RepricedSubscription[] {
-    if (!raw) {
-        return [];
-    }
-    try {
-        const parsed = decodeRepriced(JSON.parse(raw));
-        return Option.isSome(parsed) ? parsed.value.filter((entry) => entry !== null) : [];
-    } catch {
-        return [];
-    }
-}
-
 export const takeRepriced = Effect.fn("PendingWrites.takeRepriced")(function* takeRepriced(db: Database) {
-    const entries = parseRepriced(yield* getMeta(db, META_KEYS.repricedSubscriptions));
+    const entries = yield* Meta.get(db, "repricedSubscriptions");
     if (entries.length > 0) {
-        yield* setMeta(db, META_KEYS.repricedSubscriptions, "[]");
+        yield* Meta.set(db, "repricedSubscriptions", []);
     }
     return entries;
 });
 
-const LastWalletEntry = Schema.Struct({
-    /** Epoch ms of the commit, not of the purchase. */
-    at: Schema.Finite,
-    push: Schema.optional(Schema.Literal(true)),
-    txId: Schema.String,
-});
-
-export type LastWalletEntry = typeof LastWalletEntry.Type;
-
-const decodeLastWalletEntry = Schema.decodeUnknownOption(LastWalletEntry);
-
-export function parseLastWalletEntry(raw: string | null | undefined): LastWalletEntry | null {
-    if (!raw) {
-        return null;
-    }
-    try {
-        return Option.getOrNull(decodeLastWalletEntry(JSON.parse(raw)));
-    } catch {
-        return null;
-    }
-}
-
-const NotificationText = Schema.Struct({
-    amountText: Schema.NullOr(Schema.String),
-    at: Schema.Finite,
-    text: Schema.String,
-});
-
-export type NotificationText = typeof NotificationText.Type;
-
-const decodeNotificationTexts = Schema.decodeUnknownOption(Schema.Array(orNullOnFailure(NotificationText)));
 const NOTIFICATION_TEXTS_LIMIT = 5;
-
-export function parseNotificationTexts(raw: string | null | undefined): NotificationText[] {
-    if (!raw) {
-        return [];
-    }
-    try {
-        const parsed = decodeNotificationTexts(JSON.parse(raw));
-        return Option.isSome(parsed) ? parsed.value.filter((entry) => entry !== null) : [];
-    } catch {
-        return [];
-    }
-}
 
 const rememberNotification = Effect.fn("PendingWrites.rememberNotification")(function* rememberNotification(
     db: Database,
     entry: NotificationText
 ) {
-    const kept = parseNotificationTexts(yield* getMeta(db, META_KEYS.notificationTexts));
+    const kept = yield* Meta.get(db, "notificationTexts");
     const last = kept.at(-1);
     if (last?.text === entry.text && Math.abs(entry.at - last.at) <= WALLET_DEDUPE_WINDOW_MS) {
         return;
     }
     const next = [...kept, entry].slice(-NOTIFICATION_TEXTS_LIMIT);
-    yield* setMeta(db, META_KEYS.notificationTexts, JSON.stringify(next));
+    yield* Meta.set(db, "notificationTexts", next);
 });
-
-const WalletCard = Schema.Struct({
-    accountId: Schema.optional(Schema.NullOr(Schema.String)),
-    lastAt: Schema.Finite,
-    text: Schema.String,
-    waiting: Schema.mutableKey(Schema.optional(Schema.Array(Schema.String))),
-});
-
-export type WalletCard = typeof WalletCard.Type;
-
-const decodeWalletCards = Schema.decodeUnknownOption(Schema.Array(orNullOnFailure(WalletCard)));
-
-export function parseWalletCards(raw: string | null | undefined): WalletCard[] {
-    if (!raw) {
-        return [];
-    }
-    try {
-        const parsed = decodeWalletCards(JSON.parse(raw));
-        return Option.isSome(parsed) ? parsed.value.filter((card) => card !== null) : [];
-    } catch {
-        return [];
-    }
-}
 
 export function cardAccountId(
     text: string,
@@ -214,8 +125,8 @@ const updateWalletCards = Effect.fn("PendingWrites.updateWalletCards")(function*
     db: Database,
     change: (cards: WalletCard[]) => WalletCard[]
 ) {
-    const cards = parseWalletCards(yield* getMeta(db, META_KEYS.walletCards));
-    yield* setMeta(db, META_KEYS.walletCards, JSON.stringify(change(cards)));
+    const cards = yield* Meta.get(db, "walletCards");
+    yield* Meta.set(db, "walletCards", change(cards));
 });
 
 export function cardStatus<Account extends CardAccountCandidate>(
@@ -234,7 +145,7 @@ export const cardStillAsks = Effect.fn("PendingWrites.cardStillAsks")(function* 
     text: string
 ) {
     const live = yield* listBanks(db);
-    return cardStatus(text, parseWalletCards(yield* getMeta(db, META_KEYS.walletCards)), live).asks;
+    return cardStatus(text, yield* Meta.get(db, "walletCards"), live).asks;
 });
 
 export const pickCardAccount = Effect.fn("PendingWrites.pickCardAccount")(function* pickCardAccount(
@@ -256,7 +167,7 @@ export const pickCardAccount = Effect.fn("PendingWrites.pickCardAccount")(functi
 export const fileWaitingPurchases = Effect.fn("PendingWrites.fileWaitingPurchases")(function* fileWaitingPurchases(
     db: Database
 ) {
-    const cards = parseWalletCards(yield* getMeta(db, META_KEYS.walletCards));
+    const cards = yield* Meta.get(db, "walletCards");
     const waitingCards = cards.filter((card) => (card.waiting?.length ?? 0) > 0);
     if (waitingCards.length === 0) {
         return;
@@ -345,20 +256,6 @@ function readNotification(job: PendingWrite, reads: NotificationReads | undefine
 const LEDGER_LIMIT = 100;
 const LEDGER_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 
-const LedgerEntry = Schema.Struct({
-    at: Schema.Finite,
-    date: Schema.optional(Schema.Finite),
-    id: Schema.String,
-    key: Schema.NullOr(Schema.String),
-    source: Schema.optional(Schema.String),
-    txId: Schema.String,
-});
-
-type LedgerEntry = typeof LedgerEntry.Type;
-
-// Per entry: one bad row must not discard the only record of which purchases were committed.
-const decodeLedger = Schema.decodeUnknownOption(Schema.Array(orNullOnFailure(LedgerEntry)));
-
 export const appliedWriteIds = Effect.fn("PendingWrites.appliedWriteIds")(function* appliedWriteIds(
     db: SpendDb,
     since: number
@@ -374,18 +271,7 @@ export const writeIdsByTransaction = Effect.fn("PendingWrites.writeIdsByTransact
     return new Map(ledger.map((entry) => [entry.txId, entry.id]));
 });
 
-const readLedger = Effect.fn("PendingWrites.readLedger")(function* readLedger(db: SpendDb) {
-    const raw = yield* getMeta(db, META_KEYS.pendingWriteLedger);
-    if (!raw) {
-        return [];
-    }
-    try {
-        const parsed = decodeLedger(JSON.parse(raw));
-        return Option.isSome(parsed) ? parsed.value.filter((entry) => entry !== null) : [];
-    } catch {
-        return [];
-    }
-});
+const readLedger = (db: SpendDb) => Meta.get(db, "pendingWriteLedger");
 
 // Replaces, not appends: `alreadyApplied` answers with the FIRST entry, so a stale one would keep re-checking a
 // deleted transaction and re-writing it on every replay.
@@ -434,12 +320,13 @@ export const unloggedPushes = Effect.fn("PendingWrites.unloggedPushes")(function
     return kept;
 });
 
+const dateOf = (entry: LedgerEntry) => entry.date ?? entry.at;
+
 function settleRepeatOf(ledger: LedgerEntry[], job: PendingWrite): LedgerEntry | null {
     const key = job.dedupeKey?.trim();
     if (!key || !REPEATS_ON_SETTLE.test(job.card ?? "")) {
         return null;
     }
-    const dateOf = (entry: LedgerEntry) => entry.date ?? entry.at;
     const repeated = (first: LedgerEntry) =>
         ledger.some(
             (other) =>
@@ -522,7 +409,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
         if (duplicate) {
             if (duplicate.id !== job.id) {
                 ledger = remember(ledger, { at, date: job.date, id: job.id, key: null, txId: duplicate.txId }, at);
-                yield* setMeta(db, META_KEYS.pendingWriteLedger, JSON.stringify(ledger));
+                yield* Meta.set(db, "pendingWriteLedger", ledger);
             }
             continue;
         }
@@ -574,14 +461,14 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
                             .set({ amount: job.amount, amountUsd: null, updatedAt: now })
                             .where(eq(transactions.id, settled.id))
                     );
-                    const repriced = parseRepriced(yield* getMeta(db, META_KEYS.repricedSubscriptions));
+                    const repriced = yield* Meta.get(db, "repricedSubscriptions");
                     repriced.push({
                         currency: settled.currency,
                         from: settled.amount,
                         note: settled.note,
                         to: job.amount,
                     });
-                    yield* setMeta(db, META_KEYS.repricedSubscriptions, JSON.stringify(repriced));
+                    yield* Meta.set(db, "repricedSubscriptions", repriced);
                 }
                 const txId =
                     twin?.id ??
@@ -620,10 +507,10 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
                     { at, date: job.date, id: job.id, key: job.dedupeKey?.trim() || null, source, txId },
                     at
                 );
-                yield* setMeta(db, META_KEYS.pendingWriteLedger, JSON.stringify(ledger));
+                yield* Meta.set(db, "pendingWriteLedger", ledger);
                 if (fromAutomation(job)) {
                     const entry: LastWalletEntry = job.text ? { at, push: true, txId } : { at, txId };
-                    yield* setMeta(db, META_KEYS.lastWalletEntry, JSON.stringify(entry));
+                    yield* Meta.set(db, "lastWalletEntry", entry);
                 }
                 const card = job.card?.trim();
                 if (card) {
@@ -686,7 +573,7 @@ const sameCharge = Effect.fn("PendingWrites.sameCharge")(function* sameCharge(
     if (ids.length === 0) {
         return null;
     }
-    const code = currency ?? (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    const code = currency ?? (yield* Meta.get(db, "currency"));
     const rows = yield* attempt("read", () =>
         db
             .select({
@@ -726,7 +613,7 @@ const settledOccurrence = Effect.fn("PendingWrites.settledOccurrence")(function*
     ledger: readonly LedgerEntry[],
     now: Date
 ) {
-    const code = currency ?? (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    const code = currency ?? (yield* Meta.get(db, "currency"));
     const taken = new Set(ledger.map((entry) => entry.txId));
     const lo = job.date - SUBSCRIPTION_SETTLE_WINDOW_MS;
     const hi = job.date + SUBSCRIPTION_SETTLE_WINDOW_MS;
@@ -831,7 +718,7 @@ const resolveAccount = Effect.fn("PendingWrites.resolveAccount")(function* resol
         return { account: null, asks: false };
     }
     const rows = yield* listBanks(db);
-    const status = cardStatus(card, parseWalletCards(yield* getMeta(db, META_KEYS.walletCards)), rows);
+    const status = cardStatus(card, yield* Meta.get(db, "walletCards"), rows);
     const charged = job.currency?.trim().toUpperCase() || detectCurrency(job.amountText);
     const same = charged ? rows.filter((row) => row.currency === charged) : [];
     const account =
@@ -986,7 +873,7 @@ const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
         yield* writeAutologWaiting(db, []);
     }
     if (fresh.autologged > 0) {
-        yield* setMeta(db, META_KEYS.reviewPending, "1");
+        yield* Meta.set(db, "reviewPending", true);
     }
     yield* attemptSync("release", () => {
         release(claimed);

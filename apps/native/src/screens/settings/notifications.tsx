@@ -71,11 +71,11 @@ export function Notifications() {
     const { language } = useLanguage();
     const { use24Hour } = useDisplaySettings().state;
     const { state: settings } = useAppSettings();
-    const enabled = settings.bool("showNotifications");
-    const subscriptionsEnabled = settings.bool("subscriptionReminders");
-    const installmentsEnabled = settings.bool("installmentReminders");
-    const option = settings.number("notificationOption");
-    const custom = clampTimeOfDay(settings.number("notificationHour"), settings.number("notificationMinute"));
+    const enabled = settings.get("showNotifications");
+    const subscriptionsEnabled = settings.get("subscriptionReminders");
+    const installmentsEnabled = settings.get("installmentReminders");
+    const option = settings.get("notificationOption");
+    const custom = clampTimeOfDay(settings.get("notificationHour"), settings.get("notificationMinute"));
     const scheduled = reminderTime(option, custom);
 
     const chooseOption = (next: number) => setNumber({ db, key: "notificationOption", value: next });

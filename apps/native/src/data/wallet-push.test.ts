@@ -5,7 +5,7 @@ import { expect, test } from "vite-plus/test";
 import { accounts, categories, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
-import { META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { transactionsRepo } from "./transactions-core";
 import { buildWalletPush } from "./wallet-push";
 
@@ -30,16 +30,12 @@ test("says where the next tap lands, the way the drain will file it", async () =
         { id: "cat-salary", income: true, name: "Salary", sortOrder: 0, updatedAt: NOW },
     ]);
     await Effect.runPromise(
-        setMeta(
-            db,
-            META_KEYS.walletCards,
-            JSON.stringify([
-                { lastAt: 1, text: "Chase Sapphire Visa" },
-                { accountId: "acc-n26", lastAt: 1, text: "Work card" },
-                { lastAt: 1, text: "Revolut" },
-                { accountId: null, lastAt: 1, text: "Amex" },
-            ])
-        )
+        Meta.set(db, "walletCards", [
+            { lastAt: 1, text: "Chase Sapphire Visa" },
+            { accountId: "acc-n26", lastAt: 1, text: "Work card" },
+            { lastAt: 1, text: "Revolut" },
+            { accountId: null, lastAt: 1, text: "Amex" },
+        ])
     );
     const entry = (note: string, categoryId: string, date: string, income = false) =>
         Effect.runPromise(
@@ -77,7 +73,7 @@ test("says where the next tap lands, the way the drain will file it", async () =
 
 test("never asks which account while the ledger has none", async () => {
     const db = migratedDatabase();
-    await Effect.runPromise(setMeta(db, META_KEYS.walletCards, JSON.stringify([{ lastAt: 1, text: "Visa" }])));
+    await Effect.runPromise(Meta.set(db, "walletCards", [{ lastAt: 1, text: "Visa" }]));
 
     await expect(Effect.runPromise(buildWalletPush(db))).resolves.toMatchObject({
         cards: { Visa: { label: null, pick: false } },

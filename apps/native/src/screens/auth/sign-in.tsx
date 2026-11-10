@@ -65,9 +65,9 @@ function FlyleafCard() {
     const currency = useGlobalCurrency(db);
     const reminderChosen = useReminderChosen(db);
     const { state: settings } = useAppSettings();
-    const option = settings.number("notificationOption");
-    const hour = settings.number("notificationHour");
-    const minute = settings.number("notificationMinute");
+    const option = settings.get("notificationOption");
+    const hour = settings.get("notificationHour");
+    const minute = settings.get("notificationMinute");
     const time = reminderTime(option, clampTimeOfDay(hour, minute));
 
     return (

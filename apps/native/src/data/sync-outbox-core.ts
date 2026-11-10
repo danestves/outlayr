@@ -1,13 +1,13 @@
-import { and, count, eq, inArray, isNotNull, or } from "drizzle-orm";
+import { and, count, eq, isNotNull, or } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
-import { appMeta, outbox } from "@/db/schema";
+import { outbox } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { SYNCED_SPECS, SYNCED_TABLES } from "./sync-tables";
 
 /** 999 bound variables per statement, three columns per queue entry. */
@@ -28,7 +28,7 @@ const query = <A>(step: typeof SyncOutboxStep.Type, run: () => PromiseLike<A>) =
     Effect.tryPromise({ catch: failedAt(step), try: run });
 
 export const isSyncEnabled = Effect.fn("SyncOutbox.isSyncEnabled")(function* isSyncEnabled(db: Database) {
-    return (yield* getMeta(db, META_KEYS.syncEnabled).pipe(Effect.mapError(failedAt("gate")))) === "1";
+    return yield* Meta.get(db, "syncEnabled").pipe(Effect.mapError(failedAt("gate")));
 });
 
 /** Turning sync off drops the queue, or edits made while signed out would push at the next sign-in. */
@@ -39,7 +39,7 @@ export const setSyncEnabled = Effect.fn("SyncOutbox.setSyncEnabled")(function* s
     yield* transaction(
         db,
         Effect.gen(function* write() {
-            yield* setMeta(db, META_KEYS.syncEnabled, enabled ? "1" : "0").pipe(Effect.mapError(failedAt("gate")));
+            yield* Meta.set(db, "syncEnabled", enabled).pipe(Effect.mapError(failedAt("gate")));
             if (!enabled) {
                 yield* query("gate", () => db.delete(outbox));
             }
@@ -51,7 +51,7 @@ export const setSyncEnabled = Effect.fn("SyncOutbox.setSyncEnabled")(function* s
 export const getSyncAccountSubject = Effect.fn("SyncOutbox.getSyncAccountSubject")(function* getSyncAccountSubject(
     db: Database
 ) {
-    return yield* getMeta(db, META_KEYS.syncAccountSubject).pipe(Effect.mapError(failedAt("subject")));
+    return yield* Meta.get(db, "syncAccountSubject").pipe(Effect.mapError(failedAt("subject")));
 });
 
 export const enableSyncForAccount = Effect.fn("SyncOutbox.enableSyncForAccount")(function* enableSyncForAccount(
@@ -61,8 +61,8 @@ export const enableSyncForAccount = Effect.fn("SyncOutbox.enableSyncForAccount")
     yield* transaction(
         db,
         Effect.gen(function* write() {
-            yield* setMeta(db, META_KEYS.syncAccountSubject, accountId).pipe(Effect.mapError(failedAt("subject")));
-            yield* setMeta(db, META_KEYS.syncEnabled, "1").pipe(Effect.mapError(failedAt("subject")));
+            yield* Meta.set(db, "syncAccountSubject", accountId).pipe(Effect.mapError(failedAt("subject")));
+            yield* Meta.set(db, "syncEnabled", true).pipe(Effect.mapError(failedAt("subject")));
         }),
         failedAt("subject")
     );
@@ -78,38 +78,32 @@ export const hasResidualSyncState = Effect.fn("SyncOutbox.hasResidualSyncState")
         return true;
     }
     return (
-        (yield* getMeta(db, META_KEYS.syncCursor).pipe(Effect.mapError(failedAt("cursor")))) !== null ||
-        (yield* getMeta(db, META_KEYS.syncedAt).pipe(Effect.mapError(failedAt("stamp")))) !== null
+        (yield* Meta.has(db, "syncCursor").pipe(Effect.mapError(failedAt("cursor")))) ||
+        (yield* Meta.has(db, "syncedAt").pipe(Effect.mapError(failedAt("stamp"))))
     );
 });
 
 export const getOrCreateDeviceId = Effect.fn("SyncOutbox.getOrCreateDeviceId")(function* getOrCreateDeviceId(
     db: Database
 ) {
-    const existing = yield* getMeta(db, META_KEYS.syncDeviceId).pipe(Effect.mapError(failedAt("device")));
+    const existing = yield* Meta.get(db, "syncDeviceId").pipe(Effect.mapError(failedAt("device")));
     if (existing) {
         return existing;
     }
     const minted = newId();
-    yield* setMeta(db, META_KEYS.syncDeviceId, minted).pipe(Effect.mapError(failedAt("device")));
+    yield* Meta.set(db, "syncDeviceId", minted).pipe(Effect.mapError(failedAt("device")));
     return minted;
 });
 
-/** Zero for anything unreadable: re-applying a change is a no-op, skipping one is silent data loss. */
 export const getSyncCursor = Effect.fn("SyncOutbox.getSyncCursor")(function* getSyncCursor(db: Database) {
-    const raw = yield* getMeta(db, META_KEYS.syncCursor).pipe(Effect.mapError(failedAt("cursor")));
-    if (raw === null) {
-        return 0;
-    }
-    const parsed = Number(raw);
-    return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : 0;
+    return yield* Meta.get(db, "syncCursor").pipe(Effect.mapError(failedAt("cursor")));
 });
 
 export const setSyncCursor = Effect.fn("SyncOutbox.setSyncCursor")(function* setSyncCursor(
     db: Database,
     cursor: number
 ) {
-    yield* setMeta(db, META_KEYS.syncCursor, String(cursor)).pipe(Effect.mapError(failedAt("cursor")));
+    yield* Meta.set(db, "syncCursor", cursor).pipe(Effect.mapError(failedAt("cursor")));
 });
 
 export const outboxPendingCount = Effect.fn("SyncOutbox.outboxPendingCount")(function* outboxPendingCount(
@@ -171,7 +165,7 @@ export const enqueueAllForSync = Effect.fn("SyncOutbox.enqueueAllForSync")(funct
 });
 
 export const setSyncedAt = Effect.fn("SyncOutbox.setSyncedAt")(function* setSyncedAt(db: Database, at: Date) {
-    yield* setMeta(db, META_KEYS.syncedAt, String(at.getTime())).pipe(Effect.mapError(failedAt("stamp")));
+    yield* Meta.set(db, "syncedAt", at.getTime()).pipe(Effect.mapError(failedAt("stamp")));
 });
 
 export const resetSyncForAccountSwitch = Effect.fn("SyncOutbox.resetSyncForAccountSwitch")(
@@ -188,20 +182,14 @@ export const resetSyncForAccountSwitch = Effect.fn("SyncOutbox.resetSyncForAccou
                     }
                 }
                 yield* query("reset", () => db.delete(outbox));
-                yield* query("reset", () =>
-                    db
-                        .delete(appMeta)
-                        .where(
-                            inArray(appMeta.key, [
-                                META_KEYS.syncAccountSubject,
-                                META_KEYS.syncCursor,
-                                META_KEYS.syncedAt,
-                                META_KEYS.syncEnabled,
-                                META_KEYS.syncReread,
-                                META_KEYS.syncRestoresReread,
-                            ])
-                        )
-                );
+                yield* Meta.remove(db, [
+                    "syncAccountSubject",
+                    "syncCursor",
+                    "syncedAt",
+                    "syncEnabled",
+                    "syncReread",
+                    "syncRestoresReread",
+                ]);
             }),
             failedAt("reset")
         );

@@ -18,7 +18,8 @@ import { Text } from "@/components/text";
 import { useUpdateWaiting } from "@/components/update-sheet";
 import { useSheetInsets } from "@/components/use-sheet-insets";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useAiConsent, useNumberSetting } from "@/data/settings";
+import { useMeta } from "@/data/app-meta";
+import { useAiConsent } from "@/data/settings";
 import { formatTargetDate } from "@/domain/dates";
 import { pendingNotices } from "@/domain/policy-notice";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -56,8 +57,8 @@ export function PolicyNoticeSheet() {
     const consentDue = useAiConsent(db) === "unanswered" && gate === "signed-in";
     const updateDue = useUpdateWaiting();
     const notices = useAtomValue(policyNoticesAtom);
-    const privacySeen = useNumberSetting(db, "privacyNoticeSeen");
-    const termsSeen = useNumberSetting(db, "termsNoticeSeen");
+    const privacySeen = useMeta(db, "privacyNoticeSeen");
+    const termsSeen = useMeta(db, "termsNoticeSeen");
     const pending = pendingNotices(notices, { privacy: privacySeen, terms: termsSeen });
     const [shown, setShown] = useState(pending);
     if (pending.length > 0 && pendingKey(pending) !== pendingKey(shown)) {

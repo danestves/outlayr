@@ -12,7 +12,7 @@ import * as Stream from "effect/Stream";
 import type { Database } from "@/db/client";
 import { appStates, launchAndForegrounds, listen, WatchAppState, WatchTableWrites } from "@/lib/app-events";
 
-import type { AppMetaError } from "./app-meta-core";
+import type { AppMetaError, CorruptMetaError } from "./app-meta-core";
 import type { LogoReplateError } from "./logo-replate-core";
 import { PHOTO_TABLES } from "./photo-store-core";
 import type { PhotoReconciliation, PhotoStoreError } from "./photo-store-core";
@@ -41,7 +41,9 @@ export class PhotoPasses extends Context.Service<
     PhotoPasses,
     {
         readonly reconcile: (db: Database, nowMs: number) => Effect.Effect<PhotoReconciliation, PhotoStoreError>;
-        readonly replateLogos: (db: Database) => Effect.Effect<number, AppMetaError | LogoReplateError>;
+        readonly replateLogos: (
+            db: Database
+        ) => Effect.Effect<number, AppMetaError | CorruptMetaError | LogoReplateError>;
         readonly sync: (db: Database) => Effect.Effect<PhotoSyncResult, PhotoTransferError>;
     }
 >()("outlayr/data/PhotoSync/PhotoPasses") {}

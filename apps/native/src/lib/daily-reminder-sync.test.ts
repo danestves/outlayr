@@ -6,7 +6,8 @@ import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import type { AppStateStatus } from "react-native";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { META_KEYS, setMeta } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
+import type { MetaName, MetaStored } from "@/data/app-meta-registry";
 import type { Database } from "@/db/client";
 import { appMeta } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
@@ -70,8 +71,8 @@ describe("daily reminder sync", () => {
         return flush();
     };
 
-    const writeSetting = async (key: string) => {
-        await Effect.runPromise(setMeta(db, key, "true"));
+    const writeSetting = async <K extends MetaName>(key: K, value: MetaStored<K>) => {
+        await Effect.runPromise(Meta.set(db, key, value));
         const [row] = await db
             .select({ rowId: sql<number>`rowid` })
             .from(appMeta)
@@ -143,11 +144,11 @@ describe("daily reminder sync", () => {
     it("reconciles after a setting changes, not after sync bookkeeping", async () => {
         await start();
 
-        await writeSetting(META_KEYS.syncedAt);
-        await writeSetting(META_KEYS.syncCursor);
+        await writeSetting("syncedAt", 1);
+        await writeSetting("syncCursor", 1);
         expect(syncs).toHaveBeenCalledOnce();
 
-        await writeSetting("showNotifications");
+        await writeSetting("showNotifications", true);
         expect(syncs).toHaveBeenCalledTimes(2);
     });
 

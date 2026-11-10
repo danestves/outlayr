@@ -70,7 +70,7 @@ export function useChooseImportFile() {
     );
 
     const chooseStatement = () => {
-        if (!remoteEnrichmentOn(settings.bool)) {
+        if (!remoteEnrichmentOn(settings.get)) {
             importDraftStore.setFileError({ cause: "aiOff" });
             return;
         }
@@ -83,7 +83,7 @@ export function useChooseImportFile() {
         importDraftStore.setFileError(null);
         pickStatement({
             categoryTree: buildCategoryTree(meta),
-            groundedLookup: settings.bool("groundedLookup"),
+            groundedLookup: settings.get("groundedLookup"),
             regionCode,
             today: localDay(new Date()),
         });

@@ -8,8 +8,8 @@ export interface DisplaySettings {
 
 export function selectDisplaySettings(snapshot: SettingsSnapshot): DisplaySettings {
     return {
-        showCents: snapshot.bool("showCents"),
-        swapTimeLabel: snapshot.bool("swapTimeLabel"),
-        use24Hour: snapshot.bool("use24HourClock"),
+        showCents: snapshot.get("showCents"),
+        swapTimeLabel: snapshot.get("swapTimeLabel"),
+        use24Hour: snapshot.get("use24HourClock"),
     };
 }

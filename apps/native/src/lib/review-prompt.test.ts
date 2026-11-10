@@ -5,7 +5,7 @@ import * as StoreReview from "expo-store-review";
 import { AppState } from "react-native";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { getMeta, META_KEYS, setMeta } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
@@ -14,8 +14,8 @@ import { askForReview as ask, askForReviewIfPending as askIfPending } from "./re
 
 const askForReview = (db: Database) => Effect.runPromise(ask(db));
 const askForReviewIfPending = (db: Database) => Effect.runPromise(askIfPending(db));
-const markPending = (db: Database) => Effect.runPromise(setMeta(db, META_KEYS.reviewPending, "1"));
-const pending = (db: Database) => Effect.runPromise(getMeta(db, META_KEYS.reviewPending));
+const markPending = (db: Database) => Effect.runPromise(Meta.set(db, "reviewPending", true));
+const pending = (db: Database) => Effect.runPromise(Meta.get(db, "reviewPending"));
 
 vi.mock("@react-native-async-storage/async-storage", async () => {
     vi.stubGlobal("jest", vi);
@@ -104,7 +104,7 @@ describe("askForReview", () => {
         await askForReviewIfPending(db);
 
         expect(mockStoreReview.requestReview).toHaveBeenCalledOnce();
-        await expect(pending(db)).resolves.toBe("0");
+        await expect(pending(db)).resolves.toBe(false);
     });
 
     it("spends no ask when the store request fails, so the next entry asks again without looping", async () => {
@@ -114,7 +114,7 @@ describe("askForReview", () => {
 
         await expect(askForReviewIfPending(db)).rejects.toThrow();
 
-        await expect(pending(db)).resolves.toBe("0");
+        await expect(pending(db)).resolves.toBe(false);
         await expect(AsyncStorage.getItem(ASKED_AT_KEY)).resolves.toBeNull();
         expect(capture).not.toHaveBeenCalled();
 
@@ -141,7 +141,7 @@ describe("askForReview", () => {
         await askForReviewIfPending(db);
 
         expect(mockStoreReview.requestReview).not.toHaveBeenCalled();
-        await expect(pending(db)).resolves.toBe("1");
+        await expect(pending(db)).resolves.toBe(true);
     });
 
     it("waits for a second day, which a deleted entry does not supply", async () => {

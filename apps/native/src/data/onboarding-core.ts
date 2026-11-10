@@ -4,7 +4,7 @@ import * as Schema from "effect/Schema";
 import type { Database } from "@/db/client";
 import { transaction } from "@/db/transaction";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 
 export class OnboardingError extends Schema.TaggedError<OnboardingError>()("OnboardingError", {
     cause: Schema.Defect(),
@@ -15,48 +15,32 @@ export class OnboardingError extends Schema.TaggedError<OnboardingError>()("Onbo
     }
 }
 
-// Read from the marker the terminal step writes, not the ledger: erasing every transaction must not re-open the flow.
-export function isOnboardingSettled(completed: string | null): boolean {
-    return completed === "true";
-}
-
 // The sole writer of `onboardingComplete`: the first-entry step, or the currency step's "I already have an account".
+// The gate reads this marker, not the ledger: erasing every transaction must not re-open the flow.
 export const finishOnboarding = Effect.fn("Onboarding.finishOnboarding")(function* finishOnboarding(db: Database) {
-    yield* setMeta(db, META_KEYS.onboardingComplete, "true");
+    yield* Meta.set(db, "onboardingComplete", true);
 });
-
-export function isReminderChosen(chosen: string | null): boolean {
-    return chosen === "true";
-}
 
 export const markReminderChosen = Effect.fn("Onboarding.markReminderChosen")(function* markReminderChosen(
     db: Database
 ) {
-    yield* setMeta(db, META_KEYS.reminderChosen, "true");
+    yield* Meta.set(db, "reminderChosen", true);
 });
 
 export const clearReminderChosen = Effect.fn("Onboarding.clearReminderChosen")(function* clearReminderChosen(
     db: Database
 ) {
-    yield* setMeta(db, META_KEYS.reminderChosen, "false");
+    yield* Meta.set(db, "reminderChosen", false);
 });
 
-export function isAccountDeferred(deferred: string | null): boolean {
-    return deferred === "true";
-}
-
 export const deferAccount = Effect.fn("Onboarding.deferAccount")(function* deferAccount(db: Database) {
-    yield* setMeta(db, META_KEYS.accountDeferred, "true");
+    yield* Meta.set(db, "accountDeferred", true);
 });
 
 // `migrated` gates this to once per device: a device killed between `setCurrency` and `finishOnboarding` looks exactly
 // like a pre-flow ledger, and would otherwise be backfilled past a flow it was mid-way through.
-export function shouldSettleLegacyLedger(
-    completed: string | null,
-    currencyChosen: string | null,
-    migrated: string | null
-): boolean {
-    return migrated !== "true" && completed !== "true" && currencyChosen === "true";
+export function shouldSettleLegacyLedger(completed: boolean, currencyChosen: boolean, migrated: boolean): boolean {
+    return !migrated && !completed && currencyChosen;
 }
 
 // `onboardingComplete` first, marker last: a kill between them re-runs an idempotent backfill, while the reverse
@@ -65,15 +49,11 @@ export const settleLegacyOnboarding = Effect.fn("Onboarding.settleLegacyOnboardi
     db: Database
 ) {
     const [completed, currencyChosen, migrated] = yield* Effect.all(
-        [
-            getMeta(db, META_KEYS.onboardingComplete),
-            getMeta(db, META_KEYS.currencyChosen),
-            getMeta(db, META_KEYS.onboardingGateMigrated),
-        ],
+        [Meta.get(db, "onboardingComplete"), Meta.get(db, "currencyChosen"), Meta.get(db, "onboardingGateMigrated")],
         { concurrency: "unbounded" }
     );
 
-    if (migrated === "true") {
+    if (migrated) {
         return;
     }
 
@@ -81,9 +61,9 @@ export const settleLegacyOnboarding = Effect.fn("Onboarding.settleLegacyOnboardi
         db,
         Effect.gen(function* write() {
             if (shouldSettleLegacyLedger(completed, currencyChosen, migrated)) {
-                yield* setMeta(db, META_KEYS.onboardingComplete, "true");
+                yield* Meta.set(db, "onboardingComplete", true);
             }
-            yield* setMeta(db, META_KEYS.onboardingGateMigrated, "true");
+            yield* Meta.set(db, "onboardingGateMigrated", true);
         }),
         (cause) => new OnboardingError({ cause })
     );

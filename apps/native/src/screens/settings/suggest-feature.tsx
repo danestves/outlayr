@@ -69,7 +69,7 @@ export function SuggestFeature() {
         setBusy(true);
         submit({
             appVersion: APP_VERSION,
-            linkAccount: settings.bool("shareAnalytics"),
+            linkAccount: settings.get("shareAnalytics"),
             locale: language,
             notify: notify && profile !== null,
             osName: Platform.select({ android: "Android", ios: "iOS" }) ?? Platform.OS,

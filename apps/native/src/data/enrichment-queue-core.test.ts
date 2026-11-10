@@ -7,7 +7,7 @@ import { categories, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 import { asCloudCall } from "@/lib/fake-cloud";
 
-import { getMeta, META_KEYS } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { categoriesRepo } from "./categories-core";
 import { applyEnrichmentAnswer, queueEnrichment, sendQueuedEnrichment } from "./enrichment-queue-core";
 import type { ApplyDeps, EnrichmentAnswer, EnrichmentJobRequest } from "./enrichment-queue-core";
@@ -84,9 +84,7 @@ describe("sendQueuedEnrichment", () => {
         expect(sent).toHaveLength(1);
         expect(sent[0]).toMatchObject({ currency: "EUR", localId: "tx-1", name: "CARE4BAG AE", regionCode: "VE" });
         expect(sent[0]?.categoryTree).toContainEqual({ children: [], name: "Trips" });
-        expect(JSON.parse((await Effect.runPromise(getMeta(db, META_KEYS.enrichmentOutbox))) ?? "null")).toStrictEqual(
-            []
-        );
+        await expect(Effect.runPromise(Meta.get(db, "enrichmentOutbox"))).resolves.toStrictEqual([]);
     });
 
     it("keeps what it could not send for the next pass", async () => {
@@ -104,10 +102,7 @@ describe("sendQueuedEnrichment", () => {
         await Effect.runPromise(sendQueuedEnrichment(db, { enqueue, groundedLookup: true }));
 
         expect(enqueue).toHaveBeenCalledOnce();
-        expect(JSON.parse((await Effect.runPromise(getMeta(db, META_KEYS.enrichmentOutbox))) ?? "null")).toStrictEqual([
-            "tx-1",
-            "tx-2",
-        ]);
+        await expect(Effect.runPromise(Meta.get(db, "enrichmentOutbox"))).resolves.toStrictEqual(["tx-1", "tx-2"]);
     });
 });
 

@@ -2,7 +2,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { Alert } from "react-native";
 
-import { setBoolSetting } from "@/data/settings-core";
+import { Meta } from "@/data/app-meta-core";
 import type { Database } from "@/db/client";
 import { enableReminderStep } from "@/domain/reminder";
 import type { TranslatableKey } from "@/i18n/catalog";
@@ -49,21 +49,21 @@ export const setDueReminders = Effect.fn("DueReminders.set")(function* setDueRem
             return false;
         }
     }
-    yield* setBoolSetting(db, key, next);
+    yield* Meta.set(db, key, next);
     return true;
 });
 
 export const turnOnInstallmentReminders = Effect.fn("DueReminders.turnOnInstallments")(
     function* turnOnInstallmentReminders(db: Database) {
         if (!(yield* setDueReminders(db, "installmentReminders", true))) {
-            yield* setBoolSetting(db, "installmentReminders", false);
+            yield* Meta.set(db, "installmentReminders", false);
         }
     }
 );
 
 export const declineInstallmentReminders = Effect.fn("DueReminders.declineInstallments")(
     function* declineInstallmentReminders(db: Database) {
-        yield* setBoolSetting(db, "installmentReminders", false);
+        yield* Meta.set(db, "installmentReminders", false);
     }
 );
 

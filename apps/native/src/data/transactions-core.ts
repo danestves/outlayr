@@ -13,11 +13,10 @@ import type { Database } from "@/db/client";
 import { accounts, categories, installments, transactions, transfers } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
-import { DEFAULT_CURRENCY } from "@/domain/money";
 import type { PaidVia } from "@/domain/paid-via";
 import type { LastEntry } from "@/domain/reminder";
 
-import { getMeta, META_KEYS } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import type { SpendDb } from "./budget-spent";
 import { cardFeeFor, cardFeeValues, suggestedCardFee } from "./card-fees-core";
 import { getCategoryById } from "./categories-core";
@@ -230,7 +229,7 @@ const toRow = Effect.fn("Transactions.toRow")(function* toRow(db: Database, id: 
 });
 
 const displayCurrency = Effect.fn("Transactions.displayCurrency")(function* displayCurrency(db: Database) {
-    return (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    return yield* Meta.get(db, "currency");
 });
 
 /**
@@ -294,6 +293,7 @@ export const transactionsRepo = {
             yield* rememberLogoCandidate(db, id, row.updatedAt.getTime(), LOGO_CANDIDATE_KEEP_MS).pipe(
                 Effect.catchTags({
                     AppMetaError: (error) => Effect.logWarning("[outlayr] logo candidate not recorded", error),
+                    CorruptMetaError: (error) => Effect.logWarning("[outlayr] logo candidate not recorded", error),
                 })
             );
         }
@@ -631,7 +631,7 @@ export const lastLoggedEntry = Effect.fn("Transactions.lastLoggedEntry")(functio
     }
     const entry: LastEntry = {
         ...row,
-        currency: row.currency ?? (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY,
+        currency: row.currency ?? (yield* Meta.get(db, "currency")),
     };
     return entry;
 });

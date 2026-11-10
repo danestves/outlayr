@@ -5,7 +5,7 @@ import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { localDataAtom, localDataState } from "@/contexts/local-data-context";
-import { getMeta, META_KEYS } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import * as LocalDatabase from "@/data/local-database";
 import type { Database } from "@/db/client";
 import { testDatabase, withAsyncTransactions } from "@/db/test-database";
@@ -69,7 +69,7 @@ describe("local data", () => {
 
         expect(state.status).toBe("ready");
         expect(state.db).toBe(fresh);
-        await expect(Effect.runPromise(getMeta(fresh, META_KEYS.firstLaunch))).resolves.toBe("true");
-        await expect(Effect.runPromise(getMeta(fresh, META_KEYS.onboardingGateMigrated))).resolves.toBe("true");
+        await expect(Effect.runPromise(Meta.get(fresh, "firstLaunch"))).resolves.toBe(true);
+        await expect(Effect.runPromise(Meta.get(fresh, "onboardingGateMigrated"))).resolves.toBe(true);
     });
 });

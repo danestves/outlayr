@@ -4,10 +4,10 @@ import * as Schema from "effect/Schema";
 import { checkForUpdateAsync, fetchUpdateAsync, reloadAsync } from "expo-updates";
 import type { PurchasesPackage } from "react-native-purchases";
 
-import { META_KEYS, setMeta } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import { clearReminderChosen, finishOnboarding, markReminderChosen } from "@/data/onboarding-core";
 import type { PhotoFiles } from "@/data/photo-store-core";
-import { setBoolSetting, setCurrency, setNumberSetting } from "@/data/settings-core";
+import { setCurrency } from "@/data/settings-core";
 import { exportTransactionsCsv } from "@/data/transfer-core";
 import { flushDeferredDeletes } from "@/data/use-deferred-delete";
 import type { Database } from "@/db/client";
@@ -102,15 +102,15 @@ export const chooseFirstRunReminderCommand = createCommand({
     execute: (input: { db: Database; option: number | null }) =>
         input.option === null
             ? clearReminderChosen(input.db)
-            : bothSettled(setNumberSetting(input.db, "notificationOption", input.option), markReminderChosen(input.db)),
+            : bothSettled(Meta.set(input.db, "notificationOption", input.option), markReminderChosen(input.db)),
     label: "onboarding:choose-reminder",
 });
 
 export const setReminderTimeCommand = createCommand({
     execute: (input: { db: Database; hour: number; minute: number }) =>
         bothSettled(
-            setNumberSetting(input.db, "notificationHour", input.hour),
-            setNumberSetting(input.db, "notificationMinute", input.minute)
+            Meta.set(input.db, "notificationHour", input.hour),
+            Meta.set(input.db, "notificationMinute", input.minute)
         ),
     label: "settings:set-reminder-time",
 });
@@ -122,7 +122,7 @@ export const setRemindersCommand = createRuntimeCommand(appRuntime, {
         onDenied: () => void;
     }) {
         if (!input.next) {
-            yield* setBoolSetting(input.db, "showNotifications", false);
+            yield* Meta.set(input.db, "showNotifications", false);
             return;
         }
         const reminders = yield* Reminders;
@@ -135,7 +135,7 @@ export const setRemindersCommand = createRuntimeCommand(appRuntime, {
         if (granted !== "granted") {
             return;
         }
-        yield* setBoolSetting(input.db, "showNotifications", true);
+        yield* Meta.set(input.db, "showNotifications", true);
     }),
     label: "settings:set-reminders",
 });
@@ -241,8 +241,7 @@ export const restoreFromArchiveCommand = createRuntimeCommand(appRuntime, {
 
 /** Records the link was taken, not that the shortcut exists: iOS reports nothing back, so the claim waits for a run. */
 export const getWalletShortcutCommand = createCommand({
-    execute: (db: Database) =>
-        openWalletShortcut().pipe(Effect.andThen(setMeta(db, META_KEYS.walletShortcutAdded, "1"))),
+    execute: (db: Database) => openWalletShortcut().pipe(Effect.andThen(Meta.set(db, "walletShortcutAdded", true))),
     label: "wallet:get-shortcut",
 });
 
@@ -254,7 +253,7 @@ export const toggleAppLockCommand = createCommand({
     }) {
         const result = yield* requestUnlock(input.promptMessage);
         if (result.success) {
-            yield* setBoolSetting(input.db, "biometricLock", input.next);
+            yield* Meta.set(input.db, "biometricLock", input.next);
             posthog?.capture("setting_changed", { enabled: input.next, setting: "biometricLock" });
             return null;
         }

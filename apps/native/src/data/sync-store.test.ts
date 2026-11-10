@@ -4,12 +4,12 @@ import { expect, test } from "vite-plus/test";
 import { migratedDatabase } from "@/db/test-database";
 import { asCloudCall } from "@/lib/fake-cloud";
 
-import { META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import * as SyncStore from "./sync-store";
 
 test("fails a pass that throws as a SyncError, so the engine logs it and keeps listening", async () => {
     const db = migratedDatabase({ foreignKeys: false });
-    await Effect.runPromise(setMeta(db, META_KEYS.syncEnabled, "1"));
+    await Effect.runPromise(Meta.set(db, "syncEnabled", true));
     const malformedPage = asCloudCall(() => Promise.resolve(JSON.parse("{}")));
     const error = await Effect.runPromise(
         SyncStore.make.pipe(

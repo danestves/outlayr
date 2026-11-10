@@ -2,13 +2,11 @@ import * as Effect from "effect/Effect";
 import * as Semaphore from "effect/Semaphore";
 
 import type { Database } from "@/db/client";
-import { parseFavourites, serialiseFavourites, toggleFavourite } from "@/domain/favourite-currencies";
+import { toggleFavourite } from "@/domain/favourite-currencies";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 
-export const readFavourites = Effect.fn("FavouriteCurrencies.readFavourites")(function* readFavourites(db: Database) {
-    return parseFavourites(yield* getMeta(db, META_KEYS.favouriteCurrencies));
-});
+export const readFavourites = (db: Database) => Meta.get(db, "favouriteCurrencies");
 
 // Every `appMeta` write schedules a widget republish (`affectsWidgets` matches the table, not the key), which is why a
 // per-screen currency override stays in screen state and never comes through here.
@@ -16,7 +14,7 @@ export const writeFavourites = Effect.fn("FavouriteCurrencies.writeFavourites")(
     db: Database,
     codes: readonly string[]
 ) {
-    yield* setMeta(db, META_KEYS.favouriteCurrencies, serialiseFavourites(codes));
+    yield* Meta.set(db, "favouriteCurrencies", codes);
 });
 
 // Toggles run one at a time: the read-modify-write straddles a suspension, so a double-tap would lose one. A failed

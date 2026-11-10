@@ -7,7 +7,7 @@ import { scheduleOnRN } from "react-native-worklets";
 
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { Text } from "@/components/text";
-import { useSettingBool } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { monthAbbrevTitle } from "@/domain/dates";
 import type { LogMeasure } from "@/domain/log-measure";
 import type { SparklinePoint } from "@/domain/log-sparkline";
@@ -67,7 +67,7 @@ export function LogSparkline({ points, positive, range, byMonth, code, measure }
     const { language } = useLanguage();
     const hidden = use(AmountsHiddenContext);
     const reduceMotion = useReducedMotion();
-    const animatedCharts = useSettingBool("animatedCharts") && !reduceMotion;
+    const animatedCharts = useSetting("animatedCharts") && !reduceMotion;
     const [width, setWidth] = useState(0);
     const [scrubIndex, setScrubIndex] = useState<number | null>(null);
     const draw = useChartDraw(animatedCharts);

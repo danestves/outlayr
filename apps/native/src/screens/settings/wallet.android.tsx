@@ -1,5 +1,4 @@
 import { Switch } from "@expo/ui/jetpack-compose";
-import { eq } from "drizzle-orm";
 import { Button } from "panelui-native/components/button";
 import { View } from "react-native";
 
@@ -9,11 +8,8 @@ import { MaterialHost } from "@/components/material-host";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
-import { META_KEYS } from "@/data/app-meta-core";
-import { useLiveValue } from "@/data/live-query";
-import { parseLastWalletEntry } from "@/data/pending-writes-core";
+import { useMeta } from "@/data/app-meta";
 import { onOffLabel } from "@/data/settings-core";
-import { appMeta } from "@/db/schema";
 import { useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { purchaseListener } from "@/lib/purchase-listener";
@@ -33,12 +29,7 @@ export const Wallet: typeof IosWallet = () => {
     const db = useDatabase();
     const t = useTranslation();
     const [listener, refreshListener] = usePurchaseListener();
-    const last = useLiveValue(
-        appMeta,
-        () => db.select().from(appMeta).where(eq(appMeta.key, META_KEYS.lastWalletEntry)),
-        (rows) => rows[0]?.value ?? null
-    );
-    const lastEntry = parseLastWalletEntry(last);
+    const lastEntry = useMeta(db, "lastWalletEntry");
 
     const toggle = (packageName: string, on: boolean) => {
         const next = new Set(listener.allowed);

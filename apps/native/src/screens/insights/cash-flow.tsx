@@ -12,7 +12,7 @@ import { ROW_TYPE } from "@/components/row-type";
 import { ScreenHeader } from "@/components/screen-header";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
-import { useDisplaySettings, useSettingNumber } from "@/contexts/display-settings-context";
+import { useDisplaySettings, useSetting } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { categoryBreakdownWithin } from "@/data/insights";
@@ -44,10 +44,10 @@ export function CashFlow() {
     const { showCents } = useDisplaySettings().state;
     const nowMs = useNow();
     const params = useLocalSearchParams<{ offset?: string }>();
-    const period = periodOf(useSettingNumber("insightsTimeFrame"));
+    const period = periodOf(useSetting("insightsTimeFrame"));
     const calendar = {
-        firstDayOfMonth: useSettingNumber("firstDayOfMonth"),
-        firstWeekday: useSettingNumber("firstWeekday"),
+        firstDayOfMonth: useSetting("firstDayOfMonth"),
+        firstWeekday: useSetting("firstWeekday"),
     };
     const [offset, setOffset] = useState(() => Math.min(0, Number(params.offset) || 0));
     const result = useInsights(db, nowMs, period, "spent", offset, calendar);

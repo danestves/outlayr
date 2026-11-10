@@ -2,7 +2,7 @@ import { AndroidHaptics, performAndroidHapticsAsync } from "expo-haptics";
 import { Platform } from "react-native";
 
 import { useLocalData } from "@/contexts/local-data-context";
-import { useNumberSetting } from "@/data/settings";
+import { useMeta } from "@/data/app-meta";
 import { hapticPlay } from "@/domain/haptics";
 import type { HapticEvent, HapticPlay } from "@/domain/haptics";
 import type { useHaptics as iosUseHaptics } from "@/lib/use-haptics";
@@ -45,7 +45,7 @@ function androidHapticFor(play: HapticPlay, event: HapticEvent, api: number): An
 /** See `use-haptics.ts` for why `db` is nullable and unread means silent. */
 function useHapticsLevel(): number | null {
     const { db } = useLocalData();
-    const level = useNumberSetting(db, "haptics");
+    const level = useMeta(db, "haptics");
     return db === null ? null : level;
 }
 

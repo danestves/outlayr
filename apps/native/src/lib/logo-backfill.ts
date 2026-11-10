@@ -3,9 +3,10 @@ import * as Effect from "effect/Effect";
 import * as HttpClient from "effect/http/HttpClient";
 import { File } from "expo-file-system";
 
+import { Meta } from "@/data/app-meta-core";
 import type { LogoBackfillDeps } from "@/data/logo-backfill-core";
 import { attachMissingLogos } from "@/data/logo-backfill-core";
-import { readBoolSetting, readRemoteEnrichment } from "@/data/settings-core";
+import { readRemoteEnrichment } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { firstLocale } from "@/i18n/device-language";
 import { persistLogo } from "@/lib/persist-logo";
@@ -91,7 +92,7 @@ const backfillPass = Effect.fn("LogoBackfill.backfillPass")(function* backfillPa
                 : Effect.fn("LogoBackfill.enrich")(function* enrich(args) {
                       // Read at send time: the pass outlives the settings screen and must not send after consent went.
                       const [remoteEnrichment, groundedLookup] = yield* Effect.all(
-                          [readRemoteEnrichment(db), readBoolSetting(db, "groundedLookup")],
+                          [readRemoteEnrichment(db), Meta.get(db, "groundedLookup")],
                           { concurrency: "unbounded" }
                       );
                       if (!remoteEnrichment || cancelled()) {

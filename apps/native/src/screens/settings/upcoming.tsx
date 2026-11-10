@@ -59,8 +59,8 @@ export function Upcoming() {
     const { showCents } = useDisplaySettings().state;
     const largeText = useAccessibilityTextSize();
     const { displayCurrency: currency, rates } = useValuation(db);
-    const showUpcoming = settings.bool("showUpcoming");
-    const showSoon = settings.bool("showUpcomingSoon");
+    const showUpcoming = settings.get("showUpcoming");
+    const showSoon = settings.get("showUpcomingSoon");
     const nowMs = useNow();
     const scheduled = useUpcomingTransactions(db, nowMs, false);
     const { pendingId, requestDelete } = useDeferredDelete("row");

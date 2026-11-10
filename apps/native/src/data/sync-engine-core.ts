@@ -7,7 +7,6 @@ import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
 import {
-    appMeta,
     budgets,
     installmentPlans,
     installments,
@@ -21,7 +20,7 @@ import { transaction } from "@/db/transaction";
 import { chunkRows } from "@/lib/chunk";
 import type { CloudError } from "@/lib/cloud-error";
 
-import { getMeta, META_KEYS } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { getOrCreateDeviceId, getSyncCursor, isSyncEnabled, setSyncCursor } from "./sync-outbox-core";
 import { SYNCED_SPECS, SYNCED_TABLES } from "./sync-tables";
 import type { SyncedTable, SyncedTableSpec } from "./sync-tables";
@@ -369,6 +368,16 @@ function isReplicated(row: PulledRow): boolean {
     return syncedIds === undefined || syncedIds.includes(row.localId);
 }
 
+const isMetaText = Schema.is(Schema.NullOr(Schema.String));
+
+function holdsCorruptMeta(row: PulledRow): boolean {
+    if (row.table !== "appMeta") {
+        return false;
+    }
+    const value = row.fields.value ?? null;
+    return !(isMetaText(value) && Meta.check(row.localId, value));
+}
+
 export const writePulledRows = Effect.fn("SyncCore.writePulledRows")(function* writePulledRows(
     db: Database,
     page: { rows: readonly PulledRow[]; cursor: number },
@@ -377,11 +386,16 @@ export const writePulledRows = Effect.fn("SyncCore.writePulledRows")(function* w
 ) {
     const touched = new Set<SyncedTable>();
 
+    const replicated = page.rows.filter(isReplicated);
+    const corrupt = replicated.filter(holdsCorruptMeta);
+    if (corrupt.length > 0) {
+        const keys = corrupt.map((row) => row.localId);
+        yield* Effect.logWarning("[outlayr] app meta: pulled corrupt values skipped", { keys });
+    }
+    const usable = replicated.filter((row) => !corrupt.includes(row));
+
     const byTable = new Map<SyncedTable, PulledRow[]>();
-    for (const row of page.rows) {
-        if (!isReplicated(row)) {
-            continue;
-        }
+    for (const row of usable) {
         const bucket = byTable.get(row.table) ?? [];
         bucket.push(row);
         byTable.set(row.table, bucket);
@@ -402,10 +416,7 @@ export const writePulledRows = Effect.fn("SyncCore.writePulledRows")(function* w
     );
 
     const winners: PulledRow[] = [];
-    for (const row of page.rows) {
-        if (!isReplicated(row)) {
-            continue;
-        }
+    for (const row of usable) {
         const local = existing.get(row.table)?.get(row.localId);
         const localVersion =
             local === undefined
@@ -745,9 +756,8 @@ export const pullAndApply = Effect.fn("SyncCore.pullAndApply")(function* pullAnd
         return nothingApplied();
     }
     const main = yield* walkLog(db, pull, yield* getSyncCursor(db), now);
-    const reread = yield* getMeta(db, META_KEYS.syncReread).pipe(Effect.mapError(failedAt("read")));
-    const restores =
-        (yield* getMeta(db, META_KEYS.syncRestoresReread).pipe(Effect.mapError(failedAt("read")))) !== null;
+    const reread = yield* Meta.get(db, "syncReread").pipe(Effect.mapError(failedAt("read")));
+    const restores = yield* Meta.get(db, "syncRestoresReread").pipe(Effect.mapError(failedAt("read")));
     if (reread === null && !restores) {
         return main;
     }
@@ -759,9 +769,7 @@ export const pullAndApply = Effect.fn("SyncCore.pullAndApply")(function* pullAnd
         tables.length === 0
             ? nothingApplied()
             : yield* walkLog(db, pull, 0, now, { markersOnly: new Set(markersOnly), repair: restores, tables });
-    yield* query("write", () =>
-        db.delete(appMeta).where(inArray(appMeta.key, [META_KEYS.syncReread, META_KEYS.syncRestoresReread]))
-    );
+    yield* Meta.remove(db, ["syncReread", "syncRestoresReread"]).pipe(Effect.mapError(failedAt("write")));
     return { applied: main.applied + extra.applied, tables: [...new Set([...main.tables, ...extra.tables])] };
 });
 

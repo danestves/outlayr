@@ -1,13 +1,12 @@
 import { inArray } from "drizzle-orm";
 import * as Effect from "effect/Effect";
-import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import type { SpendDb } from "./budget-spent";
 
 const DISMISSAL_LIMIT = 200;
@@ -30,19 +29,12 @@ const query = <A>(area: typeof LogoBackfillStateArea.Type, run: () => PromiseLik
 // holder only awaits its own statements, so a caller inside `transaction` can't deadlock one outside it.
 const exclusive = Semaphore.makeUnsafe(1);
 
-const decodeIdList = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.mutable(Schema.Array(Schema.String))));
-
-const readIds = Effect.fn("LogoBackfillState.readIds")(function* readIds(db: SpendDb, key: string) {
-    const raw = yield* getMeta(db, key);
-    return raw ? Option.getOrElse(decodeIdList(raw), () => []) : [];
-});
-
 // A removed logo and one that never arrived both leave every identity column null; without this list the backfill
 // puts back the image the user just removed.
 export const dismissedLogoIds = Effect.fn("LogoBackfillState.dismissedLogoIds")(function* dismissedLogoIds(
     db: SpendDb
 ) {
-    return new Set(yield* readIds(db, META_KEYS.logoDismissals));
+    return new Set(yield* Meta.get(db, "logoDismissals"));
 });
 
 export const forgetLogoDismissal = Effect.fn("LogoBackfillState.forgetLogoDismissal")(function* forgetLogoDismissal(
@@ -53,7 +45,7 @@ export const forgetLogoDismissal = Effect.fn("LogoBackfillState.forgetLogoDismis
         Effect.gen(function* forget() {
             const ids = yield* dismissedLogoIds(db);
             if (ids.delete(id)) {
-                yield* setMeta(db, META_KEYS.logoDismissals, JSON.stringify([...ids]));
+                yield* Meta.set(db, "logoDismissals", [...ids]);
             }
         })
     );
@@ -66,30 +58,22 @@ export const rememberLogoDismissal = Effect.fn("LogoBackfillState.rememberLogoDi
                 const ids = yield* dismissedLogoIds(db);
                 ids.delete(id);
                 const kept = [...ids, id].slice(-DISMISSAL_LIMIT);
-                yield* setMeta(db, META_KEYS.logoDismissals, JSON.stringify(kept));
+                yield* Meta.set(db, "logoDismissals", kept);
             })
         );
     }
 );
-
-const decodeStampedIds = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Record(Schema.String, Schema.Finite)));
-
-const readStamped = Effect.fn("LogoBackfillState.readStamped")(function* readStamped(db: SpendDb, key: string) {
-    const raw = yield* getMeta(db, key);
-    const stamped: Record<string, number> = raw ? Option.getOrElse(decodeStampedIds(raw), () => ({})) : {};
-    return stamped;
-});
 
 // Only a row whose `updatedAt` still matches this device's bare write is ours: a synced or peer-edited row is the
 // other device's to paint, and a logo removed over there must not reappear here.
 export const candidateLogoIds = Effect.fn("LogoBackfillState.candidateLogoIds")(function* candidateLogoIds(
     db: SpendDb
 ) {
-    return new Map(Object.entries(yield* readStamped(db, META_KEYS.logoCandidates)));
+    return new Map(Object.entries(yield* Meta.get(db, "logoCandidates")));
 });
 
 const writeCandidates = (db: SpendDb, candidates: Map<string, number>) =>
-    setMeta(db, META_KEYS.logoCandidates, JSON.stringify(Object.fromEntries(candidates)));
+    Meta.set(db, "logoCandidates", Object.fromEntries(candidates));
 
 export const rememberLogoCandidates = Effect.fn("LogoBackfillState.rememberLogoCandidates")(
     function* rememberLogoCandidates(db: SpendDb, ids: readonly string[], at: number, keepMs: number) {
@@ -195,7 +179,7 @@ export const readRetryDeadlines = Effect.fn("LogoBackfillState.readRetryDeadline
     db: SpendDb,
     now: number
 ) {
-    const stamped = yield* readStamped(db, META_KEYS.logoBackfillRetries);
+    const stamped = yield* Meta.get(db, "logoBackfillRetries");
     return new Map(Object.entries(stamped).filter(([, until]) => now - until < RETRY_DEADLINE_KEEP_MS));
 });
 
@@ -203,7 +187,5 @@ export const writeRetryDeadlines = Effect.fn("LogoBackfillState.writeRetryDeadli
     db: SpendDb,
     deadlines: Map<string, number>
 ) {
-    yield* exclusive.withPermits(1)(
-        setMeta(db, META_KEYS.logoBackfillRetries, JSON.stringify(Object.fromEntries(deadlines)))
-    );
+    yield* exclusive.withPermits(1)(Meta.set(db, "logoBackfillRetries", Object.fromEntries(deadlines)));
 });

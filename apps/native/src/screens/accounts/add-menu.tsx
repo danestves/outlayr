@@ -2,7 +2,7 @@ import { Stack, useRouter } from "expo-router";
 
 import { toolbarIcon } from "@/components/toolbar-icons";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useBoolSetting } from "@/data/settings";
+import { useMeta } from "@/data/app-meta";
 import { useCreateAccount } from "@/hooks/use-pro-gate";
 import { useTranslation } from "@/i18n/context";
 import { useNewDebtItems } from "@/screens/debts/use-new-debt-items";
@@ -54,7 +54,7 @@ export function useSortMenu(accountCount: number) {
     const t = useTranslation();
     const router = useRouter();
     const db = useDatabase();
-    const byHand = useBoolSetting(db, "accountsByHand");
+    const byHand = useMeta(db, "accountsByHand");
     const setBoolSetting = useAtomCommand(setBoolSettingCommand);
 
     return (

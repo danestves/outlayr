@@ -18,7 +18,7 @@ import type { TransferLogRow } from "@/domain/transfer-log-rows";
 import { useOpenAccounts, useOverviewOf } from "./accounts";
 import type { SettledCell } from "./accounts";
 import type { Account } from "./accounts-core";
-import { useGlobalCurrency } from "./app-meta";
+import { useGlobalCurrency, useMeta } from "./app-meta";
 import { dueWindow, installmentsByAccount } from "./debts-due";
 import type { AccountInstallments, DueWindow } from "./debts-due";
 import { useInstallmentPlans } from "./installments";
@@ -28,7 +28,6 @@ import { payoffEndedOn, payoffLines } from "./payoff-plans";
 import type { PayoffLine } from "./payoff-plans";
 import { savingsGoalsQuery } from "./savings-goals-core";
 import type { SavingsGoal } from "./savings-goals-core";
-import { useBoolSetting } from "./settings";
 import { useDeferredDelete } from "./use-deferred-delete";
 import type { Valuation } from "./valuation-source";
 
@@ -153,7 +152,7 @@ export function useLogOverviewIn(
     const { displayCurrency } = valuation;
     const { overview, rates } = useOverviewOf(db, rows, displayCurrency, nowMs);
     const plans = useInstallmentPlans(db, nowMs);
-    const byHand = useBoolSetting(db, "accountsByHand");
+    const byHand = useMeta(db, "accountsByHand");
     const assets = (overview?.rows ?? []).filter((row) => row.kind === "asset");
     return {
         // Assets only, matching the Accounts screen's total: cards and loans are already counted under Debts.

@@ -2,7 +2,7 @@ import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import * as Cause from "effect/Cause";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
-import { useSettingNumber } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { useExpenseContributions, useMainBudget, usePerCategoryBudgets } from "@/data/budgets";
@@ -28,7 +28,7 @@ export function Balances() {
     const nowMs = useNow();
     const currency = useGlobalCurrency(db);
     const { view: param } = useLocalSearchParams<{ view?: string }>();
-    const stored = useSettingNumber("balancesView");
+    const stored = useSetting("balancesView");
     const saveView = useAtomAction(
         setNumberSettingCommand,
         { onFailure: (cause) => console.error("Saving the Balances view failed", Cause.squash(cause)) },

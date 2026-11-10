@@ -18,11 +18,10 @@ import { netWorthSeries } from "@/domain/net-worth-series";
 import type { NetWorthSeriesPoint } from "@/domain/net-worth-series";
 
 import type { Account } from "./accounts-core";
-import { useGlobalCurrency } from "./app-meta";
+import { useGlobalCurrency, useMeta } from "./app-meta";
 import { settledAccountCellQuery, settledAccountsCellQuery, toCurrencyCell } from "./cell-query";
 import type { CellRow } from "./cell-query";
 import { useLiveQuery } from "./live-query";
-import { useBoolSetting } from "./settings";
 import { useDecoratedRows } from "./transactions";
 import type { TransactionWithCategory } from "./transactions";
 import { accountTransactionsQuery } from "./transactions-core";
@@ -64,7 +63,7 @@ export function useArchivedAccounts(db: Database): Account[] {
 
 export function useBankAccountsInOrder(db: Database, nowMs: number): Account[] {
     const rows = useBankAccounts(db);
-    const byHand = useBoolSetting(db, "accountsByHand");
+    const byHand = useMeta(db, "accountsByHand");
     const { overview } = useOverviewOf(db, rows, useGlobalCurrency(db), nowMs);
     const balances = new Map(overview?.rows.map((row) => [row.id, row.balance]));
     return displayOrder(rows, byHand, (account) => balances.get(account.id) ?? 0);

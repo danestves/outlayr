@@ -1,36 +1,23 @@
 import * as Effect from "effect/Effect";
-import * as Option from "effect/Option";
-import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
-import { AutologAccess, monthUsage, parseAutologUsage, withAutologEntry } from "@/domain/autolog-cap";
-import type { AutologUsage } from "@/domain/autolog-cap";
-import { parseLegacyQueue } from "@/lib/pending-writes-core";
+import { monthUsage, withAutologEntry } from "@/domain/autolog-cap";
+import type { AutologAccess, AutologUsage } from "@/domain/meta-values";
 import type { PendingWrite } from "@/lib/pending-writes-core";
 import { posthog } from "@/lib/posthog";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 
-const decodeAccess = Schema.decodeUnknownOption(AutologAccess);
+export const readAutologAccess = (db: Database) => Meta.get(db, "autologAccess");
 
-export const readAutologAccess = Effect.fn("Autolog.readAccess")(function* readAutologAccess(db: Database) {
-    const raw = yield* getMeta(db, META_KEYS.autologAccess);
-    return Option.getOrElse(decodeAccess(raw), (): AutologAccess => "open");
-});
+export const writeAutologAccess = (db: Database, access: AutologAccess) => Meta.set(db, "autologAccess", access);
 
-export const writeAutologAccess = (db: Database, access: AutologAccess) => setMeta(db, META_KEYS.autologAccess, access);
+export const readAutologUsage = (db: Database) => Meta.get(db, "autologUsage");
 
-export const readAutologUsage = Effect.fn("Autolog.readUsage")(function* readAutologUsage(db: Database) {
-    return parseAutologUsage(yield* getMeta(db, META_KEYS.autologUsage));
-});
-
-export const readAutologWaiting = Effect.fn("Autolog.readWaiting")(function* readAutologWaiting(db: Database) {
-    const raw = yield* getMeta(db, META_KEYS.autologWaiting);
-    return raw ? parseLegacyQueue(raw) : [];
-});
+export const readAutologWaiting = (db: Database) => Meta.get(db, "autologWaiting");
 
 export const writeAutologWaiting = (db: Database, writes: readonly PendingWrite[]) =>
-    setMeta(db, META_KEYS.autologWaiting, JSON.stringify(writes));
+    Meta.set(db, "autologWaiting", writes);
 
 export const holdAutologWrite = Effect.fn("Autolog.hold")(function* holdAutologWrite(
     db: Database,
@@ -44,7 +31,7 @@ export const holdAutologWrite = Effect.fn("Autolog.hold")(function* holdAutologW
     const next = withAutologEntry(usage, at, "held");
     const waiting = yield* readAutologWaiting(db);
     yield* writeAutologWaiting(db, waiting.some((kept) => kept.id === write.id) ? waiting : [...waiting, write]);
-    yield* setMeta(db, META_KEYS.autologUsage, JSON.stringify(next));
+    yield* Meta.set(db, "autologUsage", next);
     return next;
 });
 
@@ -54,6 +41,6 @@ export const countAutologEntry = Effect.fn("Autolog.count")(function* countAutol
     at: number
 ) {
     const next = withAutologEntry(usage, at, "applied");
-    yield* setMeta(db, META_KEYS.autologUsage, JSON.stringify(next));
+    yield* Meta.set(db, "autologUsage", next);
     return next;
 });

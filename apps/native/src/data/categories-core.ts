@@ -25,7 +25,7 @@ import { languageFromTag } from "@/i18n/languages";
 import type { Language } from "@/i18n/languages";
 import { translateIn, translateNow } from "@/i18n/runtime";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 
 export type Category = typeof categories.$inferSelect;
 
@@ -185,7 +185,7 @@ export function presetLabelUpdates(
 
 export const localizePresetCategories = Effect.fn("Categories.localizePresetCategories")(
     function* localizePresetCategories(db: Database, language: Language) {
-        const stored = yield* getMeta(db, META_KEYS.categoryLanguage);
+        const stored = yield* Meta.get(db, "categoryLanguage");
         const rows = yield* query("localize", () =>
             db
                 .select({
@@ -212,7 +212,7 @@ export const localizePresetCategories = Effect.fn("Categories.localizePresetCate
                         db.update(categories).set(update.set).where(eq(categories.id, update.id))
                     );
                 }
-                yield* setMeta(db, META_KEYS.categoryLanguage, language);
+                yield* Meta.set(db, "categoryLanguage", language);
             }),
             (cause) => new CategoriesError({ cause, operation: "localize" })
         );

@@ -15,7 +15,7 @@ import { SheetDragRegion } from "@/components/sheet-drag-region";
 import { SheetGestureRoot } from "@/components/sheet-gesture-root";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
-import { useSettingNumber } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { useYearPlan } from "@/data/budget-plans";
 import type { PlanCategoryMeta } from "@/data/budget-plans";
 import type { Database } from "@/db/client";
@@ -136,7 +136,7 @@ function PlanEditorBody({
     const [typing, setTyping] = useState(false);
     const [entry, setEntry] = useState("");
     const minorUnits = minorUnitsFor(currency);
-    const entryMode = numpadMode(useSettingNumber("numberEntryType"));
+    const entryMode = numpadMode(useSetting("numberEntryType"));
     const { decimal } = numberLocale(language);
     const step = planStep(axisTop);
     const editable = opened.filter((month) => !month.locked);

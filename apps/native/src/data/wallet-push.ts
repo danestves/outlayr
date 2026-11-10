@@ -9,8 +9,8 @@ import { translateNow } from "@/i18n/runtime";
 import type { WalletPushSnapshot } from "@/lib/widget-bridge";
 
 import { accountsRepo } from "./accounts-core";
-import { getMeta, META_KEYS } from "./app-meta-core";
-import { cardStatus, filedNote, parseWalletCards } from "./pending-writes-core";
+import { Meta } from "./app-meta-core";
+import { cardStatus, filedNote } from "./pending-writes-core";
 
 export class WalletPushError extends Schema.TaggedError<WalletPushError>()("WalletPushError", {
     cause: Schema.Defect(),
@@ -26,7 +26,7 @@ const attempt = <A>(operation: typeof WalletPushError.Type.operation, run: () =>
 
 export const buildWalletPush = Effect.fn("WalletPush.buildWalletPush")(function* buildWalletPush(db: Database) {
     const live = yield* accountsRepo.listBanks(db);
-    const walletCards = parseWalletCards(yield* getMeta(db, META_KEYS.walletCards));
+    const walletCards = yield* Meta.get(db, "walletCards");
     const filed = yield* attempt("filed", () =>
         db
             .select({

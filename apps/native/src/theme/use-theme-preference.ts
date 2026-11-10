@@ -1,14 +1,14 @@
 import { useLayoutEffect } from "react";
 import { Uniwind } from "uniwind";
 
-import { useSettingNumber } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 
 import { themePreferenceForValue } from "./theme-preference";
 import type { ThemePreference } from "./theme-preference";
 
 /** Setting to uniwind, never back: uniwind holds the theme in memory only. Layout effect: no light first frame. */
 export function useApplyThemePreference(): ThemePreference {
-    const preference = themePreferenceForValue(useSettingNumber("colorScheme"));
+    const preference = themePreferenceForValue(useSetting("colorScheme"));
 
     // oxlint-disable-next-line outlayr/react-effect-budget -- sets the Uniwind theme before the first paint
     useLayoutEffect(() => {

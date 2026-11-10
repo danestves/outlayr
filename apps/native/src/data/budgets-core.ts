@@ -5,13 +5,11 @@ import { and, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { getMeta, META_KEYS } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import { localRateLookup } from "@/data/rates";
-import { readNumberSetting } from "@/data/settings-core";
 import type { Database } from "@/db/client";
 import { budgets, mainBudget } from "@/db/schema";
 import { newId } from "@/domain/ids";
-import { DEFAULT_CURRENCY } from "@/domain/money";
 
 const BudgetsOperation = Schema.Literals([
     "advance-budget-start",
@@ -47,7 +45,7 @@ const budgetLimit = Effect.fn("Budgets.budgetLimit")(function* budgetLimit(
     storedCurrency?: string | null
 ) {
     const magnitude = Math.abs(amount);
-    const currency = storedCurrency ?? (yield* getMeta(db, META_KEYS.currency)) ?? DEFAULT_CURRENCY;
+    const currency = storedCurrency ?? (yield* Meta.get(db, "currency"));
     const { amountUsd } = yield* canonicalUsd(localRateLookup(db), {
         amount: magnitude,
         currency,
@@ -103,7 +101,7 @@ const anchorFor = Effect.fn("Budgets.anchorFor")(function* anchorFor(
         return startDate;
     }
     const [firstWeekday, firstDayOfMonth] = yield* Effect.all(
-        [readNumberSetting(db, "firstWeekday"), readNumberSetting(db, "firstDayOfMonth")],
+        [Meta.get(db, "firstWeekday"), Meta.get(db, "firstDayOfMonth")],
         { concurrency: "unbounded" }
     );
     return startOfPeriod(now, type, { firstDayOfMonth, firstWeekday });

@@ -1,11 +1,6 @@
-import { inArray } from "drizzle-orm";
-
-import { META_KEYS } from "@/data/app-meta-core";
-import { useLiveValue } from "@/data/live-query";
-import { parseImportRecord } from "@/data/money-manager-import-core";
-import { parseCsvImportRecord } from "@/data/transfer-core";
+import { useMeta } from "@/data/app-meta";
 import type { Database } from "@/db/client";
-import { appMeta } from "@/db/schema";
+import type { FileImportRecord, MoneyManagerImportRecord } from "@/domain/meta-values";
 
 export interface LastImport {
     entries: number;
@@ -13,11 +8,13 @@ export interface LastImport {
     kind: "csv" | "moneyManager" | "pdf";
 }
 
-export function newestImport(rows: readonly { key: string; value: string | null }[]): LastImport | null {
-    const raw = new Map(rows.map((row) => [row.key, row.value]));
-    const moneyManager = parseImportRecord(raw.get(META_KEYS.moneyManagerImport));
-    const csv = parseCsvImportRecord(raw.get(META_KEYS.csvImport));
-    const pdf = parseCsvImportRecord(raw.get(META_KEYS.pdfImport));
+interface ImportRecords {
+    csv: FileImportRecord | null;
+    moneyManager: MoneyManagerImportRecord | null;
+    pdf: FileImportRecord | null;
+}
+
+export function newestImport({ csv, moneyManager, pdf }: ImportRecords): LastImport | null {
     const candidates: LastImport[] = [];
     if (moneyManager != null) {
         candidates.push({
@@ -42,13 +39,8 @@ export function newestImport(rows: readonly { key: string; value: string | null 
 }
 
 export function useLastImport(db: Database): LastImport | null {
-    return useLiveValue(
-        appMeta,
-        () =>
-            db
-                .select()
-                .from(appMeta)
-                .where(inArray(appMeta.key, [META_KEYS.moneyManagerImport, META_KEYS.csvImport, META_KEYS.pdfImport])),
-        newestImport
-    );
+    const moneyManager = useMeta(db, "moneyManagerImport");
+    const csv = useMeta(db, "csvImport");
+    const pdf = useMeta(db, "pdfImport");
+    return newestImport({ csv, moneyManager, pdf });
 }

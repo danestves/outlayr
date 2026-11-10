@@ -1,7 +1,7 @@
 import { useLayoutEffect } from "react";
 import { Uniwind } from "uniwind";
 
-import { useSettingNumber } from "@/contexts/display-settings-context";
+import { useSetting } from "@/contexts/display-settings-context";
 import { accentForValue, accentVariables } from "@/domain/accent";
 import type { Accent } from "@/domain/accent";
 
@@ -10,7 +10,7 @@ import type { Accent } from "@/domain/accent";
  * and `dark`. A layout effect, or a cold start paints one vermilion frame.
  */
 export function useAccent(): Accent {
-    const accent = accentForValue(useSettingNumber("accentColor"));
+    const accent = accentForValue(useSetting("accentColor"));
 
     // oxlint-disable-next-line outlayr/react-effect-budget -- writes the accent variables into Uniwind before the first paint
     useLayoutEffect(() => {

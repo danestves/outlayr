@@ -235,7 +235,7 @@ export function useAccountForm(props: AccountEditorProps) {
     useIdentitySeed(seed);
 
     const identity = useAccountIdentity({
-        ...accountIdentityLookup(mode, loaded, settings.bool),
+        ...accountIdentityLookup(mode, loaded, settings.get),
         canAttach: () => logoMayReplaceIdentity(identitySource, pickerOpen, hasIdentity),
         initialName: initialValues.name,
         locale,

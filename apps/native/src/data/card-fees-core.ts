@@ -10,7 +10,7 @@ import { paidViaMemory } from "@/domain/paid-via";
 import type { PaidViaMemory } from "@/domain/paid-via";
 import { translateNow } from "@/i18n/runtime";
 
-import { getMetaSync, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { getCategoryById } from "./categories-core";
 import { localRateLookup } from "./rates";
 
@@ -116,14 +116,14 @@ export function goesWithPendingDelete(
 }
 
 export function lastFeeCategoryId(db: Database): string | null {
-    return getMetaSync(db, META_KEYS.lastTransferFeeCategory);
+    return Meta.getSync(db, "lastTransferFeeCategory");
 }
 
 export const rememberFeeCategory = Effect.fn("CardFees.rememberFeeCategory")(function* rememberFeeCategory(
     db: Database,
     categoryId: string
 ) {
-    yield* setMeta(db, META_KEYS.lastTransferFeeCategory, categoryId);
+    yield* Meta.set(db, "lastTransferFeeCategory", categoryId);
 });
 
 export function feeCategoryFor(db: Database, purchaseCategoryId: string | null): string | null {

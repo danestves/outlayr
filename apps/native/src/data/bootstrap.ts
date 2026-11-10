@@ -5,13 +5,12 @@ import { getLocales } from "expo-localization";
 
 import type { Database } from "@/db/client";
 import { transaction } from "@/db/transaction";
-import { seedFavourites, serialiseFavourites } from "@/domain/favourite-currencies";
+import { seedFavourites } from "@/domain/favourite-currencies";
 import { DEFAULT_CURRENCY } from "@/domain/money";
 import { resolveLanguage } from "@/i18n/languages";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { seedCategories } from "./categories-core";
-import { setNumberSetting } from "./settings-core";
 
 const BootstrapOperation = Schema.Literals(["locale", "seed"]);
 
@@ -26,8 +25,7 @@ export class BootstrapError extends Schema.TaggedError<BootstrapError>()("Bootst
 
 // Run by `LocalDatabase.open` before `ready`, so the first screen sees its categories.
 export const bootstrapLocalData = Effect.fn("Bootstrap.bootstrapLocalData")(function* bootstrapLocalData(db: Database) {
-    const done = yield* getMeta(db, META_KEYS.firstLaunch);
-    if (done === "true") {
+    if (yield* Meta.get(db, "firstLaunch")) {
         return;
     }
     // Behind the guard, so a user who clears the cluster keeps it cleared.
@@ -41,13 +39,13 @@ export const bootstrapLocalData = Effect.fn("Bootstrap.bootstrapLocalData")(func
     yield* transaction(
         db,
         Effect.gen(function* write() {
-            yield* setMeta(db, META_KEYS.currency, DEFAULT_CURRENCY);
-            yield* setMeta(db, META_KEYS.favouriteCurrencies, serialiseFavourites(favourites));
+            yield* Meta.set(db, "currency", DEFAULT_CURRENCY);
+            yield* Meta.set(db, "favouriteCurrencies", favourites);
             yield* seedCategories(db, resolveLanguage(locale?.languageTag));
             const installedAt = yield* Clock.currentTimeMillis;
-            yield* setNumberSetting(db, "privacyNoticeSeen", installedAt);
-            yield* setNumberSetting(db, "termsNoticeSeen", installedAt);
-            yield* setMeta(db, META_KEYS.firstLaunch, "true");
+            yield* Meta.set(db, "privacyNoticeSeen", installedAt);
+            yield* Meta.set(db, "termsNoticeSeen", installedAt);
+            yield* Meta.set(db, "firstLaunch", true);
         }),
         (cause) => new BootstrapError({ cause, operation: "seed" })
     );

@@ -9,7 +9,7 @@ import type { Database } from "@/db/client";
 import { accounts, categories, transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
-import { setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
 import { backfillRecurring } from "./recurrence-backfill";
 import { pendingReminderPlan, reminderCandidates } from "./subscription-reminders-core";
 
@@ -156,7 +156,7 @@ describe("reminderCandidates", () => {
     });
 
     it("stamps a row that stored no currency with the ledger's", async () => {
-        await Effect.runPromise(setMeta(db, "currency", "MXN"));
+        await Effect.runPromise(Meta.set(db, "currency", "MXN"));
         await seedCarrier(db, {
             currency: null,
             date: at(2025, 3, 15),

@@ -5,21 +5,10 @@ import type { Database } from "@/db/client";
 import { migratedDatabase } from "@/db/test-database";
 import { amountParts, formatAmount } from "@/domain/money";
 
-import { getMeta, META_KEYS, setMeta } from "./app-meta-core";
+import { Meta } from "./app-meta-core";
+import type { BoolSettingKey } from "./app-meta-registry";
 import { selectSettings, settingsSnapshot } from "./settings";
-import type { BoolSettingKey } from "./settings-core";
-import {
-    mirrorTimeZone,
-    ordinalDay,
-    parseBoolSetting,
-    parseIntSetting,
-    readBoolSetting,
-    readNumberSetting,
-    remoteEnrichmentOn,
-    seedClockPreference,
-    setBoolSetting,
-    setNumberSetting,
-} from "./settings-core";
+import { mirrorTimeZone, ordinalDay, remoteEnrichmentOn, seedClockPreference } from "./settings-core";
 
 const makeDb = migratedDatabase;
 
@@ -31,29 +20,29 @@ describe("the 12/24-hour clock", () => {
 
     it("seeds the device's convention when the user has never chosen", async () => {
         await Effect.runPromise(seedClockPreference(db, true));
-        await expect(Effect.runPromise(readBoolSetting(db, "use24HourClock"))).resolves.toBe(true);
+        await expect(Effect.runPromise(Meta.get(db, "use24HourClock"))).resolves.toBe(true);
     });
 
     it("never overrules a stored choice, not even a stored false", async () => {
-        await Effect.runPromise(setBoolSetting(db, "use24HourClock", false));
+        await Effect.runPromise(Meta.set(db, "use24HourClock", false));
         await Effect.runPromise(seedClockPreference(db, true));
-        await expect(Effect.runPromise(readBoolSetting(db, "use24HourClock"))).resolves.toBe(false);
+        await expect(Effect.runPromise(Meta.get(db, "use24HourClock"))).resolves.toBe(false);
     });
 
     it("does not re-seed once it has seeded", async () => {
         await Effect.runPromise(seedClockPreference(db, true));
-        await Effect.runPromise(setBoolSetting(db, "use24HourClock", false));
+        await Effect.runPromise(Meta.set(db, "use24HourClock", false));
         await Effect.runPromise(seedClockPreference(db, true));
-        await expect(Effect.runPromise(readBoolSetting(db, "use24HourClock"))).resolves.toBe(false);
+        await expect(Effect.runPromise(Meta.get(db, "use24HourClock"))).resolves.toBe(false);
     });
 });
 
 describe("the mirrored time zone", () => {
     it("rewrites on a change of this device's zone, never over another device's pulled zone", async () => {
         const db = makeDb();
-        const stored = () => Effect.runPromise(getMeta(db, META_KEYS.timeZone));
+        const stored = () => Effect.runPromise(Meta.get(db, "timeZone"));
         await Effect.runPromise(mirrorTimeZone(db, "America/Caracas"));
-        await Effect.runPromise(setMeta(db, META_KEYS.timeZone, "Pacific/Niue"));
+        await Effect.runPromise(Meta.set(db, "timeZone", "Pacific/Niue"));
 
         await Effect.runPromise(mirrorTimeZone(db, "America/Caracas"));
         await expect(stored()).resolves.toBe("Pacific/Niue");
@@ -70,42 +59,31 @@ describe("settings read/write round-trip", () => {
     });
 
     it("upserts (a second write replaces the first)", async () => {
-        await Effect.runPromise(setNumberSetting(db, "firstWeekday", 2));
-        await Effect.runPromise(setNumberSetting(db, "firstWeekday", 1));
-        await expect(Effect.runPromise(readNumberSetting(db, "firstWeekday"))).resolves.toBe(1);
+        await Effect.runPromise(Meta.set(db, "firstWeekday", 2));
+        await Effect.runPromise(Meta.set(db, "firstWeekday", 1));
+        await expect(Effect.runPromise(Meta.get(db, "firstWeekday"))).resolves.toBe(1);
     });
 
     it("holds the subscription notices on a key of their own", async () => {
-        await Effect.runPromise(setBoolSetting(db, "subscriptionReminders", true));
-        await Effect.runPromise(setBoolSetting(db, "showNotifications", false));
-        await expect(Effect.runPromise(readBoolSetting(db, "subscriptionReminders"))).resolves.toBe(true);
-        await expect(Effect.runPromise(readBoolSetting(db, "showNotifications"))).resolves.toBe(false);
+        await Effect.runPromise(Meta.set(db, "subscriptionReminders", true));
+        await Effect.runPromise(Meta.set(db, "showNotifications", false));
+        await expect(Effect.runPromise(Meta.get(db, "subscriptionReminders"))).resolves.toBe(true);
+        await expect(Effect.runPromise(Meta.get(db, "showNotifications"))).resolves.toBe(false);
     });
 });
 
 describe("the settings read behind the app-wide snapshot", () => {
     it("is unchanged by bookkeeping writes and reads a changed setting", async () => {
         const db = makeDb();
-        await Effect.runPromise(setBoolSetting(db, "showCents", true));
+        await Effect.runPromise(Meta.set(db, "showCents", true));
         const before = selectSettings(db).all();
 
-        await Effect.runPromise(setMeta(db, META_KEYS.syncCursor, "42"));
-        await Effect.runPromise(setMeta(db, META_KEYS.syncedAt, "1760000000000"));
+        await Effect.runPromise(Meta.set(db, "syncCursor", 42));
+        await Effect.runPromise(Meta.set(db, "syncedAt", 1_760_000_000_000));
         expect(selectSettings(db).all()).toStrictEqual(before);
 
-        await Effect.runPromise(setBoolSetting(db, "showCents", false));
-        expect(settingsSnapshot(selectSettings(db).all()).bool("showCents")).toBe(false);
-    });
-});
-
-describe("setting parsers", () => {
-    it("falls back on absence and bad input", () => {
-        expect(parseBoolSetting(null, true)).toBe(true);
-        expect(parseBoolSetting("false", true)).toBe(false);
-        expect(parseBoolSetting("true", false)).toBe(true);
-        expect(parseIntSetting(null, 1)).toBe(1);
-        expect(parseIntSetting("abc", 1)).toBe(1);
-        expect(parseIntSetting("15", 1)).toBe(15);
+        await Effect.runPromise(Meta.set(db, "showCents", false));
+        expect(settingsSnapshot(selectSettings(db).all()).get("showCents")).toBe(false);
     });
 });
 

@@ -5,7 +5,7 @@ import PostHog from "posthog-react-native";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 
-import { SETTING_DEFAULTS } from "@/data/settings-core";
+import { META } from "@/data/app-meta-registry";
 import { groupStacklessExceptions } from "@/domain/exception-grouping";
 import { scrubQueryParams } from "@/domain/exception-scrub";
 import { dropLaunchUrl } from "@/domain/launch-url-scrub";
@@ -20,7 +20,7 @@ export const posthog =
                   ...properties,
                   $os_name: Platform.select({ android: "Android", ios: "iOS" }),
               }),
-              defaultOptIn: SETTING_DEFAULTS.shareAnalytics,
+              defaultOptIn: META.shareAnalytics.default,
               errorTracking: { autocapture: { uncaughtExceptions: true, unhandledRejections: true } },
           })
         : null;

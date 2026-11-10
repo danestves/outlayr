@@ -1,7 +1,7 @@
 import { addMonths, firstOfMonth } from "@outlayr/money/calendar";
 import * as Effect from "effect/Effect";
 
-import { readBoolSetting, readNumberSetting, setBoolSetting } from "@/data/settings-core";
+import { Meta } from "@/data/app-meta-core";
 import { hasEntriesBetween, lastLoggedEntry } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { previousMonth } from "@/domain/recap-month";
@@ -20,11 +20,7 @@ import type { DatedReminder } from "./reminders";
 
 export const readReminderTime = Effect.fn("ReminderSync.readReminderTime")(function* readReminderTime(db: Database) {
     const [option, hour, minute] = yield* Effect.all(
-        [
-            readNumberSetting(db, "notificationOption"),
-            readNumberSetting(db, "notificationHour"),
-            readNumberSetting(db, "notificationMinute"),
-        ],
+        [Meta.get(db, "notificationOption"), Meta.get(db, "notificationHour"), Meta.get(db, "notificationMinute")],
         { concurrency: "unbounded" }
     );
     return reminderTime(option, clampTimeOfDay(hour, minute));
@@ -45,7 +41,7 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
 ) {
     const reminders = yield* Reminders;
     const [enabled, permission, hideAmounts] = yield* Effect.all(
-        [readBoolSetting(db, "showNotifications"), reminders.permission(), readBoolSetting(db, "hideAmounts")],
+        [Meta.get(db, "showNotifications"), reminders.permission(), Meta.get(db, "hideAmounts")],
         { concurrency: "unbounded" }
     );
     if (enabled && permission === "unknown") {
@@ -75,6 +71,6 @@ export const reconcileDailyReminder = Effect.fn("ReminderSync.reconcileDailyRemi
     yield* armReminders(notices);
 
     if (decision === "disable") {
-        yield* setBoolSetting(db, "showNotifications", false);
+        yield* Meta.set(db, "showNotifications", false);
     }
 });

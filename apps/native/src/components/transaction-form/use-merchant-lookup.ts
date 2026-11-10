@@ -66,8 +66,8 @@ export function useMerchantLookup({
     const { setDraft: setIdentity } = useIdentityDraft();
     const identityReads = useIdentityReads();
     const settings = useAppSettings().state;
-    const remoteEnrichment = remoteEnrichmentOn(settings.bool);
-    const groundedLookup = settings.bool("groundedLookup");
+    const remoteEnrichment = remoteEnrichmentOn(settings.get);
+    const groundedLookup = settings.get("groundedLookup");
     const locale = useLocaleTag();
     const regionCode = useRegionCode();
 

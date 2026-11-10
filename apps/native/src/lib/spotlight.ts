@@ -7,9 +7,8 @@ import * as Schema from "effect/Schema";
 import Spotlight from "expo-core-spotlight";
 import { Platform } from "react-native";
 
-import { getMeta } from "@/data/app-meta-core";
+import { Meta } from "@/data/app-meta-core";
 import type { SpendDb } from "@/data/budget-spent";
-import { parseBoolSetting } from "@/data/settings-core";
 import { loadValuation } from "@/data/valuation-source";
 import type { Valuation } from "@/data/valuation-source";
 import { budgets as budgetsTable, categories as categoriesTable, transactions as transactionsTable } from "@/db/schema";
@@ -55,7 +54,7 @@ export const indexSpotlight = Effect.fn("Spotlight.index")(function* indexSpotli
         }
 
         const valuation = yield* loadValuation(db);
-        const showCents = parseBoolSetting(yield* getMeta(db, "showCents"), true);
+        const showCents = yield* Meta.get(db, "showCents");
         const money = (value: number, code: string) => formatAmount(value, code, showCents);
 
         const categoryRows = yield* attempt("query", () =>
