@@ -1,287 +1,185 @@
 import { Link } from "@tanstack/react-router";
-import { SankeyChart } from "panelui-web/sankey-chart";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import type { Dashboard } from "@/components/dashboard/shell/dashboard";
 import { LedgerSettingsContext } from "@/lib/ledger-settings";
-import { cn } from "@/lib/utils";
 
-import { CategoryTile } from "./category-tile";
 import { KEPT_COLOR, flowOf } from "./flow";
-import type { FlowRow } from "./flow";
+import type { Band, FlowRow } from "./flow";
 import { useInsightsFormat } from "./format";
 import type { InsightsModel } from "./model";
-import { useWide } from "./use-wide";
+import { FIGURE } from "./parts";
+import { Aside, Key, MONO, Nothing, PhoneCard } from "./phone/card";
+import { Sankey } from "./phone/sankey";
 
-const HEAD_HEIGHT = 36;
-const ROW_HEIGHT = 38;
-const MIN_CHART_HEIGHT = 200;
-const STACKED_CHART_HEIGHT = 260;
-const TABLE_WIDTH = 520;
-const COLLAPSED = "max-sm:overflow-hidden max-sm:p-0 max-sm:whitespace-nowrap";
-const RIBBON_TAPER = 0.3;
-const PHONE_TARGETS = 6;
+const CELL = "border-border border-b p-0 group-last/row:border-b-0";
+const AMOUNT = `${CELL} ${MONO} pl-2.5 text-right whitespace-nowrap`;
+// Zero max-width lets the name truncate while the money columns grow to fit a longer language.
+const NAME = `${CELL} max-w-0 text-left font-normal`;
 
+type Copy = ReturnType<typeof useIntlayer<"dashboard-insights">>;
 type Format = ReturnType<typeof useInsightsFormat>;
 
-interface TableProps {
-    dashboard: Dashboard;
-    fmt: Format;
-    model: InsightsModel;
-    rows: readonly FlowRow[];
+function bandName(band: Band, copy: Copy) {
+    if (band.kind === "savings") {
+        return copy.cashFlow.savings.value;
+    }
+    return band.name ?? copy.changes.other.value;
 }
 
-function BudgetCells({ categoryId, fmt, model }: { categoryId: string; fmt: Format; model: InsightsModel }) {
+function Legend({ bands, fmt }: { bands: readonly Band[]; fmt: Format }) {
     const copy = useIntlayer("dashboard-insights");
-    const budget = model.budgets.get(categoryId);
-    if (!model.budgeted) {
-        return <td aria-hidden className="border-border/60 border-b" colSpan={2} />;
-    }
-    if (!budget) {
-        return (
-            <td
-                className="text-muted-foreground border-border/60 border-b pl-2.5 text-right font-mono text-xs whitespace-nowrap"
-                colSpan={2}
-            >
-                {copy.budget.none}
-            </td>
-        );
-    }
-    const color = model.flow.nodes.find((node) => node.id === `out:${categoryId}`)?.color;
-    const share = budget.effectiveLimit > 0 ? Math.min(budget.spent / budget.effectiveLimit, 1) : 1;
     return (
-        <>
-            <td className={cn("border-border/60 border-b pl-2.5", COLLAPSED)}>
-                <span className="sr-only">{fmt.amount(budget.effectiveLimit)}</span>
-                <div aria-hidden className="bg-border hidden h-1 overflow-hidden rounded-full sm:block">
-                    <div
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: color ?? "var(--color-foreground)", width: `${share * 100}%` }}
-                    />
-                </div>
-            </td>
-            <td
-                className={cn(
-                    "border-border/60 border-b pl-2.5 text-right font-mono text-xs whitespace-nowrap",
-                    budget.overBudget ? "text-destructive" : "text-muted-foreground"
-                )}
-            >
-                {fmt.amount(budget.remaining)}
-            </td>
-        </>
+        <ul className="text-muted-foreground mx-[15px] flex flex-wrap gap-x-1.5 gap-y-1 text-[13px] leading-5">
+            {bands.map((band) => (
+                <li className="flex min-w-0 items-center gap-2" key={band.id}>
+                    <Key color={band.color} />
+                    <span className="truncate">
+                        {`${bandName(band, copy)} `}
+                        <span className={FIGURE}>{fmt.whole(band.amount)}</span>
+                    </span>
+                </li>
+            ))}
+        </ul>
     );
 }
 
-function VersusCell({
-    amount,
-    categoryId,
-    fmt,
-    model,
-}: {
-    amount: number;
-    categoryId: string;
-    fmt: Format;
-    model: InsightsModel;
-}) {
-    const { table } = useIntlayer("dashboard-insights");
-    if (model.usual === null) {
-        return null;
+function LeftCell({ categoryId, fmt, model }: { categoryId: string; fmt: Format; model: InsightsModel }) {
+    const copy = useIntlayer("dashboard-insights");
+    const budget = model.budgets.get(categoryId);
+    if (!model.budgeted) {
+        return <td aria-hidden className={CELL} />;
     }
-    const delta = Math.round(amount - (model.usual.byCategory.get(categoryId) ?? 0));
+    if (!budget) {
+        return <td className={`${AMOUNT} text-muted-foreground`}>{copy.budget.none}</td>;
+    }
     return (
-        <td
-            className={cn(
-                "border-border/60 border-b pl-2.5 text-right font-mono text-xs",
-                COLLAPSED,
-                delta > 0 && "text-destructive",
-                delta < 0 && "text-success",
-                delta === 0 && "text-muted-foreground"
-            )}
-        >
-            {delta === 0 ? table.same : fmt.signedWhole(delta)}
+        <td className={`${AMOUNT} ${budget.overBudget ? "text-destructive" : "text-muted-foreground"}`}>
+            {fmt.amount(budget.remaining)}
         </td>
     );
 }
 
-function CategoryRow({ dashboard, fmt, model, row }: TableProps & { row: FlowRow }) {
-    const category = dashboard.ledger.categories.get(row.id);
+function CategoryRow({ fmt, model, row }: { fmt: Format; model: InsightsModel; row: FlowRow }) {
+    const { ledger } = useDashboard();
+    const category = ledger.categories.get(row.id);
     return (
-        <tr className="hover:bg-muted relative" style={{ height: ROW_HEIGHT }}>
-            <th className="border-border/60 border-b text-left font-normal" scope="row">
-                <div className="flex min-w-0 items-center gap-2">
-                    <CategoryTile color={category?.color ?? KEPT_COLOR} look={model.looks.get(row.id)} />
+        <tr className="group/row hover:bg-app-hover relative h-[38px]">
+            <th className={NAME} scope="row">
+                <span className="flex min-w-0 items-center gap-[9px]">
+                    <Key color={category?.color ?? KEPT_COLOR} />
                     <Link
-                        className="truncate font-medium before:absolute before:inset-0"
+                        className="truncate before:absolute before:inset-0"
                         search={(previous) => ({ ...previous, category: row.id })}
                         to="/app"
                     >
                         {category?.name}
                     </Link>
-                </div>
+                </span>
             </th>
-            <td className="border-border/60 border-b pl-2.5 text-right font-mono text-xs whitespace-nowrap">
-                {fmt.amount(row.amount)}
-            </td>
-            <VersusCell amount={row.amount} categoryId={row.id} fmt={fmt} model={model} />
-            <BudgetCells categoryId={row.id} fmt={fmt} model={model} />
+            <td className={AMOUNT}>{fmt.amount(row.amount)}</td>
+            <LeftCell categoryId={row.id} fmt={fmt} model={model} />
         </tr>
     );
 }
 
-function KeptRow({ fmt, model, row }: Pick<TableProps, "fmt" | "model"> & { row: FlowRow }) {
+function KeptRow({ fmt, model, row }: { fmt: Format; model: InsightsModel; row: FlowRow }) {
     const { measures } = useIntlayer("dashboard-insights");
     const share = model.flow.income > 0 ? Math.round((row.amount / model.flow.income) * 100) : 0;
     return (
-        <tr style={{ height: ROW_HEIGHT }}>
-            <th
-                aria-label={measures.kept.value}
-                className="border-border/60 border-b text-left font-normal"
-                scope="row"
-            >
-                <div className="flex items-center gap-2">
-                    <span aria-hidden className="size-5 shrink-0 rounded-md" style={{ backgroundColor: KEPT_COLOR }} />
-                    <span className="truncate font-medium">{measures.kept}</span>
-                </div>
+        <tr className="group/row h-[38px]">
+            <th className={NAME} scope="row">
+                <span className="flex min-w-0 items-center gap-[9px]">
+                    <Key color={KEPT_COLOR} />
+                    <span className="truncate">{measures.kept}</span>
+                </span>
             </th>
-            <td className="border-border/60 border-b pl-2.5 text-right font-mono text-xs whitespace-nowrap">
-                {fmt.amount(row.amount)}
-            </td>
-            {model.usual === null ? null : <td aria-hidden className="border-border/60 border-b" />}
-            <td aria-hidden className="border-border/60 border-b" />
-            <td className="text-muted-foreground border-border/60 border-b pl-2.5 text-right font-mono text-xs">
-                {share}%
-            </td>
+            <td className={AMOUNT}>{fmt.amount(row.amount)}</td>
+            <td className={`${AMOUNT} text-muted-foreground`}>{`${share}%`}</td>
         </tr>
     );
 }
 
-function FlowTable(props: TableProps) {
+function FlowTable({ fmt, model, rows }: { fmt: Format; model: InsightsModel; rows: readonly FlowRow[] }) {
     const { table } = useIntlayer("dashboard-insights");
     return (
-        <table className="w-full table-fixed border-separate border-spacing-0 text-sm">
-            <colgroup>
-                <col />
-                <col className="w-24" />
-                {props.model.usual === null ? null : <col className="w-0 sm:w-22" />}
-                <col className="w-0 sm:w-28" />
-                <col className="w-22" />
-            </colgroup>
-            <thead>
-                <tr className="text-muted-foreground text-xs" style={{ height: HEAD_HEIGHT }}>
-                    <th className="text-left font-normal" scope="col">
-                        {table.category}
-                    </th>
-                    <th className="pl-2.5 text-right font-normal" scope="col">
-                        {table.spent}
-                    </th>
-                    {props.model.usual === null ? null : (
-                        <th className={cn("pl-2.5 text-right font-normal", COLLAPSED)} scope="col">
-                            {table.vsUsual}
+        <div className="px-[15px]">
+            <table className="w-full border-separate border-spacing-0 text-sm">
+                <thead>
+                    <tr className="text-muted-foreground h-7 text-[13px]">
+                        <th className="border-border w-full border-b p-0 text-left font-normal" scope="col">
+                            {table.category}
                         </th>
+                        <th
+                            className="border-border min-w-[90px] border-b p-0 pl-2.5 text-right font-normal"
+                            scope="col"
+                        >
+                            {table.spent}
+                        </th>
+                        <th className="border-border min-w-24 border-b p-0 pl-2.5 text-right font-normal" scope="col">
+                            {model.budgeted ? table.left : null}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody className="before:block before:h-[5px]">
+                    {rows.map((row) =>
+                        row.kind === "kept" ? (
+                            <KeptRow fmt={fmt} key={row.id} model={model} row={row} />
+                        ) : (
+                            <CategoryRow fmt={fmt} key={row.id} model={model} row={row} />
+                        )
                     )}
-                    <th className={cn("pl-2.5 text-left font-normal", COLLAPSED)} scope="col">
-                        {table.budget}
-                    </th>
-                    <th className="pl-2.5 text-right font-normal" scope="col">
-                        {table.left}
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                {props.rows.map((row) =>
-                    row.kind === "kept" ? (
-                        <KeptRow fmt={props.fmt} key={row.id} model={props.model} row={row} />
-                    ) : (
-                        <CategoryRow key={row.id} {...props} row={row} />
-                    )
-                )}
-            </tbody>
-        </table>
-    );
-}
-
-function Totals({ fmt, model }: { fmt: Format; model: InsightsModel }) {
-    const { measures } = useIntlayer("dashboard-insights");
-    const { income, kept, spent } = model.flow;
-    const parts = [
-        [measures.in.value, income],
-        [measures.out.value, spent],
-        [kept < 0 ? measures.savings.value : measures.kept.value, Math.abs(kept)],
-    ] as const;
-    return (
-        <dl className="text-muted-foreground flex flex-wrap gap-x-3 text-xs">
-            {parts.map(([label, value]) => (
-                <div className="flex gap-1" key={label}>
-                    <dt>{label}</dt>
-                    <dd className="text-foreground font-mono font-medium">{fmt.amount(value)}</dd>
-                </div>
-            ))}
-        </dl>
+                </tbody>
+            </table>
+        </div>
     );
 }
 
 export function CashFlowCard({ model }: { model: InsightsModel }) {
-    const dashboard = useDashboard();
+    const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-insights");
-    const fmt = useInsightsFormat(dashboard.ledger);
-    const wide = useWide();
+    const fmt = useInsightsFormat(ledger);
     const { incomeTracking } = useContext(LedgerSettingsContext);
-    const { links, nodes, rows } = flowOf(model.flow, {
-        hub: copy.cashFlow.hub.value,
-        kept: copy.measures.kept.value,
-        savings: copy.cashFlow.savings.value,
-    });
-    const empty = model.flow.income === 0 && model.flow.spent === 0;
+    const { rows, sources, targets } = useMemo(() => flowOf(model.flow), [model.flow]);
+    const { income, kept, spent } = model.flow;
     if (!incomeTracking) {
         return (
-            <CardFrame title={copy.trend.spending}>
-                {model.flow.spent === 0 ? (
-                    <p className="text-muted-foreground p-4 text-sm">{copy.empty.spending}</p>
+            <PhoneCard title={copy.trend.spending}>
+                {spent === 0 ? (
+                    <Nothing>{copy.empty.spending}</Nothing>
                 ) : (
-                    <div className="px-4 pt-1 pb-3">
-                        <FlowTable
-                            dashboard={dashboard}
-                            fmt={fmt}
-                            model={model}
-                            rows={rows.filter((row) => row.kind === "category")}
-                        />
+                    <div className="pt-1 pb-3">
+                        <FlowTable fmt={fmt} model={model} rows={rows.filter((row) => row.kind === "category")} />
                     </div>
                 )}
-            </CardFrame>
+            </PhoneCard>
+        );
+    }
+    if (income === 0 && spent === 0) {
+        return (
+            <PhoneCard title={copy.cashFlow.title}>
+                <Nothing>{copy.empty.cashFlow}</Nothing>
+            </PhoneCard>
         );
     }
     return (
-        <CardFrame action={empty ? null : <Totals fmt={fmt} model={model} />} stackAction title={copy.cashFlow.title}>
-            {empty ? (
-                <p className="text-muted-foreground p-4 text-sm">{copy.empty.cashFlow}</p>
-            ) : (
-                <div
-                    className="grid items-start gap-x-3 px-4 pt-1 pb-3"
-                    style={wide ? { gridTemplateColumns: `minmax(0, 1fr) ${TABLE_WIDTH}px` } : undefined}
-                >
-                    <SankeyChart
-                        collapse={wide ? undefined : { label: copy.changes.other.value, maxPerColumn: PHONE_TARGETS }}
-                        height={
-                            wide
-                                ? Math.max(HEAD_HEIGHT + rows.length * ROW_HEIGHT, MIN_CHART_HEIGHT)
-                                : STACKED_CHART_HEIGHT
-                        }
-                        label={copy.cashFlow.title.value}
-                        links={links}
-                        nodes={nodes}
-                        targetRows={wide ? { height: ROW_HEIGHT, taper: RIBBON_TAPER, top: HEAD_HEIGHT } : undefined}
-                    >
-                        <SankeyChart.Links gradient />
-                        <SankeyChart.Nodes />
-                        <SankeyChart.Labels formatValue={fmt.amount} />
-                        <SankeyChart.Tooltip formatValue={fmt.amount} />
-                    </SankeyChart>
-                    <FlowTable dashboard={dashboard} fmt={fmt} model={model} rows={rows} />
+        <PhoneCard
+            aside={
+                <Aside
+                    label={(kept < 0 ? copy.measures.savings : copy.measures.kept).value}
+                    value={fmt.whole(Math.abs(kept))}
+                />
+            }
+            title={copy.cashFlow.title}
+        >
+            <div className="pt-3.5 pb-3">
+                <Legend bands={sources} fmt={fmt} />
+                <div className="mt-[18px] mb-[27px]">
+                    <Sankey label={copy.cashFlow.title.value} sources={sources} targets={targets} />
                 </div>
-            )}
-        </CardFrame>
+                <FlowTable fmt={fmt} model={model} rows={rows} />
+            </div>
+        </PhoneCard>
     );
 }

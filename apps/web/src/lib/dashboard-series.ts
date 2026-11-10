@@ -10,7 +10,7 @@ import type { Ledger, LedgerRow, Scope } from "./dashboard-series-ledger";
 import { netWorthPoints } from "./dashboard-series-net-worth";
 import { daysFrom, priorSlice, periodOf, shiftPeriodKey } from "./dashboard-series-period";
 import type { Period } from "./dashboard-series-period";
-import { daysBetween } from "./ledger";
+import { addDays, daysBetween } from "./ledger";
 
 export interface SeriesCategory {
     color: string;
@@ -286,6 +286,14 @@ export function categoryBudgets(ledger: Ledger, period: Period) {
         }
     }
     return standings;
+}
+
+/** The budgets that run for exactly this month. A window may end on the month's last day or the day after it. */
+export function monthlyBudgets(ledger: Ledger, month: Period) {
+    const nextDay = addDays(month.to, 1);
+    return [...categoryBudgets(ledger, month)].filter(
+        ([, standing]) => standing.from === month.from && (standing.to === month.to || standing.to === nextDay)
+    );
 }
 
 interface ShareRow {

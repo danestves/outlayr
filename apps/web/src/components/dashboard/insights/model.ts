@@ -6,7 +6,8 @@ import type { CategoryBudget } from "@/lib/dashboard-series";
 import { cashFlow, monthlyTotals, netWorthHistory } from "@/lib/dashboard-series-insights";
 
 import { changesFromUsual, compareToUsual, keptStreak, standouts, usualKeptShare, usualSpend } from "./answers";
-import type { CategoryLook } from "./category-tile";
+
+const MONTHS_DRAWN = 6;
 
 export function useInsightsModel({ filters, ledger }: Dashboard) {
     const { accounts, period } = filters;
@@ -16,7 +17,7 @@ export function useInsightsModel({ filters, ledger }: Dashboard) {
         const budgeted = accounts.length === 0;
         const budgets = budgeted ? categoryBudgets(ledger, period) : new Map<string, CategoryBudget>();
         const usual = usualSpend(ledger, period, scope);
-        const months = monthlyTotals(ledger, period, scope);
+        const history = monthlyTotals(ledger, period, scope);
         return {
             budgeted,
             budgets,
@@ -25,14 +26,12 @@ export function useInsightsModel({ filters, ledger }: Dashboard) {
             closed: period.to < ledger.today,
             comparison: compareToUsual(flow.spent, usual?.total ?? null),
             flow,
-            looks: new Map<string, CategoryLook>(
-                ledger.books.categories.map((row) => [row.localId, { emoji: row.emoji, icon: row.icon }])
-            ),
-            keptStreak: keptStreak(months),
-            months,
-            netWorth: netWorthHistory(ledger, period, scope, months.length),
+            keptStreak: keptStreak(history),
+            /** The months the two monthly charts draw; the kept figures read the whole year. */
+            months: history.slice(-MONTHS_DRAWN),
+            netWorth: netWorthHistory(ledger, period, scope, history.length),
             usual,
-            usualKept: usualKeptShare(months),
+            usualKept: usualKeptShare(history),
         };
     }, [accounts, ledger, period]);
 }

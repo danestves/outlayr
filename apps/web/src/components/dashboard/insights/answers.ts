@@ -7,7 +7,7 @@ import type { Period } from "../../../lib/dashboard-series-period";
 import { addDays, daysBetween } from "../../../lib/ledger";
 
 const PRIOR_PERIODS = 6;
-const MIN_PRIOR_PERIODS = 3;
+export const MIN_PRIOR_PERIODS = 3;
 const MIN_DELTA_OF_USUAL = 0.2;
 const MIN_DELTA_OF_TOTAL = 0.05;
 const MAX_CARDS = 3;
@@ -21,7 +21,8 @@ export interface Usual {
 
 const earlier = (a: string, b: string) => (a < b ? a : b);
 
-function priorWindows(ledger: Ledger, period: Period) {
+/** The periods a usual is averaged over, each cut to as far as `period` has run. */
+export function priorWindows(ledger: Ledger, period: Period) {
     const elapsed = Math.max(daysBetween(period.from, ledger.today) + 1, 1);
     const closed = elapsed >= period.days;
     const firstSpend = ledger.rows.reduce((first, row) => (row.income ? first : earlier(first, row.day)), ledger.today);

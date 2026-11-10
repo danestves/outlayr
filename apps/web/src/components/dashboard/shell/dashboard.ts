@@ -5,7 +5,7 @@ import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKeyOf, periodOf } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
 
-import { accountIdsOf, periodKeyOr } from "./filters";
+import { accountIdsOf, periodKeyOr, spanKeyOr } from "./filters";
 import type { DashboardSearch, FilterPatch } from "./filters";
 
 export interface DashboardFilters {
@@ -14,6 +14,8 @@ export interface DashboardFilters {
     category: string | null;
     currentKey: string;
     period: Period;
+    /** The week, month or year Insights is reading; `period` stays a month for every other screen. */
+    span: Period;
 }
 
 export interface Dashboard {
@@ -37,8 +39,8 @@ export function useDashboard() {
 const NONE: readonly string[] = [];
 
 export function useFilters(search: DashboardSearch, ledger: Ledger): DashboardFilters {
-    const { firstDayOfMonth } = ledger;
-    const currentKey = periodKeyOf(ledger.today, firstDayOfMonth);
+    const { firstDayOfMonth, firstWeekday, today } = ledger;
+    const currentKey = periodKeyOf(today, firstDayOfMonth);
     const accountKey = accountIdsOf(search.accounts)
         .filter((id) => ledger.accounts.has(id))
         .join(",");
@@ -49,6 +51,8 @@ export function useFilters(search: DashboardSearch, ledger: Ledger): DashboardFi
     const accounts = useMemo(() => (accountKey === "" ? NONE : accountKey.split(",")), [accountKey]);
     const categories = useMemo(() => (categoryKey === "" ? NONE : categoryKey.split(",")), [categoryKey]);
     const period = useMemo(() => periodOf(periodKey, firstDayOfMonth), [firstDayOfMonth, periodKey]);
+    const spanKey = spanKeyOr(search.period, today, { firstDayOfMonth, firstWeekday });
+    const span = useMemo(() => periodOf(spanKey, firstDayOfMonth), [firstDayOfMonth, spanKey]);
     return useMemo(
         () => ({
             accounts,
@@ -56,7 +60,8 @@ export function useFilters(search: DashboardSearch, ledger: Ledger): DashboardFi
             category: categories.length === 1 ? (categories[0] ?? null) : null,
             currentKey,
             period,
+            span,
         }),
-        [accounts, categories, currentKey, period]
+        [accounts, categories, currentKey, period, span]
     );
 }

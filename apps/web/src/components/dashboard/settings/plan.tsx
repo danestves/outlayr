@@ -32,7 +32,7 @@ const STORE_URL = {
 } as const;
 const PLAN_KEY = ["billing", "plan"];
 
-const usePlan = () =>
+export const usePlan = () =>
     useQuery({
         queryFn: () => convexClient().action(api.billing.plan, {}),
         queryKey: PLAN_KEY,

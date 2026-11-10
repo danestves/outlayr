@@ -144,13 +144,15 @@ export function sampleDashboard(now: number): Dashboard {
     const books = sampleBooks(now);
     const ledger = prepareLedger(books, now);
     const currentKey = periodKeyOf(ledger.today, ledger.firstDayOfMonth);
+    const period = periodOf(currentKey, ledger.firstDayOfMonth);
     return {
         filters: {
             accounts: [],
             categories: [],
             category: null,
             currentKey,
-            period: periodOf(currentKey, ledger.firstDayOfMonth),
+            period,
+            span: period,
         },
         ledger,
         overview: ledgerGlance(books, now),

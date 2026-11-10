@@ -1,18 +1,21 @@
 import { Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useContext } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { CardFrame } from "@/components/dashboard/home/card-frame";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LedgerSettingsContext } from "@/lib/ledger-settings";
 
 import type { Standout } from "./answers";
-import { CategoryTile } from "./category-tile";
 import { KEPT_COLOR } from "./flow";
 import { useInsightsFormat } from "./format";
 import type { InsightsModel } from "./model";
+import { FIGURE, NOTE } from "./parts";
+import { Key, Nothing, PhoneCard } from "./phone/card";
 
-const CELL = "block min-w-0 px-4 py-3.5 max-md:not-last:border-b md:not-last:border-r";
+const ITEM =
+    "group/row relative not-first:before:bg-border not-first:before:absolute not-first:before:inset-x-[15px] not-first:before:top-0 not-first:before:h-px";
+const ROW = "block px-[15px] pt-4 pb-[5px] group-first/row:pt-3.5";
 
 type Copy = ReturnType<typeof useIntlayer<"dashboard-insights">>;
 type Format = ReturnType<typeof useInsightsFormat>;
@@ -47,35 +50,54 @@ function figureOf(card: Standout, copy: Copy, fmt: Format) {
     return (card.under ? copy.standsOut.less({ amount }) : copy.standsOut.more({ amount })).value;
 }
 
-function StandoutCard({ card, model }: { card: Standout; model: InsightsModel }) {
+interface LinesProps {
+    color: string;
+    figure: ReactNode;
+    name: ReactNode;
+    note: ReactNode;
+    tone: string;
+}
+
+function Lines({ color, figure, name, note, tone }: LinesProps) {
+    return (
+        <>
+            <span className="flex h-5 items-center gap-[9px] text-sm font-medium">
+                <Key color={color} />
+                <span className="min-w-0 truncate">{name}</span>
+                <span className={`${FIGURE} ml-auto pl-2 whitespace-nowrap ${tone}`}>{figure}</span>
+            </span>
+            {note ? <span className={`${NOTE} mt-0.5 block first-letter:uppercase`}>{note}</span> : null}
+        </>
+    );
+}
+
+function StandoutRow({ card, closed }: { card: Standout; closed: boolean }) {
     const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-insights");
     const fmt = useInsightsFormat(ledger);
     const target = ledger.budgetTargets.get(card.categoryId);
     const category = target ?? ledger.categories.get(card.categoryId);
+    const under = card.kind === "versus" && card.under;
     return (
-        <Link
-            className={`${CELL} hover:bg-muted`}
-            search={(previous) => ({ ...previous, category: target?.topId ?? card.categoryId })}
-            to="/app"
-        >
-            <span className="flex items-center gap-2">
-                <CategoryTile color={category?.color ?? KEPT_COLOR} look={model.looks.get(card.categoryId)} />
-                <span className="text-sm font-medium">{category?.name}</span>
-            </span>
-            <span
-                className={`mt-2 block font-mono text-xl leading-7 font-medium ${card.kind === "overBudget" || !card.under ? "text-destructive" : "text-success"}`}
+        <li className={ITEM}>
+            <Link
+                className={`${ROW} hover:bg-app-hover`}
+                search={(previous) => ({ ...previous, category: target?.topId ?? card.categoryId })}
+                to="/app"
             >
-                {figureOf(card, copy, fmt)}
-            </span>
-            <span className="text-muted-foreground mt-1 block text-sm leading-5">
-                {sentenceOf(card, copy, fmt, model.closed)}
-            </span>
-        </Link>
+                <Lines
+                    color={category?.color ?? KEPT_COLOR}
+                    figure={figureOf(card, copy, fmt)}
+                    name={category?.name}
+                    note={sentenceOf(card, copy, fmt, closed)}
+                    tone={under ? "text-success" : "text-destructive"}
+                />
+            </Link>
+        </li>
     );
 }
 
-function streakLine(model: InsightsModel, copy: Copy, fmt: Format) {
+function streakOf(model: InsightsModel, copy: Copy, fmt: Format) {
     const streak = model.keptStreak;
     if (streak === null) {
         return null;
@@ -85,11 +107,11 @@ function streakLine(model: InsightsModel, copy: Copy, fmt: Format) {
         return (lowest ? copy.standsOut.keptLowest : copy.standsOut.keptHighest)({ count: String(streak.months) })
             .value;
     }
-    const month = fmt.month(streak.since);
+    const month = fmt.longMonth(`${streak.since}-15`);
     return (lowest ? copy.standsOut.keptLowestSince : copy.standsOut.keptHighestSince)({ month }).value;
 }
 
-function KeptCell({ model }: { model: InsightsModel }) {
+function KeptRow({ model }: { model: InsightsModel }) {
     const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-insights");
     const fmt = useInsightsFormat(ledger);
@@ -97,20 +119,19 @@ function KeptCell({ model }: { model: InsightsModel }) {
         model.usualKept === null
             ? null
             : copy.standsOut.keptUsual({ percent: String(Math.round(model.usualKept * 100)) }).value;
-    const note = [usual, streakLine(model, copy, fmt)].filter(Boolean).join(" ");
     const { income, kept } = model.flow;
-    const percent = Math.round((kept / income) * 100);
     return (
-        <div className={CELL}>
-            <span className="flex items-center gap-2">
-                <span aria-hidden className="size-5 shrink-0 rounded-md" style={{ backgroundColor: KEPT_COLOR }} />
-                <span className="text-sm font-medium">{copy.measures.kept}</span>
-            </span>
-            <span className="mt-2 block font-mono text-xl leading-7 font-medium">
-                {copy.standsOut.kept({ percent: String(percent) })}
-            </span>
-            {note ? <span className="text-muted-foreground mt-1 block text-sm leading-5">{note}</span> : null}
-        </div>
+        <li className={ITEM}>
+            <div className={ROW}>
+                <Lines
+                    color={KEPT_COLOR}
+                    figure={copy.standsOut.kept({ percent: String(Math.round((kept / income) * 100)) })}
+                    name={copy.measures.kept}
+                    note={[usual, streakOf(model, copy, fmt)].filter(Boolean).join(", ")}
+                    tone="text-muted-foreground"
+                />
+            </div>
+        </li>
     );
 }
 
@@ -121,17 +142,17 @@ export function StandoutsCard({ model }: { model: InsightsModel }) {
     const cards = model.cards.slice(0, showKept ? 2 : 3);
     const empty = cards.length === 0 && !showKept;
     return (
-        <CardFrame title={copy.standsOut.title}>
+        <PhoneCard title={copy.standsOut.title}>
             {empty ? (
-                <p className="text-muted-foreground p-4 text-sm">{copy.standsOut.empty}</p>
+                <Nothing>{copy.standsOut.empty}</Nothing>
             ) : (
-                <div className="grid md:auto-cols-fr md:grid-flow-col">
+                <ul className="pb-[17px]">
                     {cards.map((card) => (
-                        <StandoutCard card={card} key={`${card.kind}:${card.categoryId}`} model={model} />
+                        <StandoutRow card={card} closed={model.closed} key={`${card.kind}:${card.categoryId}`} />
                     ))}
-                    {showKept ? <KeptCell model={model} /> : null}
-                </div>
+                    {showKept ? <KeptRow model={model} /> : null}
+                </ul>
             )}
-        </CardFrame>
+        </PhoneCard>
     );
 }

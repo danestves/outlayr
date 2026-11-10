@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { createContext, use, useState } from "react";
 import type { ReactNode } from "react";
 import { Skeleton } from "skullet/react";
 
@@ -11,6 +11,11 @@ export function useSample() {
     return sample;
 }
 
+const SampledContext = createContext(false);
+
+/** True under a `Sampled` skeleton, for a card whose loading shape is not the shape of its sample. */
+export const useSampled = () => use(SampledContext);
+
 interface SampledProps {
     children: ReactNode;
     label?: string;
@@ -20,7 +25,9 @@ interface SampledProps {
 export function Sampled({ children, label, sample }: SampledProps) {
     return (
         <Skeleton label={label} loading>
-            <DashboardContext value={sample}>{children}</DashboardContext>
+            <SampledContext value>
+                <DashboardContext value={sample}>{children}</DashboardContext>
+            </SampledContext>
         </Skeleton>
     );
 }

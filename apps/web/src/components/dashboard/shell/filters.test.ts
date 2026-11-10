@@ -47,9 +47,15 @@ describe("dashboardSearch", () => {
     });
 
     it("drops a filter the address parsed into a number or a flag instead of failing the screen", async () => {
-        const result = await read({ accounts: 123, category: true, period: 2026 });
+        const result = await read({ accounts: 123, category: true, period: false });
 
         expect(result).toStrictEqual({ value: { accounts: undefined, category: undefined, period: undefined } });
+    });
+
+    it("reads a bare year, which the address parses into a number, as a period", async () => {
+        const result = await read({ period: 2025 });
+
+        expect(result).toStrictEqual({ value: { period: "2025" } });
     });
 });
 
