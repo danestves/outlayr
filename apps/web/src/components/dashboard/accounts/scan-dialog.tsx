@@ -194,6 +194,10 @@ export function ScanDialog({
         if (!account) {
             return;
         }
+        if (!readAiConsent()) {
+            setPhase({ kind: "consent" });
+            return;
+        }
         latest.current += 1;
         const run = latest.current;
         setPhase({ file, kind: "reading", run });
