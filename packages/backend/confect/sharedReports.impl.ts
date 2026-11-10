@@ -1,11 +1,13 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 
+import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx } from "./_generated/services";
+import { DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx, Scheduler } from "./_generated/services";
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { COPY_BATCH, fits, LIFETIMES, MAX_LINKS, newSlug, SLUG } from "./sharedReports";
@@ -128,6 +130,10 @@ const dropExpired = FunctionImpl.make(
             .take(COPY_BATCH);
         for (const row of rows) {
             yield* table.delete(row._id);
+        }
+        // A full batch means more may be waiting, and the privacy policy gives an expired copy a day at most.
+        if (rows.length === COPY_BATCH) {
+            yield* (yield* Scheduler).runAfter(Duration.zero, refs.internal.sharedReports.dropExpired, {});
         }
         return null;
     }, Effect.orDie)

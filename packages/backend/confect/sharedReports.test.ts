@@ -74,20 +74,23 @@ test("an expired link shows nothing, and sharing again makes a new address", asy
     await expect(t.query(api.sharedReports.view, { slug: first.slug })).resolves.toBeNull();
 });
 
-test("the sweep deletes expired copies and keeps the rest", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] });
+test("one sweep deletes every expired copy, however many, and keeps the rest", async () => {
+    vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-11-01T12:00:00Z"));
     const t = convexTest(schema, modules);
     const owner = await seedAuthUser(t);
     const as = authenticatedAs(t, owner);
-    await as.mutation(api.sharedReports.publish, shared);
-    await as.mutation(api.sharedReports.publish, { ...shared, expires: "never", reportId: "report-2" });
+    for (const index of Array.from({ length: 40 }).keys()) {
+        await as.mutation(api.sharedReports.publish, { ...shared, reportId: `expiring-${index}` });
+    }
+    await as.mutation(api.sharedReports.publish, { ...shared, expires: "never", reportId: "kept" });
 
     vi.setSystemTime(Date.now() + 8 * DAY_MS);
     await t.mutation(internal.sharedReports.dropExpired, {});
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
 
     const left = await t.run((ctx) => ctx.db.query("sharedReports").collect());
-    expect(left.map((row) => row.reportId)).toStrictEqual(["report-2"]);
+    expect(left.map((row) => row.reportId)).toStrictEqual(["kept"]);
 });
 
 test("refreshing a live link keeps its address and its expiry", async () => {
