@@ -24,6 +24,7 @@ const Search = Schema.Struct({
     category: Schema.optional(Param),
     checkout: Schema.optional(Param),
     period: Schema.optional(PeriodParam),
+    restore: Schema.optional(Param),
 });
 
 export const dashboardSearch = Schema.toStandardSchemaV1(Search);

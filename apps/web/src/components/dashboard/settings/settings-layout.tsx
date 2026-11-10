@@ -24,13 +24,18 @@ import { Usage } from "./usage";
 
 export function SettingsLayout({ children }: { children: ReactNode }) {
     const { title } = useIntlayer("dashboard-settings");
+    const plan = useLocation({ select: (location) => location.pathname === "/app/settings/plan" });
     return (
         <Toast.Provider position="bottom-center" toastManager={settingsToasts}>
             <div className="flex min-h-full min-w-0">
-                <aside className="border-border sticky top-0 h-dvh w-[208px] shrink-0 border-r px-3 max-lg:hidden">
-                    <h1 className="flex h-16 items-center px-2.5 text-lg font-semibold tracking-[-0.02em]">{title}</h1>
-                    <SettingsNav />
-                </aside>
+                {plan ? null : (
+                    <aside className="border-border sticky top-0 h-dvh w-[208px] shrink-0 border-r px-3 max-lg:hidden">
+                        <h1 className="flex h-16 items-center px-2.5 text-lg font-semibold tracking-[-0.02em]">
+                            {title}
+                        </h1>
+                        <SettingsNav />
+                    </aside>
+                )}
                 <main className="@container min-w-0 flex-1 px-4 pb-5 sm:px-6">{children}</main>
             </div>
         </Toast.Provider>
