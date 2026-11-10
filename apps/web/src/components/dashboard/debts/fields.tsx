@@ -78,12 +78,14 @@ export function DayField({
     day,
     invalid = false,
     label,
+    max,
     min,
     onDay,
 }: {
     day: string;
     invalid?: boolean;
     label: string;
+    max?: string;
     min?: string;
     onDay: (day: string) => void;
 }) {
@@ -105,8 +107,14 @@ export function DayField({
             <input
                 aria-hidden
                 className="pointer-events-none absolute inset-0 appearance-none opacity-0 pointer-coarse:pointer-events-auto"
+                max={max}
                 min={min}
-                onChange={(event) => event.target.value && onDay(event.target.value)}
+                onChange={({ target: { value } }) => {
+                    // Some mobile date pickers let a day outside min and max through.
+                    if (value && value <= (max ?? value) && value >= (min ?? value)) {
+                        onDay(value);
+                    }
+                }}
                 ref={input}
                 tabIndex={-1}
                 type="date"

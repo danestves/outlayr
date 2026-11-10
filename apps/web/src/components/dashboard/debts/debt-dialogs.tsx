@@ -26,6 +26,7 @@ import type { CommitRow } from "@/lib/ledger-committer";
 import { ledgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { createdTransfer, marketRate } from "@/lib/transfer-create";
+import { cn } from "@/lib/utils";
 
 import { targetInstant } from "../goals/model";
 import {
@@ -201,6 +202,7 @@ function MoveFields({
     rows: readonly AccountRow[];
     tried: boolean;
 }) {
+    const { ledger } = useDashboard();
     const { form } = useIntlayer("dashboard-debts");
     const { account, state } = move;
     return (
@@ -217,7 +219,12 @@ function MoveFields({
                 </Field>
                 <Field>
                     <Field.Label className={LABEL}>{form.date}</Field.Label>
-                    <DayField day={state.day} label={form.date.value} onDay={(day) => move.set({ day })} />
+                    <DayField
+                        day={state.day}
+                        label={form.date.value}
+                        max={ledger.today}
+                        onDay={(day) => move.set({ day })}
+                    />
                 </Field>
             </div>
             {move.crossed && account ? (
@@ -632,7 +639,7 @@ function CurrencyRow({
         return null;
     }
     return (
-        <div className="grid grid-cols-2 items-start gap-3">
+        <div className={cn("grid items-start gap-3", askCurrency && move.needsUsd && "grid-cols-[3fr_2fr]")}>
             {askCurrency ? (
                 <CurrencyField
                     inUse={[...new Set(accounts.map((row) => row.currency))]}
