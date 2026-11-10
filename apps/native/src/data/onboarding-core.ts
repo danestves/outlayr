@@ -21,6 +21,17 @@ export const finishOnboarding = Effect.fn("Onboarding.finishOnboarding")(functio
     yield* Meta.set(db, "onboardingComplete", true);
 });
 
+export const finishFirstRun = Effect.fn("Onboarding.finishFirstRun")(function* finishFirstRun(db: Database) {
+    yield* Meta.set(db, "accountOfferHeld", true);
+    yield* finishOnboarding(db);
+});
+
+export const releaseAccountOffer = Effect.fn("Onboarding.releaseAccountOffer")(function* releaseAccountOffer(
+    db: Database
+) {
+    yield* Meta.set(db, "accountOfferHeld", false);
+});
+
 export const markReminderChosen = Effect.fn("Onboarding.markReminderChosen")(function* markReminderChosen(
     db: Database
 ) {

@@ -10,8 +10,8 @@ export function useAccountDeferred(db: Database): boolean {
     return useMeta(db, "accountDeferred");
 }
 
-export function useFirstEntryOfferShown(db: Database): boolean {
-    return useMeta(db, "firstEntryOfferShown");
+export function useAccountOfferHeld(db: Database): boolean {
+    return useMeta(db, "accountOfferHeld");
 }
 
 export function useReminderChosen(db: Database): boolean {

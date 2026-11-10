@@ -103,6 +103,7 @@ const SETTINGS = defineMeta({
 
 const BOOKKEEPING = defineMeta({
     accountDeferred: { default: false, schema: BoolText, scope: "device" },
+    accountOfferHeld: { default: false, schema: BoolText, scope: "device" },
     autologAccess: { default: "open", schema: AutologAccess, scope: "device" },
     autologUsage: { default: {}, schema: Schema.fromJsonString(AutologUsage), scope: "device" },
     autologWaiting: { elements: PendingWrite, scope: "device" },
@@ -112,7 +113,6 @@ const BOOKKEEPING = defineMeta({
     currencyChosen: { default: false, schema: BoolText, scope: "synced" },
     enrichmentOutbox: { elements: Schema.String, scope: "device" },
     favouriteCurrencies: { default: [], schema: FavouriteCurrenciesText, scope: "device" },
-    firstEntryOfferShown: { default: false, schema: BoolText, scope: "device" },
     firstLaunch: { default: false, schema: BoolText, scope: "device" },
     lastRatesPullAt: { default: null, schema: NumberText, scope: "device" },
     lastTransactionAccount: { default: null, schema: Schema.String, scope: "device" },

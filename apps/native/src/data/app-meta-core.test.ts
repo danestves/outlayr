@@ -17,6 +17,7 @@ const STAMPED = [JSON.stringify({ "tx-1": 1_762_650_000_000 }), "{}"];
 const STORED_TODAY = {
     accentColor: ["4"],
     accountDeferred: BOOL,
+    accountOfferHeld: BOOL,
     accountsByHand: BOOL,
     aiConsentPlanScan: BOOL,
     aiConsentV2: BOOL,
@@ -57,7 +58,6 @@ const STORED_TODAY = {
     enrichmentOutbox: [JSON.stringify(["tx-1", "tx-2"]), "[]"],
     favouriteCurrencies: ["EUR,GBP", ""],
     firstDayOfMonth: ["15"],
-    firstEntryOfferShown: ["true"],
     firstLaunch: ["true"],
     firstWeekday: ["7"],
     groundedLookup: BOOL,

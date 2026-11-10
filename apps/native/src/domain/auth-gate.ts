@@ -34,20 +34,21 @@ export type AuthRoute = "sign-in" | "adopt" | "ledger";
 export interface AccountState {
     deferred: boolean;
     gate: AuthGate;
+    held: boolean;
     reconciled: boolean;
 }
 
 /**
- * `unconfigured` and `deferred` open the ledger: signing in only ever adds sync, so a missing backend or a declined
- * offer must never gate local data. `restoring` parks on sign-in because the stack needs an admitted screen while
- * `AuthCover` covers it.
+ * `unconfigured`, `deferred` and `held` open the ledger: signing in only ever adds sync, so a missing backend, a
+ * declined offer or one still waiting for the first entry must never gate local data. `restoring` parks on sign-in
+ * because the stack needs an admitted screen while `AuthCover` covers it.
  */
 export function authRoute(state: AccountState): AuthRoute {
     if (state.gate === "unconfigured") {
         return "ledger";
     }
     if (state.gate !== "signed-in") {
-        return state.deferred ? "ledger" : "sign-in";
+        return state.deferred || state.held ? "ledger" : "sign-in";
     }
     return state.reconciled ? "ledger" : "adopt";
 }

@@ -4,7 +4,7 @@ import * as Effect from "effect/Effect";
 import { buildArchive, restoreArchive } from "@/data/archive-core";
 import { eraseData } from "@/data/erase";
 import { completeAdoption, localLedgerState, prepareAccountAdoption, runAdoption } from "@/data/ledger-adoption";
-import { deferAccount, finishOnboarding } from "@/data/onboarding-core";
+import { deferAccount, finishFirstRun } from "@/data/onboarding-core";
 import { reconcilePhotos } from "@/data/photo-store-core";
 import type { PhotoFiles } from "@/data/photo-store-core";
 import { downloadEveryPhoto } from "@/data/photo-sync-core";
@@ -19,8 +19,8 @@ import { appRuntime } from "@/lib/runtime";
 
 import { createRuntimeCommand } from "./atom-command";
 
-export const finishOnboardingCommand = createRuntimeCommand(appRuntime, {
-    execute: (db: Database) => finishOnboarding(db),
+export const finishFirstRunCommand = createRuntimeCommand(appRuntime, {
+    execute: (db: Database) => finishFirstRun(db),
     label: "onboarding:finish",
 });
 

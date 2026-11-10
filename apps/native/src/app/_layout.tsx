@@ -31,7 +31,7 @@ import { YearSheetOpener } from "@/components/year-sheet-opener";
 import { useDatabase, useLocalData } from "@/contexts/local-data-context";
 import { RevenueCatSession } from "@/contexts/revenuecat-context";
 import { BackgroundWork } from "@/data/background-work";
-import { useAccountDeferred, useOnboardingSettled } from "@/data/onboarding";
+import { useAccountDeferred, useAccountOfferHeld, useOnboardingSettled } from "@/data/onboarding";
 import { useSeededClockPreference } from "@/data/settings";
 import { DeferredDeleteProvider } from "@/data/use-deferred-delete";
 import type { Database } from "@/db/client";
@@ -51,6 +51,7 @@ import { useAnalyticsConsent } from "@/lib/posthog-consent";
 import { usePostHogIdentity } from "@/lib/posthog-identity";
 import { identityPickerDetent, LARGE_ONLY } from "@/lib/sheet-detents";
 import { TrialReminderSync } from "@/lib/trial-reminder";
+import { useAccountOffer } from "@/lib/use-account-offer";
 import { usePaywallOpeners } from "@/lib/use-paywall-openers";
 import { useSubscriptionReminderTaps } from "@/lib/use-subscription-reminder-taps";
 import { useWalletPushTaps } from "@/lib/use-wallet-push-taps";
@@ -246,8 +247,13 @@ function RouteGate({
     return children;
 }
 
-function PaywallOpeners({ db, ready }: { db: Database; ready: boolean }) {
-    usePaywallOpeners(db, ready);
+function PaywallOpeners({ ready }: { ready: boolean }) {
+    usePaywallOpeners(ready);
+    return null;
+}
+
+function AccountOffer({ db, ready }: { db: Database; ready: boolean }) {
+    useAccountOffer(db, ready);
     return null;
 }
 
@@ -257,6 +263,7 @@ function RootStack() {
     const t = useTranslation();
     const onboarded = useOnboardingSettled(db);
     const deferred = useAccountDeferred(db);
+    const held = useAccountOfferHeld(db);
     const { gate } = useAuthSession();
     const { status: adoption } = useLedgerAdoption();
     const { height: windowHeight } = useWindowDimensions();
@@ -293,6 +300,7 @@ function RootStack() {
     const group = rootStackGroup({
         deferred,
         gate,
+        held,
         onboarded,
         reconciled: adoption === "settled",
     });
@@ -304,7 +312,8 @@ function RootStack() {
 
     return (
         <>
-            <PaywallOpeners db={db} ready={tapsReady} />
+            <PaywallOpeners ready={tapsReady} />
+            <AccountOffer db={db} ready={tapsReady} />
             <YearSheetOpener db={db} ready={tapsReady} />
             <Stack>
                 {ROOT_STACK.map(({ group: name, screens }) => (
