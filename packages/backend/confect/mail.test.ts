@@ -111,11 +111,11 @@ describe("the trial reminder", () => {
         vi.stubGlobal(
             "fetch",
             vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-                const url = String(input instanceof Request ? input.url : input);
-                if (url.includes("revenuecat.com")) {
-                    return Response.json({ subscriber: subscriber(url.includes(cancels.userId)) });
+                const url = new URL(input instanceof Request ? input.url : input);
+                if (url.hostname === "api.revenuecat.com") {
+                    return Response.json({ subscriber: subscriber(url.pathname.includes(cancels.userId)) });
                 }
-                if (url.includes("api.stripe.com")) {
+                if (url.hostname === "api.stripe.com") {
                     return new Response("unavailable", { status: 503 });
                 }
                 const { subject, to }: { subject: string; to: string } = JSON.parse(String(init?.body));
