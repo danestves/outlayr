@@ -111,7 +111,9 @@ function DeleteBody({
         <FlowDialog label={deleteRule.title({ name: rule.name })}>
             <Dialog.Body>
                 <Dialog.Description className="text-wrap">
-                    {deleteRule.body({ count: String(count) })}
+                    {count === 0 ? deleteRule.bodyNone : null}
+                    {count === 1 ? deleteRule.bodyOne : null}
+                    {count > 1 ? deleteRule.body({ count: String(count) }) : null}
                 </Dialog.Description>
             </Dialog.Body>
             <Dialog.Footer>

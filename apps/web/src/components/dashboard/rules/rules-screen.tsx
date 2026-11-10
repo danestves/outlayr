@@ -30,7 +30,7 @@ import { QuietTable } from "../home/setup";
 import { ConflictList } from "./conflicts";
 import type { ConflictChoices } from "./conflicts";
 import { useRuleWrites, useRulesData } from "./data";
-import type { RulesData } from "./data";
+import type { RuleWrites, RulesData } from "./data";
 import { DeleteDialog, RunDialog } from "./dialogs";
 import { useCategoryLook } from "./parts";
 import { RuleList } from "./rule-list";
@@ -60,13 +60,13 @@ interface ScreenProps {
     data: RulesData;
     search: RulesSearch;
     setSearch: SetRulesSearch;
+    writes: RuleWrites;
 }
 
-export function RulesScreen({ data, search, setSearch }: ScreenProps) {
+export function RulesScreen({ data, search, setSearch, writes }: ScreenProps) {
     const copy = useIntlayer("dashboard-rules");
     const { ledger } = useDashboard();
     const { money } = useDisplayFormat();
-    const writes = useRuleWrites();
     const look = useCategoryLook();
     const [moving, setMoving] = useState<Moving | null>(null);
     const [running, setRunning] = useState<Rule | "all" | null>(null);
@@ -108,8 +108,10 @@ export function RulesScreen({ data, search, setSearch }: ScreenProps) {
         onToggle: (rule, on) => {
             writes.update((current) => toggled(current, rule.id, on));
             if (!on) {
-                const count = String(stats.byRule.get(rule.id)?.count ?? 0);
-                writes.undoable(copy.toast.off({ count, name: rule.name }).value, () => {
+                const count = stats.byRule.get(rule.id)?.count ?? 0;
+                const { name } = rule;
+                const one = count === 1 ? copy.toast.offOne({ name }) : copy.toast.off({ count: String(count), name });
+                writes.undoable((count === 0 ? copy.toast.offNone({ name }) : one).value, () => {
                     writes.update((current) => toggled(current, rule.id, true));
                 });
             }
@@ -349,6 +351,6 @@ export function RulesScreen({ data, search, setSearch }: ScreenProps) {
     );
 }
 
-export function LiveRules({ search, setSearch }: Omit<ScreenProps, "data">) {
-    return <RulesScreen data={useRulesData()} search={search} setSearch={setSearch} />;
+export function LiveRules({ search, setSearch }: Pick<ScreenProps, "search" | "setSearch">) {
+    return <RulesScreen data={useRulesData()} search={search} setSearch={setSearch} writes={useRuleWrites()} />;
 }

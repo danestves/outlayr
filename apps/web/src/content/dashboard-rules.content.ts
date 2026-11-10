@@ -100,6 +100,14 @@ const dashboardRules = {
                     pt: "Estes {{count}} lançamentos passam para {{category}}.",
                 })
             ),
+            secondLineOne: insert(
+                t({
+                    en: "This entry moves to {{category}}.",
+                    es: "Este movimiento pasa a {{category}}.",
+                    fr: "Cette opération passe dans {{category}}.",
+                    pt: "Este lançamento passa para {{category}}.",
+                })
+            ),
             skipLine: insert(
                 t({
                     en: "Adds a condition to {{name}}, so it leaves these entries alone.",
@@ -139,6 +147,18 @@ const dashboardRules = {
                     pt: "Seus {{count}} lançamentos mantêm as categorias. Os novos não vão mais coincidir.",
                 })
             ),
+            bodyNone: t({
+                en: "New entries won't match it.",
+                es: "Los movimientos nuevos ya no coincidirán.",
+                fr: "Les nouvelles opérations ne correspondront plus.",
+                pt: "Os novos lançamentos não vão mais coincidir.",
+            }),
+            bodyOne: t({
+                en: "Its entry keeps its category. New ones won't match it.",
+                es: "Su movimiento conserva su categoría. Los nuevos ya no coincidirán.",
+                fr: "Son opération garde sa catégorie. Les nouvelles ne correspondront plus.",
+                pt: "Seu lançamento mantém a categoria. Os novos não vão mais coincidir.",
+            }),
             confirm: t({ en: "Delete rule", es: "Eliminar regla", fr: "Supprimer la règle", pt: "Excluir regra" }),
             title: insert(
                 t({
@@ -407,6 +427,14 @@ const dashboardRules = {
                     pt: "Coincidiu com {{count}} lançamentos, o último em {{date}}",
                 })
             ),
+            matchedOne: insert(
+                t({
+                    en: "Matched 1 entry, on {{date}}",
+                    es: "Coincidió con 1 movimiento, el {{date}}",
+                    fr: "1 opération correspondante, le {{date}}",
+                    pt: "Coincidiu com 1 lançamento, em {{date}}",
+                })
+            ),
             matchedNone: t({
                 en: "No entries matched yet",
                 es: "Aún sin coincidencias",
@@ -628,6 +656,22 @@ const dashboardRules = {
                     es: "{{name}} está desactivada. Sus {{count}} movimientos conservan sus categorías.",
                     fr: "{{name}} est désactivée. Ses {{count}} opérations gardent leur catégorie.",
                     pt: "{{name}} está desativada. Seus {{count}} lançamentos mantêm as categorias.",
+                })
+            ),
+            offNone: insert(
+                t({
+                    en: "{{name}} is off.",
+                    es: "{{name}} está desactivada.",
+                    fr: "{{name}} est désactivée.",
+                    pt: "{{name}} está desativada.",
+                })
+            ),
+            offOne: insert(
+                t({
+                    en: "{{name}} is off. Its entry keeps its category.",
+                    es: "{{name}} está desactivada. Su movimiento conserva su categoría.",
+                    fr: "{{name}} est désactivée. Son opération garde sa catégorie.",
+                    pt: "{{name}} está desativada. Seu lançamento mantém a categoria.",
                 })
             ),
             saveFailed: t({

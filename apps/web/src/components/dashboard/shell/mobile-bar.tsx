@@ -26,6 +26,8 @@ export function MobileBar() {
         title = nav.accounts;
     } else if (page === "transactions") {
         title = nav.transactions;
+    } else if (page === "rules") {
+        title = nav.rules;
     } else if (page === "settings") {
         title = account.settings;
     }

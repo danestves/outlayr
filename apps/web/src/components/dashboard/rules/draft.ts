@@ -69,14 +69,15 @@ export function draftOf(
             runToo: false,
         };
     }
+    const actions = from.actions.flatMap((action): DraftAction[] => {
+        if (action.type === "category") {
+            return [{ categoryId: action.categoryId, id: crypto.randomUUID(), type: "category" }];
+        }
+        const name = tagNames.get(action.tagId);
+        return name === undefined ? [] : [{ id: crypto.randomUUID(), name, type: "tag" }];
+    });
     return {
-        actions: from.actions.flatMap((action): DraftAction[] => {
-            if (action.type === "category") {
-                return [{ categoryId: action.categoryId, id: crypto.randomUUID(), type: "category" }];
-            }
-            const name = tagNames.get(action.tagId);
-            return name === undefined ? [] : [{ id: crypto.randomUUID(), name, type: "tag" }];
-        }),
+        actions: actions.length > 0 ? actions : [blankAction({ actions })],
         conditions: from.conditions.map((condition) => ({
             field: condition.field,
             id: crypto.randomUUID(),

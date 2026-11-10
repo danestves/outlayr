@@ -160,7 +160,11 @@ function ConflictBlock({
                 />
                 <Option
                     choice="second"
-                    line={conflicts.secondLine({ category: nameOf(secondCategory), count }).value}
+                    line={
+                        entries.length === 1
+                            ? conflicts.secondLineOne({ category: nameOf(secondCategory) }).value
+                            : conflicts.secondLine({ category: nameOf(secondCategory), count }).value
+                    }
                     picked={choice}
                     title={conflicts.orderTitle({ name: second.name }).value}
                 />

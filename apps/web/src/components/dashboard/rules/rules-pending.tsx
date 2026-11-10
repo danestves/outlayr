@@ -8,11 +8,13 @@ import type { TagBooks } from "@/lib/ledger-db";
 import { EMPTY_BOOK, ruleFromSuggestion } from "@/lib/rules";
 
 import { rulesData } from "./data";
+import type { RuleWrites } from "./data";
 import { RulesScreen } from "./rules-screen";
 
 const NO_SEARCH = {};
 const STAY = () => undefined;
 const NO_TAGS: TagBooks = { links: [], tags: [] };
+const NO_WRITES: RuleWrites = { apply: STAY, undoable: () => "", update: (change) => change(EMPTY_BOOK) };
 
 function sampleRules(ledger: Ledger) {
     const rules = rulesData(ledger, EMPTY_BOOK, NO_TAGS).suggestions.map((suggestion, index) =>
@@ -27,7 +29,7 @@ export function RulesPending() {
     const data = useMemo(() => sampleRules(sample.ledger), [sample]);
     return (
         <Sampled label={loadingLabel.value} sample={sample}>
-            <RulesScreen data={data} search={NO_SEARCH} setSearch={STAY} />
+            <RulesScreen data={data} search={NO_SEARCH} setSearch={STAY} writes={NO_WRITES} />
         </Sampled>
     );
 }

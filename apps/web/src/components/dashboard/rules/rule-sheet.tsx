@@ -15,7 +15,7 @@ import { ruleProblems, runOf, saved } from "@/lib/rules";
 import type { Change, Rule, Run, Suggestion } from "@/lib/rules";
 
 import { useWide } from "../insights/use-wide";
-import { useRuleWrites } from "./data";
+import { ruleToasts, useRuleWrites } from "./data";
 import type { RulesData } from "./data";
 import { draftOf, ruleOf, withNewTags } from "./draft";
 import { useCategoryLook, useShortDay } from "./parts";
@@ -57,7 +57,7 @@ function Body({
     target,
     testing,
 }: Omit<RuleSheetProps, "target"> & { target: SheetTarget }) {
-    const { cancel, close, create, run: runCopy, sheet, test } = useIntlayer("dashboard-rules");
+    const { cancel, close, create, run: runCopy, sheet, test, toast } = useIntlayer("dashboard-rules");
     const { ledger } = useDashboard();
     const { money } = useDisplayFormat();
     const committer = useLedgerCommitter();
@@ -96,7 +96,11 @@ function Body({
         }
         const made = withNewTags(rule, draft);
         if (made.rows.length > 0) {
-            committer.commit(made.rows);
+            void committer.commit(made.rows).settled.then((outcome) => {
+                if (outcome.status === "failed") {
+                    ruleToasts.add({ title: toast.saveFailed.value, type: "destructive" });
+                }
+            });
         }
         writes.update((book) => saved(book, made.rule, draft.position));
         if (!existing && draft.runToo) {
@@ -112,6 +116,10 @@ function Body({
         }
         return count === 1 ? sheet.matchesPastOne : sheet.matchesPast({ count: String(count) });
     };
+    const matchedLine = (day: string) =>
+        count === 1
+            ? sheet.matchedOne({ date: shortDay(day) })
+            : sheet.matched({ count: String(count), date: shortDay(day) });
     const fixes = problems.count === 1 ? sheet.errors.fixOne : sheet.errors.fix({ count: String(problems.count) });
     return (
         <>
@@ -147,14 +155,7 @@ function Body({
                     >
                         <div className="mt-5">
                             {existing ? (
-                                <BandRow
-                                    line={
-                                        newest
-                                            ? sheet.matched({ count: String(count), date: shortDay(newest.day) })
-                                            : sheet.matchedNone
-                                    }
-                                    title={sheet.on}
-                                >
+                                <BandRow line={newest ? matchedLine(newest.day) : sheet.matchedNone} title={sheet.on}>
                                     <Switch
                                         aria-label={sheet.on.value}
                                         checked={draft.on}

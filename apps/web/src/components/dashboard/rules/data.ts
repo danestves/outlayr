@@ -53,6 +53,8 @@ export function useRulesData(): RulesData {
     return useMemo(() => rulesData(ledger, book, tagBooks), [book, ledger, tagBooks]);
 }
 
+export type RuleWrites = ReturnType<typeof useRuleWrites>;
+
 export function useRuleWrites() {
     const { ledger } = useDashboard();
     const db = useLedgerDb();
