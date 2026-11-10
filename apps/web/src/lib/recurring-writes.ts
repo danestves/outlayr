@@ -1,4 +1,4 @@
-import { filedOn, wall } from "@outlayr/money/ledger-zone";
+import { filedOn, isoDay, wall } from "@outlayr/money/ledger-zone";
 import { occurrenceId, occurrenceRow } from "@outlayr/money/occurrence";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 
@@ -150,8 +150,10 @@ const seedFrom = (seed: Seed, draft: ScheduleDraft): Seed => ({
 });
 
 /** A chain carried past a short month still aims for its day when the edit keeps its date and cadence. */
-const keepsAnchor = (schedule: Schedule, draft: ScheduleDraft) =>
-    schedule.next?.at === draft.date && schedule.chain.type === draft.type && schedule.chain.every === draft.every;
+const keepsAnchor = (ledger: Ledger, schedule: Schedule, draft: ScheduleDraft) =>
+    schedule.next?.day === isoDay(draft.date, ledger.offsetAt(draft.date)) &&
+    schedule.chain.type === draft.type &&
+    schedule.chain.every === draft.every;
 
 /** A pending charge is edited in place; a logged one keeps its amount and the chain restarts at the next charge. */
 export function editedSchedule(ledger: Ledger, schedule: Schedule, draft: ScheduleDraft, at: number): Outcome {
@@ -181,7 +183,7 @@ export function editedSchedule(ledger: Ledger, schedule: Schedule, draft: Schedu
                 crypto.randomUUID(),
                 {
                     ...entryDraftOf(draft, details),
-                    recurringAnchorDay: keepsAnchor(schedule, draft) ? schedule.chain.anchor : undefined,
+                    recurringAnchorDay: keepsAnchor(ledger, schedule, draft) ? schedule.chain.anchor : undefined,
                 },
                 at
             ),

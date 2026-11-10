@@ -277,7 +277,8 @@ describe("recurring writes", () => {
             amount: 65,
             categoryId: "subs",
             currency: "USD",
-            date: tmo.next.at,
+            // The form sends the picked day at the ledger's noon, not the charge's own time.
+            date: Date.parse("2027-02-28T16:00:00Z"),
             endDate: null,
             every: 1,
             income: false,

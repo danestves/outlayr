@@ -253,10 +253,12 @@ function Stepper({ onChange, value }: { onChange: (every: number) => void; value
 }
 
 function CustomView({
+    locked,
     onBack,
     onDone,
     values,
 }: {
+    locked: boolean;
     onBack: () => void;
     onDone: (patch: Pick<Values, "endDay" | "every" | "startDay" | "type">) => void;
     values: Values;
@@ -323,6 +325,7 @@ function CustomView({
                 <div className="grid gap-4 sm:grid-cols-2">
                     <Slot label={copy.fields.starting}>
                         <DayField
+                            disabled={locked}
                             label={copy.fields.starting.value}
                             onChange={(startDay) => setDraft({ ...draft, startDay })}
                             value={draft.startDay}
@@ -641,6 +644,7 @@ function FormBody({
     if (custom) {
         return (
             <CustomView
+                locked={schedule?.pause != null}
                 onBack={() => setCustom(false)}
                 onDone={(patch) => {
                     setValues({ ...values, ...patch });
