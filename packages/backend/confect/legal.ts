@@ -503,6 +503,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "If you turn on the daily reminder in a web browser, our servers check whether you logged anything that day and send it through that browser's push service. It holds no amounts or entries.",
                     label: "Reminders on the web",
                 },
+                {
+                    detail: "Rules you create on the web to file entries sync with your ledger: their names, what they look for, and the category and tags they set.",
+                    label: "Rules on the web",
+                },
             ],
             es: [
                 {
@@ -512,6 +516,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Si activas el recordatorio diario en un navegador web, nuestros servidores comprueban si registraste algo ese día y lo envían por el servicio push de ese navegador. No incluye montos ni movimientos.",
                     label: "Recordatorios en la web",
+                },
+                {
+                    detail: "Las reglas que creas en la web para clasificar entradas se sincronizan con tu registro: su nombre, lo que buscan, y la categoría y las etiquetas que asignan.",
+                    label: "Reglas en la web",
                 },
             ],
             fr: [
@@ -523,6 +531,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Si vous activez le rappel quotidien dans un navigateur web, nos serveurs vérifient si vous avez saisi quelque chose ce jour-là et l'envoient via le service push de ce navigateur. Il ne contient ni montants ni opérations.",
                     label: "Rappels sur le web",
                 },
+                {
+                    detail: "Les règles que vous créez sur le web pour classer vos opérations sont synchronisées avec votre journal : leur nom, ce qu'elles recherchent, ainsi que la catégorie et les étiquettes qu'elles attribuent.",
+                    label: "Règles sur le web",
+                },
             ],
             pt: [
                 {
@@ -532,6 +544,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Se você ativar o lembrete diário em um navegador web, nossos servidores verificam se você registrou algo naquele dia e enviam pelo serviço push desse navegador. Não inclui valores nem lançamentos.",
                     label: "Lembretes na web",
+                },
+                {
+                    detail: "As regras que você cria na web para classificar lançamentos são sincronizadas com os seus lançamentos: o nome, o que procuram, e a categoria e as tags que atribuem.",
+                    label: "Regras na web",
                 },
             ],
         },
