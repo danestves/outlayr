@@ -1,12 +1,14 @@
 import type { RateLimitConfig, RateLimitError } from "@convex-dev/rate-limiter";
-import { DAY, RateLimiter } from "@convex-dev/rate-limiter";
+import { DAY, isRateLimitError, RateLimiter } from "@convex-dev/rate-limiter";
 import type { UserIdentity } from "convex/server";
 import { ConvexError } from "convex/values";
 import * as Effect from "effect/Effect";
 
 import { components } from "../../convex/_generated/api";
-import type { MutationCtx } from "../../convex/_generated/server";
+import type { ActionCtx, MutationCtx } from "../../convex/_generated/server";
 import { isPro } from "../revenuecat";
+import { refuse, withinLimit } from "./aiGate";
+import { perUserBurst } from "./limits";
 
 const CAPTURE_WINDOW_MS = 30 * DAY;
 
@@ -36,4 +38,29 @@ export const admitCapture = Effect.fn("Captures.admitCapture")(function* admitCa
         return yield* Effect.die(new ConvexError(data));
     }
     return "ok" as const;
+});
+
+interface CaptureAllowance<E, R> {
+    readonly admit: Effect.Effect<Effect.Success<ReturnType<typeof admitCapture>>, E, R>;
+    readonly burst: "receiptScan" | "voiceEntry";
+}
+
+export const withinCaptureAllowance = Effect.fn("Captures.withinAllowance")(function* withinCaptureAllowance<E, R>(
+    ctx: ActionCtx,
+    caller: Pick<UserIdentity, "subject" | "tokenIdentifier">,
+    allowance: CaptureAllowance<E, R>
+) {
+    const pro = yield* isPro(ctx, caller.subject);
+    const config = yield* perUserBurst(allowance.burst, pro);
+    yield* withinLimit(() =>
+        captureLimiter.limit(ctx, `${allowance.burst}PerUser`, { config, key: caller.tokenIdentifier })
+    );
+    const admitted = yield* allowance.admit.pipe(
+        Effect.catchDefect((defect) =>
+            isRateLimitError(defect) ? Effect.succeed("rateLimited" as const) : Effect.die(defect)
+        )
+    );
+    if (admitted !== "ok") {
+        return yield* refuse(admitted);
+    }
 });

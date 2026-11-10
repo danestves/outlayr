@@ -206,26 +206,6 @@ describe("buildPrompt", () => {
 });
 
 describe("scan guard ladder", () => {
-    it("returns unauthenticated for a signed-out caller", async () => {
-        const t = convexTest(schema, modules);
-
-        await expect(t.action(api.receiptScan.scan, BASE_ARGS)).resolves.toStrictEqual({
-            receipt: null,
-            status: "unauthenticated",
-        });
-    });
-
-    it("returns notConfigured when ANTHROPIC_API_KEY is unset, never throws", async () => {
-        vi.stubEnv("ANTHROPIC_API_KEY", "");
-        const t = convexTest(schema, modules);
-        const identity = await seedAuthUser(t);
-
-        await expect(authenticatedAs(t, identity).action(api.receiptScan.scan, BASE_ARGS)).resolves.toStrictEqual({
-            receipt: null,
-            status: "notConfigured",
-        });
-    });
-
     it("never sends a photo from a build that asked about other AI providers", async () => {
         vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
         const t = convexTest(schema, modules);

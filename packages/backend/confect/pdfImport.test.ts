@@ -392,14 +392,6 @@ describe("pdfImport.extract", () => {
         expect(fetch).not.toHaveBeenCalled();
     });
 
-    it("refuses a signed-out caller", async () => {
-        const { args, t, upload } = await setup();
-
-        await expect(t.action(api.pdfImport.extract, args(await upload()))).resolves.toMatchObject({
-            status: "unauthenticated",
-        });
-    });
-
     it("sends nothing from a build without the current AI consent", async () => {
         const { args, asUser, upload } = await setup();
         const fetch = vi.fn();

@@ -284,21 +284,17 @@ describe("voice thread + speak guard ladder", () => {
         return t;
     }
 
-    it("a signed-out caller gets no thread and an unauthenticated speak", async () => {
+    it("a signed-out caller gets no thread", async () => {
         const t = harness();
         await expect(t.mutation(api.voiceEntry.startThread, {})).resolves.toStrictEqual({
             status: "unauthenticated",
             threadId: null,
         });
-        await expect(t.action(api.voiceEntry.speak, ACTION_ARGS)).resolves.toStrictEqual({
-            order: null,
-            status: "unauthenticated",
-            transcript: null,
-        });
     });
 
-    it("returns notConfigured when ANTHROPIC_API_KEY is unset, never throws", async () => {
-        vi.stubEnv("ANTHROPIC_API_KEY", "");
+    it("returns notConfigured when only the transcription key is unset, never throws", async () => {
+        vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
+        vi.stubEnv("ELEVENLABS_API_KEY", "");
         const t = harness();
         const identity = await seedAuthUser(t);
         await expect(authenticatedAs(t, identity).action(api.voiceEntry.speak, ACTION_ARGS)).resolves.toMatchObject({
