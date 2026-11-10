@@ -15,7 +15,7 @@ import { ruleProblems, runOf, saved } from "@/lib/rules";
 import type { Change, Rule, Run, Suggestion } from "@/lib/rules";
 
 import { useWide } from "../insights/use-wide";
-import { ruleToasts, useRuleWrites } from "./data";
+import { ruleNotices, useRuleWrites } from "./data";
 import type { RulesData } from "./data";
 import { draftOf, ruleOf, withNewTags } from "./draft";
 import { useCategoryLook, useShortDay } from "./parts";
@@ -60,7 +60,7 @@ function Body({
     const { cancel, close, create, run: runCopy, sheet, test, toast } = useIntlayer("dashboard-rules");
     const { ledger } = useDashboard();
     const { money } = useDisplayFormat();
-    const committer = useLedgerCommitter();
+    const committer = useLedgerCommitter(ruleNotices);
     const writes = useRuleWrites();
     const look = useCategoryLook();
     const shortDay = useShortDay();
@@ -96,11 +96,7 @@ function Body({
         }
         const made = withNewTags(rule, draft);
         if (made.rows.length > 0) {
-            void committer.commit(made.rows).settled.then((outcome) => {
-                if (outcome.status === "failed") {
-                    ruleToasts.add({ title: toast.saveFailed.value, type: "destructive" });
-                }
-            });
+            void committer.commit(made.rows, { failed: toast.saveFailed.value });
         }
         writes.update((book) => saved(book, made.rule, draft.position));
         if (!existing && draft.runToo) {

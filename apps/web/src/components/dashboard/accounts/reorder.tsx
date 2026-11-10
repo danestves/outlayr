@@ -181,8 +181,8 @@ export function ReorderAccounts() {
         const order = [...chosen, ...openOnes.filter((row) => !seen.has(row.localId)), ...shelved];
         if (sort === "order") {
             // oxlint-disable-next-line react/purity -- runs on a click, not during render.
-            const outcome = await committer.commit(reorderedAccounts(order, Date.now())).settled;
-            if (outcome.status === "failed") {
+            const saved = await committer.commit(reorderedAccounts(order, Date.now()));
+            if (!saved) {
                 setFailed(true);
                 return;
             }

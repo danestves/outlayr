@@ -89,7 +89,6 @@ const dashboardTransactions = {
                 fr: "Opération supprimée",
                 pt: "Lançamento excluído",
             }),
-            undo: t({ en: "Undo", es: "Deshacer", fr: "Annuler", pt: "Desfazer" }),
         },
         detail: {
             charged: t({ en: "Charged", es: "Cobrado", fr: "Débité", pt: "Cobrado" }),

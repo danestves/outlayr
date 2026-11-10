@@ -444,8 +444,7 @@ export function PurchaseForm({
             Date.now()
         );
         setPicked(row.localId);
-        const outcome = await committer.commit([row]).settled;
-        if (outcome.status === "failed") {
+        if (!(await committer.commit([row]))) {
             setPicked(null);
             setFailed(true);
         }
@@ -477,13 +476,12 @@ export function PurchaseForm({
               })
             : [];
         setSaving(true);
-        const outcome = await committer.commit([...rows, ...fees]).settled;
-        if (outcome.status === "failed") {
+        if (await committer.commit([...rows, ...fees])) {
+            onClose();
+        } else {
             setSaving(false);
             setFailed(true);
-            return;
         }
-        onClose();
     };
 
     return (

@@ -5,8 +5,9 @@ import { useIntlayer } from "react-intlayer";
 import { useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
+import type { ToastSurface } from "@/components/dashboard/shell/ledger-committer";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
-import { ledgerBooks, ledgerCollections, tagBooks as tagBooksOf, useTagBooks } from "@/lib/ledger-db";
+import { ledgerCollections, tagBooks as tagBooksOf, useTagBooks } from "@/lib/ledger-db";
 import type { TagBooks } from "@/lib/ledger-db";
 import { useMeta, writeSettings } from "@/lib/ledger-settings";
 import { appliedRun, categoryKinds, liveTags, ruleEntries } from "@/lib/rule-writes";
@@ -17,7 +18,7 @@ import { merchantOf } from "../transactions/entry-form";
 
 export const ruleToasts = createToaster();
 
-const UNDO_MS = 6000;
+export const ruleNotices: ToastSurface = { holdMs: 6000, toasts: ruleToasts, tone: "success" };
 
 export interface RulesData {
     book: RuleBook;
@@ -56,37 +57,23 @@ export function useRulesData(): RulesData {
 export type RuleWrites = ReturnType<typeof useRuleWrites>;
 
 export function useRuleWrites() {
-    const { ledger } = useDashboard();
     const db = useLedgerDb();
-    const committer = useLedgerCommitter();
+    const committer = useLedgerCommitter(ruleNotices);
     const { toast } = useIntlayer("dashboard-rules");
     const { form } = useIntlayer("dashboard-transactions");
-    const failed = () => {
-        ruleToasts.add({ title: toast.saveFailed.value, type: "destructive" });
-    };
     const update = (change: (book: RuleBook) => RuleBook) => {
         const current = ruleBookOf(db.collection(ledgerCollections.appMeta).get(RULES_KEY)?.value);
         const next = change(current);
-        writeSettings(db, { [RULES_KEY]: JSON.stringify(next) }).catch(failed);
+        writeSettings(db, { [RULES_KEY]: JSON.stringify(next) }).catch(() => {
+            committer.notify({ failed: true, text: toast.saveFailed.value });
+        });
         return next;
     };
-    const undoable = (title: string, undo: () => void) => {
-        const id = ruleToasts.add({
-            actionProps: {
-                children: toast.undo.value,
-                onClick: () => {
-                    ruleToasts.close(id);
-                    undo();
-                },
-            },
-            timeout: UNDO_MS,
-            title,
-            type: "success",
-        });
-        return id;
+    const undoable = (text: string, onUndo: () => void) => {
+        committer.notify({ onUndo, text });
     };
     const apply = (changes: readonly Change[], categoryName: (id: string) => string, alsoUndo?: () => void) => {
-        const current = { ...ledger, books: ledgerBooks(db) };
+        const current = committer.current();
         const { moved, rows, tagged } = appliedRun(
             current,
             tagBooksOf(db),
@@ -96,12 +83,6 @@ export function useRuleWrites() {
         if (rows.length === 0) {
             return;
         }
-        const held = committer.commit(rows, { holdMs: UNDO_MS });
-        void held.settled.then((outcome) => {
-            if (outcome.status === "failed") {
-                failed();
-            }
-        });
         const targets = new Set(changes.flatMap((change) => (change.categoryId === null ? [] : [change.categoryId])));
         const [only] = targets;
         const count = moved > 0 ? moved : changes.filter((change) => change.tagIds.length > 0).length;
@@ -110,12 +91,11 @@ export function useRuleWrites() {
         const category = single ? categoryName(only) : "";
         const plain = one ? toast.changedOne.value : toast.changed({ count: String(count) }).value;
         const named = one ? toast.movedOne({ category }).value : toast.moved({ category, count: String(count) }).value;
-        const toastId = undoable(single ? named : plain, () => {
-            if (held.undo()) {
-                alsoUndo?.();
-            }
+        committer.commitWithUndo(rows, {
+            failed: toast.saveFailed.value,
+            onUndone: alsoUndo,
+            text: single ? named : plain,
         });
-        setTimeout(() => ruleToasts.close(toastId), UNDO_MS);
     };
     return { apply, undoable, update };
 }

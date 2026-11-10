@@ -15,7 +15,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { DayField, FlowDialog, MoneyField, plainAmount } from "@/components/dashboard/accounts/fields";
-import { UNDO_HOLD_MS, useAccountFlows, useLedgerDb } from "@/components/dashboard/accounts/flows";
+import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { accountRows, inMain } from "@/components/dashboard/accounts/model";
 import type { AccountRow } from "@/components/dashboard/accounts/model";
@@ -26,7 +26,6 @@ import { AccountTile } from "@/components/ledger/tiles";
 import { parseAmount } from "@/lib/account-writes";
 import { wallInstant, wallText } from "@/lib/entry-writes";
 import { addDays } from "@/lib/ledger";
-import { ledgerBooks } from "@/lib/ledger-db";
 import {
     createdTransfer,
     newTransferInput,
@@ -207,21 +206,14 @@ function useSaveGoal({
     view: GoalView | null;
 }) {
     const { ledger } = useDashboard();
-    const db = useLedgerDb();
     const committer = useLedgerCommitter();
     const { dialog, toast: toastCopy } = useIntlayer("dashboard-goals");
-    const { toast } = useAccountFlows();
-    const commit = (row: Parameters<typeof committer.commit>[0][number], text: string) => {
-        void committer.commit([row]).settled.then((outcome) => {
-            if (outcome.status === "failed") {
-                toast({ failed: true, text: dialog.saveFailed.value });
-            }
-        });
-        toast({ text });
+    const commit = (row: Parameters<typeof committer.commit>[0][number], saved: string) => {
+        void committer.commit([row], { failed: dialog.saveFailed.value, saved });
         onClose();
     };
     return ({ account, day, name, target }: SaveDraft, at: number) => {
-        const books = ledgerBooks(db);
+        const { books } = committer.current();
         const kept = view && day === view.targetDay ? view.goal.targetDate : null;
         const targetDate = kept ?? targetInstant(ledger, day);
         const named = name.trim() === "" ? account.name : name.trim();
@@ -511,25 +503,13 @@ function Unvalued({ account, onClose }: { account: string; onClose: () => void }
 function DeleteGoal({ onClose, view }: { onClose: () => void; view: GoalView }) {
     const committer = useLedgerCommitter();
     const { cancel, delete: copy } = useIntlayer("dashboard-goals");
-    const { toast } = useAccountFlows();
     const format = useGoalMoney();
     const navigate = useNavigate();
-    const remove = async () => {
-        const held = committer.commit([deletedGoal(view.goal, Date.now())], { holdMs: UNDO_HOLD_MS });
-        void held.settled.then((outcome) => {
-            if (outcome.status === "failed") {
-                toast({ failed: true, text: copy.failed.value });
-            }
-        });
+    const remove = () => {
         onClose();
-        await navigate({ to: "/app/goals" });
-        toast({
-            onExpire: () => {
-                void held.flush();
-            },
-            onUndo: () => {
-                held.undo();
-            },
+        committer.commitWithUndo([deletedGoal(view.goal, Date.now())], {
+            after: navigate({ to: "/app/goals" }),
+            failed: copy.failed.value,
             text: copy.toast.value,
         });
     };
@@ -557,11 +537,9 @@ function DeleteGoal({ onClose, view }: { onClose: () => void; view: GoalView }) 
 
 function AddMoney({ onClose, view }: { onClose: () => void; view: GoalView }) {
     const { ledger, overview, photos } = useDashboard();
-    const db = useLedgerDb();
     const committer = useLedgerCommitter();
     const { add, cancel, dialog } = useIntlayer("dashboard-goals");
     const copy = useIntlayer("dashboard-goals");
-    const { toast } = useAccountFlows();
     const format = useGoalMoney();
     const formId = useId();
     const rows = useMemo(() => accountRows(ledger, overview), [ledger, overview]);
@@ -592,7 +570,7 @@ function AddMoney({ onClose, view }: { onClose: () => void; view: GoalView }) {
     const [dayText = ledger.today, time = "00:00"] = values.dateText.split("T");
     const submit = () => {
         const at = Date.now();
-        const current = { ...ledger, books: ledgerBooks(db) };
+        const current = committer.current();
         const found = newTransferProblem(current, values);
         if (found !== null || overdrawn) {
             setProblem(found ?? "overdrawn");
@@ -605,12 +583,10 @@ function AddMoney({ onClose, view }: { onClose: () => void; view: GoalView }) {
         }
         const date = values.dateText === wallText(at, ledger) ? at : wallInstant(values.dateText, ledger);
         const created = createdTransfer(current, crypto.randomUUID(), { ...draft, date: new Date(date) }, at);
-        void committer.commit(created).settled.then((outcome) => {
-            if (outcome.status === "failed") {
-                toast({ failed: true, text: dialog.saveFailed.value });
-            }
+        void committer.commit(created, {
+            failed: dialog.saveFailed.value,
+            saved: add.saved({ amount: format(sent, fromCurrency), name: view.name }).value,
         });
-        toast({ text: add.saved({ amount: format(sent, fromCurrency), name: view.name }).value });
         onClose();
     };
     const amountError =

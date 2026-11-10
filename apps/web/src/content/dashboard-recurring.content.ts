@@ -798,7 +798,6 @@ const dashboardRecurring = {
                     pt: "{{name}} para de repetir",
                 })
             ),
-            undo: t({ en: "Undo", es: "Deshacer", fr: "Annuler", pt: "Desfazer" }),
         },
     },
     key: "dashboard-recurring",

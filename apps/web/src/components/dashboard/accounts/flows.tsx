@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import type { Notice, NoticeHost } from "@/lib/commit-notices";
 import type { PurchaseSeed } from "@/lib/installment-scan";
 import { writeSettings } from "@/lib/ledger-settings";
 
@@ -21,26 +22,16 @@ export type AccountFlow =
     | { accountId: string; kind: "transfer" }
     | { accountId?: string; from?: string; kind: "entry" };
 
-export interface FlowToast {
-    /** A second, quieter line under the text. */
-    detail?: string;
-    failed?: boolean;
-    /** Runs when the toast leaves without Undo, for a change that waits out its window before it is sent. */
-    onExpire?: () => void;
-    onUndo?: () => void;
-    text: string;
-}
-
 interface AccountFlows {
     open: (flow: AccountFlow) => void;
     sort: (sort: AccountSort) => void;
-    toast: (toast: FlowToast) => void;
+    toast: NoticeHost["show"];
 }
 
 const FlowsContext = createContext<AccountFlows>({
     open: () => undefined,
     sort: () => undefined,
-    toast: () => undefined,
+    toast: () => () => undefined,
 });
 
 export const useAccountFlows = () => useContext(FlowsContext);
@@ -81,7 +72,7 @@ export const UNDO_HOLD_MS = TOAST_MS * 2;
 // Held outside React: useToast() subscribes its caller.
 const flowToasts = createToaster();
 
-function ShowToast({ onDone, toast }: { onDone: () => void; toast: FlowToast }) {
+function ShowToast({ onDone, toast }: { onDone: () => void; toast: Notice }) {
     const { flows } = useIntlayer("dashboard-accounts");
     const undo = flows.undo.value;
     // oxlint-disable-next-line outlayr/react-effect-budget -- a timer is an external system.
@@ -117,13 +108,20 @@ function ShowToast({ onDone, toast }: { onDone: () => void; toast: FlowToast }) 
 export function AccountFlowsProvider({ children }: { children: ReactNode }) {
     const [{ flow, open }, setFlow] = useContext(OpenFlowContext);
     const { ledger } = useDashboard();
-    const [toast, setToast] = useState<FlowToast | null>(null);
+    const [toast, setToast] = useState<Notice | null>(null);
     const db = useLedgerDb();
-    const shown = useRef<FlowToast | null>(null);
+    const shown = useRef<Notice | null>(null);
     // oxlint-disable-next-line outlayr/react-effect-budget -- a click on Add must not wait on the network for its form.
     useEffect(() => {
         void loadFlowDialogs();
     }, []);
+    const clearToast = useMemo(
+        () => () => {
+            shown.current = null;
+            setToast(null);
+        },
+        []
+    );
     const targetGone =
         (flow?.kind === "archive" || flow?.kind === "check" || flow?.kind === "delete" || flow?.kind === "edit") &&
         !ledger.books.accounts.some((row) => row.localId === flow.accountId && row.deletedAt === null);
@@ -133,20 +131,18 @@ export function AccountFlowsProvider({ children }: { children: ReactNode }) {
             sort: (sort: AccountSort) => {
                 void writeSettings(db, { accountsByHand: String(sort === "order") });
             },
-            toast: (next: FlowToast) => {
+            toast: (next: Notice) => {
                 shown.current?.onExpire?.();
                 shown.current = next;
                 setToast(next);
+                return () => {
+                    if (shown.current === next) {
+                        clearToast();
+                    }
+                };
             },
         }),
-        [db, setFlow]
-    );
-    const clearToast = useMemo(
-        () => () => {
-            shown.current = null;
-            setToast(null);
-        },
-        []
+        [clearToast, db, setFlow]
     );
     return (
         <FlowsContext value={flows}>

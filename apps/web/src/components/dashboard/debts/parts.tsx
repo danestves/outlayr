@@ -14,7 +14,6 @@ import { useMemo } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { UNDO_HOLD_MS, useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { accountRows } from "@/components/dashboard/accounts/model";
 import { useDateFormat } from "@/components/dashboard/home/format";
@@ -109,21 +108,9 @@ export function useRemovePlan() {
     const { ledger } = useDashboard();
     const committer = useLedgerCommitter();
     const { form, plan } = useIntlayer("dashboard-debts");
-    const { toast } = useAccountFlows();
     return (accountId: string) => {
-        const held = committer.commit(removedPlans(plansOf(ledger, accountId), Date.now()), { holdMs: UNDO_HOLD_MS });
-        void held.settled.then((outcome) => {
-            if (outcome.status === "failed") {
-                toast({ failed: true, text: form.saveFailed.value });
-            }
-        });
-        toast({
-            onExpire: () => {
-                void held.flush();
-            },
-            onUndo: () => {
-                held.undo();
-            },
+        committer.commitWithUndo(removedPlans(plansOf(ledger, accountId), Date.now()), {
+            failed: form.saveFailed.value,
             text: plan.removed.value,
         });
     };

@@ -1,10 +1,10 @@
-import type { PushRow } from "@outlayr/backend/confect/sync";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { createToaster } from "panelui-web/toast";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
+import type { ToastSurface } from "@/components/dashboard/shell/ledger-committer";
 import {
     categoryPush,
     deletedPlans,
@@ -19,9 +19,9 @@ import { convexClient } from "@/lib/convex";
 
 import type { Category } from "./model";
 
-const UNDO_MS = 10_000;
-
 export const settingsToasts = createToaster();
+
+export const settingsNotices: ToastSurface = { holdMs: 10_000, toasts: settingsToasts };
 
 async function budgetPlansOf(categoryId: string) {
     const plans: PlanRow[] = [];
@@ -53,32 +53,26 @@ async function budgetPlansOf(categoryId: string) {
 let flushHeldDelete: (() => void) | null = null;
 
 export function useCategoryWrites() {
-    const committer = useLedgerCommitter();
+    const committer = useLedgerCommitter(settingsNotices);
     const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-categories");
     const rows = ledger.books.categories;
 
-    const commit = async (push: readonly PushRow[], failed: string) => {
-        const outcome = await committer.commit(push).settled;
-        if (outcome.status === "failed") {
-            settingsToasts.add({ title: failed, type: "destructive" });
-        }
-    };
-
     const add = (draft: CategoryDraft) => {
         const made = newCategory(rows, draft, crypto.randomUUID(), Date.now());
-        void commit([categoryPush(made)], copy.failed.value);
+        void committer.commit([categoryPush(made)], { failed: copy.failed.value });
         return made.localId;
     };
 
     const update = (doc: Category, draft: CategoryDraft) => {
-        void commit([categoryPush(editedCategory(rows, doc, draft, Date.now()))], copy.failed.value);
+        const edited = categoryPush(editedCategory(rows, doc, draft, Date.now()));
+        void committer.commit([edited], { failed: copy.failed.value });
     };
 
     const reorder = (orderedIds: readonly string[]) => {
         const changed = reorderedCategories(rows, orderedIds, Date.now());
         if (changed.length > 0) {
-            void commit(changed, copy.failed.value);
+            void committer.commit(changed, { failed: copy.failed.value });
         }
     };
 
@@ -89,33 +83,14 @@ export function useCategoryWrites() {
             return;
         }
         const now = Date.now();
-        const held = committer.commit(deletionRows(deletion, [], now), { holdMs: UNDO_MS });
-        let toastId = "";
-        const closeToast = () => {
-            clearTimeout(closing);
-            settingsToasts.close(toastId);
-        };
-        const closing = setTimeout(closeToast, UNDO_MS);
-        const failed = () => {
-            closeToast();
-            settingsToasts.add({ title: copy.deleteFailed.value, type: "destructive" });
-        };
+        const held = committer.commitWithUndo(deletionRows(deletion, [], now), {
+            detail: deletion.children.length > 0 ? copy.undoBodyWithChildren.value : copy.undoBody.value,
+            failed: copy.deleteFailed.value,
+            text: copy.deleted.value,
+        });
         flushHeldDelete = () => {
-            closeToast();
             void held.flush();
         };
-        toastId = settingsToasts.add({
-            actionProps: {
-                children: copy.undo.value,
-                onClick: () => {
-                    closeToast();
-                    held.undo();
-                },
-            },
-            description: deletion.children.length > 0 ? copy.undoBodyWithChildren.value : copy.undoBody.value,
-            timeout: UNDO_MS,
-            title: copy.deleted.value,
-        });
         const settle = async () => {
             const plans = await budgetPlansOf(id).then(
                 (found) => deletedPlans(found, now),
@@ -123,15 +98,13 @@ export function useCategoryWrites() {
             );
             if (plans === null) {
                 held.undo();
-                failed();
+                committer.notify({ failed: true, text: copy.deleteFailed.value });
                 return;
             }
             const joined = plans.length === 0 || held.add(plans);
             const outcome = await held.settled;
-            if (outcome.status === "failed") {
-                failed();
-            } else if (outcome.status === "saved" && !joined) {
-                await commit(plans, copy.deleteFailed.value);
+            if (outcome.status === "saved" && !joined) {
+                await committer.commit(plans, { failed: copy.deleteFailed.value });
             }
         };
         void settle();

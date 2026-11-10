@@ -680,7 +680,6 @@ const dashboardRules = {
                 fr: "Échec de l'enregistrement. Réessayez.",
                 pt: "Não foi possível salvar. Tente de novo.",
             }),
-            undo: t({ en: "Undo", es: "Deshacer", fr: "Annuler", pt: "Desfazer" }),
         },
     },
     key: "dashboard-rules",

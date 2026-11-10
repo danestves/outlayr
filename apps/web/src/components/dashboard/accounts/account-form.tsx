@@ -25,10 +25,8 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { createdAccount, editedAccount, parseAmount } from "@/lib/account-writes";
-import { ledgerBooks } from "@/lib/ledger-db";
 
 import { AmountInput, amountText, CurrencyField, FlowDialog, focusNode } from "./fields";
-import { useLedgerDb } from "./flows";
 import type { AccountFlow, AccountType } from "./flows";
 import { Glyph } from "./glyph";
 import { IdentityPicker, logoIdentity, logoUrl } from "./identity-picker";
@@ -211,7 +209,6 @@ export function AccountForm({
     type: AccountType;
 }) {
     const { ledger, overview, photos } = useDashboard();
-    const db = useLedgerDb();
     const committer = useLedgerCommitter();
     const { flows } = useIntlayer("dashboard-accounts");
     const { locale } = useLocale();
@@ -233,7 +230,7 @@ export function AccountForm({
             const magnitude = parseAmount(value.balanceText, decimals);
             const balance = value.negative ? -magnitude : magnitude;
             const draft = accountDraft(value, parseAmount(value.limitText, decimals));
-            const books = ledgerBooks(db);
+            const { books } = committer.current();
             const at = Date.now();
             const moneyTouched =
                 value.balanceText !== start.balanceText ||
@@ -242,12 +239,11 @@ export function AccountForm({
             const row = account
                 ? editedAccount(books, account, draft, moneyTouched ? balance : null, at)
                 : createdAccount(books, draft, balance, crypto.randomUUID(), at);
-            const outcome = await committer.commit([row]).settled;
-            if (outcome.status === "failed") {
+            if (await committer.commit([row])) {
+                onClose();
+            } else {
                 setFailed(true);
-                return;
             }
-            onClose();
         },
         validators: {
             onSubmit: ({ value }) =>

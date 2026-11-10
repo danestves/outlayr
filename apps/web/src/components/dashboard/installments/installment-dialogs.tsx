@@ -15,7 +15,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { DayField, FlowDialog, MoneyField, plainAmount } from "@/components/dashboard/accounts/fields";
-import { UNDO_HOLD_MS, useAccountFlows, useLedgerDb } from "@/components/dashboard/accounts/flows";
+import { useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { accountRows } from "@/components/dashboard/accounts/model";
 import { useGoalMoney } from "@/components/dashboard/goals/parts";
@@ -66,35 +66,14 @@ function SummaryRow({ children, label }: { children: ReactNode; label: ReactNode
     );
 }
 
-function useFailed() {
-    const { failed } = useIntlayer("dashboard-installments");
-    const { toast } = useAccountFlows();
-    return (outcome: { status: string }) => {
-        if (outcome.status === "failed") {
-            toast({ failed: true, text: failed.value });
-        }
-    };
-}
-
 export function useDeleteInstallment() {
     const db = useLedgerDb();
     const committer = useLedgerCommitter();
-    const { edit } = useIntlayer("dashboard-installments");
-    const { toast } = useAccountFlows();
-    const failed = useFailed();
+    const { edit, failed } = useIntlayer("dashboard-installments");
     const label = useRowLabel();
     return (view: PlanView, item: InstallmentView) => {
-        const held = committer.commit(deletedInstallment(ledgerBooks(db), item.id, Date.now()), {
-            holdMs: UNDO_HOLD_MS,
-        });
-        void held.settled.then(failed);
-        toast({
-            onExpire: () => {
-                void held.flush();
-            },
-            onUndo: () => {
-                held.undo();
-            },
+        committer.commitWithUndo(deletedInstallment(ledgerBooks(db), item.id, Date.now()), {
+            failed: failed.value,
             text: edit.deleted({ installment: label(view, item) }).value,
         });
     };
@@ -338,9 +317,7 @@ function PayDialog({ all, onClose, view }: { all: boolean; onClose: () => void; 
     const { ledger } = useDashboard();
     const db = useLedgerDb();
     const committer = useLedgerCommitter();
-    const { cancel, fee: feeCopy, pay } = useIntlayer("dashboard-installments");
-    const { toast } = useAccountFlows();
-    const failed = useFailed();
+    const { cancel, failed, fee: feeCopy, pay } = useIntlayer("dashboard-installments");
     const format = useGoalMoney();
     const formId = useId();
     const sources = useSources(view);
@@ -399,8 +376,10 @@ function PayDialog({ all, onClose, view }: { all: boolean; onClose: () => void; 
             setProblem(outcome.problem);
             return;
         }
-        void committer.commit(outcome.rows).settled.then(failed);
-        toast({ text: pay.saved({ amount: format(amount, currency), name: view.name }).value });
+        void committer.commit(outcome.rows, {
+            failed: failed.value,
+            saved: pay.saved({ amount: format(amount, currency), name: view.name }).value,
+        });
         onClose();
     };
     const dim = amountError !== null || !(amount > 0);
@@ -519,9 +498,7 @@ function EditInstallment({ item, onClose, view }: { item: InstallmentView; onClo
     const { ledger } = useDashboard();
     const db = useLedgerDb();
     const committer = useLedgerCommitter();
-    const { cancel, edit, fee: feeCopy, pay } = useIntlayer("dashboard-installments");
-    const { toast } = useAccountFlows();
-    const failed = useFailed();
+    const { cancel, edit, failed, fee: feeCopy, pay } = useIntlayer("dashboard-installments");
     const remove = useDeleteInstallment();
     const format = useGoalMoney();
     const label = useRowLabel();
@@ -559,8 +536,7 @@ function EditInstallment({ item, onClose, view }: { item: InstallmentView; onClo
             );
         }
         if (rows.length > 0) {
-            void committer.commit(rows).settled.then(failed);
-            toast({ text: edit.saved.value });
+            void committer.commit(rows, { failed: failed.value, saved: edit.saved.value });
         }
         onClose();
     };
@@ -647,9 +623,7 @@ function EditInstallment({ item, onClose, view }: { item: InstallmentView; onClo
 function DeletePending({ onClose, view }: { onClose: () => void; view: PlanView }) {
     const db = useLedgerDb();
     const committer = useLedgerCommitter();
-    const { cancel, deletePending: copy } = useIntlayer("dashboard-installments");
-    const { toast } = useAccountFlows();
-    const failed = useFailed();
+    const { cancel, deletePending: copy, failed } = useIntlayer("dashboard-installments");
     const format = useGoalMoney();
     const navigate = useNavigate();
     const open = openRows(view);
@@ -661,20 +635,12 @@ function DeletePending({ onClose, view }: { onClose: () => void; view: PlanView 
     } else if (open.length === 1) {
         body = copy.bodyOne({ amount, name: view.name });
     }
-    const remove = async () => {
-        const held = committer.commit(pendingDeletion(ledgerBooks(db), view, Date.now()), { holdMs: UNDO_HOLD_MS });
-        void held.settled.then(failed);
+    const remove = () => {
+        const rows = pendingDeletion(ledgerBooks(db), view, Date.now());
         onClose();
-        if (whole) {
-            await navigate({ to: "/app/installments" });
-        }
-        toast({
-            onExpire: () => {
-                void held.flush();
-            },
-            onUndo: () => {
-                held.undo();
-            },
+        committer.commitWithUndo(rows, {
+            after: whole ? navigate({ to: "/app/installments" }) : undefined,
+            failed: failed.value,
             text: copy.done({ name: view.name }).value,
         });
     };

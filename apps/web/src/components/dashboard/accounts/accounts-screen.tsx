@@ -985,17 +985,15 @@ export function EmptyAccounts() {
 function ArchivedMenu({ row }: { row: ArchivedRow }) {
     const { ledger } = useDashboard();
     const { actions, flows } = useIntlayer("dashboard-accounts");
-    const { open, toast } = useAccountFlows();
+    const { open } = useAccountFlows();
     const committer = useLedgerCommitter();
     const navigate = useNavigate();
-    const restore = async () => {
+    const restore = () => {
         const account = ledger.books.accounts.find((each) => each.localId === row.id);
-        if (!account) {
-            return;
-        }
-        const outcome = await committer.commit([archivedAccount(account, null, Date.now())]).settled;
-        if (outcome.status === "failed") {
-            toast({ text: flows.restoreFailed({ name: row.name }).value });
+        if (account) {
+            void committer.commit([archivedAccount(account, null, Date.now())], {
+                failed: flows.restoreFailed({ name: row.name }).value,
+            });
         }
     };
     return (
