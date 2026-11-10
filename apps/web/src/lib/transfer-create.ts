@@ -39,7 +39,7 @@ const currencyOf = (ledger: Ledger, id: string | null) =>
 const perUsd = (books: Books, currency: string, day: string) =>
     currency === "USD" ? 1 : (Effect.runSync(ratesLookup(books)(currency, "official", day))?.rate ?? null);
 
-const marketRate = (ledger: Ledger, from: string, to: string, dateText: string) => {
+export const marketRate = (ledger: Ledger, from: string, to: string, dateText: string) => {
     const at = wallInstant(dateText, ledger);
     if (Number.isNaN(at)) {
         return null;

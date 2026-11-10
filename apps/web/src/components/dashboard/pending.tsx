@@ -33,6 +33,10 @@ const GoalsPending = lazy(async () => {
     const pending = await import("./goals/goals-pending");
     return { default: pending.GoalsPending };
 });
+const DebtsPending = lazy(async () => {
+    const pending = await import("./debts/debts-pending");
+    return { default: pending.DebtsPending };
+});
 const TransactionsPending = lazy(async () => {
     const pending = await import("./transactions/transactions-pending");
     return { default: pending.TransactionsPending };
@@ -63,6 +67,9 @@ function pendingFor(page: string | undefined) {
     }
     if (page === "goals") {
         return <GoalsPending />;
+    }
+    if (page === "debts") {
+        return <DebtsPending />;
     }
     return page === "settings" ? <SettingsPending /> : <HomePending />;
 }
