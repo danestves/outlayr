@@ -9,8 +9,8 @@ import {
     QUEUE_DIRECTORY,
     QUEUE_FILE,
     releasePendingWrites as releaseQueue,
-} from "./pending-writes-core";
-import type { ClaimedWrites, QueueFiles } from "./pending-writes-core";
+} from "./queue-file";
+import type { ClaimedWrites, QueueFiles } from "./queue-file";
 import { sharedStore } from "./shared-store";
 
 /**

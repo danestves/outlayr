@@ -6,7 +6,7 @@ import { migratedDatabase } from "@/db/test-database";
 
 import { setCloudAuthenticated } from "./convex";
 import { readNotifications } from "./notification-read";
-import type { PendingWrite } from "./pending-writes-core";
+import type { PendingWrite } from "./queue-file";
 
 const sent = vi.fn<(args: { text: string }) => Promise<unknown>>();
 

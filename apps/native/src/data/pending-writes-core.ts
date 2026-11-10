@@ -3,7 +3,6 @@ import { merchantKey } from "@outlayr/money/merchant-key";
 import { occurrenceId } from "@outlayr/money/occurrence";
 import { anchorDayOf, nextDate, RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, between, desc, eq, gt, inArray, isNull, like, or, sql } from "drizzle-orm";
-import * as Cause from "effect/Cause";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -13,21 +12,14 @@ import { categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { autologExpenseCount, countsAsAutolog, holdsAutolog } from "@/domain/autolog-cap";
 import { detectCurrency } from "@/domain/detect-currency";
-import type { CardAccountCandidate } from "@/domain/match-card-account";
 import { matchCardAccount } from "@/domain/match-card-account";
-import type {
-    AutologAccess,
-    LastWalletEntry,
-    NotificationText,
-    PendingWriteLedgerEntry as LedgerEntry,
-    WalletCard,
-} from "@/domain/meta-values";
+import type { AutologAccess, PendingWriteLedgerEntry as LedgerEntry } from "@/domain/meta-values";
 import { cleanMerchant, mergeNotificationRead, parseNotification } from "@/domain/parse-notification";
 import { translateNow } from "@/i18n/runtime";
 import type { NotificationReader, NotificationReads } from "@/lib/notification-read";
-import { autologSourceOf } from "@/lib/pending-writes-core";
-import type { ClaimedWrites, PendingWrite } from "@/lib/pending-writes-core";
 import { posthog } from "@/lib/posthog";
+import { autologSourceOf } from "@/lib/queue-file";
+import type { ClaimedWrites, PendingWrite } from "@/lib/queue-file";
 
 import { accountsRepo, getAccountById } from "./accounts-core";
 import { Meta } from "./app-meta-core";
@@ -45,10 +37,17 @@ import { MIN_KEY_LENGTH, queueEnrichment } from "./enrichment-queue-core";
 import { backfillRecurring } from "./recurrence-backfill";
 import { readRemoteEnrichment } from "./settings-core";
 import { transactionsRepo } from "./transactions-core";
+import {
+    cardStatus,
+    rememberCard,
+    rememberNotification,
+    rememberRepriced,
+    rememberWalletEntry,
+} from "./wallet-state-core";
 
 const PendingWritesOperation = Schema.Literals(["read", "write", "account", "claim", "release"]);
 
-export class PendingWritesError extends Schema.TaggedError<PendingWritesError>()("PendingWritesError", {
+class PendingWritesError extends Schema.TaggedError<PendingWritesError>()("PendingWritesError", {
     cause: Schema.Defect(),
     operation: PendingWritesOperation,
 }) {
@@ -73,148 +72,15 @@ const attemptSync = <A>(operation: typeof PendingWritesOperation.Type, run: () =
 // a real second purchase, and a missing row is unrecoverable where a duplicate isn't.
 export const WALLET_DEDUPE_WINDOW_MS = 10 * 60 * 1000;
 
-export const SETTLE_REPEAT_WINDOW_MS = 4 * 24 * 60 * 60 * 1000;
+const SETTLE_REPEAT_WINDOW_MS = 4 * 24 * 60 * 60 * 1000;
 const REPEATS_ON_SETTLE = /payoneer/i;
 
 export const filedNote = sql<string>`lower(${transactions.note})`;
 
-export const SUBSCRIPTION_SETTLE_WINDOW_MS = 4 * 24 * 60 * 60 * 1000;
-export const SUBSCRIPTION_PRICE_BAND = { max: 2, min: 0.5 } as const;
+const SUBSCRIPTION_SETTLE_WINDOW_MS = 4 * 24 * 60 * 60 * 1000;
+const SUBSCRIPTION_PRICE_BAND = { max: 2, min: 0.5 } as const;
 const AMOUNT_EPSILON = 0.005;
 const MAX_MISSED_LANDINGS = 60;
-
-export const takeRepriced = Effect.fn("PendingWrites.takeRepriced")(function* takeRepriced(db: Database) {
-    const entries = yield* Meta.get(db, "repricedSubscriptions");
-    if (entries.length > 0) {
-        yield* Meta.set(db, "repricedSubscriptions", []);
-    }
-    return entries;
-});
-
-const NOTIFICATION_TEXTS_LIMIT = 5;
-
-const rememberNotification = Effect.fn("PendingWrites.rememberNotification")(function* rememberNotification(
-    db: Database,
-    entry: NotificationText
-) {
-    const kept = yield* Meta.get(db, "notificationTexts");
-    const last = kept.at(-1);
-    if (last?.text === entry.text && Math.abs(entry.at - last.at) <= WALLET_DEDUPE_WINDOW_MS) {
-        return;
-    }
-    const next = [...kept, entry].slice(-NOTIFICATION_TEXTS_LIMIT);
-    yield* Meta.set(db, "notificationTexts", next);
-});
-
-export function cardAccountId(
-    text: string,
-    cards: readonly WalletCard[],
-    candidates: readonly CardAccountCandidate[]
-): string | null {
-    const picked = cards.find((card) => card.text === text)?.accountId;
-    if (picked === null) {
-        return null;
-    }
-    if (picked !== undefined && candidates.some((candidate) => candidate.id === picked)) {
-        return picked;
-    }
-    return matchCardAccount(text, candidates);
-}
-
-const updateWalletCards = Effect.fn("PendingWrites.updateWalletCards")(function* updateWalletCards(
-    db: Database,
-    change: (cards: WalletCard[]) => WalletCard[]
-) {
-    const cards = yield* Meta.get(db, "walletCards");
-    yield* Meta.set(db, "walletCards", change(cards));
-});
-
-export function cardStatus<Account extends CardAccountCandidate>(
-    text: string,
-    cards: readonly WalletCard[],
-    live: readonly Account[]
-) {
-    const id = cardAccountId(text, cards, live);
-    const account = live.find((row) => row.id === id);
-    const asks = live.length > 0 && !account && cards.find((card) => card.text === text)?.accountId !== null;
-    return { account, asks };
-}
-
-export const cardStillAsks = Effect.fn("PendingWrites.cardStillAsks")(function* cardStillAsks(
-    db: Database,
-    text: string
-) {
-    const live = yield* listBanks(db);
-    return cardStatus(text, yield* Meta.get(db, "walletCards"), live).asks;
-});
-
-export const pickCardAccount = Effect.fn("PendingWrites.pickCardAccount")(function* pickCardAccount(
-    db: Database,
-    text: string,
-    accountId: string | null
-) {
-    if (accountId !== null && (yield* attemptSync("account", () => getAccountById(db, accountId))) === null) {
-        return;
-    }
-    yield* transaction(
-        db,
-        updateWalletCards(db, (cards) => cards.map((card) => (card.text === text ? { ...card, accountId } : card))),
-        (cause) => new PendingWritesError({ cause, operation: "write" })
-    );
-    yield* fileWaitingPurchases(db);
-});
-
-export const fileWaitingPurchases = Effect.fn("PendingWrites.fileWaitingPurchases")(function* fileWaitingPurchases(
-    db: Database
-) {
-    const cards = yield* Meta.get(db, "walletCards");
-    const waitingCards = cards.filter((card) => (card.waiting?.length ?? 0) > 0);
-    if (waitingCards.length === 0) {
-        return;
-    }
-    const live = yield* listBanks(db);
-    const attempts = waitingCards.flatMap((card) => {
-        const { account } = cardStatus(card.text, cards, live);
-        return account
-            ? (card.waiting ?? []).map((txId) =>
-                  transactionsRepo.attachAccount(db, txId, account).pipe(
-                      Effect.map((attached) => (attached ? txId : null)),
-                      Effect.catchCause((cause) =>
-                          Cause.hasInterruptsOnly(cause) ? Effect.failCause(cause) : Effect.succeed(null)
-                      )
-                  )
-              )
-            : [];
-    });
-    const settled = yield* Effect.all(attempts, { concurrency: "unbounded" });
-    const done = new Set(settled.filter((txId) => txId !== null));
-    if (done.size === 0) {
-        return;
-    }
-    yield* transaction(
-        db,
-        updateWalletCards(db, (next) =>
-            next.map((card) => (card.waiting ? { ...card, waiting: card.waiting.filter((id) => !done.has(id)) } : card))
-        ),
-        (cause) => new PendingWritesError({ cause, operation: "write" })
-    );
-});
-
-const rememberCard = Effect.fn("PendingWrites.rememberCard")(function* rememberCard(
-    db: Database,
-    text: string,
-    at: number,
-    unattached: string | null
-) {
-    yield* updateWalletCards(db, (cards) => {
-        const known = cards.find((card) => card.text === text);
-        const seen: WalletCard = known ? { ...known, lastAt: Math.max(known.lastAt, at) } : { lastAt: at, text };
-        if (unattached !== null) {
-            seen.waiting = [...(seen.waiting ?? []), unattached];
-        }
-        return known ? cards.map((card) => (card === known ? seen : card)) : [...cards, seen];
-    });
-});
 
 // The card is the sure sign; the key prefixes cover automations built before the card parameter existed.
 function fromAutomation(job: PendingWrite): boolean {
@@ -363,7 +229,7 @@ export const pendingWriteTxId = Effect.fn("PendingWrites.pendingWriteTxId")(func
     return entry && (yield* stillOnLedger(db, entry.txId)) ? entry.txId : null;
 });
 
-export interface DrainResult {
+interface DrainResult {
     applied: number;
     autologged: number;
 }
@@ -394,11 +260,11 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     for (const queued of jobs) {
         const job = readNotification(queued, reads);
         if (queued.text) {
-            yield* rememberNotification(db, {
-                amountText: job?.amountText ?? null,
-                at: queued.date,
-                text: queued.text,
-            });
+            yield* rememberNotification(
+                db,
+                { amountText: job?.amountText ?? null, at: queued.date, text: queued.text },
+                WALLET_DEDUPE_WINDOW_MS
+            );
         }
         if (!job) {
             continue;
@@ -461,14 +327,12 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
                             .set({ amount: job.amount, amountUsd: null, updatedAt: now })
                             .where(eq(transactions.id, settled.id))
                     );
-                    const repriced = yield* Meta.get(db, "repricedSubscriptions");
-                    repriced.push({
+                    yield* rememberRepriced(db, {
                         currency: settled.currency,
                         from: settled.amount,
                         note: settled.note,
                         to: job.amount,
                     });
-                    yield* Meta.set(db, "repricedSubscriptions", repriced);
                 }
                 const txId =
                     twin?.id ??
@@ -509,8 +373,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
                 );
                 yield* Meta.set(db, "pendingWriteLedger", ledger);
                 if (fromAutomation(job)) {
-                    const entry: LastWalletEntry = job.text ? { at, push: true, txId } : { at, txId };
-                    yield* Meta.set(db, "lastWalletEntry", entry);
+                    yield* rememberWalletEntry(db, txId, at, Boolean(job.text));
                 }
                 const card = job.card?.trim();
                 if (card) {
