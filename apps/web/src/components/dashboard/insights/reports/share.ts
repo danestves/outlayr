@@ -21,11 +21,23 @@ interface SnapshotInput {
     rowName: (label: Label) => string;
 }
 
-/** With amounts off every figure leaves the browser as its share of the report's total, so no amount is uploaded. */
-export function snapshotOf({ amounts, currency, definition, name, report, rowName }: SnapshotInput): SharedReport {
-    const plain = amounts || !canHideAmounts(report);
+/**
+ * With amounts off every figure leaves the browser as its share of the report's total, so no amount is uploaded.
+ * A report with no such whole gives no copy at all: amounts never go out unasked.
+ */
+export function snapshotOf({
+    amounts,
+    currency,
+    definition,
+    name,
+    report,
+    rowName,
+}: SnapshotInput): SharedReport | null {
+    if (!(amounts || canHideAmounts(report))) {
+        return null;
+    }
     const whole = report.totals.total;
-    const shown = (value: number) => (plain ? value : Math.round((value / whole) * PERCENT * TENTHS) / TENTHS);
+    const shown = (value: number) => (amounts ? value : Math.round((value / whole) * PERCENT * TENTHS) / TENTHS);
     const figures = (row: ReportRow) => ({
         average: shown(row.average),
         change: row.change,
@@ -44,7 +56,7 @@ export function snapshotOf({ amounts, currency, definition, name, report, rowNam
         rows: report.rows.map((row) => ({ ...figures(row), color: row.label.color, name: rowName(row.label) })),
         rowsBy: definition.rows,
         totals: figures(report.totals),
-        unit: plain ? "amount" : "percent",
+        unit: amounts ? "amount" : "percent",
     };
 }
 

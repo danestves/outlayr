@@ -224,6 +224,10 @@ const dashboardInsightsReports = {
         },
         sharing: {
             amounts: t({ en: "Show amounts", es: "Mostrar montos" }),
+            amountsHeld: t({
+                en: "This report has no percentages now. The link keeps its last copy.",
+                es: "Este reporte ya no tiene porcentajes. El enlace conserva su última copia.",
+            }),
             amountsNote: t({ en: "Off shows percentages only.", es: "Desactivado muestra solo porcentajes." }),
             copied: t({ en: "Copied", es: "Copiado" }),
             copy: t({ en: "Copy", es: "Copiar" }),

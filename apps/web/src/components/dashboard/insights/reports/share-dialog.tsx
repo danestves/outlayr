@@ -55,7 +55,9 @@ export function ShareDialog({
     const linkId = useId();
     const amountsId = useId();
     const on = link !== undefined;
-    const amounts = !hideable || (picked.amounts ?? (link ? link.unit === "amount" : true));
+    const amounts = picked.amounts ?? (link ? link.unit === "amount" : true);
+    // The link holds percentages of a report that no longer has any, so its copy stays until amounts are allowed.
+    const held = !(hideable || amounts);
     const lifetime = picked.lifetime ?? (link ? lifetimeOf(link, now) : "month");
     const url = link ? sharedUrl(link.slug, locale) : null;
 
@@ -130,11 +132,11 @@ export function ShareDialog({
                     <div className={ROW}>
                         <label className="flex flex-col" htmlFor={amountsId}>
                             <span>{sharing.amounts}</span>
-                            <span className={NOTE}>{sharing.amountsNote}</span>
+                            <span className={NOTE}>{held ? sharing.amountsHeld : sharing.amountsNote}</span>
                         </label>
                         <Switch
                             checked={amounts}
-                            disabled={busy || !hideable}
+                            disabled={busy || (!hideable && amounts)}
                             id={amountsId}
                             onCheckedChange={toggleAmounts}
                         />
@@ -148,7 +150,7 @@ export function ShareDialog({
                         >
                             <Tabs.List aria-label={sharing.expires.value}>
                                 {LIFETIMES.map((each) => (
-                                    <Tabs.Trigger disabled={busy} key={each} value={each}>
+                                    <Tabs.Trigger disabled={busy || held} key={each} value={each}>
                                         {sharing.lifetimes[each]}
                                     </Tabs.Trigger>
                                 ))}

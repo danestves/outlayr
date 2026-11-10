@@ -1,17 +1,20 @@
 import type { SharedReport } from "./sharedReports.spec";
 
 const DAY_MS = 86_400_000;
-const ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+// Lower case only: the site redirects every public path to its lower-case form.
+const ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz";
 const SLUG_LENGTH = 12;
 /** Bytes at or above this would favour the first letters of the alphabet. */
-const UNBIASED_BYTE_LIMIT = 248;
+const UNBIASED_BYTE_LIMIT = 252;
 const MAX_NAME = 120;
-const MAX_ROWS = 20;
+const MAX_ROWS = 400;
+// Keeps the copy well under the 1 MiB a document may weigh.
+const MAX_CELLS = 50_000;
 const MAX_COLUMNS = 600;
 const MAX_ID = 64;
 
 export const MAX_LINKS = 50;
-export const SLUG = /^[0-9A-Za-z]{12}$/;
+export const SLUG = /^[0-9a-z]{12}$/;
 
 export const LIFETIMES = { month: 30 * DAY_MS, week: 7 * DAY_MS } as const;
 
@@ -50,6 +53,7 @@ export function fits(reportId: string, report: SharedReport) {
         report.currency.length <= MAX_ID &&
         width <= MAX_COLUMNS &&
         report.rows.length <= MAX_ROWS &&
+        figures.length * width <= MAX_CELLS &&
         report.rows.every((row) => named(row.name)) &&
         (report.rise === null || named(report.rise.name)) &&
         figures.every((row) => row.values.length === width && [...row.values, row.total].every(Number.isFinite))

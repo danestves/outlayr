@@ -179,18 +179,18 @@ function useSharing({ books, ledger, words }: SharingInput) {
     const [forgotten, setForgotten] = useState<ReadonlySet<string>>(new Set());
     const linkOf = (id: string) => all.find((each) => each.reportId === id);
     const publish = async (target: SavedReport, { amounts, expires }: ShareOptions) => {
-        await publishLink({
-            expires,
-            report: snapshotOf({
-                amounts,
-                currency: ledger.currency,
-                definition: target.definition,
-                name: target.name,
-                report: buildReport({ books, definition: target.definition, ledger }),
-                rowName: (label) => words.rowName(label, target.definition.rows),
-            }),
-            reportId: target.id,
+        const report = snapshotOf({
+            amounts,
+            currency: ledger.currency,
+            definition: target.definition,
+            name: target.name,
+            report: buildReport({ books, definition: target.definition, ledger }),
+            rowName: (label) => words.rowName(label, target.definition.rows),
         });
+        if (report === null) {
+            throw new Error("This report has no percentages to share");
+        }
+        await publishLink({ expires, report, reportId: target.id });
     };
     return {
         forget: (ids: readonly string[]) => {
@@ -297,6 +297,12 @@ export function ReportsScreen() {
         sharing.refresh(target);
         setModal({ id: target.id, kind: "share" });
     };
+    const shareOpen = (current: SavedReport) => {
+        if (dirty) {
+            store.change(current.id, { definition });
+        }
+        share({ ...current, definition });
+    };
     const open = (id: string) => {
         const target = saved.find((each) => each.id === id);
         if (target) {
@@ -317,7 +323,9 @@ export function ReportsScreen() {
         rename: (id) => setModal({ id, kind: "rename" }),
         share: (id) => {
             const target = saved.find((each) => each.id === id);
-            if (target) {
+            if (target && search.view !== "all" && target.id === active?.id) {
+                shareOpen(target);
+            } else if (target) {
                 share(target);
             }
         },
@@ -426,10 +434,7 @@ export function ReportsScreen() {
                         setModal({ kind: "save", share: true });
                         return;
                     }
-                    if (dirty) {
-                        store.change(active.id, { definition });
-                    }
-                    share({ ...active, definition });
+                    shareOpen(active);
                 }}
                 variant="outline"
             >

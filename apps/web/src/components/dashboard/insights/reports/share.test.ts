@@ -36,25 +36,26 @@ describe("a shared copy", () => {
     it("carries shares of the total and no amount when amounts are off", () => {
         const shared = snapshotOf(input("spending", false));
 
-        expect(shared.unit).toBe("percent");
-        expect(shared.totals).toEqual({ average: 50, change: 0.05, total: 100, values: [47.5, 52.5] });
-        expect(shared.rows[0]).toMatchObject({ average: 46.9, total: 93.8, values: [43.8, 50] });
-        expect(shared.rise?.delta).toBe(6.3);
+        expect(shared?.unit).toBe("percent");
+        expect(shared?.totals).toEqual({ average: 50, change: 0.05, total: 100, values: [47.5, 52.5] });
+        expect(shared?.rows[0]).toMatchObject({ average: 46.9, total: 93.8, values: [43.8, 50] });
+        expect(shared?.rise?.delta).toBe(6.3);
         expect(JSON.stringify(shared)).not.toMatch(/1750|2000|1900|2100|4000/);
     });
 
-    it("keeps amounts for a measure that has no whole to take shares of", () => {
-        expect(snapshotOf(input("net", false)).unit).toBe("amount");
+    it("makes no copy when amounts are off and the measure has no whole to take shares of", () => {
+        expect(snapshotOf(input("net", false))).toBeNull();
     });
 
     it("reads back as the report it was made from", () => {
         const source = report("spending");
-        const { report: back } = reportOf(snapshotOf(input("spending", true)));
+        const shared = snapshotOf(input("spending", true));
+        const back = shared ? reportOf(shared).report : null;
 
-        expect(back.totals.values).toEqual(source.totals.values);
-        expect(back.rows.map((each) => [each.label.name, each.total, each.change])).toEqual(
+        expect(back?.totals.values).toEqual(source.totals.values);
+        expect(back?.rows.map((each) => [each.label.name, each.total, each.change])).toEqual(
             source.rows.map((each) => [each.label.name, each.total, each.change])
         );
-        expect(back.rise).toMatchObject({ delta: 250, label: { name: "Rent" } });
+        expect(back?.rise).toMatchObject({ delta: 250, label: { name: "Rent" } });
     });
 });

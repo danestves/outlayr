@@ -132,3 +132,31 @@ test("a report wider than its columns is refused", async () => {
         })
     ).rejects.toThrow();
 });
+
+test("a report with a row for every category is shared, and one too large to store is refused", async () => {
+    const t = convexTest(schema, modules);
+    const owner = await seedAuthUser(t);
+    const ones = (width: number) => Array.from({ length: width }, () => 1);
+    const sized = (rows: number, width: number) => ({
+        ...shared,
+        report: {
+            ...report,
+            columns: ones(width).map((_, index) => ({ from: "2026-10-01", key: `c${index}`, to: "2026-10-31" })),
+            rows: ones(rows).map(() => ({
+                average: 1,
+                change: null,
+                color: null,
+                name: "Rent",
+                total: 1,
+                values: ones(width),
+            })),
+            totals: { ...report.totals, values: ones(width) },
+        },
+    });
+
+    const { slug } = await authenticatedAs(t, owner).mutation(api.sharedReports.publish, sized(40, 12));
+
+    // The site redirects every public path to its lower-case form, so an address must survive that.
+    expect(slug).toBe(slug.toLowerCase());
+    await expect(authenticatedAs(t, owner).mutation(api.sharedReports.publish, sized(400, 200))).rejects.toThrow();
+});
