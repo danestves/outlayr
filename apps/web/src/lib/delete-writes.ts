@@ -4,6 +4,7 @@ import { FIELDS_BY_TABLE } from "@outlayr/backend/confect/lib/syncTables";
 import { cardFeeValues, savedFeeInput } from "@outlayr/money/card-fee";
 import { deletionPlan } from "@outlayr/money/entry-deletion";
 import { canonicalOccurrence, occurrenceFeeId, successorRow } from "@outlayr/money/occurrence";
+import type { occurrenceRow } from "@outlayr/money/occurrence";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import * as Effect from "effect/Effect";
 
@@ -70,9 +71,16 @@ function successorPush(books: LedgerBooks, carrier: Doc, at: number): CommitRow[
     if (successor === null || books.transactions.some((row) => row.localId === successor.id)) {
         return [];
     }
+    return chargePush(books, carrier.localId, successor, at);
+}
+
+type Charge = ReturnType<typeof occurrenceRow>;
+
+/** A charge of `carrierId`'s schedule, frozen at its own date and with the carrier's card fee. */
+export function chargePush(books: LedgerBooks, carrierId: string, charge: Charge, at: number): CommitRow[] {
     const lookup = ratesLookup(books);
-    const row = Effect.runSync(canonicalOccurrence(lookup, successor, settingsOf(books.appMeta).currency));
-    const fee = books.transactions.find((doc) => doc.deletedAt === null && doc.feeForId === carrier.localId);
+    const row = Effect.runSync(canonicalOccurrence(lookup, charge, settingsOf(books.appMeta).currency));
+    const fee = books.transactions.find((doc) => doc.deletedAt === null && doc.feeForId === carrierId);
     if (fee?.currency == null) {
         return [entryPush(row, at)];
     }
