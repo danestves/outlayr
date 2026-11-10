@@ -108,14 +108,18 @@ const live = <Row extends { deletedAt: number | null }>(row: Row) => row.deleted
 
 export function pendingDeletion(books: Books, view: PlanView, at: number): CommitRow[] {
     const installment = (row: InstallmentView) => books.installments.find((doc) => doc.localId === row.id);
+    const unlinked = (installmentId: string) =>
+        liveFees(books, installmentId).map((fee) =>
+            nextRow("transactions", fee, { accountId: fee.accountId ?? null, installmentId: null }, at)
+        );
     if (view.paid === 0) {
+        const rows = books.installments.filter((row) => live(row) && row.planId === view.id);
         return [
             ...books.transfers
                 .filter((row) => live(row) && row.installmentPlanId === view.id)
                 .map((row) => nextRow("transfers", row, { installmentPlanId: null }, at)),
-            ...books.installments
-                .filter((row) => live(row) && row.planId === view.id)
-                .map((row) => nextRow("installments", row, { deletedAt: at }, at)),
+            ...rows.flatMap((row) => unlinked(row.localId)),
+            ...rows.map((row) => nextRow("installments", row, { deletedAt: at }, at)),
             ...books.outsidePayments
                 .filter((row) => live(row) && row.planId === view.id)
                 .map((row) => nextRow("outsidePayments", row, { deletedAt: at }, at)),
@@ -130,17 +134,12 @@ export function pendingDeletion(books: Books, view: PlanView, at: number): Commi
             return [];
         }
         if (row.status === "unpaid") {
-            return [nextRow("installments", doc, { deletedAt: at }, at)];
+            return [...unlinked(row.id), nextRow("installments", doc, { deletedAt: at }, at)];
         }
         if (row.covered > row.fee) {
             const amount = roundMoney(row.covered - row.fee, decimalsFor(view.currency));
             return [nextRow("installments", doc, { amount }, at)];
         }
-        return [
-            ...liveFees(books, row.id).map((fee) =>
-                nextRow("transactions", fee, { accountId: fee.accountId ?? null, installmentId: null }, at)
-            ),
-            nextRow("installments", doc, { amount: row.covered }, at),
-        ];
+        return [...unlinked(row.id), nextRow("installments", doc, { amount: row.covered }, at)];
     });
 }

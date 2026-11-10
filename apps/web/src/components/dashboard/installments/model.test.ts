@@ -20,9 +20,11 @@ const account = (localId: string, kind: "asset" | "liability") => ({
 });
 
 function ledgerWith({
+    fees = [],
     outside = [],
     transfers = [],
 }: {
+    fees?: [number, string][];
     outside?: [number, string][];
     transfers?: [number, string][];
 }) {
@@ -63,6 +65,18 @@ function ledgerWith({
                     income: false,
                     note: "Desk",
                 },
+                ...fees.map(([amount, installmentId], index) => ({
+                    ...envelope(`fee${index}`),
+                    accountId: "card",
+                    amount,
+                    amountUsd: amount,
+                    categoryId: null,
+                    currency: "USD",
+                    date: Date.parse("2026-11-05T12:00:00Z"),
+                    income: false,
+                    installmentId,
+                    note: "Late fee",
+                })),
             ],
             transfers: transfers.map(([amount, day], index) => ({
                 ...envelope(`move${index}`),
@@ -141,6 +155,15 @@ describe("pendingDeletion", () => {
             ["i2", null, 50],
             ["i3", NOW, 100],
         ]);
+    });
+
+    it("keeps the late fee on a dropped row as a plain charge", () => {
+        const ledger = ledgerWith({ fees: [[5, "i2"]], transfers: [[100, "2026-10-01"]] });
+        const rows = pendingDeletion(ledger.books, onlyPlan(ledger), NOW);
+        expect(rows.find((row) => row.localId === "fee0")).toMatchObject({
+            deletedAt: null,
+            fields: { installmentId: null },
+        });
     });
 
     it("drops a plan with nothing paid whole and keeps its transfers as plain ones", () => {
