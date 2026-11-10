@@ -15,7 +15,7 @@ import { fireAtomCommand } from "@/state/use-atom-action";
 
 import { commitDeferredDelete, createDeferredDeleteRegistry } from "./deferred-delete-registry";
 import type { DeferredDeleteKind, UndoNotice } from "./deferred-delete-registry";
-import type { PendingDeletes } from "./pending-deletes";
+import type { PendingDeletes } from "./deletion-plan";
 
 // At module scope because a held delete outlives its screen; the database is read when its window closes.
 const registry = createDeferredDeleteRegistry({

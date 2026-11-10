@@ -1,21 +1,18 @@
 import { DEFAULT_ACCOUNT_KIND, isPerson } from "@outlayr/money/account-kind";
 import type { AccountKind } from "@outlayr/money/account-kind";
-import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, eq, isNull, max } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
-import { accounts, outsideMoves, savingsGoals, transactions } from "@/db/schema";
+import { accounts, outsideMoves, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 
 import { Meta } from "./app-meta-core";
-import { tombstonesWithEntries } from "./entry-tombstones";
+import { tombstone } from "./deletion-plan";
 import { frozenUsdAmount } from "./frozen-usd";
-import { tombstonePlansOnAccount } from "./installment-cascade";
 import { refreshLogoCandidates } from "./logo-backfill-state";
-import { tombstoneTransfersTouchingAccount } from "./transfers-core";
 
 export type Account = typeof accounts.$inferSelect;
 
@@ -186,44 +183,14 @@ export const accountsRepo = {
         );
     }),
 
-    /**
-     * `onDelete: "set null"` never fires for a tombstone, so entries are detached here. A person's entries are the debt
-     * itself, so they go with them (no schedule left for the orphan repair to revive), and so do the account's goals.
-     * A test holds this to `accountDeletionPlan`.
-     */
     softDelete: Effect.fn("Accounts.softDelete")(function* softDelete(
         db: Database,
         id: string,
         now: Date = new Date()
     ) {
-        // Read past the tombstone: a peer's delete may have landed first.
-        const [account] = yield* read("delete", () =>
-            db.select({ kind: accounts.kind }).from(accounts).where(eq(accounts.id, id)).limit(1).all()
-        );
-        const person = isPerson(account ?? {});
         yield* transaction(
             db,
             Effect.gen(function* write() {
-                yield* tombstoneTransfersTouchingAccount(db, id, now);
-                yield* tombstonePlansOnAccount(db, id, now);
-                yield* query("delete", () =>
-                    db
-                        .update(outsideMoves)
-                        .set({ deletedAt: now, updatedAt: now })
-                        .where(and(eq(outsideMoves.accountId, id), isNull(outsideMoves.deletedAt)))
-                );
-                yield* query("delete", () =>
-                    db
-                        .update(savingsGoals)
-                        .set({ deletedAt: now, updatedAt: now })
-                        .where(and(eq(savingsGoals.accountId, id), isNull(savingsGoals.deletedAt)))
-                );
-                yield* query("delete", () =>
-                    db
-                        .update(accounts)
-                        .set({ deletedAt: now, updatedAt: now })
-                        .where(and(eq(accounts.id, id), isNull(accounts.deletedAt)))
-                );
                 // Detaching moves `updatedAt` on live rows, so a logo candidate must follow or the backfill reads
                 // it as a peer's edit. Before the write: only a stamp matching the row as it is now is moved.
                 const attached = yield* query("delete", () =>
@@ -234,30 +201,7 @@ export const accountsRepo = {
                     attached.map((row) => row.id),
                     now.getTime()
                 );
-                if (!person) {
-                    yield* query("delete", () =>
-                        db
-                            .update(transactions)
-                            .set({ accountId: null, updatedAt: now })
-                            .where(eq(transactions.accountId, id))
-                    );
-                    return;
-                }
-                yield* query("delete", () =>
-                    db
-                        .update(transactions)
-                        .set({
-                            deletedAt: now,
-                            recurringType: RECURRING_TYPE.none,
-                            reminderLeadDays: null,
-                            updatedAt: now,
-                        })
-                        .where(and(eq(transactions.accountId, id), isNull(transactions.deletedAt)))
-                );
-                const taken = and(eq(transactions.accountId, id), eq(transactions.deletedAt, now));
-                for (const statement of tombstonesWithEntries(db, taken, now)) {
-                    yield* query("delete", statement);
-                }
+                yield* tombstone(db, "account", id, now);
             }),
             (cause) => new AccountsError({ cause, operation: "delete" })
         );

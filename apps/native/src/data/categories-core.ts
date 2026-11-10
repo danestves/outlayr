@@ -10,14 +10,12 @@ import {
 import type { SuggestedCategoryPreset } from "@outlayr/money/category-rules";
 import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
 import type { CanonicalCategoryName } from "@outlayr/money/contract";
-import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { and, eq, isNull, max } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { TOMBSTONED_BUDGET } from "@/data/budgets-core";
 import type { Database } from "@/db/client";
-import { budgetPlans, budgets, categories, transactions } from "@/db/schema";
+import { categories } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { CATEGORY_ICON_GROUPS } from "@/domain/category-icon-catalog";
 import { newId } from "@/domain/ids";
@@ -27,7 +25,7 @@ import type { Language } from "@/i18n/languages";
 import { translateIn, translateNow } from "@/i18n/runtime";
 
 import { Meta } from "./app-meta-core";
-import { tombstonesWithEntries } from "./entry-tombstones";
+import { tombstone } from "./deletion-plan";
 
 export type Category = typeof categories.$inferSelect;
 
@@ -521,54 +519,10 @@ export const categoriesRepo = {
         return id;
     }),
 
-    // By hand, and held to `categoryDeletionPlan` by a test: `foreign_keys` is off, so `ON DELETE` never fires. The
-    // budget is fully tombstoned for peers before 0038, whose `budgets.categoryId` stays UNIQUE when deleted. Schedules
-    // retire so `repairOrphanedRecurrence` mints no successor, and photos drop so `reconcilePhotos` collects them.
     remove: Effect.fn("Categories.remove")(function* remove(db: Database, id: string, now: Date = new Date()) {
         yield* transaction(
             db,
-            Effect.gen(function* write() {
-                yield* query("remove", () =>
-                    db
-                        .update(transactions)
-                        .set({
-                            deletedAt: now,
-                            imageKey: null,
-                            imageUri: null,
-                            recurringType: RECURRING_TYPE.none,
-                            updatedAt: now,
-                        })
-                        .where(and(eq(transactions.categoryId, id), isNull(transactions.deletedAt)))
-                );
-                const taken = and(eq(transactions.categoryId, id), eq(transactions.deletedAt, now));
-                for (const statement of tombstonesWithEntries(db, taken, now)) {
-                    yield* query("remove", statement);
-                }
-                yield* query("remove", () =>
-                    db
-                        .update(budgets)
-                        .set({ ...TOMBSTONED_BUDGET, deletedAt: now, updatedAt: now })
-                        .where(and(eq(budgets.categoryId, id), isNull(budgets.deletedAt)))
-                );
-                yield* query("remove", () =>
-                    db
-                        .update(budgetPlans)
-                        .set({ deletedAt: now, updatedAt: now })
-                        .where(and(eq(budgetPlans.categoryId, id), isNull(budgetPlans.deletedAt)))
-                );
-                yield* query("remove", () =>
-                    db
-                        .update(categories)
-                        .set({ parentId: null, updatedAt: now })
-                        .where(and(eq(categories.parentId, id), isNull(categories.deletedAt)))
-                );
-                yield* query("remove", () =>
-                    db
-                        .update(categories)
-                        .set({ deletedAt: now, updatedAt: now })
-                        .where(and(eq(categories.id, id), isNull(categories.deletedAt)))
-                );
-            }),
+            tombstone(db, "category", id, now),
             (cause) => new CategoriesError({ cause, operation: "remove" })
         );
     }),

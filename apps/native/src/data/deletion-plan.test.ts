@@ -1,4 +1,6 @@
 import { accountDeletionPlan, categoryDeletionPlan, deletionPlan } from "@outlayr/money/entry-deletion";
+import { and, isNull } from "drizzle-orm";
+import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -18,14 +20,17 @@ import {
 } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
-import { accountsRepo } from "./accounts-core";
-import { categoriesRepo } from "./categories-core";
-import { transactionsRepo } from "./transactions-core";
-import { transfersRepo } from "./transfers-core";
+import { expenseContributionQuery } from "./budget-spent";
+import { logCellQuery, settledAccountsCellQuery } from "./cell-query";
+import { commitDeferredDelete } from "./deferred-delete-registry";
+import { kept, NO_PENDING_DELETES } from "./deletion-plan";
+import type { DeletionTable, PendingDeletes } from "./deletion-plan";
+import { livePlansQuery, planPaymentsQuery } from "./installments-core";
+import { settledOutsideMovesQuery, settledOutsidePaymentsQuery, settledTransfersQuery } from "./transfer-cells";
 
 const AT = new Date(Date.UTC(2026, 10, 8, 12));
 const EARLIER = new Date(AT.getTime() - 1000);
-const NOW = new Date(AT.getTime() + 1000);
+const LATER = new Date(AT.getTime() + 1000);
 
 const entry = (id: string, extra: Partial<typeof transactions.$inferInsert> = {}) => ({
     amount: 10,
@@ -126,7 +131,7 @@ async function seeded() {
             transfer("move"),
             transfer("still here"),
             transfer("gone move", { deletedAt: EARLIER }),
-            transfer("payoff", { fromAccountId: "cash", toAccountId: "card" }),
+            transfer("payoff", { fromAccountId: "cash", installmentPlanId: "groceries plan", toAccountId: "card" }),
             transfer("plan payment", { installmentPlanId: "groceries plan" }),
             transfer("tagged move"),
             transfer("lend", { fromAccountId: "cash", toAccountId: "ana" }),
@@ -167,11 +172,9 @@ const TABLES = {
     savingsGoals,
     transactions,
     transfers,
-};
+} satisfies Record<DeletionTable, SQLiteTable>;
 
-type Table = keyof typeof TABLES;
-
-const TABLE_NAMES = Object.keys(TABLES) as Table[];
+const TABLE_NAMES = Object.keys(TABLES) as DeletionTable[];
 
 const booksOf = async (db: Database) => ({
     accounts: await db.select().from(accounts),
@@ -189,15 +192,56 @@ const booksOf = async (db: Database) => ({
 
 type Books = Awaited<ReturnType<typeof booksOf>>;
 
-const idsBy = (pick: (table: Table) => string[]) =>
+const idsBy = (pick: (table: DeletionTable) => string[]) =>
     Object.fromEntries(TABLE_NAMES.map((table) => [table, new Set(pick(table))]));
 
 /** A plan in the shape of a whole ledger: a table it does not name loses nothing. */
-const planned = (gone: Partial<Record<Table, Set<string>>>) => idsBy((table) => [...(gone[table] ?? [])]);
+const planned = (gone: Partial<Record<DeletionTable, Set<string>>>) => idsBy((table) => [...(gone[table] ?? [])]);
 
-/** What the write actually tombstoned, in the shape the plan answers in. */
-const tombstonedSince = (books: Books, instant: Date) =>
-    idsBy((table) => books[table].filter((row) => row.deletedAt?.getTime() === instant.getTime()).map((row) => row.id));
+const PLANS = {
+    account: accountDeletionPlan,
+    category: categoryDeletionPlan,
+    row: (books: Books, id: string) => ({
+        ...deletionPlan(books, [id]),
+        detached: {},
+        outsideMoves: new Set(books.outsideMoves.filter((move) => move.id === id).map((move) => move.id)),
+    }),
+};
+
+type Kind = keyof typeof PLANS;
+
+async function hiddenBy(db: Database, pending: PendingDeletes) {
+    const hidden = new Map<DeletionTable, string[]>();
+    for (const name of TABLE_NAMES) {
+        const table = TABLES[name];
+        const shown = await db
+            .select({ id: table.id })
+            .from(table)
+            .where(and(isNull(table.deletedAt), kept(name, pending)));
+        const live = await db.select({ id: table.id }).from(table).where(isNull(table.deletedAt));
+        const still = new Set(shown.map((row) => row.id));
+        hidden.set(
+            name,
+            live.map((row) => row.id).filter((id) => !still.has(id))
+        );
+    }
+    return idsBy((table) => hidden.get(table) ?? []);
+}
+
+const stampOf = (books: Books) =>
+    new Map(
+        TABLE_NAMES.flatMap((table) => books[table].map((row) => [`${table} ${row.id}`, row.deletedAt?.getTime()]))
+    );
+
+function tombstonedBetween(before: Books, after: Books) {
+    const was = stampOf(before);
+    const is = stampOf(after);
+    return idsBy((table) =>
+        after[table]
+            .filter((row) => is.get(`${table} ${row.id}`) !== was.get(`${table} ${row.id}`))
+            .map((row) => row.id)
+    );
+}
 
 const linkOf = (books: Books) =>
     new Map<string, string | null>([
@@ -217,48 +261,57 @@ function detachedBetween(before: Books, after: Books) {
     );
 }
 
-describe("deletionPlan matches what native's delete writes", () => {
-    it.each([
-        ["a purchase and its card fee", "coffee"],
-        ["a transfer's fee, which takes the transfer", "wire fee"],
-        ["a financed purchase, with its plan and payments", "financed"],
-    ])("%s", async (_name, id) => {
+async function figures(db: Database, pending: PendingDeletes) {
+    const others = <Row extends { accountId: string | null }>(rows: Row[]) =>
+        rows.filter((row) => pending.account === null || row.accountId !== pending.account);
+    return {
+        balances: others(await settledAccountsCellQuery(db, LATER, pending)),
+        contributions: await expenseContributionQuery(db, LATER, null, pending),
+        log: await logCellQuery(db, null, LATER, pending),
+        moves: await settledOutsideMovesQuery(db, LATER, pending),
+        orders: await livePlansQuery(db, undefined, pending),
+        outside: await settledOutsidePaymentsQuery(db, LATER, pending),
+        paid: await planPaymentsQuery(db, pending),
+        transfers: await settledTransfersQuery(db, LATER, pending),
+    };
+}
+
+const CASES: [string, Kind, string][] = [
+    ["a purchase and its card fee", "row", "coffee"],
+    ["a transfer's fee, which takes the transfer and its other fee", "row", "wire fee"],
+    ["a fee whose transfer is already gone, which keeps its instant", "row", "orphaned wire fee"],
+    ["a financed purchase, with its plan and payments", "row", "financed"],
+    ["a transfer and its fees", "row", "move"],
+    ["a transfer already gone, whose live fee still goes", "row", "gone move"],
+    ["an outside move", "row", "cash adjustment"],
+    ["a category with a financed purchase, a fee in another category and a subcategory", "category", "food"],
+    ["a category holding a transfer's fee, which takes the transfer", "category", "tagged"],
+    ["a card, which keeps its entries and loses its plans, transfers, goal and adjustment", "account", "card"],
+    ["a person, whose entries go with them, a fee held elsewhere too", "account", "ana"],
+];
+
+describe("native's deletion plan against the pure one", () => {
+    it.each(CASES)("hides %s while it can be undone", async (_name, kind, id) => {
         const db = await seeded();
-        const plan = deletionPlan(await booksOf(db), [id]);
-        await Effect.runPromise(transactionsRepo.remove(db, id, NOW));
-        expect(tombstonedSince(await booksOf(db), NOW)).toStrictEqual(planned(plan));
+        const { detached: _detached, ...gone } = PLANS[kind](await booksOf(db), id);
+        await expect(hiddenBy(db, { ...NO_PENDING_DELETES, [kind]: id })).resolves.toStrictEqual(planned(gone));
     });
 
-    it.each(["move", "gone move"])("transfer %s and its live fees", async (id) => {
-        const db = await seeded();
-        const plan = deletionPlan(await booksOf(db), [id]);
-        await Effect.runPromise(transfersRepo.softDelete(db, id, NOW));
-        expect(tombstonedSince(await booksOf(db), NOW)).toStrictEqual(planned(plan));
-    });
-
-    it.each([
-        ["with a financed purchase and its fee in another category", "food"],
-        ["holding a transfer's fee, which takes the transfer", "tagged"],
-    ])("a category %s", async (_name, id) => {
+    it.each(CASES)("tombstones and detaches %s", async (_name, kind, id) => {
         const db = await seeded();
         const before = await booksOf(db);
-        const { detached, ...gone } = categoryDeletionPlan(before, id);
-        await Effect.runPromise(categoriesRepo.remove(db, id, NOW));
+        const { detached, ...gone } = PLANS[kind](before, id);
+        await Effect.runPromise(commitDeferredDelete(kind, db, id));
         const after = await booksOf(db);
-        expect(tombstonedSince(after, NOW)).toStrictEqual(planned(gone));
+        expect(tombstonedBetween(before, after)).toStrictEqual(planned(gone));
         expect(detachedBetween(before, after)).toStrictEqual(planned(detached));
     });
 
-    it.each([
-        ["a card, which keeps its entries and loses its plans and transfers", "card"],
-        ["a person, whose entries go with them", "ana"],
-    ])("%s", async (_name, id) => {
+    it.each(CASES)("has readers already count %s as deleted", async (_name, kind, id) => {
         const db = await seeded();
-        const before = await booksOf(db);
-        const { detached, ...gone } = accountDeletionPlan(before, id);
-        await Effect.runPromise(accountsRepo.softDelete(db, id, NOW));
-        const after = await booksOf(db);
-        expect(tombstonedSince(after, NOW)).toStrictEqual(planned(gone));
-        expect(detachedBetween(before, after)).toStrictEqual(planned(detached));
+        const held = await figures(db, { ...NO_PENDING_DELETES, [kind]: id });
+        expect(held).not.toStrictEqual(await figures(db, NO_PENDING_DELETES));
+        await Effect.runPromise(commitDeferredDelete(kind, db, id));
+        expect(held).toStrictEqual(await figures(db, NO_PENDING_DELETES));
     });
 });

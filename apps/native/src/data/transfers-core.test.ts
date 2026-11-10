@@ -9,7 +9,8 @@ import type { Database } from "@/db/client";
 import { transactions, transfers } from "@/db/schema";
 import { testDatabase, withAsyncTransactions } from "@/db/test-database";
 
-import { AccountsError, accountsRepo } from "./accounts-core";
+import { accountsRepo } from "./accounts-core";
+import { DeletionPlanError } from "./deletion-plan";
 import { lastTransfer, sameSavedTransfer, savedTransfer, transfersRepo } from "./transfers-core";
 
 const DAY = new Date(Date.UTC(2026, 7, 9));
@@ -648,8 +649,8 @@ describe("an account delete that cannot finish", () => {
         severTheDetach(db);
 
         const failure = await Effect.runPromise(Effect.flip(accountsRepo.softDelete(db, from, DAY)));
-        expect(failure).toBeInstanceOf(AccountsError);
-        expect(failure).toMatchObject({ operation: "delete" });
+        expect(failure).toBeInstanceOf(DeletionPlanError);
+        expect(failure).toMatchObject({ operation: "tombstone" });
         expect(failure).toMatchObject({ cause: { cause: { message: expect.stringContaining("mid-delete") } } });
 
         const rows = await db.select().from(transfers);
@@ -673,8 +674,8 @@ describe("an account delete that cannot finish", () => {
         severTheDetach(db);
 
         const failure = await Effect.runPromise(Effect.flip(accountsRepo.softDelete(db, from, DAY)));
-        expect(failure).toBeInstanceOf(AccountsError);
-        expect(failure).toMatchObject({ operation: "delete" });
+        expect(failure).toBeInstanceOf(DeletionPlanError);
+        expect(failure).toMatchObject({ operation: "tombstone" });
         expect(failure).toMatchObject({ cause: { cause: { message: expect.stringContaining("mid-delete") } } });
 
         const [fee] = await db.select().from(transactions);

@@ -12,9 +12,9 @@ import { monthKey, monthKeyAt, monthKeyWindow, projectYear, shiftMonthKey } from
 import type { MonthKey, PlanFlow, YearPlanInput, YearProjection } from "@/domain/year-plan";
 
 import { budgetPlansQuery } from "./budget-plans-core";
+import { kept } from "./deletion-plan";
 import { useLiveQuery } from "./live-query";
 import { useUpcomingTransactions } from "./log-filtered";
-import { keptTransactions } from "./pending-deletes";
 import { useSavingsGoals } from "./savings-goals";
 import { usePendingDeletes } from "./use-deferred-delete";
 import { useValuation } from "./use-valuation";
@@ -109,7 +109,7 @@ export function useYearPlan(db: Database, nowMs: number, year: number): YearPlan
                         isNull(transactions.deletedAt),
                         gte(transactions.date, new Date(lookback)),
                         lte(transactions.date, now),
-                        keptTransactions(db, pending)
+                        kept("transactions", pending)
                     )
                 ),
         [lookback, nowMs, pending],

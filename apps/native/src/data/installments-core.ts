@@ -17,10 +17,9 @@ import { translateNow } from "@/i18n/runtime";
 
 import { getAccountById } from "./accounts-core";
 import { feeCategoryFor } from "./card-fees-core";
+import { kept, NO_PENDING_DELETES, tombstone } from "./deletion-plan";
+import type { PendingDeletes } from "./deletion-plan";
 import { frozenUsdAmount } from "./frozen-usd";
-import { tombstonePlans } from "./installment-cascade";
-import { keptTransfers, NO_PENDING_DELETES } from "./pending-deletes";
-import type { PendingDeletes } from "./pending-deletes";
 import { localRateLookup } from "./rates";
 import { transactionsRepo } from "./transactions-core";
 import type { TransactionInput } from "./transactions-core";
@@ -469,7 +468,7 @@ export const installmentsRepo = {
                     return;
                 }
                 if (entry.standing.paid === 0) {
-                    yield* tombstonePlans(db, eq(installmentPlans.id, planId), now, true);
+                    yield* tombstone(db, "plan", planId, now);
                     return;
                 }
                 yield* Effect.all(
@@ -546,7 +545,7 @@ export const installmentsRepo = {
     updateInstallment,
 };
 
-export function livePlansQuery(db: Database, accountId?: string) {
+export function livePlansQuery(db: Database, accountId?: string, pending: PendingDeletes = NO_PENDING_DELETES) {
     return db
         .select({
             accountId: installmentPlans.accountId,
@@ -560,7 +559,8 @@ export function livePlansQuery(db: Database, accountId?: string) {
         .where(
             and(
                 isNull(installmentPlans.deletedAt),
-                accountId === undefined ? undefined : eq(installmentPlans.accountId, accountId)
+                accountId === undefined ? undefined : eq(installmentPlans.accountId, accountId),
+                kept("installmentPlans", pending)
             )
         )
         .orderBy(asc(installmentPlans.dateCreated));
@@ -591,7 +591,7 @@ export function planPaymentsQuery(db: Database, pending: PendingDeletes = NO_PEN
                 eq(installmentPlans.accountId, transfers.toAccountId)
             )
         )
-        .where(and(isNull(transfers.deletedAt), isNotNull(transfers.installmentPlanId), keptTransfers(db, pending)))
+        .where(and(isNull(transfers.deletedAt), isNotNull(transfers.installmentPlanId), kept("transfers", pending)))
         .groupBy(installmentPlans.id);
 }
 

@@ -10,7 +10,7 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { Database } from "@/db/client";
-import { accounts, categories, installments, transactions, transfers } from "@/db/schema";
+import { accounts, categories, installments, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 import type { PaidVia } from "@/domain/paid-via";
@@ -20,8 +20,8 @@ import { Meta } from "./app-meta-core";
 import type { SpendDb } from "./budget-spent";
 import { cardFeeFor, cardFeeValues, suggestedCardFee } from "./card-fees-core";
 import { getCategoryById } from "./categories-core";
+import { restoreEntry, tombstone } from "./deletion-plan";
 import { ERASED_DATE } from "./erase-core";
-import { restorePlansForTransaction, tombstonePlansForTransaction } from "./installment-cascade";
 import {
     forgetLogoDismissal,
     isLogoCandidate,
@@ -329,37 +329,7 @@ export const transactionsRepo = {
                     yield* insertOccurrences(db, id, [successor], now);
                 }
                 yield* refreshLogoCandidate(db, id, now.getTime());
-                yield* query("remove", () =>
-                    db
-                        .update(transactions)
-                        .set({
-                            deletedAt: now,
-                            recurringType: RECURRING_TYPE.none,
-                            reminderLeadDays: null,
-                            updatedAt: now,
-                        })
-                        .where(eq(transactions.id, id))
-                );
-                // A fee outliving its transfer would keep charging for a movement the ledger no longer holds.
-                if (row?.transferId != null) {
-                    const { transferId } = row;
-                    yield* query("remove", () =>
-                        db.update(transfers).set({ deletedAt: now, updatedAt: now }).where(eq(transfers.id, transferId))
-                    );
-                    yield* query("remove", () =>
-                        db
-                            .update(transactions)
-                            .set({ deletedAt: now, updatedAt: now })
-                            .where(and(eq(transactions.transferId, transferId), isNull(transactions.deletedAt)))
-                    );
-                }
-                yield* query("remove", () =>
-                    db
-                        .update(transactions)
-                        .set({ deletedAt: now, updatedAt: now })
-                        .where(and(eq(transactions.feeForId, id), isNull(transactions.deletedAt)))
-                );
-                yield* tombstonePlansForTransaction(db, id, now);
+                yield* tombstone(db, "row", id, now);
             }),
             failedAt("remove")
         );
@@ -403,16 +373,11 @@ export const transactionsRepo = {
                     return;
                 }
                 yield* refreshLogoCandidate(db, id, now.getTime());
-                const { deletedAt } = previous;
-                const lifted = { deletedAt: null, restoredAt: restoreStamp(previous, now), updatedAt: now };
-                yield* query("restore", () => db.update(transactions).set(lifted).where(eq(transactions.id, id)));
-                yield* query("restore", () =>
-                    db
-                        .update(transactions)
-                        .set(lifted)
-                        .where(and(eq(transactions.feeForId, id), eq(transactions.deletedAt, deletedAt)))
-                );
-                yield* restorePlansForTransaction(db, id, deletedAt, now, lifted.restoredAt);
+                yield* restoreEntry(db, id, {
+                    deletedAt: previous.deletedAt,
+                    now,
+                    restoredAt: restoreStamp(previous, now),
+                });
             }),
             failedAt("restore")
         );

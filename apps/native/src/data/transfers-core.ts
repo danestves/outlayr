@@ -16,7 +16,7 @@ import {
     transferRejection,
 } from "@outlayr/money/transfer-row";
 import type { TransferFeeInput, TransferInput } from "@outlayr/money/transfer-row";
-import { and, count, desc, eq, inArray, isNull, notInArray, or } from "drizzle-orm";
+import { and, count, desc, eq, isNull, notInArray, or } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
@@ -26,6 +26,7 @@ import { transaction } from "@/db/transaction";
 import { newId } from "@/domain/ids";
 import { minorUnitsFor } from "@/domain/money";
 
+import { tombstone } from "./deletion-plan";
 import { localRateLookup } from "./rates";
 
 export type Transfer = typeof transfers.$inferSelect;
@@ -180,33 +181,11 @@ export function lastTransfer(db: Database): SavedTransfer | null {
     return row === undefined ? null : savedTransfer(db, row.id);
 }
 
-export function touchesAccount(accountId: string) {
+function touchesAccount(accountId: string) {
     return or(eq(transfers.fromAccountId, accountId), eq(transfers.toAccountId, accountId));
 }
 
-/** Statements only: `withTransactionAsync` does not nest, so the account delete supplies the transaction. */
-export const tombstoneTransfersTouchingAccount = Effect.fn("Transfers.tombstoneTouchingAccount")(
-    function* tombstoneTransfersTouchingAccount(db: Database, accountId: string, now: Date) {
-        const doomed = db
-            .select({ id: transfers.id })
-            .from(transfers)
-            .where(and(isNull(transfers.deletedAt), touchesAccount(accountId)));
-        yield* query("delete", () =>
-            db
-                .update(transactions)
-                .set({ deletedAt: now, updatedAt: now })
-                .where(and(isNull(transactions.deletedAt), inArray(transactions.transferId, doomed)))
-        );
-        yield* query("delete", () =>
-            db
-                .update(transfers)
-                .set({ deletedAt: now, updatedAt: now })
-                .where(and(isNull(transfers.deletedAt), touchesAccount(accountId)))
-        );
-    }
-);
-
-/** Statements only, like {@link tombstoneTransfersTouchingAccount}; run `write` inside the caller's transaction. */
+/** Statements only: `withTransactionAsync` does not nest, so run `write` inside the caller's transaction. */
 export const stageTransfer = Effect.fn("Transfers.stageTransfer")(function* stageTransfer(
     db: Database,
     input: TransferInput
@@ -262,20 +241,7 @@ export const transfersRepo = {
     ) {
         yield* transaction(
             db,
-            Effect.gen(function* write() {
-                yield* query("delete", () =>
-                    db
-                        .update(transfers)
-                        .set({ deletedAt: now, updatedAt: now })
-                        .where(and(eq(transfers.id, id), isNull(transfers.deletedAt)))
-                );
-                yield* query("delete", () =>
-                    db
-                        .update(transactions)
-                        .set({ deletedAt: now, updatedAt: now })
-                        .where(and(eq(transactions.transferId, id), isNull(transactions.deletedAt)))
-                );
-            }),
+            tombstone(db, "row", id, now),
             (cause) => new TransfersError({ cause, operation: "delete" })
         );
     }),
