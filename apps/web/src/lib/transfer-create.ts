@@ -86,7 +86,7 @@ export function repriced(ledger: Ledger, values: NewTransferValues): NewTransfer
     return { ...values, arrivedText: arrivalOf(ledger, values, marketRate(ledger, from, to, values.dateText)) };
 }
 
-function pinnedArrival(ledger: Ledger, values: NewTransferValues, arrival: number): NewTransferValues {
+export function pinnedArrival(ledger: Ledger, values: NewTransferValues, arrival: number): NewTransferValues {
     const [from, to] = [currencyOf(ledger, values.fromId), currencyOf(ledger, values.toId)];
     if (from === to) {
         return { ...values, arrivedText: "", sentText: amountText(arrival, from) };

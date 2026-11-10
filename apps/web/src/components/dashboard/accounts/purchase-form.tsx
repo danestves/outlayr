@@ -22,15 +22,17 @@ import { AccountTile } from "@/components/ledger/tiles";
 import { createdAccount, parseAmount } from "@/lib/account-writes";
 import { openAccounts, startOfDay } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
+import type { PurchaseSeed } from "@/lib/installment-scan";
+import { feeRows, outsidePayment } from "@/lib/installment-writes";
+import type { CommitRow } from "@/lib/ledger-committer";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { planPurchase, purchaseInInstallments } from "@/lib/plan-writes";
 import type { PurchaseDraft } from "@/lib/plan-writes";
 
-import { AmountInput, amountText, FlowDialog, focusNode } from "./fields";
+import { AmountInput, amountText, DayField, FlowDialog, focusNode } from "./fields";
 import type { AccountFlow } from "./flows";
 import { Glyph } from "./glyph";
 import { logoIdentity } from "./identity-picker";
-import { PhoneAction } from "./parts";
 
 const COUNTS = Array.from({ length: MAX_INSTALLMENT_COUNT }, (_, index) => String(index + 1));
 const OTHER_APP = "other";
@@ -72,7 +74,7 @@ function ChoiceField<Value extends string>({
                 <Select.Trigger icon={CHEVRON}>
                     <Select.Value className={figure ? "dash-figure" : undefined} />
                 </Select.Trigger>
-                <Select.Content className={CONTENT}>
+                <Select.Content alignItemWithTrigger={false} className={CONTENT}>
                     {options.map((option) => (
                         <Select.Item key={option.value} value={option.value}>
                             {option.label}
@@ -106,13 +108,16 @@ function NoCardsSelect({ onAdd, onOther }: { onAdd: (app: InstallmentApp) => voi
             <Select.Trigger icon={CHEVRON}>
                 <Select.Value placeholder={purchase.pick.value} />
             </Select.Trigger>
-            <Select.Content className={CONTENT}>
+            <Select.Content alignItemWithTrigger={false} className={CONTENT}>
                 {apps.length > 0 ? (
                     <Select.Group>
                         <Select.GroupLabel>{purchase.appsIn({ region: regionName ?? "" })}</Select.GroupLabel>
                         {apps.map((app) => (
                             <Select.Item key={app.id} value={app.id}>
-                                {app.label}
+                                <span className="flex w-full items-center justify-between gap-3">
+                                    {app.label}
+                                    <span className="text-app-tint">{purchase.add}</span>
+                                </span>
                             </Select.Item>
                         ))}
                     </Select.Group>
@@ -147,7 +152,7 @@ function CategoryField({ onPick, value }: { onPick: (id: string | null) => void;
                     {chosen ? <CategoryDot color={chosen.color} /> : null}
                     <Select.Value placeholder={purchase.pick.value} />
                 </Select.Trigger>
-                <Select.Content className={CONTENT}>
+                <Select.Content alignItemWithTrigger={false} className={CONTENT}>
                     {categories.map((row) => (
                         <Select.Item icon={<CategoryDot color={row.color} />} key={row.localId} value={row.localId}>
                             {row.name}
@@ -191,7 +196,7 @@ function AccountField({
                         {chosen ? <AccountTile account={accountLook(chosen)} photos={photos} size="sm" /> : null}
                         <Select.Value placeholder={purchase.pick.value} />
                     </Select.Trigger>
-                    <Select.Content className={CONTENT}>
+                    <Select.Content alignItemWithTrigger={false} className={CONTENT}>
                         {cards.map((row) => (
                             <Select.Item key={row.localId} value={row.localId}>
                                 {row.name}
@@ -207,7 +212,15 @@ function AccountField({
 
 const SUMMARY_ROW = "flex h-[33px] items-center text-[13px]";
 
-function Summary({ currency, plan }: { currency: string; plan: ReturnType<typeof planPurchase> }) {
+function Summary({
+    currency,
+    plan,
+    scanned,
+}: {
+    currency: string;
+    plan: ReturnType<typeof planPurchase>;
+    scanned: boolean;
+}) {
     const { purchase } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const date = useDateFormat();
@@ -231,7 +244,9 @@ function Summary({ currency, plan }: { currency: string; plan: ReturnType<typeof
                 {first ? (
                     <div className={`${SUMMARY_ROW} border-b`}>
                         <span className="text-muted-foreground">
-                            {purchase.thenEach({ amount: money(first.amount, currency), count: ahead.length })}
+                            {!scanned || ahead.every((row) => row.amount === first.amount)
+                                ? purchase.thenEach({ amount: money(first.amount, currency), count: ahead.length })
+                                : purchase.thenMixed({ count: ahead.length })}
                         </span>
                         <span className="dash-figure ml-auto">
                             {over > 0 ? money(total - paidNow, currency) : dates()}
@@ -282,30 +297,96 @@ function purchaseRows(
     );
 }
 
+function seededFees(
+    ledger: Ledger,
+    rows: readonly CommitRow[],
+    {
+        categoryId,
+        currency,
+        fees,
+        note,
+        paidBefore,
+    }: { categoryId: string | null; currency: string; fees: PurchaseSeed["fees"]; note: string; paidBefore: number }
+) {
+    const plan = rows.find((row) => row.table === "installmentPlans");
+    if (plan?.table !== "installmentPlans") {
+        return [];
+    }
+    const at = Date.now();
+    const view = { account: { id: plan.fields.accountId }, categoryId, currency, id: plan.localId };
+    return fees.flatMap((fee) => {
+        const due = rows.find((row) => row.table === "installments" && row.fields.sequence === fee.sequence);
+        if (due?.table !== "installments") {
+            return [];
+        }
+        const date = Math.min(due.fields.dueDate, at);
+        const charged = feeRows(ledger, view, due.localId, { amount: fee.amount, date, note }, at);
+        return fee.sequence <= paidBefore
+            ? [...charged, outsidePayment(ledger.books, view, { amount: fee.amount, date }, crypto.randomUUID(), at)]
+            : charged;
+    });
+}
+
+function startFields(seed: PurchaseSeed | undefined, currency: string) {
+    return {
+        count: seed?.count ?? newInstallmentDraft(null).count,
+        every: seed?.every ?? ("days14" satisfies EveryOption),
+        firstDueKey: seed ? dayKey(seed.firstDue) : null,
+        totalText: seed ? amountText(seed.price, currency) : "",
+        upfrontText: seed?.upfront ? amountText(seed.upfront, currency) : "",
+    };
+}
+
+function stillScanned(
+    seed: PurchaseSeed | undefined,
+    form: Pick<PurchaseSeed, "count" | "every" | "price" | "upfront"> & {
+        accountId: string | null;
+        each: number | null;
+        firstDueKey: string | null;
+    }
+) {
+    const same =
+        seed !== undefined &&
+        seed.accountId === form.accountId &&
+        seed.count === form.count &&
+        seed.every === form.every &&
+        seed.price === form.price &&
+        seed.upfront === form.upfront &&
+        form.each === null &&
+        form.firstDueKey === dayKey(seed.firstDue);
+    return same ? seed : null;
+}
+
 /** Records a purchase on a card or an installment app. The upfront is paid from outside: no other account moves. */
 export function PurchaseForm({
     accountId,
     onClose,
     onSwitch,
+    seed,
 }: {
     accountId?: string;
     onClose: () => void;
     onSwitch: (flow: AccountFlow) => void;
+    seed?: PurchaseSeed;
 }) {
     const { ledger } = useDashboard();
     const { flows, purchase } = useIntlayer("dashboard-accounts");
+    const { fee } = useIntlayer("dashboard-installments");
     const committer = useLedgerCommitter();
     const id = useId();
     const cards = openAccounts(ledger.books).filter((row) => row.kind === "liability");
     const [name, setName] = useState("");
     const [categoryId, setCategoryId] = useState<string | null>(null);
-    const [totalText, setTotalText] = useState("");
-    const [picked, setPicked] = useState(accountId ?? cards[0]?.localId ?? null);
-    const [upfrontText, setUpfrontText] = useState("");
-    const [count, setCount] = useState(newInstallmentDraft(null).count);
+    const [start] = useState(() =>
+        startFields(seed, cards.find((row) => row.localId === seed?.accountId)?.currency ?? ledger.currency)
+    );
+    const [totalText, setTotalText] = useState(start.totalText);
+    const [picked, setPicked] = useState(seed?.accountId ?? accountId ?? cards[0]?.localId ?? null);
+    const [upfrontText, setUpfrontText] = useState(start.upfrontText);
+    const [count, setCount] = useState(start.count);
     const [eachText, setEachText] = useState<string | null>(null);
-    const [every, setEvery] = useState<EveryOption>("days14");
-    const [firstDueKey, setFirstDueKey] = useState<string | null>(null);
+    const [every, setEvery] = useState<EveryOption>(start.every);
+    const [firstDueKey, setFirstDueKey] = useState<string | null>(start.firstDueKey);
     const [attempted, setAttempted] = useState(false);
     const [failed, setFailed] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -322,15 +403,21 @@ export function PurchaseForm({
     const currency = account?.currency ?? ledger.currency;
     const decimals = decimalsFor(currency);
     const price = parseAmount(totalText, decimals);
+    const upfront = parseAmount(upfrontText, decimals);
+    const each = eachText?.trim() ? parseAmount(eachText, decimals) : null;
+    const scanned = stillScanned(seed, { accountId: picked, count, each, every, firstDueKey, price, upfront });
     const plan = planPurchase({
         count,
         currency,
-        each: eachText?.trim() ? parseAmount(eachText, decimals) : null,
+        each,
+        edits: scanned?.edits,
         every,
         firstDue: firstDueKey === null ? null : fromKey(firstDueKey),
         now: new Date(ledger.now),
+        paidBefore: scanned?.paidBefore ?? null,
         price,
-        upfront: parseAmount(upfrontText, decimals),
+        purchaseDay: scanned?.purchaseDay ?? null,
+        upfront,
     });
     const splitText = plan.split === null ? "" : amountText(plan.split, currency);
     const blocked = plan.over > 0 || plan.upfrontTooHigh;
@@ -377,11 +464,20 @@ export function PurchaseForm({
             name: name.trim(),
             paidBefore: plan.paidBefore,
             price,
-            purchasedOn: plan.backdated ? plan.firstDue : null,
+            purchasedOn: plan.purchasedOn,
             schedule: plan.schedule,
         });
+        const fees = scanned
+            ? seededFees(ledger, rows, {
+                  categoryId,
+                  currency,
+                  fees: scanned.fees,
+                  note: fee.note({ order: name.trim() }).value,
+                  paidBefore: plan.paidBefore,
+              })
+            : [];
         setSaving(true);
-        const outcome = await committer.commit(rows).settled;
+        const outcome = await committer.commit([...rows, ...fees]).settled;
         if (outcome.status === "failed") {
             setSaving(false);
             setFailed(true);
@@ -460,15 +556,15 @@ export function PurchaseForm({
                         />
                         <Field>
                             <Field.Label>{purchase.firstDue}</Field.Label>
-                            <Input
-                                className="dash-figure appearance-none [&::-webkit-datetime-edit]:font-mono"
-                                onChange={(event) => setFirstDueKey(event.target.value || null)}
-                                type="date"
-                                value={dayKey(plan.firstDue)}
+                            <DayField
+                                day={dayKey(plan.firstDue)}
+                                label={purchase.firstDue.value}
+                                onDay={setFirstDueKey}
+                                trailing
                             />
                         </Field>
                     </div>
-                    <Summary currency={currency} plan={plan} />
+                    <Summary currency={currency} plan={plan} scanned={scanned !== null} />
                 </form>
             </Dialog.Body>
             <Dialog.Footer>
@@ -476,10 +572,14 @@ export function PurchaseForm({
                     <span className="text-destructive flex items-center text-[13px]">{flows.saveFailed}</span>
                 ) : null}
                 {failed || blocked ? null : (
-                    <PhoneAction className="min-w-max!" variant="secondary">
+                    <Button
+                        className="min-w-max!"
+                        onClick={() => onSwitch({ accountId: picked ?? undefined, kind: "scan" })}
+                        variant="secondary"
+                    >
                         <Glyph icon={ImageAdd01Icon} size={16} />
                         {purchase.importScreenshot}
-                    </PhoneAction>
+                    </Button>
                 )}
                 <Button onClick={onClose} variant="secondary">
                     {flows.cancel}

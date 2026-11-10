@@ -3,23 +3,23 @@ import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import SquareLock02Icon from "@hugeicons/core-free-icons/SquareLock02Icon";
 import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
-import { currencyDisplayFor, decimalsFor } from "@outlayr/money/currency";
+import { decimalsFor } from "@outlayr/money/currency";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Field } from "panelui-web/field";
 import { Input } from "panelui-web/input";
 import { Select } from "panelui-web/select";
-import { useId, useMemo, useRef, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { FlowDialog } from "@/components/dashboard/accounts/fields";
+import { DayField, FlowDialog, MoneyField, plainAmount } from "@/components/dashboard/accounts/fields";
 import { UNDO_HOLD_MS, useAccountFlows, useLedgerDb } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { accountRows, inMain } from "@/components/dashboard/accounts/model";
 import type { AccountRow } from "@/components/dashboard/accounts/model";
-import { useDateFormat, useMonthYear } from "@/components/dashboard/home/format";
+import { useMonthYear } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
@@ -50,95 +50,6 @@ const POPUP = "app-shell z-[60]";
 const DEFAULT_SPAN_DAYS = 365;
 const LABEL = "data-invalid:text-foreground has-[[aria-invalid=true]]:text-foreground";
 const LOCKED = "bg-app-fill/40 text-muted-foreground flex h-9 w-full items-center gap-2 rounded-lg border px-3 text-sm";
-
-const plainAmount = (amount: number, currency: string) => {
-    const decimals = decimalsFor(currency);
-    return new Intl.NumberFormat("en-US", { maximumFractionDigits: decimals, minimumFractionDigits: decimals }).format(
-        amount
-    );
-};
-
-function MoneyField({
-    autoFocus = false,
-    currency,
-    invalid = false,
-    label,
-    onText,
-    text,
-}: {
-    autoFocus?: boolean;
-    currency: string;
-    invalid?: boolean;
-    label: string;
-    onText: (text: string) => void;
-    text: string;
-}) {
-    const decimals = decimalsFor(currency);
-    return (
-        <Input.Group className="has-[input[aria-invalid=true]]:ring-3">
-            <Input.Addon className="dash-figure text-muted-foreground pe-2!">
-                {currencyDisplayFor(currency).symbol}
-            </Input.Addon>
-            <Input
-                aria-invalid={invalid || undefined}
-                aria-label={label}
-                autoFocus={autoFocus}
-                className="dash-figure ps-1"
-                inputMode="decimal"
-                onBlur={() => {
-                    if (text.trim() !== "") {
-                        onText(plainAmount(parseAmount(text, decimals), currency));
-                    }
-                }}
-                onChange={(event) => onText(event.target.value)}
-                placeholder={plainAmount(0, currency)}
-                value={text}
-            />
-        </Input.Group>
-    );
-}
-
-function DayField({
-    invalid = false,
-    label,
-    min,
-    onDay,
-    day,
-}: {
-    day: string;
-    invalid?: boolean;
-    label: string;
-    min?: string;
-    onDay: (day: string) => void;
-}) {
-    const date = useDateFormat();
-    const input = useRef<HTMLInputElement>(null);
-    return (
-        <div className="relative flex w-full items-center">
-            <Button
-                aria-invalid={invalid || undefined}
-                aria-label={label}
-                className="dash-figure aria-invalid:border-destructive aria-invalid:ring-destructive/20 w-full justify-start gap-2 px-3 font-normal aria-invalid:ring-3"
-                onClick={() => input.current?.showPicker()}
-                type="button"
-                variant="outline"
-            >
-                <Glyph icon={Calendar03Icon} className="text-muted-foreground" size={15} />
-                {date.full(day)}
-            </Button>
-            <input
-                aria-hidden
-                className="pointer-events-none absolute inset-0 appearance-none opacity-0 pointer-coarse:pointer-events-auto"
-                min={min}
-                onChange={(event) => event.target.value && onDay(event.target.value)}
-                ref={input}
-                tabIndex={-1}
-                type="date"
-                value={day}
-            />
-        </div>
-    );
-}
 
 function Locked({ row }: { row: Pick<AccountRow, "look" | "name"> }) {
     const { photos } = useDashboard();

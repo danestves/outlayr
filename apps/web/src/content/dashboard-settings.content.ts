@@ -139,6 +139,18 @@ const dashboardSettings = {
                 fr: "Envoie les noms de commerçants et de catégories à un fournisseur d'IA, jamais les montants, dates ou comptes",
                 pt: "Envia nomes de comerciantes e categorias a um provedor de IA, nunca valores, datas ou contas",
             }),
+            sendToAi: t({
+                en: "Send data to AI providers",
+                es: "Enviar datos a proveedores de IA",
+                fr: "Envoyer les données aux fournisseurs d'IA",
+                pt: "Enviar dados a provedores de IA",
+            }),
+            sendToAiHint: t({
+                en: "Lets this browser send installment plan screenshots to an AI provider to read them",
+                es: "Permite que este navegador envíe capturas de planes de cuotas a un proveedor de IA para leerlas",
+                fr: "Permet à ce navigateur d'envoyer des captures de plans de paiement à un fournisseur d'IA pour les lire",
+                pt: "Permite que este navegador envie capturas de planos de parcelamento a um provedor de IA para lê-las",
+            }),
         },
         help: {
             title: t({ en: "Help", es: "Ayuda", fr: "Aide", pt: "Ajuda" }),

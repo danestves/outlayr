@@ -34,6 +34,8 @@ export function MobileBar() {
         title = nav.goals;
     } else if (page === "debts") {
         title = nav.debts;
+    } else if (page === "installments") {
+        title = nav.installments;
     } else if (page === "settings") {
         title = account.settings;
     }

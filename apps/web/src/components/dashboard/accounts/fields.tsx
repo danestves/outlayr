@@ -1,6 +1,7 @@
 import { Popover } from "@base-ui/react/popover";
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import ArrowUp01Icon from "@hugeicons/core-free-icons/ArrowUp01Icon";
+import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
@@ -9,10 +10,11 @@ import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Input } from "panelui-web/input";
 import { Label } from "panelui-web/label";
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useDateFormat } from "@/components/dashboard/home/format";
 import { parseAmount } from "@/lib/account-writes";
 import { money } from "@/lib/ledger";
 
@@ -215,6 +217,103 @@ export function Fact({ children, label }: { children: ReactNode; label: ReactNod
         <div className="flex h-9 items-center gap-2 border-b text-[13px] last:border-0">
             <span className="text-muted-foreground flex min-w-0 items-center gap-2 [&>svg]:flex-none">{label}</span>
             <span className="dash-figure ml-auto">{children}</span>
+        </div>
+    );
+}
+
+export const plainAmount = (amount: number, currency: string) => {
+    const decimals = decimalsFor(currency);
+    return new Intl.NumberFormat("en-US", { maximumFractionDigits: decimals, minimumFractionDigits: decimals }).format(
+        amount
+    );
+};
+
+export function MoneyField({
+    autoFocus = false,
+    className = "",
+    currency,
+    invalid = false,
+    label,
+    onText,
+    text,
+}: {
+    autoFocus?: boolean;
+    className?: string;
+    currency: string;
+    invalid?: boolean;
+    label: string;
+    onText: (text: string) => void;
+    text: string;
+}) {
+    const decimals = decimalsFor(currency);
+    return (
+        <Input.Group className={`has-[input[aria-invalid=true]]:ring-3 ${className}`}>
+            <Input.Addon className="dash-figure text-muted-foreground pe-2!">
+                {currencyDisplayFor(currency).symbol}
+            </Input.Addon>
+            <Input
+                aria-invalid={invalid || undefined}
+                aria-label={label}
+                autoFocus={autoFocus}
+                className="dash-figure ps-1"
+                inputMode="decimal"
+                onBlur={() => {
+                    if (text.trim() !== "") {
+                        onText(plainAmount(parseAmount(text, decimals), currency));
+                    }
+                }}
+                onChange={(event) => onText(event.target.value)}
+                placeholder={plainAmount(0, currency)}
+                value={text}
+            />
+        </Input.Group>
+    );
+}
+
+export function DayField({
+    invalid = false,
+    label,
+    max,
+    min,
+    onDay,
+    day,
+    trailing = false,
+}: {
+    day: string;
+    invalid?: boolean;
+    label: string;
+    max?: string;
+    min?: string;
+    onDay: (day: string) => void;
+    trailing?: boolean;
+}) {
+    const date = useDateFormat();
+    const input = useRef<HTMLInputElement>(null);
+    return (
+        <div className="relative flex w-full items-center">
+            <Button
+                aria-invalid={invalid || undefined}
+                aria-label={label}
+                className="dash-figure aria-invalid:border-destructive aria-invalid:ring-destructive/20 w-full justify-start gap-2 px-3 font-normal aria-invalid:ring-3"
+                onClick={() => input.current?.showPicker()}
+                type="button"
+                variant="outline"
+            >
+                {trailing ? null : <Glyph icon={Calendar03Icon} className="text-muted-foreground" size={15} />}
+                {date.full(day)}
+                {trailing ? <Glyph icon={Calendar03Icon} className="text-muted-foreground ms-auto" size={15} /> : null}
+            </Button>
+            <input
+                aria-hidden
+                className="pointer-events-none absolute inset-0 appearance-none opacity-0 pointer-coarse:pointer-events-auto"
+                max={max}
+                min={min}
+                onChange={(event) => event.target.value && onDay(event.target.value)}
+                ref={input}
+                tabIndex={-1}
+                type="date"
+                value={day}
+            />
         </div>
     );
 }

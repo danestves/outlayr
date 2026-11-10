@@ -176,10 +176,10 @@ function DetailBar({ row }: { row: AccountRow }) {
                                 <Glyph icon={CalendarCheckIn01Icon} size={16} />
                                 {actions.newPurchase}
                             </Menu.Item>
-                            <PhoneItem>
+                            <Menu.Item onClick={() => open({ accountId: row.id, kind: "scan" })}>
                                 <Glyph icon={ImageAdd01Icon} size={16} />
                                 {actions.importScreenshot}
-                            </PhoneItem>
+                            </Menu.Item>
                             <PhoneItem>
                                 <Glyph icon={Flag01Icon} size={16} />
                                 {actions.payOffBy}
@@ -910,7 +910,12 @@ function InstallmentsCard({ row }: { row: AccountRow }) {
                         const amount = money(plan.left, plan.currency);
                         const [before, after] = list.planLeft({ amount }).value.split(amount);
                         return (
-                            <div key={plan.id}>
+                            <Link
+                                className="hover:bg-muted/50 -m-2 block rounded-lg p-2 transition-colors"
+                                key={plan.id}
+                                params={{ planId: plan.id }}
+                                to="/app/installments/$planId"
+                            >
                                 <div className="flex items-baseline gap-2 text-[13px] font-medium">
                                     <span className="min-w-0 truncate">{plan.name || list.planFallback}</span>
                                     <span className="dash-figure ml-auto whitespace-nowrap">
@@ -924,7 +929,7 @@ function InstallmentsCard({ row }: { row: AccountRow }) {
                                     {plan.count} x {money(plan.each, plan.currency)}
                                     <span className="ml-auto">{list.planPaid({ count: plan.paidCount })}</span>
                                 </div>
-                            </div>
+                            </Link>
                         );
                     })}
                 </div>

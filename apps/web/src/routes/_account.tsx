@@ -41,6 +41,10 @@ const DebtsFirstVisit = lazy(async () => {
     const pending = await import("@/components/dashboard/debts/debts-pending");
     return { default: pending.DebtsFirstVisit };
 });
+const InstallmentsFirstVisit = lazy(async () => {
+    const pending = await import("@/components/dashboard/installments/installments-pending");
+    return { default: pending.InstallmentsFirstVisit };
+});
 const TransactionsFirstVisit = lazy(async () => {
     const pending = await import("@/components/dashboard/transactions/transactions-pending");
     return { default: pending.TransactionsFirstVisit };
@@ -87,6 +91,9 @@ function firstVisitFor(page: string | undefined) {
     }
     if (page === "debts") {
         return <DebtsFirstVisit />;
+    }
+    if (page === "installments") {
+        return <InstallmentsFirstVisit />;
     }
     return page === "settings" ? <SettingsFirstVisit /> : <HomeFirstVisit />;
 }

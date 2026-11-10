@@ -7,7 +7,7 @@ import {
     overPrice,
     paidBeforeCount,
 } from "@outlayr/money/installment-draft";
-import type { EveryOption } from "@outlayr/money/installment-draft";
+import type { EveryOption, InstallmentDraft } from "@outlayr/money/installment-draft";
 import { generateSchedule } from "@outlayr/money/installments";
 import type { ScheduledInstallment } from "@outlayr/money/installments";
 import * as Effect from "effect/Effect";
@@ -20,10 +20,13 @@ export interface PurchaseChoices {
     currency: string;
     /** Null while each installment is the price split evenly. */
     each: number | null;
+    edits?: InstallmentDraft["edits"];
     every: EveryOption;
     firstDue: Date | null;
     now: Date;
+    paidBefore?: number | null;
     price: number;
+    purchaseDay?: Date | null;
     upfront: number;
 }
 
@@ -31,10 +34,31 @@ export interface PurchaseChoices {
  * The schedule the form shows and saves. An old purchase recorded late starts on its first due day, and whatever fell
  * due before today counts as already paid, as on native, so a plan does not open overdue.
  */
-export function planPurchase({ count, currency, each, every, firstDue, now, price, upfront }: PurchaseChoices) {
+export function planPurchase({
+    count,
+    currency,
+    each,
+    edits = {},
+    every,
+    firstDue,
+    now,
+    paidBefore: paid = null,
+    price,
+    purchaseDay: scanned = null,
+    upfront,
+}: PurchaseChoices) {
     const backdated = firstDue !== null && firstDue < now;
-    const purchaseDay = backdated ? firstDue : now;
-    const draft = { ...newInstallmentDraft(null), count, each, every, firstDue, upfront: { amount: upfront } };
+    const purchaseDay = scanned ?? (backdated ? firstDue : now);
+    const draft = {
+        ...newInstallmentDraft(null),
+        count,
+        each,
+        edits,
+        every,
+        firstDue,
+        paidBefore: paid,
+        upfront: { amount: upfront },
+    };
     const schedule = price > 0 ? draftSchedule(draft, price, purchaseDay, currency) : null;
     const installments = schedule?.filter((row) => row.sequence > 0) ?? [];
     const paidBefore = schedule ? paidBeforeCount(draft, schedule, now) : 0;
@@ -54,6 +78,7 @@ export function planPurchase({ count, currency, each, every, firstDue, now, pric
         over: schedule ? overPrice(schedule, price, currency) : 0,
         paidBefore,
         paidNow: upfront + settled,
+        purchasedOn: scanned ?? (backdated ? firstDue : null),
         schedule,
         split: each === null ? (installments[0]?.amount ?? null) : null,
         total: schedule?.reduce((sum, row) => sum + row.amount, 0) ?? 0,

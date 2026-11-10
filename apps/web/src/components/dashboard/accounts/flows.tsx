@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import type { PurchaseSeed } from "@/lib/installment-scan";
 import { writeSettings } from "@/lib/ledger-settings";
 
 import type { AccountSort } from "./model";
@@ -15,7 +16,8 @@ export type AccountType = "bank" | "card" | "cash";
 export type AccountFlow =
     | { accountId: string; kind: "archive" | "check" | "delete" | "edit" }
     | { kind: "create"; type: AccountType }
-    | { accountId?: string; kind: "purchase" }
+    | { accountId?: string; kind: "purchase"; seed?: PurchaseSeed }
+    | { accountId?: string; kind: "scan" }
     | { accountId: string; kind: "transfer" }
     | { accountId?: string; from?: string; kind: "entry" };
 

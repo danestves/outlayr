@@ -144,6 +144,53 @@ const entry = (
     ...fields,
 });
 
+const plain = <Table extends TableNames>(localId: string, seq: number) => {
+    const { emoji: _emoji, icon: _icon, ...base } = envelope<Table>(localId, seq);
+    return base;
+};
+
+const PLAN_EACH = 75;
+const PLAN_COUNT = 6;
+const PLAN_PAID = 2;
+
+function samplePlan(now: number): Pick<LedgerBooks, "installmentPlans" | "installments" | "outsidePayments"> & {
+    purchase: Doc<"transactions">;
+} {
+    const bought = now - PLAN_PAID * MONTH_MS;
+    const planId = "plan-0";
+    const purchase = {
+        ...entry(bought, RECENT_ENTRIES + PAST_MONTHS + UPCOMING + 1, { amount: PLAN_EACH * PLAN_COUNT }),
+        accountId: ACCOUNTS[2]?.localId ?? null,
+        note: "Sample order",
+    };
+    const installments = Array.from({ length: PLAN_COUNT }, (_, index) => ({
+        ...plain<"installments">(`installment-${index}`, index),
+        amount: PLAN_EACH,
+        dueDate: bought + (index + 1) * MONTH_MS - DAY_MS,
+        planId,
+        sequence: index + 1,
+    }));
+    return {
+        installmentPlans: [
+            {
+                ...plain<"installmentPlans">(planId, 0),
+                accountId: purchase.accountId ?? "",
+                dateCreated: bought,
+                transactionId: purchase.localId,
+            },
+        ],
+        installments,
+        outsidePayments: installments.slice(0, PLAN_PAID).map((row, index) => ({
+            ...plain<"outsidePayments">(`outside-${index}`, index),
+            amount: PLAN_EACH,
+            amountUsd: PLAN_EACH,
+            date: row.dueDate,
+            planId,
+        })),
+        purchase,
+    };
+}
+
 function sampleBooks(now: number): LedgerBooks {
     const recent = Array.from({ length: RECENT_ENTRIES }, (_, index) =>
         entry(now - index * RECENT_GAP_MS, index, { amount: 40 + index * 3 })
@@ -159,6 +206,7 @@ function sampleBooks(now: number): LedgerBooks {
             recurringType: RECURRING_TYPE.monthly,
         })
     );
+    const { purchase, ...plan } = samplePlan(now);
     return {
         accounts: [...ACCOUNTS, ...PEOPLE],
         // Without a stored zone the ledger infers one from each row's `day`, which these rows do not model.
@@ -166,16 +214,16 @@ function sampleBooks(now: number): LedgerBooks {
         budgets: CATEGORIES.slice(0, 3).map((each, index) => budget(each, index, now - PAST_MONTHS * MONTH_MS)),
         categories: CATEGORIES,
         exchangeRates: [],
-        installmentPlans: [],
-        installments: [],
+        installmentPlans: plan.installmentPlans,
+        installments: plan.installments,
         savingsGoals: [
             goal("Emergency fund", 1, now, { start: 1000, target: 10_000 }),
             goal("Trip", 4, now, { start: 500, target: 4000 }),
         ],
         mainBudget: [],
         outsideMoves: [],
-        outsidePayments: [],
-        transactions: [...past, ...recent, income, ...charges],
+        outsidePayments: plan.outsidePayments,
+        transactions: [...past, ...recent, income, ...charges, purchase],
         transfers: [],
     };
 }
