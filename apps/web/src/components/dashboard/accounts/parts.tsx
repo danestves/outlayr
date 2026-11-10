@@ -98,6 +98,7 @@ export function KpiCell({
     color,
     icon,
     label,
+    loose = false,
     quiet = false,
     tone = "",
     value,
@@ -106,6 +107,7 @@ export function KpiCell({
     color: string;
     icon?: IconSvgElement;
     label: ReactNode;
+    loose?: boolean;
     quiet?: boolean;
     /** A text colour class for the figure. */
     tone?: string;
@@ -122,12 +124,14 @@ export function KpiCell({
                 <Kpi.Title>{label}</Kpi.Title>
             </Kpi.Header>
             <Kpi.Value
-                className={`dash-figure ${icon ? "mt-2" : "mt-1"} truncate leading-8 font-semibold tracking-[-0.04em] ${quiet ? "text-muted-foreground" : ""} ${tone}`}
+                className={`dash-figure ${icon || loose ? "mt-2" : "mt-1"} truncate ${loose ? "leading-[30px]" : "leading-8"} font-semibold tracking-[-0.04em] ${quiet ? "text-muted-foreground" : ""} ${tone}`}
             >
                 {value}
             </Kpi.Value>
             {quiet ? null : (
-                <Kpi.Footer className={`${icon ? "h-7" : "h-5"} mt-1 justify-between`}>{children}</Kpi.Footer>
+                <Kpi.Footer className={`${icon ? "h-7" : "h-5"} ${loose ? "mt-2" : "mt-1"} justify-between`}>
+                    {children}
+                </Kpi.Footer>
             )}
         </Kpi>
     );

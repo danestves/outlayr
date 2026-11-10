@@ -1,4 +1,4 @@
-import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
+import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import LinkSquare02Icon from "@hugeicons/core-free-icons/LinkSquare02Icon";
@@ -65,7 +65,7 @@ function DetailBar({ view }: { view: PlanView }) {
                         size="icon"
                         variant="ghost"
                     >
-                        <Glyph icon={ArrowLeft01Icon} size={16} />
+                        <Glyph icon={ArrowLeft02Icon} size={18} />
                     </Button>
                     <Link className="text-muted-foreground hover:text-foreground font-medium" to="/app/installments">
                         {title}
@@ -150,7 +150,7 @@ function NextCell({ view }: { view: PlanView }) {
     const { next, overdue } = view;
     if (overdue) {
         return (
-            <KpiCell color={MUTED} label={kpi.overdue} value={format(overdue.amount, view.currency)}>
+            <KpiCell color={MUTED} loose label={kpi.overdue} value={format(overdue.amount, view.currency)}>
                 <OverdueBadge>{kpi.since({ date: date.day(overdue.since) })}</OverdueBadge>
             </KpiCell>
         );
@@ -159,7 +159,7 @@ function NextCell({ view }: { view: PlanView }) {
         const terms =
             view.each === null ? null : detail.terms({ cadence: cadence(view.cadence) ?? "", count: view.count });
         return (
-            <KpiCell color={MUTED} label={detail.plan} value={format(view.each ?? view.scheduled, view.currency)}>
+            <KpiCell color={MUTED} loose label={detail.plan} value={format(view.each ?? view.scheduled, view.currency)}>
                 {note(terms)}
             </KpiCell>
         );
@@ -172,7 +172,7 @@ function NextCell({ view }: { view: PlanView }) {
         when = detail.nextTomorrow({ date: due(next.day) });
     }
     return (
-        <KpiCell color={MUTED} label={detail.next} value={format(next.remaining, view.currency)}>
+        <KpiCell color={MUTED} loose label={detail.next} value={format(next.remaining, view.currency)}>
             {note(when)}
         </KpiCell>
     );
@@ -196,6 +196,7 @@ function Kpis({ view }: { view: PlanView }) {
     return (
         <KpiBand>
             <KpiCell
+                loose
                 color={MUTED}
                 label={kpi.leftToPay}
                 tone={view.left === 0 ? "text-muted-foreground" : ""}
@@ -203,11 +204,12 @@ function Kpis({ view }: { view: PlanView }) {
             >
                 {note(left)}
             </KpiCell>
-            <KpiCell color={MUTED} label={detail.paid} value={format(view.paid, view.currency)}>
+            <KpiCell color={MUTED} loose label={detail.paid} value={format(view.paid, view.currency)}>
                 {note(progress({ count: view.count, paid: view.paidCount }))}
             </KpiCell>
             <NextCell view={view} />
             <KpiCell
+                loose
                 color={MUTED}
                 label={view.purchaseDay ? detail.boughtFor({ date: due(view.purchaseDay) }) : columns.price}
                 value={format(view.price, view.currency)}
@@ -230,7 +232,9 @@ function RowMenu({ item, view }: { item: InstallmentView; view: PlanView }) {
         <Menu>
             <Menu.Trigger
                 aria-label={menu.more({ name: label(view, item) }).value}
-                render={<Button className="text-muted-foreground -mx-2 size-[26px]" size="icon-sm" variant="ghost" />}
+                render={
+                    <Button className="text-muted-foreground -mx-2 -my-1 size-[26px]" size="icon-sm" variant="ghost" />
+                }
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
@@ -288,30 +292,26 @@ function Schedule({ view }: { view: PlanView }) {
                     columns.amount,
                     columns.leftAfter,
                 ]}
-                phoneHidden={[2, 4]}
+                phoneHidden={[2, 4, 5]}
             >
                 {rows.map((item) => {
                     const muted = item.status === "paid" && !view.finished;
                     return (
                         <Table.Row className={muted ? "text-muted-foreground" : ""} key={item.id}>
-                            <Cell className="text-[13px]">{label(view, item)}</Cell>
-                            <Cell className={`dash-figure text-[13px] ${muted ? "" : "text-muted-foreground"}`}>
-                                {due(item.day)}
-                            </Cell>
+                            <Cell>{label(view, item)}</Cell>
+                            <Cell className="dash-figure">{due(item.day)}</Cell>
                             <Cell>
                                 <RowStatus item={item} next={item.id === view.next?.id} />
                             </Cell>
-                            <Cell className="text-muted-foreground text-[13px]">
+                            <Cell className="text-muted-foreground">
                                 <PaidFrom item={item} />
                             </Cell>
-                            <Cell className={muted ? "text-muted-foreground font-normal" : ""} figure>
+                            <Cell className="font-normal" figure>
                                 {format(item.owed, view.currency)}
                             </Cell>
                             <Cell>
                                 <span className="flex items-center justify-end gap-3">
-                                    <span className={`dash-figure text-sm ${muted ? "" : "font-medium"}`}>
-                                        {format(item.leftAfter, view.currency)}
-                                    </span>
+                                    <span className="dash-figure text-sm">{format(item.leftAfter, view.currency)}</span>
                                     {view.finished ? null : <RowMenu item={item} view={view} />}
                                 </span>
                             </Cell>

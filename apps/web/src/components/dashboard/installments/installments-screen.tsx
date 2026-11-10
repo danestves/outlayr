@@ -1,5 +1,7 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ImageAdd01Icon from "@hugeicons/core-free-icons/ImageAdd01Icon";
+import { decimalsFor } from "@outlayr/money/currency";
+import { roundMoney } from "@outlayr/money/round";
 import { Link } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
@@ -13,6 +15,7 @@ import { useIntlayer } from "react-intlayer";
 import { AccountsBar, Card, Cell, DataTable, MUTED } from "@/components/dashboard/accounts/accounts-screen";
 import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { inMain } from "@/components/dashboard/accounts/model";
 import { KpiBand, KpiCell } from "@/components/dashboard/accounts/parts";
 import { useGoalMoney } from "@/components/dashboard/goals/parts";
 import { useDateFormat } from "@/components/dashboard/home/format";
@@ -58,14 +61,15 @@ function Kpis({ summary }: { summary: InstallmentsSummary }) {
     const [late, ...more] = overdue?.plans ?? [];
     return (
         <KpiBand>
-            <KpiCell color={MUTED} label={kpi.leftToPay} tone={tone(left)} value={money(left)}>
+            <KpiCell color={MUTED} loose label={kpi.leftToPay} tone={tone(left)} value={money(left)}>
                 {quiet(orders)}
             </KpiCell>
-            <KpiCell color={MUTED} label={kpi.next30} tone={tone(soon.amount)} value={money(soon.amount)}>
+            <KpiCell color={MUTED} loose label={kpi.next30} tone={tone(soon.amount)} value={money(soon.amount)}>
                 {quiet(payments)}
             </KpiCell>
             <KpiCell
                 color={MUTED}
+                loose
                 label={kpi.overdue}
                 tone={tone(overdue?.amount ?? 0)}
                 value={money(overdue?.amount ?? 0)}
@@ -79,7 +83,7 @@ function Kpis({ summary }: { summary: InstallmentsSummary }) {
                     quiet(kpi.nothingOverdue)
                 )}
             </KpiCell>
-            <KpiCell color={MUTED} label={kpi.paidSoFar} tone={tone(paid)} value={money(paid)}>
+            <KpiCell color={MUTED} loose label={kpi.paidSoFar} tone={tone(paid)} value={money(paid)}>
                 {quiet(kpi.ofTotal({ amount: money(scheduled) }))}
             </KpiCell>
         </KpiBand>
@@ -89,7 +93,7 @@ function Kpis({ summary }: { summary: InstallmentsSummary }) {
 function OrderLink({ view }: { view: PlanView }) {
     return (
         <Link
-            className="flex min-w-0 items-center gap-2.5 text-sm font-medium hover:underline"
+            className="flex max-w-[8.5rem] min-w-0 items-center gap-2.5 text-sm font-medium hover:underline sm:max-w-none"
             params={{ planId: view.id }}
             to="/app/installments/$planId"
         >
@@ -304,15 +308,25 @@ function EmptyOrders() {
     );
 }
 
-const count = (value: number) => <span className="dash-figure text-muted-foreground ms-2 text-xs">{value}</span>;
+const count = (value: number) => <span className="dash-figure text-muted-foreground text-xs">{value}</span>;
 
-function OrdersCard({ summary }: { summary: InstallmentsSummary }) {
+function OrdersCard({
+    accountId,
+    onAccount,
+    onTab,
+    summary,
+    tab,
+}: {
+    accountId: string;
+    onAccount: (id: string) => void;
+    onTab: (tab: Tab) => void;
+    summary: InstallmentsSummary;
+    tab: Tab;
+}) {
     const { paidOffCount, tabs } = useIntlayer("dashboard-installments");
     const { ledger } = useDashboard();
     const format = useGoalMoney();
     const { active, paidOff } = summary;
-    const [tab, setTab] = useState<Tab>(active.length === 0 && paidOff.length > 0 ? "paidOff" : "orders");
-    const [accountId, setAccountId] = useState(ALL);
     const all = [...active, ...paidOff];
     const empty = all.length === 0;
     const mine = (view: PlanView) => accountId === ALL || view.account.id === accountId;
@@ -322,12 +336,12 @@ function OrdersCard({ summary }: { summary: InstallmentsSummary }) {
     return (
         <Tabs
             className={`min-w-0 ${tab === "paidOff" || empty ? "flex flex-1 flex-col" : ""}`}
-            onValueChange={(next: Tab) => setTab(next)}
+            onValueChange={onTab}
             value={tab}
             variant="underline"
         >
             <Frame className="min-w-0 flex-1">
-                <div className="flex h-10 items-center gap-3 ps-3 pe-0.5">
+                <div className="relative flex h-10 items-center gap-3">
                     <Tabs.List aria-label={tabs.orders.value} className="h-10 self-end">
                         <Tabs.Trigger value="orders">
                             {tabs.orders}
@@ -339,8 +353,8 @@ function OrdersCard({ summary }: { summary: InstallmentsSummary }) {
                         </Tabs.Trigger>
                     </Tabs.List>
                     {empty ? null : (
-                        <span className="ms-auto">
-                            <AccountFilter onPick={setAccountId} value={accountId} views={all} />
+                        <span className="absolute end-1 top-1 z-10">
+                            <AccountFilter onPick={onAccount} value={accountId} views={all} />
                         </span>
                     )}
                 </div>
@@ -377,18 +391,26 @@ function OrdersCard({ summary }: { summary: InstallmentsSummary }) {
     );
 }
 
-function ComingUpCard({ summary }: { summary: InstallmentsSummary }) {
+function ComingUpCard({ accountId, summary }: { accountId: string; summary: InstallmentsSummary }) {
     const { ledger } = useDashboard();
     const { columns, comingUp } = useIntlayer("dashboard-installments");
     const format = useGoalMoney();
     const due = useDueText();
     const label = useRowLabel();
-    const { rows } = summary.soon;
+    const rows =
+        accountId === ALL ? summary.soon.rows : summary.soon.rows.filter(({ plan }) => plan.account.id === accountId);
     if (rows.length === 0) {
         return null;
     }
+    const total =
+        accountId === ALL
+            ? summary.soon.amount
+            : roundMoney(
+                  rows.reduce((sum, { plan, row }) => sum + inMain(ledger, row.remaining, plan.currency).value, 0),
+                  decimalsFor(ledger.currency)
+              );
     return (
-        <Card aside={format(summary.soon.amount, ledger.currency)} className="flex-1" title={comingUp}>
+        <Card aside={format(total, ledger.currency)} className="flex-1" title={comingUp}>
             <DataTable
                 density="comfortable"
                 head={[columns.date, columns.order, columns.installment, columns.amount]}
@@ -425,6 +447,10 @@ function InstallmentsList() {
     const { summary, views } = useModel();
     const { restoring } = useDashboard();
     const empty = views.length === 0;
+    const [accountId, setAccountId] = useState(ALL);
+    const [tab, setTab] = useState<Tab>(
+        summary.active.length === 0 && summary.paidOff.length > 0 ? "paidOff" : "orders"
+    );
     if (empty && restoring) {
         return (
             <Restoring>
@@ -440,8 +466,15 @@ function InstallmentsList() {
             </AccountsBar>
             <Kpis summary={summary} />
             <div className="mt-4 flex flex-1 flex-col gap-4">
-                <OrdersCard key={empty ? "empty" : "orders"} summary={summary} />
-                {empty ? null : <ComingUpCard summary={summary} />}
+                <OrdersCard
+                    accountId={accountId}
+                    key={empty ? "empty" : "orders"}
+                    onAccount={setAccountId}
+                    onTab={setTab}
+                    summary={summary}
+                    tab={tab}
+                />
+                {empty || tab === "paidOff" ? null : <ComingUpCard accountId={accountId} summary={summary} />}
             </div>
         </main>
     );

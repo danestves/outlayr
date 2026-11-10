@@ -23,7 +23,7 @@ import { useInstallmentFlows } from "./flow-context";
 import { isWeekly } from "./model";
 import type { Cadence, InstallmentView, PlanView } from "./model";
 
-export const BADGE = "dash-figure h-[22px] rounded-md px-2 text-xs font-medium normal-nums";
+export const BADGE = "h-6 rounded-md px-2 text-xs font-medium";
 
 export function OrderTile({ look }: { look: PlanView["look"] }) {
     const icon = look?.icon ? CATEGORY_ICONS.get(look.icon) : undefined;

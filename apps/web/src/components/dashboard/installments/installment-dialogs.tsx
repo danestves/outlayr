@@ -1,7 +1,6 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import BanIcon from "@hugeicons/core-free-icons/BanIcon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
-import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import type { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
 import { decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
@@ -169,7 +168,7 @@ function SourcePick({
                 {picked ? <AccountTile account={picked.look} photos={photos} size="sm" /> : ban}
                 <Select.Value />
             </Select.Trigger>
-            <Select.Content className={POPUP}>
+            <Select.Content alignItemWithTrigger={false} className={POPUP}>
                 {sources.map((source) => (
                     <Select.Item
                         icon={<AccountTile account={source.look} photos={photos} size="sm" />}
@@ -318,7 +317,7 @@ function PayTitle({ all, target, view }: { all: boolean; target: InstallmentView
         <span className="flex items-center gap-2">
             {all ? pay.allTitle({ name: view.name }) : pay.title({ account: view.account.name })}
             {target?.overdue ? (
-                <Badge className="h-[22px] rounded-md px-2 text-xs font-medium" variant="destructive">
+                <Badge className="h-6 rounded-md px-2 text-xs font-medium" variant="destructive">
                     {status.overdue}
                 </Badge>
             ) : null}
@@ -689,7 +688,6 @@ function DeletePending({ onClose, view }: { onClose: () => void; view: PlanView 
                     {cancel}
                 </Button>
                 <Button className={FOOTER_PILL} onClick={remove} variant="destructive">
-                    <Glyph icon={Delete02Icon} size={16} />
                     {copy.confirm}
                 </Button>
             </Dialog.Footer>

@@ -74,7 +74,7 @@ function ChoiceField<Value extends string>({
                 <Select.Trigger icon={CHEVRON}>
                     <Select.Value className={figure ? "dash-figure" : undefined} />
                 </Select.Trigger>
-                <Select.Content className={CONTENT}>
+                <Select.Content alignItemWithTrigger={false} className={CONTENT}>
                     {options.map((option) => (
                         <Select.Item key={option.value} value={option.value}>
                             {option.label}
@@ -108,13 +108,16 @@ function NoCardsSelect({ onAdd, onOther }: { onAdd: (app: InstallmentApp) => voi
             <Select.Trigger icon={CHEVRON}>
                 <Select.Value placeholder={purchase.pick.value} />
             </Select.Trigger>
-            <Select.Content className={CONTENT}>
+            <Select.Content alignItemWithTrigger={false} className={CONTENT}>
                 {apps.length > 0 ? (
                     <Select.Group>
                         <Select.GroupLabel>{purchase.appsIn({ region: regionName ?? "" })}</Select.GroupLabel>
                         {apps.map((app) => (
                             <Select.Item key={app.id} value={app.id}>
-                                {app.label}
+                                <span className="flex w-full items-center justify-between gap-3">
+                                    {app.label}
+                                    <span className="text-app-tint">{purchase.add}</span>
+                                </span>
                             </Select.Item>
                         ))}
                     </Select.Group>
@@ -149,7 +152,7 @@ function CategoryField({ onPick, value }: { onPick: (id: string | null) => void;
                     {chosen ? <CategoryDot color={chosen.color} /> : null}
                     <Select.Value placeholder={purchase.pick.value} />
                 </Select.Trigger>
-                <Select.Content className={CONTENT}>
+                <Select.Content alignItemWithTrigger={false} className={CONTENT}>
                     {categories.map((row) => (
                         <Select.Item icon={<CategoryDot color={row.color} />} key={row.localId} value={row.localId}>
                             {row.name}
@@ -193,7 +196,7 @@ function AccountField({
                         {chosen ? <AccountTile account={accountLook(chosen)} photos={photos} size="sm" /> : null}
                         <Select.Value placeholder={purchase.pick.value} />
                     </Select.Trigger>
-                    <Select.Content className={CONTENT}>
+                    <Select.Content alignItemWithTrigger={false} className={CONTENT}>
                         {cards.map((row) => (
                             <Select.Item key={row.localId} value={row.localId}>
                                 {row.name}
