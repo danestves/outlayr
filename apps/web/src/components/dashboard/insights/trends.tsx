@@ -1,224 +1,262 @@
-import { AreaChart } from "panelui-web/area-chart";
-import { BarChart } from "panelui-web/bar-chart";
-import { MirrorAreaChart } from "panelui-web/mirror-area-chart";
-import { WaterfallChart } from "panelui-web/waterfall-chart";
-import type { WaterfallDatum } from "panelui-web/waterfall-chart";
 import type { ReactNode } from "react";
-import { useIntlayer } from "react-intlayer";
+import { useIntlayer, useLocale } from "react-intlayer";
 
-import { CardFrame } from "@/components/dashboard/home/card-frame";
+import { titled } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 
+import { KEPT_COLOR } from "./flow";
 import { useInsightsFormat } from "./format";
 import type { InsightsModel } from "./model";
+import { Aside, Nothing, PhoneCard } from "./phone/card";
+import { AXIS, AXIS_NOW, Curves, Plot, Stroke } from "./phone/plot";
+import { axisFromZero, bumpArea, bumpLine, floatingAxis, labelled, mirrorAxis, waterfall } from "./phone/scale";
 
-type Format = ReturnType<typeof useInsightsFormat>;
-
-const LEGEND_ROOM = 1.25;
-const FEW_MONTHS = 6;
-const NARROW_BAR = 28;
+const INCOME = "var(--color-app-income)";
+const SPEND = "var(--color-app-spend)";
+const NOW = "color-mix(in oklab, var(--color-foreground) 85%, transparent)";
+const NOW_BAR = "color-mix(in oklab, var(--color-foreground) 92%, transparent)";
+const AVERAGE =
+    "repeating-linear-gradient(90deg, color-mix(in oklab, var(--color-foreground) 70%, transparent) 0 4px, transparent 4px 7px)";
+const GUTTER = 58;
+const WORTH_GUTTER = 64;
+const BARS_HEIGHT = 156;
+const BAR_ROWS = 3;
+const MIRROR_HEIGHT = 176;
+const MIRROR_ROWS = 2;
+const WORTH_HEIGHT = 168;
+const WORTH_ROWS = 4;
+const MIN_BAR = 2;
 
 const keptPercent = (income: number, spent: number) =>
     income > 0 ? Math.round(((income - spent) / income) * 100) : null;
 
-function Aside({ label, value }: { label?: ReactNode; value: string }) {
+const percent = (share: number) => `${share * 100}%`;
+
+function Chart({ children, className, label }: { children: ReactNode; className: string; label: string }) {
     return (
-        <span className="text-muted-foreground text-xs">
-            {label} <span className="text-foreground font-mono font-medium">{value}</span>
-        </span>
+        <div
+            aria-label={label}
+            className={`relative ${className}`}
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an img element cannot hold the drawn chart, so the container is named by role.
+            role="img"
+        >
+            {children}
+        </div>
     );
 }
 
-function Body({ children }: { children: ReactNode }) {
-    return <div className="px-4 pt-3 pb-3">{children}</div>;
-}
-
-function Nothing({ children }: { children: ReactNode }) {
-    return <p className="text-muted-foreground p-4 text-sm">{children}</p>;
+/** The plot less the room its last point's dot needs at the right. */
+function Points({ children }: { children: ReactNode }) {
+    return <div className="absolute inset-y-0 right-2 left-0">{children}</div>;
 }
 
 export function ChangesCard({ model }: { model: InsightsModel }) {
     const { filters, ledger } = useDashboard();
     const copy = useIntlayer("dashboard-insights");
+    const { locale } = useLocale();
     const fmt = useInsightsFormat(ledger);
-    const period = fmt.periodName(filters.period);
+    const period = titled(fmt.periodName(filters.period), locale);
+    const title = copy.changes.title({ period });
     const { changes } = model;
-    const title = copy.changes.title({ period: `${period.charAt(0).toLocaleUpperCase()}${period.slice(1)}` });
     if (changes === null) {
         return (
-            <CardFrame title={title}>
+            <PhoneCard title={title}>
                 <Nothing>{copy.changes.empty}</Nothing>
-            </CardFrame>
+            </PhoneCard>
         );
     }
-    const data: WaterfallDatum[] = [
-        { label: copy.changes.usual.value, total: true, value: changes.usual },
-        ...changes.moves.map((move) => ({
-            label: ledger.categories.get(move.categoryId)?.name ?? copy.changes.other.value,
-            value: move.delta,
-        })),
-        ...(changes.other === 0 ? [] : [{ label: copy.changes.other.value, value: changes.other }]),
-        { label: period, total: true, value: 0 },
-    ];
-    const stepValue = (value: number, total: boolean) => (total ? fmt.compact(value) : fmt.signedWhole(value));
-    return (
-        <CardFrame
-            action={<Aside label={copy.changes.usual} value={fmt.amount(changes.usual)} />}
-            stackAction
-            title={title}
-        >
-            <Body>
-                <WaterfallChart
-                    aspectRatio={1.9}
-                    data={data}
-                    fallColor="success"
-                    label={title.value}
-                    riseColor="destructive"
-                    totalColor="chart-1"
-                >
-                    <WaterfallChart.Grid />
-                    <WaterfallChart.Connectors />
-                    <WaterfallChart.Bars />
-                    <WaterfallChart.Values format={(step) => stepValue(step.value, step.kind === "total")} />
-                    <WaterfallChart.XAxis />
-                    <WaterfallChart.YAxis format={fmt.compact} ticks={4} />
-                    <WaterfallChart.Tooltip
-                        formatTotal={(step) => fmt.amount(step.end)}
-                        formatValue={(step) =>
-                            step.kind === "total" ? fmt.amount(step.value) : fmt.signedWhole(step.value)
-                        }
-                        labels={{
-                            balance: copy.changes.running.value,
-                            fall: copy.changes.less.value,
-                            rise: copy.changes.more.value,
-                            total: copy.changes.total.value,
-                        }}
-                    />
-                </WaterfallChart>
-            </Body>
-        </CardFrame>
+    const steps = waterfall(
+        changes.usual,
+        [
+            ...changes.moves.map((move) => ({ delta: move.delta, id: move.categoryId })),
+            ...(changes.other === 0 ? [] : [{ delta: changes.other, id: "other" }]),
+        ],
+        changes.now
     );
-}
-
-function monthsData(model: InsightsModel) {
-    const last = model.months.length - 1;
-    return model.months.map((month, index) => ({
-        income: month.income,
-        key: month.key,
-        now: index === last ? month.spent : null,
-        past: index === last ? null : month.spent,
-        spent: month.spent,
-    }));
+    const named = new Map([
+        ["now", period],
+        ["other", copy.changes.other.value],
+        ["usual", copy.changes.usual.value],
+    ]);
+    const colorOf = (step: (typeof steps)[number]) => {
+        if (step.kind === "move") {
+            return step.amount > 0 ? SPEND : INCOME;
+        }
+        return step.id === "usual" ? KEPT_COLOR : NOW;
+    };
+    return (
+        <PhoneCard aside={<Aside value={fmt.whole(changes.usual)} />} title={title}>
+            <ol className="flex flex-col gap-[13px] pt-5 pr-[15px] pb-[23px]">
+                {steps.map((step) => (
+                    <li className="relative flex h-5 items-center text-[13.5px]" key={step.id}>
+                        <span className="w-24 shrink-0 truncate text-right">
+                            {step.kind === "move"
+                                ? (ledger.categories.get(step.id)?.name ?? named.get("other"))
+                                : named.get(step.id)}
+                        </span>
+                        <span aria-hidden className="absolute inset-y-0 right-1 left-[107px]">
+                            <span
+                                className="absolute inset-y-0 rounded"
+                                style={{
+                                    background: colorOf(step),
+                                    left: percent(step.left),
+                                    minWidth: MIN_BAR,
+                                    width: percent(step.width),
+                                }}
+                            />
+                        </span>
+                        <span className={`${AXIS} relative ml-auto`}>
+                            {step.kind === "move" ? fmt.signedWhole(step.amount) : fmt.whole(step.amount)}
+                        </span>
+                    </li>
+                ))}
+            </ol>
+        </PhoneCard>
+    );
 }
 
 export function MonthsCard({ model }: { model: InsightsModel }) {
     const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-insights");
     const fmt = useInsightsFormat(ledger);
-    const ended = model.months.filter((month) => month.ended);
-    const average = ended.length === 0 ? 0 : ended.reduce((sum, month) => sum + month.spent, 0) / ended.length;
-    const spent = model.months.some((month) => month.spent > 0);
+    const { months } = model;
+    const before = months.slice(0, -1);
+    const average = before.length === 0 ? 0 : before.reduce((sum, month) => sum + month.spent, 0) / before.length;
+    const highest = Math.max(average, ...months.map((month) => month.spent));
+    if (highest === 0) {
+        return (
+            <PhoneCard title={copy.months.title}>
+                <Nothing>{copy.empty.spending}</Nothing>
+            </PhoneCard>
+        );
+    }
+    const axis = axisFromZero(highest, BAR_ROWS);
+    const last = months.length - 1;
     return (
-        <CardFrame
-            action={average > 0 ? <Aside label={copy.months.averageLabel} value={fmt.amount(average)} /> : null}
+        <PhoneCard
+            aside={average > 0 ? <Aside label={copy.months.averageLabel.value} value={fmt.whole(average)} /> : null}
             title={copy.months.title}
         >
-            {spent ? (
-                <Body>
-                    <BarChart
-                        aspectRatio={1.9}
-                        barWidth={model.months.length < FEW_MONTHS ? NARROW_BAR : undefined}
-                        data={monthsData(model)}
-                        label={copy.months.title.value}
-                        stacked
-                        xDataKey="key"
-                    >
-                        <BarChart.Grid />
-                        <BarChart.Bar color="chart-2" dataKey="past" />
-                        <BarChart.Bar color="chart-1" dataKey="now" />
-                        <BarChart.XAxis format={(datum) => fmt.month(String(datum.key))} />
-                        <BarChart.YAxis format={fmt.compact} ticks={4} />
-                        <BarChart.Tooltip
-                            formatValue={(value) => fmt.amount(value)}
-                            formatX={(datum) => fmt.month(String(datum.key))}
-                            labels={{ now: copy.trend.spending.value, past: copy.trend.spending.value }}
+            <Chart className="h-[221px]" label={copy.months.title.value}>
+                <Plot
+                    gutter={GUTTER}
+                    height={BARS_HEIGHT}
+                    lines={axis.ticks.map((tick, index) => ({
+                        at: (index * BARS_HEIGHT) / BAR_ROWS,
+                        label: fmt.compact(tick),
+                    }))}
+                >
+                    <div className="absolute inset-0 flex">
+                        {months.map((month, index) => (
+                            <div className="relative flex min-w-0 flex-1 items-end justify-center" key={month.key}>
+                                <span
+                                    className="w-[55.56%] max-w-10 rounded-[3px]"
+                                    style={{
+                                        background: index === last ? NOW_BAR : KEPT_COLOR,
+                                        height: percent(month.spent / axis.top),
+                                    }}
+                                />
+                                <span
+                                    className={`${AXIS} absolute top-full mt-[5px] ${index === last ? AXIS_NOW : ""}`}
+                                >
+                                    {fmt.month(month.key)}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                    {average > 0 ? (
+                        <span
+                            className="absolute right-0.5 left-0 h-px"
+                            style={{ background: AVERAGE, top: Math.floor(BARS_HEIGHT * (1 - average / axis.top)) }}
                         />
-                    </BarChart>
-                </Body>
-            ) : (
-                <Nothing>{copy.empty.spending}</Nothing>
-            )}
-        </CardFrame>
+                    ) : null}
+                </Plot>
+            </Chart>
+        </PhoneCard>
     );
-}
-
-function keptLine(
-    fmt: Format,
-    copy: ReturnType<typeof useIntlayer<"dashboard-insights">>,
-    income: number,
-    spent: number
-) {
-    const percent = keptPercent(income, spent);
-    return percent === null ? fmt.amount(income - spent) : copy.trend.kept({ percent: String(percent) }).value;
 }
 
 export function IncomeSpendingCard({ model }: { model: InsightsModel }) {
     const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-insights");
     const fmt = useInsightsFormat(ledger);
-    const { income, spent } = model.flow;
-    const percent = keptPercent(income, spent);
-    const top = Math.max(1, ...model.months.flatMap((month) => [month.income, month.spent])) * LEGEND_ROOM;
-    const empty = model.months.every((month) => month.income === 0 && month.spent === 0);
-    const single = model.months.length < 2;
+    const { months } = model;
+    const kept = keptPercent(model.flow.income, model.flow.spent);
+    const empty = months.every((month) => month.income === 0 && month.spent === 0);
+    const single = months.length < 2;
+    if (empty || single) {
+        return (
+            <PhoneCard title={copy.trend.title}>
+                <Nothing>{single ? copy.trend.single : copy.empty.cashFlow}</Nothing>
+            </PhoneCard>
+        );
+    }
+    const axis = mirrorAxis(
+        Math.max(...months.map((month) => month.income)),
+        Math.max(...months.map((month) => month.spent)),
+        MIRROR_ROWS
+    );
+    const last = months.length - 1;
+    const zero = axis.zero * MIRROR_HEIGHT;
+    const across = (index: number) => (index / last) * 100;
+    const income = months.map((month, index) => ({
+        x: across(index),
+        y: zero - (month.income / axis.whole) * MIRROR_HEIGHT,
+    }));
+    const spent = months.map((month, index) => ({
+        x: across(index),
+        y: zero + (month.spent / axis.whole) * MIRROR_HEIGHT,
+    }));
+    const ends = [
+        { color: INCOME, y: income.at(-1)?.y ?? zero },
+        { color: SPEND, y: spent.at(-1)?.y ?? zero },
+    ];
     return (
-        <CardFrame
-            action={
-                percent === null ? null : (
-                    <Aside label={copy.measures.kept} value={copy.standsOut.kept({ percent: String(percent) }).value} />
-                )
-            }
+        <PhoneCard
+            aside={kept === null ? null : <Aside label={copy.measures.kept.value} value={`${kept}%`} />}
             title={copy.trend.title}
         >
-            {empty || single ? (
-                <Nothing>{single ? copy.trend.single : copy.empty.cashFlow}</Nothing>
-            ) : (
-                <Body>
-                    <MirrorAreaChart
-                        aspectRatio={1.9}
-                        bottomDomain={[0, top]}
-                        data={monthsData(model)}
-                        label={copy.trend.title.value}
-                        topDomain={[0, top]}
-                        xDataKey="key"
-                    >
-                        <MirrorAreaChart.Grid variant="lines" />
-                        <MirrorAreaChart.Area
-                            color="success"
-                            dataKey="income"
-                            label={copy.trend.income.value}
-                            side="top"
-                        />
-                        <MirrorAreaChart.Area
-                            color="destructive"
-                            dataKey="spent"
-                            label={copy.trend.spending.value}
-                            side="bottom"
-                        />
-                        <MirrorAreaChart.Baseline />
-                        <MirrorAreaChart.XAxis format={(datum) => fmt.month(String(datum.key))} />
-                        <MirrorAreaChart.YAxis formatBottom={fmt.compact} formatTop={fmt.compact} />
-                        <MirrorAreaChart.Tooltip
-                            formatValue={(value) => fmt.amount(value)}
-                            formatX={(datum) =>
-                                `${fmt.month(String(datum.key))} · ${keptLine(fmt, copy, Number(datum.income ?? 0), Number(datum.spent ?? 0))}`
-                            }
-                        />
-                        <MirrorAreaChart.Legend />
-                    </MirrorAreaChart>
-                </Body>
-            )}
-        </CardFrame>
+            <Chart className="h-[250px]" label={copy.trend.title.value}>
+                <Plot
+                    gutter={GUTTER}
+                    height={MIRROR_HEIGHT}
+                    lines={axis.lines.map((line) => ({
+                        at: line.at * MIRROR_HEIGHT,
+                        label: fmt.compact(line.value),
+                        zero: line.at === axis.zero,
+                    }))}
+                >
+                    <Points>
+                        <Curves height={MIRROR_HEIGHT}>
+                            <path d={bumpArea(income, zero)} fill={INCOME} fillOpacity={0.22} />
+                            <path d={bumpArea(spent, zero)} fill={SPEND} fillOpacity={0.24} />
+                            <Stroke color={INCOME} d={bumpLine(income)} />
+                            <Stroke color={SPEND} d={bumpLine(spent)} />
+                        </Curves>
+                        <span className="bg-muted-foreground absolute inset-y-0 right-0 w-px" />
+                        {ends.map((end) => (
+                            <span
+                                className="border-card absolute right-0 size-[8.5px] translate-x-1/2 -translate-y-1/2 rounded-full border-[1.5px]"
+                                key={end.color}
+                                style={{ background: end.color, top: end.y }}
+                            />
+                        ))}
+                        {months.map((month, index) => (
+                            <span
+                                className={`${AXIS} absolute top-full mt-0.5 -translate-x-1/2 text-center leading-4 ${index === last ? AXIS_NOW : ""}`}
+                                key={month.key}
+                                style={{ left: `${across(index)}%` }}
+                            >
+                                <span className="block">{fmt.month(month.key)}</span>
+                                <span className="block">
+                                    {month.income > 0 ? `${keptPercent(month.income, month.spent)}%` : " "}
+                                </span>
+                            </span>
+                        ))}
+                    </Points>
+                </Plot>
+            </Chart>
+        </PhoneCard>
     );
 }
 
@@ -226,26 +264,61 @@ export function NetWorthCard({ model }: { model: InsightsModel }) {
     const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-insights");
     const fmt = useInsightsFormat(ledger);
-    const worth = Number(model.netWorth.at(-1)?.netWorth ?? 0);
-    return (
-        <CardFrame action={<Aside value={fmt.amount(worth)} />} title={copy.netWorth.title}>
-            {model.netWorth.length < 2 ? (
+    const values = model.netWorth.map((month) => Number(month.netWorth));
+    const worth = values.at(-1) ?? 0;
+    if (values.length < 2) {
+        return (
+            <PhoneCard aside={<Aside value={fmt.whole(worth)} />} title={copy.netWorth.title}>
                 <Nothing>{copy.trend.single}</Nothing>
-            ) : (
-                <Body>
-                    <AreaChart aspectRatio={1.9} data={model.netWorth} label={copy.netWorth.title.value} xDataKey="key">
-                        <AreaChart.Grid />
-                        <AreaChart.Area color="var(--color-foreground)" dataKey="netWorth" />
-                        <AreaChart.XAxis format={(datum) => fmt.month(String(datum.key))} />
-                        <AreaChart.YAxis format={fmt.compact} ticks={4} />
-                        <AreaChart.Tooltip
-                            formatValue={(value) => fmt.amount(value)}
-                            formatX={(datum) => fmt.day(String(datum.date))}
-                            labels={{ netWorth: copy.netWorth.title.value }}
+            </PhoneCard>
+        );
+    }
+    const axis = floatingAxis(values, WORTH_ROWS);
+    const last = values.length - 1;
+    const across = (index: number) => (index / last) * 100;
+    const points = values.map((value, index) => ({
+        x: across(index),
+        y: (WORTH_HEIGHT * (axis.top - value)) / (axis.top - axis.floor),
+    }));
+    const shown = labelled(values.length);
+    return (
+        <PhoneCard aside={<Aside value={fmt.whole(worth)} />} title={copy.netWorth.title}>
+            <Chart className="h-[230px]" label={copy.netWorth.title.value}>
+                <Plot
+                    gutter={WORTH_GUTTER}
+                    height={WORTH_HEIGHT}
+                    lines={axis.ticks.map((tick, index) => ({
+                        at: (index * WORTH_HEIGHT) / WORTH_ROWS,
+                        label: fmt.compact(tick),
+                    }))}
+                >
+                    <Points>
+                        <Curves height={WORTH_HEIGHT}>
+                            <path
+                                d={bumpArea(points, WORTH_HEIGHT)}
+                                fill="var(--color-foreground)"
+                                fillOpacity={0.12}
+                            />
+                            <Stroke color="var(--color-foreground)" d={bumpLine(points)} />
+                        </Curves>
+                        <span
+                            className="bg-foreground absolute right-0 size-1.5 translate-x-1/2 -translate-y-1/2 rounded-full"
+                            style={{ top: points.at(-1)?.y }}
                         />
-                    </AreaChart>
-                </Body>
-            )}
-        </CardFrame>
+                        {model.netWorth.map((month, index) =>
+                            shown(index) ? (
+                                <span
+                                    className={`${AXIS} absolute top-full mt-1 -translate-x-1/2`}
+                                    key={String(month.key)}
+                                    style={{ left: `${across(index)}%` }}
+                                >
+                                    {fmt.month(String(month.key))}
+                                </span>
+                            ) : null
+                        )}
+                    </Points>
+                </Plot>
+            </Chart>
+        </PhoneCard>
     );
 }

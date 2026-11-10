@@ -54,6 +54,12 @@ import { Route as AccountAppAccountsIndexRouteImport } from './routes/_account/a
 import { Route as AccountAppAccountsAccountIdRouteImport } from './routes/_account/app.accounts.$accountId'
 import { Route as AccountAppAccountsNetWorthRouteImport } from './routes/_account/app.accounts.net-worth'
 import { Route as AccountAppAccountsReorderRouteImport } from './routes/_account/app.accounts.reorder'
+import { Route as AccountAppInsightsIndexRouteImport } from './routes/_account/app.insights.index'
+import { Route as AccountAppInsightsBreakdownRouteImport } from './routes/_account/app.insights.breakdown'
+import { Route as AccountAppInsightsCashFlowRouteImport } from './routes/_account/app.insights.cash-flow'
+import { Route as AccountAppInsightsRecapRouteImport } from './routes/_account/app.insights.recap'
+import { Route as AccountAppInsightsReportsRouteImport } from './routes/_account/app.insights.reports'
+import { Route as AccountAppInsightsYearRouteImport } from './routes/_account/app.insights.year'
 import { Route as AccountAppSettingsIndexRouteImport } from './routes/_account/app.settings.index'
 import { Route as AccountAppSettingsAboutRouteImport } from './routes/_account/app.settings.about'
 import { Route as AccountAppSettingsAccountRouteImport } from './routes/_account/app.settings.account'
@@ -323,6 +329,39 @@ const AccountAppAccountsReorderRoute =
     path: '/accounts/reorder',
     getParentRoute: () => AccountAppRoute,
   } as any)
+const AccountAppInsightsIndexRoute = AccountAppInsightsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountAppInsightsRoute,
+} as any)
+const AccountAppInsightsBreakdownRoute =
+  AccountAppInsightsBreakdownRouteImport.update({
+    id: '/breakdown',
+    path: '/breakdown',
+    getParentRoute: () => AccountAppInsightsRoute,
+  } as any)
+const AccountAppInsightsCashFlowRoute =
+  AccountAppInsightsCashFlowRouteImport.update({
+    id: '/cash-flow',
+    path: '/cash-flow',
+    getParentRoute: () => AccountAppInsightsRoute,
+  } as any)
+const AccountAppInsightsRecapRoute = AccountAppInsightsRecapRouteImport.update({
+  id: '/recap',
+  path: '/recap',
+  getParentRoute: () => AccountAppInsightsRoute,
+} as any)
+const AccountAppInsightsReportsRoute =
+  AccountAppInsightsReportsRouteImport.update({
+    id: '/reports',
+    path: '/reports',
+    getParentRoute: () => AccountAppInsightsRoute,
+  } as any)
+const AccountAppInsightsYearRoute = AccountAppInsightsYearRouteImport.update({
+  id: '/year',
+  path: '/year',
+  getParentRoute: () => AccountAppInsightsRoute,
+} as any)
 const AccountAppSettingsIndexRoute = AccountAppSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -437,7 +476,7 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
-  '/app/insights': typeof AccountAppInsightsRoute
+  '/app/insights': typeof AccountAppInsightsRouteWithChildren
   '/app/onboarding': typeof AccountAppOnboardingRoute
   '/app/rules': typeof AccountAppRulesRoute
   '/app/settings': typeof AccountAppSettingsRouteWithChildren
@@ -457,6 +496,11 @@ export interface FileRoutesByFullPath {
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
+  '/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
+  '/app/insights/recap': typeof AccountAppInsightsRecapRoute
+  '/app/insights/reports': typeof AccountAppInsightsReportsRoute
+  '/app/insights/year': typeof AccountAppInsightsYearRoute
   '/app/settings/about': typeof AccountAppSettingsAboutRoute
   '/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
@@ -471,6 +515,7 @@ export interface FileRoutesByFullPath {
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/app/accounts/': typeof AccountAppAccountsIndexRoute
+  '/app/insights/': typeof AccountAppInsightsIndexRoute
   '/app/settings/': typeof AccountAppSettingsIndexRoute
   '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
   '/app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
@@ -498,7 +543,6 @@ export interface FileRoutesByTo {
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
   '/{-$locale}': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
-  '/app/insights': typeof AccountAppInsightsRoute
   '/app/onboarding': typeof AccountAppOnboardingRoute
   '/app/rules': typeof AccountAppRulesRoute
   '/app/transactions': typeof AccountAppTransactionsRoute
@@ -517,6 +561,11 @@ export interface FileRoutesByTo {
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
+  '/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
+  '/app/insights/recap': typeof AccountAppInsightsRecapRoute
+  '/app/insights/reports': typeof AccountAppInsightsReportsRoute
+  '/app/insights/year': typeof AccountAppInsightsYearRoute
   '/app/settings/about': typeof AccountAppSettingsAboutRoute
   '/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
@@ -531,6 +580,7 @@ export interface FileRoutesByTo {
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/app/accounts': typeof AccountAppAccountsIndexRoute
+  '/app/insights': typeof AccountAppInsightsIndexRoute
   '/app/settings': typeof AccountAppSettingsIndexRoute
   '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
   '/app/settings/categories': typeof AccountAppSettingsCategoriesIndexRoute
@@ -561,7 +611,7 @@ export interface FileRoutesById {
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
-  '/_account/app/insights': typeof AccountAppInsightsRoute
+  '/_account/app/insights': typeof AccountAppInsightsRouteWithChildren
   '/_account/app/onboarding': typeof AccountAppOnboardingRoute
   '/_account/app/rules': typeof AccountAppRulesRoute
   '/_account/app/settings': typeof AccountAppSettingsRouteWithChildren
@@ -581,6 +631,11 @@ export interface FileRoutesById {
   '/_account/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/_account/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/_account/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/_account/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
+  '/_account/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
+  '/_account/app/insights/recap': typeof AccountAppInsightsRecapRoute
+  '/_account/app/insights/reports': typeof AccountAppInsightsReportsRoute
+  '/_account/app/insights/year': typeof AccountAppInsightsYearRoute
   '/_account/app/settings/about': typeof AccountAppSettingsAboutRoute
   '/_account/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/_account/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
@@ -595,6 +650,7 @@ export interface FileRoutesById {
   '/_account/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/_account/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/_account/app/accounts/': typeof AccountAppAccountsIndexRoute
+  '/_account/app/insights/': typeof AccountAppInsightsIndexRoute
   '/_account/app/settings/': typeof AccountAppSettingsIndexRoute
   '/_account/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
   '/_account/app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
@@ -646,6 +702,11 @@ export interface FileRouteTypes {
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
     | '/app/accounts/reorder'
+    | '/app/insights/breakdown'
+    | '/app/insights/cash-flow'
+    | '/app/insights/recap'
+    | '/app/insights/reports'
+    | '/app/insights/year'
     | '/app/settings/about'
     | '/app/settings/account'
     | '/app/settings/connections'
@@ -660,6 +721,7 @@ export interface FileRouteTypes {
     | '/app/settings/time'
     | '/app/settings/usage'
     | '/app/accounts/'
+    | '/app/insights/'
     | '/app/settings/'
     | '/app/settings/categories/$categoryId'
     | '/app/settings/categories/'
@@ -687,7 +749,6 @@ export interface FileRouteTypes {
     | '/{-$locale}/terms'
     | '/{-$locale}'
     | '/.well-known/mcp/server-card.json'
-    | '/app/insights'
     | '/app/onboarding'
     | '/app/rules'
     | '/app/transactions'
@@ -706,6 +767,11 @@ export interface FileRouteTypes {
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
     | '/app/accounts/reorder'
+    | '/app/insights/breakdown'
+    | '/app/insights/cash-flow'
+    | '/app/insights/recap'
+    | '/app/insights/reports'
+    | '/app/insights/year'
     | '/app/settings/about'
     | '/app/settings/account'
     | '/app/settings/connections'
@@ -720,6 +786,7 @@ export interface FileRouteTypes {
     | '/app/settings/time'
     | '/app/settings/usage'
     | '/app/accounts'
+    | '/app/insights'
     | '/app/settings'
     | '/app/settings/categories/$categoryId'
     | '/app/settings/categories'
@@ -769,6 +836,11 @@ export interface FileRouteTypes {
     | '/_account/app/accounts/$accountId'
     | '/_account/app/accounts/net-worth'
     | '/_account/app/accounts/reorder'
+    | '/_account/app/insights/breakdown'
+    | '/_account/app/insights/cash-flow'
+    | '/_account/app/insights/recap'
+    | '/_account/app/insights/reports'
+    | '/_account/app/insights/year'
     | '/_account/app/settings/about'
     | '/_account/app/settings/account'
     | '/_account/app/settings/connections'
@@ -783,6 +855,7 @@ export interface FileRouteTypes {
     | '/_account/app/settings/time'
     | '/_account/app/settings/usage'
     | '/_account/app/accounts/'
+    | '/_account/app/insights/'
     | '/_account/app/settings/'
     | '/_account/app/settings/categories/$categoryId'
     | '/_account/app/settings/categories/'
@@ -1121,6 +1194,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppAccountsReorderRouteImport
       parentRoute: typeof AccountAppRoute
     }
+    '/_account/app/insights/': {
+      id: '/_account/app/insights/'
+      path: '/'
+      fullPath: '/app/insights/'
+      preLoaderRoute: typeof AccountAppInsightsIndexRouteImport
+      parentRoute: typeof AccountAppInsightsRoute
+    }
+    '/_account/app/insights/breakdown': {
+      id: '/_account/app/insights/breakdown'
+      path: '/breakdown'
+      fullPath: '/app/insights/breakdown'
+      preLoaderRoute: typeof AccountAppInsightsBreakdownRouteImport
+      parentRoute: typeof AccountAppInsightsRoute
+    }
+    '/_account/app/insights/cash-flow': {
+      id: '/_account/app/insights/cash-flow'
+      path: '/cash-flow'
+      fullPath: '/app/insights/cash-flow'
+      preLoaderRoute: typeof AccountAppInsightsCashFlowRouteImport
+      parentRoute: typeof AccountAppInsightsRoute
+    }
+    '/_account/app/insights/recap': {
+      id: '/_account/app/insights/recap'
+      path: '/recap'
+      fullPath: '/app/insights/recap'
+      preLoaderRoute: typeof AccountAppInsightsRecapRouteImport
+      parentRoute: typeof AccountAppInsightsRoute
+    }
+    '/_account/app/insights/reports': {
+      id: '/_account/app/insights/reports'
+      path: '/reports'
+      fullPath: '/app/insights/reports'
+      preLoaderRoute: typeof AccountAppInsightsReportsRouteImport
+      parentRoute: typeof AccountAppInsightsRoute
+    }
+    '/_account/app/insights/year': {
+      id: '/_account/app/insights/year'
+      path: '/year'
+      fullPath: '/app/insights/year'
+      preLoaderRoute: typeof AccountAppInsightsYearRouteImport
+      parentRoute: typeof AccountAppInsightsRoute
+    }
     '/_account/app/settings/': {
       id: '/_account/app/settings/'
       path: '/'
@@ -1289,6 +1404,27 @@ const Char123LocaleChar125RouteRouteWithChildren =
     Char123LocaleChar125RouteRouteChildren,
   )
 
+interface AccountAppInsightsRouteChildren {
+  AccountAppInsightsBreakdownRoute: typeof AccountAppInsightsBreakdownRoute
+  AccountAppInsightsCashFlowRoute: typeof AccountAppInsightsCashFlowRoute
+  AccountAppInsightsRecapRoute: typeof AccountAppInsightsRecapRoute
+  AccountAppInsightsReportsRoute: typeof AccountAppInsightsReportsRoute
+  AccountAppInsightsYearRoute: typeof AccountAppInsightsYearRoute
+  AccountAppInsightsIndexRoute: typeof AccountAppInsightsIndexRoute
+}
+
+const AccountAppInsightsRouteChildren: AccountAppInsightsRouteChildren = {
+  AccountAppInsightsBreakdownRoute: AccountAppInsightsBreakdownRoute,
+  AccountAppInsightsCashFlowRoute: AccountAppInsightsCashFlowRoute,
+  AccountAppInsightsRecapRoute: AccountAppInsightsRecapRoute,
+  AccountAppInsightsReportsRoute: AccountAppInsightsReportsRoute,
+  AccountAppInsightsYearRoute: AccountAppInsightsYearRoute,
+  AccountAppInsightsIndexRoute: AccountAppInsightsIndexRoute,
+}
+
+const AccountAppInsightsRouteWithChildren =
+  AccountAppInsightsRoute._addFileChildren(AccountAppInsightsRouteChildren)
+
 interface AccountAppSettingsRouteChildren {
   AccountAppSettingsAboutRoute: typeof AccountAppSettingsAboutRoute
   AccountAppSettingsAccountRoute: typeof AccountAppSettingsAccountRoute
@@ -1333,7 +1469,7 @@ const AccountAppSettingsRouteWithChildren =
   AccountAppSettingsRoute._addFileChildren(AccountAppSettingsRouteChildren)
 
 interface AccountAppRouteChildren {
-  AccountAppInsightsRoute: typeof AccountAppInsightsRoute
+  AccountAppInsightsRoute: typeof AccountAppInsightsRouteWithChildren
   AccountAppOnboardingRoute: typeof AccountAppOnboardingRoute
   AccountAppRulesRoute: typeof AccountAppRulesRoute
   AccountAppSettingsRoute: typeof AccountAppSettingsRouteWithChildren
@@ -1346,7 +1482,7 @@ interface AccountAppRouteChildren {
 }
 
 const AccountAppRouteChildren: AccountAppRouteChildren = {
-  AccountAppInsightsRoute: AccountAppInsightsRoute,
+  AccountAppInsightsRoute: AccountAppInsightsRouteWithChildren,
   AccountAppOnboardingRoute: AccountAppOnboardingRoute,
   AccountAppRulesRoute: AccountAppRulesRoute,
   AccountAppSettingsRoute: AccountAppSettingsRouteWithChildren,

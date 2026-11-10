@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { periodKeyOf, periodOf, priorSlice, shiftPeriodKey } from "./dashboard-series-period";
+import { periodKeyIn, periodKeyOf, periodOf, priorSlice, shiftPeriodKey } from "./dashboard-series-period";
 
 describe("periodOf", () => {
     it("spans the calendar month when the month starts on the 1st", () => {
@@ -53,5 +53,33 @@ describe("priorSlice", () => {
 
     it("never runs past a shorter previous month", () => {
         expect(priorSlice(periodOf("2026-03", 1), "2026-03-30", 1).to).toBe("2026-02-28");
+    });
+});
+
+describe("weeks and years", () => {
+    it("opens a week on the ledger's first weekday", () => {
+        expect(periodKeyIn("week", "2026-10-31", { firstDayOfMonth: 1, firstWeekday: 1 })).toBe("2026-10-25");
+        expect(periodKeyIn("week", "2026-10-31", { firstDayOfMonth: 1, firstWeekday: 2 })).toBe("2026-10-26");
+        expect(periodKeyIn("week", "2026-10-25", { firstDayOfMonth: 1, firstWeekday: 2 })).toBe("2026-10-19");
+    });
+
+    it("spans seven days from a week key, across a month end", () => {
+        expect(periodOf("2026-10-26", 1)).toStrictEqual({
+            days: 7,
+            from: "2026-10-26",
+            key: "2026-10-26",
+            to: "2026-11-01",
+        });
+        expect(shiftPeriodKey("2026-03-02", -1)).toBe("2026-02-23");
+    });
+
+    it("runs a year over its twelve ledger months", () => {
+        expect(periodOf("2026", 1)).toStrictEqual({ days: 365, from: "2026-01-01", key: "2026", to: "2026-12-31" });
+        expect(periodOf("2024", 15)).toMatchObject({ days: 366, from: "2024-01-15", to: "2025-01-14" });
+        expect(shiftPeriodKey("2026", -1)).toBe("2025");
+    });
+
+    it("files a day before the first day of January's period in the year before", () => {
+        expect(periodKeyIn("year", "2026-01-10", { firstDayOfMonth: 15, firstWeekday: 1 })).toBe("2025");
     });
 });

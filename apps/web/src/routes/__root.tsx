@@ -7,7 +7,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import * as Effect from "effect/Effect";
 import { defaultLocale, getIntlayer, getPathWithoutLocale } from "intlayer";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import type { ReactNode } from "react";
 import { IntlayerProvider } from "react-intlayer";
 
@@ -22,7 +22,7 @@ import { startMotion } from "@/lib/motion";
 import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } from "@/lib/seo";
 import type { Session } from "@/lib/session";
 import { COMPANY, FOUNDER, SITE_URL, SOURCE_URL, SUPPORT_EMAIL, X_URL } from "@/lib/site";
-import { THEME_SCRIPT } from "@/lib/theme";
+import { THEME_SCRIPT, paintTheme, readTheme } from "@/lib/theme";
 import { useAgentTools } from "@/lib/use-agent-tools";
 
 import appCss from "../index.css?url";
@@ -196,6 +196,11 @@ function RootDocument({ children }: { children: ReactNode }) {
         Effect.runFork(startAnalytics(country).pipe(Effect.ignoreCause));
     }, [country]);
     useAgentTools(locale);
+    // oxlint-disable-next-line outlayr/react-effect-budget -- a hydration that falls back to a client render strips what THEME_SCRIPT stamped on <html>.
+    useLayoutEffect(() => {
+        document.documentElement.classList.add("js");
+        paintTheme(readTheme());
+    }, []);
     return (
         <html lang={LANGUAGES[locale].lang} suppressHydrationWarning>
             <head>

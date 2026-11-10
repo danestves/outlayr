@@ -1071,7 +1071,8 @@
     font-size: 14px;
     line-height: 20px;
     font-family: var(--font-sans);
-    --skullet-base: var(--color-app-fill);
+    /* Translucent ink, not the fill: a tray is painted with the fill and would hide its bones. */
+    --skullet-base: color-mix(in oklab, var(--color-app-ink) 7%, transparent);
     --skullet-animation: pulse;
 }
 
