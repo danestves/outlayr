@@ -11,9 +11,18 @@ import type { Candidate } from "@/lib/recurring";
 
 import { Glyph } from "../accounts/glyph";
 import { QuietTable } from "../home/setup";
-import { CategoryBadge } from "../rules/parts";
 import type { ScheduleActions } from "./menu";
-import { CELL, FIGURE, HEAD, MUTED, useAccountName, useChargeMoney, useDay, useRepeatText } from "./parts";
+import {
+    CELL,
+    CategoryBadge,
+    FIGURE,
+    HEAD,
+    MUTED,
+    useAccountName,
+    useChargeMoney,
+    useDay,
+    useRepeatText,
+} from "./parts";
 import { CandidateTile } from "./upcoming";
 
 export const daysBetween = (later: string, earlier: string) =>

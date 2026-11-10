@@ -1,7 +1,8 @@
 import { entryLook } from "@outlayr/backend/confect/lib/ledgerLog";
 import { wallNoon } from "@outlayr/money/ledger-zone";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
-import { createContext, useContext, useMemo } from "react";
+import { Badge } from "panelui-web/badge";
+import { createContext, useCallback, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -9,12 +10,14 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { NO_PHOTOS } from "@/components/dashboard/shell/photos";
 import type { PhotoUrls } from "@/components/ledger/overview";
 import { LookTile, MerchantTile } from "@/components/ledger/tiles";
+import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import type { Candidate, RecurringModel, Seed } from "@/lib/recurring";
 
 import { useImageUrls } from "../home/catalog";
+import { useCategoryName } from "../home/format";
 
 export const CELL = "h-[39px] px-3 py-0 align-middle first:ps-4 last:pe-3";
 export const HEAD = "h-8 px-3 text-xs leading-4 font-medium first:ps-4 last:pe-3";
@@ -183,4 +186,42 @@ export function useRepeatText() {
         return repeat.long.onDay({ day: dayText, every: each }).value;
     };
     return { everyText, long, short, word };
+}
+
+// `ledger.categories` only holds categories with a past entry,
+// so a schedule that starts later would read as uncategorized.
+export function useCategoryLook() {
+    const { ledger } = useDashboard();
+    const categoryName = useCategoryName();
+    const { categories } = ledger.books;
+    return useCallback(
+        (id: string | null) => {
+            const row = id === null ? undefined : categories.find((it) => it.localId === id && it.deletedAt === null);
+            if (!row) {
+                return null;
+            }
+            const parent = row.parentId ? categories.find((it) => it.localId === row.parentId) : undefined;
+            return {
+                color: row.color ?? parent?.color ?? NEUTRAL_COLOR,
+                id: row.localId,
+                name: categoryName({ id: row.localId, name: row.name ?? "" }),
+            };
+        },
+        [categories, categoryName]
+    );
+}
+
+export function CategoryBadge({ id }: { id: string | null }) {
+    const look = useCategoryLook();
+    const { test } = useIntlayer("dashboard-rules");
+    const found = look(id);
+    if (!found) {
+        return <span className="text-muted-foreground text-[13px] whitespace-nowrap">{test.noCategory}</span>;
+    }
+    return (
+        <Badge className="h-6 gap-1.5 rounded-md px-2 text-xs font-medium whitespace-nowrap" variant="outline">
+            <i className="size-1.5 flex-none rounded-full" style={{ backgroundColor: found.color }} />
+            {found.name}
+        </Badge>
+    );
 }

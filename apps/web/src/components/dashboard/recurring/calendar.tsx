@@ -10,9 +10,16 @@ import { addDays, isActive, monthEvents, nextCharges } from "@/lib/recurring";
 import type { MonthEvent, RecurringModel } from "@/lib/recurring";
 
 import { Glyph } from "../accounts/glyph";
-import { CategoryBadge } from "../rules/parts";
 import type { ScheduleActions } from "./menu";
-import { ScheduleTile, useAccountName, useChargeMoney, useDay, useRepeatText } from "./parts";
+import {
+    CategoryBadge,
+    ScheduleTile,
+    useAccountName,
+    useCategoryLook,
+    useChargeMoney,
+    useDay,
+    useRepeatText,
+} from "./parts";
 import { SideCard } from "./upcoming";
 
 const WEEK = 7;
@@ -67,6 +74,7 @@ function useCalendar({ day, model, month }: Pick<CalendarProps, "day" | "model" 
 export function CalendarGrid(props: CalendarProps) {
     const copy = useIntlayer("dashboard-recurring");
     const { ledger } = useDashboard();
+    const categoryLook = useCategoryLook();
     const format = useDay();
     const cash = useChargeMoney();
     const { month, onDay, onMonth } = props;
@@ -74,10 +82,11 @@ export function CalendarGrid(props: CalendarProps) {
     const weeks = days.length / WEEK;
     return (
         <div className="flex min-h-[560px] flex-1 flex-col">
-            <div className="flex min-h-[73px] flex-wrap items-center gap-2 border-b px-5 py-3">
+            <div className="flex min-h-[52px] flex-wrap items-center gap-2 border-b px-4 py-0">
                 <Button
                     aria-label={copy.calendar.previousMonth.value}
                     onClick={() => onMonth(shiftMonth(month, -1))}
+                    className="size-[30px]"
                     size="icon"
                     variant="outline"
                 >
@@ -86,6 +95,7 @@ export function CalendarGrid(props: CalendarProps) {
                 <Button
                     aria-label={copy.calendar.nextMonth.value}
                     onClick={() => onMonth(shiftMonth(month, 1))}
+                    className="size-[30px]"
                     size="icon"
                     variant="outline"
                 >
@@ -94,7 +104,12 @@ export function CalendarGrid(props: CalendarProps) {
                 <h2 aria-live="polite" className="ms-2 me-1 text-base font-semibold">
                     {format.monthYear(month)}
                 </h2>
-                <Button disabled={month === ledger.today.slice(0, 7)} onClick={() => onMonth(null)} variant="outline">
+                <Button
+                    disabled={month === ledger.today.slice(0, 7)}
+                    onClick={() => onMonth(null)}
+                    size="sm"
+                    variant="outline"
+                >
                     {copy.calendar.today}
                 </Button>
                 <span className="text-muted-foreground ml-auto text-[13px]">
@@ -106,7 +121,7 @@ export function CalendarGrid(props: CalendarProps) {
             </div>
             <div className="grid grid-cols-7 border-b">
                 {days.slice(0, WEEK).map((each) => (
-                    <span className="text-muted-foreground px-3.5 py-2.5 text-[13px] font-medium" key={each}>
+                    <span className="text-muted-foreground px-2.5 py-1.5 text-xs font-medium" key={each}>
                         {format.weekdayShort(each)}
                     </span>
                 ))}
@@ -124,25 +139,25 @@ export function CalendarGrid(props: CalendarProps) {
                     return (
                         <button
                             aria-pressed={isSelected}
-                            className={`focus-visible:ring-ring flex min-w-0 flex-col items-start gap-1.5 overflow-hidden border-e border-b p-2.5 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset ${index % WEEK === WEEK - 1 ? "border-e-0" : ""} ${index >= days.length - WEEK ? "border-b-0" : ""} ${isSelected ? "bg-muted/50 ring-border ring-1 ring-inset" : "hover:bg-muted/25"}`}
+                            className={`focus-visible:ring-ring flex min-w-0 flex-col items-start gap-1.5 overflow-hidden border-e border-b px-2 py-[7px] text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset ${index % WEEK === WEEK - 1 ? "border-e-0" : ""} ${index >= days.length - WEEK ? "border-b-0" : ""} ${isSelected ? "bg-muted/50 ring-border ring-1 ring-inset" : "hover:bg-muted/25"}`}
                             key={each}
                             onClick={() => onDay(each)}
                             type="button"
                         >
                             <span
-                                className={`dash-figure flex h-6 min-w-6 items-center justify-center rounded-md px-1 text-[13px] ${isToday ? "bg-primary text-primary-foreground font-semibold" : ""} ${outside && !isToday ? "text-muted-foreground/60" : ""}`}
+                                className={`dash-figure flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs ${isToday ? "bg-primary text-primary-foreground font-semibold" : ""} ${outside && !isToday ? "text-muted-foreground/60" : ""}`}
                             >
                                 {Number(each.slice(8, 10))}
                             </span>
                             {events.map((event) => (
                                 <span
-                                    className={`flex w-full min-w-0 flex-col border-s-2 ps-2 text-[13px] leading-[18px] ${outside ? "opacity-55" : ""}`}
+                                    className={`flex w-full min-w-0 flex-col border-s-2 ps-1.5 text-xs leading-[15px] ${outside ? "opacity-55" : ""}`}
                                     key={`${event.schedule.id}:${event.kind}`}
                                     style={{
                                         borderColor:
                                             event.kind === "due"
                                                 ? "var(--color-app-warn)"
-                                                : (ledger.categories.get(event.schedule.seed.categoryId ?? "")?.color ??
+                                                : (categoryLook(event.schedule.seed.categoryId)?.color ??
                                                   NEUTRAL_COLOR),
                                     }}
                                 >

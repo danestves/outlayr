@@ -13,12 +13,11 @@ import { isActive, upcomingOf } from "@/lib/recurring";
 import type { Candidate, RecurringModel, UpcomingGroup } from "@/lib/recurring";
 
 import { Glyph } from "../accounts/glyph";
-import { useCategoryName } from "../home/format";
-import { CategoryBadge } from "../rules/parts";
 import type { ScheduleActions } from "./menu";
 import { ScheduleMenu } from "./menu";
 import {
     CELL,
+    CategoryBadge,
     FIGURE,
     GROUP,
     HEAD,
@@ -27,6 +26,7 @@ import {
     ScheduleTile,
     candidateDoc,
     useAccountName,
+    useCategoryLook,
     useChargeMoney,
     useDay,
     useRepeatText,
@@ -242,7 +242,7 @@ export function DetectedCard({
             title={copy.tabs.detected}
         >
             {model.candidates.slice(0, SIDE_CANDIDATES).map((candidate) => (
-                <div className="flex h-[57px] items-center gap-3 border-b last:border-0" key={candidate.key}>
+                <div className="flex h-[57px] shrink-0 items-center gap-3 border-b last:border-0" key={candidate.key}>
                     <CandidateTile candidate={candidate} />
                     <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{candidate.name}</p>
@@ -253,6 +253,7 @@ export function DetectedCard({
                     <Button
                         aria-label={copy.detected.notRecurring.value}
                         onClick={() => actions.dismiss(candidate)}
+                        className="size-[30px]"
                         size="icon-sm"
                         variant="outline"
                     >
@@ -261,6 +262,7 @@ export function DetectedCard({
                     <Button
                         aria-label={copy.detected.confirm.value}
                         onClick={() => actions.confirm(candidate)}
+                        className="size-[30px]"
                         size="icon-sm"
                         variant="outline"
                     >
@@ -274,8 +276,7 @@ export function DetectedCard({
 
 export function PerMonthCard({ model }: { model: RecurringModel }) {
     const copy = useIntlayer("dashboard-recurring");
-    const { ledger } = useDashboard();
-    const categoryName = useCategoryName();
+    const categoryLook = useCategoryLook();
     const cash = useChargeMoney();
     const spending = model.schedules
         .filter((schedule) => isActive(schedule) && !schedule.seed.income && schedule.perMonth > 0)
@@ -286,11 +287,11 @@ export function PerMonthCard({ model }: { model: RecurringModel }) {
     const total = spending.reduce((sum, schedule) => sum + schedule.perMonth, 0);
     const byCategory = [...Map.groupBy(spending, (schedule) => schedule.seed.categoryId ?? "").entries()]
         .map(([id, schedules]) => {
-            const category = ledger.categories.get(id);
+            const category = categoryLook(id);
             return {
                 color: category?.color ?? NEUTRAL_COLOR,
                 id,
-                name: category ? categoryName(category) : "",
+                name: category?.name ?? "",
                 total: schedules.reduce((sum, schedule) => sum + schedule.perMonth, 0),
             };
         })

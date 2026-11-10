@@ -44,7 +44,7 @@ import { CandidateDetail, DetectedEmpty, DetectedTable } from "./detected";
 import { ConfirmDialog, DeleteDialog, LogDialog, PauseDialog } from "./dialogs";
 import { ScheduleDrawer } from "./drawer";
 import type { ScheduleActions } from "./menu";
-import { LivePhotos, useDay, useRepeatText } from "./parts";
+import { LivePhotos, useCategoryLook, useDay, useRepeatText } from "./parts";
 import { PausedTable } from "./paused";
 import { ScheduleForm } from "./schedule-form";
 import { NEW_SCHEDULE, RECURRING_TABS, dayOf, monthOf, sortOf, tabOf } from "./search";
@@ -228,6 +228,7 @@ function useExport(data: RecurringData) {
     const copy = useIntlayer("dashboard-recurring");
     const { ledger } = useDashboard();
     const repeat = useRepeatText();
+    const categoryLook = useCategoryLook();
     return () => {
         const header = [
             copy.columns.name.value,
@@ -243,8 +244,8 @@ function useExport(data: RecurringData) {
             repeat.short(schedule.chain.type, schedule.chain.every),
             schedule.state === "active" ? (nextDayOf(schedule, ledger.today) ?? "") : copy.badge[schedule.state].value,
             String(schedule.seed.income ? schedule.worth : -schedule.worth),
-            String(schedule.perMonth),
-            schedule.seed.categoryId === null ? "" : (ledger.categories.get(schedule.seed.categoryId)?.name ?? ""),
+            schedule.perMonth.toFixed(2),
+            categoryLook(schedule.seed.categoryId)?.name ?? "",
             schedule.seed.accountId === null
                 ? ""
                 : (ledger.books.accounts.find((row) => row.localId === schedule.seed.accountId)?.name ?? ""),

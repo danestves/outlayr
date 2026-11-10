@@ -19,11 +19,10 @@ import type { HistoryEntry, RecurringModel, Schedule } from "@/lib/recurring";
 import { Glyph } from "../accounts/glyph";
 import { useCatalog } from "../home/catalog";
 import { useWide } from "../insights/use-wide";
-import { CategoryBadge } from "../rules/parts";
 import { HeldBadge, nextDayOf } from "./all";
 import type { ScheduleActions } from "./menu";
 import { ScheduleMenu } from "./menu";
-import { ScheduleTile, useAccountName, useChargeMoney, useDay, useRepeatText } from "./parts";
+import { CategoryBadge, ScheduleTile, useAccountName, useChargeMoney, useDay, useRepeatText } from "./parts";
 import { heldSince } from "./paused";
 
 const HISTORY_MONTHS = 6;

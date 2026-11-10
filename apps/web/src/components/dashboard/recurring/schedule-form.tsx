@@ -281,7 +281,7 @@ function CustomView({
     const badEnd = draft.endDay !== null && draft.endDay <= draft.startDay;
     return (
         <>
-            <Dialog.Header>
+            <Dialog.Header data-view="custom">
                 <div className="flex items-center gap-1">
                     <Button aria-label={copy.form.back.value} onClick={onBack} size="icon-sm" variant="ghost">
                         <Glyph icon={ArrowLeft02Icon} size={18} />
@@ -605,7 +605,10 @@ export function ScheduleForm({
 }) {
     return (
         <Dialog onOpenChange={(open) => (open ? undefined : onClose())} open={target !== null}>
-            <Dialog.Content className="app-shell ph-no-capture max-w-[520px]" size="md">
+            <Dialog.Content
+                className="app-shell ph-no-capture max-w-[520px] has-[[data-view=custom]]:max-w-md"
+                size="md"
+            >
                 {target ? (
                     <FormBody key={target.key} onClose={onClose} onSave={onSave} onStop={onStop} target={target} />
                 ) : null}

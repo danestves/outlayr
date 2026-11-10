@@ -18,11 +18,21 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import type { RecurringModel, Schedule, ScheduleState } from "@/lib/recurring";
 
 import { Glyph } from "../accounts/glyph";
-import { useCategoryName } from "../home/format";
-import { CategoryBadge } from "../rules/parts";
 import type { ScheduleActions } from "./menu";
 import { ScheduleMenu } from "./menu";
-import { CELL, FIGURE, HEAD, MUTED, NameCell, useAccountName, useChargeMoney, useDay, useRepeatText } from "./parts";
+import {
+    CELL,
+    CategoryBadge,
+    FIGURE,
+    HEAD,
+    MUTED,
+    NameCell,
+    useAccountName,
+    useCategoryLook,
+    useChargeMoney,
+    useDay,
+    useRepeatText,
+} from "./parts";
 import { ALL_SORTS } from "./search";
 import type { AllSort, RecurringSearch, SetRecurringSearch } from "./search";
 import { Foot, GroupRow } from "./upcoming";
@@ -138,7 +148,7 @@ export function AllTable({
     const days = useDay();
     const repeat = useRepeatText();
     const accountName = useAccountName();
-    const categoryName = useCategoryName();
+    const categoryLook = useCategoryLook();
     const cash = useChargeMoney();
     const query = (search.q ?? "").trim().toLocaleLowerCase(locale);
     const shown = model.schedules.filter(
@@ -171,8 +181,8 @@ export function AllTable({
     );
     const categories = unique(
         model.schedules.flatMap((schedule) => {
-            const category = ledger.categories.get(schedule.seed.categoryId ?? "");
-            return category ? [{ label: categoryName(category), value: category.id }] : [];
+            const category = categoryLook(schedule.seed.categoryId);
+            return category ? [{ label: category.name, value: category.id }] : [];
         })
     );
     const repeats = unique(
@@ -282,7 +292,7 @@ export function AllTable({
                                     const next = nextDayOf(schedule, ledger.today);
                                     return (
                                         <Table.Row
-                                            className="hover:bg-muted/40 cursor-pointer"
+                                            className={`hover:bg-muted/40 cursor-pointer ${schedule.state === "active" ? "" : "text-muted-foreground"}`}
                                             key={schedule.id}
                                             onClick={() => actions.open(schedule)}
                                         >
