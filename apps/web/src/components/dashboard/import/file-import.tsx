@@ -28,7 +28,10 @@ import { useDraftStore } from "./undo";
 
 type Kind = "csv" | "pdf";
 
-type Run = { draft: Draft; kind: "failed"; retry: () => void } | { kind: "idle" } | { kind: "importing" };
+type Run =
+    | { draft: Draft; kind: "failed"; model: FileModel; retry: () => void }
+    | { kind: "idle" }
+    | { kind: "importing"; model: FileModel };
 
 const NO_ASKED = [] as const;
 
@@ -129,19 +132,19 @@ function Wizard({
         );
     }
     if (run.kind === "importing") {
-        return <ImportingStep draft={draft} model={model} />;
+        return <ImportingStep draft={draft} model={run.model} />;
     }
     const start = () => {
         // The same rows go again unless review changed since, so batches that landed before the failure aren't doubled.
         if (run.kind === "failed" && run.draft === draft) {
-            setRun({ kind: "importing" });
+            setRun({ kind: "importing", model: run.model });
             run.retry();
             return;
         }
         store.settle();
-        setRun({ kind: "importing" });
+        setRun({ kind: "importing", model });
         runImport(draft, model, {
-            failed: (retry) => setRun({ draft, kind: "failed", retry }),
+            failed: (retry) => setRun({ draft, kind: "failed", model, retry }),
             saved: (finished) => {
                 store.clear();
                 onFinished(finished);

@@ -399,14 +399,13 @@ export function MatchStep({
                                                     <p className="text-muted-foreground text-[13px] leading-5">
                                                         {match.noAccountNote}
                                                     </p>
-                                                    <Button
-                                                        className="mt-3 w-full"
+                                                    <button
+                                                        className="text-primary mt-1 cursor-pointer text-[13px] leading-5 font-medium hover:underline"
                                                         onClick={() => navigate({ to: "/app/accounts" })}
-                                                        size="sm"
-                                                        variant="outline"
+                                                        type="button"
                                                     >
                                                         {match.createAccount}
-                                                    </Button>
+                                                    </button>
                                                 </>
                                             ) : (
                                                 <AccountPick

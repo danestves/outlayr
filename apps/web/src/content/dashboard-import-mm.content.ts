@@ -277,6 +277,7 @@ const dashboardImportMm = {
             budgets: text("Monthly budgets", "Presupuestos mensuales", "Budgets mensuels", "Orçamentos mensais"),
             categories: text("Categories", "Categorías", "Catégories", "Categorias"),
             entries: text("Entries", "Movimientos", "Opérations", "Lançamentos"),
+            heading: text("Importing", "Importando", "Import en cours", "Importando"),
             steps: text("Steps", "Pasos", "Étapes", "Etapas"),
             title: text("Importing…", "Importando…", "Import en cours…", "Importando…"),
         },
@@ -328,7 +329,7 @@ const dashboardImportMm = {
                     "No Money Manager, abra Ajustes e encontre Backup."
                 ),
                 text(
-                    "Create a backup and get it onto this computer.",
+                    "Create a backup and share it to this computer.",
                     "Crea un respaldo y pásalo a esta computadora.",
                     "Créez une sauvegarde et transférez-la sur cet ordinateur.",
                     "Crie um backup e passe-o para este computador."

@@ -101,7 +101,7 @@ function ConnectBody({ onClose }: { onClose: () => void }) {
         <>
             <Dialog.Header>
                 <Dialog.Title>{notion.title}</Dialog.Title>
-                <Dialog.Description>{notion.text}</Dialog.Description>
+                <Dialog.Description className="text-[13px] leading-5">{notion.text}</Dialog.Description>
             </Dialog.Header>
             <Dialog.Body>
                 <RadioGroup

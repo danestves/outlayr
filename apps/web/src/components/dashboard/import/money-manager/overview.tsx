@@ -47,8 +47,11 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
     return (
         <ImportPage>
             <MmBar onBack={onCancel} title={bar.title}>
-                <Button disabled={count === 0} onClick={onImport} size="sm">
-                    {fill(bar.import.value, { n: count })}
+                <Button onClick={onCancel} variant="outline">
+                    {bar.cancel}
+                </Button>
+                <Button disabled={count === 0} onClick={onImport}>
+                    {fill(bar.import.value, { n: count.toLocaleString() })}
                 </Button>
             </MmBar>
             <Columns
@@ -57,7 +60,7 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                         <Card title={overview.comingOver}>
                             <div className="px-4 py-3">
                                 <b className="dash-figure block text-2xl leading-8 font-semibold">
-                                    {fill(overview.entries.value, { n: count })}
+                                    {fill(overview.entries.value, { n: count.toLocaleString() })}
                                 </b>
                                 {analysis.firstDay && analysis.lastDay ? (
                                     <small className="text-muted-foreground text-xs leading-4">
@@ -77,7 +80,7 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                                                 style={{ width: `${Math.max(BAR_MIN, (year.count / peak) * 100)}%` }}
                                             />
                                             <span className="dash-figure text-muted-foreground ml-auto">
-                                                {year.count}
+                                                {year.count.toLocaleString()}
                                             </span>
                                         </li>
                                     ))}
@@ -100,7 +103,7 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                         {uncategorized > 0 ? (
                             <NavRow
                                 onClick={() => onOpen("uncategorized")}
-                                title={fill(overview.noCategory.value, { n: uncategorized })}
+                                title={fill(overview.noCategory.value, { n: uncategorized.toLocaleString() })}
                                 tone={WARN}
                             />
                         ) : null}

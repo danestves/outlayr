@@ -164,11 +164,16 @@ export function UploadStep({
     if (state.kind === "reading") {
         fileNote = fileSize(state.file.size);
     } else if (state.kind === "problem" && file) {
-        fileNote = state.problem === "notRead" ? upload.notReadDeleted : upload.notRead({ size: fileSize(file.size) });
+        const size = fileSize(file.size);
+        if (state.problem === "notRead") {
+            fileNote = upload.notReadDeleted;
+        } else {
+            fileNote = state.problem === "aiOff" ? upload.notReadYet({ size }) : upload.notRead({ size });
+        }
     }
 
     let rail: ReactNode = <WorksWith />;
-    if (state.kind === "reading" && kind === "pdf") {
+    if ((state.kind === "reading" && kind === "pdf") || (state.kind === "problem" && state.problem === "aiOff")) {
         rail = (
             <Card title={copy.home.privacy}>
                 <p className={`${NOTE} py-4`}>{upload.privacyPdf}</p>
@@ -291,7 +296,7 @@ export function UploadStep({
                 >
                     <div className="px-5 pb-5" {...(state.kind === "reading" ? {} : drop.props)}>
                         <div
-                            className={`${DROPZONE} h-[420px] ${drop.over ? "border-primary bg-primary/10 ring-primary/22 border-solid ring-3" : ""} ${state.kind === "problem" ? "border-destructive/40" : ""} ${state.kind === "reading" ? "border-solid" : ""}`}
+                            className={`${DROPZONE} h-[420px] ${drop.over ? "border-primary bg-primary/10 ring-primary/22 border-solid ring-3" : ""} ${state.kind === "problem" && state.problem !== "aiOff" ? "border-destructive/40" : ""} ${state.kind === "reading" ? "border-solid" : ""}`}
                         >
                             {body()}
                         </div>

@@ -26,23 +26,40 @@ const CENT = 0.005;
 export function Importing({ draft }: { draft: Draft }) {
     const { bar, importing } = useIntlayer("dashboard-import-mm");
     const plan = planOf(draft);
+    const steps = [
+        [importing.accounts, plan.accounts.length],
+        [importing.categories, plan.categories.length],
+        ...(plan.budgets.length > 0 ? [[importing.budgets, plan.budgets.length] as const] : []),
+        [importing.entries, planSize(plan)],
+    ] as const;
     return (
         <ImportPage>
-            <MmBar title={importing.title} />
+            <MmBar title={importing.heading}>
+                <Button disabled>{importing.title}</Button>
+            </MmBar>
             <Columns
                 rail={
                     <Card title={importing.steps}>
-                        <NavRow detail={plan.accounts.length} title={importing.accounts} />
-                        <NavRow detail={plan.categories.length} title={importing.categories} />
-                        {plan.budgets.length > 0 ? (
-                            <NavRow detail={plan.budgets.length} title={importing.budgets} />
-                        ) : null}
-                        <NavRow detail={planSize(plan)} title={importing.entries} />
+                        <ul className="divide-border divide-y">
+                            {steps.map(([label, count]) => (
+                                <li
+                                    className="flex min-h-9 items-center justify-between gap-3 px-4 text-[13px]"
+                                    key={label.value}
+                                >
+                                    <span className="text-muted-foreground">{label}</span>
+                                    <span className="dash-figure">{count.toLocaleString()}</span>
+                                </li>
+                            ))}
+                        </ul>
                     </Card>
                 }
             >
                 <Card title={bar.title}>
-                    <p className="px-4 py-3 text-sm">{fill(importing.body.value, { n: planSize(plan) })}</p>
+                    <div className="p-5">
+                        <div className="flex h-105 items-center justify-center rounded-xl border border-dashed px-4 text-center text-sm">
+                            {fill(importing.body.value, { n: planSize(plan).toLocaleString() })}
+                        </div>
+                    </div>
                 </Card>
             </Columns>
         </ImportPage>

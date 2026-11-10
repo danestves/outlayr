@@ -1,6 +1,9 @@
+import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import type { MmArchiveError } from "@outlayr/money/money-manager/types";
 import { Button } from "panelui-web/button";
 import { useIntlayer } from "react-intlayer";
+
+import { Glyph } from "@/components/dashboard/accounts/glyph";
 
 import {
     Banner,
@@ -30,8 +33,12 @@ export function Intro({ onCancel, onFile }: { onCancel: () => void; onFile: (fil
                         <Card title={intro.comesOver}>
                             <ul className="divide-border divide-y">
                                 {intro.items.map((item, index) => (
-                                    <li className="px-4 py-2.5 text-sm" key={index}>
+                                    <li
+                                        className="text-muted-foreground flex min-h-9 items-center justify-between gap-3 px-4 text-[13px]"
+                                        key={index}
+                                    >
                                         {item}
+                                        <Glyph className="text-muted-foreground" icon={Tick02Icon} size={14} />
                                     </li>
                                 ))}
                             </ul>
@@ -47,29 +54,29 @@ export function Intro({ onCancel, onFile }: { onCancel: () => void; onFile: (fil
                 <Card title={intro.backupTitle}>
                     <ol className="divide-border divide-y">
                         {intro.steps.map((step, index) => (
-                            <li className="flex items-center gap-3 px-4 py-3 text-sm" key={index}>
-                                <span className="bg-app-fill dash-figure flex size-5 flex-none items-center justify-center rounded-full text-[11px] font-medium">
+                            <li className="flex min-h-14 items-center gap-3 px-4 text-sm font-medium" key={index}>
+                                <span className="bg-app-fill dash-figure flex size-8 flex-none items-center justify-center rounded-lg border text-xs font-medium">
                                     {index + 1}
                                 </span>
                                 {step}
                             </li>
                         ))}
                     </ol>
-                </Card>
-                <FilePicker accept={ACCEPT} onFile={onFile}>
-                    {(open) => (
-                        <div className="p-4" {...drop.props}>
-                            <div className={`${DROPZONE} min-h-56 ${drop.over ? "bg-app-fill" : ""}`}>
-                                <DropTile />
-                                <b className="text-sm font-medium">{intro.drop}</b>
-                                <small className="text-muted-foreground mb-4 text-xs">{intro.dropHint}</small>
-                                <Button onClick={open} size="sm">
-                                    {intro.choose}
-                                </Button>
+                    <FilePicker accept={ACCEPT} onFile={onFile}>
+                        {(open) => (
+                            <div className="p-5" {...drop.props}>
+                                <div className={`${DROPZONE} h-84 ${drop.over ? "bg-app-fill" : ""}`}>
+                                    <DropTile />
+                                    <b className="text-sm font-semibold">{intro.drop}</b>
+                                    <small className="text-muted-foreground mt-1.5 mb-4 text-[13px]">
+                                        {intro.dropHint}
+                                    </small>
+                                    <Button onClick={open}>{intro.choose}</Button>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </FilePicker>
+                        )}
+                    </FilePicker>
+                </Card>
             </Columns>
         </ImportPage>
     );

@@ -1,4 +1,5 @@
 import type { AccountTarget, MmAccountGroup, MmAccountView, MmChoices } from "@outlayr/money/money-manager/types";
+import { Button } from "panelui-web/button";
 import { Table } from "panelui-web/table";
 import { useIntlayer } from "react-intlayer";
 
@@ -21,7 +22,7 @@ interface Props {
 }
 
 export function Accounts({ draft, onBack, onChoices }: Props) {
-    const { accounts: copy } = useIntlayer("dashboard-import-mm");
+    const { accounts: copy, bar } = useIntlayer("dashboard-import-mm");
     const groupTitle = { deleted: copy.groupDeleted, hidden: copy.groupHidden, open: copy.groupOpen };
 
     const labelOf = (target: AccountTarget | undefined) => {
@@ -112,7 +113,9 @@ export function Accounts({ draft, onBack, onChoices }: Props) {
 
     return (
         <ImportPage>
-            <MmBar onBack={onBack} title={copy.title} />
+            <MmBar onBack={onBack} title={copy.title}>
+                <Button onClick={onBack}>{bar.done}</Button>
+            </MmBar>
             <div className="flex flex-col gap-4">
                 {GROUPS.map((group) => {
                     const rows = draft.analysis.accounts.filter((account) => account.group === group);
@@ -127,11 +130,13 @@ export function Accounts({ draft, onBack, onChoices }: Props) {
                                                 <span className="truncate">{view.title}</span>
                                             </span>
                                         </Cell>
-                                        <Cell figure>{view.entryCount}</Cell>
-                                        <Cell figure>
+                                        <Cell className="text-muted-foreground w-32" figure>
+                                            {view.entryCount.toLocaleString()}
+                                        </Cell>
+                                        <Cell className="w-44" figure>
                                             {view.balance === null ? "" : money(view.balance, view.currency)}
                                         </Cell>
-                                        <Cell>
+                                        <Cell className="w-56">
                                             <Pick
                                                 groups={groupsFor(view)}
                                                 label={labelOf(draft.choices.accounts[view.uid])}
