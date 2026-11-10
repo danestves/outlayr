@@ -4,8 +4,8 @@ import { and, count, eq, gte, isNotNull, isNull, lte, sql, sum } from "drizzle-o
 import type { SpendDb } from "@/data/budget-spent";
 import { transactions } from "@/db/schema";
 
-import { keptTransactions, NO_PENDING_DELETES } from "./pending-deletes";
-import type { PendingDeletes } from "./pending-deletes";
+import { kept, NO_PENDING_DELETES } from "./deletion-plan";
+import type { PendingDeletes } from "./deletion-plan";
 
 // The same key `utcDateString` derives in JS, so SQL and the Log's day sections look rates up on the same day.
 export const UTC_DAY = sql<string>`strftime('%Y-%m-%d', ${transactions.date} / 1000, 'unixepoch')`;
@@ -77,7 +77,7 @@ export function logCellQuery(db: SpendDb, start: Date | null, now: Date, pending
                 isNull(transactions.deletedAt),
                 start ? gte(transactions.date, start) : undefined,
                 lte(transactions.date, now),
-                keptTransactions(db, pending)
+                kept("transactions", pending)
             )
         )
         .groupBy(transactions.currency, transactions.income, UTC_DAY);
@@ -97,7 +97,7 @@ export function settledAccountCellQuery(
                 isNull(transactions.deletedAt),
                 eq(transactions.accountId, accountId),
                 lte(transactions.date, now),
-                keptTransactions(db, pending)
+                kept("transactions", pending)
             )
         )
         .groupBy(transactions.currency, transactions.income, UTC_DAY, LOCAL_DAY);
@@ -114,7 +114,7 @@ export function settledAccountsCellQuery(db: SpendDb, now: Date, pending: Pendin
                 isNull(transactions.deletedAt),
                 isNotNull(transactions.accountId),
                 lte(transactions.date, now),
-                keptTransactions(db, pending)
+                kept("transactions", pending)
             )
         )
         .groupBy(transactions.accountId, transactions.currency, transactions.income, UTC_DAY, LOCAL_DAY);

@@ -9,8 +9,8 @@ import { transactions } from "@/db/schema";
 import type { LogFigures } from "@/domain/log-measure";
 
 import { logCellQuery, toCurrencyCells } from "./cell-query";
+import { kept } from "./deletion-plan";
 import { NO_READ, useLiveQuery } from "./live-query";
-import { keptTransactions } from "./pending-deletes";
 import { usePendingDeletes } from "./use-deferred-delete";
 
 export type LogPeriod = "day" | "week" | "month" | "year" | "all";
@@ -89,7 +89,7 @@ export function useSparklineRows(
                         isNull(transactions.deletedAt),
                         lte(transactions.date, new Date(nowMs)),
                         cumulative || !floor ? undefined : gte(transactions.date, floor),
-                        keptTransactions(db, pending)
+                        kept("transactions", pending)
                     )
                 )
                 .orderBy(asc(transactions.date));

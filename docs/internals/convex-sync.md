@@ -263,7 +263,7 @@ and on the `nextSeq` subscription firing. Never on the write path itself.
   `seq` than a transaction created against it last year. The applier must therefore run
   the batch with `PRAGMA foreign_keys = OFF` and restore it after. This is cheap: FK
   enforcement is already opportunistic (`src/db/client.ts`) and the declared cascades
-  are already done by hand (`src/data/categories-core.ts`).
+  are already done by hand (`src/data/deletion-plan.ts`).
 
 ### 3.5 Photos — a second channel, not another row in the stream
 
@@ -460,8 +460,8 @@ Kept because the reasoning still explains why the write path looks the way it do
    `isNull(deletedAt)`, so this was a change of write, not of read.)
 
 2. **`categoriesRepo.remove` used to hard-delete its cascade.** Same problem, same fix:
-   `src/data/categories-core.ts` now stamps `deletedAt` on the category's transactions, its
-   budgets, its child categories and the category itself.
+   `src/data/deletion-plan.ts` now stamps `deletedAt` on the category's transactions, its
+   budgets and the category itself, and detaches its child categories.
 
 And one hazard the applier must design around:
 

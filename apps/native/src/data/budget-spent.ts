@@ -3,8 +3,8 @@ import type { SQLiteAsyncDatabase } from "drizzle-orm/sqlite-core";
 
 import { transactions } from "@/db/schema";
 
-import { keptTransactions, NO_PENDING_DELETES } from "./pending-deletes";
-import type { PendingDeletes } from "./pending-deletes";
+import { kept, NO_PENDING_DELETES } from "./deletion-plan";
+import type { PendingDeletes } from "./deletion-plan";
 
 // Both drivers are `"sync"`, which keeps `.all()` typed as rows so `useLiveQuery` can read in render.
 export type SpendDb = SQLiteAsyncDatabase<"sync", unknown>;
@@ -34,7 +34,7 @@ export function expenseContributionQuery(
                 isNull(transactions.deletedAt),
                 since ? gte(transactions.date, since) : undefined,
                 lte(transactions.date, now),
-                keptTransactions(db, pending)
+                kept("transactions", pending)
             )
         )
         .orderBy(asc(transactions.date));

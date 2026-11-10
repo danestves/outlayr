@@ -5,8 +5,8 @@ import type { SpendDb } from "@/data/budget-spent";
 import { accounts, installmentPlans, outsideMoves, outsidePayments, transfers } from "@/db/schema";
 
 import type { CellRow } from "./cell-query";
-import { keptOutsideMoves, keptOutsidePayments, keptTransfers, NO_PENDING_DELETES } from "./pending-deletes";
-import type { PendingDeletes } from "./pending-deletes";
+import { kept, NO_PENDING_DELETES } from "./deletion-plan";
+import type { PendingDeletes } from "./deletion-plan";
 
 const TRANSFER_UTC_DAY = sql<string>`strftime('%Y-%m-%d', ${transfers.date} / 1000, 'unixepoch')`;
 
@@ -65,7 +65,7 @@ export function settledTransferOutboundQuery(
                 isNull(transfers.deletedAt),
                 eq(transfers.fromAccountId, accountId),
                 lte(transfers.date, now),
-                keptTransfers(db, pending)
+                kept("transfers", pending)
             )
         )
         .groupBy(transfers.fromCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY);
@@ -85,7 +85,7 @@ export function settledTransferInboundQuery(
                 isNull(transfers.deletedAt),
                 eq(transfers.toAccountId, accountId),
                 lte(transfers.date, now),
-                keptTransfers(db, pending)
+                kept("transfers", pending)
             )
         )
         .groupBy(transfers.toCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY);
@@ -95,7 +95,7 @@ export function settledTransfersOutboundQuery(db: SpendDb, now: Date, pending: P
     return db
         .select({ accountId: transfers.fromAccountId, ...OUTBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY.as("plotDay") })
         .from(transfers)
-        .where(and(isNull(transfers.deletedAt), lte(transfers.date, now), keptTransfers(db, pending)))
+        .where(and(isNull(transfers.deletedAt), lte(transfers.date, now), kept("transfers", pending)))
         .groupBy(transfers.fromAccountId, transfers.fromCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY);
 }
 
@@ -103,7 +103,7 @@ export function settledTransfersInboundQuery(db: SpendDb, now: Date, pending: Pe
     return db
         .select({ accountId: transfers.toAccountId, ...INBOUND_COLUMNS, plotDay: TRANSFER_LOCAL_DAY.as("plotDay") })
         .from(transfers)
-        .where(and(isNull(transfers.deletedAt), lte(transfers.date, now), keptTransfers(db, pending)))
+        .where(and(isNull(transfers.deletedAt), lte(transfers.date, now), kept("transfers", pending)))
         .groupBy(transfers.toAccountId, transfers.toCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY);
 }
 
@@ -120,7 +120,7 @@ export function settledTransfersQuery(db: SpendDb, now: Date, pending: PendingDe
             plotDay: TRANSFER_LOCAL_DAY.as("plotDay"),
         })
         .from(transfers)
-        .where(and(isNull(transfers.deletedAt), lte(transfers.date, now), keptTransfers(db, pending)))
+        .where(and(isNull(transfers.deletedAt), lte(transfers.date, now), kept("transfers", pending)))
         .groupBy(transfers.fromAccountId, transfers.fromCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY)
         .unionAll(
             db
@@ -131,7 +131,7 @@ export function settledTransfersQuery(db: SpendDb, now: Date, pending: PendingDe
                     plotDay: TRANSFER_LOCAL_DAY.as("plotDay"),
                 })
                 .from(transfers)
-                .where(and(isNull(transfers.deletedAt), lte(transfers.date, now), keptTransfers(db, pending)))
+                .where(and(isNull(transfers.deletedAt), lte(transfers.date, now), kept("transfers", pending)))
                 .groupBy(transfers.toAccountId, transfers.toCurrency, TRANSFER_UTC_DAY, TRANSFER_LOCAL_DAY)
         );
 }
@@ -156,12 +156,12 @@ const OUTSIDE_COLUMNS = {
     unconvertedRows: sql<number>`SUM(CASE WHEN ${outsidePayments.amountUsd} IS NULL THEN 1 ELSE 0 END)`,
 } as const;
 
-function settledOutside(db: SpendDb, now: Date, pending: PendingDeletes) {
+function settledOutside(now: Date, pending: PendingDeletes) {
     return and(
         isNull(outsidePayments.deletedAt),
         isNull(installmentPlans.deletedAt),
         lte(outsidePayments.date, now),
-        keptOutsidePayments(db, pending)
+        kept("outsidePayments", pending)
     );
 }
 
@@ -179,7 +179,7 @@ const MOVE_COLUMNS = {
 } as const;
 
 function settledMoves(now: Date, pending: PendingDeletes) {
-    return and(isNull(outsideMoves.deletedAt), lte(outsideMoves.date, now), keptOutsideMoves(pending));
+    return and(isNull(outsideMoves.deletedAt), lte(outsideMoves.date, now), kept("outsideMoves", pending));
 }
 
 export function settledOutsidePaymentQuery(
@@ -193,7 +193,7 @@ export function settledOutsidePaymentQuery(
         .from(outsidePayments)
         .innerJoin(installmentPlans, eq(installmentPlans.id, outsidePayments.planId))
         .innerJoin(accounts, eq(accounts.id, installmentPlans.accountId))
-        .where(and(settledOutside(db, now, pending), eq(installmentPlans.accountId, accountId)))
+        .where(and(settledOutside(now, pending), eq(installmentPlans.accountId, accountId)))
         .groupBy(accounts.currency, OUTSIDE_UTC_DAY, OUTSIDE_LOCAL_DAY);
 }
 
@@ -203,7 +203,7 @@ export function settledOutsidePaymentsQuery(db: SpendDb, now: Date, pending: Pen
         .from(outsidePayments)
         .innerJoin(installmentPlans, eq(installmentPlans.id, outsidePayments.planId))
         .innerJoin(accounts, eq(accounts.id, installmentPlans.accountId))
-        .where(settledOutside(db, now, pending))
+        .where(settledOutside(now, pending))
         .groupBy(installmentPlans.accountId, accounts.currency, OUTSIDE_UTC_DAY, OUTSIDE_LOCAL_DAY);
 }
 
