@@ -1,4 +1,3 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { freezeTransfer, transferRejection } from "@outlayr/money/transfer-row";
 import type { TransferInput } from "@outlayr/money/transfer-row";
 import * as Effect from "effect/Effect";
@@ -7,6 +6,7 @@ import { createdAccount, frozenUsd, nextRow, ratesLookup } from "../../../lib/ac
 import type { Ledger } from "../../../lib/dashboard-series-ledger";
 import { blankValues, createdEntry, draftOf, entryProblem } from "../../../lib/entry-writes";
 import type { EntryProblem } from "../../../lib/entry-writes";
+import type { LedgerBooks } from "../../../lib/ledger-books";
 import type { CommitRow } from "../../../lib/ledger-committer";
 import { createdGoal, deletedGoal } from "../goals/model";
 import type { Goal } from "../goals/model";

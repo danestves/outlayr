@@ -1,6 +1,5 @@
-import { ledgerGlance } from "@outlayr/backend/confect/ledgerView";
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { api } from "@outlayr/backend/convex/_generated/api";
+import { ledgerGlance } from "@outlayr/money/ledger-view";
 import { useQuery } from "@tanstack/react-query";
 import {
     Navigate,
@@ -32,6 +31,7 @@ import { readDashboardLocale, serverDashboardLocale, subscribeDashboardLocale } 
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { LANGUAGES } from "@/lib/i18n";
 import { watchKeyboardInset } from "@/lib/keyboard-inset";
+import type { LedgerBooks } from "@/lib/ledger-books";
 import { dropLedger, forgetLedger, hasLedgerCopy, restoreLedger, saveLedger } from "@/lib/ledger-cache";
 import { ledgerCommitter } from "@/lib/ledger-committer";
 import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";

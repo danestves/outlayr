@@ -1,11 +1,11 @@
-import { ledgerGlance } from "@outlayr/backend/confect/ledgerView";
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import type { Doc, Id, TableNames } from "@outlayr/backend/convex/_generated/dataModel";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
+import { ledgerGlance } from "@outlayr/money/ledger-view";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { periodKeyOf, periodOf } from "@/lib/dashboard-series-period";
+import type { LedgerBooks } from "@/lib/ledger-books";
 
 import type { Dashboard } from "./dashboard";
 import { NO_PHOTOS } from "./photos";

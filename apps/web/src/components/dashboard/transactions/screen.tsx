@@ -5,7 +5,7 @@ import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { placed } from "@outlayr/backend/confect/lib/ledgerLog";
+import { placed } from "@outlayr/money/ledger-log";
 import { Button } from "panelui-web/button";
 import { Input } from "panelui-web/input";
 import { Menu } from "panelui-web/menu";

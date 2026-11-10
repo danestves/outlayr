@@ -1,7 +1,7 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { describe, expect, it } from "vite-plus/test";
 
 import { prepareLedger } from "./dashboard-series-ledger";
+import type { LedgerBooks } from "./ledger-books";
 import {
     editedTransfer,
     repriced,

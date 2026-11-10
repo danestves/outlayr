@@ -1,6 +1,6 @@
 import ArrowDataTransferHorizontalIcon from "@hugeicons/core-free-icons/ArrowDataTransferHorizontalIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { accountLook } from "@outlayr/money/ledger-log";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
 import { Input } from "panelui-web/input";

@@ -2,7 +2,6 @@ import ArrowDataTransferHorizontalIcon from "@hugeicons/core-free-icons/ArrowDat
 import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
 import SafeIcon from "@hugeicons/core-free-icons/SafeIcon";
 import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
@@ -12,6 +11,7 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { archivedAccount, deletedAccount } from "@/lib/account-writes";
+import type { LedgerBooks } from "@/lib/ledger-books";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { Fact, FlowDialog } from "./fields";

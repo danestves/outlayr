@@ -1,4 +1,4 @@
-import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { accountLook } from "@outlayr/money/ledger-log";
 import { keepPreviousData, useQueries } from "@tanstack/react-query";
 import { useRouteContext } from "@tanstack/react-router";
 import { useMemo } from "react";

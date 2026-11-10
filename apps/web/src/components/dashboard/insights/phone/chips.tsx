@@ -1,7 +1,7 @@
 import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { accountLook } from "@outlayr/money/ledger-log";
 import { Button } from "panelui-web/button";
 import { Checkbox } from "panelui-web/checkbox";
 import { Sheet } from "panelui-web/sheet";

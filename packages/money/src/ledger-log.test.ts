@@ -1,8 +1,8 @@
-import { buildRateTable } from "@outlayr/money/valuation";
 import { describe, expect, it } from "vite-plus/test";
 
-import { buildLog } from "./ledgerLog";
-import type { AccountSource, EntrySource, TransferSource } from "./ledgerLog";
+import { buildLog } from "./ledger-log";
+import type { AccountSource, EntrySource, TransferSource } from "./ledger-log";
+import { buildRateTable } from "./valuation";
 
 const DAY = Date.UTC(2026, 10, 4);
 

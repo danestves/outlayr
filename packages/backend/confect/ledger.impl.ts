@@ -1,11 +1,11 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { LEDGER_SETTING_KEYS } from "@outlayr/money/ledger-view";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
 import databaseSchema from "./_generated/schema";
 import { DatabaseReader, QueryCtx } from "./_generated/services";
 import spec from "./ledger.spec";
-import { LEDGER_SETTING_KEYS } from "./ledgerView";
 import { requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
 import { requirePro } from "./revenuecat";

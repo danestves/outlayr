@@ -1,6 +1,7 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { isPerson } from "@outlayr/money/account-kind";
 import { isInstallmentAppAccount } from "@outlayr/money/institution-map";
+
+import type { LedgerBooks } from "@/lib/ledger-books";
 
 type UsageBooks = Pick<LedgerBooks, "accounts" | "budgets" | "savingsGoals">;
 

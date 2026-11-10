@@ -1,8 +1,8 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import BanIcon from "@hugeicons/core-free-icons/BanIcon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
-import type { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
 import { decimalsFor } from "@outlayr/money/currency";
+import type { accountLook } from "@outlayr/money/ledger-log";
 import { roundMoney } from "@outlayr/money/round";
 import { useNavigate } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";

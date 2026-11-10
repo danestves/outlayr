@@ -1,4 +1,3 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { describe, expect, it } from "vite-plus/test";
 
 import { netAfterDelete } from "../components/dashboard/accounts/model";
@@ -12,6 +11,7 @@ import {
     parseAmount,
 } from "./account-writes";
 import { prepareLedger } from "./dashboard-series-ledger";
+import type { LedgerBooks } from "./ledger-books";
 
 const AT = Date.UTC(2026, 10, 8);
 const EARLIER = AT - 1000;

@@ -1,4 +1,3 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import type { PushRow } from "@outlayr/backend/confect/sync";
 import {
     formatCategoryName,
@@ -10,6 +9,7 @@ import { categoryDeletionPlan } from "@outlayr/money/entry-deletion";
 
 import { planBooks, withId } from "./account-writes";
 import { takenWith, tombstonesOf } from "./delete-writes";
+import type { LedgerBooks } from "./ledger-books";
 
 type Category = LedgerBooks["categories"][number];
 type Budget = LedgerBooks["budgets"][number];

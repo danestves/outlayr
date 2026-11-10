@@ -1,9 +1,9 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { occurrenceId } from "@outlayr/money/occurrence";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { describe, expect, it } from "vite-plus/test";
 
 import { prepareLedger } from "./dashboard-series-ledger";
+import type { LedgerBooks } from "./ledger-books";
 import type { CommitRow } from "./ledger-committer";
 import { EMPTY_RECURRING, recurringModel, reverted, stepWall, upcomingOf } from "./recurring";
 import type { RecurringBook } from "./recurring";

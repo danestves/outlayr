@@ -1,4 +1,3 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { entryRow } from "@outlayr/money/entry-row";
 import {
     draftSchedule,
@@ -15,6 +14,7 @@ import type { OffsetAt } from "@outlayr/money/ledger-zone";
 import * as Effect from "effect/Effect";
 
 import { frozenUsd, ratesLookup } from "./account-writes";
+import type { LedgerBooks } from "./ledger-books";
 import type { CommitRow } from "./ledger-committer";
 
 export interface PurchaseChoices {

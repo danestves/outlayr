@@ -1,4 +1,4 @@
-import { entryLook } from "@outlayr/backend/confect/lib/ledgerLog";
+import { entryLook } from "@outlayr/money/ledger-log";
 import { wallNoon } from "@outlayr/money/ledger-zone";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { Badge } from "panelui-web/badge";

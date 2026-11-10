@@ -1,14 +1,14 @@
-import { accountBalances, rateTableOf, settingsOf, zoneOf } from "@outlayr/backend/confect/ledgerView";
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { FIELDS_BY_TABLE } from "@outlayr/backend/confect/lib/syncTables";
 import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { decimalsFor } from "@outlayr/money/currency";
 import { accountDeletionPlan } from "@outlayr/money/entry-deletion";
+import { accountBalances, rateTableOf, settingsOf, zoneOf } from "@outlayr/money/ledger-view";
 import type { RateLookup } from "@outlayr/money/rates";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";
 import * as Effect from "effect/Effect";
 
+import type { LedgerBooks } from "./ledger-books";
 import type { CommitRow } from "./ledger-committer";
 
 type Account = LedgerBooks["accounts"][number];

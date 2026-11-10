@@ -1,6 +1,6 @@
-import { accountLook } from "@outlayr/backend/confect/lib/ledgerLog";
 import { decimalsFor } from "@outlayr/money/currency";
 import { planStanding } from "@outlayr/money/installments";
+import { accountLook } from "@outlayr/money/ledger-log";
 import { isoDay } from "@outlayr/money/ledger-zone";
 import { roundMoney } from "@outlayr/money/round";
 

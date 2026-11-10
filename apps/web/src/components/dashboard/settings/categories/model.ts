@@ -1,5 +1,6 @@
-import type { LedgerBooks } from "@outlayr/backend/confect/ledgerView";
 import { capitalizeCategoryName, detectCategoryCollision } from "@outlayr/money/category-rules";
+
+import type { LedgerBooks } from "@/lib/ledger-books";
 
 import { liveCategories } from "../../../../lib/category-writes";
 import { rowsOf, total, UNCATEGORIZED_ID } from "../../../../lib/dashboard-series-ledger";
