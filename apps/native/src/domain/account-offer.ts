@@ -1,20 +1,19 @@
-export function firstEntryOfferDue(state: {
+export function accountOfferDue(state: {
     arriving: boolean;
-    consentDue: boolean;
-    locked: boolean;
+    held: boolean;
     onLog: boolean;
     onTabs: boolean;
     savedThisSession: boolean;
-    shown: boolean;
+    signedOut: boolean;
     transactions: number;
     updateDue: boolean;
 }): boolean {
-    const sheetFirst = state.consentDue || state.updateDue || (state.arriving && state.onLog);
+    const sheetFirst = state.updateDue || (state.arriving && state.onLog);
     return (
         state.onTabs &&
-        state.locked &&
+        state.held &&
+        state.signedOut &&
         state.savedThisSession &&
-        !state.shown &&
         state.transactions === 1 &&
         !sheetFirst
     );

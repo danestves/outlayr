@@ -80,8 +80,8 @@ describe("auth gate", () => {
 });
 
 describe("account routing", () => {
-    const at = (gate: Parameters<typeof authRoute>[0]["gate"], reconciled: boolean, deferred = false) =>
-        authRoute({ deferred, gate, reconciled });
+    const at = (gate: Parameters<typeof authRoute>[0]["gate"], reconciled: boolean, deferred = false, held = false) =>
+        authRoute({ deferred, gate, held, reconciled });
 
     it("opens the ledger of a build that cannot sign anyone in", () => {
         expect(at("unconfigured", true)).toBe("ledger");
@@ -111,6 +111,11 @@ describe("account routing", () => {
         expect(at("restoring", false, true)).toBe("ledger");
     });
 
+    it("opens the ledger while the account offer waits for the first entry", () => {
+        expect(at("signed-out", false, false, true)).toBe("ledger");
+        expect(at("signed-in", false, false, true)).toBe("adopt");
+    });
+
     it("still reconciles when a device that declined signs in later", () => {
         expect(at("signed-in", false, true)).toBe("adopt");
         expect(at("signed-in", true, true)).toBe("ledger");
@@ -125,7 +130,9 @@ describe("rootStackGroup", () => {
         for (const gate of GATES) {
             for (const reconciled of BOOLEANS) {
                 for (const deferred of BOOLEANS) {
-                    expect(rootStackGroup({ deferred, gate, onboarded: false, reconciled })).toBe("onboarding");
+                    expect(rootStackGroup({ deferred, gate, held: false, onboarded: false, reconciled })).toBe(
+                        "onboarding"
+                    );
                 }
             }
         }
@@ -135,8 +142,8 @@ describe("rootStackGroup", () => {
         for (const gate of GATES) {
             for (const reconciled of BOOLEANS) {
                 for (const deferred of BOOLEANS) {
-                    expect(rootStackGroup({ deferred, gate, onboarded: true, reconciled })).toBe(
-                        authRoute({ deferred, gate, reconciled })
+                    expect(rootStackGroup({ deferred, gate, held: false, onboarded: true, reconciled })).toBe(
+                        authRoute({ deferred, gate, held: false, reconciled })
                     );
                 }
             }

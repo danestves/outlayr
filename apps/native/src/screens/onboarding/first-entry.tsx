@@ -20,7 +20,7 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
-import { finishOnboardingCommand } from "@/state/lifecycle-commands";
+import { finishFirstRunCommand } from "@/state/lifecycle-commands";
 import { saveFirstEntryCommand } from "@/state/onboarding-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
@@ -56,9 +56,9 @@ export function OnboardingFirstEntry() {
         haptics("error");
         setFailed("finish");
     };
-    const finishOnboarding = useAtomAction(finishOnboardingCommand, { onFailure: finishFailed }, SILENT);
+    const finishOnboarding = useAtomAction(finishFirstRunCommand, { onFailure: finishFailed }, SILENT);
     const skipOnboarding = useAtomAction(
-        finishOnboardingCommand,
+        finishFirstRunCommand,
         {
             onFailure: finishFailed,
             onSuccess: () => posthog?.capture("onboarding_first_entry", { outcome: "skipped" }),

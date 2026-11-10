@@ -1,6 +1,6 @@
 import * as Effect from "effect/Effect";
 
-import { Meta } from "@/data/app-meta-core";
+import { releaseAccountOffer } from "@/data/onboarding-core";
 import type { Database } from "@/db/client";
 import { armChosenReminder } from "@/lib/chosen-reminder";
 import { posthog } from "@/lib/posthog";
@@ -34,7 +34,7 @@ export const awaitReminderPromptCommand = createRuntimeCommand(appRuntime, {
     label: "onboarding:await-reminder-prompt",
 });
 
-export const markFirstEntryOfferCommand = createRuntimeCommand(appRuntime, {
-    execute: (db: Database) => Meta.set(db, "firstEntryOfferShown", true),
-    label: "onboarding:mark-first-entry-offer",
+export const releaseAccountOfferCommand = createRuntimeCommand(appRuntime, {
+    execute: (db: Database) => releaseAccountOffer(db),
+    label: "onboarding:release-account-offer",
 });
