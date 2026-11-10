@@ -1,3 +1,7 @@
+import { analyzeSnapshot } from "@outlayr/money/money-manager/analysis";
+import { defaultChoices } from "@outlayr/money/money-manager/defaults";
+import { buildImportPlan } from "@outlayr/money/money-manager/plan";
+import type { MmArchiveError } from "@outlayr/money/money-manager/types";
 import * as Effect from "effect/Effect";
 
 import {
@@ -8,10 +12,6 @@ import {
 } from "@/data/money-manager-import-core";
 import type { Database } from "@/db/client";
 import { countBucket } from "@/domain/count-bucket";
-import { analyzeSnapshot } from "@/domain/money-manager/analysis";
-import { defaultChoices } from "@/domain/money-manager/defaults";
-import { buildImportPlan } from "@/domain/money-manager/plan";
-import type { MmArchiveError } from "@/domain/money-manager/types";
 import { pickBackupFile, readBackupFile } from "@/lib/money-manager-file";
 import type { BackupSource } from "@/lib/money-manager-file";
 import { moneyManagerSession } from "@/lib/money-manager-session";

@@ -1,7 +1,7 @@
+import { readMoneyManagerArchive } from "@outlayr/money/money-manager/archive";
 import { strToU8, zipSync } from "fflate";
 import { describe, expect, it } from "vite-plus/test";
 
-import { readMoneyManagerArchive } from "./archive";
 import { buildMoneyManagerFixture } from "./fixture";
 
 const SQLITE = new TextEncoder().encode("SQLite format 3\0");

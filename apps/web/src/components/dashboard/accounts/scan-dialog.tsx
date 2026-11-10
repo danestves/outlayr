@@ -18,7 +18,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
 import { LocalizedLink } from "@/components/localized-link";
-import { chooseAiConsent, readAiConsent } from "@/lib/ai-consent";
+import { allowPlanScan, hasPlanScanConsent } from "@/lib/ai-consent";
 import { convexClient } from "@/lib/convex";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { scanImage, scannedSeed } from "@/lib/installment-scan";
@@ -179,7 +179,7 @@ export function ScanDialog({
     const [picked, setPicked] = useState(
         cards.find((row) => row.localId === accountId)?.localId ?? cards[0]?.localId ?? null
     );
-    const [phase, setPhase] = useState<Phase>(() => ({ kind: readAiConsent() ? "pick" : "consent" }));
+    const [phase, setPhase] = useState<Phase>(() => ({ kind: hasPlanScanConsent() ? "pick" : "consent" }));
     const input = useRef<HTMLInputElement>(null);
     const latest = useRef(0);
     const account = cards.find((row) => row.localId === picked) ?? null;
@@ -201,7 +201,7 @@ export function ScanDialog({
         if (!account) {
             return;
         }
-        if (!readAiConsent()) {
+        if (!hasPlanScanConsent()) {
             setPhase({ kind: "consent" });
             return;
         }
@@ -326,7 +326,7 @@ export function ScanDialog({
                 </Button>
                 <Button
                     onClick={() => {
-                        chooseAiConsent(true);
+                        allowPlanScan();
                         setPhase({ kind: "pick" });
                     }}
                 >

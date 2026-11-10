@@ -1,3 +1,4 @@
+import type { AccountTarget, MmAccountGroup, MmAccountView } from "@outlayr/money/money-manager/types";
 import { useRef, useState } from "react";
 import { View } from "react-native";
 
@@ -5,7 +6,6 @@ import { CategoryIconTile } from "@/components/category-icon-tile";
 import { ChoiceRow, SettingsSection } from "@/components/list/list-row";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { tc } from "@/domain/money-manager/count-labels";
-import type { AccountTarget, MmAccountGroup, MmAccountView } from "@/domain/money-manager/types";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";

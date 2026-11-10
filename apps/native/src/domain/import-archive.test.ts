@@ -1,9 +1,9 @@
+import { parseCsv } from "@outlayr/money/csv-read";
 import { strToU8, zipSync } from "fflate";
 import { describe, expect, it } from "vite-plus/test";
 
 import { guessMapping } from "@/data/transfer-core";
 
-import { parseCsv } from "./csv";
 import { csvFromArchive, isZip } from "./import-archive";
 import { HARD_PARSE_REJECT_CHARS } from "./import-diagnosis";
 

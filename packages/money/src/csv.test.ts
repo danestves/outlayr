@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { formatCsvRow, parseCsv } from "./csv";
+import { parseCsv } from "./csv-read";
+import { formatCsvRow } from "./transaction-csv";
 
 describe("formatCsvRow", () => {
     it("leaves plain fields bare", () => {

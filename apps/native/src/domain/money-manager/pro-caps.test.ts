@@ -1,11 +1,14 @@
+import type { MmImportPlan, OutlayrLedgerState, PlannedAccount } from "@outlayr/money/money-manager/types";
 import { describe, expect, it } from "vite-plus/test";
 
+import { presetLabel } from "@/data/categories-core";
+
 import { importCapsPassed } from "./pro-caps";
-import type { MmImportPlan, OutlayrLedgerState, PlannedAccount } from "./types";
 
 const EMPTY: OutlayrLedgerState = {
     accounts: [],
     budgetCategoryIds: [],
+    presetLabel: (preset) => presetLabel(preset),
     categories: [],
     currency: "USD",
     currencyChosen: false,

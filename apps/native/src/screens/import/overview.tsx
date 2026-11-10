@@ -1,3 +1,4 @@
+import { buildImportPlan } from "@outlayr/money/money-manager/plan";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
 
@@ -9,7 +10,6 @@ import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { formatTargetDate, formatTargetMonth } from "@/domain/dates";
 import { tc } from "@/domain/money-manager/count-labels";
-import { buildImportPlan } from "@/domain/money-manager/plan";
 import { importCapsPassed } from "@/domain/money-manager/pro-caps";
 import type { ImportCap } from "@/domain/money-manager/pro-caps";
 import { useOpenPaywall } from "@/hooks/use-pro-gate";

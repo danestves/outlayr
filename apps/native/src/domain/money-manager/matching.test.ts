@@ -1,14 +1,13 @@
-import { describe, expect, it } from "vite-plus/test";
-
-import { CATEGORY_PALETTE } from "@/data/categories-core";
-
 import {
     iconFamilyPreset,
     nearestPaletteColor,
     normalizeLabel,
     presetForMoneyManager,
     suggestAccountKind,
-} from "./matching";
+} from "@outlayr/money/money-manager/matching";
+import { describe, expect, it } from "vite-plus/test";
+
+import { CATEGORY_PALETTE } from "@/data/categories-core";
 
 describe("Money Manager category matching", () => {
     it("matches names across accents and keeps a notebook off the education preset", () => {

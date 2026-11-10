@@ -1,8 +1,9 @@
+import { parseCsv } from "@outlayr/money/csv-read";
+import { formatCsvRow } from "@outlayr/money/transaction-csv";
 import { strFromU8, unzipSync } from "fflate";
 
 import { guessMapping } from "@/data/transfer-core";
 
-import { formatCsvRow, parseCsv } from "./csv";
 import { HARD_PARSE_REJECT_CHARS } from "./import-diagnosis";
 
 const ZIP_SIGNATURE = [0x50, 0x4b, 0x03, 0x04];

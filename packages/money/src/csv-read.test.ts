@@ -1,16 +1,15 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { parseCsv } from "./csv";
 import {
-    CSV_HEADER,
     deduceDateFormat,
     detectDecimalSeparator,
+    parseCsv,
     parseCsvAmount,
     parseCsvDate,
     parseCsvType,
-    serializeCsvAmount,
-    transactionsToCsv,
-} from "./transaction-csv";
+} from "./csv-read";
+import { CSV_HEADER, serializeCsvAmount, transactionsToCsv } from "./transaction-csv";
+import type { ExportableTransaction } from "./transaction-csv";
 
 describe("serializeCsvAmount", () => {
     it("pads to the currency's minor units", () => {
@@ -196,18 +195,15 @@ describe("parseCsvDate with a month name", () => {
 
 describe("parseCsvType", () => {
     it("reads the exported words", () => {
-        expect(parseCsvType("Income")).toBe(true);
-        expect(parseCsvType("Expense")).toBe(false);
+        expect(["Income", "Expense"].map(parseCsvType)).toStrictEqual([true, false]);
     });
 
     it("ignores case and padding", () => {
-        expect(parseCsvType("  income ")).toBe(true);
+        expect(["  income "].map(parseCsvType)).toStrictEqual([true]);
     });
 
     it("reads Spanish and Portuguese words", () => {
-        expect(parseCsvType("Ingreso")).toBe(true);
-        expect(parseCsvType("Gasto")).toBe(false);
-        expect(parseCsvType("Saída")).toBe(false);
+        expect(["Ingreso", "Gasto", "Saída"].map(parseCsvType)).toStrictEqual([true, false, false]);
     });
 
     it("leaves a card type alone, since Crédito names how it was paid", () => {
@@ -220,17 +216,18 @@ describe("parseCsvType", () => {
 });
 
 describe("transactionsToCsv", () => {
-    const rows = [
-        {
-            amount: 12.5,
-            categoryName: "Groceries",
-            currency: "EUR",
-            date: new Date(Date.UTC(2026, 6, 29, 10, 15)),
-            exchangeRate: null,
-            exchangeRateType: null,
-            income: false,
-            note: "Bakery, twice",
-        },
+    const bakery: ExportableTransaction = {
+        amount: 12.5,
+        categoryName: "Groceries",
+        currency: "EUR",
+        date: new Date(Date.UTC(2026, 6, 29, 10, 15)),
+        exchangeRate: null,
+        exchangeRateType: null,
+        income: false,
+        note: "Bakery, twice",
+    };
+    const rows: ExportableTransaction[] = [
+        bakery,
         {
             amount: 2400,
             categoryName: null,
@@ -251,8 +248,7 @@ describe("transactionsToCsv", () => {
     it("round-trips date, amount, currency and type exactly", () => {
         const parsed = parseCsv(transactionsToCsv(rows, "USD"));
         for (const [index, row] of rows.entries()) {
-            const cells = parsed[index + 1];
-            expect(cells).toBeTruthy();
+            const cells = parsed[index + 1] ?? [];
             expect(parseCsvDate(cells[0] ?? "", "ISO")?.getTime()).toBe(row.date.getTime());
             expect(parseCsvAmount(cells[2] ?? "")).toBe(row.amount);
             expect(cells[3]).toBe(row.currency ?? "USD");
@@ -268,8 +264,8 @@ describe("transactionsToCsv", () => {
         const parsed = parseCsv(
             transactionsToCsv(
                 [
-                    { ...rows[0], exchangeRate: 55.5, exchangeRateType: "custom" },
-                    { ...rows[0], exchangeRate: 42, exchangeRateType: "official" },
+                    { ...bakery, exchangeRate: 55.5, exchangeRateType: "custom" },
+                    { ...bakery, exchangeRate: 42, exchangeRateType: "official" },
                 ],
                 "USD"
             )
@@ -281,7 +277,7 @@ describe("transactionsToCsv", () => {
 
     it("exports pending custom as type custom with a blank actual rate", () => {
         const parsed = parseCsv(
-            transactionsToCsv([{ ...rows[0], exchangeRate: null, exchangeRateType: "custom" }], "USD")
+            transactionsToCsv([{ ...bakery, exchangeRate: null, exchangeRateType: "custom" }], "USD")
         );
 
         expect(parsed[1]?.slice(6)).toStrictEqual(["custom", ""]);
@@ -289,7 +285,7 @@ describe("transactionsToCsv", () => {
 
     it("exports USD with both metadata cells blank", () => {
         const parsed = parseCsv(
-            transactionsToCsv([{ ...rows[0], currency: "USD", exchangeRate: 55.5, exchangeRateType: "custom" }], "USD")
+            transactionsToCsv([{ ...bakery, currency: "USD", exchangeRate: 55.5, exchangeRateType: "custom" }], "USD")
         );
 
         expect(parsed[1]?.slice(6)).toStrictEqual(["", ""]);

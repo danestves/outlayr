@@ -1,3 +1,4 @@
+import { deduceDateFormat, detectDecimalSeparator } from "@outlayr/money/csv-read";
 import { describe, expect, it } from "vite-plus/test";
 
 import { buildImportPlan, categoryKey } from "@/data/transfer-core";
@@ -5,7 +6,6 @@ import type { StatementRow } from "@/lib/cloud-ai";
 
 import { resolveImportMapping } from "./import-mapping";
 import { STATEMENT_DRAFT, statementToParsedImport } from "./import-statement";
-import { deduceDateFormat, detectDecimalSeparator } from "./transaction-csv";
 
 function planFor(rows: readonly StatementRow[]) {
     const parsed = statementToParsedImport(rows);

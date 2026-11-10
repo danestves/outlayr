@@ -1,6 +1,7 @@
-import type { AccountKind } from "@outlayr/money/account-kind";
+import type { AccountKind } from "../account-kind";
+import type { CanonicalCategoryName } from "../contract";
 
-import type { CategoryPreset } from "@/data/categories-core";
+export type CategoryPreset = CanonicalCategoryName<"expense" | "income">;
 
 /**
  * Money Manager (Orange Dog, `.mmbackup`) rows, in major units and resolved currencies.
@@ -86,6 +87,8 @@ export type MmArchiveError =
 
 /** What the import needs to know about the Outlayr ledger it lands in. */
 export interface OutlayrLedgerState {
+    /** The localized name of a preset category. */
+    presetLabel: (preset: string) => string;
     currency: string;
     currencyChosen: boolean;
     accounts: readonly { id: string; name: string; currency: string; kind: AccountKind }[];

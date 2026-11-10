@@ -1,5 +1,3 @@
-import { useSyncExternalStore } from "react";
-
 import type {
     MmAnalysis,
     MmArchiveError,
@@ -8,7 +6,8 @@ import type {
     MmImportRecord,
     MmSnapshot,
     OutlayrLedgerState,
-} from "@/domain/money-manager/types";
+} from "@outlayr/money/money-manager/types";
+import { useSyncExternalStore } from "react";
 
 import type { BackupSource } from "./money-manager-file";
 

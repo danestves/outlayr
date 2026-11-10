@@ -1,10 +1,10 @@
+import { readMoneyManagerArchive } from "@outlayr/money/money-manager/archive";
+import { MoneyManagerSnapshotError, readMoneyManagerSnapshot } from "@outlayr/money/money-manager/snapshot";
+import type { SqlAll } from "@outlayr/money/money-manager/snapshot";
 import BetterSqlite3 from "better-sqlite3";
 import { describe, expect, it } from "vite-plus/test";
 
-import { readMoneyManagerArchive } from "./archive";
 import { buildMoneyManagerFixture } from "./fixture";
-import { MoneyManagerSnapshotError, readMoneyManagerSnapshot } from "./snapshot";
-import type { SqlAll } from "./snapshot";
 
 function openFixture(): ReturnType<typeof readMoneyManagerSnapshot> {
     const archive = readMoneyManagerArchive(buildMoneyManagerFixture());

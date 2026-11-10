@@ -1,3 +1,4 @@
+import type { UncategorizedChoice } from "@outlayr/money/money-manager/types";
 import { View } from "react-native";
 
 import { ChoiceRow, SettingsSection } from "@/components/list/list-row";
@@ -5,7 +6,6 @@ import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { formatTargetDate } from "@/domain/dates";
 import { tc } from "@/domain/money-manager/count-labels";
-import type { UncategorizedChoice } from "@/domain/money-manager/types";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { moneyManagerSession, useMoneyManagerSession } from "@/lib/money-manager-session";

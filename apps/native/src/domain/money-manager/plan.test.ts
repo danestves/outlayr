@@ -1,18 +1,21 @@
+import { analyzeSnapshot } from "@outlayr/money/money-manager/analysis";
+import { readMoneyManagerArchive } from "@outlayr/money/money-manager/archive";
+import { defaultChoices, keepModeCategories } from "@outlayr/money/money-manager/defaults";
+import { buildImportPlan } from "@outlayr/money/money-manager/plan";
+import { readMoneyManagerSnapshot } from "@outlayr/money/money-manager/snapshot";
+import type { SqlAll } from "@outlayr/money/money-manager/snapshot";
+import type { OutlayrLedgerState } from "@outlayr/money/money-manager/types";
 import BetterSqlite3 from "better-sqlite3";
 import { describe, expect, it } from "vite-plus/test";
 
-import { analyzeSnapshot } from "./analysis";
-import { readMoneyManagerArchive } from "./archive";
-import { defaultChoices, keepModeCategories } from "./defaults";
+import { presetLabel } from "@/data/categories-core";
+
 import { buildMoneyManagerFixture } from "./fixture";
-import { buildImportPlan } from "./plan";
-import { readMoneyManagerSnapshot } from "./snapshot";
-import type { SqlAll } from "./snapshot";
-import type { OutlayrLedgerState } from "./types";
 
 const EMPTY: OutlayrLedgerState = {
     accounts: [],
     budgetCategoryIds: [],
+    presetLabel: (preset) => presetLabel(preset),
     categories: [],
     currency: "USD",
     currencyChosen: false,

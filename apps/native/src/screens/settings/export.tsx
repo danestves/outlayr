@@ -1,3 +1,4 @@
+import { CSV_HEADER } from "@outlayr/money/transaction-csv";
 import * as Cause from "effect/Cause";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
@@ -12,7 +13,6 @@ import { useDatabase } from "@/contexts/local-data-context";
 import { useTransactionCount } from "@/data/transactions";
 import { exportFileName } from "@/data/transfer-core";
 import { archiveFileName } from "@/domain/archive";
-import { CSV_HEADER } from "@/domain/transaction-csv";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { TransferError } from "@/lib/data-transfer";

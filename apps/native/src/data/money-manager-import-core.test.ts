@@ -1,19 +1,20 @@
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
+import { analyzeSnapshot } from "@outlayr/money/money-manager/analysis";
+import { readMoneyManagerArchive } from "@outlayr/money/money-manager/archive";
+import { defaultChoices } from "@outlayr/money/money-manager/defaults";
+import { buildImportPlan } from "@outlayr/money/money-manager/plan";
+import { readMoneyManagerSnapshot } from "@outlayr/money/money-manager/snapshot";
+import type { SqlAll } from "@outlayr/money/money-manager/snapshot";
+import type { OutlayrLedgerState } from "@outlayr/money/money-manager/types";
 import BetterSqlite3 from "better-sqlite3";
 import { and, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
+import { presetLabel } from "@/data/categories-core";
 import { accounts, budgets, categories, transactions } from "@/db/schema";
 import { transactionalDatabase } from "@/db/test-database";
-import { analyzeSnapshot } from "@/domain/money-manager/analysis";
-import { readMoneyManagerArchive } from "@/domain/money-manager/archive";
-import { defaultChoices } from "@/domain/money-manager/defaults";
 import { buildMoneyManagerFixture } from "@/domain/money-manager/fixture";
-import { buildImportPlan } from "@/domain/money-manager/plan";
-import { readMoneyManagerSnapshot } from "@/domain/money-manager/snapshot";
-import type { SqlAll } from "@/domain/money-manager/snapshot";
-import type { OutlayrLedgerState } from "@/domain/money-manager/types";
 
 import { Meta } from "./app-meta-core";
 import { budgetsRepo } from "./budgets-core";
@@ -30,6 +31,7 @@ import { deletedTransactionsQuery, transactionsRepo } from "./transactions-core"
 const EMPTY: OutlayrLedgerState = {
     accounts: [],
     budgetCategoryIds: [],
+    presetLabel: (preset) => presetLabel(preset),
     categories: [],
     currency: "USD",
     currencyChosen: false,
