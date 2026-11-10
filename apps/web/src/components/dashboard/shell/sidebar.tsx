@@ -90,7 +90,14 @@ function NavLink({
     to,
 }: NavProps & {
     exact?: boolean;
-    to: "/app" | "/app/accounts" | "/app/goals" | "/app/insights" | "/app/recurring" | "/app/rules" | "/app/transactions";
+    to:
+        | "/app"
+        | "/app/accounts"
+        | "/app/goals"
+        | "/app/insights"
+        | "/app/recurring"
+        | "/app/rules"
+        | "/app/transactions";
 }) {
     const item = (
         <Link activeOptions={{ exact, includeSearch: false }} className="dash-nav" to={to}>

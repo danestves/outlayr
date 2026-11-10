@@ -29,7 +29,7 @@ const PhotosContext = createContext<PhotoUrls>(NO_PHOTOS);
 
 /** The newest entry a candidate was spotted from, which lends it its look. */
 export const candidateDoc = (ledger: Ledger, candidate: Candidate) => {
-    const id = candidate.entries.at(-1)?.id;
+    const id = candidate.entries.at(0)?.id;
     return ledger.books.transactions.find((row) => row.localId === id);
 };
 

@@ -13,7 +13,7 @@ import { Foot, GroupRow } from "./upcoming";
 
 /** When a chain went quiet: the day it was paused, or its last charge once it ran out. */
 export const heldSince = (model: RecurringModel, schedule: Schedule) =>
-    schedule.pause?.since ?? model.history.get(schedule.id)?.at(-1)?.day ?? schedule.chain.endDay ?? schedule.startDay;
+    schedule.pause?.since ?? model.history.get(schedule.id)?.at(0)?.day ?? schedule.chain.endDay ?? schedule.startDay;
 
 export function PausedTable({
     actions,

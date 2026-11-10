@@ -2,6 +2,7 @@ import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
 import TickDouble02Icon from "@hugeicons/core-free-icons/TickDouble02Icon";
 import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
+import { decimalsFor } from "@outlayr/money/currency";
 import { useNavigate } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
@@ -243,7 +244,7 @@ function useExport(data: RecurringData) {
             schedule.name,
             repeat.short(schedule.chain.type, schedule.chain.every),
             schedule.state === "active" ? (nextDayOf(schedule, ledger.today) ?? "") : copy.badge[schedule.state].value,
-            String(schedule.seed.income ? schedule.worth : -schedule.worth),
+            (schedule.seed.income ? schedule.worth : -schedule.worth).toFixed(decimalsFor(ledger.currency)),
             schedule.perMonth.toFixed(2),
             categoryLook(schedule.seed.categoryId)?.name ?? "",
             schedule.seed.accountId === null
