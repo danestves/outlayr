@@ -85,6 +85,12 @@ describe("outcomeOf", () => {
         );
     });
 
+    it("leaves a blank amount out of an amount rule", () => {
+        const small = rule("small", [{ field: "amount", op: "atMost", value: 5 }], "shopping");
+        expect(outcomeOf([small], entry("blank", "", { amount: 0 }), KINDS).categoryId).toBeNull();
+        expect(outcomeOf([small], entry("coffee", "", { amount: 4 }), KINDS).categoryId).toBe("shopping");
+    });
+
     it("falls through a rule whose category was deleted", () => {
         const stale = rule("stale", [merchant("amazon")], "gone");
         expect(outcomeOf([stale, amazon], plainOrder, KINDS).categoryId).toBe("shopping");

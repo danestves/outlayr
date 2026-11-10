@@ -69,6 +69,9 @@ const lower = (text: string) => text.trim().toLocaleLowerCase();
 function holds(condition: Condition, entry: Matchable) {
     if (condition.field === "amount") {
         const amount = Math.abs(entry.amount);
+        if (amount === 0) {
+            return false;
+        }
         if (condition.op === "is") {
             return Math.abs(amount - condition.value) < CENT;
         }
