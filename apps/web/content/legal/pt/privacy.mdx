@@ -57,6 +57,7 @@ Todo tipo de dado que o Outlayr trata, em um só lugar. As seções abaixo expli
 | Recurso, modelo, tokens, custo, velocidade e erros de cada solicitação de IA | Sugestões, leitura de notificações, voz, escaneamentos, importações | PostHog | Com Compartilhar análises ativado, até a exclusão da conta. Caso contrário, política do PostHog |
 | Páginas, cliques, rolagem, erros, velocidade das páginas, gravações de visitas | Visitas ao site | PostHog | Política do PostHog |
 | Endereço push do navegador e chaves, fuso horário, idioma, hora do lembrete | Lembrete diário na web, se você ativar | Nossos servidores, o serviço push do seu navegador (como Google, Apple, Mozilla ou Microsoft) | Até você desativar ou excluir sua conta |
+| Um relatório que você compartilha: o nome, os nomes das linhas e colunas, e os totais, ou porcentagens se você ocultar os valores | Link para compartilhar um relatório, se você ativar | Nossos servidores, qualquer pessoa com o link | Até você desativar o link, ele expirar ou você excluir sua conta |
 | Lançamentos, saldos, orçamentos, cobranças futuras | Assistente de IA que você aprova | A empresa do assistente | Políticas dela |
 | Nome e endereço do assistente, sua aprovação, chaves de acesso | Assistente de IA que você aprova | Nossos servidores | Até a exclusão da conta |
 | Seus e-mails | Você escreve | Nossa caixa de entrada | Pelo tempo necessário |
@@ -296,6 +297,8 @@ Se você iniciar sessão neste site, para conectar um assistente de IA ou abrir 
 
 Com o Outlayr Pro, abrir seus lançamentos aqui salva uma cópia no armazenamento do seu navegador para que a página carregue sem esperar pelo nosso servidor. Ela não é criptografada, assim como os lançamentos no seu celular, então qualquer pessoa que use o seu perfil do navegador poderia lê-la. Um cookie pequeno indica que a cópia existe e não guarda mais nada. Sair da conta neste site apaga a cópia daquele navegador.
 
+A partir dos seus lançamentos neste site, você pode compartilhar um relatório com um link. Quando você ativa um link, seu navegador nos envia uma cópia desse relatório: o nome, os nomes das linhas e colunas, como categorias, estabelecimentos ou contas, e os totais. Se você ocultar os valores, a cópia leva porcentagens e nenhum valor. Qualquer pessoa com o link pode abrir essa cópia sem entrar na conta, então envie-o apenas para quem você quer que a veja. A página pede aos buscadores que não a listem. A cópia só muda quando você abre de novo as opções de compartilhamento do relatório, e nada mais dos seus lançamentos é enviado.
+
 Para reconhecer você em visitas posteriores, o PostHog guarda um ID aleatório em um cookie e no armazenamento do seu navegador. Se você estiver no EEE ou no Reino Unido, ou se o seu navegador enviar o Global Privacy Control, o site pergunta antes de defini-lo e não registra nada até você responder. Nos outros lugares, ele é definido na sua primeira visita. Altere sua resposta a qualquer momento no rodapé, em **Cookies**. Sua resposta fica guardada no seu navegador.
 
 Se você recusar, o site ainda conta sua visita sem cookie. O PostHog transforma seu endereço IP e seu navegador em um código que muda todos os dias, de modo que não consegue reconhecer você em outro dia, e a visita não é gravada.
@@ -336,6 +339,7 @@ A [tabela acima](#dados-em-resumo) lista por quanto tempo cada tipo de dado é g
 - Os itens da lista compartilhada de estabelecimentos não estão vinculados a ninguém. Eles são atualizados após 30 ou 90 dias.
 - Os eventos de análise vinculados à sua conta são apagados junto com ela. O PostHog os apaga em um lote posterior, então eles podem continuar lá por um tempo depois que o app informar que a exclusão terminou. Os eventos de uma instalação que nunca iniciou sessão levam apenas um ID de instalação aleatório e são guardados conforme a política de retenção do PostHog. Os registros de solicitações de IA enviados enquanto Compartilhar análises estava desativado levam um ID aleatório em vez do seu ID de conta, além do ID da conversa no lançamento por voz, e são guardados da mesma forma.
 - Os eventos do site levam um ID aleatório do navegador, ou um código que muda diariamente se você recusou os cookies, e são guardados conforme a política de retenção do PostHog.
+- A cópia de um relatório que você compartilha é apagada quando você desativa o link, até um dia depois de ele expirar, quando você exclui o relatório neste site ou quando exclui sua conta.
 - Nossos provedores, incluindo a Anthropic, a ElevenLabs, a Apple, o Google e a Expo, e o Notion se você o conectar, guardam os dados que recebem conforme as próprias políticas de retenção.
 
 ## Apagar e exportar

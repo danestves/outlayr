@@ -57,6 +57,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Feature, model, tokens, cost, speed, and errors of each AI request | Suggestions, notification reading, voice, scans, imports | PostHog | With Share analytics on, until account deletion. Otherwise PostHog’s policy |
 | Pages, clicks, scrolling, errors, page speed, visit recordings | Website visits | PostHog | PostHog’s policy |
 | Browser push address and keys, time zone, language, reminder time | Daily reminder on the web, if you turn it on | Our servers, your browser’s push service (such as Google, Apple, Mozilla, or Microsoft) | Until you turn it off or delete your account |
+| A report you share: its name, the names of its rows and columns, and their totals, or percentages if you hide amounts | Share link on a report, if you turn it on | Our servers, anyone with the link | Until you turn the link off, it expires, or you delete your account |
 | Entries, balances, budgets, upcoming charges | AI assistant you approve | The assistant’s company | Their policies |
 | Assistant name and address, your approval, access keys | AI assistant you approve | Our servers | Until account deletion |
 | Your emails | You write | Our inbox | As long as needed |
@@ -296,6 +297,8 @@ If you sign in on this site, to connect an AI assistant or to open your ledger, 
 
 With Outlayr Pro, opening your ledger here saves a copy in your browser's storage so the page loads without waiting for our server. It isn't encrypted, like the ledger on your phone, so anyone using your browser profile could read it. A small cookie notes that the copy exists and holds nothing else. Signing out on this site deletes the copy from that browser.
 
+From your ledger on this site you can share a report with a link. When you turn a link on, your browser sends us a copy of that report: its name, the names of its rows and columns, such as categories, merchants, or accounts, and their totals. If you turn amounts off, the copy holds percentages and no amounts. Anyone who has the link can open that copy without signing in, so send it only to people you want to see it. The page asks search engines not to list it. The copy changes only when you open the report's sharing options again, and nothing else from your ledger is sent.
+
 To recognize you on later visits, PostHog keeps a random ID in a cookie and your browser’s storage. If you’re in the EEA or UK, or your browser sends Global Privacy Control, the site asks before setting it and records nothing until you answer. Elsewhere it’s set on your first visit. Change your answer at any time in the footer under **Cookies**. Your answer is kept in your browser.
 
 If you decline, the site still counts your visit without a cookie. PostHog turns your IP address and browser into a code that changes every day, so it can’t recognize you on a later day, and the visit isn’t recorded.
@@ -336,6 +339,7 @@ The [table above](#data-at-a-glance) lists how long each kind of data is kept. A
 - Items in the shared merchant list aren’t linked to anyone. They’re refreshed after 30 or 90 days.
 - Analytics events linked to your account are deleted with it. PostHog erases them in a later batch, so they can remain for a while after the app reports the deletion finished. Events from an install that never signed in carry only a random install ID and are kept under PostHog’s retention policy. Records of AI requests sent while Share analytics was off carry a random ID instead of your account ID, plus the conversation ID for voice entry, and are kept the same way.
 - Website events carry a random browser ID, or a code that changes daily if you declined cookies, and are kept under PostHog’s retention policy.
+- The copy of a report you share is deleted when you turn its link off, within a day of the link expiring, when you delete the report on this site, or when you delete your account.
 - Our providers, including Anthropic, ElevenLabs, Apple, Google, and Expo, and Notion if you connect it, keep the data they receive under their own retention policies.
 
 ## Deleting and exporting
