@@ -24,6 +24,7 @@ const PAD = 20;
 const UNMEASURED = { height: 0, width: 768 };
 const NICE = [1, 1.5, 2, 3, 5, 10] as const;
 const THOUSAND = 1000;
+const MILLION = THOUSAND * THOUSAND;
 const tenths = (value: number) => (value < THOUSAND ? String(Math.round(value)) : `${(value / THOUSAND).toFixed(1)}k`);
 
 /** The smallest 1, 2 or 5 times a power of ten that three steps of it cover the tallest bar with some air. */
@@ -157,7 +158,7 @@ export function MonthChart({ average, months }: Props) {
                                 x={centre}
                                 y={top + (inside ? LABEL_DROP : -6)}
                             >
-                                {tenths(month.spent)}
+                                {month.spent < MILLION ? tenths(month.spent) : fmt.axis(month.spent)}
                             </text>
                             <text
                                 className="dash-figure fill-muted-foreground text-[11px]"

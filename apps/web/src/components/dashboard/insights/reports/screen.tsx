@@ -75,7 +75,9 @@ function csvOfReport({ definition: target, job, ledger, report: exportReport, wo
             : "",
     };
     const table = tableRows(exportReport, names, job.averages && target.columns !== "none");
-    const categoryNames = new Map(ledger.books.categories.map((row) => [row.localId, row.name ?? ""]));
+    const categoryNames = new Map(
+        ledger.books.categories.filter((row) => row.deletedAt === null).map((row) => [row.localId, row.name ?? ""])
+    );
     const entries = job.entries
         ? [
               [],
