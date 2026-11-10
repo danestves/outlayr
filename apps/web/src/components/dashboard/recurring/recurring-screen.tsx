@@ -1,6 +1,7 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import Download01Icon from "@hugeicons/core-free-icons/Download01Icon";
-import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
+import TickDouble02Icon from "@hugeicons/core-free-icons/TickDouble02Icon";
+import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
 import { useNavigate } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
@@ -58,6 +59,8 @@ type Dialogs =
 
 const now = () => Date.now();
 
+const MIN_CHANGE = 0.05;
+
 const SIDE_TABS = new Set<RecurringTab>(["calendar", "upcoming"]);
 
 function download(name: string, body: string) {
@@ -69,19 +72,33 @@ function download(name: string, body: string) {
     URL.revokeObjectURL(url);
 }
 
-function Figure({ children, label, sub }: { children: ReactNode; label: ReactNode; sub?: ReactNode }) {
+function Figure({
+    children,
+    label,
+    muted,
+    sub,
+}: {
+    children: ReactNode;
+    label: ReactNode;
+    muted: boolean;
+    sub?: ReactNode;
+}) {
     return (
         <Kpi className="gap-0">
             <Kpi.Header>
                 <Kpi.Title>{label}</Kpi.Title>
             </Kpi.Header>
-            <Kpi.Value className="dash-figure mt-1 flex items-center gap-2 truncate leading-8 font-semibold tracking-[-0.04em]">
+            <Kpi.Value
+                className={`dash-figure mt-1 truncate leading-[30px] font-semibold tracking-[-0.04em] ${muted ? "text-muted-foreground" : ""}`}
+            >
                 {children}
             </Kpi.Value>
-            {sub ? <p className="text-muted-foreground mt-1 truncate text-[13px]">{sub}</p> : null}
+            <div className="text-muted-foreground mt-2 flex h-5 min-w-0 items-center gap-2 truncate text-xs">{sub}</div>
         </Kpi>
     );
 }
+
+const FLAT_CHIP = "dash-figure bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium";
 
 function Kpis({ data, tab }: { data: RecurringData; tab: RecurringTab }) {
     const copy = useIntlayer("dashboard-recurring");
@@ -90,14 +107,25 @@ function Kpis({ data, tab }: { data: RecurringData; tab: RecurringTab }) {
     const days = useDay();
     const { kpis } = data;
     const cash = (amount: number) => money(amount, ledger.currency);
+    const muted = data.model.schedules.length === 0 && data.model.candidates.length === 0;
     const second =
         tab === "detected" ? (
-            <Figure label={copy.kpi.ifConfirmed} sub={`+${cash(kpis.detected)} ${copy.kpi.aMonth.value}`}>
+            <Figure
+                label={copy.kpi.ifConfirmed}
+                muted={muted}
+                sub={
+                    <>
+                        <span className={FLAT_CHIP}>{`+${cash(kpis.detected)}`}</span>
+                        {copy.kpi.aMonth}
+                    </>
+                }
+            >
                 {cash(kpis.perMonth + kpis.detected)}
             </Figure>
         ) : (
             <Figure
                 label={days.month(ledger.today.slice(0, 7))}
+                muted={muted}
                 sub={kpis.monthCount === 1 ? copy.chargesOne : copy.charges({ count: String(kpis.monthCount) })}
             >
                 {cash(kpis.month)}
@@ -122,11 +150,11 @@ function Kpis({ data, tab }: { data: RecurringData; tab: RecurringTab }) {
     );
     const third =
         tab === "paused" ? (
-            <Figure label={copy.kpi.pausedSaves} sub={copy.kpi.aMonth}>
+            <Figure label={copy.kpi.pausedSaves} muted={muted} sub={copy.kpi.aMonth}>
                 {cash(kpis.pausedSaves)}
             </Figure>
         ) : (
-            <Figure label={copy.kpi.dueNow} sub={kpis.due > 0 ? dueBadges : copy.kpi.nothingDue}>
+            <Figure label={copy.kpi.dueNow} muted={muted} sub={kpis.due > 0 ? dueBadges : copy.kpi.nothingDue}>
                 {cash(kpis.due)}
             </Figure>
         );
@@ -134,19 +162,25 @@ function Kpis({ data, tab }: { data: RecurringData; tab: RecurringTab }) {
         <KpiBand>
             <Figure
                 label={copy.kpi.perMonth}
-                sub={kpis.ofIncome === null ? null : copy.kpi.ofIncome({ share: String(kpis.ofIncome) })}
+                muted={muted}
+                sub={
+                    <>
+                        {kpis.change === null || Math.abs(kpis.change) < MIN_CHANGE ? null : (
+                            <Trend goodWhenUp={false} value={kpis.change}>
+                                {`${kpis.change > 0 ? "+" : "-"}${Math.abs(kpis.change).toFixed(1)}%`}
+                            </Trend>
+                        )}
+                        {copy.kpi.ofIncome({ share: String(kpis.ofIncome ?? 0) })}
+                    </>
+                }
             >
                 {cash(kpis.perMonth)}
-                {kpis.change === null || Math.round(kpis.change) === 0 ? null : (
-                    <Trend goodWhenUp={false} value={kpis.change}>
-                        {`${Math.abs(Math.round(kpis.change))}%`}
-                    </Trend>
-                )}
             </Figure>
             {second}
             {third}
             <Figure
                 label={copy.kpi.detected}
+                muted={muted}
                 sub={
                     kpis.detectedCount > 0
                         ? copy.kpi.toConfirm({ count: String(kpis.detectedCount) })
@@ -159,6 +193,13 @@ function Kpis({ data, tab }: { data: RecurringData; tab: RecurringTab }) {
     );
 }
 
+function Count({ pill, value }: { pill: boolean; value: number }) {
+    if (pill) {
+        return <Tabs.Badge className="dash-figure">{value}</Tabs.Badge>;
+    }
+    return <span className="dash-figure text-muted-foreground text-xs">{value}</span>;
+}
+
 function Empty({ onAdd }: { onAdd: () => void }) {
     const copy = useIntlayer("dashboard-recurring");
     const navigate = useNavigate();
@@ -168,12 +209,13 @@ function Empty({ onAdd }: { onAdd: () => void }) {
             <b className="text-[15px] font-semibold">{copy.empty.title}</b>
             <p className="text-muted-foreground max-w-sm text-[13px]">{copy.empty.line}</p>
             <div className="mt-3 flex flex-wrap justify-center gap-2">
-                <Button onClick={() => navigate({ to: "/app/settings/data" })} variant="outline">
-                    {copy.empty.import}
-                </Button>
                 <Button onClick={onAdd}>
                     <Glyph icon={Add01Icon} size={17} />
                     {copy.add}
+                </Button>
+                <Button onClick={() => navigate({ to: "/app/settings/data" })} variant="outline">
+                    <Glyph icon={Upload04Icon} size={16} />
+                    {copy.empty.import}
                 </Button>
             </div>
         </div>
@@ -290,11 +332,18 @@ function ScreenDialogs({
                 <ConfirmDialog
                     candidate={dialog.candidate}
                     onClose={onClose}
-                    onConfirm={(linkPast) => {
+                    onConfirm={(linkPast, changed) => {
                         writes.run(
                             toast.confirmed({ name: dialog.candidate.name }).value,
-                            confirmedCandidate(writes.current(), dialog.candidate, linkPast, now())
+                            confirmedCandidate(writes.current(), dialog.candidate, linkPast, now(), changed)
                         );
+                        onClose();
+                    }}
+                    onDismiss={() => {
+                        writes.run(toast.dismissed({ name: dialog.candidate.name }).value, {
+                            book: dismissedCandidate(dialog.candidate.key),
+                            rows: [],
+                        });
                         onClose();
                     }}
                 />
@@ -412,18 +461,14 @@ export function RecurringScreen({ data, search, setSearch, writes }: ScreenProps
                 {RECURRING_TABS.map((each) => (
                     <Tabs.Trigger key={each} value={each}>
                         {copy.tabs[each]}
-                        {badges[each] === null || badges[each] === 0 ? null : (
-                            <Tabs.Badge
-                                className={`dash-figure ${each === "detected" ? "bg-app-tint/14 text-app-tint" : ""}`}
-                            >
-                                {badges[each]}
-                            </Tabs.Badge>
+                        {badges[each] === null ? null : (
+                            <Count pill={each === "detected" && badges[each] > 0} value={badges[each]} />
                         )}
                     </Tabs.Trigger>
                 ))}
                 {tab === "detected" && candidates.length > 1 ? (
-                    <Button className="ml-auto self-center" onClick={confirmAll} size="sm" variant="outline">
-                        <Glyph icon={Tick02Icon} size={15} />
+                    <Button className="ml-auto self-center" onClick={confirmAll} size="sm" variant="ghost">
+                        <Glyph icon={TickDouble02Icon} size={15} />
                         {copy.detected.confirmAll}
                     </Button>
                 ) : null}
@@ -440,7 +485,7 @@ export function RecurringScreen({ data, search, setSearch, writes }: ScreenProps
         onMonth: (next: string | null) => setSearch({ day: null, month: next }, { replace: true }),
     };
     const body = () => {
-        if (fresh) {
+        if (fresh && (tab === "upcoming" || tab === "all")) {
             return <Empty onAdd={() => setSearch({ edit: NEW_SCHEDULE })} />;
         }
         if (tab === "calendar") {
@@ -489,7 +534,7 @@ export function RecurringScreen({ data, search, setSearch, writes }: ScreenProps
                 )}
             </div>
             <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto lg:overflow-visible">
-                {fresh || tab === "calendar" ? null : <Kpis data={data} tab={tab} />}
+                {tab === "calendar" ? null : <Kpis data={data} tab={tab} />}
                 <div className="flex min-h-0 flex-1 gap-4 max-lg:flex-col">
                     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
                         <Frame
@@ -497,7 +542,7 @@ export function RecurringScreen({ data, search, setSearch, writes }: ScreenProps
                             variant="plain"
                         >
                             <Frame.Panel className="min-h-0 flex-1 rounded-2xl">
-                                {fresh ? null : <div className="border-border border-b">{tabs}</div>}
+                                <div className="border-border border-b">{tabs}</div>
                                 <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">{body()}</div>
                             </Frame.Panel>
                         </Frame>

@@ -559,6 +559,7 @@ const dashboardRecurring = {
                     pt: "{{paused}} pausados, {{stopped}} encerrados",
                 })
             ),
+            wouldCost: t({ en: "Would cost", es: "Costaría", fr: "Coûterait", pt: "Custaria" }),
             whenIResume: t({
                 en: "When I resume",
                 es: "Cuando la reanude",

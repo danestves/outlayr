@@ -17,7 +17,7 @@ function Recurring() {
     const setSearch = (patch: RecurringPatch, options?: { replace?: boolean }) =>
         navigate({ replace: options?.replace, resetScroll: false, search: (prev) => patched(prev, patch), to: "." });
     return (
-        <Toast.Provider position="bottom-center" toastManager={recurringToasts}>
+        <Toast.Provider position="bottom-right" toastManager={recurringToasts}>
             <LiveRecurring search={search} setSearch={setSearch} />
         </Toast.Provider>
     );

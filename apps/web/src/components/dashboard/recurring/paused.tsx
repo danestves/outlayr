@@ -73,10 +73,10 @@ export function PausedTable({
                     ).map(([state, rows]) =>
                         rows.length === 0 ? null : (
                             <Fragment key={state}>
-                                <GroupRow span={span}>{copy.groups[state]}</GroupRow>
+                                {state === "paused" ? null : <GroupRow span={span}>{copy.groups[state]}</GroupRow>}
                                 {rows.map((schedule) => (
                                     <Table.Row
-                                        className={`h-[71px] cursor-pointer ${lit === schedule.id ? "bg-app-tint/8 hover:bg-app-tint/8 shadow-[inset_3px_0_0_var(--color-app-tint)]" : "hover:bg-muted/40"}`}
+                                        className={`h-[51px] cursor-pointer ${lit === schedule.id ? "bg-app-tint/8 hover:bg-app-tint/8 shadow-[inset_3px_0_0_var(--color-app-tint)]" : "hover:bg-muted/40"}`}
                                         key={schedule.id}
                                         onClick={() => actions.open(schedule)}
                                     >
@@ -110,7 +110,17 @@ export function PausedTable({
                     )}
                 </Table.Body>
             </Table>
-            <Foot>{copy.paused.footer({ paused: String(paused.length), stopped: String(stopped.length) })}</Foot>
+            <Foot>
+                {copy.paused.footer({ paused: String(paused.length), stopped: String(stopped.length) })}
+                {paused.length > 0 ? (
+                    <span className="ml-auto">
+                        {copy.paused.wouldCost}{" "}
+                        <span className="dash-figure text-foreground font-medium">
+                            {cash.plain(paused.reduce((sum, schedule) => sum + schedule.worth, 0))}
+                        </span>
+                    </span>
+                ) : null}
+            </Foot>
         </>
     );
 }

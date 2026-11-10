@@ -32,7 +32,7 @@ const CENT = 0.005;
 
 function Row({ children, label }: { children: ReactNode; label: ReactNode }) {
     return (
-        <div className="flex min-h-[53px] items-center gap-3 border-b text-sm">
+        <div className="flex min-h-[38px] items-center gap-3 border-b text-[13px]">
             <span className="text-muted-foreground">{label}</span>
             <span className="ml-auto flex min-w-0 items-center gap-2 text-right">{children}</span>
         </div>
@@ -41,8 +41,8 @@ function Row({ children, label }: { children: ReactNode; label: ReactNode }) {
 
 function Section({ children, title }: { children: ReactNode; title: ReactNode }) {
     return (
-        <section className="mt-6">
-            <h3 className="text-muted-foreground mb-1.5 text-[13px] font-medium">{title}</h3>
+        <section className="mt-4">
+            <h3 className="text-muted-foreground mb-1.5 text-xs">{title}</h3>
             {children}
         </section>
     );
@@ -61,10 +61,10 @@ function HistoryBars({ entries, months }: { entries: readonly HistoryEntry[]; mo
     const max = Math.max(...totals, 0);
     const lastFilled = totals.findLastIndex((total) => total > 0);
     return (
-        <div aria-hidden className="flex h-14 items-end gap-1.5">
+        <div aria-hidden className="flex h-10 items-end gap-1">
             {totals.map((total, index) => (
                 <i
-                    className={`flex-1 rounded-[3px] ${index === lastFilled ? "bg-primary" : "bg-muted"}`}
+                    className={`flex-1 rounded-[3px] ${index === lastFilled ? "bg-app-tint" : "bg-border"}`}
                     key={months[index]}
                     style={{ height: max > 0 && total > 0 ? `${Math.max(0.2, total / max) * 100}%` : "6%" }}
                 />
@@ -114,8 +114,8 @@ function Body({
     const shown = state === "paused" ? history : recent;
     return (
         <>
-            <Sheet.Header className="flex-row items-center gap-1 border-b">
-                <Sheet.Title className="me-auto text-base">{copy.drawer.title}</Sheet.Title>
+            <Sheet.Header className="h-16 flex-row items-center gap-1 border-b px-5 py-0">
+                <Sheet.Title className="me-auto text-[15px] font-semibold">{copy.drawer.title}</Sheet.Title>
                 {onStep ? (
                     <>
                         <Button
@@ -149,18 +149,20 @@ function Body({
                     <Glyph icon={Cancel01Icon} size={17} />
                 </Button>
             </Sheet.Header>
-            <Sheet.Body className="pb-6">
+            <Sheet.Body className="px-5 pt-[18px] pb-6">
                 <div className="flex items-center gap-4 pt-1">
                     <ScheduleTile name={schedule.name} seed={seed} size="xl" />
                     <div className="min-w-0">
                         <p className="flex items-center gap-2.5">
-                            <span className="truncate text-base font-semibold">{schedule.name}</span>
+                            <span className="truncate text-[15px] font-semibold">{schedule.name}</span>
                             {state === "active" ? null : <HeldBadge state={state} />}
                         </p>
-                        <p className="text-muted-foreground truncate text-sm">{subtitle()}</p>
+                        <p className="text-muted-foreground truncate text-[13px]">{subtitle()}</p>
                     </div>
                 </div>
-                <p className="dash-figure mt-4 mb-3 text-[28px] leading-9 font-semibold tracking-[-0.04em]">
+                <p
+                    className={`dash-figure mt-3 mb-2.5 text-2xl leading-8 font-semibold tracking-[-0.04em] ${state === "active" ? "" : "text-muted-foreground"}`}
+                >
                     {cash.signed(schedule.worth, seed.income)}
                 </p>
                 <Row label={copy.fields.category}>
@@ -203,7 +205,7 @@ function Body({
                 {state === "active" ? (
                     <Section title={copy.fields.nextCharges}>
                         {nextCharges(schedule, ledger, NEXT_SHOWN).map((charge) => (
-                            <div className="flex h-11 items-center border-b text-sm last:border-0" key={charge.day}>
+                            <div className="flex h-8 items-center border-b text-[13px] last:border-0" key={charge.day}>
                                 <span className="dash-figure">{dayText(charge.day)}</span>
                                 <span className="dash-figure text-muted-foreground ml-auto">
                                     {cash.plain(schedule.worth)}
@@ -218,7 +220,7 @@ function Body({
                         <p className="text-muted-foreground py-3 text-[13px]">{copy.drawer.noHistory}</p>
                     ) : null}
                     {state !== "paused" && shown.length > 0 ? (
-                        <div className="text-muted-foreground flex h-10 items-center text-sm">
+                        <div className="text-muted-foreground mt-2 flex h-8 items-center text-[13px]">
                             {shown.length === 1 ? copy.chargesOne : copy.charges({ count: String(shown.length) })}
                             <span className="dash-figure text-foreground ml-auto font-medium">
                                 {cash.plain(shown.reduce((sum, entry) => sum + entry.worth, 0))}
@@ -229,7 +231,10 @@ function Body({
                         const older = shown[index + 1];
                         const change = older ? entry.worth - older.worth : 0;
                         return (
-                            <div className="flex h-11 items-center gap-3 border-b text-sm last:border-0" key={entry.id}>
+                            <div
+                                className="flex h-8 items-center gap-3 border-b text-[13px] last:border-0"
+                                key={entry.id}
+                            >
                                 <span className="dash-figure">{dayText(entry.day)}</span>
                                 {Math.abs(change) > CENT ? (
                                     <span className="rounded-md border px-2 py-0.5 text-xs font-medium">
@@ -244,34 +249,38 @@ function Body({
                     })}
                 </Section>
             </Sheet.Body>
-            <Sheet.Footer className="flex-row items-center gap-2 border-t pt-4">
+            <Sheet.Footer className="flex-row items-center gap-2 px-5 pt-3 pb-5">
                 {state === "stopped" ? null : (
-                    <Button onClick={() => actions.edit(schedule)} variant="outline">
+                    <Button onClick={() => actions.edit(schedule)} size="sm" variant="outline">
                         <Glyph icon={PencilEdit01Icon} size={16} />
                         {copy.actions.edit}
                     </Button>
                 )}
                 {state === "active" ? (
-                    <Button onClick={() => actions.pause(schedule)} variant="outline">
+                    <Button onClick={() => actions.pause(schedule)} size="sm" variant="outline">
                         <Glyph icon={PauseIcon} size={16} />
                         {copy.actions.pause}
                     </Button>
                 ) : (
                     <Button
                         onClick={() => (state === "paused" ? actions.resume(schedule) : actions.restart(schedule))}
+                        size="sm"
                         variant="outline"
                     >
                         <Glyph icon={PlayIcon} size={16} />
                         {state === "paused" ? copy.actions.resume : copy.actions.restart}
                     </Button>
                 )}
-                <Button
-                    className="ml-auto"
-                    onClick={() => navigate({ search: { q: schedule.name }, to: "/app/transactions" })}
-                    variant="outline"
-                >
-                    {copy.drawer.allEntries}
-                </Button>
+                {state === "paused" ? null : (
+                    <Button
+                        className="ml-auto"
+                        onClick={() => navigate({ search: { q: schedule.name }, to: "/app/transactions" })}
+                        size="sm"
+                        variant="outline"
+                    >
+                        {copy.drawer.allEntries}
+                    </Button>
+                )}
             </Sheet.Footer>
         </>
     );
@@ -302,7 +311,7 @@ export function ScheduleDrawer({
             side={wide ? "right" : "bottom"}
         >
             <Sheet.Content
-                className={`app-shell ph-no-capture ${wide ? "sm:w-[min(500px,calc(100vw-2*var(--sheet-gap)))]" : ""}`}
+                className={`app-shell ph-no-capture ${wide ? "sm:w-[min(384px,calc(100vw-2*var(--sheet-gap)))]" : ""}`}
                 showGrabber={false}
                 size={wide ? "auto" : "full"}
             >

@@ -82,7 +82,7 @@ export function UpcomingTable({ actions, model }: { actions: ScheduleActions; mo
                         <Table.Head className={`${HEAD} w-[23%] min-w-44`}>{copy.columns.name}</Table.Head>
                         <Table.Head className={`${HEAD} w-[17%] max-lg:hidden`}>{copy.columns.category}</Table.Head>
                         <Table.Head className={`${HEAD} w-[12%] max-xl:hidden`}>{copy.columns.account}</Table.Head>
-                        <Table.Head className={`${HEAD} w-[10%] max-md:hidden`}>{copy.columns.repeats}</Table.Head>
+                        <Table.Head className={`${HEAD} w-[13%] max-md:hidden`}>{copy.columns.repeats}</Table.Head>
                         <Table.Head className={`${HEAD} w-[13%]`}>{copy.columns.date}</Table.Head>
                         <Table.Head align="end" className={`${HEAD} w-[13%]`}>
                             {copy.columns.amount}
@@ -242,7 +242,7 @@ export function DetectedCard({
             title={copy.tabs.detected}
         >
             {model.candidates.slice(0, SIDE_CANDIDATES).map((candidate) => (
-                <div className="flex h-[66px] items-center gap-3 border-b last:border-0" key={candidate.key}>
+                <div className="flex h-[57px] items-center gap-3 border-b last:border-0" key={candidate.key}>
                     <CandidateTile candidate={candidate} />
                     <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{candidate.name}</p>
@@ -308,7 +308,7 @@ export function PerMonthCard({ model }: { model: RecurringModel }) {
             </div>
             <div className="border-b py-2">
                 {byCategory.map((category) => (
-                    <div className="flex h-9 items-center gap-2.5 px-1.5 text-sm font-medium" key={category.id}>
+                    <div className="flex h-8 items-center gap-2.5 px-1.5 text-sm font-medium" key={category.id}>
                         <i className="size-2 rounded-full" style={{ backgroundColor: category.color }} />
                         <span className="truncate">{category.name}</span>
                         <span className="dash-figure ml-auto">{cash.plain(category.total)}</span>
@@ -317,7 +317,7 @@ export function PerMonthCard({ model }: { model: RecurringModel }) {
             </div>
             <div className="py-2">
                 {spending.map((schedule) => (
-                    <div className="text-muted-foreground flex h-9 items-center gap-2 px-1.5 text-sm" key={schedule.id}>
+                    <div className="text-muted-foreground flex h-8 items-center gap-2 px-1.5 text-sm" key={schedule.id}>
                         <span className="truncate">{schedule.name}</span>
                         <span className="dash-figure ml-auto">{cash.plain(schedule.perMonth)}</span>
                     </div>

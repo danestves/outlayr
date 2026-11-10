@@ -334,13 +334,28 @@ export const loggedAgain = (ledger: Ledger, schedule: Schedule, at: number) => {
     );
 };
 
-/** The latest entry becomes the chain's carrier; linking marks the rest as its past charges. */
-export function confirmedCandidate(ledger: Ledger, candidate: Candidate, linkPast: boolean, at: number): CommitRow[] {
+const linkedRows = (docs: readonly Doc[], at: number) =>
+    docs.map((doc) => nextRow("transactions", doc, { accountId: doc.accountId ?? null, onceRecurring: true }, at));
+
+/**
+ * The latest entry becomes the chain's carrier; linking marks the rest as its past charges.
+ * A changed draft starts a fresh chain on its next date instead, since the carrier already happened.
+ */
+export function confirmedCandidate(
+    ledger: Ledger,
+    candidate: Candidate,
+    linkPast: boolean,
+    at: number,
+    changed: ScheduleDraft | null = null
+): CommitRow[] {
     const ids = new Set(candidate.entries.map((entry) => entry.id));
     const docs = ledger.books.transactions.filter((doc) => ids.has(doc.localId)).toSorted((a, b) => b.date - a.date);
     const [latest, ...rest] = docs;
     if (!latest) {
         return [];
+    }
+    if (changed) {
+        return [...createdSchedule(ledger, changed, at), ...(linkPast ? linkedRows(docs, at) : [])];
     }
     return [
         nextRow(
@@ -356,11 +371,7 @@ export function confirmedCandidate(ledger: Ledger, candidate: Candidate, linkPas
             },
             at
         ),
-        ...(linkPast
-            ? rest.map((doc) =>
-                  nextRow("transactions", doc, { accountId: doc.accountId ?? null, onceRecurring: true }, at)
-              )
-            : []),
+        ...(linkPast ? linkedRows(rest, at) : []),
     ];
 }
 

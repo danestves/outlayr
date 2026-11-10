@@ -16,9 +16,9 @@ import type { Candidate, RecurringModel, Seed } from "@/lib/recurring";
 
 import { useImageUrls } from "../home/catalog";
 
-export const CELL = "h-[54px] px-3 py-0 align-middle first:ps-4 last:pe-3";
-export const HEAD = "h-11 px-3 text-[13px] leading-4 font-medium first:ps-4 last:pe-3";
-export const GROUP = "text-muted-foreground h-11 px-4 text-[13px] font-medium";
+export const CELL = "h-[39px] px-3 py-0 align-middle first:ps-4 last:pe-3";
+export const HEAD = "h-8 px-3 text-xs leading-4 font-medium first:ps-4 last:pe-3";
+export const GROUP = "text-muted-foreground h-8 px-4 text-xs font-medium";
 export const FIGURE = "dash-figure whitespace-nowrap";
 export const MUTED = "text-muted-foreground whitespace-nowrap";
 

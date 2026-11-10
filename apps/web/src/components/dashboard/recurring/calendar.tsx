@@ -218,7 +218,7 @@ export function CalendarSide(props: CalendarProps) {
                 ) : null}
                 {events.map((event) => (
                     <button
-                        className="flex h-[66px] w-full items-center gap-3 border-b text-left last:border-0"
+                        className="flex h-[57px] w-full items-center gap-3 border-b text-left last:border-0"
                         key={`${event.schedule.id}:${event.kind}`}
                         onClick={() => actions.open(event.schedule)}
                         type="button"
@@ -242,13 +242,13 @@ export function CalendarSide(props: CalendarProps) {
                 ))}
                 {only ? (
                     <>
-                        <div className="flex h-[50px] items-center border-t px-1.5 text-sm">
+                        <div className="flex h-9 items-center border-t px-1.5 text-sm">
                             <span className="text-muted-foreground">{copy.fields.category}</span>
                             <span className="ml-auto">
                                 <CategoryBadge id={only.schedule.seed.categoryId} />
                             </span>
                         </div>
-                        <div className="flex h-[50px] items-center border-t px-1.5 text-sm">
+                        <div className="flex h-9 items-center border-t px-1.5 text-sm">
                             <span className="text-muted-foreground">{copy.fields.nextCharges}</span>
                             <span className="dash-figure text-muted-foreground ml-auto">
                                 {nextCharges(only.schedule, ledger, NEXT_SHOWN + 1)
@@ -268,7 +268,7 @@ export function CalendarSide(props: CalendarProps) {
                 >
                     {due.map(({ charge, schedule }) => (
                         <div
-                            className="flex h-[66px] items-center gap-3 border-b last:border-0"
+                            className="flex h-[57px] items-center gap-3 border-b last:border-0"
                             key={`${schedule.id}:${charge.day}`}
                         >
                             <ScheduleTile name={schedule.name} seed={schedule.seed} />
@@ -308,7 +308,7 @@ export function CalendarSide(props: CalendarProps) {
                 {weeks.map(({ from, to }) => {
                     const total = spent(inMonth.filter((event) => event.day >= from && event.day <= to));
                     return (
-                        <div className="flex h-[50px] items-center border-b px-1.5 text-sm last:border-0" key={from}>
+                        <div className="flex h-9 items-center border-b px-1.5 text-sm last:border-0" key={from}>
                             <span className="text-muted-foreground">
                                 {from === to
                                     ? dayText(from)

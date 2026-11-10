@@ -1,4 +1,5 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import CalendarRemove01Icon from "@hugeicons/core-free-icons/CalendarRemove01Icon";
 import MinusSignIcon from "@hugeicons/core-free-icons/MinusSignIcon";
@@ -28,10 +29,10 @@ import type { Schedule } from "@/lib/recurring";
 import { draftProblems } from "@/lib/recurring-writes";
 import type { DraftProblem, ScheduleDraft } from "@/lib/recurring-writes";
 
-import { AmountInput, amountText } from "../accounts/fields";
+import { AmountInput, amountText, FlowDialog } from "../accounts/fields";
 import { Glyph } from "../accounts/glyph";
 import { Pick, useCategoryOptions } from "../transactions/entry-form";
-import { useDay, useRepeatText } from "./parts";
+import { ScheduleTile, useDay, useRepeatText } from "./parts";
 
 const NO_ACCOUNT = "none";
 const PREVIEW = 3;
@@ -281,19 +282,24 @@ function CustomView({
     return (
         <>
             <Dialog.Header>
-                <Dialog.Title>{copy.form.customTitle}</Dialog.Title>
+                <div className="flex items-center gap-1">
+                    <Button aria-label={copy.form.back.value} onClick={onBack} size="icon-sm" variant="ghost">
+                        <Glyph icon={ArrowLeft02Icon} size={18} />
+                    </Button>
+                    <Dialog.Title>{copy.form.customTitle}</Dialog.Title>
+                </div>
             </Dialog.Header>
-            <Dialog.Body className="gap-5">
-                <p aria-live="polite" className="text-[28px] leading-[34px] font-semibold tracking-[-0.02em]">
+            <Dialog.Body className="gap-3.5">
+                <p aria-live="polite" className="mb-0.5 text-[26px] leading-[34px] font-medium tracking-[-0.02em]">
                     {sentence.map((part, index) => (
                         // Odd parts are the values the sentence was built around.
-                        <span className={index % 2 === 1 ? "text-app-tint" : undefined} key={index}>
+                        <span className={index % 2 === 1 ? "text-app-tint/90" : undefined} key={index}>
                             {part}
                         </span>
                     ))}
                 </p>
                 <Slot label={copy.form.every}>
-                    <div className="flex flex-wrap gap-3">
+                    <div className="flex gap-2">
                         <Stepper onChange={(next) => setDraft({ ...draft, every: next })} value={draft.every} />
                         <div className="bg-muted/50 flex flex-1 gap-1 rounded-lg p-1">
                             {UNITS.map(({ type, unit }) => (
@@ -327,7 +333,7 @@ function CustomView({
                 </div>
                 <Slot label={copy.fields.nextCharges}>
                     <PreviewList amount="" first rows={rows} />
-                    {clamps ? <p className="text-muted-foreground text-[13px]">{copy.form.shortNote}</p> : null}
+                    {clamps ? <p className="text-muted-foreground text-xs">{copy.form.shortNote}</p> : null}
                 </Slot>
             </Dialog.Body>
             <Dialog.Footer>
@@ -371,6 +377,30 @@ function valuesOf(schedule: Schedule | null, today: string): Values {
     };
 }
 
+/** Open accounts, plus the picked one when it has since been closed. */
+export function AccountPick({ onPick, value }: { onPick: (id: string | null) => void; value: string | null }) {
+    const copy = useIntlayer("dashboard-recurring");
+    const { ledger } = useDashboard();
+    const accounts = openAccounts(ledger.books);
+    const picked = ledger.books.accounts.find((row) => row.localId === value);
+    const shown = picked && !accounts.includes(picked) ? [...accounts, picked] : accounts;
+    return (
+        <Pick
+            onPick={(id) => onPick(id === NO_ACCOUNT ? null : id)}
+            options={[
+                { label: copy.form.noAccount.value, value: NO_ACCOUNT },
+                ...shown.map((row) => ({
+                    icon: <AccountTile account={accountLook(row)} size="sm" />,
+                    label: row.name,
+                    value: row.localId,
+                })),
+            ]}
+            quiet={false}
+            value={value ?? NO_ACCOUNT}
+        />
+    );
+}
+
 function FormView({
     onClose,
     onCustom,
@@ -395,7 +425,6 @@ function FormView({
     const repeat = useRepeatText();
     const categoryOptions = useCategoryOptions(ledger, values.income);
     const [tried, setTried] = useState(false);
-    const accounts = openAccounts(ledger.books);
     const account = ledger.books.accounts.find((row) => row.localId === values.accountId);
     const currency = account?.currency ?? schedule?.seed.currency ?? ledger.currency;
     const amount = parseAmount(values.amountText, decimalsFor(currency));
@@ -425,13 +454,11 @@ function FormView({
     const set = (patch: Partial<Values>) => setValues({ ...values, ...patch });
     const { errors } = copy.form;
     return (
-        <>
-            <Dialog.Header>
-                <Dialog.Title>
-                    {schedule ? copy.form.editTitle({ name: schedule.name }) : copy.form.addTitle}
-                </Dialog.Title>
-            </Dialog.Header>
-            <Dialog.Body className="gap-4">
+        <FlowDialog
+            head={schedule ? <ScheduleTile name={schedule.name} seed={schedule.seed} size="md" /> : null}
+            label={schedule ? copy.form.editTitle({ name: schedule.name }) : copy.form.addTitle}
+        >
+            <Dialog.Body className="gap-3.5">
                 {schedule ? null : (
                     <div className="bg-muted/50 flex w-fit gap-1 rounded-lg p-1">
                         {([false, true] as const).map((income) => (
@@ -456,7 +483,7 @@ function FormView({
                         value={values.note}
                     />
                 </Slot>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-3 gap-y-3.5 sm:grid-cols-2">
                     <Slot
                         error={problems.has("amount") ? errors.amount({ zero: amountText(0, currency) }) : null}
                         label={copy.fields.amount}
@@ -479,21 +506,7 @@ function FormView({
                         />
                     </Slot>
                     <Slot label={copy.fields.account}>
-                        <Pick
-                            onPick={(id) => set({ accountId: id === NO_ACCOUNT ? null : id })}
-                            options={[
-                                { label: copy.form.noAccount.value, value: NO_ACCOUNT },
-                                ...[...accounts, ...(account && !accounts.includes(account) ? [account] : [])].map(
-                                    (row) => ({
-                                        icon: <AccountTile account={accountLook(row)} size="sm" />,
-                                        label: row.name,
-                                        value: row.localId,
-                                    })
-                                ),
-                            ]}
-                            quiet={false}
-                            value={values.accountId ?? NO_ACCOUNT}
-                        />
+                        <AccountPick onPick={(accountId) => set({ accountId })} value={values.accountId} />
                     </Slot>
                     <Slot label={schedule ? copy.fields.nextCharge : copy.fields.starting}>
                         <DayField
@@ -508,9 +521,10 @@ function FormView({
                         {PRESETS.map((each) => (
                             <Button
                                 aria-pressed={preset?.key === each.key}
-                                className={`rounded-full ${preset?.key === each.key ? "border-app-tint/60 bg-app-tint/14 text-app-tint hover:bg-app-tint/18" : ""}`}
+                                className={`rounded-full px-3 ${preset?.key === each.key ? "border-app-tint/60 bg-app-tint/14 text-app-tint hover:bg-app-tint/18" : ""}`}
                                 key={each.key}
                                 onClick={() => set({ every: 1, type: each.type })}
+                                size="sm"
                                 type="button"
                                 variant="outline"
                             >
@@ -519,8 +533,9 @@ function FormView({
                         ))}
                         <Button
                             aria-pressed={preset === undefined}
-                            className={`rounded-full ${preset === undefined ? "border-app-tint/60 bg-app-tint/14 text-app-tint hover:bg-app-tint/18" : ""}`}
+                            className={`rounded-full px-3 ${preset === undefined ? "border-app-tint/60 bg-app-tint/14 text-app-tint hover:bg-app-tint/18" : ""}`}
                             onClick={onCustom}
+                            size="sm"
                             type="button"
                             variant="outline"
                         >
@@ -538,12 +553,12 @@ function FormView({
                         first={schedule === null}
                         rows={previewOf(values, schedule ? 2 : PREVIEW)}
                     />
-                    {schedule ? <p className="text-muted-foreground text-[13px]">{copy.form.keepNote}</p> : null}
+                    {schedule ? <p className="text-muted-foreground text-xs">{copy.form.keepNote}</p> : null}
                 </Slot>
             </Dialog.Body>
             <Dialog.Footer className="items-center">
                 {onStop ? (
-                    <Button className="me-auto" onClick={onStop} variant="ghost">
+                    <Button className="me-auto" onClick={onStop} variant="outline">
                         <Glyph icon={CalendarRemove01Icon} size={16} />
                         {copy.actions.stop}
                     </Button>
@@ -569,9 +584,11 @@ function FormView({
                 <Button onClick={onClose} variant="secondary">
                     {copy.cancel}
                 </Button>
-                <Button onClick={save}>{copy.form.save}</Button>
+                <Button disabled={problems.size > 0} onClick={save}>
+                    {copy.form.save}
+                </Button>
             </Dialog.Footer>
-        </>
+        </FlowDialog>
     );
 }
 
@@ -588,7 +605,7 @@ export function ScheduleForm({
 }) {
     return (
         <Dialog onOpenChange={(open) => (open ? undefined : onClose())} open={target !== null}>
-            <Dialog.Content className="app-shell ph-no-capture" size="md">
+            <Dialog.Content className="app-shell ph-no-capture max-w-[520px]" size="md">
                 {target ? (
                     <FormBody key={target.key} onClose={onClose} onSave={onSave} onStop={onStop} target={target} />
                 ) : null}

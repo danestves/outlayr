@@ -72,7 +72,7 @@ export function DetectedTable({
                     return (
                         <Table.Row
                             aria-selected={lit}
-                            className={`relative h-[79px] cursor-pointer ${lit ? "bg-app-tint/8 hover:bg-app-tint/8 shadow-[inset_3px_0_0_var(--color-app-tint)]" : "hover:bg-muted/40"}`}
+                            className={`relative h-[57px] cursor-pointer ${lit ? "bg-app-tint/8 hover:bg-app-tint/8 shadow-[inset_3px_0_0_var(--color-app-tint)]" : "hover:bg-muted/40"}`}
                             key={candidate.key}
                             onClick={() => onSelect(candidate.key)}
                         >
@@ -180,7 +180,7 @@ export function CandidateDetail({ candidate }: { candidate: Candidate }) {
                         {entries.map((entry, index) => {
                             const before = entries[index + 1];
                             return (
-                                <Table.Row className="h-[86px] hover:bg-transparent" key={entry.id}>
+                                <Table.Row className="h-[62px] hover:bg-transparent" key={entry.id}>
                                     <Table.Cell className={`${CELL} ${FIGURE} text-sm`}>
                                         {days.day(entry.day, ledger.today)}
                                     </Table.Cell>
