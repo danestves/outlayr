@@ -5,9 +5,9 @@ import { describe, expect, it } from "vite-plus/test";
 
 import { prepareLedger } from "./dashboard-series-ledger";
 import type { CommitRow } from "./ledger-committer";
-import { EMPTY_RECURRING, recurringModel, stepWall, upcomingOf } from "./recurring";
+import { EMPTY_RECURRING, recurringModel, reverted, stepWall, upcomingOf } from "./recurring";
 import type { RecurringBook } from "./recurring";
-import { deletedSchedule, loggedCharge, pausedSchedule, resumedSchedule } from "./recurring-writes";
+import { deletedSchedule, editedSchedule, loggedCharge, pausedSchedule, resumedSchedule } from "./recurring-writes";
 
 // 11:00 on Nov 8 in Caracas (UTC-4).
 const NOW = Date.parse("2026-11-08T15:00:00Z");
@@ -235,5 +235,53 @@ describe("recurring writes", () => {
             ["tmo", NOW],
         ]);
         expect(modelOf(applied(ledger, rows)).schedules).toEqual([]);
+    });
+
+    it("stops a chain whose pending charge lands later today instead of handing it on", () => {
+        const ledger = ledgerWith([doc("tmo", "2026-11-08T20:00:00Z", monthly)]);
+        const [tmo] = modelOf(ledger).schedules;
+        if (!tmo) {
+            throw new Error("expected a schedule");
+        }
+        const { rows } = deletedSchedule(ledger, tmo, [], NOW);
+        expect(modelOf(applied(ledger, rows)).schedules).toEqual([]);
+    });
+
+    it("keeps a chain on the 31st after an edit made while February clamps it", () => {
+        const february = Date.parse("2027-02-10T15:00:00Z");
+        const ledger = ledgerWith([doc("tmo", "2027-01-31T18:00:00Z", monthly)], february);
+        const [tmo] = modelOf(ledger).schedules;
+        if (!tmo?.next) {
+            throw new Error("expected a next charge");
+        }
+        const draft = {
+            accountId: "chase",
+            amount: 65,
+            categoryId: "subs",
+            currency: "USD",
+            date: tmo.next.at,
+            endDate: null,
+            every: 1,
+            income: false,
+            note: "T-Mobile Plus",
+            type: RECURRING_TYPE.monthly,
+        };
+        const edited = applied(
+            ledger,
+            editedSchedule(ledger, tmo, draft, february).rows,
+            Date.parse("2027-03-01T15:00:00Z")
+        );
+        expect(modelOf(edited).schedules.map((schedule) => schedule.next?.day)).toEqual(["2027-03-31"]);
+    });
+
+    it("undoes one pause without dropping a pause made after it", () => {
+        const [tmo] = modelOf(ledgerWith([doc("tmo", "2026-10-25T18:00:00Z", monthly)])).schedules;
+        if (!tmo) {
+            throw new Error("expected a schedule");
+        }
+        const pause = (fromId: string) => ({ fromId, resumes: null, seed: tmo.seed, since: "2026-11-08", toId: null });
+        const first = { dismissed: [], paused: [pause("a")] };
+        const second = { dismissed: [], paused: [pause("a"), pause("b")] };
+        expect(reverted(second, EMPTY_RECURRING, first).paused.map((each) => each.fromId)).toEqual(["b"]);
     });
 });

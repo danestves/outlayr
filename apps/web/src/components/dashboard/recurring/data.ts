@@ -10,7 +10,7 @@ import type { Ledger } from "@/lib/dashboard-series-ledger";
 import type { CommitRow } from "@/lib/ledger-committer";
 import { ledgerBooks, ledgerCollections } from "@/lib/ledger-db";
 import { useMeta, writeSettings } from "@/lib/ledger-settings";
-import { RECURRING_KEY, kpisOf, recurringBookOf, recurringModel } from "@/lib/recurring";
+import { RECURRING_KEY, kpisOf, recurringBookOf, recurringModel, reverted } from "@/lib/recurring";
 import type { RecurringBook, RecurringKpis, RecurringModel, Seed } from "@/lib/recurring";
 import type { Outcome } from "@/lib/recurring-writes";
 
@@ -84,12 +84,19 @@ export function useRecurringWrites(): RecurringWrites {
             return;
         }
         const before = book ? readBook() : null;
-        if (book && before) {
-            writeBook(book(before));
+        const after = book && before ? book(before) : null;
+        if (after) {
+            writeBook(after);
         }
+        const revert = () => {
+            if (before && after) {
+                writeBook(reverted(readBook(), before, after));
+            }
+        };
         const held = rows.length > 0 ? committer.commit(rows, { holdMs: UNDO_MS }) : null;
         void held?.settled.then((result) => {
             if (result.status === "failed") {
+                revert();
                 failed();
             }
         });
@@ -99,9 +106,8 @@ export function useRecurringWrites(): RecurringWrites {
                       children: toast.undo.value,
                       onClick: () => {
                           recurringToasts.close(id);
-                          const undone = held === null || held.undo();
-                          if (undone && before) {
-                              writeBook(before);
+                          if (held === null || held.undo()) {
+                              revert();
                           }
                       },
                   }

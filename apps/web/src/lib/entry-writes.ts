@@ -32,6 +32,8 @@ export interface EntryDraft {
     note: string;
     /** Absent leaves the frozen rate alone; picking one re-freezes the entry at it. */
     rate?: { custom: number | null; type: EntryRateType };
+    /** The day a monthly chain aims for, when it is not the date's own. */
+    recurringAnchorDay?: number;
     recurringCoefficient: number;
     recurringEndDate: number | null;
     recurringType: number;
@@ -256,7 +258,9 @@ function entryOf(ledger: Ledger, id: string, draft: EntryDraft, at: number) {
         ...row,
         day: new Date(filed.day),
         month: new Date(filed.month),
-        recurringAnchorDay: recurring ? wall(draft.date, offsetAt(draft.date)).getUTCDate() : null,
+        recurringAnchorDay: recurring
+            ? (draft.recurringAnchorDay ?? wall(draft.date, offsetAt(draft.date)).getUTCDate())
+            : null,
     };
 }
 

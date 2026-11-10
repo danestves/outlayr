@@ -33,6 +33,27 @@ export type RecurringBook = typeof RecurringBook.Type;
 
 export const EMPTY_RECURRING: RecurringBook = { dismissed: [], paused: [] };
 
+/** Takes back one write's change to the book, leaving whatever changed since. */
+export function reverted(current: RecurringBook, before: RecurringBook, after: RecurringBook): RecurringBook {
+    const was = new Map(before.paused.map((pause) => [pause.fromId, pause]));
+    const now = new Map(after.paused.map((pause) => [pause.fromId, pause]));
+    const touched = new Set(
+        [...was.keys(), ...now.keys()].filter((id) => JSON.stringify(was.get(id)) !== JSON.stringify(now.get(id)))
+    );
+    const added = after.dismissed.filter((key) => !before.dismissed.includes(key));
+    const removed = before.dismissed.filter((key) => !after.dismissed.includes(key));
+    return {
+        dismissed: [
+            ...current.dismissed.filter((key) => !added.includes(key)),
+            ...removed.filter((key) => !current.dismissed.includes(key)),
+        ],
+        paused: [
+            ...current.paused.filter((pause) => !touched.has(pause.fromId)),
+            ...before.paused.filter((pause) => touched.has(pause.fromId)),
+        ],
+    };
+}
+
 const decodeBook = Schema.decodeUnknownOption(Schema.fromJsonString(RecurringBook));
 
 export const recurringBookOf = (raw: string | null | undefined): RecurringBook =>
@@ -383,7 +404,16 @@ export function recurringModel(
             linked.set(key, [...(linked.get(key) ?? []), entryOf(doc)]);
         }
     }
-    const history = new Map(schedules.map((schedule) => [schedule.id, linked.get(schedule.key) ?? []]));
+    const sharing = Map.groupBy(schedules, (schedule) => schedule.key);
+    // Merchants like Apple bill several schedules, so a shared key splits by price and currency.
+    const historyOf = (schedule: Schedule) => {
+        const entries = linked.get(schedule.key) ?? [];
+        const { amount, currency } = schedule.seed;
+        return (sharing.get(schedule.key)?.length ?? 0) > 1
+            ? entries.filter((entry) => entry.amount === amount && entry.currency === (currency ?? ledger.currency))
+            : entries;
+    };
+    const history = new Map(schedules.map((schedule) => [schedule.id, historyOf(schedule)]));
 
     const taken = new Set(schedules.map((schedule) => schedule.key));
     const dismissed = new Set(book.dismissed);

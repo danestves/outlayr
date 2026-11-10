@@ -92,11 +92,13 @@ export function previewOf(values: Pick<Values, "endDay" | "every" | "startDay" |
 }
 
 export function DayField({
+    disabled = false,
     invalid = false,
     label,
     onChange,
     value,
 }: {
+    disabled?: boolean;
     invalid?: boolean;
     label: string;
     onChange: (day: string) => void;
@@ -109,6 +111,7 @@ export function DayField({
             <Button
                 aria-invalid={invalid || undefined}
                 className="dash-figure aria-invalid:border-destructive w-full justify-between font-normal"
+                disabled={disabled}
                 onClick={() => input.current?.showPicker()}
                 type="button"
                 variant="outline"
@@ -119,6 +122,7 @@ export function DayField({
             {/* iOS keeps its own wider width on a date input until its appearance is off. */}
             <input
                 aria-label={label}
+                disabled={disabled}
                 className="pointer-events-none absolute inset-0 appearance-none opacity-0 pointer-coarse:pointer-events-auto"
                 onChange={(event) => {
                     if (event.target.value !== "") {
@@ -426,7 +430,8 @@ function FormView({
     const categoryOptions = useCategoryOptions(ledger, values.income);
     const [tried, setTried] = useState(false);
     const account = ledger.books.accounts.find((row) => row.localId === values.accountId);
-    const currency = account?.currency ?? schedule?.seed.currency ?? ledger.currency;
+    const kept = schedule && values.accountId === schedule.seed.accountId ? schedule.seed.currency : null;
+    const currency = kept ?? account?.currency ?? ledger.currency;
     const amount = parseAmount(values.amountText, decimalsFor(currency));
     const { offsetAt } = ledger;
     const draft: ScheduleDraft = {
@@ -510,6 +515,7 @@ function FormView({
                     </Slot>
                     <Slot label={schedule ? copy.fields.nextCharge : copy.fields.starting}>
                         <DayField
+                            disabled={schedule?.pause != null}
                             label={(schedule ? copy.fields.nextCharge : copy.fields.starting).value}
                             onChange={(startDay) => set({ startDay })}
                             value={values.startDay}

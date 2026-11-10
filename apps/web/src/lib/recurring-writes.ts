@@ -68,9 +68,19 @@ const retired = (doc: Doc, at: number) =>
         at
     );
 
+/** Rows deleted out of a chain must not hand it on: a charge later today otherwise counts as logged. */
+const unchained = (books: Ledger["books"], ids: ReadonlySet<string>): Ledger["books"] => ({
+    ...books,
+    transactions: books.transactions.map((row) =>
+        ids.has(row.localId) ? { ...row, recurringType: RECURRING_TYPE.none } : row
+    ),
+});
+
 /** A charge already logged stays as the entry it is; a pending one goes, with its card fee. */
 const withdrawn = (ledger: Ledger, doc: Doc, at: number): CommitRow[] =>
-    doc.date > ledger.now ? deletionOf(ledger.books, [doc.localId], at).rows : [retired(doc, at)];
+    doc.date > ledger.now
+        ? deletionOf(unchained(ledger.books, new Set([doc.localId])), [doc.localId], at).rows
+        : [retired(doc, at)];
 
 interface Override {
     accountId?: string | null;
@@ -139,6 +149,10 @@ const seedFrom = (seed: Seed, draft: ScheduleDraft): Seed => ({
     recurringType: draft.type,
 });
 
+/** A chain carried past a short month still aims for its day when the edit keeps its date and cadence. */
+const keepsAnchor = (schedule: Schedule, draft: ScheduleDraft) =>
+    schedule.next?.at === draft.date && schedule.chain.type === draft.type && schedule.chain.every === draft.every;
+
 /** A pending charge is edited in place; a logged one keeps its amount and the chain restarts at the next charge. */
 export function editedSchedule(ledger: Ledger, schedule: Schedule, draft: ScheduleDraft, at: number): Outcome {
     const { carrier, pause } = schedule;
@@ -162,7 +176,15 @@ export function editedSchedule(ledger: Ledger, schedule: Schedule, draft: Schedu
     return {
         rows: [
             ...(carrier ? [retired(carrier, at)] : []),
-            ...createdEntry(ledger, crypto.randomUUID(), entryDraftOf(draft, details), at),
+            ...createdEntry(
+                ledger,
+                crypto.randomUUID(),
+                {
+                    ...entryDraftOf(draft, details),
+                    recurringAnchorDay: keepsAnchor(schedule, draft) ? schedule.chain.anchor : undefined,
+                },
+                at
+            ),
         ],
     };
 }
@@ -294,17 +316,11 @@ export function stoppedSchedule(schedule: Schedule, at: number): CommitRow[] {
 export function deletedSchedule(ledger: Ledger, schedule: Schedule, entries: readonly string[], at: number): Outcome {
     const { carrier, pause } = schedule;
     const doomed = new Set(entries);
-    const books = {
-        ...ledger.books,
-        transactions: ledger.books.transactions.map((row) =>
-            doomed.has(row.localId) ? { ...row, recurringType: RECURRING_TYPE.none } : row
-        ),
-    };
     return {
         book: pause ? withoutPause(pause.fromId) : undefined,
         rows: [
             ...(carrier && !doomed.has(carrier.localId) ? withdrawn(ledger, carrier, at) : []),
-            ...(doomed.size > 0 ? deletionOf(books, doomed, at).rows : []),
+            ...(doomed.size > 0 ? deletionOf(unchained(ledger.books, doomed), doomed, at).rows : []),
         ],
     };
 }
