@@ -124,6 +124,12 @@ const paywall = {
         afterThat: t({ en: "After that", es: "Después", fr: "Ensuite", pt: "Depois" }),
         dayN: insert(t({ en: "Day {{day}}", es: "Día {{day}}", fr: "Jour {{day}}", pt: "Dia {{day}}" })),
         proUnlocks: t({ en: "Pro unlocks", es: "Se activa Pro", fr: "Pro s'active", pt: "O Pro é ativado" }),
+        weRemindYou: t({
+            en: "We remind you by email",
+            es: "Te avisamos por correo",
+            fr: "On vous prévient par e-mail",
+            pt: "Avisamos você por e-mail",
+        }),
         firstCharge: t({ en: "First charge", es: "Primer cobro", fr: "Premier paiement", pt: "Primeira cobrança" }),
         unlocksAndCharges: t({
             en: "Pro unlocks, first charge",

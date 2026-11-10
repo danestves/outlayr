@@ -5,6 +5,7 @@ import Infinity01Icon from "@hugeicons/core-free-icons/Infinity01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
+import { TRIAL_REMINDER_LEAD_MS, TRIAL_REMINDERS_FROM_MS } from "@outlayr/money/contract";
 import type { ProPlan } from "@outlayr/money/pro-prices";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLoaderData, useRouteContext, useSearch } from "@tanstack/react-router";
@@ -31,6 +32,9 @@ import { currentToken } from "@/lib/session";
 import { SUPPORT_EMAIL } from "@/lib/site";
 
 const TRIAL_DAYS = 7;
+const DAY_MS = 86_400_000;
+const REMINDER_DAY = TRIAL_DAYS - TRIAL_REMINDER_LEAD_MS / DAY_MS;
+const remindsBeforeCharge = (now: number) => now + REMINDER_DAY * DAY_MS >= TRIAL_REMINDERS_FROM_MS;
 const PLANS = ["annual", "monthly", "lifetime"] as const;
 const TABLE = [
     { free: "30", key: "autoLog", pro: "infinity" },
@@ -297,6 +301,7 @@ function Offer({
         next.setMonth(next.getMonth() + 1);
         return next.toLocaleDateString(locale, { day: "numeric", month: "short" });
     });
+    const [reminds] = useState(() => remindsBeforeCharge(Date.now()));
     const ctaLabel = (() => {
         if (busy) {
             return copy.unlocking;
@@ -352,6 +357,7 @@ function Offer({
                         <Timeline
                             rows={[
                                 [copy.today, copy.proUnlocks],
+                                ...(reminds ? [[copy.dayN({ day: REMINDER_DAY }), copy.weRemindYou] as const] : []),
                                 [copy.dayN({ day: TRIAL_DAYS }), copy.firstCharge],
                             ]}
                         />
