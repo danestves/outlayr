@@ -23,6 +23,7 @@ export interface StackChrome {
     paywall: Options;
     /** `minimal` drops the back title, which would otherwise read the cover's title from behind it. */
     firstRunStep: Options;
+    headless: Options;
 }
 
 const TRANSPARENT_HEADER = { headerTransparent: true } as const;
@@ -46,6 +47,7 @@ const CHROME: StackChrome = {
         headerTransparent: true,
         title: "",
     },
+    headless: { headerShown: false },
     identityPicker: (detent) => ({ ...pickerSheet(detent), sheetLargestUndimmedDetentIndex: 0 }),
     modal: (title) => ({ ...TRANSPARENT_HEADER, ...MINIMAL_BACK, presentation: "modal", title }),
     paywall: { ...TRANSPARENT_HEADER, presentation: "modal", sheetGrabberVisible: true, title: "" },
