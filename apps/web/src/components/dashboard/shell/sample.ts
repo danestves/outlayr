@@ -184,6 +184,7 @@ export function sampleDashboard(now: number): Dashboard {
         ledger,
         overview: ledgerGlance(books, now),
         photos: NO_PHOTOS,
+        restoring: false,
         setFilters: () => undefined,
     };
 }

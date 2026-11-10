@@ -37,7 +37,7 @@ import { ledgerCommitter } from "@/lib/ledger-committer";
 import { ledgerCollections, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
 import { onboardingDue, readProgress, subscribeProgress } from "@/lib/onboarding";
 import { currentToken, onSessionChange, userOf } from "@/lib/session";
-import { watchSync } from "@/lib/sync-status";
+import { readSync, subscribeSync, watchSync } from "@/lib/sync-status";
 
 const Paywall = lazy(async () => {
     const { Paywall: page } = await import("@/components/dashboard/paywall/paywall");
@@ -66,17 +66,17 @@ export const Route = createFileRoute("/_account/app")({
         });
         if (restored) {
             seedPhotos(context.queryClient, restored.photos);
-            return { asOf, settled, synced: true, userId };
+            return { asOf, restored: true, settled, synced: true, userId };
         }
         try {
             await settled;
         } catch (error) {
             if (error instanceof Error && proRequired(error)) {
-                return { asOf, settled, synced: false, userId };
+                return { asOf, restored: false, settled, synced: false, userId };
             }
             throw error;
         }
-        return { asOf, settled, synced: true, userId };
+        return { asOf, restored: false, settled, synced: true, userId };
     },
     pendingComponent: Pending,
     pendingMinMs: 0,
@@ -222,6 +222,7 @@ function useLedgerCopy(overview: Overview, photos: PhotoUrls, settled: Promise<b
     const { dbClient, queryClient } = Route.useRouteContext();
     const router = useRouter();
     const [synced, setSynced] = useState(false);
+    const [answered, setAnswered] = useState(false);
     // oxlint-disable-next-line outlayr/react-effect-budget -- other tabs are an external system.
     useEffect(() => onSessionChange(() => forgetLedger().finally(() => window.location.reload())), []);
     // oxlint-disable-next-line outlayr/react-effect-budget -- the Convex connection is an external system.
@@ -230,13 +231,16 @@ function useLedgerCopy(overview: Overview, photos: PhotoUrls, settled: Promise<b
     useEffect(() => watchKeyboardInset(), []);
     // oxlint-disable-next-line outlayr/react-effect-budget -- the restored copy shows before Convex answers, so a refusal arrives after the first paint.
     useEffect(() => {
-        settled.then(setSynced).catch(async (error) => {
-            // Only a refusal ends the copy: a server that stays busy past the retries leaves the books on screen.
-            if (error instanceof ConvexError) {
-                await dropLedger();
-                await router.invalidate();
-            }
-        });
+        settled
+            .then(setSynced)
+            .catch(async (error) => {
+                // Only a refusal ends the copy: a server that stays busy past the retries leaves the books on screen.
+                if (error instanceof ConvexError) {
+                    await dropLedger();
+                    await router.invalidate();
+                }
+            })
+            .finally(() => setAnswered(true));
     }, [router, settled]);
     // oxlint-disable-next-line outlayr/react-effect-budget -- IndexedDB is an external system.
     useEffect(() => {
@@ -248,7 +252,10 @@ function useLedgerCopy(overview: Overview, photos: PhotoUrls, settled: Promise<b
         return () => clearTimeout(timer);
         // oxlint-disable-next-line react/exhaustive-effect-dependencies -- newly minted photos re-arm the save.
     }, [dbClient, overview, photos, queryClient, synced, userId]);
+    return answered;
 }
+
+const offline = () => readSync().status === "failed";
 
 function LiveDashboard({ books, children }: { books: LedgerBooks; children: ReactNode }) {
     const loaded = Route.useLoaderData();
@@ -259,7 +266,9 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
     useTurnover(overview.nextChangeAt, setAsOf);
     const ledger = useMemo(() => prepareLedger(books, asOf), [books, asOf]);
     const photos = usePhotoUrls(overview);
-    useLedgerCopy(overview, photos, loaded.settled, loaded.userId);
+    const answered = useLedgerCopy(overview, photos, loaded.settled, loaded.userId);
+    const failed = useSyncExternalStore(subscribeSync, offline, () => false);
+    const restoring = loaded.restored && !answered && !failed;
     const filters = useFilters(search, ledger);
     const dashboard = useMemo(
         () => ({
@@ -267,10 +276,11 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
             ledger,
             overview,
             photos,
+            restoring,
             setFilters: (patch: FilterPatch) =>
                 navigate({ resetScroll: false, search: (prev) => ({ ...prev, ...searchPatch(patch) }), to: "." }),
         }),
-        [filters, ledger, navigate, overview, photos]
+        [filters, ledger, navigate, overview, photos, restoring]
     );
     return (
         <DashboardContext value={dashboard}>

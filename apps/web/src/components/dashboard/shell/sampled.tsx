@@ -1,5 +1,6 @@
 import { createContext, use, useState } from "react";
 import type { ReactNode } from "react";
+import { useIntlayer } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
 import { DashboardContext } from "./dashboard";
@@ -29,5 +30,15 @@ export function Sampled({ children, label, sample }: SampledProps) {
                 <DashboardContext value={sample}>{children}</DashboardContext>
             </SampledContext>
         </Skeleton>
+    );
+}
+
+export function Restoring({ children }: { children: ReactNode }) {
+    const { loadingLabel } = useIntlayer("dashboard");
+    const sample = useSample();
+    return (
+        <Sampled label={loadingLabel.value} sample={sample}>
+            {children}
+        </Sampled>
     );
 }
