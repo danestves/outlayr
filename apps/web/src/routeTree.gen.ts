@@ -66,6 +66,8 @@ import { Route as AccountAppInsightsCashFlowRouteImport } from './routes/_accoun
 import { Route as AccountAppInsightsRecapRouteImport } from './routes/_account/app.insights.recap'
 import { Route as AccountAppInsightsReportsRouteImport } from './routes/_account/app.insights.reports'
 import { Route as AccountAppInsightsYearRouteImport } from './routes/_account/app.insights.year'
+import { Route as AccountAppInstallmentsIndexRouteImport } from './routes/_account/app.installments.index'
+import { Route as AccountAppInstallmentsPlanIdRouteImport } from './routes/_account/app.installments.$planId'
 import { Route as AccountAppSettingsIndexRouteImport } from './routes/_account/app.settings.index'
 import { Route as AccountAppSettingsAboutRouteImport } from './routes/_account/app.settings.about'
 import { Route as AccountAppSettingsAccountRouteImport } from './routes/_account/app.settings.account'
@@ -400,6 +402,18 @@ const AccountAppInsightsYearRoute = AccountAppInsightsYearRouteImport.update({
   path: '/year',
   getParentRoute: () => AccountAppInsightsRoute,
 } as any)
+const AccountAppInstallmentsIndexRoute =
+  AccountAppInstallmentsIndexRouteImport.update({
+    id: '/installments/',
+    path: '/installments/',
+    getParentRoute: () => AccountAppRoute,
+  } as any)
+const AccountAppInstallmentsPlanIdRoute =
+  AccountAppInstallmentsPlanIdRouteImport.update({
+    id: '/installments/$planId',
+    path: '/installments/$planId',
+    getParentRoute: () => AccountAppRoute,
+  } as any)
 const AccountAppSettingsIndexRoute = AccountAppSettingsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -543,6 +557,7 @@ export interface FileRoutesByFullPath {
   '/app/insights/recap': typeof AccountAppInsightsRecapRoute
   '/app/insights/reports': typeof AccountAppInsightsReportsRoute
   '/app/insights/year': typeof AccountAppInsightsYearRoute
+  '/app/installments/$planId': typeof AccountAppInstallmentsPlanIdRoute
   '/app/settings/about': typeof AccountAppSettingsAboutRoute
   '/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
@@ -560,6 +575,7 @@ export interface FileRoutesByFullPath {
   '/app/debts/': typeof AccountAppDebtsIndexRoute
   '/app/goals/': typeof AccountAppGoalsIndexRoute
   '/app/insights/': typeof AccountAppInsightsIndexRoute
+  '/app/installments/': typeof AccountAppInstallmentsIndexRoute
   '/app/settings/': typeof AccountAppSettingsIndexRoute
   '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
   '/app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
@@ -614,6 +630,7 @@ export interface FileRoutesByTo {
   '/app/insights/recap': typeof AccountAppInsightsRecapRoute
   '/app/insights/reports': typeof AccountAppInsightsReportsRoute
   '/app/insights/year': typeof AccountAppInsightsYearRoute
+  '/app/installments/$planId': typeof AccountAppInstallmentsPlanIdRoute
   '/app/settings/about': typeof AccountAppSettingsAboutRoute
   '/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
@@ -631,6 +648,7 @@ export interface FileRoutesByTo {
   '/app/debts': typeof AccountAppDebtsIndexRoute
   '/app/goals': typeof AccountAppGoalsIndexRoute
   '/app/insights': typeof AccountAppInsightsIndexRoute
+  '/app/installments': typeof AccountAppInstallmentsIndexRoute
   '/app/settings': typeof AccountAppSettingsIndexRoute
   '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
   '/app/settings/categories': typeof AccountAppSettingsCategoriesIndexRoute
@@ -690,6 +708,7 @@ export interface FileRoutesById {
   '/_account/app/insights/recap': typeof AccountAppInsightsRecapRoute
   '/_account/app/insights/reports': typeof AccountAppInsightsReportsRoute
   '/_account/app/insights/year': typeof AccountAppInsightsYearRoute
+  '/_account/app/installments/$planId': typeof AccountAppInstallmentsPlanIdRoute
   '/_account/app/settings/about': typeof AccountAppSettingsAboutRoute
   '/_account/app/settings/account': typeof AccountAppSettingsAccountRoute
   '/_account/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
@@ -707,6 +726,7 @@ export interface FileRoutesById {
   '/_account/app/debts/': typeof AccountAppDebtsIndexRoute
   '/_account/app/goals/': typeof AccountAppGoalsIndexRoute
   '/_account/app/insights/': typeof AccountAppInsightsIndexRoute
+  '/_account/app/installments/': typeof AccountAppInstallmentsIndexRoute
   '/_account/app/settings/': typeof AccountAppSettingsIndexRoute
   '/_account/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
   '/_account/app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
@@ -767,6 +787,7 @@ export interface FileRouteTypes {
     | '/app/insights/recap'
     | '/app/insights/reports'
     | '/app/insights/year'
+    | '/app/installments/$planId'
     | '/app/settings/about'
     | '/app/settings/account'
     | '/app/settings/connections'
@@ -784,6 +805,7 @@ export interface FileRouteTypes {
     | '/app/debts/'
     | '/app/goals/'
     | '/app/insights/'
+    | '/app/installments/'
     | '/app/settings/'
     | '/app/settings/categories/$categoryId'
     | '/app/settings/categories/'
@@ -838,6 +860,7 @@ export interface FileRouteTypes {
     | '/app/insights/recap'
     | '/app/insights/reports'
     | '/app/insights/year'
+    | '/app/installments/$planId'
     | '/app/settings/about'
     | '/app/settings/account'
     | '/app/settings/connections'
@@ -855,6 +878,7 @@ export interface FileRouteTypes {
     | '/app/debts'
     | '/app/goals'
     | '/app/insights'
+    | '/app/installments'
     | '/app/settings'
     | '/app/settings/categories/$categoryId'
     | '/app/settings/categories'
@@ -913,6 +937,7 @@ export interface FileRouteTypes {
     | '/_account/app/insights/recap'
     | '/_account/app/insights/reports'
     | '/_account/app/insights/year'
+    | '/_account/app/installments/$planId'
     | '/_account/app/settings/about'
     | '/_account/app/settings/account'
     | '/_account/app/settings/connections'
@@ -930,6 +955,7 @@ export interface FileRouteTypes {
     | '/_account/app/debts/'
     | '/_account/app/goals/'
     | '/_account/app/insights/'
+    | '/_account/app/installments/'
     | '/_account/app/settings/'
     | '/_account/app/settings/categories/$categoryId'
     | '/_account/app/settings/categories/'
@@ -1352,6 +1378,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppInsightsYearRouteImport
       parentRoute: typeof AccountAppInsightsRoute
     }
+    '/_account/app/installments/': {
+      id: '/_account/app/installments/'
+      path: '/installments'
+      fullPath: '/app/installments/'
+      preLoaderRoute: typeof AccountAppInstallmentsIndexRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
+    '/_account/app/installments/$planId': {
+      id: '/_account/app/installments/$planId'
+      path: '/installments/$planId'
+      fullPath: '/app/installments/$planId'
+      preLoaderRoute: typeof AccountAppInstallmentsPlanIdRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
     '/_account/app/settings/': {
       id: '/_account/app/settings/'
       path: '/'
@@ -1599,9 +1639,11 @@ interface AccountAppRouteChildren {
   AccountAppAccountsReorderRoute: typeof AccountAppAccountsReorderRoute
   AccountAppDebtsAccountIdRoute: typeof AccountAppDebtsAccountIdRoute
   AccountAppGoalsGoalIdRoute: typeof AccountAppGoalsGoalIdRoute
+  AccountAppInstallmentsPlanIdRoute: typeof AccountAppInstallmentsPlanIdRoute
   AccountAppAccountsIndexRoute: typeof AccountAppAccountsIndexRoute
   AccountAppDebtsIndexRoute: typeof AccountAppDebtsIndexRoute
   AccountAppGoalsIndexRoute: typeof AccountAppGoalsIndexRoute
+  AccountAppInstallmentsIndexRoute: typeof AccountAppInstallmentsIndexRoute
 }
 
 const AccountAppRouteChildren: AccountAppRouteChildren = {
@@ -1617,9 +1659,11 @@ const AccountAppRouteChildren: AccountAppRouteChildren = {
   AccountAppAccountsReorderRoute: AccountAppAccountsReorderRoute,
   AccountAppDebtsAccountIdRoute: AccountAppDebtsAccountIdRoute,
   AccountAppGoalsGoalIdRoute: AccountAppGoalsGoalIdRoute,
+  AccountAppInstallmentsPlanIdRoute: AccountAppInstallmentsPlanIdRoute,
   AccountAppAccountsIndexRoute: AccountAppAccountsIndexRoute,
   AccountAppDebtsIndexRoute: AccountAppDebtsIndexRoute,
   AccountAppGoalsIndexRoute: AccountAppGoalsIndexRoute,
+  AccountAppInstallmentsIndexRoute: AccountAppInstallmentsIndexRoute,
 }
 
 const AccountAppRouteWithChildren = AccountAppRoute._addFileChildren(

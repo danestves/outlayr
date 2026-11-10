@@ -95,6 +95,7 @@ function NavLink({
         | "/app/accounts"
         | "/app/debts"
         | "/app/goals"
+        | "/app/installments"
         | "/app/insights"
         | "/app/recurring"
         | "/app/rules"
@@ -168,7 +169,12 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
             <NavLink collapsed={collapsed} icon={Flag02Icon} label={nav.goals.value} to="/app/goals" />
             <NavLink collapsed={collapsed} icon={RepeatIcon} label={nav.recurring.value} to="/app/recurring" />
             <NavLink collapsed={collapsed} icon={HandCoinsIcon} label={nav.debts.value} to="/app/debts" />
-            <Soon collapsed={collapsed} icon={CalendarCheckIn01Icon} label={nav.installments.value} />
+            <NavLink
+                collapsed={collapsed}
+                icon={CalendarCheckIn01Icon}
+                label={nav.installments.value}
+                to="/app/installments"
+            />
             {group(nav.tools.value)}
             <Soon collapsed={collapsed} icon={Upload04Icon} label={nav.import.value} />
             <NavLink collapsed={collapsed} icon={MagicWand01Icon} label={nav.rules.value} to="/app/rules" />
