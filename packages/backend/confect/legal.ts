@@ -511,6 +511,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "If you turn on a link for a report on the web, our servers keep a copy of that report, with percentages in place of amounts if you choose, and show it to anyone with the link until you turn it off, it expires, or you delete your account.",
                     label: "Sharing a report with a link",
                 },
+                {
+                    detail: "If you start a Pro free trial on the web, we email you two days before the first charge with its date, the amount, and how to cancel.",
+                    label: "A reminder before a trial ends",
+                },
             ],
             es: [
                 {
@@ -528,6 +532,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Si activas un enlace para un informe en la web, nuestros servidores guardan una copia de ese informe, con porcentajes en lugar de montos si lo prefieres, y la muestran a cualquiera que tenga el enlace hasta que lo desactives, caduque o borres tu cuenta.",
                     label: "Compartir un informe con un enlace",
+                },
+                {
+                    detail: "Si empiezas una prueba gratis de Pro en la web, te enviamos un correo dos días antes del primer cobro con la fecha, el monto y cómo cancelar.",
+                    label: "Un recordatorio antes de que termine la prueba",
                 },
             ],
             fr: [
@@ -547,6 +555,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Si vous activez un lien pour un rapport sur le web, nos serveurs gardent une copie de ce rapport, avec des pourcentages à la place des montants si vous le choisissez, et la montrent à toute personne disposant du lien jusqu'à ce que vous le désactiviez, qu'il expire ou que vous supprimiez votre compte.",
                     label: "Partager un rapport avec un lien",
                 },
+                {
+                    detail: "Si vous commencez un essai gratuit de Pro sur le web, nous vous écrivons deux jours avant le premier paiement avec sa date, le montant et comment résilier.",
+                    label: "Un rappel avant la fin de l'essai",
+                },
             ],
             pt: [
                 {
@@ -564,6 +576,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Se você ativar um link para um relatório na web, nossos servidores guardam uma cópia desse relatório, com porcentagens no lugar dos valores se você preferir, e a mostram a qualquer pessoa com o link até você desativá-lo, ele expirar ou você excluir sua conta.",
                     label: "Compartilhar um relatório com um link",
+                },
+                {
+                    detail: "Se você começar um teste grátis do Pro na web, enviamos um e-mail dois dias antes da primeira cobrança com a data, o valor e como cancelar.",
+                    label: "Um lembrete antes do fim do teste",
                 },
             ],
         },

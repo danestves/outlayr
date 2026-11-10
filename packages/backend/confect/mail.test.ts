@@ -86,6 +86,67 @@ describe("the Pro email", () => {
     });
 });
 
+describe("the trial reminder", () => {
+    it("goes out two days before a web trial's first charge, and not once the trial is cancelled", async () => {
+        const startedAt = Date.UTC(2027, 1, 1, 12);
+        const chargeAt = startedAt + 7 * 86_400_000;
+        vi.useFakeTimers({ now: startedAt });
+        const t = convexTest(schema, modules);
+        const keeps = await seedAuthUser(t);
+        const cancels = await seedAuthUser(t);
+        const sent: { at: number; subject: string; to: string }[] = [];
+        const subscriber = (cancelled: boolean) => ({
+            entitlements: {
+                pro: { expires_date: new Date(chargeAt).toISOString(), product_identifier: "price_yearly" },
+            },
+            subscriptions: {
+                price_yearly: {
+                    period_type: "trial",
+                    price: { amount: 49.99, currency: "USD" },
+                    store: "stripe",
+                    unsubscribe_detected_at: cancelled ? new Date(startedAt).toISOString() : null,
+                },
+            },
+        });
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+                const url = new URL(input instanceof Request ? input.url : input);
+                if (url.hostname === "api.revenuecat.com") {
+                    return Response.json({ subscriber: subscriber(url.pathname.includes(cancels.userId)) });
+                }
+                if (url.hostname === "api.stripe.com") {
+                    return new Response("unavailable", { status: 503 });
+                }
+                const { subject, to }: { subject: string; to: string } = JSON.parse(String(init?.body));
+                sent.push({ at: Date.now(), subject, to });
+                return Response.json({ errors: [], success: true });
+            })
+        );
+        const activation = {
+            entitlementId: "pro",
+            expiresAtMs: chargeAt,
+            isSandbox: false,
+            productId: "price_yearly",
+            sourceEventType: "INITIAL_PURCHASE",
+            store: "STRIPE" as const,
+        };
+
+        await t.mutation(internal.mail.claimPro, { ...activation, appUserId: keeps.userId });
+        await t.mutation(internal.mail.claimPro, { ...activation, appUserId: cancels.userId });
+        await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+        const reminders = sent.filter(({ subject }) => subject.includes("trial"));
+        expect(reminders).toStrictEqual([
+            {
+                at: chargeAt - 2 * 86_400_000,
+                subject: "Your Outlayr Pro trial ends on 8 February 2027",
+                to: keeps.email,
+            },
+        ]);
+    });
+});
+
 describe("a policy notice", () => {
     it("sends one email per account for every document changing that day, skipping ones it already got, and retries failures", async () => {
         const t = convexTest(schema, modules);

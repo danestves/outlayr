@@ -7,6 +7,7 @@
         "./language": "./src/language.ts",
         "./policy-change": "./src/emails/policy-change.tsx",
         "./pro": "./src/emails/pro.tsx",
+        "./trial-ending": "./src/emails/trial-ending.tsx",
         "./welcome": "./src/emails/welcome.tsx"
     },
     "scripts": {

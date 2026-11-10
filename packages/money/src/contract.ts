@@ -73,3 +73,7 @@ export const REFERRAL_DAYS_TO_EARN = 3;
 export const REFERRAL_YEARLY_CAP = 12;
 
 export const REFERRAL_CAP_WINDOW_MS = 365 * 86_400_000;
+
+export const TRIAL_REMINDER_LEAD_MS = 2 * 86_400_000;
+
+export const TRIAL_REMINDERS_FROM_MS = Date.UTC(2027, 0, 1);
