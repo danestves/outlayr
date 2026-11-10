@@ -1,5 +1,6 @@
+import { parseCsv } from "@outlayr/money/csv-read";
+
 import { splitHeaderAndRows } from "@/data/transfer-core";
-import { parseCsv } from "@/domain/csv";
 
 export type ParseFailureReason = "empty" | "noDataRows" | "tooFewColumns";
 

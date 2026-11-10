@@ -1,11 +1,11 @@
 import File02Icon from "@hugeicons-pro/core-stroke-rounded/File02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import { deduceDateFormat } from "@outlayr/money/csv-read";
 import { Button } from "panelui-native/components/button";
 import { View } from "react-native";
 
 import { Text } from "@/components/text";
 import type { ImportSourceId } from "@/domain/import-sources";
-import { deduceDateFormat } from "@/domain/transaction-csv";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";

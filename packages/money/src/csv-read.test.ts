@@ -1,16 +1,14 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { parseCsv } from "./csv";
 import {
-    CSV_HEADER,
     deduceDateFormat,
     detectDecimalSeparator,
+    parseCsv,
     parseCsvAmount,
     parseCsvDate,
     parseCsvType,
-    serializeCsvAmount,
-    transactionsToCsv,
-} from "./transaction-csv";
+} from "./csv-read";
+import { CSV_HEADER, serializeCsvAmount, transactionsToCsv } from "./transaction-csv";
 
 describe("serializeCsvAmount", () => {
     it("pads to the currency's minor units", () => {
@@ -196,18 +194,15 @@ describe("parseCsvDate with a month name", () => {
 
 describe("parseCsvType", () => {
     it("reads the exported words", () => {
-        expect(parseCsvType("Income")).toBe(true);
-        expect(parseCsvType("Expense")).toBe(false);
+        expect(["Income", "Expense"].map(parseCsvType)).toStrictEqual([true, false]);
     });
 
     it("ignores case and padding", () => {
-        expect(parseCsvType("  income ")).toBe(true);
+        expect(["  income "].map(parseCsvType)).toStrictEqual([true]);
     });
 
     it("reads Spanish and Portuguese words", () => {
-        expect(parseCsvType("Ingreso")).toBe(true);
-        expect(parseCsvType("Gasto")).toBe(false);
-        expect(parseCsvType("Saída")).toBe(false);
+        expect(["Ingreso", "Gasto", "Saída"].map(parseCsvType)).toStrictEqual([true, false, false]);
     });
 
     it("leaves a card type alone, since Crédito names how it was paid", () => {

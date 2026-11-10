@@ -1,8 +1,8 @@
 import type { NotificationRead } from "@outlayr/backend/confect/notificationRead.spec";
 import { CURRENCY_META, PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
+import { detectDecimalSeparator, parseCsvAmount } from "@outlayr/money/csv-read";
 
 import { detectCurrency, SYMBOL_ALIASES } from "./detect-currency";
-import { detectDecimalSeparator, parseCsvAmount } from "./transaction-csv";
 
 export interface ParsedNotification {
     amount: number;
