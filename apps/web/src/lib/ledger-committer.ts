@@ -28,6 +28,8 @@ const COLLECTED = {
     outsideMoves: ledgerCollections.outsideMoves,
     outsidePayments: ledgerCollections.outsidePayments,
     savingsGoals: ledgerCollections.savingsGoals,
+    tags: ledgerCollections.tags,
+    transactionTags: ledgerCollections.transactionTags,
     transactions: ledgerCollections.transactions,
     transfers: ledgerCollections.transfers,
 };

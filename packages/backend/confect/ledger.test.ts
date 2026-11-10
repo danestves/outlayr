@@ -130,6 +130,45 @@ describe("ledger queries", () => {
         expect(page.map((row) => row.note)).toStrictEqual(["mine"]);
     });
 
+    it("reads only the caller's own tags and tag links", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        const other = await seedProUser(t);
+        const synced = (userId: string, localId: string) => ({
+            deletedAt: null,
+            deviceId: "device",
+            localId,
+            seq: 1,
+            updatedAt: 0,
+            userId,
+        });
+        await t.run(async (ctx) => {
+            for (const { userId } of [owner, other]) {
+                await ctx.db.insert("tags", {
+                    ...synced(userId, `${userId}-tag`),
+                    color: null,
+                    name: "online",
+                    sortOrder: 0,
+                });
+                await ctx.db.insert("transactionTags", {
+                    ...synced(userId, `${userId}-link`),
+                    restoredAt: null,
+                    tagId: `${userId}-tag`,
+                    transactionId: `${userId}-entry`,
+                });
+            }
+        });
+
+        const asOwner = authenticatedAs(t, owner);
+        const tags = await asOwner.query(api.ledger.tags, {});
+        const { page } = await asOwner.query(api.ledger.transactionTags, {
+            paginationOpts: { cursor: null, numItems: 10 },
+        });
+
+        expect(tags.map((row) => row.localId)).toStrictEqual([`${owner.userId}-tag`]);
+        expect(page.map((row) => row.localId)).toStrictEqual([`${owner.userId}-link`]);
+    });
+
     it("hands over the display settings, not the ones that stay on a device", async () => {
         const t = setup();
         const owner = await seedProUser(t);

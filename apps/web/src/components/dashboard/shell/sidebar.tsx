@@ -90,7 +90,7 @@ function NavLink({
     to,
 }: NavProps & {
     exact?: boolean;
-    to: "/app" | "/app/accounts" | "/app/insights" | "/app/transactions";
+    to: "/app" | "/app/accounts" | "/app/insights" | "/app/rules" | "/app/transactions";
 }) {
     const item = (
         <Link activeOptions={{ exact, includeSearch: false }} className="dash-nav" to={to}>
@@ -163,7 +163,7 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
             <Soon collapsed={collapsed} icon={CalendarCheckIn01Icon} label={nav.installments.value} />
             {group(nav.tools.value)}
             <Soon collapsed={collapsed} icon={Upload04Icon} label={nav.import.value} />
-            <Soon collapsed={collapsed} icon={MagicWand01Icon} label={nav.rules.value} />
+            <NavLink collapsed={collapsed} icon={MagicWand01Icon} label={nav.rules.value} to="/app/rules" />
         </>
     );
 }

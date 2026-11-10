@@ -148,6 +148,25 @@ export const ledgerCollections = {
             query: api.ledger.savingsGoals,
         })
     ),
+    tags: collectionOptions("ledger.tags", (db) =>
+        convexCollectionOptions({
+            client: convexOf(db),
+            getKey: (row) => row.localId,
+            queryArgs: {},
+            id: "ledger.tags",
+            query: api.ledger.tags,
+        })
+    ),
+    transactionTags: collectionOptions("ledger.transactionTags", (db) =>
+        convexPaginatedCollectionOptions({
+            ...paged,
+            client: convexOf(db),
+            getKey: (row) => row.localId,
+            queryArgs: {},
+            id: "ledger.transactionTags",
+            query: api.ledger.transactionTags,
+        })
+    ),
     transactions: collectionOptions("ledger.transactions", (db) =>
         convexPaginatedCollectionOptions({
             ...paged,
@@ -209,6 +228,8 @@ export const preloadLedger = (db: DbClient) =>
         load(db.collection(ledgerCollections.outsideMoves)),
         load(db.collection(ledgerCollections.outsidePayments)),
         load(db.collection(ledgerCollections.savingsGoals)),
+        load(db.collection(ledgerCollections.tags)),
+        load(db.collection(ledgerCollections.transactionTags)),
         load(db.collection(ledgerCollections.transactions)),
         load(db.collection(ledgerCollections.transfers)),
     ]);
@@ -228,6 +249,31 @@ export const ledgerBooks = (db: DbClient): LedgerBooks => ({
     transactions: db.collection(ledgerCollections.transactions).toArray,
     transfers: db.collection(ledgerCollections.transfers).toArray,
 });
+
+export type Tag = FunctionReturnType<typeof api.ledger.tags>[number];
+export type TagLink = FunctionReturnType<typeof api.ledger.transactionTags>["page"][number];
+
+export interface TagBooks {
+    links: readonly TagLink[];
+    tags: readonly Tag[];
+}
+
+export const tagBooks = (db: DbClient): TagBooks => ({
+    links: db.collection(ledgerCollections.transactionTags).toArray,
+    tags: db.collection(ledgerCollections.tags).toArray,
+});
+
+export function useTagBooks(): TagBooks {
+    const tags = useLiveQuery({
+        query: (q) => q.from({ row: ledgerCollections.tags }),
+        queryKey: ["ledger.tags"],
+    }).data;
+    const links = useLiveQuery({
+        query: (q) => q.from({ row: ledgerCollections.transactionTags }),
+        queryKey: ["ledger.transactionTags"],
+    }).data;
+    return useMemo(() => ({ links, tags }), [links, tags]);
+}
 
 export function useLedgerBooks(): LedgerBooks {
     const accounts = useLiveQuery({
