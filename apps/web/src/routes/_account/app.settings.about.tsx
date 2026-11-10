@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 
-import { ABOUT_TABS, AboutSettings } from "@/components/dashboard/settings/about/screen";
+import { AboutSettings } from "@/components/dashboard/settings/about/screen";
+import { ABOUT_TABS } from "@/components/dashboard/settings/about/tabs";
 
 export const Route = createFileRoute("/_account/app/settings/about")({
     component: AboutSettings,
