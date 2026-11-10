@@ -72,6 +72,14 @@ export function usePeriodTitle(firstDayOfMonth: number, currentKey: string) {
     };
 }
 
+export function useMonthYear() {
+    const { locale } = useLocale();
+    return useMemo(() => {
+        const format = new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC", year: "numeric" });
+        return (day: string) => format.format(wallNoon(day)).replace(".", "");
+    }, [locale]);
+}
+
 export function useWholeMoney(currency: string) {
     return useMemo(() => {
         const whole = new Intl.NumberFormat("en-US", { currency, maximumFractionDigits: 0, style: "currency" });

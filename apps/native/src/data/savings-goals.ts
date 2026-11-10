@@ -2,6 +2,8 @@ import { balanceIn } from "@outlayr/money/account-overview";
 import type { DisplayedBalance } from "@outlayr/money/account-overview";
 import type { CurrencyCell } from "@outlayr/money/currency-totals";
 import { utcDateString } from "@outlayr/money/dates";
+import { goalProgress, isPayoffPlan } from "@outlayr/money/savings-goal";
+import type { GoalProgress } from "@outlayr/money/savings-goal";
 import { convertUsdSum } from "@outlayr/money/valuation";
 import type { RateTable } from "@outlayr/money/valuation";
 
@@ -12,8 +14,6 @@ import type { PlottedCell } from "@/domain/goal-balance-series";
 import type { GoalLinePoint } from "@/domain/goal-pace-geometry";
 import { startOfLocalDay } from "@/domain/local-day";
 import { minorUnitsFor } from "@/domain/money";
-import { goalProgress, isPayoffPlan } from "@/domain/savings-goal";
-import type { GoalProgress } from "@/domain/savings-goal";
 
 import { useAccounts, useBalanceRates, useSettledAccountCells } from "./accounts";
 import type { Account } from "./accounts-core";

@@ -1,3 +1,4 @@
+import { goalRequiredLine } from "@outlayr/money/savings-goal";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { ScrollView, View } from "react-native";
@@ -9,7 +10,6 @@ import type { SavingsGoalDetail } from "@/data/savings-goals";
 import { formatTargetMonth } from "@/domain/dates";
 import { startOfLocalDay } from "@/domain/local-day";
 import { formatAmount } from "@/domain/money";
-import { goalRequiredLine } from "@/domain/savings-goal";
 import { useLanguage, useTranslation } from "@/i18n/context";
 
 import { GoalPaceChart } from "./goal-pace-chart";

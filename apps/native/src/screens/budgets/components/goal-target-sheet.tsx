@@ -1,4 +1,6 @@
 import { BottomSheetModal, BottomSheetView } from "@expo/ui/community/bottom-sheet";
+import { goalProgress } from "@outlayr/money/savings-goal";
+import type { GoalProgress } from "@outlayr/money/savings-goal";
 import { use, useState } from "react";
 import type { Ref } from "react";
 import { Pressable, View } from "react-native";
@@ -17,8 +19,6 @@ import { formatSentenceDate, formatTargetMonth } from "@/domain/dates";
 import { addLocalMonths, daysBetween, startOfLocalDay, tomorrowLocal } from "@/domain/local-day";
 import { formatAmount, maskedAmount, minorUnitsFor } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
-import { goalProgress } from "@/domain/savings-goal";
-import type { GoalProgress } from "@/domain/savings-goal";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";

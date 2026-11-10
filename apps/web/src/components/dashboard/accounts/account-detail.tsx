@@ -24,7 +24,6 @@ import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
 import { entryLook } from "@outlayr/backend/confect/lib/ledgerLog";
-import { wallNoon } from "@outlayr/money/ledger-zone";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
@@ -37,7 +36,7 @@ import { Fragment, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { timeOfDay, titled, useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
+import { timeOfDay, titled, useDateFormat, useMonthYear, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { EntrySheet, editableDoc } from "@/components/dashboard/transactions/entry-sheet";
 import type { EntryStart } from "@/components/dashboard/transactions/entry-sheet";
@@ -107,14 +106,6 @@ function useMonthName() {
     const date = useDateFormat();
     const { locale } = useLocale();
     return (key: string) => titled(date.month(key), locale);
-}
-
-function useMonthYear() {
-    const { locale } = useLocale();
-    return useMemo(() => {
-        const format = new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC", year: "numeric" });
-        return (day: string) => format.format(wallNoon(day)).replace(".", "");
-    }, [locale]);
 }
 
 function DetailBar({ row }: { row: AccountRow }) {

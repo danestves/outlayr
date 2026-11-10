@@ -756,7 +756,14 @@ function GoalsCard({ model }: { model: ListModel }) {
         return null;
     }
     return (
-        <Card action={<PhoneAction size="sm">{actions.seeAll}</PhoneAction>} title={list.goals}>
+        <Card
+            action={
+                <Button nativeButton={false} render={<Link to="/app/goals" />} size="sm" variant="outline">
+                    {actions.seeAll}
+                </Button>
+            }
+            title={list.goals}
+        >
             <div className="flex flex-col gap-4 p-4">
                 {goals.map((goal) => (
                     <div key={goal.id}>

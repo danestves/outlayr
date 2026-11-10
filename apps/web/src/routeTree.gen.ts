@@ -55,6 +55,8 @@ import { Route as AccountAppAccountsIndexRouteImport } from './routes/_account/a
 import { Route as AccountAppAccountsAccountIdRouteImport } from './routes/_account/app.accounts.$accountId'
 import { Route as AccountAppAccountsNetWorthRouteImport } from './routes/_account/app.accounts.net-worth'
 import { Route as AccountAppAccountsReorderRouteImport } from './routes/_account/app.accounts.reorder'
+import { Route as AccountAppGoalsIndexRouteImport } from './routes/_account/app.goals.index'
+import { Route as AccountAppGoalsGoalIdRouteImport } from './routes/_account/app.goals.$goalId'
 import { Route as AccountAppInsightsIndexRouteImport } from './routes/_account/app.insights.index'
 import { Route as AccountAppInsightsBreakdownRouteImport } from './routes/_account/app.insights.breakdown'
 import { Route as AccountAppInsightsCashFlowRouteImport } from './routes/_account/app.insights.cash-flow'
@@ -336,6 +338,16 @@ const AccountAppAccountsReorderRoute =
     path: '/accounts/reorder',
     getParentRoute: () => AccountAppRoute,
   } as any)
+const AccountAppGoalsIndexRoute = AccountAppGoalsIndexRouteImport.update({
+  id: '/goals/',
+  path: '/goals/',
+  getParentRoute: () => AccountAppRoute,
+} as any)
+const AccountAppGoalsGoalIdRoute = AccountAppGoalsGoalIdRouteImport.update({
+  id: '/goals/$goalId',
+  path: '/goals/$goalId',
+  getParentRoute: () => AccountAppRoute,
+} as any)
 const AccountAppInsightsIndexRoute = AccountAppInsightsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -504,6 +516,7 @@ export interface FileRoutesByFullPath {
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
   '/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
   '/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
   '/app/insights/recap': typeof AccountAppInsightsRecapRoute
@@ -523,6 +536,7 @@ export interface FileRoutesByFullPath {
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/app/accounts/': typeof AccountAppAccountsIndexRoute
+  '/app/goals/': typeof AccountAppGoalsIndexRoute
   '/app/insights/': typeof AccountAppInsightsIndexRoute
   '/app/settings/': typeof AccountAppSettingsIndexRoute
   '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
@@ -570,6 +584,7 @@ export interface FileRoutesByTo {
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
   '/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
   '/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
   '/app/insights/recap': typeof AccountAppInsightsRecapRoute
@@ -589,6 +604,7 @@ export interface FileRoutesByTo {
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/app/accounts': typeof AccountAppAccountsIndexRoute
+  '/app/goals': typeof AccountAppGoalsIndexRoute
   '/app/insights': typeof AccountAppInsightsIndexRoute
   '/app/settings': typeof AccountAppSettingsIndexRoute
   '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
@@ -641,6 +657,7 @@ export interface FileRoutesById {
   '/_account/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/_account/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/_account/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/_account/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
   '/_account/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
   '/_account/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
   '/_account/app/insights/recap': typeof AccountAppInsightsRecapRoute
@@ -660,6 +677,7 @@ export interface FileRoutesById {
   '/_account/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/_account/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/_account/app/accounts/': typeof AccountAppAccountsIndexRoute
+  '/_account/app/goals/': typeof AccountAppGoalsIndexRoute
   '/_account/app/insights/': typeof AccountAppInsightsIndexRoute
   '/_account/app/settings/': typeof AccountAppSettingsIndexRoute
   '/_account/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
@@ -713,6 +731,7 @@ export interface FileRouteTypes {
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
     | '/app/accounts/reorder'
+    | '/app/goals/$goalId'
     | '/app/insights/breakdown'
     | '/app/insights/cash-flow'
     | '/app/insights/recap'
@@ -732,6 +751,7 @@ export interface FileRouteTypes {
     | '/app/settings/time'
     | '/app/settings/usage'
     | '/app/accounts/'
+    | '/app/goals/'
     | '/app/insights/'
     | '/app/settings/'
     | '/app/settings/categories/$categoryId'
@@ -779,6 +799,7 @@ export interface FileRouteTypes {
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
     | '/app/accounts/reorder'
+    | '/app/goals/$goalId'
     | '/app/insights/breakdown'
     | '/app/insights/cash-flow'
     | '/app/insights/recap'
@@ -798,6 +819,7 @@ export interface FileRouteTypes {
     | '/app/settings/time'
     | '/app/settings/usage'
     | '/app/accounts'
+    | '/app/goals'
     | '/app/insights'
     | '/app/settings'
     | '/app/settings/categories/$categoryId'
@@ -849,6 +871,7 @@ export interface FileRouteTypes {
     | '/_account/app/accounts/$accountId'
     | '/_account/app/accounts/net-worth'
     | '/_account/app/accounts/reorder'
+    | '/_account/app/goals/$goalId'
     | '/_account/app/insights/breakdown'
     | '/_account/app/insights/cash-flow'
     | '/_account/app/insights/recap'
@@ -868,6 +891,7 @@ export interface FileRouteTypes {
     | '/_account/app/settings/time'
     | '/_account/app/settings/usage'
     | '/_account/app/accounts/'
+    | '/_account/app/goals/'
     | '/_account/app/insights/'
     | '/_account/app/settings/'
     | '/_account/app/settings/categories/$categoryId'
@@ -1214,6 +1238,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppAccountsReorderRouteImport
       parentRoute: typeof AccountAppRoute
     }
+    '/_account/app/goals/': {
+      id: '/_account/app/goals/'
+      path: '/goals'
+      fullPath: '/app/goals/'
+      preLoaderRoute: typeof AccountAppGoalsIndexRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
+    '/_account/app/goals/$goalId': {
+      id: '/_account/app/goals/$goalId'
+      path: '/goals/$goalId'
+      fullPath: '/app/goals/$goalId'
+      preLoaderRoute: typeof AccountAppGoalsGoalIdRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
     '/_account/app/insights/': {
       id: '/_account/app/insights/'
       path: '/'
@@ -1500,7 +1538,9 @@ interface AccountAppRouteChildren {
   AccountAppAccountsAccountIdRoute: typeof AccountAppAccountsAccountIdRoute
   AccountAppAccountsNetWorthRoute: typeof AccountAppAccountsNetWorthRoute
   AccountAppAccountsReorderRoute: typeof AccountAppAccountsReorderRoute
+  AccountAppGoalsGoalIdRoute: typeof AccountAppGoalsGoalIdRoute
   AccountAppAccountsIndexRoute: typeof AccountAppAccountsIndexRoute
+  AccountAppGoalsIndexRoute: typeof AccountAppGoalsIndexRoute
 }
 
 const AccountAppRouteChildren: AccountAppRouteChildren = {
@@ -1513,7 +1553,9 @@ const AccountAppRouteChildren: AccountAppRouteChildren = {
   AccountAppAccountsAccountIdRoute: AccountAppAccountsAccountIdRoute,
   AccountAppAccountsNetWorthRoute: AccountAppAccountsNetWorthRoute,
   AccountAppAccountsReorderRoute: AccountAppAccountsReorderRoute,
+  AccountAppGoalsGoalIdRoute: AccountAppGoalsGoalIdRoute,
   AccountAppAccountsIndexRoute: AccountAppAccountsIndexRoute,
+  AccountAppGoalsIndexRoute: AccountAppGoalsIndexRoute,
 }
 
 const AccountAppRouteWithChildren = AccountAppRoute._addFileChildren(

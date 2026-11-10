@@ -41,6 +41,7 @@
         "./rates": "./src/rates.ts",
         "./recurrence": "./src/recurrence.ts",
         "./round": "./src/round.ts",
+        "./savings-goal": "./src/savings-goal.ts",
         "./subscription-cost": "./src/subscription-cost.ts",
         "./time-grid": "./src/time-grid.ts",
         "./transfer-reconcile": "./src/transfer-reconcile.ts",
