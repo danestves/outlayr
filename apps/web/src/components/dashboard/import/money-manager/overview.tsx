@@ -1,16 +1,23 @@
+import BalanceScaleIcon from "@hugeicons/core-free-icons/BalanceScaleIcon";
+import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
+import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
+import DashboardSquare01Icon from "@hugeicons/core-free-icons/DashboardSquare01Icon";
+import MoneyExchange01Icon from "@hugeicons/core-free-icons/MoneyExchange01Icon";
+import PieChartIcon from "@hugeicons/core-free-icons/PieChartIcon";
+import Tag01Icon from "@hugeicons/core-free-icons/Tag01Icon";
 import { Button } from "panelui-web/button";
 import { useIntlayer } from "react-intlayer";
 
-import { useDateFormat } from "@/components/dashboard/home/format";
+import { useDateFormat, useMonthYear } from "@/components/dashboard/home/format";
 import { money } from "@/lib/ledger";
 
 import { Card, Columns, ImportPage } from "../parts";
 import { fill, planOf, planSize } from "./model";
 import type { Draft, Screen } from "./model";
-import { MmBar, NavRow } from "./parts";
+import { MmBar, NavRow, Tile, ValueRow } from "./parts";
 
 const WARN = "text-app-tint";
-const BAR_MIN = 4;
+const BAR_MIN = 6;
 
 interface Props {
     draft: Draft;
@@ -22,6 +29,7 @@ interface Props {
 export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
     const { bar, overview } = useIntlayer("dashboard-import-mm");
     const date = useDateFormat();
+    const monthYear = useMonthYear();
     const { analysis, choices } = draft;
     const plan = planOf(draft);
     const count = planSize(plan);
@@ -43,7 +51,10 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
         choices.start.kind === "cutoff" && analysis.overlap
             ? fill(start.value, { day: date.full(analysis.overlap.outlayrFirstDay) })
             : start.value;
-    const needsLook = uncategorized > 0 || analysis.uncategorized.pairs.length > 0 || analysis.balanceGaps.length > 0;
+    const needsCount =
+        Number(uncategorized > 0) +
+        Number(analysis.uncategorized.pairs.length > 0) +
+        Number(analysis.balanceGaps.length > 0);
     return (
         <ImportPage>
             <MmBar onBack={onCancel} title={bar.title}>
@@ -65,43 +76,57 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                                 {analysis.firstDay && analysis.lastDay ? (
                                     <small className="text-muted-foreground text-xs leading-4">
                                         {fill(overview.range.value, {
-                                            from: date.full(analysis.firstDay),
-                                            to: date.full(analysis.lastDay),
+                                            from: monthYear(analysis.firstDay),
+                                            to: monthYear(analysis.lastDay),
                                         })}
                                     </small>
                                 ) : null}
-                                <ul className="mt-3 flex flex-col gap-1.5">
+                                <ul className="mt-3 flex h-20 items-end gap-2">
                                     {analysis.perYear.map((year) => (
-                                        <li className="flex items-center gap-2 text-xs" key={year.year}>
-                                            <span className="dash-figure w-9 flex-none">{year.year}</span>
-                                            <span
-                                                aria-hidden
-                                                className="bg-primary h-2 rounded-sm"
-                                                style={{ width: `${Math.max(BAR_MIN, (year.count / peak) * 100)}%` }}
-                                            />
-                                            <span className="dash-figure text-muted-foreground ml-auto">
-                                                {year.count.toLocaleString()}
+                                        <li
+                                            className="flex h-full min-w-0 flex-1 flex-col gap-1.5 text-xs"
+                                            key={year.year}
+                                            title={year.count.toLocaleString()}
+                                        >
+                                            <span className="flex min-h-0 flex-1 items-end">
+                                                <span
+                                                    aria-hidden
+                                                    className="bg-primary w-full rounded-sm"
+                                                    style={{
+                                                        height: `${Math.max(BAR_MIN, (year.count / peak) * 100)}%`,
+                                                    }}
+                                                />
                                             </span>
+                                            <span className="dash-figure text-center">{year.year}</span>
                                         </li>
                                     ))}
                                 </ul>
                             </div>
                         </Card>
-                        <Card
-                            footer={<span className="text-muted-foreground">{overview.undoBody}</span>}
-                            title={overview.leftBehind}
-                        >
-                            <NavRow detail={analysis.removedEntryCount} title={overview.deletedEntries} />
-                            <NavRow detail={analysis.removedAccountCount} title={overview.deletedAccounts} />
-                            <NavRow detail={analysis.reminderCount} title={overview.reminders} />
+                        <Card title={overview.leftBehind}>
+                            <ValueRow label={overview.deletedEntries} value={analysis.removedEntryCount} />
+                            <ValueRow label={overview.deletedAccounts} value={analysis.removedAccountCount} />
+                            <ValueRow label={overview.reminders} value={analysis.reminderCount} />
+                        </Card>
+                        <Card title={overview.undo}>
+                            <p className="text-muted-foreground px-4 py-3 text-sm leading-5">{overview.undoBody}</p>
                         </Card>
                     </>
                 }
             >
-                {needsLook ? (
-                    <Card title={overview.needs}>
+                {needsCount > 0 ? (
+                    <Card
+                        action={
+                            <span className="dash-figure flex items-center gap-1.5 text-xs">
+                                <span aria-hidden className="bg-app-tint size-1.5 rounded-full" />
+                                {needsCount}
+                            </span>
+                        }
+                        title={overview.needs}
+                    >
                         {uncategorized > 0 ? (
                             <NavRow
+                                leading={<Tile icon={Tag01Icon} />}
                                 onClick={() => onOpen("uncategorized")}
                                 title={fill(overview.noCategory.value, { n: uncategorized.toLocaleString() })}
                                 tone={WARN}
@@ -109,6 +134,7 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                         ) : null}
                         {analysis.uncategorized.pairs.length > 0 ? (
                             <NavRow
+                                leading={<Tile icon={Tag01Icon} />}
                                 onClick={() => onOpen("uncategorized")}
                                 title={fill(overview.pairs.value, { n: analysis.uncategorized.pairs.length })}
                                 tone={WARN}
@@ -119,6 +145,7 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                                 detail={fill(overview.offOneDetail.value, {
                                     amount: money(Math.abs(gap.stored - gap.computed), gap.currency),
                                 })}
+                                leading={<Tile icon={BalanceScaleIcon} />}
                                 onClick={() => onOpen("balances")}
                                 title={fill(overview.offOne.value, { name: gapAccount?.title ?? "" })}
                                 tone={WARN}
@@ -127,6 +154,7 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                         {analysis.balanceGaps.length > 1 ? (
                             <NavRow
                                 detail={fill(overview.offManyDetail.value, { n: analysis.balanceGaps.length })}
+                                leading={<Tile icon={BalanceScaleIcon} />}
                                 onClick={() => onOpen("balances")}
                                 title={overview.offMany}
                                 tone={WARN}
@@ -137,6 +165,7 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                 <Card title={overview.setUp}>
                     <NavRow
                         detail={fill(overview.accountsDetail.value, { hidden, open })}
+                        leading={<Tile icon={CreditCardIcon} />}
                         onClick={() => onOpen("accounts")}
                         title={overview.accounts}
                     />
@@ -145,12 +174,14 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                             created,
                             matched: targets.length - created,
                         })}
+                        leading={<Tile icon={DashboardSquare01Icon} />}
                         onClick={() => onOpen("categories")}
                         title={overview.categories}
                     />
                     {budgets > 0 ? (
                         <NavRow
                             detail={fill(overview.budgetsDetail.value, { n: budgets })}
+                            leading={<Tile icon={PieChartIcon} />}
                             onClick={() => onOpen("budgets")}
                             title={overview.budgets}
                         />
@@ -158,11 +189,13 @@ export function Overview({ draft, onCancel, onImport, onOpen }: Props) {
                     {analysis.currencies.length > 1 ? (
                         <NavRow
                             detail={fill(overview.currenciesDetail.value, { list: analysis.currencies.join(", ") })}
+                            leading={<Tile icon={MoneyExchange01Icon} />}
                             title={overview.currencies}
                         />
                     ) : null}
                     <NavRow
                         detail={startDetail}
+                        leading={<Tile icon={Calendar03Icon} />}
                         onClick={analysis.overlap ? () => onOpen("start") : undefined}
                         title={overview.starting}
                     />

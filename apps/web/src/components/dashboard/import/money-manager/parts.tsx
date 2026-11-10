@@ -3,11 +3,13 @@ import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { Button } from "panelui-web/button";
+import { Kpi } from "panelui-web/kpi";
 import { Menu } from "panelui-web/menu";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { KpiBand } from "@/components/dashboard/accounts/parts";
 
 export function MmBar({ children, onBack, title }: { children?: ReactNode; onBack?: () => void; title: ReactNode }) {
     const { bar } = useIntlayer("dashboard-import-mm");
@@ -20,6 +22,23 @@ export function MmBar({ children, onBack, title }: { children?: ReactNode; onBac
             ) : null}
             <h1 className="text-lg leading-6 font-semibold tracking-[-0.02em]">{title}</h1>
             <div className="ml-auto flex items-center gap-2">{children}</div>
+        </div>
+    );
+}
+
+export function Tile({ icon }: { icon: Parameters<typeof Glyph>[0]["icon"] }) {
+    return (
+        <span className="bg-app-fill text-muted-foreground flex size-9 flex-none items-center justify-center rounded-lg">
+            <Glyph icon={icon} size={18} />
+        </span>
+    );
+}
+
+export function ValueRow({ label, value }: { label: ReactNode; value: ReactNode }) {
+    return (
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 text-xs leading-4">
+            <span className="text-muted-foreground">{label}</span>
+            <span className="dash-figure">{value}</span>
         </div>
     );
 }
@@ -109,11 +128,13 @@ export function RadioLine({
     checked,
     children,
     hint,
+    name = "mm-radio",
     onSelect,
 }: {
     checked: boolean;
     children: ReactNode;
     hint?: ReactNode;
+    name?: string;
     onSelect: () => void;
 }) {
     return (
@@ -121,7 +142,7 @@ export function RadioLine({
             <input
                 checked={checked}
                 className="accent-primary mt-1 size-4"
-                name="mm-radio"
+                name={name}
                 onChange={onSelect}
                 type="radio"
             />
@@ -130,5 +151,24 @@ export function RadioLine({
                 {hint ? <small className="text-muted-foreground block text-xs leading-4">{hint}</small> : null}
             </span>
         </label>
+    );
+}
+
+export function Figures({ items }: { items: readonly { label: ReactNode; value: number }[] }) {
+    return (
+        <div className="mb-4">
+            <KpiBand>
+                {items.map(({ label, value }, index) => (
+                    <Kpi className="gap-0" key={index}>
+                        <Kpi.Header>
+                            <Kpi.Title>{label}</Kpi.Title>
+                        </Kpi.Header>
+                        <Kpi.Value className="dash-figure mt-2 mb-0.5 truncate leading-7 font-semibold tracking-[-0.04em]">
+                            {value.toLocaleString()}
+                        </Kpi.Value>
+                    </Kpi>
+                ))}
+            </KpiBand>
+        </div>
     );
 }

@@ -5,18 +5,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 
-import {
-    Banner,
-    Card,
-    Columns,
-    DROPZONE,
-    DropTile,
-    FileHead,
-    FilePicker,
-    ImportPage,
-    fileSize,
-    useFileDrop,
-} from "../parts";
+import { Card, Columns, DROPZONE, DropTile, FileHead, FilePicker, ImportPage, fileSize, useFileDrop } from "../parts";
 import { MmBar, NavRow } from "./parts";
 
 const ACCEPT = ".mmbackup";
@@ -123,40 +112,54 @@ export function WrongFile({
         notBackup: { body: wrong.notBackupBody, title: wrong.notBackupTitle },
         realbyte: { body: wrong.realbyteBody, title: wrong.realbyteTitle },
     }[error.kind];
+    const { bar } = useIntlayer("dashboard-import-mm");
     return (
         <ImportPage>
-            <MmBar onBack={onCancel} title={wrong.title} />
+            <MmBar onBack={onCancel} title={bar.title} />
             <Columns
                 rail={
-                    error.kind === "notBackup" ? (
-                        <Card title={wrong.reasons}>
-                            <NavRow detail={wrong.damagedBody} title={wrong.damaged} />
-                            <NavRow detail={wrong.newerBody} title={wrong.newer} />
+                    <>
+                        <Card title={wrong.file}>
+                            <FileHead
+                                name={name}
+                                note={wrong.notRead.value.replace("{size}", fileSize(size))}
+                                source="moneyManager"
+                            />
                         </Card>
-                    ) : null
+                        {error.kind === "notBackup" ? (
+                            <Card title={wrong.reasons}>
+                                <ul className="divide-border divide-y">
+                                    {[
+                                        { hint: wrong.damagedBody, label: wrong.damaged },
+                                        { hint: wrong.newerBody, label: wrong.newer },
+                                    ].map(({ hint, label }) => (
+                                        <li
+                                            className="flex min-h-9 items-center justify-between gap-3 px-4 py-1.5 text-[13px]"
+                                            key={label.value}
+                                        >
+                                            <span className="text-muted-foreground flex-none">{label}</span>
+                                            <span className="text-end">{hint}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </Card>
+                        ) : null}
+                    </>
                 }
             >
-                <Card title={wrong.file}>
-                    <FileHead
-                        name={name}
-                        note={wrong.notRead.value.replace("{size}", fileSize(size))}
-                        source="moneyManager"
-                    />
-                    <Banner
-                        action={
+                <Card title={wrong.title}>
+                    <div className="p-5">
+                        <div className={`${DROPZONE} h-105`}>
+                            <DropTile bad />
+                            <b className="text-sm font-semibold">{copy.title}</b>
+                            <small className="text-muted-foreground mt-1.5 mb-4 max-w-sm text-[13px] leading-5">
+                                {copy.body}
+                            </small>
                             <FilePicker accept={ACCEPT} onFile={onFile}>
-                                {(open) => (
-                                    <Button onClick={open} size="sm" variant="outline">
-                                        {wrong.chooseOther}
-                                    </Button>
-                                )}
+                                {(open) => <Button onClick={open}>{wrong.chooseOther}</Button>}
                             </FilePicker>
-                        }
-                        title={copy.title}
-                        tone="bad"
-                    >
-                        {copy.body}
-                    </Banner>
+                        </div>
+                    </div>
                 </Card>
             </Columns>
         </ImportPage>

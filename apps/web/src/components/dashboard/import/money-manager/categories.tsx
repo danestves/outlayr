@@ -2,6 +2,8 @@ import { defaultChoices } from "@outlayr/money/money-manager/defaults";
 import type { CategoryTarget, MmCategoryView, MmChoices } from "@outlayr/money/money-manager/types";
 import { Button } from "panelui-web/button";
 import { Table } from "panelui-web/table";
+import { Tabs } from "panelui-web/tabs";
+import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { Cell, DataTable } from "@/components/dashboard/accounts/accounts-screen";
@@ -20,7 +22,8 @@ interface Props {
 }
 
 export function Categories({ draft, onBack, onChoices }: Props) {
-    const { categories: copy } = useIntlayer("dashboard-import-mm");
+    const { bar, categories: copy } = useIntlayer("dashboard-import-mm");
+    const [tab, setTab] = useState<"expenses" | "income">("expenses");
     const { analysis, choices, ledger, snapshot } = draft;
 
     const switchMode = (categoryMode: MmChoices["categoryMode"]) => {
@@ -85,11 +88,57 @@ export function Categories({ draft, onBack, onChoices }: Props) {
         ];
     };
 
-    const section = (income: boolean, title: string) => {
-        const rows = analysis.categories.filter((view) => view.income === income);
-        return rows.length === 0 ? null : (
-            <Card title={title}>
-                <DataTable head={[copy.inMm, copy.entries, copy.how, copy.goesTo]}>
+    const expenseRows = analysis.categories.filter((view) => !view.income);
+    const incomeRows = analysis.categories.filter((view) => view.income);
+    const shown = tab === "income" && incomeRows.length > 0 ? "income" : "expenses";
+    const rows = shown === "income" ? incomeRows : expenseRows;
+    const tabs = (
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+            <Tabs
+                className="min-w-0 flex-1"
+                onValueChange={(value) => setTab(value === "income" ? "income" : "expenses")}
+                value={shown}
+                variant="underline"
+            >
+                <Tabs.List aria-label={copy.title.value}>
+                    <Tabs.Trigger value="expenses">
+                        {copy.expenses}
+                        <Tabs.Badge className="dash-figure text-muted-foreground bg-transparent! px-0">
+                            {expenseRows.length}
+                        </Tabs.Badge>
+                    </Tabs.Trigger>
+                    {incomeRows.length > 0 ? (
+                        <Tabs.Trigger value="income">
+                            {copy.income}
+                            <Tabs.Badge className="dash-figure text-muted-foreground bg-transparent! px-0">
+                                {incomeRows.length}
+                            </Tabs.Badge>
+                        </Tabs.Trigger>
+                    ) : null}
+                </Tabs.List>
+            </Tabs>
+            <span className="text-muted-foreground text-[13px]">{copy.use}</span>
+            <Tabs
+                onValueChange={(value) => switchMode(value === "keep" ? "keep" : "match")}
+                value={choices.categoryMode}
+                variant="segmented"
+            >
+                <Tabs.List aria-label={copy.use.value}>
+                    <Tabs.Trigger value="match">{copy.outlayrs}</Tabs.Trigger>
+                    <Tabs.Trigger value="keep">{copy.mine}</Tabs.Trigger>
+                </Tabs.List>
+            </Tabs>
+        </div>
+    );
+
+    const kept = Object.values(choices.categories).filter((target) => target.kind !== "skip").length;
+    return (
+        <ImportPage>
+            <MmBar onBack={onBack} title={copy.title}>
+                <Button onClick={onBack}>{bar.done}</Button>
+            </MmBar>
+            <Card head={tabs}>
+                <DataTable head={[copy.inMm, copy.entries, copy.goesTo, copy.how]} numbers={0}>
                     {rows.map((view) => (
                         <Table.Row key={view.uid}>
                             <Cell>
@@ -99,51 +148,25 @@ export function Categories({ draft, onBack, onChoices }: Props) {
                                 </span>
                             </Cell>
                             <Cell figure>{view.entryCount}</Cell>
-                            <Cell>{howOf(view)}</Cell>
                             <Cell>
                                 <Pick
                                     groups={groupsFor(view)}
                                     label={targetName(draft, view, choices.categories[view.uid]) ?? copy.left}
                                 />
                             </Cell>
+                            <Cell>{howOf(view)}</Cell>
                         </Table.Row>
                     ))}
                 </DataTable>
-            </Card>
-        );
-    };
-
-    const kept = Object.values(choices.categories).filter((target) => target.kind !== "skip").length;
-    return (
-        <ImportPage>
-            <MmBar onBack={onBack} title={copy.title}>
-                <span className="text-muted-foreground text-[13px]">{copy.use}</span>
-                <Button
-                    onClick={() => switchMode("match")}
-                    size="sm"
-                    variant={choices.categoryMode === "match" ? "secondary" : "ghost"}
-                >
-                    {copy.outlayrs}
-                </Button>
-                <Button
-                    onClick={() => switchMode("keep")}
-                    size="sm"
-                    variant={choices.categoryMode === "keep" ? "secondary" : "ghost"}
-                >
-                    {copy.mine}
-                </Button>
-            </MmBar>
-            <div className="flex flex-col gap-4">
-                {section(false, copy.expenses.value)}
-                {section(true, copy.income.value)}
-                <p className="text-muted-foreground text-[13px] leading-5">
-                    {copy.count.value
-                        .replace("{n}", String(kept))
-                        .replace("{total}", String(analysis.categories.length))}
-                    {". "}
-                    {copy.note}
+                <p className="text-muted-foreground flex justify-between gap-4 px-4 py-3 text-[13px] leading-5">
+                    <span>{copy.note}</span>
+                    <span className="dash-figure flex-none">
+                        {copy.count.value
+                            .replace("{n}", String(kept))
+                            .replace("{total}", String(analysis.categories.length))}
+                    </span>
                 </p>
-            </div>
+            </Card>
         </ImportPage>
     );
 }

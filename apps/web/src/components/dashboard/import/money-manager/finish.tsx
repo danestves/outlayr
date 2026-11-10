@@ -1,5 +1,6 @@
 import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
 import CheckmarkCircle02Icon from "@hugeicons/core-free-icons/CheckmarkCircle02Icon";
+import Undo02Icon from "@hugeicons/core-free-icons/Undo02Icon";
 import { Link } from "@tanstack/react-router";
 import { AlertDialog } from "panelui-web/alert-dialog";
 import { Button } from "panelui-web/button";
@@ -19,12 +20,12 @@ import type { MoneyManagerImported } from "@/lib/money-manager/writes";
 import { Banner, Card, Columns, ImportPage } from "../parts";
 import { fill, planOf, planSize } from "./model";
 import type { Draft } from "./model";
-import { MmBar, NavRow } from "./parts";
+import { Figures, MmBar } from "./parts";
 
 const CENT = 0.005;
 
 export function Importing({ draft }: { draft: Draft }) {
-    const { bar, importing } = useIntlayer("dashboard-import-mm");
+    const { importing } = useIntlayer("dashboard-import-mm");
     const plan = planOf(draft);
     const steps = [
         [importing.accounts, plan.accounts.length],
@@ -54,9 +55,9 @@ export function Importing({ draft }: { draft: Draft }) {
                     </Card>
                 }
             >
-                <Card title={bar.title}>
+                <Card title={importing.writing}>
                     <div className="p-5">
-                        <div className="flex h-105 items-center justify-center rounded-xl border border-dashed px-4 text-center text-sm">
+                        <div className="flex h-105 items-center justify-center rounded-xl border px-4 text-center text-sm">
                             {fill(importing.body.value, { n: planSize(plan).toLocaleString() })}
                         </div>
                     </div>
@@ -113,7 +114,7 @@ export function Done({ at, entryCount, imported, onUndo, undone }: DoneProps) {
         return row ? [{ expected, row }] : [];
     });
     const matching = checks.filter(({ expected, row }) => Math.abs(row.balance - expected) < CENT).length;
-    const day = date.full(new Date(at).toISOString().slice(0, 10));
+    const day = date.day(new Date(at).toISOString().slice(0, 10));
     const confirm = async () => {
         setFailed(false);
         const ok = await onUndo();
@@ -133,19 +134,35 @@ export function Done({ at, entryCount, imported, onUndo, undone }: DoneProps) {
     }
     return (
         <ImportPage>
-            <MmBar title={bar.title}>
+            <MmBar title={fill(done.movedIn.value, { day })}>
                 <Button render={<Link to="/app/transactions" />} size="sm">
                     {done.openTransactions}
                 </Button>
             </MmBar>
+            <Figures
+                items={[
+                    { label: done.entries, value: entryCount },
+                    { label: done.accounts, value: imported.accountIds.length },
+                    { label: done.categories, value: imported.categoryIds.length },
+                    ...(imported.budgetIds.length > 0
+                        ? [{ label: done.budgets, value: imported.budgetIds.length }]
+                        : []),
+                ]}
+            />
             <Columns
                 rail={
                     <Card title={done.undoTitle}>
                         <p className="text-muted-foreground px-4 py-3 text-[13px] leading-5">
-                            {fill(done.undoBody.value, { day, n: entryCount })}
+                            {fill(done.undoBody.value, { day, n: entryCount.toLocaleString() })}
                         </p>
                         <div className="px-4 pb-4">
-                            <Button onClick={() => setAsking(true)} size="sm" variant="outline">
+                            <Button
+                                className="w-full gap-1.5"
+                                onClick={() => setAsking(true)}
+                                size="sm"
+                                variant="outline"
+                            >
+                                <Glyph icon={Undo02Icon} size={14} />
                                 {done.undo}
                             </Button>
                         </div>
@@ -153,16 +170,16 @@ export function Done({ at, entryCount, imported, onUndo, undone }: DoneProps) {
                 }
             >
                 {failed ? <Banner title={done.undoFailed} tone="bad" /> : null}
-                <Card title={done.inOutlayr}>
-                    <NavRow detail={imported.accountIds.length} title={done.accounts} />
-                    <NavRow detail={imported.categoryIds.length} title={done.categories} />
-                    {imported.budgetIds.length > 0 ? (
-                        <NavRow detail={imported.budgetIds.length} title={done.budgets} />
-                    ) : null}
-                    <NavRow detail={entryCount} title={done.entries} />
-                </Card>
                 {checks.length > 0 ? (
                     <Card
+                        action={
+                            matching === checks.length ? (
+                                <span className="text-app-income flex items-center gap-1.5 text-xs">
+                                    <span aria-hidden className="bg-app-income size-1.5 rounded-full" />
+                                    {done.matchesMm}
+                                </span>
+                            ) : undefined
+                        }
                         title={
                             matching === checks.length
                                 ? fill(done.balancesAll.value, { n: checks.length })
@@ -204,7 +221,7 @@ export function Done({ at, entryCount, imported, onUndo, undone }: DoneProps) {
                 <AlertDialog.Content className="app-shell" tone="destructive">
                     <AlertDialog.Title>{done.undoConfirm}</AlertDialog.Title>
                     <AlertDialog.Description>
-                        {fill(done.undoBody.value, { day, n: entryCount })}
+                        {fill(done.undoBody.value, { day, n: entryCount.toLocaleString() })}
                     </AlertDialog.Description>
                     <AlertDialog.Footer>
                         <AlertDialog.Cancel>{bar.cancel}</AlertDialog.Cancel>

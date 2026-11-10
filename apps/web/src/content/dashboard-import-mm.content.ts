@@ -122,13 +122,21 @@ const dashboardImportMm = {
             bring: text("Bring", "Traer", "Importer", "Trazer"),
             category: text("Category", "Categoría", "Catégorie", "Categoria"),
             from: text("From", "Desde", "Depuis", "De"),
+            fromLimits: text(
+                "From Money Manager limits",
+                "De los límites de Money Manager",
+                "Des limites de Money Manager",
+                "Dos limites do Money Manager"
+            ),
+            fromName: text("From {name}", "Desde {name}", "Depuis {name}", "De {name}"),
             hint: text(
-                "From Money Manager limits. They start this month, so what you already spent in it counts.",
-                "Vienen de los límites de Money Manager. Empiezan este mes, así que lo que ya gastaste cuenta.",
-                "Issus des limites de Money Manager. Ils démarrent ce mois-ci, donc ce que vous avez déjà dépensé compte.",
-                "Vêm dos limites do Money Manager. Começam neste mês, então o que você já gastou conta."
+                "They start this month, so what you already spent in it counts.",
+                "Empiezan este mes, así que lo que ya gastaste cuenta.",
+                "Ils démarrent ce mois-ci, donc ce que vous avez déjà dépensé compte.",
+                "Começam neste mês, então o que você já gastou conta."
             ),
             limit: text("Limit", "Límite", "Limite", "Limite"),
+            used: text("Spent", "Gastado", "Dépensé", "Gasto"),
             spent: text("Spent in {month}", "Gastado en {month}", "Dépensé en {month}", "Gasto em {month}"),
             title: text("Monthly budgets", "Presupuestos mensuales", "Budgets mensuels", "Orçamentos mensais"),
             total: text(
@@ -280,6 +288,7 @@ const dashboardImportMm = {
             heading: text("Importing", "Importando", "Import en cours", "Importando"),
             steps: text("Steps", "Pasos", "Étapes", "Etapas"),
             title: text("Importing…", "Importando…", "Import en cours…", "Importando…"),
+            writing: text("Writing", "Escribiendo", "Écriture", "Gravando"),
         },
         intro: {
             backupTitle: text(
