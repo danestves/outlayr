@@ -3,6 +3,7 @@ import { text } from "node:stream/consumers";
 import { addMonths, firstOfMonth, monthPeriodStart, startOfDay } from "@outlayr/money/calendar";
 import { utcDateString } from "@outlayr/money/dates";
 import { generateSchedule } from "@outlayr/money/installments";
+import { goalProgress } from "@outlayr/money/savings-goal";
 import { buildRateTable } from "@outlayr/money/valuation";
 
 import { accountBalanceSeries } from "./account-balance-series";
@@ -14,7 +15,6 @@ import { formatDayHeader } from "./dates";
 import { cumulativeByDay, periodProgress } from "./insights-answers";
 import { daysBetween, localDayKey } from "./local-day";
 import { loggedDays } from "./month-days";
-import { goalProgress } from "./savings-goal";
 import { reminderFireAt } from "./subscription-reminder";
 
 const [kind = "", ...rest] = process.argv.slice(2);

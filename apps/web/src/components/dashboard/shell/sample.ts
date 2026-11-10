@@ -79,6 +79,30 @@ const budget = (spentOn: Doc<"categories">, seq: number, startDate: number): Doc
     };
 };
 
+const YEAR_MS = 365 * DAY_MS;
+const goal = (
+    name: string,
+    seq: number,
+    now: number,
+    fields: { start: number; target: number }
+): Doc<"savingsGoals"> => {
+    const { emoji: _emoji, icon: _icon, ...base } = envelope<"savingsGoals">(`goal-${seq}`, seq);
+    return {
+        ...base,
+        accountId: ACCOUNTS[seq]?.localId ?? "",
+        currency: "USD",
+        dateCreated: now - PAST_MONTHS * MONTH_MS,
+        exchangeRate: null,
+        name,
+        sortOrder: seq,
+        startAmount: fields.start,
+        startAmountUsd: fields.start,
+        targetAmount: fields.target,
+        targetAmountUsd: fields.target,
+        targetDate: now + YEAR_MS,
+    };
+};
+
 const entry = (
     date: number,
     seq: number,
@@ -131,7 +155,10 @@ function sampleBooks(now: number): LedgerBooks {
         exchangeRates: [],
         installmentPlans: [],
         installments: [],
-        savingsGoals: [],
+        savingsGoals: [
+            goal("Emergency fund", 1, now, { start: 1000, target: 10_000 }),
+            goal("Trip", 4, now, { start: 500, target: 4000 }),
+        ],
         mainBudget: [],
         outsideMoves: [],
         outsidePayments: [],

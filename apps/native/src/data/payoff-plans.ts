@@ -4,6 +4,8 @@ import { restate } from "@outlayr/money/account-overview";
 import type { OverviewRow } from "@outlayr/money/account-overview";
 import { valueCell } from "@outlayr/money/currency-totals";
 import { utcDateString } from "@outlayr/money/dates";
+import { goalProgress, isPayoffPlan } from "@outlayr/money/savings-goal";
+import type { GoalProgress } from "@outlayr/money/savings-goal";
 import type { RateTable } from "@outlayr/money/valuation";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -13,8 +15,6 @@ import { transaction } from "@/db/transaction";
 import type { PlottedCell } from "@/domain/goal-balance-series";
 import { localDayKey } from "@/domain/local-day";
 import { minorUnitsFor, roundToMinorUnits } from "@/domain/money";
-import { goalProgress, isPayoffPlan } from "@/domain/savings-goal";
-import type { GoalProgress } from "@/domain/savings-goal";
 
 import { settledBalanceAt, settledCellsAt } from "./accounts";
 import { accountsRepo } from "./accounts-core";

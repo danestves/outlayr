@@ -1,12 +1,12 @@
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { addDays, startOfDay } from "@outlayr/money/calendar";
+import { isPayoffPlan } from "@outlayr/money/savings-goal";
 import { limitIn, valueDatedRowsIn } from "@outlayr/money/valuation";
 import { and, gte, isNotNull, isNull, lte } from "drizzle-orm";
 
 import { useSetting } from "@/contexts/display-settings-context";
 import type { Database } from "@/db/client";
 import { budgetPlans, budgets, categories, transactions } from "@/db/schema";
-import { isPayoffPlan } from "@/domain/savings-goal";
 import { occurrencesBetween } from "@/domain/upcoming";
 import { monthKey, monthKeyAt, monthKeyWindow, projectYear, shiftMonthKey } from "@/domain/year-plan";
 import type { MonthKey, PlanFlow, YearPlanInput, YearProjection } from "@/domain/year-plan";

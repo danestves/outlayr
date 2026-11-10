@@ -3,6 +3,7 @@ import { toAccountKind } from "@outlayr/money/account-kind";
 import { summarizeOverview } from "@outlayr/money/account-overview";
 import type { AccountsOverview, OverviewRow } from "@outlayr/money/account-overview";
 import { startOfDay } from "@outlayr/money/calendar";
+import { isPayoffPlan } from "@outlayr/money/savings-goal";
 import type { RateTable } from "@outlayr/money/valuation";
 import { and, desc, eq, isNull } from "drizzle-orm";
 
@@ -12,7 +13,6 @@ import { displayOrder } from "@/domain/account-order";
 import { debtsOverview } from "@/domain/debts";
 import type { DebtsOverview } from "@/domain/debts";
 import type { PlottedCell } from "@/domain/goal-balance-series";
-import { isPayoffPlan } from "@/domain/savings-goal";
 import type { TransferLogRow } from "@/domain/transfer-log-rows";
 
 import { useOpenAccounts, useOverviewOf } from "./accounts";

@@ -25,6 +25,10 @@ const RulesPending = lazy(async () => {
     const pending = await import("./rules/rules-pending");
     return { default: pending.RulesPending };
 });
+const GoalsPending = lazy(async () => {
+    const pending = await import("./goals/goals-pending");
+    return { default: pending.GoalsPending };
+});
 const TransactionsPending = lazy(async () => {
     const pending = await import("./transactions/transactions-pending");
     return { default: pending.TransactionsPending };
@@ -49,6 +53,9 @@ function pendingFor(page: string | undefined) {
     }
     if (page === "rules") {
         return <RulesPending />;
+    }
+    if (page === "goals") {
+        return <GoalsPending />;
     }
     return page === "settings" ? <SettingsPending /> : <HomePending />;
 }

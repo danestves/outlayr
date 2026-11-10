@@ -1,9 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 
+import { goalProgress, goalRequiredLine } from "@outlayr/money/savings-goal";
 import { describe, expect, it } from "vite-plus/test";
-
-import { goalProgress, goalRequiredLine } from "./savings-goal";
 
 const inNewYork = (...args: (number | string)[]): string =>
     execFileSync(

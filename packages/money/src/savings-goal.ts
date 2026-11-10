@@ -1,6 +1,5 @@
-import { roundMoney } from "@outlayr/money/round";
-
-import { addLocalDays, daysBetween, startOfLocalDay } from "./local-day";
+import { addLocalDays, startOfLocalDay } from "./calendar";
+import { roundMoney } from "./round";
 
 interface GoalPace {
     monthsLeft: number;
@@ -163,6 +162,11 @@ export function goalRequiredLine(
         });
     }
     return points;
+}
+
+// Rounded, not divided: a span crossing a clock shift is not a whole number of 24-hour days.
+function daysBetween(fromMs: number, toMs: number): number {
+    return Math.round((toMs - fromMs) / MS_PER_DAY);
 }
 
 function round(value: number, decimals: number): number {
