@@ -91,6 +91,8 @@ export function goalViews(ledger: Ledger, rows: readonly AccountRow[]): GoalView
             const startDay = dayOf(ledger, goal.dateCreated);
             const targetDay = goal.targetDate === null ? null : dayOf(ledger, goal.targetDate);
             const saved = Math.max(0, account.exact ? account.value : account.balance);
+            const savedCurrency = account.exact ? ledger.currency : account.currency;
+            const targetCurrency = target.exact ? ledger.currency : goal.currency;
             const span =
                 comparable && targetDay !== null
                     ? {
@@ -107,13 +109,13 @@ export function goalViews(ledger: Ledger, rows: readonly AccountRow[]): GoalView
                     goal,
                     id: goal.localId,
                     name: goal.name,
-                    progress: goalProgress(saved, target.value, span, decimals),
+                    progress: goalProgress(savedCurrency === targetCurrency ? saved : 0, target.value, span, decimals),
                     saved,
-                    savedCurrency: account.exact ? ledger.currency : account.currency,
+                    savedCurrency,
                     start: Math.max(0, start.value),
                     startDay,
                     target: target.value,
-                    targetCurrency: target.exact ? ledger.currency : goal.currency,
+                    targetCurrency,
                     targetDay,
                 },
             ];

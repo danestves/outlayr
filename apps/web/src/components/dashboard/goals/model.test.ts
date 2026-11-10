@@ -54,13 +54,16 @@ const deposit = (localId: string, date: string, amount: number, income = true) =
     recurringType: 0,
 });
 
-function views(savingsGoals: Goal[], transactions: ReturnType<typeof deposit>[] = []) {
+function views(
+    savingsGoals: Goal[],
+    transactions: ReturnType<typeof deposit>[] = [],
+    account: { currency: string; initialBalance: number } = { currency: "USD", initialBalance: 1000 }
+) {
     const books = {
         accounts: [
             {
                 ...envelope("savings"),
-                currency: "USD",
-                initialBalance: 1000,
+                ...account,
                 initialBalanceDate: Date.parse("2025-12-01T12:00:00Z"),
                 initialBalanceUsd: 1000,
                 name: "Savings",
@@ -91,6 +94,11 @@ describe("goal views", () => {
             goal("payoff", { targetAmount: 0, targetAmountUsd: 0 }),
         ]).views;
         expect(found.map((view) => view.id)).toStrictEqual(["trip"]);
+    });
+
+    it("does not call a goal reached by comparing a balance with no rate against a target in another currency", () => {
+        const [view] = views([goal("trip")], [], { currency: "JPY", initialBalance: 500_000 }).views;
+        expect(view?.progress).toMatchObject({ fraction: 0, reached: false });
     });
 
     it("reads a goal that saved slower than the line from its start as behind", () => {
