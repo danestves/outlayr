@@ -89,6 +89,7 @@ export const ROOT_STACK: readonly { group: RootStackGroup; screens: readonly Roo
             { chrome: "titled", name: "settings/feature-lab", titleKey: "nav.settings.featureLab" },
             { chrome: "titled", name: "settings/integrations/bank", titleKey: "settings.wallet.bankSection" },
             { chrome: "titled", name: "settings/integrations/index", titleKey: "nav.settings.integrations" },
+            { chrome: "titled", name: "settings/integrations/messages", titleKey: "settings.wallet.messages" },
             { chrome: "titled", name: "settings/integrations/wallet", titleKey: "nav.settings.wallet" },
             { chrome: "titled", name: "settings/invite", titleKey: "referrals.title" },
             { chrome: "titled", name: "settings/licenses/index", titleKey: "settings.about.openSourceLicenses" },

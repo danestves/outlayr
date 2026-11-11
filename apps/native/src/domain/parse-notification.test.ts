@@ -114,6 +114,66 @@ describe("parseNotification", () => {
         expect(parseNotification("Declined\n$12.40 at STARBUCKS. Insufficient funds.")).toBeNull();
         expect(parseNotification("Compra rechazada por Bs. 1.250,00 en FARMATODO")).toBeNull();
         expect(parseNotification("Payment failed\nWe couldn't charge €9.99 for Netflix")).toBeNull();
+        expect(
+            parseNotification(
+                "BDV: operación pago de servicio movistar, por Bs. 500  no realizada. Por favor, intente de nuevo más tarde."
+            )
+        ).toBeNull();
+    });
+
+    it("reads Venezuelan bank notices in each bank's own number format", () => {
+        expect(
+            parseNotification(
+                "Recibiste un PagomovilBDV por Bs.5.953,10 del 0424-5550103 Ref: 000717000003 en fecha 27-03-26 hora: 22:25."
+            )
+        ).toStrictEqual({ amount: 5953.1, amountText: "Bs.5.953,10", income: true, merchant: null });
+        expect(
+            parseNotification(
+                "BNC Pago Movil Recibido Bs.250000,00 Telf.0412***9999 Dia:15/07/26-10:31 Ref:987654321 Llamar al 0500-2625000 si no realizo esta Operacion"
+            )
+        ).toStrictEqual({ amount: 250_000, amountText: "Bs.250000,00", income: true, merchant: null });
+        expect(
+            parseNotification(
+                "BBVA Provincial informa Pago Movil desde cuenta 5256 por Bs. 30,206.00. Si no la realizaste envia N al 77106 o llama al 0212-5550199 F2026/08/05H15:51:44"
+            )
+        ).toStrictEqual({ amount: 30_206, amountText: "Bs. 30,206.00", income: false, merchant: null });
+        expect(
+            parseNotification(
+                "Operacion en linea con tu Tarjeta Internacional #4325 por $.300,00 el 15-04-26 a las 14:04. Inf. 0500-6425283"
+            )
+        ).toStrictEqual({ amount: 300, amountText: "$.300,00", income: false, merchant: null });
+    });
+
+    it("names who sent the money when the bank puts the name before the amount", () => {
+        expect(
+            parseNotification(
+                "Transferencia de otros bancos recibida\nRecibiste una transferencia de otros bancos de JUAN CARLOS RODRIGUEZ DIAZ por Bs. 15.900,00 bajo el número de operación 68800010. Saldo disponible Bs. 15.900,63"
+            )
+        ).toStrictEqual({
+            amount: 15_900,
+            amountText: "Bs. 15.900,00",
+            income: true,
+            merchant: "JUAN CARLOS RODRIGUEZ DIAZ",
+        });
+        expect(
+            parseNotification(
+                "Has recibido un Pago Movil\nBANESCO REGISTRO: Pago recibido a traves de Pago Movil de LOPEZ M por Bs. 1900.0 el 31/08/2026; 15:43 REF 062400000018. Para mas inf. llama..."
+            )
+        ).toStrictEqual({ amount: 1900, amountText: "Bs. 1900.0", income: true, merchant: "LOPEZ M" });
+    });
+
+    it("names nobody from a date, a time or an operation number", () => {
+        expect(
+            parseNotification(
+                "Realizaste un PagomovilBDV por Bs. 150,30 al 0416-5550104, comisión Bs. 0,66 Ref: 000226000004 en fecha: 10-07-24 hora: 11:05"
+            )
+        ).toStrictEqual({ amount: 150.3, amountText: "Bs. 150,30", income: false, merchant: null });
+        expect(
+            parseNotification(
+                "Pago sin contacto realizado en punto de venta por Bs. 5.910,00, bajo el #2977, disp. 366.258,19 el 15-04-26 a las 17:46."
+            )
+        ).toStrictEqual({ amount: 5910, amountText: "Bs. 5.910,00", income: false, merchant: null });
+        expect(NOTIFICATION_PATTERNS.receivedFrom.exec(" bajo el numero de operacion 005700000011")).toBeNull();
     });
 
     it("reads money coming in as income, named by who sent it", () => {

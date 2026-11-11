@@ -11,6 +11,7 @@ import android.content.pm.ApplicationInfo
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.provider.Telephony
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import expo.modules.notifications.notifications.model.NotificationContent
@@ -41,6 +42,8 @@ internal object PurchaseListenerStore {
   private const val KEY_APPS = "apps"
   private const val KEY_PUSHED = "pushed"
   private const val KEY_SENDERS = "senders"
+  private const val KEY_SENDERS_OFF = "sendersOff"
+  private const val KEY_SENDERS_ON = "sendersOn"
   private const val KEY_SNAPSHOT = "snapshot"
   private const val PUSH_CHANNEL = "purchases"
   private const val PUSH_WINDOW_MS = 10 * 60 * 1000L
@@ -51,6 +54,7 @@ internal object PurchaseListenerStore {
   private const val WALLET = "com.google.android.apps.walletnfcrel"
   private val WHITESPACE = Regex("\\s+")
   private val SPACES = Regex("[\\s\\u00a0\\u202f]+")
+  private val SHORT_CODE = Regex("\\d{3,6}")
   private val DEFAULT_APPS = setOf(WALLET)
 
   private val lock = Any()
@@ -96,14 +100,53 @@ internal object PurchaseListenerStore {
     }
   }
 
-  fun senders(context: Context): List<Map<String, Any>> {
+  fun messagesApp(context: Context): String? = Telephony.Sms.getDefaultSmsPackage(context)
+
+  fun allowMessages(context: Context) {
+    val messages = messagesApp(context) ?: return
+    synchronized(lock) {
+      val preferences = prefs(context)
+      val apps = preferences.getStringSet(KEY_APPS, DEFAULT_APPS).orEmpty()
+      preferences.edit().putStringSet(KEY_APPS, apps + messages).apply()
+    }
+  }
+
+  fun setSender(context: Context, from: String, on: Boolean) {
+    val messages = messagesApp(context)
+    synchronized(lock) {
+      val preferences = prefs(context)
+      val apps = preferences.getStringSet(KEY_APPS, DEFAULT_APPS).orEmpty().toHashSet()
+      val turnedOn = preferences.getStringSet(KEY_SENDERS_ON, null).orEmpty().toHashSet()
+      val turnedOff = preferences.getStringSet(KEY_SENDERS_OFF, null).orEmpty().toHashSet()
+      if (on && messages != null && apps.add(messages)) {
+        turnedOff += readSenders(preferences.getString(KEY_SENDERS, null))
+          .mapNotNull { it.from }
+          .filter { it !in turnedOn }
+      }
+      (if (on) turnedOn else turnedOff).add(from)
+      (if (on) turnedOff else turnedOn).remove(from)
+      preferences.edit()
+        .putStringSet(KEY_APPS, apps)
+        .putStringSet(KEY_SENDERS_ON, turnedOn)
+        .putStringSet(KEY_SENDERS_OFF, turnedOff)
+        .apply()
+    }
+  }
+
+  fun senders(context: Context): List<Map<String, Any?>> {
+    val messages = messagesApp(context)
     return synchronized(lock) {
-      readSenders(prefs(context).getString(KEY_SENDERS, null)).map { sender ->
-        mapOf<String, Any>(
+      val preferences = prefs(context)
+      val known = readSenders(preferences.getString(KEY_SENDERS, null))
+        .filterNot { it.from == null && it.packageName == messages }
+      known.map { sender ->
+        mapOf(
           "packageName" to sender.packageName,
+          "from" to sender.from,
           "label" to sender.label,
           "text" to sender.text,
           "at" to sender.at.toDouble(),
+          "on" to allowed(preferences, sender.packageName, sender.from),
         )
       }
     }
@@ -117,12 +160,15 @@ internal object PurchaseListenerStore {
     if ((flags and Notification.FLAG_ONGOING_EVENT) != 0) return
     if ((flags and Notification.FLAG_FOREGROUND_SERVICE) != 0) return
     val extras = notification.extras ?: return
-    val body = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)
-      ?: extras.getCharSequence(Notification.EXTRA_TEXT)
-    val text = listOf(extras.getCharSequence(Notification.EXTRA_TITLE), body)
-      .map { it?.toString()?.trim().orEmpty() }
-      .filter { it.isNotEmpty() }
-      .joinToString("\n")
+    val title = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString()?.trim().orEmpty()
+    val body = (extras.getCharSequence(Notification.EXTRA_BIG_TEXT) ?: extras.getCharSequence(Notification.EXTRA_TEXT))
+      ?.toString()
+      ?.trim()
+      .orEmpty()
+    val messages = sbn.packageName == messagesApp(context)
+    if (messages && title.isEmpty()) return
+    val from = title.takeIf { messages }
+    val text = if (messages) body else listOf(title, body).filter { it.isNotEmpty() }.joinToString("\n")
     if (text.isEmpty()) return
     val label = label(context, sbn.packageName, extras)
     synchronized(lock) {
@@ -131,14 +177,14 @@ internal object PurchaseListenerStore {
       val money = current?.pattern("money")
       val matched = current != null && charge(current, text) != null
       if (matched) {
-        remember(preferences, sbn.packageName, label, text, sbn.postTime)
+        remember(preferences, Sender(sbn.packageName, from, label, text.take(SENDER_TEXT_CAP), sbn.postTime))
       }
-      val allowed = preferences.getStringSet(KEY_APPS, DEFAULT_APPS)?.contains(sbn.packageName) == true
-      if (!allowed || !(matched || money == null)) return
+      if (!allowed(preferences, sbn.packageName, from) || !(matched || money == null)) return
       val card = (if (sbn.packageName == WALLET) current?.group("cardUsed", text) else null)
         ?.replace(SPACES, " ")
         ?.trim()
         ?.takeIf { it.isNotEmpty() }
+        ?: from
         ?: label
       val id = UUID.randomUUID().toString()
       val key = dedupeKey(text)
@@ -209,10 +255,14 @@ internal object PurchaseListenerStore {
     val amountText = text.substring(start, end).trim()
     if (amountText.none { it in '1'..'9' }) return null
     val income = snapshot.found("incoming", text)
+    val before = text.substring(0, start)
     val tail = text.substring(end)
-    val named = snapshot.group(if (income) "receivedFrom" else "paidTo", tail)?.trim()?.takeIf { it.isNotEmpty() }
+    val sentBy = if (income) snapshot.group("sentBy", before) else null
+    val named = (sentBy ?: snapshot.group(if (income) "receivedFrom" else "paidTo", tail))
+      ?.trim()
+      ?.takeIf { it.isNotEmpty() }
     val raw = when {
-      named == null -> lineBefore(snapshot, text.substring(0, start))
+      named == null -> lineBefore(snapshot, before)
       snapshot.found("cardReference", named) -> snapshot.group("parenthesized", tail)
       else -> named
     }
@@ -336,7 +386,23 @@ internal object PurchaseListenerStore {
     return packageName
   }
 
-  private data class Sender(val packageName: String, val label: String, val text: String, val at: Long)
+  private data class Sender(
+    val packageName: String,
+    val from: String?,
+    val label: String,
+    val text: String,
+    val at: Long,
+  )
+
+  private fun allowed(preferences: SharedPreferences, packageName: String, from: String?): Boolean {
+    if (preferences.getStringSet(KEY_APPS, DEFAULT_APPS)?.contains(packageName) != true) return false
+    if (from == null) return true
+    if (preferences.getStringSet(KEY_SENDERS_ON, null)?.contains(from) == true) return true
+    if (preferences.getStringSet(KEY_SENDERS_OFF, null)?.contains(from) == true) return false
+    return onByDefault(from)
+  }
+
+  private fun onByDefault(from: String): Boolean = SHORT_CODE.matches(from)
 
   private fun readSenders(raw: String?): List<Sender> {
     if (raw.isNullOrEmpty()) return emptyList()
@@ -350,6 +416,7 @@ internal object PurchaseListenerStore {
           add(
             Sender(
               packageName,
+              item.optString("from").takeIf { it.isNotEmpty() },
               item.optString("label", packageName),
               item.optString("text"),
               item.optLong("at"),
@@ -362,28 +429,20 @@ internal object PurchaseListenerStore {
     }
   }
 
-  private fun remember(
-    preferences: SharedPreferences,
-    packageName: String,
-    label: String,
-    text: String,
-    at: Long,
-  ) {
+  private fun remember(preferences: SharedPreferences, latest: Sender) {
     val next = JSONArray()
-    val seen = mutableSetOf<String>()
-    fun add(name: String, appLabel: String, body: String, postedAt: Long) {
-      if (!seen.add(name) || next.length() >= SENDER_LIMIT) return
+    val senders = (listOf(latest) + readSenders(preferences.getString(KEY_SENDERS, null)))
+      .distinctBy { it.packageName to it.from }
+      .take(SENDER_LIMIT)
+    for (sender in senders) {
       next.put(
         JSONObject()
-          .put("packageName", name)
-          .put("label", appLabel)
-          .put("text", body.take(SENDER_TEXT_CAP))
-          .put("at", postedAt)
+          .put("packageName", sender.packageName)
+          .put("from", sender.from)
+          .put("label", sender.label)
+          .put("text", sender.text)
+          .put("at", sender.at)
       )
-    }
-    add(packageName, label, text, at)
-    for (sender in readSenders(preferences.getString(KEY_SENDERS, null))) {
-      add(sender.packageName, sender.label, sender.text, sender.at)
     }
     preferences.edit().putString(KEY_SENDERS, next.toString()).apply()
   }

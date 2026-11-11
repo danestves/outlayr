@@ -39,7 +39,7 @@ const AMBIGUOUS_UNIT = `(?:${AMBIGUOUS_RE})`;
 const NUMBER = String.raw`\d+(?:[.,]\d+)*`;
 const AMOUNT = String.raw`\d+(?:[.,]\d+)+`;
 const MONEY = new RegExp(
-    String.raw`${UNIT}\s?${NUMBER}|${NUMBER}\s?${UNIT}|${AMBIGUOUS_UNIT}\s?${AMOUNT}|${AMOUNT}\s?${AMBIGUOUS_UNIT}`,
+    String.raw`${UNIT}\s?${NUMBER}|${UNIT}\.\s?${AMOUNT}|${NUMBER}\s?${UNIT}|${AMBIGUOUS_UNIT}\s?${AMOUNT}|${AMOUNT}\s?${AMBIGUOUS_UNIT}`,
     "u"
 );
 const DIGITS = new RegExp(NUMBER, "u");
@@ -49,7 +49,7 @@ const AFTER_NUMBER = /^\d|\s?\d/;
 
 /* oxlint-disable prefer-regex-literals -- LogNotificationIntent reads these sources with ICU, and Babel rewrites a u-flag literal into surrogate classes ICU matches differently */
 const DECLINED = new RegExp(
-    String.raw`\b(?:declined|denied|failed|reverted|unsuccessful|insufficient funds|rechazad[ao]|denegad[ao]|fallid[ao]|revertid[ao]|no aprobad[ao]|fondos insuficientes)\b`,
+    String.raw`\b(?:declined|denied|failed|reverted|unsuccessful|insufficient funds|rechazad[ao]|denegad[ao]|fallid[ao]|revertid[ao]|no aprobad[ao]|no realizad[ao]|fondos insuficientes)\b`,
     "iu"
 );
 const INCOMING = new RegExp(
@@ -75,8 +75,9 @@ const BALANCE_BEFORE = new RegExp(
 );
 
 const STOP = String.raw`(?=\s+(?:with|using|via|on|for|con|usando|por|el|la|desde|mediante)\b|[,.;\n]|$)`;
-const PAID_TO = new RegExp(String.raw`\b(?:at|in|en|to|a|de|@)\s+(.+?)${STOP}`, "iu");
-const RECEIVED_FROM = new RegExp(String.raw`\b(?:from|de|por parte de)\s+(.+?)${STOP}`, "iu");
+const PAID_TO = new RegExp(String.raw`\b(?:at|in|en|to|a|de|@)\s+(?!las?\s+\d|fecha\b)(.+?)${STOP}`, "iu");
+const RECEIVED_FROM = new RegExp(String.raw`\b(?:from|de|por parte de)\s+(?!operaci[oó]n\b)(.+?)${STOP}`, "iu");
+const SENT_BY = new RegExp(String.raw`\bde\s+(\p{Lu}[\p{Lu} .'-]*\p{Lu})\s+por\s*$`, "u");
 const YOUR_CHARGE = new RegExp(
     String.raw`\byour[^\S\n]+([^\n]+?)[^\S\n]+(?:transaction|purchase|payment|charge|order)\b`,
     "iu"
@@ -112,6 +113,7 @@ export const NOTIFICATION_PATTERNS = {
     promoAfter: PROMO_AFTER,
     promoBefore: PROMO_BEFORE,
     receivedFrom: RECEIVED_FROM,
+    sentBy: SENT_BY,
 };
 
 // "Get $10 off your next order" and "You have $1,000 available credit" are the shapes a purchase never takes, so the
@@ -153,11 +155,11 @@ export function parseNotification(text: string): ParsedNotification | null {
         return null;
     }
     const income = INCOMING.test(text);
+    const head = text.slice(0, match.index);
     const tail = text.slice(match.index + match[0].length);
-    const named = (income ? RECEIVED_FROM : PAID_TO).exec(tail)?.[1]?.trim();
-    const merchant = cleanMerchant(
-        named ? payee(named, tail) : (chargeNamed(text.slice(0, match.index)) ?? lineBefore(text, match.index))
-    );
+    const sender = income ? SENT_BY.exec(head)?.[1] : undefined;
+    const named = sender ?? (income ? RECEIVED_FROM : PAID_TO).exec(tail)?.[1]?.trim();
+    const merchant = cleanMerchant(named ? payee(named, tail) : (chargeNamed(head) ?? lineBefore(text, match.index)));
     return { amount, amountText, income, merchant };
 }
 

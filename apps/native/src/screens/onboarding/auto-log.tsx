@@ -5,10 +5,26 @@ import { AutoLogSourceRow } from "@/components/auto-log-source-row";
 import { FirstRun } from "@/components/first-run";
 import { MonoLabel } from "@/components/mono-label";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useAutoLogSources } from "@/hooks/use-auto-log-sources";
+import { useGlobalCurrency } from "@/data/app-meta";
+import { useAutoLogSources, useBankTexts } from "@/hooks/use-auto-log-sources";
+import { useRegionCode } from "@/hooks/use-region-code";
 import { useTranslation } from "@/i18n/context";
 
+import { OnboardingBankTexts } from "./bank-texts";
+
 export function OnboardingAutoLog() {
+    const db = useDatabase();
+    const region = useRegionCode();
+    const currency = useGlobalCurrency(db);
+    const bankTexts = useBankTexts(db);
+
+    if (bankTexts && (region === "VE" || currency === "VES")) {
+        return <OnboardingBankTexts bankTexts={bankTexts} />;
+    }
+    return <AutoLogSources />;
+}
+
+function AutoLogSources() {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
