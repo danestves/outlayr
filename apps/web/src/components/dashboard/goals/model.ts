@@ -25,7 +25,7 @@ export type Goal = LedgerBooks["savingsGoals"][number];
 
 const DAYS_PER_MONTH = 30.44;
 const CHART_SAMPLES = 120;
-const MONTH_BARS = 12;
+export const MONTH_BARS = 12;
 export const ROAD_MONTHS = 24;
 
 const dayOf = (ledger: Pick<Ledger, "offsetAt">, at: number) => isoDay(at, ledger.offsetAt(at));

@@ -27,7 +27,17 @@ import { AccountTile } from "@/components/ledger/tiles";
 
 import { useGoalFlows } from "./flow-context";
 import { GoalFlowsProvider } from "./goal-flows";
-import { averageAdded, contributions, goalChart, goalViews, monthlyAdded, projectedDay, standingOf } from "./model";
+import {
+    MONTH_BARS,
+    addMonths,
+    averageAdded,
+    contributions,
+    goalChart,
+    goalViews,
+    monthlyAdded,
+    projectedDay,
+    standingOf,
+} from "./model";
 import type { GoalChart, GoalView, MonthAdded } from "./model";
 import { PERCENT, ReachedBadge, Terrain, percentOf, useGoalMoney } from "./parts";
 
@@ -495,6 +505,14 @@ function MonthlyCard({ months, view }: { months: readonly MonthAdded[]; view: Go
     const short = useMonthShort();
     const top = Math.max(1, ...months.map((month) => month.added));
     const color = view.progress.reached ? "bg-app-income" : "bg-app-tint";
+    const lead = Math.max(0, MONTH_BARS - months.length);
+    const slots = [
+        ...Array.from({ length: lead }, (_, index) => ({
+            bar: null,
+            month: addMonths(months[0]?.month ?? "", index - lead),
+        })),
+        ...months.map((bar) => ({ bar, month: bar.month })),
+    ];
     return (
         <Frame className="min-h-[300px] min-w-0 flex-1">
             <Frame.Header>
@@ -502,21 +520,25 @@ function MonthlyCard({ months, view }: { months: readonly MonthAdded[]; view: Go
             </Frame.Header>
             <Frame.Panel className="flex flex-1 flex-col">
                 <div className="flex min-h-[200px] flex-1 items-end gap-[6px] px-4 pt-4">
-                    {months.map((month) => (
-                        <span
-                            className="flex h-full min-w-0 flex-1 flex-col justify-end"
-                            key={month.month}
-                            title={format(month.added, view.account.currency)}
-                        >
-                            <i
-                                className={`block min-h-0.5 w-full rounded-t-[3px] ${color} ${month.current ? "" : "opacity-40"}`}
-                                style={{ height: `${(month.added / top) * PERCENT}%` }}
-                            />
-                        </span>
-                    ))}
+                    {slots.map(({ bar, month }) =>
+                        bar ? (
+                            <span
+                                className="flex h-full min-w-0 flex-1 flex-col justify-end"
+                                key={month}
+                                title={format(bar.added, view.account.currency)}
+                            >
+                                <i
+                                    className={`block min-h-0.5 w-full rounded-t-[3px] ${color} ${bar.current ? "" : "opacity-40"}`}
+                                    style={{ height: `${(bar.added / top) * PERCENT}%` }}
+                                />
+                            </span>
+                        ) : (
+                            <span className="min-w-0 flex-1" key={month} />
+                        )
+                    )}
                 </div>
                 <div className="flex gap-[6px] px-4 pt-2 pb-3">
-                    {months.map((month) => (
+                    {slots.map((month) => (
                         <span
                             className="dash-figure text-muted-foreground min-w-0 flex-1 text-center text-[11px]"
                             key={month.month}

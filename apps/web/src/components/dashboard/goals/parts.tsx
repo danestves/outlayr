@@ -150,11 +150,11 @@ export function GoalMenu({ className = "", view }: { className?: string; view: G
 export function Terrain({ flat = false }: { flat?: boolean }) {
     const name = flat ? "terrain-flat" : "terrain";
     const height = flat ? 180 : 874;
-    const image = "pointer-events-none absolute top-0 left-0 -z-10 h-auto max-w-none select-none";
+    const image = "pointer-events-none absolute top-0 left-1/2 -z-10 h-auto max-w-none -translate-x-1/2 select-none";
     return (
         <>
-            <img alt="" className={`light-only ${image}`} height={height} src={`/goals/${name}.svg`} width={1158} />
-            <img alt="" className={`dark-only ${image}`} height={height} src={`/goals/${name}-dark.svg`} width={1158} />
+            <img alt="" className={`light-only ${image}`} height={height} src={`/goals/${name}.svg`} width={2202} />
+            <img alt="" className={`dark-only ${image}`} height={height} src={`/goals/${name}-dark.svg`} width={2202} />
         </>
     );
 }
