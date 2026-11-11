@@ -6,11 +6,15 @@ import { useRouteContext } from "@tanstack/react-router";
 
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 
-const PHOTO_REMINT_MS = 50 * 60_000;
+export const PHOTO_REMINT_MS = 50 * 60_000;
 const MIN_REMINT_WAIT_MS = 60_000;
 const PHOTO_URLS = "photoUrls";
 
 export const NO_PHOTOS: PhotoUrls = new Map();
+
+export const isPhotoKey = (queryKey: readonly unknown[]) => queryKey[0] === PHOTO_URLS;
+
+export const photoMintUsable = (mintedAt: number, now: number) => now - mintedAt < PHOTO_REMINT_MS;
 
 export function photoKeys({ balances, upcoming }: Overview) {
     const looks = [
@@ -23,6 +27,7 @@ export function photoKeys({ balances, upcoming }: Overview) {
 export const photoUrlsQuery = (convex: ConvexQueryClient | undefined, keys: readonly string[]) =>
     queryOptions({
         enabled: Boolean(convex) && keys.length > 0,
+        gcTime: PHOTO_REMINT_MS,
         queryFn: async () => {
             if (!convex) {
                 return [];
@@ -48,7 +53,7 @@ export function mintedPhotos(client: QueryClient, keys: readonly string[]): Mint
 }
 
 export function seedPhotos(client: QueryClient, photos: MintedPhotos | undefined) {
-    if (photos && Date.now() - photos.mintedAt < PHOTO_REMINT_MS) {
+    if (photos && photoMintUsable(photos.mintedAt, Date.now())) {
         client.setQueryData(photoUrlsQuery(undefined, photos.keys).queryKey, [...photos.minted], {
             updatedAt: photos.mintedAt,
         });

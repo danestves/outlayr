@@ -9,9 +9,10 @@ import { Kpi } from "panelui-web/kpi";
 import { useToast } from "panelui-web/toast";
 import { useSyncExternalStore } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
+import { Skeleton } from "skullet/react";
 
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { authClient } from "@/lib/auth-client";
+import { useProfile } from "@/lib/account-state";
 import { useLedgerBooks } from "@/lib/ledger-db";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import { INITIAL_SYNC, readSync, subscribeSync } from "@/lib/sync-status";
@@ -36,7 +37,7 @@ export function Sync() {
     const { locale } = useLocale();
     const { clockTime } = useDisplayFormat();
     const committer = useLedgerCommitter();
-    const { data: session } = authClient.useSession();
+    const user = useProfile();
     const toast = useToast();
     const { transactions } = useLedgerBooks();
     const { lastSyncedAt, peak, status, waiting } = useSyncExternalStore(subscribeSync, readSync, serverSync);
@@ -69,7 +70,6 @@ export function Sync() {
         upToDate: { badge: copy.on, title: copy.upToDate, variant: "success" },
     } as const;
     const { badge, title, variant } = statusView[status];
-    const user = session?.user;
     const showProgress = status === "syncing" && peak > 0;
 
     return (
@@ -139,15 +139,17 @@ export function Sync() {
                                     </span>
                                 </div>
                             ) : null}
-                            <Row
-                                hint={<span className="ph-no-capture">{user?.email}</span>}
-                                label={<span className="ph-no-capture">{user?.name}</span>}
-                                leading={<Avatar name={user?.name ?? ""} size="sm" />}
-                            >
-                                <Button render={<Link to="/app/settings/account" />} size="sm" variant="outline">
-                                    {copy.account}
-                                </Button>
-                            </Row>
+                            <Skeleton loading={user === undefined}>
+                                <Row
+                                    hint={<span className="ph-no-capture">{user?.email}</span>}
+                                    label={<span className="ph-no-capture">{user?.name}</span>}
+                                    leading={<Avatar name={user?.name ?? ""} size="sm" />}
+                                >
+                                    <Button render={<Link to="/app/settings/account" />} size="sm" variant="outline">
+                                        {copy.account}
+                                    </Button>
+                                </Row>
+                            </Skeleton>
                         </SettingsCard>
                     </div>
                 </div>

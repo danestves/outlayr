@@ -523,6 +523,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "After your first entry, the app and this website can ask where you heard about Outlayr. Answering is optional, and your answer goes to PostHog with the rest of the analytics.",
                     label: "Where you heard about us",
                 },
+                {
+                    detail: "The copy the website keeps in your browser now also holds what your settings show, such as your name, email, plan, and signed-in devices, so those pages load at once. Signing out deletes it.",
+                    label: "What the website copy holds",
+                },
             ],
             es: [
                 {
@@ -552,6 +556,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Después de tu primera entrada, la app y este sitio web pueden preguntarte dónde supiste de Outlayr. Responder es opcional, y tu respuesta va a PostHog con el resto de las analíticas.",
                     label: "Dónde supiste de nosotros",
+                },
+                {
+                    detail: "La copia que el sitio web guarda en tu navegador ahora también incluye lo que muestra tu Configuración, como tu nombre, correo, plan y dispositivos con sesión iniciada, para que esas páginas carguen al instante. Al cerrar sesión se borra.",
+                    label: "Qué guarda la copia del sitio web",
                 },
             ],
             fr: [
@@ -583,6 +591,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Après votre première opération, l'app et ce site web peuvent vous demander comment vous avez connu Outlayr. Répondre est facultatif, et votre réponse est envoyée à PostHog avec le reste des analyses.",
                     label: "Comment vous nous avez connus",
                 },
+                {
+                    detail: "La copie que le site web garde dans votre navigateur contient désormais aussi ce qu'affichent vos Réglages, comme votre nom, votre e-mail, votre formule et les appareils connectés, pour que ces pages se chargent tout de suite. Se déconnecter la supprime.",
+                    label: "Ce que contient la copie du site web",
+                },
             ],
             pt: [
                 {
@@ -612,6 +624,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Depois do seu primeiro lançamento, o app e este site podem perguntar onde você conheceu o Outlayr. Responder é opcional, e sua resposta vai para o PostHog com o resto das análises.",
                     label: "Onde você nos conheceu",
+                },
+                {
+                    detail: "A cópia que o site guarda no seu navegador agora também inclui o que os seus Ajustes mostram, como seu nome, e-mail, plano e dispositivos conectados, para que essas páginas carreguem na hora. Sair da conta apaga a cópia.",
+                    label: "O que a cópia do site guarda",
                 },
             ],
         },

@@ -1,4 +1,3 @@
-import { convexQuery } from "@convex-dev/react-query";
 import AppleIcon from "@hugeicons/core-free-icons/AppleIcon";
 import CheckmarkBadge01Icon from "@hugeicons/core-free-icons/CheckmarkBadge01Icon";
 import ComputerIcon from "@hugeicons/core-free-icons/ComputerIcon";
@@ -9,7 +8,6 @@ import SmartPhone01Icon from "@hugeicons/core-free-icons/SmartPhone01Icon";
 import SquareLock02Icon from "@hugeicons/core-free-icons/SquareLock02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
-import { api } from "@outlayr/backend/convex/_generated/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Alert } from "panelui-web/alert";
@@ -25,9 +23,11 @@ import { useToast } from "panelui-web/toast";
 import { useId, useState } from "react";
 import type { ComponentProps, FormEvent, ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
+import { Skeleton } from "skullet/react";
 
 import { signOut } from "@/components/dashboard/shell/account-menu";
 import { convexDeletionSteps, deletionProvider, runDeletion, storedDeletion } from "@/lib/account-deletion";
+import { accountsQuery, limitsQuery, planQuery, sessionsQuery, useProfile } from "@/lib/account-state";
 import { authClient } from "@/lib/auth-client";
 import { convexClient } from "@/lib/convex";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
@@ -35,8 +35,7 @@ import { sessionDevice } from "@/lib/session-device";
 
 import { Row, SectionHead, SettingsCard } from "./parts";
 
-const ACCOUNTS_KEY = ["auth", "accounts"];
-const SESSIONS_KEY = ["auth", "sessions"];
+const SAMPLE_SESSIONS = [{ id: "sample", updatedAt: 0, userAgent: null }];
 const LINK_RETURN = "/app/settings/account";
 const MIN_PASSWORD = 8;
 
@@ -48,24 +47,6 @@ async function succeed(call: AuthResult) {
         throw new Error("Auth request refused");
     }
 }
-
-const useAccounts = () =>
-    useQuery({
-        queryFn: async () => {
-            const { data } = await authClient.listAccounts();
-            return data ?? [];
-        },
-        queryKey: ACCOUNTS_KEY,
-    });
-
-const useSessions = () =>
-    useQuery({
-        queryFn: async () => {
-            const { data } = await authClient.listSessions();
-            return data ?? [];
-        },
-        queryKey: SESSIONS_KEY,
-    });
 
 function useDateText() {
     const { locale } = useLocale();
@@ -321,59 +302,59 @@ export function Tile({ children }: { children: ReactNode }) {
 
 function Profile({ onOpen }: { onOpen: (dialog: OpenDialog) => void }) {
     const { account } = useIntlayer("dashboard-settings");
-    const { data: session } = authClient.useSession();
-    const { data: limits } = useQuery(convexQuery(api.limits.mine, {}));
-    const user = session?.user;
+    const user = useProfile();
+    const { data: limits } = useQuery(limitsQuery);
     const dateText = useDateText();
-    const { data: plan } = useQuery({
-        queryFn: () => convexClient().action(api.billing.plan, {}),
-        queryKey: ["billing", "plan"],
-        retry: false,
-    });
+    const plan = useQuery(planQuery);
     const tier = limits?.pro ? account.pro : account.free;
-    const renews = plan?.expiresAtMs && plan.state === "renews" ? dateText(plan.expiresAtMs) : null;
+    const tierKnown = Boolean(limits) && !(limits?.pro && plan.isPending);
+    const renews = plan.data?.expiresAtMs && plan.data.state === "renews" ? dateText(plan.data.expiresAtMs) : null;
     return (
         <SettingsCard title={account.profile}>
-            <Row
-                hint={user?.name}
-                label={account.name}
-                leading={<Avatar name={user?.name ?? ""} size="sm" src={user?.image ?? undefined} />}
-            >
-                <Button onClick={() => onOpen("name")} size="sm" variant="outline">
-                    {account.edit}
-                </Button>
-            </Row>
-            <Row
-                hint={<span className="ph-no-capture break-all">{user?.email}</span>}
-                label={account.email}
-                leading={
-                    <Tile>
-                        <HugeiconsIcon icon={Mail01Icon} size={16} />
-                    </Tile>
-                }
-            >
-                {user?.emailVerified ? (
-                    <Badge dot variant="success">
-                        {account.verified}
-                    </Badge>
-                ) : null}
-                <Button onClick={() => onOpen("email")} size="sm" variant="outline">
-                    {account.change}
-                </Button>
-            </Row>
-            <Row
-                hint={renews ? account.renews({ date: renews }) : tier}
-                label={account.plan}
-                leading={
-                    <Tile>
-                        <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} />
-                    </Tile>
-                }
-            >
-                <Button render={<Link to="/app/settings/usage" />} size="sm" variant="outline">
-                    {account.usage}
-                </Button>
-            </Row>
+            <Skeleton loading={user === undefined}>
+                <Row
+                    hint={<span>{user?.name}</span>}
+                    label={account.name}
+                    leading={<Avatar name={user?.name ?? ""} size="sm" src={user?.image ?? undefined} />}
+                >
+                    <Button onClick={() => onOpen("name")} size="sm" variant="outline">
+                        {account.edit}
+                    </Button>
+                </Row>
+                <Row
+                    hint={<span className="ph-no-capture break-all">{user?.email}</span>}
+                    label={account.email}
+                    leading={
+                        <Tile>
+                            <HugeiconsIcon icon={Mail01Icon} size={16} />
+                        </Tile>
+                    }
+                >
+                    {user?.emailVerified ? (
+                        <Badge dot variant="success">
+                            {account.verified}
+                        </Badge>
+                    ) : null}
+                    <Button onClick={() => onOpen("email")} size="sm" variant="outline">
+                        {account.change}
+                    </Button>
+                </Row>
+            </Skeleton>
+            <Skeleton className="border-border border-t" loading={!tierKnown}>
+                <Row
+                    hint={renews ? account.renews({ date: renews }) : tier}
+                    label={account.plan}
+                    leading={
+                        <Tile>
+                            <HugeiconsIcon icon={CheckmarkBadge01Icon} size={16} />
+                        </Tile>
+                    }
+                >
+                    <Button render={<Link to="/app/settings/usage" />} size="sm" variant="outline">
+                        {account.usage}
+                    </Button>
+                </Row>
+            </Skeleton>
         </SettingsCard>
     );
 }
@@ -388,7 +369,7 @@ function ProviderRow({
     icon: IconSvgElement;
     label: string;
     lastMethod: boolean;
-    linkedAt: Date | string | undefined;
+    linkedAt: number | undefined;
     provider: "apple" | "google";
 }) {
     const { account } = useIntlayer("dashboard-settings");
@@ -423,7 +404,7 @@ function ProviderRow({
                                 onClick={async () => {
                                     try {
                                         await succeed(authClient.unlinkAccount({ providerId: provider }));
-                                        await client.invalidateQueries({ queryKey: ACCOUNTS_KEY });
+                                        await client.invalidateQueries({ queryKey: accountsQuery.queryKey });
                                     } catch {
                                         toast.add({ title: account.failed.value, type: "destructive" });
                                     }
@@ -455,47 +436,54 @@ function ProviderRow({
 
 function Methods({ onOpen }: { onOpen: (dialog: OpenDialog) => void }) {
     const { account } = useIntlayer("dashboard-settings");
-    const { data: accounts = [] } = useAccounts();
-    const linkedAt = (provider: string) => accounts.find((item) => item.providerId === provider)?.createdAt;
+    const { data } = useQuery(accountsQuery);
+    const accounts = data ?? [];
+    const linkedAt = (provider: string) => accounts.find((item) => item.providerId === provider)?.linkedAt;
     const signIns = accounts.filter((item) => item.providerId !== "notion");
     const hasPassword = linkedAt("credential") !== undefined;
     return (
-        <SettingsCard
-            action={
-                <span className="text-muted-foreground font-mono text-[13px]">
-                    {account.of({ count: signIns.length, total: 3 })}
-                </span>
-            }
-            title={account.methods}
-        >
-            <ProviderRow
-                icon={AppleIcon}
-                label="Apple"
-                lastMethod={signIns.length === 1}
-                linkedAt={linkedAt("apple")}
-                provider="apple"
-            />
-            <ProviderRow
-                icon={GoogleIcon}
-                label="Google"
-                lastMethod={signIns.length === 1}
-                linkedAt={linkedAt("google")}
-                provider="google"
-            />
-            <Row
-                hint={hasPassword ? account.passwordSet : account.passwordNone}
-                label={account.password}
-                leading={
-                    <Tile>
-                        <HugeiconsIcon icon={SquareLock02Icon} size={16} />
-                    </Tile>
+        <Skeleton loading={data === undefined}>
+            <SettingsCard
+                action={
+                    <span className="text-muted-foreground font-mono text-[13px]">
+                        {account.of({ count: signIns.length, total: 3 })}
+                    </span>
                 }
+                title={account.methods}
             >
-                <Button onClick={() => onOpen(hasPassword ? "password" : "addPassword")} size="sm" variant="outline">
-                    {hasPassword ? account.change : account.add}
-                </Button>
-            </Row>
-        </SettingsCard>
+                <ProviderRow
+                    icon={AppleIcon}
+                    label="Apple"
+                    lastMethod={signIns.length === 1}
+                    linkedAt={linkedAt("apple")}
+                    provider="apple"
+                />
+                <ProviderRow
+                    icon={GoogleIcon}
+                    label="Google"
+                    lastMethod={signIns.length === 1}
+                    linkedAt={linkedAt("google")}
+                    provider="google"
+                />
+                <Row
+                    hint={hasPassword ? account.passwordSet : account.passwordNone}
+                    label={account.password}
+                    leading={
+                        <Tile>
+                            <HugeiconsIcon icon={SquareLock02Icon} size={16} />
+                        </Tile>
+                    }
+                >
+                    <Button
+                        onClick={() => onOpen(hasPassword ? "password" : "addPassword")}
+                        size="sm"
+                        variant="outline"
+                    >
+                        {hasPassword ? account.change : account.add}
+                    </Button>
+                </Row>
+            </SettingsCard>
+        </Skeleton>
     );
 }
 
@@ -510,18 +498,26 @@ function deviceLabel(userAgent: string | null | undefined, copy: { app: string; 
     return copy.unknownDevice;
 }
 
+async function revokeSession(id: string) {
+    const listed = await authClient.listSessions();
+    const token = listed.data?.find((item) => item.id === id)?.token;
+    return token === undefined ? listed : authClient.revokeSession({ token });
+}
+
 function Sessions() {
     const { account } = useIntlayer("dashboard-settings");
-    const { data: current } = authClient.useSession();
-    const { data: sessions = [] } = useSessions();
+    const current = useProfile()?.sessionId;
+    const { data } = useQuery(sessionsQuery);
     const client = useQueryClient();
     const toast = useToast();
     const dateText = useDateText();
-    const others = sessions.filter((item) => item.token !== current?.session.token);
+    const loading = data === undefined || current === undefined;
+    const sessions = data ?? SAMPLE_SESSIONS;
+    const others = loading ? [] : sessions.filter((item) => item.id !== current);
     const revoked = async (call: AuthResult) => {
         try {
             await succeed(call);
-            await client.invalidateQueries({ queryKey: SESSIONS_KEY });
+            await client.invalidateQueries({ queryKey: sessionsQuery.queryKey });
         } catch {
             toast.add({ title: account.failed.value, type: "destructive" });
         }
@@ -532,73 +528,79 @@ function Sessions() {
         unknownDevice: account.unknownDevice.value,
     };
     return (
-        <SettingsCard
-            action={
-                <span className="text-muted-foreground font-mono text-[13px]">
-                    {sessions.length} {account.active}
-                </span>
-            }
-            footer={
-                others.length > 0 ? (
-                    <div className="flex items-center justify-between gap-3 max-sm:flex-wrap">
-                        <span className="text-muted-foreground text-[13px]">{account.ledgerStays}</span>
-                        <Button onClick={() => revoked(authClient.revokeOtherSessions())} size="sm" variant="outline">
-                            {account.signOutOthers}
-                        </Button>
-                    </div>
-                ) : undefined
-            }
-            title={account.sessions}
-        >
-            <Table framed aria-label={account.sessions.value} maxHeight="none">
-                <Table.Header className="in-data-[sticky]:bg-card">
-                    <Table.Row>
-                        <Table.Head>{account.device}</Table.Head>
-                        <Table.Head>{account.lastActive}</Table.Head>
-                        <Table.Head />
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {sessions.map((item) => {
-                        const isCurrent = item.token === current?.session.token;
-                        const { browser } = sessionDevice(item.userAgent ?? "");
-                        const Icon = browser ? ComputerIcon : SmartPhone01Icon;
-                        return (
-                            <Table.Row key={item.id}>
-                                <Table.Cell>
-                                    <span className="flex min-w-0 items-center gap-2.5 font-medium">
-                                        <Tile>
-                                            <HugeiconsIcon icon={Icon} size={16} />
-                                        </Tile>
-                                        <span className="truncate">{deviceLabel(item.userAgent, copy)}</span>
-                                    </span>
-                                </Table.Cell>
-                                <Table.Cell className="text-muted-foreground whitespace-nowrap">
-                                    {isCurrent ? (
-                                        <Badge dot variant="success">
-                                            {account.thisBrowser}
-                                        </Badge>
-                                    ) : (
-                                        dateText(item.updatedAt)
-                                    )}
-                                </Table.Cell>
-                                <Table.Cell align="end">
-                                    {isCurrent ? null : (
-                                        <Button
-                                            onClick={() => revoked(authClient.revokeSession({ token: item.token }))}
-                                            size="sm"
-                                            variant="outline"
-                                        >
-                                            {account.signOut}
-                                        </Button>
-                                    )}
-                                </Table.Cell>
-                            </Table.Row>
-                        );
-                    })}
-                </Table.Body>
-            </Table>
-        </SettingsCard>
+        <Skeleton loading={loading}>
+            <SettingsCard
+                action={
+                    <span className="text-muted-foreground font-mono text-[13px]">
+                        {sessions.length} {account.active}
+                    </span>
+                }
+                footer={
+                    others.length > 0 ? (
+                        <div className="flex items-center justify-between gap-3 max-sm:flex-wrap">
+                            <span className="text-muted-foreground text-[13px]">{account.ledgerStays}</span>
+                            <Button
+                                onClick={() => revoked(authClient.revokeOtherSessions())}
+                                size="sm"
+                                variant="outline"
+                            >
+                                {account.signOutOthers}
+                            </Button>
+                        </div>
+                    ) : undefined
+                }
+                title={account.sessions}
+            >
+                <Table framed aria-label={account.sessions.value} maxHeight="none">
+                    <Table.Header className="in-data-[sticky]:bg-card">
+                        <Table.Row>
+                            <Table.Head>{account.device}</Table.Head>
+                            <Table.Head>{account.lastActive}</Table.Head>
+                            <Table.Head />
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {sessions.map((item) => {
+                            const isCurrent = loading || item.id === current;
+                            const { browser } = sessionDevice(item.userAgent ?? "");
+                            const Icon = browser ? ComputerIcon : SmartPhone01Icon;
+                            return (
+                                <Table.Row key={item.id}>
+                                    <Table.Cell>
+                                        <span className="flex min-w-0 items-center gap-2.5 font-medium">
+                                            <Tile>
+                                                <HugeiconsIcon icon={Icon} size={16} />
+                                            </Tile>
+                                            <span className="truncate">{deviceLabel(item.userAgent, copy)}</span>
+                                        </span>
+                                    </Table.Cell>
+                                    <Table.Cell className="text-muted-foreground whitespace-nowrap">
+                                        {isCurrent ? (
+                                            <Badge dot variant="success">
+                                                {account.thisBrowser}
+                                            </Badge>
+                                        ) : (
+                                            dateText(item.updatedAt)
+                                        )}
+                                    </Table.Cell>
+                                    <Table.Cell align="end">
+                                        {isCurrent ? null : (
+                                            <Button
+                                                onClick={() => revoked(revokeSession(item.id))}
+                                                size="sm"
+                                                variant="outline"
+                                            >
+                                                {account.signOut}
+                                            </Button>
+                                        )}
+                                    </Table.Cell>
+                                </Table.Row>
+                            );
+                        })}
+                    </Table.Body>
+                </Table>
+            </SettingsCard>
+        </Skeleton>
     );
 }
 
@@ -611,10 +613,9 @@ async function revokeApple(resumeSecret: string) {
 
 function DeleteCard() {
     const { account } = useIntlayer("dashboard-settings");
-    const { data: accounts } = useAccounts();
+    const { data: accounts } = useQuery(accountsQuery);
     const toast = useToast();
-    const { data: session } = authClient.useSession();
-    const userId = session?.user.id;
+    const userId = useProfile()?.id;
     const [, noteFailure] = useState(0);
     const resumable = userId !== undefined && storedDeletion(userId) !== null;
     const remove = async () => {
@@ -663,13 +664,13 @@ function DeleteCard() {
 
 export function Account() {
     const { account, sections } = useIntlayer("dashboard-settings");
-    const { data: session } = authClient.useSession();
+    const profile = useProfile();
     const [open, setOpen] = useState<OpenDialog>(null);
     const close = () => setOpen(null);
     const client = useQueryClient();
     const closeRefreshing = () => {
         close();
-        client.invalidateQueries({ queryKey: ACCOUNTS_KEY });
+        client.invalidateQueries({ queryKey: accountsQuery.queryKey });
     };
     return (
         <>
@@ -693,14 +694,14 @@ export function Account() {
                 </div>
             </div>
             <FormShell onClose={close} open={open === "name"}>
-                <NameBody name={session?.user.name ?? ""} onClose={close} />
+                <NameBody name={profile?.name ?? ""} onClose={close} />
             </FormShell>
             <EmailDialog onClose={close} open={open === "email"} />
             <FormShell onClose={closeRefreshing} open={open === "password"}>
                 <ChangePasswordBody onClose={closeRefreshing} />
             </FormShell>
             <FormShell onClose={close} open={open === "addPassword"}>
-                <AddPasswordBody email={session?.user.email ?? ""} />
+                <AddPasswordBody email={profile?.email ?? ""} />
             </FormShell>
         </>
     );

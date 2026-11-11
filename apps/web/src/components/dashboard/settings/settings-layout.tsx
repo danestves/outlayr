@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useLocation } from "@tanstack/react-router";
 import { Toast } from "panelui-web/toast";
 import type { ReactNode } from "react";
@@ -17,6 +18,7 @@ import { Email } from "./email";
 import { Invite } from "./invite";
 import { SettingsNav } from "./nav";
 import { Notifications } from "./notifications";
+import { Plan } from "./plan";
 import { Preferences } from "./preferences";
 import { Sync } from "./sync";
 import { Time } from "./time";
@@ -54,9 +56,12 @@ const SECTIONS = {
     time: Time,
     email: Email,
     notifications: Notifications,
+    plan: Plan,
     sync: Sync,
     usage: Usage,
 } as const;
+
+const unanswered = new QueryClient({ defaultOptions: { queries: { enabled: false } } });
 
 const isSection = (name: string | undefined): name is keyof typeof SECTIONS => name !== undefined && name in SECTIONS;
 
@@ -66,15 +71,17 @@ export function SettingsPending() {
     const name = useLocation({ select: (location) => location.pathname.split("/")[3] });
     const Section = isSection(name) ? SECTIONS[name] : undefined;
     return (
-        <SettingsLayout>
-            {Section ? (
-                <Sampled label={loadingLabel.value} sample={sample}>
-                    <Section />
-                </Sampled>
-            ) : (
-                <SettingsNav list />
-            )}
-        </SettingsLayout>
+        <QueryClientProvider client={unanswered}>
+            <SettingsLayout>
+                {Section ? (
+                    <Sampled label={loadingLabel.value} sample={sample}>
+                        <Section />
+                    </Sampled>
+                ) : (
+                    <SettingsNav list />
+                )}
+            </SettingsLayout>
+        </QueryClientProvider>
     );
 }
 

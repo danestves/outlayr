@@ -16,6 +16,7 @@ import type { CSSProperties } from "react";
 import { useIntlayer } from "react-intlayer";
 import * as Skullet from "skullet";
 
+import { useProfile } from "@/lib/account-state";
 import { authClient } from "@/lib/auth-client";
 import { forgetLedger } from "@/lib/ledger-cache";
 import { announceSessionChange } from "@/lib/session";
@@ -57,9 +58,9 @@ function DarkModeItem() {
 }
 
 export function UserMenu({ collapsed, side = "right" }: { collapsed: boolean; side?: "right" | "top" }) {
-    const { data: session } = authClient.useSession();
+    const profile = useProfile();
     const { account } = useIntlayer("dashboard");
-    const name = session?.user.name || session?.user.email || "";
+    const name = profile?.name || profile?.email || "";
     return (
         <Menu>
             <Menu.Trigger
@@ -70,7 +71,7 @@ export function UserMenu({ collapsed, side = "right" }: { collapsed: boolean; si
                 {collapsed ? null : (
                     <>
                         <span className="min-w-0 flex-1">
-                            <b className="flex items-center gap-1.5 text-[13px] leading-[18px] font-medium">
+                            <b className="flex min-h-[18px] items-center gap-1.5 text-[13px] leading-[18px] font-medium">
                                 <span className="truncate">{name}</span>
                                 <HugeiconsIcon
                                     className="text-app-tint shrink-0"
@@ -79,8 +80,8 @@ export function UserMenu({ collapsed, side = "right" }: { collapsed: boolean; si
                                     strokeWidth={1.5}
                                 />
                             </b>
-                            <small className="text-muted-foreground block truncate text-xs leading-4">
-                                {session?.user.email}
+                            <small className="text-muted-foreground block min-h-4 truncate text-xs leading-4">
+                                {profile?.email}
                             </small>
                         </span>
                         <HugeiconsIcon

@@ -1,5 +1,6 @@
 import { deleteByKey, executeTransaction, getByKey, openDatabase, put } from "@tanstack/react-db";
 import type { DbClient, DehydratedDbState } from "@tanstack/react-db";
+import type { DehydratedState } from "@tanstack/react-query";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getCookie } from "@tanstack/react-start/server";
 
@@ -15,6 +16,7 @@ export const LEDGER_CACHE_VERSION = 3;
 export interface LedgerSnapshot {
     collections: DehydratedDbState["collections"];
     photos: MintedPhotos | undefined;
+    queries?: DehydratedState;
     userId: string;
     version: number;
 }
@@ -53,12 +55,17 @@ const inStore = async <Result>(
 export const usableSnapshot = (snapshot: LedgerSnapshot | undefined, userId: string) =>
     snapshot?.userId === userId && snapshot.version === LEDGER_CACHE_VERSION ? snapshot : undefined;
 
-export function snapshotOf(db: DbClient, photos: MintedPhotos | undefined, userId: string): LedgerSnapshot {
+export function snapshotOf(
+    db: DbClient,
+    photos: MintedPhotos | undefined,
+    userId: string,
+    queries?: DehydratedState
+): LedgerSnapshot {
     const { collections } = db.dehydrate({
         shouldDehydrateCollection: () => true,
         shouldDehydrateLiveQuery: () => false,
     });
-    return { collections, photos, userId, version: LEDGER_CACHE_VERSION };
+    return { collections, photos, queries, userId, version: LEDGER_CACHE_VERSION };
 }
 
 export async function restoreLedger(db: DbClient, userId: string) {
@@ -78,11 +85,16 @@ export async function restoreLedger(db: DbClient, userId: string) {
     }
 }
 
-export async function saveLedger(db: DbClient, photos: MintedPhotos | undefined, userId: string) {
+export async function saveLedger(
+    db: DbClient,
+    photos: MintedPhotos | undefined,
+    userId: string,
+    queries?: DehydratedState
+) {
     if (forgotten) {
         return;
     }
-    await inStore("readwrite", (store) => put(store, snapshotOf(db, photos, userId), LATEST))
+    await inStore("readwrite", (store) => put(store, snapshotOf(db, photos, userId, queries), LATEST))
         .then(() =>
             window.cookieStore?.set({
                 expires: Date.now() + A_YEAR_MS,

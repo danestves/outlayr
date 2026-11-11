@@ -1,4 +1,3 @@
-import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert } from "panelui-web/alert";
@@ -9,7 +8,9 @@ import { Radio, RadioGroup } from "panelui-web/radio-group";
 import { useToast } from "panelui-web/toast";
 import { useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
+import { Skeleton } from "skullet/react";
 
+import { pushConfigQuery, pushEndpointQuery, reminderQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { clockOf } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
@@ -28,7 +29,6 @@ const minuteOf = (clock: string) => {
 };
 
 type Slot = "custom" | "evening" | "morning";
-const PUSH_QUERY_KEY = ["web-push", "subscription"];
 
 const slotOf = (minute: number): Slot => {
     if (minute === MORNING) {
@@ -38,18 +38,13 @@ const slotOf = (minute: number): Slot => {
 };
 
 function useReminder() {
-    const { data: push = null, isPending } = useQuery({
-        queryFn: currentPush,
-        queryKey: PUSH_QUERY_KEY,
-        staleTime: Number.POSITIVE_INFINITY,
-    });
-    const { data: saved } = useQuery({
-        ...convexQuery(api.webPush.mine, push ? { endpoint: push.endpoint } : "skip"),
-    });
+    const { data: push } = useQuery(pushEndpointQuery);
+    const endpoint = push?.endpoint ?? null;
+    const { data: saved } = useQuery(reminderQuery(endpoint));
     return {
-        foreign: push !== null && saved === null,
-        loading: isPending || (push !== null && saved === undefined),
-        push,
+        endpoint,
+        foreign: endpoint !== null && saved === null,
+        loading: push === undefined || (endpoint !== null && saved === undefined),
         saved: saved ?? null,
     };
 }
@@ -61,8 +56,8 @@ export function Notifications() {
     const { clockTime } = useDisplayFormat();
     const toast = useToast();
     const queryClient = useQueryClient();
-    const { data: config } = useQuery(convexQuery(api.webPush.config, {}));
-    const { foreign, loading, push, saved } = useReminder();
+    const { data: config } = useQuery(pushConfigQuery);
+    const { endpoint, foreign, loading, saved } = useReminder();
     const [access, setAccess] = useState<PushAccess>(() => (typeof window === "undefined" ? "prompt" : pushAccess()));
     const [draft, setDraft] = useState<number | false | null>(null);
     const [customSlot, setCustomSlot] = useState(false);
@@ -77,9 +72,10 @@ export function Notifications() {
         setDraft(next);
         try {
             const publicKey = config?.publicKey;
-            let subscription = foreign ? null : push;
+            const held = await currentPush();
+            let subscription = foreign ? null : held;
             if (subscription === null && publicKey) {
-                await push?.unsubscribe();
+                await held?.unsubscribe();
                 subscription = await subscribePush(publicKey);
             }
             setAccess(pushAccess());
@@ -96,7 +92,7 @@ export function Notifications() {
                 p256dh: p256dh ?? "",
                 timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             });
-            queryClient.setQueryData(PUSH_QUERY_KEY, subscription);
+            queryClient.setQueryData(pushEndpointQuery.queryKey, { endpoint: subscription.endpoint });
         } catch {
             setDraft(previous);
             setAccess(pushAccess());
@@ -108,8 +104,8 @@ export function Notifications() {
         const previous = draft;
         setDraft(false);
         try {
-            if (push) {
-                await convexClient().mutation(api.webPush.remove, { endpoint: push.endpoint });
+            if (endpoint !== null) {
+                await convexClient().mutation(api.webPush.remove, { endpoint });
             }
         } catch {
             setDraft(previous);
@@ -159,59 +155,61 @@ export function Notifications() {
                     </Alert>
                 ) : null}
                 <div className="grid items-start gap-4 @4xl:grid-cols-2">
-                    <SettingsCard
-                        footer={
-                            <span className="text-muted-foreground">
-                                {on && available
-                                    ? copy.next({ time: <span className="font-mono">{time(minute)}</span> })
-                                    : copy.none}
-                            </span>
-                        }
-                        title={copy.daily}
-                    >
-                        <div className={available ? undefined : "opacity-50"}>
-                            <ToggleRow
-                                checked={on && available}
-                                disabled={!available || loading}
-                                hint={copy.remindHint}
-                                label={copy.remind.value}
-                                onChange={(next) => (next ? save(minute === false ? MORNING : minute) : turnOff())}
-                            />
-                        </div>
-                        <RadioGroup
-                            aria-label={copy.daily.value}
-                            className={on && available ? "gap-0" : "gap-0 opacity-50"}
-                            disabled={!(on && available)}
-                            // SAFETY: every Radio in this group has a Slot value.
-                            onValueChange={(next) => pick(next as Slot)}
-                            value={on && available ? slot : ""}
+                    <Skeleton loading={loading || config === undefined}>
+                        <SettingsCard
+                            footer={
+                                <span className="text-muted-foreground">
+                                    {on && available
+                                        ? copy.next({ time: <span className="font-mono">{time(minute)}</span> })
+                                        : copy.none}
+                                </span>
+                            }
+                            title={copy.daily}
                         >
-                            <Row
-                                hint={copy.morningHint({ time: time(MORNING) })}
-                                label={copy.morning}
-                                leading={<Radio value="morning" />}
-                            />
-                            <Row
-                                hint={copy.eveningHint({ time: time(EVENING) })}
-                                label={copy.evening}
-                                leading={<Radio value="evening" />}
-                            />
-                            <Row label={copy.custom} leading={<Radio value="custom" />}>
-                                <Input
-                                    aria-label={copy.custom.value}
-                                    className="w-[132px]"
-                                    disabled={!(on && available && slot === "custom")}
-                                    onChange={(event) => {
-                                        if (event.target.value) {
-                                            void save(minuteOf(event.target.value));
-                                        }
-                                    }}
-                                    type="time"
-                                    value={clockOf(slot === "custom" && minute !== false ? minute : DEFAULT_CUSTOM)}
+                            <div className={available ? undefined : "opacity-50"}>
+                                <ToggleRow
+                                    checked={on && available}
+                                    disabled={!available || loading || config === undefined}
+                                    hint={copy.remindHint}
+                                    label={copy.remind.value}
+                                    onChange={(next) => (next ? save(minute === false ? MORNING : minute) : turnOff())}
                                 />
-                            </Row>
-                        </RadioGroup>
-                    </SettingsCard>
+                            </div>
+                            <RadioGroup
+                                aria-label={copy.daily.value}
+                                className={on && available ? "gap-0" : "gap-0 opacity-50"}
+                                disabled={!(on && available)}
+                                // SAFETY: every Radio in this group has a Slot value.
+                                onValueChange={(next) => pick(next as Slot)}
+                                value={on && available ? slot : ""}
+                            >
+                                <Row
+                                    hint={copy.morningHint({ time: time(MORNING) })}
+                                    label={copy.morning}
+                                    leading={<Radio value="morning" />}
+                                />
+                                <Row
+                                    hint={copy.eveningHint({ time: time(EVENING) })}
+                                    label={copy.evening}
+                                    leading={<Radio value="evening" />}
+                                />
+                                <Row label={copy.custom} leading={<Radio value="custom" />}>
+                                    <Input
+                                        aria-label={copy.custom.value}
+                                        className="w-[132px]"
+                                        disabled={!(on && available && slot === "custom")}
+                                        onChange={(event) => {
+                                            if (event.target.value) {
+                                                void save(minuteOf(event.target.value));
+                                            }
+                                        }}
+                                        type="time"
+                                        value={clockOf(slot === "custom" && minute !== false ? minute : DEFAULT_CUSTOM)}
+                                    />
+                                </Row>
+                            </RadioGroup>
+                        </SettingsCard>
+                    </Skeleton>
                 </div>
             </div>
         </>

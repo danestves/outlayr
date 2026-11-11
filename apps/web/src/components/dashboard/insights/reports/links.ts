@@ -1,8 +1,8 @@
-import { convexQuery } from "@convex-dev/react-query";
 import type { Expires } from "@outlayr/backend/confect/sharedReports.spec";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { useQuery } from "@tanstack/react-query";
 
+import { sharedLinksQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 
 import type { SharedReport } from "./share";
@@ -21,7 +21,7 @@ const WEEK_MS = 7 * 86_400_000;
 
 /** The links that are on for this account, kept live so another tab's change shows here. */
 export function useSharedLinks(): readonly SharedLink[] {
-    const { data } = useQuery(convexQuery(api.sharedReports.mine, {}));
+    const { data } = useQuery(sharedLinksQuery);
     return data ?? NONE;
 }
 
