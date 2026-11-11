@@ -186,10 +186,10 @@ const home = {
             },
             {
                 answer: t({
-                    en: "Yes. Outlayr supports 165 currencies. You can log a purchase in any of them, and totals convert to your main currency at the rate from the day it happened. Each account keeps its own currency: the free plan includes one, Pro allows more.",
-                    es: "Sí. Outlayr admite 165 monedas. Puedes registrar una compra en cualquiera de ellas, y los totales se convierten a tu moneda principal con la tasa del día de la compra. Cada cuenta tiene su propia moneda: el plan gratis incluye una y Pro permite más.",
-                    pt: "Sim. O Outlayr aceita 165 moedas. Você pode registrar uma compra em qualquer uma delas, e os totais são convertidos para sua moeda principal com a cotação do dia da compra. Cada conta tem sua própria moeda: o plano grátis inclui uma e o Pro permite mais.",
-                    fr: "Oui. Outlayr prend en charge 165 devises. Vous pouvez enregistrer un achat dans n'importe laquelle, et les totaux sont convertis dans votre devise principale au taux du jour de l'achat. Chaque compte a sa propre devise : la formule gratuite en inclut une, Pro en permet davantage.",
+                    en: "Yes. Outlayr supports 165 currencies. You can log a purchase in any of them, and totals convert to your main currency at the rate from the day it happened. Each account keeps its own currency: the free plan includes two, Pro allows more.",
+                    es: "Sí. Outlayr admite 165 monedas. Puedes registrar una compra en cualquiera de ellas, y los totales se convierten a tu moneda principal con la tasa del día de la compra. Cada cuenta tiene su propia moneda: el plan gratis incluye dos y Pro permite más.",
+                    pt: "Sim. O Outlayr aceita 165 moedas. Você pode registrar uma compra em qualquer uma delas, e os totais são convertidos para sua moeda principal com a cotação do dia da compra. Cada conta tem sua própria moeda: o plano grátis inclui duas e o Pro permite mais.",
+                    fr: "Oui. Outlayr prend en charge 165 devises. Vous pouvez enregistrer un achat dans n'importe laquelle, et les totaux sont convertis dans votre devise principale au taux du jour de l'achat. Chaque compte a sa propre devise : la formule gratuite en inclut deux, Pro en permet davantage.",
                 }),
                 question: t({
                     en: "Can I track expenses in different currencies?",
@@ -296,7 +296,7 @@ const home = {
                 pro: t({ en: "unlimited", es: "sin límite", pt: "sem limite", fr: "illimité" }),
             },
             {
-                free: "1",
+                free: "2",
                 label: t({
                     en: "Account currencies",
                     es: "Monedas de cuentas",

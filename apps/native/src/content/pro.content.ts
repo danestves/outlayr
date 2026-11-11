@@ -736,11 +736,11 @@ const pro = {
             "pt-PT": "O Outlayr registou {count} compras por si este mês",
         }),
         "pro.top.currencies.note": t({
-            en: "Pro converts your totals at the day's rate.",
-            es: "Pro convierte tus totales a la tasa del día.",
-            fr: "Pro convertit vos totaux au taux du jour.",
-            pt: "O Pro converte seus totais pela taxa do dia.",
-            "pt-PT": "O Pro converte os seus totais pela taxa do dia.",
+            en: "Free keeps {count}. Pro totals every currency at the day's rate.",
+            es: "Gratis admite {count}. Pro suma todas tus monedas a la tasa del día.",
+            fr: "Gratuit en garde {count}. Pro totalise toutes vos devises au taux du jour.",
+            pt: "Grátis mantém {count}. O Pro soma todas as suas moedas pela taxa do dia.",
+            "pt-PT": "Grátis mantém {count}. O Pro soma todas as suas moedas pela taxa do dia.",
         }),
         "pro.top.currencies.title": t({
             en: "Track every currency together",

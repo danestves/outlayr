@@ -43,7 +43,7 @@ const TABLE = [
     { free: "2", key: "installmentApps", pro: "infinity" },
     { free: "2", key: "payoffPlans", pro: "infinity" },
     { free: "2", key: "budgets", pro: "infinity" },
-    { free: "1", key: "currencies", pro: "infinity" },
+    { free: "2", key: "currencies", pro: "infinity" },
     { free: null, key: "sync", pro: "check" },
     { free: null, key: "receipts", pro: "check" },
     { free: null, key: "aiMatching", pro: "check" },

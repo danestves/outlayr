@@ -28,37 +28,38 @@ describe("blocksNewCurrency", () => {
         expect(blocksNewCurrency(bank("VES"), [], true)).toBe(false);
     });
 
-    it("blocks a second currency once one is in use", () => {
-        expect(blocksNewCurrency(bank("VES"), [bank("USD")], true)).toBe(true);
+    it("lets a second currency in, and blocks a third", () => {
+        expect(blocksNewCurrency(bank("VES"), [bank("USD")], true)).toBe(false);
+        expect(blocksNewCurrency(bank("EUR"), [bank("USD"), bank("VES")], true)).toBe(true);
     });
 
     it("never blocks a currency the ledger already holds", () => {
-        expect(blocksNewCurrency(bank("USD"), [bank("USD"), bank("VES")], true)).toBe(false);
+        expect(blocksNewCurrency(bank("USD"), [bank("USD"), bank("VES"), bank("EUR")], true)).toBe(false);
     });
 
     it("blocks nothing while Pro is unlocked or unsellable", () => {
-        expect(blocksNewCurrency(bank("VES"), [bank("USD")], false)).toBe(false);
+        expect(blocksNewCurrency(bank("EUR"), [bank("USD"), bank("VES")], false)).toBe(false);
     });
 
-    it("lets a curated installment app bill in a second currency", () => {
-        expect(blocksNewCurrency(cashea, [bank("VES")], true)).toBe(false);
+    it("lets a curated installment app bill in a currency past the cap", () => {
+        expect(blocksNewCurrency(cashea, [bank("VES"), bank("EUR")], true)).toBe(false);
     });
 
-    it("never lets a curated installment app claim the free currency", () => {
-        expect(blocksNewCurrency(bank("VES"), [cashea], true)).toBe(false);
-        expect(blocksNewCurrency(bank("EUR"), [cashea, bank("VES")], true)).toBe(true);
+    it("never lets a curated installment app claim a free currency", () => {
+        expect(blocksNewCurrency(bank("EUR"), [cashea, bank("VES")], true)).toBe(false);
+        expect(blocksNewCurrency(bank("EUR"), [cashea, bank("VES"), bank("COP")], true)).toBe(true);
     });
 
     it("never blocks a person's currency, nor lets a person claim one", () => {
         const pedro = { currency: "USD", kind: "person", name: "Pedro" };
-        expect(blocksNewCurrency(pedro, [bank("VES")], true)).toBe(false);
-        expect(blocksNewCurrency(bank("VES"), [pedro], true)).toBe(false);
+        expect(blocksNewCurrency(pedro, [bank("VES"), bank("EUR")], true)).toBe(false);
+        expect(blocksNewCurrency(bank("EUR"), [pedro, bank("VES")], true)).toBe(false);
     });
 
     it("counts a card's currency, and an asset named after an app", () => {
         const visa = { currency: "USD", kind: "liability", name: "Visa" };
-        expect(blocksNewCurrency(bank("VES"), [visa], true)).toBe(true);
-        expect(blocksNewCurrency(bank("VES"), [bank("USD", "Cashea")], true)).toBe(true);
+        expect(blocksNewCurrency(bank("VES"), [visa, bank("EUR")], true)).toBe(true);
+        expect(blocksNewCurrency(bank("VES"), [bank("USD", "Cashea"), bank("EUR")], true)).toBe(true);
     });
 });
 
@@ -112,14 +113,18 @@ describe("saving an account on a free ledger with both caps full", () => {
 
 describe("saving an account's currency on a free ledger", () => {
     const checking = { currency: "USD", kind: "asset", name: "Checking" };
+    const euros = { currency: "EUR", kind: "asset", name: "Euros" };
+    const pounds = { currency: "GBP", kind: "asset", name: "Pounds" };
 
     it("claims the currency of an installment app renamed into a plain account", () => {
         const casheaVes = { ...cashea, currency: "VES" };
-        expect(blocksSavedCurrency({ ...visa, currency: "VES" }, casheaVes, [checking], true)).toBe(true);
+        expect(blocksSavedCurrency({ ...visa, currency: "VES" }, casheaVes, [checking, euros], true)).toBe(true);
     });
 
     it("lets a plain account keep its currency on a ledger already over the cap", () => {
         const savings = { currency: "VES", kind: "asset", name: "Savings" };
-        expect(blocksSavedCurrency({ ...savings, name: "Ahorros" }, savings, [checking], true)).toBe(false);
+        expect(blocksSavedCurrency({ ...savings, name: "Ahorros" }, savings, [checking, euros, pounds], true)).toBe(
+            false
+        );
     });
 });

@@ -3,10 +3,10 @@ import { isInstallmentAppAccount } from "@outlayr/money/institution-map";
 
 export const FREE_ACCOUNTS = 3;
 export const FREE_BUDGETS = 2;
-export const FREE_CURRENCIES = 1;
+export const FREE_CURRENCIES = 2;
 /** People sit outside every other cap: they never count as accounts, installment apps or currencies. */
 export const FREE_PEOPLE = 3;
-/** Never counts toward {@link FREE_ACCOUNTS} nor uses up the free currency. Cards and loans are plain accounts. */
+/** Never counts toward {@link FREE_ACCOUNTS} nor uses up a free currency. Cards and loans are plain accounts. */
 export const FREE_INSTALLMENT_APPS = 2;
 /** Live payoff plans: one paid off has ended and no longer counts. */
 export const FREE_PAYOFF_PLANS = 2;

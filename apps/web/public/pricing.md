@@ -22,7 +22,7 @@ Prices vary by country. Google Play and the App Store show your price before you
 | People you lend to or borrow from | 3 | Unlimited |
 | Payoff plans | 2 | Unlimited |
 | Category budgets | 2 | Unlimited |
-| Account currencies | 1 | Unlimited |
+| Account currencies | 2 | Unlimited |
 
 ## Included in every plan
 
