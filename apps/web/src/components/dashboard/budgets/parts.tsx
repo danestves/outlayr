@@ -15,12 +15,12 @@ import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
+import { useGoalMoney } from "@/components/dashboard/goals/parts";
 import { useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useBox } from "@/components/dashboard/insights/use-box";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { periodKeyOf, periodKindOf, periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import { LANGUAGES, localeFromParam } from "@/lib/i18n";
-import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { useBudgetFlows } from "./flow-context";
 import { MONTHS_AHEAD } from "./model";
@@ -544,7 +544,7 @@ export function Ghost({
 
 export function useMoney() {
     const { ledger } = useDashboard();
-    const { money } = useDisplayFormat();
+    const money = useGoalMoney();
     return (amount: number, currency = ledger.currency) => money(amount, currency);
 }
 

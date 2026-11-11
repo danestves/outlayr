@@ -170,30 +170,51 @@ function lineOf(
     };
 }
 
-function paceOf(
-    ledger: Ledger,
-    period: Period,
-    phase: Phase,
-    lines: readonly BudgetLine[],
-    overall: BudgetLine | null
-) {
-    if (phase === "ahead" || (lines.length === 0 && !overall)) {
+interface Share {
+    limit: number;
+    perDay: ReadonlyMap<string, number>;
+    spent: number;
+}
+
+const shareOf = (ledger: Ledger, line: BudgetLine): Share => ({
+    limit: line.standing.effectiveLimit,
+    perDay: spentByDay(ledger, line.categoryId, line.standing.from, line.standing.to),
+    spent: line.standing.spent,
+});
+
+// A child's limit sits inside its parent's, so a day both windows cover counts once, against the parent,
+// and the child keeps the slice of its limit that falls on its other days.
+function childShare(ledger: Ledger, line: BudgetLine, parent: BudgetLine): Share {
+    const { from, to } = parent.standing;
+    const days = daysFrom(line.standing.from, line.standing.to);
+    const own = days.filter((day) => day < from || day > to);
+    const perDay = new Map([...shareOf(ledger, line).perDay].filter(([day]) => day < from || day > to));
+    return {
+        limit: round(ledger, days.length === 0 ? 0 : (line.standing.effectiveLimit * own.length) / days.length),
+        perDay,
+        spent: round(
+            ledger,
+            [...perDay.values()].reduce((sum, amount) => sum + amount, 0)
+        ),
+    };
+}
+
+function paceOf(ledger: Ledger, period: Period, phase: Phase, shares: readonly Share[]) {
+    if (phase === "ahead" || shares.length === 0) {
         return null;
     }
-    const subject = overall ? [overall] : lines;
     const limit = round(
         ledger,
-        subject.reduce((sum, line) => sum + line.standing.effectiveLimit, 0)
+        shares.reduce((sum, share) => sum + share.limit, 0)
     );
     const spent = round(
         ledger,
-        subject.reduce((sum, line) => sum + line.standing.spent, 0)
+        shares.reduce((sum, share) => sum + share.spent, 0)
     );
     const days = daysFrom(period.from, lastDay(ledger, period));
-    const perDay = subject.map((line) => spentByDay(ledger, line.categoryId, line.standing.from, line.standing.to));
     let running = 0;
     const daily = days.map((day) => {
-        running += perDay.reduce((sum, totals) => sum + (totals.get(day) ?? 0), 0);
+        running += shares.reduce((sum, share) => sum + (share.perDay.get(day) ?? 0), 0);
         return round(ledger, running);
     });
     const crossed = daily.findIndex((value) => value > limit);
@@ -280,10 +301,11 @@ export function budgetsOverview(ledger: Ledger, period: Period): BudgetsOverview
             ledger,
             values.reduce((acc, value) => acc + value, 0)
         );
-    // A child's limit sits inside its parent's, so only one of them counts toward the sums.
-    const counted = lines.filter((line) => {
+    const byCategory = new Map(lines.map((line) => [line.categoryId, line]));
+    const shares = lines.map((line) => {
         const target = line.categoryId === null ? undefined : ledger.budgetTargets.get(line.categoryId);
-        return !target || target.id === target.topId || !seen.has(target.topId);
+        const parent = target && target.id !== target.topId ? byCategory.get(target.topId) : undefined;
+        return parent ? childShare(ledger, line, parent) : shareOf(ledger, line);
     });
     const over = lines.filter((line) => line.standing.overBudget).length;
     return {
@@ -291,16 +313,16 @@ export function budgetsOverview(ledger: Ledger, period: Period): BudgetsOverview
         lines,
         open,
         overall,
-        pace: paceOf(ledger, period, phase, counted, overall),
+        pace: paceOf(ledger, period, phase, overall ? [shareOf(ledger, overall)] : shares),
         period,
         phase,
         sparkMonths,
         totals: {
-            limits: sum(counted.map((line) => line.standing.effectiveLimit)),
+            limits: sum(shares.map((share) => share.limit)),
             onTrack: lines.length - over,
             open: sum(open.map((line) => line.spent)),
             over,
-            spent: sum(counted.map((line) => line.standing.spent)),
+            spent: sum(shares.map((share) => share.spent)),
             total,
         },
     };

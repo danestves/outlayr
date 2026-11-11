@@ -103,6 +103,14 @@ describe("budgetsOverview", () => {
         expect(nested.pace).toMatchObject({ limit: 300, spent: 350 });
     });
 
+    it("counts a child's days outside a shorter parent window against the child's share of its limit", () => {
+        const weeklyFood = { ...foodLimit, startDate: Date.parse("2026-11-08T00:00:00Z"), type: BUDGET_TYPE.week };
+        const groceriesLimit = { ...foodLimit, amount: 90, categoryId: "groceries", localId: "groceries-limit" };
+        const mixed = budgetsOverview(ledgerWith([weeklyFood, groceriesLimit]), periodOf("2026-11", 1));
+        expect(mixed.totals).toMatchObject({ limits: 369, spent: 200 });
+        expect(mixed.pace).toMatchObject({ limit: 369, spent: 200 });
+    });
+
     it("leaves budgeted categories and income out of the open spending", () => {
         expect(overview.open.map((line) => [line.categoryId, line.spent, line.share])).toStrictEqual([
             ["fun", 50, 50 / 400],
