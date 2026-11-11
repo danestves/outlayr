@@ -26,7 +26,7 @@ import { useBudgetFlows } from "./flow-context";
 import { MONTHS_AHEAD } from "./model";
 import type { BudgetLine, LineStatus } from "./model";
 
-export const BADGE = "dash-figure h-[22px] rounded-md px-2 text-xs font-medium normal-nums";
+export const BADGE = "h-[22px] rounded-md px-2 text-xs font-medium normal-nums";
 export const TINT = "var(--color-app-tint)";
 export const BAD = "var(--color-app-spend)";
 export const OK = "var(--color-app-income)";
@@ -113,7 +113,7 @@ export function Stepper({
             >
                 <Glyph icon={ArrowLeft01Icon} size={16} />
             </Button>
-            <span aria-live="polite" className="dash-figure px-2">
+            <span aria-live="polite" className="dash-figure px-3.5">
                 {label}
             </span>
             <Button
@@ -279,9 +279,7 @@ export function PaceGauge({
                         <text
                             className="dash-figure"
                             fill={GROUND}
-                            fontSize={12}
-                            fontWeight={600}
-                            textAnchor="middle"
+                            style={{ fontSize: 12, fontWeight: 600, textAnchor: "middle" }}
                             x={PILL_WIDTH / 2}
                             y={16.5}
                         >
@@ -367,7 +365,13 @@ export function PaceChart({
                     {levels.map((level) => (
                         <g key={level}>
                             <line stroke={GRID} x1={CHART_LEFT} x2={width} y1={y(level)} y2={y(level)} />
-                            <text className={TICK} fill={MUTED_FILL} textAnchor="end" x={36} y={y(level) + 4}>
+                            <text
+                                className={TICK}
+                                fill={MUTED_FILL}
+                                style={{ textAnchor: "end" }}
+                                x={36}
+                                y={y(level) + 4}
+                            >
                                 {whole(level)}
                             </text>
                         </g>
@@ -395,7 +399,7 @@ export function PaceChart({
                                 className={TICK}
                                 fill={MUTED_FILL}
                                 key={index}
-                                textAnchor={anchor}
+                                style={{ textAnchor: anchor }}
                                 x={x(index)}
                                 y={height - 4}
                             >
@@ -482,7 +486,7 @@ export function BudgetMenu({ line }: { line: BudgetLine }) {
         <Menu>
             <Menu.Trigger
                 aria-label={menu.more({ name: line.customName ?? line.categoryName }).value}
-                render={<Button className="text-muted-foreground -mx-2" size="icon-sm" variant="ghost" />}
+                render={<Button className="text-muted-foreground -mx-1 size-6" size="icon-sm" variant="ghost" />}
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>

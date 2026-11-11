@@ -30,7 +30,7 @@ const PERCENT = 100;
 const CHART_HEIGHT = 140;
 const ZERO_LINE = 112;
 const BAR_REACH = 90;
-const LABEL_ROOM = 16;
+const LABEL_ROOM = 11;
 const COLUMN_GAP = 14;
 const MIN_BAR = 4;
 const USED_INK = "#57554a";
@@ -64,7 +64,7 @@ export function PlanCrumbs({ back, children, parent }: { back: ReactNode; childr
 }
 
 export const BACK = "text-muted-foreground -ms-1.5 size-[30px]";
-export const PARENT = "text-muted-foreground hover:text-foreground font-normal";
+export const PARENT = "text-muted-foreground hover:text-foreground text-[13px] font-normal";
 
 function YearBar({ year }: { year: ReturnType<typeof usePlanYear> }) {
     const plan = useIntlayer("dashboard-budgets-plan");
@@ -233,8 +233,7 @@ function LeftChart({ projection }: { projection: YearProjection }) {
                                 <text
                                     className="dash-figure"
                                     fill={short ? BAD : MUTED}
-                                    fontSize={11}
-                                    textAnchor="middle"
+                                    style={{ fontSize: 11, textAnchor: "middle" }}
                                     x={center}
                                     y={short ? ZERO_LINE - 5 : y - 5}
                                 >
@@ -243,8 +242,7 @@ function LeftChart({ projection }: { projection: YearProjection }) {
                                 <text
                                     className="dash-figure"
                                     fill={current ? "var(--color-foreground)" : MUTED}
-                                    fontSize={11}
-                                    textAnchor="middle"
+                                    style={{ fontSize: 11, textAnchor: "middle" }}
                                     x={center}
                                     y={CHART_HEIGHT + 2}
                                 >
@@ -281,7 +279,7 @@ function LeftCard({ plan }: { plan: YearPlan }) {
                 ) : null}
                 {line ? <span className="text-muted-foreground ms-auto text-[13px] leading-5">{line}</span> : null}
             </Frame.Header>
-            <Frame.Panel className="pb-3">
+            <Frame.Panel className="px-4 pt-5">
                 <LeftChart projection={projection} />
             </Frame.Panel>
         </Frame>

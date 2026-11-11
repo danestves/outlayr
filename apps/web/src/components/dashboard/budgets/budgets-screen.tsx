@@ -168,13 +168,7 @@ function Kpis({ model }: { model: BudgetsOverview }) {
                 </span>
             </KpiCell>
             {over ? (
-                <KpiCell
-                    color={SPEND}
-                    icon={Alert02Icon}
-                    label={kpi.over}
-                    tone="text-app-spend"
-                    value={money(spent - limit)}
-                >
+                <KpiCell color={SPEND} icon={Alert02Icon} label={kpi.over} value={money(spent - limit)}>
                     <Badge className={BADGE} dot variant="destructive">
                         {totals.over === 1 ? kpi.oneCategory : kpi.categories({ count: totals.over })}
                     </Badge>
@@ -230,7 +224,7 @@ function PaceCard({ model, pace }: { model: BudgetsOverview; pace: Pace }) {
                 }
                 title={copy.title}
             />
-            <Frame.Panel className="flex-1">
+            <Frame.Panel className="flex-1 px-4 pt-4">
                 <PaceGauge
                     currency={ledger.currency}
                     label={copy.title.value}
@@ -261,7 +255,7 @@ function ChartCard({ model, pace }: { model: BudgetsOverview; pace: Pace }) {
     return (
         <Frame className="min-w-0">
             <CardHead aside={<ChartLegend />} title={copy.chart} />
-            <Frame.Panel className="flex-1 pb-3">
+            <Frame.Panel className="flex-1 px-4 pt-4 pb-3">
                 <PaceChart
                     currency={ledger.currency}
                     daily={pace.daily}
@@ -382,7 +376,7 @@ function OpenMenu({ line }: { line: OpenLine }) {
         <Menu>
             <Menu.Trigger
                 aria-label={copy.menu.more({ name: line.name }).value}
-                render={<Button className="text-muted-foreground -mx-2" size="icon-sm" variant="ghost" />}
+                render={<Button className="text-muted-foreground -mx-1 size-6" size="icon-sm" variant="ghost" />}
             >
                 <Glyph icon={MoreVerticalIcon} size={17} />
             </Menu.Trigger>
@@ -477,7 +471,7 @@ function BudgetTable({ model }: { model: BudgetsOverview }) {
     ];
     const lines = model.overall ? [model.overall, ...model.lines] : model.lines;
     return (
-        <Frame className="mb-5 min-w-0 flex-1">
+        <Frame className={`mb-5 min-w-0 ${ahead ? "" : "flex-1"}`}>
             <Frame.Panel className="flex-1 p-0">
                 <DataTable density="comfortable" head={head} numbers={0} phoneHidden={[2, 4, 5]}>
                     {lines.map((line) => (

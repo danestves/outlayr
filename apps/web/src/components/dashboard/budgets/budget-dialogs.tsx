@@ -1,6 +1,7 @@
 import Alert02Icon from "@hugeicons/core-free-icons/Alert02Icon";
 import Analytics01Icon from "@hugeicons/core-free-icons/Analytics01Icon";
 import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
+import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import PieChartIcon from "@hugeicons/core-free-icons/PieChartIcon";
 import SquareLock02Icon from "@hugeicons/core-free-icons/SquareLock02Icon";
 import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
@@ -28,6 +29,7 @@ import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committe
 import { parseAmount } from "@/lib/account-writes";
 import { createdBudget, deletedBudget, editedBudget } from "@/lib/budget-writes";
 import type { Budget, BudgetDraft, MainBudget } from "@/lib/budget-writes";
+import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKeyOf, periodOf } from "@/lib/dashboard-series-period";
 import { ledgerBooks } from "@/lib/ledger-db";
@@ -203,7 +205,10 @@ function useChoices(): readonly Choice[] {
     const categoryName = useCategoryName();
     const overview = budgetsOverview(ledger, monthNow(ledger));
     const spent = new Map(overview.open.map((line) => [line.categoryId, line.spent]));
-    return [...ledger.budgetTargets.values()]
+    const spentOn = new Set(ledger.rows.filter((row) => !row.income).map((row) => row.topId));
+    const targets = new Map([...[...ledger.categories].filter(([id]) => spentOn.has(id)), ...ledger.budgetTargets]);
+    targets.delete(UNCATEGORIZED_ID);
+    return [...targets.values()]
         .map((target) => ({
             color: target.color,
             id: target.id,
@@ -267,13 +272,12 @@ function CategoryPick({
 
 function Locked({ children, icon, label }: { children: ReactNode; icon: ReactNode; label: string }) {
     return (
-        <fieldset
-            aria-label={label}
-            className="bg-foreground/[0.024] flex h-9 items-center gap-2 rounded-lg border px-3 text-sm"
-        >
-            {icon}
-            <span className="min-w-0 truncate">{children}</span>
-            <Glyph icon={SquareLock02Icon} className="text-muted-foreground ms-auto" size={16} />
+        <fieldset aria-label={label} className="bg-foreground/[0.024] h-9 rounded-lg border p-0 text-sm">
+            <div className="flex h-[34px] items-center gap-2 px-3">
+                {icon}
+                <span className="min-w-0 truncate">{children}</span>
+                <Glyph icon={SquareLock02Icon} className="text-muted-foreground ms-auto" size={16} />
+            </div>
         </fieldset>
     );
 }
@@ -505,6 +509,7 @@ function LimitFooter({
         <Dialog.Footer>
             {onDelete ? (
                 <Button className={`text-destructive me-auto ${FOOTER_PILL}`} onClick={onDelete} variant="secondary">
+                    <Glyph icon={Delete02Icon} size={16} />
                     {form.delete}
                 </Button>
             ) : null}

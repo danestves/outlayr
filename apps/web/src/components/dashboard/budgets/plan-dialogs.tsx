@@ -162,8 +162,7 @@ function PlanChart({
                                 <text
                                     className="dash-figure"
                                     fill={active ? "var(--color-foreground)" : "var(--color-muted-foreground)"}
-                                    fontSize={11}
-                                    textAnchor="middle"
+                                    style={{ fontSize: 11, textAnchor: "middle" }}
                                     x={x + barWidth / 2}
                                     y={CHART_HEIGHT - 4}
                                 >
@@ -326,10 +325,7 @@ function PlanEditor({
         void committer.commit(rows, { failed: dialog.failed.value });
     };
     return (
-        <FlowDialog
-            head={<Dot color={meta.color} size={10} />}
-            label={dialog.planTitle({ name: planName(meta), year })}
-        >
+        <FlowDialog label={dialog.planTitle({ name: planName(meta), year })}>
             <Dialog.Body>
                 <form
                     id={formId}
@@ -533,7 +529,7 @@ function TrimDialog({ flow, onClose }: { flow: TrimFlow; onClose: () => void }) 
                         />
                     </Field>
                 </form>
-                <div className="my-3.5 grid grid-cols-2 overflow-hidden rounded-xl border">
+                <div className="mb-3.5 grid grid-cols-2 overflow-hidden rounded-xl border">
                     <div className="px-3.5 py-3">
                         <div className="text-muted-foreground text-[13px]">{dialog.was}</div>
                         <div className="dash-figure mt-0.5 text-sm font-medium">{money(was)}</div>

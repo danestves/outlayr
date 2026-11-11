@@ -19,7 +19,7 @@ import { useIntlayer } from "react-intlayer";
 import { AccountsBar, DataTable } from "@/components/dashboard/accounts/accounts-screen";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { KpiBand, KpiCell, Trend } from "@/components/dashboard/accounts/parts";
-import { useDateFormat } from "@/components/dashboard/home/format";
+import { useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useBox } from "@/components/dashboard/insights/use-box";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { Restoring } from "@/components/dashboard/shell/sampled";
@@ -418,6 +418,7 @@ function chartTop(value: number) {
 function SpentChart({ view }: { view: MonthView }) {
     const { month: copy } = useIntlayer("dashboard-budgets-plan");
     const { ledger } = useDashboard();
+    const { whole } = useWholeMoney(ledger.currency);
     const money = useMoney();
     const date = useDateFormat();
     const [ref, { width }] = useBox<HTMLElement>();
@@ -445,7 +446,7 @@ function SpentChart({ view }: { view: MonthView }) {
     return (
         <>
             <div className="flex h-[52px] items-center gap-2 border-t px-5">
-                <b className="text-[15px] font-semibold tracking-[-0.01em]">{copy.spentAgainst}</b>
+                <b className="text-muted-foreground text-sm font-medium">{copy.spentAgainst}</b>
                 <span className="dash-figure text-muted-foreground ms-auto text-[13px]">{money(month.in)}</span>
             </div>
             <figure aria-label={copy.spentAgainst.value} className="px-5 pb-3" ref={ref}>
@@ -457,12 +458,11 @@ function SpentChart({ view }: { view: MonthView }) {
                                 <text
                                     className="dash-figure"
                                     fill={MUTED}
-                                    fontSize={11}
-                                    textAnchor="end"
+                                    style={{ fontSize: 11, textAnchor: "end" }}
                                     x={36}
                                     y={y(value) + 4}
                                 >
-                                    {money(value)}
+                                    {whole(value)}
                                 </text>
                             </g>
                         ))}
@@ -483,9 +483,8 @@ function SpentChart({ view }: { view: MonthView }) {
                                 <text
                                     className="dash-figure"
                                     fill={MUTED}
-                                    fontSize={11}
                                     key={tick}
-                                    textAnchor={anchor}
+                                    style={{ fontSize: 11, textAnchor: anchor }}
                                     x={x(tick - 1)}
                                     y={CHART_HEIGHT - 4}
                                 >
@@ -622,7 +621,7 @@ function WhereCard({ view }: { view: MonthView }) {
     return (
         <Frame className="min-w-0 flex-1">
             <CardHead aside={money(month.in)} title={copy.whereItWent} />
-            <Frame.Panel>
+            <Frame.Panel className="px-4">
                 <div aria-hidden className="flex h-3 gap-0.5 overflow-hidden rounded-full">
                     <i
                         className="bg-app-tint block h-full rounded-full"

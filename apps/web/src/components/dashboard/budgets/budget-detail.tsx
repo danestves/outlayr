@@ -173,7 +173,7 @@ function LimitKpis({ detail, line }: { detail: BudgetDetail; line: BudgetLine })
     }
     return (
         <KpiBand>
-            <KpiCell color={TINT} label={kpi.spent} value={money(spent)}>
+            <KpiCell color={TINT} label={kpi.spent} tone="text-[22px]/8" value={money(spent)}>
                 <span className="flex min-w-0 items-center gap-2">
                     <Trend goodWhenUp={false} value={ratio > 1 ? 1 : 0}>
                         {percent(ratio)}
@@ -181,18 +181,18 @@ function LimitKpis({ detail, line }: { detail: BudgetDetail; line: BudgetLine })
                     {quiet(kpi.ofLimit)}
                 </span>
             </KpiCell>
-            <KpiCell color={TINT} label={kpi.limit} value={money(limit)}>
+            <KpiCell color={TINT} label={kpi.limit} tone="text-[22px]/8" value={money(limit)}>
                 {quiet(kpi.cadence[cadenceOf(line.budget.type)])}
             </KpiCell>
             <KpiCell
                 color={TINT}
                 label={over ? kpi.over : kpi.left}
-                tone={leftTone}
+                tone={`${leftTone} text-[22px]/8`}
                 value={money(Math.abs(limit - spent))}
             >
                 {standing}
             </KpiCell>
-            <KpiCell color={TINT} label={kpi.typical} value={money(detail.typical.amount ?? 0)}>
+            <KpiCell color={TINT} label={kpi.typical} tone="text-[22px]/8" value={money(detail.typical.amount ?? 0)}>
                 {typicalNote(detail)}
             </KpiCell>
         </KpiBand>
@@ -256,7 +256,7 @@ function PaceCard({ detail, line }: { detail: BudgetDetail; line: BudgetLine }) 
                 aside={note ? <span className="text-muted-foreground text-[13px]">{note}</span> : null}
                 title={pace.chart}
             />
-            <Frame.Panel className="pb-3">
+            <Frame.Panel className="px-4 pt-4 pb-3">
                 <PaceChart
                     currency={ledger.currency}
                     daily={detail.daily}
@@ -344,7 +344,7 @@ function TransactionsCard({ detail }: { detail: BudgetDetail }) {
 
 function Fact({ children, label }: { children: ReactNode; label: ReactNode }) {
     return (
-        <div className="flex h-[42px] items-center justify-between gap-3 border-t text-[13px]">
+        <div className="flex h-[42px] items-center justify-between gap-3 border-t px-4 text-[13px]">
             <span className="text-muted-foreground">{label}</span>
             {children}
         </div>
@@ -389,7 +389,7 @@ function BudgetCard({ detail, line }: { detail: BudgetDetail; line: BudgetLine }
                 }
                 title={copy.detail.budget}
             />
-            <Frame.Panel className="pt-0 pb-1.5">
+            <Frame.Panel className="px-4 pt-4 pb-1.5">
                 <Fact label={copy.detail.limit}>
                     <span className="dash-figure">{money(line.standing.limit)}</span>
                 </Fact>
@@ -448,7 +448,7 @@ function HistoryCard({ detail }: { detail: BudgetDetail }) {
                 }
                 title={copy.detail.last[cadence]}
             />
-            <Frame.Panel className={line ? "pb-2" : ""}>
+            <Frame.Panel className={line ? "px-4 pb-2" : "px-4"}>
                 <HistoryBars
                     bars={bars}
                     color={detail.color}
