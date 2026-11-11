@@ -148,11 +148,15 @@ const COPIED: readonly QueryKey[] = [
 
 const REMINDERS = reminderQuery(null).queryKey.slice(0, 2);
 
-const isAccountState = (query: Query) =>
-    COPIED.some((queryKey) => matchQuery({ exact: true, queryKey }, query)) ||
-    matchQuery({ queryKey: REMINDERS }, query);
+const NULL_IS_NO_ANSWER: readonly QueryKey[] = [planQuery.queryKey, limitsQuery.queryKey];
 
-const answered = ({ state }: Query) => state.status === "success" && state.data !== null;
+const oneOf = (keys: readonly QueryKey[], query: Query) =>
+    keys.some((queryKey) => matchQuery({ exact: true, queryKey }, query));
+
+const isAccountState = (query: Query) => oneOf(COPIED, query) || matchQuery({ queryKey: REMINDERS }, query);
+
+const answered = (query: Query) =>
+    query.state.status === "success" && !(query.state.data === null && oneOf(NULL_IS_NO_ANSWER, query));
 
 export const accountStateOf = (client: QueryClient, now = Date.now()): DehydratedState =>
     dehydrate(client, {

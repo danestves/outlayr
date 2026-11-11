@@ -54,11 +54,12 @@ describe("account state copy", () => {
         ]);
     });
 
-    it("never copies a plan the server could not answer", () => {
+    it("copies a reminder that is off, never a plan the server could not answer", () => {
         const client = cache();
         client.setQueryData(planQuery.queryKey, null);
+        client.setQueryData(reminderQuery("https://push.test/a").queryKey, null);
 
-        expect(copiedKeys(client)).toStrictEqual([]);
+        expect(copiedKeys(client)).toStrictEqual([reminderQuery("https://push.test/a").queryKey]);
     });
 
     it("copies only the photo links that are still inside the mint age", () => {

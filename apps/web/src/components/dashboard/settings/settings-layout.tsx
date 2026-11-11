@@ -71,17 +71,17 @@ export function SettingsPending() {
     const name = useLocation({ select: (location) => location.pathname.split("/")[3] });
     const Section = isSection(name) ? SECTIONS[name] : undefined;
     return (
-        <SettingsLayout>
-            {Section ? (
-                <QueryClientProvider client={unanswered}>
+        <QueryClientProvider client={unanswered}>
+            <SettingsLayout>
+                {Section ? (
                     <Sampled label={loadingLabel.value} sample={sample}>
                         <Section />
                     </Sampled>
-                </QueryClientProvider>
-            ) : (
-                <SettingsNav list />
-            )}
-        </SettingsLayout>
+                ) : (
+                    <SettingsNav list />
+                )}
+            </SettingsLayout>
+        </QueryClientProvider>
     );
 }
 
