@@ -27,10 +27,18 @@ export default function FlowDialogs({
         return <TransferDialog accountId={flow.accountId} onClose={onClose} />;
     }
     if (flow.kind === "create") {
-        return <AccountForm account={null} onClose={onClose} onSwitch={onSwitch} type={flow.type} />;
+        return <AccountForm account={null} draft={flow.draft} onClose={onClose} onSwitch={onSwitch} type={flow.type} />;
     }
     if (flow.kind === "purchase") {
-        return <PurchaseForm accountId={flow.accountId} onClose={onClose} onSwitch={onSwitch} seed={flow.seed} />;
+        return (
+            <PurchaseForm
+                accountId={flow.accountId}
+                draft={flow.draft}
+                onClose={onClose}
+                onSwitch={onSwitch}
+                seed={flow.seed}
+            />
+        );
     }
     if (flow.kind === "scan") {
         return <ScanDialog accountId={flow.accountId} onClose={onClose} onSwitch={onSwitch} />;
@@ -41,7 +49,9 @@ export default function FlowDialogs({
     }
     switch (flow.kind) {
         case "edit": {
-            return <AccountForm account={account} onClose={onClose} onSwitch={onSwitch} type="bank" />;
+            return (
+                <AccountForm account={account} draft={flow.draft} onClose={onClose} onSwitch={onSwitch} type="bank" />
+            );
         }
         case "check": {
             return <CheckDialog account={account} onClose={onClose} />;

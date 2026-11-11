@@ -203,21 +203,6 @@ export function checkedAccount(
     ];
 }
 
-/** Takes back a check: the stamp returns to what it was and its adjustment, if any, goes. */
-export function uncheckedAccount(
-    books: Pick<LedgerBooks, "outsideMoves">,
-    account: Account,
-    checkedAt: number | null,
-    adjustmentId: string | null,
-    at: number
-): CommitRow[] {
-    const move = books.outsideMoves.find((row) => row.localId === adjustmentId);
-    return [
-        ...(move ? [nextRow("outsideMoves", move, { deletedAt: at }, at)] : []),
-        nextRow("accounts", account, { checkedAt }, at),
-    ];
-}
-
 export const archivedAccount = (account: Account, archivedAt: number | null, at: number) =>
     nextRow("accounts", account, { archivedAt }, at);
 

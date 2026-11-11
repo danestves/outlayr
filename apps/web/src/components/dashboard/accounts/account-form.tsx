@@ -17,7 +17,7 @@ import { Input } from "panelui-web/input";
 import { Label } from "panelui-web/label";
 import { Select } from "panelui-web/select";
 import { Switch } from "panelui-web/switch";
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -27,6 +27,7 @@ import { createdAccount, editedAccount, parseAmount } from "@/lib/account-writes
 import type { LedgerBooks } from "@/lib/ledger-books";
 
 import { AmountInput, amountText, CurrencyField, FlowDialog, focusNode } from "./fields";
+import { useAccountFlows } from "./flows";
 import type { AccountFlow, AccountType } from "./flows";
 import { Glyph } from "./glyph";
 import { IdentityPicker, logoIdentity, logoUrl } from "./identity-picker";
@@ -114,6 +115,8 @@ function startValues(account: Account | null, type: AccountType, balance: number
     };
 }
 
+export type AccountValues = ReturnType<typeof startValues>;
+
 function accountDraft(
     value: {
         currency: string;
@@ -199,17 +202,20 @@ function EditActions({ accountId, onSwitch }: { accountId: string; onSwitch: (fl
 /** Create and edit. Picking an identity by hand stops the name from replacing it with a matched logo. */
 export function AccountForm({
     account,
+    draft: kept,
     onClose,
     onSwitch,
     type: startType,
 }: {
     account: Account | null;
+    draft?: AccountValues;
     onClose: () => void;
     onSwitch: (flow: AccountFlow) => void;
     type: AccountType;
 }) {
     const { ledger, overview, photos } = useDashboard();
     const committer = useLedgerCommitter();
+    const { reopen } = useAccountFlows();
     const { flows } = useIntlayer("dashboard-accounts");
     const { locale } = useLocale();
     const id = useId();
@@ -217,15 +223,13 @@ export function AccountForm({
         () => [...new Set([ledger.currency, ...overview.balances.accounts.map((row) => row.currency)])],
         [ledger.currency, overview.balances.accounts]
     );
-    const [failed, setFailed] = useState(false);
     const editing = account !== null;
     const startBalance = account ? accountFacts(ledger, account.localId).balance : 0;
     const start = startValues(account, startType, startBalance, ledger.currency);
 
     const form = useForm({
-        defaultValues: start,
-        onSubmit: async ({ value }) => {
-            setFailed(false);
+        defaultValues: kept ?? start,
+        onSubmit: ({ value }) => {
             const decimals = decimalsFor(value.currency);
             const magnitude = parseAmount(value.balanceText, decimals);
             const balance = value.negative ? -magnitude : magnitude;
@@ -239,11 +243,16 @@ export function AccountForm({
             const row = account
                 ? editedAccount(books, account, draft, moneyTouched ? balance : null, at)
                 : createdAccount(books, draft, balance, crypto.randomUUID(), at);
-            if (await committer.commit([row])) {
-                onClose();
-            } else {
-                setFailed(true);
-            }
+            void committer.commit([row], { failed: flows.saveFailed.value }).then((saved) => {
+                if (!saved) {
+                    reopen(
+                        account
+                            ? { accountId: account.localId, draft: value, kind: "edit" }
+                            : { draft: value, kind: "create", type: value.type }
+                    );
+                }
+            });
+            onClose();
         },
         validators: {
             onSubmit: ({ value }) =>
@@ -413,23 +422,10 @@ export function AccountForm({
                             </div>
                         </>
                     ) : null}
-                    {failed && account ? (
-                        <p className="text-destructive text-[13px]" role="alert">
-                            {flows.saveFailed}
-                        </p>
-                    ) : null}
                 </form>
             </Dialog.Body>
             <Dialog.Footer>
                 {account ? <EditActions accountId={account.localId} onSwitch={onSwitch} /> : null}
-                {failed && !account ? (
-                    <span
-                        className="text-destructive mr-auto h-auto! min-w-0 flex-[0_1_auto]! rounded-none! text-[13px] leading-5"
-                        role="alert"
-                    >
-                        {flows.saveFailed}
-                    </span>
-                ) : null}
                 <Button className={FOOTER_PILL} onClick={onClose} variant="secondary">
                     {flows.cancel}
                 </Button>

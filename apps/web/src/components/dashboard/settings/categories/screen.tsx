@@ -7,7 +7,7 @@ import PencilEdit02Icon from "@hugeicons/core-free-icons/PencilEdit02Icon";
 import PlusSignIcon from "@hugeicons/core-free-icons/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { suggestionsNotAdded } from "@outlayr/money/category-rules";
-import { Link, useNavigate, useRouteContext } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Chip } from "panelui-web/chip";
@@ -24,9 +24,9 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile } from "@/components/ledger/tiles";
 import { liveCategories } from "@/lib/category-writes";
 import { categoryBudgets } from "@/lib/dashboard-series";
-import { metaFlag, useDisplayFormat, useMeta, writeSettings } from "@/lib/ledger-settings";
+import { metaFlag, useDisplayFormat, useMeta } from "@/lib/ledger-settings";
 
-import { SectionHead, SettingsCard } from "../parts";
+import { SectionHead, SettingsCard, useSaveSettings } from "../parts";
 import { CategoryEditor } from "./editor";
 import type { EditorTarget } from "./editor";
 import { categoryLines, categoryTree, INCOME_COLOR, MAX_EXPENSE_CATEGORIES } from "./model";
@@ -102,7 +102,7 @@ function Left({ remaining, over, currency }: { currency: string; over: boolean; 
 export function Categories() {
     const copy = useIntlayer("dashboard-categories");
     const labelOf = usePresetLabel();
-    const { dbClient } = useRouteContext({ from: "__root__" });
+    const save = useSaveSettings();
     const { filters, ledger } = useDashboard();
     const { money } = useDisplayFormat();
     const date = useDateFormat();
@@ -205,7 +205,7 @@ export function Categories() {
                         <Button
                             aria-pressed={showSuggestions}
                             className="max-sm:hidden"
-                            onClick={() => writeSettings(dbClient, { categorySuggestions: String(!showSuggestions) })}
+                            onClick={() => save({ categorySuggestions: String(!showSuggestions) })}
                             size="sm"
                             variant="outline"
                         >
