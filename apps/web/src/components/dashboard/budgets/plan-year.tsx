@@ -65,7 +65,7 @@ export function PlanCrumbs({ back, children, parent }: { back: ReactNode; childr
     );
 }
 
-export const BACK = "text-muted-foreground -ms-1.5 size-[30px]";
+export const BACK = "text-muted-foreground size-[30px]";
 export const PARENT = "text-muted-foreground hover:text-foreground text-[13px] font-normal";
 
 function YearBar({ year }: { year: ReturnType<typeof usePlanYear> }) {
@@ -82,7 +82,7 @@ function YearBar({ year }: { year: ReturnType<typeof usePlanYear> }) {
                             nativeButton={false}
                             render={<Link search={(prev) => ({ ...prev, period: undefined })} to="/app/budgets" />}
                             size="icon"
-                            variant="ghost"
+                            variant="outline"
                         >
                             <Glyph icon={ArrowLeft01Icon} size={16} />
                         </Button>

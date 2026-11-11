@@ -86,7 +86,7 @@ function MonthBar({ view }: { view: MonthView }) {
                                 <Link search={(prev) => ({ ...prev, period: yearSearch })} to="/app/budgets/plan" />
                             }
                             size="icon"
-                            variant="ghost"
+                            variant="outline"
                         >
                             <Glyph icon={ArrowLeft01Icon} size={16} />
                         </Button>
@@ -103,7 +103,7 @@ function MonthBar({ view }: { view: MonthView }) {
                 >
                     <span className="truncate">{names.month(view.period.key)}</span>
                     {view.month.status === "closed" ? (
-                        <Badge className={`${BADGE} ms-1`} variant="secondary">
+                        <Badge className={`${BADGE} ms-1`} variant="outline">
                             {copy.status.closed}
                         </Badge>
                     ) : null}
@@ -343,7 +343,12 @@ function OutCard({ view }: { view: MonthView }) {
         <Frame className="min-w-0">
             <CardHead aside={aside} title={copy.out} />
             <Frame.Panel className="p-0">
-                <DataTable head={head} numbers={0} phoneHidden={status === "ahead" ? [3] : [2, 5]}>
+                <DataTable
+                    density="comfortable"
+                    head={head}
+                    numbers={0}
+                    phoneHidden={status === "ahead" ? [3] : [2, 5]}
+                >
                     {out.map((entry) => {
                         const meta = plan.categories.get(entry.categoryId);
                         const color = meta?.color ?? MUTED;
@@ -449,54 +454,62 @@ function SpentChart({ view }: { view: MonthView }) {
                 <b className="text-muted-foreground text-sm font-medium">{copy.spentAgainst}</b>
                 <span className="dash-figure text-muted-foreground ms-auto text-[13px]">{money(month.in)}</span>
             </div>
-            <figure aria-label={copy.spentAgainst.value} className="px-5 pb-3" ref={ref}>
-                {width > 0 ? (
-                    <svg aria-hidden className="block overflow-visible" height={CHART_HEIGHT} width={width}>
-                        {(month.in > 0 ? [0, month.in] : [0]).map((value) => (
-                            <g key={value}>
-                                <line stroke={STRONG} x1={CHART_LEFT} x2={width} y1={y(value)} y2={y(value)} />
-                                <text
-                                    className="dash-figure"
-                                    fill={MUTED}
-                                    style={{ fontSize: 11, textAnchor: "end" }}
-                                    x={36}
-                                    y={y(value) + 4}
-                                >
-                                    {whole(value)}
-                                </text>
-                            </g>
-                        ))}
-                        {path.length > 1 ? (
-                            <path d={path.join("")} fill="none" stroke={TINT} strokeLinejoin="round" strokeWidth={2} />
-                        ) : null}
-                        {ticks.map((tick) => {
-                            let anchor: "end" | "middle" | "start" = "middle";
-                            if (tick === 1) {
-                                anchor = "start";
-                            } else if (tick === period.days) {
-                                anchor = "end";
-                            }
-                            const day = new Date(Date.parse(`${period.from}T12:00:00Z`) + (tick - 1) * 86_400_000)
-                                .toISOString()
-                                .slice(0, 10);
-                            return (
-                                <text
-                                    className="dash-figure"
-                                    fill={MUTED}
-                                    key={tick}
-                                    style={{ fontSize: 11, textAnchor: anchor }}
-                                    x={x(tick - 1)}
-                                    y={CHART_HEIGHT - 4}
-                                >
-                                    {date.day(day)}
-                                </text>
-                            );
-                        })}
-                    </svg>
-                ) : (
-                    <div style={{ height: CHART_HEIGHT }} />
-                )}
-            </figure>
+            <div className="px-5 pb-3">
+                <figure aria-label={copy.spentAgainst.value} ref={ref}>
+                    {width > 0 ? (
+                        <svg aria-hidden className="block overflow-visible" height={CHART_HEIGHT} width={width}>
+                            {(month.in > 0 ? [0, month.in] : [0]).map((value) => (
+                                <g key={value}>
+                                    <line stroke={STRONG} x1={CHART_LEFT} x2={width} y1={y(value)} y2={y(value)} />
+                                    <text
+                                        className="dash-figure"
+                                        fill={MUTED}
+                                        style={{ fontSize: 11, textAnchor: "end" }}
+                                        x={36}
+                                        y={y(value) + 4}
+                                    >
+                                        {whole(value)}
+                                    </text>
+                                </g>
+                            ))}
+                            {path.length > 1 ? (
+                                <path
+                                    d={path.join("")}
+                                    fill="none"
+                                    stroke={TINT}
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                />
+                            ) : null}
+                            {ticks.map((tick) => {
+                                let anchor: "end" | "middle" | "start" = "middle";
+                                if (tick === 1) {
+                                    anchor = "start";
+                                } else if (tick === period.days) {
+                                    anchor = "end";
+                                }
+                                const day = new Date(Date.parse(`${period.from}T12:00:00Z`) + (tick - 1) * 86_400_000)
+                                    .toISOString()
+                                    .slice(0, 10);
+                                return (
+                                    <text
+                                        className="dash-figure"
+                                        fill={MUTED}
+                                        key={tick}
+                                        style={{ fontSize: 11, textAnchor: anchor }}
+                                        x={x(tick - 1)}
+                                        y={CHART_HEIGHT - 4}
+                                    >
+                                        {date.day(day)}
+                                    </text>
+                                );
+                            })}
+                        </svg>
+                    ) : (
+                        <div style={{ height: CHART_HEIGHT }} />
+                    )}
+                </figure>
+            </div>
         </>
     );
 }
@@ -528,6 +541,7 @@ function InCard({ view }: { view: MonthView }) {
             <Frame.Panel className="p-0">
                 {income.length > 0 ? (
                     <DataTable
+                        density="comfortable"
                         head={[columns.source, month.status === "closed" ? columns.got : columns.now, columns.arrived]}
                         numbers={0}
                     >

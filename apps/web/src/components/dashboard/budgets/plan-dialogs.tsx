@@ -159,6 +159,18 @@ function PlanChart({
                                         y={top + 0.5}
                                     />
                                 ) : null}
+                                {month.locked ? (
+                                    <g
+                                        fill="none"
+                                        stroke="var(--color-muted-foreground)"
+                                        strokeLinecap="round"
+                                        strokeWidth={1.2}
+                                        transform={`translate(${x + barWidth / 2 - 4} ${BASELINE - 12})`}
+                                    >
+                                        <rect height={5} rx={1} width={8} y={3.5} />
+                                        <path d="M2 3.5V2.5a2 2 0 0 1 4 0V3.5" />
+                                    </g>
+                                ) : null}
                                 <text
                                     className="dash-figure"
                                     fill={active ? "var(--color-foreground)" : "var(--color-muted-foreground)"}

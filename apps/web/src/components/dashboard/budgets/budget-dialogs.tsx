@@ -249,7 +249,11 @@ function CategoryPick({
             onValueChange={(next) => next !== null && onPick(next)}
             value={value}
         >
-            <Select.Trigger aria-invalid={invalid || undefined} aria-label={form.category.value}>
+            <Select.Trigger
+                aria-invalid={invalid || undefined}
+                aria-label={form.category.value}
+                className="aria-invalid:border-destructive aria-invalid:ring-destructive/20 aria-invalid:ring-3"
+            >
                 {picked ? <Dot color={picked.color} /> : null}
                 <Select.Value placeholder={(invalid ? form.pick : form.choose).value} />
             </Select.Trigger>
@@ -611,7 +615,8 @@ function useLimitForm(mode: LimitMode) {
         () => (chosen ? limitPreview(ledger, subject, { amount, startDay: stored ? startDay : null, type }) : null),
         [amount, chosen, ledger, startDay, stored, subject, type]
     );
-    const target = categoryId === null ? undefined : ledger.budgetTargets.get(categoryId);
+    const target =
+        categoryId === null ? undefined : (ledger.budgetTargets.get(categoryId) ?? ledger.categories.get(categoryId));
     const color = target?.color ?? "var(--color-app-muted)";
     const draft: BudgetDraft = { amount, name, rollover, startDay: stored ? startDay : null, type };
     const dirty = stored !== null && isDirty(ledger, stored, draft, storedDay);

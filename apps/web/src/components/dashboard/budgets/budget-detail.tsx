@@ -94,7 +94,7 @@ function DetailBar({ detail }: { detail: BudgetDetail }) {
                             nativeButton={false}
                             render={<Link search={(prev) => prev} to="/app/budgets" />}
                             size="icon"
-                            variant="ghost"
+                            variant="outline"
                         >
                             <Glyph icon={ArrowLeft01Icon} size={16} />
                         </Button>
