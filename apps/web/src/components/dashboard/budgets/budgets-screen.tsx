@@ -506,7 +506,7 @@ function AheadCard({ model }: { model: BudgetsOverview }) {
     const names = useMonthNames();
     return (
         <Frame className="my-4 min-w-0 flex-1">
-            <Frame.Panel className="flex flex-1 flex-col items-center justify-center gap-1.5 px-6 py-10 text-center">
+            <Frame.Panel className="flex flex-1 flex-col items-center justify-center gap-1.5 divide-y-0 px-6 py-10 text-center">
                 <span className="bg-app-fill text-muted-foreground mb-2 flex size-11 items-center justify-center rounded-[14px]">
                     <Glyph icon={Calendar03Icon} size={20} />
                 </span>
@@ -546,7 +546,7 @@ function NoBudgets({ model }: { model: BudgetsOverview }) {
     return (
         <>
             <Frame className="mb-4 min-w-0">
-                <Frame.Panel className="relative isolate flex flex-col items-center gap-1.5 overflow-hidden px-6 pt-[172px] pb-7 text-center">
+                <Frame.Panel className="relative isolate flex flex-col items-center gap-1.5 divide-y-0 overflow-hidden px-6 pt-[172px] pb-7 text-center">
                     <Ghost height={160} name="budgets" />
                     <EmptyLine title={copy.noBudgets.title}>{line}</EmptyLine>
                     <Button onClick={() => open({ categoryId: null, kind: "new" })}>
@@ -612,7 +612,7 @@ function NoData() {
     const { open } = useAccountFlows();
     return (
         <Frame className="mb-5 min-w-0 flex-1">
-            <Frame.Panel className="relative isolate flex min-h-[874px] flex-1 flex-col items-center gap-1.5 overflow-hidden px-6 pt-[460px] text-center">
+            <Frame.Panel className="relative isolate flex min-h-[874px] flex-1 flex-col items-center gap-1.5 divide-y-0 overflow-hidden px-6 pt-[460px] text-center">
                 <Ghost height={874} name="page" />
                 <EmptyLine title={copy.title}>{copy.line}</EmptyLine>
                 <Button onClick={() => open({ kind: "entry" })}>

@@ -416,7 +416,7 @@ function EmptyYear({ plan }: { plan: YearPlan }) {
     const first = monthKey(plan.projection.year, 0);
     return (
         <Frame className="mt-4 mb-5 min-w-0 flex-1">
-            <Frame.Panel className="relative isolate flex min-h-[744px] flex-1 flex-col items-center gap-1.5 overflow-hidden px-6 pt-[392px] text-center">
+            <Frame.Panel className="relative isolate flex min-h-[744px] flex-1 flex-col items-center gap-1.5 divide-y-0 overflow-hidden px-6 pt-[392px] text-center">
                 <Ghost height={744} name="year" />
                 <b className="text-[15px] leading-[22px] font-semibold">
                     {empty.yearTitle({ year: plan.projection.year })}

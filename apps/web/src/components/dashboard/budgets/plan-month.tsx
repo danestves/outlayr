@@ -663,7 +663,7 @@ function EmptyMonth({ view }: { view: MonthView }) {
     const { key } = view.month;
     return (
         <Frame className="mt-4 mb-5 min-w-0 flex-1">
-            <Frame.Panel className="relative isolate flex min-h-[744px] flex-1 flex-col items-center gap-1.5 overflow-hidden px-6 pt-[392px] text-center">
+            <Frame.Panel className="relative isolate flex min-h-[744px] flex-1 flex-col items-center gap-1.5 divide-y-0 overflow-hidden px-6 pt-[392px] text-center">
                 <Ghost height={744} name="month" />
                 <b className="text-[15px] leading-[22px] font-semibold">
                     {empty.monthTitle({ month: names.month(view.period.key) })}
