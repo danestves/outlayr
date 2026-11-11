@@ -23,6 +23,7 @@
         "./catalog": "./src/catalog.generated.ts",
         "./category-rules": "./src/category-rules.ts",
         "./contract": "./src/contract.ts",
+        "./count-bucket": "./src/count-bucket.ts",
         "./csv-read": "./src/csv-read.ts",
         "./currency": "./src/currency.ts",
         "./currency-totals": "./src/currency-totals.ts",

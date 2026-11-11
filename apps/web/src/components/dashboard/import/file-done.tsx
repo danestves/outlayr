@@ -1,4 +1,5 @@
 import UndoIcon from "@hugeicons/core-free-icons/UndoIcon";
+import { countBucket } from "@outlayr/money/count-bucket";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
@@ -15,6 +16,7 @@ import { KpiBand } from "@/components/dashboard/accounts/parts";
 import { useCategoryLook } from "@/components/dashboard/rules/parts";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
+import { capture } from "@/lib/analytics";
 import { groupKey, repairRow } from "@/lib/import-file";
 import type { FaultyRow, FileRow, StatementCheck } from "@/lib/import-file";
 import { planOf } from "@/lib/import-plan";
@@ -122,6 +124,10 @@ export function useRunImport() {
         const land = async () => {
             if (await committer.commit(written)) {
                 records?.add(record);
+                capture("import_finished", {
+                    rows: countBucket(plan.entries.length),
+                    source: draft.source === "pdf" ? "pdf" : "csv",
+                });
                 on.saved({
                     accountChoices,
                     accountOf,

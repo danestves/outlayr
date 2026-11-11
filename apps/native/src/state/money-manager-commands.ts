@@ -1,3 +1,4 @@
+import { countBucket } from "@outlayr/money/count-bucket";
 import { analyzeSnapshot } from "@outlayr/money/money-manager/analysis";
 import { defaultChoices } from "@outlayr/money/money-manager/defaults";
 import { buildImportPlan } from "@outlayr/money/money-manager/plan";
@@ -11,7 +12,6 @@ import {
     verifyImportedBalances,
 } from "@/data/money-manager-import-core";
 import type { Database } from "@/db/client";
-import { countBucket } from "@/domain/count-bucket";
 import { pickBackupFile, readBackupFile } from "@/lib/money-manager-file";
 import type { BackupSource } from "@/lib/money-manager-file";
 import { moneyManagerSession } from "@/lib/money-manager-session";

@@ -1,3 +1,4 @@
+import { countBucket } from "@outlayr/money/count-bucket";
 import * as Effect from "effect/Effect";
 
 import type { LastImport } from "@/data/last-import";
@@ -6,7 +7,6 @@ import { transactionsRepo } from "@/data/transactions-core";
 import { applyImport, undoFileImport } from "@/data/transfer-core";
 import type { FileImportKind, ImportPlan } from "@/data/transfer-core";
 import type { Database } from "@/db/client";
-import { countBucket } from "@/domain/count-bucket";
 import { attachImportLogos } from "@/lib/import-logo-attach";
 import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
