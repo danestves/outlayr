@@ -6,7 +6,8 @@ import { FirstRun } from "@/components/first-run";
 import { MonoLabel } from "@/components/mono-label";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
-import { useAutoLogSources, useBankTexts } from "@/hooks/use-auto-log-sources";
+import { useAutoLogSources } from "@/hooks/use-auto-log-sources";
+import { useBankTexts } from "@/hooks/use-bank-texts";
 import { useRegionCode } from "@/hooks/use-region-code";
 import { useTranslation } from "@/i18n/context";
 
@@ -16,7 +17,7 @@ export function OnboardingAutoLog() {
     const db = useDatabase();
     const region = useRegionCode();
     const currency = useGlobalCurrency(db);
-    const bankTexts = useBankTexts(db);
+    const bankTexts = useBankTexts();
 
     if (bankTexts && (region === "VE" || currency === "VES")) {
         return <OnboardingBankTexts bankTexts={bankTexts} />;

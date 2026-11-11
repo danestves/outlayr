@@ -14,7 +14,7 @@ import { cn } from "@/components/tw";
 import { useNow } from "@/data/use-now";
 import { bankTextSample } from "@/domain/bank-text-sample";
 import { formatTime } from "@/domain/dates";
-import type { BankTexts } from "@/hooks/use-auto-log-sources";
+import type { BankTexts } from "@/hooks/use-bank-texts";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 

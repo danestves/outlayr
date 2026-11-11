@@ -1,5 +1,4 @@
 import * as Cause from "effect/Cause";
-import { useState } from "react";
 
 import type { SettingsIconName } from "@/components/settings/settings-icons";
 import { useWalletState } from "@/data/use-wallet-state";
@@ -19,11 +18,6 @@ export interface AutoLogSource {
     on: boolean;
     onSetUp?: () => void;
     title: string;
-}
-
-export interface BankTexts {
-    done: boolean;
-    onSetUp: () => void;
 }
 
 const SIRI_PHRASE = "“Log an expense in Outlayr”";
@@ -76,21 +70,4 @@ export function useAutoLogSources(db: Database): AutoLogSource[] {
         },
         siri,
     ];
-}
-
-export function useBankTexts(db: Database): BankTexts | null {
-    const [opened, setOpened] = useState(false);
-    const bank = useAutoLogSources(db).find((source) => source.id === "bank");
-    const onSetUp = bank?.onSetUp;
-    if (!bank || !onSetUp) {
-        return null;
-    }
-
-    return {
-        done: bank.on || opened,
-        onSetUp: () => {
-            setOpened(true);
-            onSetUp();
-        },
-    };
 }

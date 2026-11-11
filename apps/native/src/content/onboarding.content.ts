@@ -44,25 +44,12 @@ const onboarding = {
             "pt-PT": "Deixe o Outlayr escrever por si",
         }),
         "onboarding.bankTexts.action": t({
-            en: "Set up",
-            es: "Configurar",
-            fr: "Configurer",
-            pt: "Configurar",
-        }),
-        "onboarding.bankTexts.action.android": t({
             en: "Turn it on",
             es: "Activar",
             fr: "Activer",
             pt: "Ativar",
         }),
         "onboarding.bankTexts.footnote": t({
-            en: "Opens Shortcuts. You choose which apps it reads.",
-            es: "Abre Atajos. Tú eliges qué apps lee.",
-            fr: "Ouvre Raccourcis. Vous choisissez les apps lues.",
-            pt: "Abre o app Atalhos. Você escolhe quais apps ele lê.",
-            "pt-PT": "Abre a app Atalhos. Escolhe quais apps são lidas.",
-        }),
-        "onboarding.bankTexts.footnote.android": t({
             en: "Opens Settings. You choose which senders it reads.",
             es: "Abre Ajustes. Tú eliges qué remitentes lee.",
             fr: "Ouvre les Paramètres. Vous choisissez les expéditeurs lus.",
