@@ -147,10 +147,14 @@ export function GoalMenu({ className = "", view }: { className?: string; view: G
     );
 }
 
+// The plate's back lines start further in than its front ones, so a wide card would show its diagonal ends.
+const PLATE_EDGES =
+    "@min-[1640px]:[mask-image:linear-gradient(to_right,transparent_300px,#000_560px,#000_calc(100%_-_560px),transparent_calc(100%_-_300px))]";
+
 export function Terrain({ flat = false }: { flat?: boolean }) {
     const name = flat ? "terrain-flat" : "terrain";
     const height = flat ? 180 : 874;
-    const image = "pointer-events-none absolute top-0 left-1/2 -z-10 h-auto max-w-none -translate-x-1/2 select-none";
+    const image = `pointer-events-none absolute top-0 left-1/2 -z-10 h-auto max-w-none -translate-x-1/2 select-none ${PLATE_EDGES}`;
     return (
         <>
             <img alt="" className={`light-only ${image}`} height={height} src={`/goals/${name}.svg`} width={2202} />

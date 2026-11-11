@@ -34,6 +34,7 @@ import {
     contributions,
     goalChart,
     goalViews,
+    monthOf,
     monthlyAdded,
     projectedDay,
     standingOf,
@@ -505,14 +506,12 @@ function MonthlyCard({ months, view }: { months: readonly MonthAdded[]; view: Go
     const short = useMonthShort();
     const top = Math.max(1, ...months.map((month) => month.added));
     const color = view.progress.reached ? "bg-app-income" : "bg-app-tint";
-    const lead = Math.max(0, MONTH_BARS - months.length);
-    const slots = [
-        ...Array.from({ length: lead }, (_, index) => ({
-            bar: null,
-            month: addMonths(months[0]?.month ?? "", index - lead),
-        })),
-        ...months.map((bar) => ({ bar, month: bar.month })),
-    ];
+    const { ledger } = useDashboard();
+    const end = monthOf(ledger.today);
+    const slots = Array.from({ length: MONTH_BARS }, (_, index) => {
+        const month = addMonths(end, index + 1 - MONTH_BARS);
+        return { bar: months.find((bar) => bar.month === month) ?? null, month };
+    });
     return (
         <Frame className="min-h-[300px] min-w-0 flex-1">
             <Frame.Header>
