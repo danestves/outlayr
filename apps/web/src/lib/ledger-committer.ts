@@ -3,7 +3,7 @@ import { createTransaction } from "@tanstack/react-db";
 import type { DbClient } from "@tanstack/react-db";
 
 import { UNSENT_PREFIX, keepUnsent } from "./ledger-cache";
-import { ledgerCollections } from "./ledger-db";
+import { ledgerCollections, ledgerSync } from "./ledger-db";
 import { pushRows } from "./ledger-write";
 
 interface ShownRow {
@@ -15,7 +15,6 @@ interface ShownRows {
     has: (key: string) => boolean;
     insert: (row: ShownRow) => void;
     update: (key: string, change: (draft: ShownRow) => void) => void;
-    utils: { awaitSync: () => Promise<void> };
 }
 
 const COLLECTED = {
@@ -159,7 +158,8 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
     const start = (
         initial: readonly PushRow[],
         holdMs: number | undefined,
-        key = `${UNSENT_PREFIX}${crypto.randomUUID()}`
+        key = `${UNSENT_PREFIX}${crypto.randomUUID()}`,
+        allowed?: Promise<void>
     ): LedgerCommit => {
         const rows = [...initial];
         let sent: Promise<void> | undefined;
@@ -167,14 +167,14 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
         let timer: ReturnType<typeof setTimeout> | undefined;
 
         const send = async () => {
+            let pushedSeq = 0;
             try {
-                await pushRows(db, rows);
+                pushedSeq = await pushRows(db, rows);
             } finally {
                 sendingKeys.delete(key);
                 dropUnsent(key);
             }
-            const tables = new Set(rows.filter(isShown).map((row) => row.table));
-            await Promise.allSettled([...tables].map((table) => shownRows(db, table).utils.awaitSync()));
+            await ledgerSync(db).reached(pushedSeq);
         };
         const transaction = createTransaction({ autoCommit: false, mutationFn: () => sent ?? Promise.resolve() });
         const show = (shown: readonly PushRow[]) => {
@@ -202,7 +202,7 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
             };
         };
 
-        const run = async (): Promise<CommitOutcome> => {
+        const push = async (): Promise<CommitOutcome> => {
             if (transaction.state !== "pending") {
                 move("sending", "failed");
                 return failure(new Error("A failed commit on the same rows rolled this one back"));
@@ -221,6 +221,23 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
                 move("sending", "failed");
                 return failure(error instanceof Error ? error : new Error(String(error)));
             }
+        };
+
+        const giveUp = (): CommitOutcome => {
+            sendingKeys.delete(key);
+            move("sending", null);
+            if (transaction.state === "pending") {
+                transaction.rollback();
+            }
+            return { status: "undone" };
+        };
+
+        const run = () => {
+            if (!allowed) {
+                return push();
+            }
+            sendingKeys.add(key);
+            return allowed.then(push, giveUp);
         };
 
         const leaveHold = () => {
@@ -287,7 +304,7 @@ function createCommitter(db: DbClient, userId: string | undefined): LedgerCommit
                 if (!sendingKeys.has(key)) {
                     const unsent = readUnsent(key);
                     if (unsent && unsent.userId === userId && Array.isArray(unsent.rows)) {
-                        start(unsent.rows, undefined, key);
+                        start(unsent.rows, undefined, key, ledgerSync(db).synced());
                     } else {
                         dropUnsent(key);
                     }

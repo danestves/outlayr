@@ -61,10 +61,8 @@ export const Route = createFileRoute("/_account/app")({
         const userId = userOf(token);
         const idle = context.dbClient.collection(ledgerCollections.transactions).status === "idle";
         const restored = idle && userId !== undefined ? await restoreLedger(context.dbClient, userId) : undefined;
-        const settled = preloadLedger(context.dbClient).then(() => {
-            ledgerCommitter(context.dbClient, userId).resume();
-            return true;
-        });
+        const settled = preloadLedger(context.dbClient).then(() => true);
+        ledgerCommitter(context.dbClient, userId).resume();
         restoreAccountState(context.queryClient, restored?.queries);
         warmAccountState(context.queryClient);
         if (restored) {

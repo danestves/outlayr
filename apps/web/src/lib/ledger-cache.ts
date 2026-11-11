@@ -11,7 +11,7 @@ import { forgetPush } from "./web-push";
 const DATABASE = "outlayr-ledger";
 const STORE = "snapshots";
 const LATEST = "latest";
-export const LEDGER_CACHE_VERSION = 3;
+export const LEDGER_CACHE_VERSION = 4;
 
 export interface LedgerSnapshot {
     collections: DehydratedDbState["collections"];
