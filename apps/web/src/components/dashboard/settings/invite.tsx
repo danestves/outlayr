@@ -427,6 +427,7 @@ export function Invite() {
     const overview = query.data ?? null;
     const { data: minted, mutate: mint } = useMutation({
         mutationFn: () => convexClient().mutation(api.referrals.ensureCode, {}),
+        retry: 3,
     });
     const unminted = overview !== null && overview.code === null;
     // oxlint-disable-next-line outlayr/react-effect-budget -- Convex is an external system.

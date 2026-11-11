@@ -68,7 +68,7 @@ export function Usage() {
     const { usage: text } = copy;
     const { locale } = useLocale();
     const { data } = useQuery(limitsQuery);
-    const { data: referrals } = useQuery(referralsQuery);
+    const { data: referrals, isPending: countingFriends } = useQuery(referralsQuery);
     const now = useSyncExternalStore(subscribeMinute, currentMinute, serverMinute);
     const limits = data ?? SAMPLE_LIMITS;
     const captures = projectLimit(limits.captures, now);
@@ -98,7 +98,7 @@ export function Usage() {
     return (
         <>
             <SectionHead title={copy.sections.usage} />
-            <Skeleton loading={!data || referrals === undefined}>
+            <Skeleton loading={!data || countingFriends}>
                 <div className="flex flex-col gap-4">
                     <Kpi.Group className="rounded-2xl max-lg:grid max-lg:grid-cols-2 max-lg:gap-y-5" surface>
                         <Stat
