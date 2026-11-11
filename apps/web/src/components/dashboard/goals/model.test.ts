@@ -71,6 +71,7 @@ function views(
             },
         ],
         appMeta: [{ key: "timeZone", value: "UTC" }],
+        budgetPlans: [],
         budgets: [],
         categories: [],
         exchangeRates: [],

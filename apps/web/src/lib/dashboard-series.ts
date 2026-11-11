@@ -1,11 +1,13 @@
-import { spentForCategory } from "@outlayr/money/budget-spent";
+import { spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
 import { budgetStanding } from "@outlayr/money/budget-standing";
-import { wall } from "@outlayr/money/ledger-zone";
+import type { StoredBudget } from "@outlayr/money/budget-standing";
+import { previousPeriodStart } from "@outlayr/money/budget-window";
+import { fromWall, wall } from "@outlayr/money/ledger-zone";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import type { AreaChartDatum } from "panelui-web/area-chart";
 
 import { endOfDay, round, rowsBetween, rowsOf, startOfDay, total, UNCATEGORIZED_NAME } from "./dashboard-series-ledger";
-import type { Ledger, LedgerRow, Scope } from "./dashboard-series-ledger";
+import type { Expense, Ledger, LedgerRow, Scope } from "./dashboard-series-ledger";
 import { netWorthPoints } from "./dashboard-series-net-worth";
 import { daysFrom, priorSlice, periodOf, shiftPeriodKey } from "./dashboard-series-period";
 import type { Period } from "./dashboard-series-period";
@@ -207,19 +209,74 @@ const budgetsByAge = (ledger: Ledger) =>
         .filter((row) => row.deletedAt === null && row.categoryId !== null)
         .toSorted((a, b) => (a.dateCreated ?? 0) - (b.dateCreated ?? 0));
 
-function standingOf(ledger: Ledger, budget: Budget, categoryId: string, period: Period): CategoryBudget {
-    const asOf = Math.min(ledger.now, endOfDay(ledger, period.to));
+const allExpenses = new WeakMap<Ledger, readonly Expense[]>();
+
+/** Every expense once, for the overall limit; a category's list repeats a row under its parent. */
+function expensesOf(ledger: Ledger, categoryId: string | null): readonly Expense[] {
+    if (categoryId !== null) {
+        return ledger.expensesByCategory.get(categoryId) ?? [];
+    }
+    const kept = allExpenses.get(ledger);
+    if (kept) {
+        return kept;
+    }
+    const rows = ledger.rows
+        .filter((row) => !row.income)
+        .map((row) => ({
+            amount: row.amount,
+            categoryId: row.categoryId,
+            date: wall(row.at, ledger.offsetAt(row.at)),
+            day: row.day,
+            parentId: row.parentId,
+        }));
+    allExpenses.set(ledger, rows);
+    return rows;
+}
+
+/** The instant a period is read at: its end once it is over, now while it runs, its first moment before it starts. */
+export function periodInstant(ledger: Ledger, period: Period) {
+    return period.from > ledger.today
+        ? startOfDay(ledger, period.from)
+        : Math.min(ledger.now, endOfDay(ledger, period.to));
+}
+
+// A window never opens before its anchor, and a phone keeps the anchor on its current window,
+// so reading an earlier window steps the anchor back to it.
+function anchoredBy(ledger: Ledger, budget: StoredBudget, asOf: number): StoredBudget {
+    if (budget.startDate === null || budget.startDate <= asOf) {
+        return budget;
+    }
+    const target = wall(asOf, ledger.offsetAt(asOf)).getTime();
+    let start = wall(budget.startDate, ledger.offsetAt(budget.startDate));
+    while (start.getTime() > target) {
+        const previous = previousPeriodStart(start, budget.type, true);
+        if (previous.getTime() === start.getTime()) {
+            break;
+        }
+        start = previous;
+    }
+    return { ...budget, startDate: fromWall(start.getTime(), ledger.offsetAt) };
+}
+
+/** The window holding `asOf`; `categoryId` null reads the limit against all spending. */
+export function standingAt(
+    ledger: Ledger,
+    budget: StoredBudget,
+    categoryId: string | null,
+    asOf: number
+): CategoryBudget {
     const clock = {
         currency: ledger.currency,
         now: wall(asOf, ledger.offsetAt(asOf)),
         offsetAt: ledger.offsetAt,
         rates: ledger.rates,
     };
-    const filed = ledger.expensesByCategory.get(categoryId) ?? [];
+    const filed = expensesOf(ledger, categoryId);
     const standing = budgetStanding(
-        budget,
+        anchoredBy(ledger, budget, asOf),
         budget.rollover,
-        (start, last) => spentForCategory(filed, categoryId, start, last),
+        (start, last) =>
+            categoryId === null ? spentForMain(filed, start, last) : spentForCategory(filed, categoryId, start, last),
         clock
     );
     const byDay = new Map<string, number>();
@@ -249,6 +306,9 @@ function standingOf(ledger: Ledger, budget: Budget, categoryId: string, period: 
         to: standing.to,
     };
 }
+
+const standingOf = (ledger: Ledger, budget: Budget, categoryId: string, period: Period) =>
+    standingAt(ledger, budget, categoryId, periodInstant(ledger, period));
 
 export function categoryBudget(ledger: Ledger, categoryId: string, period: Period) {
     const budget = budgetsByAge(ledger).find((row) => row.categoryId === categoryId);

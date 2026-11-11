@@ -3,6 +3,7 @@ import * as Schema from "effect/Schema";
 
 import accounts from "./_generated/tables/accounts";
 import appMeta from "./_generated/tables/appMeta";
+import budgetPlans from "./_generated/tables/budgetPlans";
 import budgets from "./_generated/tables/budgets";
 import categories from "./_generated/tables/categories";
 import exchangeRates from "./_generated/tables/exchangeRates";
@@ -41,6 +42,13 @@ export default GroupSpec.make()
     )
     .addFunction(
         FunctionSpec.publicQuery({ args: () => ({}), name: "appMeta", returns: () => Schema.Array(appMeta.Doc) })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({
+            args: () => ({}),
+            name: "budgetPlans",
+            returns: () => Schema.Array(budgetPlans.Doc),
+        })
     )
     .addFunction(
         FunctionSpec.publicQuery({ args: () => ({}), name: "budgets", returns: () => Schema.Array(budgets.Doc) })

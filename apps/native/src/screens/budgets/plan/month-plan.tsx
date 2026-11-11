@@ -1,5 +1,7 @@
 import type { BottomSheetModal } from "@expo/ui/community/bottom-sheet";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
+import { monthKeyAt, monthKeyParts, shiftMonthKey } from "@outlayr/money/year-plan";
+import type { CategoryMonth, MonthKey, MonthProjection } from "@outlayr/money/year-plan";
 import * as Cause from "effect/Cause";
 import { useRef, useState } from "react";
 import { ScrollView, View } from "react-native";
@@ -22,8 +24,6 @@ import { buildBurndown } from "@/domain/budget-burndown";
 import { leftPerDay } from "@/domain/budget-math";
 import { formatTargetMonth, monthAbbrevTitle } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
-import { monthKeyAt, monthKeyParts, shiftMonthKey } from "@/domain/year-plan";
-import type { CategoryMonth, MonthKey, MonthProjection } from "@/domain/year-plan";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";

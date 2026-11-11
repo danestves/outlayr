@@ -63,6 +63,7 @@ const ledger = prepareLedger(
             { ...envelope("chase", 1), currency: "USD", initialBalance: 0, initialBalanceDate: 0, name: "Chase" },
         ],
         appMeta: [{ key: "timeZone", value: "UTC" }],
+        budgetPlans: [],
         budgets: [],
         categories: [category("food"), category("rent"), category("travel"), category("salary", true)],
         exchangeRates: [],

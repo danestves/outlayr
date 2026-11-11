@@ -1,5 +1,6 @@
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { lastMsBefore, spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
+import { typicalSpend } from "@outlayr/money/budget-typical";
 import { BUDGET_TYPE, periodEnd, startOfPeriod } from "@outlayr/money/budget-window";
 import type { BudgetWindow } from "@outlayr/money/budget-window";
 import { useState } from "react";
@@ -18,7 +19,6 @@ import { earliestDate } from "@/data/budgets";
 import { buildBurndown } from "@/domain/budget-burndown";
 import { suggestedLimit } from "@/domain/budget-limit-step";
 import { budgetPeriodCadence, budgetPeriodName, budgetWindowLabel } from "@/domain/budget-math";
-import { typicalSpend } from "@/domain/budget-typical";
 import { monthLongTitle } from "@/domain/dates";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { numpadToNumber, wholeUnitsToNumpad } from "@/domain/numpad";

@@ -2,8 +2,7 @@ import { contributesTo } from "@outlayr/money/budget-spent";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import type { BudgetWindow } from "@outlayr/money/budget-window";
 import { startOfDay } from "@outlayr/money/calendar";
-
-import { median } from "./stats";
+import { median } from "@outlayr/money/stats";
 
 const DAY_MS = 86_400_000;
 

@@ -31,6 +31,17 @@ const accountsQuery = FunctionImpl.make(databaseSchema, spec, "accounts", () =>
     }).pipe(Effect.orDie)
 );
 
+const budgetPlansQuery = FunctionImpl.make(databaseSchema, spec, "budgetPlans", () =>
+    Effect.gen(function* budgetPlans() {
+        const userId = yield* syncedUser();
+        const reader = yield* DatabaseReader;
+        return yield* reader
+            .table("budgetPlans")
+            .index("by_user_and_seq", (q) => q.eq("userId", userId))
+            .collect();
+    }).pipe(Effect.orDie)
+);
+
 const budgetsQuery = FunctionImpl.make(databaseSchema, spec, "budgets", () =>
     Effect.gen(function* budgets() {
         const userId = yield* syncedUser();
@@ -221,6 +232,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(appMetaQuery),
     Layer.provide(exchangeRatesQuery),
     Layer.provide(accountsQuery),
+    Layer.provide(budgetPlansQuery),
     Layer.provide(budgetsQuery),
     Layer.provide(categoriesQuery),
     Layer.provide(installmentPlansQuery),

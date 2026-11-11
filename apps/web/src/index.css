@@ -1221,21 +1221,9 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
         border-radius: 12px;
     }
 
-    .dash-soon {
-        display: none;
-    }
-
     .dash-drawer .dash-nav {
         height: 44px;
         margin-bottom: 0;
-    }
-
-    .dash-drawer .dash-soon {
-        display: inline;
-        margin-left: auto;
-        color: var(--color-app-ghost);
-        font-size: 12px;
-        font-weight: 400;
     }
 
     @media (max-width: 1023px) {

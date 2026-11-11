@@ -1,7 +1,6 @@
-import type { ExpenseContribution } from "@outlayr/money/budget-spent";
-import { previousPeriodStart } from "@outlayr/money/budget-window";
-import type { BudgetWindow } from "@outlayr/money/budget-window";
-
+import type { ExpenseContribution } from "./budget-spent";
+import { previousPeriodStart } from "./budget-window";
+import type { BudgetWindow } from "./budget-window";
 import { median } from "./stats";
 
 const TYPICAL_LOOKBACK = 6;

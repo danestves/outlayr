@@ -75,6 +75,7 @@ const transfer = (localId: string, from: string, to: string, extra: Partial<Ledg
 const books = (extra: Partial<LedgerBooks>): LedgerBooks => ({
     accounts: [],
     appMeta: [],
+    budgetPlans: [],
     budgets: [],
     categories: [],
     exchangeRates: [],

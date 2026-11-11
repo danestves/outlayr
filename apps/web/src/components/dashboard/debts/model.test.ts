@@ -43,6 +43,7 @@ function elena(moves: ReturnType<typeof move>[]) {
             },
         ],
         appMeta: [{ key: "timeZone", value: "UTC" }],
+        budgetPlans: [],
         budgets: [],
         categories: [],
         exchangeRates: [],

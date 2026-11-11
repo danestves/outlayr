@@ -61,6 +61,7 @@ const ledger = prepareLedger(
     {
         accounts: [account("chase", "USD"), account("savings", "USD")],
         appMeta: [{ key: "timeZone", value: "America/Caracas" }],
+        budgetPlans: [],
         budgets: [],
         categories: [category("food"), category("salary", true)],
         exchangeRates: [],

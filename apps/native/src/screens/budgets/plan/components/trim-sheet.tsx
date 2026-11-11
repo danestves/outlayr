@@ -1,4 +1,6 @@
 import { BottomSheetModal, BottomSheetView } from "@expo/ui/community/bottom-sheet";
+import { firstShortRun, isShort, trimEffect, trimMonths } from "@outlayr/money/year-plan";
+import type { MonthKey, MonthProjection } from "@outlayr/money/year-plan";
 import { useState } from "react";
 import type { Ref } from "react";
 import { Pressable, View } from "react-native";
@@ -20,8 +22,6 @@ import { useYearPlan } from "@/data/budget-plans";
 import type { PlanCategoryMeta } from "@/data/budget-plans";
 import type { Database } from "@/db/client";
 import { formatAmount } from "@/domain/money";
-import { firstShortRun, isShort, trimEffect, trimMonths } from "@/domain/year-plan";
-import type { MonthKey, MonthProjection } from "@/domain/year-plan";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useHaptics } from "@/lib/use-haptics";

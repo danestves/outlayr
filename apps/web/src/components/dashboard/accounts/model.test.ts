@@ -21,6 +21,7 @@ describe("account entries", () => {
                 { ...envelope("chase"), currency: "USD", initialBalance: 0, initialBalanceDate: 0, name: "Chase" },
             ],
             appMeta: [{ key: "timeZone", value: "UTC" }],
+            budgetPlans: [],
             budgets: [],
             categories: [],
             exchangeRates: [],

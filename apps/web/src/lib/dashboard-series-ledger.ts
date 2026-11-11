@@ -49,7 +49,7 @@ export interface BudgetTarget extends LedgerCategory {
     topId: string;
 }
 
-interface Expense extends ExpenseContribution {
+export interface Expense extends ExpenseContribution {
     day: string;
 }
 

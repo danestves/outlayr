@@ -1,7 +1,8 @@
+import { firstShortRun, monthKeyParts } from "@outlayr/money/year-plan";
+import type { MonthKey, YearProjection } from "@outlayr/money/year-plan";
+
 import type { PlanCategoryMeta } from "@/data/budget-plans";
 import { monthAbbrevTitle, monthLongTitle } from "@/domain/dates";
-import { firstShortRun, monthKeyParts } from "@/domain/year-plan";
-import type { MonthKey, YearProjection } from "@/domain/year-plan";
 import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 

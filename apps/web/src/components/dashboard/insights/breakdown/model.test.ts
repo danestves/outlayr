@@ -30,6 +30,7 @@ const entry = (localId: string, iso: string, amount: number) =>
 const books = (transactions: Doc<"transactions">[]): LedgerBooks => ({
     accounts: [],
     appMeta: [{ key: "timeZone", value: "UTC" }],
+    budgetPlans: [],
     budgets: [],
     categories: [],
     exchangeRates: [],

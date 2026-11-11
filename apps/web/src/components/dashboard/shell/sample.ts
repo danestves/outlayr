@@ -211,6 +211,7 @@ function sampleBooks(now: number): LedgerBooks {
         accounts: [...ACCOUNTS, ...PEOPLE],
         // Without a stored zone the ledger infers one from each row's `day`, which these rows do not model.
         appMeta: [{ key: "timeZone", value: "UTC" }],
+        budgetPlans: [],
         budgets: CATEGORIES.slice(0, 3).map((each, index) => budget(each, index, now - PAST_MONTHS * MONTH_MS)),
         categories: CATEGORIES,
         exchangeRates: [],

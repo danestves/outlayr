@@ -1,3 +1,5 @@
+import { isShort } from "@outlayr/money/year-plan";
+import type { MonthProjection } from "@outlayr/money/year-plan";
 import { use } from "react";
 import { View } from "react-native";
 
@@ -6,8 +8,6 @@ import { MonoLabel } from "@/components/mono-label";
 import { FontScaleCapContext, Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { amountParts, formatAmount, withCurrencySymbol } from "@/domain/money";
-import { isShort } from "@/domain/year-plan";
-import type { MonthProjection } from "@/domain/year-plan";
 import { LARGEST_STANDARD_FONT_SCALE } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { CHART_BAR, compactMagnitude } from "@/theme/chart";

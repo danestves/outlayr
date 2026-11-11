@@ -1,4 +1,3 @@
-import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -9,6 +8,7 @@ import {
     typicalSpend,
     windowsOver,
 } from "./budget-typical";
+import { BUDGET_TYPE } from "./budget-window";
 
 const MONTH = BUDGET_TYPE.month;
 

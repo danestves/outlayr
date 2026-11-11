@@ -2,6 +2,7 @@ import registeredFunctions from "../confect/_generated/registeredFunctions/ledge
 
 export const accounts = registeredFunctions.accounts;
 export const appMeta = registeredFunctions.appMeta;
+export const budgetPlans = registeredFunctions.budgetPlans;
 export const budgets = registeredFunctions.budgets;
 export const categories = registeredFunctions.categories;
 export const exchangeRates = registeredFunctions.exchangeRates;

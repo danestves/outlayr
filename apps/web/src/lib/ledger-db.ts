@@ -108,6 +108,17 @@ export const ledgerCollections = {
             })
         )
     ),
+    budgetPlans: ledgerTable(
+        collectionOptions("ledger.budgetPlans", (db) =>
+            convexCollectionOptions({
+                client: convexOf(db),
+                getKey: (row) => row.localId,
+                queryArgs: {},
+                id: "ledger.budgetPlans",
+                query: api.ledger.budgetPlans,
+            })
+        )
+    ),
     budgets: ledgerTable(
         collectionOptions("ledger.budgets", (db) =>
             convexCollectionOptions({
@@ -272,6 +283,7 @@ function useRows<Row extends object, Key extends string | number, Utils extends 
 export const ledgerBooks = (db: DbClient): LedgerBooks => ({
     accounts: rowsOf(db, ledgerCollections.accounts),
     appMeta: rowsOf(db, ledgerCollections.appMeta),
+    budgetPlans: rowsOf(db, ledgerCollections.budgetPlans),
     budgets: rowsOf(db, ledgerCollections.budgets),
     categories: rowsOf(db, ledgerCollections.categories),
     exchangeRates: rowsOf(db, ledgerCollections.exchangeRates),
@@ -288,6 +300,7 @@ export const ledgerBooks = (db: DbClient): LedgerBooks => ({
 export function useLedgerBooks(): LedgerBooks {
     const accounts = useRows(ledgerCollections.accounts);
     const appMeta = useRows(ledgerCollections.appMeta);
+    const budgetPlans = useRows(ledgerCollections.budgetPlans);
     const budgets = useRows(ledgerCollections.budgets);
     const categories = useRows(ledgerCollections.categories);
     const exchangeRates = useRows(ledgerCollections.exchangeRates);
@@ -303,6 +316,7 @@ export function useLedgerBooks(): LedgerBooks {
         () => ({
             accounts,
             appMeta,
+            budgetPlans,
             budgets,
             categories,
             exchangeRates,
@@ -318,6 +332,7 @@ export function useLedgerBooks(): LedgerBooks {
         [
             accounts,
             appMeta,
+            budgetPlans,
             budgets,
             categories,
             exchangeRates,

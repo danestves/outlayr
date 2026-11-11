@@ -81,6 +81,7 @@ const entry = (localId: string, iso: string, amount: number, categoryId: string)
 const booksWith = (transactions: LedgerBooks["transactions"], fields: Partial<LedgerBooks> = {}): LedgerBooks => ({
     accounts: [],
     appMeta: [{ key: "timeZone", value: "UTC" }],
+    budgetPlans: [],
     budgets: [],
     categories: [category("rent", "Rent", "#e2643f"), category("food", "Groceries", "#4f9d69")],
     exchangeRates: [],

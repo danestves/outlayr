@@ -78,6 +78,7 @@ const ledgerOf = (patch: { accounts?: unknown[]; rates?: unknown[]; transfers?: 
                 { key: "timeZone", value: "America/Caracas" },
                 { key: "currency", value: "USD" },
             ],
+            budgetPlans: [],
             budgets: [],
             categories: [],
             exchangeRates: patch.rates ?? [{ date: "2026-10-01", quote: "VES", rate: 500, rateType: "official" }],
