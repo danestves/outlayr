@@ -333,12 +333,9 @@ function EmptyGoals({ kept, month }: { kept: number; month: string }) {
     const date = useDateFormat();
     const { locale } = useLocale();
     return (
-        <Frame
-            className="bg-card relative isolate min-h-[760px] min-w-0 flex-1 overflow-hidden rounded-3xl"
-            variant="plain"
-        >
+        <Frame className="bg-card relative isolate min-w-0 flex-1 overflow-hidden rounded-3xl" variant="plain">
             <Terrain />
-            <Frame.Panel className="flex-1 justify-end bg-transparent! px-6 pb-[84px]">
+            <Frame.Panel className="flex-1 bg-transparent! px-6 pt-[clamp(560px,calc(100dvh-180px),672px)] pb-[84px]">
                 <div className="flex flex-col items-center gap-1.5 text-center">
                     <b className="text-[15px] leading-[22px] font-semibold">{empty.title}</b>
                     <p className="text-muted-foreground text-[13px]">
