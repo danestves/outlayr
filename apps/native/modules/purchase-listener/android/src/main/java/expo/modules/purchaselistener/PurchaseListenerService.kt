@@ -45,6 +45,7 @@ internal object PurchaseListenerStore {
   private const val KEY_SENDERS_OFF = "sendersOff"
   private const val KEY_SENDERS_ON = "sendersOn"
   private const val KEY_SNAPSHOT = "snapshot"
+  private const val KEY_TEXT_APPS = "textApps"
   private const val PUSH_CHANNEL = "purchases"
   private const val PUSH_WINDOW_MS = 10 * 60 * 1000L
   private const val QUEUE_DIRECTORY = "pending-writes"
@@ -165,7 +166,7 @@ internal object PurchaseListenerStore {
       ?.toString()
       ?.trim()
       .orEmpty()
-    val messages = sbn.packageName == messagesApp(context)
+    val messages = texts(context, sbn.packageName)
     if (messages && title.isEmpty()) return
     val from = title.takeIf { messages }
     val text = if (messages) body else listOf(title, body).filter { it.isNotEmpty() }.joinToString("\n")
@@ -393,6 +394,15 @@ internal object PurchaseListenerStore {
     val text: String,
     val at: Long,
   )
+
+  private fun texts(context: Context, packageName: String): Boolean {
+    val preferences = prefs(context)
+    val known = preferences.getStringSet(KEY_TEXT_APPS, null).orEmpty()
+    if (packageName in known) return true
+    if (packageName != messagesApp(context)) return false
+    preferences.edit().putStringSet(KEY_TEXT_APPS, known + packageName).apply()
+    return true
+  }
 
   private fun allowed(preferences: SharedPreferences, packageName: String, from: String?): Boolean {
     if (preferences.getStringSet(KEY_APPS, DEFAULT_APPS)?.contains(packageName) != true) return false

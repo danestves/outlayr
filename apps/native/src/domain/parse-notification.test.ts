@@ -160,6 +160,11 @@ describe("parseNotification", () => {
                 "Has recibido un Pago Movil\nBANESCO REGISTRO: Pago recibido a traves de Pago Movil de LOPEZ M por Bs. 1900.0 el 31/08/2026; 15:43 REF 062400000018. Para mas inf. llama..."
             )
         ).toStrictEqual({ amount: 1900, amountText: "Bs. 1900.0", income: true, merchant: "LOPEZ M" });
+        expect(
+            parseNotification(
+                "BANESCO REGISTRO: Pago recibido a traves de Pago Movil por Bs.1880.00 el 26/01/2023; 12:04 REF 047300000903. Para mas inf. llama +582125550111"
+            )
+        ).toStrictEqual({ amount: 1880, amountText: "Bs.1880.00", income: true, merchant: null });
     });
 
     it("names nobody from a date, a time or an operation number", () => {
@@ -226,6 +231,7 @@ describe("parseNotification", () => {
             "10 € de descuento en tu próxima compra",
             "You have $1,000 available credit on your card",
             "Tu saldo disponible: Bs. 1.250,00",
+            "Saldo Disp. en Cta\n4548: 101,25Bs",
             "Your balance is $180.00",
             "Card ending 7909: $1,234.00 balance",
             "Discount: $10.00",

@@ -70,7 +70,7 @@ const PROMO_BEFORE = new RegExp(
 );
 const BALANCE_AFTER = new RegExp(String.raw`^[^\S\n]*(?:available|balance|saldo|solde|dispon[íi]ve(?:is|l))\b`, "iu");
 const BALANCE_BEFORE = new RegExp(
-    String.raw`(?<![A-Za-z])(?:available credit|crédito disponible|crédit disponible|crédito disponível|available balance|balance|saldo disponible|saldo|solde)\s*(?:is|es|est|é)?\s*[:=-]?\s*$`,
+    String.raw`(?<![A-Za-z])(?:available credit|crédito disponible|crédit disponible|crédito disponível|available balance|balance|saldo disponible|saldo disp\.|saldo|solde)(?:\s+en\s+c(?:uen)?ta\.?)?(?:\s+\d{4})?\s*(?:is|es|est|é)?\s*[:=-]?\s*$`,
     "iu"
 );
 
