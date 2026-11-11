@@ -1,9 +1,9 @@
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
+import { EVERY_SCOPE, spendPerWindow } from "@outlayr/money/budget-typical";
 import type { BudgetWindow } from "@outlayr/money/budget-window";
 import { addDays, startOfDay } from "@outlayr/money/calendar";
 
 import { leftPerDay } from "./budget-math";
-import { EVERY_SCOPE, spendPerWindow } from "./budget-typical";
 import { daysBetween } from "./local-day";
 
 export const PRIOR_PERIODS = 6;

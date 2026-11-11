@@ -143,6 +143,7 @@ const budget = (categoryId: string, limit: number) =>
 const NO_BOOKS: LedgerBooks = {
     accounts: [],
     appMeta: [],
+    budgetPlans: [],
     budgets: [],
     categories: [],
     exchangeRates: [],

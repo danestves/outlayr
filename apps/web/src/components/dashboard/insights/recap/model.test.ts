@@ -60,6 +60,7 @@ const budget = (categoryId: string, amount: number) =>
 const books = (transactions: Doc<"transactions">[]): LedgerBooks => ({
     accounts: [],
     appMeta: [{ key: "timeZone", value: "UTC" }],
+    budgetPlans: [],
     budgets: [budget("rent", 1000), budget("shopping", 100)],
     categories: [category("rent"), category("shopping")],
     exchangeRates: [],

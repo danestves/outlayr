@@ -63,7 +63,17 @@ describe("month keys", () => {
 
 describe("projectYear", () => {
     const projection = projectYear(input);
-    const [january, , march, april, , june] = projection.months;
+    const monthAt = (index: number) => {
+        const found = projection.months[index];
+        if (!found) {
+            throw new Error(`No month at ${index}`);
+        }
+        return found;
+    };
+    const january = monthAt(0);
+    const march = monthAt(2);
+    const april = monthAt(3);
+    const june = monthAt(5);
 
     it("counts what was logged in a closed month and nothing set aside", () => {
         expect(january.status).toBe("closed");
@@ -91,7 +101,7 @@ describe("projectYear", () => {
 
     it("lets a plan row win over the budget", () => {
         const planned = projectYear({ ...input, plans: new Map([["groceries", new Map([[monthKey(2027, 3), 300]])]]) });
-        expect(planned.months[3].categories.find((entry) => entry.categoryId === "groceries")).toMatchObject({
+        expect(planned.months[3]?.categories.find((entry) => entry.categoryId === "groceries")).toMatchObject({
             planned: 300,
             source: "plan",
         });

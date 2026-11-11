@@ -59,6 +59,7 @@ const ledgerWith = (transactions: unknown[], installmentPlans: unknown[] = []) =
                 { key: "timeZone", value: "America/Caracas" },
                 { key: "currency", value: "USD" },
             ],
+            budgetPlans: [],
             budgets: [],
             categories: [category("food", false), category("rent", false), category("pay", true)],
             exchangeRates: [],

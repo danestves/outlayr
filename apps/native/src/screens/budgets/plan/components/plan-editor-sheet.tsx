@@ -1,4 +1,6 @@
 import { BottomSheetModal, BottomSheetTextInput, BottomSheetView } from "@expo/ui/community/bottom-sheet";
+import { aboveTypical, editorMonths, overPlan } from "@outlayr/money/year-plan";
+import type { EditorMonth, MonthKey } from "@outlayr/money/year-plan";
 import { useState } from "react";
 import type { Ref } from "react";
 import { Keyboard, Pressable, View } from "react-native";
@@ -21,8 +23,6 @@ import type { PlanCategoryMeta } from "@/data/budget-plans";
 import type { Database } from "@/db/client";
 import { currencySymbol, formatAmount, minorUnitsFor, numberLocale } from "@/domain/money";
 import { decimalPadEntry, decimalPadSeed, numpadMode, numpadToNumber } from "@/domain/numpad";
-import { aboveTypical, editorMonths, overPlan } from "@/domain/year-plan";
-import type { EditorMonth, MonthKey } from "@/domain/year-plan";
 import { useKeyboardEvent } from "@/hooks/use-keyboard-height";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useLanguage, useTranslation } from "@/i18n/context";

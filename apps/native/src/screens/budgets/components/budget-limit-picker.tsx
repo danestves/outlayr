@@ -1,3 +1,4 @@
+import { windowsOver } from "@outlayr/money/budget-typical";
 import type { BudgetWindow } from "@outlayr/money/budget-window";
 import {
     Canvas,
@@ -23,7 +24,6 @@ import type { Burndown, BurndownPoint } from "@/domain/budget-burndown";
 import { crossingDay } from "@/domain/budget-limit-crossing";
 import { LIMIT_STEP } from "@/domain/budget-limit-step";
 import { daysLeftInWindow, leftPerDay } from "@/domain/budget-math";
-import { windowsOver } from "@/domain/budget-typical";
 import { monthAbbrevTitle } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";

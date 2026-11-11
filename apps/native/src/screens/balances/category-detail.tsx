@@ -1,5 +1,6 @@
 import AddIcon from "@hugeicons-pro/core-stroke-rounded/Add01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
+import { closedWindowsBefore, EVERY_SCOPE, spendPerWindow, typicalOf } from "@outlayr/money/budget-typical";
 import { BUDGET_TYPE, periodsBackTo, shiftWindow, startOfPeriod, windowEndMs } from "@outlayr/money/budget-window";
 import { useRouter } from "expo-router";
 import { useState } from "react";
@@ -19,7 +20,6 @@ import { useCategoryMeta } from "@/data/categories";
 import { useNow } from "@/data/use-now";
 import { useValuation } from "@/data/use-valuation";
 import { budgetWindowLabel } from "@/domain/budget-math";
-import { closedWindowsBefore, EVERY_SCOPE, spendPerWindow, typicalOf } from "@/domain/budget-typical";
 import { monthAbbrev, monthLongTitle } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import { useLeaveWhenGone } from "@/hooks/use-leave-when-gone";

@@ -68,6 +68,7 @@ const entry = (
 const books = (transactions: LedgerBooks["transactions"], fields: Partial<LedgerBooks> = {}): LedgerBooks => ({
     accounts: [],
     appMeta: [{ key: "timeZone", value: "UTC" }],
+    budgetPlans: [],
     budgets: [],
     categories: [category("rent", "Rent", "#b26c43"), category("food", "Groceries", "#53915a")],
     exchangeRates: [],

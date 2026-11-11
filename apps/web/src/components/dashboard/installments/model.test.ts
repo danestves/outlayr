@@ -32,6 +32,7 @@ function ledgerWith({
         {
             accounts: [account("card", "liability"), account("checking", "asset")],
             appMeta: [{ key: "timeZone", value: "UTC" }],
+            budgetPlans: [],
             budgets: [],
             categories: [],
             exchangeRates: [],

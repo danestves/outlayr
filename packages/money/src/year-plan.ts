@@ -1,7 +1,6 @@
-import type { BudgetWindow } from "@outlayr/money/budget-window";
-import { monthPeriodStart } from "@outlayr/money/calendar";
-
 import { typicalOf } from "./budget-typical";
+import type { BudgetWindow } from "./budget-window";
+import { monthPeriodStart } from "./calendar";
 import { median } from "./stats";
 
 /**
@@ -351,15 +350,20 @@ export function firstShortRun(projection: YearProjection): ShortRun | null {
         return null;
     }
     let end = start;
-    while (end + 1 < months.length && isShort(months[end + 1])) {
+    for (let next = months[end + 1]; next && isShort(next); next = months[end + 1]) {
         end += 1;
     }
     const run = months.slice(start, end + 1);
+    const [first] = run;
+    const last = run.at(-1);
+    if (!first || !last) {
+        return null;
+    }
     return {
         backIn: months[end + 1]?.key ?? null,
         driver: largest(deviations(projection, run)),
-        from: months[start].key,
-        to: months[end].key,
+        from: first.key,
+        to: last.key,
     };
 }
 
@@ -401,7 +405,10 @@ export function trimEffect(
 ): TrimEffect {
     const after = projectYear(withPlannedMonths(input, categoryId, trimMonths(fromKey, throughKey, amount)));
     const fixed = before.months
-        .filter((month, index) => isShort(month) && !isShort(after.months[index]))
+        .filter((month, index) => {
+            const next = after.months[index];
+            return isShort(month) && next !== undefined && !isShort(next);
+        })
         .map((month) => month.key);
     const current = after.months.find((month) => month.status === "current");
     const spent = current?.categories.find((entry) => entry.categoryId === categoryId)?.actual ?? 0;

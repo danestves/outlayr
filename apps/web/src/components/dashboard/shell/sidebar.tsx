@@ -70,18 +70,6 @@ function RailTip({ children, label }: { children: ReactElement; label: string })
     );
 }
 
-function Soon({ collapsed, icon, label }: NavProps) {
-    const { nav } = useIntlayer("dashboard");
-    const item = (
-        <span aria-disabled className="dash-nav" title={collapsed ? undefined : label}>
-            <HugeiconsIcon className="shrink-0" icon={icon} size={17} strokeWidth={1.5} />
-            {collapsed ? <span className="sr-only">{label}</span> : label}
-            <span className="dash-soon">{nav.soon}</span>
-        </span>
-    );
-    return collapsed ? <RailTip label={label}>{item}</RailTip> : item;
-}
-
 function NavLink({
     collapsed,
     exact,
@@ -93,6 +81,7 @@ function NavLink({
     to:
         | "/app"
         | "/app/accounts"
+        | "/app/budgets"
         | "/app/debts"
         | "/app/goals"
         | "/app/import"
@@ -166,7 +155,7 @@ export function NavLinks({ collapsed }: { collapsed: boolean }) {
             <NavLink collapsed={collapsed} icon={CreditCardIcon} label={nav.accounts.value} to="/app/accounts" />
             <NavLink collapsed={collapsed} icon={Analytics01Icon} label={nav.insights.value} to="/app/insights" />
             {group(nav.plan.value)}
-            <Soon collapsed={collapsed} icon={PieChartIcon} label={nav.budgets.value} />
+            <NavLink collapsed={collapsed} icon={PieChartIcon} label={nav.budgets.value} to="/app/budgets" />
             <NavLink collapsed={collapsed} icon={Flag02Icon} label={nav.goals.value} to="/app/goals" />
             <NavLink collapsed={collapsed} icon={RepeatIcon} label={nav.recurring.value} to="/app/recurring" />
             <NavLink collapsed={collapsed} icon={HandCoinsIcon} label={nav.debts.value} to="/app/debts" />

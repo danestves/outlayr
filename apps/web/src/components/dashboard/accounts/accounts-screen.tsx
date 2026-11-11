@@ -147,6 +147,8 @@ const PHONE_HIDDEN = {
     3: "max-sm:[&_tr>*:nth-child(3)]:hidden",
     4: "max-sm:[&_tr>*:nth-child(4)]:hidden",
     5: "max-sm:[&_tr>*:nth-child(5)]:hidden",
+    6: "max-sm:[&_tr>*:nth-child(6)]:hidden",
+    7: "max-sm:[&_tr>*:nth-child(7)]:hidden",
 } as const;
 
 export function DataTable({

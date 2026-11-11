@@ -32,6 +32,8 @@ export function MobileBar() {
         title = nav.rules;
     } else if (page === "goals") {
         title = nav.goals;
+    } else if (page === "budgets") {
+        title = nav.budgets;
     } else if (page === "debts") {
         title = nav.debts;
     } else if (page === "installments") {

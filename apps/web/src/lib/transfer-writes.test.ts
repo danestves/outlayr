@@ -75,6 +75,7 @@ const ledgerWith = (transfer: unknown, transactions: unknown[] = [], exchangeRat
                 { key: "timeZone", value: "America/Caracas" },
                 { key: "currency", value: "USD" },
             ],
+            budgetPlans: [],
             budgets: [],
             categories: [],
             exchangeRates,

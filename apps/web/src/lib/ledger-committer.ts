@@ -20,6 +20,7 @@ interface ShownRows {
 
 const COLLECTED = {
     accounts: ledgerCollections.accounts,
+    budgetPlans: ledgerCollections.budgetPlans,
     budgets: ledgerCollections.budgets,
     categories: ledgerCollections.categories,
     installmentPlans: ledgerCollections.installmentPlans,

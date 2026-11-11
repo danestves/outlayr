@@ -1,10 +1,9 @@
 import { contributesTo } from "@outlayr/money/budget-spent";
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import type { BudgetWindow } from "@outlayr/money/budget-window";
+import { median } from "@outlayr/money/stats";
 
 import type { TranslateFn } from "@/i18n/context";
-
-import { median } from "./stats";
 
 interface DayBlock {
     amount: number;

@@ -15,6 +15,7 @@ export default {
 ["tags"]: RegisteredConvexFunction.register({ ...definitions["tags"], handler: forward(definitions["tags"].handler) }),
 ["accounts"]: RegisteredConvexFunction.register({ ...definitions["accounts"], handler: forward(definitions["accounts"].handler) }),
 ["appMeta"]: RegisteredConvexFunction.register({ ...definitions["appMeta"], handler: forward(definitions["appMeta"].handler) }),
+["budgetPlans"]: RegisteredConvexFunction.register({ ...definitions["budgetPlans"], handler: forward(definitions["budgetPlans"].handler) }),
 ["budgets"]: RegisteredConvexFunction.register({ ...definitions["budgets"], handler: forward(definitions["budgets"].handler) }),
 ["categories"]: RegisteredConvexFunction.register({ ...definitions["categories"], handler: forward(definitions["categories"].handler) }),
 ["exchangeRates"]: RegisteredConvexFunction.register({ ...definitions["exchangeRates"], handler: forward(definitions["exchangeRates"].handler) }),

@@ -57,6 +57,8 @@ import { Route as AccountAppAccountsIndexRouteImport } from './routes/_account/a
 import { Route as AccountAppAccountsAccountIdRouteImport } from './routes/_account/app.accounts.$accountId'
 import { Route as AccountAppAccountsNetWorthRouteImport } from './routes/_account/app.accounts.net-worth'
 import { Route as AccountAppAccountsReorderRouteImport } from './routes/_account/app.accounts.reorder'
+import { Route as AccountAppBudgetsIndexRouteImport } from './routes/_account/app.budgets.index'
+import { Route as AccountAppBudgetsCategoryIdRouteImport } from './routes/_account/app.budgets.$categoryId'
 import { Route as AccountAppDebtsIndexRouteImport } from './routes/_account/app.debts.index'
 import { Route as AccountAppDebtsAccountIdRouteImport } from './routes/_account/app.debts.$accountId'
 import { Route as AccountAppGoalsIndexRouteImport } from './routes/_account/app.goals.index'
@@ -86,6 +88,8 @@ import { Route as AccountAppSettingsPreferencesRouteImport } from './routes/_acc
 import { Route as AccountAppSettingsSyncRouteImport } from './routes/_account/app.settings.sync'
 import { Route as AccountAppSettingsTimeRouteImport } from './routes/_account/app.settings.time'
 import { Route as AccountAppSettingsUsageRouteImport } from './routes/_account/app.settings.usage'
+import { Route as AccountAppBudgetsPlanIndexRouteImport } from './routes/_account/app.budgets.plan.index'
+import { Route as AccountAppBudgetsPlanMonthRouteImport } from './routes/_account/app.budgets.plan.$month'
 import { Route as AccountAppSettingsCategoriesIndexRouteImport } from './routes/_account/app.settings.categories.index'
 import { Route as AccountAppSettingsCategoriesCategoryIdRouteImport } from './routes/_account/app.settings.categories.$categoryId'
 
@@ -357,6 +361,17 @@ const AccountAppAccountsReorderRoute =
     path: '/accounts/reorder',
     getParentRoute: () => AccountAppRoute,
   } as any)
+const AccountAppBudgetsIndexRoute = AccountAppBudgetsIndexRouteImport.update({
+  id: '/budgets/',
+  path: '/budgets/',
+  getParentRoute: () => AccountAppRoute,
+} as any)
+const AccountAppBudgetsCategoryIdRoute =
+  AccountAppBudgetsCategoryIdRouteImport.update({
+    id: '/budgets/$categoryId',
+    path: '/budgets/$categoryId',
+    getParentRoute: () => AccountAppRoute,
+  } as any)
 const AccountAppDebtsIndexRoute = AccountAppDebtsIndexRouteImport.update({
   id: '/debts/',
   path: '/debts/',
@@ -515,6 +530,18 @@ const AccountAppSettingsUsageRoute = AccountAppSettingsUsageRouteImport.update({
   path: '/usage',
   getParentRoute: () => AccountAppSettingsRoute,
 } as any)
+const AccountAppBudgetsPlanIndexRoute =
+  AccountAppBudgetsPlanIndexRouteImport.update({
+    id: '/budgets/plan/',
+    path: '/budgets/plan/',
+    getParentRoute: () => AccountAppRoute,
+  } as any)
+const AccountAppBudgetsPlanMonthRoute =
+  AccountAppBudgetsPlanMonthRouteImport.update({
+    id: '/budgets/plan/$month',
+    path: '/budgets/plan/$month',
+    getParentRoute: () => AccountAppRoute,
+  } as any)
 const AccountAppSettingsCategoriesIndexRoute =
   AccountAppSettingsCategoriesIndexRouteImport.update({
     id: '/categories/',
@@ -576,6 +603,7 @@ export interface FileRoutesByFullPath {
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/app/budgets/$categoryId': typeof AccountAppBudgetsCategoryIdRoute
   '/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
   '/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
   '/app/import/file': typeof AccountAppImportFileRoute
@@ -600,13 +628,16 @@ export interface FileRoutesByFullPath {
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/app/accounts/': typeof AccountAppAccountsIndexRoute
+  '/app/budgets/': typeof AccountAppBudgetsIndexRoute
   '/app/debts/': typeof AccountAppDebtsIndexRoute
   '/app/goals/': typeof AccountAppGoalsIndexRoute
   '/app/import/': typeof AccountAppImportIndexRoute
   '/app/insights/': typeof AccountAppInsightsIndexRoute
   '/app/installments/': typeof AccountAppInstallmentsIndexRoute
   '/app/settings/': typeof AccountAppSettingsIndexRoute
+  '/app/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
   '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/app/budgets/plan/': typeof AccountAppBudgetsPlanIndexRoute
   '/app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
 }
 export interface FileRoutesByTo {
@@ -652,6 +683,7 @@ export interface FileRoutesByTo {
   '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/app/budgets/$categoryId': typeof AccountAppBudgetsCategoryIdRoute
   '/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
   '/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
   '/app/import/file': typeof AccountAppImportFileRoute
@@ -676,13 +708,16 @@ export interface FileRoutesByTo {
   '/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/app/accounts': typeof AccountAppAccountsIndexRoute
+  '/app/budgets': typeof AccountAppBudgetsIndexRoute
   '/app/debts': typeof AccountAppDebtsIndexRoute
   '/app/goals': typeof AccountAppGoalsIndexRoute
   '/app/import': typeof AccountAppImportIndexRoute
   '/app/insights': typeof AccountAppInsightsIndexRoute
   '/app/installments': typeof AccountAppInstallmentsIndexRoute
   '/app/settings': typeof AccountAppSettingsIndexRoute
+  '/app/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
   '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/app/budgets/plan': typeof AccountAppBudgetsPlanIndexRoute
   '/app/settings/categories': typeof AccountAppSettingsCategoriesIndexRoute
 }
 export interface FileRoutesById {
@@ -734,6 +769,7 @@ export interface FileRoutesById {
   '/_account/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
   '/_account/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
   '/_account/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
+  '/_account/app/budgets/$categoryId': typeof AccountAppBudgetsCategoryIdRoute
   '/_account/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
   '/_account/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
   '/_account/app/import/file': typeof AccountAppImportFileRoute
@@ -758,13 +794,16 @@ export interface FileRoutesById {
   '/_account/app/settings/time': typeof AccountAppSettingsTimeRoute
   '/_account/app/settings/usage': typeof AccountAppSettingsUsageRoute
   '/_account/app/accounts/': typeof AccountAppAccountsIndexRoute
+  '/_account/app/budgets/': typeof AccountAppBudgetsIndexRoute
   '/_account/app/debts/': typeof AccountAppDebtsIndexRoute
   '/_account/app/goals/': typeof AccountAppGoalsIndexRoute
   '/_account/app/import/': typeof AccountAppImportIndexRoute
   '/_account/app/insights/': typeof AccountAppInsightsIndexRoute
   '/_account/app/installments/': typeof AccountAppInstallmentsIndexRoute
   '/_account/app/settings/': typeof AccountAppSettingsIndexRoute
+  '/_account/app/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
   '/_account/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
+  '/_account/app/budgets/plan/': typeof AccountAppBudgetsPlanIndexRoute
   '/_account/app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
 }
 export interface FileRouteTypes {
@@ -817,6 +856,7 @@ export interface FileRouteTypes {
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
     | '/app/accounts/reorder'
+    | '/app/budgets/$categoryId'
     | '/app/debts/$accountId'
     | '/app/goals/$goalId'
     | '/app/import/file'
@@ -841,13 +881,16 @@ export interface FileRouteTypes {
     | '/app/settings/time'
     | '/app/settings/usage'
     | '/app/accounts/'
+    | '/app/budgets/'
     | '/app/debts/'
     | '/app/goals/'
     | '/app/import/'
     | '/app/insights/'
     | '/app/installments/'
     | '/app/settings/'
+    | '/app/budgets/plan/$month'
     | '/app/settings/categories/$categoryId'
+    | '/app/budgets/plan/'
     | '/app/settings/categories/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -893,6 +936,7 @@ export interface FileRouteTypes {
     | '/app/accounts/$accountId'
     | '/app/accounts/net-worth'
     | '/app/accounts/reorder'
+    | '/app/budgets/$categoryId'
     | '/app/debts/$accountId'
     | '/app/goals/$goalId'
     | '/app/import/file'
@@ -917,13 +961,16 @@ export interface FileRouteTypes {
     | '/app/settings/time'
     | '/app/settings/usage'
     | '/app/accounts'
+    | '/app/budgets'
     | '/app/debts'
     | '/app/goals'
     | '/app/import'
     | '/app/insights'
     | '/app/installments'
     | '/app/settings'
+    | '/app/budgets/plan/$month'
     | '/app/settings/categories/$categoryId'
+    | '/app/budgets/plan'
     | '/app/settings/categories'
   id:
     | '__root__'
@@ -974,6 +1021,7 @@ export interface FileRouteTypes {
     | '/_account/app/accounts/$accountId'
     | '/_account/app/accounts/net-worth'
     | '/_account/app/accounts/reorder'
+    | '/_account/app/budgets/$categoryId'
     | '/_account/app/debts/$accountId'
     | '/_account/app/goals/$goalId'
     | '/_account/app/import/file'
@@ -998,13 +1046,16 @@ export interface FileRouteTypes {
     | '/_account/app/settings/time'
     | '/_account/app/settings/usage'
     | '/_account/app/accounts/'
+    | '/_account/app/budgets/'
     | '/_account/app/debts/'
     | '/_account/app/goals/'
     | '/_account/app/import/'
     | '/_account/app/insights/'
     | '/_account/app/installments/'
     | '/_account/app/settings/'
+    | '/_account/app/budgets/plan/$month'
     | '/_account/app/settings/categories/$categoryId'
+    | '/_account/app/budgets/plan/'
     | '/_account/app/settings/categories/'
   fileRoutesById: FileRoutesById
 }
@@ -1362,6 +1413,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppAccountsReorderRouteImport
       parentRoute: typeof AccountAppRoute
     }
+    '/_account/app/budgets/': {
+      id: '/_account/app/budgets/'
+      path: '/budgets'
+      fullPath: '/app/budgets/'
+      preLoaderRoute: typeof AccountAppBudgetsIndexRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
+    '/_account/app/budgets/$categoryId': {
+      id: '/_account/app/budgets/$categoryId'
+      path: '/budgets/$categoryId'
+      fullPath: '/app/budgets/$categoryId'
+      preLoaderRoute: typeof AccountAppBudgetsCategoryIdRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
     '/_account/app/debts/': {
       id: '/_account/app/debts/'
       path: '/debts'
@@ -1565,6 +1630,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAppSettingsUsageRouteImport
       parentRoute: typeof AccountAppSettingsRoute
     }
+    '/_account/app/budgets/plan/': {
+      id: '/_account/app/budgets/plan/'
+      path: '/budgets/plan'
+      fullPath: '/app/budgets/plan/'
+      preLoaderRoute: typeof AccountAppBudgetsPlanIndexRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
+    '/_account/app/budgets/plan/$month': {
+      id: '/_account/app/budgets/plan/$month'
+      path: '/budgets/plan/$month'
+      fullPath: '/app/budgets/plan/$month'
+      preLoaderRoute: typeof AccountAppBudgetsPlanMonthRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
     '/_account/app/settings/categories/': {
       id: '/_account/app/settings/categories/'
       path: '/categories'
@@ -1728,13 +1807,17 @@ interface AccountAppRouteChildren {
   AccountAppAccountsAccountIdRoute: typeof AccountAppAccountsAccountIdRoute
   AccountAppAccountsNetWorthRoute: typeof AccountAppAccountsNetWorthRoute
   AccountAppAccountsReorderRoute: typeof AccountAppAccountsReorderRoute
+  AccountAppBudgetsCategoryIdRoute: typeof AccountAppBudgetsCategoryIdRoute
   AccountAppDebtsAccountIdRoute: typeof AccountAppDebtsAccountIdRoute
   AccountAppGoalsGoalIdRoute: typeof AccountAppGoalsGoalIdRoute
   AccountAppInstallmentsPlanIdRoute: typeof AccountAppInstallmentsPlanIdRoute
   AccountAppAccountsIndexRoute: typeof AccountAppAccountsIndexRoute
+  AccountAppBudgetsIndexRoute: typeof AccountAppBudgetsIndexRoute
   AccountAppDebtsIndexRoute: typeof AccountAppDebtsIndexRoute
   AccountAppGoalsIndexRoute: typeof AccountAppGoalsIndexRoute
   AccountAppInstallmentsIndexRoute: typeof AccountAppInstallmentsIndexRoute
+  AccountAppBudgetsPlanMonthRoute: typeof AccountAppBudgetsPlanMonthRoute
+  AccountAppBudgetsPlanIndexRoute: typeof AccountAppBudgetsPlanIndexRoute
 }
 
 const AccountAppRouteChildren: AccountAppRouteChildren = {
@@ -1749,13 +1832,17 @@ const AccountAppRouteChildren: AccountAppRouteChildren = {
   AccountAppAccountsAccountIdRoute: AccountAppAccountsAccountIdRoute,
   AccountAppAccountsNetWorthRoute: AccountAppAccountsNetWorthRoute,
   AccountAppAccountsReorderRoute: AccountAppAccountsReorderRoute,
+  AccountAppBudgetsCategoryIdRoute: AccountAppBudgetsCategoryIdRoute,
   AccountAppDebtsAccountIdRoute: AccountAppDebtsAccountIdRoute,
   AccountAppGoalsGoalIdRoute: AccountAppGoalsGoalIdRoute,
   AccountAppInstallmentsPlanIdRoute: AccountAppInstallmentsPlanIdRoute,
   AccountAppAccountsIndexRoute: AccountAppAccountsIndexRoute,
+  AccountAppBudgetsIndexRoute: AccountAppBudgetsIndexRoute,
   AccountAppDebtsIndexRoute: AccountAppDebtsIndexRoute,
   AccountAppGoalsIndexRoute: AccountAppGoalsIndexRoute,
   AccountAppInstallmentsIndexRoute: AccountAppInstallmentsIndexRoute,
+  AccountAppBudgetsPlanMonthRoute: AccountAppBudgetsPlanMonthRoute,
+  AccountAppBudgetsPlanIndexRoute: AccountAppBudgetsPlanIndexRoute,
 }
 
 const AccountAppRouteWithChildren = AccountAppRoute._addFileChildren(

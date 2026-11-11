@@ -53,6 +53,7 @@ const ledgerWith = (transactions: unknown[], now = NOW) =>
                 { key: "timeZone", value: "America/Caracas" },
                 { key: "currency", value: "USD" },
             ],
+            budgetPlans: [],
             budgets: [],
             categories: [
                 {
