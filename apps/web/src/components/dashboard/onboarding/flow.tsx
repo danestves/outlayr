@@ -187,6 +187,7 @@ export function Onboarding({ step }: { step: string | undefined }) {
         default: {
             return (
                 <Done
+                    asksSource={entered}
                     begun={begun}
                     currency={settings.currency}
                     onOpen={finish}

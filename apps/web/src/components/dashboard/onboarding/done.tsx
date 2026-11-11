@@ -1,10 +1,13 @@
 import { Button } from "panelui-web/button";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import type { OnboardingStep } from "@/lib/onboarding";
 
 import { HEADLINE, Plate, PlateFoot, Staged, focusOnMount } from "./chrome";
+import { HeardFromRows, sendHeardFrom } from "./heard-from";
+import type { HeardFrom } from "./heard-from";
 
 function Fact({ figure = true, label, value }: { figure?: boolean; label: ReactNode; value: ReactNode }) {
     return (
@@ -16,12 +19,14 @@ function Fact({ figure = true, label, value }: { figure?: boolean; label: ReactN
 }
 
 export function Done({
+    asksSource,
     begun,
     currency,
     onOpen,
     onStep,
     reminder,
 }: {
+    asksSource: boolean;
     begun: string;
     currency: string;
     onOpen: () => void;
@@ -29,6 +34,13 @@ export function Done({
     reminder: string | null;
 }) {
     const { done } = useIntlayer("dashboard-onboarding");
+    const [heardFrom, setHeardFrom] = useState<HeardFrom | null>(null);
+    const open = () => {
+        if (heardFrom) {
+            sendHeardFrom(heardFrom);
+        }
+        onOpen();
+    };
     return (
         <Staged current="done" layout="justify-center md:grid-cols-[560px]" onPick={onStep}>
             <Plate>
@@ -39,9 +51,10 @@ export function Done({
                     <Fact label={done.begun} value={begun} />
                     <Fact label={done.keptIn} value={currency} />
                     <Fact figure={reminder !== null} label={done.writtenAt} value={reminder ?? done.noReminder} />
+                    {asksSource ? <HeardFromRows onChange={setHeardFrom} value={heardFrom} /> : null}
                 </dl>
                 <PlateFoot>
-                    <Button className="ml-auto" onClick={onOpen} ref={focusOnMount}>
+                    <Button className="ml-auto" onClick={open} ref={focusOnMount}>
                         {done.open}
                     </Button>
                 </PlateFoot>

@@ -519,6 +519,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Recurring charges you pause on the web, and until when, sync with your ledger, as do the repeating merchants you mark as not recurring.",
                     label: "Recurring on the web",
                 },
+                {
+                    detail: "After your first entry, the app and this website can ask where you heard about Outlayr. Answering is optional, and your answer goes to PostHog with the rest of the analytics.",
+                    label: "Where you heard about us",
+                },
             ],
             es: [
                 {
@@ -544,6 +548,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Los cargos recurrentes que pausas en la web, y hasta cuándo, se sincronizan con tu registro, al igual que los comercios repetidos que marcas como no recurrentes.",
                     label: "Recurrentes en la web",
+                },
+                {
+                    detail: "Después de tu primera entrada, la app y este sitio web pueden preguntarte dónde supiste de Outlayr. Responder es opcional, y tu respuesta va a PostHog con el resto de las analíticas.",
+                    label: "Dónde supiste de nosotros",
                 },
             ],
             fr: [
@@ -571,6 +579,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Les paiements récurrents que vous mettez en pause sur le web, et jusqu'à quand, sont synchronisés avec votre journal, tout comme les commerçants répétés que vous marquez comme non récurrents.",
                     label: "Paiements récurrents sur le web",
                 },
+                {
+                    detail: "Après votre première opération, l'app et ce site web peuvent vous demander comment vous avez connu Outlayr. Répondre est facultatif, et votre réponse est envoyée à PostHog avec le reste des analyses.",
+                    label: "Comment vous nous avez connus",
+                },
             ],
             pt: [
                 {
@@ -596,6 +608,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "As cobranças recorrentes que você pausa na web, e até quando, são sincronizadas com os seus lançamentos, assim como os estabelecimentos repetidos que você marca como não recorrentes.",
                     label: "Recorrentes na web",
+                },
+                {
+                    detail: "Depois do seu primeiro lançamento, o app e este site podem perguntar onde você conheceu o Outlayr. Responder é opcional, e sua resposta vai para o PostHog com o resto das análises.",
+                    label: "Onde você nos conheceu",
                 },
             ],
         },
