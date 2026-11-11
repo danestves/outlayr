@@ -15,7 +15,7 @@ import { SectionHead, SettingsCard } from "./parts";
 
 const MONTHS_A_YEAR = 12;
 const DAY_MS = 86_400_000;
-const FREE = { accounts: 3, autoLog: 30, budgets: 2, currencies: 1, installmentApps: 2, payoffPlans: 2, people: 3 };
+const FREE = { accounts: 3, autoLog: 30, budgets: 2, currencies: 2, installmentApps: 2, payoffPlans: 2, people: 3 };
 const SAMPLE_BUCKET = { capacity: 1, kind: "token bucket", period: 1, rate: 1, ts: 0, value: 1 } as const;
 const SAMPLE_LIMITS = {
     captures: SAMPLE_BUCKET,

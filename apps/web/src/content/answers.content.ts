@@ -138,9 +138,9 @@ const LICENSE_ROW = {
 
 const COST_FAQ = {
     answer: t({
-        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
-        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
-        fr: "Le suivi des dépenses est gratuit, avec les budgets, les objectifs, les abonnements et les widgets. L'offre gratuite comprend 20 captures vocales ou de reçus tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans une seule devise. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte 7,99 $ US par mois, 49,99 $ US par an avec 7 jours gratuits ou 129,99 $ US en un seul paiement. Votre boutique d'applications affiche le prix de votre pays.",
+        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
+        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+        fr: "Le suivi des dépenses est gratuit, avec les budgets, les objectifs, les abonnements et les widgets. L'offre gratuite comprend 20 captures vocales ou de reçus tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans 2 devises. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte 7,99 $ US par mois, 49,99 $ US par an avec 7 jours gratuits ou 129,99 $ US en un seul paiement. Votre boutique d'applications affiche le prix de votre pays.",
     }),
     question: t({ en: "How much does Outlayr cost?", es: "¿Cuánto cuesta Outlayr?", fr: "Combien coûte Outlayr ?" }),
 };
@@ -171,9 +171,9 @@ const SYNC_ACCOUNTS = t({
 });
 
 const OUTLAYR_FREE = t({
-    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in one currency",
-    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en una moneda",
-    fr: "3 comptes, 2 budgets par catégorie plus un pour le mois, 20 captures vocales ou de reçus tous les 30 jours et des comptes dans une seule devise",
+    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in 2 currencies",
+    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en 2 monedas",
+    fr: "3 comptes, 2 budgets par catégorie plus un pour le mois, 20 captures vocales ou de reçus tous les 30 jours et des comptes dans 2 devises",
 });
 
 const LIST_SOURCES = t({
@@ -1487,8 +1487,8 @@ const answers = {
                     {
                         label: MOVING.lost,
                         text: t({
-                            en: "Accounts. On the free plan, Outlayr holds 3 accounts in one currency, and Pro allows any number of both.",
-                            es: "Las cuentas. En el plan gratis, Outlayr permite 3 cuentas en una moneda, y Pro permite las que quieras de ambas.",
+                            en: "Accounts. On the free plan, Outlayr holds 3 accounts in 2 currencies, and Pro allows any number of both.",
+                            es: "Las cuentas. En el plan gratis, Outlayr permite 3 cuentas en 2 monedas, y Pro permite las que quieras de ambas.",
                         }),
                     },
                 ],
@@ -2238,8 +2238,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. You can log a purchase in any of 165 currencies, and totals convert at the rate from the day of each purchase. Each account keeps its own currency: the free plan holds accounts in one, Pro in any number. YNAB lets you pick one currency per spending plan.",
-                            es: "Sí. Puedes registrar una compra en cualquiera de 165 monedas, y los totales se convierten con la tasa del día de cada compra. Cada cuenta tiene su propia moneda: el plan gratis permite cuentas en una, Pro en las que quieras. YNAB te deja elegir una moneda por plan de gastos.",
+                            en: "Yes. You can log a purchase in any of 165 currencies, and totals convert at the rate from the day of each purchase. Each account keeps its own currency: the free plan holds accounts in two, Pro in any number. YNAB lets you pick one currency per spending plan.",
+                            es: "Sí. Puedes registrar una compra en cualquiera de 165 monedas, y los totales se convierten con la tasa del día de cada compra. Cada cuenta tiene su propia moneda: el plan gratis permite cuentas en dos, Pro en las que quieras. YNAB te deja elegir una moneda por plan de gastos.",
                         }),
                         question: t({
                             en: "Can Outlayr track more than one currency?",
@@ -3484,8 +3484,8 @@ const answers = {
                                 label: t({ en: "Free plan", es: "Plan gratis" }),
                                 source: "https://github.com/danestves/outlayr/blob/main/apps/native/src/domain/pro-limits.ts",
                                 text: t({
-                                    en: "3 accounts, 2 category budgets, and accounts in one currency",
-                                    es: "3 cuentas, 2 presupuestos por categoría y cuentas en una moneda",
+                                    en: "3 accounts, 2 category budgets, and accounts in 2 currencies",
+                                    es: "3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas",
                                 }),
                             },
                             {
@@ -3721,8 +3721,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Monefy supports 150+ currencies, Wallet by BudgetBakers converts at real-time rates, and Spendee supports several. Money Manager uses several at once and lets you update the rate over the internet, and YNAB uses one currency per spending plan. Outlayr has 165 and converts each purchase at the rate from its day. Its free plan holds accounts in one currency.",
-                            es: "Monefy admite más de 150 monedas, Wallet by BudgetBakers convierte con tasas en tiempo real y Spendee admite varias. Money Manager usa varias a la vez y te deja actualizar la tasa por internet, y YNAB usa una moneda por plan de gastos. Outlayr tiene 165 y convierte cada compra con la tasa de su día. Su plan gratis permite cuentas en una moneda.",
+                            en: "Monefy supports 150+ currencies, Wallet by BudgetBakers converts at real-time rates, and Spendee supports several. Money Manager uses several at once and lets you update the rate over the internet, and YNAB uses one currency per spending plan. Outlayr has 165 and converts each purchase at the rate from its day. Its free plan holds accounts in 2 currencies.",
+                            es: "Monefy admite más de 150 monedas, Wallet by BudgetBakers convierte con tasas en tiempo real y Spendee admite varias. Money Manager usa varias a la vez y te deja actualizar la tasa por internet, y YNAB usa una moneda por plan de gastos. Outlayr tiene 165 y convierte cada compra con la tasa de su día. Su plan gratis permite cuentas en 2 monedas.",
                         }),
                         question: t({
                             en: "Which expense tracker handles more than one currency?",
@@ -4018,8 +4018,8 @@ const answers = {
                             {
                                 label: LATAM.cash,
                                 text: t({
-                                    en: "Accounts for cash, cards, savings, and debts. Pro lets each one keep its own currency",
-                                    es: "Cuentas para efectivo, tarjetas, ahorros y deudas. Con Pro, cada una puede tener su propia moneda",
+                                    en: "Accounts for cash, cards, savings, and debts, in 2 currencies. Pro lifts the limit",
+                                    es: "Cuentas para efectivo, tarjetas, ahorros y deudas, en 2 monedas. Pro quita el límite",
                                 }),
                             },
                             { label: LABELS.free, text: OUTLAYR_FREE },
@@ -4208,8 +4208,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Finy supports 40+ currencies, including ARS, MXN, and USD. Monefy supports 150+ and you type each exchange rate. Money Manager uses several at once and lets you update the rate over the internet. Spendee gives each wallet a currency, with your own rate per transaction. Wallet by BudgetBakers converts at real-time rates. The Mobills listing does not describe using more than one currency. Outlayr has 165 and converts each purchase at the rate from its day. Its free plan holds accounts in one currency.",
-                            es: "Finy admite más de 40 monedas, entre ellas ARS, MXN y USD. Monefy admite más de 150 y tú escribes cada tasa de cambio. Money Manager usa varias a la vez y te deja actualizar la tasa por internet. Spendee le da una moneda a cada billetera, con tu propia tasa por movimiento. Wallet by BudgetBakers convierte con tasas en tiempo real. La ficha de Mobills no describe el uso de más de una moneda. Outlayr tiene 165 y convierte cada compra con la tasa de su día. Su plan gratis permite cuentas en una moneda.",
+                            en: "Finy supports 40+ currencies, including ARS, MXN, and USD. Monefy supports 150+ and you type each exchange rate. Money Manager uses several at once and lets you update the rate over the internet. Spendee gives each wallet a currency, with your own rate per transaction. Wallet by BudgetBakers converts at real-time rates. The Mobills listing does not describe using more than one currency. Outlayr has 165 and converts each purchase at the rate from its day. Its free plan holds accounts in 2 currencies.",
+                            es: "Finy admite más de 40 monedas, entre ellas ARS, MXN y USD. Monefy admite más de 150 y tú escribes cada tasa de cambio. Money Manager usa varias a la vez y te deja actualizar la tasa por internet. Spendee le da una moneda a cada billetera, con tu propia tasa por movimiento. Wallet by BudgetBakers convierte con tasas en tiempo real. La ficha de Mobills no describe el uso de más de una moneda. Outlayr tiene 165 y convierte cada compra con la tasa de su día. Su plan gratis permite cuentas en 2 monedas.",
                         }),
                         question: t({
                             en: "Which expense tracker handles pesos and dollars together?",
@@ -4663,9 +4663,9 @@ const answers = {
                             {
                                 label: LABELS.free,
                                 text: t({
-                                    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in one currency",
-                                    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en una moneda",
-                                    pt: "3 contas, 2 orçamentos por categoria mais um para o mês, 20 capturas por voz ou de recibos a cada 30 dias e contas em uma moeda",
+                                    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in 2 currencies",
+                                    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en 2 monedas",
+                                    pt: "3 contas, 2 orçamentos por categoria mais um para o mês, 20 capturas por voz ou de recibos a cada 30 dias e contas em 2 moedas",
                                 }),
                             },
                             {
@@ -4872,9 +4872,9 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
-                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
-                            pt: "Registrar gastos é grátis, assim como orçamentos, metas, assinaturas e widgets. O plano grátis inclui 20 capturas por voz ou de recibos a cada 30 dias, 3 contas, 2 orçamentos por categoria e contas em uma moeda. O Outlayr Pro aumenta esses limites e adiciona a sincronização. Nos Estados Unidos, custa US$7.99 por mês, US$49.99 por ano com 7 dias grátis ou US$129.99 em pagamento único. Sua loja de apps mostra o preço do seu país.",
+                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
+                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+                            pt: "Registrar gastos é grátis, assim como orçamentos, metas, assinaturas e widgets. O plano grátis inclui 20 capturas por voz ou de recibos a cada 30 dias, 3 contas, 2 orçamentos por categoria e contas em 2 moedas. O Outlayr Pro aumenta esses limites e adiciona a sincronização. Nos Estados Unidos, custa US$7.99 por mês, US$49.99 por ano com 7 dias grátis ou US$129.99 em pagamento único. Sua loja de apps mostra o preço do seu país.",
                         }),
                         question: t({
                             en: "How much does Outlayr cost?",
@@ -5247,9 +5247,9 @@ const answers = {
                             {
                                 label: LABELS.free,
                                 text: t({
-                                    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in one currency",
-                                    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en una moneda",
-                                    fr: "3 comptes, 2 budgets par catégorie plus un pour le mois, 20 captures vocales ou de tickets tous les 30 jours et des comptes dans une seule devise",
+                                    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in 2 currencies",
+                                    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en 2 monedas",
+                                    fr: "3 comptes, 2 budgets par catégorie plus un pour le mois, 20 captures vocales ou de tickets tous les 30 jours et des comptes dans 2 devises",
                                 }),
                             },
                             {
@@ -5522,9 +5522,9 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in one currency. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
-                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en una moneda. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
-                            fr: "La saisie, les budgets, les objectifs, les abonnements et les widgets sont gratuits. La formule gratuite comprend 20 captures vocales ou de tickets tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans une seule devise. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte US$7.99 par mois, US$49.99 par an avec 7 jours gratuits ou US$129.99 en un seul paiement. Votre boutique d'apps affiche le prix de votre pays.",
+                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
+                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+                            fr: "La saisie, les budgets, les objectifs, les abonnements et les widgets sont gratuits. La formule gratuite comprend 20 captures vocales ou de tickets tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans 2 devises. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte US$7.99 par mois, US$49.99 par an avec 7 jours gratuits ou US$129.99 en un seul paiement. Votre boutique d'apps affiche le prix de votre pays.",
                         }),
                         question: t({
                             en: "How much does Outlayr cost?",
@@ -7600,8 +7600,8 @@ const answers = {
                     {
                         label: t({ en: "Free plan", es: "Plan gratis" }),
                         text: t({
-                            en: "Log in any currency. Accounts in one currency, more with Pro",
-                            es: "Registra en cualquier moneda. Cuentas en una moneda, más con Pro",
+                            en: "Log in any currency. Accounts in 2 currencies, more with Pro",
+                            es: "Registra en cualquier moneda. Cuentas en 2 monedas, más con Pro",
                         }),
                     },
                 ],
@@ -7638,8 +7638,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. A dollar card, a bolívar bank account, and cash in euros each keep their own balance, and a transfer between them does not count as spending. The free plan holds accounts in one currency. Outlayr Pro allows any number.",
-                            es: "Sí. Una tarjeta en dólares, una cuenta de banco en bolívares y efectivo en euros tienen cada uno su propio saldo, y una transferencia entre ellos no cuenta como gasto. El plan gratis permite cuentas en una moneda. Outlayr Pro permite las que quieras.",
+                            en: "Yes. A dollar card, a bolívar bank account, and cash in euros each keep their own balance, and a transfer between them does not count as spending. The free plan holds accounts in 2 currencies. Outlayr Pro allows any number.",
+                            es: "Sí. Una tarjeta en dólares, una cuenta de banco en bolívares y efectivo en euros tienen cada uno su propio saldo, y una transferencia entre ellos no cuenta como gasto. El plan gratis permite cuentas en 2 monedas. Outlayr Pro permite las que quieras.",
                         }),
                         question: t({
                             en: "Can each account hold its own currency?",
@@ -7723,8 +7723,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "On a trip, log each purchase in the currency on the receipt as you go, and every total still reads in your main currency. Each account keeps its own currency and balance, so a dollar card and cash in euros stay apart. You can log in any of the 165 currencies on any plan; the free plan holds accounts in one currency, and Outlayr Pro in as many as you need.",
-                                es: "De viaje, registra cada compra en la moneda del recibo, y todos los totales se siguen leyendo en tu moneda principal. Cada cuenta tiene su propia moneda y su saldo, así que una tarjeta en dólares y el efectivo en euros quedan separados. Puedes registrar en cualquiera de las 165 monedas con cualquier plan; el plan gratis permite cuentas en una moneda, y Outlayr Pro en las que necesites.",
+                                en: "On a trip, log each purchase in the currency on the receipt as you go, and every total still reads in your main currency. Each account keeps its own currency and balance, so a dollar card and cash in euros stay apart. You can log in any of the 165 currencies on any plan; the free plan holds accounts in 2 currencies, and Outlayr Pro in as many as you need.",
+                                es: "De viaje, registra cada compra en la moneda del recibo, y todos los totales se siguen leyendo en tu moneda principal. Cada cuenta tiene su propia moneda y su saldo, así que una tarjeta en dólares y el efectivo en euros quedan separados. Puedes registrar en cualquiera de las 165 monedas con cualquier plan; el plan gratis permite cuentas en 2 monedas, y Outlayr Pro en las que necesites.",
                             }),
                             t({
                                 en: "Splitting costs with friends? The split expenses calculator works out who pays whom, once you agree on one currency and a rate.",
@@ -7809,8 +7809,8 @@ const answers = {
                     {
                         label: t({ en: "Free plan", es: "Plan gratis" }),
                         text: t({
-                            en: "Log in any currency. Accounts in one currency, more with Pro",
-                            es: "Registra en cualquier moneda. Cuentas en una moneda, más con Pro",
+                            en: "Log in any currency. Accounts in 2 currencies, more with Pro",
+                            es: "Registra en cualquier moneda. Cuentas en 2 monedas, más con Pro",
                         }),
                     },
                 ],
@@ -7837,8 +7837,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes for logging: you can enter an expense in any of the 165 currencies, at the rate from that day or your own. The free plan holds accounts in one currency, so a transfer between a dollar account and a bolívar account needs Outlayr Pro.",
-                            es: "Sí para registrar: puedes anotar un gasto en cualquiera de las 165 monedas, con la tasa del día o la tuya. El plan gratis permite cuentas en una moneda, así que una transferencia entre una cuenta en dólares y otra en bolívares necesita Outlayr Pro.",
+                            en: "Yes. You can enter an expense in any of the 165 currencies, at the rate from that day or your own. The free plan holds accounts in 2 currencies, so a transfer between a dollar account and a bolívar account works without Outlayr Pro.",
+                            es: "Sí. Puedes anotar un gasto en cualquiera de las 165 monedas, con la tasa del día o la tuya. El plan gratis permite cuentas en 2 monedas, así que una transferencia entre una cuenta en dólares y otra en bolívares funciona sin Outlayr Pro.",
                         }),
                         question: t({
                             en: "Does this work on the free plan?",
@@ -7896,8 +7896,8 @@ const answers = {
                                 es: "Si te cobraron una comisión, agrégala del lado que la pagó, incluida en el monto o aparte. La comisión cuenta como gasto. La transferencia no, así que no cuenta contra un presupuesto.",
                             }),
                             t({
-                                en: "A transfer between two currencies needs accounts in two currencies. The free plan holds accounts in one, and Outlayr Pro in as many as you need.",
-                                es: "Una transferencia entre dos monedas necesita cuentas en dos monedas. El plan gratis permite cuentas en una, y Outlayr Pro en las que necesites.",
+                                en: "A transfer between two currencies needs accounts in two currencies. The free plan holds accounts in two, and Outlayr Pro in as many as you need.",
+                                es: "Una transferencia entre dos monedas necesita cuentas en dos monedas. El plan gratis permite cuentas en dos, y Outlayr Pro en las que necesites.",
                             }),
                         ],
                         id: "as-a-transfer",

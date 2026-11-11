@@ -8,7 +8,7 @@ import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAccounts } from "@/data/accounts";
 import type { PaywallTrigger } from "@/domain/paywall-trigger";
-import { FREE_ACCOUNTS, FREE_INSTALLMENT_APPS } from "@/domain/pro-limits";
+import { FREE_ACCOUNTS, FREE_CURRENCIES, FREE_INSTALLMENT_APPS } from "@/domain/pro-limits";
 import { useTranslation } from "@/i18n/context";
 
 const SHOWN_ACCOUNTS = 4;
@@ -50,7 +50,9 @@ export function AccountTop({ trigger }: { trigger: AccountTrigger }) {
                 ))}
             </View>
             {trigger === "currencies" ? (
-                <Text className="text-muted text-footnote pt-3">{t("pro.top.currencies.note")}</Text>
+                <Text className="text-muted text-footnote pt-3">
+                    {t("pro.top.currencies.note", { count: FREE_CURRENCIES })}
+                </Text>
             ) : null}
         </View>
     );

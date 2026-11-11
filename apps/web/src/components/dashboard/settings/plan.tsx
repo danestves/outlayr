@@ -28,7 +28,7 @@ import { useLedgerBooks } from "@/lib/ledger-db";
 import { SettingsCard } from "./parts";
 import { planUsage } from "./plan-usage";
 
-const FREE = { accounts: 3, budgets: 2, captures: 20, currencies: 1, installmentApps: 2, payoffPlans: 2 } as const;
+const FREE = { accounts: 3, budgets: 2, captures: 20, currencies: 2, installmentApps: 2, payoffPlans: 2 } as const;
 const FREE_AUTO_LOG = 30;
 const DAY_MS = 86_400_000;
 const STORE_URL = {

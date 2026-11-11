@@ -44,13 +44,13 @@ function plan(accounts: PlannedAccount[], budgets = 0): MmImportPlan {
 describe("importCapsPassed", () => {
     it("names every free cap a large backup passes, and none for a small one", () => {
         const big = plan(
-            [account("Cash", "USD"), account("Bank", "USD"), account("Card", "USD"), account("Pesos", "COP")],
+            [account("Cash", "USD"), account("Bank", "USD"), account("Card", "EUR"), account("Pesos", "COP")],
             3
         );
         expect(importCapsPassed(big, EMPTY)).toStrictEqual([
             { cap: "accounts", count: 4, free: 3 },
             { cap: "budgets", count: 3, free: 2 },
-            { cap: "currencies", count: 2, free: 1 },
+            { cap: "currencies", count: 3, free: 2 },
         ]);
         expect(
             importCapsPassed(plan([account("Cash", "USD"), account("Bank", "USD"), account("Card", "USD")], 2), EMPTY)
@@ -63,7 +63,7 @@ describe("importCapsPassed", () => {
             accounts: [
                 { currency: "USD", id: "a1", kind: "asset", name: "Cash" },
                 { currency: "EUR", id: "a2", kind: "asset", name: "Euros" },
-                { currency: "EUR", id: "a3", kind: "asset", name: "Savings" },
+                { currency: "GBP", id: "a3", kind: "asset", name: "Savings" },
                 { currency: "USD", id: "p1", kind: "person", name: "Ana" },
             ],
         };
