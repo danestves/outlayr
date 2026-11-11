@@ -431,6 +431,14 @@ const dashboardAccounts = {
                 fr: "Il quitte vos listes et vos totaux. Toutes les opérations sont conservées et vous pouvez le restaurer à tout moment.",
                 pt: "Ela sai das suas listas e totais. Todas as transações são mantidas e você pode restaurá-la quando quiser.",
             }),
+            archiveFailed: insert(
+                t({
+                    en: "Couldn't archive {{name}}. Try again.",
+                    es: "No se pudo archivar {{name}}. Inténtalo de nuevo.",
+                    fr: "Impossible d'archiver {{name}}. Réessayez.",
+                    pt: "Não foi possível arquivar {{name}}. Tente novamente.",
+                })
+            ),
             archiveTitle: insert(
                 t({
                     en: "Archive {{name}}?",
@@ -492,6 +500,14 @@ const dashboardAccounts = {
                 fr: "Non, c'est différent",
                 pt: "Não, é diferente",
             }),
+            checkFailed: insert(
+                t({
+                    en: "Couldn't check {{name}}. Try again.",
+                    es: "No se pudo revisar {{name}}. Inténtalo de nuevo.",
+                    fr: "Impossible de vérifier {{name}}. Réessayez.",
+                    pt: "Não foi possível conferir {{name}}. Tente novamente.",
+                })
+            ),
             checkLog: insert(
                 t({
                     en: "Log {{amount}} and mark checked",
@@ -1040,6 +1056,12 @@ const dashboardAccounts = {
                 })
             ),
             save: t({ en: "Save", es: "Guardar", fr: "Enregistrer", pt: "Salvar" }),
+            saveFailed: t({
+                en: "Couldn't save this purchase. Try again.",
+                es: "No se pudo guardar esta compra. Inténtalo de nuevo.",
+                fr: "Impossible d'enregistrer cet achat. Réessayez.",
+                pt: "Não foi possível salvar esta compra. Tente novamente.",
+            }),
             thenEach: insert(
                 t({
                     en: "Then {{count}} × {{amount}}",

@@ -10,26 +10,31 @@ import type { Notice, NoticeHost } from "@/lib/commit-notices";
 import type { PurchaseSeed } from "@/lib/installment-scan";
 import { writeSettings } from "@/lib/ledger-settings";
 
+import type { AccountValues } from "./account-form";
 import type { AccountSort } from "./model";
+import type { PurchaseValues } from "./purchase-form";
 
 export type AccountType = "bank" | "card" | "cash";
 
 export type AccountFlow =
-    | { accountId: string; kind: "archive" | "check" | "delete" | "edit" }
-    | { kind: "create"; type: AccountType }
-    | { accountId?: string; kind: "purchase"; seed?: PurchaseSeed }
+    | { accountId: string; kind: "archive" | "check" | "delete" }
+    | { accountId: string; draft?: AccountValues; kind: "edit" }
+    | { draft?: AccountValues; kind: "create"; type: AccountType }
+    | { accountId?: string; draft?: PurchaseValues; kind: "purchase"; seed?: PurchaseSeed }
     | { accountId?: string; kind: "scan" }
     | { accountId: string; kind: "transfer" }
     | { accountId?: string; from?: string; kind: "entry" };
 
 interface AccountFlows {
     open: (flow: AccountFlow) => void;
+    reopen: (flow: AccountFlow) => void;
     sort: (sort: AccountSort) => void;
     toast: NoticeHost["show"];
 }
 
 const FlowsContext = createContext<AccountFlows>({
     open: () => undefined,
+    reopen: () => undefined,
     sort: () => undefined,
     toast: () => () => undefined,
 });
@@ -41,8 +46,12 @@ interface OpenFlow {
     open: boolean;
 }
 
-const OpenFlowContext = createContext<[OpenFlow, (flow: AccountFlow | null) => void]>([
+type SetFlow = (flow: AccountFlow | null) => void;
+type Reopen = (flow: AccountFlow) => void;
+
+const OpenFlowContext = createContext<[OpenFlow, SetFlow, Reopen]>([
     { flow: null, open: false },
+    () => undefined,
     () => undefined,
 ]);
 
@@ -53,7 +62,11 @@ export function FlowRoot({ children }: { children: ReactNode }) {
         (next: AccountFlow | null) => setState((last) => ({ flow: next ?? last.flow, open: next !== null })),
         []
     );
-    const value = useMemo((): [OpenFlow, typeof setFlow] => [state, setFlow], [state, setFlow]);
+    const reopen = useCallback(
+        (flow: AccountFlow) => setState((last) => (last.open ? last : { flow, open: true })),
+        []
+    );
+    const value = useMemo((): [OpenFlow, SetFlow, Reopen] => [state, setFlow, reopen], [state, setFlow, reopen]);
     return <OpenFlowContext value={value}>{children}</OpenFlowContext>;
 }
 
@@ -106,8 +119,9 @@ function ShowToast({ onDone, toast }: { onDone: () => void; toast: Notice }) {
 
 /** Holds the dialog that is open and the toast after it. A new toast first settles the one it replaces. */
 export function AccountFlowsProvider({ children }: { children: ReactNode }) {
-    const [{ flow, open }, setFlow] = useContext(OpenFlowContext);
+    const [{ flow, open }, setFlow, reopen] = useContext(OpenFlowContext);
     const { ledger } = useDashboard();
+    const sortFailed = useIntlayer("dashboard-accounts").flows.reorderFailed.value;
     const [toast, setToast] = useState<Notice | null>(null);
     const db = useLedgerDb();
     const shown = useRef<Notice | null>(null);
@@ -125,25 +139,28 @@ export function AccountFlowsProvider({ children }: { children: ReactNode }) {
     const targetGone =
         (flow?.kind === "archive" || flow?.kind === "check" || flow?.kind === "delete" || flow?.kind === "edit") &&
         !ledger.books.accounts.some((row) => row.localId === flow.accountId && row.deletedAt === null);
-    const flows = useMemo(
-        () => ({
+    const flows = useMemo(() => {
+        const show = (next: Notice) => {
+            shown.current?.onExpire?.();
+            shown.current = next;
+            setToast(next);
+            return () => {
+                if (shown.current === next) {
+                    clearToast();
+                }
+            };
+        };
+        return {
             open: setFlow,
+            reopen,
             sort: (sort: AccountSort) => {
-                void writeSettings(db, { accountsByHand: String(sort === "order") });
+                writeSettings(db, { accountsByHand: String(sort === "order") }).catch(() => {
+                    show({ failed: true, text: sortFailed });
+                });
             },
-            toast: (next: Notice) => {
-                shown.current?.onExpire?.();
-                shown.current = next;
-                setToast(next);
-                return () => {
-                    if (shown.current === next) {
-                        clearToast();
-                    }
-                };
-            },
-        }),
-        [clearToast, db, setFlow]
-    );
+            toast: show,
+        };
+    }, [clearToast, db, reopen, setFlow, sortFailed]);
     return (
         <FlowsContext value={flows}>
             {children}

@@ -9,6 +9,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { download } from "@/components/dashboard/settings/data/write";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
+import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKeyOf } from "@/lib/dashboard-series-period";
 import { useTagBooks } from "@/lib/ledger-db";
@@ -176,10 +177,15 @@ interface SharingInput {
 /** A link's copy is built here, in the browser, from the ledger the owner is looking at. */
 function useSharing({ books, ledger, words }: SharingInput) {
     const all = useSharedLinks();
+    const { notify } = useLedgerCommitter();
     const [forgotten, setForgotten] = useState<ReadonlySet<string>>(new Set());
-    const linkOf = (id: string) => all.find((each) => each.reportId === id);
-    const publish = async (target: SavedReport, { amounts, expires }: ShareOptions) => {
-        const report = snapshotOf({
+    const links = all.filter((link) => !forgotten.has(link.reportId));
+    const linkOf = (id: string) => links.find((each) => each.reportId === id);
+    const refused = () => {
+        notify({ failed: true, text: words.copy.sharing.failed.value });
+    };
+    const snapshot = (target: SavedReport, amounts: boolean) =>
+        snapshotOf({
             amounts,
             currency: ledger.currency,
             definition: target.definition,
@@ -187,6 +193,8 @@ function useSharing({ books, ledger, words }: SharingInput) {
             report: buildReport({ books, definition: target.definition, ledger }),
             rowName: (label) => words.rowName(label, target.definition.rows),
         });
+    const publish = async (target: SavedReport, { amounts, expires }: ShareOptions) => {
+        const report = snapshot(target, amounts);
         if (report === null) {
             throw new Error("This report has no percentages to share");
         }
@@ -194,22 +202,21 @@ function useSharing({ books, ledger, words }: SharingInput) {
     };
     return {
         forget: (ids: readonly string[]) => {
+            const remember = () => setForgotten((before) => new Set([...before].filter((id) => !ids.includes(id))));
             setForgotten((before) => new Set([...before, ...ids]));
-            Promise.all(ids.map((id) => removeLink(id))).catch(() =>
-                setForgotten((before) => new Set([...before].filter((id) => !ids.includes(id))))
-            );
+            Promise.all(ids.map((id) => removeLink(id)))
+                .catch(refused)
+                .finally(remember);
         },
         linkOf,
-        links: all.filter((link) => !forgotten.has(link.reportId)),
+        links,
         publish,
         refresh: (target: SavedReport) => {
             const link = linkOf(target.id);
-            if (link) {
-                publish(target, { amounts: link.unit === "amount", expires: "keep" }).catch(() => undefined);
+            const report = link ? snapshot(target, link.unit === "amount") : null;
+            if (report !== null) {
+                publishLink({ expires: "keep", report, reportId: target.id }).catch(refused);
             }
-        },
-        remove: async (id: string) => {
-            await removeLink(id);
         },
     };
 }
@@ -233,7 +240,7 @@ function ShareModal({ hideable, now, onClose, sharing, target, words }: ShareMod
             now={now}
             onClose={onClose}
             onPublish={(options) => (target ? sharing.publish(target, options) : Promise.resolve())}
-            onRemove={() => (target ? sharing.remove(target.id) : Promise.resolve())}
+            onRemove={() => target && sharing.forget([target.id])}
             open={target !== undefined}
             words={words}
         />

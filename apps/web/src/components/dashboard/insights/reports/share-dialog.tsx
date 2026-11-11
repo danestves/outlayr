@@ -30,7 +30,7 @@ interface ShareDialogProps {
     now: number;
     onClose: () => void;
     onPublish: (options: ShareOptions) => Promise<void>;
-    onRemove: () => Promise<void>;
+    onRemove: () => void;
     open: boolean;
     words: ReportWords;
 }
@@ -73,7 +73,7 @@ export function ShareDialog({
             setBusy(false);
         }
     };
-    const toggleLink = (next: boolean) => run(next ? () => onPublish({ amounts, expires: lifetime }) : onRemove);
+    const toggleLink = (next: boolean) => (next ? run(() => onPublish({ amounts, expires: lifetime })) : onRemove());
     const toggleAmounts = (next: boolean) => {
         setPicked((before) => ({ ...before, amounts: next }));
         if (on) {

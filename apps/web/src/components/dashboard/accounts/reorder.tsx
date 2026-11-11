@@ -11,10 +11,10 @@ import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committe
 import { AccountTile } from "@/components/ledger/tiles";
 import { reorderedAccounts } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
-import { useDisplayFormat, writeSettings } from "@/lib/ledger-settings";
+import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { AccountsBar, Card } from "./accounts-screen";
-import { useLedgerDb } from "./flows";
+import { useAccountFlows } from "./flows";
 import { Glyph } from "./glyph";
 import { accountRows, groupRows, sortRows, storedSort } from "./model";
 import type { AccountRow, AccountSort } from "./model";
@@ -139,7 +139,7 @@ function Group({
 export function ReorderAccounts() {
     const { ledger, overview } = useDashboard();
     const { actions, detail, flows, list } = useIntlayer("dashboard-accounts");
-    const db = useLedgerDb();
+    const { sort: saveSort } = useAccountFlows();
     const committer = useLedgerCommitter();
     const navigate = useNavigate();
     const all = useMemo(() => accountRows(ledger, overview), [ledger, overview]);
@@ -148,7 +148,6 @@ export function ReorderAccounts() {
     const [movedIds, setDraft] = useState<readonly string[] | null>(null);
     const sort = pickedSort ?? storedSort(ledger);
     const draft = movedIds ?? all.map((row) => row.id);
-    const [failed, setFailed] = useState(false);
 
     const byId = new Map(all.map((row) => [row.id, row]));
     const ordered = draft.flatMap((id) => byId.get(id) ?? []);
@@ -170,8 +169,7 @@ export function ReorderAccounts() {
         ]);
     };
 
-    const done = async () => {
-        setFailed(false);
+    const done = () => {
         const openOnes = openAccounts(ledger.books);
         const open = new Map(openOnes.map((row) => [row.localId, row]));
         const shelved = ledger.books.accounts.filter((row) => row.deletedAt === null && !open.has(row.localId));
@@ -181,18 +179,10 @@ export function ReorderAccounts() {
         const order = [...chosen, ...openOnes.filter((row) => !seen.has(row.localId)), ...shelved];
         if (sort === "order") {
             // oxlint-disable-next-line react/purity -- runs on a click, not during render.
-            const saved = await committer.commit(reorderedAccounts(order, Date.now()));
-            if (!saved) {
-                setFailed(true);
-                return;
-            }
+            void committer.commit(reorderedAccounts(order, Date.now()), { failed: flows.reorderFailed.value });
         }
-        try {
-            await writeSettings(db, { accountsByHand: String(sort === "order") });
-            await navigate({ to: "/app/accounts" });
-        } catch {
-            setFailed(true);
-        }
+        saveSort(sort);
+        void navigate({ to: "/app/accounts" });
     };
 
     const hint = <span className="font-sans tracking-normal">{flows.reorderHint}</span>;
@@ -215,7 +205,6 @@ export function ReorderAccounts() {
                     </span>
                 }
             >
-                {failed ? <span className="text-app-spend text-[13px]">{flows.reorderFailed}</span> : null}
                 <Segments
                     onPick={setSort}
                     options={[

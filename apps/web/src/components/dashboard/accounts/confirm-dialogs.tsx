@@ -5,7 +5,6 @@ import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistor
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
-import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -26,25 +25,13 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
     const { flows } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const navigate = useNavigate();
-    const [failed, setFailed] = useState(false);
     const facts = accountFacts(ledger, account.localId);
-    const archive = async () => {
+    const archive = () => {
         const at = Date.now();
-        if (!(await committer.commit([archivedAccount(account, at, at)]))) {
-            setFailed(true);
-            return;
-        }
         onClose();
-        await navigate({ to: "/app/accounts" });
-        committer.notify({
-            onUndo: () => {
-                const fresh = committer.current().books.accounts.find((row) => row.localId === account.localId);
-                if (fresh) {
-                    void committer.commit([archivedAccount(fresh, null, Date.now())], {
-                        failed: flows.restoreFailed({ name: account.name }).value,
-                    });
-                }
-            },
+        committer.commitWithUndo([archivedAccount(account, at, at)], {
+            after: navigate({ to: "/app/accounts" }),
+            failed: flows.archiveFailed({ name: account.name }).value,
             text: flows.archivedToast({ name: account.name }).value,
         });
     };
@@ -57,11 +44,6 @@ export function ArchiveDialog({ account, onClose }: { account: Account; onClose:
                     <Fact label={flows.transactionsKept}>{facts.transactions}</Fact>
                     <Fact label={flows.netWorthAfter}>{money(facts.netAfter, ledger.currency)}</Fact>
                 </div>
-                {failed ? (
-                    <p className="text-destructive text-xs" role="alert">
-                        {flows.saveFailed}
-                    </p>
-                ) : null}
             </Dialog.Body>
             <Dialog.Footer>
                 <Button onClick={onClose} variant="secondary">

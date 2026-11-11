@@ -30,6 +30,7 @@ import { planPurchase, purchaseInInstallments } from "@/lib/plan-writes";
 import type { PurchaseDraft } from "@/lib/plan-writes";
 
 import { AmountInput, amountText, DayField, FlowDialog, focusNode } from "./fields";
+import { useAccountFlows } from "./flows";
 import type { AccountFlow } from "./flows";
 import { Glyph } from "./glyph";
 import { logoIdentity } from "./identity-picker";
@@ -327,11 +328,27 @@ function seededFees(
     });
 }
 
-function startFields(seed: PurchaseSeed | undefined, currency: string) {
+export interface PurchaseValues {
+    categoryId: string | null;
+    count: number;
+    eachText: string | null;
+    every: EveryOption;
+    firstDueKey: string | null;
+    name: string;
+    picked: string | null;
+    totalText: string;
+    upfrontText: string;
+}
+
+function startFields(seed: PurchaseSeed | undefined, picked: string | null, currency: string): PurchaseValues {
     return {
+        categoryId: null,
         count: seed?.count ?? newInstallmentDraft(null).count,
-        every: seed?.every ?? ("days14" satisfies EveryOption),
+        eachText: null,
+        every: seed?.every ?? "days14",
         firstDueKey: seed ? dayKey(seed.firstDue) : null,
+        name: "",
+        picked,
         totalText: seed ? amountText(seed.price, currency) : "",
         upfrontText: seed?.upfront ? amountText(seed.upfront, currency) : "",
     };
@@ -360,11 +377,13 @@ function stillScanned(
 /** Records a purchase on a card or an installment app. The upfront is paid from outside: no other account moves. */
 export function PurchaseForm({
     accountId,
+    draft,
     onClose,
     onSwitch,
     seed,
 }: {
     accountId?: string;
+    draft?: PurchaseValues;
     onClose: () => void;
     onSwitch: (flow: AccountFlow) => void;
     seed?: PurchaseSeed;
@@ -373,23 +392,28 @@ export function PurchaseForm({
     const { flows, purchase } = useIntlayer("dashboard-accounts");
     const { fee } = useIntlayer("dashboard-installments");
     const committer = useLedgerCommitter();
+    const { reopen } = useAccountFlows();
     const id = useId();
     const cards = openAccounts(ledger.books).filter((row) => row.kind === "liability");
-    const [name, setName] = useState("");
-    const [categoryId, setCategoryId] = useState<string | null>(null);
-    const [start] = useState(() =>
-        startFields(seed, cards.find((row) => row.localId === seed?.accountId)?.currency ?? ledger.currency)
+    const [start] = useState(
+        () =>
+            draft ??
+            startFields(
+                seed,
+                seed?.accountId ?? accountId ?? cards[0]?.localId ?? null,
+                cards.find((row) => row.localId === seed?.accountId)?.currency ?? ledger.currency
+            )
     );
+    const [name, setName] = useState(start.name);
+    const [categoryId, setCategoryId] = useState(start.categoryId);
     const [totalText, setTotalText] = useState(start.totalText);
-    const [picked, setPicked] = useState(seed?.accountId ?? accountId ?? cards[0]?.localId ?? null);
+    const [picked, setPicked] = useState(start.picked);
     const [upfrontText, setUpfrontText] = useState(start.upfrontText);
     const [count, setCount] = useState(start.count);
-    const [eachText, setEachText] = useState<string | null>(null);
-    const [every, setEvery] = useState<EveryOption>(start.every);
-    const [firstDueKey, setFirstDueKey] = useState<string | null>(start.firstDueKey);
+    const [eachText, setEachText] = useState(start.eachText);
+    const [every, setEvery] = useState(start.every);
+    const [firstDueKey, setFirstDueKey] = useState(start.firstDueKey);
     const [attempted, setAttempted] = useState(false);
-    const [failed, setFailed] = useState(false);
-    const [saving, setSaving] = useState(false);
 
     const everyLabels: Record<EveryOption, string> = {
         days14: purchase.everyDays14.value,
@@ -423,7 +447,7 @@ export function PurchaseForm({
     const blocked = plan.over > 0 || plan.upfrontTooHigh;
     const nameMissing = name.trim() === "";
 
-    const addApp = async (app: InstallmentApp) => {
+    const addApp = (app: InstallmentApp) => {
         const row = createdAccount(
             ledger.books,
             {
@@ -444,16 +468,16 @@ export function PurchaseForm({
             Date.now()
         );
         setPicked(row.localId);
-        if (!(await committer.commit([row]))) {
-            setPicked(null);
-            setFailed(true);
-        }
+        void committer.commit([row], { failed: flows.saveFailed.value }).then((saved) => {
+            if (!saved) {
+                setPicked((now) => (now === row.localId ? null : now));
+            }
+        });
     };
 
-    const save = async () => {
+    const save = () => {
         setAttempted(true);
-        setFailed(false);
-        if (saving || nameMissing || !account || !plan.schedule || blocked) {
+        if (nameMissing || !account || !plan.schedule || blocked) {
             return;
         }
         const rows = purchaseRows(ledger, {
@@ -475,13 +499,17 @@ export function PurchaseForm({
                   paidBefore: plan.paidBefore,
               })
             : [];
-        setSaving(true);
-        if (await committer.commit([...rows, ...fees])) {
-            onClose();
-        } else {
-            setSaving(false);
-            setFailed(true);
-        }
+        void committer.commit([...rows, ...fees], { failed: purchase.saveFailed.value }).then((saved) => {
+            if (!saved) {
+                reopen({
+                    accountId,
+                    draft: { categoryId, count, eachText, every, firstDueKey, name, picked, totalText, upfrontText },
+                    kind: "purchase",
+                    seed,
+                });
+            }
+        });
+        onClose();
     };
 
     return (
@@ -493,7 +521,7 @@ export function PurchaseForm({
                     noValidate
                     onSubmit={(event) => {
                         event.preventDefault();
-                        void save();
+                        save();
                     }}
                 >
                     <div className="grid grid-cols-2 gap-3">
@@ -566,10 +594,7 @@ export function PurchaseForm({
                 </form>
             </Dialog.Body>
             <Dialog.Footer>
-                {failed ? (
-                    <span className="text-destructive flex items-center text-[13px]">{flows.saveFailed}</span>
-                ) : null}
-                {failed || blocked ? null : (
+                {blocked ? null : (
                     <Button
                         className="min-w-max!"
                         onClick={() => onSwitch({ accountId: picked ?? undefined, kind: "scan" })}
@@ -582,7 +607,7 @@ export function PurchaseForm({
                 <Button onClick={onClose} variant="secondary">
                     {flows.cancel}
                 </Button>
-                <Button disabled={blocked} form={id} loading={saving} type="submit">
+                <Button disabled={blocked} form={id} type="submit">
                     {purchase.save}
                 </Button>
             </Dialog.Footer>

@@ -8,7 +8,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { checkedAccount, parseAmount, uncheckedAccount } from "@/lib/account-writes";
+import { checkedAccount, parseAmount } from "@/lib/account-writes";
 import type { LedgerBooks } from "@/lib/ledger-books";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -27,43 +27,24 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
     const [different, setDifferent] = useState(false);
     const [negative, setNegative] = useState(has < 0);
     const [text, setText] = useState(() => amountText(Math.abs(has), currency));
-    const [failed, setFailed] = useState(false);
     const decimals = decimalsFor(currency);
     const shows = (negative ? -1 : 1) * parseAmount(text, decimals);
     const change = different ? roundMoney(shows - has, decimals) : 0;
 
-    const save = async () => {
+    const save = () => {
         // oxlint-disable-next-line react/purity -- runs on a click, not during render.
         const at = Date.now();
-        const adjustmentId = change === 0 ? null : crypto.randomUUID();
         const adjustment =
-            adjustmentId === null ? null : { amount: change, id: adjustmentId, note: flows.checkNote.value };
-        if (!(await committer.commit(checkedAccount(committer.current().books, account, adjustment, at)))) {
-            setFailed(true);
-            return;
-        }
+            change === 0 ? null : { amount: change, id: crypto.randomUUID(), note: flows.checkNote.value };
         onClose();
-        committer.notify({
-            onUndo: () => {
-                const { books } = committer.current();
-                const fresh = books.accounts.find((row) => row.localId === account.localId);
-                if (fresh) {
-                    const rows = uncheckedAccount(books, fresh, account.checkedAt ?? null, adjustmentId, Date.now());
-                    void committer.commit(rows, { failed: flows.saveFailed.value });
-                }
-            },
+        committer.commitWithUndo(checkedAccount(committer.current().books, account, adjustment, at), {
+            failed: flows.checkFailed({ name }).value,
             text:
                 change === 0
                     ? flows.checkedToast({ name }).value
                     : flows.checkedAdjusted({ amount: money(Math.abs(change), currency), name }).value,
         });
     };
-
-    const error = failed ? (
-        <p className="text-destructive text-xs" role="alert">
-            {flows.saveFailed}
-        </p>
-    ) : null;
 
     if (!different) {
         return (
@@ -75,7 +56,6 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
                             {money(has, currency)}
                         </div>
                         <p className="text-muted-foreground mt-0.5 text-[13px]">{flows.checkCompare}</p>
-                        {error}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         <Button onClick={() => setDifferent(true)} variant="outline">
@@ -111,7 +91,6 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
                         </span>
                     </Fact>
                 </div>
-                {error}
             </Dialog.Body>
             <Dialog.Footer>
                 <Button className="px-3.5 sm:min-w-max!" onClick={() => setDifferent(false)} variant="secondary">

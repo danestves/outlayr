@@ -28,8 +28,10 @@ Every ledger commit goes through `ledgerCommitter(db, userId)` in `lib/ledger-co
 
 A component reaches it with `useLedgerCommitter()`, which also owns how an outcome reads (`lib/commit-notices.ts`). A caller states its rows and its copy:
 
-- `commit(rows, { failed, saved })` resolves to whether the rows were saved. With `failed` it tells the person when they were not, and with `saved` it says so at once. A form that shows its own inline error passes no copy and reads the answer.
-- `commitWithUndo(rows, { text, failed })` is a held commit with its Undo notice. The notice leaves when the hold runs out, a failure takes its place, and `onUndone` runs only if Undo still worked. `after` keeps the notice back until a navigation has landed.
+- `commit(rows, { failed, saved })` resolves to whether the rows were saved. With `failed` it tells the person when they were not, and with `saved` it says so at once. A flow that says a refusal in its own place (the imports, erase, an onboarding step) passes no copy and reads the answer.
+- A dialog never awaits its commit. It commits, closes and starts any navigation in the same handler, and the `failed` copy is how a refusal is heard. No inline error and no saving spinner: the dialog is gone before either could show.
+- A form whose typing a refusal would lose reads the answer only to bring it back: `reopen(flow)` from `useAccountFlows()` with the values as the flow's `draft`. It does nothing while another dialog is open.
+- `commitWithUndo(rows, { text, failed })` is a held commit with its Undo notice. The notice leaves when the hold runs out, a failure takes its place, and `onUndone` runs only if Undo still worked. `after` keeps the notice back until a navigation has landed. An action with Undo is this, not a commit followed by a second one that takes it back.
 - `current()` is the ledger with the books as the local copy holds them right now, for rows built in a handler.
 - `notify(notice)` speaks through the same host, for a notice that is not a commit's own.
 - Notices go to the shell's host unless the page has its own toast region. Such a page passes its surface (`entryNotices`, `ruleNotices`, `settingsNotices`), which also says how long its Undo lasts: do not add a second hold constant or a hand-made failure toast.
@@ -42,7 +44,7 @@ Under the hook:
 - The saved copy holds only rows the server has confirmed, so a reload never restores an unsent row and `resume()` cannot apply one twice. `ledger-committer.test.ts` pins this.
 - A failed commit rolls back every unsent commit on the same rows, as TanStack DB does for conflicting transactions.
 - The push runs beside the TanStack DB transaction, not inside its handler: a transaction that shows nothing never runs its handler, and budget plans are pushed without being shown. The transaction ends only after the touched collections have synced, or the change flickers back for a frame.
-- Rows are built by pure functions in `lib` (`*-writes.ts`, `transfer-create.ts`), never in a component. Do not call `createTransaction` or `pushRows` for ledger rows anywhere else. Settings (`writeSettings`) and the archive import are the two exceptions.
+- Rows are built by pure functions in `lib` (`*-writes.ts`, `transfer-create.ts`), never in a component. Do not call `createTransaction` or `pushRows` for ledger rows anywhere else. Settings (`writeSettings`) and the archive import are the two exceptions. `writeSettings` shows the change at once and rejects when it is refused: call it through `useSaveSettings()` or catch it and `notify`, never bare.
 
 ## The copy is the user's financial data
 
