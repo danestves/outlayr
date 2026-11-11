@@ -153,6 +153,7 @@ interface FirstRunProps {
     error?: string | null;
     eyebrow?: string;
     footnote?: ReactNode;
+    note?: string;
     /** Without one, the head sits at the top and `children` fill the space. */
     object?: ReactNode;
     skip?: FirstRunSkip;
@@ -198,6 +199,7 @@ export function FirstRun({
     action,
     skip,
     footnote,
+    note,
     error,
 }: FirstRunProps) {
     const timing = cover ? ENTRANCE.cover : ENTRANCE.step;
@@ -229,9 +231,12 @@ export function FirstRun({
                             {title}
                         </Text>
                         {body ? (
-                            <Text className="text-fr-muted text-subtitle max-w-72 text-center leading-snug">
-                                {body}
-                            </Text>
+                            <View className="max-w-72 gap-1.5">
+                                <Text className="text-fr-muted text-subtitle text-center leading-snug">{body}</Text>
+                                {note ? (
+                                    <Text className="text-fr-ink text-subtitle text-center leading-snug">{note}</Text>
+                                ) : null}
+                            </View>
                         ) : null}
                     </Animated.View>
                     {children ? (
