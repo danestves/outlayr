@@ -9,9 +9,10 @@ import { Sentence } from "@/components/sentence/sentence";
 import { SentenceValue } from "@/components/sentence/sentence-value";
 import { StepCategory } from "@/components/transaction-form/stage/step-category";
 import { useDatabase } from "@/contexts/local-data-context";
-import { useGlobalCurrency } from "@/data/app-meta";
+import { useGlobalCurrency, useMeta } from "@/data/app-meta";
 import { useCategoriesByNamespace } from "@/data/categories";
 import { useNow } from "@/data/use-now";
+import { formatSignedAmount } from "@/domain/account-display";
 import { firstEntryCategory } from "@/domain/first-entry-category";
 import { formatAmount, minorUnitsFor, roundToMinorUnits } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
@@ -24,6 +25,8 @@ import { finishFirstRunCommand } from "@/state/lifecycle-commands";
 import { saveFirstEntryCommand } from "@/state/onboarding-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { useColors } from "@/theme/use-colors";
+
+import { HeardFrom } from "./heard-from";
 
 const FAILURE_COPY = {
     finish: "onboarding.firstEntry.finishFailed",
@@ -39,12 +42,14 @@ export function OnboardingFirstEntry() {
     const nowMs = useNow();
     const currency = useGlobalCurrency(db);
     const categories = useCategoriesByNamespace(db, false);
+    const shareAnalytics = useMeta(db, "shareAnalytics");
     const [amount, setAmount] = useState("");
     const [pickedId, setPickedId] = useState<string | null>(null);
     const [step, setStep] = useState<"amount" | "category">("amount");
     const [saving, setSaving] = useState(false);
     const savingRef = useRef(false);
     const [saved, setSaved] = useState(false);
+    const [asking, setAsking] = useState(false);
     const [failed, setFailed] = useState<keyof typeof FAILURE_COPY | null>(null);
 
     const picked = categories.flatMap((parent) => [parent, ...parent.children]).find((row) => row.id === pickedId);
@@ -80,7 +85,9 @@ export function OnboardingFirstEntry() {
                 haptics(written ? "success" : "error");
                 setFailed(written ? null : "save");
                 setSaved(written);
-                if (written) {
+                if (written && shareAnalytics) {
+                    setAsking(true);
+                } else if (written) {
                     finishOnboarding(db);
                 }
             },
@@ -117,6 +124,22 @@ export function OnboardingFirstEntry() {
         setFailed(null);
         (saved ? finishOnboarding : skipOnboarding)(db);
     };
+
+    if (asking && category !== null) {
+        return (
+            <HeardFrom
+                error={failed === null ? null : t(FAILURE_COPY[failed])}
+                eyebrow={t("onboarding.heardFrom.eyebrow", {
+                    amount: formatSignedAmount(-roundToMinorUnits(figure, currency), currency, true, language),
+                    category: category.name ?? "",
+                })}
+                onDone={() => {
+                    setFailed(null);
+                    finishOnboarding(db);
+                }}
+            />
+        );
+    }
 
     return (
         <FirstRun

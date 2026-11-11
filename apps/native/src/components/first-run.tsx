@@ -146,6 +146,7 @@ interface FirstRunSkip {
 interface FirstRunProps {
     action?: FirstRunAction;
     body?: string;
+    centered?: boolean;
     children?: ReactNode;
     cover?: boolean;
     /** Rendered in reserved space, so an appearing error never shifts the buttons under the thumb. */
@@ -158,8 +159,37 @@ interface FirstRunProps {
     title: string;
 }
 
+function PlainHead({
+    body,
+    centered,
+    eyebrow,
+    title,
+}: Pick<FirstRunProps, "body" | "eyebrow" | "title"> & { centered: boolean }) {
+    if (centered) {
+        return (
+            <View className="items-center gap-2">
+                {eyebrow ? <MonoLabel className="text-fr-vermilion text-center">{eyebrow}</MonoLabel> : null}
+                <Text
+                    className="font-sans-semibold text-fr-ink text-center text-[28px] leading-[33px] tracking-[-0.5px]"
+                    maxFontSizeMultiplier={LARGEST_STANDARD_FONT_SCALE}
+                >
+                    {title}
+                </Text>
+            </View>
+        );
+    }
+    return (
+        <View className="gap-2">
+            {eyebrow ? <MonoLabel className="text-fr-muted">{eyebrow}</MonoLabel> : null}
+            <Text className="font-sans-semibold text-fr-ink text-title">{title}</Text>
+            {body ? <Text className="text-fr-muted text-subtitle leading-snug">{body}</Text> : null}
+        </View>
+    );
+}
+
 export function FirstRun({
     object,
+    centered = false,
     cover = false,
     eyebrow,
     title,
@@ -181,12 +211,8 @@ export function FirstRun({
         <Frame scrolls={largeText}>
             {object === undefined ? (
                 <>
-                    <View className="gap-2">
-                        {eyebrow ? <MonoLabel className="text-fr-muted">{eyebrow}</MonoLabel> : null}
-                        <Text className="font-sans-semibold text-fr-ink text-title">{title}</Text>
-                        {body ? <Text className="text-fr-muted text-subtitle leading-snug">{body}</Text> : null}
-                    </View>
-                    <View className="flex-1 justify-center">{children}</View>
+                    <PlainHead body={body} centered={centered} eyebrow={eyebrow} title={title} />
+                    <View className={centered ? "flex-1 pt-6" : "flex-1 justify-center"}>{children}</View>
                 </>
             ) : (
                 <>
