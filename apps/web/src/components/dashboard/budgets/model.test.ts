@@ -55,32 +55,35 @@ const foodLimit = {
     type: BUDGET_TYPE.month,
 } as unknown as Doc<"budgets">;
 
-const ledger = prepareLedger(
-    {
-        accounts: [],
-        appMeta: [{ key: "timeZone", value: "UTC" }],
-        budgetPlans: [],
-        budgets: [foodLimit],
-        categories: [category("food"), category("groceries", "food"), category("fun"), category("salary")],
-        exchangeRates: [],
-        installmentPlans: [],
-        installments: [],
-        mainBudget: [],
-        outsideMoves: [],
-        outsidePayments: [],
-        savingsGoals: [],
-        transactions: [
-            entry("sep", "food", "2026-09-12", 200),
-            entry("oct", "food", "2026-10-08", 100),
-            entry("groceries", "groceries", "2026-11-03", 200),
-            entry("dinner", "food", "2026-11-05", 150),
-            entry("cinema", "fun", "2026-11-06", 50),
-            entry("pay", "salary", "2026-11-01", 3000, true),
-        ],
-        transfers: [],
-    } satisfies LedgerBooks,
-    NOW
-);
+const ledgerWith = (budgets: Doc<"budgets">[]) =>
+    prepareLedger(
+        {
+            accounts: [],
+            appMeta: [{ key: "timeZone", value: "UTC" }],
+            budgetPlans: [],
+            budgets,
+            categories: [category("food"), category("groceries", "food"), category("fun"), category("salary")],
+            exchangeRates: [],
+            installmentPlans: [],
+            installments: [],
+            mainBudget: [],
+            outsideMoves: [],
+            outsidePayments: [],
+            savingsGoals: [],
+            transactions: [
+                entry("sep", "food", "2026-09-12", 200),
+                entry("oct", "food", "2026-10-08", 100),
+                entry("groceries", "groceries", "2026-11-03", 200),
+                entry("dinner", "food", "2026-11-05", 150),
+                entry("cinema", "fun", "2026-11-06", 50),
+                entry("pay", "salary", "2026-11-01", 3000, true),
+            ],
+            transfers: [],
+        } satisfies LedgerBooks,
+        NOW
+    );
+
+const ledger = ledgerWith([foodLimit]);
 
 describe("budgetsOverview", () => {
     const overview = budgetsOverview(ledger, periodOf("2026-11", 1));
@@ -90,6 +93,14 @@ describe("budgetsOverview", () => {
             ["food", 350, "over"],
         ]);
         expect(overview.totals).toMatchObject({ onTrack: 0, over: 1, spent: 350 });
+    });
+
+    it("counts a child's limit inside its parent's once in the totals", () => {
+        const groceriesLimit = { ...foodLimit, amount: 100, categoryId: "groceries", localId: "groceries-limit" };
+        const nested = budgetsOverview(ledgerWith([foodLimit, groceriesLimit]), periodOf("2026-11", 1));
+        expect(nested.lines).toHaveLength(2);
+        expect(nested.totals).toMatchObject({ limits: 300, spent: 350 });
+        expect(nested.pace).toMatchObject({ limit: 300, spent: 350 });
     });
 
     it("leaves budgeted categories and income out of the open spending", () => {

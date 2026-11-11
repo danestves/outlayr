@@ -247,7 +247,7 @@ const dashboardBudgets = {
                 pt: "Deixe em branco para manter o nome da categoria.",
             }),
             newTitle: t({ en: "New budget", es: "Nuevo presupuesto", fr: "Nouveau budget", pt: "Novo orçamento" }),
-            overallTitle: t({ en: "Overall limit", es: "Límite general", fr: "Limite global", pt: "Limite geral" }),
+            overallTitle: t({ en: "Overall limit", es: "Límite general", fr: "Limite globale", pt: "Limite geral" }),
             perDayLeft: insert(
                 t({
                     en: "{{amount}} a day for the {{count}} days left",
@@ -408,7 +408,7 @@ const dashboardBudgets = {
                 })
             ),
             open: t({ en: "Open", es: "Abrir", fr: "Ouvrir", pt: "Abrir" }),
-            overall: t({ en: "Overall limit", es: "Límite general", fr: "Limite global", pt: "Limite geral" }),
+            overall: t({ en: "Overall limit", es: "Límite general", fr: "Limite globale", pt: "Limite geral" }),
         },
         newBudget: t({ en: "New budget", es: "Nuevo presupuesto", fr: "Nouveau budget", pt: "Novo orçamento" }),
         next: t({ en: "Next month", es: "Mes siguiente", fr: "Mois suivant", pt: "Próximo mês" }),
@@ -468,7 +468,7 @@ const dashboardBudgets = {
                 en: "Budget your finances",
                 es: "Presupuesta tus finanzas",
                 fr: "Budgétez vos finances",
-                pt: "Orçe suas finanças",
+                pt: "Orce suas finanças",
             }),
         },
         none: t({ en: "None", es: "Ninguno", fr: "Aucune", pt: "Nenhum" }),

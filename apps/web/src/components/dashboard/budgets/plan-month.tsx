@@ -452,7 +452,7 @@ function SpentChart({ view }: { view: MonthView }) {
             <figure aria-label={copy.spentAgainst.value} className="px-5 pb-3" ref={ref}>
                 {width > 0 ? (
                     <svg aria-hidden className="block overflow-visible" height={CHART_HEIGHT} width={width}>
-                        {[0, month.in].map((value) => (
+                        {(month.in > 0 ? [0, month.in] : [0]).map((value) => (
                             <g key={value}>
                                 <line stroke={STRONG} x1={CHART_LEFT} x2={width} y1={y(value)} y2={y(value)} />
                                 <text

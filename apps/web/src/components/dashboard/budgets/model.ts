@@ -280,22 +280,27 @@ export function budgetsOverview(ledger: Ledger, period: Period): BudgetsOverview
             ledger,
             values.reduce((acc, value) => acc + value, 0)
         );
+    // A child's limit sits inside its parent's, so only one of them counts toward the sums.
+    const counted = lines.filter((line) => {
+        const target = line.categoryId === null ? undefined : ledger.budgetTargets.get(line.categoryId);
+        return !target || target.id === target.topId || !seen.has(target.topId);
+    });
     const over = lines.filter((line) => line.standing.overBudget).length;
     return {
         hasData: ledger.rows.length > 0,
         lines,
         open,
         overall,
-        pace: paceOf(ledger, period, phase, lines, overall),
+        pace: paceOf(ledger, period, phase, counted, overall),
         period,
         phase,
         sparkMonths,
         totals: {
-            limits: sum(lines.map((line) => line.standing.effectiveLimit)),
+            limits: sum(counted.map((line) => line.standing.effectiveLimit)),
             onTrack: lines.length - over,
             open: sum(open.map((line) => line.spent)),
             over,
-            spent: sum(lines.map((line) => line.standing.spent)),
+            spent: sum(counted.map((line) => line.standing.spent)),
             total,
         },
     };

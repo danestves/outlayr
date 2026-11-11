@@ -30,6 +30,8 @@ const PERCENT = 100;
 const CHART_HEIGHT = 140;
 const ZERO_LINE = 112;
 const BAR_REACH = 90;
+// The room between the zero line and the month labels.
+const DEFICIT_REACH = 18;
 const LABEL_ROOM = 11;
 const COLUMN_GAP = 14;
 const MIN_BAR = 4;
@@ -192,6 +194,8 @@ function LeftChart({ projection }: { projection: YearProjection }) {
     const { chart } = useIntlayer("dashboard-budgets-plan");
     const top = Math.max(1, ...projection.months.map((month) => Math.abs(month.left)));
     const scale = BAR_REACH / top;
+    const deepest = Math.max(1, ...projection.months.map((month) => -month.left));
+    const deficitScale = Math.min(scale, DEFICIT_REACH / deepest);
     const column = width / projection.months.length;
     const barWidth = Math.max(0, column - COLUMN_GAP);
     return (
@@ -203,7 +207,7 @@ function LeftChart({ projection }: { projection: YearProjection }) {
                         const { left } = month;
                         const short = left < 0;
                         const x = index * column + COLUMN_GAP / 2;
-                        const height = Math.max(Math.abs(left) * scale, MIN_BAR);
+                        const height = Math.max(Math.abs(left) * (short ? deficitScale : scale), MIN_BAR);
                         const y = short ? ZERO_LINE : ZERO_LINE - height;
                         const current = month.status === "current";
                         const center = x + barWidth / 2;

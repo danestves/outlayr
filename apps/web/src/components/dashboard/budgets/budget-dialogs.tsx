@@ -204,18 +204,25 @@ interface Choice {
 function useChoices(): readonly Choice[] {
     const { ledger } = useDashboard();
     const categoryName = useCategoryName();
-    const overview = budgetsOverview(ledger, monthNow(ledger));
-    const spent = new Map(overview.open.map((line) => [line.categoryId, line.spent]));
-    const spentOn = new Set(ledger.rows.filter((row) => !row.income).map((row) => row.topId));
-    const targets = new Map([...[...ledger.categories].filter(([id]) => spentOn.has(id)), ...ledger.budgetTargets]);
-    targets.delete(UNCATEGORIZED_ID);
-    return [...targets.values()]
-        .map((target) => ({
+    const scanned = useMemo(() => {
+        const overview = budgetsOverview(ledger, monthNow(ledger));
+        const spent = new Map(overview.open.map((line) => [line.categoryId, line.spent]));
+        const spentOn = new Set(ledger.rows.filter((row) => !row.income).map((row) => row.topId));
+        const targets = new Map([...[...ledger.categories].filter(([id]) => spentOn.has(id)), ...ledger.budgetTargets]);
+        targets.delete(UNCATEGORIZED_ID);
+        return [...targets.values()].map((target) => ({
+            spent: spent.get(target.id) ?? 0,
+            taken: budgetOf(ledger, target.id) !== null,
+            target,
+        }));
+    }, [ledger]);
+    return scanned
+        .map(({ spent, taken, target }) => ({
             color: target.color,
             id: target.id,
             name: categoryName(target),
-            spent: spent.get(target.id) ?? 0,
-            taken: budgetOf(ledger, target.id) !== null,
+            spent,
+            taken,
         }))
         .toSorted((a, b) => Number(a.taken) - Number(b.taken) || b.spent - a.spent || a.name.localeCompare(b.name));
 }
