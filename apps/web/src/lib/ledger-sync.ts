@@ -123,7 +123,6 @@ export function createLedgerSync<Table extends string>({ onStale, source, tables
         onStale();
     };
 
-    // The cursor moves when a table accepts its rows; the saved one waits until every table shows them, in order.
     const land = (to: number, receipts: readonly Promise<void>[]) => {
         if (receipts.length === 0 && lagging === 0) {
             applied = to;
@@ -249,7 +248,6 @@ export function createLedgerSync<Table extends string>({ onStale, source, tables
         }
         vouched = Math.max(vouched, cursor);
         if (!page.hasMore) {
-            // The head counts every table, so it carries the cursor past rows of tables this pull leaves out.
             vouched = Math.max(vouched, (nextSeq ?? 0) - 1);
             answerReady();
         }

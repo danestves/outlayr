@@ -152,7 +152,6 @@ const syncedConfig = <Row extends object>(db: DbClient, table: SyncedTable, stor
                 ready: markReady,
             }),
     };
-    // Only the sync fills these tables, and it never sends a row twice: one emptied for having no reader stays empty.
     return { gcTime: 0, getKey: storing.getKey, id: `ledger.${table}`, sync };
 };
 
