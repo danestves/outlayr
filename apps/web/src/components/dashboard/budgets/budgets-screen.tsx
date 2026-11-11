@@ -546,8 +546,8 @@ function NoBudgets({ model }: { model: BudgetsOverview }) {
     return (
         <>
             <Frame className="mb-4 min-w-0">
-                <Frame.Panel className="relative isolate flex min-h-[458px] flex-col items-center justify-end gap-1.5 overflow-hidden px-6 pb-7 text-center">
-                    <Ghost height={458} name="budgets" />
+                <Frame.Panel className="relative isolate flex flex-col items-center gap-1.5 overflow-hidden px-6 pt-[172px] pb-7 text-center">
+                    <Ghost height={160} name="budgets" />
                     <EmptyLine title={copy.noBudgets.title}>{line}</EmptyLine>
                     <Button onClick={() => open({ categoryId: null, kind: "new" })}>
                         <Glyph icon={Add01Icon} size={16} />

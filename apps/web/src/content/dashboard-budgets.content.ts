@@ -416,10 +416,10 @@ const dashboardBudgets = {
             card: t({ en: "Categories", es: "Categorías", fr: "Catégories", pt: "Categorias" }),
             one: insert(
                 t({
-                    en: "{{first}} took most of {{month}}. Set a limit on it.",
-                    es: "{{first}} se llevó la mayor parte de {{month}}. Ponle un límite.",
-                    fr: "{{first}} a pris l'essentiel de {{month}}. Fixez-lui une limite.",
-                    pt: "{{first}} levou a maior parte de {{month}}. Defina um limite nela.",
+                    en: "{{first}} cost the most in {{month}}. Set a limit on it.",
+                    es: "{{first}} fue tu mayor gasto de {{month}}. Ponle un límite.",
+                    fr: "{{first}} est votre plus grosse dépense en {{month}}. Fixez-lui une limite.",
+                    pt: "{{first}} foi seu maior gasto de {{month}}. Defina um limite nele.",
                 })
             ),
             quiet: t({
@@ -430,10 +430,10 @@ const dashboardBudgets = {
             }),
             three: insert(
                 t({
-                    en: "{{first}}, {{second}} and {{third}} took most of {{month}}. Set a limit on any of them.",
-                    es: "{{first}}, {{second}} y {{third}} se llevaron la mayor parte de {{month}}. Ponle un límite a cualquiera.",
-                    fr: "{{first}}, {{second}} et {{third}} ont pris l'essentiel de {{month}}. Fixez une limite sur l'une d'elles.",
-                    pt: "{{first}}, {{second}} e {{third}} levaram a maior parte de {{month}}. Defina um limite em qualquer uma.",
+                    en: "{{first}}, {{second}} and {{third}} cost the most in {{month}}. Set a limit on any of them.",
+                    es: "{{first}}, {{second}} y {{third}} fueron tus mayores gastos de {{month}}. Ponle un límite a cualquiera.",
+                    fr: "{{first}}, {{second}} et {{third}} sont vos plus grosses dépenses en {{month}}. Fixez une limite sur l'une d'elles.",
+                    pt: "{{first}}, {{second}} e {{third}} foram seus maiores gastos de {{month}}. Defina um limite em qualquer um deles.",
                 })
             ),
             title: t({
@@ -444,10 +444,10 @@ const dashboardBudgets = {
             }),
             two: insert(
                 t({
-                    en: "{{first}} and {{second}} took most of {{month}}. Set a limit on either of them.",
-                    es: "{{first}} y {{second}} se llevaron la mayor parte de {{month}}. Ponle un límite a cualquiera.",
-                    fr: "{{first}} et {{second}} ont pris l'essentiel de {{month}}. Fixez une limite sur l'une d'elles.",
-                    pt: "{{first}} e {{second}} levaram a maior parte de {{month}}. Defina um limite em qualquer uma.",
+                    en: "{{first}} and {{second}} cost the most in {{month}}. Set a limit on either of them.",
+                    es: "{{first}} y {{second}} fueron tus mayores gastos de {{month}}. Ponle un límite a cualquiera.",
+                    fr: "{{first}} et {{second}} sont vos plus grosses dépenses en {{month}}. Fixez une limite sur l'une d'elles.",
+                    pt: "{{first}} e {{second}} foram seus maiores gastos de {{month}}. Defina um limite em qualquer um deles.",
                 })
             ),
         },
