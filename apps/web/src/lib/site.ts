@@ -66,6 +66,7 @@ const LISTS_RECHECKED = {
     "best-subscription-tracker-apps": new Date(Date.UTC(2026, 10, 7)),
     "how-to-pay-cashea": new Date(Date.UTC(2026, 10, 7)),
     "mint-alternative": new Date(Date.UTC(2026, 9, 23)),
+    "multi-currency-expense-tracker": new Date(Date.UTC(2026, 10, 11)),
     "track-money-sent-home": new Date(Date.UTC(2026, 10, 3)),
     "ynab-alternatives": new Date(Date.UTC(2026, 9, 23)),
 };

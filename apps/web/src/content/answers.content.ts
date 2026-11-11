@@ -7608,6 +7608,26 @@ const answers = {
                 faq: [
                     {
                         answer: t({
+                            en: "Yes. Log each purchase in the currency you paid, dollars or bolívares, and Outlayr adds everything up in your main currency. A bolívar purchase converts at the Banco Central de Venezuela (BCV) rate from that day, or at the rate you type. Changing dollars into bolívares between your own accounts is a transfer, not spending.",
+                            es: "Sí. Registra cada compra en la moneda en que pagaste, dólares o bolívares, y Outlayr suma todo en tu moneda principal. Una compra en bolívares se convierte con la tasa del Banco Central de Venezuela (BCV) de ese día, o con la que escribas. Cambiar dólares a bolívares entre tus propias cuentas es una transferencia, no un gasto.",
+                        }),
+                        question: t({
+                            en: "Can I track expenses in dollars and bolívares in the same app?",
+                            es: "¿Puedo llevar mis gastos en dólares y en bolívares en la misma app?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. For a purchase in bolívares you can pick USD (BCV) or EUR (BCV), the rates the Banco Central de Venezuela publishes, which Outlayr gets through Cotizave. If you paid at a different rate, choose My rate and type it. The rate stays with the entry, so what you already logged does not change when the rate moves.",
+                            es: "Sí. Para una compra en bolívares puedes elegir USD (BCV) o EUR (BCV), las tasas que publica el Banco Central de Venezuela y que Outlayr toma de Cotizave. Si pagaste a otra tasa, elige Mi tasa y escríbela. La tasa se queda con el registro, así que lo que ya registraste no cambia cuando la tasa se mueve.",
+                        }),
+                        question: t({
+                            en: "Does Outlayr use the BCV rate?",
+                            es: "¿Outlayr usa la tasa del BCV?",
+                        }),
+                    },
+                    {
+                        answer: t({
                             en: "The rate from the day of the purchase, from Open Exchange Rates, or for bolívares the BCV rate published through Cotizave. Entries you already logged do not change when the rate moves. You can type your own rate when the one you got was different.",
                             es: "La tasa del día de la compra, de Open Exchange Rates, o para los bolívares la tasa del BCV que publica Cotizave. Los registros que ya hiciste no cambian cuando la tasa se mueve. Puedes escribir tu propia tasa cuando la que te dieron fue distinta.",
                         }),
@@ -7696,8 +7716,8 @@ const answers = {
                         ],
                         id: "bolivares",
                         title: t({
-                            en: "Bolívares: the BCV rate or the one you paid",
-                            es: "Bolívares: la tasa del BCV o la que pagaste",
+                            en: "Dollars and bolívares in Venezuela: the BCV rate or the one you paid",
+                            es: "Dólares y bolívares en Venezuela: la tasa del BCV o la que pagaste",
                         }),
                     },
                     {
