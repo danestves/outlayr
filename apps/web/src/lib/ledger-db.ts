@@ -1,24 +1,37 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
-import { convexCollectionOptions, convexPaginatedCollectionOptions } from "@tanstack/convex-db-collection";
-import type { ConvexCollectionClient } from "@tanstack/convex-db-collection";
+import type { Doc } from "@outlayr/backend/convex/_generated/dataModel";
+import { convexCollectionOptions } from "@tanstack/convex-db-collection";
 import { collectionOptions, useLiveQuery } from "@tanstack/react-db";
-import type { Collection, CollectionOptions, DbClient, NonSingleResult, UtilsRecord } from "@tanstack/react-db";
-import type { FunctionReturnType } from "convex/server";
+import type {
+    Collection,
+    CollectionConfig,
+    CollectionOptions,
+    DbClient,
+    NonSingleResult,
+    SyncConfig,
+    UtilsRecord,
+} from "@tanstack/react-db";
 import { ConvexError } from "convex/values";
 import { useMemo } from "react";
 
 import { CONVEX } from "./db";
+import type { LedgerConvex } from "./db";
 import type { LedgerBooks } from "./ledger-books";
+import { dropLedger } from "./ledger-cache";
+import { createLedgerSync, isSavedCursor } from "./ledger-sync";
+import type { LedgerSync, PulledRow } from "./ledger-sync";
 import { pushRows } from "./ledger-write";
 
-const PAGE_SIZE = 1000;
-const MAX_ROWS = 100_000;
+const convexOf = (db: DbClient) => db.requireDependency<LedgerConvex>(CONVEX);
 
-const convexOf = (db: DbClient) => db.requireDependency<ConvexCollectionClient>(CONVEX);
+type TagTable = "tags" | "transactionTags";
 
-const paged = { maxRows: MAX_ROWS, pageSize: PAGE_SIZE };
+type Stored = { [Table in Exclude<keyof LedgerBooks, "appMeta" | "exchangeRates">]: LedgerBooks[Table][number] } & {
+    [Table in TagTable]: Doc<Table>;
+};
 
-type PulledRow = FunctionReturnType<typeof api.sync.pullSince>["rows"][number];
+type DocTable = keyof Stored;
+type SyncedTable = DocTable | "appMeta";
 
 export interface MetaRow {
     key: string;
@@ -33,17 +46,21 @@ const metaOf = (row: PulledRow): MetaRow => ({
     value: typeof row.fields.value === "string" ? row.fields.value : null,
 });
 
-const pushMeta = (db: DbClient, mutations: readonly { modified: MetaRow }[]) =>
-    pushRows(
-        db,
-        mutations.map(({ modified }) => ({
-            deletedAt: null,
-            fields: { value: modified.value },
-            localId: modified.key,
-            table: "appMeta",
-            updatedAt: modified.updatedAt,
-        }))
-    );
+const docOf = <Table extends DocTable>(row: PulledRow) =>
+    // SAFETY: push checks a row's fields against the schema of the table it names,
+    // so a pulled row is that table's document.
+    ({
+        ...row.fields,
+        _creationTime: row.updatedAt,
+        _id: row.localId,
+        deletedAt: row.deletedAt,
+        deviceId: row.deviceId,
+        localId: row.localId,
+        restoredAt: row.restoredAt,
+        seq: row.seq,
+        updatedAt: row.updatedAt,
+        userId: "",
+    }) as Stored[Table];
 
 type Loadable = Pick<Collection, "preload" | "reload" | "status">;
 
@@ -51,7 +68,7 @@ const start = (collection: Loadable) => (collection.status === "error" ? collect
 
 const RETRY_WAITS_MS = [500, 1500, 4000, 8000];
 
-// A busy server can time one of these queries out at Convex's 1 s limit, and one failure must not sink the page.
+// A busy server can time this query out at Convex's 1 s limit, and one failure must not sink the page.
 // A ConvexError is a refusal (no Pro, signed out), which would only say the same thing again.
 const load = async (collection: Loadable) => {
     for (const wait of RETRY_WAITS_MS) {
@@ -71,8 +88,7 @@ const load = async (collection: Loadable) => {
     return start(collection);
 };
 
-type TagTable = "tags" | "transactionTags";
-
+const syncedTables: SyncedTable[] = [];
 const openers: ((db: DbClient) => Loadable)[] = [];
 
 const ledgerTable = <Row extends object, Key extends string | number, Utils extends UtilsRecord>(
@@ -82,192 +98,123 @@ const ledgerTable = <Row extends object, Key extends string | number, Utils exte
     return options;
 };
 
+const engines = new WeakMap<DbClient, LedgerSync<SyncedTable>>();
+
+export function ledgerSync(db: DbClient) {
+    const running = engines.get(db);
+    if (running) {
+        return running;
+    }
+    const convex = convexOf(db);
+    const engine = createLedgerSync({
+        onStale: () => {
+            void dropLedger().then(() => window.location.reload());
+        },
+        source: {
+            head: () => convex.watchQuery(api.sync.currentSeq, {}),
+            pull: (cursor) => convex.watchQuery(api.sync.pullSince, { cursor, tables: syncedTables }),
+        },
+        tables: syncedTables,
+    });
+    engines.set(db, engine);
+    return engine;
+}
+
+interface Storing<Row> {
+    getKey: (row: Row) => string;
+    keepsDeleted: boolean;
+    rowOf: (pulled: PulledRow) => Row;
+}
+
+const syncedConfig = <Row extends object>(db: DbClient, table: SyncedTable, storing: Storing<Row>) => {
+    const sync: SyncConfig<Row, string> = {
+        exportSyncMeta: () => ledgerSync(db).saved(),
+        importSyncMeta: (meta) => {
+            if (isSavedCursor(meta)) {
+                ledgerSync(db).restore(table, meta);
+            }
+        },
+        rowUpdateMode: "full",
+        sync: ({ begin, commit, fail, markReady, write }) =>
+            ledgerSync(db).attach(table, {
+                apply: (rows) => {
+                    begin();
+                    for (const row of rows) {
+                        if (row.deletedAt === null || storing.keepsDeleted) {
+                            write({ type: "update", value: storing.rowOf(row) });
+                        } else {
+                            write({ key: row.localId, type: "delete" });
+                        }
+                    }
+                    return commit();
+                },
+                fail,
+                ready: markReady,
+            }),
+    };
+    // Only the sync fills these tables, and it never sends a row twice: one emptied for having no reader stays empty.
+    return { gcTime: 0, getKey: storing.getKey, id: `ledger.${table}`, sync };
+};
+
+const docs = <Table extends DocTable>(table: Table, keepsDeleted = true) => {
+    syncedTables.push(table);
+    return collectionOptions(`ledger.${table}`, (db) =>
+        syncedConfig(db, table, { getKey: (row: Stored[Table]) => row.localId, keepsDeleted, rowOf: docOf<Table> })
+    );
+};
+
+const saveMeta = async (db: DbClient, mutations: readonly { modified: MetaRow }[]) => {
+    const seq = await pushRows(
+        db,
+        mutations.map(({ modified }) => ({
+            deletedAt: null,
+            fields: { value: modified.value },
+            localId: modified.key,
+            table: "appMeta",
+            updatedAt: modified.updatedAt,
+        }))
+    );
+    await ledgerSync(db).reached(seq);
+};
+
+const settings = () => {
+    syncedTables.push("appMeta");
+    return collectionOptions("ledger.appMeta", (db): CollectionConfig<MetaRow, string> => ({
+        ...syncedConfig(db, "appMeta", { getKey: (row: MetaRow) => row.key, keepsDeleted: true, rowOf: metaOf }),
+        onInsert: ({ transaction }) => saveMeta(db, transaction.mutations),
+        onUpdate: ({ transaction }) => saveMeta(db, transaction.mutations),
+    }));
+};
+
 export const ledgerCollections = {
-    accounts: ledgerTable(
-        collectionOptions("ledger.accounts", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.accounts",
-                query: api.ledger.accounts,
-            })
-        )
+    accounts: ledgerTable(docs("accounts")),
+    appMeta: ledgerTable(settings()),
+    budgetPlans: ledgerTable(docs("budgetPlans")),
+    budgets: ledgerTable(docs("budgets")),
+    categories: ledgerTable(docs("categories")),
+    exchangeRates: collectionOptions("ledger.exchangeRates", (db) =>
+        convexCollectionOptions({
+            client: convexOf(db),
+            getKey: (row) => row._id,
+            queryArgs: {},
+            id: "ledger.exchangeRates",
+            query: api.ledger.exchangeRates,
+        })
     ),
-    appMeta: ledgerTable(
-        collectionOptions("ledger.appMeta", (db) =>
-            convexCollectionOptions<typeof api.sync.pullSince, MetaRow, string>({
-                client: convexOf(db),
-                getKey: (row) => row.key,
-                id: "ledger.appMeta",
-                query: api.sync.pullSince,
-                queryArgs: { cursor: 0, tables: ["appMeta"] },
-                select: (page) => page.rows.map(metaOf),
-                onInsert: ({ transaction }) => pushMeta(db, transaction.mutations),
-                onUpdate: ({ transaction }) => pushMeta(db, transaction.mutations),
-            })
-        )
-    ),
-    budgetPlans: ledgerTable(
-        collectionOptions("ledger.budgetPlans", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.budgetPlans",
-                query: api.ledger.budgetPlans,
-            })
-        )
-    ),
-    budgets: ledgerTable(
-        collectionOptions("ledger.budgets", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.budgets",
-                query: api.ledger.budgets,
-            })
-        )
-    ),
-    categories: ledgerTable(
-        collectionOptions("ledger.categories", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.categories",
-                query: api.ledger.categories,
-            })
-        )
-    ),
-    exchangeRates: ledgerTable(
-        collectionOptions("ledger.exchangeRates", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row._id,
-                queryArgs: {},
-                id: "ledger.exchangeRates",
-                query: api.ledger.exchangeRates,
-            })
-        )
-    ),
-    installmentPlans: ledgerTable(
-        collectionOptions("ledger.installmentPlans", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.installmentPlans",
-                query: api.ledger.installmentPlans,
-            })
-        )
-    ),
-    installments: ledgerTable(
-        collectionOptions("ledger.installments", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.installments",
-                query: api.ledger.installments,
-            })
-        )
-    ),
-    mainBudget: ledgerTable(
-        collectionOptions("ledger.mainBudget", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.mainBudget",
-                query: api.ledger.mainBudget,
-            })
-        )
-    ),
-    outsideMoves: ledgerTable(
-        collectionOptions("ledger.outsideMoves", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.outsideMoves",
-                query: api.ledger.outsideMoves,
-            })
-        )
-    ),
-    outsidePayments: ledgerTable(
-        collectionOptions("ledger.outsidePayments", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.outsidePayments",
-                query: api.ledger.outsidePayments,
-            })
-        )
-    ),
-    savingsGoals: ledgerTable(
-        collectionOptions("ledger.savingsGoals", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.savingsGoals",
-                query: api.ledger.savingsGoals,
-            })
-        )
-    ),
-    tags: ledgerTable(
-        collectionOptions("ledger.tags", (db) =>
-            convexCollectionOptions({
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.tags",
-                query: api.ledger.tags,
-            })
-        )
-    ),
-    transactionTags: ledgerTable(
-        collectionOptions("ledger.transactionTags", (db) =>
-            convexPaginatedCollectionOptions({
-                ...paged,
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.transactionTags",
-                query: api.ledger.transactionTags,
-            })
-        )
-    ),
-    transactions: ledgerTable(
-        collectionOptions("ledger.transactions", (db) =>
-            convexPaginatedCollectionOptions({
-                ...paged,
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.transactions",
-                query: api.ledger.transactions,
-            })
-        )
-    ),
-    transfers: ledgerTable(
-        collectionOptions("ledger.transfers", (db) =>
-            convexPaginatedCollectionOptions({
-                ...paged,
-                client: convexOf(db),
-                getKey: (row) => row.localId,
-                queryArgs: {},
-                id: "ledger.transfers",
-                query: api.ledger.transfers,
-            })
-        )
-    ),
+    installmentPlans: ledgerTable(docs("installmentPlans")),
+    installments: ledgerTable(docs("installments")),
+    mainBudget: ledgerTable(docs("mainBudget")),
+    outsideMoves: ledgerTable(docs("outsideMoves")),
+    outsidePayments: ledgerTable(docs("outsidePayments")),
+    savingsGoals: ledgerTable(docs("savingsGoals")),
+    tags: ledgerTable(docs("tags")),
+    transactionTags: ledgerTable(docs("transactionTags")),
+    transactions: ledgerTable(docs("transactions", false)),
+    transfers: ledgerTable(docs("transfers", false)),
 } satisfies Record<keyof LedgerBooks | TagTable, { id: string }>;
 
-export const preloadLedger = (db: DbClient) => Promise.all(openers.map((open) => load(open(db))));
+export const preloadLedger = (db: DbClient) =>
+    Promise.all([load(db.collection(ledgerCollections.exchangeRates)), ...openers.map((open) => start(open(db)))]);
 
 const rowsOf = <Row extends object, Key extends string | number, Utils extends UtilsRecord>(
     db: DbClient,
@@ -348,8 +295,8 @@ export function useLedgerBooks(): LedgerBooks {
     );
 }
 
-export type Tag = FunctionReturnType<typeof api.ledger.tags>[number];
-export type TagLink = FunctionReturnType<typeof api.ledger.transactionTags>["page"][number];
+export type Tag = Stored["tags"];
+export type TagLink = Stored["transactionTags"];
 
 export interface TagBooks {
     links: readonly TagLink[];

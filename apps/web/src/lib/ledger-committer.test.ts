@@ -1,5 +1,6 @@
 import type { PushRow } from "@outlayr/backend/confect/sync";
 import { DbClient } from "@tanstack/react-db";
+import { ConvexError } from "convex/values";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { ledgerDependencies } from "./db";
@@ -7,7 +8,7 @@ import { snapshotOf } from "./ledger-cache";
 import { ledgerCommitter } from "./ledger-committer";
 import { ledgerBooks, preloadLedger } from "./ledger-db";
 import type { LedgerPusher } from "./ledger-write";
-import { fakeConvex, pagesOf } from "./test-convex";
+import { fakeConvex } from "./test-convex";
 
 const HOLD_MS = 60_000;
 const answered = { accepted: 1, nextSeq: 1, skipped: 0 };
@@ -30,10 +31,17 @@ type Push = LedgerPusher["mutation"];
 const unanswered: Push = () => Promise.race([]);
 
 const openTab = async (push: Push) => {
-    const db = new DbClient(ledgerDependencies(fakeConvex(pagesOf([]), push)));
+    const db = new DbClient(ledgerDependencies(fakeConvex({ push })));
     await preloadLedger(db);
     return db;
 };
+
+const saved = (db: DbClient) => JSON.stringify(snapshotOf(db, undefined, "owner").collections);
+
+const turn = () =>
+    new Promise<void>((resolve) => {
+        setTimeout(resolve, 0);
+    });
 
 const shown = (db: DbClient) => ledgerBooks(db).transactions.map((row) => row.localId);
 
@@ -183,6 +191,68 @@ describe("ledger committer", () => {
         ledgerCommitter(db, "owner").commit([entry("a")]);
 
         expect(shown(db)).toStrictEqual(["a"]);
-        expect(JSON.stringify(snapshotOf(db, undefined, "owner").collections)).not.toContain('"localId":"a"');
+        expect(saved(db)).not.toContain('"localId":"a"');
+    });
+
+    it("finishes a commit only once the pushed row is in the table", async () => {
+        const convex = fakeConvex();
+        const db = new DbClient(ledgerDependencies(convex));
+        await preloadLedger(db);
+        convex.quiet();
+        const finished = vi.fn<() => void>();
+        const commit = ledgerCommitter(db, "owner").commit([entry("a")]);
+        void commit.settled.then(finished);
+        await vi.waitFor(() => expect(storedRows()).toHaveLength(0));
+        await turn();
+        expect(finished).not.toHaveBeenCalled();
+        expect(saved(db)).not.toContain('"localId":"a"');
+
+        convex.speak();
+
+        expect(await commit.settled).toStrictEqual({ status: "saved" });
+        expect(saved(db)).toContain('"localId":"a"');
+        expect(shown(db)).toStrictEqual(["a"]);
+    });
+
+    it("shows a closed tab's unsent rows at once on a restored copy, and sends them once", async () => {
+        const closed = await openTab(unanswered);
+        ledgerCommitter(closed, "owner").commit([entry("a")]);
+        const copy = snapshotOf(closed, undefined, "owner");
+        const convex = fakeConvex();
+        const push = vi.spyOn(convex, "mutation");
+        convex.quiet();
+        const db = new DbClient(ledgerDependencies(convex));
+        db.hydrate({ collections: copy.collections });
+        const loaded = preloadLedger(db);
+        const committer = ledgerCommitter(db, "owner");
+
+        committer.resume();
+        committer.resume();
+        expect(shown(db)).toStrictEqual(["a"]);
+        expect(push).not.toHaveBeenCalled();
+        convex.speak();
+        await loaded;
+        await vi.waitFor(() => expect(committer.getSnapshot().sending).toBe(0));
+
+        expect(sentIds(push)).toStrictEqual([["a"]]);
+        expect(shown(db)).toStrictEqual(["a"]);
+        expect(storedRows()).toHaveLength(0);
+    });
+
+    it("keeps unsent rows for a later load when the server refuses this one", async () => {
+        const closed = await openTab(unanswered);
+        ledgerCommitter(closed, "owner").commit([entry("a")]);
+        const push = vi.fn<Push>(() => Promise.resolve(answered));
+        const db = new DbClient(ledgerDependencies(fakeConvex({ push, refusal: new ConvexError("Pro is required") })));
+        const loaded = preloadLedger(db);
+        const committer = ledgerCommitter(db, "owner");
+
+        committer.resume();
+        await expect(loaded).rejects.toBeInstanceOf(ConvexError);
+        await vi.waitFor(() => expect(committer.getSnapshot().sending).toBe(0));
+
+        expect(push).not.toHaveBeenCalled();
+        expect(storedRows()).toHaveLength(1);
+        expect(committer.getSnapshot()).toStrictEqual({ failed: 0, held: 0, sending: 0 });
     });
 });

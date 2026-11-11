@@ -8,7 +8,7 @@ import { ledgerDependencies } from "./db";
 import { ledgerCommitter } from "./ledger-committer";
 import { ledgerBooks, preloadLedger } from "./ledger-db";
 import type { LedgerPusher } from "./ledger-write";
-import { fakeConvex, pagesOf } from "./test-convex";
+import { fakeConvex } from "./test-convex";
 
 type Push = LedgerPusher["mutation"];
 
@@ -19,7 +19,7 @@ const unanswered: Push = () => Promise.race([]);
 const refused: Push = () => Promise.reject(new Error("refused"));
 
 const open = async (push: Push) => {
-    const db = new DbClient(ledgerDependencies(fakeConvex(pagesOf([]), push)));
+    const db = new DbClient(ledgerDependencies(fakeConvex({ push })));
     await preloadLedger(db);
     const up = new Set<Notice>();
     const host = {
