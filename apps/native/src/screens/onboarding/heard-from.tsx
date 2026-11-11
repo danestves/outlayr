@@ -16,6 +16,7 @@ import { Input } from "panelui-native/components/input";
 import { RadioGroup } from "panelui-native/components/radio-group";
 import { useRef, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
+import type { ScrollViewInstance } from "react-native";
 import { useCSSVariable } from "uniwind";
 
 import { FirstRun } from "@/components/first-run";
@@ -68,6 +69,7 @@ export function HeardFrom({ error, eyebrow, onDone }: HeardFromProps) {
     const [picked, setPicked] = useState<HeardFromSource | null>(null);
     const [detail, setDetail] = useState("");
     const answeredRef = useRef(false);
+    const scrollRef = useRef<ScrollViewInstance>(null);
     useHardwareBack(onDone);
 
     const answer = (source: HeardFromSource) => {
@@ -101,9 +103,14 @@ export function HeardFrom({ error, eyebrow, onDone }: HeardFromProps) {
                 title={t("onboarding.heardFrom.title")}
             >
                 <ScrollView
-                    automaticallyAdjustKeyboardInsets
                     className="shrink grow-0"
                     keyboardShouldPersistTaps="handled"
+                    onContentSizeChange={() => {
+                        if (picked === "other") {
+                            scrollRef.current?.scrollToEnd();
+                        }
+                    }}
+                    ref={scrollRef}
                 >
                     <RadioGroup className="gap-0" onValueChange={choose} value={picked ?? undefined} variant="card">
                         {order.map((source, index) => (
