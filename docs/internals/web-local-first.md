@@ -16,7 +16,7 @@
 - A loader under `/app` awaits nothing when a copy was restored. Anything the first paint needs from Convex goes in the snapshot, as minted photo URLs do.
 - Set `pendingMs: 0` and `pendingMinMs: 0` on a route with a pending component: the router's default holds it on screen for 500 ms, whatever the data does.
 - Restore only into idle collections: a second load, after a hover preload or a retry, must not seed older rows under a running sync.
-- The copy is the store and the sync only moves rows. One cursor serves every table, so the tables start, fail and restart together, and none is read from Convex on its own. Exchange rates are not the user's rows and stay a plain query collection.
+- The copy is the store and the sync only moves rows. One cursor serves every table, so the tables start, fail and restart together, and none is read from Convex on its own. The pull starts only once every table is open, which `preloadLedger` does after the restore: the pending shell reads the settings table earlier, and a pull started then would begin at cursor 0 and download the whole ledger. Exchange rates are not the user's rows and stay a plain query collection.
 - The sync is the only thing that fills a table and it never sends a row twice. So the tables are never garbage collected (`gcTime: 0`), and a sync write is always an upsert by `localId`, which is safe to repeat.
 - The saved cursor is the one whose rows every table already shows, read in the same `dehydrate` as the rows (`exportSyncMeta`). A cursor ahead of its rows would lose them for good; one behind only downloads them again.
 - A copy is dropped and the page starts over when a table has no cursor in it (the table set changed) or when the server's seq (`sync.currentSeq`) is behind its cursor.

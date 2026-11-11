@@ -160,3 +160,6 @@ export function fakeConvex({ pageSize = DEFAULT_PAGE, push, refusal, rows = [] }
         watchQuery,
     } satisfies LedgerConvex & Record<string, unknown>;
 }
+
+export const silentConvex = fakeConvex();
+silentConvex.quiet();
