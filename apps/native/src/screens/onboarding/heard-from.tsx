@@ -80,6 +80,12 @@ export function HeardFrom({ error, eyebrow, onDone }: HeardFromProps) {
         onDone();
     };
 
+    const revealField = () => {
+        if (picked === "other") {
+            scrollRef.current?.scrollToEnd();
+        }
+    };
+
     const choose = (value: string) => {
         const source = order.find((candidate) => candidate === value);
         if (source === undefined) {
@@ -105,11 +111,8 @@ export function HeardFrom({ error, eyebrow, onDone }: HeardFromProps) {
                 <ScrollView
                     className="shrink grow-0"
                     keyboardShouldPersistTaps="handled"
-                    onContentSizeChange={() => {
-                        if (picked === "other") {
-                            scrollRef.current?.scrollToEnd();
-                        }
-                    }}
+                    onContentSizeChange={revealField}
+                    onLayout={revealField}
                     ref={scrollRef}
                 >
                     <RadioGroup className="gap-0" onValueChange={choose} value={picked ?? undefined} variant="card">
