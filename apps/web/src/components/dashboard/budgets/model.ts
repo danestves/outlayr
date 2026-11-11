@@ -184,11 +184,13 @@ const shareOf = (ledger: Ledger, line: BudgetLine): Share => ({
 
 // A child's limit sits inside its parent's, so a day both windows cover counts once, against the parent,
 // and the child keeps the slice of its limit that falls on its other days.
-function childShare(ledger: Ledger, line: BudgetLine, parent: BudgetLine): Share {
+function childShare(ledger: Ledger, line: BudgetLine, parent: BudgetLine, through: string): Share {
     const { from, to } = parent.standing;
     const days = daysFrom(line.standing.from, line.standing.to);
     const own = days.filter((day) => day < from || day > to);
-    const perDay = new Map([...shareOf(ledger, line).perDay].filter(([day]) => day < from || day > to));
+    const perDay = new Map(
+        [...shareOf(ledger, line).perDay].filter(([day]) => day <= through && (day < from || day > to))
+    );
     return {
         limit: round(ledger, days.length === 0 ? 0 : (line.standing.effectiveLimit * own.length) / days.length),
         perDay,
@@ -305,7 +307,7 @@ export function budgetsOverview(ledger: Ledger, period: Period): BudgetsOverview
     const shares = lines.map((line) => {
         const target = line.categoryId === null ? undefined : ledger.budgetTargets.get(line.categoryId);
         const parent = target && target.id !== target.topId ? byCategory.get(target.topId) : undefined;
-        return parent ? childShare(ledger, line, parent) : shareOf(ledger, line);
+        return parent ? childShare(ledger, line, parent, through) : shareOf(ledger, line);
     });
     const over = lines.filter((line) => line.standing.overBudget).length;
     return {

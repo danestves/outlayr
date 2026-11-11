@@ -111,6 +111,19 @@ describe("budgetsOverview", () => {
         expect(mixed.pace).toMatchObject({ limit: 369, spent: 200 });
     });
 
+    it("leaves a child's spending after the month being read out of its totals", () => {
+        const yearlyGroceries = {
+            ...foodLimit,
+            categoryId: "groceries",
+            localId: "groceries-limit",
+            startDate: Date.parse("2026-01-01T00:00:00Z"),
+            type: BUDGET_TYPE.year,
+        };
+        const september = budgetsOverview(ledgerWith([foodLimit, yearlyGroceries]), periodOf("2026-09", 1));
+        expect(september.totals.spent).toBe(200);
+        expect(september.pace?.spent).toBe(200);
+    });
+
     it("leaves budgeted categories and income out of the open spending", () => {
         expect(overview.open.map((line) => [line.categoryId, line.spent, line.share])).toStrictEqual([
             ["fun", 50, 50 / 400],
