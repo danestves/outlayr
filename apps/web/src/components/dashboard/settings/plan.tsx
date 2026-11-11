@@ -1,4 +1,3 @@
-import { convexQuery } from "@convex-dev/react-query";
 import ArrowLeft02Icon from "@hugeicons/core-free-icons/ArrowLeft02Icon";
 import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
 import FlashIcon from "@hugeicons/core-free-icons/FlashIcon";
@@ -20,7 +19,9 @@ import { Tooltip } from "panelui-web/tooltip";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
+import { Skeleton } from "skullet/react";
 
+import { limitsQuery, notionQuery, planQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { useLedgerBooks } from "@/lib/ledger-db";
 
@@ -34,16 +35,20 @@ const STORE_URL = {
     app_store: "https://apps.apple.com/account/subscriptions",
     play_store: "https://play.google.com/store/account/subscriptions",
 } as const;
-const PLAN_KEY = ["billing", "plan"];
 
-export const usePlan = () =>
-    useQuery({
-        queryFn: () => convexClient().action(api.billing.plan, {}),
-        queryKey: PLAN_KEY,
-        retry: false,
-    });
+export const usePlan = () => useQuery(planQuery);
 
 type Held = NonNullable<ReturnType<typeof usePlan>["data"]>;
+
+const SAMPLE_PLAN: Held = {
+    expiresAtMs: 0,
+    payments: [{ amount: 0, atMs: 0, currency: "USD" }],
+    plan: "annual",
+    price: { amount: 0, currency: "USD" },
+    state: "renews",
+    store: "stripe",
+    trialAvailable: false,
+};
 
 const isManagedStore = (store: string | null): store is keyof typeof STORE_URL =>
     store === "app_store" || store === "play_store";
@@ -323,8 +328,8 @@ function Term({ plan }: { plan: Held }) {
 function Usage({ endsSoon }: { endsSoon: boolean }) {
     const { use } = useIntlayer("plan");
     const counts = planUsage(useLedgerBooks());
-    const { data: limits } = useQuery(convexQuery(api.limits.mine, {}));
-    const { data: notion } = useQuery(convexQuery(api.notion.connected, {}));
+    const { data: limits } = useQuery(limitsQuery);
+    const { data: notion } = useQuery(notionQuery);
     const captures = limits ? Math.max(0, Math.round(limits.captures.capacity - limits.captures.value)) : null;
     const counted = [
         { free: FREE.captures, label: use.captures, using: captures },
@@ -480,7 +485,7 @@ function Payments({ plan }: { plan: Held }) {
                 return;
             }
             toast.add({ title: answer === "restored" ? copy.restored.value : copy.nothingRestored.value });
-            await client.invalidateQueries({ queryKey: PLAN_KEY });
+            await client.invalidateQueries({ queryKey: planQuery.queryKey });
         },
     });
     const restorable = plan.state === "renews" || plan.state === "trial";
@@ -518,7 +523,8 @@ function Payments({ plan }: { plan: Held }) {
 export function Plan() {
     const copy = useIntlayer("plan");
     const { title: settings } = useIntlayer("dashboard-settings");
-    const plan = usePlan();
+    const plan = useQuery({ ...planQuery, refetchOnMount: "always" });
+    const held = plan.data ?? (plan.isPending ? SAMPLE_PLAN : null);
     return (
         <div className="flex flex-col">
             <div className="flex h-16 items-center gap-2 max-lg:h-12">
@@ -533,7 +539,7 @@ export function Plan() {
                 </Button>
                 <h1 className="text-lg font-semibold tracking-[-0.02em]">{copy.title}</h1>
             </div>
-            {plan.isError || plan.data === null ? (
+            {held === null ? (
                 <SettingsCard title={copy.pro}>
                     <Fact label={copy.couldNotLoad}>
                         <Button loading={plan.isFetching} onClick={() => plan.refetch()} size="sm" variant="outline">
@@ -542,23 +548,25 @@ export function Plan() {
                     </Fact>
                 </SettingsCard>
             ) : null}
-            {plan.data ? (
-                <div className="grid items-start gap-4 @4xl:grid-cols-[minmax(0,1fr)_400px]">
-                    <div className="flex flex-col gap-4">
-                        <Term plan={plan.data} />
-                        <Usage endsSoon={plan.data.state === "ends"} />
+            {held ? (
+                <Skeleton loading={!plan.data}>
+                    <div className="grid items-start gap-4 @4xl:grid-cols-[minmax(0,1fr)_400px]">
+                        <div className="flex flex-col gap-4">
+                            <Term plan={held} />
+                            <Usage endsSoon={held.state === "ends"} />
+                        </div>
+                        <div className="flex flex-col gap-4">
+                            {isManagedStore(held.store) ? (
+                                <StoreManaged lifetime={held.state === "lifetime"} store={held.store} />
+                            ) : (
+                                <>
+                                    <AlsoGives />
+                                    <Payments plan={held} />
+                                </>
+                            )}
+                        </div>
                     </div>
-                    <div className="flex flex-col gap-4">
-                        {isManagedStore(plan.data.store) ? (
-                            <StoreManaged lifetime={plan.data.state === "lifetime"} store={plan.data.store} />
-                        ) : (
-                            <>
-                                <AlsoGives />
-                                <Payments plan={plan.data} />
-                            </>
-                        )}
-                    </div>
-                </div>
+                </Skeleton>
             ) : null}
         </div>
     );

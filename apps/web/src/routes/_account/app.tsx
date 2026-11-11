@@ -26,6 +26,7 @@ import type { FilterPatch } from "@/components/dashboard/shell/filters";
 import { mintedPhotos, photoKeys, seedPhotos, usePhotoUrls } from "@/components/dashboard/shell/photos";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
+import { accountStateOf, restoreAccountState, useAccountStateStamp, warmAccountState } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { readDashboardLocale, serverDashboardLocale, subscribeDashboardLocale } from "@/lib/dashboard-locale";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
@@ -64,6 +65,8 @@ export const Route = createFileRoute("/_account/app")({
             ledgerCommitter(context.dbClient, userId).resume();
             return true;
         });
+        restoreAccountState(context.queryClient, restored?.queries);
+        warmAccountState(context.queryClient);
         if (restored) {
             seedPhotos(context.queryClient, restored.photos);
             return { asOf, restored: true, settled, synced: true, userId };
@@ -227,6 +230,7 @@ function useLedgerCopy(overview: Overview, photos: PhotoUrls, settled: Promise<b
     const router = useRouter();
     const [synced, setSynced] = useState(false);
     const [answered, setAnswered] = useState(false);
+    const copiedAt = useAccountStateStamp(queryClient);
     // oxlint-disable-next-line outlayr/react-effect-budget -- other tabs are an external system.
     useEffect(() => onSessionChange(() => forgetLedger().finally(() => window.location.reload())), []);
     // oxlint-disable-next-line outlayr/react-effect-budget -- the Convex connection is an external system.
@@ -251,11 +255,12 @@ function useLedgerCopy(overview: Overview, photos: PhotoUrls, settled: Promise<b
         if (!synced || userId === undefined) {
             return;
         }
-        const save = () => saveLedger(dbClient, mintedPhotos(queryClient, photoKeys(overview)), userId);
+        const save = () =>
+            saveLedger(dbClient, mintedPhotos(queryClient, photoKeys(overview)), userId, accountStateOf(queryClient));
         const timer = setTimeout(save, SAVE_DELAY_MS);
         return () => clearTimeout(timer);
-        // oxlint-disable-next-line react/exhaustive-effect-dependencies -- newly minted photos re-arm the save.
-    }, [dbClient, overview, photos, queryClient, synced, userId]);
+        // oxlint-disable-next-line react/exhaustive-effect-dependencies -- newly minted photos and fresh account state re-arm the save.
+    }, [copiedAt, dbClient, overview, photos, queryClient, synced, userId]);
     return answered;
 }
 

@@ -5,8 +5,9 @@ import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
+import { Skeleton } from "skullet/react";
 
-import { authClient } from "@/lib/auth-client";
+import { useProfile } from "@/lib/account-state";
 
 import { EmailDialog, Tile } from "./account";
 import { Row, SectionHead, SettingsCard } from "./parts";
@@ -14,9 +15,8 @@ import { Row, SectionHead, SettingsCard } from "./parts";
 export function Email() {
     const copy = useIntlayer("dashboard-email");
     const { account, sections } = useIntlayer("dashboard-settings");
-    const { data: session } = authClient.useSession();
+    const user = useProfile();
     const [changing, setChanging] = useState(false);
-    const user = session?.user;
     const kinds = [
         { key: "signIn", label: copy.signIn },
         { key: "welcome", label: copy.welcome },
@@ -30,23 +30,25 @@ export function Email() {
                 <div className="grid items-start gap-4 @4xl:grid-cols-2">
                     <div className="flex min-w-0 flex-col gap-4">
                         <SettingsCard title={copy.address}>
-                            <Row
-                                label={<span className="ph-no-capture break-all">{user?.email}</span>}
-                                leading={
-                                    <Tile>
-                                        <HugeiconsIcon icon={Mail01Icon} size={16} />
-                                    </Tile>
-                                }
-                            >
-                                {user?.emailVerified ? (
-                                    <Badge dot variant="success">
-                                        {account.verified}
-                                    </Badge>
-                                ) : null}
-                                <Button onClick={() => setChanging(true)} size="sm" variant="outline">
-                                    {account.change}
-                                </Button>
-                            </Row>
+                            <Skeleton loading={user === undefined}>
+                                <Row
+                                    label={<span className="ph-no-capture break-all">{user?.email}</span>}
+                                    leading={
+                                        <Tile>
+                                            <HugeiconsIcon icon={Mail01Icon} size={16} />
+                                        </Tile>
+                                    }
+                                >
+                                    {user?.emailVerified ? (
+                                        <Badge dot variant="success">
+                                            {account.verified}
+                                        </Badge>
+                                    ) : null}
+                                    <Button onClick={() => setChanging(true)} size="sm" variant="outline">
+                                        {account.change}
+                                    </Button>
+                                </Row>
+                            </Skeleton>
                         </SettingsCard>
                         <SettingsCard title={copy.alwaysSent}>
                             {kinds.map(({ key, label }) => (

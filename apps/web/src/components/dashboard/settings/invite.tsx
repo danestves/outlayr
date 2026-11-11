@@ -1,4 +1,3 @@
-import { convexQuery } from "@convex-dev/react-query";
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import Share01Icon from "@hugeicons/core-free-icons/Share01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -11,7 +10,7 @@ import {
     referralLink,
 } from "@outlayr/money/contract";
 import { earnedThisYear, monthsEarned, rewardsToAnnounce } from "@outlayr/money/referrals";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Alert } from "panelui-web/alert";
 import { Avatar } from "panelui-web/avatar";
 import { Badge } from "panelui-web/badge";
@@ -22,11 +21,12 @@ import { Input } from "panelui-web/input";
 import { Kpi } from "panelui-web/kpi";
 import { Table } from "panelui-web/table";
 import { useToast } from "panelui-web/toast";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
+import { referralsQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 
 import { Row, SectionHead, SettingsCard } from "./parts";
@@ -36,14 +36,6 @@ type Friend = ReferralOverview["friends"][number];
 type Refusal = Exclude<RedeemStatus, "claimed" | "signedOut"> | "offline";
 
 const SEEN_KEY = "outlayr-referral-reward-seen";
-const LOADING_FRIENDS: readonly Friend[] = ["a", "b", "c"].map((id) => ({
-    claimedAt: 0,
-    daysLogged: 0,
-    id,
-    name: "Placeholder",
-    rewardedAt: null,
-    status: "counting",
-}));
 
 const readSeen = () => {
     try {
@@ -273,14 +265,14 @@ function FriendsCard({
             year: new Date(at).getFullYear() === thisYear ? undefined : "numeric",
         });
     const ordered = friends.toSorted((a, b) => (b.rewardedAt ?? 0) - (a.rewardedAt ?? 0));
-    const count = loading ? null : friends.length;
+    const count = friends.length;
     return (
         <SettingsCard
             action={count ? <span className="dash-figure text-muted-foreground text-[13px]">{count}</span> : null}
             title={copy.friends}
         >
             {count === 0 ? (
-                <div>
+                <Skeleton loading={loading}>
                     <div aria-hidden className="divide-y">
                         {["head", "row"].map((row) => (
                             <div className="flex items-center justify-between gap-3 px-4 py-3" key={row}>
@@ -305,47 +297,45 @@ function FriendsCard({
                             {copy.share}
                         </Button>
                     </div>
-                </div>
-            ) : (
-                <Skeleton loading={loading}>
-                    <Table aria-label={copy.friends.value} framed maxHeight="none">
-                        <Table.Header className="in-data-[sticky]:bg-card">
-                            <Table.Row>
-                                <Table.Head>{copy.name}</Table.Head>
-                                <Table.Head>{copy.progress}</Table.Head>
-                                <Table.Head />
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            {ordered.map((friend) => {
-                                const name = friend.name ?? copy.unnamed.value;
-                                return (
-                                    <Table.Row key={friend.id}>
-                                        <Table.Cell>
-                                            <span className="flex items-center gap-2.5 font-medium">
-                                                <Avatar name={name} size="sm" />
-                                                <span className="max-w-[120px] truncate">{name}</span>
-                                            </span>
-                                        </Table.Cell>
-                                        <Table.Cell className="text-muted-foreground">
-                                            {friend.rewardedAt === null
-                                                ? copy.logged({ days: friend.daysLogged, total: REFERRAL_DAYS_TO_EARN })
-                                                : copy.done({
-                                                      date: rewardDate(friend.rewardedAt),
-                                                      days: Math.max(friend.daysLogged, REFERRAL_DAYS_TO_EARN),
-                                                  })}
-                                        </Table.Cell>
-                                        <Table.Cell align="end">
-                                            <Badge dot variant={friend.status === "rewarded" ? "success" : "outline"}>
-                                                {copy.status[friend.status]}
-                                            </Badge>
-                                        </Table.Cell>
-                                    </Table.Row>
-                                );
-                            })}
-                        </Table.Body>
-                    </Table>
                 </Skeleton>
+            ) : (
+                <Table aria-label={copy.friends.value} framed maxHeight="none">
+                    <Table.Header className="in-data-[sticky]:bg-card">
+                        <Table.Row>
+                            <Table.Head>{copy.name}</Table.Head>
+                            <Table.Head>{copy.progress}</Table.Head>
+                            <Table.Head />
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {ordered.map((friend) => {
+                            const name = friend.name ?? copy.unnamed.value;
+                            return (
+                                <Table.Row key={friend.id}>
+                                    <Table.Cell>
+                                        <span className="flex items-center gap-2.5 font-medium">
+                                            <Avatar name={name} size="sm" />
+                                            <span className="max-w-[120px] truncate">{name}</span>
+                                        </span>
+                                    </Table.Cell>
+                                    <Table.Cell className="text-muted-foreground">
+                                        {friend.rewardedAt === null
+                                            ? copy.logged({ days: friend.daysLogged, total: REFERRAL_DAYS_TO_EARN })
+                                            : copy.done({
+                                                  date: rewardDate(friend.rewardedAt),
+                                                  days: Math.max(friend.daysLogged, REFERRAL_DAYS_TO_EARN),
+                                              })}
+                                    </Table.Cell>
+                                    <Table.Cell align="end">
+                                        <Badge dot variant={friend.status === "rewarded" ? "success" : "outline"}>
+                                            {copy.status[friend.status]}
+                                        </Badge>
+                                    </Table.Cell>
+                                </Table.Row>
+                            );
+                        })}
+                    </Table.Body>
+                </Table>
             )}
         </SettingsCard>
     );
@@ -433,15 +423,19 @@ export function Invite() {
     const copy = useIntlayer("dashboard-invite");
     const { sections, usage } = useIntlayer("dashboard-settings");
     const { locale } = useLocale();
-    const query = useQuery(convexQuery(api.referrals.overview, {}));
+    const query = useQuery(referralsQuery);
     const overview = query.data ?? null;
-    const ensured = useQuery({
-        enabled: overview !== null && overview.code === null,
-        gcTime: 0,
-        queryFn: () => convexClient().mutation(api.referrals.ensureCode, {}),
-        queryKey: ["referrals.ensureCode"],
+    const { data: minted, mutate: mint } = useMutation({
+        mutationFn: () => convexClient().mutation(api.referrals.ensureCode, {}),
     });
-    const code = overview?.code ?? ensured.data ?? null;
+    const unminted = overview !== null && overview.code === null;
+    // oxlint-disable-next-line outlayr/react-effect-budget -- Convex is an external system.
+    useEffect(() => {
+        if (unminted) {
+            mint();
+        }
+    }, [mint, unminted]);
+    const code = overview?.code ?? minted ?? null;
     const [now] = useState(() => Date.now());
     const share = useShareInvite(code);
     const friends = overview?.friends ?? [];
@@ -519,12 +513,7 @@ export function Invite() {
                         </SettingsCard>
                         {overview?.canRedeem ? <EnterCode /> : null}
                     </div>
-                    <FriendsCard
-                        friends={loading ? LOADING_FRIENDS : friends}
-                        loading={loading}
-                        now={now}
-                        onShare={share}
-                    />
+                    <FriendsCard friends={friends} loading={loading} now={now} onShare={share} />
                 </div>
             </div>
             {overview ? <RewardLanded onShare={share} overview={overview} /> : null}

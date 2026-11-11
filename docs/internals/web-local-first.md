@@ -22,6 +22,19 @@
 - The onboarding gate (`Ledgered` in `routes/_account/app.tsx`) runs in render, over the books and the device's progress in `localStorage` (`lib/onboarding.ts`). It must stay out of the loader: a restored copy answers it with no round trip. Progress is written before the step's first ledger write, because that write alone makes the ledger look set up and would end the flow.
 - Bump `LEDGER_CACHE_VERSION` when a ledger row loses or retypes a field the web reads. Adding a field needs no bump, but the code must tolerate its absence until the first sync.
 
+## Data that is not a ledger row
+
+The plan, usage limits, the profile, sessions, sign-in methods, connections, referrals, shared links and push settings are account state. They are TanStack Query answers, not collections, and they follow the same rule as the rows: the first frame shows the last known answer.
+
+- Define the query once in `lib/account-state.ts` and add it to `COPIED` and `warmAccountState`. The save writes the listed answers beside the rows (`accountStateOf`, TanStack Query's `dehydrate`), the `/app` loader restores them before the first paint (`restoreAccountState`), and on a first visit the loader starts every fetch without awaiting one. A screen reads that same options object. A `useQuery(convexQuery(...))` written in a screen is fetched after paint on every reload.
+- Unknown is not a value. Until an answer exists, render the same card inside `<Skeleton loading>`, with one sample row where a count decides the height. Never render a default that reads as an answer: Free, 0, a switch that is off, "not shared", a nav item that is missing.
+- A `null` that means the server could not say (`billing.plan`, `limits.mine`) is never copied.
+- Copy no secret. The session list keeps `id`, `updatedAt` and `userAgent` and drops the token (`sessionRows`); the profile is six fields mirrored from the better-auth session store, not the session.
+- An action has no live subscription, so it needs a real `staleTime` (`planQuery`: 5 minutes, and Plan settings asks again on every mount). Listed queries set `gcTime: Infinity`: a collected query loses its Convex watch and its place in the next save.
+- Every minted photo batch (the overview, row thumbnails, archived accounts) rides the copy while it is younger than `PHOTO_REMINT_MS`, and is dropped on restore once older. A copy older than that repaints its photos after the first frame: the signed URLs have expired and nothing proxies them.
+- The settings pending tree renders under a query client that never fetches (`SettingsPending`), so an answer that lands mid-skeleton cannot move the bones.
+- Bump `LEDGER_CACHE_VERSION` when a copied answer loses or retypes a field.
+
 ## How a write works
 
 Every ledger commit goes through `ledgerCommitter(db, userId)` in `lib/ledger-committer.ts`. `commit(rows)` shows the rows at once and pushes them. It never rejects: `settled` resolves to `saved`, `failed` or `undone`.
@@ -48,7 +61,7 @@ Under the hook:
 
 ## The copy is the user's financial data
 
-It sits unencrypted in IndexedDB, like the native app's SQLite file. It is keyed to the JWT's subject and dropped on sign-out (`forgetLedger`, which also stops a save waiting on its timer), when Convex refuses the subscription during a load (a lapsed Pro, `dropLedger`), and when another user signs in on the same browser. A refusal while the tab stays open leaves the copy until the next load. Unsent rows sit in `localStorage` under the same rules: tagged with the user, cleared on sign-out, and dropped on a load by anyone else. Signing out, or signing in by email, tells other tabs (`announceSessionChange`), and they reload, so none keeps saving the previous account's rows. An Apple or Google sign-in returns through a redirect and does not announce.
+It sits unencrypted in IndexedDB, like the native app's SQLite file, and holds the account state above in the same record. It is keyed to the JWT's subject and dropped on sign-out (`forgetLedger`, which also stops a save waiting on its timer), when Convex refuses the subscription during a load (a lapsed Pro, `dropLedger`), and when another user signs in on the same browser. A refusal while the tab stays open leaves the copy until the next load. Unsent rows sit in `localStorage` under the same rules: tagged with the user, cleared on sign-out, and dropped on a load by anyone else. Signing out, or signing in by email, tells other tabs (`announceSessionChange`), and they reload, so none keeps saving the previous account's rows. An Apple or Google sign-in returns through a redirect and does not announce.
 
 ## Measuring
 

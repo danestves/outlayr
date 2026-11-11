@@ -1,4 +1,3 @@
-import { convexQuery } from "@convex-dev/react-query";
 import BotIcon from "@hugeicons/core-free-icons/BotIcon";
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
@@ -17,19 +16,13 @@ import { useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
+import { connectionsQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { LEDGER_MCP_ORIGIN } from "@/lib/site";
 
 import { Row, SectionHead, SettingsCard } from "./parts";
 
 const SERVER = `${LEDGER_MCP_ORIGIN}/mcp`;
-const LOADING_ROWS = ["a", "b"].map((id) => ({
-    createdAt: 0,
-    id,
-    lastUsedAt: undefined,
-    name: "Claude Desktop",
-    scopes: ["ledger:read"],
-}));
 
 interface Agent {
     createdAt: number;
@@ -159,9 +152,8 @@ export function Connections() {
     const [disconnecting, setDisconnecting] = useState(false);
     const [gone, setGone] = useState<ReadonlySet<string>>(new Set());
     const [thisYear] = useState(() => new Date().getFullYear());
-    const { data } = useQuery(convexQuery(api.mcp.listConnections, {}));
-    const loading = data === undefined;
-    const agents: readonly Agent[] = data?.filter(({ id }) => !gone.has(id)) ?? LOADING_ROWS;
+    const { data } = useQuery(connectionsQuery);
+    const agents: readonly Agent[] = (data ?? []).filter(({ id }) => !gone.has(id));
 
     const day = (at: number) =>
         new Date(at).toLocaleDateString(locale, {
@@ -199,115 +191,116 @@ export function Connections() {
             />
             <div className="@container flex flex-col gap-4 pb-8">
                 {agents.length === 0 ? (
-                    <Frame className="min-w-0">
-                        <Frame.Panel>
-                            <div>
-                                <div aria-hidden className="divide-y">
-                                    {["head", "first", "second", "third"].map((row) => (
-                                        <div className="flex items-center justify-between gap-3 px-4 py-3" key={row}>
-                                            <span className="flex w-1/3 items-center gap-2">
-                                                {row === "head" ? null : (
-                                                    <span className="border-border size-[26px] rounded-lg border" />
-                                                )}
-                                                <span className="border-border h-2 w-16 rounded-full border" />
-                                            </span>
-                                            <span
-                                                className={
-                                                    row === "head"
-                                                        ? "border-border h-2 w-12 rounded-full border"
-                                                        : "border-border h-6 w-24 rounded-lg border"
-                                                }
-                                            />
-                                            <span className="border-border h-2 w-12 rounded-full border" />
-                                        </div>
-                                    ))}
+                    <Skeleton loading={data === undefined}>
+                        <Frame className="min-w-0">
+                            <Frame.Panel>
+                                <div>
+                                    <div aria-hidden className="divide-y">
+                                        {["head", "first", "second", "third"].map((row) => (
+                                            <div
+                                                className="flex items-center justify-between gap-3 px-4 py-3"
+                                                key={row}
+                                            >
+                                                <span className="flex w-1/3 items-center gap-2">
+                                                    {row === "head" ? null : (
+                                                        <span className="border-border size-[26px] rounded-lg border" />
+                                                    )}
+                                                    <span className="border-border h-2 w-16 rounded-full border" />
+                                                </span>
+                                                <span
+                                                    className={
+                                                        row === "head"
+                                                            ? "border-border h-2 w-12 rounded-full border"
+                                                            : "border-border h-6 w-24 rounded-lg border"
+                                                    }
+                                                />
+                                                <span className="border-border h-2 w-12 rounded-full border" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="flex flex-col items-center px-5 pt-6 pb-8 text-center">
+                                        <b className="text-sm font-semibold">{copy.emptyTitle}</b>
+                                        <p className="text-muted-foreground mt-1 text-[13px] leading-5">
+                                            {copy.emptyBody}
+                                        </p>
+                                        <Button className="mt-4" onClick={() => setConnecting(true)}>
+                                            <HugeiconsIcon icon={BotIcon} size={16} />
+                                            {copy.connect}
+                                        </Button>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col items-center px-5 pt-6 pb-8 text-center">
-                                    <b className="text-sm font-semibold">{copy.emptyTitle}</b>
-                                    <p className="text-muted-foreground mt-1 text-[13px] leading-5">{copy.emptyBody}</p>
-                                    <Button className="mt-4" onClick={() => setConnecting(true)}>
-                                        <HugeiconsIcon icon={BotIcon} size={16} />
-                                        {copy.connect}
-                                    </Button>
-                                </div>
-                            </div>
-                        </Frame.Panel>
-                    </Frame>
+                            </Frame.Panel>
+                        </Frame>
+                    </Skeleton>
                 ) : (
                     <SettingsCard footer={<ServerLine />} title={copy.agents}>
-                        <Skeleton loading={loading}>
-                            <Table aria-label={copy.agents.value} framed maxHeight="none">
-                                <Table.Header className="in-data-[sticky]:bg-card">
-                                    <Table.Row>
-                                        <Table.Head>{copy.agent}</Table.Head>
-                                        <Table.Head>{copy.access}</Table.Head>
-                                        <Table.Head className="max-sm:hidden">{copy.connected}</Table.Head>
-                                        <Table.Head className="max-sm:hidden">{copy.lastUsed}</Table.Head>
-                                        <Table.Head />
-                                    </Table.Row>
-                                </Table.Header>
-                                <Table.Body>
-                                    {agents.map((agent) => {
-                                        const name = agent.name ?? copy.agent.value;
-                                        return (
-                                            <Table.Row key={agent.id}>
-                                                <Table.Cell>
-                                                    <span className="flex items-center gap-2.5 font-medium">
-                                                        <span className="bg-app-fill text-muted-foreground grid size-[26px] shrink-0 place-items-center rounded-lg">
-                                                            <HugeiconsIcon icon={BotIcon} size={15} />
-                                                        </span>
-                                                        <span className="ph-no-capture max-w-[220px] truncate">
-                                                            {name}
-                                                        </span>
+                        <Table aria-label={copy.agents.value} framed maxHeight="none">
+                            <Table.Header className="in-data-[sticky]:bg-card">
+                                <Table.Row>
+                                    <Table.Head>{copy.agent}</Table.Head>
+                                    <Table.Head>{copy.access}</Table.Head>
+                                    <Table.Head className="max-sm:hidden">{copy.connected}</Table.Head>
+                                    <Table.Head className="max-sm:hidden">{copy.lastUsed}</Table.Head>
+                                    <Table.Head />
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
+                                {agents.map((agent) => {
+                                    const name = agent.name ?? copy.agent.value;
+                                    return (
+                                        <Table.Row key={agent.id}>
+                                            <Table.Cell>
+                                                <span className="flex items-center gap-2.5 font-medium">
+                                                    <span className="bg-app-fill text-muted-foreground grid size-[26px] shrink-0 place-items-center rounded-lg">
+                                                        <HugeiconsIcon icon={BotIcon} size={15} />
                                                     </span>
-                                                </Table.Cell>
-                                                <Table.Cell>{access(agent.scopes)}</Table.Cell>
-                                                <Table.Cell className="max-sm:hidden">
-                                                    {day(agent.createdAt)}
-                                                </Table.Cell>
-                                                <Table.Cell className="max-sm:hidden">
-                                                    {agent.lastUsedAt === undefined
-                                                        ? copy.neverUsed
-                                                        : day(agent.lastUsedAt)}
-                                                </Table.Cell>
-                                                <Table.Cell className="w-10 text-right">
-                                                    <Menu>
-                                                        <Menu.Trigger
-                                                            aria-label={copy.more({ name }).value}
-                                                            render={
-                                                                <Button
-                                                                    className="text-muted-foreground -mr-1"
-                                                                    size="icon-sm"
-                                                                    variant="ghost"
-                                                                />
-                                                            }
+                                                    <span className="ph-no-capture max-w-[220px] truncate">{name}</span>
+                                                </span>
+                                            </Table.Cell>
+                                            <Table.Cell>{access(agent.scopes)}</Table.Cell>
+                                            <Table.Cell className="max-sm:hidden">{day(agent.createdAt)}</Table.Cell>
+                                            <Table.Cell className="max-sm:hidden">
+                                                {agent.lastUsedAt === undefined
+                                                    ? copy.neverUsed
+                                                    : day(agent.lastUsedAt)}
+                                            </Table.Cell>
+                                            <Table.Cell className="w-10 text-right">
+                                                <Menu>
+                                                    <Menu.Trigger
+                                                        aria-label={copy.more({ name }).value}
+                                                        render={
+                                                            <Button
+                                                                className="text-muted-foreground -mr-1"
+                                                                size="icon-sm"
+                                                                variant="ghost"
+                                                            />
+                                                        }
+                                                    >
+                                                        <HugeiconsIcon icon={MoreVerticalIcon} size={17} />
+                                                    </Menu.Trigger>
+                                                    <Menu.Content
+                                                        align="end"
+                                                        className="app-shell w-[200px]"
+                                                        sideOffset={4}
+                                                    >
+                                                        <Menu.Item
+                                                            onClick={() => {
+                                                                setTarget(agent);
+                                                                setDisconnecting(true);
+                                                            }}
+                                                            variant="destructive"
                                                         >
-                                                            <HugeiconsIcon icon={MoreVerticalIcon} size={17} />
-                                                        </Menu.Trigger>
-                                                        <Menu.Content
-                                                            align="end"
-                                                            className="app-shell w-[200px]"
-                                                            sideOffset={4}
-                                                        >
-                                                            <Menu.Item
-                                                                onClick={() => {
-                                                                    setTarget(agent);
-                                                                    setDisconnecting(true);
-                                                                }}
-                                                                variant="destructive"
-                                                            >
-                                                                <HugeiconsIcon icon={Unlink01Icon} size={16} />
-                                                                {copy.disconnect}
-                                                            </Menu.Item>
-                                                        </Menu.Content>
-                                                    </Menu>
-                                                </Table.Cell>
-                                            </Table.Row>
-                                        );
-                                    })}
-                                </Table.Body>
-                            </Table>
-                        </Skeleton>
+                                                            <HugeiconsIcon icon={Unlink01Icon} size={16} />
+                                                            {copy.disconnect}
+                                                        </Menu.Item>
+                                                    </Menu.Content>
+                                                </Menu>
+                                            </Table.Cell>
+                                        </Table.Row>
+                                    );
+                                })}
+                            </Table.Body>
+                        </Table>
                     </SettingsCard>
                 )}
             </div>

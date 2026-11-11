@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { accentCss } from "@/lib/accent";
+import { useProfileMirror } from "@/lib/account-state";
 import { LedgerSettingsContext, useLedgerSettings } from "@/lib/ledger-settings";
 
 import { FlowRoot } from "../accounts/flows";
@@ -22,6 +23,7 @@ function forwardScrollKeys(content: HTMLDivElement | null) {
 /** `bare` drops the sidebar and the scroll pane: onboarding owns the whole window. */
 export function DashboardShell({ bare = false, children }: { bare?: boolean; children: ReactNode }) {
     const settings = useLedgerSettings();
+    useProfileMirror();
     if (bare) {
         return (
             <LedgerSettingsContext value={settings}>
