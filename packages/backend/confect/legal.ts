@@ -527,6 +527,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "The copy the website keeps in your browser now also holds what your settings show, such as your name, email, plan, and signed-in devices, so those pages load at once. Signing out deletes it.",
                     label: "What the website copy holds",
                 },
+                {
+                    detail: "When you import data into your ledger on this website, it tells PostHog the kind of import and how many rows it brought in, rounded to a range such as 10 to 99, as the app already does.",
+                    label: "Imports on the web",
+                },
             ],
             es: [
                 {
@@ -560,6 +564,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "La copia que el sitio web guarda en tu navegador ahora también incluye lo que muestra tu Configuración, como tu nombre, correo, plan y dispositivos con sesión iniciada, para que esas páginas carguen al instante. Al cerrar sesión se borra.",
                     label: "Qué guarda la copia del sitio web",
+                },
+                {
+                    detail: "Cuando importas datos a tu registro en este sitio web, le dice a PostHog el tipo de importación y cuántas filas trajo, redondeado a un rango como de 10 a 99, como ya lo hace la app.",
+                    label: "Importaciones en la web",
                 },
             ],
             fr: [
@@ -595,6 +603,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "La copie que le site web garde dans votre navigateur contient désormais aussi ce qu'affichent vos Réglages, comme votre nom, votre e-mail, votre formule et les appareils connectés, pour que ces pages se chargent tout de suite. Se déconnecter la supprime.",
                     label: "Ce que contient la copie du site web",
                 },
+                {
+                    detail: "Quand vous importez des données dans votre journal sur ce site web, il indique à PostHog le type d'import et combien de lignes il a ajoutées, arrondi à une fourchette comme 10 à 99, comme le fait déjà l'app.",
+                    label: "Imports sur le web",
+                },
             ],
             pt: [
                 {
@@ -628,6 +640,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "A cópia que o site guarda no seu navegador agora também inclui o que os seus Ajustes mostram, como seu nome, e-mail, plano e dispositivos conectados, para que essas páginas carreguem na hora. Sair da conta apaga a cópia.",
                     label: "O que a cópia do site guarda",
+                },
+                {
+                    detail: "Quando você importa dados para seu livro-caixa neste site, ele informa ao PostHog o tipo de importação e quantas linhas ela trouxe, arredondado a uma faixa como de 10 a 99, como o app já faz.",
+                    label: "Importações na web",
                 },
             ],
         },
