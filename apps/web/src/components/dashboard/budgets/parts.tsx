@@ -527,15 +527,24 @@ export function Ghost({
     name: "budgets" | "month" | "page" | "spending" | "year";
     width?: number;
 }) {
-    const image = `pointer-events-none absolute top-0 left-0 -z-10 h-auto max-w-none select-none ${className}`;
+    const image = `pointer-events-none absolute top-0 left-0 -z-10 w-full max-w-none select-none ${className}`;
+    const size = { height, minWidth: width };
     return (
         <>
-            <img alt="" className={`light-only ${image}`} height={height} src={`/budgets/${name}.svg`} width={width} />
+            <img
+                alt=""
+                className={`light-only ${image}`}
+                height={height}
+                src={`/budgets/${name}.svg`}
+                style={size}
+                width={width}
+            />
             <img
                 alt=""
                 className={`dark-only ${image}`}
                 height={height}
                 src={`/budgets/${name}-dark.svg`}
+                style={size}
                 width={width}
             />
         </>

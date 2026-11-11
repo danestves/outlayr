@@ -299,7 +299,7 @@ function TransactionsCard({ detail }: { detail: BudgetDetail }) {
                 title={copy.detail.transactions}
             />
             {detail.rows.length === 0 ? (
-                <Frame.Panel className="relative isolate flex min-h-[348px] flex-1 flex-col items-center justify-end overflow-hidden px-6 pb-7 text-center">
+                <Frame.Panel className="relative isolate flex min-h-[348px] flex-1 flex-col items-center divide-y-0 overflow-hidden px-6 pt-[300px] pb-7 text-center">
                     <Ghost height={348} name="spending" width={846} />
                     <p className="text-muted-foreground text-[13px] leading-5">{copy.detail.noSpending}</p>
                 </Frame.Panel>
