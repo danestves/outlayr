@@ -1,13 +1,11 @@
 import type { StoredBudget } from "@outlayr/money/budget-standing";
 import { typicalOf, windowsOver } from "@outlayr/money/budget-typical";
-import { previousPeriodStart } from "@outlayr/money/budget-window";
-import { fromWall, wallMidnight } from "@outlayr/money/ledger-zone";
 
 import type { Budget, BudgetDraft, MainBudget } from "@/lib/budget-writes";
 import { windowAnchorDay } from "@/lib/budget-writes";
 import { periodInstant, standingAt } from "@/lib/dashboard-series";
 import type { CategoryBudget } from "@/lib/dashboard-series";
-import { endOfDay, round, UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
+import { endOfDay, round, startOfDay, UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import type { Ledger, LedgerRow } from "@/lib/dashboard-series-ledger";
 import { daysFrom, periodKeyOf, periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
@@ -466,18 +464,13 @@ export function limitPreview(
     draft: Pick<BudgetDraft, "amount" | "startDay" | "type">
 ): LimitPreview {
     const anchor = draft.startDay ?? windowAnchorDay(ledger.today, draft.type, ledger);
-    // A window never opens before its anchor, so the windows a new limit is compared with need one further back.
-    let start = new Date(wallMidnight(anchor));
-    for (let step = 0; step < LOOKBACK; step += 1) {
-        start = previousPeriodStart(start, draft.type, true);
-    }
     const stored: StoredBudget = {
         amount: Math.abs(draft.amount),
         amountUsd: null,
         currency: ledger.currency,
         dateCreated: null,
         rollover: false,
-        startDate: fromWall(start.getTime(), ledger.offsetAt),
+        startDate: startOfDay(ledger, anchor),
         type: draft.type,
     };
     const history = windowsBack(ledger, stored, categoryId, ledger.now);

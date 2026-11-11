@@ -16,7 +16,7 @@ import { goalViews } from "@/components/dashboard/goals/model";
 import type { GoalView } from "@/components/dashboard/goals/model";
 import { useRecurringData } from "@/components/dashboard/recurring/data";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
+import { NEUTRAL_COLOR, startOfDay } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { addDays, chargesIn, isActive } from "@/lib/recurring";
 import type { Schedule } from "@/lib/recurring";
@@ -172,13 +172,15 @@ export function yearPlanOf(
         }))
     );
 
+    // Rates are keyed by the UTC day of the instant, so the month opens in the ledger's zone, not the browser's.
+    const opensOn = (key: MonthKey) => new Date(startOfDay(ledger, isoDay(monthKeyWindow(key, firstDayOfMonth).start)));
     const plans = new Map<string, Map<MonthKey, number>>();
     for (const row of ledger.books.budgetPlans) {
         const inYear = row.month >= monthKey(year, 0) && row.month <= monthKey(year, 11);
         if (row.deletedAt !== null || row.amount === null || !inYear || !meta.has(row.categoryId)) {
             continue;
         }
-        const opens = monthKeyWindow(row.month, firstDayOfMonth).start;
+        const opens = opensOn(row.month);
         const amount = limitIn(
             { amount: row.amount, amountUsd: null, currency: row.currency },
             opens,
@@ -191,7 +193,7 @@ export function yearPlanOf(
     }
 
     const budgets = new Map<string, number>();
-    const opens = monthKeyWindow(currentKey, firstDayOfMonth).start;
+    const opens = opensOn(currentKey);
     for (const row of ledger.books.budgets) {
         if (row.deletedAt === null && row.categoryId !== null && meta.has(row.categoryId)) {
             budgets.set(row.categoryId, monthlyLimit(limitIn(row, opens, ledger.currency, ledger.rates), row.type));

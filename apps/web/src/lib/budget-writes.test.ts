@@ -96,6 +96,12 @@ describe("editedBudget", () => {
         const changed = editedBudget(ledger, "budgets", budget(), draft({ amount: 280 }), NOW);
         expect(changed.fields).toMatchObject({ amountUsd: null, currency: "EUR" });
     });
+
+    it("keeps a freeze it could not make again when only the name or carry-over changes", () => {
+        const euro = budget({ amountUsd: 330, currency: "EUR" });
+        const row = editedBudget(ledger, "budgets", euro, draft({ name: "Food", rollover: true }), NOW);
+        expect(row.fields).toMatchObject({ amount: 300, amountUsd: 330, currency: "EUR", name: "Food" });
+    });
 });
 
 describe("createdBudget", () => {

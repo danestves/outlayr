@@ -7,6 +7,7 @@ import SquareLock02Icon from "@hugeicons/core-free-icons/SquareLock02Icon";
 import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { decimalsFor } from "@outlayr/money/currency";
+import { limitIn } from "@outlayr/money/valuation";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
@@ -29,7 +30,7 @@ import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committe
 import { parseAmount } from "@/lib/account-writes";
 import { createdBudget, deletedBudget, editedBudget } from "@/lib/budget-writes";
 import type { Budget, BudgetDraft, MainBudget } from "@/lib/budget-writes";
-import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
+import { round, UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKeyOf, periodOf } from "@/lib/dashboard-series-period";
 import { ledgerBooks } from "@/lib/ledger-db";
@@ -287,9 +288,15 @@ type LimitMode =
     | { kind: "overall" }
     | { kind: "edit"; stored: StoredLimit };
 
+// A limit set in another currency reads in the ledger's, as the overview and a phone show it.
+const shownAmount = (ledger: Ledger, row: Budget | MainBudget) =>
+    row.currency === ledger.currency
+        ? row.amount
+        : round(ledger, limitIn(row, new Date(ledger.now), ledger.currency, ledger.rates));
+
 function initialText(ledger: Ledger, mode: LimitMode) {
     if (mode.kind === "edit") {
-        return plainAmount(mode.stored.row.amount, ledger.currency);
+        return plainAmount(shownAmount(ledger, mode.stored.row), ledger.currency);
     }
     if (mode.kind === "overall") {
         const { limits } = budgetsOverview(ledger, monthNow(ledger)).totals;
@@ -305,8 +312,8 @@ function monthNow(ledger: Ledger) {
 const storedDayOf = (ledger: Ledger, row: Budget | MainBudget) =>
     row.startDate === null ? null : new Date(row.startDate + ledger.offsetAt(row.startDate)).toISOString().slice(0, 10);
 
-const isDirty = (stored: StoredLimit, draft: BudgetDraft, storedDay: string | null) =>
-    Math.abs(draft.amount) !== stored.row.amount ||
+const isDirty = (ledger: Ledger, stored: StoredLimit, draft: BudgetDraft, storedDay: string | null) =>
+    Math.abs(draft.amount) !== shownAmount(ledger, stored.row) ||
     draft.type !== stored.row.type ||
     draft.startDay !== storedDay ||
     draft.name.trim() !== (stored.row.name ?? "").trim() ||
@@ -486,7 +493,8 @@ function limitRow(
         (stored.table === "budgets" ? ledger.books.budgets : ledger.books.mainBudget).find(
             (each) => each.localId === stored.row.localId
         ) ?? stored.row;
-    return editedBudget(ledger, stored.table, fresh, draft, at);
+    const amount = Math.abs(draft.amount) === shownAmount(ledger, fresh) ? fresh.amount : draft.amount;
+    return editedBudget(ledger, stored.table, fresh, { ...draft, amount }, at);
 }
 
 function LimitFooter({
@@ -601,7 +609,7 @@ function useLimitForm(mode: LimitMode) {
     const target = categoryId === null ? undefined : ledger.budgetTargets.get(categoryId);
     const color = target?.color ?? "var(--color-app-muted)";
     const draft: BudgetDraft = { amount, name, rollover, startDay: stored ? startDay : null, type };
-    const dirty = stored !== null && isDirty(stored, draft, storedDay);
+    const dirty = stored !== null && isDirty(ledger, stored, draft, storedDay);
     return {
         amount,
         cadence,

@@ -1,7 +1,8 @@
 import { spentForCategory, spentForMain } from "@outlayr/money/budget-spent";
 import { budgetStanding } from "@outlayr/money/budget-standing";
 import type { StoredBudget } from "@outlayr/money/budget-standing";
-import { wall } from "@outlayr/money/ledger-zone";
+import { previousPeriodStart } from "@outlayr/money/budget-window";
+import { fromWall, wall } from "@outlayr/money/ledger-zone";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import type { AreaChartDatum } from "panelui-web/area-chart";
 
@@ -239,6 +240,24 @@ export function periodInstant(ledger: Ledger, period: Period) {
         : Math.min(ledger.now, endOfDay(ledger, period.to));
 }
 
+// A window never opens before its anchor, and a phone keeps the anchor on its current window,
+// so reading an earlier window steps the anchor back to it.
+function anchoredBy(ledger: Ledger, budget: StoredBudget, asOf: number): StoredBudget {
+    if (budget.startDate === null || budget.startDate <= asOf) {
+        return budget;
+    }
+    const target = wall(asOf, ledger.offsetAt(asOf)).getTime();
+    let start = wall(budget.startDate, ledger.offsetAt(budget.startDate));
+    while (start.getTime() > target) {
+        const previous = previousPeriodStart(start, budget.type, true);
+        if (previous.getTime() === start.getTime()) {
+            break;
+        }
+        start = previous;
+    }
+    return { ...budget, startDate: fromWall(start.getTime(), ledger.offsetAt) };
+}
+
 /** The window holding `asOf`; `categoryId` null reads the limit against all spending. */
 export function standingAt(
     ledger: Ledger,
@@ -254,7 +273,7 @@ export function standingAt(
     };
     const filed = expensesOf(ledger, categoryId);
     const standing = budgetStanding(
-        budget,
+        anchoredBy(ledger, budget, asOf),
         budget.rollover,
         (start, last) =>
             categoryId === null ? spentForMain(filed, start, last) : spentForCategory(filed, categoryId, start, last),

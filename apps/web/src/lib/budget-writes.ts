@@ -91,7 +91,7 @@ const dayOf = (ledger: Ledger, instant: number) =>
 
 /**
  * A cadence change re-anchors to the new cadence's current window unless a start day is given; a restated cadence
- * keeps the stored anchor. The USD value is frozen again on the day the window opens.
+ * keeps the stored anchor. A new amount or window freezes the USD value again on the day the window opens.
  */
 export function editedBudget(
     ledger: Ledger,
@@ -106,8 +106,12 @@ export function editedBudget(
         startDay = dayOf(ledger, row.startDate);
     }
     const amountChanged = Math.abs(draft.amount) !== row.amount;
+    const anchor = startDay ?? anchorOf(ledger, draft);
+    const unchanged = !amountChanged && startOfDay(ledger, anchor) === row.startDate;
     const currency = amountChanged || row.currency === null ? ledger.currency : row.currency;
-    const limit = limitFields(ledger, draft.amount, currency, startDay ?? anchorOf(ledger, draft));
+    const limit = unchanged
+        ? { amount: row.amount, amountUsd: row.amountUsd, currency: row.currency, startDate: row.startDate }
+        : limitFields(ledger, draft.amount, currency, anchor);
     return nextRow(
         table,
         row,

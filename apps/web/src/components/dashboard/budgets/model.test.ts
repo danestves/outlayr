@@ -51,7 +51,7 @@ const foodLimit = {
     localId: "food-limit",
     name: null,
     rollover: false,
-    startDate: Date.parse("2026-01-01T00:00:00Z"),
+    startDate: Date.parse("2026-11-01T00:00:00Z"),
     type: BUDGET_TYPE.month,
 } as unknown as Doc<"budgets">;
 
@@ -97,6 +97,13 @@ describe("budgetsOverview", () => {
             ["fun", 50, 50 / 400],
         ]);
         expect(overview.totals.total).toBe(400);
+    });
+});
+
+describe("a limit anchored on the running window, as a phone keeps it", () => {
+    it("reads an earlier month's own window", () => {
+        const [food] = budgetsOverview(ledger, periodOf("2026-09", 1)).lines;
+        expect(food?.standing).toMatchObject({ from: "2026-09-01", spent: 200, to: "2026-09-30" });
     });
 });
 
