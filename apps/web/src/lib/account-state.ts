@@ -148,7 +148,7 @@ const COPIED: readonly QueryKey[] = [
 
 const REMINDERS = reminderQuery(null).queryKey.slice(0, 2);
 
-const NULL_IS_NO_ANSWER: readonly QueryKey[] = [planQuery.queryKey, limitsQuery.queryKey];
+const NULL_IS_NO_ANSWER: readonly QueryKey[] = [planQuery.queryKey, limitsQuery.queryKey, referralsQuery.queryKey];
 
 const oneOf = (keys: readonly QueryKey[], query: Query) =>
     keys.some((queryKey) => matchQuery({ exact: true, queryKey }, query));

@@ -9,6 +9,7 @@ import {
     connectionsQuery,
     planQuery,
     pushEndpointQuery,
+    referralsQuery,
     reminderQuery,
     restoreAccountState,
     sessionRows,
@@ -54,9 +55,10 @@ describe("account state copy", () => {
         ]);
     });
 
-    it("copies a reminder that is off, never a plan the server could not answer", () => {
+    it("copies a reminder that is off, never a plan or an invite the server could not answer", () => {
         const client = cache();
         client.setQueryData(planQuery.queryKey, null);
+        client.setQueryData(referralsQuery.queryKey, null);
         client.setQueryData(reminderQuery("https://push.test/a").queryKey, null);
 
         expect(copiedKeys(client)).toStrictEqual([reminderQuery("https://push.test/a").queryKey]);
