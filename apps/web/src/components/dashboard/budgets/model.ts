@@ -254,42 +254,34 @@ export function budgetsOverview(ledger: Ledger, period: Period): BudgetsOverview
     const overall = main ? lineOf(ledger, main, null, asOf, sparkMonths) : null;
     const through = lastDay(ledger, period);
     const total = phase === "ahead" ? 0 : spentIn(ledger, null, period.from, through);
+    // A limited subcategory's rows are already counted by its own line.
+    const openSpend = (categoryId: string, from: string, to: string) =>
+        round(
+            ledger,
+            ledger.rows
+                .filter(
+                    (row) =>
+                        !row.income &&
+                        row.topId === categoryId &&
+                        !(row.categoryId !== null && seen.has(row.categoryId)) &&
+                        row.day >= from &&
+                        row.day <= to
+                )
+                .reduce((sum, row) => sum + row.amount, 0)
+        );
     const open =
         phase === "ahead"
             ? []
             : [...ledger.categories.values()]
                   .filter((category) => category.id !== UNCATEGORIZED_ID && !seen.has(category.id))
                   .map((category) => {
-                      const spent = round(
-                          ledger,
-                          ledger.rows
-                              .filter(
-                                  (row) =>
-                                      !row.income &&
-                                      row.topId === category.id &&
-                                      row.day >= period.from &&
-                                      row.day <= through
-                              )
-                              .reduce((sum, row) => sum + row.amount, 0)
-                      );
+                      const spent = openSpend(category.id, period.from, through);
                       return {
                           categoryId: category.id,
                           color: category.color,
                           history: sparkMonths.map((key) => {
                               const month = periodOf(key, ledger.firstDayOfMonth);
-                              const end = lastDay(ledger, month);
-                              return round(
-                                  ledger,
-                                  ledger.rows
-                                      .filter(
-                                          (row) =>
-                                              !row.income &&
-                                              row.topId === category.id &&
-                                              row.day >= month.from &&
-                                              row.day <= end
-                                      )
-                                      .reduce((sum, row) => sum + row.amount, 0)
-                              );
+                              return openSpend(category.id, month.from, lastDay(ledger, month));
                           }),
                           name: category.name,
                           share: total > 0 ? spent / total : 0,

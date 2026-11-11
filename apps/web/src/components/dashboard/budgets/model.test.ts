@@ -124,6 +124,15 @@ describe("budgetsOverview", () => {
         expect(september.pace?.spent).toBe(200);
     });
 
+    it("leaves a limited subcategory's spending out of its unlimited parent's open line", () => {
+        const groceriesLimit = { ...foodLimit, categoryId: "groceries", localId: "groceries-limit" };
+        const { open } = budgetsOverview(ledgerWith([groceriesLimit]), periodOf("2026-11", 1));
+        expect(open.map((line) => [line.categoryId, line.spent])).toStrictEqual([
+            ["food", 150],
+            ["fun", 50],
+        ]);
+    });
+
     it("leaves budgeted categories and income out of the open spending", () => {
         expect(overview.open.map((line) => [line.categoryId, line.spent, line.share])).toStrictEqual([
             ["fun", 50, 50 / 400],

@@ -7,7 +7,7 @@ import Scissor01Icon from "@hugeicons/core-free-icons/Scissor01Icon";
 import SquareLock02Icon from "@hugeicons/core-free-icons/SquareLock02Icon";
 import { monthKeyParts } from "@outlayr/money/year-plan";
 import type { CategoryMonth, MonthProjection } from "@outlayr/money/year-plan";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
@@ -24,9 +24,9 @@ import { useBox } from "@/components/dashboard/insights/use-box";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { Restoring } from "@/components/dashboard/shell/sampled";
 import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
-import { periodKeyOf, periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
+import { isPeriodKey, periodKeyOf, periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
-import { daysBetween } from "@/lib/ledger";
+import { addDays, daysBetween } from "@/lib/ledger";
 
 import { BudgetFlowsProvider } from "./budget-flows";
 import { useBudgetFlows } from "./flow-context";
@@ -439,8 +439,7 @@ function SpentChart({ view }: { view: MonthView }) {
     const cumulative: number[] = [];
     let running = 0;
     for (let index = 0; index < count; index += 1) {
-        const day = new Date(Date.parse(`${period.from}T12:00:00Z`) + index * 86_400_000).toISOString().slice(0, 10);
-        running += byDay.get(day) ?? 0;
+        running += byDay.get(addDays(period.from, index)) ?? 0;
         cumulative.push(running);
     }
     const top = chartTop(Math.max(month.in, running));
@@ -488,9 +487,7 @@ function SpentChart({ view }: { view: MonthView }) {
                                 } else if (tick === period.days) {
                                     anchor = "end";
                                 }
-                                const day = new Date(Date.parse(`${period.from}T12:00:00Z`) + (tick - 1) * 86_400_000)
-                                    .toISOString()
-                                    .slice(0, 10);
+                                const day = addDays(period.from, tick - 1);
                                 return (
                                     <text
                                         className="dash-figure"
@@ -739,6 +736,9 @@ function PlanMonthBody({ periodKey }: { periodKey: string }) {
 }
 
 export function PlanMonthScreen({ month }: { month: string }) {
+    if (!isPeriodKey(month)) {
+        return <Navigate replace search={(prev) => prev} to="/app/budgets/plan" />;
+    }
     return (
         <BudgetFlowsProvider>
             <PlanMonthBody periodKey={month} />
