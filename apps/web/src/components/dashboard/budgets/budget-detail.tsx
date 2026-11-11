@@ -373,7 +373,7 @@ function BudgetCard({ detail, line }: { detail: BudgetDetail; line: BudgetLine }
         if (!fresh) {
             return;
         }
-        const draft = { amount: fresh.amount, name: fresh.name ?? "", rollover, startDay: null, type: fresh.type };
+        const draft = { amount: null, name: fresh.name ?? "", rollover, startDay: null, type: fresh.type };
         void committer.commit([editedBudget({ ...ledger, books }, line.table, fresh, draft, Date.now())], {
             failed: copy.form.failed.value,
         });

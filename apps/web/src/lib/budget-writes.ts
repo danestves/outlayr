@@ -23,6 +23,9 @@ export interface BudgetDraft {
     type: number;
 }
 
+/** `amount` null keeps the stored limit in its own currency; a number is in the ledger's currency. */
+export type BudgetEdit = Omit<BudgetDraft, "amount"> & { amount: number | null };
+
 const BUDGET_PLAN_NAMESPACE = "5b1f0d8e-7c43-4f6a-9e2d-3a8c61b47f09";
 
 // The same id a phone writes, so two devices planning one month land on one row.
@@ -61,7 +64,7 @@ function limitFields(ledger: Ledger, amount: number, currency: string, startDay:
     };
 }
 
-const anchorOf = (ledger: Ledger, draft: BudgetDraft) =>
+const anchorOf = (ledger: Ledger, draft: Pick<BudgetDraft, "startDay" | "type">) =>
     draft.startDay ?? windowAnchorDay(ledger.today, draft.type, ledger);
 
 /** A category limit, or the overall one when `categoryId` is null. */
@@ -97,7 +100,7 @@ export function editedBudget(
     ledger: Ledger,
     table: "budgets" | "mainBudget",
     row: Budget | MainBudget,
-    draft: BudgetDraft,
+    draft: BudgetEdit,
     at: number
 ): CommitRow {
     const cadenceChanged = draft.type !== row.type;
@@ -105,13 +108,15 @@ export function editedBudget(
     if (startDay === null && !cadenceChanged && row.startDate !== null) {
         startDay = dayOf(ledger, row.startDate);
     }
-    const amountChanged = Math.abs(draft.amount) !== row.amount;
+    const amount = draft.amount === null ? row.amount : Math.abs(draft.amount);
+    const amountChanged =
+        draft.amount !== null && (amount !== row.amount || (row.currency ?? ledger.currency) !== ledger.currency);
     const anchor = startDay ?? anchorOf(ledger, draft);
     const unchanged = !amountChanged && startOfDay(ledger, anchor) === row.startDate;
     const currency = amountChanged || row.currency === null ? ledger.currency : row.currency;
     const limit = unchanged
         ? { amount: row.amount, amountUsd: row.amountUsd, currency: row.currency, startDate: row.startDate }
-        : limitFields(ledger, draft.amount, currency, anchor);
+        : limitFields(ledger, amount, currency, anchor);
     return nextRow(
         table,
         row,

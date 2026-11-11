@@ -7,7 +7,6 @@ import SquareLock02Icon from "@hugeicons/core-free-icons/SquareLock02Icon";
 import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
 import { BUDGET_TYPE } from "@outlayr/money/budget-window";
 import { decimalsFor } from "@outlayr/money/currency";
-import { limitIn } from "@outlayr/money/valuation";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
 import { Dialog } from "panelui-web/dialog";
@@ -30,7 +29,8 @@ import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committe
 import { parseAmount } from "@/lib/account-writes";
 import { createdBudget, deletedBudget, editedBudget } from "@/lib/budget-writes";
 import type { Budget, BudgetDraft, MainBudget } from "@/lib/budget-writes";
-import { round, UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
+import { standingAt } from "@/lib/dashboard-series";
+import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKeyOf, periodOf } from "@/lib/dashboard-series-period";
 import { ledgerBooks } from "@/lib/ledger-db";
@@ -288,11 +288,9 @@ type LimitMode =
     | { kind: "overall" }
     | { kind: "edit"; stored: StoredLimit };
 
-// A limit set in another currency reads in the ledger's, as the overview and a phone show it.
+// A limit set in another currency reads in the ledger's, valued as the overview values it.
 const shownAmount = (ledger: Ledger, row: Budget | MainBudget) =>
-    row.currency === ledger.currency
-        ? row.amount
-        : round(ledger, limitIn(row, new Date(ledger.now), ledger.currency, ledger.rates));
+    row.currency === ledger.currency ? row.amount : standingAt(ledger, row, null, ledger.now).limit;
 
 function initialText(ledger: Ledger, mode: LimitMode) {
     if (mode.kind === "edit") {
@@ -493,8 +491,8 @@ function limitRow(
         (stored.table === "budgets" ? ledger.books.budgets : ledger.books.mainBudget).find(
             (each) => each.localId === stored.row.localId
         ) ?? stored.row;
-    const amount = Math.abs(draft.amount) === shownAmount(ledger, fresh) ? fresh.amount : draft.amount;
-    return editedBudget(ledger, stored.table, fresh, { ...draft, amount }, at);
+    const kept = Math.abs(draft.amount) === shownAmount(ledger, fresh);
+    return editedBudget(ledger, stored.table, fresh, { ...draft, amount: kept ? null : draft.amount }, at);
 }
 
 function LimitFooter({

@@ -91,15 +91,26 @@ describe("editedBudget", () => {
     });
 
     it("keeps the frozen currency until the amount changes", () => {
-        const kept = editedBudget(ledger, "budgets", budget(), draft({ rollover: true }), NOW);
+        const kept = editedBudget(ledger, "budgets", budget(), { ...draft({ rollover: true }), amount: null }, NOW);
         expect(kept.fields).toMatchObject({ amountUsd: 300, currency: "USD", rollover: true });
         const changed = editedBudget(ledger, "budgets", budget(), draft({ amount: 280 }), NOW);
         expect(changed.fields).toMatchObject({ amountUsd: null, currency: "EUR" });
     });
 
+    it("takes a typed amount in the ledger's currency even when it equals the stored foreign one", () => {
+        const row = editedBudget(ledger, "budgets", budget({ currency: "USD" }), draft({ amount: 300 }), NOW);
+        expect(row.fields).toMatchObject({ amount: 300, currency: "EUR" });
+    });
+
     it("keeps a freeze it could not make again when only the name or carry-over changes", () => {
         const euro = budget({ amountUsd: 330, currency: "EUR" });
-        const row = editedBudget(ledger, "budgets", euro, draft({ name: "Food", rollover: true }), NOW);
+        const row = editedBudget(
+            ledger,
+            "budgets",
+            euro,
+            { ...draft({ name: "Food", rollover: true }), amount: null },
+            NOW
+        );
         expect(row.fields).toMatchObject({ amount: 300, amountUsd: 330, currency: "EUR", name: "Food" });
     });
 });
