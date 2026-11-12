@@ -21,7 +21,8 @@ import type {
     VoiceQuote,
     VoiceThreadTransport,
 } from "@/lib/cloud-ai";
-import type { ScribeFailureReason, ScribeStreamError } from "@/lib/realtime-scribe";
+import { ScribeStreamError } from "@/lib/realtime-scribe";
+import type { ScribeFailureReason } from "@/lib/realtime-scribe";
 import { useLatest } from "@/lib/use-latest";
 import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
 import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
@@ -358,11 +359,12 @@ const finishTake = Effect.fn("VoiceEntry.finishTake")(function* finishTake<Conte
         return;
     }
     setPhase({ kind: "sending", text: null });
-    const finished = yield* Effect.promise(() =>
-        transcriptRef.current.finish().then(
-            (text) => ({ ok: true as const, text: text.trim() }),
-            (error: ScribeStreamError) => ({ ok: false as const, reason: scribeFailureOf(error) })
-        )
+    const finished = yield* Effect.tryPromise({
+        catch: (error): VoiceFailure => (error instanceof ScribeStreamError ? scribeFailureOf(error) : "provider"),
+        try: () => transcriptRef.current.finish(),
+    }).pipe(
+        Effect.map((text) => ({ ok: true as const, text: text.trim() })),
+        Effect.catch((reason) => Effect.succeed({ ok: false as const, reason }))
     );
     if (take !== takeRef.current) {
         return;

@@ -71,6 +71,7 @@ const REASON_BY_ERROR: Record<typeof ServerErrorType.Type, ScribeFailureReason> 
 };
 
 const COMMIT_TIMEOUT_MS = 10_000;
+const OPEN_TIMEOUT_MS = 5000;
 
 export interface ScribeStreamOptions {
     token: string;
@@ -160,7 +161,13 @@ export function openScribeStream({
         }
     };
 
+    const openTimer = setTimeout(
+        () => fail(new ScribeStreamError({ message: "The transcription socket never opened.", reason: "offline" })),
+        OPEN_TIMEOUT_MS
+    );
+
     socket.addEventListener("open", () => {
+        clearTimeout(openTimer);
         opened = true;
         for (const message of held.splice(0)) {
             socket.send(message);
@@ -168,6 +175,9 @@ export function openScribeStream({
     });
 
     socket.addEventListener("message", (event) => {
+        if (closed) {
+            return;
+        }
         const decoded = decodeServerMessage(event.data);
         if (Option.isNone(decoded)) {
             return;
@@ -210,6 +220,7 @@ export function openScribeStream({
     return {
         close: () => {
             closed = true;
+            clearTimeout(openTimer);
             if (finishing) {
                 clearTimeout(finishing.timer);
                 finishing = null;
