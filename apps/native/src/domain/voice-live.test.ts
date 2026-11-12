@@ -51,6 +51,7 @@ describe("amount", () => {
         ["pt", "Paguei R$ 1.234,56 no mercado", 1234.56],
         ["pt", "Paguei 3,5 milhões de reais", 3_500_000],
         ["fr", "J'ai payé 1 500,50 euros pour le café", 1500.5],
+        ["fr", "J'ai payé 1 500,50 euros pour le café", 1500.5],
         ["fr", "J'ai payé 15,99 euros pour le café", 15.99],
     ] as const)("%s: %s", (language, text, expected) => {
         expect(parse(text, language, { final: true }).amount?.value).toBe(expected);
@@ -66,6 +67,7 @@ describe("amount", () => {
         expect(parse("on March 5 I paid 8 dollars", "en").amount?.value).toBe(8);
         expect(parse("en marzo de 2026 gasté 30 dólares", "es").amount?.value).toBe(30);
         expect(parse("a las 5 gasté 9 euros", "es").amount?.value).toBe(9);
+        expect(parse("on 12/11/2026 I paid 20 for lunch", "en").amount?.value).toBe(20);
         expect(parse("I paid 20% tip", "en", { final: true }).amount).toBeNull();
         expect(parse("every 2 weeks I pay 15 dollars", "en").amount?.value).toBe(15);
     });
@@ -178,6 +180,11 @@ describe("transfers", () => {
         expect(parse("sent $20 to Zelle", "en").accountId).toBeNull();
         expect(parse("sent $20 from Zelle to Débito Móvil", "en").kind?.value).toBe("transfer");
         expect(parse("pasé 20 dólares por el super", "es").kind).toBeNull();
+    });
+
+    it("moves the source account's currency when none is spoken", () => {
+        expect(parse("moved 200 from Banesco to Débito Móvil for rent", "en").currency?.value).toBe("VES");
+        expect(parse("moved 200 euros from Banesco to Débito Móvil", "en").currency?.value).toBe("EUR");
     });
 
     it("does not use one account on both sides", () => {

@@ -410,8 +410,8 @@ const OF_WORDS: ReadonlySet<string> = new Set(["de", "del", "of"]);
 const DAY_BEFORE: ReadonlySet<string> = new Set(["dia", "day", "at", "las", "as", "el", "le"]);
 const YEAR_BEFORE: ReadonlySet<string> = new Set([...OF_WORDS, "in", "year", "ano", "an", "annee"]);
 
-const NUMBER = /\d{1,3}(?:[  ]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)*/gu;
-const NARROW_SPACES = /[  ]/g;
+const NUMBER = /\d{1,3}(?:[   ]\d{3}(?!\d))+(?:[.,]\d+)?|\d+(?:[.,]\d+)*/gu;
+const GROUP_SPACES = /[   ]/g;
 const WORD_CHAR = /[\p{L}\p{N}]/u;
 const DIGIT = /\d/;
 const ASCII_ONLY = /^\p{ASCII}*$/u;
@@ -453,7 +453,7 @@ function isGrouped(digits: string, mark: string): boolean {
 
 /** Both marks: the last is the decimal. One mark: a lone three-digit tail is a group only where that mark groups. */
 function parseNumber(literal: string, decimal: DecimalMark): number | null {
-    const compact = literal.replaceAll(NARROW_SPACES, "");
+    const compact = literal.replaceAll(GROUP_SPACES, "");
     const lastAt = Math.max(compact.lastIndexOf("."), compact.lastIndexOf(","));
     if (lastAt === -1) {
         return Number(compact);
@@ -545,7 +545,7 @@ function amountCandidates(folded: string, decimal: DecimalMark, final: boolean):
         let end = start + literal.length;
         const before = folded[start - 1];
         const next = folded[end];
-        if (isWordChar(before) || before === ":" || next === "%") {
+        if (isWordChar(before) || before === ":" || before === "/" || next === "/" || next === "%") {
             continue;
         }
         if (next === ":" && DIGIT.test(folded[end + 1] ?? "")) {
@@ -771,6 +771,17 @@ const EMPTY_DRAFT: LiveDraft = {
     toAccountId: null,
 };
 
+const amountIn = (candidate: AmountCandidate | undefined, code: string) =>
+    candidate === undefined ? null : found(roundToMinorUnits(candidate.value, code), candidate.start, candidate.end);
+
+function sourceCurrency(accounts: LiveContext["accounts"], from: Mention | null): Found<string> | null {
+    if (from === null) {
+        return null;
+    }
+    const source = accounts.find((account) => account.id === from.id);
+    return source === undefined ? null : found(source.currency, from.start, from.end);
+}
+
 /** Folds the user's names once; the returned function is cheap enough to run on every partial transcript. */
 export function createLiveParser(context: LiveContext): (text: string, options?: LiveParseOptions) => LiveDraft {
     const lexicon: Lexicon = LEXICONS[context.language];
@@ -789,15 +800,8 @@ export function createLiveParser(context: LiveContext): (text: string, options?:
         const folded = fold(text);
         const chosen = amountCandidates(folded, lexicon.decimal, final);
         const candidate = chosen.find((item) => item.currency !== null) ?? chosen[0];
-        const amount =
-            candidate === undefined
-                ? null
-                : found(
-                      roundToMinorUnits(candidate.value, candidate.currency?.value ?? context.currency),
-                      candidate.start,
-                      candidate.end
-                  );
         const currency = candidate?.currency ?? null;
+        const amount = amountIn(candidate, currency?.value ?? context.currency);
         const date = dateOf(lexicon, folded, context.now, final);
         const base: LiveDraft = { ...EMPTY_DRAFT, amount, currency, date };
 
@@ -816,8 +820,11 @@ export function createLiveParser(context: LiveContext): (text: string, options?:
             const fromMention = bothLoose ? (loose[0] ?? null) : from;
             const toMention = bothLoose ? (loose[1] ?? null) : to;
             const sameAccount = fromMention !== null && fromMention.id === toMention?.id;
+            const moved = currency ?? sourceCurrency(context.accounts, fromMention);
             return {
                 ...base,
+                amount: amountIn(candidate, moved?.value ?? context.currency),
+                currency: moved,
                 fromAccountId: fromMention === null ? null : mentionFound(fromMention),
                 kind: found("transfer", cue.index, cue.index + cue[0].length),
                 toAccountId: toMention === null || sameAccount ? null : mentionFound(toMention),
