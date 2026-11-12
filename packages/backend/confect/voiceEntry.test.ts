@@ -20,6 +20,7 @@ import { runEdge } from "./lib/runEdge";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 import {
     buildPrompt,
+    ENDED_THREAD_GRACE_MS,
     normalizeDraft,
     normalizeQuotes,
     PROPOSE_DRAFT_TOOL,
@@ -404,6 +405,28 @@ describe("voice thread + speak guard ladder", () => {
         vi.advanceTimersByTime(30 * 60 * 1000);
         await t.run(async (ctx) => saveMessage(ctx, components.agent, { prompt: "twenty at netflix", threadId }));
         vi.advanceTimersByTime(31 * 60 * 1000);
+        await t.finishInProgressScheduledFunctions();
+        await expect(metadata()).resolves.toMatchObject({ userId: expect.any(String) });
+        await t.finishAllScheduledFunctions(vi.runAllTimers);
+        vi.useRealTimers();
+        await expect(metadata()).resolves.toBeNull();
+    });
+
+    it("closing the screen mid-turn leaves the thread to the turn still landing, then deletes it", async () => {
+        const t = harness();
+        const owner = authenticatedAs(t, await seedAuthUser(t));
+        vi.useFakeTimers();
+        const { threadId } = await owner.mutation(api.voiceEntry.startThread, {});
+        if (threadId === null) {
+            throw new Error("Expected a thread for a signed-in caller");
+        }
+        const metadata = () =>
+            t.run(async (ctx) => getThreadMetadata(ctx, components.agent, { threadId }).catch(() => null));
+        await owner.mutation(api.voiceEntry.endThread, { threadId });
+        vi.advanceTimersByTime(15_000);
+        await t.finishInProgressScheduledFunctions();
+        await t.run(async (ctx) => saveMessage(ctx, components.agent, { prompt: "twenty at netflix", threadId }));
+        vi.advanceTimersByTime(ENDED_THREAD_GRACE_MS - 15_000);
         await t.finishInProgressScheduledFunctions();
         await expect(metadata()).resolves.toMatchObject({ userId: expect.any(String) });
         await t.finishAllScheduledFunctions(vi.runAllTimers);

@@ -37,6 +37,7 @@ import { isPro } from "./revenuecat";
 import {
     buildPrompt,
     CONTEXT_TURNS,
+    ENDED_THREAD_GRACE_MS,
     failure,
     listTurns,
     MAX_STREAM_CREDITS,
@@ -170,7 +171,7 @@ const expireThread = FunctionImpl.make(
     databaseSchema,
     spec,
     "expireThread",
-    Effect.fn("VoiceEntry.expireThread")(function* expireThread({ threadId }) {
+    Effect.fn("VoiceEntry.expireThread")(function* expireThread({ idleLimitMs = THREAD_TTL_MS, threadId }) {
         const ctx = yield* MutationCtx;
         const thread = yield* Effect.promise(() => getThreadMetadata(ctx, components.agent, { threadId })).pipe(
             Effect.catchDefect(() => Effect.succeed(null))
@@ -187,9 +188,10 @@ const expireThread = FunctionImpl.make(
             })
         );
         const idleFor = (yield* Clock.currentTimeMillis) - (latest.page[0]?._creationTime ?? thread._creationTime);
-        if (idleFor < THREAD_TTL_MS) {
+        if (idleFor < idleLimitMs) {
             const scheduler = yield* Scheduler;
-            yield* scheduler.runAfter(Duration.millis(THREAD_TTL_MS - idleFor), refs.internal.voiceEntry.expireThread, {
+            yield* scheduler.runAfter(Duration.millis(idleLimitMs - idleFor), refs.internal.voiceEntry.expireThread, {
+                idleLimitMs,
                 threadId,
             });
             return null;
@@ -209,8 +211,11 @@ const endThread = FunctionImpl.make(
         if ((yield* ownsThread(ctx, threadId)) === null) {
             return null;
         }
-        yield* Effect.promise(() => ctx.runMutation(components.agent.threads.deleteAllForThreadIdAsync, { threadId }));
-        yield* clearStreamCredits(threadId);
+        const scheduler = yield* Scheduler;
+        yield* scheduler.runAfter(Duration.millis(ENDED_THREAD_GRACE_MS), refs.internal.voiceEntry.expireThread, {
+            idleLimitMs: ENDED_THREAD_GRACE_MS,
+            threadId,
+        });
         return null;
     }, Effect.orDie)
 );

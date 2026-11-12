@@ -97,7 +97,7 @@ export default GroupSpec.make()
     )
     .addFunction(
         FunctionSpec.internalMutation({
-            args: () => ({ threadId: Schema.String }),
+            args: () => ({ idleLimitMs: Schema.optional(Schema.Number), threadId: Schema.String }),
             name: "expireThread",
             returns: () => Schema.Null,
         })
