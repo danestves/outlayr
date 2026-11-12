@@ -69,10 +69,11 @@ const PROMO_BEFORE = new RegExp(
     "iu"
 );
 const BALANCE_AFTER = new RegExp(String.raw`^[^\S\n]*(?:available|balance|saldo|solde|dispon[íi]ve(?:is|l))\b`, "iu");
-const BALANCE_BEFORE = new RegExp(
-    String.raw`(?<![A-Za-z])(?:available credit|crédito disponible|crédit disponible|crédito disponível|available balance|balance|saldo disponible|saldo disp\.|saldo|solde)(?:\s+en\s+c(?:uen)?ta\.?)?(?:\s+\d{4})?\s*(?:is|es|est|é)?\s*[:=-]?\s*$`,
-    "iu"
-);
+const BALANCE = String.raw`(?<![A-Za-z])(?:available credit|crédito disponible|crédit disponible|crédito disponível|available balance|balance|saldo disponible|saldo disp\.|saldo|solde)(?:\s+en\s+c(?:uen)?ta\.?)?(?:\s+\d{4})?\s*(?:is|es|est|é)?\s*[:=-]?\s*$`;
+const EXCHANGE_RATE = String.raw`(?<![A-Za-z])(?:tasa(?:\s+(?:de\s+)?(?:compra|venta|cambio|oficial|bcv))?|tipo\s+de\s+cambio|cotizaci[oó]n|precio\s+del\s+d[oó]lar|exchange\s+rate|(?:buy|sell)(?:ing)?\s+rate|taxa\s+de\s+c[aâ]mbio|taux\s+de\s+change)(?:\s+del\s+d[oó]lar)?(?:\s*(?:est[aá]|es|is|hoy|today|en|at|a|:|=|-))*\s*$`;
+// A shipped LogNotificationIntent decodes only the pattern keys it was built with, so the rate cue rides on
+// balanceBefore to reach it without a native release.
+const BALANCE_BEFORE = new RegExp(`(?:${BALANCE})|(?:${EXCHANGE_RATE})`, "iu");
 
 const STOP = String.raw`(?=\s+(?:with|using|via|on|for|con|usando|por|el|la|desde|mediante)\b|[,.;\n]|$)`;
 const PAID_TO = new RegExp(String.raw`\b(?:at|in|en|to|a|de|@)\s+(?!las?\s+\d|fecha\b)(.+?)${STOP}`, "iu");

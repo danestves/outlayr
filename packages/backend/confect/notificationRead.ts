@@ -23,7 +23,7 @@ const modelOutputSchema = modelSchema(NotificationRead);
 function buildPrompt(text: string, language: string | undefined): string {
     return [
         "This is the text of a phone notification, possibly from a bank, card or payment app.",
-        "Decide what it reports: a purchase or payment the user made (purchase), money the user received or a refund (income), a charge that was declined or failed (declined), or anything else such as a login, a statement, a promotion or a balance reminder (other).",
+        "Decide what it reports: a purchase or payment the user made (purchase), money the user received or a refund (income), a charge that was declined or failed (declined), or anything else such as a login, a statement, a promotion, an exchange rate or a balance reminder (other).",
         "For purchase and income, read the amount as a plain positive number with a dot for decimals, the ISO 4217 currency code when the text names it or shows a symbol only one currency uses (null for a symbol several currencies share, such as $), and the merchant or sender as a short name the user would recognize (no card numbers, no city, no payment processor prefix such as SQ * or SumUp *). The app that posted the notification and the card are never the merchant.",
         "Use null for anything the text does not say.",
         language ? `The user's language is ${language}.` : "",

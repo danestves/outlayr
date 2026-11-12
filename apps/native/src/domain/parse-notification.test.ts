@@ -251,6 +251,10 @@ describe("parseNotification", () => {
             "Available credit: $1,000.00",
             "Crédito disponible: $1.000,00",
             "Você tem R$ 1.000,00 disponível",
+            "Spoiler: subió el dólar\nSe movió 2,3% en los últimos días. En Plenti la tasa de compra está en $3.328. Tú sabrás 😏",
+            "Tasa BCV: Bs. 36,50",
+            "Tipo de cambio hoy: $17.45",
+            "Today's exchange rate is $1.08",
         ]) {
             expect(parseNotification(text)).toBeNull();
             expect(hasChargeAmount(text)).toBe(false);
@@ -274,6 +278,10 @@ describe("parseNotification", () => {
         expect(parseNotification("Available credit: $1,000.00. You spent $25.00 at OXXO")).toMatchObject({
             amount: 25,
             merchant: "OXXO",
+        });
+        expect(parseNotification("Tasa de compra: $3.328. Compraste USD 100.00 en Plenti")).toMatchObject({
+            amount: 100,
+            merchant: "Plenti",
         });
         expect(parseNotification("Blue Bottle Coffee\n$6.40\nAvailable credit: $1,000.00")).toMatchObject({
             amount: 6.4,
