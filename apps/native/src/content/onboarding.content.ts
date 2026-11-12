@@ -50,6 +50,12 @@ const onboarding = {
             pt: "Um livro-caixa que você preenche à mão. Cada lançamento é seu, neste dispositivo.",
             "pt-PT": "Um livro-caixa que preenche à mão. Cada registo é seu, neste dispositivo.",
         }),
+        "onboarding.cover.noSignUp": t({
+            en: "No sign-up, no code.",
+            es: "Sin crear cuenta, sin código.",
+            fr: "Sans inscription, sans code.",
+            pt: "Sem criar conta, sem código.",
+        }),
         "onboarding.currency.body": t({
             en: "Everything totals in this. Change it any time; old entries keep their own.",
             es: "Todo se suma en esta moneda. Cámbiala cuando quieras; las entradas anteriores conservan la suya.",

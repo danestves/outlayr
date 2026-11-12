@@ -34,6 +34,7 @@ export function OnboardingWelcome() {
             eyebrow={t("onboarding.welcome.begun", {
                 date: flyleafDate(new Date(nowMs), language),
             })}
+            note={t("onboarding.cover.noSignUp")}
             object={<OutlayrMark size={92} />}
             skip={{ label: t("mmImport.welcome.switching"), onPress: () => router.push("/onboarding/import") }}
             title={t("onboarding.welcome.title")}
