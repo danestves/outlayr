@@ -219,7 +219,7 @@ internal object PurchaseListenerStore {
     val newPlace = snapshot.newPlace.takeIf { merchant.isNotEmpty() && category == null && !pickCard && it.isNotEmpty() }
     val content = NotificationContent.Builder()
       .setTitle(if (merchant.isEmpty()) amount else "$amount · $merchant")
-      .setText(listOfNotNull(category, cardLabel, newPlace).joinToString(" · "))
+      .setText(listOfNotNull(category, cardLabel, newPlace).joinToString(" · ").ifEmpty { card })
       .setBody(JSONObject().put("walletWrite", id).put("pickCard", pickCard).put("card", card))
       .setAutoDismiss(true)
       .build()

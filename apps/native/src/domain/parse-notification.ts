@@ -53,7 +53,7 @@ const DECLINED = new RegExp(
     "iu"
 );
 const INCOMING = new RegExp(
-    String.raw`\b(?:received|refund(?:ed)?|reversal|credited|recibi(?:ste|d[ao])|reembols(?:o|ad[ao])|devoluci[oó]n|abon(?:o|ad[ao])|acreditad[ao])\b`,
+    String.raw`\b(?:received|refund(?:ed)?|reversal|credited|recibi(?:ste|d[ao])|reembols(?:o|ad[ao])|devoluci[oó]n|abon(?:o|ad[ao])|acreditad[ao])\b|\bte\s+(?:transfer[ií]|pagu[eé]|envi[eé]|mand[eé]|deposit[eé]|pas[eé]|hice)(?!\p{L})`,
     "iu"
 );
 

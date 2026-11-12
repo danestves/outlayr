@@ -33,8 +33,9 @@ export function OnboardingBankTexts({ bankTexts }: { bankTexts: BankTexts }) {
                     : { label: t("onboarding.bankTexts.action"), onPress: bankTexts.onSetUp }
             }
             eyebrow={t("onboarding.autoLog.eyebrow")}
-            footnote={bankTexts.done ? undefined : t("onboarding.bankTexts.footnote")}
-            skip={bankTexts.done ? undefined : { label: t("aiConsent.notNow"), onPress: next }}
+            footerHidden={bankTexts.done}
+            footnote={t("onboarding.bankTexts.footnote")}
+            skip={{ label: t("aiConsent.notNow"), onPress: next }}
             title={t("onboarding.bankTexts.title")}
         >
             <BankTextProof />

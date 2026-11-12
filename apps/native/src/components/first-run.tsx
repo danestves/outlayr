@@ -152,6 +152,7 @@ interface FirstRunProps {
     /** Rendered in reserved space, so an appearing error never shifts the buttons under the thumb. */
     error?: string | null;
     eyebrow?: string;
+    footerHidden?: boolean;
     footnote?: ReactNode;
     note?: string;
     /** Without one, the head sits at the top and `children` fill the space. */
@@ -198,6 +199,7 @@ export function FirstRun({
     children,
     action,
     skip,
+    footerHidden = false,
     footnote,
     note,
     error,
@@ -260,13 +262,22 @@ export function FirstRun({
                 </Animated.View>
             ) : null}
 
-            {skip ? (
-                <Pressable accessibilityRole="button" onPress={skip.onPress}>
-                    <Text className="font-sans-medium text-fr-muted text-subtitle pt-3 text-center">{skip.label}</Text>
-                </Pressable>
-            ) : null}
+            <View
+                accessibilityElementsHidden={footerHidden}
+                className={footerHidden ? "opacity-0" : undefined}
+                importantForAccessibility={footerHidden ? "no-hide-descendants" : "auto"}
+                pointerEvents={footerHidden ? "none" : "auto"}
+            >
+                {skip ? (
+                    <Pressable accessibilityRole="button" onPress={skip.onPress}>
+                        <Text className="font-sans-medium text-fr-muted text-subtitle pt-3 text-center">
+                            {skip.label}
+                        </Text>
+                    </Pressable>
+                ) : null}
 
-            {footnote ? <Text className="text-footnote text-fr-muted pt-3 text-center">{footnote}</Text> : null}
+                {footnote ? <Text className="text-footnote text-fr-muted pt-3 text-center">{footnote}</Text> : null}
+            </View>
 
             {error === undefined ? null : (
                 <View className="min-h-9 justify-start pt-2">
