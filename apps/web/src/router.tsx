@@ -8,6 +8,7 @@ import { routerWithDbClient } from "@tanstack/react-router-with-db";
 import { ENV } from "@/env";
 import { convexClient } from "@/lib/convex";
 import { ledgerDependencies } from "@/lib/db";
+import { registerAgentTools } from "@/lib/register-agent-tools";
 import type { Session } from "@/lib/session";
 
 import { routeTree } from "./routeTree.gen";
@@ -39,7 +40,11 @@ export function getRouter() {
         scrollToTopSelectors: ['[data-scroll-restoration-id="dashboard-content"]'],
     });
     setupRouterSsrQueryIntegration({ queryClient, router });
-    return routerWithDbClient(router, dbClient);
+    const appRouter = routerWithDbClient(router, dbClient);
+    if (typeof document !== "undefined") {
+        registerAgentTools(appRouter);
+    }
+    return appRouter;
 }
 
 declare module "@tanstack/react-router" {
