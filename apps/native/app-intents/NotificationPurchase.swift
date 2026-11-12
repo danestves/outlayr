@@ -32,6 +32,7 @@ struct NotificationPatterns: Codable {
     let promoAfter: Pattern?
     let promoBefore: Pattern?
     let receivedFrom: Pattern
+    let sentBy: Pattern?
 }
 
 struct NotificationPurchase {
@@ -48,10 +49,13 @@ struct NotificationPurchase {
             return nil
         }
         let income = patterns.incoming.matches(text)
+        let head = String(text[..<money.lowerBound])
         let tail = String(text[money.upperBound...])
+        let sentBy = income ? patterns.sentBy?.range(in: head, group: 1).map { String(head[$0]) } : nil
         let raw: String?
-        if let named = (income ? patterns.receivedFrom : patterns.paidTo).range(in: tail, group: 1)
-            .flatMap({ tail[$0].trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty }) {
+        if let named = (sentBy ?? (income ? patterns.receivedFrom : patterns.paidTo).range(in: tail, group: 1)
+            .map { String(tail[$0]) })?
+            .trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty {
             raw = patterns.cardReference.matches(named)
                 ? patterns.parenthesized.range(in: tail, group: 1).map { String(tail[$0]) }
                 : named

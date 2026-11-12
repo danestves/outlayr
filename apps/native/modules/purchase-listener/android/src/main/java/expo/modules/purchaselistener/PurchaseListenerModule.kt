@@ -42,5 +42,24 @@ class PurchaseListenerModule : Module() {
       val context = appContext.reactContext
       if (context == null) emptyList() else PurchaseListenerStore.senders(context)
     }
+
+    Function("setSender") { from: String, on: Boolean ->
+      val context = appContext.reactContext
+      if (context != null) {
+        PurchaseListenerStore.setSender(context, from, on)
+      }
+    }
+
+    Function("messagesApp") {
+      val context = appContext.reactContext
+      if (context == null) null else PurchaseListenerStore.messagesApp(context)
+    }
+
+    Function("allowMessages") {
+      val context = appContext.reactContext
+      if (context != null) {
+        PurchaseListenerStore.allowMessages(context)
+      }
+    }
   }
 }

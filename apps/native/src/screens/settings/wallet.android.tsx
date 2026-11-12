@@ -1,10 +1,8 @@
-import { Switch } from "@expo/ui/jetpack-compose";
+import { useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { View } from "react-native";
 
 import { LinkRow, SettingsSection } from "@/components/list/list-row";
-import { ListItemFrame } from "@/components/list/material-list-item";
-import { MaterialHost } from "@/components/material-host";
 import { SettingsScreen } from "@/components/settings/settings-screen";
 import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
@@ -13,13 +11,11 @@ import { onOffLabel } from "@/data/settings-core";
 import { useTranslation } from "@/i18n/context";
 import { posthog } from "@/lib/posthog";
 import { purchaseListener } from "@/lib/purchase-listener";
-import type { PurchaseSender } from "@/lib/purchase-listener";
 import { usePurchaseListener } from "@/lib/use-purchase-listener";
 import type { Wallet as IosWallet } from "@/screens/settings/wallet";
 
+import { SourceRow } from "./source-row";
 import { LastEntry } from "./wallet-parts";
-
-const LINE_BREAKS = /\s*\n\s*/g;
 
 function openSettings() {
     purchaseListener?.openSettings();
@@ -27,9 +23,13 @@ function openSettings() {
 
 export const Wallet: typeof IosWallet = () => {
     const db = useDatabase();
+    const router = useRouter();
     const t = useTranslation();
     const [listener, refreshListener] = usePurchaseListener();
     const lastEntry = useMeta(db, "lastWalletEntry");
+    const apps = listener.senders.filter((sender) => sender.from === null);
+    const texts = listener.senders.filter((sender) => sender.from !== null);
+    const textsOn = texts.filter((sender) => sender.on);
 
     const toggle = (packageName: string, on: boolean) => {
         const next = new Set(listener.allowed);
@@ -80,14 +80,29 @@ export const Wallet: typeof IosWallet = () => {
                         {t("settings.wallet.noSources")}
                     </Text>
                 ) : (
-                    listener.senders.map((sender) => (
-                        <SourceRow
-                            key={sender.packageName}
-                            on={listener.allowed.has(sender.packageName)}
-                            onToggle={(on) => toggle(sender.packageName, on)}
-                            sender={sender}
-                        />
-                    ))
+                    <>
+                        {apps.map((sender) => (
+                            <SourceRow
+                                key={sender.packageName}
+                                label={sender.label}
+                                lines={1}
+                                on={sender.on}
+                                onToggle={(on) => toggle(sender.packageName, on)}
+                                text={sender.text}
+                            />
+                        ))}
+                        {texts.length > 0 ? (
+                            <LinkRow
+                                detail={textsOn.map((sender) => sender.from).join(", ")}
+                                onPress={() => router.push("/settings/integrations/messages")}
+                                title={t("settings.wallet.messages")}
+                                value={t("settings.wallet.sendersOn", {
+                                    on: String(textsOn.length),
+                                    total: String(texts.length),
+                                })}
+                            />
+                        ) : null}
+                    </>
                 )}
             </SettingsSection>
 
@@ -97,27 +112,3 @@ export const Wallet: typeof IosWallet = () => {
         </SettingsScreen>
     );
 };
-
-function SourceRow({ sender, on, onToggle }: { on: boolean; onToggle: (on: boolean) => void; sender: PurchaseSender }) {
-    return (
-        <ListItemFrame
-            accessibilityLabel={sender.label}
-            accessibilityRole="switch"
-            accessibilityState={{ checked: on }}
-            onPress={() => onToggle(!on)}
-            twoLine
-        >
-            <View className="flex-1">
-                <Text className="text-m3-on-surface text-body leading-6">{sender.label}</Text>
-                <Text className="text-m3-on-surface-variant text-caption leading-5" numberOfLines={1}>
-                    {sender.text.replaceAll(LINE_BREAKS, " · ")}
-                </Text>
-            </View>
-            <View importantForAccessibility="no-hide-descendants">
-                <MaterialHost matchContents>
-                    <Switch value={on} />
-                </MaterialHost>
-            </View>
-        </ListItemFrame>
-    );
-}

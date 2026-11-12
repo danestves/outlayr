@@ -21,7 +21,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - App lock with Face ID or Touch ID on iPhone, or a fingerprint or face on Android.
 - On iPhone: Home Screen and Lock Screen widgets, Spotlight search, and Apple Pay logging through a Shortcuts automation.
 - On Android: home screen widgets for your balance, today's spending, an overview, recent entries, and insights, plus a 1×1 + that opens a new expense.
-- On Android: with notification access on, Outlayr logs purchases from the notifications of apps you turn on, such as your bank; Google Wallet starts on. These entries and Apple Pay logging on iPhone count toward the free plan's 30 auto-logged entries a month.
+- On Android: with notification access on, Outlayr logs purchases from the notifications of apps you turn on, such as your bank, and from the text messages of senders you turn on, such as a bank's short code; Google Wallet starts on. These entries and Apple Pay logging on iPhone count toward the free plan's 30 auto-logged entries a month.
 - CSV export and full archive export.
 - Entries are stored on the phone first and work offline.
 

@@ -531,6 +531,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "When you import data into your ledger on this website, it tells PostHog the kind of import and how many rows it brought in, rounded to a range such as 10 to 99, as the app already does.",
                     label: "Imports on the web",
                 },
+                {
+                    detail: "On Android, text messages now have a switch for each sender instead of one for the whole app. Short codes, the kind banks send from, start on once you turn bank texts on, and names and phone numbers stay off until you turn each one on. The phone keeps the latest text from each sender, and a text is sent to be read without the sender's name or number.",
+                    label: "Bank text messages on Android",
+                },
             ],
             es: [
                 {
@@ -568,6 +572,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Cuando importas datos a tu registro en este sitio web, le dice a PostHog el tipo de importación y cuántas filas trajo, redondeado a un rango como de 10 a 99, como ya lo hace la app.",
                     label: "Importaciones en la web",
+                },
+                {
+                    detail: "En Android, los mensajes de texto ahora tienen un interruptor por remitente en vez de uno para toda la app. Cuando activas los mensajes del banco, los números cortos, como los que usan los bancos, vienen activados, y los nombres y números de teléfono quedan desactivados hasta que actives cada uno. El celular guarda el último mensaje de cada remitente, y el texto se envía a leer sin el nombre ni el número del remitente.",
+                    label: "Mensajes de texto del banco en Android",
                 },
             ],
             fr: [
@@ -607,6 +615,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Quand vous importez des données dans votre journal sur ce site web, il indique à PostHog le type d'import et combien de lignes il a ajoutées, arrondi à une fourchette comme 10 à 99, comme le fait déjà l'app.",
                     label: "Imports sur le web",
                 },
+                {
+                    detail: "Sur Android, les SMS ont désormais un interrupteur par expéditeur plutôt qu'un seul pour toute l'app. Une fois les SMS de la banque activés, les numéros courts, comme ceux qu'utilisent les banques, sont activés au départ, et les noms et numéros de téléphone restent désactivés jusqu'à ce que vous activiez chacun d'eux. Le téléphone conserve le dernier SMS de chaque expéditeur, et le texte est envoyé pour lecture sans le nom ni le numéro de l'expéditeur.",
+                    label: "SMS de la banque sur Android",
+                },
             ],
             pt: [
                 {
@@ -644,6 +656,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Quando você importa dados para seu livro-caixa neste site, ele informa ao PostHog o tipo de importação e quantas linhas ela trouxe, arredondado a uma faixa como de 10 a 99, como o app já faz.",
                     label: "Importações na web",
+                },
+                {
+                    detail: "No Android, as mensagens de texto agora têm um interruptor por remetente em vez de um para o app inteiro. Quando você ativa as mensagens do banco, os números curtos, como os que os bancos usam, começam ativados, e nomes e números de telefone ficam desativados até você ativar cada um. O celular guarda a mensagem mais recente de cada remetente, e o texto é enviado para leitura sem o nome nem o número do remetente.",
+                    label: "Mensagens de texto do banco no Android",
                 },
             ],
         },

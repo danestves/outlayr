@@ -178,6 +178,7 @@ struct LogWalletTransactionIntent: AppIntent {
         }
 
         let digits = trimmed.filter { $0.isNumber || $0 == "." || $0 == "," }
+            .trimmingCharacters(in: CharacterSet(charactersIn: ".,"))
         guard !digits.isEmpty else { return nil }
 
         let dots = digits.filter { $0 == "." }.count

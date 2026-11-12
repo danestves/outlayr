@@ -43,6 +43,32 @@ const onboarding = {
             pt: "Deixe o Outlayr digitar por você",
             "pt-PT": "Deixe o Outlayr escrever por si",
         }),
+        "onboarding.bankTexts.action": t({
+            en: "Turn it on",
+            es: "Activar",
+            fr: "Activer",
+            pt: "Ativar",
+        }),
+        "onboarding.bankTexts.footnote": t({
+            en: "Opens Settings. You choose which senders it reads.",
+            es: "Abre Ajustes. Tú eliges qué remitentes lee.",
+            fr: "Ouvre les Paramètres. Vous choisissez les expéditeurs lus.",
+            pt: "Abre as Configurações. Você escolhe quais remetentes ele lê.",
+            "pt-PT": "Abre as Definições. Escolhe quais remetentes são lidos.",
+        }),
+        "onboarding.bankTexts.textMessage": t({
+            en: "Text message",
+            es: "Mensaje de texto",
+            fr: "SMS",
+            pt: "Mensagem de texto",
+        }),
+        "onboarding.bankTexts.title": t({
+            en: "Your bank's texts log themselves",
+            es: "Los mensajes de tu banco se registran solos",
+            fr: "Les SMS de votre banque s'enregistrent seuls",
+            pt: "As mensagens do seu banco se registram sozinhas",
+            "pt-PT": "As mensagens do seu banco registam-se sozinhas",
+        }),
         "onboarding.cover.line": t({
             en: "A ledger you keep by hand. Every entry yours, on this device.",
             es: "Un registro que llevas a mano. Cada entrada es tuya, en este dispositivo.",
