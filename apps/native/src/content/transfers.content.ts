@@ -304,6 +304,12 @@ const transfers = {
             fr: "{fee}.",
             pt: "{fee}.",
         }),
+        "transfers.sentence.noFeeArrives": t({
+            en: "{fee}, {arrives} arrives.",
+            es: "{fee}, llegan {arrives}.",
+            fr: "{fee}, {arrives} arrivent.",
+            pt: "{fee}, chegam {arrives}.",
+        }),
         "transfers.sentence.outside": t({
             en: "Includes {outside} from another account.",
             es: "Incluye {outside} de otra cuenta.",

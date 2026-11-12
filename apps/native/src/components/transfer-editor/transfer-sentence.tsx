@@ -37,6 +37,8 @@ export const TRANSFER_FEE_ON_TOP_KEY = "transfers.sentence.feeOnTop";
 
 export const TRANSFER_FEES_ARRIVAL_KEY = "transfers.sentence.feesArrive";
 
+export const TRANSFER_NO_FEE_ARRIVAL_KEY = "transfers.sentence.noFeeArrives";
+
 export type TransferSentenceValues = Readonly<Record<TransferSentenceSlot, string | null>>;
 
 interface TransferSentenceProps {
@@ -128,10 +130,11 @@ export function TransferSentence({
     const bothClause = crossCurrency ? t("transfers.sentence.fees") : t(TRANSFER_FEES_ARRIVAL_KEY);
     const included = bothFees ? bothClause : singleClause;
     const feeClause = onTop && !bothFees ? t(TRANSFER_FEE_ON_TOP_KEY) : included;
+    const noFeeClause = crossCurrency ? t("transfers.sentence.noFee") : t(TRANSFER_NO_FEE_ARRIVAL_KEY);
     const template = [
         t("transfers.sentence.move"),
         crossCurrency ? rateClause : null,
-        hasFee ? feeClause : t("transfers.sentence.noFee"),
+        hasFee ? feeClause : noFeeClause,
         outside ? t("transfers.sentence.outside") : null,
     ]
         .filter((clause) => clause !== null)
