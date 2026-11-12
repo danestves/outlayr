@@ -2,6 +2,7 @@ import ArrowLeft01Icon from "@hugeicons/core-free-icons/ArrowLeft01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link, useRouteContext } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
+import { ChoiceCards } from "panelui-web/choice-cards";
 import { Frame } from "panelui-web/frame";
 import { Label } from "panelui-web/label";
 import { Switch } from "panelui-web/switch";
@@ -144,4 +145,45 @@ export function useSaveSettings() {
             toast.add({ title: saveFailed.value, type: "destructive" });
         });
     };
+}
+
+const SWATCH =
+    "size-7 rounded-full p-0 data-checked:outline-current hover:not-data-checked:outline-2 hover:not-data-checked:outline-solid hover:not-data-checked:outline-current/35 [&>[data-slot=choice-cards-check]]:hidden";
+
+export function Swatches<Value extends string>({
+    className,
+    label,
+    onChange,
+    options,
+    value,
+}: {
+    className?: string;
+    label: string;
+    onChange: (next: Value) => void;
+    options: readonly { color: string; label: string; value: Value }[];
+    value: Value;
+}) {
+    return (
+        <ChoiceCards
+            aria-label={label}
+            className={className}
+            onValueChange={(next) => {
+                const picked = options.find((option) => option.value === next);
+                if (picked) {
+                    onChange(picked.value);
+                }
+            }}
+            value={value}
+        >
+            {options.map((option) => (
+                <ChoiceCards.Item
+                    aria-label={option.label}
+                    className={SWATCH}
+                    key={option.value}
+                    style={{ background: option.color, color: option.color }}
+                    value={option.value}
+                />
+            ))}
+        </ChoiceCards>
+    );
 }

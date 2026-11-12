@@ -2,7 +2,6 @@ import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ACCENT_PALETTE } from "@outlayr/money/accent";
-import { ChoiceCards } from "panelui-web/choice-cards";
 import { Select } from "panelui-web/select";
 import { useContext, useId, useState, useSyncExternalStore } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -17,7 +16,7 @@ import { LedgerSettingsContext, metaFlag, useDisplayFormat, useMeta } from "@/li
 import { chooseTheme, readTheme, subscribeTheme, THEMES } from "@/lib/theme";
 
 import { SuggestDialog } from "./about/suggest";
-import { Choice, Row, SectionHead, SettingsCard, ToggleRow, useSaveSettings } from "./parts";
+import { Choice, Row, SectionHead, SettingsCard, Swatches, ToggleRow, useSaveSettings } from "./parts";
 
 const SAMPLE_AMOUNT = 1284;
 
@@ -81,29 +80,22 @@ function AppearanceCard() {
                 />
             </Row>
             <Row hint={copy.accents[accent.key]} label={copy.accent}>
-                <ChoiceCards
-                    aria-label={copy.accent.value}
-                    aspect="1 / 1"
+                <Swatches
                     className="flex w-fit shrink-0 gap-2"
-                    onValueChange={(next) => {
+                    label={copy.accent.value}
+                    onChange={(next) => {
                         const picked = ACCENT_PALETTE.find((option) => option.key === next);
                         if (picked) {
                             save({ accentColor: String(picked.value) });
                         }
                     }}
+                    options={ACCENT_PALETTE.map((option) => ({
+                        color: `light-dark(${option.light}, ${option.dark})`,
+                        label: copy.accents[option.key].value,
+                        value: option.key,
+                    }))}
                     value={accent.key}
-                >
-                    {ACCENT_PALETTE.map((option) => (
-                        <ChoiceCards.Item
-                            aria-label={copy.accents[option.key].value}
-                            className="w-7 shrink-0"
-                            key={option.key}
-                            value={option.key}
-                        >
-                            <ChoiceCards.Media style={{ background: `light-dark(${option.light}, ${option.dark})` }} />
-                        </ChoiceCards.Item>
-                    ))}
-                </ChoiceCards>
+                />
             </Row>
             <LanguageRow />
             <ToggleRow
