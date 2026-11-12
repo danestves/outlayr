@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
+import { detectCurrency } from "./detect-currency";
 import { hasChargeAmount, mergeNotificationRead, NOTIFICATION_PATTERNS, parseNotification } from "./parse-notification";
 
 describe("parseNotification", () => {
@@ -101,6 +102,21 @@ describe("parseNotification", () => {
             income: false,
             merchant: "AMAZON",
         });
+    });
+
+    it("reads a dot that groups thousands with no decimals, as Colombian and Chilean pesos print", () => {
+        expect(parseNotification("Compra aprobada por $25.000 en Exito")).toMatchObject({ amount: 25_000 });
+        expect(parseNotification("Compra aprobada por $1.250.000 en Falabella")).toMatchObject({ amount: 1_250_000 });
+        expect(parseNotification("You spent $1,250 at Costco")).toMatchObject({ amount: 1250 });
+    });
+
+    it("reads a USDt amount as dollars", () => {
+        expect(parseNotification("Compraste 5,50 USDt en Starbucks")).toMatchObject({
+            amount: 5.5,
+            amountText: "5,50 USDt",
+            merchant: "Starbucks",
+        });
+        expect(detectCurrency("5,50 USDt")).toBe("USD");
     });
 
     it("takes the amount when the unit trails the number", () => {

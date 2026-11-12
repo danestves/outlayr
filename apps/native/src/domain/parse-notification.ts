@@ -1,6 +1,6 @@
 import type { NotificationRead } from "@outlayr/backend/confect/notificationRead.spec";
 import { CURRENCY_META, PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
-import { detectDecimalSeparator, parseCsvAmount } from "@outlayr/money/csv-read";
+import { parseCsvAmount } from "@outlayr/money/csv-read";
 
 import { detectCurrency, SYMBOL_ALIASES } from "./detect-currency";
 
@@ -143,6 +143,20 @@ export function hasChargeAmount(text: string): boolean {
     return chargeMoney(text) !== null;
 }
 
+// One kind of separator that repeats, or that leaves three digits, is grouping: "$25.000" is 25000 and "$1.250.000"
+// parses, as LogWalletTransactionIntent.parseAmount reads them for the push.
+function amountOf(digits: string): number | null {
+    const dot = digits.includes(".");
+    if (dot !== digits.includes(",")) {
+        const only = dot ? "." : ",";
+        const groups = digits.split(only);
+        if (groups.length > 2 || groups.at(-1)?.length === 3) {
+            return parseCsvAmount(digits.replaceAll(only, ""));
+        }
+    }
+    return parseCsvAmount(digits, digits.lastIndexOf(",") > digits.lastIndexOf(".") ? "," : ".");
+}
+
 // Null without a money token (how "your statement is ready" is skipped), or when the charge did not go through.
 export function parseNotification(text: string): ParsedNotification | null {
     const match = chargeMoney(text);
@@ -151,7 +165,7 @@ export function parseNotification(text: string): ParsedNotification | null {
     }
     const amountText = match[0].trim();
     const digits = DIGITS.exec(amountText)?.[0] ?? amountText;
-    const amount = parseCsvAmount(digits, detectDecimalSeparator([digits]));
+    const amount = amountOf(digits);
     if (amount == null || amount <= 0) {
         return null;
     }
@@ -217,7 +231,7 @@ function readCurrency(text: string, code: string | null, amount: number): string
     }
     const shown = (text.match(EVERY_MONEY) ?? []).some((token) => {
         const digits = DIGITS.exec(token)?.[0] ?? "";
-        const value = parseCsvAmount(digits, detectDecimalSeparator([digits]));
+        const value = amountOf(digits);
         return value !== null && Math.abs(value - amount) < SAME_AMOUNT && detectCurrency(token) === code;
     });
     return shown ? `${code} ${amount}` : null;
