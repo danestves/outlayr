@@ -1,0 +1,6 @@
+{
+    "name": "outlayr-voice-relay",
+    "main": "src/index.ts",
+    "compatibility_date": "2026-10-01",
+    "routes": [{ "pattern": "voice.tryoutlayr.com", "custom_domain": true }],
+}
