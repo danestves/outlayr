@@ -108,6 +108,7 @@ describe("parseNotification", () => {
         expect(parseNotification("Compra aprobada por $25.000 en Exito")).toMatchObject({ amount: 25_000 });
         expect(parseNotification("Compra aprobada por $1.250.000 en Falabella")).toMatchObject({ amount: 1_250_000 });
         expect(parseNotification("You spent $1,250 at Costco")).toMatchObject({ amount: 1250 });
+        expect(parseNotification("Purchase of KWD 1.250 at Sultan Center")).toMatchObject({ amount: 1.25 });
     });
 
     it("reads a USDt amount as dollars", () => {
@@ -295,6 +296,7 @@ describe("parseNotification", () => {
             amount: 25,
             merchant: "OXXO",
         });
+        expect(parseNotification("Pago de tasa: $25.00")).toMatchObject({ amount: 25 });
         expect(parseNotification("Tasa de compra: $3.328. Compraste USD 100.00 en Plenti")).toMatchObject({
             amount: 100,
             merchant: "Plenti",
