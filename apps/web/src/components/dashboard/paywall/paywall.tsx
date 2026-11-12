@@ -5,6 +5,7 @@ import Infinity01Icon from "@hugeicons/core-free-icons/Infinity01Icon";
 import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
+import { FREE_CAPTURES, PRO_CAPTURES } from "@outlayr/money/capture-allowance";
 import { TRIAL_REMINDER_LEAD_MS, TRIAL_REMINDERS_FROM_MS } from "@outlayr/money/contract";
 import type { ProPlan } from "@outlayr/money/pro-prices";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -38,7 +39,7 @@ const remindsBeforeCharge = (now: number) => now + REMINDER_DAY * DAY_MS >= TRIA
 const PLANS = ["annual", "monthly", "lifetime"] as const;
 const TABLE = [
     { free: "30", key: "autoLog", pro: "infinity" },
-    { free: "20", key: "captures", pro: "500" },
+    { free: String(FREE_CAPTURES), key: "captures", pro: String(PRO_CAPTURES) },
     { free: "3", key: "accounts", pro: "infinity" },
     { free: "2", key: "installmentApps", pro: "infinity" },
     { free: "2", key: "payoffPlans", pro: "infinity" },

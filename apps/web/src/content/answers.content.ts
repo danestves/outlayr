@@ -138,9 +138,9 @@ const LICENSE_ROW = {
 
 const COST_FAQ = {
     answer: t({
-        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
-        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
-        fr: "Le suivi des dépenses est gratuit, avec les budgets, les objectifs, les abonnements et les widgets. L'offre gratuite comprend 20 captures vocales ou de reçus tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans 2 devises. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte 7,99 $ US par mois, 49,99 $ US par an avec 7 jours gratuits ou 129,99 $ US en un seul paiement. Votre boutique d'applications affiche le prix de votre pays.",
+        en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 30 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
+        es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 30 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+        fr: "Le suivi des dépenses est gratuit, avec les budgets, les objectifs, les abonnements et les widgets. L'offre gratuite comprend 30 captures vocales ou de reçus tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans 2 devises. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte 7,99 $ US par mois, 49,99 $ US par an avec 7 jours gratuits ou 129,99 $ US en un seul paiement. Votre boutique d'applications affiche le prix de votre pays.",
     }),
     question: t({ en: "How much does Outlayr cost?", es: "¿Cuánto cuesta Outlayr?", fr: "Combien coûte Outlayr ?" }),
 };
@@ -171,9 +171,9 @@ const SYNC_ACCOUNTS = t({
 });
 
 const OUTLAYR_FREE = t({
-    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in 2 currencies",
-    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en 2 monedas",
-    fr: "3 comptes, 2 budgets par catégorie plus un pour le mois, 20 captures vocales ou de reçus tous les 30 jours et des comptes dans 2 devises",
+    en: "3 accounts, 2 category budgets plus one for the month, 30 voice or receipt captures every 30 days, and accounts in 2 currencies",
+    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 30 capturas de voz o de recibos cada 30 días y cuentas en 2 monedas",
+    fr: "3 comptes, 2 budgets par catégorie plus un pour le mois, 30 captures vocales ou de reçus tous les 30 jours et des comptes dans 2 devises",
 });
 
 const LIST_SOURCES = t({
@@ -220,9 +220,9 @@ const LISTED_IN_SPANISH = t({
 });
 
 const OUTLAYR_WATCH = t({
-    en: "Voice entry and receipt scans need an account and a connection, with 20 captures every 30 days on the free plan. There is no web app",
-    es: "Dictar y escanear recibos requiere una cuenta y conexión, con 20 capturas cada 30 días en el plan gratis. No tiene app web",
-    fr: "La saisie vocale et le scan de reçus demandent un compte et une connexion Internet, avec 20 captures tous les 30 jours en offre gratuite. Pas de version Web",
+    en: "Voice entry and receipt scans need an account and a connection, with 30 captures every 30 days on the free plan. There is no web app",
+    es: "Dictar y escanear recibos requiere una cuenta y conexión, con 30 capturas cada 30 días en el plan gratis. No tiene app web",
+    fr: "La saisie vocale et le scan de reçus demandent un compte et une connexion Internet, avec 30 captures tous les 30 jours en offre gratuite. Pas de version Web",
 });
 
 const CSV_INTO_OUTLAYR = {
@@ -2387,8 +2387,8 @@ const answers = {
                     {
                         label: t({ en: "Free plan", es: "Plan gratis" }),
                         text: t({
-                            en: "Typing has no limit. 20 voice or receipt captures every 30 days, 500 with Pro",
-                            es: "Escribir no tiene límite. 20 capturas de voz o de recibos cada 30 días, 500 con Pro",
+                            en: "Typing has no limit. 30 voice or receipt captures every 30 days, 500 with Pro",
+                            es: "Escribir no tiene límite. 30 capturas de voz o de recibos cada 30 días, 500 con Pro",
                         }),
                     },
                     {
@@ -2429,8 +2429,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "20 captures every 30 days, shared with receipt scans, and each clip is one. Outlayr Pro raises that to 500. Typing has no limit.",
-                            es: "20 capturas cada 30 días, compartidas con el escaneo de recibos, y cada grabación es una. Outlayr Pro lo sube a 500. Escribir no tiene límite.",
+                            en: "30 captures every 30 days, shared with receipt scans, and each clip is one. Outlayr Pro raises that to 500. Typing has no limit.",
+                            es: "30 capturas cada 30 días, compartidas con el escaneo de recibos, y cada grabación es una. Outlayr Pro lo sube a 500. Escribir no tiene límite.",
                         }),
                         question: t({
                             en: "How many voice entries are free?",
@@ -3522,8 +3522,8 @@ const answers = {
                                 label: LABELS.watch,
                                 source: "https://github.com/danestves/outlayr/blob/main/packages/backend/confect/lib/captures.ts",
                                 text: t({
-                                    en: "It does not connect to your bank. Voice entry and receipt scans need an account and a connection, with 20 captures every 30 days on the free plan",
-                                    es: "No se conecta con tu banco. Dictar y escanear recibos requiere una cuenta y conexión, con 20 capturas cada 30 días en el plan gratis",
+                                    en: "It does not connect to your bank. Voice entry and receipt scans need an account and a connection, with 30 captures every 30 days on the free plan",
+                                    es: "No se conecta con tu banco. Dictar y escanear recibos requiere una cuenta y conexión, con 30 capturas cada 30 días en el plan gratis",
                                 }),
                             },
                         ],
@@ -4663,9 +4663,9 @@ const answers = {
                             {
                                 label: LABELS.free,
                                 text: t({
-                                    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in 2 currencies",
-                                    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en 2 monedas",
-                                    pt: "3 contas, 2 orçamentos por categoria mais um para o mês, 20 capturas por voz ou de recibos a cada 30 dias e contas em 2 moedas",
+                                    en: "3 accounts, 2 category budgets plus one for the month, 30 voice or receipt captures every 30 days, and accounts in 2 currencies",
+                                    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 30 capturas de voz o de recibos cada 30 días y cuentas en 2 monedas",
+                                    pt: "3 contas, 2 orçamentos por categoria mais um para o mês, 30 capturas por voz ou de recibos a cada 30 dias e contas em 2 moedas",
                                 }),
                             },
                             {
@@ -4683,9 +4683,9 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account and a connection, with 20 captures every 30 days on the free plan. There is no web app",
-                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta y conexión, con 20 capturas cada 30 días en el plan gratis. No tiene app web",
-                                    pt: "Não sincroniza com o banco, então cada lançamento começa por você. Lançar por voz e escanear recibos exige uma conta e conexão, com 20 capturas a cada 30 dias no plano grátis. Não tem versão web",
+                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account and a connection, with 30 captures every 30 days on the free plan. There is no web app",
+                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta y conexión, con 30 capturas cada 30 días en el plan gratis. No tiene app web",
+                                    pt: "Não sincroniza com o banco, então cada lançamento começa por você. Lançar por voz e escanear recibos exige uma conta e conexão, com 30 capturas a cada 30 dias no plano grátis. Não tem versão web",
                                 }),
                             },
                         ],
@@ -4848,9 +4848,9 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Monefy is free at its core. Wallet by BudgetBakers has a free tier for tracking by hand. Meu Dinheiro's Básico is free for 12 months, up to 100 entries a month. Minhas Economias and Mobills are free to download, with paid plans inside. Outlayr has a free plan with 3 accounts and 20 voice or receipt captures every 30 days. Organizze's plans page has no free plan, only 7 days free on Manual.",
-                            es: "Monefy es gratis en lo básico. Wallet by BudgetBakers tiene un plan gratis para registrar a mano. Básico de Meu Dinheiro es gratis por 12 meses, hasta 100 registros al mes. Minhas Economias y Mobills son gratis para descargar, con planes de pago dentro. Outlayr tiene un plan gratis con 3 cuentas y 20 capturas de voz o de recibos cada 30 días. La página de planes de Organizze no tiene plan gratis, solo 7 días gratis en Manual.",
-                            pt: "O Monefy é grátis no básico. O Wallet by BudgetBakers tem um plano grátis para lançar à mão. O Básico do Meu Dinheiro é grátis por 12 meses, com até 100 lançamentos por mês. Minhas Economias e Mobills são grátis para baixar, com planos pagos dentro do app. O Outlayr tem um plano grátis com 3 contas e 20 capturas por voz ou de recibos a cada 30 dias. A página de planos do Organizze não tem plano grátis, só 7 dias grátis no Manual.",
+                            en: "Monefy is free at its core. Wallet by BudgetBakers has a free tier for tracking by hand. Meu Dinheiro's Básico is free for 12 months, up to 100 entries a month. Minhas Economias and Mobills are free to download, with paid plans inside. Outlayr has a free plan with 3 accounts and 30 voice or receipt captures every 30 days. Organizze's plans page has no free plan, only 7 days free on Manual.",
+                            es: "Monefy es gratis en lo básico. Wallet by BudgetBakers tiene un plan gratis para registrar a mano. Básico de Meu Dinheiro es gratis por 12 meses, hasta 100 registros al mes. Minhas Economias y Mobills son gratis para descargar, con planes de pago dentro. Outlayr tiene un plan gratis con 3 cuentas y 30 capturas de voz o de recibos cada 30 días. La página de planes de Organizze no tiene plan gratis, solo 7 días gratis en Manual.",
+                            pt: "O Monefy é grátis no básico. O Wallet by BudgetBakers tem um plano grátis para lançar à mão. O Básico do Meu Dinheiro é grátis por 12 meses, com até 100 lançamentos por mês. Minhas Economias e Mobills são grátis para baixar, com planos pagos dentro do app. O Outlayr tem um plano grátis com 3 contas e 30 capturas por voz ou de recibos a cada 30 dias. A página de planos do Organizze não tem plano grátis, só 7 dias grátis no Manual.",
                         }),
                         question: t({
                             en: "Which expense control app is free?",
@@ -4872,9 +4872,9 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
-                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
-                            pt: "Registrar gastos é grátis, assim como orçamentos, metas, assinaturas e widgets. O plano grátis inclui 20 capturas por voz ou de recibos a cada 30 dias, 3 contas, 2 orçamentos por categoria e contas em 2 moedas. O Outlayr Pro aumenta esses limites e adiciona a sincronização. Nos Estados Unidos, custa US$7.99 por mês, US$49.99 por ano com 7 dias grátis ou US$129.99 em pagamento único. Sua loja de apps mostra o preço do seu país.",
+                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 30 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
+                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 30 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+                            pt: "Registrar gastos é grátis, assim como orçamentos, metas, assinaturas e widgets. O plano grátis inclui 30 capturas por voz ou de recibos a cada 30 dias, 3 contas, 2 orçamentos por categoria e contas em 2 moedas. O Outlayr Pro aumenta esses limites e adiciona a sincronização. Nos Estados Unidos, custa US$7.99 por mês, US$49.99 por ano com 7 dias grátis ou US$129.99 em pagamento único. Sua loja de apps mostra o preço do seu país.",
                         }),
                         question: t({
                             en: "How much does Outlayr cost?",
@@ -5247,9 +5247,9 @@ const answers = {
                             {
                                 label: LABELS.free,
                                 text: t({
-                                    en: "3 accounts, 2 category budgets plus one for the month, 20 voice or receipt captures every 30 days, and accounts in 2 currencies",
-                                    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 20 capturas de voz o de recibos cada 30 días y cuentas en 2 monedas",
-                                    fr: "3 comptes, 2 budgets par catégorie plus un pour le mois, 20 captures vocales ou de tickets tous les 30 jours et des comptes dans 2 devises",
+                                    en: "3 accounts, 2 category budgets plus one for the month, 30 voice or receipt captures every 30 days, and accounts in 2 currencies",
+                                    es: "3 cuentas, 2 presupuestos por categoría más uno para el mes, 30 capturas de voz o de recibos cada 30 días y cuentas en 2 monedas",
+                                    fr: "3 comptes, 2 budgets par catégorie plus un pour le mois, 30 captures vocales ou de tickets tous les 30 jours et des comptes dans 2 devises",
                                 }),
                             },
                             {
@@ -5259,9 +5259,9 @@ const answers = {
                             {
                                 label: LABELS.watch,
                                 text: t({
-                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account and a connection, with 20 captures every 30 days on the free plan. There is no web app",
-                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta y conexión, con 20 capturas cada 30 días en el plan gratis. No tiene app web",
-                                    fr: "Pas de synchronisation bancaire, donc chaque opération part de vous. La saisie vocale et le scan de tickets demandent un compte et une connexion, avec 20 captures tous les 30 jours en formule gratuite. Pas de version web",
+                                    en: "No bank sync, so every entry starts with you. Voice entry and receipt scans need an account and a connection, with 30 captures every 30 days on the free plan. There is no web app",
+                                    es: "No sincroniza con el banco, así que cada registro empieza por ti. Dictar y escanear recibos requiere una cuenta y conexión, con 30 capturas cada 30 días en el plan gratis. No tiene app web",
+                                    fr: "Pas de synchronisation bancaire, donc chaque opération part de vous. La saisie vocale et le scan de tickets demandent un compte et une connexion, avec 30 captures tous les 30 jours en formule gratuite. Pas de version web",
                                 }),
                             },
                         ],
@@ -5486,9 +5486,9 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Linxo and Bankin' are free, with Premium at 5,99 € a month for Linxo and Plus at 4,99 € a month for Bankin'. Monefy is free at its core. Wallet by BudgetBakers has a free tier by hand. Finary is free, but budget management needs Plus. Outlayr has a free plan with 3 accounts and 20 voice or receipt captures every 30 days. YNAB is free for 30 days, then paid.",
-                            es: "Linxo y Bankin' son gratis, con Premium a 5,99 € al mes en Linxo y Plus a 4,99 € al mes en Bankin'. Monefy es gratis en lo básico. Wallet by BudgetBakers tiene un plan gratis a mano. Finary es gratis, pero la gestión del presupuesto requiere Plus. Outlayr tiene un plan gratis con 3 cuentas y 20 capturas de voz o de recibos cada 30 días. YNAB es gratis 30 días y luego de pago.",
-                            fr: "Linxo et Bankin' sont gratuits, avec Premium à 5,99 € par mois chez Linxo et Plus à 4,99 € par mois chez Bankin'. Monefy est gratuit pour l'essentiel. Wallet by BudgetBakers a une offre gratuite à la main. Finary est gratuit, mais la gestion du budget demande Plus. Outlayr a une formule gratuite avec 3 comptes et 20 captures vocales ou de tickets tous les 30 jours. YNAB est gratuit 30 jours, puis payant.",
+                            en: "Linxo and Bankin' are free, with Premium at 5,99 € a month for Linxo and Plus at 4,99 € a month for Bankin'. Monefy is free at its core. Wallet by BudgetBakers has a free tier by hand. Finary is free, but budget management needs Plus. Outlayr has a free plan with 3 accounts and 30 voice or receipt captures every 30 days. YNAB is free for 30 days, then paid.",
+                            es: "Linxo y Bankin' son gratis, con Premium a 5,99 € al mes en Linxo y Plus a 4,99 € al mes en Bankin'. Monefy es gratis en lo básico. Wallet by BudgetBakers tiene un plan gratis a mano. Finary es gratis, pero la gestión del presupuesto requiere Plus. Outlayr tiene un plan gratis con 3 cuentas y 30 capturas de voz o de recibos cada 30 días. YNAB es gratis 30 días y luego de pago.",
+                            fr: "Linxo et Bankin' sont gratuits, avec Premium à 5,99 € par mois chez Linxo et Plus à 4,99 € par mois chez Bankin'. Monefy est gratuit pour l'essentiel. Wallet by BudgetBakers a une offre gratuite à la main. Finary est gratuit, mais la gestion du budget demande Plus. Outlayr a une formule gratuite avec 3 comptes et 30 captures vocales ou de tickets tous les 30 jours. YNAB est gratuit 30 jours, puis payant.",
                         }),
                         question: t({
                             en: "Which budget app is free?",
@@ -5522,9 +5522,9 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 20 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
-                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 20 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
-                            fr: "La saisie, les budgets, les objectifs, les abonnements et les widgets sont gratuits. La formule gratuite comprend 20 captures vocales ou de tickets tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans 2 devises. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte US$7.99 par mois, US$49.99 par an avec 7 jours gratuits ou US$129.99 en un seul paiement. Votre boutique d'apps affiche le prix de votre pays.",
+                            en: "The tracker is free, with budgets, goals, subscriptions, and widgets. The free plan includes 30 voice or receipt captures every 30 days, 3 accounts, 2 category budgets, and accounts in 2 currencies. Outlayr Pro raises those limits and adds sync. In the United States it is $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Your app store shows the price for your country.",
+                            es: "El control de gastos es gratis, con presupuestos, metas, suscripciones y widgets. El plan gratis incluye 30 capturas de voz o de recibos cada 30 días, 3 cuentas, 2 presupuestos por categoría y cuentas en 2 monedas. Outlayr Pro sube esos límites y agrega la sincronización. En Estados Unidos cuesta US$7.99 al mes, US$49.99 al año con 7 días gratis o US$129.99 en un solo pago. Tu tienda de apps muestra el precio de tu país.",
+                            fr: "La saisie, les budgets, les objectifs, les abonnements et les widgets sont gratuits. La formule gratuite comprend 30 captures vocales ou de tickets tous les 30 jours, 3 comptes, 2 budgets par catégorie et des comptes dans 2 devises. Outlayr Pro relève ces limites et ajoute la synchronisation. Aux États-Unis, il coûte US$7.99 par mois, US$49.99 par an avec 7 jours gratuits ou US$129.99 en un seul paiement. Votre boutique d'apps affiche le prix de votre pays.",
                         }),
                         question: t({
                             en: "How much does Outlayr cost?",
@@ -7997,8 +7997,8 @@ const answers = {
                     {
                         label: t({ en: "Free plan", es: "Plan gratis" }),
                         text: t({
-                            en: "20 captures every 30 days, shared with voice entry",
-                            es: "20 capturas cada 30 días, compartidas con los registros por voz",
+                            en: "30 captures every 30 days, shared with voice entry",
+                            es: "30 capturas cada 30 días, compartidas con los registros por voz",
                         }),
                     },
                     {
@@ -8023,8 +8023,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes, up to a limit. The free plan includes 20 captures every 30 days, and a capture is one receipt scan or one voice entry. Outlayr Pro raises that to 500.",
-                            es: "Sí, hasta un límite. El plan gratis incluye 20 capturas cada 30 días, y una captura es un escaneo de recibo o un registro por voz. Outlayr Pro lo sube a 500.",
+                            en: "Yes, up to a limit. The free plan includes 30 captures every 30 days, and a capture is one receipt scan or one voice entry. Outlayr Pro raises that to 500.",
+                            es: "Sí, hasta un límite. El plan gratis incluye 30 capturas cada 30 días, y una captura es un escaneo de recibo o un registro por voz. Outlayr Pro lo sube a 500.",
                         }),
                         question: t({ en: "Is receipt scanning free?", es: "¿Escanear recibos es gratis?" }),
                     },
@@ -8105,8 +8105,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "Scanning needs an account, a connection, and your OK to send the photo to an AI provider. The photo is read by Anthropic's Claude, and it isn't stored after the scan. Each scan counts as one capture: 20 every 30 days on the free plan, shared with voice entry, and 500 with Outlayr Pro, which also backs up the receipt photo.",
-                                es: "Para escanear necesitas una cuenta, conexión y aceptar que la foto se envíe a un proveedor de IA. La foto la lee Claude, de Anthropic, y no se guarda después del escaneo. Cada escaneo cuenta como una captura: 20 cada 30 días en el plan gratis, compartidas con el registro por voz, y 500 con Outlayr Pro, que además respalda la foto del recibo.",
+                                en: "Scanning needs an account, a connection, and your OK to send the photo to an AI provider. The photo is read by Anthropic's Claude, and it isn't stored after the scan. Each scan counts as one capture: 30 every 30 days on the free plan, shared with voice entry, and 500 with Outlayr Pro, which also backs up the receipt photo.",
+                                es: "Para escanear necesitas una cuenta, conexión y aceptar que la foto se envíe a un proveedor de IA. La foto la lee Claude, de Anthropic, y no se guarda después del escaneo. Cada escaneo cuenta como una captura: 30 cada 30 días en el plan gratis, compartidas con el registro por voz, y 500 con Outlayr Pro, que además respalda la foto del recibo.",
                             }),
                             t({
                                 en: "Typing works with no signal, so when you're offline you can type the purchase as one sentence and scan the next receipt later.",
@@ -8646,8 +8646,8 @@ const answers = {
                     {
                         label: t({ en: "Free plan", es: "Plan gratis" }),
                         text: t({
-                            en: "20 captures every 30 days, shared with receipt scans. Each clip is one",
-                            es: "20 capturas cada 30 días, compartidas con el escaneo de recibos. Cada grabación es una",
+                            en: "30 captures every 30 days, shared with receipt scans. Each clip is one",
+                            es: "30 capturas cada 30 días, compartidas con el escaneo de recibos. Cada grabación es una",
                         }),
                     },
                     {
@@ -8672,8 +8672,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes, up to a limit. The free plan includes 20 captures every 30 days, shared with receipt scans, and each clip you say is one capture. Outlayr Pro raises that to 500.",
-                            es: "Sí, hasta un límite. El plan gratis incluye 20 capturas cada 30 días, compartidas con el escaneo de recibos, y cada grabación que dictas es una captura. Outlayr Pro lo sube a 500.",
+                            en: "Yes, up to a limit. The free plan includes 30 captures every 30 days, shared with receipt scans, and each clip you say is one capture. Outlayr Pro raises that to 500.",
+                            es: "Sí, hasta un límite. El plan gratis incluye 30 capturas cada 30 días, compartidas con el escaneo de recibos, y cada grabación que dictas es una captura. Outlayr Pro lo sube a 500.",
                         }),
                         question: t({ en: "Is voice entry free?", es: "¿Registrar por voz es gratis?" }),
                     },

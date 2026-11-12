@@ -1,3 +1,4 @@
+import { FREE_CAPTURES, PRO_CAPTURES } from "@outlayr/money/capture-allowance";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 
@@ -72,7 +73,7 @@ function Comparison() {
             </View>
             <View className="border-foreground border-t">
                 <Row free={String(FREE_AUTOLOG_PER_MONTH)} label={t("pro.row.autolog")} pro={UNLIMITED} />
-                <Row free="20" label={t("pro.row.captures")} pro="500" />
+                <Row free={String(FREE_CAPTURES)} label={t("pro.row.captures")} pro={String(PRO_CAPTURES)} />
                 <Row free={String(FREE_ACCOUNTS)} label={t("pro.row.accounts")} pro={UNLIMITED} />
                 <Row free={String(FREE_INSTALLMENT_APPS)} label={t("pro.row.installmentApps")} pro={UNLIMITED} />
                 <Row free={String(FREE_PAYOFF_PLANS)} label={t("pro.row.payoffPlans")} pro={UNLIMITED} />

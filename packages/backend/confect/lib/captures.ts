@@ -1,5 +1,6 @@
 import type { RateLimitConfig, RateLimitError } from "@convex-dev/rate-limiter";
 import { DAY, isRateLimitError, RateLimiter } from "@convex-dev/rate-limiter";
+import { FREE_CAPTURES, PRO_CAPTURES } from "@outlayr/money/capture-allowance";
 import type { UserIdentity } from "convex/server";
 import { ConvexError } from "convex/values";
 import * as Effect from "effect/Effect";
@@ -12,8 +13,16 @@ import { perUserBurst } from "./limits";
 
 const CAPTURE_WINDOW_MS = 30 * DAY;
 
-export const FREE_CAPTURE_CONFIG: RateLimitConfig = { kind: "fixed window", period: CAPTURE_WINDOW_MS, rate: 20 };
-export const PRO_CAPTURE_CONFIG: RateLimitConfig = { kind: "fixed window", period: CAPTURE_WINDOW_MS, rate: 500 };
+export const FREE_CAPTURE_CONFIG: RateLimitConfig = {
+    kind: "fixed window",
+    period: CAPTURE_WINDOW_MS,
+    rate: FREE_CAPTURES,
+};
+export const PRO_CAPTURE_CONFIG: RateLimitConfig = {
+    kind: "fixed window",
+    period: CAPTURE_WINDOW_MS,
+    rate: PRO_CAPTURES,
+};
 
 export const captureLimiter = new RateLimiter(components.rateLimiter, {
     capturesFree: FREE_CAPTURE_CONFIG,

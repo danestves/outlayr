@@ -27,7 +27,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 
 ## Plans
 
-- Free: logging, budgets, goals, insights, subscriptions, debts, installments, and widgets. 20 voice, receipt, or payment plan captures every 30 days, 30 auto-logged entries a month, 3 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, and 2 account currencies.
+- Free: logging, budgets, goals, insights, subscriptions, debts, installments, and widgets. 30 voice, receipt, or payment plan captures every 30 days, 30 auto-logged entries a month, 3 accounts, 2 installment apps, 3 people, 2 payoff plans, 2 category budgets, and 2 account currencies.
 - Outlayr Pro: 500 captures every 30 days, unlimited auto-logged entries, accounts, installment apps, people, payoff plans, category budgets, and account currencies, sync across devices, receipt photo backup, AI matching on CSV import, web merchant lookup, and 5 app icons on iPhone.
 - Pro is billed monthly or yearly, or bought once. US prices: $7.99 a month, $49.99 a year with 7 days free, or $129.99 once. Prices vary by country and the app store shows yours before purchase.
 
@@ -80,7 +80,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 - [Receipt scanner](https://tryoutlayr.com/guides/receipt-scanner): what a scan reads (store, date, total, up to 60 lines, tax, tip, and how you paid), how the category, account, and currency are picked, refunds, invoices and bills, the review before saving, the free and Pro capture limits, and what it needs
 - [Subscription tracker](https://tryoutlayr.com/guides/subscription-tracker): recurring charges that log themselves, an Upcoming list with what your subscriptions and bills cost per month, and reminders before each charge. Outlayr does not cancel subscriptions for you
 - [Expense tracker template](https://tryoutlayr.com/guides/expense-tracker-template): a free Excel workbook (Transactions, a Summary with income, spending, and net for the month and currency you pick, spending against a budget per category, and a chart, and How to import) and a plain CSV, both with the columns Outlayr's CSV import reads; rows whose category matches one of yours by name import on any plan, and Outlayr Pro matches the rest with AI, up to 5,000 rows and 2 MB a file. The Spanish page offers a Spanish file: https://tryoutlayr.com/es/guides/expense-tracker-template
-- [Voice expense tracker](https://tryoutlayr.com/guides/voice-expense-tracker): saying a purchase in English, Spanish, Portuguese, or French, what voice entry fills in, how spoken corrections work, and the 20 free captures every 30 days
+- [Voice expense tracker](https://tryoutlayr.com/guides/voice-expense-tracker): saying a purchase in English, Spanish, Portuguese, or French, what voice entry fills in, how spoken corrections work, and the 30 free captures every 30 days
 
 ## Build log
 

@@ -75,7 +75,7 @@ Never target "budget app without bank linking" style queries: they can only be w
 **Glossary:**
 | Term | Meaning |
 |------|---------|
-| Capture | One voice entry or one receipt scan (free: 20 every 30 days, Pro: 500) |
+| Capture | One voice entry or one receipt scan (free: 30 every 30 days, Pro: 500) |
 | Log | The main list of entries |
 | Ledger | All of a user's entries, accounts, budgets, and goals |
 
