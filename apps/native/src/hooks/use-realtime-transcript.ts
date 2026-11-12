@@ -61,6 +61,29 @@ function toPcm16(samples: Float32Array) {
     return { pcm: new Uint8Array(pcm.buffer), rms: Math.sqrt(energy / Math.max(1, samples.length)) };
 }
 
+async function openMicrophone(recorder: AudioRecorder, overtaken: () => boolean): Promise<boolean> {
+    try {
+        await AudioManager.setAudioSessionActivity(true);
+        if (overtaken()) {
+            return false;
+        }
+        const started = await recorder.start();
+        return !overtaken() && started.status !== "error";
+    } catch {
+        return false;
+    }
+}
+
+async function drain(session: Session, release: (session: Session) => Promise<void>, done: () => void) {
+    try {
+        await release(session);
+        return await session.stream.finish();
+    } finally {
+        session.stream.close();
+        done();
+    }
+}
+
 export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTranscriptOptions): RealtimeTranscript {
     const [partial, setPartial] = useState("");
     const level = useSharedValue(0);
@@ -174,36 +197,18 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
         AudioManager.setSystemOptions({
             ios: { category: "playAndRecord", mode: "default", options: ["defaultToSpeaker", "allowBluetoothHFP"] },
         });
-        const overtaken = () => attempt !== startsRef.current;
-        const abandon = async () => {
+        const opened = await openMicrophone(recorder, () => attempt !== startsRef.current);
+        starting = false;
+        if (opened && !failedEarly) {
+            return "started";
+        }
+        if (sessionRef.current === session) {
+            cancel();
+        } else {
             session.stream.close();
             await release(session);
-        };
-        try {
-            await AudioManager.setAudioSessionActivity(true);
-            if (overtaken()) {
-                await abandon();
-                return "failed";
-            }
-            const started = await recorder.start();
-            if (overtaken()) {
-                await abandon();
-                return "failed";
-            }
-            if (started.status === "error" || failedEarly) {
-                throw new Error("The stream or microphone failed while starting.");
-            }
-        } catch {
-            if (sessionRef.current === session) {
-                cancel();
-            } else {
-                await abandon();
-            }
-            return "failed";
-        } finally {
-            starting = false;
         }
-        return "started";
+        return "failed";
     };
 
     const finish = async (): Promise<string> => {
@@ -212,13 +217,7 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
             throw new ScribeStreamError({ message: "Nothing is being recorded.", reason: "provider" });
         }
         sessionRef.current = null;
-        try {
-            await release(session);
-            return await session.stream.finish();
-        } finally {
-            session.stream.close();
-            reset();
-        }
+        return drain(session, release, reset);
     };
 
     const cancelLatest = useLatest(cancel);
