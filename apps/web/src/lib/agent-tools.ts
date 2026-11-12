@@ -86,61 +86,20 @@ const openPage = Effect.fn("AgentTools.openPage")(function* openPage(
     return located(page, locale);
 });
 
-export function registerAgentTools(
-    modelContext: ModelContext,
-    router: ReturnType<typeof useRouter>,
-    locale: Locale,
-    signal: AbortSignal
-) {
-    const pages = sitePages(locale).filter((page) => isPublished(page.path, locale));
+export function publishedPages(locale: Locale): SitePage[] {
+    return sitePages(locale).filter((page) => isPublished(page.path, locale));
+}
+
+export function searchSite(locale: Locale, query: string) {
+    return searchPages(publishedPages(locale), query).map((page) => located(page, locale));
+}
+
+export function openSitePage(router: ReturnType<typeof useRouter>, locale: Locale, path: string) {
+    return Effect.runPromise(openPage(router, locale, publishedPages(locale), path));
+}
+
+export function siteAnswers(locale: Locale) {
     const { faq } = getIntlayer("home", locale);
     const { answers } = getIntlayer("support", locale);
-    const options = { signal };
-    void modelContext.registerTool(
-        {
-            annotations: { readOnlyHint: true },
-            description:
-                "Search tryoutlayr.com, the site for Outlayr, a mobile expense tracker and budget app. Covers the product overview, how-to guides, comparisons with other budget apps, free money calculators, support, and legal pages. Returns each match's title, description, path, and URL. Leave the query empty to list every page.",
-            execute: ({ query = "" }: { query?: string }) =>
-                searchPages(pages, query).map((page) => located(page, locale)),
-            inputSchema: {
-                properties: {
-                    query: { description: "Words to look for, like 'receipt' or 'ynab'.", type: "string" },
-                },
-                type: "object",
-            },
-            name: "search_pages",
-        },
-        options
-    );
-    void modelContext.registerTool(
-        {
-            description: "Open a page of tryoutlayr.com in this tab. Takes a path returned by search_pages.",
-            execute: ({ path }: { path: string }) => Effect.runPromise(openPage(router, locale, pages, path)),
-            inputSchema: {
-                properties: {
-                    path: {
-                        description: "Site path, like /guides/budget-planner.",
-                        enum: pages.map(({ path }) => path),
-                        type: "string",
-                    },
-                },
-                required: ["path"],
-                type: "object",
-            },
-            name: "open_page",
-        },
-        options
-    );
-    void modelContext.registerTool(
-        {
-            annotations: { readOnlyHint: true },
-            description:
-                "Answers to common questions about Outlayr: what it is, what is free and what Pro adds, platforms, languages, privacy, and how to restore or cancel Pro, get a refund, and export or delete data.",
-            execute: () => [...faq, ...answers],
-            inputSchema: { properties: {}, type: "object" },
-            name: "get_answers",
-        },
-        options
-    );
+    return [...faq, ...answers];
 }

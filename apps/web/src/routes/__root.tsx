@@ -23,7 +23,6 @@ import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } fr
 import type { Session } from "@/lib/session";
 import { COMPANY, FOUNDER, SITE_URL, SOURCE_URL, SUPPORT_EMAIL, X_URL } from "@/lib/site";
 import { THEME_SCRIPT, paintTheme, readTheme } from "@/lib/theme";
-import { useAgentTools } from "@/lib/use-agent-tools";
 
 import appCss from "../index.css?url";
 
@@ -198,7 +197,6 @@ function RootDocument({ children }: { children: ReactNode }) {
     useEffect(() => {
         Effect.runFork(startAnalytics(country).pipe(Effect.ignoreCause));
     }, [country]);
-    useAgentTools(locale);
     // oxlint-disable-next-line outlayr/react-effect-budget -- a hydration that falls back to a client render strips what THEME_SCRIPT stamped on <html>.
     useLayoutEffect(() => {
         document.documentElement.classList.add("js");
