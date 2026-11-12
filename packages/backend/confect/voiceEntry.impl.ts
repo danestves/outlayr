@@ -5,6 +5,9 @@ import type { UserIdentity } from "convex/server";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -25,6 +28,7 @@ import { openAiGate, refuse } from "./lib/aiGate";
 import { liveIdentity } from "./lib/auth";
 import { admitCapture, withinCaptureAllowance } from "./lib/captures";
 import { claudeModelId, elevenLabsApiKey } from "./lib/config";
+import { outboundHttp } from "./lib/http";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";
 import { modelCallError } from "./lib/modelCall";
@@ -49,8 +53,8 @@ const isVoiceEntryInput = Schema.is(VoiceEntryInput);
 const isSpeakTextInput = Schema.is(SpeakTextInput);
 
 const SCRIBE_TOKEN_URL = "https://api.elevenlabs.io/v1/single-use-token/realtime_scribe";
-const SCRIBE_TOKEN_TIMEOUT_MS = 5000;
-const decodeScribeToken = Schema.decodeUnknownEffect(Schema.Struct({ token: Schema.String }));
+const SCRIBE_TOKEN_TIMEOUT = Duration.seconds(5);
+const decodeScribeToken = HttpIncomingMessage.schemaBodyJson(Schema.Struct({ token: Schema.String }));
 
 const clearStreamCredits = Effect.fn("VoiceEntry.clearStreamCredits")(function* clearStreamCredits(threadId: string) {
     const reader = yield* DatabaseReader;
@@ -65,22 +69,15 @@ const clearStreamCredits = Effect.fn("VoiceEntry.clearStreamCredits")(function* 
 });
 
 const requestScribeToken = Effect.fn("VoiceEntry.requestScribeToken")(function* requestScribeToken(apiKey: string) {
-    const body = yield* Effect.tryPromise({
-        catch: modelCallError,
-        try: async () => {
-            const response = await fetch(SCRIBE_TOKEN_URL, {
-                headers: { "xi-api-key": apiKey },
-                method: "POST",
-                signal: AbortSignal.timeout(SCRIBE_TOKEN_TIMEOUT_MS),
-            });
-            if (!response.ok) {
-                throw new Error(`ElevenLabs token request failed with ${response.status}`);
-            }
-            return await response.json();
-        },
-    });
-    return yield* decodeScribeToken(body).pipe(Effect.map(({ token }) => token));
-});
+    const response = yield* HttpClient.execute(
+        HttpClientRequest.post(SCRIBE_TOKEN_URL).pipe(HttpClientRequest.setHeader("xi-api-key", apiKey))
+    );
+    if (response.status < 200 || response.status >= 300) {
+        return yield* modelCallError(new Error(`ElevenLabs token request failed with ${response.status}`));
+    }
+    const { token } = yield* decodeScribeToken(response);
+    return token;
+}, Effect.timeout(SCRIBE_TOKEN_TIMEOUT));
 
 const ledgerContext = (args: Pick<LedgerContext, "accounts" | "categoryTree" | "currency" | "language" | "today">) =>
     ({
@@ -301,7 +298,19 @@ const grantStream = FunctionImpl.make(
     spec,
     "grantStream",
     Effect.fn("VoiceEntry.grantStream")(function* grantStream({ threadId }) {
+        const reader = yield* DatabaseReader;
         const writer = yield* DatabaseWriter;
+        const now = yield* Clock.currentTimeMillis;
+        const credits = yield* reader
+            .table("voiceStreamCredits")
+            .index("by_threadId", (q) => q.eq("threadId", threadId))
+            .take(MAX_STREAM_CREDITS);
+        const overflow = credits.length + 1 - MAX_STREAM_CREDITS;
+        for (const [at, credit] of credits.entries()) {
+            if (at < overflow || now - credit._creationTime >= THREAD_TTL_MS) {
+                yield* writer.table("voiceStreamCredits").delete(credit._id);
+            }
+        }
         yield* writer.table("voiceStreamCredits").insert({ threadId });
         return null;
     }, Effect.orDie)
@@ -365,9 +374,12 @@ const openStream = FunctionImpl.make(
             return yield* requestScribeToken(Redacted.value(scribeKey)).pipe(
                 Effect.map((token) => ({ status: "ok" as const, token })),
                 Effect.catchTags({
+                    HttpClientError: () => Effect.succeed({ status: "providerError" as const, token: null }),
                     ModelCallError: () => Effect.succeed({ status: "providerError" as const, token: null }),
                     SchemaError: () => Effect.succeed({ status: "providerError" as const, token: null }),
-                })
+                    TimeoutError: () => Effect.succeed({ status: "providerError" as const, token: null }),
+                }),
+                Effect.provide(outboundHttp)
             );
         },
         Effect.catchTags({ AiRefused: ({ status }) => Effect.succeed({ status, token: null }) }),

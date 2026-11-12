@@ -24,6 +24,7 @@ import {
     normalizeQuotes,
     PROPOSE_DRAFT_TOOL,
     rateLimiter,
+    THREAD_TTL_MS,
     transcribeClip,
 } from "./voiceEntry";
 
@@ -496,12 +497,12 @@ describe("openStream + speakText credits", () => {
     };
 
     function stubProviders() {
-        const scribeCalls: { headers: unknown }[] = [];
+        const scribeCalls: (string | null)[] = [];
         vi.stubGlobal(
             "fetch",
             vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
                 if (String(input).includes("elevenlabs.io/v1/single-use-token/realtime_scribe")) {
-                    scribeCalls.push({ headers: init?.headers });
+                    scribeCalls.push(new Headers(init?.headers).get("xi-api-key"));
                     return Response.json({ token: "sut_test" });
                 }
                 return new Response("down", { status: 500 });
@@ -541,13 +542,29 @@ describe("openStream + speakText credits", () => {
         await expect(
             asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId })
         ).resolves.toStrictEqual({ status: "ok", token: "sut_test" });
-        expect(scribeCalls).toStrictEqual([{ headers: { "xi-api-key": "test-elevenlabs-key" } }]);
+        expect(scribeCalls).toStrictEqual(["test-elevenlabs-key"]);
 
         const first = await asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId });
         expect(first.status).not.toBe("invalid");
         await expect(asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId })).resolves.toMatchObject({
             status: "invalid",
         });
+    });
+
+    it("a fresh credit still pays on a thread holding twenty stale ones", async () => {
+        stubProviders();
+        const { asUser, t, threadId } = await signedIn();
+        vi.useFakeTimers();
+        await t.run(async (ctx) => {
+            for (let credit = 0; credit < 20; credit += 1) {
+                await ctx.db.insert("voiceStreamCredits", { threadId });
+            }
+        });
+        vi.advanceTimersByTime(THREAD_TTL_MS + 1);
+        await asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId });
+        const spoken = await asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId });
+        vi.useRealTimers();
+        expect(spoken.status).not.toBe("invalid");
     });
 
     it("an empty transcript is unclear and keeps the credit", async () => {
