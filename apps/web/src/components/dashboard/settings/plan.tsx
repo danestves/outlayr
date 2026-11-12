@@ -7,6 +7,7 @@ import MoneyExchange01Icon from "@hugeicons/core-free-icons/MoneyExchange01Icon"
 import RefreshIcon from "@hugeicons/core-free-icons/RefreshIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
+import { FREE_CAPTURES } from "@outlayr/money/capture-allowance";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
@@ -28,7 +29,14 @@ import { useLedgerBooks } from "@/lib/ledger-db";
 import { SettingsCard } from "./parts";
 import { planUsage } from "./plan-usage";
 
-const FREE = { accounts: 3, budgets: 2, captures: 20, currencies: 2, installmentApps: 2, payoffPlans: 2 } as const;
+const FREE = {
+    accounts: 3,
+    budgets: 2,
+    captures: FREE_CAPTURES,
+    currencies: 2,
+    installmentApps: 2,
+    payoffPlans: 2,
+} as const;
 const FREE_AUTO_LOG = 30;
 const DAY_MS = 86_400_000;
 const STORE_URL = {

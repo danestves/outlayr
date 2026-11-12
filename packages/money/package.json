@@ -19,6 +19,7 @@
         "./calendar": "./src/calendar.ts",
         "./calendar-vectors": "./src/calendar-vectors.ts",
         "./canonical-usd": "./src/canonical-usd.ts",
+        "./capture-allowance": "./src/capture-allowance.ts",
         "./card-fee": "./src/card-fee.ts",
         "./catalog": "./src/catalog.generated.ts",
         "./category-rules": "./src/category-rules.ts",

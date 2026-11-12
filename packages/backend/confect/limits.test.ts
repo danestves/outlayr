@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { FREE_CAPTURES } from "@outlayr/money/capture-allowance";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vite-plus/test";
@@ -36,7 +37,7 @@ describe("limits.mine", () => {
         const limits = await asUser.query(api.limits.mine, {});
 
         expect(limits).toMatchObject({
-            captures: { capacity: 20, kind: "fixed window", value: 20 },
+            captures: { capacity: FREE_CAPTURES, kind: "fixed window", value: FREE_CAPTURES },
             csvImport: null,
             pro: false,
             receiptScan: { capacity: 10, kind: "token bucket", value: 7 },
