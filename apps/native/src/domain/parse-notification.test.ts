@@ -198,6 +198,18 @@ describe("parseNotification", () => {
         });
     });
 
+    it("reads a personal text that says someone sent you money as income", () => {
+        expect(parseNotification("Epa, te transferi Bs. 275,50 de la cena de anoche.")).toMatchObject({
+            amount: 275.5,
+            income: true,
+        });
+        expect(parseNotification("Listo, te hice el pago móvil por Bs. 1.200,00")).toMatchObject({
+            amount: 1200,
+            income: true,
+        });
+        expect(parseNotification("Transferiste Bs. 275,50 a Maria")).toMatchObject({ income: false });
+    });
+
     it("does not read a card's last digits or a word as a currency", () => {
         expect(parseNotification("Your card ending in 4321 was used")).toBeNull();
         expect(parseNotification("Purchase alert\nYou spent 12 at the pen shop")).toBeNull();
