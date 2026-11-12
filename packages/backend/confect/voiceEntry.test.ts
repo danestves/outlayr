@@ -24,6 +24,7 @@ import {
     normalizeQuotes,
     PROPOSE_DRAFT_TOOL,
     rateLimiter,
+    THREAD_TTL_MS,
     transcribeClip,
 } from "./voiceEntry";
 
@@ -481,5 +482,134 @@ describe("voice thread + speak guard ladder", () => {
         await expect(asUser.action(api.voiceEntry.speak, { ...ACTION_ARGS, threadId })).resolves.toMatchObject({
             status: "rateLimited",
         });
+    });
+});
+
+describe("openStream + speakText credits", () => {
+    const TEXT_ARGS = {
+        accounts: BASE_ARGS.accounts,
+        aiConsent: AI_CONSENT_VERSION,
+        categoryTree: BASE_ARGS.categoryTree,
+        currency: "USD",
+        language: "en-US",
+        today: "2026-09-03",
+        transcript: "twelve fifty at Starbucks",
+    };
+
+    function stubProviders() {
+        const scribeCalls: (string | null)[] = [];
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+                if (String(input).includes("elevenlabs.io/v1/single-use-token/realtime_scribe")) {
+                    scribeCalls.push(new Headers(init?.headers).get("xi-api-key"));
+                    return Response.json({ token: "sut_test" });
+                }
+                return new Response("down", { status: 500 });
+            })
+        );
+        return scribeCalls;
+    }
+
+    async function signedIn() {
+        vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
+        vi.stubEnv("ELEVENLABS_API_KEY", "test-elevenlabs-key");
+        const t = convexTest(schema, modules);
+        agentTest.register(t);
+        rateLimiterTest.register(t);
+        revenuecatTest.register(t);
+        const identity = await seedAuthUser(t);
+        const asUser = authenticatedAs(t, identity);
+        const { threadId } = await asUser.mutation(api.voiceEntry.startThread, {});
+        if (threadId === null) {
+            throw new Error("Expected a thread for a signed-in caller");
+        }
+        return { asUser, t, threadId };
+    }
+
+    it("speakText refuses a thread that no openStream admitted", async () => {
+        stubProviders();
+        const { asUser, threadId } = await signedIn();
+        await expect(asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId })).resolves.toMatchObject({
+            order: null,
+            status: "invalid",
+        });
+    });
+
+    it("one openStream pays for exactly one speakText, and the token request carries the key", async () => {
+        const scribeCalls = stubProviders();
+        const { asUser, threadId } = await signedIn();
+        await expect(
+            asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId })
+        ).resolves.toStrictEqual({ status: "ok", token: "sut_test" });
+        expect(scribeCalls).toStrictEqual(["test-elevenlabs-key"]);
+
+        const first = await asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId });
+        expect(first.status).not.toBe("invalid");
+        await expect(asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId })).resolves.toMatchObject({
+            status: "invalid",
+        });
+    });
+
+    it("a fresh credit still pays on a thread holding twenty stale ones", async () => {
+        stubProviders();
+        const { asUser, t, threadId } = await signedIn();
+        vi.useFakeTimers();
+        await t.run(async (ctx) => {
+            for (let credit = 0; credit < 20; credit += 1) {
+                await ctx.db.insert("voiceStreamCredits", { threadId });
+            }
+        });
+        vi.advanceTimersByTime(THREAD_TTL_MS + 1);
+        await asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId });
+        const spoken = await asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId });
+        vi.useRealTimers();
+        expect(spoken.status).not.toBe("invalid");
+    });
+
+    it("an empty transcript is unclear and keeps the credit", async () => {
+        stubProviders();
+        const { asUser, t, threadId } = await signedIn();
+        await asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId });
+        await expect(
+            asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId, transcript: "   " })
+        ).resolves.toMatchObject({ status: "unclear" });
+        await expect(t.run((ctx) => ctx.db.query("voiceStreamCredits").collect())).resolves.toHaveLength(1);
+    });
+
+    it("an over-long transcript is invalid", async () => {
+        stubProviders();
+        const { asUser, threadId } = await signedIn();
+        await asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId });
+        await expect(
+            asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId, transcript: "a".repeat(1001) })
+        ).resolves.toMatchObject({ status: "invalid" });
+    });
+
+    it("openStream refuses without calling ElevenLabs once the free capture pool is spent", async () => {
+        const scribeCalls = stubProviders();
+        const { asUser, t, threadId } = await signedIn();
+        const tokenIdentifier = await asUser.run(async (ctx) => (await ctx.auth.getUserIdentity())?.tokenIdentifier);
+        if (!tokenIdentifier) {
+            throw new Error("Expected an authenticated identity");
+        }
+        await t.run((ctx) =>
+            captureLimiter.limit(ctx, "capturesFree", { count: FREE_CAPTURE_CONFIG.rate, key: tokenIdentifier })
+        );
+        await expect(
+            asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId })
+        ).resolves.toStrictEqual({ status: "notEntitled", token: null });
+        expect(scribeCalls).toHaveLength(0);
+    });
+
+    it("a provider failure on the token request is providerError", async () => {
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(async () => new Response("no", { status: 401 }))
+        );
+        const { asUser, threadId } = await signedIn();
+        await expect(
+            asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId })
+        ).resolves.toStrictEqual({ status: "providerError", token: null });
     });
 });

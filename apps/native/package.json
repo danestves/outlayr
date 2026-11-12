@@ -87,6 +87,7 @@
         "posthog-react-native": "^4.85.1",
         "react": "19.3.0",
         "react-native": "0.88.1",
+        "react-native-audio-api": "1.0.0",
         "react-native-gesture-handler": "~3.3.0",
         "react-native-intlayer": "catalog:",
         "react-native-nitro-google-signin": "^2.3.1",

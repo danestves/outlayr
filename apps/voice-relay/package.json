@@ -1,0 +1,17 @@
+{
+    "name": "@outlayr/voice-relay",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "check-types": "tsc --noEmit",
+        "deploy": "vp dlx wrangler@4.152.0 deploy",
+        "dev": "vp dlx wrangler@4.152.0 dev"
+    },
+    "devDependencies": {
+        "@cloudflare/workers-types": "5.20261023.1",
+        "@outlayr/config": "workspace:*",
+        "typescript": "catalog:",
+        "vite-plus": "catalog:"
+    }
+}

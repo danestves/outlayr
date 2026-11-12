@@ -2,30 +2,14 @@ import { useUIMessages } from "@convex-dev/agent/react";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Option from "effect/Option";
-import {
-    AudioQuality,
-    getRecordingPermissionsAsync,
-    IOSOutputFormat,
-    requestRecordingPermissionsAsync,
-    setAudioModeAsync,
-    useAudioRecorder,
-} from "expo-audio";
-import type { RecordingOptions } from "expo-audio";
-import { File } from "expo-file-system";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { RefObject } from "react";
-import { useSharedValue } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated";
 
-import {
-    judgeSilence,
-    localIsoDate,
-    meterToLevel,
-    proposedDraftOf,
-    startSilenceWatch,
-    voiceTurnsOf,
-} from "@/domain/voice-entry";
-import type { VoiceTurn, VoiceTurnMessage } from "@/domain/voice-entry";
+import { judgeSilence, localIsoDate, proposedDraftOf, startSilenceWatch, voiceTurnsOf } from "@/domain/voice-entry";
+import type { SilenceWatch, VoiceTurn, VoiceTurnMessage } from "@/domain/voice-entry";
+import { useRealtimeTranscript } from "@/hooks/use-realtime-transcript";
+import type { RealtimeStart, RealtimeTranscript } from "@/hooks/use-realtime-transcript";
 import { trackCapturesWall } from "@/hooks/use-usage-limits";
 import { duringHandoff } from "@/lib/app-handoff";
 import { VOICE_TURNS_QUERY, voiceThreadTransport } from "@/lib/cloud-ai";
@@ -37,35 +21,22 @@ import type {
     VoiceQuote,
     VoiceThreadTransport,
 } from "@/lib/cloud-ai";
+import { ScribeStreamError } from "@/lib/realtime-scribe";
+import type { ScribeFailureReason } from "@/lib/realtime-scribe";
 import { useLatest } from "@/lib/use-latest";
 import { timedCaptureCommand, VOICE_SPEAK_TIMEOUT } from "@/state/capture-commands";
 import { fromCommand, voidFlowCommand } from "@/state/entry-commands";
 import { logged } from "@/state/entry-save";
 import { useAtomCommand } from "@/state/use-atom-command";
 
-// ~6KB/s against the server's 900KB cap and 45s recording cap.
-// `isMeteringEnabled` is what makes `getStatus().metering` exist at all.
-const RECORDING_OPTIONS: RecordingOptions = {
-    android: { audioEncoder: "aac", extension: ".m4a", outputFormat: "mpeg4" },
-    bitRate: 48_000,
-    extension: ".m4a",
-    ios: {
-        audioQuality: AudioQuality.MEDIUM,
-        linearPCMBitDepth: 16,
-        linearPCMIsBigEndian: false,
-        linearPCMIsFloat: false,
-        outputFormat: IOSOutputFormat.MPEG4AAC,
-    },
-    isMeteringEnabled: true,
-    numberOfChannels: 1,
-    sampleRate: 44_100,
-    web: { bitsPerSecond: 48_000, mimeType: "audio/webm" },
-};
-
-const METER_INTERVAL_MS = 50;
 const TURNS_PAGE = 40;
 
-const speakCommand = timedCaptureCommand<Effect.Success<ReturnType<VoiceThreadTransport["speak"]>>>({
+const speakCommand = timedCaptureCommand<Effect.Success<ReturnType<VoiceThreadTransport["speakText"]>>>({
+    operation: "speak",
+    timeout: VOICE_SPEAK_TIMEOUT,
+});
+
+const streamCommand = timedCaptureCommand<Effect.Success<ReturnType<VoiceThreadTransport["openStream"]>>>({
     operation: "speak",
     timeout: VOICE_SPEAK_TIMEOUT,
 });
@@ -86,13 +57,15 @@ export type VoiceFailure =
 export type VoicePhase<Context = unknown> =
     | { kind: "starting" }
     | { kind: "listening" }
-    | { after: number; clip: ArrayBuffer; kind: "sending" }
-    | { context: Context; kind: "thinking"; order: number }
+    | { kind: "sending"; text: string | null }
+    | { context: Context; kind: "thinking"; order: number; text: string }
     | { context: Context; draft: VoiceDraft; kind: "review"; order: number; quotes: readonly VoiceQuote[] }
     | { kind: "failed"; reason: VoiceFailure; transcript: string | null };
 
 interface UseVoiceEntryArgs<Context> {
     context: Context;
+    /** The subtag Scribe takes as `language_code`, like `es`. */
+    language: string;
     request: Omit<SpeakRequest, "audio" | "threadId" | "today">;
     transport?: VoiceThreadTransport;
 }
@@ -103,6 +76,8 @@ export interface UseVoiceEntryResult<Context> {
     heard: string | null;
     level: SharedValue<number>;
     listenAgain: () => void;
+    /** The words heard so far while listening. */
+    partial: string;
     phase: VoicePhase<Context>;
     spoke: boolean;
     turns: VoiceTurn[];
@@ -126,18 +101,17 @@ const THREAD_FAILURE_FOR = {
     unauthenticated: "unauthenticated",
 } as const satisfies Record<ThreadRefusal, VoiceFailure>;
 
-const readAndDiscard = Effect.fn("VoiceEntry.readAndDiscard")(function* readAndDiscard(uri: string) {
-    const file = new File(uri);
-    const bytes = yield* Effect.tryPromise(() => file.arrayBuffer());
-    try {
-        file.delete();
-    } catch {
-        // The OS sweeps the cache; a leftover clip costs only bytes.
-    }
-    return bytes;
-});
+// Scribe's quota and rate limits are the provider's account, not the user's captures, so they read as a provider fault.
+const SCRIBE_FAILURE_FOR = {
+    offline: "offline",
+    provider: "provider",
+    quotaExceeded: "provider",
+    rateLimited: "provider",
+    silent: "silent",
+    unauthenticated: "unauthenticated",
+} as const satisfies Record<ScribeFailureReason, VoiceFailure>;
 
-const discardClip = (uri: string) => readAndDiscard(uri).pipe(Effect.catchCause(() => Effect.void));
+const scribeFailureOf = (error: ScribeStreamError): VoiceFailure => SCRIBE_FAILURE_FOR[error.reason];
 
 function settledPhaseOf<Context>(
     phase: VoicePhase<Context>,
@@ -167,20 +141,18 @@ function settledPhaseOf<Context>(
     return answer.status === "failed" ? { kind: "failed", reason: "provider", transcript: null } : phase;
 }
 
-function lastOrderOf(messages: readonly VoiceTurnMessage[]): number {
-    return messages.reduce((last, message) => Math.max(last, message.order), -1);
-}
-
 function heardIn(phase: VoicePhase, messages: readonly VoiceTurnMessage[]): string | null {
-    const said = (matches: (order: number) => boolean) =>
-        messages.find((message) => message.role === "user" && matches(message.order))?.text ?? null;
+    const said = (order: number) =>
+        messages.find((message) => message.role === "user" && message.order === order)?.text ?? null;
     switch (phase.kind) {
         case "sending": {
-            return said((order) => order > phase.after);
+            return phase.text;
         }
-        case "thinking":
+        case "thinking": {
+            return said(phase.order) ?? phase.text;
+        }
         case "review": {
-            return said((order) => order === phase.order);
+            return said(phase.order);
         }
         case "failed": {
             return phase.transcript;
@@ -200,11 +172,7 @@ interface VoicePorts<Context> {
         messages: readonly VoiceTurnMessage[];
         request: UseVoiceEntryArgs<Context>["request"];
     }>;
-    level: SharedValue<number>;
-    meterRef: RefObject<ReturnType<typeof setInterval> | null>;
-    queuedClipRef: RefObject<ArrayBuffer | null>;
-    recorder: ReturnType<typeof useAudioRecorder>;
-    resentRef: RefObject<ArrayBuffer | null>;
+    resentRef: RefObject<string | null>;
     setPhase: (phase: VoicePhase<Context>) => void;
     setSpoke: (spoke: boolean) => void;
     setThreadId: (threadId: string | null) => void;
@@ -212,25 +180,21 @@ interface VoicePorts<Context> {
     start: (flow: Effect.Effect<void, unknown>) => void;
     takeRef: RefObject<number>;
     threadRef: RefObject<string | null>;
+    transcriptRef: RefObject<RealtimeTranscript>;
+    watchRef: RefObject<SilenceWatch | null>;
 }
 
 function supersedeTake({
-    queuedClipRef,
     speakAbortRef,
     takeRef,
-}: Pick<VoicePorts<unknown>, "queuedClipRef" | "speakAbortRef" | "takeRef">) {
+    transcriptRef,
+    watchRef,
+}: Pick<VoicePorts<unknown>, "speakAbortRef" | "takeRef" | "transcriptRef" | "watchRef">) {
     takeRef.current += 1;
-    queuedClipRef.current = null;
+    watchRef.current = null;
     speakAbortRef.current?.abort();
     speakAbortRef.current = null;
-}
-
-function stopMeter({ level, meterRef }: Pick<VoicePorts<unknown>, "level" | "meterRef">) {
-    if (meterRef.current !== null) {
-        clearInterval(meterRef.current);
-        meterRef.current = null;
-    }
-    level.set(0);
+    transcriptRef.current.cancel();
 }
 
 function dropThread<Context>(ports: VoicePorts<Context>) {
@@ -243,73 +207,26 @@ function dropThread<Context>(ports: VoicePorts<Context>) {
     }
 }
 
-function abandonTake<Context>(ports: VoicePorts<Context>) {
-    const take = ports.takeRef.current;
-    supersedeTake(ports);
-    ports.start(endTake(ports, take, "discard"));
-}
-
-function dispatchClip<Context>(ports: VoicePorts<Context>, clip: ArrayBuffer) {
-    const id = ports.threadRef.current;
-    if (id === null) {
-        ports.queuedClipRef.current = clip;
-        return;
-    }
-    ports.start(sendClip(ports, clip, id));
-}
-
-const endTake = Effect.fn("VoiceEntry.endTake")(function* endTake<Context>(
+function fail<Context>(
     ports: VoicePorts<Context>,
     take: number,
-    outcome: "send" | "silent" | "discard",
-    onClip?: (clip: ArrayBuffer) => void
+    reason: VoiceFailure,
+    transcript: string | null = null
 ) {
-    const { endingRef, latest, recorder, setPhase, takeRef } = ports;
-    // Claimed before the first yield: a second tap or the silence timer would race this for one recorder.
-    if (endingRef.current === take) {
-        return;
+    if (take === ports.takeRef.current) {
+        ports.setPhase({ kind: "failed", reason, transcript });
     }
-    endingRef.current = take;
-    stopMeter(ports);
-    // Never started, or already released by unmount: no clip either way.
-    const uri = yield* Effect.tryPromise(() => recorder.stop()).pipe(
-        Effect.map(() => recorder.uri),
-        Effect.catchCause(() => Effect.succeed(null))
-    );
-    if (outcome === "discard" || take !== takeRef.current) {
-        if (uri) {
-            yield* discardClip(uri);
-        }
-        return;
-    }
-    if (outcome === "silent" || !uri) {
-        if (uri) {
-            yield* discardClip(uri);
-        }
-        setPhase({ kind: "failed", reason: "silent", transcript: null });
-        return;
-    }
-    const clip = yield* readAndDiscard(uri).pipe(Effect.exit);
-    if (take !== takeRef.current) {
-        return;
-    }
-    if (Exit.isFailure(clip)) {
-        setPhase({ kind: "failed", reason: "provider", transcript: null });
-        return;
-    }
-    setPhase({ after: lastOrderOf(latest.current.messages), clip: clip.value, kind: "sending" });
-    if (onClip !== undefined) {
-        onClip(clip.value);
-    }
-});
+}
 
-const openThread = Effect.fn("VoiceEntry.openThread")(function* openThread<Context>(ports: VoicePorts<Context>) {
-    const { api, disposedRef, setPhase, setThreadId, threadRef } = ports;
+const openThread = Effect.fn("VoiceEntry.openThread")(function* openThread<Context>(
+    ports: VoicePorts<Context>,
+    take: number
+) {
+    const { api, disposedRef, setThreadId, threadRef } = ports;
     const started = yield* api.start().pipe(Effect.exit);
     if (Exit.isFailure(started)) {
         if (!disposedRef.current) {
-            abandonTake(ports);
-            setPhase({ kind: "failed", reason: "offline", transcript: null });
+            fail(ports, take, "offline");
         }
         return null;
     }
@@ -320,157 +237,223 @@ const openThread = Effect.fn("VoiceEntry.openThread")(function* openThread<Conte
         }
         return null;
     }
-    const threadId = opened.ok ? opened.threadId : null;
-    threadRef.current = threadId;
-    setThreadId(threadId);
     if (!opened.ok) {
-        abandonTake(ports);
-        setPhase({ kind: "failed", reason: THREAD_FAILURE_FOR[opened.reason], transcript: null });
+        fail(ports, take, THREAD_FAILURE_FOR[opened.reason]);
+        return null;
     }
-    return threadId;
+    threadRef.current = opened.threadId;
+    setThreadId(opened.threadId);
+    return opened.threadId;
 });
 
-const sendClip: <Context>(ports: VoicePorts<Context>, clip: ArrayBuffer, id: string) => Effect.Effect<void> = Effect.fn(
-    "VoiceEntry.sendClip"
-)(function* sendClipTo<Context>(ports: VoicePorts<Context>, clip: ArrayBuffer, id: string) {
-    const { api, latest, resentRef, setPhase, speakAbortRef, takeRef } = ports;
-    const take = takeRef.current;
-    const { context: sentContext, request: sentRequest } = latest.current;
+const openTakeStream: <Context>(
+    ports: VoicePorts<Context>,
+    take: number,
+    retried?: boolean
+) => Effect.Effect<string | null> = Effect.fn("VoiceEntry.openTakeStream")(function* openTakeStreamFor<Context>(
+    ports: VoicePorts<Context>,
+    take: number,
+    retried = false
+) {
+    const { api, speakAbortRef, takeRef, threadRef } = ports;
+    const id = threadRef.current ?? (yield* openThread(ports, take));
+    if (id === null || take !== takeRef.current) {
+        return null;
+    }
     const controller = new AbortController();
     speakAbortRef.current = controller;
-    const result = yield* fromCommand(speakCommand, {
-        call: api.speak({ ...sentRequest, audio: clip, threadId: id, today: localIsoDate(new Date()) }),
+    const result = yield* fromCommand(streamCommand, {
+        call: api.openStream({ threadId: id }),
         signal: controller.signal,
     }).pipe(Effect.exit);
     if (take !== takeRef.current) {
-        return;
+        return null;
     }
     if (Exit.isFailure(result)) {
-        setPhase({ kind: "failed", reason: "offline", transcript: null });
-        return;
+        fail(ports, take, "offline");
+        return null;
     }
     const settled = Option.getOrNull(result.value);
     if (settled === null) {
-        // The request may still land a draft on this thread, so a retry must not speak into it.
-        dropThread(ports);
-        setPhase({ kind: "failed", reason: "timeout", transcript: null });
-        return;
+        fail(ports, take, "timeout");
+        return null;
     }
     if (settled.ok) {
-        setPhase({ context: sentContext, kind: "thinking", order: settled.order });
-        return;
+        return settled.token;
     }
-    if (settled.reason === "invalid") {
-        const resent = resentRef.current === clip;
-        if (!resent) {
-            // The server sweeps threads idle for an hour: resend this clip once on a fresh thread.
-            resentRef.current = clip;
-            setPhase({ after: -1, clip, kind: "sending" });
-            dropThread(ports);
-            const reopened = yield* openThread(ports);
-            if (reopened !== null && take === takeRef.current) {
-                yield* sendClip(ports, clip, reopened);
-            }
-            return;
-        }
+    if (settled.reason === "invalid" && !retried) {
+        // The server sweeps threads idle for an hour: reopen once on a fresh thread.
+        dropThread(ports);
+        return yield* openTakeStream(ports, take, true);
     }
     const reason = FAILURE_FOR[settled.reason];
     trackCapturesWall(reason);
-    setPhase({ kind: "failed", reason, transcript: settled.transcript });
+    fail(ports, take, reason);
+    return null;
 });
 
-const openAndSend = Effect.fn("VoiceEntry.openAndSend")(function* openAndSend<Context>(ports: VoicePorts<Context>) {
-    const id = yield* openThread(ports);
-    const queued = ports.queuedClipRef.current;
-    if (id !== null && queued !== null) {
-        ports.queuedClipRef.current = null;
-        ports.start(sendClip(ports, queued, id));
+const sendText: <Context>(ports: VoicePorts<Context>, take: number, text: string, id: string) => Effect.Effect<void> =
+    Effect.fn("VoiceEntry.sendText")(function* sendTextTo<Context>(
+        ports: VoicePorts<Context>,
+        take: number,
+        text: string,
+        id: string
+    ) {
+        const { api, latest, resentRef, setPhase, speakAbortRef, takeRef } = ports;
+        const { context: sentContext, request: sentRequest } = latest.current;
+        const controller = new AbortController();
+        speakAbortRef.current = controller;
+        const result = yield* fromCommand(speakCommand, {
+            call: api.speakText({ ...sentRequest, threadId: id, today: localIsoDate(new Date()), transcript: text }),
+            signal: controller.signal,
+        }).pipe(Effect.exit);
+        if (take !== takeRef.current) {
+            return;
+        }
+        if (Exit.isFailure(result)) {
+            fail(ports, take, "offline");
+            return;
+        }
+        const settled = Option.getOrNull(result.value);
+        if (settled === null) {
+            // The request may still land a draft on this thread, so a retry must not speak into it.
+            dropThread(ports);
+            fail(ports, take, "timeout");
+            return;
+        }
+        if (settled.ok) {
+            setPhase({ context: sentContext, kind: "thinking", order: settled.order, text });
+            return;
+        }
+        if (settled.reason === "invalid" && resentRef.current !== text) {
+            resentRef.current = text;
+            dropThread(ports);
+            const reopened = yield* openThread(ports, take);
+            if (reopened !== null && take === takeRef.current) {
+                yield* sendText(ports, take, text, reopened);
+            }
+            return;
+        }
+        const reason = FAILURE_FOR[settled.reason];
+        trackCapturesWall(reason);
+        fail(ports, take, reason, settled.transcript);
+    });
+
+const finishTake = Effect.fn("VoiceEntry.finishTake")(function* finishTake<Context>(
+    ports: VoicePorts<Context>,
+    take: number,
+    outcome: "send" | "silent" | "discard"
+) {
+    const { endingRef, setPhase, takeRef, threadRef, transcriptRef, watchRef } = ports;
+    // Claimed before the first yield: a second tap or the silence judge would race this for one stream.
+    if (endingRef.current === take) {
+        return;
     }
-});
-
-const startTake = Effect.fn("VoiceEntry.startTake")(function* startTake<Context>(ports: VoicePorts<Context>) {
-    const { level, meterRef, recorder, setPhase, setSpoke, start, takeRef } = ports;
-    supersedeTake(ports);
-    const take = takeRef.current;
-    const current = yield* Effect.tryPromise(() => getRecordingPermissionsAsync());
-    const permission = current.granted
-        ? current
-        : yield* duringHandoff(Effect.tryPromise(() => requestRecordingPermissionsAsync()));
+    endingRef.current = take;
+    watchRef.current = null;
+    if (outcome !== "send") {
+        transcriptRef.current.cancel();
+        if (outcome === "silent") {
+            fail(ports, take, "silent");
+        }
+        return;
+    }
+    setPhase({ kind: "sending", text: null });
+    const finished = yield* Effect.tryPromise({
+        catch: (error): VoiceFailure => (error instanceof ScribeStreamError ? scribeFailureOf(error) : "provider"),
+        try: () => transcriptRef.current.finish(),
+    }).pipe(
+        Effect.map((text) => ({ ok: true as const, text: text.trim() })),
+        Effect.catch((reason) => Effect.succeed({ ok: false as const, reason }))
+    );
     if (take !== takeRef.current) {
         return;
     }
-    setPhase({ kind: "starting" });
-    if (!permission.granted) {
-        setPhase({ kind: "failed", reason: "denied", transcript: null });
+    if (!finished.ok) {
+        fail(ports, take, finished.reason);
         return;
     }
-    const began = yield* Effect.tryPromise(() =>
-        setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true })
-    ).pipe(
-        Effect.andThen(Effect.tryPromise(() => recorder.prepareToRecordAsync())),
-        Effect.andThen(
-            Effect.try(() => {
-                if (take !== takeRef.current) {
-                    return false;
-                }
-                recorder.record();
-                return true;
-            })
-        ),
-        Effect.exit
-    );
-    if (Exit.isFailure(began)) {
-        if (take === takeRef.current) {
-            setPhase({ kind: "failed", reason: "provider", transcript: null });
-        }
+    if (finished.text === "") {
+        fail(ports, take, "silent");
         return;
     }
-    if (!began.value) {
-        return;
+    setPhase({ kind: "sending", text: finished.text });
+    const id = threadRef.current ?? (yield* openThread(ports, take));
+    if (id !== null && take === takeRef.current) {
+        yield* sendText(ports, take, finished.text, id);
     }
-    setPhase({ kind: "listening" });
-    setSpoke(false);
-
-    let watch = startSilenceWatch(Date.now());
-    meterRef.current = setInterval(() => {
-        const status = recorder.getStatus();
-        const sample = meterToLevel(status.metering);
-        level.set(sample);
-        const judged = judgeSilence(watch, sample, Date.now());
-        if (watch.lastSpeechAt === null && judged.watch.lastSpeechAt !== null) {
-            setSpoke(true);
-        }
-        ({ watch } = judged);
-        if (judged.verdict === "keep") {
-            return;
-        }
-        start(
-            endTake(ports, take, judged.verdict === "nothingSaid" ? "silent" : "send", (clip) =>
-                dispatchClip(ports, clip)
-            )
-        );
-    }, METER_INTERVAL_MS);
 });
 
-// Must render inside the Convex provider. The meter polls into a shared value because `useAudioRecorderState` would
-// re-render the screen twenty times a second.
+function hearLevel<Context>(ports: VoicePorts<Context>, sample: number, at: number) {
+    const { setSpoke, start, takeRef, watchRef } = ports;
+    const watch = watchRef.current;
+    if (watch === null) {
+        return;
+    }
+    const judged = judgeSilence(watch, sample, at);
+    if (watch.lastSpeechAt === null && judged.watch.lastSpeechAt !== null) {
+        setSpoke(true);
+    }
+    watchRef.current = judged.watch;
+    if (judged.verdict !== "keep") {
+        start(finishTake(ports, takeRef.current, judged.verdict === "nothingSaid" ? "silent" : "send"));
+    }
+}
+
+function streamFailed<Context>(ports: VoicePorts<Context>, error: ScribeStreamError) {
+    const { endingRef, takeRef, transcriptRef, watchRef } = ports;
+    // Past `finish` the stream's own promise carries the failure.
+    if (watchRef.current === null) {
+        return;
+    }
+    const take = takeRef.current;
+    endingRef.current = take;
+    watchRef.current = null;
+    transcriptRef.current.cancel();
+    fail(ports, take, scribeFailureOf(error));
+}
+
+const startTake = Effect.fn("VoiceEntry.startTake")(function* startTake<Context>(ports: VoicePorts<Context>) {
+    const { setPhase, setSpoke, takeRef, transcriptRef, watchRef } = ports;
+    supersedeTake(ports);
+    const take = takeRef.current;
+    setPhase({ kind: "starting" });
+    const token = yield* openTakeStream(ports, take);
+    if (token === null || take !== takeRef.current) {
+        return;
+    }
+    const began = yield* duringHandoff(
+        Effect.promise(() => transcriptRef.current.start(token).catch((): RealtimeStart => "failed"))
+    );
+    if (take !== takeRef.current) {
+        transcriptRef.current.cancel();
+        return;
+    }
+    if (began !== "started") {
+        fail(ports, take, began === "denied" ? "denied" : "provider");
+        return;
+    }
+    watchRef.current = startSilenceWatch(Date.now());
+    setSpoke(false);
+    setPhase({ kind: "listening" });
+});
+
+// Must render inside the Convex provider.
 export function useVoiceEntry<Context>({
     context,
+    language,
     request,
     transport,
 }: UseVoiceEntryArgs<Context>): UseVoiceEntryResult<Context> {
-    const recorder = useAudioRecorder(RECORDING_OPTIONS);
-    const level = useSharedValue(0);
     const [phase, setPhase] = useState<VoicePhase<Context>>({ kind: "starting" });
     const [threadId, setThreadId] = useState<string | null>(null);
     const [spoke, setSpoke] = useState(false);
     /** Bumped by every cancel/listenAgain so a stop racing a start cannot land on the wrong take. */
     const takeRef = useRef(0);
-    const meterRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const watchRef = useRef<SilenceWatch | null>(null);
     const endingRef = useRef<number | null>(null);
-    const queuedClipRef = useRef<ArrayBuffer | null>(null);
     const threadRef = useRef<string | null>(null);
-    const resentRef = useRef<ArrayBuffer | null>(null);
+    const resentRef = useRef<string | null>(null);
     const disposedRef = useRef(false);
     const speakAbortRef = useRef<AbortController | null>(null);
     const runFlow = useAtomCommand(voidFlowCommand);
@@ -478,6 +461,13 @@ export function useVoiceEntry<Context>({
         void runFlow(logged("Voice entry failed")(flow));
     };
     const [api] = useState(() => transport ?? voiceThreadTransport());
+
+    const transcript = useRealtimeTranscript({
+        language,
+        onError: (error) => streamFailed(portsRef.current, error),
+        onLevel: (sample, at) => hearLevel(portsRef.current, sample, at),
+    });
+    const transcriptRef = useLatest(transcript);
 
     const { results: messages } = useUIMessages(VOICE_TURNS_QUERY, threadId === null ? "skip" : { threadId }, {
         initialNumItems: TURNS_PAGE,
@@ -491,10 +481,6 @@ export function useVoiceEntry<Context>({
         disposedRef,
         endingRef,
         latest,
-        level,
-        meterRef,
-        queuedClipRef,
-        recorder,
         resentRef,
         setPhase,
         setSpoke,
@@ -503,9 +489,11 @@ export function useVoiceEntry<Context>({
         start,
         takeRef,
         threadRef,
+        transcriptRef,
+        watchRef,
     };
+    const portsRef = useLatest(ports);
 
-    const openFirstThread = useEffectEvent(() => start(openAndSend(ports)));
     const endThreadOnUnmount = useEffectEvent(() => {
         const id = threadRef.current;
         if (id !== null) {
@@ -513,19 +501,11 @@ export function useVoiceEntry<Context>({
         }
     });
     const startFirstTake = useEffectEvent(() => start(startTake(ports)));
-    const endFirstTake = useEffectEvent(() => {
-        supersedeTake(ports);
-        stopMeter(ports);
-    });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- opens the Convex voice thread and starts the recorder while the screen is mounted; the cleanup ends the thread and stops the meter
+    const endFirstTake = useEffectEvent(() => supersedeTake(ports));
+    // oxlint-disable-next-line outlayr/react-effect-budget -- opens the voice stream while the screen is mounted; the cleanup ends the thread and closes the microphone
     useEffect(() => {
         let disposed = false;
         disposedRef.current = false;
-        queueMicrotask(() => {
-            if (!disposedRef.current) {
-                openFirstThread();
-            }
-        });
         queueMicrotask(() => {
             if (!disposed) {
                 startFirstTake();
@@ -536,7 +516,6 @@ export function useVoiceEntry<Context>({
             endThreadOnUnmount();
             disposed = true;
             endFirstTake();
-            // Never touch the recorder here: `useAudioRecorder` already released it, and reading `isRecording` throws.
         };
     }, []);
 
@@ -551,24 +530,27 @@ export function useVoiceEntry<Context>({
 
     const finish = () => {
         if (phase.kind === "listening") {
-            start(endTake(ports, takeRef.current, "send", (clip) => dispatchClip(ports, clip)));
+            start(finishTake(ports, takeRef.current, "send"));
         }
     };
 
     const cancel = () => {
-        const take = takeRef.current;
         supersedeTake(ports);
-        if (phase.kind === "listening" || phase.kind === "starting") {
-            start(endTake(ports, take, "discard"));
-        }
     };
 
     const listenAgain = () => {
-        if (threadRef.current === null) {
-            start(openAndSend(ports));
-        }
         start(startTake(ports));
     };
 
-    return { cancel, finish, heard, level, listenAgain, phase: settledPhase, spoke, turns };
+    return {
+        cancel,
+        finish,
+        heard,
+        level: transcript.level,
+        listenAgain,
+        partial: transcript.partial,
+        phase: settledPhase,
+        spoke,
+        turns,
+    };
 }

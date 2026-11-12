@@ -40,7 +40,7 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | Sesiones, dirección IP, tipo de dispositivo | Inicio de sesión | Nuestros servidores | Hasta el cierre de sesión o la eliminación de la cuenta |
 | Nombres de comercios y categorías | Autocompletado | Nuestros servidores, Anthropic | Hasta obtener respuesta |
 | Título y texto de una notificación que muestra un monto | Registro desde notificaciones, con Autocompletado | Nuestros servidores, Anthropic | No se guardan |
-| Grabación de voz | Entrada por voz | Nuestros servidores, ElevenLabs | No se conserva |
+| Grabación de voz | Entrada por voz | Nuestros servidores (Cloudflare), ElevenLabs | No se conserva |
 | Transcripción y borrador | Entrada por voz | Nuestros servidores, ElevenLabs, Anthropic | Hasta que se cierre, o tras 1 hora de inactividad |
 | Foto del recibo | Escaneo de recibo | Nuestros servidores, Anthropic | No se conserva |
 | Captura del plan de cuotas | Importación de plan de cuotas | Nuestros servidores, Anthropic | No se conserva |
@@ -180,7 +180,7 @@ Cuando no encontramos un logo para un comercio, puedes agregar su sitio web. Al 
 
 ### Entrada por voz
 
-Cuando dictas una entrada, la app graba el clip en tu dispositivo y lo envía a nuestro servidor junto con los nombres de tus cuentas, los nombres de tus categorías, la moneda de tu registro, tu idioma y la fecha de hoy. ElevenLabs transcribe el clip (solo recibe el audio y tu idioma), y el modelo Claude de Anthropic convierte el texto en un borrador de entrada para que lo revises.
+Cuando dictas una entrada, la app envía el audio a ElevenLabs a través de nuestro servidor mientras hablas. ElevenLabs lo transcribe a medida que hablas (solo recibe el audio y tu idioma). Luego la app envía el texto a nuestro servidor junto con los nombres de tus cuentas, los nombres de tus categorías, la moneda de tu registro, tu idioma y la fecha de hoy, y el modelo Claude de Anthropic lo convierte en un borrador de entrada para que lo revises.
 
 Nunca guardamos el audio. La transcripción y el borrador se conservan en nuestro servidor como una conversación breve para que puedas corregir la entrada hablando de nuevo. Se elimina cuando cierras la pantalla de voz, o una hora después de tu último mensaje si la app se cierra antes.
 
@@ -270,7 +270,7 @@ Outlayr no pide tu ubicación ni tus contactos, ni permiso para rastrearte.
 Estas empresas nos ayudan a operar Outlayr. Cada una recibe solo lo que su función requiere.
 
 - **[Hetzner](https://www.hetzner.com/legal/privacy-policy)** aloja en Helsinki, Finlandia, los servidores que ejecutan nuestra base de datos y las funciones de nuestro servidor. Esos servidores guardan tu cuenta y tus datos sincronizados, y atienden cada solicitud a nuestro servidor.
-- **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** almacena las fotos que adjuntas a entradas y cuentas (Cloudflare R2), cuando el respaldo de fotos está activado, y envía nuestros correos (los códigos de inicio de sesión, las notas de bienvenida y de Pro, y los avisos de cambios), para lo cual recibe tu correo electrónico y el contenido del mensaje.
+- **[Cloudflare](https://www.cloudflare.com/privacypolicy/)** almacena las fotos que adjuntas a entradas y cuentas (Cloudflare R2), cuando el respaldo de fotos está activado, y envía nuestros correos (los códigos de inicio de sesión, las notas de bienvenida y de Pro, y los avisos de cambios), para lo cual recibe tu correo electrónico y el contenido del mensaje. También lleva las entradas por voz de la app a ElevenLabs mientras hablas, sin conservarlas.
 - **[Anthropic](https://www.anthropic.com/legal/privacy)** proporciona los modelos de IA Claude detrás de las sugerencias, la lectura de notificaciones, la entrada por voz, el escaneo de recibos, la importación de planes de cuotas, la importación de CSV, la importación de estados de cuenta en PDF y las búsquedas web. Recibe el contenido descrito en [Sugerencias, voz y recibos](#sugerencias-voz-y-recibos).
 - **[ElevenLabs](https://elevenlabs.io/privacy-policy)** convierte las grabaciones de voz en texto. Recibe la grabación y tu idioma.
 - **[RevenueCat](https://www.revenuecat.com/privacy)** lleva el control del estado de las suscripciones. Recibe un ID anónimo, o tu ID de cuenta, nombre y correo electrónico una vez que inicias sesión, y tus registros de compra.
@@ -398,7 +398,7 @@ Si vives en California o en otro estado de EE. UU. con una ley de privacidad, es
 | --- | --- |
 | **Identificadores:** nombre, correo electrónico, ID de cuenta, ID de instalación, dirección IP | Hetzner, RevenueCat, Stripe, Expo, PostHog, Google, Cloudflare (correo, logos), Anthropic (lo que muestre un estado de cuenta que importes) |
 | **Información comercial:** registros de suscripciones y compras | Apple, Google, Stripe, RevenueCat, Hetzner |
-| **Información de audio y visual:** clips de voz, escaneos de recibos, capturas de planes de cuotas, fotos adjuntas | ElevenLabs (clips), Anthropic (escaneos), Cloudflare (fotos) |
+| **Información de audio y visual:** clips de voz, escaneos de recibos, capturas de planes de cuotas, fotos adjuntas | ElevenLabs (clips), Anthropic (escaneos), Cloudflare (fotos, clips en tránsito) |
 | **Actividad en internet u otras redes:** dirección IP, agente de usuario, registros de solicitudes, uso de la app y del sitio web, reportes de fallas | Hetzner, Expo, PostHog, el proveedor que aloja nuestro sitio web |
 | **Registros que creas:** entradas sincronizadas, montos, comercios, notas, presupuestos | Hetzner; nombres de comercios, categorías y cuentas a Anthropic |
 

@@ -535,6 +535,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "On Android, text messages now have a switch for each sender instead of one for the whole app. Short codes, the kind banks send from, start on once you turn bank texts on, and names and phone numbers stay off until you turn each one on. The phone keeps the latest text from each sender, and a text is sent to be read without the sender's name or number.",
                     label: "Bank text messages on Android",
                 },
+                {
+                    detail: "Voice entry now sends the audio to ElevenLabs as you talk, through our server on Cloudflare, which keeps none of it. The text then goes to our server with your account and category names, as before.",
+                    label: "Voice entry while you speak",
+                },
             ],
             es: [
                 {
@@ -576,6 +580,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "En Android, los mensajes de texto ahora tienen un interruptor por remitente en vez de uno para toda la app. Cuando activas los mensajes del banco, los números cortos, como los que usan los bancos, vienen activados, y los nombres y números de teléfono quedan desactivados hasta que actives cada uno. El celular guarda el último mensaje de cada remitente, y el texto se envía a leer sin el nombre ni el número del remitente.",
                     label: "Mensajes de texto del banco en Android",
+                },
+                {
+                    detail: "La entrada por voz ahora envía el audio a ElevenLabs mientras hablas, a través de nuestro servidor en Cloudflare, que no conserva nada. Luego el texto va a nuestro servidor con los nombres de tus cuentas y categorías, como antes.",
+                    label: "Entrada por voz mientras hablas",
                 },
             ],
             fr: [
@@ -619,6 +627,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Sur Android, les SMS ont désormais un interrupteur par expéditeur plutôt qu'un seul pour toute l'app. Une fois les SMS de la banque activés, les numéros courts, comme ceux qu'utilisent les banques, sont activés au départ, et les noms et numéros de téléphone restent désactivés jusqu'à ce que vous activiez chacun d'eux. Le téléphone conserve le dernier SMS de chaque expéditeur, et le texte est envoyé pour lecture sans le nom ni le numéro de l'expéditeur.",
                     label: "SMS de la banque sur Android",
                 },
+                {
+                    detail: "La saisie vocale envoie désormais l'audio à ElevenLabs pendant que vous parlez, via notre serveur sur Cloudflare, qui n'en garde rien. Le texte part ensuite vers notre serveur avec les noms de vos comptes et catégories, comme avant.",
+                    label: "Saisie vocale pendant que vous parlez",
+                },
             ],
             pt: [
                 {
@@ -660,6 +672,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "No Android, as mensagens de texto agora têm um interruptor por remetente em vez de um para o app inteiro. Quando você ativa as mensagens do banco, os números curtos, como os que os bancos usam, começam ativados, e nomes e números de telefone ficam desativados até você ativar cada um. O celular guarda a mensagem mais recente de cada remetente, e o texto é enviado para leitura sem o nome nem o número do remetente.",
                     label: "Mensagens de texto do banco no Android",
+                },
+                {
+                    detail: "O lançamento por voz agora envia o áudio à ElevenLabs enquanto você fala, pelo nosso servidor na Cloudflare, que não guarda nada. Depois o texto vai ao nosso servidor com os nomes das suas contas e categorias, como antes.",
+                    label: "Lançamento por voz enquanto você fala",
                 },
             ],
         },

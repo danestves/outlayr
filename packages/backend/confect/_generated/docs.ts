@@ -33,6 +33,7 @@ export type TransactionSplitsDoc = Document.Document<typeof schemaDefinition, "t
 export type TransactionTagsDoc = Document.Document<typeof schemaDefinition, "transactionTags">;
 export type TransactionsDoc = Document.Document<typeof schemaDefinition, "transactions">;
 export type TransfersDoc = Document.Document<typeof schemaDefinition, "transfers">;
+export type VoiceStreamCreditsDoc = Document.Document<typeof schemaDefinition, "voiceStreamCredits">;
 export type WebPushSubscriptionsDoc = Document.Document<typeof schemaDefinition, "webPushSubscriptions">;
 
 export interface Docs {
@@ -68,5 +69,6 @@ export interface Docs {
   transactionTags: TransactionTagsDoc;
   transactions: TransactionsDoc;
   transfers: TransfersDoc;
+  voiceStreamCredits: VoiceStreamCreditsDoc;
   webPushSubscriptions: WebPushSubscriptionsDoc;
 }

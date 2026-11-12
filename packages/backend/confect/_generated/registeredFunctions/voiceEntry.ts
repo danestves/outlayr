@@ -13,4 +13,8 @@ export default {
 ["endThread"]: RegisteredConvexFunction.register({ ...definitions["endThread"], handler: forward(definitions["endThread"].handler) }),
 ["admit"]: RegisteredConvexFunction.register({ ...definitions["admit"], handler: forward(definitions["admit"].handler) }),
 ["speak"]: RegisteredConvexFunction.register({ ...definitions["speak"], handler: forward(definitions["speak"].handler) }),
+["openStream"]: RegisteredConvexFunction.register({ ...definitions["openStream"], handler: forward(definitions["openStream"].handler) }),
+["speakText"]: RegisteredConvexFunction.register({ ...definitions["speakText"], handler: forward(definitions["speakText"].handler) }),
+["grantStream"]: RegisteredConvexFunction.register({ ...definitions["grantStream"], handler: forward(definitions["grantStream"].handler) }),
+["spendStream"]: RegisteredConvexFunction.register({ ...definitions["spendStream"], handler: forward(definitions["spendStream"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../voiceEntry.spec")["default"]>;
