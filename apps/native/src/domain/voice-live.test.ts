@@ -106,6 +106,14 @@ describe("accounts and categories", () => {
         expect(parse("I paid with Banesco for lunch").accountId?.value).toBe("banesco");
     });
 
+    it("hears Banesco in a Spanish transcript that spelled it with a v", () => {
+        const text = "Veinte dólares en Farmatodo con Vanesco hoy";
+        const draft = parse(text, "es");
+        expect(draft.accountId?.value).toBe("banesco");
+        expect(spanOf(text, draft.accountId)).toBe("Vanesco");
+        expect(parse("I paid with Vanesco for lunch").accountId).toBeNull();
+    });
+
     it("waits at the tail while a longer name could still be coming", () => {
         expect(parse("I paid with Banesco").accountId).toBeNull();
         expect(parse("I paid with Banesco", "en", { final: true }).accountId?.value).toBe("banesco");

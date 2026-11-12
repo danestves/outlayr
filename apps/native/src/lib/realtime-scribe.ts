@@ -2,6 +2,8 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 export const SCRIBE_SAMPLE_RATE = 16_000;
+// apps/voice-relay forwards the socket so ElevenLabs never sees the phone, as the privacy policy says.
+const SCRIBE_RELAY = "wss://voice.tryoutlayr.com";
 
 export const ScribeFailureReason = Schema.Literals([
     "unauthenticated",
@@ -73,6 +75,7 @@ const COMMIT_TIMEOUT_MS = 10_000;
 export interface ScribeStreamOptions {
     token: string;
     language: string;
+    /** Everything heard so far: committed segments plus the one in progress. */
     onPartial: (text: string) => void;
     onCommitted: (text: string) => void;
     onError: (error: ScribeStreamError) => void;
@@ -94,7 +97,7 @@ export function scribeUrl({ language, token }: Pick<ScribeStreamOptions, "langua
         model_id: "scribe_v2_realtime",
         token,
     });
-    return `wss://api.elevenlabs.io/v1/speech-to-text/realtime?${query.toString()}`;
+    return `${SCRIBE_RELAY}/v1/speech-to-text/realtime?${query.toString()}`;
 }
 
 export function pcmToBase64(pcm: Uint8Array): string {
@@ -171,12 +174,13 @@ export function openScribeStream({
         }
         const message: ServerMessage = decoded.value;
         if (message.message_type === "partial_transcript") {
-            onPartial(message.text);
+            onPartial([...committed, message.text.trim()].join(" ").trim());
         } else if (message.message_type === "committed_transcript") {
             const text = message.text.trim();
             if (text) {
                 committed.push(text);
                 onCommitted(text);
+                onPartial(committed.join(" "));
             }
             if (finishing) {
                 clearTimeout(finishing.timer);

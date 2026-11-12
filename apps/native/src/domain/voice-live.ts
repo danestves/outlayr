@@ -598,12 +598,18 @@ interface Mention {
 
 const foldName = (name: string) => fold(name).trim().split(WHITESPACE).join(" ");
 
+// Spanish says b and v alike, so the transcriber writes "Vanesco" for an account named Banesco.
+const betacism = (folded: string) => folded.replaceAll("v", "b");
+
 const MIN_NAME_LENGTH = 2;
 
 // Duplicate names are no match, like `uniqueMatch`: a draft that could land on either is not filled unasked.
-function prepareNames(rows: readonly { id: string; name: string | null }[]): NameEntry[] {
+function prepareNames(
+    rows: readonly { id: string; name: string | null }[],
+    spoken: (folded: string) => string
+): NameEntry[] {
     const named = rows.flatMap((row) => {
-        const name = row.name === null ? "" : foldName(row.name);
+        const name = row.name === null ? "" : spoken(foldName(row.name));
         return name.length >= MIN_NAME_LENGTH ? [{ id: row.id, name }] : [];
     });
     return named
@@ -768,9 +774,16 @@ const EMPTY_DRAFT: LiveDraft = {
 /** Folds the user's names once; the returned function is cheap enough to run on every partial transcript. */
 export function createLiveParser(context: LiveContext): (text: string, options?: LiveParseOptions) => LiveDraft {
     const lexicon: Lexicon = LEXICONS[context.language];
-    const accounts = prepareNames(context.accounts);
-    const expenseCategories = prepareNames(context.categories.filter((category) => !category.income));
-    const incomeCategories = prepareNames(context.categories.filter((category) => category.income));
+    const spoken = context.language.startsWith("es") ? betacism : (folded: string) => folded;
+    const accounts = prepareNames(context.accounts, spoken);
+    const expenseCategories = prepareNames(
+        context.categories.filter((category) => !category.income),
+        spoken
+    );
+    const incomeCategories = prepareNames(
+        context.categories.filter((category) => category.income),
+        spoken
+    );
 
     return (text, { final = false } = {}) => {
         const folded = fold(text);
@@ -790,7 +803,7 @@ export function createLiveParser(context: LiveContext): (text: string, options?:
 
         const strong = lexicon.transferStrong.exec(folded);
         const weak = strong === null ? lexicon.transferWeak.exec(folded) : null;
-        const mentions = findMentions(folded, accounts, final);
+        const mentions = findMentions(spoken(folded), accounts, final);
         const roles = mentions.map((mention) => roleOf(folded, mention.start, lexicon));
         const settledWeak = weak !== null && (roles.includes("from") || new Set(mentions.map((m) => m.id)).size > 1);
         const cue = strong ?? (settledWeak ? weak : null);
@@ -816,7 +829,7 @@ export function createLiveParser(context: LiveContext): (text: string, options?:
 
         const income = incomeOf(lexicon, folded, final);
         const categories = findMentions(
-            folded,
+            spoken(folded),
             income?.value === true ? incomeCategories : expenseCategories,
             final,
             mentions

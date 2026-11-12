@@ -74,6 +74,8 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
     const [partial, setPartial] = useState("");
     const level = useSharedValue(0);
     const sessionRef = useRef<Session | null>(null);
+    /** Bumped by every start and cancel, so a start that a cancel overtook never opens the microphone. */
+    const startsRef = useRef(0);
     const frameRef = useRef<number | null>(null);
     const latestPartial = useRef("");
     const onLevelRef = useLatest(onLevel);
@@ -101,6 +103,7 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
     };
 
     const cancel = () => {
+        startsRef.current += 1;
         const session = sessionRef.current;
         sessionRef.current = null;
         reset();
@@ -114,15 +117,28 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
         if (sessionRef.current) {
             return "failed";
         }
+        startsRef.current += 1;
+        const attempt = startsRef.current;
         const permission = await AudioManager.requestRecordingPermissions();
         if (permission !== "Granted") {
             return "denied";
         }
+        if (attempt !== startsRef.current) {
+            return "failed";
+        }
         const recorder = new AudioRecorder();
+        let starting = true;
+        let failedEarly = false;
         const stream = openScribeStream({
             language,
             onCommitted: () => undefined,
-            onError: (error) => onErrorRef.current?.(error),
+            onError: (error) => {
+                if (starting) {
+                    failedEarly = true;
+                } else {
+                    onErrorRef.current?.(error);
+                }
+            },
             onPartial: paintPartial,
             token,
         });
@@ -144,22 +160,36 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
                 onLevelRef.current?.(sample, Date.now());
             }
         );
-        recorder.onError(() =>
-            onErrorRef.current?.(new ScribeStreamError({ message: "The microphone failed.", reason: "provider" }))
-        );
+        recorder.onError(() => {
+            if (starting) {
+                failedEarly = true;
+            } else {
+                onErrorRef.current?.(new ScribeStreamError({ message: "The microphone failed.", reason: "provider" }));
+            }
+        });
 
         AudioManager.setSystemOptions({
             ios: { category: "playAndRecord", mode: "default", options: ["defaultToSpeaker", "allowBluetoothHFP"] },
         });
+        const overtaken = () => attempt !== startsRef.current;
         try {
             await AudioManager.setAudioSessionActivity(true);
+            if (overtaken()) {
+                return "failed";
+            }
             const started = await recorder.start();
-            if (started.status === "error") {
-                throw new Error(started.message);
+            if (overtaken()) {
+                await release(session);
+                return "failed";
+            }
+            if (started.status === "error" || failedEarly) {
+                throw new Error("The stream or microphone failed while starting.");
             }
         } catch {
             cancel();
             return "failed";
+        } finally {
+            starting = false;
         }
         return "started";
     };
