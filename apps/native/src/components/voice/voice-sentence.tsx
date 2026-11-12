@@ -22,9 +22,11 @@ interface PartProps<T> {
     fill: SlotFill<T> | null;
     onPress: (() => void) | undefined;
     show: (value: T) => string;
+    showWas?: (value: T) => string;
 }
 
-function Part<T>({ accessibilityLabel, blank, fallback, fill, onPress, show }: PartProps<T>) {
+function Part<T>({ accessibilityLabel, blank, fallback, fill, onPress, show, showWas = show }: PartProps<T>) {
+    const t = useTranslation();
     const { textClassName } = useSentenceStyle();
     const text = fill === null ? (fallback ?? blank) : show(fill.value);
     const open = fill === null && fallback === undefined;
@@ -52,13 +54,18 @@ function Part<T>({ accessibilityLabel, blank, fallback, fill, onPress, show }: P
         <Pressable
             accessibilityLabel={accessibilityLabel}
             accessibilityRole={onPress ? "button" : "text"}
-            accessibilityValue={{ text }}
+            accessibilityValue={{
+                text:
+                    fill?.was === null || fill === null
+                        ? text
+                        : t("voice.turn.corrected", { value: text, was: showWas(fill.was) }),
+            }}
             disabled={onPress === undefined}
             onPress={onPress}
         >
             <View className="flex-row items-baseline gap-1.5">
                 {fill?.was === null || fill === null ? null : (
-                    <Text className={cn(textClassName, "text-muted line-through")}>{show(fill.was)}</Text>
+                    <Text className={cn(textClassName, "text-muted line-through")}>{showWas(fill.was)}</Text>
                 )}
                 <Text className={cn(textClassName, tone())}>{text}</Text>
             </View>
@@ -80,7 +87,7 @@ interface VoiceSentenceViewProps {
     sentence: VoiceSentence;
 }
 
-const name = (lookup: (id: string) => string | null) => (id: string) => lookup(id) ?? id;
+const name = (lookup: (id: string) => string | null, blank: string) => (id: string) => lookup(id) ?? blank;
 
 export function VoiceSentenceView({ accountName, categoryName, currency, onEdit, sentence }: VoiceSentenceViewProps) {
     const t = useTranslation();
@@ -99,7 +106,7 @@ export function VoiceSentenceView({ accountName, categoryName, currency, onEdit,
                 blank={t("transaction.sentence.blank.account")}
                 fill={sentence.account}
                 onPress={onEdit}
-                show={name(accountName)}
+                show={name(accountName, t("transaction.sentence.blank.account"))}
             />
         ),
         amount: (
@@ -109,6 +116,7 @@ export function VoiceSentenceView({ accountName, categoryName, currency, onEdit,
                 fill={sentence.amount}
                 onPress={onEdit}
                 show={(value: number) => formatAmount(value, code, true, language)}
+                showWas={(value: number) => formatAmount(value, sentence.wasCurrency ?? code, true, language)}
             />
         ),
         category: (
@@ -117,7 +125,7 @@ export function VoiceSentenceView({ accountName, categoryName, currency, onEdit,
                 blank={t("transaction.sentence.blank.category")}
                 fill={sentence.category}
                 onPress={onEdit}
-                show={name(categoryName)}
+                show={name(categoryName, t("transaction.sentence.blank.category"))}
             />
         ),
         every: (
@@ -135,7 +143,7 @@ export function VoiceSentenceView({ accountName, categoryName, currency, onEdit,
                 blank={t("transaction.sentence.blank.account")}
                 fill={sentence.from}
                 onPress={onEdit}
-                show={name(accountName)}
+                show={name(accountName, t("transaction.sentence.blank.account"))}
             />
         ),
         merchant: (
@@ -153,7 +161,7 @@ export function VoiceSentenceView({ accountName, categoryName, currency, onEdit,
                 blank={t("transaction.sentence.blank.account")}
                 fill={sentence.to}
                 onPress={onEdit}
-                show={name(accountName)}
+                show={name(accountName, t("transaction.sentence.blank.account"))}
             />
         ),
         when: (

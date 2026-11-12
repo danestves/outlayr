@@ -2,7 +2,7 @@ import { localIsoDate } from "./voice-entry";
 import type { ResolvedRecurrence, ResolvedVoiceDraft } from "./voice-entry";
 import type { LiveDraft } from "./voice-live";
 
-export type SentenceKind = "expense" | "income" | "subscription" | "transfer";
+export type SentenceKind = "expense" | "income" | "recurringIncome" | "subscription" | "transfer";
 
 /** `guessed` is what the live parser heard; `confirmed` is what Claude's draft resolved. */
 export interface SlotFill<T> {
@@ -26,6 +26,7 @@ export interface VoiceSentence {
     /** Null until a word says which kind of entry this is. */
     kind: SentenceKind | null;
     to: Slot<string>;
+    wasCurrency: string | null;
 }
 
 const slot = <T>(mark: SlotFill<T>["mark"], value: T | null | undefined): Slot<T> =>
@@ -40,7 +41,7 @@ export function sentenceFromLive(live: LiveDraft): VoiceSentence {
     if (live.kind?.value === "transfer") {
         kind = "transfer";
     } else if (live.recurrence !== null) {
-        kind = "subscription";
+        kind = live.income?.value === true ? "recurringIncome" : "subscription";
     } else if (live.income?.value === true) {
         kind = "income";
     }
@@ -55,6 +56,7 @@ export function sentenceFromLive(live: LiveDraft): VoiceSentence {
         recurrence: guess(live.recurrence),
         kind,
         to: guess(live.toAccountId),
+        wasCurrency: null,
     };
 }
 
@@ -71,11 +73,12 @@ export function sentenceFromResolved(draft: ResolvedVoiceDraft): VoiceSentence {
             recurrence: null,
             kind: "transfer",
             to: confirm(draft.toAccount?.id),
+            wasCurrency: null,
         };
     }
     let kind: SentenceKind = "expense";
     if (draft.recurrence !== null) {
-        kind = "subscription";
+        kind = draft.income ? "recurringIncome" : "subscription";
     } else if (draft.income) {
         kind = "income";
     }
@@ -90,6 +93,7 @@ export function sentenceFromResolved(draft: ResolvedVoiceDraft): VoiceSentence {
         recurrence: confirm(draft.recurrence),
         kind,
         to: null,
+        wasCurrency: null,
     };
 }
 
@@ -112,13 +116,14 @@ export function withCorrection(next: VoiceSentence, previous: VoiceSentence | nu
     return {
         ...next,
         account: withWas(next.account, previous.account),
-        amount: withWas(next.amount, previous.amount),
+        amount: withWas(next.amount, previous.amount, (a, b) => a === b && next.currency === previous.currency),
         category: withWas(next.category, previous.category),
         date: withWas(next.date, previous.date, sameDay),
         from: withWas(next.from, previous.from),
         merchant: withWas(next.merchant, previous.merchant),
         recurrence: withWas(next.recurrence, previous.recurrence, sameRecurrence),
         to: withWas(next.to, previous.to),
+        wasCurrency: previous.currency,
     };
 }
 
@@ -136,6 +141,7 @@ export function overlayLive(base: VoiceSentence, live: VoiceSentence): VoiceSent
             recurrence: live.recurrence ?? base.recurrence,
             kind: live.kind ?? base.kind,
             to: live.to ?? base.to,
+            wasCurrency: null,
         },
         base
     );

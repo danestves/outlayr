@@ -188,6 +188,12 @@ const voice = {
             fr: "J'ai reçu {amount} de {merchant} pour {category} sur {account} {when}",
             pt: "Recebi {amount} de {merchant} para {category} em {account} {when}",
         }),
+        "voice.sentence.recurringIncome": t({
+            en: "Receiving {amount} from {merchant} {every} for {category} into {account} from {when}",
+            es: "Recibo {amount} de {merchant} {every} para {category} en {account} desde {when}",
+            fr: "Je reçois {amount} de {merchant} {every} pour {category} sur {account} dès {when}",
+            pt: "Recebo {amount} de {merchant} {every} para {category} em {account} a partir de {when}",
+        }),
         "voice.sentence.subscription": t({
             en: "Subscribed to {merchant} at {amount} {every} on {account} from {when}",
             es: "Me suscribí a {merchant} por {amount} {every} con {account} desde {when}",
@@ -220,6 +226,12 @@ const voice = {
             fr: "Je note…",
             pt: "Anotando…",
             "pt-PT": "A anotar…",
+        }),
+        "voice.turn.corrected": t({
+            en: "{value}, was {was}",
+            es: "{value}, antes {was}",
+            fr: "{value}, avant {was}",
+            pt: "{value}, antes {was}",
         }),
         "voice.turn.field.account": t({
             en: "account",

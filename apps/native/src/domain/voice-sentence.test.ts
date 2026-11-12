@@ -67,10 +67,18 @@ describe("sentenceFromResolved", () => {
             recurrence: { coefficient: 1, type: RECURRING_TYPE.monthly },
         });
         expect(sentence.kind).toBe("subscription");
+        expect(
+            sentenceFromResolved({ ...ENTRY, income: true, recurrence: sentence.recurrence?.value ?? null }).kind
+        ).toBe("recurringIncome");
     });
 });
 
 describe("corrections", () => {
+    it("strikes the old amount in its own currency when only the currency moved", () => {
+        const after = withCorrection(sentenceFromResolved({ ...ENTRY, currency: "EUR" }), sentenceFromResolved(ENTRY));
+        expect([after.amount?.was, after.wasCurrency]).toStrictEqual([20, ENTRY.currency]);
+    });
+
     it("strikes only the slots that moved", () => {
         const before = sentenceFromResolved(ENTRY);
         const after = withCorrection(
