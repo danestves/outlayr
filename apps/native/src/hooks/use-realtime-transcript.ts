@@ -61,17 +61,6 @@ function toPcm16(samples: Float32Array) {
     return { pcm: new Uint8Array(pcm.buffer), rms: Math.sqrt(energy / Math.max(1, samples.length)) };
 }
 
-async function release(session: Session, deactivate = true) {
-    session.recorder.clearOnAudioReady();
-    session.recorder.clearOnError();
-    if (session.recorder.isRecording()) {
-        await session.recorder.stop();
-    }
-    if (deactivate) {
-        await AudioManager.setAudioSessionActivity(false);
-    }
-}
-
 export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTranscriptOptions): RealtimeTranscript {
     const [partial, setPartial] = useState("");
     const level = useSharedValue(0);
@@ -92,6 +81,18 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
             frameRef.current = null;
             setPartial(latestPartial.current);
         });
+    };
+
+    const release = async (session: Session) => {
+        session.recorder.clearOnAudioReady();
+        session.recorder.clearOnError();
+        if (session.recorder.isRecording()) {
+            await session.recorder.stop();
+        }
+        // A newer take may have claimed the audio session while the recorder stopped.
+        if (sessionRef.current === null) {
+            await AudioManager.setAudioSessionActivity(false);
+        }
     };
 
     const reset = () => {
@@ -174,10 +175,9 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
             ios: { category: "playAndRecord", mode: "default", options: ["defaultToSpeaker", "allowBluetoothHFP"] },
         });
         const overtaken = () => attempt !== startsRef.current;
-        // A newer take may own the audio session by now, so only an idle one is switched off.
         const abandon = async () => {
             session.stream.close();
-            await release(session, sessionRef.current === null);
+            await release(session);
         };
         try {
             await AudioManager.setAudioSessionActivity(true);
