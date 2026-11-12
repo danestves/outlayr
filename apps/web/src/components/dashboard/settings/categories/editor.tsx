@@ -19,7 +19,7 @@ import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
 import { LookTile } from "@/components/ledger/tiles";
 import { liveCategories } from "@/lib/category-writes";
 
-import { Choice } from "../parts";
+import { Choice, Swatches } from "../parts";
 import { categoryProblem, categoryTree, INCOME_COLOR, MAX_EXPENSE_CATEGORIES } from "./model";
 import type { Category } from "./model";
 import { useCategoryWrites } from "./write";
@@ -330,19 +330,13 @@ function ColorField({ onPick, value }: { onPick: (hex: string) => void; value: s
     return (
         <div className="flex flex-col gap-1.5">
             <Label render={<span />}>{copy.color}</Label>
-            <ChoiceCards
-                aria-label={copy.color.value}
-                aspect="1 / 1"
-                className="grid grid-cols-[repeat(auto-fill,36px)] gap-2"
-                onValueChange={onPick}
+            <Swatches
+                className="grid grid-cols-[repeat(auto-fill,1.75rem)] gap-2"
+                label={copy.color.value}
+                onChange={onPick}
+                options={CATEGORY_PALETTE.map((hex) => ({ color: hex, label: hex, value: hex }))}
                 value={value}
-            >
-                {CATEGORY_PALETTE.map((hex) => (
-                    <ChoiceCards.Item aria-label={hex} key={hex} value={hex}>
-                        <ChoiceCards.Media style={{ background: hex }} />
-                    </ChoiceCards.Item>
-                ))}
-            </ChoiceCards>
+            />
         </div>
     );
 }
