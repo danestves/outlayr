@@ -79,10 +79,16 @@ const log = {
             fr: "Tout confirmer",
             pt: "Confirmar tudo",
         }),
-        "log.autolog.new": t({
+        "log.autolog.new_one": t({
+            en: "1 new",
+            es: "1 nuevo",
+            fr: "1 nouvelle",
+            pt: "1 novo",
+        }),
+        "log.autolog.new_other": t({
             en: "{count} new",
             es: "{count} nuevos",
-            fr: "{count} nouveaux",
+            fr: "{count} nouvelles",
             pt: "{count} novos",
         }),
         "log.autolog.paused": t({
