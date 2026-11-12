@@ -9,6 +9,7 @@ import {
     TRANSFER_FEE_ARRIVAL_KEY,
     TRANSFER_FEES_ARRIVAL_KEY,
     TRANSFER_FEE_ON_TOP_KEY,
+    TRANSFER_NO_FEE_ARRIVAL_KEY,
     TRANSFER_SENTENCE_KEYS,
     TRANSFER_SENTENCE_SLOTS,
 } from "./transfer-sentence";
@@ -57,5 +58,9 @@ describe("transfer sentence templates", () => {
 
     it.each(SUPPORTED_LANGUAGES)("keeps the fee slot in the %s feeless clause", (language) => {
         expect(sentenceSlotNames(CATALOGS[language]["transfers.sentence.noFee"] ?? "")).toStrictEqual(["fee"]);
+        expect([...sentenceSlotNames(CATALOGS[language][TRANSFER_NO_FEE_ARRIVAL_KEY] ?? "")].sort()).toStrictEqual([
+            "arrives",
+            "fee",
+        ]);
     });
 });

@@ -1386,3 +1386,42 @@ describe("a fee charged by each bank", () => {
         });
     });
 });
+
+describe("dollars that arrive short in another dollar account", () => {
+    async function shortArrival(): Promise<{ current: TransferDraft }> {
+        const { result } = await renderHook(() =>
+            useTransferDraft({} as Database, { fromAccountId: "usd", toAccountId: "usd-2" })
+        );
+        await act(async () => {
+            result.current.setSent("790");
+        });
+        await act(async () => {
+            result.current.setArrived("757.83");
+        });
+        return result;
+    }
+
+    it("holds the save and names what went missing as a fee either side could have taken", async () => {
+        const result = await shortArrival();
+        expect(result.current).toMatchObject({
+            canSave: false,
+            gapAmount: 32.17,
+            gapFees: { destination: 32.17, source: 32.17 },
+        });
+    });
+
+    it("books the difference as the sender's fee and moves exactly what arrived", async () => {
+        const result = await shortArrival();
+        await act(async () => {
+            result.current.resolveAsFee("source");
+        });
+        expect(result.current).toMatchObject({
+            arrived: 757.83,
+            canSave: true,
+            fees: { destination: 0, source: 32.17 },
+            fromBalanceAfter: -790,
+            gapAmount: 0,
+            toBalanceAfter: 757.83,
+        });
+    });
+});
