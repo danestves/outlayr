@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
+import { detectCurrency } from "./detect-currency";
 import { hasChargeAmount, mergeNotificationRead, NOTIFICATION_PATTERNS, parseNotification } from "./parse-notification";
 
 describe("parseNotification", () => {
@@ -101,6 +102,22 @@ describe("parseNotification", () => {
             income: false,
             merchant: "AMAZON",
         });
+    });
+
+    it("reads a dot that groups thousands with no decimals, as Colombian and Chilean pesos print", () => {
+        expect(parseNotification("Compra aprobada por $25.000 en Exito")).toMatchObject({ amount: 25_000 });
+        expect(parseNotification("Compra aprobada por $1.250.000 en Falabella")).toMatchObject({ amount: 1_250_000 });
+        expect(parseNotification("You spent $1,250 at Costco")).toMatchObject({ amount: 1250 });
+        expect(parseNotification("Purchase of KWD 1.250 at Sultan Center")).toMatchObject({ amount: 1.25 });
+    });
+
+    it("reads a USDt amount as dollars", () => {
+        expect(parseNotification("Compraste 5,50 USDt en Starbucks")).toMatchObject({
+            amount: 5.5,
+            amountText: "5,50 USDt",
+            merchant: "Starbucks",
+        });
+        expect(detectCurrency("5,50 USDt")).toBe("USD");
     });
 
     it("takes the amount when the unit trails the number", () => {
@@ -251,6 +268,10 @@ describe("parseNotification", () => {
             "Available credit: $1,000.00",
             "Crédito disponible: $1.000,00",
             "Você tem R$ 1.000,00 disponível",
+            "Spoiler: subió el dólar\nSe movió 2,3% en los últimos días. En Plenti la tasa de compra está en $3.328. Tú sabrás 😏",
+            "Tasa BCV: Bs. 36,50",
+            "Tipo de cambio hoy: $17.45",
+            "Today's exchange rate is $1.08",
         ]) {
             expect(parseNotification(text)).toBeNull();
             expect(hasChargeAmount(text)).toBe(false);
@@ -274,6 +295,11 @@ describe("parseNotification", () => {
         expect(parseNotification("Available credit: $1,000.00. You spent $25.00 at OXXO")).toMatchObject({
             amount: 25,
             merchant: "OXXO",
+        });
+        expect(parseNotification("Pago de tasa: $25.00")).toMatchObject({ amount: 25 });
+        expect(parseNotification("Tasa de compra: $3.328. Compraste USD 100.00 en Plenti")).toMatchObject({
+            amount: 100,
+            merchant: "Plenti",
         });
         expect(parseNotification("Blue Bottle Coffee\n$6.40\nAvailable credit: $1,000.00")).toMatchObject({
             amount: 6.4,

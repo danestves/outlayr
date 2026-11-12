@@ -1,6 +1,7 @@
 import type { NotificationRead } from "@outlayr/backend/confect/notificationRead.spec";
 import { CURRENCY_META, PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
-import { detectDecimalSeparator, parseCsvAmount } from "@outlayr/money/csv-read";
+import { parseCsvAmount } from "@outlayr/money/csv-read";
+import { decimalsFor } from "@outlayr/money/currency";
 
 import { detectCurrency, SYMBOL_ALIASES } from "./detect-currency";
 
@@ -69,10 +70,11 @@ const PROMO_BEFORE = new RegExp(
     "iu"
 );
 const BALANCE_AFTER = new RegExp(String.raw`^[^\S\n]*(?:available|balance|saldo|solde|dispon[íi]ve(?:is|l))\b`, "iu");
-const BALANCE_BEFORE = new RegExp(
-    String.raw`(?<![A-Za-z])(?:available credit|crédito disponible|crédit disponible|crédito disponível|available balance|balance|saldo disponible|saldo disp\.|saldo|solde)(?:\s+en\s+c(?:uen)?ta\.?)?(?:\s+\d{4})?\s*(?:is|es|est|é)?\s*[:=-]?\s*$`,
-    "iu"
-);
+const BALANCE = String.raw`(?<![A-Za-z])(?:available credit|crédito disponible|crédit disponible|crédito disponível|available balance|balance|saldo disponible|saldo disp\.|saldo|solde)(?:\s+en\s+c(?:uen)?ta\.?)?(?:\s+\d{4})?\s*(?:is|es|est|é)?\s*[:=-]?\s*$`;
+const EXCHANGE_RATE = String.raw`(?<![A-Za-z])(?:tasa\s+(?:de\s+)?(?:compra|venta|cambio|oficial|bcv)|tasa(?=\s+del\s+d[oó]lar)|tipo\s+de\s+cambio|cotizaci[oó]n|precio\s+del\s+d[oó]lar|exchange\s+rate|(?:buy|sell)(?:ing)?\s+rate|taxa\s+de\s+c[aâ]mbio|taux\s+de\s+change)(?:\s+del\s+d[oó]lar)?(?:\s*(?:est[aá]|es|is|hoy|today|en|at|a|:|=|-))*\s*$`;
+// A shipped LogNotificationIntent decodes only the pattern keys it was built with, so the rate cue rides on
+// balanceBefore to reach it without a native release.
+const BALANCE_BEFORE = new RegExp(`(?:${BALANCE})|(?:${EXCHANGE_RATE})`, "iu");
 
 const STOP = String.raw`(?=\s+(?:with|using|via|on|for|con|usando|por|el|la|desde|mediante)\b|[,.;\n]|$)`;
 const PAID_TO = new RegExp(String.raw`\b(?:at|in|en|to|a|de|@)\s+(?!las?\s+\d|fecha\b)(.+?)${STOP}`, "iu");
@@ -142,6 +144,23 @@ export function hasChargeAmount(text: string): boolean {
     return chargeMoney(text) !== null;
 }
 
+// One kind of separator that repeats, or that leaves three digits, is grouping: "$25.000" is 25000 and "$1.250.000"
+// parses, as LogWalletTransactionIntent.parseAmount reads them for the push. A three-decimal dinar keeps its decimals.
+function amountOf(token: string): number | null {
+    const digits = DIGITS.exec(token)?.[0] ?? token;
+    const code = detectCurrency(token);
+    const dot = digits.includes(".");
+    const threeDecimals = code !== null && decimalsFor(code) === 3;
+    if (dot !== digits.includes(",") && !threeDecimals) {
+        const only = dot ? "." : ",";
+        const groups = digits.split(only);
+        if (groups.length > 2 || groups.at(-1)?.length === 3) {
+            return parseCsvAmount(digits.replaceAll(only, ""));
+        }
+    }
+    return parseCsvAmount(digits, digits.lastIndexOf(",") > digits.lastIndexOf(".") ? "," : ".");
+}
+
 // Null without a money token (how "your statement is ready" is skipped), or when the charge did not go through.
 export function parseNotification(text: string): ParsedNotification | null {
     const match = chargeMoney(text);
@@ -149,8 +168,7 @@ export function parseNotification(text: string): ParsedNotification | null {
         return null;
     }
     const amountText = match[0].trim();
-    const digits = DIGITS.exec(amountText)?.[0] ?? amountText;
-    const amount = parseCsvAmount(digits, detectDecimalSeparator([digits]));
+    const amount = amountOf(amountText);
     if (amount == null || amount <= 0) {
         return null;
     }
@@ -215,8 +233,7 @@ function readCurrency(text: string, code: string | null, amount: number): string
         return null;
     }
     const shown = (text.match(EVERY_MONEY) ?? []).some((token) => {
-        const digits = DIGITS.exec(token)?.[0] ?? "";
-        const value = parseCsvAmount(digits, detectDecimalSeparator([digits]));
+        const value = amountOf(token);
         return value !== null && Math.abs(value - amount) < SAME_AMOUNT && detectCurrency(token) === code;
     });
     return shown ? `${code} ${amount}` : null;

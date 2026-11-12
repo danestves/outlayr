@@ -15,7 +15,10 @@ for (const code of PICKABLE_CURRENCY_CODES) {
 
 const CODES = new Set<string>(PICKABLE_CURRENCY_CODES);
 
-export const SYMBOL_ALIASES = { U$S: "USD", US$: "USD" } as const satisfies Record<string, string>;
+export const SYMBOL_ALIASES = { U$S: "USD", US$: "USD", USDT: "USD", USDt: "USD" } as const satisfies Record<
+    string,
+    string
+>;
 const ALIAS_CODE = new Map<string, string>(Object.entries(SYMBOL_ALIASES));
 
 /**
