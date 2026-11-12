@@ -197,9 +197,10 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
         AudioManager.setSystemOptions({
             ios: { category: "playAndRecord", mode: "default", options: ["defaultToSpeaker", "allowBluetoothHFP"] },
         });
-        const opened = await openMicrophone(recorder, () => attempt !== startsRef.current);
+        const overtaken = () => attempt !== startsRef.current;
+        const opened = await openMicrophone(recorder, overtaken);
         starting = false;
-        if (opened && !failedEarly) {
+        if (opened && !failedEarly && !overtaken()) {
             return "started";
         }
         if (sessionRef.current === session) {
