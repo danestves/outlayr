@@ -12,10 +12,12 @@ import { Pressable, Text, View } from "react-native";
 import Animated, {
     FadeIn,
     FadeOut,
+    LinearTransition,
     useAnimatedStyle,
     useDerivedValue,
     useReducedMotion,
     useSharedValue,
+    withDelay,
     withSpring,
     withTiming,
 } from "react-native-reanimated";
@@ -26,8 +28,8 @@ import { AiConsentGate } from "@/components/ai-consent";
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { LimitToast } from "@/components/limit-toast";
 import { ModalClose } from "@/components/modal-close";
-import { VoiceOrb } from "@/components/voice/voice-orb";
-import type { VoiceOrbState } from "@/components/voice/voice-orb";
+import { ORI_GOT_IT_MS, OriVoice } from "@/components/voice/ori-voice";
+import type { OriState } from "@/components/voice/ori-voice";
 import { VoiceSentenceView } from "@/components/voice/voice-sentence";
 import { useDatabase } from "@/contexts/local-data-context";
 import { getLastUsedAccount } from "@/data/accounts-core";
@@ -74,10 +76,12 @@ import { voiceEntryDraft } from "./entry-drafts";
 import { usePromptLedger } from "./use-prompt-ledger";
 import { useResolvedPhase } from "./use-resolved-phase";
 
-const ORB_SIZE = 180;
-const ORB_SIZE_BAR = 88;
-const ORB_PRESS_SCALE = 0.96;
-const ORB_SPRING = { damping: 18, mass: 0.9, stiffness: 170 };
+const ORI_SIZE = 150;
+const ORI_SIZE_SETTLED = 84;
+const ORI_PRESS_SCALE = 0.96;
+const ORI_SPRING = { damping: 18, mass: 0.9, stiffness: 170 };
+const HEARD_AFTER_MOVE_MS = 300;
+const BUTTONS_AFTER_HOLD_MS = 120;
 const HINT_MERCHANT_MAX = 24;
 
 const FAILURE_KEY = {
@@ -105,7 +109,7 @@ const HANDOFF_HAPTIC: Partial<Record<VoicePhase["kind"], HapticEvent>> = {
 
 const NO_QUOTES: readonly VoiceQuote[] = [];
 
-function orbStateOf(phase: VoicePhase): VoiceOrbState {
+function oriStateOf(phase: VoicePhase): OriState {
     switch (phase.kind) {
         case "listening": {
             return "listening";
@@ -156,44 +160,101 @@ function VoiceShell({
     );
 }
 
-function OrbControl({
+function OriControl({
+    delayMs,
     label,
     level,
     onPress,
     size,
     state,
 }: {
-    label: string;
+    delayMs: number;
+    /** Absent once settled: she is decoration there, and the buttons below carry the actions. */
+    label?: string;
     level: SharedValue<number>;
     onPress?: () => void;
     size: number;
-    state: VoiceOrbState;
+    state: OriState;
 }) {
     const reducedMotion = useReducedMotion();
     const pressed = useSharedValue(1);
     const frame = useDerivedValue(() =>
-        reducedMotion ? withTiming(size, { duration: 160 }) : withSpring(size, ORB_SPRING)
+        reducedMotion ? withTiming(size, { duration: 160 }) : withDelay(delayMs, withSpring(size, ORI_SPRING))
     );
     const box = useAnimatedStyle(() => ({ height: frame.get(), width: frame.get() }));
     const canvas = useAnimatedStyle(() => ({
-        transform: [{ scale: (frame.get() / ORB_SIZE) * pressed.get() }],
+        transform: [{ scale: (frame.get() / ORI_SIZE) * pressed.get() }],
     }));
 
     return (
         <Pressable
             accessibilityLabel={label}
-            accessibilityRole="button"
+            accessibilityRole={label === undefined ? undefined : "button"}
+            accessible={label !== undefined}
             disabled={onPress === undefined}
             onPress={onPress}
-            onPressIn={() => pressed.set(withSpring(ORB_PRESS_SCALE, ORB_SPRING))}
-            onPressOut={() => pressed.set(withSpring(1, ORB_SPRING))}
+            onPressIn={() => pressed.set(withSpring(ORI_PRESS_SCALE, ORI_SPRING))}
+            onPressOut={() => pressed.set(withSpring(1, ORI_SPRING))}
         >
             <Animated.View className="items-center justify-center" style={box}>
                 <Animated.View style={canvas}>
-                    <VoiceOrb level={level} size={ORB_SIZE} state={state} />
+                    <OriVoice level={level} size={ORI_SIZE} state={state} />
                 </Animated.View>
             </Animated.View>
         </Pressable>
+    );
+}
+
+function VoiceBar({
+    buttons,
+    caption,
+    level,
+    settled,
+    state,
+    tap,
+}: {
+    buttons: React.ReactNode;
+    caption: React.ReactNode;
+    level: SharedValue<number>;
+    settled: boolean;
+    state: OriState;
+    tap: { label: string; onPress?: () => void };
+}) {
+    const reducedMotion = useReducedMotion();
+    const holdMs = settled && !reducedMotion ? ORI_GOT_IT_MS : 0;
+    // Keyed so Ori moves above the heard sentence on settle instead of remounting, which would skip her hop.
+    // The sentence and buttons fade in only once she has left their slots.
+    const ori = (
+        <Animated.View className="items-center" key="ori" layout={LinearTransition.delay(holdMs)}>
+            <OriControl
+                delayMs={holdMs}
+                label={settled ? undefined : tap.label}
+                level={level}
+                onPress={settled ? undefined : tap.onPress}
+                size={settled ? ORI_SIZE_SETTLED : ORI_SIZE}
+                state={state}
+            />
+        </Animated.View>
+    );
+    const captioned = caption ? (
+        <Animated.View
+            entering={settled ? FadeIn.delay(holdMs + HEARD_AFTER_MOVE_MS).duration(220) : undefined}
+            key={settled ? "heard" : "live"}
+        >
+            {caption}
+        </Animated.View>
+    ) : null;
+    return (
+        <View className="gap-5">
+            {settled ? [ori, captioned] : [captioned, ori]}
+            {settled && buttons ? (
+                <Animated.View entering={FadeIn.delay(holdMs + BUTTONS_AFTER_HOLD_MS).duration(220)}>
+                    {buttons}
+                </Animated.View>
+            ) : (
+                buttons
+            )}
+        </View>
     );
 }
 
@@ -360,7 +421,7 @@ function VoiceGateScreen({ gate }: { gate: Exclude<AuthGate, "signed-in"> }) {
     }
     return (
         <VoiceShell bottom={null} onClose={() => router.back()}>
-            <VoiceOrb size={ORB_SIZE} state={gate === "restoring" ? "idle" : "failed"} />
+            <OriVoice size={ORI_SIZE} state={gate === "restoring" ? "idle" : "failed"} />
             <StatusLine waiting={gate === "restoring"}>{status}</StatusLine>
         </VoiceShell>
     );
@@ -372,7 +433,7 @@ interface BarAction {
 }
 
 /** Nothing while a clip is on its way or a save is in flight. */
-function orbActionOf(
+function oriActionOf(
     phase: VoicePhase,
     saving: boolean,
     actions: { finish: () => void; listenAgain: () => void; seePro: () => void },
@@ -763,27 +824,20 @@ function VoiceThreadScreen() {
         </Animated.View>
     ) : null;
 
-    const orb = orbActionOf(phase, saving, { finish, listenAgain, seePro }, t, entitled);
+    const tap = oriActionOf(phase, saving, { finish, listenAgain, seePro }, t, entitled);
     const onEdit = resolved ? editorOf(resolved, openForm, openTransferForm) : undefined;
 
     const caption = captionOf({ heard, heardWords, phase, saying, underSentence: sentence !== null });
 
     const bottom = (
-        <View className="gap-5">
-            {caption}
-            {resolved ? null : (
-                <View className="items-center">
-                    <OrbControl
-                        label={orb.label}
-                        level={level}
-                        onPress={orb.onPress}
-                        size={ORB_SIZE_BAR}
-                        state={orbStateOf(phase)}
-                    />
-                </View>
-            )}
-            {buttons}
-        </View>
+        <VoiceBar
+            buttons={buttons}
+            caption={caption}
+            level={level}
+            settled={resolved !== null}
+            state={oriStateOf(phase)}
+            tap={tap}
+        />
     );
 
     const waiting = phase.kind === "sending" || phase.kind === "thinking";
