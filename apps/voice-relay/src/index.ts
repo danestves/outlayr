@@ -18,28 +18,37 @@ function upstreamUrl(request: URL): URL | null {
     return url;
 }
 
+const NORMAL_CLOSE = 1000;
+const FAILED_CLOSE = 1011;
+
+// 1005 and 1006 only describe a close locally; sending them throws and would leave the other side open.
+function sendableCode(code: number): number {
+    if (code === 1005) {
+        return NORMAL_CLOSE;
+    }
+    const allowed = (code >= 1000 && code <= 1003) || (code >= 1007 && code <= 1011) || (code >= 3000 && code <= 4999);
+    return allowed ? code : FAILED_CLOSE;
+}
+
+function shut(socket: WebSocket, code: number, reason?: string) {
+    try {
+        socket.close(code, reason);
+    } catch {
+        // Already closed.
+    }
+}
+
 function pipe(from: WebSocket, to: WebSocket) {
     from.addEventListener("message", (event) => {
         try {
             to.send(event.data);
         } catch {
-            from.close(1011);
+            shut(from, FAILED_CLOSE);
+            shut(to, FAILED_CLOSE);
         }
     });
-    from.addEventListener("close", (event) => {
-        try {
-            to.close(event.code === 1005 ? 1000 : event.code, event.reason);
-        } catch {
-            // Already closed from the other side.
-        }
-    });
-    from.addEventListener("error", () => {
-        try {
-            to.close(1011);
-        } catch {
-            // Already closed from the other side.
-        }
-    });
+    from.addEventListener("close", (event) => shut(to, sendableCode(event.code), event.reason));
+    from.addEventListener("error", () => shut(to, FAILED_CLOSE));
 }
 
 export default {

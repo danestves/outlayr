@@ -61,13 +61,15 @@ function toPcm16(samples: Float32Array) {
     return { pcm: new Uint8Array(pcm.buffer), rms: Math.sqrt(energy / Math.max(1, samples.length)) };
 }
 
-async function release(session: Session) {
+async function release(session: Session, deactivate = true) {
     session.recorder.clearOnAudioReady();
     session.recorder.clearOnError();
     if (session.recorder.isRecording()) {
         await session.recorder.stop();
     }
-    await AudioManager.setAudioSessionActivity(false);
+    if (deactivate) {
+        await AudioManager.setAudioSessionActivity(false);
+    }
 }
 
 export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTranscriptOptions): RealtimeTranscript {
@@ -172,21 +174,31 @@ export function useRealtimeTranscript({ language, onError, onLevel }: RealtimeTr
             ios: { category: "playAndRecord", mode: "default", options: ["defaultToSpeaker", "allowBluetoothHFP"] },
         });
         const overtaken = () => attempt !== startsRef.current;
+        // A newer take may own the audio session by now, so only an idle one is switched off.
+        const abandon = async () => {
+            session.stream.close();
+            await release(session, sessionRef.current === null);
+        };
         try {
             await AudioManager.setAudioSessionActivity(true);
             if (overtaken()) {
+                await abandon();
                 return "failed";
             }
             const started = await recorder.start();
             if (overtaken()) {
-                await release(session);
+                await abandon();
                 return "failed";
             }
             if (started.status === "error" || failedEarly) {
                 throw new Error("The stream or microphone failed while starting.");
             }
         } catch {
-            cancel();
+            if (sessionRef.current === session) {
+                cancel();
+            } else {
+                await abandon();
+            }
             return "failed";
         } finally {
             starting = false;
