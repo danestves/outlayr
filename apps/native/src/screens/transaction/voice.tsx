@@ -3,7 +3,6 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
-import { Image } from "expo-image";
 import { useNavigation, useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
 import { Shimmer } from "panelui-native/components/shimmer";
@@ -24,28 +23,24 @@ import type { SharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AiConsentGate } from "@/components/ai-consent";
-import { AmountsHiddenContext, FlowAmount } from "@/components/amount-text";
-import { intervalPhrase } from "@/components/custom-schedule-sheet";
+import { AmountsHiddenContext } from "@/components/amount-text";
 import { LimitToast } from "@/components/limit-toast";
 import { ModalClose } from "@/components/modal-close";
 import { VoiceOrb } from "@/components/voice/voice-orb";
 import type { VoiceOrbState } from "@/components/voice/voice-orb";
+import { VoiceSentenceView } from "@/components/voice/voice-sentence";
 import { useDatabase } from "@/contexts/local-data-context";
 import { getLastUsedAccount } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import { getCategoryById } from "@/data/categories-core";
 import { useAiConsent } from "@/data/settings";
 import { lastLoggedEntry } from "@/data/transactions-core";
-import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
 import type { AuthGate } from "@/domain/auth-gate";
-import { formatRelativeDay } from "@/domain/dates";
 import type { HapticEvent } from "@/domain/haptics";
-import { amountParts, formatAmount, symbolPrefix } from "@/domain/money";
 import { paywallHref } from "@/domain/paywall-trigger";
 import type { LastEntry } from "@/domain/reminder";
 import {
-    draftDelta,
     heardSegments,
     resolveVoiceDraft,
     savableEntry,
@@ -53,21 +48,18 @@ import {
     stillCurrent,
     transferStillCurrent,
 } from "@/domain/voice-entry";
-import type {
-    AccountCandidate,
-    ResolvedVoiceDraft,
-    ResolvedVoiceEntry,
-    ResolvedVoiceTransfer,
-    VoiceDraftField,
-    VoiceTurn,
-} from "@/domain/voice-entry";
-import { useMerchantMark } from "@/hooks/use-merchant-mark";
+import type { ResolvedVoiceDraft, ResolvedVoiceEntry, ResolvedVoiceTransfer, VoiceTurn } from "@/domain/voice-entry";
+import { createLiveParser } from "@/domain/voice-live";
+import type { LiveContext } from "@/domain/voice-live";
+import { overlayLive, sentenceFromLive, sentenceFromResolved, withCorrection } from "@/domain/voice-sentence";
+import type { VoiceSentence } from "@/domain/voice-sentence";
 import { useProEntitled } from "@/hooks/use-pro-locked";
 import { isLimitRefusal, useLimitNotice } from "@/hooks/use-usage-limits";
 import { useVoiceEntry } from "@/hooks/use-voice-entry";
 import type { VoiceFailure, VoicePhase } from "@/hooks/use-voice-entry";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
+import { languageSubtag } from "@/i18n/languages";
 import { useAuthSession } from "@/lib/auth-session";
 import type { VoiceDraft, VoiceQuote } from "@/lib/cloud-ai";
 import { useHaptics } from "@/lib/use-haptics";
@@ -83,12 +75,9 @@ import { usePromptLedger } from "./use-prompt-ledger";
 import { useResolvedPhase } from "./use-resolved-phase";
 
 const ORB_SIZE = 180;
-const ORB_SIZE_HEARD = 120;
-const ORB_SIZE_SETTLED = 80;
+const ORB_SIZE_BAR = 88;
 const ORB_PRESS_SCALE = 0.96;
 const ORB_SPRING = { damping: 18, mass: 0.9, stiffness: 170 };
-const MARK_SIZE = 28;
-const MARK_RADIUS = 8;
 const HINT_MERCHANT_MAX = 24;
 
 const FAILURE_KEY = {
@@ -116,17 +105,6 @@ const HANDOFF_HAPTIC: Partial<Record<VoicePhase["kind"], HapticEvent>> = {
 
 const NO_QUOTES: readonly VoiceQuote[] = [];
 
-const FIELD_KEY = {
-    account: "voice.turn.field.account",
-    amount: "voice.turn.field.amount",
-    category: "voice.turn.field.category",
-    date: "voice.turn.field.date",
-    details: "voice.turn.field.details",
-    kind: "voice.turn.field.kind",
-    merchant: "voice.turn.field.merchant",
-    schedule: "voice.turn.field.schedule",
-} as const satisfies Record<VoiceDraftField, string>;
-
 function orbStateOf(phase: VoicePhase): VoiceOrbState {
     switch (phase.kind) {
         case "listening": {
@@ -152,6 +130,7 @@ function VoiceShell({
     bottom,
     children,
     closeDisabled = false,
+    contentClassName = "flex-1 items-center justify-center gap-6 px-6",
     onClose,
     overlay,
 }: {
@@ -159,6 +138,7 @@ function VoiceShell({
     children: React.ReactNode;
     /** Leaving under a save would land its callbacks on the wrong route. */
     closeDisabled?: boolean;
+    contentClassName?: string;
     onClose: () => void;
     overlay?: React.ReactNode;
 }) {
@@ -167,7 +147,7 @@ function VoiceShell({
     return (
         <View className="bg-background flex-1">
             <ModalClose accessibilityLabel={t("voice.close")} disabled={closeDisabled} onPress={onClose} />
-            <View className="flex-1 items-center justify-center gap-6 px-6">{children}</View>
+            <View className={contentClassName}>{children}</View>
             <View className="gap-2 px-5" style={{ paddingBottom: Math.max(insets.bottom, 20) }}>
                 {bottom}
             </View>
@@ -214,102 +194,6 @@ function OrbControl({
                 </Animated.View>
             </Animated.View>
         </Pressable>
-    );
-}
-
-function ReviewLine({
-    accountName,
-    categoryName,
-    draft,
-}: {
-    accountName: string | null;
-    categoryName: string | null;
-    draft: ResolvedVoiceEntry;
-}) {
-    const nowMs = useNow();
-    const t = useTranslation();
-    const { language } = useLanguage();
-    const amount = formatAmount(draft.amount, draft.currency, true, language);
-    const day = formatRelativeDay(draft.date, new Date(nowMs), language);
-    const preposition = t(draft.income ? "voice.review.from" : "voice.review.at");
-    const mark = useMerchantMark(draft.merchant, draft.domain);
-
-    return (
-        <View className="items-center gap-2 px-6">
-            <View accessibilityLabel={amount} accessibilityRole="text" accessible>
-                <FlowAmount
-                    amount={draft.amount}
-                    className={`font-sans-semibold text-hero tabular-nums ${draft.income ? "text-income" : "text-foreground"}`}
-                    code={draft.currency}
-                    prefix={symbolPrefix(amountParts(draft.amount, draft.currency, true, language).symbol)}
-                    showCents
-                    still
-                />
-            </View>
-            <View className="flex-row items-center justify-center gap-2">
-                <Text className="font-sans-medium text-grammar text-title">{preposition}</Text>
-                {mark ? (
-                    <Animated.View entering={FadeIn.duration(200)}>
-                        <Image
-                            contentFit="cover"
-                            source={{ uri: mark }}
-                            style={{ borderRadius: MARK_RADIUS, height: MARK_SIZE, width: MARK_SIZE }}
-                        />
-                    </Animated.View>
-                ) : null}
-                <Text className="font-sans-medium text-foreground text-title shrink" numberOfLines={2}>
-                    {draft.merchant.trim().length > 0 ? draft.merchant : t("voice.review.noMerchant")}
-                </Text>
-            </View>
-            <Text className="text-muted text-center font-sans text-base" numberOfLines={1}>
-                {categoryName ?? t("voice.review.noCategory")}
-                {draft.recurrence ? (
-                    <>
-                        <Text className="text-subtle"> · </Text>
-                        {t("transaction.schedule.every", {
-                            interval: intervalPhrase(t, draft.recurrence.type, draft.recurrence.coefficient),
-                        })}
-                    </>
-                ) : null}
-                {accountName ? (
-                    <>
-                        <Text className="text-subtle"> · </Text>
-                        {accountName}
-                    </>
-                ) : null}
-                <Text className="text-subtle"> · </Text>
-                {day}
-            </Text>
-        </View>
-    );
-}
-
-function TransferReviewLine({ draft }: { draft: ResolvedVoiceTransfer }) {
-    const nowMs = useNow();
-    const t = useTranslation();
-    const { language } = useLanguage();
-    const colors = useColors();
-    const amount = formatAmount(draft.amount, draft.currency, true, language);
-    const day = formatRelativeDay(draft.date, new Date(nowMs), language);
-    const missing = t("voice.review.noAccount");
-
-    return (
-        <View className="items-center gap-2 px-6">
-            <Text className="font-sans-semibold text-hero tabular-nums" style={{ color: colors.transfer }}>
-                {amount}
-            </Text>
-            <Text className="font-sans-medium text-foreground text-title text-center" numberOfLines={2}>
-                {t("voice.review.transfer", {
-                    from: draft.fromAccount?.name ?? missing,
-                    to: draft.toAccount?.name ?? missing,
-                })}
-            </Text>
-            <Text className="text-muted text-center font-sans text-base" numberOfLines={1}>
-                {t("voice.review.transferLabel")}
-                <Text className="text-subtle"> · </Text>
-                {day}
-            </Text>
-        </View>
     );
 }
 
@@ -365,79 +249,56 @@ function HeardSentence({ quotes, text, under }: { quotes: readonly VoiceQuote[];
     );
 }
 
-function correctionOf(turns: VoiceTurn[], order: number): VoiceDraftField[] | null {
-    let previous: VoiceDraft | null = null;
-    let current: VoiceDraft | null = null;
-    for (const turn of turns) {
-        if (turn.kind !== "proposed" || turn.draft === null) {
-            continue;
-        }
-        if (turn.order < order) {
-            previous = turn.draft;
-        } else if (turn.order === order) {
-            current = turn.draft;
-        }
-    }
-    return previous && current ? draftDelta(previous, current) : null;
+const SAYING: ReadonlySet<VoicePhase["kind"]> = new Set(["starting", "listening", "sending", "thinking"]);
+
+function hintShown(phase: VoicePhase, spoke: boolean, turns: VoiceTurn[], partial: string): boolean {
+    return phase.kind === "listening" && !spoke && turns.length === 0 && partial === "";
 }
 
-function CorrectionLine({ fields }: { fields: VoiceDraftField[] }) {
-    const t = useTranslation();
+const CAPTION_MAX_CHARS = 140;
+
+function LiveCaption({ caret, text }: { caret: boolean; text: string }) {
+    const tail = text.trim().slice(-CAPTION_MAX_CHARS);
+    const cut = tail.lastIndexOf(" ") + 1;
     return (
-        <Animated.View entering={FadeIn.duration(220)}>
-            <Text className="text-muted text-caption text-center font-sans">
-                {t("voice.turn.updated")}
-                <Text className="text-subtle"> · </Text>
-                <Text className="font-sans-medium text-foreground">
-                    {fields.length === 0
-                        ? t("voice.turn.unchanged")
-                        : fields.map((field) => t(FIELD_KEY[field])).join(", ")}
-                </Text>
-            </Text>
-        </Animated.View>
+        <Text className="text-muted font-sans-medium text-lg" numberOfLines={3}>
+            {tail.slice(0, cut)}
+            <Text className="text-foreground font-sans-semibold">{tail.slice(cut)}</Text>
+            {caret ? <Text className="text-tint font-sans-semibold">|</Text> : null}
+        </Text>
     );
 }
 
-function latestDraft(turns: VoiceTurn[]): VoiceDraft | null {
-    for (let index = turns.length - 1; index >= 0; index -= 1) {
-        const turn = turns[index];
-        if (turn?.kind === "proposed" && turn.draft !== null) {
-            return turn.draft;
+function draftBefore(turns: VoiceTurn[], order: number): VoiceDraft | null {
+    let found: VoiceDraft | null = null;
+    for (const turn of turns) {
+        if (turn.kind === "proposed" && turn.draft !== null && turn.order < order) {
+            found = turn.draft;
         }
     }
-    return null;
+    return found;
 }
 
-function earlierResolved(
-    context: Omit<Parameters<typeof resolveVoiceDraft>[0], "draft" | "now">,
-    saying: boolean,
-    turns: VoiceTurn[]
-): ResolvedVoiceDraft | null {
-    const draft = saying ? latestDraft(turns) : null;
+type ResolveContext = Omit<Parameters<typeof resolveVoiceDraft>[0], "draft" | "now">;
+
+function resolvedBefore(context: ResolveContext, turns: VoiceTurn[], order: number): ResolvedVoiceDraft | null {
+    const draft = draftBefore(turns, order);
     return draft ? resolveVoiceDraft({ ...context, draft, now: new Date() }) : null;
 }
 
-function DraftLine({ accounts, draft }: { accounts: readonly AccountCandidate[]; draft: ResolvedVoiceDraft }) {
-    const db = useDatabase();
-    if (draft.kind === "transfer") {
-        return <TransferReviewLine draft={draft} />;
-    }
-    const categoryName = draft.categoryId ? (getCategoryById(db, draft.categoryId)?.name ?? null) : null;
-    const accountName = accounts.find((account) => account.id === draft.accountId)?.name ?? null;
-    return <ReviewLine accountName={accountName} categoryName={categoryName} draft={draft} />;
+interface SentenceParts {
+    earlier: ResolvedVoiceDraft | null;
+    live: VoiceSentence | null;
+    previous: ResolvedVoiceDraft | null;
+    resolved: ResolvedVoiceDraft | null;
 }
 
-const SAYING: ReadonlySet<VoicePhase["kind"]> = new Set(["starting", "listening", "sending", "thinking"]);
-
-function orbSizeOf(phase: VoicePhase, resolved: boolean, company: boolean): number {
+function sentenceOf({ earlier, live, previous, resolved }: SentenceParts): VoiceSentence | null {
     if (resolved) {
-        return ORB_SIZE_SETTLED;
+        return withCorrection(sentenceFromResolved(resolved), previous && sentenceFromResolved(previous));
     }
-    return company || phase.kind === "failed" ? ORB_SIZE_HEARD : ORB_SIZE;
-}
-
-function hintShown(phase: VoicePhase, spoke: boolean, turns: VoiceTurn[]): boolean {
-    return phase.kind === "listening" && !spoke && turns.length === 0;
+    const base = earlier && sentenceFromResolved(earlier);
+    return live && base ? overlayLive(base, live) : (live ?? base);
 }
 
 function useHandoffHaptics(kind: VoicePhase["kind"]) {
@@ -609,6 +470,79 @@ const writeTransfer = Effect.fn("VoiceThread.writeTransfer")(function* writeTran
     done.onSaved();
 });
 
+function useVoiceSentence({
+    context,
+    currency,
+    heard,
+    partial,
+    phase,
+    resolved,
+    turns,
+}: {
+    context: ResolveContext & Pick<LiveContext, "accounts" | "categories">;
+    currency: string;
+    heard: string | null;
+    partial: string;
+    phase: VoicePhase;
+    resolved: ResolvedVoiceDraft | null;
+    turns: VoiceTurn[];
+}) {
+    const { language } = useLanguage();
+    const [parse] = useState(() =>
+        createLiveParser({
+            accounts: context.accounts,
+            categories: context.categories,
+            currency,
+            language,
+            now: new Date(),
+        })
+    );
+    const saying = SAYING.has(phase.kind);
+    const earlier = saying ? resolvedBefore(context, turns, Number.POSITIVE_INFINITY) : null;
+    const previous = phase.kind === "review" ? resolvedBefore(context, turns, phase.order) : null;
+    const spokenText = phase.kind === "listening" ? partial : heard;
+    const heardWords = saying && spokenText !== null && spokenText.trim() !== "" ? spokenText : null;
+    const live =
+        heardWords === null ? null : sentenceFromLive(parse(heardWords, { final: phase.kind !== "listening" }));
+    return { heardWords, sentence: sentenceOf({ earlier, live, previous, resolved }) };
+}
+
+function captionOf({
+    heard,
+    heardWords,
+    phase,
+    saying,
+    underSentence,
+}: {
+    heard: string | null;
+    heardWords: string | null;
+    phase: VoicePhase;
+    saying: boolean;
+    underSentence: boolean;
+}) {
+    if (heardWords !== null) {
+        return <LiveCaption caret={phase.kind === "listening"} text={heardWords} />;
+    }
+    if (heard && !saying) {
+        return (
+            <HeardSentence
+                quotes={phase.kind === "review" ? phase.quotes : NO_QUOTES}
+                text={heard}
+                under={underSentence}
+            />
+        );
+    }
+    return null;
+}
+
+function editorOf(
+    resolved: ResolvedVoiceDraft,
+    openForm: (draft: ResolvedVoiceEntry) => void,
+    openTransferForm: (draft: ResolvedVoiceTransfer) => void
+) {
+    return () => (resolved.kind === "entry" ? openForm(resolved) : openTransferForm(resolved));
+}
+
 function VoiceThreadScreen() {
     const router = useRouter();
     const db = useDatabase();
@@ -628,7 +562,11 @@ function VoiceThreadScreen() {
         language,
     };
 
-    const { cancel, finish, heard, level, listenAgain, phase, spoke, turns } = useVoiceEntry({ context, request });
+    const { cancel, finish, heard, level, listenAgain, partial, phase, spoke, turns } = useVoiceEntry({
+        context,
+        language: languageSubtag(language),
+        request,
+    });
     const hint = useVoiceHint();
     const refusal = phase.kind === "failed" && isLimitRefusal(phase.reason) ? phase.reason : null;
     const limit = useLimitNotice("voiceEntry", refusal);
@@ -639,8 +577,7 @@ function VoiceThreadScreen() {
     const entry = resolved?.kind === "entry" ? resolved : null;
     const transfer = resolved?.kind === "transfer" ? resolved : null;
     const saying = SAYING.has(phase.kind);
-    const earlier = earlierResolved(context, saying, turns);
-    const shown = resolved ?? earlier;
+    const { heardWords, sentence } = useVoiceSentence({ context, currency, heard, partial, phase, resolved, turns });
     useHandoffHaptics(phase.kind);
     const savableCategoryId = entry && stillCurrent(entry, live) ? (savableEntry(entry)?.categoryId ?? null) : null;
 
@@ -761,8 +698,6 @@ function VoiceThreadScreen() {
     const settled = resolved !== null || phase.kind === "failed";
     const transferLegs = transfer && transferStillCurrent(transfer, live) ? savableTransfer(transfer) : null;
 
-    const moved = phase.kind === "review" ? correctionOf(turns, phase.order) : null;
-
     let primary: BarAction | null = null;
     let secondary: BarAction | null = null;
     if (entry) {
@@ -788,7 +723,7 @@ function VoiceThreadScreen() {
         ));
     }
 
-    const bottom = settled ? (
+    const buttons = settled ? (
         <Animated.View className="gap-1" entering={FadeIn.duration(220)}>
             <View className="flex-row items-center gap-2.5">
                 {secondary ? (
@@ -829,40 +764,55 @@ function VoiceThreadScreen() {
     ) : null;
 
     const orb = orbActionOf(phase, saving, { finish, listenAgain, seePro }, t, entitled);
+    const onEdit = resolved ? editorOf(resolved, openForm, openTransferForm) : undefined;
+
+    const caption = captionOf({ heard, heardWords, phase, saying, underSentence: sentence !== null });
+
+    const bottom = (
+        <View className="gap-5">
+            {caption}
+            {resolved ? null : (
+                <View className="items-center">
+                    <OrbControl
+                        label={orb.label}
+                        level={level}
+                        onPress={orb.onPress}
+                        size={ORB_SIZE_BAR}
+                        state={orbStateOf(phase)}
+                    />
+                </View>
+            )}
+            {buttons}
+        </View>
+    );
+
+    const waiting = phase.kind === "sending" || phase.kind === "thinking";
 
     return (
         <VoiceShell
             bottom={bottom}
             closeDisabled={saving}
+            contentClassName="flex-1 gap-5 px-6 pt-6"
             onClose={close}
             overlay={<LimitToast feature="voiceEntry" {...limit} />}
         >
-            <OrbControl
-                label={orb.label}
-                level={level}
-                onPress={orb.onPress}
-                size={orbSizeOf(phase, resolved !== null, shown !== null || heard !== null)}
-                state={orbStateOf(phase)}
-            />
-            {shown ? (
-                <Animated.View entering={FadeIn.duration(260)}>
-                    <DraftLine accounts={accounts} draft={shown} />
-                </Animated.View>
-            ) : null}
-            {heard ? (
-                <HeardSentence
-                    quotes={phase.kind === "review" ? phase.quotes : NO_QUOTES}
-                    text={heard}
-                    under={shown !== null}
+            {sentence ? (
+                <VoiceSentenceView
+                    accountName={(id) => accounts.find((account) => account.id === id)?.name ?? null}
+                    categoryName={(id) => getCategoryById(db, id)?.name ?? null}
+                    currency={currency}
+                    onEdit={onEdit}
+                    sentence={sentence}
                 />
             ) : null}
-            {status && refusal === null ? <StatusLine waiting={phase.kind !== "failed"}>{status}</StatusLine> : null}
-            {hint && hintShown(phase, spoke, turns) ? (
+            {status && refusal === null && (sentence === null || waiting) ? (
+                <StatusLine waiting={phase.kind !== "failed"}>{status}</StatusLine>
+            ) : null}
+            {hint && hintShown(phase, spoke, turns, partial) ? (
                 <Animated.View entering={FadeIn.duration(220)} exiting={FadeOut.duration(160)}>
-                    <Text className="text-grammar text-caption text-center font-sans">{hint}</Text>
+                    <Text className="text-grammar text-caption font-sans">{hint}</Text>
                 </Animated.View>
             ) : null}
-            {moved ? <CorrectionLine fields={moved} /> : null}
         </VoiceShell>
     );
 }

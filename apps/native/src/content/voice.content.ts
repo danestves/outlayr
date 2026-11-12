@@ -175,48 +175,30 @@ const voice = {
             fr: "J'ai terminé",
             pt: "Terminei de falar",
         }),
-        // The review reads as one line: "$12.50 at Starbucks · Coffee · yesterday".
-        "voice.review.at": t({
-            en: "at",
-            es: "en",
-            fr: "chez",
-            pt: "em",
+        // Layout, not just copy: `parseSentence` reads the slot order straight out of these templates.
+        "voice.sentence.expense": t({
+            en: "Spent {amount} at {merchant} on {category} with {account} {when}",
+            es: "Gasté {amount} en {merchant} para {category} con {account} {when}",
+            fr: "J'ai dépensé {amount} chez {merchant} pour {category} avec {account} {when}",
+            pt: "Gastei {amount} em {merchant} para {category} com {account} {when}",
         }),
-        "voice.review.from": t({
-            en: "from",
-            es: "de",
-            fr: "de",
-            pt: "de",
+        "voice.sentence.income": t({
+            en: "Received {amount} from {merchant} for {category} into {account} {when}",
+            es: "Recibí {amount} de {merchant} para {category} en {account} {when}",
+            fr: "J'ai reçu {amount} de {merchant} pour {category} sur {account} {when}",
+            pt: "Recebi {amount} de {merchant} para {category} em {account} {when}",
         }),
-        "voice.review.noAccount": t({
-            en: "Which account?",
-            es: "¿Qué cuenta?",
-            fr: "Quel compte ?",
-            pt: "Qual conta?",
+        "voice.sentence.subscription": t({
+            en: "Subscribed to {merchant} at {amount} {every} on {account} from {when}",
+            es: "Me suscribí a {merchant} por {amount} {every} con {account} desde {when}",
+            fr: "Abonné à {merchant} pour {amount} {every} avec {account} dès {when}",
+            pt: "Assinei {merchant} por {amount} {every} com {account} a partir de {when}",
         }),
-        "voice.review.noCategory": t({
-            en: "No category yet",
-            es: "Aún sin categoría",
-            fr: "Pas encore de catégorie",
-            pt: "Ainda sem categoria",
-        }),
-        "voice.review.noMerchant": t({
-            en: "No name yet",
-            es: "Aún sin nombre",
-            fr: "Pas encore de nom",
-            pt: "Ainda sem nome",
-        }),
-        "voice.review.transfer": t({
-            en: "{from} to {to}",
-            es: "{from} a {to}",
-            fr: "{from} vers {to}",
-            pt: "{from} para {to}",
-        }),
-        "voice.review.transferLabel": t({
-            en: "Transfer",
-            es: "Transferencia",
-            fr: "Virement",
-            pt: "Transferência",
+        "voice.sentence.transfer": t({
+            en: "Moved {amount} from {from} to {to} {when}",
+            es: "Moví {amount} de {from} a {to} {when}",
+            fr: "J'ai viré {amount} de {from} vers {to} {when}",
+            pt: "Movi {amount} de {from} para {to} {when}",
         }),
         "voice.state.listening": t({
             en: "Listening…",
@@ -264,18 +246,6 @@ const voice = {
             fr: "date",
             pt: "data",
         }),
-        "voice.turn.field.details": t({
-            en: "details",
-            es: "detalles",
-            fr: "détails",
-            pt: "detalhes",
-        }),
-        "voice.turn.field.kind": t({
-            en: "kind",
-            es: "tipo",
-            fr: "type",
-            pt: "tipo",
-        }),
         "voice.turn.field.merchant": t({
             en: "name",
             es: "nombre",
@@ -287,18 +257,6 @@ const voice = {
             es: "frecuencia",
             fr: "fréquence",
             pt: "recorrência",
-        }),
-        "voice.turn.unchanged": t({
-            en: "Same as before",
-            es: "Igual que antes",
-            fr: "Inchangé",
-            pt: "Sem alterações",
-        }),
-        "voice.turn.updated": t({
-            en: "Updated",
-            es: "Actualizado",
-            fr: "Mis à jour",
-            pt: "Atualizado",
         }),
     },
     key: "voice" as const,

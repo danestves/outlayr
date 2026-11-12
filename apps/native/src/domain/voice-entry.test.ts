@@ -8,7 +8,6 @@ import {
     MAX_RECORDING_MS,
     meterToLevel,
     NO_SPEECH_TIMEOUT_MS,
-    draftDelta,
     heardSegments,
     proposedDraftOf,
     resolveVoiceDraft,
@@ -363,19 +362,6 @@ describe("thread turns", () => {
             { draft: DRAFT, kind: "proposed", order: 1 },
             { kind: "said", order: 2, text: "twenty at netflix" },
         ]);
-    });
-
-    it("draftDelta names the fields a correction moved, in names not ids", () => {
-        expect(draftDelta(DRAFT, DRAFT)).toStrictEqual([]);
-        expect(draftDelta(DRAFT, { ...DRAFT, categoryName: "Groceries", date: "2026-09-03" })).toStrictEqual([
-            "date",
-            "category",
-        ]);
-        expect(draftDelta(DRAFT, { ...DRAFT, amount: 15, income: true })).toStrictEqual(["amount", "category"]);
-        expect(draftDelta(DRAFT, { ...DRAFT, recurrence: { every: 1, unit: "month" } })).toStrictEqual(["schedule"]);
-        expect(draftDelta(DRAFT, { ...DRAFT, details: "for the office" })).toStrictEqual(["details"]);
-        expect(draftDelta(DRAFT, TRANSFER)).toStrictEqual(["kind", "amount", "date"]);
-        expect(draftDelta(TRANSFER, { ...TRANSFER, toAccountName: "Amex" })).toStrictEqual(["account"]);
     });
 });
 

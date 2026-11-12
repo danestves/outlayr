@@ -321,48 +321,6 @@ export function voiceTurnsOf(messages: readonly VoiceTurnMessage[]): VoiceTurn[]
     return turns;
 }
 
-export type VoiceDraftField = "amount" | "merchant" | "category" | "account" | "date" | "kind" | "schedule" | "details";
-
-export function draftDelta(previous: VoiceDraft, next: VoiceDraft): VoiceDraftField[] {
-    const changed: VoiceDraftField[] = [];
-    if (previous.kind !== next.kind) {
-        changed.push("kind");
-    }
-    if (previous.amount !== next.amount || previous.currency !== next.currency) {
-        changed.push("amount");
-    }
-    if (previous.date !== next.date) {
-        changed.push("date");
-    }
-    if (previous.details !== next.details) {
-        changed.push("details");
-    }
-    if (previous.kind === "entry" && next.kind === "entry") {
-        if (previous.merchant !== next.merchant) {
-            changed.push("merchant");
-        }
-        if (previous.categoryName !== next.categoryName || previous.income !== next.income) {
-            changed.push("category");
-        }
-        if (previous.accountName !== next.accountName) {
-            changed.push("account");
-        }
-        if (
-            previous.recurrence?.every !== next.recurrence?.every ||
-            previous.recurrence?.unit !== next.recurrence?.unit
-        ) {
-            changed.push("schedule");
-        }
-    } else if (
-        previous.kind === "transfer" &&
-        next.kind === "transfer" &&
-        (previous.fromAccountName !== next.fromAccountName || previous.toAccountName !== next.toAccountName)
-    ) {
-        changed.push("account");
-    }
-    return changed;
-}
-
 export interface HeardSegment {
     field: VoiceQuote["field"] | null;
     start: number;

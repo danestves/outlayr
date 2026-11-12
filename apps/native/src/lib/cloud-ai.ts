@@ -11,7 +11,7 @@ import type {
     ScanStatus as ScanStatusSchema,
 } from "@outlayr/backend/confect/receiptScan.spec";
 import type { PROPOSE_DRAFT_TOOL as SERVER_DRAFT_TOOL } from "@outlayr/backend/confect/voiceEntry";
-import { SpeakResult, StartThreadResult } from "@outlayr/backend/confect/voiceEntry.spec";
+import { OpenStreamResult, SpeakResult, StartThreadResult } from "@outlayr/backend/confect/voiceEntry.spec";
 import type { SpeakStatus } from "@outlayr/backend/confect/voiceEntry.spec";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import * as Effect from "effect/Effect";
@@ -217,6 +217,14 @@ export type SpeakOutcome =
     | { readonly ok: true; readonly order: number }
     | { readonly ok: false; readonly reason: SpeakRefusal; readonly transcript: string | null };
 
+export interface SpeakTextRequest extends Omit<SpeakRequest, "audio"> {
+    transcript: string;
+}
+
+export type OpenStreamOutcome =
+    | { readonly ok: true; readonly token: string }
+    | { readonly ok: false; readonly reason: SpeakRefusal };
+
 export type ThreadRefusal = Exclude<StartThreadResult["status"], "ok"> | "invalidResponse";
 
 export type ThreadOutcome =
@@ -225,11 +233,15 @@ export type ThreadOutcome =
 
 export interface VoiceThreadTransport {
     end: (threadId: string) => Effect.Effect<null, CloudError>;
+    openStream: (args: Pick<SpeakRequest, "threadId">) => Effect.Effect<OpenStreamOutcome, CloudError>;
     speak: (args: SpeakRequest) => Effect.Effect<SpeakOutcome, CloudError>;
+    speakText: (args: SpeakTextRequest) => Effect.Effect<SpeakOutcome, CloudError>;
     start: () => Effect.Effect<ThreadOutcome, CloudError>;
 }
 
 const decodeSpeakResult = Schema.decodeUnknownOption(SpeakResult);
+
+const decodeOpenStreamResult = Schema.decodeUnknownOption(OpenStreamResult);
 
 const decodeStartThreadResult = Schema.decodeUnknownOption(StartThreadResult);
 
@@ -238,6 +250,13 @@ function speakOutcome({ order, status, transcript }: SpeakResult): SpeakOutcome 
         return { ok: false, reason: status, transcript };
     }
     return order === null ? { ok: false, reason: "invalidResponse", transcript } : { ok: true, order };
+}
+
+function openStreamOutcome({ status, token }: OpenStreamResult): OpenStreamOutcome {
+    if (status !== "ok") {
+        return { ok: false, reason: status };
+    }
+    return token === null ? INVALID_RESPONSE : { ok: true, token };
 }
 
 function threadOutcome({ status, threadId }: StartThreadResult): ThreadOutcome {
@@ -250,8 +269,26 @@ function threadOutcome({ status, threadId }: StartThreadResult): ThreadOutcome {
 export function voiceThreadTransport(): VoiceThreadTransport {
     return {
         end: (threadId) => cloudMutation(api.voiceEntry.endThread, { threadId }),
+        openStream: (args) =>
+            cloudAction(api.voiceEntry.openStream, { ...args, ...aiConsentArgs() }).pipe(
+                Effect.map((reply) =>
+                    Option.match(decodeOpenStreamResult(reply), {
+                        onNone: () => INVALID_RESPONSE,
+                        onSome: openStreamOutcome,
+                    })
+                )
+            ),
         speak: (args) =>
             cloudAction(api.voiceEntry.speak, { ...args, ...aiConsentArgs() }).pipe(
+                Effect.map((reply) =>
+                    Option.match(decodeSpeakResult(reply), {
+                        onNone: (): SpeakOutcome => ({ ...INVALID_RESPONSE, transcript: null }),
+                        onSome: speakOutcome,
+                    })
+                )
+            ),
+        speakText: (args) =>
+            cloudAction(api.voiceEntry.speakText, { ...args, ...aiConsentArgs() }).pipe(
                 Effect.map((reply) =>
                     Option.match(decodeSpeakResult(reply), {
                         onNone: (): SpeakOutcome => ({ ...INVALID_RESPONSE, transcript: null }),
