@@ -49,6 +49,9 @@ export const CONTEXT_TURNS = 12;
 // The privacy backstop for a thread whose `endThread` never ran, measured from its last turn rather than its opening.
 export const THREAD_TTL_MS = 60 * 60 * 1000;
 
+// Each is a counted capture awaiting its transcript, so this also bounds what one thread can bank.
+export const MAX_STREAM_CREDITS = 20;
+
 export const PROPOSE_DRAFT_TOOL = "proposeDraft";
 
 type Heard = { text: string } | { error: "empty" | "provider" };
