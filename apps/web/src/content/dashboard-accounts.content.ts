@@ -785,6 +785,20 @@ const dashboardAccounts = {
                 pt: "Nova transferência",
             }),
             noFee: t({ en: "No fee", es: "Sin comisión", fr: "Sans frais", pt: "Sem taxa" }),
+            officialRate: insert(
+                t({
+                    en: "Official {{rate}}",
+                    es: "Oficial {{rate}}",
+                    fr: "Officiel {{rate}}",
+                    pt: "Oficial {{rate}}",
+                })
+            ),
+            useOfficialRate: t({
+                en: "Use official rate",
+                es: "Usar tasa oficial",
+                fr: "Utiliser le taux officiel",
+                pt: "Usar cotação oficial",
+            }),
             optional: t({ en: "Optional", es: "Opcional", fr: "Facultatif", pt: "Opcional" }),
             saveTransfer: t({
                 en: "Save transfer",

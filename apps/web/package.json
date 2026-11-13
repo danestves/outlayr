@@ -45,7 +45,7 @@
         "fflate": "^0.8.3",
         "intlayer": "catalog:",
         "nitro": "3.0.260903-beta",
-        "panelui-web": "^0.14.0",
+        "panelui-web": "^0.17.0",
         "posthog-js": "^1.440.0",
         "react": "19.3.1",
         "react-dom": "19.3.1",

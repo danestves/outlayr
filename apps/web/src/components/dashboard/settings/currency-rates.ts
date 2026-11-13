@@ -23,8 +23,8 @@ export function crossRate(rate: (code: string) => number | null, from: string, t
 }
 
 /** Below one, significant digits keep a weak currency's rate from rounding to 0.00. */
-export function formatRate(value: number): string {
+export function formatRate(value: number, locale = "en-US"): string {
     return value < 1
-        ? value.toLocaleString("en-US", { maximumSignificantDigits: 3 })
-        : value.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+        ? value.toLocaleString(locale, { maximumSignificantDigits: 3 })
+        : value.toLocaleString(locale, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
 }
