@@ -141,14 +141,8 @@ export function TransferEditor({
         const moved = parseAmount(arrivedText, decimalsFor(arrivedCurrency)) !== arrived;
         change({ arrivedText, rateType: crossed && moved ? "custom" : values.rateType });
     };
-    const pickFrom = (fromId: string) =>
-        pick(
-            fromId === values.toId ? swappedTransfer(values) : withAccounts(ledger, base, values, fromId, values.toId)
-        );
-    const pickTo = (toId: string) =>
-        pick(
-            toId === values.fromId ? swappedTransfer(values) : withAccounts(ledger, base, values, values.fromId, toId)
-        );
+    const pickFrom = (fromId: string) => pick(withAccounts(ledger, base, values, fromId, values.toId));
+    const pickTo = (toId: string) => pick(withAccounts(ledger, base, values, values.fromId, toId));
     const pickRate = (next: string) => {
         const market = MARKET_RATE_TYPES.find((type) => type === next);
         const priced = market ? repriced(ledger, base, values, market) : { ...values, rateType: next };

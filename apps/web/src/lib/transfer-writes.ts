@@ -138,9 +138,35 @@ export function repriced(ledger: Ledger, base: TransferBase, values: TransferVal
     return { ...values, arrivedText: money(roundMoney(sent * rate, decimalsFor(to)), to), rateType };
 }
 
+const throughRate = (text: string | null, from: string, to: string, rate: number) =>
+    text === null || text.trim() === "" || !Number.isFinite(rate) || rate <= 0
+        ? text
+        : money(roundMoney(parseAmount(text, decimalsFor(from)) * rate, decimalsFor(to)), to);
+
+function tradedLegs(books: Books, base: TransferBase, values: TransferValues): TransferValues {
+    const traded = { ...values, fromId: values.toId, toId: values.fromId };
+    const [from, to] = [currencyOf(books, base, values.fromId), currencyOf(books, base, values.toId)];
+    if (from === to) {
+        return traded;
+    }
+    const rate = parseAmount(values.arrivedText, decimalsFor(to)) / parseAmount(values.sentText, decimalsFor(from));
+    return {
+        ...traded,
+        arrivedText: values.sentText,
+        feeTexts: {
+            destination: throughRate(values.feeTexts.destination, to, from, 1 / rate),
+            source: throughRate(values.feeTexts.source, from, to, rate),
+        },
+        sentText: values.arrivedText,
+    };
+}
+
 /** A new account on one leg. A pair that changes currency reprices, and without a published rate it reads as typed. */
 export function withAccounts(ledger: Ledger, base: TransferBase, values: TransferValues, fromId: string, toId: string) {
     const { books } = ledger;
+    if (fromId === toId) {
+        return tradedLegs(books, base, values);
+    }
     const moved = { ...values, fromId, toId };
     const [from, to] = [currencyOf(books, base, fromId), currencyOf(books, base, toId)];
     if (from === to) {
