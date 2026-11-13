@@ -164,7 +164,7 @@ function tradedLegs(books: Books, base: TransferBase, values: TransferValues): T
 /** A new account on one leg. A pair that changes currency reprices, and without a published rate it reads as typed. */
 export function withAccounts(ledger: Ledger, base: TransferBase, values: TransferValues, fromId: string, toId: string) {
     const { books } = ledger;
-    if (fromId === toId || (fromId === values.toId && toId === values.fromId)) {
+    if (fromId === toId) {
         return tradedLegs(books, base, values);
     }
     const moved = { ...values, fromId, toId };
