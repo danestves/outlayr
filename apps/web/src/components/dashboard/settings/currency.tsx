@@ -295,7 +295,7 @@ function PickerBody({
     return (
         <>
             <Dialog.Body>
-                <Command className="-mx-2 border-0 bg-transparent shadow-none" label={label} variant="compact">
+                <Command className="-mx-2 w-auto border-0 bg-transparent shadow-none" label={label} variant="compact">
                     <Command.Input autoFocus className="max-sm:text-base" placeholder={text.search.value} />
                     <Command.List className="max-h-80 flex-none overflow-y-auto">
                         <Command.Empty>{text.none}</Command.Empty>

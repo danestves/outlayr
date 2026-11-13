@@ -370,7 +370,7 @@ export function DropTile({
 }
 
 export const DROPZONE =
-    "flex flex-col items-center justify-center rounded-xl border border-dashed border-[color:var(--color-border-strong,var(--border))] px-4 text-center transition-colors";
+    "flex flex-col items-center justify-center rounded-xl border border-dashed border-app-strong px-4 text-center transition-colors";
 
 const KILO = 1024;
 
