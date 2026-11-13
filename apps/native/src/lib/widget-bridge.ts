@@ -67,6 +67,7 @@ export interface IntentSnapshot {
 
 export interface WalletPushSnapshot {
     cards: Record<string, { label: string | null; pick: boolean }>;
+    missedTap: { body: string; title: string };
     newPlace: string;
     patterns: Record<string, { ignoreCase: boolean; source: string }>;
     places: { expense: Record<string, string>; income: Record<string, string> };

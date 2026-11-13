@@ -65,6 +65,10 @@ test("says where the next tap lands, the way the drain will file it", async () =
             Revolut: { label: "Which account is Revolut? Tap to pick.", pick: true },
             "Work card": { label: "N26", pick: false },
         },
+        missedTap: {
+            body: "Apple didn't send the purchase details. Tap to log it if it went through.",
+            title: "Apple Pay purchase not logged",
+        },
         newPlace: "New place, tap to pick a category.",
         patterns: expect.objectContaining({ money: { ignoreCase: false, source: expect.any(String) } }),
         places: { expense: { "vietnam house": "Restaurants" }, income: { acme: "Salary" } },

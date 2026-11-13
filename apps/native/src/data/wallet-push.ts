@@ -77,6 +77,10 @@ export const buildWalletPush = Effect.fn("WalletPush.buildWalletPush")(function*
     );
     return {
         cards,
+        missedTap: {
+            body: translateNow("settings.wallet.missedTapBody"),
+            title: translateNow("settings.wallet.missedTapTitle"),
+        },
         newPlace: translateNow("settings.wallet.pushNewPlace"),
         patterns,
         places,

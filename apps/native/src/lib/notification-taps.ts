@@ -8,7 +8,7 @@ import { drainDevicePendingWrites } from "@/data/pending-writes";
 import { pendingWriteTxId } from "@/data/pending-writes-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
 import { getTransactionById } from "@/data/transactions-core";
-import { cardStillAsks, fileWaitingPurchases } from "@/data/wallet-state-core";
+import { cardAccount, cardStillAsks, fileWaitingPurchases } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
 import { paywallHref } from "@/domain/paywall-trigger";
 
@@ -18,7 +18,12 @@ const SubscriptionTap = Schema.Struct({ charge: Schema.String, subscription: Sch
 const ReminderTap = Schema.Union([
     SubscriptionTap,
     Schema.Struct({ open: Schema.Literal("log") }),
-    Schema.Struct({ date: Schema.optional(Schema.String), open: Schema.Literal("create") }),
+    Schema.Struct({
+        card: Schema.optional(Schema.String),
+        date: Schema.optional(Schema.String),
+        note: Schema.optional(Schema.String),
+        open: Schema.Literal("create"),
+    }),
     Schema.Struct({ open: Schema.Literal("installment"), plan: Schema.String }),
     Schema.Struct({ account: Schema.String, open: Schema.Literal("account") }),
     Schema.Struct({ month: Schema.String, open: Schema.Literal("recap") }),
@@ -56,6 +61,15 @@ function installmentTarget(db: Database, planId: string): Href | null {
         : { params: { all: "0", planId }, pathname: "/installments/pay" };
 }
 
+const createTarget = Effect.fn("NotificationTaps.createTarget")(function* createTarget(
+    db: Database,
+    { card, date, note }: Extract<ReminderTap, { open: "create" }>
+) {
+    const account = card ? yield* cardAccount(db, card).pipe(Effect.orElseSucceed(() => null)) : null;
+    const params = { ...(account && { accountId: account.id }), ...(date && { date }), ...(note && { note }) };
+    return { params, pathname: "/transactions/create" } satisfies Href;
+});
+
 export const resolveReminderTap = Effect.fn("NotificationTaps.resolveReminder")(function* resolveReminderTap(
     db: Database,
     tap: ReminderTap
@@ -74,7 +88,7 @@ export const resolveReminderTap = Effect.fn("NotificationTaps.resolveReminder")(
     } else if (tap.open === "pro") {
         target = paywallHref("trial_reminder");
     } else if (tap.open === "create") {
-        target = tap.date === undefined ? "/transactions/create" : `/transactions/create?date=${tap.date}`;
+        target = yield* createTarget(db, tap);
     }
     return target;
 });

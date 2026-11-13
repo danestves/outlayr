@@ -59,14 +59,16 @@ struct LogWalletTransactionIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        guard let value = Self.parseAmount(amount), value > 0 else {
-            throw $amount.needsValueError("How much was it?")
-        }
-
         let name = merchant.trimmingCharacters(in: .whitespacesAndNewlines)
         let cardText = card?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .nilIfEmpty
+        let ranAt = SharedStore.lastWalletRun(within: SharedStore.missedTapWindow)
+        guard let value = Self.parseAmount(amount), value > 0 else {
+            let at = ranAt ?? Date().timeIntervalSince1970 * 1000
+            await SharedStore.armMissedTap(at: at, merchant: name, card: cardText, after: nil)
+            return .result(dialog: IntentDialog("No amount came with this purchase."))
+        }
         let purchase = Self.dedupeKey(
             transactionId: transactionId,
             merchant: name,
@@ -94,6 +96,9 @@ struct LogWalletTransactionIntent: AppIntent {
             text: nil
         )
         await SharedStore.enqueue(write)
+        if let ranAt {
+            SharedStore.disarmMissedTap(at: ranAt)
+        }
 
         let push = Self.push(
             amount: amount.trimmingCharacters(in: .whitespacesAndNewlines),

@@ -15,6 +15,12 @@ enum SharedStore {
     /// Mirrored by `WALLET_LAST_RUN_KEY` in `src/lib/widget-bridge.ts`.
     static let walletRunKey = "walletLastRunAt"
 
+    private static let missedTapPrefix = "outlayr.wallet-missed"
+
+    static let missedTapDelay: TimeInterval = 2 * 60
+
+    static let missedTapWindow: TimeInterval = 10 * 60
+
     /// Mirrored by `PUSHED_PURCHASES_KEY` in `src/lib/widget-bridge.ts`.
     static let pushedPurchasesKey = "pushedPurchases"
 
@@ -94,6 +100,51 @@ enum SharedStore {
         } catch {
             await PushLedger.shared.release(key)
         }
+    }
+
+    static func lastWalletRun(within window: TimeInterval) -> Double? {
+        let now = Date().timeIntervalSince1970 * 1000
+        guard let at = store?.string(forKey: walletRunKey).flatMap(Double.init),
+              now - at <= window * 1000 else { return nil }
+        return at
+    }
+
+    static func armMissedTap(
+        at: Double,
+        merchant: String = "",
+        card: String? = nil,
+        after delay: TimeInterval?
+    ) async {
+        let center = UNUserNotificationCenter.current()
+        guard await center.notificationSettings().authorizationStatus == .authorized else { return }
+        let id = missedTapId(at)
+        center.removePendingNotificationRequests(withIdentifiers: [id])
+        let copy = walletPush()?.missedTap
+        let content = UNMutableNotificationContent()
+        content.title = copy?.title ?? "Apple Pay purchase not logged"
+        content.body = copy?.body ?? "Apple didn't send the purchase details. Tap to log it if it went through."
+        var userInfo: [AnyHashable: Any] = ["open": "create", "date": String(Int(at))]
+        if !merchant.isEmpty {
+            userInfo["note"] = merchant
+        }
+        if let card {
+            userInfo["card"] = card
+        }
+        content.userInfo = userInfo
+        content.threadIdentifier = "automation"
+        let trigger = delay.map { UNTimeIntervalNotificationTrigger(timeInterval: $0, repeats: false) }
+        try? await center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
+    }
+
+    static func disarmMissedTap(at: Double) {
+        let center = UNUserNotificationCenter.current()
+        let id = missedTapId(at)
+        center.removePendingNotificationRequests(withIdentifiers: [id])
+        center.removeDeliveredNotifications(withIdentifiers: [id])
+    }
+
+    private static func missedTapId(_ at: Double) -> String {
+        "\(missedTapPrefix).\(Int(at))"
     }
 
     private static func queueURL() -> URL? {
@@ -220,7 +271,13 @@ struct WalletPushSnapshot: Codable {
         let income: [String: String]
     }
 
+    struct MissedTap: Codable {
+        let title: String
+        let body: String
+    }
+
     let cards: [String: Card]
+    let missedTap: MissedTap?
     let newPlace: String
     let patterns: NotificationPatterns?
     let places: Places
