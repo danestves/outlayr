@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { compactMagnitude } from "./chart";
+import { compactMagnitude, roundAxisDomain } from "./chart";
 
 describe("compactMagnitude", () => {
     it("leaves values under a thousand whole", () => {
@@ -39,5 +39,15 @@ describe("compactMagnitude", () => {
 
     it("survives a negative without emitting a stray sign inside the unit", () => {
         expect(compactMagnitude(-1500)).toBe("-1.5k");
+    });
+});
+
+describe("roundAxisDomain", () => {
+    it("labels a $149 debt 0, -100 and -200 instead of the padded 15, -74 and -164", () => {
+        expect(roundAxisDomain([0, -149], 2)).toStrictEqual([-200, 0]);
+    });
+
+    it("keeps zero on a grid line when the balance crosses it", () => {
+        expect(roundAxisDomain([-30, 170], 2)).toStrictEqual([-200, 200]);
     });
 });

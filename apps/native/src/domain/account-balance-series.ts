@@ -53,10 +53,6 @@ export function accountBalanceSeries(
     const windowStart = addDays(nowKey, -(HISTORY_DAYS - 1));
     const stampedOpening = localDayKey(account.initialBalanceDate.getTime());
     const openingDate = stampedOpening > nowKey ? nowKey : stampedOpening;
-    let startDate = windowStart;
-    if (account.initialBalance !== 0 && openingDate > windowStart) {
-        startDate = openingDate;
-    }
     const cellsByDate = new Map<string, CurrencyCell[]>();
     const state = { exact: true, value: 0 };
 
@@ -64,7 +60,11 @@ export function accountBalanceSeries(
         state.value += opening;
     }
 
+    let firstEntry = nowKey;
     for (const cell of cells) {
+        if (cell.plotDay < firstEntry) {
+            firstEntry = cell.plotDay;
+        }
         if (cell.plotDay < windowStart) {
             applyCell(state, cell, currency, rates);
             continue;
@@ -77,6 +77,8 @@ export function accountBalanceSeries(
         }
     }
 
+    const firstDay = opening === 0 ? firstEntry : openingDate;
+    const startDate = firstDay > windowStart ? firstDay : windowStart;
     for (let date = windowStart; date < startDate; date = addDays(date, 1)) {
         for (const cell of cellsByDate.get(date) ?? []) {
             applyCell(state, cell, currency, rates);
