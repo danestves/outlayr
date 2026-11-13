@@ -178,6 +178,49 @@ describe("editedTransfer", () => {
         ]);
     });
 
+    it("charges the source fee to the new source when the receiving account is picked as from", () => {
+        const transfer = move({
+            exchangeRate: 1,
+            exchangeRateType: null,
+            toAccountId: "wise",
+            toAmount: 98.5,
+            toAmountUsd: 98.5,
+            toCurrency: "USD",
+        });
+        const { base, doc, ledger } = baseFor([fee({ amount: 1.5, amountUsd: 1.5 })], transfer, []);
+        const input = transferInputOf(ledger, base, withAccounts(ledger, base, base.start, "wise", base.start.toId));
+        expect(transferProblem(ledger, doc, input)).toBeNull();
+        const rows = editedTransfer(ledger, doc, input, NOW);
+        expect(Object.fromEntries(fieldsOf(rows, "t1").fields)).toMatchObject({
+            fromAccountId: "wise",
+            fromAmount: 100,
+            toAccountId: "chase",
+            toAmount: 98.5,
+        });
+        const kept = fieldsOf(rows, "f1");
+        expect(kept.deletedAt).toBeNull();
+        expect(Object.fromEntries(kept.fields)).toMatchObject({ accountId: "wise", amount: 1.5, currency: "USD" });
+    });
+
+    it("prices a carried source fee in the new source's currency at the transfer's rate", () => {
+        const { base, doc, ledger } = baseFor([fee()], move(), [rate("VES", 500)]);
+        const input = transferInputOf(ledger, base, withAccounts(ledger, base, base.start, "banco", base.start.toId));
+        expect(transferProblem(ledger, doc, input)).toBeNull();
+        const rows = editedTransfer(ledger, doc, input, NOW);
+        expect(Object.fromEntries(fieldsOf(rows, "t1").fields)).toMatchObject({
+            fromAccountId: "banco",
+            fromAmount: 50_000,
+            toAccountId: "chase",
+            toAmount: 100,
+        });
+        expect(Object.fromEntries(fieldsOf(rows, "f1").fields)).toMatchObject({
+            accountId: "banco",
+            amount: 1000,
+            amountUsd: 2,
+            currency: "VES",
+        });
+    });
+
     it("swaps with no rate published, each account keeping its stored amount, frozen USD and fee", () => {
         const fees = [
             fee(),
