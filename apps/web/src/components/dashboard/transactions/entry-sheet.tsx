@@ -81,10 +81,13 @@ function Chrome({
     return (
         <>
             {wide ? (
-                <Sheet.Header title={title} />
+                <>
+                    <Sheet.Close aria-label={detail.hints.close.value} className="absolute end-4 top-4 z-10" />
+                    <Sheet.Header className="pe-14" title={title} />
+                </>
             ) : (
                 <Sheet.Header>
-                    <Sheet.Close />
+                    <Sheet.Close aria-label={detail.hints.close.value} />
                     <Sheet.Title>{title}</Sheet.Title>
                 </Sheet.Header>
             )}
