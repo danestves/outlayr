@@ -1,8 +1,10 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import type { CaptureResult, PostHog, Properties } from "posthog-js";
+import type { PostHog, Properties } from "posthog-js";
 
 import { ENV } from "@/env";
+
+import { dropNoiseExceptions } from "./exception-noise";
 
 export type Consent = "denied" | "granted" | "pending";
 
@@ -60,19 +62,6 @@ const ASK_FIRST = new Set([
     "YT",
 ]);
 
-// Benign by spec, the notifications arrive next frame. The vendored Stageshow films raise it, and that kit stays a
-// copy of upstream, so it is dropped here rather than patched there.
-const RESIZE_OBSERVER_LOOP = /^ResizeObserver loop completed with undelivered notifications/;
-
-function dropResizeObserverLoop(event: CaptureResult | null): CaptureResult | null {
-    const exceptions: unknown = event?.event === "$exception" ? event.properties.$exception_list : undefined;
-    const benign =
-        Array.isArray(exceptions) &&
-        exceptions.length > 0 &&
-        exceptions.every((exception) => RESIZE_OBSERVER_LOOP.test(String(exception?.value ?? "")));
-    return benign ? null : event;
-}
-
 // Loaded on start rather than imported: posthog-js was over a third of the chunk every page waits on.
 let posthog: PostHog | null = null;
 let starting = false;
@@ -109,7 +98,7 @@ export const startAnalytics = Effect.fn("Analytics.start")(function* startAnalyt
     client.init(TOKEN, {
         advanced_disable_feature_flags: true,
         api_host: "https://relay.tryoutlayr.com",
-        before_send: dropResizeObserverLoop,
+        before_send: dropNoiseExceptions,
         capture_exceptions: true,
         cookieless_mode: "on_reject",
         defaults: "2026-08-30",
