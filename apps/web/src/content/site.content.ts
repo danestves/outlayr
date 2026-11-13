@@ -202,6 +202,12 @@ const site = {
                     pt: "No Product Hunt",
                     fr: "Sur Product Hunt",
                 }),
+                sellWithBoost: t({
+                    en: "Listed on Sell With boost",
+                    es: "En Sell With boost",
+                    pt: "No Sell With boost",
+                    fr: "Sur Sell With boost",
+                }),
             },
             nav: t({ en: "Footer", es: "Pie de página", pt: "Rodapé", fr: "Pied de page" }),
             open: t({ en: "Open numbers", es: "Números abiertos", pt: "Números abertos", fr: "Chiffres ouverts" }),

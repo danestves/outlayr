@@ -19,6 +19,7 @@ const LISTINGS = [
     { href: "https://peerpush.com/p/outlayr", key: "peerPush" },
     { href: "https://alternativeto.net/software/outlayr/about/", key: "alternativeTo" },
     { href: "https://www.producthunt.com/products/outlayr", key: "productHunt" },
+    { href: "https://sellwithboost.com", key: "sellWithBoost" },
 ] as const;
 
 function Column({ children, title }: { children: ReactNode; title: ReactNode }) {
