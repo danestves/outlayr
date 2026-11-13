@@ -195,7 +195,7 @@ describe("accountBalanceSeries", () => {
 
     it("starts an account opened at zero on its first entry, not 182 days back", () => {
         const series = accountBalanceSeries(
-            account({ initialBalanceDate: new Date("2026-08-06T12:00:00Z") }),
+            account({ initialBalanceDate: new Date("2026-01-01T12:00:00Z") }),
             [cell({ amount: 20, amountUsd: 20, dateKey: "2026-08-03", income: false })],
             NO_RATES,
             NOW

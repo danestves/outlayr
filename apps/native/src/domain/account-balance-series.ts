@@ -60,7 +60,7 @@ export function accountBalanceSeries(
         state.value += opening;
     }
 
-    let firstEntry = openingDate;
+    let firstEntry = nowKey;
     for (const cell of cells) {
         if (cell.plotDay < firstEntry) {
             firstEntry = cell.plotDay;
