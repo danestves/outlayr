@@ -14,11 +14,13 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { AmountInput } from "@/components/dashboard/accounts/fields";
+import { formatRate } from "@/components/dashboard/settings/currency-rates";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
 import { parseAmount } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
+import { useExchangeLocale } from "@/lib/exchange-locale";
 import { money } from "@/lib/ledger";
 import {
     currencyOf,
@@ -33,8 +35,8 @@ import {
 import type { TransferDoc, TransferProblem, TransferValues } from "@/lib/transfer-writes";
 
 import { DateRow, NoteSlot, Pick, QUIET_INPUT, Slot } from "./entry-form";
+import { TransferAmounts } from "./transfer-exchange";
 
-const RATE_DIGITS = 2;
 const PICK_CHROME_CHARS = 8;
 const FEE_SIDES = ["source", "destination"] as const satisfies readonly FeeSide[];
 // Native offers EUR (BCV) only for money arriving in bolivars.
@@ -79,6 +81,7 @@ export function TransferEditor({
     const { ledger, photos } = useDashboard();
     const committer = useLedgerCommitter();
     const { bulk, detail, form } = useIntlayer("dashboard-transactions");
+    const { locale } = useExchangeLocale();
     const [base] = useState(() => transferBaseOf(ledger, doc));
     const [values, setValues] = useState(base.start);
     const [problem, setProblem] = useState<TransferProblem | null>(null);
@@ -125,8 +128,8 @@ export function TransferEditor({
     // The smaller side is the unit, so a bolivar to dollar transfer doesn't read as 0.00 per VES.
     const perUnit =
         arrived >= sent
-            ? detail.perUnit({ currency: sentCurrency, rate: (arrived / sent).toFixed(RATE_DIGITS) }).value
-            : detail.perUnit({ currency: arrivedCurrency, rate: (sent / arrived).toFixed(RATE_DIGITS) }).value;
+            ? detail.perUnit({ currency: sentCurrency, rate: formatRate(arrived / sent, locale) }).value
+            : detail.perUnit({ currency: arrivedCurrency, rate: formatRate(sent / arrived, locale) }).value;
     const typeSent = (sentText: string) => {
         const moved = parseAmount(sentText, decimalsFor(sentCurrency)) !== sent;
         // One currency moves one amount until someone says it arrived short.
@@ -183,33 +186,54 @@ export function TransferEditor({
     const columns = `minmax(0, ${widthOf(values.fromId, values.sentText)}fr) auto minmax(0, ${widthOf(values.toId, values.arrivedText)}fr)`;
     return (
         <div onBlur={() => save(values)}>
-            <div className="grid items-end gap-2" style={{ gridTemplateColumns: columns }}>
-                <div className="flex min-w-0 flex-col gap-1.5 [&_[data-slot=select-value]]:block! [&_[data-slot=select-value]]:truncate">
-                    <span className="text-muted-foreground text-xs">{detail.from}</span>
-                    <Pick bare onPick={pickFrom} options={accountOptions} quiet={false} value={values.fromId} />
-                </div>
-                <HugeiconsIcon icon={ArrowRight02Icon} className="text-muted-foreground mb-3" size={16} />
-                <div className="flex min-w-0 flex-col gap-1.5 [&_[data-slot=select-value]]:block! [&_[data-slot=select-value]]:truncate">
-                    <span className="text-muted-foreground text-xs">{detail.to}</span>
-                    <Pick bare onPick={pickTo} options={accountOptions} quiet={false} value={values.toId} />
-                </div>
-            </div>
-            <div className="mt-3 grid gap-2" style={{ gridTemplateColumns: columns }}>
-                <AmountColumn
-                    currency={sentCurrency}
-                    label={detail.from.value}
-                    onText={typeSent}
-                    text={values.sentText}
+            {crossed ? (
+                <TransferAmounts
+                    arrived={values.arrivedText.trim() === "" ? null : arrived}
+                    from={{ currency: sentCurrency, detail: null, id: values.fromId, onPick: pickFrom }}
+                    onArrived={typeArrived}
+                    onSent={typeSent}
+                    onSwap={() => pick(swappedTransfer(values))}
+                    options={accountOptions}
+                    sent={values.sentText.trim() === "" ? null : sent}
+                    side="from"
+                    to={{
+                        currency: arrivedCurrency,
+                        detail: sent > 0 && arrived > 0 ? perUnit : null,
+                        id: values.toId,
+                        onPick: pickTo,
+                    }}
                 />
-                <span className="w-4" />
-                <AmountColumn
-                    currency={arrivedCurrency}
-                    label={detail.to.value}
-                    onText={typeArrived}
-                    rate={crossed && sent > 0 && arrived > 0 ? perUnit : undefined}
-                    text={values.arrivedText}
-                />
-            </div>
+            ) : (
+                <>
+                    <div className="grid items-end gap-2" style={{ gridTemplateColumns: columns }}>
+                        <div className="flex min-w-0 flex-col gap-1.5 [&_[data-slot=select-value]]:block! [&_[data-slot=select-value]]:truncate">
+                            <span className="text-muted-foreground text-xs">{detail.from}</span>
+                            <Pick bare onPick={pickFrom} options={accountOptions} quiet={false} value={values.fromId} />
+                        </div>
+                        <HugeiconsIcon icon={ArrowRight02Icon} className="text-muted-foreground mb-3" size={16} />
+                        <div className="flex min-w-0 flex-col gap-1.5 [&_[data-slot=select-value]]:block! [&_[data-slot=select-value]]:truncate">
+                            <span className="text-muted-foreground text-xs">{detail.to}</span>
+                            <Pick bare onPick={pickTo} options={accountOptions} quiet={false} value={values.toId} />
+                        </div>
+                    </div>
+                    <div className="mt-3 grid gap-2" style={{ gridTemplateColumns: columns }}>
+                        <AmountColumn
+                            currency={sentCurrency}
+                            label={detail.from.value}
+                            onText={typeSent}
+                            text={values.sentText}
+                        />
+                        <span className="w-4" />
+                        <AmountColumn
+                            currency={arrivedCurrency}
+                            label={detail.to.value}
+                            onText={typeArrived}
+                            rate={crossed && sent > 0 && arrived > 0 ? perUnit : undefined}
+                            text={values.arrivedText}
+                        />
+                    </div>
+                </>
+            )}
             {problem === "empty-leg" || problem === "rateMissing" ? (
                 <p className="text-destructive mt-2 text-[13px]" role="alert">
                     {problem === "empty-leg" ? form.amountRequired : form.rateMissing}

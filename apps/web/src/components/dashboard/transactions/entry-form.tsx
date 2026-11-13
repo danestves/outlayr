@@ -90,7 +90,7 @@ export function Slot({
     );
 }
 
-interface PickOption {
+export interface PickOption {
     icon?: ReactNode;
     label: string;
     value: string;

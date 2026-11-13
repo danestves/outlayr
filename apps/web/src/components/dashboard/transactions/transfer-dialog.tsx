@@ -24,12 +24,12 @@ import {
     rewired,
     swapped,
     transferAccounts,
-    withArrived,
     withSent,
 } from "@/lib/transfer-create";
 import type { NewTransferProblem, NewTransferValues } from "@/lib/transfer-create";
 
 import { DateRow, Pick, Slot } from "./entry-form";
+import { TransferExchange } from "./transfer-exchange";
 
 function Balance({ children }: { children: ReactNode }) {
     return <p className="dash-figure text-muted-foreground mt-1.5 text-xs">{children}</p>;
@@ -65,6 +65,7 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
     const currencyOf = (id: string | null) =>
         ledger.books.accounts.find((row) => row.localId === id)?.currency ?? ledger.currency;
     const [fromCurrency, toCurrency] = [currencyOf(values.fromId), currencyOf(values.toId)];
+    const crossed = fromCurrency !== toCurrency;
     const input = newTransferInput(ledger, values);
     const balanceLine = (id: string | null, delta: number) => {
         const held = rows.find((row) => row.id === id);
@@ -108,65 +109,90 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
                         submit(false);
                     }}
                 >
-                    <Slot error={problem === "amount" ? form.amountRequired : null} label={flows.youSend} quiet={false}>
-                        <div className="[&_input]:font-semibold!">
-                            <AmountInput
-                                autoFocus
-                                currency={fromCurrency}
-                                key={round}
-                                onText={(text) => change(withSent(ledger, values, text))}
-                                text={values.sentText}
-                                unit={fromCurrency}
-                            />
-                        </div>
-                    </Slot>
-                    <div className="grid grid-cols-[minmax(0,1fr)_32px_minmax(0,1fr)] items-start gap-2">
-                        <Slot
-                            error={problem === "accounts" ? flows.transferNeedsAccounts : null}
-                            label={detail.from}
-                            quiet={false}
-                        >
-                            <Pick
-                                onPick={(id) => change(rewired(ledger, values, id, values.toId))}
+                    {crossed ? (
+                        <>
+                            <TransferExchange
+                                from={{
+                                    currency: fromCurrency,
+                                    detail: balanceLine(values.fromId, input ? -(input.fromAmount + fee) : 0),
+                                    error: problem === "accounts" ? flows.transferNeedsAccounts : null,
+                                    onPick: (id) => change(rewired(ledger, values, id, values.toId)),
+                                }}
+                                onChange={change}
                                 options={options}
+                                to={{
+                                    currency: toCurrency,
+                                    detail: balanceLine(values.toId, input?.toAmount ?? 0),
+                                    error: problem === "same-account" ? flows.transferSameAccount : null,
+                                    onPick: (id) => change(rewired(ledger, values, values.fromId, id)),
+                                }}
+                                values={values}
+                            />
+                            {problem === "amount" ? (
+                                <p className="text-destructive text-[13px]" role="alert">
+                                    {form.amountRequired}
+                                </p>
+                            ) : null}
+                        </>
+                    ) : (
+                        <>
+                            <Slot
+                                error={problem === "amount" ? form.amountRequired : null}
+                                label={flows.youSend}
                                 quiet={false}
-                                value={values.fromId}
-                            />
-                            <Balance>{balanceLine(values.fromId, input ? -(input.fromAmount + fee) : 0)}</Balance>
-                        </Slot>
-                        <Button
-                            aria-label={flows.swap.value}
-                            className="text-muted-foreground mt-7"
-                            onClick={() => change(swapped(ledger, values))}
-                            size="icon"
-                            type="button"
-                            variant="ghost"
-                        >
-                            <HugeiconsIcon icon={ArrowDataTransferHorizontalIcon} size={16} />
-                        </Button>
-                        <Slot
-                            error={problem === "same-account" ? flows.transferSameAccount : null}
-                            label={detail.to}
-                            quiet={false}
-                        >
-                            <Pick
-                                onPick={(id) => change(rewired(ledger, values, values.fromId, id))}
-                                options={options}
-                                quiet={false}
-                                value={values.toId}
-                            />
-                            <Balance>{balanceLine(values.toId, input?.toAmount ?? 0)}</Balance>
-                        </Slot>
-                    </div>
-                    {fromCurrency === toCurrency ? null : (
-                        <Slot label={flows.arrives} quiet={false}>
-                            <AmountInput
-                                currency={toCurrency}
-                                onText={(text) => change(withArrived(ledger, values, text))}
-                                text={values.arrivedText}
-                                unit={toCurrency}
-                            />
-                        </Slot>
+                            >
+                                <div className="[&_input]:font-semibold!">
+                                    <AmountInput
+                                        autoFocus
+                                        currency={fromCurrency}
+                                        key={round}
+                                        onText={(text) => change(withSent(ledger, values, text))}
+                                        text={values.sentText}
+                                        unit={fromCurrency}
+                                    />
+                                </div>
+                            </Slot>
+                            <div className="grid grid-cols-[minmax(0,1fr)_32px_minmax(0,1fr)] items-start gap-2">
+                                <Slot
+                                    error={problem === "accounts" ? flows.transferNeedsAccounts : null}
+                                    label={detail.from}
+                                    quiet={false}
+                                >
+                                    <Pick
+                                        onPick={(id) => change(rewired(ledger, values, id, values.toId))}
+                                        options={options}
+                                        quiet={false}
+                                        value={values.fromId}
+                                    />
+                                    <Balance>
+                                        {balanceLine(values.fromId, input ? -(input.fromAmount + fee) : 0)}
+                                    </Balance>
+                                </Slot>
+                                <Button
+                                    aria-label={flows.swap.value}
+                                    className="text-muted-foreground mt-7"
+                                    onClick={() => change(swapped(ledger, values))}
+                                    size="icon"
+                                    type="button"
+                                    variant="ghost"
+                                >
+                                    <HugeiconsIcon icon={ArrowDataTransferHorizontalIcon} size={16} />
+                                </Button>
+                                <Slot
+                                    error={problem === "same-account" ? flows.transferSameAccount : null}
+                                    label={detail.to}
+                                    quiet={false}
+                                >
+                                    <Pick
+                                        onPick={(id) => change(rewired(ledger, values, values.fromId, id))}
+                                        options={options}
+                                        quiet={false}
+                                        value={values.toId}
+                                    />
+                                    <Balance>{balanceLine(values.toId, input?.toAmount ?? 0)}</Balance>
+                                </Slot>
+                            </div>
+                        </>
                     )}
                     <div className="grid grid-cols-1 gap-3.5 min-[481px]:grid-cols-[3fr_2fr]">
                         <Slot

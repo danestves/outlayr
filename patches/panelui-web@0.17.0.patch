@@ -1,0 +1,226 @@
+diff --git a/dist/components/exchange/index.d.ts b/dist/components/exchange/index.d.ts
+index f0ae296d49903e7acba922c1071676207a44d9f7..2828ec05ad4906e0719163d7b870f134a018ccb3 100644
+--- a/dist/components/exchange/index.d.ts
++++ b/dist/components/exchange/index.d.ts
+@@ -37,7 +37,7 @@
+  * common base, or `convert` for a rule of your own, such as a fee.
+  */
+ import { type ComponentProps, type ReactNode } from 'react';
+-import { parseAmount } from './parse.js';
++import { decimalMarkOf, parseAmount } from './parse.js';
+ /** Which of the two cards: what is paid, or what it comes to. */
+ export type ExchangeSide = 'from' | 'to';
+ /** A theme role for a currency's mark. */
+@@ -54,6 +54,19 @@ export interface ExchangeCurrency {
+     /** The mark's colour, as a theme role. Default `neutral`. */
+     color?: ExchangeColor;
+ }
++/** The words the control draws itself, for a translated page. */
++export interface ExchangeLabels {
++    /** The list's heading while the paying side is chosen. Default "Convert from". */
++    convertFrom: string;
++    /** The list's heading while the receiving side is chosen. Default "Convert to". */
++    convertTo: string;
++    /** The list's close button. Default "Close". */
++    close: string;
++    /** The currency pill's name for assistive tech. */
++    changeCurrency: (name: string) => string;
++    /** An amount field's name for assistive tech; `label` is undefined when the card's label is not a string. */
++    amountIn: (label: string | undefined, name: string) => string;
++}
+ export interface ExchangeValue {
+     /** Code of the currency paid. */
+     from: string;
+@@ -223,6 +236,8 @@ export interface ExchangeProps extends Omit<ComponentProps<'div'>, 'defaultValue
+      * spread, or a rate you fetch per pair. Return `NaN` when there is no rate.
+      */
+     convert?: (amount: number, from: string, to: string) => number;
++    /** The words the control draws itself. Typed amounts are read with `locale`'s decimal mark. */
++    labels?: Partial<ExchangeLabels>;
+     /** The currencies and the amount, when you hold them. */
+     value?: ExchangeValue;
+     /** The currencies and the amount to start with, when the control holds them. */
+@@ -271,4 +286,4 @@ export declare const Exchange: typeof ExchangeRoot & {
+     Field: typeof ExchangeField;
+     Swap: typeof ExchangeSwap;
+ };
+-export { ExchangeField, ExchangeSwap, exchangeVariants, parseAmount };
++export { ExchangeField, ExchangeSwap, decimalMarkOf, exchangeVariants, parseAmount };
+diff --git a/dist/components/exchange/index.js b/dist/components/exchange/index.js
+index c9daaf78709d37b0ca9fcdf6ab72a9bcf6bfe63b..af6263d941b882c264444e502c9b337ff359cbba 100644
+--- a/dist/components/exchange/index.js
++++ b/dist/components/exchange/index.js
+@@ -41,7 +41,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+ import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, } from 'react';
+ import { tv } from 'tailwind-variants';
+ import { ScrollArea } from '../scroll-area/index.js';
+-import { parseAmount } from './parse.js';
++import { decimalMarkOf, parseAmount, splitAmount } from './parse.js';
+ const COLOR_VAR = {
+     primary: 'var(--primary)',
+     info: 'var(--info)',
+@@ -204,9 +204,18 @@ const roundTo = (amount, decimals) => {
+ };
+ /** A rate with four significant figures, so a small one is not rounded to nothing. */
+ const formatRate = (rate, locale) => new Intl.NumberFormat(locale, { maximumSignificantDigits: 4 }).format(rate);
++const DEFAULT_LABELS = {
++    convertFrom: 'Convert from',
++    convertTo: 'Convert to',
++    close: 'Close',
++    changeCurrency: (name) => `${name}, change currency`,
++    amountIn: (label, name) => `${label ?? 'Amount'} in ${name}`,
++};
+ /** The control: both cards, the swap between them, and the list that opens over them. */
+-function ExchangeRoot({ currencies, rates, convert, value: valueProp, defaultValue, onValueChange, locale = 'en-US', disabled = false, className, children, ...props }) {
++function ExchangeRoot({ currencies, rates, convert, value: valueProp, defaultValue, onValueChange, locale = 'en-US', labels: labelsProp, disabled = false, className, children, ...props }) {
+     const slots = exchangeVariants();
++    const decimal = useMemo(() => decimalMarkOf(locale), [locale]);
++    const labels = useMemo(() => ({ ...DEFAULT_LABELS, ...labelsProp }), [labelsProp]);
+     const first = currencies[0]?.code ?? '';
+     const second = currencies[1]?.code ?? first;
+     const [inner, setInner] = useState(() => ({
+@@ -332,6 +341,8 @@ function ExchangeRoot({ currencies, rates, convert, value: valueProp, defaultVal
+         amounts,
+         rate,
+         locale,
++        decimal,
++        labels,
+         disabled,
+         picking,
+         setPicking,
+@@ -360,7 +371,7 @@ function CurrencyMark({ currency }) {
+ function ExchangeField({ side, label, placeholder = '0', detail, className, ...props }) {
+     const slots = exchangeVariants();
+     const exchange = useExchange('Exchange.Field');
+-    const { value, amounts, byCode, locale, disabled, rate } = exchange;
++    const { value, amounts, byCode, locale, decimal, labels, disabled, rate } = exchange;
+     const code = value[side];
+     const currency = byCode.get(code);
+     const other = byCode.get(value[side === 'from' ? 'to' : 'from']);
+@@ -382,14 +393,11 @@ function ExchangeField({ side, label, placeholder = '0', detail, className, ...p
+     const onChange = (event) => {
+         const text = event.target.value;
+         // Holds back anything that is not a figure, rather than clearing what was typed.
+-        const typed = text.replace(/,/g, '');
+-        if (typed !== '' && !/^\d*\.?\d*$/.test(typed))
+-            return;
+-        const [, fraction = ''] = typed.split('.');
+-        if (fraction.length > decimals)
++        const split = splitAmount(text, decimal, decimals);
++        if (split === null || split.fraction.length > decimals || (decimals === 0 && split.point))
+             return;
+         setDraft(text);
+-        exchange.setAmount(side, parseAmount(text));
++        exchange.setAmount(side, parseAmount(text, decimal, decimals));
+     };
+     const perUnit = rate[side];
+     const line = detail !== undefined
+@@ -397,11 +405,11 @@ function ExchangeField({ side, label, placeholder = '0', detail, className, ...p
+         : perUnit !== null && other
+             ? `1 ${code} = ${formatRate(perUnit, locale)} ${other.code}`
+             : null;
+-    return (_jsxs("div", { ref: (node) => exchange.register(side, node), "data-slot": "exchange-field", "data-side": side, role: "group", "aria-labelledby": labelId, className: slots.card({ className }), ...props, children: [_jsx("span", { id: labelId, className: slots.label(), children: label }), _jsxs("div", { className: slots.row(), children: [_jsx("input", { "data-slot": "exchange-amount", inputMode: "decimal", autoComplete: "off", spellCheck: false, "aria-label": `${typeof label === 'string' ? label : 'Amount'} in ${currency?.name ?? code}`, placeholder: placeholder, disabled: disabled, value: draft ?? formatted, onChange: onChange, onFocus: (event) => {
+-                            setDraft(amount === null ? '' : String(amount));
++    return (_jsxs("div", { ref: (node) => exchange.register(side, node), "data-slot": "exchange-field", "data-side": side, role: "group", "aria-labelledby": labelId, className: slots.card({ className }), ...props, children: [_jsx("span", { id: labelId, className: slots.label(), children: label }), _jsxs("div", { className: slots.row(), children: [_jsx("input", { "data-slot": "exchange-amount", inputMode: "decimal", autoComplete: "off", spellCheck: false, "aria-label": labels.amountIn(typeof label === 'string' ? label : undefined, currency?.name ?? code), placeholder: placeholder, disabled: disabled, value: draft ?? formatted, onChange: onChange, onFocus: (event) => {
++                            setDraft(amount === null ? '' : String(amount).replace('.', decimal));
+                             const input = event.currentTarget;
+                             requestAnimationFrame(() => input.select());
+-                        }, onBlur: () => setDraft(null), className: slots.amount() }), _jsxs("button", { ref: (node) => exchange.registerPill(side, node), type: "button", "data-slot": "exchange-currency", disabled: disabled, "aria-haspopup": "listbox", "aria-expanded": exchange.picking === side, "aria-label": `${currency?.name ?? code}, change currency`, onClick: () => exchange.setPicking(side), className: slots.pill(), children: [_jsx(CurrencyMark, { currency: currency }), code] })] }), line !== null ? (_jsx("span", { "data-slot": "exchange-detail", className: slots.rate(), children: line })) : null] }));
++                        }, onBlur: () => setDraft(null), className: slots.amount() }), _jsxs("button", { ref: (node) => exchange.registerPill(side, node), type: "button", "data-slot": "exchange-currency", disabled: disabled, "aria-haspopup": "listbox", "aria-expanded": exchange.picking === side, "aria-label": labels.changeCurrency(currency?.name ?? code), onClick: () => exchange.setPicking(side), className: slots.pill(), children: [_jsx(CurrencyMark, { currency: currency }), code] })] }), line !== null ? (_jsx("span", { "data-slot": "exchange-detail", className: slots.rate(), children: line })) : null] }));
+ }
+ ExchangeField.displayName = 'Exchange.Field';
+ /** The round button on the seam: the two cards trade places. */
+@@ -420,7 +428,7 @@ ExchangeSwap.displayName = 'Exchange.Swap';
+ /** The currency list, over both cards while a side is being chosen. */
+ function ExchangeList() {
+     const slots = exchangeVariants();
+-    const { picking, setPicking, choose, currencies, value } = useExchange('Exchange');
++    const { picking, setPicking, choose, currencies, value, labels } = useExchange('Exchange');
+     const listRef = useRef(null);
+     const headingId = useId();
+     const open = picking !== null;
+@@ -456,7 +464,7 @@ function ExchangeList() {
+         event.preventDefault();
+         next.focus();
+     };
+-    return (_jsxs("div", { ref: (node) => setInert(node, !open), "data-slot": "exchange-list", className: slots.list(), "data-hidden": open ? undefined : '', onKeyDown: onKeyDown, children: [_jsxs("div", { className: slots.listHeader(), children: [_jsx("span", { id: headingId, children: picking === 'to' ? 'Convert to' : 'Convert from' }), _jsx("button", { type: "button", "aria-label": "Close", className: slots.listClose(), onClick: () => setPicking(null), children: _jsx("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", "aria-hidden": "true", children: _jsx("path", { d: "M18 6 6 18M6 6l12 12" }) }) })] }), _jsx(ScrollArea, { fade: true, className: slots.listScroll(), viewportClassName: slots.listViewport(), children: _jsx("div", { ref: listRef, role: "listbox", "aria-labelledby": headingId, className: slots.listItems(), children: currencies.map((currency) => {
++    return (_jsxs("div", { ref: (node) => setInert(node, !open), "data-slot": "exchange-list", className: slots.list(), "data-hidden": open ? undefined : '', onKeyDown: onKeyDown, children: [_jsxs("div", { className: slots.listHeader(), children: [_jsx("span", { id: headingId, children: picking === 'to' ? labels.convertTo : labels.convertFrom }), _jsx("button", { type: "button", "aria-label": labels.close, className: slots.listClose(), onClick: () => setPicking(null), children: _jsx("svg", { viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", "aria-hidden": "true", children: _jsx("path", { d: "M18 6 6 18M6 6l12 12" }) }) })] }), _jsx(ScrollArea, { fade: true, className: slots.listScroll(), viewportClassName: slots.listViewport(), children: _jsx("div", { ref: listRef, role: "listbox", "aria-labelledby": headingId, className: slots.listItems(), children: currencies.map((currency) => {
+                         const chosen = currency.code === selected;
+                         return (_jsxs("div", { role: "option", "aria-selected": chosen, tabIndex: chosen ? 0 : -1, "data-selected": chosen ? '' : undefined, className: slots.item(), onClick: () => picking && choose(picking, currency.code), onKeyDown: (event) => {
+                                 if ((event.key === 'Enter' || event.key === ' ') && picking) {
+@@ -470,4 +478,4 @@ export const Exchange = Object.assign(ExchangeRoot, {
+     Field: ExchangeField,
+     Swap: ExchangeSwap,
+ });
+-export { ExchangeField, ExchangeSwap, exchangeVariants, parseAmount };
++export { ExchangeField, ExchangeSwap, decimalMarkOf, exchangeVariants, parseAmount };
+diff --git a/dist/components/exchange/parse.d.ts b/dist/components/exchange/parse.d.ts
+index 75fdf3421eda6e49a9893543b1b1f2884cd9da19..1d2aadc7e54bd954e69fd3d73e3c6b18aed898bd 100644
+--- a/dist/components/exchange/parse.d.ts
++++ b/dist/components/exchange/parse.d.ts
+@@ -1,5 +1,13 @@
+ /**
+  * Reading a typed amount, apart from anything drawn, so a test can run it directly.
+  */
+-/** The figure as it is typed: digits and one point, with grouping commas dropped. */
+-export declare function parseAmount(text: string): number | null;
++/** The decimal mark a locale writes: "." in en-US, "," in es-ES. */
++export declare function decimalMarkOf(locale: string): string;
++/** A typed figure split at its point, or null when it is not a figure. */
++export declare function splitAmount(text: string, decimal?: string, decimals?: number): {
++    whole: string;
++    fraction: string;
++    point: boolean;
++} | null;
++/** The figure as it is typed, read with the locale's decimal mark. */
++export declare function parseAmount(text: string, decimal?: string, decimals?: number): number | null;
+diff --git a/dist/components/exchange/parse.js b/dist/components/exchange/parse.js
+index 856ccc8b5e6887c2eff6f317162f8b9d66fc4c3f..d8e9bcd8762cb6782cdfc3a78fbabb61317c3d9f 100644
+--- a/dist/components/exchange/parse.js
++++ b/dist/components/exchange/parse.js
+@@ -1,13 +1,39 @@
+ /**
+  * Reading a typed amount, apart from anything drawn, so a test can run it directly.
+  */
+-/** The figure as it is typed: digits and one point, with grouping commas dropped. */
+-export function parseAmount(text) {
+-    const cleaned = text.replace(/,/g, '').trim();
+-    if (cleaned === '' || cleaned === '.')
++const SEPARATORS = /[.,]/g;
++const SPACES = /[\s']/g;
++/** The decimal mark a locale writes: "." in en-US, "," in es-ES. */
++export function decimalMarkOf(locale) {
++    return new Intl.NumberFormat(locale).formatToParts(1.1).find((part) => part.type === 'decimal')?.value ?? '.';
++}
++/**
++ * A typed figure split at its point, or null when it is not a figure. The locale's
++ * mark is the point; the other mark is one only when it appears once and cannot be
++ * grouping, so a keypad that offers "." still works under a "," locale.
++ */
++export function splitAmount(text, decimal = '.', decimals = 2) {
++    const cleaned = text.replace(SPACES, '');
++    if (!/^[\d.,]*$/.test(cleaned))
+         return null;
+-    if (!/^\d*\.?\d*$/.test(cleaned))
++    const marks = cleaned.match(SEPARATORS) ?? [];
++    const last = Math.max(cleaned.lastIndexOf('.'), cleaned.lastIndexOf(','));
++    if (last < 0)
++        return { whole: cleaned, fraction: '', point: false };
++    const mark = cleaned[last];
++    const tail = cleaned.slice(last + 1);
++    const point = new Set(marks).size > 1 ||
++        (mark === decimal
++            ? marks.length === 1
++            : marks.length === 1 && tail.length <= decimals && tail.length !== 3);
++    const whole = (point ? cleaned.slice(0, last) : cleaned).replace(SEPARATORS, '');
++    return { whole, fraction: point ? tail : '', point };
++}
++/** The figure as it is typed, read with the locale's decimal mark. */
++export function parseAmount(text, decimal = '.', decimals = 2) {
++    const split = splitAmount(text, decimal, decimals);
++    if (split === null || (split.whole === '' && split.fraction === ''))
+         return null;
+-    const parsed = Number(cleaned);
++    const parsed = Number(`${split.whole || '0'}.${split.fraction || '0'}`);
+     return Number.isFinite(parsed) ? parsed : null;
+ }

@@ -46,7 +46,7 @@ packageExtensions:
                 optional: true
 minimumReleaseAgeExclude:
     - panelui-native@0.75.1
-    - panelui-web@0.14.0
+    - panelui-web@0.17.0
 
 patchedDependencies:
     "@convex-dev/agent@0.7.8": patches/@convex-dev__agent@0.7.8.patch
@@ -60,7 +60,7 @@ patchedDependencies:
     lru-cache@11.5.3: patches/lru-cache@11.5.3.patch
     number-flow-react-native@0.5.1: patches/number-flow-react-native@0.5.1.patch
     panelui-native@0.116.0: patches/panelui-native@0.116.0.patch
-    panelui-web@0.14.0: patches/panelui-web@0.14.0.patch
+    panelui-web@0.17.0: patches/panelui-web@0.17.0.patch
     react-native-nano-icons@1.0.1: patches/react-native-nano-icons@1.0.1.patch
     "@tanstack/redact@0.2.0": patches/@tanstack__redact@0.2.0.patch
 overrides:

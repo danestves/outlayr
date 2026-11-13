@@ -23,6 +23,7 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
 import { LedgerSettingsContext, useDisplayFormat, useMeta } from "@/lib/ledger-settings";
 
+import { CurrencyConverter } from "./currency-converter";
 import { crossRate, formatRate, usdRates } from "./currency-rates";
 import { Row, SectionHead, SettingsCard, useSaveSettings } from "./parts";
 
@@ -113,75 +114,82 @@ function Favourites({ books, currency }: { books: Parameters<typeof usdRates>[0]
     const { latest, rate } = useMemo(() => usdRates(books), [books]);
     const toggle = (code: string) => save({ favouriteCurrencies: serialiseFavourites(toggleFavourite(stored, code)) });
     return (
-        <SettingsCard
-            action={
-                latest ? (
-                    <span className="text-muted-foreground font-mono text-[13px]">
-                        {text.rateDate({ date: date.day(latest) })}
-                    </span>
-                ) : undefined
-            }
-            footer={
-                <div className="flex w-full items-center justify-between gap-3">
-                    <span className="text-muted-foreground text-[13px]">{text.starHint}</span>
-                    <CurrencyPicker
-                        action={(code) => text.addCode({ code }).value}
-                        initial={null}
-                        label={text.favourites.value}
-                        onPick={(code) => {
-                            if (!isFavourite(stored, code)) {
-                                toggle(code);
+        <div className="flex min-w-0 flex-col gap-4">
+            <CurrencyConverter codes={[currency, ...favourites]} rate={rate} />
+            <SettingsCard
+                action={
+                    latest ? (
+                        <span className="text-muted-foreground font-mono text-[13px]">
+                            {text.rateDate({ date: date.day(latest) })}
+                        </span>
+                    ) : undefined
+                }
+                footer={
+                    <div className="flex w-full items-center justify-between gap-3">
+                        <span className="text-muted-foreground text-[13px]">{text.starHint}</span>
+                        <CurrencyPicker
+                            action={(code) => text.addCode({ code }).value}
+                            initial={null}
+                            label={text.favourites.value}
+                            onPick={(code) => {
+                                if (!isFavourite(stored, code)) {
+                                    toggle(code);
+                                }
+                            }}
+                            trigger={
+                                <Button
+                                    disabled={stored.length >= FAVOURITE_CURRENCY_LIMIT}
+                                    size="sm"
+                                    variant="outline"
+                                >
+                                    <HugeiconsIcon icon={PlusSignIcon} size={16} />
+                                    {text.add}
+                                </Button>
                             }
-                        }}
-                        trigger={
-                            <Button disabled={stored.length >= FAVOURITE_CURRENCY_LIMIT} size="sm" variant="outline">
-                                <HugeiconsIcon icon={PlusSignIcon} size={16} />
-                                {text.add}
-                            </Button>
-                        }
-                    />
-                </div>
-            }
-            title={text.favourites}
-        >
-            <Table framed aria-label={text.favourites.value} maxHeight="none">
-                <Table.Header className="in-data-[sticky]:bg-card">
-                    <Table.Row>
-                        <Table.Head>{text.code}</Table.Head>
-                        <Table.Head>{text.name}</Table.Head>
-                        <Table.Head align="end">1 {currency}</Table.Head>
-                        <Table.Head className="w-10" />
-                    </Table.Row>
-                </Table.Header>
-                <Table.Body>
-                    {favourites.map((code) => {
-                        const value = crossRate(rate, currency, code);
-                        return (
-                            <Table.Row key={code}>
-                                <Table.Cell className="dash-figure font-medium">{code}</Table.Cell>
-                                <Table.Cell className="text-muted-foreground">
-                                    {currencyDisplayFor(code).name}
-                                </Table.Cell>
-                                <Table.Cell align="end" className="dash-figure">
-                                    {value === null ? "-" : formatRate(value)}
-                                </Table.Cell>
-                                <Table.Cell align="end">
-                                    <Button
-                                        aria-label={text.toggleFavourite({ code }).value}
-                                        aria-pressed
-                                        onClick={() => toggle(code)}
-                                        size="icon-sm"
-                                        variant="ghost"
-                                    >
-                                        <HugeiconsIcon className="text-primary" icon={StarIcon} size={16} />
-                                    </Button>
-                                </Table.Cell>
-                            </Table.Row>
-                        );
-                    })}
-                </Table.Body>
-            </Table>
-        </SettingsCard>
+                        />
+                    </div>
+                }
+                title={text.favourites}
+            >
+                <Table framed aria-label={text.favourites.value} maxHeight="none">
+                    <Table.Header className="in-data-[sticky]:bg-card">
+                        <Table.Row>
+                            <Table.Head>{text.code}</Table.Head>
+                            <Table.Head>{text.name}</Table.Head>
+                            <Table.Head align="end">1 {currency}</Table.Head>
+                            <Table.Head className="w-10" />
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {favourites.map((code) => {
+                            const value = crossRate(rate, currency, code);
+                            return (
+                                <Table.Row key={code}>
+                                    <Table.Cell className="dash-figure font-medium">{code}</Table.Cell>
+                                    <Table.Cell className="text-muted-foreground">
+                                        {currencyDisplayFor(code).name}
+                                    </Table.Cell>
+                                    <Table.Cell align="end" className="dash-figure">
+                                        {value === null ? "-" : formatRate(value)}
+                                    </Table.Cell>
+                                    <Table.Cell align="end">
+                                        <Button
+                                            aria-label={text.toggleFavourite({ code }).value}
+                                            aria-pressed
+                                            onClick={() => toggle(code)}
+                                            size="icon-sm"
+                                            variant="ghost"
+                                        >
+                                            <HugeiconsIcon className="text-primary" icon={StarIcon} size={16} />
+                                        </Button>
+                                    </Table.Cell>
+                                </Table.Row>
+                            );
+                        })}
+                    </Table.Body>
+                </Table>
+            </SettingsCard>
+        </div>
     );
 }
 

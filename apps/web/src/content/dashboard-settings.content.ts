@@ -521,6 +521,15 @@ const dashboardSettings = {
             currencyColumn: t({ en: "Currency", es: "Moneda", fr: "Devise", pt: "Moeda" }),
             balance: t({ en: "Balance", es: "Saldo", fr: "Solde", pt: "Saldo" }),
             favourites: t({ en: "Favourites", es: "Favoritas", fr: "Favorites", pt: "Favoritas" }),
+            convert: t({ en: "Convert", es: "Convertir", fr: "Convertir", pt: "Converter" }),
+            convertFrom: t({ en: "From", es: "De", fr: "De", pt: "De" }),
+            convertTo: t({ en: "To", es: "A", fr: "Vers", pt: "Para" }),
+            convertSwap: t({
+                en: "Swap currencies",
+                es: "Intercambiar monedas",
+                fr: "Inverser les devises",
+                pt: "Trocar moedas",
+            }),
             code: t({ en: "Code", es: "Código", fr: "Code", pt: "Código" }),
             name: t({ en: "Name", es: "Nombre", fr: "Nom", pt: "Nome" }),
             rateDate: insert(
