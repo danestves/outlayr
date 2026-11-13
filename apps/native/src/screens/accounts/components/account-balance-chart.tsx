@@ -12,7 +12,7 @@ import { formatDayMonth } from "@/domain/dates";
 import type { PlottedCell } from "@/domain/goal-balance-series";
 import { numberLocale } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
-import { CHART_DRAW, compactMagnitude } from "@/theme/chart";
+import { CHART_DRAW, compactMagnitude, roundAxisDomain } from "@/theme/chart";
 import { useColors } from "@/theme/use-colors";
 
 const Y_TICKS = 2;
@@ -29,26 +29,6 @@ interface AccountBalanceChartProps {
     showCents: boolean;
 }
 
-function balanceDomain(values: readonly number[]): [number, number] {
-    let minimum = Number.POSITIVE_INFINITY;
-    let maximum = Number.NEGATIVE_INFINITY;
-    for (const value of values) {
-        minimum = Math.min(minimum, value);
-        maximum = Math.max(maximum, value);
-    }
-    if (!(Number.isFinite(minimum) && Number.isFinite(maximum))) {
-        return [-1, 1];
-    }
-    if (minimum === maximum) {
-        const padding = Math.max(Math.abs(minimum) * 0.1, 1);
-        return [minimum - padding, maximum + padding];
-    }
-    const boundedMinimum = Math.min(0, minimum);
-    const boundedMaximum = Math.max(0, maximum);
-    const padding = (boundedMaximum - boundedMinimum) * 0.1;
-    return [boundedMinimum - padding, boundedMaximum + padding];
-}
-
 export function AccountBalanceChart({ account, cells, now, rates, showCents }: AccountBalanceChartProps) {
     const clock = useNow();
     const colors = useColors();
@@ -62,8 +42,14 @@ export function AccountBalanceChart({ account, cells, now, rates, showCents }: A
         exact: exact ? 1 : 0,
         value,
     }));
-    const domain = balanceDomain(data.map((point) => point.value));
-    const latest = data.at(-1) ?? { date: "", exact: 1, value: 0 };
+    const latest = data.at(-1);
+    if (!latest || data.length < 2) {
+        return null;
+    }
+    const domain = roundAxisDomain(
+        data.map((point) => point.value),
+        Y_TICKS
+    );
     const summary = t(latest.exact === 1 ? "accounts.chart.summary" : "accounts.chart.summaryApproximate", {
         amount: formatSignedAmount(latest.value, account.currency, showCents, language),
         date: formatDayMonth(latest.date, language),

@@ -33,6 +33,34 @@ export const CHART_DRAW = {
     durationMs: 600,
 } as const;
 
+const ROUND_STEPS = [1, 2, 2.5, 5] as const;
+
+function roundStep(atLeast: number): number {
+    const magnitude = 10 ** Math.floor(Math.log10(atLeast));
+    return (ROUND_STEPS.find((step) => step * magnitude >= atLeast) ?? 10) * magnitude;
+}
+
+export function roundAxisDomain(values: Iterable<number>, intervals: number): [number, number] {
+    let low = 0;
+    let high = 0;
+    for (const value of values) {
+        if (Number.isFinite(value)) {
+            low = Math.min(low, value);
+            high = Math.max(high, value);
+        }
+    }
+    if (low === high) {
+        return [-1, 1];
+    }
+    let step = roundStep((high - low) / intervals);
+    let start = Math.floor(low / step) * step;
+    while (start + intervals * step < high) {
+        step = roundStep(step * 1.01);
+        start = Math.floor(low / step) * step;
+    }
+    return [start, start + intervals * step];
+}
+
 /** Below ten, one decimal, more when `step` is under a tenth, so 0.04 and 0.09 do not both read 0. */
 export function compactMagnitude(value: number, decimal = ".", step = 1): string {
     const abs = Math.abs(value);

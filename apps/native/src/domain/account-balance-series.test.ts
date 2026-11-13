@@ -85,9 +85,9 @@ describe("accountBalanceSeries", () => {
 
     it("ends on today's local day across a clock change", () => {
         // 23:30 on 1 Nov 2026 in New York, the night clocks fell back: 04:30 on 2 Nov in UTC.
-        expect(JSON.parse(inNewYork(2026, 10, 1, 23, 30, 2026, 10, 1, 21, 0))).toStrictEqual({
+        expect(JSON.parse(inNewYork(2026, 10, 1, 23, 30, 2026, 9, 25, 21, 0))).toStrictEqual({
             last: { date: "2026-11-01", exact: true, value: -30 },
-            length: 182,
+            length: 8,
         });
     });
 
@@ -193,12 +193,16 @@ describe("accountBalanceSeries", () => {
         expect(series[0]).toMatchObject({ date: "2026-08-06", exact: true, value: 80 });
     });
 
-    it("keeps an empty account as an exact zero-valued 182-day series", () => {
-        const series = accountBalanceSeries(account(), [], NO_RATES, NOW);
+    it("starts an account opened at zero on its first entry, not 182 days back", () => {
+        const series = accountBalanceSeries(
+            account({ initialBalanceDate: new Date("2026-08-06T12:00:00Z") }),
+            [cell({ amount: 20, amountUsd: 20, dateKey: "2026-08-03", income: false })],
+            NO_RATES,
+            NOW
+        );
 
-        expect(series).toHaveLength(182);
-        expect(series[0]).toMatchObject({ date: "2026-02-10", exact: true, value: 0 });
-        expect(series.at(-1)).toMatchObject({ date: "2026-08-10", exact: true, value: 0 });
+        expect(series).toHaveLength(8);
+        expect(series[0]).toMatchObject({ date: "2026-08-03", value: -20 });
     });
 
     it("ends today, drawing an opening stamped later on today's point", () => {
