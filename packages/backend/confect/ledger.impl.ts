@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { parseFavourites } from "@outlayr/money/favourite-currencies";
 import { LEDGER_SETTING_KEYS } from "@outlayr/money/ledger-view";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -195,12 +196,15 @@ const exchangeRatesQuery = FunctionImpl.make(databaseSchema, spec, "exchangeRate
     Effect.gen(function* exchangeRates() {
         const userId = yield* syncedUser();
         const reader = yield* DatabaseReader;
-        const [currency, accounts] = yield* Effect.all(
+        const setting = (key: string) =>
+            reader
+                .table("appMeta")
+                .get("by_user_and_key", userId, key)
+                .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
+        const [currency, favourites, accounts] = yield* Effect.all(
             [
-                reader
-                    .table("appMeta")
-                    .get("by_user_and_key", userId, "currency")
-                    .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) })),
+                setting("currency"),
+                setting("favouriteCurrencies"),
                 reader
                     .table("accounts")
                     .index("by_user_and_seq", (q) => q.eq("userId", userId))
@@ -210,6 +214,7 @@ const exchangeRatesQuery = FunctionImpl.make(databaseSchema, spec, "exchangeRate
         );
         const quotes = new Set([
             currency?.value ?? "USD",
+            ...parseFavourites(favourites?.value ?? null),
             ...accounts.filter((row) => row.deletedAt === null).map((row) => row.currency),
         ]);
         quotes.delete("USD");
