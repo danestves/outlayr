@@ -142,4 +142,33 @@ describe("ledger queries", () => {
 
         expect(rows.map((row) => row.key).toSorted()).toStrictEqual(["accentColor", "use24HourClock"]);
     });
+
+    it("hands over the rates of favourite currencies the user holds no account in", async () => {
+        const t = setup();
+        const owner = await seedProUser(t);
+        await t.run(async (ctx) => {
+            await ctx.db.insert("appMeta", {
+                deviceId: "device",
+                key: "favouriteCurrencies",
+                seq: 1,
+                updatedAt: 0,
+                userId: owner.userId,
+                value: "EUR,JPY",
+            });
+            for (const quote of ["EUR", "JPY", "GBP"]) {
+                await ctx.db.insert("exchangeRates", {
+                    date: "2026-11-01",
+                    fetchedAt: 0,
+                    quote,
+                    rate: 2,
+                    rateType: "official",
+                    source: "openexchangerates",
+                });
+            }
+        });
+
+        const rows = await authenticatedAs(t, owner).query(api.ledger.exchangeRates, {});
+
+        expect(rows.map((row) => row.quote).toSorted()).toStrictEqual(["EUR", "JPY"]);
+    });
 });
