@@ -151,7 +151,7 @@ suite, and both stay on in `src/`.
 
 ## React Compiler
 
-`apps/native` ships through the React Compiler (`experiments.reactCompiler` in `app.config.ts`; babel-preset-expo adds the plugin when Metro's caller sets `supportsReactCompiler`). `apps/web` does not run it: `@vitejs/plugin-react` there has no compiler plugin.
+`apps/native` ships through the React Compiler (`experiments.reactCompiler` in `app.config.ts`; babel-preset-expo adds the plugin when Metro's caller sets `supportsReactCompiler`). `apps/site` does not run it: `@vitejs/plugin-react` there has no compiler plugin.
 
 The compiler rules (`REACT_COMPILER_RULES` in `vite.config.ts`) are **errors**. `react/exhaustive-deps` stays `warn`, with no findings. `react/todo` is off: it reports syntax the compiler cannot lower yet, which the coverage test below tracks per file instead. No source file disables a `react/*` rule: code the compiler would skip is restructured, and `react/rule-suppression` reports any disable that comes back.
 
@@ -161,7 +161,7 @@ The last five findings were `exhaustive-effect-dependencies`: a dependency the e
 - `lib/posthog.ts`: `useScreenTracking` depends on the screen only; `Analytics` renders it keyed by `usePathname()`, so a new path still records a screen.
 - `screens/paywall`: `failed` is derived, `failedAttempt === attempt`, so the effect records which attempt failed and a retry clears it by moving `attempt`.
 - `lib/ledger-adoption.tsx`: `??=` was the only path to `db`, and the compiler cannot lower `??=`, so `db` looked unused. It is an explicit `if` now.
-- `apps/web` demo `sentence-form.tsx`: `idle` and the `touches` counter are one `number | null`, null while idle.
+- `apps/site` demo `sentence-form.tsx`: `idle` and the `touches` counter are one `number | null`, null while idle.
 
 oxlint's compiler rules are a port and do not see every bailout: `try`/`finally`, value blocks inside `try`/`catch` and `??=` pass lint and still make the real compiler skip the component, which then ships unmemoized. `src/test-react-compiler.ts` compiles every `src` file with the app's own `babel.config.js` and Metro's release caller, and fails on any bailout outside `KNOWN_BAILOUTS`. It also fails when a listed file compiles, so the list only shrinks. The compiler itself is about 80% of the cost, close to three CPU minutes for the tree under vitest, so it runs as four `react-compiler-coverage-N.test.ts` shards that vitest spreads across workers.
 
@@ -191,7 +191,7 @@ oxlint's compiler rules are a port and do not see every bailout: `try`/`finally`
 | `prefer-catch-tags` | Every file: `Effect.catchTags({ Tag: handler })` rather than `Effect.catchTag`, even for one tag. |
 | `no-inline-schema-compile` | Every file: no `Schema.decodeUnknownSync(S)(input)` and friends inside a function, which compiles the decoder on every call. Hoist the compiled function to module scope. |
 | `require-suppression-reason` | Every file: an `oxlint-disable`, `eslint-disable`, `@ts-expect-error`, `@ts-ignore` or `@effect-diagnostics` directive ends with `-- reason` or sits under a comment that gives one. |
-| `react-effect-budget` | `apps/native/src`, `apps/web/src`, `packages/*/src`, tests skipped: a file holds at most as many `useEffect`, `useLayoutEffect` and `useInsertionEffect` calls as `scripts/effect-budget.json` gives it, and a file without an entry gets none. See "React effect budget". |
+| `react-effect-budget` | `apps/native/src`, `apps/site/src`, `packages/*/src`, tests skipped: a file holds at most as many `useEffect`, `useLayoutEffect` and `useInsertionEffect` calls as `scripts/effect-budget.json` gives it, and a file without an entry gets none. See "React effect budget". |
 | `no-em-dash-copy` | The same paths: no em dash in a string, template or JSX text. Comments are `no-slop-comments`' job. A "no value" placeholder is an en dash. |
 | `no-test-in-loop` | Test files: no `it` or `describe` declared inside a `for` loop; write `it.each(cases)(name, fn)`. A loop inside a test body is fine. |
 | `no-polling-loop-in-tests` | Test files: no `while` or `for` loop that spins on `setTimeout`, `setImmediate`, `Promise.resolve()` or `Effect.sleep` until a predicate holds. Await the event, or use `expect.poll`. A fixed-count flush (`i < 3`) is not polling. |
@@ -200,7 +200,7 @@ The rows from `no-manual-memo` down are ported under the MIT License; the upstre
 
 - `no-manual-effect-runtime-in-tests`, `no-wall-clock-in-tests` and `no-real-time-wait-in-tests` assume `@effect/vitest` and its `TestClock`. This repo does not use it, and `apps/native` drives time with `vi.useFakeTimers`. Revisit with `@effect/vitest`.
 - `no-manual-effect-runtime-in-tests` bans `Effect.runPromise` in tests in favour of `@effect/vitest`, which this repo does not use. Revisit with `@effect/vitest`.
-- `no-manual-memo` is not on in `apps/web`: without the compiler there, nothing replaces the memoization it would remove. The site has no `useMemo`, `useCallback` or `memo` today.
+- `no-manual-memo` is not on in `apps/site`: without the compiler there, nothing replaces the memoization it would remove. The site has no `useMemo`, `useCallback` or `memo` today.
 - The rest of that plugin duplicates `no-low-value-comments` and `no-test-timeout-or-retry`, or polices another product's components, RPC layer, browser tests and styling.
 
 The budget, em dash, `no-test-in-loop` and `no-polling-loop-in-tests` rules have tests in `packages/config/oxlint/rules.test.ts`, which lint a fixture through the real oxlint binary: `vp test run` in `packages/config`. The reason for each lives in the plugin, as a comment above the rule or in its message. To prove a rule still fires, break the invariant in a shipped file and run `vp check`; every rule was verified that way when it landed.
@@ -226,7 +226,7 @@ An effect is for synchronizing with something outside React. A file's count of `
 
 ## Effect diagnostics
 
-`@effect/language-service` is a TypeScript plugin in `packages/config/tsconfig.base.json`, which reaches `packages/money` and `apps/web`. `apps/native/tsconfig.json` and `packages/backend/tsconfig.json` extend Expo's and Convex's bases instead, so each repeats the same plugin block. `tsc` ignores plugins, so these diagnostics show in the editor and from the CLI, not in `check-types`:
+`@effect/language-service` is a TypeScript plugin in `packages/config/tsconfig.base.json`, which reaches `packages/money` and `apps/site`. `apps/native/tsconfig.json` and `packages/backend/tsconfig.json` extend Expo's and Convex's bases instead, so each repeats the same plugin block. `tsc` ignores plugins, so these diagnostics show in the editor and from the CLI, not in `check-types`:
 
 ```bash
 vp exec effect-language-service diagnostics --project packages/money/tsconfig.json --strict
@@ -238,7 +238,7 @@ The tree has no findings. Patching `tsc` (`effect-language-service patch`) would
 
 ## Tailwind
 
-`oxlint-tailwindcss` reads `apps/native/global.css` and lints class strings against the real Uniwind theme. `apps/screenshots` is ignored by both lint and format: it is scaffolded rather than authored here, and it is Tailwind v3 against that v4 entry point, so every class would report unknown. Its hand-written `scripts/` stay checked. `apps/web/src/stageshow` is ignored too: it is the vendored Stageshow kit (MIT, LICENSE beside it), kept close to upstream so updates stay a copy; only its strict-index type errors were patched. The home page films beside it (`apps/web/src/components/home/films`) style themselves with plain CSS classes, so `tailwindcss/no-unknown-classes` is off there. The group modules `confect codegen` writes into `packages/backend/convex/` are ignored the same way; `http.ts`, `crons.ts`, `auth.config.ts` and `convex.config.ts` there are hand-written and stay checked. Only its correctness rules are on. `enforce-sort-order` and the rest of its style set are off: oxfmt already owns class order inside `cn`/`tv`/`clsx`, and the plugin's sorter would additionally reorder 302 raw `className` strings.
+`oxlint-tailwindcss` reads `apps/native/global.css` and lints class strings against the real Uniwind theme. `apps/screenshots` is ignored by both lint and format: it is scaffolded rather than authored here, and it is Tailwind v3 against that v4 entry point, so every class would report unknown. Its hand-written `scripts/` stay checked. `apps/site/src/stageshow` is ignored too: it is the vendored Stageshow kit (MIT, LICENSE beside it), kept close to upstream so updates stay a copy; only its strict-index type errors were patched. The home page films beside it (`apps/site/src/components/home/films`) style themselves with plain CSS classes, so `tailwindcss/no-unknown-classes` is off there. The group modules `confect codegen` writes into `packages/backend/convex/` are ignored the same way; `http.ts`, `crons.ts`, `auth.config.ts` and `convex.config.ts` there are hand-written and stay checked. Only its correctness rules are on. `enforce-sort-order` and the rest of its style set are off: oxfmt already owns class order inside `cn`/`tv`/`clsx`, and the plugin's sorter would additionally reorder 302 raw `className` strings.
 
 One class the theme does not define is allowed, `ph-no-capture`: PostHog's opt-out, which keeps the web calculators out of autocapture, dead clicks and session replay. `data-ph-no-autocapture` only covers autocapture. It does nothing in `apps/native`, where posthog-react-native ignores `className`. The allowlist sits on the root rule because oxlint drops a JS plugin rule's options in an override.
 

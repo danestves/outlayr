@@ -80,9 +80,9 @@ function heroFit(t,cap,y,size,w,c=WP.ink){let sz=size;for(;;){g.font=`600 ${sz*S
  const ys=[18,42,9,61,27,74,33],pk=74,bh=44*SC,bw=(w-6*3*SC)/7;ys.forEach((v,i)=>{const hh=v/pk*bh;g.fillStyle=WP.ink;g.fillRect(i*(bw+3*SC),h-12*SC-hh,bw,hh)});
  TX.days.split("").forEach((d,i)=>mono(d,i*(bw+3*SC)+bw/2,h,WP.muted,8,"center"));
  g.restore();FACES.insights=[x0,y0,SM,SM]}
-// Phone: an App Store screenshot (screen=en/05) inside the website's bezel, screen inset from apps/web index.css .phone-screen
+// Phone: an App Store screenshot (screen=en/05) inside the website's bezel, screen inset from apps/site index.css .phone-screen
 const loadImg=src=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src});
-if(P.get("screen")){const [bz,sc]=await Promise.all([loadImg("../../web/public/app/iphone.webp"),loadImg("../public/screenshots/apple/iphone/"+P.get("screen")+".png")]);
+if(P.get("screen")){const [bz,sc]=await Promise.all([loadImg("../../site/public/app/iphone.webp"),loadImg("../public/screenshots/apple/iphone/"+P.get("screen")+".png")]);
  const x0=MD+GAP;g.save();g.translate(x0-14,-14);const sx=1000*0.05102,sy=2041*0.022,sw=1000*0.89796,sh=2041*0.956;
  g.save();g.beginPath();g.roundRect(sx,sy,sw,sh,[sw*0.125]);g.clip();g.drawImage(sc,sx,sy,sw,sh);g.restore();g.drawImage(bz,0,0);g.restore();FACES.phone=[x0,0,PW,PH]}
 const uvOf=([x,y,w,h])=>[x/AW,1-(y+h)/AH,(x+w)/AW,1-y/AH];

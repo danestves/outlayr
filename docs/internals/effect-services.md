@@ -162,7 +162,7 @@ const purchaseCommand = createRuntimeCommand(appRuntime, {
 
 ## The web app
 
-`apps/web` has no runtime, registry or atoms: it has no services, only edges.
+`apps/site` has no runtime, registry or atoms: it has no services, only edges.
 
 - A handler TanStack Start or Nitro requires to return a `Response` or a promise is an `Effect.fn` program run with `Effect.runPromise` at that edge (`server.ts`, `routes/a2a.ts`, `routes/mcp.ts`). A body read is `readJsonBody`, which fails with `RequestBodyError`.
 - Browser-only work started from React (`startAnalytics`) is an `Effect.fn` run with `Effect.runFork` from the one effect that owns it.

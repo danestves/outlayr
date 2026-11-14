@@ -3,7 +3,7 @@ set -eu
 
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
-out="../web/public/brand-kit/broll"
+out="../site/public/brand-kit/broll"
 mkdir -p "$out"
 
 remotion bundle --out-dir "$work/bundle" --log=error

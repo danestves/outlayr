@@ -4,7 +4,7 @@ import ts from "typescript";
 
 const BUDGET_FILE = new URL("effect-budget.json", import.meta.url);
 const EFFECT_HOOKS = new Set(["useEffect", "useLayoutEffect", "useInsertionEffect"]);
-const SOURCE_GLOBS = ["apps/native/src/**/*.{ts,tsx}", "apps/web/src/**/*.{ts,tsx}", "packages/*/src/**/*.{ts,tsx}"];
+const SOURCE_GLOBS = ["apps/native/src/**/*.{ts,tsx}", "apps/site/src/**/*.{ts,tsx}", "packages/*/src/**/*.{ts,tsx}"];
 const TEST_FILE = /\.test\.[cm]?[jt]sx?$|[\\/](?:test|__tests__)[\\/]/u;
 const JUSTIFIED = /oxlint-disable-next-line[^\n]*outlayr\/react-effect-budget\s+--\s*\S/u;
 

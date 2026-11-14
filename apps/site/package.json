@@ -1,5 +1,5 @@
 {
-    "name": "@outlayr/web",
+    "name": "@outlayr/site",
     "private": true,
     "type": "module",
     "scripts": {

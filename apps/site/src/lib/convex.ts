@@ -7,7 +7,7 @@ export function convexUrls() {
     const convexSiteUrl = ENV.VITE_CONVEX_SITE_URL;
     if (!convexUrl || !convexSiteUrl) {
         throw new Error(
-            "Set VITE_CONVEX_URL and VITE_CONVEX_SITE_URL in apps/web/.env.local to use /login and /connect."
+            "Set VITE_CONVEX_URL and VITE_CONVEX_SITE_URL in apps/site/.env.local to use /login and /connect."
         );
     }
     return { convexSiteUrl, convexUrl };

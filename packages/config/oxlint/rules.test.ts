@@ -16,7 +16,7 @@ describe("react-effect-budget", () => {
     it("gives a file without an entry a budget of 0 and counts member calls", () => {
         const reported = messages(
             budget(
-                "apps/web/src/NotInTheBudget.tsx",
+                "apps/site/src/NotInTheBudget.tsx",
                 "export const New = () => { React.useEffect(() => {}); return null; };"
             )
         );
@@ -31,7 +31,7 @@ export const label = "useEffect(() => {})";
 export const pipeline = Effect.matchCauseEffect(effect, {});
 export const alias = useEffect;
 `;
-        expect(budget("apps/web/src/Lookalikes.tsx", source)).toStrictEqual([]);
+        expect(budget("apps/site/src/Lookalikes.tsx", source)).toStrictEqual([]);
     });
 
     it("does not count an effect that states its reason, and uses its directive", () => {
@@ -41,7 +41,7 @@ export const alias = useEffect;
     return null;
 }
 `;
-        expect(budget("apps/web/src/New.tsx", source)).toStrictEqual([]);
+        expect(budget("apps/site/src/New.tsx", source)).toStrictEqual([]);
     });
 
     it("still counts an effect whose line above is not a reasoned directive", () => {
@@ -51,16 +51,16 @@ export const alias = useEffect;
     return null;
 }
 `;
-        expect(budget("apps/web/src/New.tsx", source)).toHaveLength(1);
+        expect(budget("apps/site/src/New.tsx", source)).toHaveLength(1);
     });
 
     it("skips test files", () => {
-        expect(budget("apps/web/src/Panel.test.tsx", component(3))).toStrictEqual([]);
+        expect(budget("apps/site/src/Panel.test.tsx", component(3))).toStrictEqual([]);
     });
 });
 
 describe("no-em-dash-copy", () => {
-    const dash = (source: string) => lint("no-em-dash-copy", "apps/web/src/Example.tsx", source);
+    const dash = (source: string) => lint("no-em-dash-copy", "apps/site/src/Example.tsx", source);
 
     it("allows em dashes in comments and regex literals", () => {
         expect(

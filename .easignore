@@ -16,7 +16,7 @@ dist
 build
 *.tsbuildinfo
 
-apps/web/src/routeTree.gen.ts
+apps/site/src/routeTree.gen.ts
 
 .env
 .env*.local
