@@ -1,5 +1,5 @@
 diff --git a/lib/module/components/bottom-sheet/index.js b/lib/module/components/bottom-sheet/index.js
-index 44e7dc2b97fdc8f00cdd2ca44db5a3adb2cf3b44..8003c4f34ef84629289abf17f3a3feba9487c9e3 100644
+index ce32378..53b5244 100644
 --- a/lib/module/components/bottom-sheet/index.js
 +++ b/lib/module/components/bottom-sheet/index.js
 @@ -7,7 +7,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -20,7 +20,7 @@ index 44e7dc2b97fdc8f00cdd2ca44db5a3adb2cf3b44..8003c4f34ef84629289abf17f3a3feba
    return undefined;
  }
  
-@@ -660,6 +658,7 @@ function BottomSheetContent({
+@@ -692,6 +690,7 @@ function BottomSheetContent({
          onDismiss: onNativeDismiss,
          snapPoints: snapPoints,
          modifiers: modifiers,
@@ -29,7 +29,7 @@ index 44e7dc2b97fdc8f00cdd2ca44db5a3adb2cf3b44..8003c4f34ef84629289abf17f3a3feba
            matchContents: true,
            children: /*#__PURE__*/_jsx(BottomSheetContext.Provider, {
 diff --git a/lib/module/components/toast/index.js b/lib/module/components/toast/index.js
-index 7f3723be6df90d2424a895bc7fec25b7b226dbaa..e537c11818546dae2f828f420bf96351f999dccc 100644
+index fadd14d..3dfc5b5 100644
 --- a/lib/module/components/toast/index.js
 +++ b/lib/module/components/toast/index.js
 @@ -97,7 +97,7 @@ const exitKeyframe = offset => new Keyframe({
@@ -55,7 +55,7 @@ index 7f3723be6df90d2424a895bc7fec25b7b226dbaa..e537c11818546dae2f828f420bf96351
    slots: {
      root: 'w-full flex-row items-start gap-3 rounded-2xl border px-4 py-3.5 shadow-lg',
 diff --git a/src/components/bottom-sheet/index.tsx b/src/components/bottom-sheet/index.tsx
-index 0fc06b4e391138d3372cb42a79351c062ed1690f..861e3fdf7bc1f11884b52ab682ae0cfd150aef4d 100644
+index 7a3f011..4582c3c 100644
 --- a/src/components/bottom-sheet/index.tsx
 +++ b/src/components/bottom-sheet/index.tsx
 @@ -43,7 +43,7 @@ import Animated, {
@@ -77,7 +77,7 @@ index 0fc06b4e391138d3372cb42a79351c062ed1690f..861e3fdf7bc1f11884b52ab682ae0cfd
    return undefined;
  }
  
-@@ -870,6 +867,7 @@ function BottomSheetContent({
+@@ -900,6 +897,7 @@ function BottomSheetContent({
            onDismiss={onNativeDismiss}
            snapPoints={snapPoints}
            modifiers={modifiers}
@@ -86,7 +86,7 @@ index 0fc06b4e391138d3372cb42a79351c062ed1690f..861e3fdf7bc1f11884b52ab682ae0cfd
            <RNHostView matchContents>
              <BottomSheetContext.Provider value={context}>
 diff --git a/src/components/toast/index.tsx b/src/components/toast/index.tsx
-index 1b1fe41e5b9d0a2e55b1de3773c1dc40b89d825e..320544bd53e0be001f80f8c3f9c110ce820b6fba 100644
+index bf60f60..a9c91cb 100644
 --- a/src/components/toast/index.tsx
 +++ b/src/components/toast/index.tsx
 @@ -115,14 +115,14 @@ const exitKeyframe = (offset: number) =>

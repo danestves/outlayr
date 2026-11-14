@@ -22,7 +22,7 @@ index 9639055..937e345 100644
 +apply plugin: 'org.jetbrains.kotlin.plugin.compose'
 +
  group = 'expo.modules.widgets'
- version = '58.0.26'
+ version = '58.0.28'
  
 @@ -64,6 +75,7 @@ android {
  
@@ -34,7 +34,7 @@ index 9639055..937e345 100644
    packagingOptions {
 @@ -146,6 +158,9 @@ dependencies {
    implementation expoModule.getExpoDependency("expo-ui")
-   api 'io.github.expo.peek:peek-emittables:0.3.2'
+   api 'io.github.expo.peek:peek-emittables:0.3.3'
    implementation "androidx.glance:glance:1.2.0"
 +  implementation 'androidx.activity:activity:1.11.0'
 +  implementation 'androidx.compose.foundation:foundation-android:1.12.1'
