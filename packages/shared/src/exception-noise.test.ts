@@ -18,6 +18,10 @@ test("drops the link scanner rejection as posthog-js captures it", () => {
     expect(dropNoiseExceptions(exception(SCANNER, SCANNER))).toBeNull();
 });
 
+test("drops the Instagram in-app browser bridge error on unload", () => {
+    expect(dropNoiseExceptions(exception("Error invoking postMessage: Java object is gone"))).toBeNull();
+});
+
 test("keeps an event when a real error rides along with the noise", () => {
     const event = exception(SCANNER, "TypeError: Cannot read properties of undefined (reading 'amount')");
     expect(dropNoiseExceptions(event)).toBe(event);

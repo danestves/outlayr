@@ -6,6 +6,7 @@ const NOISE = [
     /^ResizeObserver loop completed with undelivered notifications/,
     // Email link scanners open the page in headless Chrome, and their injected script calls a missing host method.
     /^(Non-Error promise rejection captured with value: )?Object Not Found Matching Id:\d+, MethodName:\w+, ParamCount:\d+$/,
+    /^Error invoking postMessage: Java object is gone$/,
 ];
 
 export function dropNoiseExceptions(event: CaptureResult | null): CaptureResult | null {
