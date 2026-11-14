@@ -17,10 +17,10 @@ import { useRegionCode } from "@/hooks/use-region-code";
 import { useTransactionEnrichment } from "@/hooks/use-transaction-enrichment";
 import type { EnrichmentSuggestion } from "@/hooks/use-transaction-enrichment";
 import { voidAppFlowCommand } from "@/state/entry-commands";
+import type { MerchantWebsiteLogo } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 import { attachMerchantLogo, carryLookup, shareMerchantWebsite } from "./entry-flows";
-import type { MerchantWebsiteLogo } from "./entry-flows";
 import type { EntryForm } from "./form-values";
 import { carriedSlots, logoBlocked, replacesSlot, suggestionWrites } from "./merchant-lookup";
 import type { FieldSource, LookupGuard, LookupSlot, LookupSources } from "./merchant-lookup";
@@ -318,18 +318,27 @@ export function useMerchantLookup({
         carriedSlots(guard(), { categorySource, identitySource, tagsSource }, suggestedDomainRef.current);
 
     const carry = (savedId: string, saved: SavedEntry, entryCurrency: string) => {
+        const { photoUri } = identityReads.draft();
         const website = websiteRef.current;
-        if (website?.key === merchantKey(saved.merchant) && website.photoUri === identityReads.draft().photoUri) {
+        const linked = identityReads.linkedWebsite();
+        let sharedDomain: string | null = null;
+        if (website?.key === merchantKey(saved.merchant) && website.photoUri === photoUri) {
+            sharedDomain = website.domain;
+        } else if (linked?.photoUri === photoUri) {
+            sharedDomain = linked.domain;
+        }
+        if (sharedDomain !== null) {
+            const domain = sharedDomain;
             return shareMerchantWebsite({
                 currency: entryCurrency,
                 db,
-                domain: website.domain,
+                domain,
                 forCurrency: saved.txCurrency,
                 forIncome: saved.income,
                 globalCurrency,
                 locale,
                 merchant: saved.merchant,
-                read: () => ({ ...readCarried(), domain: website.domain }),
+                read: () => ({ ...readCarried(), domain }),
                 savedId,
             });
         }

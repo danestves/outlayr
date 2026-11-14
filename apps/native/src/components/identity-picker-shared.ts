@@ -2,6 +2,7 @@ import type { ImagePickerErrorResult, ImagePickerResult } from "expo-image-picke
 
 import { CATEGORY_PALETTE } from "@/data/categories-core";
 import type { TranslationKey } from "@/i18n/catalog";
+import type { MerchantWebsiteLogo } from "@/state/entry-commands";
 
 export interface IdentitySelection {
     color: string | null;
@@ -25,6 +26,7 @@ export const IDENTITY_TAB_LABEL = {
 export interface IdentityPickerContentProps {
     onChange: (next: IdentitySelection) => void;
     onDone: () => void;
+    onLinkedWebsite?: (logo: MerchantWebsiteLogo) => void;
     /** Off for income and for subcategories. */
     showsColorRail?: boolean;
     tabs?: readonly IdentityTab[];
