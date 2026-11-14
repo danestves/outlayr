@@ -22,7 +22,8 @@ Outlayr is an open source mobile expense tracker, budget app, and subscription t
 ```
 apps/
   native/        Expo + React Native app, iOS and Android
-  web/           tryoutlayr.com, TanStack Start
+  site/          tryoutlayr.com, TanStack Start
+  app/           app.tryoutlayr.com, the web dashboard, TanStack Start
   screenshots/   App Store screenshot editor
   clips/         Remotion videos for the site, socials and in-app loops
 packages/

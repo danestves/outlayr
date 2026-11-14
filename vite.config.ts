@@ -48,7 +48,7 @@ const MANUAL_MEMO_FILES = [
     "apps/native/src/lib/ledger-adoption.tsx",
     "apps/native/src/lib/use-day-card-share.ts",
 ];
-const SHIPPED_SOURCE = ["apps/native/src/**", "apps/site/src/**", "packages/*/src/**"];
+const SHIPPED_SOURCE = ["apps/native/src/**", "apps/site/src/**", "apps/app/src/**", "packages/*/src/**"];
 const TEST_FILES = ["**/*.test.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/*.spec.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"];
 const NODE_SIDE_FILES = [
     "**/*.test.{ts,tsx}",
@@ -432,6 +432,7 @@ export default defineConfig({
             tailwindcss: {
                 entryPoint: [
                     { files: "apps/site/**", use: "apps/site/src/index.css" },
+                    { files: "apps/app/**", use: "apps/app/src/index.css" },
                     { files: "packages/shared/**", use: "apps/site/src/index.css" },
                     { files: "**", use: "apps/native/global.css" },
                 ],

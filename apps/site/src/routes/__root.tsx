@@ -1,13 +1,10 @@
-import type { ConvexQueryClient } from "@convex-dev/react-query";
 import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import { startAnalytics } from "@outlayr/shared/analytics";
 import { LANGUAGES, localeFromParam, pageUrl, publishedLocales } from "@outlayr/shared/i18n";
 import type { Locale } from "@outlayr/shared/i18n";
 import { THEME_SCRIPT, paintTheme, readTheme } from "@outlayr/shared/theme";
 import { SITE_URL, SUPPORT_EMAIL } from "@outlayr/shared/urls";
-import type { DbClient } from "@tanstack/react-db";
-import type { QueryClient } from "@tanstack/react-query";
-import { HeadContent, Scripts, createRootRouteWithContext, useMatches, useParams } from "@tanstack/react-router";
+import { HeadContent, Scripts, createRootRoute, useMatches, useParams } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import * as Effect from "effect/Effect";
@@ -23,7 +20,6 @@ import { SiteHeader } from "@/components/site-header";
 import { ENV } from "@/env";
 import { startMotion } from "@/lib/motion";
 import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } from "@/lib/seo";
-import type { Session } from "@/lib/session";
 import { COMPANY, FOUNDER, SOURCE_URL, X_URL } from "@/lib/site";
 
 import appCss from "../index.css?url";
@@ -105,12 +101,7 @@ function siteGraph(locale: Locale) {
     };
 }
 
-export const Route = createRootRouteWithContext<{
-    convexQueryClient: ConvexQueryClient | undefined;
-    dbClient: DbClient;
-    queryClient: QueryClient;
-    session: Session;
-}>()({
+export const Route = createRootRoute({
     head: ({ matches }) => {
         const leaf = matches.at(-1);
         const params: { locale?: string } = leaf?.params ?? {};
@@ -189,7 +180,7 @@ export const Route = createRootRouteWithContext<{
 });
 
 /** Routes that draw their own top bar, so the site header and footer stay out. */
-const OWN_CHROME: ReadonlySet<string> = new Set(["/_account", "/{-$locale}/r/$slug"]);
+const OWN_CHROME: ReadonlySet<string> = new Set(["/{-$locale}/r/$slug"]);
 
 function RootDocument({ children }: { children: ReactNode }) {
     const locale = localeFromParam(useParams({ strict: false }).locale);

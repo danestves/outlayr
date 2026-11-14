@@ -1,0 +1,15 @@
+{
+    "extends": "@outlayr/config/tsconfig.base.json",
+    "include": ["**/*.ts", "**/*.tsx", ".intlayer/types/**/*.ts"],
+    "exclude": ["node_modules", "dist"],
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        "types": ["vite/client"],
+        "noEmit": true,
+        "allowImportingTsExtensions": true,
+        "paths": {
+            "@/*": ["./src/*"]
+        }
+    }
+}

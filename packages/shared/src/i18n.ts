@@ -24,6 +24,13 @@ export function pageUrl(path: string, locale: Locale, origin: string = SITE_URL)
     return `${origin}${getLocalizedUrl(path, locale)}`;
 }
 
+export function sitePageUrl(path: string, locale: Locale): string {
+    const [pathname = "/", hash] = path.split("#");
+    const prefix = locale === defaultLocale || !isPublished(pathname, locale) ? "" : `/${locale}`;
+    const localized = prefix && pathname === "/" ? prefix : `${prefix}${pathname}`;
+    return `${SITE_URL}${localized}${hash === undefined ? "" : `#${hash}`}`;
+}
+
 // Portuguese and French serve only the pages translated so far, so no English text sits under /pt or /fr.
 const TOOL_PATHS = [
     "/tools",

@@ -1,13 +1,7 @@
-import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
-import { Link } from "@tanstack/react-router";
-import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
 import { Kpi } from "panelui-web/kpi";
 import type { KpiGoodDirection } from "panelui-web/kpi";
 import type { ComponentProps, ReactNode } from "react";
-
-import { Glyph } from "@/components/dashboard/accounts/glyph";
-import type { DashboardSearch } from "@/components/dashboard/shell/filters";
 
 const PERCENT = 100;
 const TENTHS = 10;
@@ -168,39 +162,5 @@ export function Track({
         <span aria-hidden className={`block h-2 overflow-hidden rounded-full ${className}`}>
             <span className="block h-full rounded-full" style={{ background: color, width: `${share * PERCENT}%` }} />
         </span>
-    );
-}
-
-export type Onward =
-    | "/app/accounts/net-worth"
-    | "/app/insights"
-    | "/app/insights/breakdown"
-    | "/app/insights/cash-flow"
-    | "/app/insights/recap"
-    | "/app/insights/reports"
-    | "/app/insights/year"
-    | "/app/transactions";
-
-/** The search a link out of a card carries: the accounts always, the span only between Insights tabs. */
-export const onwardSearch =
-    (to: Onward, category?: string) =>
-    (prev: DashboardSearch): DashboardSearch => ({
-        accounts: prev.accounts,
-        category,
-        period: to.startsWith("/app/insights") ? prev.period : undefined,
-    });
-
-/** The outline button that closes a card by opening the screen its finding belongs to. */
-export function OnwardButton({ category, children, to }: { category?: string; children: ReactNode; to: Onward }) {
-    return (
-        <Button
-            className="h-[30px] px-2.5"
-            render={<Link search={onwardSearch(to, category)} to={to} />}
-            size="sm"
-            variant="outline"
-        >
-            {children}
-            <Glyph icon={ArrowUpRight01Icon} size={16} />
-        </Button>
     );
 }

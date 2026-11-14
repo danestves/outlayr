@@ -107,9 +107,9 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 
 - Use ref as a prop instead of `React.forwardRef`
 
-**Web app (`/app`):**
+**Web app (`apps/app`):**
 
-- Local first: a reload paints from the browser's copy of the ledger and a click never waits on the network. Read `docs/internals/web-local-first.md` before adding a route, a loader, or a data source under `/app`
+- Local first: a reload paints from the browser's copy of the ledger and a click never waits on the network. Read `docs/internals/web-local-first.md` before adding a route, a loader, or a data source under `apps/app`
 
 **Effect (v4):**
 

@@ -15,12 +15,6 @@ const SECURITY_HEADERS = {
     "strict-transport-security": "max-age=31536000",
     "x-content-type-options": "nosniff",
 };
-const UNFRAMEABLE = {
-    headers: {
-        ...SECURITY_HEADERS,
-        "content-security-policy": "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
-    },
-};
 const LOADER_SPLIT_ROUTES = new Set([
     "/{-$locale}/compare/",
     "/{-$locale}/compare/$slug",
@@ -64,7 +58,7 @@ export default defineConfig({
             router: {
                 codeSplittingOptions: {
                     splitBehavior: ({ routeId }) =>
-                        routeId === "/_account/app" || LOADER_SPLIT_ROUTES.has(routeId)
+                        LOADER_SPLIT_ROUTES.has(routeId)
                             ? [
                                   ["component"],
                                   ["loader"],
@@ -79,8 +73,6 @@ export default defineConfig({
         nitro({
             routeRules: {
                 "/**": { headers: SECURITY_HEADERS },
-                "/connect": UNFRAMEABLE,
-                "/login": UNFRAMEABLE,
                 ...PUBLIC_FILE_RULES,
             },
             // A file requested before its deploy is live would 404 with these cache headers, and Cloudflare keeps it.
