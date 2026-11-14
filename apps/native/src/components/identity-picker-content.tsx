@@ -60,7 +60,7 @@ import {
     SymbolIconCell,
     symbolCellSize,
 } from "@/components/identity-symbol-cells";
-import { shownLinkStatus, useLinkLogo } from "@/components/use-link-logo";
+import { LINK_FOUND_LABEL, shownLinkStatus, useLinkLogo } from "@/components/use-link-logo";
 import type { LinkStatus } from "@/components/use-link-logo";
 import { CATEGORY_PALETTE } from "@/data/categories-core";
 import { CATEGORY_EMOJI_GROUPS, CATEGORY_ICON_GROUPS, iconKeysMatching } from "@/domain/category-icon-catalog";
@@ -568,10 +568,10 @@ function LinkStatusLine({ status }: { status: LinkStatus }) {
             <HStack spacing={6}>
                 <SwiftImage color={colors.income} size={15} systemName="checkmark.circle.fill" />
                 <SwiftText modifiers={[FOOTNOTE_STRONG, foregroundStyle(colors.income)]}>
-                    {t("transaction.website.found")}
+                    {t(LINK_FOUND_LABEL[status.source])}
                 </SwiftText>
                 <SwiftText modifiers={[FOOTNOTE, foregroundStyle(SECONDARY_LABEL), lineLimit(1)]}>
-                    {`· ${status.domain}`}
+                    {`· ${status.host}`}
                 </SwiftText>
             </HStack>
         );

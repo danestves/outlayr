@@ -511,6 +511,13 @@ const transaction = {
             pt: "Toque para trocar",
             "pt-PT": "Toque para alterar",
         }),
+        "transaction.identity.imageFound": t({
+            en: "Image found",
+            es: "Imagen encontrada",
+            fr: "Image trouvée",
+            pt: "Imagem encontrada",
+            "pt-PT": "Imagem encontrada",
+        }),
         "transaction.identity.link": t({
             en: "Website or image link",
             es: "Sitio web o enlace de imagen",

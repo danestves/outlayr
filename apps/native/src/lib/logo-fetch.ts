@@ -10,6 +10,7 @@ import { isRealLogo } from "@/domain/logo-acceptance";
 
 const MERCHANT_LOGOS_ORIGIN = "https://logos.tryoutlayr.com";
 const REQUEST_TIMEOUT = Duration.seconds(6);
+const IMPORT_TIMEOUT = Duration.seconds(10);
 /** A cold TLS handshake can alone exceed the budget; the retry reuses the connection. */
 const TIMEOUT_ATTEMPTS = 2;
 
@@ -80,6 +81,24 @@ const fetchLogo = (domain: string, etag: string | null) =>
             TimeoutError: () => Effect.succeed(INDETERMINATE),
         })
     );
+
+const ImportedImage = Schema.Struct({ domain: Schema.String });
+const decodeImportedImage = Schema.decodeUnknownEffect(ImportedImage);
+
+export const importImageLink = Effect.fn("LogoFetch.importImageLink")(
+    function* importImageLink(url: string) {
+        const response = yield* HttpClient.execute(
+            HttpClientRequest.post(`${MERCHANT_LOGOS_ORIGIN}/images`).pipe(HttpClientRequest.bodyText(url))
+        );
+        if (response.status < OK_MIN || response.status > OK_MAX) {
+            return null;
+        }
+        const { domain } = yield* decodeImportedImage(yield* response.json);
+        return domain;
+    },
+    Effect.timeout(IMPORT_TIMEOUT),
+    Effect.catchCause(() => Effect.succeed(null))
+);
 
 export interface MerchantImageRequest {
     domain: string | null;

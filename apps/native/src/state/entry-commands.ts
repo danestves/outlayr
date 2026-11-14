@@ -5,7 +5,7 @@ import * as Schema from "effect/Schema";
 import { Linking } from "react-native";
 
 import { appLogger } from "@/lib/app-logger";
-import { fetchMerchantImage } from "@/lib/logo-fetch";
+import { fetchMerchantImage, importImageLink } from "@/lib/logo-fetch";
 import { appRuntime } from "@/lib/runtime";
 
 import { createCommand, createRuntimeCommand, runAtomCommand, SILENT } from "./atom-command";
@@ -85,6 +85,21 @@ export const checkMerchantWebsite = Effect.fn("Entry.checkWebsite")(
     },
     Effect.catchCause(() => Effect.succeed(null))
 );
+
+/** An image link is filed under a shared domain so it travels like a website; anything else falls back to the site. */
+export const checkLinkLogo = Effect.fn("Entry.checkLinkLogo")(function* checkLinkLogo(link: {
+    domain: string;
+    image: string | null;
+}) {
+    const imported = link.image === null ? null : yield* importImageLink(link.image);
+    // The page has no merchant name yet, so the domain keys the logo cache.
+    const image = imported === null ? null : yield* checkMerchantWebsite(imported, imported);
+    if (image !== null) {
+        return { logo: image, source: "image" as const };
+    }
+    const website = yield* checkMerchantWebsite(link.domain, link.domain);
+    return website === null ? null : { logo: website, source: "website" as const };
+});
 
 class NoLogoToCarryError extends Schema.TaggedError<NoLogoToCarryError>()("NoLogoToCarryError", {}) {
     // oxlint-disable-next-line class-methods-use-this -- one fixed message, nothing on the instance to read

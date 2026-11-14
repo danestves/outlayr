@@ -2,16 +2,22 @@ import * as Effect from "effect/Effect";
 import { useEffect, useRef, useState } from "react";
 
 import { readIdentityLink } from "@/domain/identity-link";
-import { checkMerchantWebsite, discardStoredPhoto, voidAppFlowCommand } from "@/state/entry-commands";
+import type { TranslationKey } from "@/i18n/catalog";
+import { checkLinkLogo, discardStoredPhoto, voidAppFlowCommand } from "@/state/entry-commands";
 import type { MerchantWebsiteLogo } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 
 export type LinkStatus =
     | { kind: "idle" }
     | { kind: "checking" }
-    | { kind: "found"; domain: string; photoUri: string }
+    | { kind: "found"; host: string; photoUri: string; source: "image" | "website" }
     | { kind: "refused"; platform: string }
     | { kind: "missing" };
+
+export const LINK_FOUND_LABEL = {
+    image: "transaction.identity.imageFound",
+    website: "transaction.website.found",
+} satisfies Record<"image" | "website", TranslationKey>;
 
 const IDLE: LinkStatus = { kind: "idle" };
 const CHECK_DELAY_MS = 800;
@@ -56,23 +62,27 @@ export function useLinkLogo(onFound: (logo: MerchantWebsiteLogo) => void) {
         setStatus({ kind: "checking" });
         const asked = ticket.current;
         timer.current = setTimeout(() => {
-            // The page has no merchant name yet, so the domain keys the logo cache.
             void runFlow(
-                checkMerchantWebsite(link.domain, link.domain).pipe(
-                    Effect.flatMap((logo) =>
+                checkLinkLogo(link).pipe(
+                    Effect.flatMap((found) =>
                         Effect.sync(() => {
                             if (asked !== ticket.current) {
-                                if (logo !== null) {
-                                    discardStoredPhoto(logo.photoUri);
+                                if (found !== null) {
+                                    discardStoredPhoto(found.logo.photoUri);
                                 }
                                 return;
                             }
-                            if (logo === null) {
+                            if (found === null) {
                                 setStatus({ kind: "missing" });
                                 return;
                             }
-                            setStatus({ domain: logo.domain, kind: "found", photoUri: logo.photoUri });
-                            onFound(logo);
+                            setStatus({
+                                host: link.domain,
+                                kind: "found",
+                                photoUri: found.logo.photoUri,
+                                source: found.source,
+                            });
+                            onFound(found.logo);
                         })
                     )
                 )
