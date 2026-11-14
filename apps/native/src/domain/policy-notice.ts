@@ -10,6 +10,16 @@ function seenThrough(notices: readonly PolicyNotice[], document: PolicyNotice["d
     return retired ? LAST_NOTICE_BEFORE_RETIRED_MS : seenMs;
 }
 
+function isUnseen(notices: readonly PolicyNotice[], notice: PolicyNotice, seenMs: number): boolean {
+    const through = seenThrough(notices, notice.document, seenMs);
+    if (notice.effectiveAtMs <= through) {
+        return false;
+    }
+    const acknowledged = notices.some((other) => other.document === notice.document && other.effectiveAtMs === through);
+    // Otherwise `through` is the install time from bootstrap: that install agreed to every version posted before it.
+    return acknowledged || notice.postedAtMs > through;
+}
+
 type Changes = PolicyNotice["changes"]["en"];
 
 const mergeChanges = (newer: Changes, older: Changes): Changes => [
@@ -22,7 +32,7 @@ export function pendingNotices(
     seenAt: Readonly<Record<PolicyNotice["document"], number>>
 ): PolicyNotice[] {
     const unseen = notices
-        .filter((notice) => notice.effectiveAtMs > seenThrough(notices, notice.document, seenAt[notice.document]))
+        .filter((notice) => isUnseen(notices, notice, seenAt[notice.document]))
         .sort((a, b) => b.effectiveAtMs - a.effectiveAtMs);
     const merged = new Map<PolicyNotice["document"], PolicyNotice>();
     for (const notice of unseen) {

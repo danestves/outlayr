@@ -8,6 +8,7 @@ export const PolicyNotice = Schema.Struct({
     changes: Schema.Struct({ en: Changes, es: Changes, fr: Changes, pt: Changes }),
     document: LegalDocument,
     effectiveAtMs: Schema.Number,
+    postedAtMs: Schema.Number,
 });
 
 export type PolicyNotice = typeof PolicyNotice.Type;
@@ -55,6 +56,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "privacy",
         effectiveAtMs: Date.UTC(2026, 10, 2),
+        postedAtMs: Date.UTC(2026, 10, 2),
     },
     {
         changes: {
@@ -117,6 +119,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "privacy",
         effectiveAtMs: Date.UTC(2026, 10, 3),
+        postedAtMs: Date.UTC(2026, 10, 3),
     },
     {
         changes: {
@@ -160,6 +163,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 3),
+        postedAtMs: Date.UTC(2026, 10, 3),
     },
     {
         changes: {
@@ -190,6 +194,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "privacy",
         effectiveAtMs: Date.UTC(2026, 10, 4),
+        postedAtMs: Date.UTC(2026, 10, 4),
     },
     {
         changes: {
@@ -220,6 +225,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 4),
+        postedAtMs: Date.UTC(2026, 10, 4),
     },
     {
         changes: {
@@ -245,6 +251,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 6),
+        postedAtMs: Date.UTC(2026, 10, 6),
     },
     {
         changes: {
@@ -307,6 +314,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "privacy",
         effectiveAtMs: Date.UTC(2026, 10, 6),
+        postedAtMs: Date.UTC(2026, 10, 6),
     },
     {
         changes: {
@@ -353,6 +361,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "privacy",
         effectiveAtMs: Date.UTC(2026, 10, 8),
+        postedAtMs: Date.UTC(2026, 10, 8),
     },
     {
         changes: {
@@ -383,6 +392,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 8),
+        postedAtMs: Date.UTC(2026, 10, 8),
     },
     {
         changes: {
@@ -461,6 +471,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "privacy",
         effectiveAtMs: Date.UTC(2026, 10, 9),
+        postedAtMs: Date.UTC(2026, 10, 9),
     },
     {
         changes: {
@@ -491,6 +502,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "terms",
         effectiveAtMs: Date.UTC(2026, 10, 9),
+        postedAtMs: Date.UTC(2026, 10, 9),
     },
     {
         changes: {
@@ -681,6 +693,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "privacy",
         effectiveAtMs: Date.UTC(2027, 0, 1),
+        postedAtMs: Date.UTC(2026, 10, 13),
     },
     {
         changes: {
@@ -711,6 +724,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
         },
         document: "terms",
         effectiveAtMs: Date.UTC(2027, 0, 1),
+        postedAtMs: Date.UTC(2026, 10, 10),
     },
 ];
 

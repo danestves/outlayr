@@ -63,6 +63,7 @@ These traps come from how the notice code works:
 - **One email a month.** Check `mailState.notices` or ask Daniel when the last one went out. A second email inside a month needs a reason that can't wait.
 - **A date freezes once it's emailed.** Emails dedupe on `<document>:<effectiveAtMs>`, and the sheet compares dates. Anything added to a sent notice misses everyone already emailed and everyone who tapped Got it, so it needs a new date.
 - **Only the latest day gets emailed.** `notifyPolicy` sends only notices with the newest `effectiveAtMs`. Dating a newer notice first means an unsent older one never goes out, so send it first or move its changes into the newer one.
+- **Bump `postedAtMs` with every change.** A new install skips notices posted before it, because it signs up under the version already on the site. Set it to the UTC midnight after the change ships; a stale one hides the change from everyone who installed since.
 - **Changes in the same month share one date.** Merge them under the same future date, before that date is emailed.
 - **The sheet doesn't replace the email.** It reaches people only when they open a recent app. People who don't open the app, or run a version older than the sheet, only hear by email.
 - **All the dates match.** The effective date in en, es, fr and pt, `LEGAL_DAYS`, and `effectiveAtMs`.

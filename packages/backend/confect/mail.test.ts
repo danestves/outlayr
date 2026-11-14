@@ -20,9 +20,9 @@ vi.mock(import("./legal"), async (original) => {
     return {
         ...legal,
         POLICY_NOTICES: [
-            { changes, document: "terms", effectiveAtMs: Date.UTC(2026, 10, 3) },
-            { changes, document: "privacy", effectiveAtMs: DAY },
-            { changes, document: "terms", effectiveAtMs: DAY },
+            { changes, document: "terms", effectiveAtMs: Date.UTC(2026, 10, 3), postedAtMs: Date.UTC(2026, 10, 3) },
+            { changes, document: "privacy", effectiveAtMs: DAY, postedAtMs: DAY },
+            { changes, document: "terms", effectiveAtMs: DAY, postedAtMs: DAY },
         ] satisfies PolicyNotice[],
     };
 });
