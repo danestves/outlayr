@@ -17,6 +17,7 @@ build
 *.tsbuildinfo
 
 apps/site/src/routeTree.gen.ts
+apps/app/src/routeTree.gen.ts
 
 .env
 .env*.local

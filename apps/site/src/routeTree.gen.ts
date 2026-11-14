@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AccountRouteImport } from './routes/_account'
 import { Route as A2aRouteImport } from './routes/a2a'
 import { Route as AuthDotmdRouteImport } from './routes/auth[.]md'
 import { Route as HealthRouteImport } from './routes/health'
@@ -21,9 +20,6 @@ import { Route as DotwellKnownApiCatalogRouteImport } from './routes/[.]well-kno
 import { Route as DotwellKnownHttpMessageSignaturesDirectoryRouteImport } from './routes/[.]well-known.http-message-signatures-directory'
 import { Route as DotwellKnownOauthAuthorizationServerRouteImport } from './routes/[.]well-known.oauth-authorization-server'
 import { Route as DotwellKnownOauthProtectedResourceRouteImport } from './routes/[.]well-known.oauth-protected-resource'
-import { Route as AccountAppRouteImport } from './routes/_account/app'
-import { Route as AccountConnectRouteImport } from './routes/_account/connect'
-import { Route as AccountLoginRouteImport } from './routes/_account/login'
 import { Route as Char123LocaleChar125IndexRouteImport } from './routes/{-$locale}/index'
 import { Route as Char123LocaleChar125SplatRouteImport } from './routes/{-$locale}/$'
 import { Route as Char123LocaleChar125AboutRouteImport } from './routes/{-$locale}/about'
@@ -34,15 +30,6 @@ import { Route as Char123LocaleChar125PrivacyRouteImport } from './routes/{-$loc
 import { Route as Char123LocaleChar125SupportRouteImport } from './routes/{-$locale}/support'
 import { Route as Char123LocaleChar125TermsRouteImport } from './routes/{-$locale}/terms'
 import { Route as DotwellKnownMcpServerCardDotjsonRouteImport } from './routes/[.]well-known.mcp.server-card[.]json'
-import { Route as AccountAppIndexRouteImport } from './routes/_account/app.index'
-import { Route as AccountAppImportRouteImport } from './routes/_account/app.import'
-import { Route as AccountAppInsightsRouteImport } from './routes/_account/app.insights'
-import { Route as AccountAppOnboardingRouteImport } from './routes/_account/app.onboarding'
-import { Route as AccountAppRecurringRouteImport } from './routes/_account/app.recurring'
-import { Route as AccountAppRulesRouteImport } from './routes/_account/app.rules'
-import { Route as AccountAppSettingsRouteImport } from './routes/_account/app.settings'
-import { Route as AccountAppTransactionsRouteImport } from './routes/_account/app.transactions'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as Char123LocaleChar125BlogIndexRouteImport } from './routes/{-$locale}/blog.index'
 import { Route as Char123LocaleChar125BlogSlugRouteImport } from './routes/{-$locale}/blog.$slug'
 import { Route as Char123LocaleChar125BlogRssDotxmlRouteImport } from './routes/{-$locale}/blog.rss[.]xml'
@@ -54,50 +41,7 @@ import { Route as Char123LocaleChar125ICodeRouteImport } from './routes/{-$local
 import { Route as Char123LocaleChar125RSlugRouteImport } from './routes/{-$locale}/r.$slug'
 import { Route as Char123LocaleChar125ToolsIndexRouteImport } from './routes/{-$locale}/tools.index'
 import { Route as Char123LocaleChar125ToolsSlugRouteImport } from './routes/{-$locale}/tools.$slug'
-import { Route as AccountAppAccountsIndexRouteImport } from './routes/_account/app.accounts.index'
-import { Route as AccountAppAccountsAccountIdRouteImport } from './routes/_account/app.accounts.$accountId'
-import { Route as AccountAppAccountsNetWorthRouteImport } from './routes/_account/app.accounts.net-worth'
-import { Route as AccountAppAccountsReorderRouteImport } from './routes/_account/app.accounts.reorder'
-import { Route as AccountAppBudgetsIndexRouteImport } from './routes/_account/app.budgets.index'
-import { Route as AccountAppBudgetsCategoryIdRouteImport } from './routes/_account/app.budgets.$categoryId'
-import { Route as AccountAppDebtsIndexRouteImport } from './routes/_account/app.debts.index'
-import { Route as AccountAppDebtsAccountIdRouteImport } from './routes/_account/app.debts.$accountId'
-import { Route as AccountAppGoalsIndexRouteImport } from './routes/_account/app.goals.index'
-import { Route as AccountAppGoalsGoalIdRouteImport } from './routes/_account/app.goals.$goalId'
-import { Route as AccountAppImportIndexRouteImport } from './routes/_account/app.import.index'
-import { Route as AccountAppImportFileRouteImport } from './routes/_account/app.import.file'
-import { Route as AccountAppImportMoneyManagerRouteImport } from './routes/_account/app.import.money-manager'
-import { Route as AccountAppInsightsIndexRouteImport } from './routes/_account/app.insights.index'
-import { Route as AccountAppInsightsBreakdownRouteImport } from './routes/_account/app.insights.breakdown'
-import { Route as AccountAppInsightsCashFlowRouteImport } from './routes/_account/app.insights.cash-flow'
-import { Route as AccountAppInsightsRecapRouteImport } from './routes/_account/app.insights.recap'
-import { Route as AccountAppInsightsReportsRouteImport } from './routes/_account/app.insights.reports'
-import { Route as AccountAppInsightsYearRouteImport } from './routes/_account/app.insights.year'
-import { Route as AccountAppInstallmentsIndexRouteImport } from './routes/_account/app.installments.index'
-import { Route as AccountAppInstallmentsPlanIdRouteImport } from './routes/_account/app.installments.$planId'
-import { Route as AccountAppSettingsIndexRouteImport } from './routes/_account/app.settings.index'
-import { Route as AccountAppSettingsAboutRouteImport } from './routes/_account/app.settings.about'
-import { Route as AccountAppSettingsAccountRouteImport } from './routes/_account/app.settings.account'
-import { Route as AccountAppSettingsConnectionsRouteImport } from './routes/_account/app.settings.connections'
-import { Route as AccountAppSettingsCurrencyRouteImport } from './routes/_account/app.settings.currency'
-import { Route as AccountAppSettingsDataRouteImport } from './routes/_account/app.settings.data'
-import { Route as AccountAppSettingsEmailRouteImport } from './routes/_account/app.settings.email'
-import { Route as AccountAppSettingsInviteRouteImport } from './routes/_account/app.settings.invite'
-import { Route as AccountAppSettingsNotificationsRouteImport } from './routes/_account/app.settings.notifications'
-import { Route as AccountAppSettingsPlanRouteImport } from './routes/_account/app.settings.plan'
-import { Route as AccountAppSettingsPreferencesRouteImport } from './routes/_account/app.settings.preferences'
-import { Route as AccountAppSettingsSyncRouteImport } from './routes/_account/app.settings.sync'
-import { Route as AccountAppSettingsTimeRouteImport } from './routes/_account/app.settings.time'
-import { Route as AccountAppSettingsUsageRouteImport } from './routes/_account/app.settings.usage'
-import { Route as AccountAppBudgetsPlanIndexRouteImport } from './routes/_account/app.budgets.plan.index'
-import { Route as AccountAppBudgetsPlanMonthRouteImport } from './routes/_account/app.budgets.plan.$month'
-import { Route as AccountAppSettingsCategoriesIndexRouteImport } from './routes/_account/app.settings.categories.index'
-import { Route as AccountAppSettingsCategoriesCategoryIdRouteImport } from './routes/_account/app.settings.categories.$categoryId'
 
-const AccountRoute = AccountRouteImport.update({
-  id: '/_account',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const A2aRoute = A2aRouteImport.update({
   id: '/a2a',
   path: '/a2a',
@@ -158,21 +102,6 @@ const DotwellKnownOauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AccountAppRoute = AccountAppRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => AccountRoute,
-} as any)
-const AccountConnectRoute = AccountConnectRouteImport.update({
-  id: '/connect',
-  path: '/connect',
-  getParentRoute: () => AccountRoute,
-} as any)
-const AccountLoginRoute = AccountLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => AccountRoute,
-} as any)
 const Char123LocaleChar125IndexRoute =
   Char123LocaleChar125IndexRouteImport.update({
     id: '/',
@@ -233,51 +162,6 @@ const DotwellKnownMcpServerCardDotjsonRoute =
     path: '/.well-known/mcp/server-card.json',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AccountAppIndexRoute = AccountAppIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppImportRoute = AccountAppImportRouteImport.update({
-  id: '/import',
-  path: '/import',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppInsightsRoute = AccountAppInsightsRouteImport.update({
-  id: '/insights',
-  path: '/insights',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppOnboardingRoute = AccountAppOnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppRecurringRoute = AccountAppRecurringRouteImport.update({
-  id: '/recurring',
-  path: '/recurring',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppRulesRoute = AccountAppRulesRouteImport.update({
-  id: '/rules',
-  path: '/rules',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppSettingsRoute = AccountAppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppTransactionsRoute = AccountAppTransactionsRouteImport.update({
-  id: '/transactions',
-  path: '/transactions',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const Char123LocaleChar125BlogIndexRoute =
   Char123LocaleChar125BlogIndexRouteImport.update({
     id: '/blog/',
@@ -344,226 +228,9 @@ const Char123LocaleChar125ToolsSlugRoute =
     path: '/tools/$slug',
     getParentRoute: () => Char123LocaleChar125RouteRoute,
   } as any)
-const AccountAppAccountsIndexRoute = AccountAppAccountsIndexRouteImport.update({
-  id: '/accounts/',
-  path: '/accounts/',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppAccountsAccountIdRoute =
-  AccountAppAccountsAccountIdRouteImport.update({
-    id: '/accounts/$accountId',
-    path: '/accounts/$accountId',
-    getParentRoute: () => AccountAppRoute,
-  } as any)
-const AccountAppAccountsNetWorthRoute =
-  AccountAppAccountsNetWorthRouteImport.update({
-    id: '/accounts/net-worth',
-    path: '/accounts/net-worth',
-    getParentRoute: () => AccountAppRoute,
-  } as any)
-const AccountAppAccountsReorderRoute =
-  AccountAppAccountsReorderRouteImport.update({
-    id: '/accounts/reorder',
-    path: '/accounts/reorder',
-    getParentRoute: () => AccountAppRoute,
-  } as any)
-const AccountAppBudgetsIndexRoute = AccountAppBudgetsIndexRouteImport.update({
-  id: '/budgets/',
-  path: '/budgets/',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppBudgetsCategoryIdRoute =
-  AccountAppBudgetsCategoryIdRouteImport.update({
-    id: '/budgets/$categoryId',
-    path: '/budgets/$categoryId',
-    getParentRoute: () => AccountAppRoute,
-  } as any)
-const AccountAppDebtsIndexRoute = AccountAppDebtsIndexRouteImport.update({
-  id: '/debts/',
-  path: '/debts/',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppDebtsAccountIdRoute =
-  AccountAppDebtsAccountIdRouteImport.update({
-    id: '/debts/$accountId',
-    path: '/debts/$accountId',
-    getParentRoute: () => AccountAppRoute,
-  } as any)
-const AccountAppGoalsIndexRoute = AccountAppGoalsIndexRouteImport.update({
-  id: '/goals/',
-  path: '/goals/',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppGoalsGoalIdRoute = AccountAppGoalsGoalIdRouteImport.update({
-  id: '/goals/$goalId',
-  path: '/goals/$goalId',
-  getParentRoute: () => AccountAppRoute,
-} as any)
-const AccountAppImportIndexRoute = AccountAppImportIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AccountAppImportRoute,
-} as any)
-const AccountAppImportFileRoute = AccountAppImportFileRouteImport.update({
-  id: '/file',
-  path: '/file',
-  getParentRoute: () => AccountAppImportRoute,
-} as any)
-const AccountAppImportMoneyManagerRoute =
-  AccountAppImportMoneyManagerRouteImport.update({
-    id: '/money-manager',
-    path: '/money-manager',
-    getParentRoute: () => AccountAppImportRoute,
-  } as any)
-const AccountAppInsightsIndexRoute = AccountAppInsightsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AccountAppInsightsRoute,
-} as any)
-const AccountAppInsightsBreakdownRoute =
-  AccountAppInsightsBreakdownRouteImport.update({
-    id: '/breakdown',
-    path: '/breakdown',
-    getParentRoute: () => AccountAppInsightsRoute,
-  } as any)
-const AccountAppInsightsCashFlowRoute =
-  AccountAppInsightsCashFlowRouteImport.update({
-    id: '/cash-flow',
-    path: '/cash-flow',
-    getParentRoute: () => AccountAppInsightsRoute,
-  } as any)
-const AccountAppInsightsRecapRoute = AccountAppInsightsRecapRouteImport.update({
-  id: '/recap',
-  path: '/recap',
-  getParentRoute: () => AccountAppInsightsRoute,
-} as any)
-const AccountAppInsightsReportsRoute =
-  AccountAppInsightsReportsRouteImport.update({
-    id: '/reports',
-    path: '/reports',
-    getParentRoute: () => AccountAppInsightsRoute,
-  } as any)
-const AccountAppInsightsYearRoute = AccountAppInsightsYearRouteImport.update({
-  id: '/year',
-  path: '/year',
-  getParentRoute: () => AccountAppInsightsRoute,
-} as any)
-const AccountAppInstallmentsIndexRoute =
-  AccountAppInstallmentsIndexRouteImport.update({
-    id: '/installments/',
-    path: '/installments/',
-    getParentRoute: () => AccountAppRoute,
-  } as any)
-const AccountAppInstallmentsPlanIdRoute =
-  AccountAppInstallmentsPlanIdRouteImport.update({
-    id: '/installments/$planId',
-    path: '/installments/$planId',
-    getParentRoute: () => AccountAppRoute,
-  } as any)
-const AccountAppSettingsIndexRoute = AccountAppSettingsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AccountAppSettingsRoute,
-} as any)
-const AccountAppSettingsAboutRoute = AccountAppSettingsAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => AccountAppSettingsRoute,
-} as any)
-const AccountAppSettingsAccountRoute =
-  AccountAppSettingsAccountRouteImport.update({
-    id: '/account',
-    path: '/account',
-    getParentRoute: () => AccountAppSettingsRoute,
-  } as any)
-const AccountAppSettingsConnectionsRoute =
-  AccountAppSettingsConnectionsRouteImport.update({
-    id: '/connections',
-    path: '/connections',
-    getParentRoute: () => AccountAppSettingsRoute,
-  } as any)
-const AccountAppSettingsCurrencyRoute =
-  AccountAppSettingsCurrencyRouteImport.update({
-    id: '/currency',
-    path: '/currency',
-    getParentRoute: () => AccountAppSettingsRoute,
-  } as any)
-const AccountAppSettingsDataRoute = AccountAppSettingsDataRouteImport.update({
-  id: '/data',
-  path: '/data',
-  getParentRoute: () => AccountAppSettingsRoute,
-} as any)
-const AccountAppSettingsEmailRoute = AccountAppSettingsEmailRouteImport.update({
-  id: '/email',
-  path: '/email',
-  getParentRoute: () => AccountAppSettingsRoute,
-} as any)
-const AccountAppSettingsInviteRoute =
-  AccountAppSettingsInviteRouteImport.update({
-    id: '/invite',
-    path: '/invite',
-    getParentRoute: () => AccountAppSettingsRoute,
-  } as any)
-const AccountAppSettingsNotificationsRoute =
-  AccountAppSettingsNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
-    getParentRoute: () => AccountAppSettingsRoute,
-  } as any)
-const AccountAppSettingsPlanRoute = AccountAppSettingsPlanRouteImport.update({
-  id: '/plan',
-  path: '/plan',
-  getParentRoute: () => AccountAppSettingsRoute,
-} as any)
-const AccountAppSettingsPreferencesRoute =
-  AccountAppSettingsPreferencesRouteImport.update({
-    id: '/preferences',
-    path: '/preferences',
-    getParentRoute: () => AccountAppSettingsRoute,
-  } as any)
-const AccountAppSettingsSyncRoute = AccountAppSettingsSyncRouteImport.update({
-  id: '/sync',
-  path: '/sync',
-  getParentRoute: () => AccountAppSettingsRoute,
-} as any)
-const AccountAppSettingsTimeRoute = AccountAppSettingsTimeRouteImport.update({
-  id: '/time',
-  path: '/time',
-  getParentRoute: () => AccountAppSettingsRoute,
-} as any)
-const AccountAppSettingsUsageRoute = AccountAppSettingsUsageRouteImport.update({
-  id: '/usage',
-  path: '/usage',
-  getParentRoute: () => AccountAppSettingsRoute,
-} as any)
-const AccountAppBudgetsPlanIndexRoute =
-  AccountAppBudgetsPlanIndexRouteImport.update({
-    id: '/budgets/plan/',
-    path: '/budgets/plan/',
-    getParentRoute: () => AccountAppRoute,
-  } as any)
-const AccountAppBudgetsPlanMonthRoute =
-  AccountAppBudgetsPlanMonthRouteImport.update({
-    id: '/budgets/plan/$month',
-    path: '/budgets/plan/$month',
-    getParentRoute: () => AccountAppRoute,
-  } as any)
-const AccountAppSettingsCategoriesIndexRoute =
-  AccountAppSettingsCategoriesIndexRouteImport.update({
-    id: '/categories/',
-    path: '/categories/',
-    getParentRoute: () => AccountAppSettingsRoute,
-  } as any)
-const AccountAppSettingsCategoriesCategoryIdRoute =
-  AccountAppSettingsCategoriesCategoryIdRouteImport.update({
-    id: '/categories/$categoryId',
-    path: '/categories/$categoryId',
-    getParentRoute: () => AccountAppSettingsRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/{-$locale}': typeof Char123LocaleChar125RouteRouteWithChildren
-  '/': typeof AccountRouteWithChildren
   '/a2a': typeof A2aRoute
   '/auth.md': typeof AuthDotmdRoute
   '/health': typeof HealthRoute
@@ -574,9 +241,6 @@ export interface FileRoutesByFullPath {
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRoute
-  '/app': typeof AccountAppRouteWithChildren
-  '/connect': typeof AccountConnectRoute
-  '/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
   '/{-$locale}/brand': typeof Char123LocaleChar125BrandRoute
@@ -587,14 +251,6 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
-  '/app/import': typeof AccountAppImportRouteWithChildren
-  '/app/insights': typeof AccountAppInsightsRouteWithChildren
-  '/app/onboarding': typeof AccountAppOnboardingRoute
-  '/app/recurring': typeof AccountAppRecurringRoute
-  '/app/rules': typeof AccountAppRulesRoute
-  '/app/settings': typeof AccountAppSettingsRouteWithChildren
-  '/app/transactions': typeof AccountAppTransactionsRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
   '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
   '/{-$locale}/compare/$slug': typeof Char123LocaleChar125CompareSlugRoute
@@ -602,53 +258,12 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/i/$code': typeof Char123LocaleChar125ICodeRoute
   '/{-$locale}/r/$slug': typeof Char123LocaleChar125RSlugRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
-  '/app/': typeof AccountAppIndexRoute
   '/{-$locale}/blog/': typeof Char123LocaleChar125BlogIndexRoute
   '/{-$locale}/compare/': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides/': typeof Char123LocaleChar125GuidesIndexRoute
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
-  '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
-  '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
-  '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
-  '/app/budgets/$categoryId': typeof AccountAppBudgetsCategoryIdRoute
-  '/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
-  '/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
-  '/app/import/file': typeof AccountAppImportFileRoute
-  '/app/import/money-manager': typeof AccountAppImportMoneyManagerRoute
-  '/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
-  '/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
-  '/app/insights/recap': typeof AccountAppInsightsRecapRoute
-  '/app/insights/reports': typeof AccountAppInsightsReportsRoute
-  '/app/insights/year': typeof AccountAppInsightsYearRoute
-  '/app/installments/$planId': typeof AccountAppInstallmentsPlanIdRoute
-  '/app/settings/about': typeof AccountAppSettingsAboutRoute
-  '/app/settings/account': typeof AccountAppSettingsAccountRoute
-  '/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
-  '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
-  '/app/settings/data': typeof AccountAppSettingsDataRoute
-  '/app/settings/email': typeof AccountAppSettingsEmailRoute
-  '/app/settings/invite': typeof AccountAppSettingsInviteRoute
-  '/app/settings/notifications': typeof AccountAppSettingsNotificationsRoute
-  '/app/settings/plan': typeof AccountAppSettingsPlanRoute
-  '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
-  '/app/settings/sync': typeof AccountAppSettingsSyncRoute
-  '/app/settings/time': typeof AccountAppSettingsTimeRoute
-  '/app/settings/usage': typeof AccountAppSettingsUsageRoute
-  '/app/accounts/': typeof AccountAppAccountsIndexRoute
-  '/app/budgets/': typeof AccountAppBudgetsIndexRoute
-  '/app/debts/': typeof AccountAppDebtsIndexRoute
-  '/app/goals/': typeof AccountAppGoalsIndexRoute
-  '/app/import/': typeof AccountAppImportIndexRoute
-  '/app/insights/': typeof AccountAppInsightsIndexRoute
-  '/app/installments/': typeof AccountAppInstallmentsIndexRoute
-  '/app/settings/': typeof AccountAppSettingsIndexRoute
-  '/app/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
-  '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
-  '/app/budgets/plan/': typeof AccountAppBudgetsPlanIndexRoute
-  '/app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof AccountRouteWithChildren
   '/a2a': typeof A2aRoute
   '/auth.md': typeof AuthDotmdRoute
   '/health': typeof HealthRoute
@@ -659,8 +274,6 @@ export interface FileRoutesByTo {
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRoute
-  '/connect': typeof AccountConnectRoute
-  '/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
   '/{-$locale}/brand': typeof Char123LocaleChar125BrandRoute
@@ -671,11 +284,6 @@ export interface FileRoutesByTo {
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
   '/{-$locale}': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
-  '/app/onboarding': typeof AccountAppOnboardingRoute
-  '/app/recurring': typeof AccountAppRecurringRoute
-  '/app/rules': typeof AccountAppRulesRoute
-  '/app/transactions': typeof AccountAppTransactionsRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
   '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
   '/{-$locale}/compare/$slug': typeof Char123LocaleChar125CompareSlugRoute
@@ -683,55 +291,14 @@ export interface FileRoutesByTo {
   '/{-$locale}/i/$code': typeof Char123LocaleChar125ICodeRoute
   '/{-$locale}/r/$slug': typeof Char123LocaleChar125RSlugRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
-  '/app': typeof AccountAppIndexRoute
   '/{-$locale}/blog': typeof Char123LocaleChar125BlogIndexRoute
   '/{-$locale}/compare': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides': typeof Char123LocaleChar125GuidesIndexRoute
   '/{-$locale}/tools': typeof Char123LocaleChar125ToolsIndexRoute
-  '/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
-  '/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
-  '/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
-  '/app/budgets/$categoryId': typeof AccountAppBudgetsCategoryIdRoute
-  '/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
-  '/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
-  '/app/import/file': typeof AccountAppImportFileRoute
-  '/app/import/money-manager': typeof AccountAppImportMoneyManagerRoute
-  '/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
-  '/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
-  '/app/insights/recap': typeof AccountAppInsightsRecapRoute
-  '/app/insights/reports': typeof AccountAppInsightsReportsRoute
-  '/app/insights/year': typeof AccountAppInsightsYearRoute
-  '/app/installments/$planId': typeof AccountAppInstallmentsPlanIdRoute
-  '/app/settings/about': typeof AccountAppSettingsAboutRoute
-  '/app/settings/account': typeof AccountAppSettingsAccountRoute
-  '/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
-  '/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
-  '/app/settings/data': typeof AccountAppSettingsDataRoute
-  '/app/settings/email': typeof AccountAppSettingsEmailRoute
-  '/app/settings/invite': typeof AccountAppSettingsInviteRoute
-  '/app/settings/notifications': typeof AccountAppSettingsNotificationsRoute
-  '/app/settings/plan': typeof AccountAppSettingsPlanRoute
-  '/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
-  '/app/settings/sync': typeof AccountAppSettingsSyncRoute
-  '/app/settings/time': typeof AccountAppSettingsTimeRoute
-  '/app/settings/usage': typeof AccountAppSettingsUsageRoute
-  '/app/accounts': typeof AccountAppAccountsIndexRoute
-  '/app/budgets': typeof AccountAppBudgetsIndexRoute
-  '/app/debts': typeof AccountAppDebtsIndexRoute
-  '/app/goals': typeof AccountAppGoalsIndexRoute
-  '/app/import': typeof AccountAppImportIndexRoute
-  '/app/insights': typeof AccountAppInsightsIndexRoute
-  '/app/installments': typeof AccountAppInstallmentsIndexRoute
-  '/app/settings': typeof AccountAppSettingsIndexRoute
-  '/app/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
-  '/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
-  '/app/budgets/plan': typeof AccountAppBudgetsPlanIndexRoute
-  '/app/settings/categories': typeof AccountAppSettingsCategoriesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/{-$locale}': typeof Char123LocaleChar125RouteRouteWithChildren
-  '/_account': typeof AccountRouteWithChildren
   '/a2a': typeof A2aRoute
   '/auth.md': typeof AuthDotmdRoute
   '/health': typeof HealthRoute
@@ -742,9 +309,6 @@ export interface FileRoutesById {
   '/.well-known/http-message-signatures-directory': typeof DotwellKnownHttpMessageSignaturesDirectoryRoute
   '/.well-known/oauth-authorization-server': typeof DotwellKnownOauthAuthorizationServerRoute
   '/.well-known/oauth-protected-resource': typeof DotwellKnownOauthProtectedResourceRoute
-  '/_account/app': typeof AccountAppRouteWithChildren
-  '/_account/connect': typeof AccountConnectRoute
-  '/_account/login': typeof AccountLoginRoute
   '/{-$locale}/$': typeof Char123LocaleChar125SplatRoute
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
   '/{-$locale}/brand': typeof Char123LocaleChar125BrandRoute
@@ -755,14 +319,6 @@ export interface FileRoutesById {
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/.well-known/mcp/server-card.json': typeof DotwellKnownMcpServerCardDotjsonRoute
-  '/_account/app/import': typeof AccountAppImportRouteWithChildren
-  '/_account/app/insights': typeof AccountAppInsightsRouteWithChildren
-  '/_account/app/onboarding': typeof AccountAppOnboardingRoute
-  '/_account/app/recurring': typeof AccountAppRecurringRoute
-  '/_account/app/rules': typeof AccountAppRulesRoute
-  '/_account/app/settings': typeof AccountAppSettingsRouteWithChildren
-  '/_account/app/transactions': typeof AccountAppTransactionsRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/{-$locale}/blog/$slug': typeof Char123LocaleChar125BlogSlugRoute
   '/{-$locale}/blog/rss.xml': typeof Char123LocaleChar125BlogRssDotxmlRoute
   '/{-$locale}/compare/$slug': typeof Char123LocaleChar125CompareSlugRoute
@@ -770,56 +326,15 @@ export interface FileRoutesById {
   '/{-$locale}/i/$code': typeof Char123LocaleChar125ICodeRoute
   '/{-$locale}/r/$slug': typeof Char123LocaleChar125RSlugRoute
   '/{-$locale}/tools/$slug': typeof Char123LocaleChar125ToolsSlugRoute
-  '/_account/app/': typeof AccountAppIndexRoute
   '/{-$locale}/blog/': typeof Char123LocaleChar125BlogIndexRoute
   '/{-$locale}/compare/': typeof Char123LocaleChar125CompareIndexRoute
   '/{-$locale}/guides/': typeof Char123LocaleChar125GuidesIndexRoute
   '/{-$locale}/tools/': typeof Char123LocaleChar125ToolsIndexRoute
-  '/_account/app/accounts/$accountId': typeof AccountAppAccountsAccountIdRoute
-  '/_account/app/accounts/net-worth': typeof AccountAppAccountsNetWorthRoute
-  '/_account/app/accounts/reorder': typeof AccountAppAccountsReorderRoute
-  '/_account/app/budgets/$categoryId': typeof AccountAppBudgetsCategoryIdRoute
-  '/_account/app/debts/$accountId': typeof AccountAppDebtsAccountIdRoute
-  '/_account/app/goals/$goalId': typeof AccountAppGoalsGoalIdRoute
-  '/_account/app/import/file': typeof AccountAppImportFileRoute
-  '/_account/app/import/money-manager': typeof AccountAppImportMoneyManagerRoute
-  '/_account/app/insights/breakdown': typeof AccountAppInsightsBreakdownRoute
-  '/_account/app/insights/cash-flow': typeof AccountAppInsightsCashFlowRoute
-  '/_account/app/insights/recap': typeof AccountAppInsightsRecapRoute
-  '/_account/app/insights/reports': typeof AccountAppInsightsReportsRoute
-  '/_account/app/insights/year': typeof AccountAppInsightsYearRoute
-  '/_account/app/installments/$planId': typeof AccountAppInstallmentsPlanIdRoute
-  '/_account/app/settings/about': typeof AccountAppSettingsAboutRoute
-  '/_account/app/settings/account': typeof AccountAppSettingsAccountRoute
-  '/_account/app/settings/connections': typeof AccountAppSettingsConnectionsRoute
-  '/_account/app/settings/currency': typeof AccountAppSettingsCurrencyRoute
-  '/_account/app/settings/data': typeof AccountAppSettingsDataRoute
-  '/_account/app/settings/email': typeof AccountAppSettingsEmailRoute
-  '/_account/app/settings/invite': typeof AccountAppSettingsInviteRoute
-  '/_account/app/settings/notifications': typeof AccountAppSettingsNotificationsRoute
-  '/_account/app/settings/plan': typeof AccountAppSettingsPlanRoute
-  '/_account/app/settings/preferences': typeof AccountAppSettingsPreferencesRoute
-  '/_account/app/settings/sync': typeof AccountAppSettingsSyncRoute
-  '/_account/app/settings/time': typeof AccountAppSettingsTimeRoute
-  '/_account/app/settings/usage': typeof AccountAppSettingsUsageRoute
-  '/_account/app/accounts/': typeof AccountAppAccountsIndexRoute
-  '/_account/app/budgets/': typeof AccountAppBudgetsIndexRoute
-  '/_account/app/debts/': typeof AccountAppDebtsIndexRoute
-  '/_account/app/goals/': typeof AccountAppGoalsIndexRoute
-  '/_account/app/import/': typeof AccountAppImportIndexRoute
-  '/_account/app/insights/': typeof AccountAppInsightsIndexRoute
-  '/_account/app/installments/': typeof AccountAppInstallmentsIndexRoute
-  '/_account/app/settings/': typeof AccountAppSettingsIndexRoute
-  '/_account/app/budgets/plan/$month': typeof AccountAppBudgetsPlanMonthRoute
-  '/_account/app/settings/categories/$categoryId': typeof AccountAppSettingsCategoriesCategoryIdRoute
-  '/_account/app/budgets/plan/': typeof AccountAppBudgetsPlanIndexRoute
-  '/_account/app/settings/categories/': typeof AccountAppSettingsCategoriesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/{-$locale}'
-    | '/'
     | '/a2a'
     | '/auth.md'
     | '/health'
@@ -830,9 +345,6 @@ export interface FileRouteTypes {
     | '/.well-known/http-message-signatures-directory'
     | '/.well-known/oauth-authorization-server'
     | '/.well-known/oauth-protected-resource'
-    | '/app'
-    | '/connect'
-    | '/login'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
     | '/{-$locale}/brand'
@@ -843,14 +355,6 @@ export interface FileRouteTypes {
     | '/{-$locale}/terms'
     | '/{-$locale}/'
     | '/.well-known/mcp/server-card.json'
-    | '/app/import'
-    | '/app/insights'
-    | '/app/onboarding'
-    | '/app/recurring'
-    | '/app/rules'
-    | '/app/settings'
-    | '/app/transactions'
-    | '/api/auth/$'
     | '/{-$locale}/blog/$slug'
     | '/{-$locale}/blog/rss.xml'
     | '/{-$locale}/compare/$slug'
@@ -858,53 +362,12 @@ export interface FileRouteTypes {
     | '/{-$locale}/i/$code'
     | '/{-$locale}/r/$slug'
     | '/{-$locale}/tools/$slug'
-    | '/app/'
     | '/{-$locale}/blog/'
     | '/{-$locale}/compare/'
     | '/{-$locale}/guides/'
     | '/{-$locale}/tools/'
-    | '/app/accounts/$accountId'
-    | '/app/accounts/net-worth'
-    | '/app/accounts/reorder'
-    | '/app/budgets/$categoryId'
-    | '/app/debts/$accountId'
-    | '/app/goals/$goalId'
-    | '/app/import/file'
-    | '/app/import/money-manager'
-    | '/app/insights/breakdown'
-    | '/app/insights/cash-flow'
-    | '/app/insights/recap'
-    | '/app/insights/reports'
-    | '/app/insights/year'
-    | '/app/installments/$planId'
-    | '/app/settings/about'
-    | '/app/settings/account'
-    | '/app/settings/connections'
-    | '/app/settings/currency'
-    | '/app/settings/data'
-    | '/app/settings/email'
-    | '/app/settings/invite'
-    | '/app/settings/notifications'
-    | '/app/settings/plan'
-    | '/app/settings/preferences'
-    | '/app/settings/sync'
-    | '/app/settings/time'
-    | '/app/settings/usage'
-    | '/app/accounts/'
-    | '/app/budgets/'
-    | '/app/debts/'
-    | '/app/goals/'
-    | '/app/import/'
-    | '/app/insights/'
-    | '/app/installments/'
-    | '/app/settings/'
-    | '/app/budgets/plan/$month'
-    | '/app/settings/categories/$categoryId'
-    | '/app/budgets/plan/'
-    | '/app/settings/categories/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/a2a'
     | '/auth.md'
     | '/health'
@@ -915,8 +378,6 @@ export interface FileRouteTypes {
     | '/.well-known/http-message-signatures-directory'
     | '/.well-known/oauth-authorization-server'
     | '/.well-known/oauth-protected-resource'
-    | '/connect'
-    | '/login'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
     | '/{-$locale}/brand'
@@ -927,11 +388,6 @@ export interface FileRouteTypes {
     | '/{-$locale}/terms'
     | '/{-$locale}'
     | '/.well-known/mcp/server-card.json'
-    | '/app/onboarding'
-    | '/app/recurring'
-    | '/app/rules'
-    | '/app/transactions'
-    | '/api/auth/$'
     | '/{-$locale}/blog/$slug'
     | '/{-$locale}/blog/rss.xml'
     | '/{-$locale}/compare/$slug'
@@ -939,54 +395,13 @@ export interface FileRouteTypes {
     | '/{-$locale}/i/$code'
     | '/{-$locale}/r/$slug'
     | '/{-$locale}/tools/$slug'
-    | '/app'
     | '/{-$locale}/blog'
     | '/{-$locale}/compare'
     | '/{-$locale}/guides'
     | '/{-$locale}/tools'
-    | '/app/accounts/$accountId'
-    | '/app/accounts/net-worth'
-    | '/app/accounts/reorder'
-    | '/app/budgets/$categoryId'
-    | '/app/debts/$accountId'
-    | '/app/goals/$goalId'
-    | '/app/import/file'
-    | '/app/import/money-manager'
-    | '/app/insights/breakdown'
-    | '/app/insights/cash-flow'
-    | '/app/insights/recap'
-    | '/app/insights/reports'
-    | '/app/insights/year'
-    | '/app/installments/$planId'
-    | '/app/settings/about'
-    | '/app/settings/account'
-    | '/app/settings/connections'
-    | '/app/settings/currency'
-    | '/app/settings/data'
-    | '/app/settings/email'
-    | '/app/settings/invite'
-    | '/app/settings/notifications'
-    | '/app/settings/plan'
-    | '/app/settings/preferences'
-    | '/app/settings/sync'
-    | '/app/settings/time'
-    | '/app/settings/usage'
-    | '/app/accounts'
-    | '/app/budgets'
-    | '/app/debts'
-    | '/app/goals'
-    | '/app/import'
-    | '/app/insights'
-    | '/app/installments'
-    | '/app/settings'
-    | '/app/budgets/plan/$month'
-    | '/app/settings/categories/$categoryId'
-    | '/app/budgets/plan'
-    | '/app/settings/categories'
   id:
     | '__root__'
     | '/{-$locale}'
-    | '/_account'
     | '/a2a'
     | '/auth.md'
     | '/health'
@@ -997,9 +412,6 @@ export interface FileRouteTypes {
     | '/.well-known/http-message-signatures-directory'
     | '/.well-known/oauth-authorization-server'
     | '/.well-known/oauth-protected-resource'
-    | '/_account/app'
-    | '/_account/connect'
-    | '/_account/login'
     | '/{-$locale}/$'
     | '/{-$locale}/about'
     | '/{-$locale}/brand'
@@ -1010,14 +422,6 @@ export interface FileRouteTypes {
     | '/{-$locale}/terms'
     | '/{-$locale}/'
     | '/.well-known/mcp/server-card.json'
-    | '/_account/app/import'
-    | '/_account/app/insights'
-    | '/_account/app/onboarding'
-    | '/_account/app/recurring'
-    | '/_account/app/rules'
-    | '/_account/app/settings'
-    | '/_account/app/transactions'
-    | '/api/auth/$'
     | '/{-$locale}/blog/$slug'
     | '/{-$locale}/blog/rss.xml'
     | '/{-$locale}/compare/$slug'
@@ -1025,55 +429,14 @@ export interface FileRouteTypes {
     | '/{-$locale}/i/$code'
     | '/{-$locale}/r/$slug'
     | '/{-$locale}/tools/$slug'
-    | '/_account/app/'
     | '/{-$locale}/blog/'
     | '/{-$locale}/compare/'
     | '/{-$locale}/guides/'
     | '/{-$locale}/tools/'
-    | '/_account/app/accounts/$accountId'
-    | '/_account/app/accounts/net-worth'
-    | '/_account/app/accounts/reorder'
-    | '/_account/app/budgets/$categoryId'
-    | '/_account/app/debts/$accountId'
-    | '/_account/app/goals/$goalId'
-    | '/_account/app/import/file'
-    | '/_account/app/import/money-manager'
-    | '/_account/app/insights/breakdown'
-    | '/_account/app/insights/cash-flow'
-    | '/_account/app/insights/recap'
-    | '/_account/app/insights/reports'
-    | '/_account/app/insights/year'
-    | '/_account/app/installments/$planId'
-    | '/_account/app/settings/about'
-    | '/_account/app/settings/account'
-    | '/_account/app/settings/connections'
-    | '/_account/app/settings/currency'
-    | '/_account/app/settings/data'
-    | '/_account/app/settings/email'
-    | '/_account/app/settings/invite'
-    | '/_account/app/settings/notifications'
-    | '/_account/app/settings/plan'
-    | '/_account/app/settings/preferences'
-    | '/_account/app/settings/sync'
-    | '/_account/app/settings/time'
-    | '/_account/app/settings/usage'
-    | '/_account/app/accounts/'
-    | '/_account/app/budgets/'
-    | '/_account/app/debts/'
-    | '/_account/app/goals/'
-    | '/_account/app/import/'
-    | '/_account/app/insights/'
-    | '/_account/app/installments/'
-    | '/_account/app/settings/'
-    | '/_account/app/budgets/plan/$month'
-    | '/_account/app/settings/categories/$categoryId'
-    | '/_account/app/budgets/plan/'
-    | '/_account/app/settings/categories/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   Char123LocaleChar125RouteRoute: typeof Char123LocaleChar125RouteRouteWithChildren
-  AccountRoute: typeof AccountRouteWithChildren
   A2aRoute: typeof A2aRoute
   AuthDotmdRoute: typeof AuthDotmdRoute
   HealthRoute: typeof HealthRoute
@@ -1085,18 +448,10 @@ export interface RootRouteChildren {
   DotwellKnownOauthAuthorizationServerRoute: typeof DotwellKnownOauthAuthorizationServerRoute
   DotwellKnownOauthProtectedResourceRoute: typeof DotwellKnownOauthProtectedResourceRoute
   DotwellKnownMcpServerCardDotjsonRoute: typeof DotwellKnownMcpServerCardDotjsonRoute
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/_account': {
-      id: '/_account'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AccountRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/a2a': {
       id: '/a2a'
       path: '/a2a'
@@ -1174,27 +529,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotwellKnownOauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_account/app': {
-      id: '/_account/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AccountAppRouteImport
-      parentRoute: typeof AccountRoute
-    }
-    '/_account/connect': {
-      id: '/_account/connect'
-      path: '/connect'
-      fullPath: '/connect'
-      preLoaderRoute: typeof AccountConnectRouteImport
-      parentRoute: typeof AccountRoute
-    }
-    '/_account/login': {
-      id: '/_account/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof AccountLoginRouteImport
-      parentRoute: typeof AccountRoute
-    }
     '/{-$locale}/': {
       id: '/{-$locale}/'
       path: '/'
@@ -1263,69 +597,6 @@ declare module '@tanstack/react-router' {
       path: '/.well-known/mcp/server-card.json'
       fullPath: '/.well-known/mcp/server-card.json'
       preLoaderRoute: typeof DotwellKnownMcpServerCardDotjsonRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_account/app/': {
-      id: '/_account/app/'
-      path: '/'
-      fullPath: '/app/'
-      preLoaderRoute: typeof AccountAppIndexRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/import': {
-      id: '/_account/app/import'
-      path: '/import'
-      fullPath: '/app/import'
-      preLoaderRoute: typeof AccountAppImportRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/insights': {
-      id: '/_account/app/insights'
-      path: '/insights'
-      fullPath: '/app/insights'
-      preLoaderRoute: typeof AccountAppInsightsRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/onboarding': {
-      id: '/_account/app/onboarding'
-      path: '/onboarding'
-      fullPath: '/app/onboarding'
-      preLoaderRoute: typeof AccountAppOnboardingRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/recurring': {
-      id: '/_account/app/recurring'
-      path: '/recurring'
-      fullPath: '/app/recurring'
-      preLoaderRoute: typeof AccountAppRecurringRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/rules': {
-      id: '/_account/app/rules'
-      path: '/rules'
-      fullPath: '/app/rules'
-      preLoaderRoute: typeof AccountAppRulesRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/settings': {
-      id: '/_account/app/settings'
-      path: '/settings'
-      fullPath: '/app/settings'
-      preLoaderRoute: typeof AccountAppSettingsRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/transactions': {
-      id: '/_account/app/transactions'
-      path: '/transactions'
-      fullPath: '/app/transactions'
-      preLoaderRoute: typeof AccountAppTransactionsRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/{-$locale}/blog/': {
@@ -1405,279 +676,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char123LocaleChar125ToolsSlugRouteImport
       parentRoute: typeof Char123LocaleChar125RouteRoute
     }
-    '/_account/app/accounts/': {
-      id: '/_account/app/accounts/'
-      path: '/accounts'
-      fullPath: '/app/accounts/'
-      preLoaderRoute: typeof AccountAppAccountsIndexRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/accounts/$accountId': {
-      id: '/_account/app/accounts/$accountId'
-      path: '/accounts/$accountId'
-      fullPath: '/app/accounts/$accountId'
-      preLoaderRoute: typeof AccountAppAccountsAccountIdRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/accounts/net-worth': {
-      id: '/_account/app/accounts/net-worth'
-      path: '/accounts/net-worth'
-      fullPath: '/app/accounts/net-worth'
-      preLoaderRoute: typeof AccountAppAccountsNetWorthRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/accounts/reorder': {
-      id: '/_account/app/accounts/reorder'
-      path: '/accounts/reorder'
-      fullPath: '/app/accounts/reorder'
-      preLoaderRoute: typeof AccountAppAccountsReorderRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/budgets/': {
-      id: '/_account/app/budgets/'
-      path: '/budgets'
-      fullPath: '/app/budgets/'
-      preLoaderRoute: typeof AccountAppBudgetsIndexRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/budgets/$categoryId': {
-      id: '/_account/app/budgets/$categoryId'
-      path: '/budgets/$categoryId'
-      fullPath: '/app/budgets/$categoryId'
-      preLoaderRoute: typeof AccountAppBudgetsCategoryIdRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/debts/': {
-      id: '/_account/app/debts/'
-      path: '/debts'
-      fullPath: '/app/debts/'
-      preLoaderRoute: typeof AccountAppDebtsIndexRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/debts/$accountId': {
-      id: '/_account/app/debts/$accountId'
-      path: '/debts/$accountId'
-      fullPath: '/app/debts/$accountId'
-      preLoaderRoute: typeof AccountAppDebtsAccountIdRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/goals/': {
-      id: '/_account/app/goals/'
-      path: '/goals'
-      fullPath: '/app/goals/'
-      preLoaderRoute: typeof AccountAppGoalsIndexRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/goals/$goalId': {
-      id: '/_account/app/goals/$goalId'
-      path: '/goals/$goalId'
-      fullPath: '/app/goals/$goalId'
-      preLoaderRoute: typeof AccountAppGoalsGoalIdRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/import/': {
-      id: '/_account/app/import/'
-      path: '/'
-      fullPath: '/app/import/'
-      preLoaderRoute: typeof AccountAppImportIndexRouteImport
-      parentRoute: typeof AccountAppImportRoute
-    }
-    '/_account/app/import/file': {
-      id: '/_account/app/import/file'
-      path: '/file'
-      fullPath: '/app/import/file'
-      preLoaderRoute: typeof AccountAppImportFileRouteImport
-      parentRoute: typeof AccountAppImportRoute
-    }
-    '/_account/app/import/money-manager': {
-      id: '/_account/app/import/money-manager'
-      path: '/money-manager'
-      fullPath: '/app/import/money-manager'
-      preLoaderRoute: typeof AccountAppImportMoneyManagerRouteImport
-      parentRoute: typeof AccountAppImportRoute
-    }
-    '/_account/app/insights/': {
-      id: '/_account/app/insights/'
-      path: '/'
-      fullPath: '/app/insights/'
-      preLoaderRoute: typeof AccountAppInsightsIndexRouteImport
-      parentRoute: typeof AccountAppInsightsRoute
-    }
-    '/_account/app/insights/breakdown': {
-      id: '/_account/app/insights/breakdown'
-      path: '/breakdown'
-      fullPath: '/app/insights/breakdown'
-      preLoaderRoute: typeof AccountAppInsightsBreakdownRouteImport
-      parentRoute: typeof AccountAppInsightsRoute
-    }
-    '/_account/app/insights/cash-flow': {
-      id: '/_account/app/insights/cash-flow'
-      path: '/cash-flow'
-      fullPath: '/app/insights/cash-flow'
-      preLoaderRoute: typeof AccountAppInsightsCashFlowRouteImport
-      parentRoute: typeof AccountAppInsightsRoute
-    }
-    '/_account/app/insights/recap': {
-      id: '/_account/app/insights/recap'
-      path: '/recap'
-      fullPath: '/app/insights/recap'
-      preLoaderRoute: typeof AccountAppInsightsRecapRouteImport
-      parentRoute: typeof AccountAppInsightsRoute
-    }
-    '/_account/app/insights/reports': {
-      id: '/_account/app/insights/reports'
-      path: '/reports'
-      fullPath: '/app/insights/reports'
-      preLoaderRoute: typeof AccountAppInsightsReportsRouteImport
-      parentRoute: typeof AccountAppInsightsRoute
-    }
-    '/_account/app/insights/year': {
-      id: '/_account/app/insights/year'
-      path: '/year'
-      fullPath: '/app/insights/year'
-      preLoaderRoute: typeof AccountAppInsightsYearRouteImport
-      parentRoute: typeof AccountAppInsightsRoute
-    }
-    '/_account/app/installments/': {
-      id: '/_account/app/installments/'
-      path: '/installments'
-      fullPath: '/app/installments/'
-      preLoaderRoute: typeof AccountAppInstallmentsIndexRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/installments/$planId': {
-      id: '/_account/app/installments/$planId'
-      path: '/installments/$planId'
-      fullPath: '/app/installments/$planId'
-      preLoaderRoute: typeof AccountAppInstallmentsPlanIdRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/settings/': {
-      id: '/_account/app/settings/'
-      path: '/'
-      fullPath: '/app/settings/'
-      preLoaderRoute: typeof AccountAppSettingsIndexRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/about': {
-      id: '/_account/app/settings/about'
-      path: '/about'
-      fullPath: '/app/settings/about'
-      preLoaderRoute: typeof AccountAppSettingsAboutRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/account': {
-      id: '/_account/app/settings/account'
-      path: '/account'
-      fullPath: '/app/settings/account'
-      preLoaderRoute: typeof AccountAppSettingsAccountRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/connections': {
-      id: '/_account/app/settings/connections'
-      path: '/connections'
-      fullPath: '/app/settings/connections'
-      preLoaderRoute: typeof AccountAppSettingsConnectionsRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/currency': {
-      id: '/_account/app/settings/currency'
-      path: '/currency'
-      fullPath: '/app/settings/currency'
-      preLoaderRoute: typeof AccountAppSettingsCurrencyRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/data': {
-      id: '/_account/app/settings/data'
-      path: '/data'
-      fullPath: '/app/settings/data'
-      preLoaderRoute: typeof AccountAppSettingsDataRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/email': {
-      id: '/_account/app/settings/email'
-      path: '/email'
-      fullPath: '/app/settings/email'
-      preLoaderRoute: typeof AccountAppSettingsEmailRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/invite': {
-      id: '/_account/app/settings/invite'
-      path: '/invite'
-      fullPath: '/app/settings/invite'
-      preLoaderRoute: typeof AccountAppSettingsInviteRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/notifications': {
-      id: '/_account/app/settings/notifications'
-      path: '/notifications'
-      fullPath: '/app/settings/notifications'
-      preLoaderRoute: typeof AccountAppSettingsNotificationsRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/plan': {
-      id: '/_account/app/settings/plan'
-      path: '/plan'
-      fullPath: '/app/settings/plan'
-      preLoaderRoute: typeof AccountAppSettingsPlanRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/preferences': {
-      id: '/_account/app/settings/preferences'
-      path: '/preferences'
-      fullPath: '/app/settings/preferences'
-      preLoaderRoute: typeof AccountAppSettingsPreferencesRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/sync': {
-      id: '/_account/app/settings/sync'
-      path: '/sync'
-      fullPath: '/app/settings/sync'
-      preLoaderRoute: typeof AccountAppSettingsSyncRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/time': {
-      id: '/_account/app/settings/time'
-      path: '/time'
-      fullPath: '/app/settings/time'
-      preLoaderRoute: typeof AccountAppSettingsTimeRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/usage': {
-      id: '/_account/app/settings/usage'
-      path: '/usage'
-      fullPath: '/app/settings/usage'
-      preLoaderRoute: typeof AccountAppSettingsUsageRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/budgets/plan/': {
-      id: '/_account/app/budgets/plan/'
-      path: '/budgets/plan'
-      fullPath: '/app/budgets/plan/'
-      preLoaderRoute: typeof AccountAppBudgetsPlanIndexRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/budgets/plan/$month': {
-      id: '/_account/app/budgets/plan/$month'
-      path: '/budgets/plan/$month'
-      fullPath: '/app/budgets/plan/$month'
-      preLoaderRoute: typeof AccountAppBudgetsPlanMonthRouteImport
-      parentRoute: typeof AccountAppRoute
-    }
-    '/_account/app/settings/categories/': {
-      id: '/_account/app/settings/categories/'
-      path: '/categories'
-      fullPath: '/app/settings/categories/'
-      preLoaderRoute: typeof AccountAppSettingsCategoriesIndexRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
-    '/_account/app/settings/categories/$categoryId': {
-      id: '/_account/app/settings/categories/$categoryId'
-      path: '/categories/$categoryId'
-      fullPath: '/app/settings/categories/$categoryId'
-      preLoaderRoute: typeof AccountAppSettingsCategoriesCategoryIdRouteImport
-      parentRoute: typeof AccountAppSettingsRoute
-    }
   }
 }
 
@@ -1736,157 +734,8 @@ const Char123LocaleChar125RouteRouteWithChildren =
     Char123LocaleChar125RouteRouteChildren,
   )
 
-interface AccountAppImportRouteChildren {
-  AccountAppImportFileRoute: typeof AccountAppImportFileRoute
-  AccountAppImportMoneyManagerRoute: typeof AccountAppImportMoneyManagerRoute
-  AccountAppImportIndexRoute: typeof AccountAppImportIndexRoute
-}
-
-const AccountAppImportRouteChildren: AccountAppImportRouteChildren = {
-  AccountAppImportFileRoute: AccountAppImportFileRoute,
-  AccountAppImportMoneyManagerRoute: AccountAppImportMoneyManagerRoute,
-  AccountAppImportIndexRoute: AccountAppImportIndexRoute,
-}
-
-const AccountAppImportRouteWithChildren =
-  AccountAppImportRoute._addFileChildren(AccountAppImportRouteChildren)
-
-interface AccountAppInsightsRouteChildren {
-  AccountAppInsightsBreakdownRoute: typeof AccountAppInsightsBreakdownRoute
-  AccountAppInsightsCashFlowRoute: typeof AccountAppInsightsCashFlowRoute
-  AccountAppInsightsRecapRoute: typeof AccountAppInsightsRecapRoute
-  AccountAppInsightsReportsRoute: typeof AccountAppInsightsReportsRoute
-  AccountAppInsightsYearRoute: typeof AccountAppInsightsYearRoute
-  AccountAppInsightsIndexRoute: typeof AccountAppInsightsIndexRoute
-}
-
-const AccountAppInsightsRouteChildren: AccountAppInsightsRouteChildren = {
-  AccountAppInsightsBreakdownRoute: AccountAppInsightsBreakdownRoute,
-  AccountAppInsightsCashFlowRoute: AccountAppInsightsCashFlowRoute,
-  AccountAppInsightsRecapRoute: AccountAppInsightsRecapRoute,
-  AccountAppInsightsReportsRoute: AccountAppInsightsReportsRoute,
-  AccountAppInsightsYearRoute: AccountAppInsightsYearRoute,
-  AccountAppInsightsIndexRoute: AccountAppInsightsIndexRoute,
-}
-
-const AccountAppInsightsRouteWithChildren =
-  AccountAppInsightsRoute._addFileChildren(AccountAppInsightsRouteChildren)
-
-interface AccountAppSettingsRouteChildren {
-  AccountAppSettingsAboutRoute: typeof AccountAppSettingsAboutRoute
-  AccountAppSettingsAccountRoute: typeof AccountAppSettingsAccountRoute
-  AccountAppSettingsConnectionsRoute: typeof AccountAppSettingsConnectionsRoute
-  AccountAppSettingsCurrencyRoute: typeof AccountAppSettingsCurrencyRoute
-  AccountAppSettingsDataRoute: typeof AccountAppSettingsDataRoute
-  AccountAppSettingsEmailRoute: typeof AccountAppSettingsEmailRoute
-  AccountAppSettingsInviteRoute: typeof AccountAppSettingsInviteRoute
-  AccountAppSettingsNotificationsRoute: typeof AccountAppSettingsNotificationsRoute
-  AccountAppSettingsPlanRoute: typeof AccountAppSettingsPlanRoute
-  AccountAppSettingsPreferencesRoute: typeof AccountAppSettingsPreferencesRoute
-  AccountAppSettingsSyncRoute: typeof AccountAppSettingsSyncRoute
-  AccountAppSettingsTimeRoute: typeof AccountAppSettingsTimeRoute
-  AccountAppSettingsUsageRoute: typeof AccountAppSettingsUsageRoute
-  AccountAppSettingsIndexRoute: typeof AccountAppSettingsIndexRoute
-  AccountAppSettingsCategoriesCategoryIdRoute: typeof AccountAppSettingsCategoriesCategoryIdRoute
-  AccountAppSettingsCategoriesIndexRoute: typeof AccountAppSettingsCategoriesIndexRoute
-}
-
-const AccountAppSettingsRouteChildren: AccountAppSettingsRouteChildren = {
-  AccountAppSettingsAboutRoute: AccountAppSettingsAboutRoute,
-  AccountAppSettingsAccountRoute: AccountAppSettingsAccountRoute,
-  AccountAppSettingsConnectionsRoute: AccountAppSettingsConnectionsRoute,
-  AccountAppSettingsCurrencyRoute: AccountAppSettingsCurrencyRoute,
-  AccountAppSettingsDataRoute: AccountAppSettingsDataRoute,
-  AccountAppSettingsEmailRoute: AccountAppSettingsEmailRoute,
-  AccountAppSettingsInviteRoute: AccountAppSettingsInviteRoute,
-  AccountAppSettingsNotificationsRoute: AccountAppSettingsNotificationsRoute,
-  AccountAppSettingsPlanRoute: AccountAppSettingsPlanRoute,
-  AccountAppSettingsPreferencesRoute: AccountAppSettingsPreferencesRoute,
-  AccountAppSettingsSyncRoute: AccountAppSettingsSyncRoute,
-  AccountAppSettingsTimeRoute: AccountAppSettingsTimeRoute,
-  AccountAppSettingsUsageRoute: AccountAppSettingsUsageRoute,
-  AccountAppSettingsIndexRoute: AccountAppSettingsIndexRoute,
-  AccountAppSettingsCategoriesCategoryIdRoute:
-    AccountAppSettingsCategoriesCategoryIdRoute,
-  AccountAppSettingsCategoriesIndexRoute:
-    AccountAppSettingsCategoriesIndexRoute,
-}
-
-const AccountAppSettingsRouteWithChildren =
-  AccountAppSettingsRoute._addFileChildren(AccountAppSettingsRouteChildren)
-
-interface AccountAppRouteChildren {
-  AccountAppImportRoute: typeof AccountAppImportRouteWithChildren
-  AccountAppInsightsRoute: typeof AccountAppInsightsRouteWithChildren
-  AccountAppOnboardingRoute: typeof AccountAppOnboardingRoute
-  AccountAppRecurringRoute: typeof AccountAppRecurringRoute
-  AccountAppRulesRoute: typeof AccountAppRulesRoute
-  AccountAppSettingsRoute: typeof AccountAppSettingsRouteWithChildren
-  AccountAppTransactionsRoute: typeof AccountAppTransactionsRoute
-  AccountAppIndexRoute: typeof AccountAppIndexRoute
-  AccountAppAccountsAccountIdRoute: typeof AccountAppAccountsAccountIdRoute
-  AccountAppAccountsNetWorthRoute: typeof AccountAppAccountsNetWorthRoute
-  AccountAppAccountsReorderRoute: typeof AccountAppAccountsReorderRoute
-  AccountAppBudgetsCategoryIdRoute: typeof AccountAppBudgetsCategoryIdRoute
-  AccountAppDebtsAccountIdRoute: typeof AccountAppDebtsAccountIdRoute
-  AccountAppGoalsGoalIdRoute: typeof AccountAppGoalsGoalIdRoute
-  AccountAppInstallmentsPlanIdRoute: typeof AccountAppInstallmentsPlanIdRoute
-  AccountAppAccountsIndexRoute: typeof AccountAppAccountsIndexRoute
-  AccountAppBudgetsIndexRoute: typeof AccountAppBudgetsIndexRoute
-  AccountAppDebtsIndexRoute: typeof AccountAppDebtsIndexRoute
-  AccountAppGoalsIndexRoute: typeof AccountAppGoalsIndexRoute
-  AccountAppInstallmentsIndexRoute: typeof AccountAppInstallmentsIndexRoute
-  AccountAppBudgetsPlanMonthRoute: typeof AccountAppBudgetsPlanMonthRoute
-  AccountAppBudgetsPlanIndexRoute: typeof AccountAppBudgetsPlanIndexRoute
-}
-
-const AccountAppRouteChildren: AccountAppRouteChildren = {
-  AccountAppImportRoute: AccountAppImportRouteWithChildren,
-  AccountAppInsightsRoute: AccountAppInsightsRouteWithChildren,
-  AccountAppOnboardingRoute: AccountAppOnboardingRoute,
-  AccountAppRecurringRoute: AccountAppRecurringRoute,
-  AccountAppRulesRoute: AccountAppRulesRoute,
-  AccountAppSettingsRoute: AccountAppSettingsRouteWithChildren,
-  AccountAppTransactionsRoute: AccountAppTransactionsRoute,
-  AccountAppIndexRoute: AccountAppIndexRoute,
-  AccountAppAccountsAccountIdRoute: AccountAppAccountsAccountIdRoute,
-  AccountAppAccountsNetWorthRoute: AccountAppAccountsNetWorthRoute,
-  AccountAppAccountsReorderRoute: AccountAppAccountsReorderRoute,
-  AccountAppBudgetsCategoryIdRoute: AccountAppBudgetsCategoryIdRoute,
-  AccountAppDebtsAccountIdRoute: AccountAppDebtsAccountIdRoute,
-  AccountAppGoalsGoalIdRoute: AccountAppGoalsGoalIdRoute,
-  AccountAppInstallmentsPlanIdRoute: AccountAppInstallmentsPlanIdRoute,
-  AccountAppAccountsIndexRoute: AccountAppAccountsIndexRoute,
-  AccountAppBudgetsIndexRoute: AccountAppBudgetsIndexRoute,
-  AccountAppDebtsIndexRoute: AccountAppDebtsIndexRoute,
-  AccountAppGoalsIndexRoute: AccountAppGoalsIndexRoute,
-  AccountAppInstallmentsIndexRoute: AccountAppInstallmentsIndexRoute,
-  AccountAppBudgetsPlanMonthRoute: AccountAppBudgetsPlanMonthRoute,
-  AccountAppBudgetsPlanIndexRoute: AccountAppBudgetsPlanIndexRoute,
-}
-
-const AccountAppRouteWithChildren = AccountAppRoute._addFileChildren(
-  AccountAppRouteChildren,
-)
-
-interface AccountRouteChildren {
-  AccountAppRoute: typeof AccountAppRouteWithChildren
-  AccountConnectRoute: typeof AccountConnectRoute
-  AccountLoginRoute: typeof AccountLoginRoute
-}
-
-const AccountRouteChildren: AccountRouteChildren = {
-  AccountAppRoute: AccountAppRouteWithChildren,
-  AccountConnectRoute: AccountConnectRoute,
-  AccountLoginRoute: AccountLoginRoute,
-}
-
-const AccountRouteWithChildren =
-  AccountRoute._addFileChildren(AccountRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   Char123LocaleChar125RouteRoute: Char123LocaleChar125RouteRouteWithChildren,
-  AccountRoute: AccountRouteWithChildren,
   A2aRoute: A2aRoute,
   AuthDotmdRoute: AuthDotmdRoute,
   HealthRoute: HealthRoute,
@@ -1901,7 +750,6 @@ const rootRouteChildren: RootRouteChildren = {
   DotwellKnownOauthProtectedResourceRoute:
     DotwellKnownOauthProtectedResourceRoute,
   DotwellKnownMcpServerCardDotjsonRoute: DotwellKnownMcpServerCardDotjsonRoute,
-  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

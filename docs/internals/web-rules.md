@@ -1,7 +1,7 @@
 # Web rules
 
 Rules file new entries by merchant, description or amount. They live on the web for now: the engine is
-`apps/site/src/lib/rules.ts` and the rows it writes come from `apps/site/src/lib/rule-writes.ts`.
+`apps/app/src/lib/rules.ts` and the rows it writes come from `apps/app/src/lib/rule-writes.ts`.
 
 ## Where the rule book is kept
 

@@ -1,0 +1,35 @@
+{
+    "$schema": "https://schema.railpack.com",
+    "packages": {
+        "node": "24",
+        "pnpm": "11.20.0"
+    },
+    "steps": {
+        "install": {
+            "secrets": ["HUGEICONS_PRO_TOKEN"],
+            "commands": [
+                "pnpm config set //npm.hugeicons.com/:_authToken \"$HUGEICONS_PRO_TOKEN\" --location user",
+                "CI=1 pnpm install --frozen-lockfile --trust-lockfile --filter @outlayr/app..."
+            ]
+        },
+        "build": {
+            "commands": ["cd apps/app && ./node_modules/.bin/vp build"]
+        }
+    },
+    "deploy": {
+        "inputs": [
+            {
+                "step": "packages:mise",
+                "include": [
+                    "/mise/shims",
+                    "/mise/installs",
+                    "/usr/local/bin/mise",
+                    "/etc/mise/config.toml",
+                    "/root/.local/state/mise"
+                ]
+            },
+            { "step": "build", "include": ["apps/app/.output"] }
+        ],
+        "startCommand": "node apps/app/.output/server/index.mjs"
+    }
+}

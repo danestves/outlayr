@@ -9,6 +9,7 @@
         "./exception-noise": "./src/exception-noise.ts",
         "./i18n": "./src/i18n.ts",
         "./theme": "./src/theme.ts",
+        "./timeout": "./src/timeout.ts",
         "./tokens.css": "./src/tokens.css",
         "./urls": "./src/urls.ts"
     },
