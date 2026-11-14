@@ -18,7 +18,7 @@ const MAX_BYTES = 524_288;
 const MAX_SIZE = 4096;
 const MAX_SITE_ICONS = 6;
 const SOURCE_TIMEOUT_MS = 3000;
-const BROWSER_AGENT =
+export const BROWSER_AGENT =
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15";
 const WIKIMEDIA_AGENT = "OutlayrLogos/1.0 (https://tryoutlayr.com; support@tryoutlayr.com)";
 

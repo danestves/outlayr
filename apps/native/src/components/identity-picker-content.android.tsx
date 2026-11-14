@@ -34,7 +34,7 @@ import { MaterialHost } from "@/components/material-host";
 import { OutlinedTextField } from "@/components/material/outlined-field";
 import { SheetHeader } from "@/components/sheet-header";
 import { Text, TextInput } from "@/components/text";
-import { shownLinkStatus, useLinkLogo } from "@/components/use-link-logo";
+import { LINK_FOUND_LABEL, shownLinkStatus, useLinkLogo } from "@/components/use-link-logo";
 import type { LinkStatus } from "@/components/use-link-logo";
 import { CATEGORY_PALETTE } from "@/data/categories-core";
 import { CATEGORY_EMOJI_GROUPS, CATEGORY_ICON_GROUPS, iconKeysMatching } from "@/domain/category-icon-catalog";
@@ -349,8 +349,8 @@ function LinkStatusLine({ status }: { status: LinkStatus }) {
     } else if (status.kind === "found") {
         icon = CheckmarkCircle02Icon;
         color = colors.income;
-        label = t("transaction.website.found");
-        detail = `· ${status.domain}`;
+        label = t(LINK_FOUND_LABEL[status.source]);
+        detail = `· ${status.host}`;
     } else if (status.kind === "refused" || status.kind === "missing") {
         icon = AlertCircleIcon;
         color = m3.error;

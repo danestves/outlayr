@@ -3,7 +3,8 @@ import { websiteDomain } from "@/domain/merchant-website";
 export type IdentityLink =
     | { kind: "unreadable" }
     | { kind: "refused"; platform: string }
-    | { kind: "website"; domain: string };
+    /** `image` is the whole link when it has a path, since it may point at a picture rather than a page. */
+    | { kind: "website"; domain: string; image: string | null };
 
 const SCHEME = /^[a-z][a-z0-9+.-]*:\/\//i;
 const PATH_START = /[/?#]/;
@@ -44,5 +45,10 @@ export function readIdentityLink(input: string): IdentityLink {
     if (onHost(domain, "google.com") && pathOf(input).startsWith("/maps")) {
         return { kind: "refused", platform: "Google Maps" };
     }
-    return { domain, kind: "website" };
+    const trimmed = input.trim();
+    const path = pathOf(trimmed);
+    if (path.length === 0 || path === "/") {
+        return { domain, image: null, kind: "website" };
+    }
+    return { domain, image: SCHEME.test(trimmed) ? trimmed : `https://${trimmed}`, kind: "website" };
 }

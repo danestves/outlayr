@@ -1,13 +1,17 @@
 import { normalizeDomain } from "./domain";
+import { importImage, isImportedDomain, readImageUrl } from "./imports";
 import { findLogo } from "./sources";
 import type { LookupResult } from "./sources";
 
 interface Env {
     BUCKET: R2Bucket;
     FILL_LIMIT: RateLimit;
+    IMPORT_LIMIT: RateLimit;
 }
 
 const PREFIX = "merchants";
+const IMPORT_PATH = "images";
+const MAX_IMPORT_BODY = 4096;
 const LOGO_CACHE = "public, max-age=2592000, stale-while-revalidate=604800";
 const MISS_CACHE = "public, max-age=86400";
 const RETRY_AFTER_SECONDS = "30";
@@ -48,9 +52,42 @@ const budget = () =>
         setTimeout(() => resolve("timeout"), FILL_BUDGET_MS);
     });
 
+async function importRoute(request: Request, env: Env, origin: string): Promise<Response> {
+    if (Number(request.headers.get("content-length") ?? MAX_IMPORT_BODY + 1) > MAX_IMPORT_BODY) {
+        return empty(413);
+    }
+    const { success } = await env.IMPORT_LIMIT.limit({ key: request.headers.get("cf-connecting-ip") ?? "unknown" });
+    if (!success) {
+        return tryLater();
+    }
+    const body = await request.text();
+    const source = readImageUrl(body.trim());
+    if (source === null) {
+        return empty(400);
+    }
+    const result = await importImage((target, init) => fetch(target, init), source);
+    if (result.kind === "unknown") {
+        return tryLater();
+    }
+    if (result.kind === "rejected") {
+        return empty(422);
+    }
+    // The source is kept so a reported image can be traced and removed.
+    await env.BUCKET.put(`${PREFIX}/${result.domain}`, result.bytes, {
+        customMetadata: { size: String(result.size), source: "import", url: source.href },
+        httpMetadata: { cacheControl: LOGO_CACHE, contentType: result.contentType },
+        onlyIf: { etagDoesNotMatch: "*" },
+    });
+    await caches.default.delete(new Request(`${origin}/${PREFIX}/${result.domain}`));
+    return Response.json({ domain: result.domain }, { headers: { "cache-control": "no-store" } });
+}
+
 export async function handle(request: Request, env: Env, context: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const [, folder, raw, ...rest] = url.pathname.split("/");
+    if (folder === IMPORT_PATH && raw === undefined) {
+        return request.method === "POST" ? importRoute(request, env, url.origin) : empty(405, { allow: "POST" });
+    }
     // The same bucket holds users' private photos.
     if (folder !== PREFIX || raw === undefined || rest.length > 0) {
         return empty(404);
@@ -88,6 +125,10 @@ export async function handle(request: Request, env: Env, context: ExecutionConte
     const stored = await serve();
     if (stored) {
         return stored;
+    }
+    // Only an import fills these; a lookup would scrape a host that does not exist.
+    if (isImportedDomain(domain)) {
+        return empty(404, { "cache-control": "no-store" });
     }
 
     const { success } = await env.FILL_LIMIT.limit({ key: request.headers.get("cf-connecting-ip") ?? "unknown" });

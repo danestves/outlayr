@@ -3,9 +3,15 @@ import { describe, expect, it } from "vite-plus/test";
 import { readIdentityLink } from "./identity-link";
 
 describe("readIdentityLink", () => {
-    it("reduces a page on the business's site to its domain", () => {
+    it("reduces a link to its domain and keeps a link with a path to try as an image", () => {
         expect(readIdentityLink("https://www.panaderiasanjose.com/menu?ref=ig")).toStrictEqual({
             domain: "panaderiasanjose.com",
+            image: "https://www.panaderiasanjose.com/menu?ref=ig",
+            kind: "website",
+        });
+        expect(readIdentityLink(" cdn.panaderia.com/logo.png ")).toStrictEqual({
+            domain: "cdn.panaderia.com",
+            image: "https://cdn.panaderia.com/logo.png",
             kind: "website",
         });
     });
@@ -27,11 +33,19 @@ describe("readIdentityLink", () => {
             kind: "refused",
             platform: "Google Maps",
         });
-        expect(readIdentityLink("https://google.com/")).toStrictEqual({ domain: "google.com", kind: "website" });
+        expect(readIdentityLink("https://google.com/")).toStrictEqual({
+            domain: "google.com",
+            image: null,
+            kind: "website",
+        });
     });
 
     it("does not mistake a lookalike for a platform", () => {
-        expect(readIdentityLink("notinstagram.com")).toStrictEqual({ domain: "notinstagram.com", kind: "website" });
+        expect(readIdentityLink("notinstagram.com")).toStrictEqual({
+            domain: "notinstagram.com",
+            image: null,
+            kind: "website",
+        });
     });
 
     it("waits on text that is not an address yet", () => {
