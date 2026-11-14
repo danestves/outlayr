@@ -1,6 +1,5 @@
+import type { Locale } from "@outlayr/shared/i18n";
 import { defaultLocale, isDeclaredLocale } from "intlayer";
-
-import type { Locale } from "./i18n";
 
 const KEY = "outlayr-dashboard-locale";
 const listeners = new Set<() => void>();

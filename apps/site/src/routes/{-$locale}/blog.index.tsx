@@ -1,10 +1,10 @@
+import { LANGUAGES, localeFromParam, pageUrl } from "@outlayr/shared/i18n";
+import type { Locale } from "@outlayr/shared/i18n";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { getIntlayer, getPrefix } from "intlayer";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Page } from "@/components/page";
-import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
-import type { Locale } from "@/lib/i18n";
 import { listPosts, postDay } from "@/lib/posts";
 import { hubTrail, itemList, ldJson, pageMeta } from "@/lib/seo";
 import { SOURCE_URL, X_URL } from "@/lib/site";

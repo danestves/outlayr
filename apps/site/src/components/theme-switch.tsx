@@ -1,7 +1,6 @@
+import { THEMES, chooseTheme, readTheme, subscribeTheme } from "@outlayr/shared/theme";
 import { useSyncExternalStore } from "react";
 import { useIntlayer } from "react-intlayer";
-
-import { THEMES, chooseTheme, readTheme, subscribeTheme } from "@/lib/theme";
 
 import { SELECT } from "./select";
 

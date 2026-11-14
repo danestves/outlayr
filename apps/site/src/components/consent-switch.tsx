@@ -1,7 +1,6 @@
+import { chooseConsent, readConsent, subscribeConsent } from "@outlayr/shared/analytics";
 import { useSyncExternalStore } from "react";
 import { useIntlayer } from "react-intlayer";
-
-import { chooseConsent, readConsent, subscribeConsent } from "@/lib/analytics";
 
 import { SELECT } from "./select";
 

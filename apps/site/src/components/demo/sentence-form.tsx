@@ -2,13 +2,13 @@ import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
 import ArrowUpDownIcon from "@hugeicons/core-free-icons/ArrowUpDownIcon";
 import Eraser01Icon from "@hugeicons/core-free-icons/Eraser01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { capture } from "@outlayr/shared/analytics";
+import type { Locale } from "@outlayr/shared/i18n";
 import { useId, useReducer, useRef, useState } from "react";
 import type { FocusEvent, KeyboardEvent, ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { capture } from "@/lib/analytics";
-import type { Locale } from "@/lib/i18n";
 import { useTimeout } from "@/lib/timeout";
 
 import { formatMoney, signedMoney } from "./money";

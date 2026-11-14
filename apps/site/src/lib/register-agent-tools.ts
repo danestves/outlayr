@@ -1,7 +1,7 @@
+import type { Locale } from "@outlayr/shared/i18n";
 import { defaultLocale, getLocaleFromPath } from "intlayer";
 
 import type { getRouter } from "../router";
-import type { Locale } from "./i18n";
 import { publishedSitePaths } from "./site-paths";
 
 type Router = ReturnType<typeof getRouter>;

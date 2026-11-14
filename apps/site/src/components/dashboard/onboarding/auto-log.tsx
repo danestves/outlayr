@@ -4,13 +4,13 @@ import Notification03Icon from "@hugeicons/core-free-icons/Notification03Icon";
 import PlayStoreIcon from "@hugeicons/core-free-icons/PlayStoreIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@outlayr/shared/urls";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import type { OnboardingStep } from "@/lib/onboarding";
-import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/site";
 
 import { Plate, PlateFoot, PlateHead, QUIET, Staged, Tile, focusOnMount } from "./chrome";
 

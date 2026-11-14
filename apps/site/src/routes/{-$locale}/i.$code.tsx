@@ -1,4 +1,6 @@
 import { formatReferralCode, normalizeReferralCode } from "@outlayr/money/contract";
+import { capture } from "@outlayr/shared/analytics";
+import { localeFromParam } from "@outlayr/shared/i18n";
 import { createFileRoute, notFound, rootRouteId } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import { useRef, useState } from "react";
@@ -7,8 +9,6 @@ import { useIntlayer } from "react-intlayer";
 import { Icon } from "@/components/icon";
 import { Page } from "@/components/page";
 import { StoreBadges } from "@/components/store-badges";
-import { capture } from "@/lib/analytics";
-import { localeFromParam } from "@/lib/i18n";
 import { pageMeta } from "@/lib/seo";
 
 const COPIED_MS = 2000;

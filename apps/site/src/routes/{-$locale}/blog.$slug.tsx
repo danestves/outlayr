@@ -1,4 +1,5 @@
 import { MDXContent } from "@content-collections/mdx/react";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { Link, createFileRoute, notFound, rootRouteId } from "@tanstack/react-router";
 import type { Post } from "content-collections";
 import { getLocalizedUrl, getPrefix } from "intlayer";
@@ -7,7 +8,6 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { HubTrail } from "@/components/hub-trail";
 import { Icon } from "@/components/icon";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
 import { scanMotion } from "@/lib/motion";
 import { getPost, postDay } from "@/lib/posts";

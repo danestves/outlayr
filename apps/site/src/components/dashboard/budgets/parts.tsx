@@ -5,6 +5,7 @@ import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import PencilEdit01Icon from "@hugeicons/core-free-icons/PencilEdit01Icon";
 import type { IconSvgElement } from "@hugeicons/react";
 import { wallNoon } from "@outlayr/money/ledger-zone";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { useSearch } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
@@ -20,7 +21,6 @@ import { useDateFormat, useWholeMoney } from "@/components/dashboard/home/format
 import { useBox } from "@/components/dashboard/insights/use-box";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { periodKeyOf, periodKindOf, periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 
 import { useBudgetFlows } from "./flow-context";
 import { MONTHS_AHEAD } from "./model";

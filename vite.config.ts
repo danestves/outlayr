@@ -432,6 +432,7 @@ export default defineConfig({
             tailwindcss: {
                 entryPoint: [
                     { files: "apps/site/**", use: "apps/site/src/index.css" },
+                    { files: "packages/shared/**", use: "apps/site/src/index.css" },
                     { files: "**", use: "apps/native/global.css" },
                 ],
             },

@@ -1,5 +1,5 @@
 import type { CaptureResult } from "posthog-js";
-import { expect, it } from "vite-plus/test";
+import { expect, test } from "vite-plus/test";
 
 import { dropNoiseExceptions } from "./exception-noise";
 
@@ -14,16 +14,16 @@ function exception(...values: string[]): CaptureResult {
     };
 }
 
-it("drops the link scanner rejection as posthog-js captures it", () => {
+test("drops the link scanner rejection as posthog-js captures it", () => {
     expect(dropNoiseExceptions(exception(SCANNER, SCANNER))).toBeNull();
 });
 
-it("keeps an event when a real error rides along with the noise", () => {
+test("keeps an event when a real error rides along with the noise", () => {
     const event = exception(SCANNER, "TypeError: Cannot read properties of undefined (reading 'amount')");
     expect(dropNoiseExceptions(event)).toBe(event);
 });
 
-it("keeps a rejection that only mentions the scanner text", () => {
+test("keeps a rejection that only mentions the scanner text", () => {
     const event = exception(`Sync failed: ${SCANNER}`);
     expect(dropNoiseExceptions(event)).toBe(event);
 });

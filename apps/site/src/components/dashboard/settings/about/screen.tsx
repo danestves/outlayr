@@ -7,6 +7,7 @@ import NewTwitterIcon from "@hugeicons/core-free-icons/NewTwitterIcon";
 import Share01Icon from "@hugeicons/core-free-icons/Share01Icon";
 import SourceCodeIcon from "@hugeicons/core-free-icons/SourceCodeIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { SITE_URL } from "@outlayr/shared/urls";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Tabs } from "panelui-web/tabs";
@@ -16,7 +17,6 @@ import { Suspense, lazy } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { metaFlag, useMeta } from "@/lib/ledger-settings";
-import { SITE_URL } from "@/lib/site";
 
 import packageJson from "../../../../../../native/package.json";
 import licenses from "../../../../../../native/src/screens/settings/licenses.json";

@@ -1,7 +1,7 @@
 import { defaultLocale, getLocalizedUrl, getPrefix, isDeclaredLocale, locales, validatePrefix } from "intlayer";
 import type { DeclaredLocales } from "intlayer";
 
-import { SITE_URL } from "./site";
+import { SITE_URL } from "./urls";
 
 export type Locale = DeclaredLocales;
 
@@ -20,8 +20,8 @@ export function localeFromParam(param: string | undefined): Locale {
     return isDeclaredLocale(localePrefix) ? localePrefix : defaultLocale;
 }
 
-export function pageUrl(path: string, locale: Locale): string {
-    return `${SITE_URL}${getLocalizedUrl(path, locale)}`;
+export function pageUrl(path: string, locale: Locale, origin: string = SITE_URL): string {
+    return `${origin}${getLocalizedUrl(path, locale)}`;
 }
 
 // Portuguese and French serve only the pages translated so far, so no English text sits under /pt or /fr.

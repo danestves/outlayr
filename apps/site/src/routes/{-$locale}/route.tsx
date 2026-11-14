@@ -1,7 +1,6 @@
+import { isPublished, localeFromParam } from "@outlayr/shared/i18n";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { getPathWithoutLocale, validatePrefix } from "intlayer";
-
-import { isPublished, localeFromParam } from "@/lib/i18n";
 
 export const Route = createFileRoute("/{-$locale}")({
     beforeLoad: ({ location, params }) => {

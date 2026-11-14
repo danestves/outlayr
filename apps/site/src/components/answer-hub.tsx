@@ -1,9 +1,8 @@
+import { isPublished } from "@outlayr/shared/i18n";
 import { Link } from "@tanstack/react-router";
 import { getPrefix } from "intlayer";
 import type { ReactNode } from "react";
 import { useLocale } from "react-intlayer";
-
-import { isPublished } from "@/lib/i18n";
 
 import { Icon } from "./icon";
 import { Page } from "./page";

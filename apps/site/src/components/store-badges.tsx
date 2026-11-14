@@ -1,8 +1,7 @@
+import { capture } from "@outlayr/shared/analytics";
+import type { Locale } from "@outlayr/shared/i18n";
+import { APP_STORE_URL, PLAY_STORE_URL } from "@outlayr/shared/urls";
 import { useIntlayer, useLocale } from "react-intlayer";
-
-import { capture } from "@/lib/analytics";
-import type { Locale } from "@/lib/i18n";
-import { APP_STORE_URL, PLAY_STORE_URL } from "@/lib/site";
 
 const APP_STORE_BADGE = {
     en: "/badges/app-store.svg",

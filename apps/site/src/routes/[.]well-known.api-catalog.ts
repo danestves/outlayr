@@ -1,6 +1,5 @@
+import { LEDGER_MCP_ORIGIN, SITE_URL } from "@outlayr/shared/urls";
 import { createFileRoute } from "@tanstack/react-router";
-
-import { LEDGER_MCP_ORIGIN, SITE_URL } from "@/lib/site";
 
 const catalog = {
     linkset: [

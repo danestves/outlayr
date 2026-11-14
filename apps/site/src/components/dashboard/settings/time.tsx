@@ -1,12 +1,12 @@
 import { BUDGET_TYPE, periodEnd, startOfPeriod } from "@outlayr/money/budget-window";
 import { addDays } from "@outlayr/money/calendar";
 import { isoWeek, monthGrid, weekDays, weekdayOrder } from "@outlayr/money/time-grid";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { Select } from "panelui-web/select";
 import { useContext, useId, useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { LedgerSettingsContext, useDisplayFormat } from "@/lib/ledger-settings";
 
 import { Choice, Row, SectionHead, SettingsCard, useSaveSettings } from "./parts";

@@ -2,13 +2,13 @@ import { countBucket } from "@outlayr/money/count-bucket";
 import { analyzeSnapshot } from "@outlayr/money/money-manager/analysis";
 import { defaultChoices } from "@outlayr/money/money-manager/defaults";
 import type { MmArchiveError, MmChoices } from "@outlayr/money/money-manager/types";
+import { capture } from "@outlayr/shared/analytics";
 import { useMatch, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
 import { usePresetLabel } from "@/components/dashboard/settings/categories/preset-label";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { capture } from "@/lib/analytics";
 import { keepImported } from "@/lib/money-manager/extras";
 import { outlayrLedgerState } from "@/lib/money-manager/ledger-state";
 import { readBackupFile } from "@/lib/money-manager/read-backup";

@@ -1,5 +1,6 @@
 import Unlink01Icon from "@hugeicons/core-free-icons/Unlink01Icon";
 import { wallNoon } from "@outlayr/money/ledger-zone";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { Button } from "panelui-web/button";
 import { useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -7,7 +8,6 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { LocalizedLink } from "@/components/localized-link";
 import { LogoMark } from "@/components/logo-mark";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { money } from "@/lib/ledger";
 
 import { ReportCard, reportFigures, riseFigure } from "./card";

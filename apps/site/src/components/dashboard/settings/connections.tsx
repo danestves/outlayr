@@ -4,6 +4,7 @@ import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import Unlink01Icon from "@hugeicons/core-free-icons/Unlink01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
+import { LEDGER_MCP_ORIGIN } from "@outlayr/shared/urls";
 import { useQuery } from "@tanstack/react-query";
 import { AlertDialog } from "panelui-web/alert-dialog";
 import { Button } from "panelui-web/button";
@@ -18,7 +19,6 @@ import { Skeleton } from "skullet/react";
 
 import { connectionsQuery } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
-import { LEDGER_MCP_ORIGIN } from "@/lib/site";
 
 import { Row, SectionHead, SettingsCard } from "./parts";
 

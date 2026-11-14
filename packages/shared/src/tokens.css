@@ -1,0 +1,100 @@
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@custom-variant data-open (&:where([data-open]:not([data-open="false"])));
+@custom-variant data-closed (&:where([data-closed]:not([data-closed="false"])));
+@custom-variant data-active (&:where([data-active]:not([data-active="false"])));
+@custom-variant data-disabled (&:where([data-disabled]:not([data-disabled="false"])));
+@custom-variant data-horizontal (&:where([data-orientation="horizontal"]));
+@custom-variant data-vertical (&:where([data-orientation="vertical"]));
+
+@theme {
+    --color-*: initial;
+    --color-white: #ffffff;
+    --color-black: #000000;
+    --color-background: #ffffff;
+    --color-foreground: #0c0a09;
+    --color-muted: #57534e;
+    --color-surface: #f5f5f4;
+    --color-raised: #ffffff;
+    --color-border: #e7e5e4;
+    --color-tint: #c2371b;
+    --color-income: #00714a;
+    --color-spend: #c0402e;
+
+    --color-app-bg: #f1f0ea;
+    --color-app-group: #f7f6f0;
+    --color-app-ink: #17150f;
+    --color-app-muted: #6b6557;
+    --color-app-rule: #dcd8cc;
+    --color-app-fill: #e4e2dc;
+    --color-app-track: #d6d4ce;
+    --color-app-tint: #c2371b;
+    --color-app-income: #00714a;
+    --color-app-spend: #c0402e;
+    --color-app-chip: #c6d8cc;
+    --color-app-strong: #cdc8b9;
+    --color-app-ghost: #cdc8b9;
+    --color-app-float: #fffefb;
+    --color-app-warn: #8f6200;
+    --color-app-hover: #17150f05;
+
+    --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+
+    --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
+}
+@layer base {
+    :root[data-theme="dark"] {
+        color-scheme: dark;
+        --color-background: #131209;
+        --color-foreground: #fafaf9;
+        --color-muted: #a8a29e;
+        --color-surface: #1c1b13;
+        --color-raised: #26251b;
+        --color-border: #2e2d24;
+        --color-tint: #e2643f;
+        --color-income: #3fd99b;
+        --color-spend: #e06a57;
+
+        --color-app-bg: #17150f;
+        --color-app-group: #2a251b;
+        --color-app-ink: #f2eee9;
+        --color-app-muted: #a8a093;
+        --color-app-rule: #353026;
+        --color-app-fill: #262420;
+        --color-app-track: #36352e;
+        --color-app-tint: #ec603b;
+        --color-app-income: #3fd99b;
+        --color-app-spend: #e06a57;
+        --color-app-chip: #23372a;
+    }
+}
+
+@utility fluid {
+    transition-property:
+        color, background-color, border-color, opacity, transform, translate, scale, rotate, box-shadow, visibility;
+    transition-duration: 700ms;
+    transition-timing-function: var(--ease-fluid);
+}
+
+@utility glass {
+    border: 1px solid rgb(0 0 0 / 0.06);
+    background-color: rgb(255 255 255 / 0.72);
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.6),
+        0 24px 48px -24px rgb(19 18 9 / 0.25);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    backdrop-filter: blur(24px) saturate(1.4);
+
+    :root[data-theme="dark"] & {
+        border-color: rgb(255 255 255 / 0.1);
+        background-color: rgb(19 18 9 / 0.6);
+        box-shadow:
+            inset 0 1px 0 rgb(255 255 255 / 0.06),
+            0 24px 48px -24px rgb(0 0 0 / 0.6);
+    }
+}
+
+@utility tabular {
+    font-variant-numeric: tabular-nums;
+}

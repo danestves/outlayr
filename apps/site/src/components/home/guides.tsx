@@ -1,10 +1,10 @@
+import { isPublished } from "@outlayr/shared/i18n";
 import { Link } from "@tanstack/react-router";
 import { getPrefix } from "intlayer";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
 import { LocalizedLink } from "@/components/localized-link";
-import { isPublished } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
 
 import { LABEL } from "./problem";

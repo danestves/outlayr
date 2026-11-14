@@ -1,3 +1,5 @@
+import { localeFromParam } from "@outlayr/shared/i18n";
+import { SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import { useIntlayer } from "react-intlayer";
@@ -5,9 +7,8 @@ import { useIntlayer } from "react-intlayer";
 import { Icon } from "@/components/icon";
 import { LocalizedLink } from "@/components/localized-link";
 import { Page } from "@/components/page";
-import { localeFromParam } from "@/lib/i18n";
 import { APP_ID, ORGANIZATION_ID, ldJson, pageMeta, webPage } from "@/lib/seo";
-import { FOUNDER, SUPPORT_EMAIL } from "@/lib/site";
+import { FOUNDER } from "@/lib/site";
 
 const SECTION = "py-24";
 const HEADING = "text-4xl font-semibold tracking-tight md:text-5xl";

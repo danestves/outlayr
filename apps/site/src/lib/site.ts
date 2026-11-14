@@ -10,13 +10,8 @@ export type PageRef =
     | `/guides/${Extract<keyof Answers["guides"], string>}`
     | `/tools/${Extract<keyof ToolPages, string>}`;
 
-export const SITE_URL = "https://tryoutlayr.com";
-export const LEDGER_MCP_ORIGIN = "https://edge.tryoutlayr.com";
-export const APP_STORE_URL = "https://apps.apple.com/app/id6801652978";
-export const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.tryoutlayr.app";
 /** The app speaks more languages than this site, which stays English and Spanish. */
 export const APP_LANGUAGES = ["en", "es-419", "es-ES", "fr", "pt-BR", "pt-PT"] as const;
-export const SUPPORT_EMAIL = "support@tryoutlayr.com";
 export const COMPANY = "danestves LLC";
 export const COMPANY_URL = "https://danestves.com/";
 export const SOURCE_URL = "https://github.com/danestves/outlayr";

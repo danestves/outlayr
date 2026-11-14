@@ -1,9 +1,9 @@
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { FactList } from "@/components/answers/article";
 import { convertAtRate, parseAmount } from "@/lib/calculators";
-import { LANGUAGES } from "@/lib/i18n";
 import { RATE_MARKETS } from "@/lib/rates";
 import type { Rate, RateSlug } from "@/lib/rates";
 

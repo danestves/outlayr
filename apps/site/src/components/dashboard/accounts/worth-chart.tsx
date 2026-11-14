@@ -1,11 +1,11 @@
 import { wallNoon } from "@outlayr/money/ledger-zone";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { Plot } from "panelui-web/plot";
 import { useMemo } from "react";
 import { useLocale } from "react-intlayer";
 
 import { useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { niceDomain } from "./model";

@@ -1,7 +1,7 @@
+import { LANGUAGES, pageUrl, publishedLocales } from "@outlayr/shared/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { defaultLocale, getIntlayer } from "intlayer";
 
-import { LANGUAGES, pageUrl, publishedLocales } from "@/lib/i18n";
 import { postDay, postsIn } from "@/lib/posts";
 import { compareUpdated, guideUpdated, legalInForce } from "@/lib/site";
 

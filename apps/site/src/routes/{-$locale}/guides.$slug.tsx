@@ -1,3 +1,5 @@
+import { LANGUAGES, isPublished, localeFromParam, pageUrl } from "@outlayr/shared/i18n";
+import type { Locale } from "@outlayr/shared/i18n";
 import { Link, createFileRoute, notFound, rootRouteId } from "@tanstack/react-router";
 import { getIntlayer, getPrefix } from "intlayer";
 import type { ReactNode } from "react";
@@ -19,8 +21,6 @@ import { SayPanel, ScanPanel } from "@/components/demo/capture-panels";
 import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
 import { hasKey } from "@/lib/has-key";
-import { LANGUAGES, isPublished, localeFromParam, pageUrl } from "@/lib/i18n";
-import type { Locale } from "@/lib/i18n";
 import { answerTrail, article, faqPage, itemList, ldJson, pageMeta, webPage } from "@/lib/seo";
 import { guideUpdated, listChecked, longDate } from "@/lib/site";
 

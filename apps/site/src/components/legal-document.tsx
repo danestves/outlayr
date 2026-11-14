@@ -1,11 +1,11 @@
 import { MDXContent } from "@content-collections/mdx/react";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { Link } from "@tanstack/react-router";
 import type { Legal } from "content-collections";
 import { useState } from "react";
 import type { ComponentProps } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { LANGUAGES } from "@/lib/i18n";
 import { useScrollSpy } from "@/lib/scroll-spy";
 import { legalDate } from "@/lib/site";
 

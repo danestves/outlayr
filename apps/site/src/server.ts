@@ -2,10 +2,9 @@ import { htmlToMarkdown } from "@mdream/js";
 import { clean } from "@mdream/js/clean";
 import { negotiateContent } from "@mdream/js/negotiate";
 import { filterPlugin, frontmatterPlugin, isolateMainPlugin } from "@mdream/js/plugins";
+import { SITE_URL } from "@outlayr/shared/urls";
 import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 import * as Effect from "effect/Effect";
-
-import { SITE_URL } from "./lib/site";
 
 const HIDDEN = [
     "aside",

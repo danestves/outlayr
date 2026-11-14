@@ -2,8 +2,6 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import type { PostHog, Properties } from "posthog-js";
 
-import { ENV } from "@/env";
-
 import { dropNoiseExceptions } from "./exception-noise";
 
 export type Consent = "denied" | "granted" | "pending";
@@ -16,8 +14,6 @@ export class AnalyticsLoadError extends Schema.TaggedError<AnalyticsLoadError>()
         return `The ${this.client} analytics client failed to load.`;
     }
 }
-
-const TOKEN = import.meta.env.PROD ? ENV.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN : undefined;
 
 const ASK_FIRST = new Set([
     "AT",
@@ -86,8 +82,11 @@ function recordOnFirstInteraction(client: PostHog) {
     }
 }
 
-export const startAnalytics = Effect.fn("Analytics.start")(function* startAnalytics(country: string | null) {
-    if (!TOKEN || starting) {
+export const startAnalytics = Effect.fn("Analytics.start")(function* startAnalytics(
+    token: string | undefined,
+    country: string | null
+) {
+    if (!token || starting) {
         return;
     }
     starting = true;
@@ -95,7 +94,7 @@ export const startAnalytics = Effect.fn("Analytics.start")(function* startAnalyt
         catch: (cause) => new AnalyticsLoadError({ cause, client: "posthog-js" }),
         try: () => import("posthog-js"),
     });
-    client.init(TOKEN, {
+    client.init(token, {
         advanced_disable_feature_flags: true,
         api_host: "https://relay.tryoutlayr.com",
         before_send: dropNoiseExceptions,

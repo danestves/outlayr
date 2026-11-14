@@ -1,8 +1,8 @@
+import { localeFromParam } from "@outlayr/shared/i18n";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 
 import { SharedReportOff, SharedReportPage } from "@/components/dashboard/insights/reports/shared";
-import { localeFromParam } from "@/lib/i18n";
 import { pageMeta } from "@/lib/seo";
 import { getSharedReport } from "@/lib/shared-report";
 

@@ -1,3 +1,4 @@
+import type { Locale } from "@outlayr/shared/i18n";
 import { useId, useState } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -6,7 +7,6 @@ import { formatMoney } from "@/components/demo/money";
 import { useNames } from "@/components/demo/use-names";
 import { Icon } from "@/components/icon";
 import { StoreBadges } from "@/components/store-badges";
-import type { Locale } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
 
 import { FilmFrame } from "./films/frame";

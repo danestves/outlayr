@@ -1,3 +1,5 @@
+import { localeFromParam } from "@outlayr/shared/i18n";
+import { SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import type { ReactNode } from "react";
@@ -7,10 +9,8 @@ import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
 import { LogoMark } from "@/components/logo-mark";
 import { Page } from "@/components/page";
-import { localeFromParam } from "@/lib/i18n";
 import { proPrices } from "@/lib/pro-prices";
 import { ldJson, pageMeta, webPage } from "@/lib/seo";
-import { SUPPORT_EMAIL } from "@/lib/site";
 
 const SECTION = "py-24";
 const HEADING = "text-4xl font-semibold tracking-tight md:text-5xl";

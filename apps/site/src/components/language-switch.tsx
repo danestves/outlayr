@@ -1,8 +1,7 @@
+import { LANGUAGES, isPublished, publishedLocales } from "@outlayr/shared/i18n";
 import { useLocation } from "@tanstack/react-router";
 import { getLocalizedUrl, getPathWithoutLocale } from "intlayer";
 import { useIntlayer, useLocale } from "react-intlayer";
-
-import { LANGUAGES, isPublished, publishedLocales } from "@/lib/i18n";
 
 export function LanguageSwitch() {
     const { footer } = useIntlayer("site");

@@ -7,6 +7,7 @@ import Plug01Icon from "@hugeicons/core-free-icons/Plug01Icon";
 import Settings02Icon from "@hugeicons/core-free-icons/Settings02Icon";
 import UserAdd01Icon from "@hugeicons/core-free-icons/UserAdd01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { chooseTheme, subscribeTheme } from "@outlayr/shared/theme";
 import { Link } from "@tanstack/react-router";
 import { Avatar } from "panelui-web/avatar";
 import { Menu } from "panelui-web/menu";
@@ -20,7 +21,6 @@ import { useProfile } from "@/lib/account-state";
 import { authClient } from "@/lib/auth-client";
 import { forgetLedger } from "@/lib/ledger-cache";
 import { announceSessionChange } from "@/lib/session";
-import { chooseTheme, subscribeTheme } from "@/lib/theme";
 
 export async function signOut() {
     Skullet.forgetShapes();

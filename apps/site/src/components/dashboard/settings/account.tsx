@@ -8,6 +8,7 @@ import SmartPhone01Icon from "@hugeicons/core-free-icons/SmartPhone01Icon";
 import SquareLock02Icon from "@hugeicons/core-free-icons/SquareLock02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Alert } from "panelui-web/alert";
@@ -30,7 +31,6 @@ import { convexDeletionSteps, deletionProvider, runDeletion, storedDeletion } fr
 import { accountsQuery, limitsQuery, planQuery, sessionsQuery, useProfile } from "@/lib/account-state";
 import { authClient } from "@/lib/auth-client";
 import { convexClient } from "@/lib/convex";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { sessionDevice } from "@/lib/session-device";
 
 import { Row, SectionHead, SettingsCard } from "./parts";

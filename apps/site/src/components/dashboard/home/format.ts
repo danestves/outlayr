@@ -1,4 +1,5 @@
 import { wallNoon } from "@outlayr/money/ledger-zone";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { useMemo } from "react";
 import type { CSSProperties } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -6,7 +7,6 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import type { LedgerCategory } from "@/lib/dashboard-series-ledger";
 import type { Period } from "@/lib/dashboard-series-period";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 
 const WEEKDAY_LEAD = /^([^\s,]+),?\s/;
 

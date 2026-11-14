@@ -1,11 +1,11 @@
 import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { currencyDisplayFor } from "@outlayr/money/currency";
+import { capture } from "@outlayr/shared/analytics";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
-import { capture } from "@/lib/analytics";
 import { formatAmount, formatCodeAmount } from "@/lib/calculators";
 import type { Cadence } from "@/lib/calculators";
 

@@ -1,5 +1,10 @@
 import type { ConvexQueryClient } from "@convex-dev/react-query";
 import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
+import { startAnalytics } from "@outlayr/shared/analytics";
+import { LANGUAGES, localeFromParam, pageUrl, publishedLocales } from "@outlayr/shared/i18n";
+import type { Locale } from "@outlayr/shared/i18n";
+import { THEME_SCRIPT, paintTheme, readTheme } from "@outlayr/shared/theme";
+import { SITE_URL, SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import type { DbClient } from "@tanstack/react-db";
 import type { QueryClient } from "@tanstack/react-query";
 import { HeadContent, Scripts, createRootRouteWithContext, useMatches, useParams } from "@tanstack/react-router";
@@ -11,20 +16,19 @@ import { useEffect, useLayoutEffect } from "react";
 import type { ReactNode } from "react";
 import { IntlayerProvider } from "react-intlayer";
 
-import { ConsentBanner } from "@/components/consent-banner";
+import { SiteConsentBanner } from "@/components/consent-banner";
 import { NotFound } from "@/components/not-found";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { startAnalytics } from "@/lib/analytics";
-import { LANGUAGES, localeFromParam, pageUrl, publishedLocales } from "@/lib/i18n";
-import type { Locale } from "@/lib/i18n";
+import { ENV } from "@/env";
 import { startMotion } from "@/lib/motion";
 import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } from "@/lib/seo";
 import type { Session } from "@/lib/session";
-import { COMPANY, FOUNDER, SITE_URL, SOURCE_URL, SUPPORT_EMAIL, X_URL } from "@/lib/site";
-import { THEME_SCRIPT, paintTheme, readTheme } from "@/lib/theme";
+import { COMPANY, FOUNDER, SOURCE_URL, X_URL } from "@/lib/site";
 
 import appCss from "../index.css?url";
+
+const ANALYTICS_TOKEN = import.meta.env.PROD ? ENV.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN : undefined;
 
 const visitorCountry = createServerFn({ method: "GET" }).handler(() => getRequestHeader("cf-ipcountry") ?? null);
 
@@ -195,7 +199,7 @@ function RootDocument({ children }: { children: ReactNode }) {
     });
     // oxlint-disable-next-line outlayr/react-effect-budget -- starts the analytics SDK once after hydration, with the visitor's country
     useEffect(() => {
-        Effect.runFork(startAnalytics(country).pipe(Effect.ignoreCause));
+        Effect.runFork(startAnalytics(ANALYTICS_TOKEN, country).pipe(Effect.ignoreCause));
     }, [country]);
     // oxlint-disable-next-line outlayr/react-effect-budget -- a hydration that falls back to a client render strips what THEME_SCRIPT stamped on <html>.
     useLayoutEffect(() => {
@@ -212,7 +216,7 @@ function RootDocument({ children }: { children: ReactNode }) {
                     {ownChrome ? null : <SiteHeader />}
                     <div className="flex-1">{children}</div>
                     {ownChrome ? null : <SiteFooter />}
-                    <ConsentBanner />
+                    <SiteConsentBanner />
                 </IntlayerProvider>
                 <Scripts />
             </body>

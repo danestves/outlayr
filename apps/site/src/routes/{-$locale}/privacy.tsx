@@ -1,7 +1,7 @@
+import { localeFromParam } from "@outlayr/shared/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { LegalDocument } from "@/components/legal-document";
-import { localeFromParam } from "@/lib/i18n";
 import { getLegalDocument } from "@/lib/legal";
 import { branded, ldJson, legalPage, pageMeta } from "@/lib/seo";
 

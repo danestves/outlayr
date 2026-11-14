@@ -1,6 +1,7 @@
 import Idea01Icon from "@hugeicons/core-free-icons/Idea01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { api } from "@outlayr/backend/convex/_generated/api";
+import { readConsent } from "@outlayr/shared/analytics";
 import { Alert } from "panelui-web/alert";
 import { Button } from "panelui-web/button";
 import { Checkbox } from "panelui-web/checkbox";
@@ -11,7 +12,6 @@ import { useId, useState } from "react";
 import type { FormEvent } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { readConsent } from "@/lib/analytics";
 import { convexClient } from "@/lib/convex";
 
 import packageJson from "../../../../../../native/package.json";
