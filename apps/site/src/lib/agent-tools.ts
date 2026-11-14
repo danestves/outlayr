@@ -95,7 +95,11 @@ export function searchSite(locale: Locale, query: string) {
 }
 
 export function openSitePage(router: ReturnType<typeof useRouter>, locale: Locale, path: string) {
-    return Effect.runPromise(openPage(router, locale, publishedPages(locale), path));
+    return Effect.runPromise(
+        openPage(router, locale, publishedPages(locale), path).pipe(
+            Effect.catchTags({ PageNotFoundError: ({ message }) => Effect.succeed({ error: message }) })
+        )
+    );
 }
 
 export function siteAnswers(locale: Locale) {

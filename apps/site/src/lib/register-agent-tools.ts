@@ -1,19 +1,23 @@
 import type { Locale } from "@outlayr/shared/i18n";
+import type { JsonObject } from "effect/Schema";
 import { defaultLocale, getLocaleFromPath } from "intlayer";
 
 import type { getRouter } from "../router";
+import { CALCULATOR_SPECS } from "./calculator-specs";
 import { publishedSitePaths } from "./site-paths";
 
 type Router = ReturnType<typeof getRouter>;
 
 const loadAgentTools = () => import("./agent-tools");
+const loadCalculatorTools = () => import("./calculator-tools");
 
 // Runs from getRouter, before hydration, so agents that check for WebMCP tools at page load find them.
 export function registerAgentTools(router: Router) {
-    const modelContext = document.modelContext ?? navigator.modelContext;
+    const { modelContext } = document;
     if (!modelContext) {
         return;
     }
+    registerCalculators(modelContext);
     let locale = getLocaleFromPath(window.location.pathname) ?? defaultLocale;
     let controller = registerTools(modelContext, router, locale);
     router.subscribe("onResolved", ({ toLocation }) => {
@@ -45,6 +49,7 @@ function registerTools(modelContext: ModelContext, router: Router, locale: Local
                 type: "object",
             },
             name: "search_pages",
+            title: "Search tryoutlayr.com",
         },
         options
     );
@@ -67,6 +72,7 @@ function registerTools(modelContext: ModelContext, router: Router, locale: Local
                 type: "object",
             },
             name: "open_page",
+            title: "Open a page",
         },
         options
     );
@@ -81,8 +87,22 @@ function registerTools(modelContext: ModelContext, router: Router, locale: Local
             },
             inputSchema: { properties: {}, type: "object" },
             name: "get_answers",
+            title: "Outlayr answers",
         },
         options
     );
     return controller;
+}
+
+function registerCalculators(modelContext: ModelContext) {
+    for (const spec of CALCULATOR_SPECS) {
+        void modelContext.registerTool({
+            ...spec,
+            annotations: { readOnlyHint: true },
+            execute: async (input: JsonObject) => {
+                const { runCalculator } = await loadCalculatorTools();
+                return runCalculator(spec.name, input);
+            },
+        });
+    }
 }

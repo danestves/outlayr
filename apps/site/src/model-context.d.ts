@@ -1,20 +1,25 @@
+interface ModelContextToolAnnotations {
+    consequentialHint?: boolean;
+    debugging?: boolean;
+    readOnlyHint?: boolean;
+    untrustedContentHint?: boolean;
+}
+
 interface ModelContextTool<Input> {
-    annotations?: { readOnlyHint?: boolean };
+    annotations?: ModelContextToolAnnotations;
     description: string;
-    execute: (input: Input) => object | Promise<object>;
+    execute: (input: Input, options: { signal: AbortSignal }) => object | Promise<object>;
     inputSchema?: object;
     name: string;
+    outputSchema?: object;
+    title?: string;
 }
 
-interface ModelContext {
+interface ModelContext extends EventTarget {
     registerTool: <Input>(
         tool: ModelContextTool<Input>,
-        options?: { signal?: AbortSignal }
-    ) => Promise<void> | undefined;
-}
-
-interface Navigator {
-    readonly modelContext?: ModelContext;
+        options?: { exposedTo?: string[]; signal?: AbortSignal }
+    ) => Promise<void>;
 }
 
 interface Document {
