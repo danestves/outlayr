@@ -17,6 +17,7 @@ struct SignalWalletRunIntent: AppIntent {
     func perform() async throws -> some IntentResult {
         let now = Date().timeIntervalSince1970 * 1000
         SharedStore.store?.set(String(Int(now)), forKey: SharedStore.walletRunKey)
+        await SharedStore.armMissedTap(at: now, after: SharedStore.missedTapDelay)
         return .result()
     }
 }

@@ -107,6 +107,11 @@ export const cardStillAsks = Effect.fn("WalletState.cardStillAsks")(function* ca
     return cardStatus(text, yield* Meta.get(db, "walletCards"), live).asks;
 });
 
+export const cardAccount = Effect.fn("WalletState.cardAccount")(function* cardAccount(db: Database, text: string) {
+    const live = yield* listBanks(db);
+    return cardStatus(text, yield* Meta.get(db, "walletCards"), live).account ?? null;
+});
+
 export const pickCardAccount = Effect.fn("WalletState.pickCardAccount")(function* pickCardAccount(
     db: Database,
     text: string,

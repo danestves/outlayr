@@ -15,6 +15,12 @@ enum SharedStore {
     /// Mirrored by `WALLET_LAST_RUN_KEY` in `src/lib/widget-bridge.ts`.
     static let walletRunKey = "walletLastRunAt"
 
+    private static let missedTapPrefix = "outlayr.wallet-missed"
+
+    static let missedTapDelay: TimeInterval = 2 * 60
+
+    static let missedTapWindow: TimeInterval = 10 * 60
+
     /// Mirrored by `PUSHED_PURCHASES_KEY` in `src/lib/widget-bridge.ts`.
     static let pushedPurchasesKey = "pushedPurchases"
 
@@ -56,16 +62,18 @@ enum SharedStore {
     /// write reserves its own offset in the kernel, so nothing is read first and
     /// there is nothing to lose. The app never edits this file in place either —
     /// it renames it aside to drain it.
-    static func enqueue(_ write: PendingWrite) async {
+    @discardableResult
+    static func enqueue(_ write: PendingWrite) async -> Bool {
         guard let url = queueURL(),
-              var line = try? JSONEncoder().encode(write) else { return }
+              var line = try? JSONEncoder().encode(write) else { return false }
         line.append(0x0A)
-        append(line, to: url)
+        guard append(line, to: url) else { return false }
         let center = UNUserNotificationCenter.current()
         let reminders = await center.pendingNotificationRequests()
             .map(\.identifier)
             .filter { $0.hasPrefix(dailyReminderPrefix) }
         center.removePendingNotificationRequests(withIdentifiers: reminders)
+        return true
     }
 
     /// Posts the app's own push from an intent, once per purchase key within
@@ -96,6 +104,51 @@ enum SharedStore {
         }
     }
 
+    static func lastWalletRun(within window: TimeInterval) -> Double? {
+        let now = Date().timeIntervalSince1970 * 1000
+        guard let at = store?.string(forKey: walletRunKey).flatMap(Double.init),
+              now - at <= window * 1000 else { return nil }
+        return at
+    }
+
+    static func armMissedTap(
+        at: Double,
+        merchant: String = "",
+        card: String? = nil,
+        after delay: TimeInterval?
+    ) async {
+        let center = UNUserNotificationCenter.current()
+        guard await center.notificationSettings().authorizationStatus == .authorized else { return }
+        let id = missedTapId(at)
+        center.removePendingNotificationRequests(withIdentifiers: [id])
+        let copy = walletPush()?.missedTap
+        let content = UNMutableNotificationContent()
+        content.title = copy?.title ?? "Apple Pay purchase not logged"
+        content.body = copy?.body ?? "Apple didn't send the purchase details. Tap to log it if it went through."
+        var userInfo: [AnyHashable: Any] = ["open": "create", "date": String(Int(at))]
+        if !merchant.isEmpty {
+            userInfo["note"] = merchant
+        }
+        if let card {
+            userInfo["card"] = card
+        }
+        content.userInfo = userInfo
+        content.threadIdentifier = "automation"
+        let trigger = delay.map { UNTimeIntervalNotificationTrigger(timeInterval: $0, repeats: false) }
+        try? await center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
+    }
+
+    static func disarmMissedTap(at: Double) {
+        let center = UNUserNotificationCenter.current()
+        let id = missedTapId(at)
+        center.removePendingNotificationRequests(withIdentifiers: [id])
+        center.removeDeliveredNotifications(withIdentifiers: [id])
+    }
+
+    private static func missedTapId(_ at: Double) -> String {
+        "\(missedTapPrefix).\(Int(at))"
+    }
+
     private static func queueURL() -> URL? {
         guard let container = FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: appGroup) else {
@@ -119,18 +172,25 @@ enum SharedStore {
         return directory.appendingPathComponent(queueFile, isDirectory: false)
     }
 
-    private static func append(_ bytes: Data, to url: URL) {
+    private static func append(_ bytes: Data, to url: URL) -> Bool {
         let descriptor = open(url.path, O_WRONLY | O_APPEND | O_CREAT, 0o644)
-        guard descriptor >= 0 else { return }
+        guard descriptor >= 0 else { return false }
         defer { close(descriptor) }
-        bytes.withUnsafeBytes { buffer in
-            guard let base = buffer.baseAddress else { return }
+        return bytes.withUnsafeBytes { buffer in
+            guard let base = buffer.baseAddress else { return false }
             var written = 0
             while written < buffer.count {
                 let count = Darwin.write(descriptor, base + written, buffer.count - written)
-                guard count > 0 else { return }
+                guard count > 0 else {
+                    if written > 0 {
+                        var newline: UInt8 = 0x0A
+                        _ = Darwin.write(descriptor, &newline, 1)
+                    }
+                    return false
+                }
                 written += count
             }
+            return true
         }
     }
 }
@@ -220,7 +280,13 @@ struct WalletPushSnapshot: Codable {
         let income: [String: String]
     }
 
+    struct MissedTap: Codable {
+        let title: String
+        let body: String
+    }
+
     let cards: [String: Card]
+    let missedTap: MissedTap?
     let newPlace: String
     let patterns: NotificationPatterns?
     let places: Places

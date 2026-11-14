@@ -237,6 +237,20 @@ const settingsWallet = {
             fr: "Messages",
             pt: "Mensagens",
         }),
+        "settings.wallet.missedTapBody": t({
+            en: "Apple didn't send the purchase details. Tap to log it if it went through.",
+            es: "Apple no envió los datos de la compra. Toca para registrarla si se hizo.",
+            fr: "Apple n'a pas transmis les détails de l'achat. Touchez pour le saisir s'il est passé.",
+            pt: "A Apple não enviou os dados da compra. Toque para registrá-la se ela foi feita.",
+            "pt-PT": "A Apple não enviou os dados da compra. Toque para registá-la se foi feita.",
+        }),
+        "settings.wallet.missedTapTitle": t({
+            en: "Apple Pay purchase not logged",
+            es: "Compra con Apple Pay sin registrar",
+            fr: "Achat Apple Pay non saisi",
+            pt: "Compra com Apple Pay não registrada",
+            "pt-PT": "Compra com Apple Pay não registada",
+        }),
         "settings.wallet.noCards": t({
             en: "No cards yet",
             es: "Aún no hay tarjetas",

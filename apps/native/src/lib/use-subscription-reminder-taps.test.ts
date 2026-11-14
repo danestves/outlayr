@@ -112,8 +112,8 @@ describe("useSubscriptionReminderTaps", () => {
         await settle();
 
         expect(mockNavigate.mock.calls).toStrictEqual([
-            ["/transactions/create?date=1760500000000"],
-            ["/transactions/create"],
+            [{ params: { date: "1760500000000" }, pathname: "/transactions/create" }],
+            [{ params: {}, pathname: "/transactions/create" }],
         ]);
     });
 
