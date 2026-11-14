@@ -62,16 +62,18 @@ enum SharedStore {
     /// write reserves its own offset in the kernel, so nothing is read first and
     /// there is nothing to lose. The app never edits this file in place either —
     /// it renames it aside to drain it.
-    static func enqueue(_ write: PendingWrite) async {
+    @discardableResult
+    static func enqueue(_ write: PendingWrite) async -> Bool {
         guard let url = queueURL(),
-              var line = try? JSONEncoder().encode(write) else { return }
+              var line = try? JSONEncoder().encode(write) else { return false }
         line.append(0x0A)
-        append(line, to: url)
+        guard append(line, to: url) else { return false }
         let center = UNUserNotificationCenter.current()
         let reminders = await center.pendingNotificationRequests()
             .map(\.identifier)
             .filter { $0.hasPrefix(dailyReminderPrefix) }
         center.removePendingNotificationRequests(withIdentifiers: reminders)
+        return true
     }
 
     /// Posts the app's own push from an intent, once per purchase key within
@@ -170,18 +172,19 @@ enum SharedStore {
         return directory.appendingPathComponent(queueFile, isDirectory: false)
     }
 
-    private static func append(_ bytes: Data, to url: URL) {
+    private static func append(_ bytes: Data, to url: URL) -> Bool {
         let descriptor = open(url.path, O_WRONLY | O_APPEND | O_CREAT, 0o644)
-        guard descriptor >= 0 else { return }
+        guard descriptor >= 0 else { return false }
         defer { close(descriptor) }
-        bytes.withUnsafeBytes { buffer in
-            guard let base = buffer.baseAddress else { return }
+        return bytes.withUnsafeBytes { buffer in
+            guard let base = buffer.baseAddress else { return false }
             var written = 0
             while written < buffer.count {
                 let count = Darwin.write(descriptor, base + written, buffer.count - written)
-                guard count > 0 else { return }
+                guard count > 0 else { return false }
                 written += count
             }
+            return true
         }
     }
 }

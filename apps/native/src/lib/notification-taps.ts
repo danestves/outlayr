@@ -66,7 +66,11 @@ const createTarget = Effect.fn("NotificationTaps.createTarget")(function* create
     { card, date, note }: Extract<ReminderTap, { open: "create" }>
 ) {
     const account = card ? yield* cardAccount(db, card).pipe(Effect.orElseSucceed(() => null)) : null;
-    const params = { ...(account && { accountId: account.id }), ...(date && { date }), ...(note && { note }) };
+    const params = {
+        ...(account && { accountId: account.id, currency: account.currency }),
+        ...(date && { date }),
+        ...(note && { note }),
+    };
     return { params, pathname: "/transactions/create" } satisfies Href;
 });
 

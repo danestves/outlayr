@@ -95,8 +95,8 @@ struct LogWalletTransactionIntent: AppIntent {
             dedupeKey: purchase,
             text: nil
         )
-        await SharedStore.enqueue(write)
-        if let ranAt {
+        let queued = await SharedStore.enqueue(write)
+        if queued, let ranAt {
             SharedStore.disarmMissedTap(at: ranAt)
         }
 

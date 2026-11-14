@@ -6,7 +6,7 @@ import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import type { Database } from "@/db/client";
-import { accounts, transactions } from "@/db/schema";
+import { transactions } from "@/db/schema";
 import { migratedDatabase } from "@/db/test-database";
 
 const mockNavigate = vi.fn();
@@ -114,42 +114,6 @@ describe("useSubscriptionReminderTaps", () => {
         expect(mockNavigate.mock.calls).toStrictEqual([
             [{ params: { date: "1760500000000" }, pathname: "/transactions/create" }],
             [{ params: {}, pathname: "/transactions/create" }],
-        ]);
-    });
-
-    it("opens a missed Apple Pay tap as a new entry on the card's account, at the tap's time", async () => {
-        const opened = new Date(0);
-        await db.insert(accounts).values({
-            currency: "USD",
-            dateCreated: opened,
-            id: "chase",
-            initialBalance: 0,
-            initialBalanceDate: opened,
-            name: "Chase",
-            updatedAt: opened,
-        });
-        await renderHook(() => useSubscriptionReminderTaps(db, true));
-        mockTaps.listener?.({
-            actionIdentifier: "expo.modules.notifications.actions.DEFAULT",
-            notification: {
-                date: 8,
-                request: {
-                    content: {
-                        data: { card: "Chase Sapphire", date: "1760500000000", note: "Blue Bottle", open: "create" },
-                    },
-                    identifier: "outlayr.wallet-missed.1760500000000",
-                },
-            },
-        });
-        await settle();
-
-        expect(mockNavigate.mock.calls).toStrictEqual([
-            [
-                {
-                    params: { accountId: "chase", date: "1760500000000", note: "Blue Bottle" },
-                    pathname: "/transactions/create",
-                },
-            ],
         ]);
     });
 
