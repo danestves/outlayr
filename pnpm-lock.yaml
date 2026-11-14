@@ -587,22 +587,7 @@ importers:
         specifier: ^5.6.3
         version: 5.9.3
 
-  apps/voice-relay:
-    devDependencies:
-      '@cloudflare/workers-types':
-        specifier: 5.20261023.1
-        version: 5.20261023.1
-      '@outlayr/config':
-        specifier: workspace:*
-        version: link:../../packages/config
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
-      vite-plus:
-        specifier: 'catalog:'
-        version: 1.4.0(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(@vitest/ui@5.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.3(@noble/hashes@2.4.0))(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
-
-  apps/web:
+  apps/site:
     dependencies:
       '@base-ui/react':
         specifier: ^1.7.0
@@ -781,10 +766,25 @@ importers:
         version: '@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)'
       vite-intlayer:
         specifier: 'catalog:'
-        version: 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@babel/core@8.0.6)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
+        version: 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@babel/core@7.29.7(supports-color@8.1.1))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
       vite-plus:
         specifier: 'catalog:'
         version: 1.4.0(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(@vitest/ui@5.0.5)(esbuild@0.25.12)(jiti@2.7.0)(jsdom@30.1.3(@noble/hashes@2.4.0))(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
+
+  apps/voice-relay:
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: 5.20261023.1
+        version: 5.20261023.1
+      '@outlayr/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite-plus:
+        specifier: 'catalog:'
+        version: 1.4.0(@edge-runtime/vm@5.0.0)(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(@vitest/ui@5.0.5)(esbuild@0.28.2)(jiti@2.7.0)(jsdom@30.1.3(@noble/hashes@2.4.0))(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)
 
   packages/backend:
     dependencies:
@@ -4389,14 +4389,8 @@ packages:
     engines: {node: '>=14.14', npm: '>=6'}
     hasBin: true
 
-  '@posthog/core@1.61.1':
-    resolution: {integrity: sha512-qyMTxPfjeJkHIhpcukOgBN3BWXbCyFRPz8/Voy5qZtVh9NZqj3EhC6LLeYZuJhL3WpqhQTgn2FMIwAo/ag6fmw==}
-
   '@posthog/core@1.62.0':
     resolution: {integrity: sha512-KjNwGC7s0141wnWWHubNMdg1lOhZjqKRw2OTNstuzdVvNDfvv2RbFJQSSvvABmbCmTXwlMpdnbb/M/aAigDnNQ==}
-
-  '@posthog/types@1.417.0':
-    resolution: {integrity: sha512-r/+gvmiE6egR6kkuMhEjOOE3Sm1pR00iFPQNoZZ0YvnZSsqGk7hK2IvQzcqjSRufG5Jf0EwhDMr5YOGtmf2/8g==}
 
   '@posthog/types@1.419.0':
     resolution: {integrity: sha512-XX7zRYt/vK8AzaD6V+oDquAzacZf5exJv971dja9En8Qf6g84Qvc3rpT0w6hDYYLWrjaSSkdjFfvvoXI0ouJDg==}
@@ -8579,9 +8573,6 @@ packages:
   exponential-backoff@3.1.3:
     resolution: {integrity: sha512-ZgEeZXj30q+I0EN+CbSSpIyPaJ5HVQD18Z1m+u1FXbAeT94mr1zw50q4q6jiiC447Nl/YTcIYSAftiGqetwXCA==}
 
-  exsolve@1.1.1:
-    resolution: {integrity: sha512-9U/jZUgjnSGyntRr6y5Muu1MJcwFl6kPu7k8qLF0IMNfLqvw0NZ4nnVDq0RVoZ0RvCyumib4Ez3KYrVfilrw+g==}
-
   exsolve@1.1.3:
     resolution: {integrity: sha512-kuzL9zherLQoqDeQaS55AiiIg1kb4KYXaSusTtgZTPlvKP2gGCI82LNmBNh5RjDVUXIcmgx+/Mx7vPwRzBbhJA==}
 
@@ -11390,11 +11381,6 @@ packages:
 
   sql.js@1.13.0:
     resolution: {integrity: sha512-RJbVP1HRDlUUXahJ7VMTcu9Rm1Nzw+EBpoPr94vnbD4LwR715F3CcxE2G2k45PewcaZ57pjetYa+LoSJLAASgA==}
-
-  srvx@1.0.5:
-    resolution: {integrity: sha512-KvSKRpgPG/oaq3cyT614OQ2bAa7DynuGamivCZeoZzIUULOdbQz6wUtnnVuC4+DCx2Zglzo8v5gBYmWIWYhDxA==}
-    engines: {node: '>=20.16.0'}
-    hasBin: true
 
   srvx@1.0.8:
     resolution: {integrity: sha512-ngFS/J6St4PJfHRHGjr78xkPPtbyXtdMOLNE4x/XZunEK3OhV7aGUWMHf9WTUEy6wm1U0W4okkd82ZFFWRVQTw==}
@@ -17150,8 +17136,8 @@ snapshots:
 
   '@posthog/browser-common@0.9.12':
     dependencies:
-      '@posthog/core': 1.61.1
-      '@posthog/types': 1.417.0
+      '@posthog/core': 1.62.0
+      '@posthog/types': 1.419.0
       preact: 10.29.8
     transitivePeerDependencies:
       - preact-render-to-string
@@ -17160,15 +17146,9 @@ snapshots:
     dependencies:
       detect-libc: 2.1.2
 
-  '@posthog/core@1.61.1':
-    dependencies:
-      '@posthog/types': 1.417.0
-
   '@posthog/core@1.62.0':
     dependencies:
       '@posthog/types': 1.419.0
-
-  '@posthog/types@1.417.0': {}
 
   '@posthog/types@1.419.0': {}
 
@@ -21145,9 +21125,9 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  crossws@0.4.12(srvx@1.0.5):
+  crossws@0.4.12(srvx@1.0.8):
     optionalDependencies:
-      srvx: 1.0.5
+      srvx: 1.0.8
 
   css-in-js-utils@3.1.0:
     dependencies:
@@ -21551,10 +21531,10 @@ snapshots:
 
   env-runner@0.2.3:
     dependencies:
-      crossws: 0.4.12(srvx@1.0.5)
-      exsolve: 1.1.1
+      crossws: 0.4.12(srvx@1.0.8)
+      exsolve: 1.2.0
       httpxy: 0.5.5
-      srvx: 1.0.5
+      srvx: 1.0.8
 
   environment@1.1.0: {}
 
@@ -22711,8 +22691,6 @@ snapshots:
 
   exponential-backoff@3.1.3: {}
 
-  exsolve@1.1.1: {}
-
   exsolve@1.1.3: {}
 
   exsolve@1.2.0: {}
@@ -22945,12 +22923,12 @@ snapshots:
       section-matter: 1.0.0
       strip-bom-string: 1.0.0
 
-  h3@2.0.1-rc.32(crossws@0.4.12(srvx@1.0.5))(ocache@0.3.0):
+  h3@2.0.1-rc.32(crossws@0.4.12(srvx@1.0.8))(ocache@0.3.0):
     dependencies:
       rou3: 0.9.2
-      srvx: 1.0.5
+      srvx: 1.0.8
     optionalDependencies:
-      crossws: 0.4.12(srvx@1.0.5)
+      crossws: 0.4.12(srvx@1.0.8)
       ocache: 0.3.0
 
   has-flag@3.0.0: {}
@@ -24861,16 +24839,16 @@ snapshots:
   nitro@3.0.260903-beta:
     dependencies:
       consola: 3.4.2
-      crossws: 0.4.12(srvx@1.0.5)
+      crossws: 0.4.12(srvx@1.0.8)
       db0: 0.4.1
       env-runner: 0.2.3
-      h3: 2.0.1-rc.32(crossws@0.4.12(srvx@1.0.5))(ocache@0.3.0)
+      h3: 2.0.1-rc.32(crossws@0.4.12(srvx@1.0.8))(ocache@0.3.0)
       hookable: 6.1.2
       nf3: 0.3.24
       ocache: 0.3.0
       rolldown: 1.2.10
       rou3: 0.9.2
-      srvx: 1.0.5
+      srvx: 1.0.8
       unenv: 2.0.0-rc.24
       unstorage: 2.0.0-alpha.10
 
@@ -25442,8 +25420,8 @@ snapshots:
   posthog-js@1.440.0(@types/react@19.3.0)(react@19.3.1):
     dependencies:
       '@posthog/browser-common': 0.9.12
-      '@posthog/core': 1.61.1
-      '@posthog/types': 1.417.0
+      '@posthog/core': 1.62.0
+      '@posthog/types': 1.419.0
       core-js: 3.51.0
       dompurify: 3.4.17
       fflate: 0.4.9
@@ -26774,8 +26752,6 @@ snapshots:
 
   sql.js@1.13.0: {}
 
-  srvx@1.0.5: {}
-
   srvx@1.0.8: {}
 
   stack-utils@2.0.6:
@@ -27475,7 +27451,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite-intlayer@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@babel/core@8.0.6)(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7):
+  vite-intlayer@9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(@babel/core@7.29.7(supports-color@8.1.1))(@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7):
     dependencies:
       '@intlayer/babel': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)(supports-color@8.1.1)(typescript@6.0.3)(zod@4.6.7)
       '@intlayer/config': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))(react@19.3.1)
@@ -27485,7 +27461,7 @@ snapshots:
       '@intlayer/types': 9.7.0(@ai-sdk/anthropic@4.0.90(zod@4.6.7))
       vite: '@voidzero-dev/vite-plus-core@1.4.0(@types/node@26.6.5)(esbuild@0.25.12)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(typescript@6.0.3)(yaml@2.9.1)'
     optionalDependencies:
-      '@babel/core': 8.0.6
+      '@babel/core': 7.29.7(supports-color@8.1.1)
     transitivePeerDependencies:
       - '@ai-sdk/alibaba'
       - '@ai-sdk/amazon-bedrock'

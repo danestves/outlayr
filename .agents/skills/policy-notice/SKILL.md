@@ -1,6 +1,6 @@
 ---
 name: policy-notice
-description: Decide whether a change needs a policy email, an in-app notice, new consent, or nothing. Use before filing a PR or merging, before any deploy or /release, and whenever a diff touches apps/web/content/legal, POLICY_NOTICES, or what data Outlayr collects, sends, shares, or keeps, its plans, or its prices.
+description: Decide whether a change needs a policy email, an in-app notice, new consent, or nothing. Use before filing a PR or merging, before any deploy or /release, and whenever a diff touches apps/site/content/legal, POLICY_NOTICES, or what data Outlayr collects, sends, shares, or keeps, its plans, or its prices.
 ---
 
 # Policy notice check
@@ -26,7 +26,7 @@ Until then, the 9 November 2026 wording applies: every material change, meaning 
 Use the range being shipped: `origin/main...HEAD` for a PR, the commits `decide.sh` lists for a release.
 
 ```sh
-git diff --name-only origin/main...HEAD -- apps/web/content/legal apps/web/src/lib/site.ts packages/backend/confect/legal.ts
+git diff --name-only origin/main...HEAD -- apps/site/content/legal apps/site/src/lib/site.ts packages/backend/confect/legal.ts
 git diff origin/main...HEAD --stat
 ```
 

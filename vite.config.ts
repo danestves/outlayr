@@ -13,7 +13,7 @@ import type { OxlintOverride } from "vite-plus/lint";
 const projectIgnores = [
     ".impeccable",
     "apps/screenshots/*",
-    "apps/web/src/stageshow",
+    "apps/site/src/stageshow",
     "!apps/screenshots/scripts",
     "**/.expo",
     "**/.vscode",
@@ -48,7 +48,7 @@ const MANUAL_MEMO_FILES = [
     "apps/native/src/lib/ledger-adoption.tsx",
     "apps/native/src/lib/use-day-card-share.ts",
 ];
-const SHIPPED_SOURCE = ["apps/native/src/**", "apps/web/src/**", "packages/*/src/**"];
+const SHIPPED_SOURCE = ["apps/native/src/**", "apps/site/src/**", "packages/*/src/**"];
 const TEST_FILES = ["**/*.test.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/*.spec.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"];
 const NODE_SIDE_FILES = [
     "**/*.test.{ts,tsx}",
@@ -206,7 +206,7 @@ export default defineConfig({
                 },
             },
             {
-                files: ["apps/web/src/components/home/films/**"],
+                files: ["apps/site/src/components/home/films/**"],
                 rules: {
                     "tailwindcss/no-unknown-classes": "off",
                 },
@@ -431,7 +431,7 @@ export default defineConfig({
         settings: {
             tailwindcss: {
                 entryPoint: [
-                    { files: "apps/web/**", use: "apps/web/src/index.css" },
+                    { files: "apps/site/**", use: "apps/site/src/index.css" },
                     { files: "**", use: "apps/native/global.css" },
                 ],
             },

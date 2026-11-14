@@ -1,8 +1,8 @@
 # Web recurring
 
 The Recurring page reads schedules straight off the ledger: every transaction with a recurring type is a
-chain, and its back-filled occurrences are its history. The model is `apps/web/src/lib/recurring.ts`; the
-rows it writes come from `apps/web/src/lib/recurring-writes.ts`.
+chain, and its back-filled occurrences are its history. The model is `apps/site/src/lib/recurring.ts`; the
+rows it writes come from `apps/site/src/lib/recurring-writes.ts`.
 
 ## What is stored where
 

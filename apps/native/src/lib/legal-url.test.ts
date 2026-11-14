@@ -5,7 +5,7 @@ import { expect, test } from "vite-plus/test";
 
 import { PRIVACY_SECTIONS } from "./legal-url";
 
-const LEGAL_DIR = join(import.meta.dirname, "..", "..", "..", "web", "content", "legal");
+const LEGAL_DIR = join(import.meta.dirname, "..", "..", "..", "site", "content", "legal");
 const HEADING = /^#{2,6}\s+(.+)$/gm;
 
 const headingIds = (markdown: string) =>
