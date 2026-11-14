@@ -225,9 +225,20 @@ index 856ccc8..d8e9bcd 100644
      return Number.isFinite(parsed) ? parsed : null;
  }
 diff --git a/dist/components/nav-rail/index.js b/dist/components/nav-rail/index.js
-index 9ae798b..8d43a15 100644
+index 9ae798b..a5d4897 100644
 --- a/dist/components/nav-rail/index.js
 +++ b/dist/components/nav-rail/index.js
+@@ -126,8 +126,8 @@ const navRailVariants = tv({
+             // surface, and leaves the tab order once the fade ends. An outside
+             // trigger is what brings it back.
+             'data-[collapsible=offcanvas]:data-[collapsed]:invisible data-[collapsible=offcanvas]:data-[collapsed]:w-0 data-[collapsible=offcanvas]:data-[collapsed]:gap-0 data-[collapsible=offcanvas]:data-[collapsed]:p-0 data-[collapsible=offcanvas]:data-[collapsed]:opacity-0 data-[collapsible=offcanvas]:data-[collapsed]:ring-0 data-[collapsible=offcanvas]:data-[collapsed]:pointer-events-none',
+-            // In a drawer, the surface is the sheet: no width, no rounding, no ring.
+-            'data-[mobile]:h-full data-[mobile]:w-full data-[mobile]:rounded-none data-[mobile]:p-3 data-[mobile]:ring-0',
++            // In a drawer, the sheet is the card: the rail fills it and takes its corners.
++            'data-[mobile]:h-full data-[mobile]:w-full data-[mobile]:rounded-[inherit] data-[mobile]:p-3 data-[mobile]:ring-0',
+         ],
+         header: [
+             `sticky top-0 z-20 flex shrink-0 items-center gap-2 rounded-t-[inherit] px-0.5 pb-1 ${SURFACE}`,
 @@ -174,7 +174,8 @@ const navRailVariants = tv({
              'group-data-[collapsed]/nav-rail:opacity-100',
          ],
@@ -238,6 +249,15 @@ index 9ae798b..8d43a15 100644
              'text-muted-foreground transition-colors duration-150 hover:bg-foreground/[0.05] hover:text-foreground',
              'data-active:text-foreground data-active:hover:bg-foreground/[0.03]',
              'data-[holding]:text-foreground data-[holding]:hover:bg-foreground/[0.03]',
+@@ -674,7 +675,7 @@ function NavRailRoot({ collapsed: collapsedProp, defaultCollapsed = false, onCol
+     });
+     if (!mobile)
+         return nav;
+-    return (_jsx(Sheet, { open: mobileOpen, onOpenChange: setMobileOpen, side: side === 'end' ? 'right' : 'left', children: _jsx(Sheet.Content, { "aria-label": ariaLabel, "data-slot": "nav-rail-drawer", detached: false, showClose: false, className: "w-[18rem] max-w-[85vw] bg-transparent p-0 shadow-none ring-0", children: nav }) }));
++    return (_jsx(Sheet, { open: mobileOpen, onOpenChange: setMobileOpen, side: side === 'end' ? 'right' : 'left', children: _jsx(Sheet.Content, { "aria-label": ariaLabel, "data-slot": "nav-rail-drawer", showClose: false, className: "w-[18rem] max-w-[85vw] bg-transparent p-0", children: nav }) }));
+ }
+ NavRailRoot.displayName = 'NavRail';
+ /**
 @@ -830,11 +831,21 @@ function NavRailBrand({ href, icon, label, className, children, render, ...props
      });
  }
