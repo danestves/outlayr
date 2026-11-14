@@ -181,7 +181,13 @@ enum SharedStore {
             var written = 0
             while written < buffer.count {
                 let count = Darwin.write(descriptor, base + written, buffer.count - written)
-                guard count > 0 else { return false }
+                guard count > 0 else {
+                    if written > 0 {
+                        var newline: UInt8 = 0x0A
+                        _ = Darwin.write(descriptor, &newline, 1)
+                    }
+                    return false
+                }
                 written += count
             }
             return true
