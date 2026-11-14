@@ -1,6 +1,6 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
-import Menu01Icon from "@hugeicons/core-free-icons/Menu01Icon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
+import SidebarLeftIcon from "@hugeicons/core-free-icons/SidebarLeftIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useLocation } from "@tanstack/react-router";
 import { Button } from "panelui-web/button";
@@ -43,7 +43,7 @@ export function MobileBar() {
                 expandLabel={nav.open.value}
                 render={<Button size="icon-lg" variant="ghost" />}
             >
-                <HugeiconsIcon icon={Menu01Icon} strokeWidth={2} />
+                <HugeiconsIcon icon={SidebarLeftIcon} strokeWidth={2} />
             </NavRail.Trigger>
             <h1 className="min-w-0 truncate text-[17px] font-semibold">{title}</h1>
             <Button
