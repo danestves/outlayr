@@ -85,4 +85,26 @@ describe("time-bounded knowledge", () => {
             t.query(internal.merchantKnowledge.lookup, { keys: ["care4bag|eur"], now: now + 4 })
         ).resolves.toMatchObject({ domain: "care4bag.eu" });
     });
+
+    it("never lets a website someone adds replace a merchant already on the list, even once it expires", async () => {
+        const t = convexTest(schema, modules);
+        const now = Date.UTC(2026, 8, 19);
+        await t.mutation(internal.merchantKnowledge.record, {
+            ...ANSWER,
+            keys: ["care4bag|eur"],
+            resolvedAt: now,
+            source: "model",
+        });
+        await t.mutation(internal.merchantKnowledge.record, {
+            ...ANSWER,
+            domain: "a1b2c3d4e5f6a7b8c9d0.img.tryoutlayr.com",
+            keys: ["care4bag|eur"],
+            resolvedAt: now + MODEL_TTL_MS + 1,
+            source: "user",
+        });
+
+        await expect(t.run((ctx) => ctx.db.query("merchantKnowledge").collect())).resolves.toMatchObject([
+            { domain: "care4bag.gr", source: "model" },
+        ]);
+    });
 });

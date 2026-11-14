@@ -8,14 +8,13 @@ import { Pressable, View } from "react-native";
 import { websiteDomain } from "@/domain/merchant-website";
 import { useSheetSurface } from "@/hooks/use-sheet-surface";
 import { useTranslation } from "@/i18n/context";
-import { discardStoredPhoto, voidAppFlowCommand } from "@/state/entry-commands";
+import { checkMerchantWebsite, discardStoredPhoto, voidAppFlowCommand } from "@/state/entry-commands";
+import type { MerchantWebsiteLogo } from "@/state/entry-commands";
 import { useAtomCommand } from "@/state/use-atom-command";
 import { useColors } from "@/theme/use-colors";
 
 import { SheetGestureRoot } from "../sheet-gesture-root";
 import { ROUNDED, Text } from "../text";
-import { checkMerchantWebsite } from "./entry-flows";
-import type { MerchantWebsiteLogo } from "./entry-flows";
 
 const CHECK_DELAY_MS = 800;
 const FIT_CONTENT = { alignSelf: "stretch" } as const;

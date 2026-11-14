@@ -511,6 +511,27 @@ const transaction = {
             pt: "Toque para trocar",
             "pt-PT": "Toque para alterar",
         }),
+        "transaction.identity.link": t({
+            en: "Website or image link",
+            es: "Sitio web o enlace de imagen",
+            fr: "Site web ou lien d'image",
+            pt: "Site ou link de imagem",
+            "pt-PT": "Site ou ligação de imagem",
+        }),
+        "transaction.identity.linkClear": t({
+            en: "Clear link",
+            es: "Borrar enlace",
+            fr: "Effacer le lien",
+            pt: "Limpar link",
+            "pt-PT": "Limpar ligação",
+        }),
+        "transaction.identity.linkRefused": t({
+            en: "{platform} gives its own logo. Use the website.",
+            es: "{platform} da su propio logo. Usa el sitio web.",
+            fr: "{platform} donne son propre logo. Utilisez le site web.",
+            pt: "{platform} mostra o próprio logo. Use o site.",
+            "pt-PT": "{platform} mostra o próprio logótipo. Use o site.",
+        }),
         "transaction.identity.noIcons": t({
             en: "No icons found",
             es: "No se encontraron íconos",

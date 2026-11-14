@@ -100,26 +100,6 @@ export const attachMerchantLogo = Effect.fn("TransactionForm.attachLogo")(functi
     return true;
 });
 
-export interface MerchantWebsiteLogo {
-    domain: string;
-    hue: string | null;
-    photoUri: string;
-}
-
-export const checkMerchantWebsite = Effect.fn("TransactionForm.checkWebsite")(
-    function* checkMerchantWebsite(domain: string, merchant: string) {
-        const outcome = yield* fetchMerchantImage({ domain, name: merchant, refresh: true });
-        if (outcome.kind !== "logo") {
-            return null;
-        }
-        const photoUri = yield* entryMedia.persistLogoBytes(outcome.bytes, domain);
-        const hues = yield* entryMedia.glowFromImage(photoUri);
-        const logo: MerchantWebsiteLogo = { domain, hue: hues[0] ?? null, photoUri };
-        return logo;
-    },
-    Effect.catchCause(() => Effect.succeed(null))
-);
-
 export interface ShareWebsiteInput {
     currency: string;
     db: Database;

@@ -66,6 +66,26 @@ export function discardStoredPhoto(uri: string): void {
     }
 }
 
+export interface MerchantWebsiteLogo {
+    domain: string;
+    hue: string | null;
+    photoUri: string;
+}
+
+export const checkMerchantWebsite = Effect.fn("Entry.checkWebsite")(
+    function* checkMerchantWebsite(domain: string, merchant: string) {
+        const outcome = yield* fetchMerchantImage({ domain, name: merchant, refresh: true });
+        if (outcome.kind !== "logo") {
+            return null;
+        }
+        const photoUri = yield* entryMedia.persistLogoBytes(outcome.bytes, domain);
+        const hues = yield* entryMedia.glowFromImage(photoUri);
+        const logo: MerchantWebsiteLogo = { domain, hue: hues[0] ?? null, photoUri };
+        return logo;
+    },
+    Effect.catchCause(() => Effect.succeed(null))
+);
+
 class NoLogoToCarryError extends Schema.TaggedError<NoLogoToCarryError>()("NoLogoToCarryError", {}) {
     // oxlint-disable-next-line class-methods-use-this -- one fixed message, nothing on the instance to read
     override get message(): string {

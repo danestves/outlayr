@@ -79,8 +79,7 @@ const record = FunctionImpl.make(
                 yield* writer.table("merchantKnowledge").insert({ ...row, key });
             } else if (
                 args.source === "web" ||
-                (args.source === "model" && sourceOf(existing) === "model") ||
-                expiresAt(existing) <= args.resolvedAt
+                (args.source === "model" && (sourceOf(existing) === "model" || expiresAt(existing) <= args.resolvedAt))
             ) {
                 yield* writer.table("merchantKnowledge").patch(existing._id, { ...row, key });
             }

@@ -1,6 +1,8 @@
 import { SegmentedButton, SingleChoiceSegmentedButtonRow, Text as ComposeText } from "@expo/ui/jetpack-compose";
 import { fillMaxWidth } from "@expo/ui/jetpack-compose/modifiers";
 import CancelCircleIcon from "@hugeicons-pro/core-solid-rounded/CancelCircleIcon";
+import AlertCircleIcon from "@hugeicons-pro/core-stroke-rounded/AlertCircleIcon";
+import CheckmarkCircle02Icon from "@hugeicons-pro/core-stroke-rounded/CheckmarkCircle02Icon";
 import Image01Icon from "@hugeicons-pro/core-stroke-rounded/Image01Icon";
 import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
@@ -16,6 +18,7 @@ import {
     TRANSACTION_TABS,
     withEmoji,
     withIcon,
+    withPhoto,
 } from "@/components/identity-picker-shared";
 import type { IdentityPickerContentProps, IdentityTab } from "@/components/identity-picker-shared";
 import {
@@ -28,8 +31,11 @@ import {
     symbolCellSize,
 } from "@/components/identity-symbol-cells";
 import { MaterialHost } from "@/components/material-host";
+import { OutlinedTextField } from "@/components/material/outlined-field";
 import { SheetHeader } from "@/components/sheet-header";
 import { Text, TextInput } from "@/components/text";
+import { shownLinkStatus, useLinkLogo } from "@/components/use-link-logo";
+import type { LinkStatus } from "@/components/use-link-logo";
 import { CATEGORY_PALETTE } from "@/data/categories-core";
 import { CATEGORY_EMOJI_GROUPS, CATEGORY_ICON_GROUPS, iconKeysMatching } from "@/domain/category-icon-catalog";
 import type { TranslateFn } from "@/i18n/context";
@@ -41,6 +47,7 @@ import { pickHandoffPhotoCommand } from "@/state/identity-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 import { SANS_BY_WEIGHT } from "@/theme/body-fonts";
 import { withAlpha } from "@/theme/shade";
+import { useColors } from "@/theme/use-colors";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
 export { CATEGORY_TABS, TRANSACTION_TABS } from "@/components/identity-picker-shared";
@@ -93,6 +100,7 @@ export function IdentityPickerHost({
     usedColors = NO_USED_COLORS,
     showsColorRail = true,
     onDone,
+    onLinkedWebsite,
 }: IdentityPickerContentProps) {
     const { width } = useWindowDimensions();
     const t = useTranslation();
@@ -104,12 +112,18 @@ export function IdentityPickerHost({
     const [photoFailed, setPhotoFailed] = useState(false);
     const glyphTint = tint ?? value.color ?? CATEGORY_PALETTE[0];
 
+    const link = useLinkLogo((logo) => {
+        onChange(withPhoto(value, logo.photoUri, logo.hue === null ? [] : [logo.hue]));
+        onLinkedWebsite?.(logo);
+    });
+
     const pickColor = (color: string) => {
         haptics("selection");
         onChange({ ...value, color });
     };
     const pickGlyph = (item: string) => {
         haptics("selection");
+        link.drop();
         onChange(tab === "emoji" ? withEmoji(value, item) : withIcon(value, item));
     };
 
@@ -127,6 +141,7 @@ export function IdentityPickerHost({
             },
             onSuccess: (next) => {
                 if (next != null) {
+                    link.drop();
                     onChange(next);
                 }
             },
@@ -151,6 +166,7 @@ export function IdentityPickerHost({
         panel = (
             <PhotoPanel
                 failed={photoFailed}
+                link={link}
                 onColorChange={(color) => {
                     haptics("selection");
                     onChange({ ...value, photoColor: color });
@@ -319,14 +335,57 @@ function SwatchRail({
     );
 }
 
+/** Always laid out, so the colour row below does not jump as the lookup moves between states. */
+function LinkStatusLine({ status }: { status: LinkStatus }) {
+    const t = useTranslation();
+    const m3 = useMaterialColors();
+    const colors = useColors();
+    let icon: typeof AlertCircleIcon | null = null;
+    let color = m3.onSurfaceVariant;
+    let label: string | null = null;
+    let detail: string | null = null;
+    if (status.kind === "checking") {
+        label = t("transaction.website.checking");
+    } else if (status.kind === "found") {
+        icon = CheckmarkCircle02Icon;
+        color = colors.income;
+        label = t("transaction.website.found");
+        detail = `· ${status.domain}`;
+    } else if (status.kind === "refused" || status.kind === "missing") {
+        icon = AlertCircleIcon;
+        color = m3.error;
+        label =
+            status.kind === "refused"
+                ? t("transaction.identity.linkRefused", { platform: status.platform })
+                : t("transaction.website.missing");
+    }
+    return (
+        <View accessibilityLiveRegion="polite" className="min-h-4 flex-row items-center gap-1.5 px-4 pt-1 pb-4">
+            {icon === null ? null : <HugeiconsIcon color={color} icon={icon} size={14} strokeWidth={2} />}
+            {label === null ? null : (
+                <Text className="text-label font-sans-medium shrink" style={{ color }}>
+                    {label}
+                </Text>
+            )}
+            {detail === null ? null : (
+                <Text className="text-label shrink font-sans" numberOfLines={1} style={{ color: m3.onSurfaceVariant }}>
+                    {detail}
+                </Text>
+            )}
+        </View>
+    );
+}
+
 function PhotoPanel({
     uri,
     photoColor,
     failed,
+    link,
     onPick,
     onColorChange,
 }: {
     failed: boolean;
+    link: ReturnType<typeof useLinkLogo>;
     uri: string | null;
     photoColor: string | null;
     onPick: () => void;
@@ -339,7 +398,10 @@ function PhotoPanel({
         prompt = t("alerts.photo.failed");
     }
     return (
-        <ScrollView contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: SYMBOL_MARGIN, paddingTop: 6 }}>
+        <ScrollView
+            contentContainerStyle={{ paddingBottom: 24, paddingHorizontal: SYMBOL_MARGIN, paddingTop: 6 }}
+            keyboardShouldPersistTaps="handled"
+        >
             <View className="items-center">
                 <Pressable
                     accessibilityLabel={t(
@@ -358,12 +420,25 @@ function PhotoPanel({
                     )}
                 </Pressable>
                 <Text
-                    className="text-caption pt-2.5 pb-6 text-center font-sans"
+                    className="text-caption pt-2.5 pb-3 text-center font-sans"
                     style={{ color: failed ? m3.error : m3.onSurfaceVariant }}
                 >
                     {prompt}
                 </Text>
             </View>
+
+            <OutlinedTextField
+                autoCapitalize="none"
+                autoCorrect={false}
+                error={link.status.kind === "refused" || link.status.kind === "missing"}
+                inputMode="url"
+                label={t("transaction.identity.link")}
+                onChangeText={link.change}
+                onSubmitEditing={link.submit}
+                returnKeyType="go"
+                value={link.text}
+            />
+            <LinkStatusLine status={shownLinkStatus(link.status, uri)} />
 
             <View className="min-h-14 flex-row items-center gap-4">
                 <View

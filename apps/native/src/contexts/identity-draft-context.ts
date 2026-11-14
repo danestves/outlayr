@@ -1,4 +1,4 @@
-import { useAtom, useAtomMount, useAtomValue } from "@effect/atom-react/Hooks";
+import { useAtom, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react/Hooks";
 import { RegistryContext } from "@effect/atom-react/RegistryContext";
 import * as Atom from "effect/reactivity/Atom";
 import * as Schema from "effect/Schema";
@@ -8,6 +8,7 @@ import type { SharedValue } from "react-native-reanimated";
 
 import type { IdentitySelection } from "@/components/identity-picker-shared";
 import { useHaptics } from "@/lib/use-haptics";
+import type { MerchantWebsiteLogo } from "@/state/entry-commands";
 
 /** Launch spring (response 0.4, dampingFraction 0.85) as stiffness/damping. */
 export const LAUNCH_SPRING = { damping: 27, mass: 1, stiffness: 246 } as const;
@@ -40,6 +41,11 @@ export const EMPTY_DRAFT: IdentitySelection = {
 
 // Two atoms: every picker tap replaces `draft`, and merging them would re-render the whole form per tap.
 export const draftAtom = Atom.make(EMPTY_DRAFT).pipe(Atom.keepAlive, Atom.withLabel("identity-draft:draft"));
+// Read at save: a website logo pasted into the picker is shared like one from the website sheet.
+const linkedWebsiteAtom = Atom.make<MerchantWebsiteLogo | null>(null).pipe(
+    Atom.keepAlive,
+    Atom.withLabel("identity-draft:linked-website")
+);
 const pickerOpenAtom = Atom.make(false).pipe(Atom.keepAlive, Atom.withLabel("identity-draft:picker-open"));
 
 const flyUpAtom = Atom.make(() => ({ floatProgress: makeMutable(0), sheetHeight: makeMutable(0) })).pipe(
@@ -102,10 +108,15 @@ export function useIdentityDraft(): IdentityDraftValue {
     return { draft, setDraft };
 }
 
+export function useSetLinkedWebsite(): (logo: MerchantWebsiteLogo) => void {
+    return useAtomSet(linkedWebsiteAtom);
+}
+
 export function useIdentityReads() {
     const registry = use(RegistryContext);
     return {
         draft: () => registry.get(draftAtom),
+        linkedWebsite: () => registry.get(linkedWebsiteAtom),
         pickerOpen: () => registry.get(pickerOpenAtom),
     };
 }

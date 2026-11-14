@@ -20,7 +20,9 @@ import {
     fixedSize,
     font,
     foregroundStyle,
+    frame,
     labelsHidden,
+    lineLimit,
     multilineTextAlignment,
     padding,
     pickerStyle,
@@ -29,12 +31,16 @@ import {
     textCase,
     textInputAutocapitalization,
 } from "@expo/ui/swift-ui/modifiers";
+import Cancel01Icon from "@hugeicons-pro/core-stroke-rounded/Cancel01Icon";
+import Link01Icon from "@hugeicons-pro/core-stroke-rounded/Link01Icon";
+import { HugeiconsIcon } from "@hugeicons/react-native";
 import * as Cause from "effect/Cause";
 import { Image } from "expo-image";
 import { SymbolView } from "expo-symbols";
+import { InputGroup } from "panelui-native/components/input-group";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { PlatformColor, Pressable, useWindowDimensions } from "react-native";
+import { PlatformColor, Pressable, useWindowDimensions, View } from "react-native";
 
 import {
     IDENTITY_TAB_LABEL,
@@ -42,6 +48,7 @@ import {
     TRANSACTION_TABS,
     withEmoji,
     withIcon,
+    withPhoto,
 } from "@/components/identity-picker-shared";
 import type { IdentityPickerContentProps, IdentityTab } from "@/components/identity-picker-shared";
 import {
@@ -53,6 +60,8 @@ import {
     SymbolIconCell,
     symbolCellSize,
 } from "@/components/identity-symbol-cells";
+import { shownLinkStatus, useLinkLogo } from "@/components/use-link-logo";
+import type { LinkStatus } from "@/components/use-link-logo";
 import { CATEGORY_PALETTE } from "@/data/categories-core";
 import { CATEGORY_EMOJI_GROUPS, CATEGORY_ICON_GROUPS, iconKeysMatching } from "@/domain/category-icon-catalog";
 import { useTranslation } from "@/i18n/context";
@@ -91,6 +100,8 @@ const SECTION_LABEL = font({
 const EMPTY_TEXT = font({ design: "rounded", textStyle: "subheadline" });
 const SUBHEADLINE = font({ design: "rounded", textStyle: "subheadline" });
 const CAPTION2 = font({ design: "rounded", textStyle: "caption2" });
+const FOOTNOTE = font({ design: "rounded", textStyle: "footnote", weight: "medium" });
+const FOOTNOTE_STRONG = font({ design: "rounded", textStyle: "footnote", weight: "semibold" });
 
 /** App-icon squircle for the photo well (radius ≈ 0.226 · size, matching the hero). */
 const PHOTO_WELL = 132;
@@ -107,6 +118,7 @@ function IdentityPickerContent({
     usedColors = NO_USED_COLORS,
     showsColorRail = true,
     onDone,
+    onLinkedWebsite,
 }: IdentityPickerContentProps) {
     const { width } = useWindowDimensions();
     const t = useTranslation();
@@ -124,16 +136,23 @@ function IdentityPickerContent({
     const effectiveColor = value.color ?? CATEGORY_PALETTE[0];
     const glyphTint = tint ?? effectiveColor;
 
+    const link = useLinkLogo((logo) => {
+        onChange(withPhoto(value, logo.photoUri, logo.hue === null ? [] : [logo.hue]));
+        onLinkedWebsite?.(logo);
+    });
+
     const pickColor = (color: string) => {
         haptics("selection");
         onChange({ ...value, color });
     };
     const pickEmoji = (emoji: string) => {
         haptics("selection");
+        link.drop();
         onChange(withEmoji(value, emoji));
     };
     const pickIcon = (icon: string) => {
         haptics("selection");
+        link.drop();
         onChange(withIcon(value, icon));
     };
 
@@ -150,6 +169,7 @@ function IdentityPickerContent({
             },
             onSuccess: (next) => {
                 if (next != null) {
+                    link.drop();
                     onChange(next);
                 }
             },
@@ -173,6 +193,7 @@ function IdentityPickerContent({
         panel = (
             <PhotoPanel
                 failed={photoFailed}
+                link={link}
                 onColorChange={(color) => onChange({ ...value, photoColor: color })}
                 onPick={pickPhoto}
                 photoColor={value.photoColor}
@@ -420,10 +441,12 @@ function PhotoPanel({
     uri,
     photoColor,
     failed,
+    link,
     onPick,
     onColorChange,
 }: {
     failed: boolean;
+    link: ReturnType<typeof useLinkLogo>;
     uri: string | null;
     photoColor: string | null;
     onPick: () => void;
@@ -442,13 +465,19 @@ function PhotoPanel({
                     SUBHEADLINE,
                     foregroundStyle(failed ? colors.danger : SECONDARY_LABEL),
                     multilineTextAlignment("center"),
-                    padding({ bottom: 24, top: 10 }),
+                    padding({ bottom: 12, top: 10 }),
                 ]}
             >
                 {failed
                     ? t("alerts.photo.failed")
                     : t(uri ? "transaction.identity.changePhotoPrompt" : "transaction.identity.selectPhotoPrompt")}
             </SwiftText>
+
+            <RNHostView matchContents={{ vertical: true }}>
+                <LinkField link={link} />
+            </RNHostView>
+
+            <LinkStatusLine status={shownLinkStatus(link.status, uri)} />
 
             <VStack alignment="leading" spacing={8}>
                 <SwiftText modifiers={[SECTION_LABEL, textCase("uppercase"), foregroundStyle(SECONDARY_LABEL)]}>
@@ -480,6 +509,88 @@ function PhotoPanel({
                 </HStack>
             </VStack>
         </VStack>
+    );
+}
+
+function LinkField({ link }: { link: ReturnType<typeof useLinkLogo> }) {
+    const t = useTranslation();
+    const colors = useColors();
+    return (
+        <View>
+            <InputGroup>
+                <InputGroup.Prefix className="px-2.5" isDecorative>
+                    <HugeiconsIcon color={colors.muted} icon={Link01Icon} size={16} strokeWidth={2} />
+                </InputGroup.Prefix>
+                <InputGroup.Input
+                    accessibilityLabel={t("transaction.identity.link")}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    clearButtonMode="never"
+                    keyboardType="url"
+                    onChangeText={link.change}
+                    onSubmitEditing={link.submit}
+                    placeholder={t("transaction.identity.link")}
+                    returnKeyType="go"
+                    size="sm"
+                    textContentType="URL"
+                    value={link.text}
+                />
+                {link.text === "" ? null : (
+                    <InputGroup.Suffix className="px-2.5">
+                        <Pressable
+                            accessibilityLabel={t("transaction.identity.linkClear")}
+                            accessibilityRole="button"
+                            hitSlop={{ bottom: 15, left: 10, right: 12, top: 15 }}
+                            onPress={link.clear}
+                        >
+                            <HugeiconsIcon color={colors.muted} icon={Cancel01Icon} size={15} strokeWidth={2} />
+                        </Pressable>
+                    </InputGroup.Suffix>
+                )}
+            </InputGroup>
+        </View>
+    );
+}
+
+/** Always laid out, so the colour row below does not jump as the lookup moves between states. */
+function LinkStatusLine({ status }: { status: LinkStatus }) {
+    const t = useTranslation();
+    const colors = useColors();
+    let line: ReactNode = null;
+    if (status.kind === "checking") {
+        line = (
+            <SwiftText modifiers={[FOOTNOTE, foregroundStyle(SECONDARY_LABEL)]}>
+                {t("transaction.website.checking")}
+            </SwiftText>
+        );
+    } else if (status.kind === "found") {
+        line = (
+            <HStack spacing={6}>
+                <SwiftImage color={colors.income} size={15} systemName="checkmark.circle.fill" />
+                <SwiftText modifiers={[FOOTNOTE_STRONG, foregroundStyle(colors.income)]}>
+                    {t("transaction.website.found")}
+                </SwiftText>
+                <SwiftText modifiers={[FOOTNOTE, foregroundStyle(SECONDARY_LABEL), lineLimit(1)]}>
+                    {`· ${status.domain}`}
+                </SwiftText>
+            </HStack>
+        );
+    } else if (status.kind === "refused" || status.kind === "missing") {
+        line = (
+            <HStack spacing={6}>
+                <SwiftImage color={colors.danger} size={15} systemName="exclamationmark.circle" />
+                <SwiftText modifiers={[FOOTNOTE, foregroundStyle(colors.danger)]}>
+                    {status.kind === "refused"
+                        ? t("transaction.identity.linkRefused", { platform: status.platform })
+                        : t("transaction.website.missing")}
+                </SwiftText>
+            </HStack>
+        );
+    }
+    return (
+        <HStack modifiers={[frame({ alignment: "leading", minHeight: 18 }), padding({ bottom: 22, top: 8 })]}>
+            {line ?? <Spacer />}
+        </HStack>
     );
 }
 
