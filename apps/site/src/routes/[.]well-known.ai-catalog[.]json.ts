@@ -1,7 +1,8 @@
+import { SITE_URL } from "@outlayr/shared/urls";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { LEDGER_SERVER_CARD, SERVER_CARD_TYPE } from "@/lib/mcp";
-import { COMPANY, SITE_URL } from "@/lib/site";
+import { COMPANY } from "@/lib/site";
 
 const CATALOG_TYPE = "application/ai-catalog+json";
 

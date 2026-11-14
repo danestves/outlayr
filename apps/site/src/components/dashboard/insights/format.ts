@@ -1,11 +1,11 @@
 import { wallNoon } from "@outlayr/money/ledger-zone";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKindOf } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 

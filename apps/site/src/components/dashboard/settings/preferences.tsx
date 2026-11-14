@@ -2,18 +2,18 @@ import ArrowRight01Icon from "@hugeicons/core-free-icons/ArrowRight01Icon";
 import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ACCENT_PALETTE } from "@outlayr/money/accent";
+import { chooseConsent, readConsent, subscribeConsent } from "@outlayr/shared/analytics";
+import { LANGUAGES } from "@outlayr/shared/i18n";
+import type { Locale } from "@outlayr/shared/i18n";
+import { chooseTheme, readTheme, subscribeTheme, THEMES } from "@outlayr/shared/theme";
 import { Select } from "panelui-web/select";
 import { useContext, useId, useState, useSyncExternalStore } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { LocalizedLink } from "@/components/localized-link";
 import { chooseAiConsent, useAnyAiConsent } from "@/lib/ai-consent";
-import { chooseConsent, readConsent, subscribeConsent } from "@/lib/analytics";
 import { DASHBOARD_LOCALES, chooseDashboardLocale } from "@/lib/dashboard-locale";
-import { LANGUAGES } from "@/lib/i18n";
-import type { Locale } from "@/lib/i18n";
 import { LedgerSettingsContext, metaFlag, useDisplayFormat, useMeta } from "@/lib/ledger-settings";
-import { chooseTheme, readTheme, subscribeTheme, THEMES } from "@/lib/theme";
 
 import { SuggestDialog } from "./about/suggest";
 import { Choice, Row, SectionHead, SettingsCard, Swatches, ToggleRow, useSaveSettings } from "./parts";

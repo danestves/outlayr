@@ -1,6 +1,7 @@
 import { entryLook } from "@outlayr/money/ledger-log";
 import { wallNoon } from "@outlayr/money/ledger-zone";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { Badge } from "panelui-web/badge";
 import { createContext, useCallback, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
@@ -12,7 +13,6 @@ import type { PhotoUrls } from "@/components/ledger/overview";
 import { LookTile, MerchantTile } from "@/components/ledger/tiles";
 import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 import type { Candidate, RecurringModel, Seed } from "@/lib/recurring";
 

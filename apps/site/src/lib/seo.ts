@@ -1,18 +1,10 @@
+import { LANGUAGES, pageUrl } from "@outlayr/shared/i18n";
+import type { Locale } from "@outlayr/shared/i18n";
+import { APP_STORE_URL, PLAY_STORE_URL, SITE_URL } from "@outlayr/shared/urls";
 import { getIntlayer } from "intlayer";
 import type { JSX } from "react";
 
-import { LANGUAGES, pageUrl } from "./i18n";
-import type { Locale } from "./i18n";
-import {
-    APP_LANGUAGES,
-    APP_STORE_URL,
-    PLAY_STORE_URL,
-    SITE_URL,
-    SOURCE_URL,
-    WIKIDATA_URL,
-    X_URL,
-    legalInForce,
-} from "./site";
+import { APP_LANGUAGES, SOURCE_URL, WIKIDATA_URL, X_URL, legalInForce } from "./site";
 import type { LEGAL_DAYS } from "./site";
 
 type Json = string | number | boolean | null | readonly Json[] | { readonly [key: string]: Json | undefined };

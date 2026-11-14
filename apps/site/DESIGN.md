@@ -18,7 +18,7 @@ below comes from them or from the app's own palette. Do not invent new ones.
 
 ## Color
 
-Tokens live in `src/index.css` and switch on `html[data-theme="dark"]`.
+Tokens live in `packages/shared/src/tokens.css` and switch on `html[data-theme="dark"]`.
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |

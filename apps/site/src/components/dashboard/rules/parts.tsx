@@ -1,10 +1,10 @@
 import { wallNoon } from "@outlayr/money/ledger-zone";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { Badge } from "panelui-web/badge";
 import { useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import type { Condition } from "@/lib/rules";
 
 import { useCategoryName } from "../home/format";

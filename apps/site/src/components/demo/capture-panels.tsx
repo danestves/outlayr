@@ -1,9 +1,8 @@
 import Mic01Icon from "@hugeicons/core-free-icons/Mic01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import type { Locale } from "@outlayr/shared/i18n";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
-
-import type { Locale } from "@/lib/i18n";
 
 import { formatMoney, signedMoney } from "./money";
 import { useNames } from "./use-names";

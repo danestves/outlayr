@@ -1,4 +1,5 @@
 import mono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 
@@ -10,7 +11,6 @@ import { HowItWorks } from "@/components/home/how-it-works";
 import { Pricing } from "@/components/home/pricing";
 import { Problem } from "@/components/home/problem";
 import { Closing, Questions, Tagline } from "@/components/home/questions";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { scanMotion } from "@/lib/motion";
 import { faqPage, ldJson, pageMeta } from "@/lib/seo";
 

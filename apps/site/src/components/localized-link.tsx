@@ -1,8 +1,7 @@
+import { linkPrefix } from "@outlayr/shared/i18n";
 import { Link } from "@tanstack/react-router";
 import type { LinkComponentProps } from "@tanstack/react-router";
 import { useLocale } from "react-intlayer";
-
-import { linkPrefix } from "@/lib/i18n";
 
 const LOCALE_SEGMENT = "/{-$locale}";
 

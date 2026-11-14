@@ -1,5 +1,6 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { ledgerGlance } from "@outlayr/money/ledger-view";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useQuery } from "@tanstack/react-query";
 import {
     Navigate,
@@ -30,7 +31,6 @@ import { accountStateOf, restoreAccountState, useAccountStateStamp, warmAccountS
 import { convexClient } from "@/lib/convex";
 import { readDashboardLocale, serverDashboardLocale, subscribeDashboardLocale } from "@/lib/dashboard-locale";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
-import { LANGUAGES } from "@/lib/i18n";
 import { watchKeyboardInset } from "@/lib/keyboard-inset";
 import type { LedgerBooks } from "@/lib/ledger-books";
 import { dropLedger, forgetLedger, hasLedgerCopy, restoreLedger, saveLedger } from "@/lib/ledger-cache";

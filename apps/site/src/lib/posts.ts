@@ -1,8 +1,7 @@
+import type { Locale } from "@outlayr/shared/i18n";
 import { createServerFn } from "@tanstack/react-start";
 import { allPosts } from "content-collections";
 import type { Post } from "content-collections";
-
-import type { Locale } from "./i18n";
 
 export function postsIn(locale: Locale): Post[] {
     return allPosts

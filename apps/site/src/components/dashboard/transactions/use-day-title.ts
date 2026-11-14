@@ -1,9 +1,9 @@
 import { wallNoon } from "@outlayr/money/ledger-zone";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { addDays } from "@/lib/ledger";
 
 const YEAR = 4;

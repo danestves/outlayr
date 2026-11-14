@@ -1,3 +1,4 @@
+import { LEDGER_MCP_ORIGIN, SITE_URL } from "@outlayr/shared/urls";
 import { toolDefinition } from "@tanstack/ai";
 import { createMCPServer, resourceDefinition } from "@tanstack/ai-mcp/server";
 import * as Effect from "effect/Effect";
@@ -7,7 +8,6 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import llms from "../../public/llms.txt?raw";
 import { PER_YEAR, installmentCost, settleUp, splitBudget, subscriptionCost } from "./calculators";
-import { LEDGER_MCP_ORIGIN, SITE_URL } from "./site";
 
 const PROTOCOL_VERSIONS = ["2026-07-28", "2025-11-25", "2025-06-18", "2025-03-26"] as const;
 const LLMS_URI = `${SITE_URL}/llms.txt`;

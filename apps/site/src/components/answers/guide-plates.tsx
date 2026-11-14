@@ -1,8 +1,8 @@
+import type { Locale } from "@outlayr/shared/i18n";
 import type { ReactNode } from "react";
 import { useLocale } from "react-intlayer";
 
 import { formatMoney } from "@/components/demo/money";
-import type { Locale } from "@/lib/i18n";
 
 const LABEL = "text-muted font-mono text-xs tracking-widest uppercase";
 

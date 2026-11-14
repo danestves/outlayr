@@ -1,3 +1,4 @@
+import type { Locale } from "@outlayr/shared/i18n";
 import { locales } from "intlayer";
 import { expect, it, vi } from "vite-plus/test";
 
@@ -9,7 +10,6 @@ import open from "../content/open.content";
 import site from "../content/site.content";
 import support from "../content/support.content";
 import tools from "../content/tools.content";
-import type { Locale } from "./i18n";
 import { publishedSitePaths } from "./site-paths";
 
 const DICTIONARIES = { about, answers, brand, home, open, site, support, tools };

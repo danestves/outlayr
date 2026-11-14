@@ -1,3 +1,4 @@
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { createFileRoute, notFound, rootRouteId } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -5,7 +6,6 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { Article, CompareTable, DELAYS, FactList, Questions } from "@/components/answers/article";
 import { Icon } from "@/components/icon";
 import { hasKey } from "@/lib/has-key";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { answerTrail, faqPage, ldJson, pageMeta, webPage } from "@/lib/seo";
 import { EXPORTS_CHECKED, compareUpdated, longDate, rivalChecked } from "@/lib/site";
 

@@ -1,9 +1,9 @@
+import { localeFromParam, pageUrl } from "@outlayr/shared/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import { useIntlayer } from "react-intlayer";
 
 import { AnswerHub } from "@/components/answer-hub";
-import { localeFromParam, pageUrl } from "@/lib/i18n";
 import { hubTrail, itemList, ldJson, pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/{-$locale}/compare/")({

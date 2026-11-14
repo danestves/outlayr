@@ -8,6 +8,7 @@ import { api } from "@outlayr/backend/convex/_generated/api";
 import { FREE_CAPTURES, PRO_CAPTURES } from "@outlayr/money/capture-allowance";
 import { TRIAL_REMINDER_LEAD_MS, TRIAL_REMINDERS_FROM_MS } from "@outlayr/money/contract";
 import type { ProPlan } from "@outlayr/money/pro-prices";
+import { SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLoaderData, useRouteContext, useSearch } from "@tanstack/react-router";
 import { Alert } from "panelui-web/alert";
@@ -30,7 +31,6 @@ import { CHECKOUT_CONFIRMED, HELD_STATES, startCheckout } from "@/lib/billing";
 import { convexClient } from "@/lib/convex";
 import { paywallPrices } from "@/lib/pro-prices";
 import { currentToken } from "@/lib/session";
-import { SUPPORT_EMAIL } from "@/lib/site";
 
 const TRIAL_DAYS = 7;
 const DAY_MS = 86_400_000;

@@ -1,3 +1,4 @@
+import { TRANSLATED } from "@outlayr/shared/i18n";
 import { expect, it } from "vite-plus/test";
 
 import about from "../content/about.content";
@@ -14,7 +15,6 @@ import site from "../content/site.content";
 import story from "../content/story.content";
 import support from "../content/support.content";
 import tools from "../content/tools.content";
-import { TRANSLATED } from "./i18n";
 
 const SHELL = [site.content];
 const TOOL = [...SHELL, tools.content.labels, answers.content.labels];

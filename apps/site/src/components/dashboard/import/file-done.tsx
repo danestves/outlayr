@@ -1,5 +1,6 @@
 import UndoIcon from "@hugeicons/core-free-icons/UndoIcon";
 import { countBucket } from "@outlayr/money/count-bucket";
+import { capture } from "@outlayr/shared/analytics";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
@@ -16,7 +17,6 @@ import { KpiBand } from "@/components/dashboard/accounts/parts";
 import { useCategoryLook } from "@/components/dashboard/rules/parts";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { capture } from "@/lib/analytics";
 import { groupKey, repairRow } from "@/lib/import-file";
 import type { FaultyRow, FileRow, StatementCheck } from "@/lib/import-file";
 import { planOf } from "@/lib/import-plan";

@@ -1,3 +1,4 @@
+import { LANGUAGES, localeFromParam, pageUrl } from "@outlayr/shared/i18n";
 import { createFileRoute, notFound, rootRouteId } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import type { ComponentType } from "react";
@@ -12,7 +13,6 @@ import { SplitTool } from "@/components/tools/split-tool";
 import { SubscriptionTool } from "@/components/tools/subscription-tool";
 import { getRates } from "@/lib/get-rates";
 import { hasKey } from "@/lib/has-key";
-import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
 import { RATE_MARKETS } from "@/lib/rates";
 import type { Rate, RateSlug } from "@/lib/rates";
 import { ORGANIZATION_ID, answerTrail, faqPage, ldJson, pageMeta } from "@/lib/seo";

@@ -10,13 +10,12 @@ import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
 import TiktokIcon from "@hugeicons/core-free-icons/TiktokIcon";
 import UserMultipleIcon from "@hugeicons/core-free-icons/UserMultipleIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { capture } from "@outlayr/shared/analytics";
 import { Input } from "panelui-web/input";
 import { Select } from "panelui-web/select";
 import type { Properties } from "posthog-js";
 import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
-
-import { capture } from "@/lib/analytics";
 
 const ICONS = {
     ai_assistant: AiChat02Icon,

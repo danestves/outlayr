@@ -1,8 +1,8 @@
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useLoaderData } from "@tanstack/react-router";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
-import { LANGUAGES } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
 import { proPrices } from "@/lib/pro-prices";
 

@@ -1,3 +1,4 @@
+import { LANGUAGES, isPublished } from "@outlayr/shared/i18n";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -10,7 +11,6 @@ import { LocalizedLink } from "@/components/localized-link";
 import { ASIDE, COLUMNS } from "@/components/page";
 import { StoreBadges } from "@/components/store-badges";
 import { hasKey } from "@/lib/has-key";
-import { LANGUAGES, isPublished } from "@/lib/i18n";
 import { CONTAINER } from "@/lib/layout";
 import { scanMotion } from "@/lib/motion";
 import { useScrollSpy } from "@/lib/scroll-spy";

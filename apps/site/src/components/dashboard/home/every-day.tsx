@@ -1,10 +1,10 @@
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { DayGrid } from "panelui-web/day-grid";
 import { useMemo, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 

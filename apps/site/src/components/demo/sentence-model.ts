@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n";
+import type { Locale } from "@outlayr/shared/i18n";
 
 import type { Currency } from "./money";
 

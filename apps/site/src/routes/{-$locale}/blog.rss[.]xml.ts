@@ -1,11 +1,11 @@
+import { LANGUAGES, localeFromParam, pageUrl } from "@outlayr/shared/i18n";
+import type { Locale } from "@outlayr/shared/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer, validatePrefix } from "intlayer";
 import { createElement } from "react";
 import type { ComponentProps } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { LANGUAGES, localeFromParam, pageUrl } from "@/lib/i18n";
-import type { Locale } from "@/lib/i18n";
 import { postDay, postsIn } from "@/lib/posts";
 
 const XML_SPECIAL = /[&<>"]/gu;

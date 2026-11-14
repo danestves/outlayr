@@ -1,8 +1,9 @@
+import { SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { CONTAINER } from "@/lib/layout";
-import { COMPANY, COMPANY_URL, SOURCE_URL, SUPPORT_EMAIL } from "@/lib/site";
+import { COMPANY, COMPANY_URL, SOURCE_URL } from "@/lib/site";
 
 import { ConsentSwitch } from "./consent-switch";
 import { LanguageSwitch } from "./language-switch";

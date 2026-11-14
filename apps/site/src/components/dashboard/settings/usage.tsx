@@ -1,5 +1,6 @@
 import { formatWait, projectLimit } from "@outlayr/money/limit-projection";
 import { earnedThisYear } from "@outlayr/money/referrals";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { Kpi } from "panelui-web/kpi";
 import { Table } from "panelui-web/table";
@@ -9,7 +10,6 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { Skeleton } from "skullet/react";
 
 import { limitsQuery, referralsQuery } from "@/lib/account-state";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 
 import { SectionHead, SettingsCard } from "./parts";
 

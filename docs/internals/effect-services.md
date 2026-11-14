@@ -166,4 +166,4 @@ const purchaseCommand = createRuntimeCommand(appRuntime, {
 
 - A handler TanStack Start or Nitro requires to return a `Response` or a promise is an `Effect.fn` program run with `Effect.runPromise` at that edge (`server.ts`, `routes/a2a.ts`, `routes/mcp.ts`). A body read is `readJsonBody`, which fails with `RequestBodyError`.
 - Browser-only work started from React (`startAnalytics`) is an `Effect.fn` run with `Effect.runFork` from the one effect that owns it.
-- A DOM subscription is a shared helper, not an effect per component: `useSyncExternalStore` for stores (`lib/theme.ts`, `lib/reduced-motion.ts`), a ref callback that returns its cleanup for an observer on the element itself (`lib/in-view.ts`, `lib/motion.ts`), `useScrollSpy` for elements found by id, `useTimeout` for a delay.
+- A DOM subscription is a shared helper, not an effect per component: `useSyncExternalStore` for stores (`@outlayr/shared/theme`, `lib/reduced-motion.ts`), a ref callback that returns its cleanup for an observer on the element itself (`lib/in-view.ts`, `lib/motion.ts`), `useScrollSpy` for elements found by id, `useTimeout` for a delay.

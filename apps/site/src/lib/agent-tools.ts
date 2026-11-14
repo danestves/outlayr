@@ -1,11 +1,11 @@
+import { isPublished, pageUrl } from "@outlayr/shared/i18n";
+import type { Locale } from "@outlayr/shared/i18n";
 import type { useRouter } from "@tanstack/react-router";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { getIntlayer, getLocalizedUrl } from "intlayer";
 
 import { fold } from "./fold";
-import { isPublished, pageUrl } from "./i18n";
-import type { Locale } from "./i18n";
 
 export interface SitePage {
     description?: string;

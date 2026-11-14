@@ -1,6 +1,5 @@
+import { LEDGER_MCP_ORIGIN } from "@outlayr/shared/urls";
 import { createFileRoute } from "@tanstack/react-router";
-
-import { LEDGER_MCP_ORIGIN } from "@/lib/site";
 
 import authMd from "../../content/auth.md?raw";
 

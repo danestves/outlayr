@@ -1,10 +1,10 @@
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Page } from "@/components/page";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { getOpenStats } from "@/lib/open-stats";
 import type { OpenStats } from "@/lib/open-stats";
 import { ldJson, pageMeta, webPage } from "@/lib/seo";

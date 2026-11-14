@@ -1,0 +1,32 @@
+{
+    "name": "@outlayr/shared",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        "./analytics": "./src/analytics.ts",
+        "./consent-banner": "./src/consent-banner.tsx",
+        "./exception-noise": "./src/exception-noise.ts",
+        "./i18n": "./src/i18n.ts",
+        "./theme": "./src/theme.ts",
+        "./tokens.css": "./src/tokens.css",
+        "./urls": "./src/urls.ts"
+    },
+    "scripts": {
+        "check-types": "tsc --noEmit",
+        "test": "vp test run"
+    },
+    "dependencies": {
+        "effect": "catalog:",
+        "intlayer": "catalog:",
+        "posthog-js": "^1.440.0",
+        "react": "19.3.1"
+    },
+    "devDependencies": {
+        "@outlayr/config": "workspace:*",
+        "@types/node": "^26.6.5",
+        "@types/react": "^19.2.18",
+        "typescript": "catalog:",
+        "vite": "catalog:"
+    }
+}

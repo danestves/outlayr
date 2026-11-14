@@ -1,3 +1,6 @@
+import { capture } from "@outlayr/shared/analytics";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
 import { useId, useState } from "react";
@@ -5,11 +8,8 @@ import { useIntlayer } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
 import { Page } from "@/components/page";
-import { capture } from "@/lib/analytics";
 import { fold } from "@/lib/fold";
-import { LANGUAGES, localeFromParam } from "@/lib/i18n";
 import { faqPage, ldJson, pageMeta } from "@/lib/seo";
-import { SUPPORT_EMAIL } from "@/lib/site";
 
 export const Route = createFileRoute("/{-$locale}/support")({
     component: Support,
