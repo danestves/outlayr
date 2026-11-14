@@ -45,6 +45,7 @@ describe("public MCP server", () => {
             "subscription_cost",
             "installment_cost",
             "split_expenses",
+            "loan_cost",
         ]);
 
         const about = await callTool("about_outlayr", {});
