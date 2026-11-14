@@ -28,6 +28,9 @@ const ANALYTICS_TOKEN = import.meta.env.PROD ? ENV.VITE_PUBLIC_POSTHOG_PROJECT_T
 
 const visitorCountry = createServerFn({ method: "GET" }).handler(() => getRequestHeader("cf-ipcountry") ?? null);
 
+const WEBMCP_ORIGIN_TRIAL_TOKEN =
+    "AmXsqnUfQanGf2Z3U7kIUNIS15/9h0sdWrJfGJ1okqWUu4XO/D5tck+LGejaRD+S9FRKDutkkQFKZLMHpR5KTgoAAABOeyJvcmlnaW4iOiJodHRwczovL3RyeW91dGxheXIuY29tOjQ0MyIsImZlYXR1cmUiOiJXZWJNQ1AiLCJleHBpcnkiOjE4MDYzNjQ4MDB9";
+
 const ORGANIZATION_NOTE = `Outlayr is an expense tracker app made by ${COMPANY}. It is not affiliated with Outlayr, Inc., a payments company at outlayr.com.`;
 
 function siteGraph(locale: Locale) {
@@ -147,6 +150,7 @@ export const Route = createRootRoute({
             meta: [
                 { charSet: "utf-8" },
                 { content: "width=device-width, initial-scale=1", name: "viewport" },
+                { content: WEBMCP_ORIGIN_TRIAL_TOKEN, httpEquiv: "origin-trial" },
                 ...(found ? [] : [{ title: `${notFound.meta} · Outlayr` }]),
                 { content: "max-image-preview:large", name: "robots" },
                 { content: "#ffffff", name: "theme-color" },
