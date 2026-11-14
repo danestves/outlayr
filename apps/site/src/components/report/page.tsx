@@ -1,22 +1,21 @@
 import Unlink01Icon from "@hugeicons/core-free-icons/Unlink01Icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { wallNoon } from "@outlayr/money/ledger-zone";
 import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { Button } from "panelui-web/button";
 import { useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
-import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { LocalizedLink } from "@/components/localized-link";
 import { LogoMark } from "@/components/logo-mark";
-import { money } from "@/lib/ledger";
+import { reportOf } from "@/lib/report/model";
+import type { Measure, SharedReport } from "@/lib/report/model";
+import { money } from "@/lib/report/money";
+import { monthsOf, reportWords } from "@/lib/report/reading";
+import type { Reading } from "@/lib/report/reading";
 
 import { ReportCard, reportFigures, riseFigure } from "./card";
 import type { Figure } from "./card";
-import type { Measure } from "./model";
-import { monthsOf, reportWords } from "./reading";
-import type { Reading } from "./reading";
-import { reportOf } from "./share";
-import type { SharedReport } from "./share";
 
 const COLUMN = "mx-auto w-full max-w-[1192px] px-4";
 
@@ -27,7 +26,7 @@ const datedLocale = (locale: string) => {
 };
 
 function useSharedReading({ currency, unit }: Pick<SharedReport, "currency" | "unit">): Reading {
-    const copy = useIntlayer("dashboard-insights-reports");
+    const { report: copy } = useIntlayer("shared-report");
     const { locale } = useLocale();
     return useMemo(() => {
         const dated = datedLocale(locale);
@@ -37,16 +36,14 @@ function useSharedReading({ currency, unit }: Pick<SharedReport, "currency" | "u
         const share = new Intl.NumberFormat(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
         const percent = unit === "percent";
         const words = reportWords({
-            categoryName: ({ name }) => name,
             copy,
             fmt: {
                 axis: (value) => (percent ? `${value}%` : compact.format(value).toLowerCase()),
                 date: (day) => monthDay.format(wallNoon(day)).replace(".", ""),
                 month: (key) => shortMonth.format(wallNoon(`${key}-15`)),
-                whole: (value) => money(value, currency, "auto", false),
+                whole: (value) => money(value, currency),
             },
             locale,
-            uncategorized: "",
         });
         return percent
             ? { ...words, measureValue: (_measure: Measure, value: number) => `${share.format(value)}%` }
@@ -97,7 +94,7 @@ export function SharedReportPage({ shared, updatedAt }: { shared: SharedReport; 
               },
               riseFigure({ definition, report, words }),
           ]
-        : reportFigures({ definition, empty: false, report, words });
+        : reportFigures({ definition, report, words });
     const subtitle = [
         copy.measures[definition.measure].value,
         words.rowsBy(definition),
@@ -119,7 +116,7 @@ export function SharedReportPage({ shared, updatedAt }: { shared: SharedReport; 
                         {page.updated({ date })}
                     </span>
                 </div>
-                <ReportCard averages definition={definition} figures={figures} report={report} words={words} />
+                <ReportCard definition={definition} figures={figures} report={report} words={words} />
                 <footer className="text-muted-foreground flex flex-col gap-1.5 pt-4 pb-8 text-[13px] sm:flex-row sm:items-center sm:justify-between sm:pt-5">
                     <span>{page.footer({ date })}</span>
                     <LocalizedLink className="text-app-tint font-medium" to="/">
@@ -137,7 +134,7 @@ export function SharedReportOff() {
         <div className="app-shell flex min-h-dvh flex-col">
             <TopBar />
             <main className="flex flex-1 flex-col items-center justify-center px-4 pb-16 text-center" id="main">
-                <Glyph className="text-muted-foreground mb-4" icon={Unlink01Icon} size={32} />
+                <HugeiconsIcon className="text-muted-foreground mb-4" icon={Unlink01Icon} size={32} strokeWidth={1.5} />
                 <h1 className="text-2xl leading-8 font-semibold tracking-[-0.02em]">{off.title}</h1>
                 <p className="text-muted-foreground mt-1 mb-5">{off.body}</p>
                 <Button render={<LocalizedLink to="/" />} variant="outline">

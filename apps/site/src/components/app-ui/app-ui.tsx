@@ -30,7 +30,7 @@ function Logo({ name }: { name: string }) {
                 className="light-only size-full"
                 height={52}
                 loading="lazy"
-                src={`/app/logos/${name}.webp`}
+                src={`/media/logos/${name}.webp`}
                 width={52}
             />
             <img
@@ -38,7 +38,7 @@ function Logo({ name }: { name: string }) {
                 className="dark-only size-full"
                 height={52}
                 loading="lazy"
-                src={`/app/logos/${name}-dark.webp`}
+                src={`/media/logos/${name}-dark.webp`}
                 width={52}
             />
         </span>
