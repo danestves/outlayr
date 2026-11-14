@@ -17,7 +17,7 @@ describe("billing", () => {
     it("sends a web subscription to the plan page, since Stripe has no store account to manage it", () => {
         expect(billing({ expiresAtMs: 1, familyShared: false, store: "STRIPE" })).toStrictEqual({
             kind: "subscription",
-            manageUrl: "https://tryoutlayr.com/app/settings/plan",
+            manageUrl: "https://app.tryoutlayr.com/settings/plan",
             renewsAtMs: 1,
             storeName: "Stripe",
         });

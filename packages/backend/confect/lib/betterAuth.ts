@@ -25,8 +25,8 @@ import { AppleLifecycleError, appleCredentialLifecycle } from "./providerLifecyc
 import { runEdge, runEdgeSync } from "./runEdge";
 import { sha256Hex } from "./sha256Hex";
 
-function allowedHosts(siteUrl: string, convexSiteUrl: Option.Option<string>) {
-    return [...new Set([siteUrl, ...Option.toArray(convexSiteUrl)].map((url) => new URL(url).host))];
+function allowedHosts(webOrigins: readonly string[], convexSiteUrl: Option.Option<string>) {
+    return [...new Set([...webOrigins, ...Option.toArray(convexSiteUrl)].map((url) => new URL(url).host))];
 }
 
 const LONGEST_COOKIE_MAX_AGE_SECONDS = 400 * 24 * 60 * 60;
@@ -109,6 +109,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         nativeAppUrl,
         notion: notionConfig,
         siteUrl,
+        webOrigins,
     } = runEdgeSync(authSettings);
 
     const recordMail = (name: "claimWelcome" | "rememberLanguage", userId: string, headers: Headers | undefined) =>
@@ -129,7 +130,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         },
         advanced: { trustedProxyHeaders: true },
         baseURL: {
-            allowedHosts: allowedHosts(siteUrl, convexSiteUrl),
+            allowedHosts: allowedHosts(webOrigins, convexSiteUrl),
             fallback: siteUrl,
             protocol: new URL(siteUrl).protocol === "http:" ? "http" : "https",
         },
@@ -312,7 +313,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
                 enabled: Option.isSome(notionConfig),
             },
         },
-        trustedOrigins: [siteUrl, nativeAppUrl, "exp://", "https://appleid.apple.com"],
+        trustedOrigins: [...webOrigins, nativeAppUrl, "exp://", "https://appleid.apple.com"],
         user: {
             deleteUser: {
                 enabled: false,

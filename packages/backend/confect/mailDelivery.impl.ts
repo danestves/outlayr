@@ -86,7 +86,7 @@ const sendTrialReminder = FunctionImpl.make(
             if (term.state !== "trial" || term.store !== "stripe" || chargeAtMs === null) {
                 return null;
             }
-            const manageUrl = `${yield* siteUrl}/app/settings/plan`;
+            const manageUrl = `${yield* siteUrl}/settings/plan`;
             const catalog =
                 term.productId === null
                     ? null
