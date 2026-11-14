@@ -1,6 +1,6 @@
 import type { useIntlayer } from "react-intlayer";
 
-import type { Column, Definition, Grouping, Label, Measure, Span } from "./model";
+import type { Arrangement, Column, Grouping, Measure, Span } from "./model";
 
 const MONTH_KEY_LENGTH = 7;
 
@@ -14,44 +14,20 @@ export const monthsOf = (columns: readonly Column[], fallback: string): Span => 
     to: columns.at(-1)?.to.slice(0, MONTH_KEY_LENGTH) ?? fallback,
 });
 
-/** The formats a report needs to be read; the dashboard hands in its fuller set. */
-export interface ReadingFormat {
+interface ReadingFormat {
     axis: (value: number) => string;
     date: (day: string) => string;
     month: (key: string) => string;
     whole: (value: number) => string;
 }
 
-interface WordsInput<Format extends ReadingFormat> {
-    categoryName: (category: { id: string; name: string }) => string;
-    copy: ReturnType<typeof useIntlayer<"dashboard-insights-reports">>;
-    fmt: Format;
+interface WordsInput {
+    copy: ReturnType<typeof useIntlayer<"shared-report">>["report"];
+    fmt: ReadingFormat;
     locale: string;
-    uncategorized: string;
 }
 
-export function reportWords<Format extends ReadingFormat>({
-    categoryName,
-    copy,
-    fmt,
-    locale,
-    uncategorized,
-}: WordsInput<Format>) {
-    const rowName = (label: Label, kind: Definition["rows"]) => {
-        switch (label.special) {
-            case "uncategorized": {
-                return uncategorized;
-            }
-            case null: {
-                return kind === "category" || kind === "subcategory"
-                    ? categoryName({ id: label.id, name: label.name })
-                    : label.name;
-            }
-            default: {
-                return copy.specials[label.special].value;
-            }
-        }
-    };
+export function reportWords({ copy, fmt, locale }: WordsInput) {
     const monthYear = (key: string) => `${fmt.month(key)} ${yearOf(key)}`;
     const columnName = (grouping: Grouping, column: Column, columns: readonly Column[]) => {
         const suffix = crossesYears(columns) ? ` ${yearOf(column.from).slice(2)}` : "";
@@ -90,27 +66,17 @@ export function reportWords<Format extends ReadingFormat>({
     return {
         columnName,
         copy,
-        crossesYears,
         fmt,
         measureValue,
         rangeName,
-        rowName,
-        rowsBy: (definition: Pick<Definition, "columns" | "rows">) =>
+        rowsBy: (definition: Pick<Arrangement, "columns" | "rows">) =>
             definition.columns === "none"
                 ? copy.dimensions[definition.rows].value
                 : copy.rowsBy({
                       columns: copy.groupings[definition.columns].name.value.toLocaleLowerCase(),
                       rows: copy.dimensions[definition.rows].value,
                   }).value,
-        title: (definition: Pick<Definition, "columns" | "rows">) =>
-            definition.columns === "none"
-                ? copy.dimensions[definition.rows].value
-                : copy.by({
-                      columns: copy.groupings[definition.columns].name.value,
-                      rows: copy.dimensions[definition.rows].value.toLocaleLowerCase(),
-                  }).value,
     };
 }
 
-/** What the chart and the table need, so a report can be read outside the dashboard. */
-export type Reading = ReturnType<typeof reportWords<ReadingFormat>>;
+export type Reading = ReturnType<typeof reportWords>;

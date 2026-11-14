@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 const BEZEL = {
     sizes: "(min-width: 40rem) 320px, 224px",
-    src: "/app/iphone.webp",
-    srcSet: "/app/iphone-500.webp 500w, /app/iphone.webp 1000w",
+    src: "/media/iphone.webp",
+    srcSet: "/media/iphone-500.webp 500w, /media/iphone.webp 1000w",
 };
 export function Phone({
     children,

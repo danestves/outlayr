@@ -1,7 +1,7 @@
 import { Table } from "panelui-web/table";
 
-import type { Dimension, Grouping, Report, ReportRow } from "./model";
-import type { Reading } from "./reading";
+import type { Dimension, Grouping, Report, ReportRow } from "@/lib/report/model";
+import type { Reading } from "@/lib/report/reading";
 
 const HEAT_FLOOR = 6;
 const HEAT_RANGE = 44;
@@ -36,17 +36,16 @@ function toneOf(change: number, measure: Report["measure"]) {
 }
 
 interface PivotProps {
-    averages: boolean;
     grouping: Grouping;
     kind: Dimension;
     report: Report;
     words: Reading;
 }
 
-export function Pivot({ averages, grouping, kind, report, words }: PivotProps) {
+export function Pivot({ grouping, kind, report, words }: PivotProps) {
     const { copy } = words;
     const { columns, measure, rows, totals } = report;
-    const compare = averages && totals.change !== null;
+    const compare = totals.change !== null;
     const last = columns.at(-1);
     const show = (value: number) => words.measureValue(measure, value);
     const cells = (row: ReportRow, tinted: boolean) => {
@@ -64,7 +63,7 @@ export function Pivot({ averages, grouping, kind, report, words }: PivotProps) {
         ));
     };
     const trailing = (row: ReportRow, strong: boolean) =>
-        averages && grouping !== "none" ? (
+        grouping === "none" ? null : (
             <>
                 <Table.Cell align="end" className={`${CELL} ${strong ? "" : "text-muted-foreground"}`}>
                     {show(row.average)}
@@ -78,7 +77,7 @@ export function Pivot({ averages, grouping, kind, report, words }: PivotProps) {
                     </Table.Cell>
                 ) : null}
             </>
-        ) : null;
+        );
     return (
         <Table className="w-full min-w-max" containerClassName="overflow-x-auto" maxHeight="none">
             <Table.Header>
@@ -89,7 +88,7 @@ export function Pivot({ averages, grouping, kind, report, words }: PivotProps) {
                             {words.columnName(grouping, column, columns)}
                         </Table.Head>
                     ))}
-                    {averages && grouping !== "none" ? (
+                    {grouping === "none" ? null : (
                         <>
                             <Table.Head align="end" className={HEAD}>
                                 {copy.table.average}
@@ -100,7 +99,7 @@ export function Pivot({ averages, grouping, kind, report, words }: PivotProps) {
                                 </Table.Head>
                             ) : null}
                         </>
-                    ) : null}
+                    )}
                 </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -113,7 +112,7 @@ export function Pivot({ averages, grouping, kind, report, words }: PivotProps) {
                                     className="size-2 shrink-0 rounded-full"
                                     style={{ background: row.label.color ?? "currentColor" }}
                                 />
-                                {words.rowName(row.label, kind)}
+                                {row.label.name}
                             </span>
                         </Table.Cell>
                         {cells(row, columns.length > 1)}

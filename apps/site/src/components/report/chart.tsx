@@ -1,10 +1,9 @@
 import { useMemo, useState } from "react";
 
-import { axisOf } from "../overview/model";
-import { Swatch } from "../parts";
-import { useBox } from "../use-box";
-import type { Dimension, Grouping, Report } from "./model";
-import type { Reading } from "./reading";
+import type { Grouping, Report } from "@/lib/report/model";
+import type { Reading } from "@/lib/report/reading";
+
+import { useBox } from "./use-box";
 
 const HEIGHT = 330;
 const SMALL_HEIGHT = 240;
@@ -21,8 +20,27 @@ const SMALL_TOTAL_SLOT = 52;
 const MIN_LABEL_SLOT = 40;
 const UNMEASURED = { height: 0, width: 872 };
 const FIGURE = "dash-figure";
+const AXIS_ROWS = 4;
+const STEPS = [1, 2, 2.5, 5, 10];
+const HEADROOM = 1.1;
 
-export function Legend({ kind, report, words }: { kind: Dimension; report: Report; words: Reading }) {
+/**
+ * A y-axis ruled on round figures. `top` ends on a rule; `roomy` adds headroom in half
+ * steps, so a tag above the highest point stays inside the plot.
+ */
+function axisOf(max: number) {
+    if (max <= 0) {
+        return { roomy: AXIS_ROWS, rows: AXIS_ROWS, step: 1, top: AXIS_ROWS };
+    }
+    const rough = max / AXIS_ROWS;
+    const magnitude = 10 ** Math.floor(Math.log10(rough));
+    const step = (STEPS.find((each) => each * magnitude >= rough) ?? 10) * magnitude;
+    const rows = Math.max(Math.ceil(max / step), 1);
+    const half = step / 2;
+    return { roomy: Math.ceil((max * HEADROOM) / half) * half, rows, step, top: rows * step };
+}
+
+export function Legend({ report }: { report: Report }) {
     if (report.measure === "net" || report.measure === "average") {
         return null;
     }
@@ -35,7 +53,7 @@ export function Legend({ kind, report, words }: { kind: Dimension; report: Repor
                         className="size-2 shrink-0 rounded-[2px]"
                         style={{ background: label.color ?? "currentColor" }}
                     />
-                    {words.rowName(label, kind)}
+                    {label.name}
                 </li>
             ))}
         </ul>
@@ -43,18 +61,15 @@ export function Legend({ kind, report, words }: { kind: Dimension; report: Repor
 }
 
 interface ChartProps {
-    fixedWidth?: number;
     grouping: Grouping;
-    kind: Dimension;
     label: string;
     report: Report;
     words: Reading;
 }
 
 /** Stacked columns when the measure adds up across rows; a single column per period when it cannot. */
-export function Chart({ fixedWidth, grouping, kind, label, report, words }: ChartProps) {
-    const [holder, { width: measured }] = useBox(UNMEASURED);
-    const width = fixedWidth ?? measured;
+export function Chart({ grouping, label, report, words }: ChartProps) {
+    const [holder, { width }] = useBox(UNMEASURED);
     const small = width < SMALL_WIDTH;
     const height = small ? SMALL_HEIGHT : HEIGHT;
     const [hovered, setHovered] = useState<number | null>(null);
@@ -192,8 +207,12 @@ export function Chart({ fixedWidth, grouping, kind, label, report, words }: Char
                               .filter((row) => (row.values[hovered] ?? 0) > 0)
                               .map(({ label: row, values }) => (
                                   <div className="flex items-center gap-2 py-0.5" key={row.id}>
-                                      <Swatch color={row.color ?? "currentColor"} />
-                                      <span className="min-w-0 flex-1 truncate">{words.rowName(row, kind)}</span>
+                                      <span
+                                          aria-hidden
+                                          className="size-2.5 shrink-0 rounded-[3px]"
+                                          style={{ background: row.color ?? "currentColor" }}
+                                      />
+                                      <span className="min-w-0 flex-1 truncate">{row.name}</span>
                                       <span className="dash-figure">{show(values[hovered] ?? 0)}</span>
                                   </div>
                               ))

@@ -29,9 +29,9 @@ const A_YEAR = { headers: { "cache-control": "public, max-age=31536000" } };
 const PUBLIC_FILE_RULES = {
     // Every file under /assets is content-hashed by Vite, so a URL never changes meaning.
     "/assets/**": { headers: { "cache-control": "public, max-age=31536000, immutable" } },
-    "/app/iphone.webp": A_YEAR,
-    "/app/iphone-500.webp": A_YEAR,
-    "/app/logos/**": A_YEAR,
+    "/media/iphone.webp": A_YEAR,
+    "/media/iphone-500.webp": A_YEAR,
+    "/media/logos/**": A_YEAR,
     "/apple-touch-icon.png": A_DAY,
     "/brand-kit/**": A_DAY,
     "/badges/**": A_YEAR,
