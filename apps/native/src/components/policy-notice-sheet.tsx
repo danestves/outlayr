@@ -160,7 +160,13 @@ export function PolicyNoticeSheet() {
                             </Button>
                         ))}
                     </View>
-                    <Button className="mt-2.5 rounded-full" fullWidth onPress={acknowledge} size="md" variant="ghost">
+                    <Button
+                        className="android:mb-safe mt-2.5 rounded-full"
+                        fullWidth
+                        onPress={acknowledge}
+                        size="md"
+                        variant="ghost"
+                    >
                         {t("policyNotice.ok")}
                     </Button>
                 </BottomSheet.Content>
