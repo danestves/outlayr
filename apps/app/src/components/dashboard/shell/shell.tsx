@@ -1,3 +1,4 @@
+import { NavRail } from "panelui-web/nav-rail";
 import type { ReactNode } from "react";
 
 import { accentCss } from "@/lib/accent";
@@ -12,7 +13,7 @@ const SCROLL_KEYS = new Set(["ArrowDown", "ArrowUp", "End", "Home", "PageDown", 
 
 function forwardScrollKeys(content: HTMLDivElement | null) {
     const forward = (event: KeyboardEvent) => {
-        if (SCROLL_KEYS.has(event.key) && document.activeElement?.matches("body, nav a")) {
+        if (!event.defaultPrevented && SCROLL_KEYS.has(event.key) && document.activeElement?.matches("body, nav a")) {
             content?.focus({ preventScroll: true });
         }
     };
@@ -37,7 +38,11 @@ export function DashboardShell({ bare = false, children }: { bare?: boolean; chi
     return (
         <LedgerSettingsContext value={settings}>
             <style>{accentCss(settings.accent)}</style>
-            <div className="app-shell ph-no-capture flex h-dvh">
+            <NavRail.Provider
+                className="app-shell ph-no-capture h-dvh min-h-0"
+                mobileBreakpoint="64rem"
+                storageKey="outlayr-nav-rail"
+            >
                 <Sidebar />
                 <div
                     className="min-w-0 flex-1 [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto overscroll-contain outline-none"
@@ -50,7 +55,7 @@ export function DashboardShell({ bare = false, children }: { bare?: boolean; chi
                         {children}
                     </FlowRoot>
                 </div>
-            </div>
+            </NavRail.Provider>
         </LedgerSettingsContext>
     );
 }

@@ -1,5 +1,6 @@
 import Analytics01Icon from "@hugeicons/core-free-icons/Analytics01Icon";
 import CalendarCheckIn01Icon from "@hugeicons/core-free-icons/CalendarCheckIn01Icon";
+import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import CreditCardIcon from "@hugeicons/core-free-icons/CreditCardIcon";
 import DashboardSquare01Icon from "@hugeicons/core-free-icons/DashboardSquare01Icon";
 import Flag02Icon from "@hugeicons/core-free-icons/Flag02Icon";
@@ -8,208 +9,119 @@ import MagicWand01Icon from "@hugeicons/core-free-icons/MagicWand01Icon";
 import PieChartIcon from "@hugeicons/core-free-icons/PieChartIcon";
 import RepeatIcon from "@hugeicons/core-free-icons/RepeatIcon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
-import SidebarLeftIcon from "@hugeicons/core-free-icons/SidebarLeftIcon";
 import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
 import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
-import { Link } from "@tanstack/react-router";
-import { Button } from "panelui-web/button";
-import { Tooltip } from "panelui-web/tooltip";
-import { useSyncExternalStore } from "react";
-import type { ReactElement } from "react";
+import { Link, useLocation } from "@tanstack/react-router";
+import { NavRail, useNavRail } from "panelui-web/nav-rail";
 import { useIntlayer } from "react-intlayer";
 
 import { LogoMark } from "@/components/logo-mark";
 
 import { UserMenu } from "./account-menu";
 
-const COLLAPSED_KEY = "outlayr-sidebar-collapsed";
-const listeners = new Set<() => void>();
+type Path =
+    | "/"
+    | "/accounts"
+    | "/budgets"
+    | "/debts"
+    | "/goals"
+    | "/import"
+    | "/installments"
+    | "/insights"
+    | "/recurring"
+    | "/rules"
+    | "/transactions";
 
-function storedCollapsed() {
-    try {
-        return localStorage.getItem(COLLAPSED_KEY) === "1";
-    } catch {
-        return false;
-    }
-}
-
-function subscribeCollapsed(listener: () => void) {
-    listeners.add(listener);
-    return () => {
-        listeners.delete(listener);
-    };
-}
-
-function toggleCollapsed() {
-    try {
-        localStorage.setItem(COLLAPSED_KEY, storedCollapsed() ? "0" : "1");
-    } catch {
-        return;
-    }
-    for (const listener of listeners) {
-        listener();
-    }
-}
-
-interface NavProps {
-    collapsed: boolean;
-    icon: IconSvgElement;
-    label: string;
-}
-
-function RailTip({ children, label }: { children: ReactElement; label: string }) {
+function Destination({ icon, label, to }: { icon: IconSvgElement; label: string; to: Path }) {
+    const active = useLocation({
+        select: ({ pathname }) => (to === "/" ? pathname === "/" : pathname === to || pathname.startsWith(`${to}/`)),
+    });
     return (
-        <Tooltip>
-            <Tooltip.Trigger render={children} />
-            <Tooltip.Content side="right" sideOffset={10} variant="outline">
-                {label}
-            </Tooltip.Content>
-        </Tooltip>
-    );
-}
-
-function NavLink({
-    collapsed,
-    exact,
-    icon,
-    label,
-    to,
-}: NavProps & {
-    exact?: boolean;
-    to:
-        | "/"
-        | "/accounts"
-        | "/budgets"
-        | "/debts"
-        | "/goals"
-        | "/import"
-        | "/installments"
-        | "/insights"
-        | "/recurring"
-        | "/rules"
-        | "/transactions";
-}) {
-    const item = (
-        <Link activeOptions={{ exact, includeSearch: false }} className="dash-nav" to={to}>
-            <HugeiconsIcon className="shrink-0" icon={icon} size={17} strokeWidth={1.5} />
-            {collapsed ? <span className="sr-only">{label}</span> : label}
-        </Link>
-    );
-    return collapsed ? <RailTip label={label}>{item}</RailTip> : item;
-}
-
-export function SearchButton({ collapsed = false }: { collapsed?: boolean }) {
-    const { nav } = useIntlayer("dashboard");
-    if (collapsed) {
-        return (
-            <RailTip label={nav.search.value}>
-                <Button
-                    aria-disabled
-                    aria-label={nav.search.value}
-                    className="text-muted-foreground"
-                    size="icon"
-                    variant="ghost"
-                >
-                    <HugeiconsIcon icon={Search01Icon} size={17} strokeWidth={1.5} />
-                </Button>
-            </RailTip>
-        );
-    }
-    return (
-        <Button
-            aria-disabled
-            className="text-muted-foreground mb-1 w-full shrink-0 justify-start gap-2 px-3 font-normal"
-            variant="outline"
+        <NavRail.Item
+            active={active}
+            href={to}
+            icon={<HugeiconsIcon icon={icon} size={18} strokeWidth={1.5} />}
+            render={<Link to={to} />}
         >
-            <HugeiconsIcon icon={Search01Icon} size={16} strokeWidth={1.5} />
+            {label}
+        </NavRail.Item>
+    );
+}
+
+function Search() {
+    const { nav } = useIntlayer("dashboard");
+    return (
+        <NavRail.Item
+            aria-disabled
+            className="[&_[data-slot=nav-rail-label]]:flex [&_[data-slot=nav-rail-label]]:items-center"
+            icon={<HugeiconsIcon icon={Search01Icon} size={18} strokeWidth={1.5} />}
+            label={nav.search.value}
+        >
             {nav.search}
             <kbd className="border-border bg-app-fill ml-auto rounded-[4px] border px-1.5 font-mono text-xs leading-4 pointer-coarse:hidden">
                 ⌘K
             </kbd>
-        </Button>
+        </NavRail.Item>
     );
 }
 
-export function NavLinks({ collapsed }: { collapsed: boolean }) {
+function Fold() {
     const { nav } = useIntlayer("dashboard");
-    const group = (label: string) =>
-        collapsed ? (
-            <div className="border-app-strong mx-2 my-1.5 border-t" />
-        ) : (
-            <div className="text-muted-foreground px-2.5 pt-3 pb-1 text-xs leading-4 [.dash-drawer_&]:pt-2">
-                {label}
-            </div>
-        );
+    const { mobile } = useNavRail();
     return (
-        <>
-            {group(nav.label.value)}
-            <NavLink collapsed={collapsed} exact icon={DashboardSquare01Icon} label={nav.dashboard.value} to="/" />
-            <NavLink
-                collapsed={collapsed}
-                icon={TransactionHistoryIcon}
-                label={nav.transactions.value}
-                to="/transactions"
-            />
-            <NavLink collapsed={collapsed} icon={CreditCardIcon} label={nav.accounts.value} to="/accounts" />
-            <NavLink collapsed={collapsed} icon={Analytics01Icon} label={nav.insights.value} to="/insights" />
-            {group(nav.plan.value)}
-            <NavLink collapsed={collapsed} icon={PieChartIcon} label={nav.budgets.value} to="/budgets" />
-            <NavLink collapsed={collapsed} icon={Flag02Icon} label={nav.goals.value} to="/goals" />
-            <NavLink collapsed={collapsed} icon={RepeatIcon} label={nav.recurring.value} to="/recurring" />
-            <NavLink collapsed={collapsed} icon={HandCoinsIcon} label={nav.debts.value} to="/debts" />
-            <NavLink
-                collapsed={collapsed}
-                icon={CalendarCheckIn01Icon}
-                label={nav.installments.value}
-                to="/installments"
-            />
-            {group(nav.tools.value)}
-            <NavLink collapsed={collapsed} icon={Upload04Icon} label={nav.import.value} to="/import" />
-            <NavLink collapsed={collapsed} icon={MagicWand01Icon} label={nav.rules.value} to="/rules" />
-        </>
+        <NavRail.Trigger collapseLabel={mobile ? nav.close.value : nav.collapse.value} expandLabel={nav.collapse.value}>
+            {mobile ? <HugeiconsIcon icon={Cancel01Icon} size={18} strokeWidth={1.5} /> : undefined}
+        </NavRail.Trigger>
     );
 }
 
 export function Sidebar() {
     const { nav } = useIntlayer("dashboard");
-    const collapsed = useSyncExternalStore(subscribeCollapsed, storedCollapsed, () => false);
-    const toggle = (
-        <Button
-            aria-label={nav.collapse.value}
-            className={collapsed ? "text-muted-foreground" : "text-muted-foreground -mr-2"}
-            onClick={toggleCollapsed}
-            size={collapsed ? "icon" : "icon-sm"}
-            variant="ghost"
-        >
-            <HugeiconsIcon className="size-[17px]" icon={SidebarLeftIcon} strokeWidth={1.5} />
-        </Button>
-    );
+    const { collapsed, mobile, setMobileOpen } = useNavRail();
+    const close = () => setMobileOpen(false);
     return (
-        <nav
+        <NavRail
             aria-label={nav.label.value}
-            className={`border-border flex h-dvh shrink-0 flex-col overflow-y-auto overscroll-none border-r px-3 pb-3 max-lg:hidden ${collapsed ? "w-16" : "w-[232px]"}`}
+            className="app-shell ph-no-capture max-lg:not-data-mobile:hidden lg:my-2 lg:ms-2 lg:h-auto"
         >
-            <div
-                className={`flex h-16 shrink-0 items-center gap-[9px] text-[15px] font-semibold ${collapsed ? "justify-center" : "px-2"}`}
-            >
-                <Link aria-label={nav.home.value} className="text-app-tint flex items-center gap-[9px]" to="/">
-                    <LogoMark className="size-6 shrink-0" />
-                </Link>
-                {collapsed ? null : "Outlayr"}
-                {collapsed ? null : <span className="-mr-[7.5px] ml-auto">{toggle}</span>}
-            </div>
-            {collapsed ? (
-                <div className="-mt-1.5 flex flex-col items-center">
-                    <RailTip label={nav.collapse.value}>{toggle}</RailTip>
-                    <SearchButton collapsed />
-                </div>
-            ) : (
-                <SearchButton />
-            )}
-            <NavLinks collapsed={collapsed} />
-            <UserMenu collapsed={collapsed} />
-        </nav>
+            <NavRail.Header>
+                <NavRail.Brand
+                    href="/"
+                    icon={<LogoMark />}
+                    label={nav.home.value}
+                    onClick={close}
+                    render={<Link to="/" />}
+                >
+                    Outlayr
+                </NavRail.Brand>
+                <Fold />
+            </NavRail.Header>
+            <NavRail.Content>
+                <Search />
+                <NavRail.Group label={nav.label.value}>
+                    <Destination icon={DashboardSquare01Icon} label={nav.dashboard.value} to="/" />
+                    <Destination icon={TransactionHistoryIcon} label={nav.transactions.value} to="/transactions" />
+                    <Destination icon={CreditCardIcon} label={nav.accounts.value} to="/accounts" />
+                    <Destination icon={Analytics01Icon} label={nav.insights.value} to="/insights" />
+                </NavRail.Group>
+                <NavRail.Group label={nav.plan.value}>
+                    <Destination icon={PieChartIcon} label={nav.budgets.value} to="/budgets" />
+                    <Destination icon={Flag02Icon} label={nav.goals.value} to="/goals" />
+                    <Destination icon={RepeatIcon} label={nav.recurring.value} to="/recurring" />
+                    <Destination icon={HandCoinsIcon} label={nav.debts.value} to="/debts" />
+                    <Destination icon={CalendarCheckIn01Icon} label={nav.installments.value} to="/installments" />
+                </NavRail.Group>
+                <NavRail.Group label={nav.tools.value}>
+                    <Destination icon={Upload04Icon} label={nav.import.value} to="/import" />
+                    <Destination icon={MagicWand01Icon} label={nav.rules.value} to="/rules" />
+                </NavRail.Group>
+            </NavRail.Content>
+            <NavRail.Footer>
+                <UserMenu collapsed={collapsed} onNavigate={close} side={mobile ? "top" : "right"} />
+            </NavRail.Footer>
+            <NavRail.Rail label={nav.collapse.value} />
+        </NavRail>
     );
 }

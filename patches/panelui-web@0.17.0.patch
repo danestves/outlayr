@@ -1,5 +1,5 @@
 diff --git a/dist/components/exchange/index.d.ts b/dist/components/exchange/index.d.ts
-index f0ae296d49903e7acba922c1071676207a44d9f7..2828ec05ad4906e0719163d7b870f134a018ccb3 100644
+index f0ae296..2828ec0 100644
 --- a/dist/components/exchange/index.d.ts
 +++ b/dist/components/exchange/index.d.ts
 @@ -37,7 +37,7 @@
@@ -47,7 +47,7 @@ index f0ae296d49903e7acba922c1071676207a44d9f7..2828ec05ad4906e0719163d7b870f134
 -export { ExchangeField, ExchangeSwap, exchangeVariants, parseAmount };
 +export { ExchangeField, ExchangeSwap, decimalMarkOf, exchangeVariants, parseAmount };
 diff --git a/dist/components/exchange/index.js b/dist/components/exchange/index.js
-index c9daaf78709d37b0ca9fcdf6ab72a9bcf6bfe63b..af6263d941b882c264444e502c9b337ff359cbba 100644
+index c9daaf7..af6263d 100644
 --- a/dist/components/exchange/index.js
 +++ b/dist/components/exchange/index.js
 @@ -41,7 +41,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
@@ -155,7 +155,7 @@ index c9daaf78709d37b0ca9fcdf6ab72a9bcf6bfe63b..af6263d941b882c264444e502c9b337f
 -export { ExchangeField, ExchangeSwap, exchangeVariants, parseAmount };
 +export { ExchangeField, ExchangeSwap, decimalMarkOf, exchangeVariants, parseAmount };
 diff --git a/dist/components/exchange/parse.d.ts b/dist/components/exchange/parse.d.ts
-index 75fdf3421eda6e49a9893543b1b1f2884cd9da19..1d2aadc7e54bd954e69fd3d73e3c6b18aed898bd 100644
+index 75fdf34..1d2aadc 100644
 --- a/dist/components/exchange/parse.d.ts
 +++ b/dist/components/exchange/parse.d.ts
 @@ -1,5 +1,13 @@
@@ -175,7 +175,7 @@ index 75fdf3421eda6e49a9893543b1b1f2884cd9da19..1d2aadc7e54bd954e69fd3d73e3c6b18
 +/** The figure as it is typed, read with the locale's decimal mark. */
 +export declare function parseAmount(text: string, decimal?: string, decimals?: number): number | null;
 diff --git a/dist/components/exchange/parse.js b/dist/components/exchange/parse.js
-index 856ccc8b5e6887c2eff6f317162f8b9d66fc4c3f..d8e9bcd8762cb6782cdfc3a78fbabb61317c3d9f 100644
+index 856ccc8..d8e9bcd 100644
 --- a/dist/components/exchange/parse.js
 +++ b/dist/components/exchange/parse.js
 @@ -1,13 +1,39 @@
@@ -224,3 +224,57 @@ index 856ccc8b5e6887c2eff6f317162f8b9d66fc4c3f..d8e9bcd8762cb6782cdfc3a78fbabb61
 +    const parsed = Number(`${split.whole || '0'}.${split.fraction || '0'}`);
      return Number.isFinite(parsed) ? parsed : null;
  }
+diff --git a/dist/components/nav-rail/index.js b/dist/components/nav-rail/index.js
+index 9ae798b..8d43a15 100644
+--- a/dist/components/nav-rail/index.js
++++ b/dist/components/nav-rail/index.js
+@@ -174,7 +174,8 @@ const navRailVariants = tv({
+             'group-data-[collapsed]/nav-rail:opacity-100',
+         ],
+         item: [
+-            'group/item relative z-10 flex h-10 w-full shrink-0 cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 text-sm font-medium outline-none select-none',
++            // A row without `href` is a button, which centres its text by default.
++            'group/item relative z-10 flex h-10 w-full shrink-0 cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 text-start text-sm font-medium outline-none select-none',
+             'text-muted-foreground transition-colors duration-150 hover:bg-foreground/[0.05] hover:text-foreground',
+             'data-active:text-foreground data-active:hover:bg-foreground/[0.03]',
+             'data-[holding]:text-foreground data-[holding]:hover:bg-foreground/[0.03]',
+@@ -830,11 +831,21 @@ function NavRailBrand({ href, icon, label, className, children, render, ...props
+     });
+ }
+ NavRailBrand.displayName = 'NavRail.Brand';
+-/** Folds and unfolds the rail. It says which it will do, and whether the rail is open. */
++/**
++ * Folds and unfolds the rail, or opens and closes the drawer on a phone. It says
++ * which it will do, and whether the rail is open. Its default glyph follows: a
++ * sidebar that turns as the rail folds, and a menu or a close mark for the
++ * drawer. With `render`, the element you pass draws the button, so a
++ * `<Button size="icon-lg" />` keeps its own size and shape.
++ */
+ function NavRailTrigger({ expandLabel = 'Expand navigation', collapseLabel = 'Collapse navigation', className, children, render, ...props }) {
+     const { collapsed, toggle, isMobile, mobileOpen, collapsible } = useNavRailPart('NavRail.Trigger');
+     const slots = navRailVariants();
+     const expanded = isMobile ? mobileOpen : !collapsed;
++    let glyph = (_jsxs(_Fragment, { children: [_jsx("rect", { x: "3", y: "4", width: "18", height: "16", rx: "3" }), _jsx("path", { d: "M9 4v16" }), _jsx("path", { d: "m15.5 9.5-2.5 2.5 2.5 2.5" })] }));
++    if (isMobile) {
++        glyph = mobileOpen ? _jsx("path", { d: "M6 6l12 12M18 6 6 18" }) : _jsx("path", { d: "M4 7h16M4 12h16M4 17h16" });
++    }
+     const trigger = useRender({
+         defaultTagName: 'button',
+         render,
+@@ -844,11 +855,12 @@ function NavRailTrigger({ expandLabel = 'Expand navigation', collapseLabel = 'Co
+             type: 'button',
+             'aria-expanded': expanded,
+             'aria-label': expanded ? collapseLabel : expandLabel,
+-            className: slots.trigger({ className }),
++            // A rendered element brings its own box; the slot would override its size.
++            className: render ? className : slots.trigger({ className }),
+             onClick: toggle,
+-            children: children ?? (_jsxs("svg", { "aria-hidden": "true", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round", className: slots.triggerGlyph({
+-                    className: collapsed ? 'rotate-180' : undefined,
+-                }), children: [_jsx("rect", { x: "3", y: "4", width: "18", height: "16", rx: "3" }), _jsx("path", { d: "M9 4v16" }), _jsx("path", { d: "m15.5 9.5-2.5 2.5 2.5 2.5" })] })),
++            children: children ?? (_jsx("svg", { "aria-hidden": "true", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round", className: slots.triggerGlyph({
++                    className: !isMobile && collapsed ? 'rotate-180' : undefined,
++                }), children: glyph })),
+         }, props),
+     });
+     // A rail that cannot fold has nothing for the trigger to say or do.

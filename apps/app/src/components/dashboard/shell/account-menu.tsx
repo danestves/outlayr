@@ -58,7 +58,13 @@ function DarkModeItem() {
     );
 }
 
-export function UserMenu({ collapsed, side = "right" }: { collapsed: boolean; side?: "right" | "top" }) {
+interface UserMenuProps {
+    collapsed: boolean;
+    onNavigate: () => void;
+    side: "right" | "top";
+}
+
+export function UserMenu({ collapsed, onNavigate, side }: UserMenuProps) {
     const profile = useProfile();
     const { account } = useIntlayer("dashboard");
     const name = profile?.name || profile?.email || "";
@@ -106,7 +112,7 @@ export function UserMenu({ collapsed, side = "right" }: { collapsed: boolean; si
                     <HugeiconsIcon icon={Plug01Icon} strokeWidth={2} />
                     {account.connections}
                 </Menu.Item>
-                <Menu.Item render={<Link to="/settings" />}>
+                <Menu.Item onClick={onNavigate} render={<Link to="/settings" />}>
                     <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} />
                     {account.settings}
                 </Menu.Item>
