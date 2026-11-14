@@ -136,23 +136,25 @@ function IdentityPickerContent({
     const effectiveColor = value.color ?? CATEGORY_PALETTE[0];
     const glyphTint = tint ?? effectiveColor;
 
+    const link = useLinkLogo((logo) => {
+        onChange(withPhoto(value, logo.photoUri, logo.hue === null ? [] : [logo.hue]));
+        onLinkedWebsite?.(logo);
+    });
+
     const pickColor = (color: string) => {
         haptics("selection");
         onChange({ ...value, color });
     };
     const pickEmoji = (emoji: string) => {
         haptics("selection");
+        link.drop();
         onChange(withEmoji(value, emoji));
     };
     const pickIcon = (icon: string) => {
         haptics("selection");
+        link.drop();
         onChange(withIcon(value, icon));
     };
-
-    const link = useLinkLogo((logo) => {
-        onChange(withPhoto(value, logo.photoUri, logo.hue === null ? [] : [logo.hue]));
-        onLinkedWebsite?.(logo);
-    });
 
     const picking = useRef(false);
     const pickFromLibrary = useAtomAction(
@@ -167,6 +169,7 @@ function IdentityPickerContent({
             },
             onSuccess: (next) => {
                 if (next != null) {
+                    link.drop();
                     onChange(next);
                 }
             },

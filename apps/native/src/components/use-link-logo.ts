@@ -1,5 +1,5 @@
 import * as Effect from "effect/Effect";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { readIdentityLink } from "@/domain/identity-link";
 import { checkMerchantWebsite, discardStoredPhoto, voidAppFlowCommand } from "@/state/entry-commands";
@@ -30,6 +30,17 @@ export function useLinkLogo(onFound: (logo: MerchantWebsiteLogo) => void) {
             timer.current = null;
         }
     };
+
+    // oxlint-disable-next-line outlayr/react-effect-budget -- a result landing after the picker closes would write into whichever form opens next
+    useEffect(
+        () => () => {
+            ticket.current += 1;
+            if (timer.current !== null) {
+                clearTimeout(timer.current);
+            }
+        },
+        []
+    );
 
     const lookUp = (input: string, delay: number) => {
         cancel();
@@ -77,6 +88,11 @@ export function useLinkLogo(onFound: (logo: MerchantWebsiteLogo) => void) {
         clear: () => {
             cancel();
             setText("");
+            setStatus(IDLE);
+        },
+        /** Another identity was chosen, so a pending logo must not land over it. */
+        drop: () => {
+            cancel();
             setStatus(IDLE);
         },
         status,

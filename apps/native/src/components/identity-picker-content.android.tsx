@@ -112,19 +112,20 @@ export function IdentityPickerHost({
     const [photoFailed, setPhotoFailed] = useState(false);
     const glyphTint = tint ?? value.color ?? CATEGORY_PALETTE[0];
 
+    const link = useLinkLogo((logo) => {
+        onChange(withPhoto(value, logo.photoUri, logo.hue === null ? [] : [logo.hue]));
+        onLinkedWebsite?.(logo);
+    });
+
     const pickColor = (color: string) => {
         haptics("selection");
         onChange({ ...value, color });
     };
     const pickGlyph = (item: string) => {
         haptics("selection");
+        link.drop();
         onChange(tab === "emoji" ? withEmoji(value, item) : withIcon(value, item));
     };
-
-    const link = useLinkLogo((logo) => {
-        onChange(withPhoto(value, logo.photoUri, logo.hue === null ? [] : [logo.hue]));
-        onLinkedWebsite?.(logo);
-    });
 
     // A rejected launch (revoked permission, host torn down) looks like a missed tap, so the prompt says so.
     const picking = useRef(false);
@@ -140,6 +141,7 @@ export function IdentityPickerHost({
             },
             onSuccess: (next) => {
                 if (next != null) {
+                    link.drop();
                     onChange(next);
                 }
             },
