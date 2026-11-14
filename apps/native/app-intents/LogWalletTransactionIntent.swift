@@ -95,8 +95,12 @@ struct LogWalletTransactionIntent: AppIntent {
             dedupeKey: purchase,
             text: nil
         )
-        let queued = await SharedStore.enqueue(write)
-        if queued, let ranAt {
+        guard await SharedStore.enqueue(write) else {
+            let at = ranAt ?? Date().timeIntervalSince1970 * 1000
+            await SharedStore.armMissedTap(at: at, merchant: name, card: cardText, after: nil)
+            return .result(dialog: IntentDialog("Couldn't save this purchase."))
+        }
+        if let ranAt {
             SharedStore.disarmMissedTap(at: ranAt)
         }
 
