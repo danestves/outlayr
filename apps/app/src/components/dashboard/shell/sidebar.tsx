@@ -118,9 +118,11 @@ export function Sidebar() {
                     <Destination icon={MagicWand01Icon} label={nav.rules.value} to="/rules" />
                 </NavRail.Group>
             </NavRail.Content>
-            <NavRail.Footer>
-                <UserMenu collapsed={collapsed} onNavigate={close} side={mobile ? "top" : "right"} />
-            </NavRail.Footer>
+            {mobile ? null : (
+                <NavRail.Footer>
+                    <UserMenu collapsed={collapsed} />
+                </NavRail.Footer>
+            )}
             <NavRail.Rail label={nav.collapse.value} />
         </NavRail>
     );

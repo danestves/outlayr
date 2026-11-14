@@ -11,8 +11,9 @@ import { chooseTheme, subscribeTheme } from "@outlayr/shared/theme";
 import { Link } from "@tanstack/react-router";
 import { Avatar } from "panelui-web/avatar";
 import { Menu } from "panelui-web/menu";
+import { Sheet } from "panelui-web/sheet";
 import { Switch } from "panelui-web/switch";
-import { useSyncExternalStore } from "react";
+import { Fragment, useState, useSyncExternalStore } from "react";
 import type { CSSProperties } from "react";
 import { useIntlayer } from "react-intlayer";
 import * as Skullet from "skullet";
@@ -31,19 +32,47 @@ export async function signOut() {
     window.location.assign("/login");
 }
 
-const AVATAR: CSSProperties & { "--avatar-color": string; "--avatar-size": string } = {
+type AvatarStyle = CSSProperties & { "--avatar-color": string; "--avatar-size": string };
+
+const avatarStyle = (size: number): AvatarStyle => ({
     "--avatar-color": "var(--color-app-tint)",
-    "--avatar-size": "34px",
-};
+    "--avatar-size": `${size}px`,
+});
+
+const LINKS = [
+    { icon: Plug01Icon, key: "connections", to: "/settings/connections" },
+    { icon: Settings02Icon, key: "settings", to: "/settings" },
+    { icon: Download04Icon, key: "exportData", to: "/settings/data" },
+    { icon: UserAdd01Icon, key: "invite", to: "/settings/invite" },
+] as const;
+
+const SHEET_ROW =
+    "hover:bg-app-hover flex h-11 w-full items-center gap-3 rounded-lg px-2 text-left text-sm [&_svg]:size-5";
 
 const AVATAR_INITIALS =
     "flex-none [&_[data-slot=avatar-face]>span]:bg-[color-mix(in_oklab,var(--avatar-color)_24%,var(--color-app-group))] [&_[data-slot=avatar-face]>span]:text-[color-mix(in_oklab,var(--avatar-color),var(--foreground)_40%)] [&_[data-slot=avatar-face]>span]:text-xs [&_[data-slot=avatar-face]>span]:tracking-normal [&_[data-slot=avatar-face]]:after:hidden";
 
 const isDark = () => document.documentElement.dataset.theme === "dark";
 
+const useDark = () => useSyncExternalStore(subscribeTheme, isDark, () => false);
+
+function useIdentity() {
+    const profile = useProfile();
+    return { email: profile?.email, name: profile?.name || profile?.email || "" };
+}
+
+function VerifiedName({ name }: { name: string }) {
+    return (
+        <>
+            <span className="truncate">{name}</span>
+            <HugeiconsIcon className="text-app-tint shrink-0" icon={CheckmarkBadge01Icon} size={14} strokeWidth={1.5} />
+        </>
+    );
+}
+
 function DarkModeItem() {
     const { account } = useIntlayer("dashboard");
-    const dark = useSyncExternalStore(subscribeTheme, isDark, () => false);
+    const dark = useDark();
     return (
         <Menu.Item
             aria-checked={dark}
@@ -58,37 +87,24 @@ function DarkModeItem() {
     );
 }
 
-interface UserMenuProps {
-    collapsed: boolean;
-    onNavigate: () => void;
-    side: "right" | "top";
-}
-
-export function UserMenu({ collapsed, onNavigate, side }: UserMenuProps) {
-    const profile = useProfile();
+export function UserMenu({ collapsed }: { collapsed: boolean }) {
+    const { email, name } = useIdentity();
     const { account } = useIntlayer("dashboard");
-    const name = profile?.name || profile?.email || "";
     return (
         <Menu>
             <Menu.Trigger
                 aria-label={account.label.value}
                 className={`hover:bg-app-fill data-[popup-open]:bg-app-fill mt-auto flex items-center gap-2.5 rounded-xl text-left ${collapsed ? "justify-center p-1" : "p-2.5"}`}
             >
-                <Avatar className={AVATAR_INITIALS} name={name} style={AVATAR} />
+                <Avatar className={AVATAR_INITIALS} name={name} style={avatarStyle(34)} />
                 {collapsed ? null : (
                     <>
                         <span className="min-w-0 flex-1">
                             <b className="flex min-h-[18px] items-center gap-1.5 text-[13px] leading-[18px] font-medium">
-                                <span className="truncate">{name}</span>
-                                <HugeiconsIcon
-                                    className="text-app-tint shrink-0"
-                                    icon={CheckmarkBadge01Icon}
-                                    size={14}
-                                    strokeWidth={1.5}
-                                />
+                                <VerifiedName name={name} />
                             </b>
                             <small className="text-muted-foreground block min-h-4 truncate text-xs leading-4">
-                                {profile?.email}
+                                {email}
                             </small>
                         </span>
                         <HugeiconsIcon
@@ -100,31 +116,17 @@ export function UserMenu({ collapsed, onNavigate, side }: UserMenuProps) {
                     </>
                 )}
             </Menu.Trigger>
-            <Menu.Content
-                align={side === "top" ? "start" : "end"}
-                className="app-shell ph-no-capture w-[min(300px,calc(100vw-32px))] max-lg:[&_[role^=menuitem]]:h-11"
-                side={side}
-                sideOffset={side === "top" ? 8 : 25}
-            >
+            <Menu.Content align="end" className="app-shell ph-no-capture w-[300px]" side="right" sideOffset={25}>
                 <DarkModeItem />
-                <Menu.Separator />
-                <Menu.Item disabled>
-                    <HugeiconsIcon icon={Plug01Icon} strokeWidth={2} />
-                    {account.connections}
-                </Menu.Item>
-                <Menu.Item onClick={onNavigate} render={<Link to="/settings" />}>
-                    <HugeiconsIcon icon={Settings02Icon} strokeWidth={2} />
-                    {account.settings}
-                </Menu.Item>
-                <Menu.Item disabled>
-                    <HugeiconsIcon icon={Download04Icon} strokeWidth={2} />
-                    {account.exportData}
-                </Menu.Item>
-                <Menu.Separator />
-                <Menu.Item disabled>
-                    <HugeiconsIcon icon={UserAdd01Icon} strokeWidth={2} />
-                    {account.invite}
-                </Menu.Item>
+                {LINKS.map((link) => (
+                    <Fragment key={link.key}>
+                        {link.key === "connections" || link.key === "invite" ? <Menu.Separator /> : null}
+                        <Menu.Item render={<Link to={link.to} />}>
+                            <HugeiconsIcon icon={link.icon} strokeWidth={2} />
+                            {account[link.key]}
+                        </Menu.Item>
+                    </Fragment>
+                ))}
                 <Menu.Item onClick={signOut}>
                     <HugeiconsIcon icon={Logout03Icon} strokeWidth={2} />
                     {account.signOut}
@@ -134,5 +136,61 @@ export function UserMenu({ collapsed, onNavigate, side }: UserMenuProps) {
                 </div>
             </Menu.Content>
         </Menu>
+    );
+}
+
+export function AccountSheet() {
+    const { email, name } = useIdentity();
+    const { account } = useIntlayer("dashboard");
+    const dark = useDark();
+    const [open, setOpen] = useState(false);
+    return (
+        <Sheet onOpenChange={setOpen} open={open} side="top">
+            <Sheet.Trigger
+                aria-label={account.label.value}
+                className="mx-[5px] flex size-11 items-center justify-center rounded-full"
+            >
+                <Avatar className={AVATAR_INITIALS} name={name} style={avatarStyle(32)} />
+            </Sheet.Trigger>
+            <Sheet.Content className="app-shell ph-no-capture">
+                <Sheet.Header className="flex-row items-center gap-3">
+                    <Avatar className={AVATAR_INITIALS} name={name} style={avatarStyle(40)} />
+                    <span className="min-w-0">
+                        <Sheet.Title className="flex items-center gap-1.5 text-[15px]">
+                            <VerifiedName name={name} />
+                        </Sheet.Title>
+                        <Sheet.Description className="truncate">{email}</Sheet.Description>
+                    </span>
+                </Sheet.Header>
+                <Sheet.Body className="divide-border flex flex-col divide-y px-4 [&>*]:py-1.5">
+                    <label className={SHEET_ROW}>
+                        <HugeiconsIcon icon={Moon02Icon} strokeWidth={2} />
+                        {account.darkMode}
+                        <Switch
+                            checked={dark}
+                            className="ml-auto"
+                            onCheckedChange={() => chooseTheme(dark ? "light" : "dark")}
+                        />
+                    </label>
+                    <nav className="flex flex-col">
+                        {LINKS.map((link) => (
+                            <Link className={SHEET_ROW} key={link.key} onClick={() => setOpen(false)} to={link.to}>
+                                <HugeiconsIcon icon={link.icon} strokeWidth={2} />
+                                {account[link.key]}
+                            </Link>
+                        ))}
+                    </nav>
+                    <button className={SHEET_ROW} onClick={signOut} type="button">
+                        <HugeiconsIcon icon={Logout03Icon} strokeWidth={2} />
+                        {account.signOut}
+                    </button>
+                </Sheet.Body>
+                <Sheet.Footer className="text-muted-foreground text-[13px] leading-[18px]">
+                    <span>
+                        {account.plan} · <SiteLink to="/terms">{account.terms}</SiteLink>
+                    </span>
+                </Sheet.Footer>
+            </Sheet.Content>
+        </Sheet>
     );
 }
