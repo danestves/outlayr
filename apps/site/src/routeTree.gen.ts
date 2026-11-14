@@ -25,6 +25,7 @@ import { Route as Char123LocaleChar125SplatRouteImport } from './routes/{-$local
 import { Route as Char123LocaleChar125AboutRouteImport } from './routes/{-$locale}/about'
 import { Route as Char123LocaleChar125BrandRouteImport } from './routes/{-$locale}/brand'
 import { Route as Char123LocaleChar125DeleteAccountRouteImport } from './routes/{-$locale}/delete-account'
+import { Route as Char123LocaleChar125DownloadRouteImport } from './routes/{-$locale}/download'
 import { Route as Char123LocaleChar125OpenRouteImport } from './routes/{-$locale}/open'
 import { Route as Char123LocaleChar125PrivacyRouteImport } from './routes/{-$locale}/privacy'
 import { Route as Char123LocaleChar125SupportRouteImport } from './routes/{-$locale}/support'
@@ -130,6 +131,12 @@ const Char123LocaleChar125DeleteAccountRoute =
   Char123LocaleChar125DeleteAccountRouteImport.update({
     id: '/delete-account',
     path: '/delete-account',
+    getParentRoute: () => Char123LocaleChar125RouteRoute,
+  } as any)
+const Char123LocaleChar125DownloadRoute =
+  Char123LocaleChar125DownloadRouteImport.update({
+    id: '/download',
+    path: '/download',
     getParentRoute: () => Char123LocaleChar125RouteRoute,
   } as any)
 const Char123LocaleChar125OpenRoute =
@@ -245,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
   '/{-$locale}/brand': typeof Char123LocaleChar125BrandRoute
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
+  '/{-$locale}/download': typeof Char123LocaleChar125DownloadRoute
   '/{-$locale}/open': typeof Char123LocaleChar125OpenRoute
   '/{-$locale}/privacy': typeof Char123LocaleChar125PrivacyRoute
   '/{-$locale}/support': typeof Char123LocaleChar125SupportRoute
@@ -278,6 +286,7 @@ export interface FileRoutesByTo {
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
   '/{-$locale}/brand': typeof Char123LocaleChar125BrandRoute
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
+  '/{-$locale}/download': typeof Char123LocaleChar125DownloadRoute
   '/{-$locale}/open': typeof Char123LocaleChar125OpenRoute
   '/{-$locale}/privacy': typeof Char123LocaleChar125PrivacyRoute
   '/{-$locale}/support': typeof Char123LocaleChar125SupportRoute
@@ -313,6 +322,7 @@ export interface FileRoutesById {
   '/{-$locale}/about': typeof Char123LocaleChar125AboutRoute
   '/{-$locale}/brand': typeof Char123LocaleChar125BrandRoute
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
+  '/{-$locale}/download': typeof Char123LocaleChar125DownloadRoute
   '/{-$locale}/open': typeof Char123LocaleChar125OpenRoute
   '/{-$locale}/privacy': typeof Char123LocaleChar125PrivacyRoute
   '/{-$locale}/support': typeof Char123LocaleChar125SupportRoute
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/about'
     | '/{-$locale}/brand'
     | '/{-$locale}/delete-account'
+    | '/{-$locale}/download'
     | '/{-$locale}/open'
     | '/{-$locale}/privacy'
     | '/{-$locale}/support'
@@ -382,6 +393,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/about'
     | '/{-$locale}/brand'
     | '/{-$locale}/delete-account'
+    | '/{-$locale}/download'
     | '/{-$locale}/open'
     | '/{-$locale}/privacy'
     | '/{-$locale}/support'
@@ -416,6 +428,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/about'
     | '/{-$locale}/brand'
     | '/{-$locale}/delete-account'
+    | '/{-$locale}/download'
     | '/{-$locale}/open'
     | '/{-$locale}/privacy'
     | '/{-$locale}/support'
@@ -564,6 +577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char123LocaleChar125DeleteAccountRouteImport
       parentRoute: typeof Char123LocaleChar125RouteRoute
     }
+    '/{-$locale}/download': {
+      id: '/{-$locale}/download'
+      path: '/download'
+      fullPath: '/{-$locale}/download'
+      preLoaderRoute: typeof Char123LocaleChar125DownloadRouteImport
+      parentRoute: typeof Char123LocaleChar125RouteRoute
+    }
     '/{-$locale}/open': {
       id: '/{-$locale}/open'
       path: '/open'
@@ -684,6 +704,7 @@ interface Char123LocaleChar125RouteRouteChildren {
   Char123LocaleChar125AboutRoute: typeof Char123LocaleChar125AboutRoute
   Char123LocaleChar125BrandRoute: typeof Char123LocaleChar125BrandRoute
   Char123LocaleChar125DeleteAccountRoute: typeof Char123LocaleChar125DeleteAccountRoute
+  Char123LocaleChar125DownloadRoute: typeof Char123LocaleChar125DownloadRoute
   Char123LocaleChar125OpenRoute: typeof Char123LocaleChar125OpenRoute
   Char123LocaleChar125PrivacyRoute: typeof Char123LocaleChar125PrivacyRoute
   Char123LocaleChar125SupportRoute: typeof Char123LocaleChar125SupportRoute
@@ -709,6 +730,7 @@ const Char123LocaleChar125RouteRouteChildren: Char123LocaleChar125RouteRouteChil
     Char123LocaleChar125BrandRoute: Char123LocaleChar125BrandRoute,
     Char123LocaleChar125DeleteAccountRoute:
       Char123LocaleChar125DeleteAccountRoute,
+    Char123LocaleChar125DownloadRoute: Char123LocaleChar125DownloadRoute,
     Char123LocaleChar125OpenRoute: Char123LocaleChar125OpenRoute,
     Char123LocaleChar125PrivacyRoute: Char123LocaleChar125PrivacyRoute,
     Char123LocaleChar125SupportRoute: Char123LocaleChar125SupportRoute,
