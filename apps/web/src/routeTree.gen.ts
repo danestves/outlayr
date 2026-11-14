@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AccountRouteImport } from './routes/_account'
 import { Route as A2aRouteImport } from './routes/a2a'
 import { Route as AuthDotmdRouteImport } from './routes/auth[.]md'
+import { Route as HealthRouteImport } from './routes/health'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as Char123LocaleChar125RouteRouteImport } from './routes/{-$locale}/route'
@@ -105,6 +106,11 @@ const A2aRoute = A2aRouteImport.update({
 const AuthDotmdRoute = AuthDotmdRouteImport.update({
   id: '/auth.md',
   path: '/auth.md',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HealthRoute = HealthRouteImport.update({
+  id: '/health',
+  path: '/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -560,6 +566,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AccountRouteWithChildren
   '/a2a': typeof A2aRoute
   '/auth.md': typeof AuthDotmdRoute
+  '/health': typeof HealthRoute
   '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
@@ -644,6 +651,7 @@ export interface FileRoutesByTo {
   '/': typeof AccountRouteWithChildren
   '/a2a': typeof A2aRoute
   '/auth.md': typeof AuthDotmdRoute
+  '/health': typeof HealthRoute
   '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
@@ -726,6 +734,7 @@ export interface FileRoutesById {
   '/_account': typeof AccountRouteWithChildren
   '/a2a': typeof A2aRoute
   '/auth.md': typeof AuthDotmdRoute
+  '/health': typeof HealthRoute
   '/mcp': typeof McpRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/.well-known/ai-catalog.json': typeof DotwellKnownAiCatalogDotjsonRoute
@@ -813,6 +822,7 @@ export interface FileRouteTypes {
     | '/'
     | '/a2a'
     | '/auth.md'
+    | '/health'
     | '/mcp'
     | '/sitemap.xml'
     | '/.well-known/ai-catalog.json'
@@ -897,6 +907,7 @@ export interface FileRouteTypes {
     | '/'
     | '/a2a'
     | '/auth.md'
+    | '/health'
     | '/mcp'
     | '/sitemap.xml'
     | '/.well-known/ai-catalog.json'
@@ -978,6 +989,7 @@ export interface FileRouteTypes {
     | '/_account'
     | '/a2a'
     | '/auth.md'
+    | '/health'
     | '/mcp'
     | '/sitemap.xml'
     | '/.well-known/ai-catalog.json'
@@ -1064,6 +1076,7 @@ export interface RootRouteChildren {
   AccountRoute: typeof AccountRouteWithChildren
   A2aRoute: typeof A2aRoute
   AuthDotmdRoute: typeof AuthDotmdRoute
+  HealthRoute: typeof HealthRoute
   McpRoute: typeof McpRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   DotwellKnownAiCatalogDotjsonRoute: typeof DotwellKnownAiCatalogDotjsonRoute
@@ -1096,6 +1109,13 @@ declare module '@tanstack/react-router' {
       path: '/auth.md'
       fullPath: '/auth.md'
       preLoaderRoute: typeof AuthDotmdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/health': {
+      id: '/health'
+      path: '/health'
+      fullPath: '/health'
+      preLoaderRoute: typeof HealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -1869,6 +1889,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRouteWithChildren,
   A2aRoute: A2aRoute,
   AuthDotmdRoute: AuthDotmdRoute,
+  HealthRoute: HealthRoute,
   McpRoute: McpRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   DotwellKnownAiCatalogDotjsonRoute: DotwellKnownAiCatalogDotjsonRoute,
