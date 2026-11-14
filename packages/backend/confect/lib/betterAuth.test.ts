@@ -81,6 +81,20 @@ describe("auth base url", () => {
         });
     });
 
+    it("keeps accepting the old web host while LEGACY_WEB_ORIGIN is set", async () => {
+        const baseURL = await baseUrlWith({
+            CONVEX_SITE_URL: "https://example-deployment.convex.site",
+            LEGACY_WEB_ORIGIN: "https://tryoutlayr.com",
+            SITE_URL: "https://app.tryoutlayr.com",
+        });
+
+        expect(baseURL).toStrictEqual({
+            allowedHosts: ["app.tryoutlayr.com", "tryoutlayr.com", "example-deployment.convex.site"],
+            fallback: "https://app.tryoutlayr.com",
+            protocol: "https",
+        });
+    });
+
     it("builds https callbacks for a request that reached the proxy over http", async () => {
         const baseURL = await baseUrlWith({
             CONVEX_SITE_URL: "https://example-deployment.convex.site",

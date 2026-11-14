@@ -35,6 +35,12 @@ export const siteUrl = Config.String("SITE_URL").pipe(
     Config.withDefault(DEFAULT_SITE_URL)
 );
 
+export const legacyWebOrigin = text("LEGACY_WEB_ORIGIN").pipe(Config.map(Option.filter((origin) => origin !== "")));
+
+export const webOrigins = Config.all([siteUrl, legacyWebOrigin]).pipe(
+    Config.map(([site, legacy]) => [site, ...Option.toArray(legacy)])
+);
+
 export const nativeAppUrl = Config.String("NATIVE_APP_URL").pipe(Config.withDefault(DEFAULT_NATIVE_APP_URL));
 
 export const mcpConsentUrl = Config.String("MCP_CONSENT_URL").pipe(Config.withDefault(DEFAULT_MCP_CONSENT_URL));
@@ -128,4 +134,5 @@ export const authSettings = Config.all({
     nativeAppUrl,
     notion: notionConfig,
     siteUrl,
+    webOrigins,
 });

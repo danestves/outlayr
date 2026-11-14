@@ -7,7 +7,7 @@ const STORE_NAMES = {
     STRIPE: "Stripe",
 } as const;
 
-const WEB_PLAN_URL = "https://tryoutlayr.com/app/settings/plan";
+const WEB_PLAN_URL = "https://app.tryoutlayr.com/settings/plan";
 
 type PaidStore = keyof typeof STORE_NAMES;
 

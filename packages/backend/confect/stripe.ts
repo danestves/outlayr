@@ -109,13 +109,13 @@ export interface CheckoutInput {
 }
 export function checkoutForm(input: CheckoutInput) {
     const shared = {
-        cancel_url: `${input.siteUrl}/app`,
+        cancel_url: input.siteUrl,
         customer: input.customerId,
         "line_items[0][price]": input.priceId,
         "line_items[0][quantity]": "1",
         "managed_payments[enabled]": "true",
         "metadata[app_user_id]": input.appUserId,
-        success_url: `${input.siteUrl}/app?checkout={CHECKOUT_SESSION_ID}`,
+        success_url: `${input.siteUrl}/?checkout={CHECKOUT_SESSION_ID}`,
     };
     if (input.plan === "lifetime") {
         return { ...shared, mode: "payment" };
@@ -180,7 +180,7 @@ export const postReceipt = Effect.fn("Stripe.postReceipt")(function* postReceipt
 export const portalUrl = Effect.fn("Stripe.portalUrl")(function* portalUrl(customerId: string, siteUrl: string) {
     const { url } = yield* stripeCall(Schema.Struct({ url: Schema.String }), "/billing_portal/sessions", {
         customer: customerId,
-        return_url: `${siteUrl}/app/settings/plan`,
+        return_url: `${siteUrl}/settings/plan`,
     });
     return url;
 });

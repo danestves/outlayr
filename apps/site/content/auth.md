@@ -29,7 +29,7 @@ The response carries your `client_id`. Clients are public and prove possession w
 Authorization code flow with PKCE, `S256` only:
 
 1. Open the `authorization_endpoint` in the person's browser with `response_type=code`, `client_id`, `redirect_uri`, `state`, `code_challenge`, `code_challenge_method=S256` and optionally `scope`.
-2. They land on https://tryoutlayr.com/connect and sign in with the account they use in the Outlayr app: Apple, Google, or email and password.
+2. They land on https://app.tryoutlayr.com/connect and sign in with the account they use in the Outlayr app: Apple, Google, or email and password.
 3. Outlayr shows a consent screen with your `client_name`, marked unverified, and your redirect host on every authorization. Nothing is issued until they approve.
 4. Exchange the `code` at the `token_endpoint` with `grant_type=authorization_code`, `client_id`, `redirect_uri` and `code_verifier`.
 

@@ -6,7 +6,7 @@ import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import { authComponent, createAuth } from "../confect/lib/betterAuth";
-import { revenueCatWebhookAuth, siteUrl } from "../confect/lib/config";
+import { legacyWebOrigin, revenueCatWebhookAuth, siteUrl } from "../confect/lib/config";
 import { runEdge, runEdgeSync } from "../confect/lib/runEdge";
 import { mcp } from "../confect/mcp";
 import { revenuecat } from "../confect/revenuecat";
@@ -26,21 +26,28 @@ mcp.registerRoutes(http);
 
 const decodeCheckoutBody = Schema.decodeUnknownOption(Schema.Struct({ plan: Schema.Literals(PRO_PLANS) }));
 
-const billingCors = async () => ({
-    "Access-Control-Allow-Headers": "Authorization, Content-Type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Origin": await runEdge(siteUrl),
-    Vary: "Origin",
-});
+const billingCors = async (request: Request) => {
+    const origin = request.headers.get("Origin");
+    const legacy = await runEdge(legacyWebOrigin);
+    return {
+        "Access-Control-Allow-Headers": "Authorization, Content-Type",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Origin":
+            origin !== null && Option.contains(legacy, origin) ? origin : await runEdge(siteUrl),
+        Vary: "Origin",
+    };
+};
 
 http.route({
-    handler: httpAction(async () => new Response(null, { headers: await billingCors(), status: 204 })),
+    handler: httpAction(
+        async (_ctx, request) => new Response(null, { headers: await billingCors(request), status: 204 })
+    ),
     method: "OPTIONS",
     path: "/billing/checkout",
 });
 http.route({
     handler: httpAction(async (ctx, request) => {
-        const headers = await billingCors();
+        const headers = await billingCors(request);
         const body = decodeCheckoutBody(await request.json().catch(() => null));
         if (Option.isNone(body)) {
             return Response.json({ kind: "unavailable" }, { headers, status: 400 });

@@ -120,7 +120,7 @@ TrialEndingEmail.PreviewProps = {
     chargeAtMs: Date.UTC(2027, 0, 17),
     email: "ana@example.com",
     language: "en",
-    manageUrl: "https://tryoutlayr.com/app/settings/plan",
+    manageUrl: "https://app.tryoutlayr.com/settings/plan",
     price: { amount: 49.99, currency: "USD" },
 } satisfies TrialEndingEmailProps;
 
