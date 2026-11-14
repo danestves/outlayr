@@ -50,6 +50,7 @@ Todos los tipos de datos que maneja Outlayr, en un solo lugar. Las secciones sig
 | Nombres, columnas y filas de las bases de datos de Notion que elijas | Importación desde Notion (Pro) | Notion, nuestros servidores, tu dispositivo | No se conservan en nuestros servidores |
 | Nombre del comercio, una dirección web que agregas, una categoría general | Agregar sitio web | Nuestros servidores, compartido con todos | Se actualiza después de 90 días. No vinculado a ti |
 | Dirección web, dirección IP | Logos | Nuestros servidores (Cloudflare) | La dirección web se guarda con el logo; la dirección IP no se conserva |
+| Enlace de imagen, la imagen | Selector de ícono | Nuestros servidores (Cloudflare), compartido con todos | Se guarda con la imagen hasta que la eliminemos; la dirección IP no se conserva. No se vincula contigo |
 | Registros de compra, ID de usuario, nombre, correo electrónico | Al abrir la app, Pro | RevenueCat, Apple, Google o Stripe, nuestros servidores | Hasta la eliminación de la cuenta |
 | Código de invitación, quién invitó a quién, nombres de pila, días registrados hasta tres y la fecha del tercero, meses ganados | Invitaciones | Nuestros servidores, RevenueCat | Hasta la eliminación de la cuenta |
 | ID de instalación, versión de la app, errores | Búsqueda de actualizaciones | Expo | Según la política de Expo |
@@ -177,6 +178,8 @@ Activado una vez que permites enviar datos a proveedores de IA. Desactívalo en 
 Cuando una respuesta identifica un negocio claro con una dirección web y una categoría general, lo agregamos a una lista compartida para que la próxima consulta de ese comercio sea instantánea. Cada elemento contiene el nombre del comercio, su dirección web, una categoría de una lista general fija, un emoji y etiquetas, guardado bajo el nombre del comercio y la moneda. No registra quién preguntó y no está vinculado a ninguna cuenta. Los elementos se actualizan después de 30 días, o de 90 días cuando una fuente web los confirma.
 
 Cuando no encontramos un logo para un comercio, puedes agregar su sitio web, y también puedes pegar uno en el selector de ícono de cualquier entrada. Al guardar la entrada, el nombre del comercio, esa dirección web y una categoría general entran en esta lista, para que otras personas que registren ese comercio vean su logo, y el logo también aparece en tus entradas anteriores de ese comercio. Si tu categoría no está en la lista fija y permites los proveedores de IA, el modelo Claude de Anthropic elige una a partir del nombre del comercio. Comprobamos que la dirección tenga un logo, y un sitio web que agregues nunca reemplaza a un comercio que ya esté en la lista. Se queda 90 días y no está vinculado a ti. No agregues un sitio web si no quieres compartirlo.
+
+También puedes pegar un enlace a una imagen en el selector de ícono. Nuestro servidor de logos descarga la imagen desde esa dirección, verifica que sea una imagen y guarda una copia junto con la dirección de donde vino. Al guardar la entrada, el nombre del comercio y esa imagen se suman a esta lista como un sitio web que agregas, así que otras personas que registren ese comercio ven esa imagen. La imagen se queda en nuestro servidor de logos hasta que la eliminemos y no se vincula contigo. Pega solo imágenes que tengas derecho a compartir.
 
 ### Entrada por voz
 

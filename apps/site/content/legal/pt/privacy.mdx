@@ -50,6 +50,7 @@ Todo tipo de dado que o Outlayr trata, em um só lugar. As seções abaixo expli
 | Nomes, colunas e linhas dos bancos de dados do Notion que você escolhe | Importação do Notion (Pro) | Notion, nossos servidores, seu dispositivo | Não guardados nos nossos servidores |
 | Nome do estabelecimento, um endereço web que você adiciona, uma categoria geral | Adicionar site | Nossos servidores, compartilhado com todos | Atualizado após 90 dias. Não vinculado a você |
 | Endereço web, endereço IP | Logos | Nossos servidores (Cloudflare) | Endereço web guardado com o logo; endereço IP não guardado |
+| Link de imagem, a imagem | Seletor de ícone | Nossos servidores (Cloudflare), compartilhado com todos | Guardado com a imagem até ser removido; endereço IP não guardado. Não vinculado a você |
 | Registros de compra, ID de usuário, nome, e-mail | Abertura do app, Pro | RevenueCat, Apple, Google ou Stripe, nossos servidores | Até a exclusão da conta |
 | Código de convite, quem convidou quem, primeiros nomes, dias com lançamentos até três e a data do terceiro, meses ganhos | Convites | Nossos servidores, RevenueCat | Até a exclusão da conta |
 | ID de instalação, versão do app, erros | Verificação de atualizações | Expo | Política da Expo |
@@ -177,6 +178,8 @@ Ativado assim que você permite o envio de dados a provedores de IA. Desative em
 Quando uma resposta identifica uma empresa clara, com endereço web e uma categoria geral, nós a adicionamos a uma lista compartilhada para que a próxima consulta desse estabelecimento seja instantânea. Cada item contém o nome do estabelecimento, o endereço web dele, uma categoria de uma lista geral fixa, um emoji e tags, arquivados pelo nome do estabelecimento e pela moeda. Ele não registra quem perguntou e não está vinculado a nenhuma conta. Os itens são atualizados após 30 dias, ou 90 dias quando confirmados por uma fonte na web.
 
 Quando não encontramos logo para um estabelecimento, você pode adicionar o site dele, e também pode colar um no seletor de ícone de qualquer lançamento. Quando você salva o lançamento, o nome do estabelecimento, esse endereço web e uma categoria geral entram nessa lista, para que outras pessoas que registram esse estabelecimento vejam o logo dele, e o logo também aparece nos seus lançamentos anteriores com ele. Se sua categoria não estiver na lista fixa e você permitir os provedores de IA, o modelo Claude da Anthropic escolhe uma a partir do nome do estabelecimento. Verificamos se o endereço tem um logo, e um site que você adiciona nunca substitui um estabelecimento que já está na lista. Ele fica por 90 dias e não é vinculado a você. Não adicione um site se não quiser que ele seja compartilhado.
+
+Você também pode colar um link para uma imagem no seletor de ícone. Nosso servidor de logos baixa a imagem desse endereço, confere que é uma imagem e guarda uma cópia junto com o endereço de origem. Quando você salva o lançamento, o nome do estabelecimento e essa imagem entram nesta lista como um site que você adiciona, e outras pessoas que registram esse estabelecimento veem essa imagem. A imagem fica no nosso servidor de logos até ser removida e não é vinculada a você. Cole só imagens que você tem direito de compartilhar.
 
 ### Lançamento por voz
 

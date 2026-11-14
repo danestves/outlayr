@@ -551,6 +551,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Voice entry now sends the audio to ElevenLabs as you talk, through our server on Cloudflare, which keeps none of it. The text then goes to our server with your account and category names, as before.",
                     label: "Voice entry while you speak",
                 },
+                {
+                    detail: "In the icon picker you can paste a link to a website or an image. Our logo server fetches that logo or image and keeps a copy, and when you save the entry, the merchant name and that logo join the shared merchant list so other people who log that merchant see it. It isn't linked to you.",
+                    label: "Logos from a link",
+                },
             ],
             es: [
                 {
@@ -596,6 +600,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "La entrada por voz ahora envía el audio a ElevenLabs mientras hablas, a través de nuestro servidor en Cloudflare, que no conserva nada. Luego el texto va a nuestro servidor con los nombres de tus cuentas y categorías, como antes.",
                     label: "Entrada por voz mientras hablas",
+                },
+                {
+                    detail: "En el selector de ícono puedes pegar un enlace a un sitio web o a una imagen. Nuestro servidor de logos busca ese logo o esa imagen y guarda una copia, y al guardar la entrada, el nombre del comercio y ese logo se suman a la lista compartida de comercios para que otras personas que registren ese comercio lo vean. No se vincula contigo.",
+                    label: "Logos desde un enlace",
                 },
             ],
             fr: [
@@ -643,6 +651,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "La saisie vocale envoie désormais l'audio à ElevenLabs pendant que vous parlez, via notre serveur sur Cloudflare, qui n'en garde rien. Le texte part ensuite vers notre serveur avec les noms de vos comptes et catégories, comme avant.",
                     label: "Saisie vocale pendant que vous parlez",
                 },
+                {
+                    detail: "Dans le sélecteur d'icône, vous pouvez coller un lien vers un site web ou une image. Notre serveur de logos récupère ce logo ou cette image et en garde une copie, et quand vous enregistrez l'opération, le nom du commerçant et ce logo rejoignent la liste partagée des commerçants pour que les autres personnes qui enregistrent ce commerçant le voient. Ce n'est pas lié à vous.",
+                    label: "Des logos à partir d'un lien",
+                },
             ],
             pt: [
                 {
@@ -689,11 +701,15 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "O lançamento por voz agora envia o áudio à ElevenLabs enquanto você fala, pelo nosso servidor na Cloudflare, que não guarda nada. Depois o texto vai ao nosso servidor com os nomes das suas contas e categorias, como antes.",
                     label: "Lançamento por voz enquanto você fala",
                 },
+                {
+                    detail: "No seletor de ícone você pode colar um link para um site ou uma imagem. Nosso servidor de logos busca esse logo ou essa imagem e guarda uma cópia, e quando você salva o lançamento, o nome do estabelecimento e esse logo entram na lista compartilhada de estabelecimentos para que outras pessoas que registram esse estabelecimento o vejam. Não é vinculado a você.",
+                    label: "Logos a partir de um link",
+                },
             ],
         },
         document: "privacy",
         effectiveAtMs: Date.UTC(2027, 0, 1),
-        postedAtMs: Date.UTC(2026, 10, 13),
+        postedAtMs: Date.UTC(2026, 10, 15),
     },
     {
         changes: {
@@ -702,11 +718,19 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "A material change gets at least 30 days' notice in the app and by email. A new optional feature can apply from the day it ships, and a new account follows the version posted when it signs up.",
                     label: "How these terms change",
                 },
+                {
+                    detail: "If you paste a link to an image, you confirm you have the right to share it. We show it to everyone who logs that merchant and may remove it at any time.",
+                    label: "Images you paste",
+                },
             ],
             es: [
                 {
                     detail: "Un cambio sustancial se avisa con al menos 30 días en la app y por correo. Una nueva función opcional puede aplicarse desde el día en que se lanza, y una cuenta nueva se rige por la versión publicada al registrarse.",
                     label: "Cómo cambian estos términos",
+                },
+                {
+                    detail: "Si pegas un enlace a una imagen, confirmas que tienes derecho a compartirla. La mostramos a todas las personas que registren ese comercio y podemos eliminarla en cualquier momento.",
+                    label: "Imágenes que pegas",
                 },
             ],
             fr: [
@@ -714,17 +738,25 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Une modification importante est annoncée au moins 30 jours à l'avance dans l'app et par e-mail. Une nouvelle fonction facultative peut s'appliquer dès sa sortie, et un nouveau compte suit la version publiée au moment de son inscription.",
                     label: "Comment ces conditions changent",
                 },
+                {
+                    detail: "Si vous collez un lien vers une image, vous confirmez avoir le droit de la partager. Nous la montrons à toutes les personnes qui enregistrent ce commerçant et pouvons la supprimer à tout moment.",
+                    label: "Les images que vous collez",
+                },
             ],
             pt: [
                 {
                     detail: "Uma mudança relevante é avisada com pelo menos 30 dias no app e por e-mail. Um novo recurso opcional pode valer desde o dia em que é lançado, e uma conta nova segue a versão publicada ao ser criada.",
                     label: "Como estes termos mudam",
                 },
+                {
+                    detail: "Se você colar um link para uma imagem, confirma que tem direito de compartilhá-la. Nós a mostramos a todos que registram esse estabelecimento e podemos removê-la a qualquer momento.",
+                    label: "Imagens que você cola",
+                },
             ],
         },
         document: "terms",
         effectiveAtMs: Date.UTC(2027, 0, 1),
-        postedAtMs: Date.UTC(2026, 10, 10),
+        postedAtMs: Date.UTC(2026, 10, 15),
     },
 ];
 
