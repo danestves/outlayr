@@ -25,6 +25,7 @@
 @source "../node_modules/panelui-web/dist/components/kpi/index.js";
 @source "../node_modules/panelui-web/dist/components/label/index.js";
 @source "../node_modules/panelui-web/dist/components/menu/index.js";
+@source "../node_modules/panelui-web/dist/components/nav-rail/index.js";
 @source "../node_modules/panelui-web/dist/components/plot/index.js";
 @source "../node_modules/panelui-web/dist/components/radio-group/index.js";
 @source "../node_modules/panelui-web/dist/components/range-meter/index.js";
@@ -239,41 +240,6 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
         letter-spacing: -0.02em;
     }
 
-    .dash-nav {
-        position: relative;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        height: 34px;
-        padding: 0 10px;
-        margin-bottom: 2px;
-        border-radius: 10px;
-        color: var(--color-app-muted);
-        font-size: 14px;
-        line-height: 20px;
-        font-weight: 500;
-    }
-
-    .dash-nav[aria-current="page"] {
-        background: var(--color-app-fill);
-        color: var(--color-app-ink);
-    }
-
-    .dash-nav[aria-current="page"] svg {
-        color: var(--color-app-tint);
-    }
-
-    .dash-nav[aria-current="page"]::before {
-        content: "";
-        position: absolute;
-        left: -12px;
-        top: 8px;
-        bottom: 8px;
-        width: 3px;
-        background: var(--color-app-tint);
-        border-radius: 0 3px 3px 0;
-    }
-
     .dash-btn {
         display: inline-flex;
         align-items: center;
@@ -302,11 +268,6 @@ html[data-theme="dark"]:has([role="dialog"][data-swipe-direction]) body::after {
         width: 44px;
         height: 44px;
         border-radius: 12px;
-    }
-
-    .dash-drawer .dash-nav {
-        height: 44px;
-        margin-bottom: 0;
     }
 
     @media (max-width: 1023px) {
