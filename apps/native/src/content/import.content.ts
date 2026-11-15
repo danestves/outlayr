@@ -93,13 +93,13 @@ const importSheet = {
             "pt-PT": "A ler o extrato…",
         }),
         "import.statementPrivacy": t({
-            en: "The file goes to our server, which deletes it after reading it. Its text goes to Anthropic with long account and card numbers masked, including your name and address if printed. It needs selectable text, so scans won't work.",
+            en: "The file goes to our server, which deletes it after reading it. Its text goes to Anthropic with long account and card numbers masked. Your name and address, if printed, are sent unmasked. It needs selectable text, so scans won't work.",
             de: "Die Datei geht an unseren Server, der sie nach dem Lesen löscht. Ihr Text geht mit maskierten langen Konto- und Kartennummern an Anthropic und enthält deinen Namen und deine Adresse, falls sie aufgedruckt sind. Der Text muss auswählbar sein, Scans funktionieren also nicht.",
             es: "El archivo va a nuestro servidor, que lo borra después de leerlo. Su texto va a Anthropic con los números largos de cuenta y tarjeta ocultos, e incluye tu nombre y dirección si aparecen. Necesita texto seleccionable, así que los escaneos no funcionan.",
-            fr: "Le fichier va sur notre serveur, qui le supprime après lecture. Son texte va à Anthropic, avec les longs numéros de compte et de carte masqués, y compris votre nom et votre adresse s'ils y figurent. Il doit contenir du texte sélectionnable : les scans ne fonctionnent pas.",
-            pt: "O arquivo vai para o nosso servidor, que o apaga depois de ler. O texto vai para a Anthropic com os números longos de conta e cartão ocultos, incluindo seu nome e endereço se aparecerem. Ele precisa ter texto selecionável, então digitalizações não funcionam.",
+            fr: "Le fichier va sur notre serveur, qui le supprime après lecture. Son texte va à Anthropic, avec les longs numéros de compte et de carte masqués. Votre nom et votre adresse, s'ils y figurent, sont envoyés sans masquage. Il doit contenir du texte sélectionnable : les scans ne fonctionnent pas.",
+            pt: "O arquivo vai para o nosso servidor, que o apaga depois de ler. O texto vai para a Anthropic com os números longos de conta e cartão ocultos. Seu nome e endereço, se aparecerem, são enviados sem ocultar. Ele precisa ter texto selecionável, então digitalizações não funcionam.",
             "pt-PT":
-                "O ficheiro vai para o nosso servidor, que o apaga depois de o ler. O texto vai para a Anthropic com os números longos de conta e cartão ocultos, incluindo o seu nome e morada se aparecerem. Tem de ter texto selecionável, por isso as digitalizações não funcionam.",
+                "O ficheiro vai para o nosso servidor, que o apaga depois de o ler. O texto vai para a Anthropic com os números longos de conta e cartão ocultos. O seu nome e morada, se aparecerem, são enviados sem ocultar. Tem de ter texto selecionável, por isso as digitalizações não funcionam.",
         }),
         "import.statementRateLimited": t({
             en: "You've reached this month's statement imports.",
