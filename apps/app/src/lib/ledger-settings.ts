@@ -1,20 +1,14 @@
 import { settingsOf } from "@outlayr/money/ledger-view";
 import type { LedgerSettings } from "@outlayr/money/ledger-view";
-import { useLiveQuery } from "@tanstack/react-db";
 import type { DbClient } from "@tanstack/react-db";
 import { createContext, useContext, useMemo } from "react";
 
 import { clockTime, money } from "./ledger";
-import { ledgerCollections } from "./ledger-db";
+import { ledgerCollections, useRows } from "./ledger-db";
 
 export const LedgerSettingsContext = createContext<LedgerSettings>(settingsOf([]));
 
-function useMetaRows() {
-    return useLiveQuery({
-        query: (q) => q.from({ row: ledgerCollections.appMeta }),
-        queryKey: ["ledger.appMeta"],
-    }).data;
-}
+const useMetaRows = () => useRows(ledgerCollections.appMeta);
 
 export function useLedgerSettings(): LedgerSettings {
     const rows = useMetaRows();

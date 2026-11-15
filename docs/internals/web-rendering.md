@@ -13,6 +13,7 @@ The web app (`apps/app`, at app.tryoutlayr.com) sends a finished page on every l
 ## Rules for new work
 
 - Read ledger data from the collections in `lib/ledger-db.ts`, through the dashboard context. A new table is one entry in `ledgerCollections`, declared with `ledgerTable(docs("<table>"))`: that adds it to the server pull, the hydration and the live sync. The entry must be one of `LedgerBooks` (`lib/ledger-books.ts`) or a tag table, and the build fails until `ledgerBooks` and `useLedgerBooks` read it. `LedgerBooks` is those tables as Convex docs and extends the rows the read model in `@outlayr/money/ledger-view` reads, so a schema change that breaks a read fails the build there. Tags are a second group (`tagBooks`, `useTagBooks`), read by the few screens that need them, so a tag change does not rebuild every screen's ledger.
+- Read a table with `useRows`, not `useLiveQuery`. The router streams every live query's rows into the page beside the hydrated tables, which sent each row twice.
 - No server function, `beforeLoad` round trip or awaited query between a click and its paint. Filters are search params over data already in memory, and the session token is kept in the router context until it expires.
 - Anything the first paint needs from Convex is fetched on the server and carried to the browser, as the rows, the photo URLs and the profile are. A `useQuery` written in a screen renders empty on the server and fills after hydration, which is the flash this design exists to remove.
 - The server never opens a Convex subscription. Its tables take the `SERVER` dependency (`serverDependencies` in `lib/db.ts`), which gives them a sync that only holds the hydrated rows and their cursor (`serverSync`). The tables pick it from the dependency, not from `import.meta.env.SSR`, because vitest sets that flag in node.
@@ -68,4 +69,4 @@ The HTML of every `_app` page holds the visitor's whole ledger and account state
 
 ## Measuring
 
-Measure a production build against a backend with real latency, not `vp dev` on localhost: a local Convex hides the round trips the server pull pays. Watch the HTML size too. The page carries every row twice, once in the dehydrated collections and once in the streamed live-query snapshots: 242 rows came to 565 KB, 64 KB gzipped.
+Measure a production build against a backend with real latency, not `vp dev` on localhost: a local Convex hides the round trips the server pull pays. Watch the HTML size too: 242 rows come to about 360 KB, 46 KB gzipped.

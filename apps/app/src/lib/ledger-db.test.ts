@@ -3,7 +3,7 @@ import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vite-plus/test";
 
 import { ledgerDependencies } from "./db";
-import { ledgerBooks, ledgerCollections, ledgerSeed, preloadLedger } from "./ledger-db";
+import { ledgerBooks, ledgerCollections, ledgerSeed, preloadLedger, rowStore } from "./ledger-db";
 import type { PulledRow } from "./ledger-sync";
 import { fakeConvex, pulled } from "./test-convex";
 
@@ -92,6 +92,21 @@ describe("server seed", () => {
         );
 
         expect(entries(browser.db)).toStrictEqual({ edited: "entry edited", kept: "entry kept" });
+    });
+
+    it("tells a screen when a row it painted from the server page is deleted", async () => {
+        const rows = [entry("kept", 1), entry("deleted", 2)];
+        const browser = open({ rows });
+        browser.db.hydrate(seedOf(rows));
+        const store = rowStore(browser.db.collection(ledgerCollections.transactions));
+        const stop = store.subscribe(() => undefined);
+        await preloadLedger(browser.db);
+
+        browser.convex.elsewhere(entry("deleted", 0, { deletedAt: 9 }));
+        await Promise.resolve();
+
+        expect(store.read().map((row) => row.localId)).toStrictEqual(["kept"]);
+        stop();
     });
 
     it("pulls only what changed after the server rendered, and loses what was deleted", async () => {
