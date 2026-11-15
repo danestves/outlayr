@@ -20,7 +20,7 @@
         },
         "/sitemap.xml": {
             "get": {
-                "summary": "Every public page in English and Spanish",
+                "summary": "Every public page in English and Spanish, plus the pages translated to German, French and Portuguese",
                 "responses": {
                     "200": {
                         "description": "Sitemap with hreflang alternates",
