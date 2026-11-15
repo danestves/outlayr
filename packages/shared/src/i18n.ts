@@ -41,10 +41,27 @@ const TOOL_PATHS = [
     "/tools/subscription-cost-calculator",
 ];
 
+const COMPARE_PATHS = [
+    "/compare",
+    "/compare/copilot",
+    "/compare/everydollar",
+    "/compare/fintonic",
+    "/compare/goodbudget",
+    "/compare/monarch",
+    "/compare/monefy",
+    "/compare/money-lover",
+    "/compare/pocketguard",
+    "/compare/rocket-money",
+    "/compare/spendee",
+    "/compare/wallet",
+    "/compare/ynab",
+];
+
 const PAGE_PATHS = [
     "/",
     "/about",
     "/brand",
+    ...COMPARE_PATHS,
     "/open",
     "/support",
     "/privacy",
