@@ -1,6 +1,6 @@
 import { useIntlayer } from "react-intlayer";
 
-import { useMoney } from "@/lib/use-money";
+import { useMoney, usePercent } from "@/lib/use-money";
 import type { Act } from "@/stageshow/act";
 import { Stage } from "@/stageshow/stage";
 
@@ -21,9 +21,9 @@ const END: Scene = { out: false, step: 5 };
 const SPENT = 597.95;
 const BARS = [0.35, 0.09, 0.58, 0.3, 0.95, 0.42, 0];
 const AVERAGE = 0.4;
-const MOVERS: readonly { amount: number; category: Category; change?: string }[] = [
-    { amount: -1850, category: "rent", change: "−100%" },
-    { amount: 122.46, category: "groceries", change: "+95%" },
+const MOVERS: readonly { amount: number; category: Category; change?: number }[] = [
+    { amount: -1850, category: "rent", change: -100 },
+    { amount: 122.46, category: "groceries", change: 95 },
     { amount: 112.34, category: "utilities" },
 ];
 
@@ -44,6 +44,7 @@ const script = async (act: Act<Scene>) => {
 export function MonthFilm() {
     const copy = useIntlayer("film-month");
     const money = useMoney();
+    const percent = usePercent();
     const days = copy.days.value.split(" ");
     return (
         <Stage<Scene>
@@ -64,7 +65,7 @@ export function MonthFilm() {
                             <div className="month-head">
                                 <Micro>{copy.range}</Micro>
                                 <span className="month-chip" data-in={step >= 4 || undefined}>
-                                    −74%
+                                    {percent(-74)}
                                 </span>
                             </div>
                             <div className="film-rise" data-in={step >= 1 || undefined}>
@@ -119,7 +120,9 @@ export function MonthFilm() {
                                     <span className={mover.amount < 0 ? "month-income" : "month-spend"}>
                                         {money(mover.amount, { plus: true })}
                                     </span>
-                                    <span className="month-change">{mover.change ?? copy.fresh}</span>
+                                    <span className="month-change">
+                                        {mover.change === undefined ? copy.fresh : percent(mover.change)}
+                                    </span>
                                 </div>
                             ))}
                         </div>

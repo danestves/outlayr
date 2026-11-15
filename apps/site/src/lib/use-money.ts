@@ -1,7 +1,7 @@
 import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useLocale } from "react-intlayer";
 
-import { formatMoney, moneyParts } from "./money";
+import { formatMoney, formatPercent, moneyParts } from "./money";
 
 const MINUS = "−";
 
@@ -18,6 +18,11 @@ export function useMoney() {
         const sign = negative ? MINUS : positive;
         return `${sign}${formatMoney(Math.abs(value), code, tag, whole ? 0 : 2)}`;
     };
+}
+
+export function usePercent() {
+    const tag = useTag();
+    return (value: number) => `${value > 0 ? "+" : MINUS}${formatPercent(Math.abs(value), tag)}`;
 }
 
 export function useCurrencyMarks() {

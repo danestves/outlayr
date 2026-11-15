@@ -3,8 +3,7 @@ import { useIntlayer } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
-import { formatPercent } from "@/lib/money";
-import { useCurrencyMarks, useMoney } from "@/lib/use-money";
+import { useCurrencyMarks, useMoney, usePercent } from "@/lib/use-money";
 
 type Size = "lg" | "md";
 
@@ -30,11 +29,6 @@ function Amount({ sign = "", value }: { sign?: string; value: number }) {
             {suffix === "" ? null : <span className="ui-cur ui-cur-after">{suffix}</span>}
         </p>
     );
-}
-
-function usePercent() {
-    const { tag } = useCurrencyMarks();
-    return (value: number) => `${value > 0 ? "+" : "−"}${formatPercent(Math.abs(value), tag)}`;
 }
 
 function Frame({ children, label, size }: { children: ReactNode; label: string; size: Size }) {

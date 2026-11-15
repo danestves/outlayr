@@ -38,6 +38,7 @@ function useSharedReading({ currency, unit }: Pick<SharedReport, "currency" | "u
             copy,
             fmt: {
                 axis: (value) => (percent ? formatPercent(value, dated) : compact.format(value).toLowerCase()),
+                percent: (value) => formatPercent(value, dated),
                 date: (day) => monthDay.format(wallNoon(day)).replace(".", ""),
                 month: (key) => shortMonth.format(wallNoon(`${key}-15`)),
                 whole: (value) =>
