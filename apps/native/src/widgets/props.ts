@@ -23,7 +23,7 @@ import {
 } from "@/db/schema";
 import { budgetPeriodPhrase } from "@/domain/budget-math";
 import { compareBudgetSeverity } from "@/domain/budget-severity";
-import { formatDateHeader, formatDayHeader, formatUpcomingDate, weekdayInitial } from "@/domain/dates";
+import { dayOfMonth, formatDateHeader, formatDayHeader, formatUpcomingDate, weekdayInitial } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import type { TranslationKey } from "@/i18n/catalog";
 import type { Language } from "@/i18n/languages";
@@ -209,7 +209,7 @@ export const PERIOD_EYEBROW = {
 function rangeLabel(start: Date, end: Date): string {
     const last = new Date(end.getTime() - 1);
     if (start.getMonth() === last.getMonth()) {
-        return `${start.getDate()} – ${formatUpcomingDate(last)}`;
+        return `${dayOfMonth(start)} – ${formatUpcomingDate(last)}`;
     }
     return `${formatUpcomingDate(start)} – ${formatUpcomingDate(last)}`;
 }

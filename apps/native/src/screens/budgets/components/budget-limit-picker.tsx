@@ -24,7 +24,7 @@ import type { Burndown, BurndownPoint } from "@/domain/budget-burndown";
 import { crossingDay } from "@/domain/budget-limit-crossing";
 import { LIMIT_STEP } from "@/domain/budget-limit-step";
 import { daysLeftInWindow, leftPerDay } from "@/domain/budget-math";
-import { monthAbbrevTitle } from "@/domain/dates";
+import { dayOfMonth, monthAbbrevTitle } from "@/domain/dates";
 import { formatAmount } from "@/domain/money";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
@@ -104,7 +104,7 @@ function limitGeometry(burndown: Burndown, width: number, axisTop: number) {
 }
 
 function formatDayMonth(date: Date, language: Language): string {
-    return `${date.getDate()} ${monthAbbrevTitle(date, language)}`;
+    return `${dayOfMonth(date, language)} ${monthAbbrevTitle(date, language)}`;
 }
 
 export function BudgetLimitPicker({

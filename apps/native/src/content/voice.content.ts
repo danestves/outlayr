@@ -5,30 +5,35 @@ const voice = {
     content: {
         "voice.action.edit": t({
             en: "Edit",
+            de: "Bearbeiten",
             es: "Editar",
             fr: "Modifier",
             pt: "Editar",
         }),
         "voice.action.finish": t({
             en: "Finish in the form",
+            de: "Im Formular fertigstellen",
             es: "Terminar en el formulario",
             fr: "Terminer dans le formulaire",
             pt: "Terminar no formulário",
         }),
         "voice.action.fix": t({
             en: "Fix it",
+            de: "Korrigieren",
             es: "Corregir",
             fr: "Corriger",
             pt: "Corrigir",
         }),
         "voice.action.retry": t({
             en: "Say it again",
+            de: "Noch mal sagen",
             es: "Dilo de nuevo",
             fr: "Répéter",
             pt: "Diga de novo",
         }),
         "voice.action.save": t({
             en: "Save",
+            de: "Speichern",
             es: "Guardar",
             fr: "Enregistrer",
             pt: "Salvar",
@@ -36,6 +41,7 @@ const voice = {
         }),
         "voice.action.settings": t({
             en: "Open Settings",
+            de: "Einstellungen öffnen",
             es: "Abrir Configuración",
             "es-ES": "Abrir Ajustes",
             fr: "Ouvrir Réglages",
@@ -44,12 +50,14 @@ const voice = {
         }),
         "voice.close": t({
             en: "Close",
+            de: "Schließen",
             es: "Cerrar",
             fr: "Fermer",
             pt: "Fechar",
         }),
         "voice.failed.denied": t({
             en: "Outlayr needs the microphone to hear you.",
+            de: "Outlayr braucht das Mikrofon, um dich zu hören.",
             es: "Outlayr necesita el micrófono para escucharte.",
             fr: "Outlayr a besoin du micro pour vous entendre.",
             pt: "O Outlayr precisa do microfone para ouvir você.",
@@ -57,6 +65,7 @@ const voice = {
         }),
         "voice.failed.notConfigured": t({
             en: "Speaking an entry needs the cloud tier.",
+            de: "Einen Eintrag einzusprechen braucht die Cloud-Stufe.",
             es: "Para dictar un registro se necesita el servicio en la nube.",
             fr: "La saisie vocale nécessite le service cloud.",
             pt: "Ditar um lançamento requer o serviço na nuvem.",
@@ -64,6 +73,7 @@ const voice = {
         }),
         "voice.failed.notEntitled": t({
             en: "Your free captures, voice and receipts together, are used up. They come back within 30 days; Pro lifts the limit.",
+            de: "Deine kostenlosen Erfassungen, Sprache und Belege zusammen, sind aufgebraucht. Sie kommen innerhalb von 30 Tagen zurück; Pro hebt das Limit auf.",
             es: "Ya usaste tus capturas gratis (voz y recibos). Se renuevan en menos de 30 días; con Pro no tienes ese límite.",
             "es-ES":
                 "Ya has usado tus capturas gratis (voz y tickets). Se renuevan en menos de 30 días; con Pro no tienes ese límite.",
@@ -74,6 +84,7 @@ const voice = {
         }),
         "voice.failed.offline": t({
             en: "You're offline.",
+            de: "Du bist offline.",
             es: "Estás sin conexión.",
             fr: "Vous êtes hors ligne.",
             pt: "Você está sem conexão.",
@@ -81,12 +92,14 @@ const voice = {
         }),
         "voice.failed.provider": t({
             en: "Couldn't write that down.",
+            de: "Das konnte nicht notiert werden.",
             es: "No pude anotarlo.",
             fr: "Impossible de le noter.",
             pt: "Não consegui anotar isso.",
         }),
         "voice.failed.quotaExceeded": t({
             en: "The fair-use limit for captures is reached. It resets within 30 days.",
+            de: "Das Fair-Use-Limit für Erfassungen ist erreicht. Es wird innerhalb von 30 Tagen zurückgesetzt.",
             es: "Llegaste al límite de uso justo de capturas. Se renueva en menos de 30 días.",
             "es-ES": "Has llegado al límite de uso justo de capturas. Se renueva en menos de 30 días.",
             fr: "La limite d'utilisation raisonnable des captures est atteinte. Elle se réinitialise sous 30 jours.",
@@ -95,6 +108,7 @@ const voice = {
         }),
         "voice.failed.rateLimited": t({
             en: "That's a lot of entries at once. Give it a moment.",
+            de: "Das sind viele Einträge auf einmal. Gib ihm einen Moment.",
             es: "Son muchos registros seguidos. Espera un momento.",
             fr: "Beaucoup d'opérations d'un coup. Patientez un instant.",
             pt: "São muitos lançamentos seguidos. Espere um momento.",
@@ -102,12 +116,14 @@ const voice = {
         }),
         "voice.failed.silent": t({
             en: "Didn't hear anything.",
+            de: "Ich habe nichts gehört.",
             es: "No escuché nada.",
             fr: "Je n'ai rien entendu.",
             pt: "Não ouvi nada.",
         }),
         "voice.failed.timeout": t({
             en: "That took too long.",
+            de: "Das hat zu lange gedauert.",
             es: "Tardó demasiado.",
             fr: "Cela a pris trop de temps.",
             pt: "Demorou demais.",
@@ -115,6 +131,7 @@ const voice = {
         }),
         "voice.failed.unauthenticated": t({
             en: "Sign in to speak an entry.",
+            de: "Melde dich an, um einen Eintrag einzusprechen.",
             es: "Inicia sesión para dictar un registro.",
             fr: "Connectez-vous pour dicter une opération.",
             pt: "Entre para ditar um lançamento.",
@@ -122,6 +139,7 @@ const voice = {
         }),
         "voice.failed.unclear": t({
             en: "Didn't catch a transaction in that.",
+            de: "Darin war kein Eintrag zu erkennen.",
             es: "No detecté ninguna transacción ahí.",
             fr: "Je n'ai repéré aucune opération.",
             pt: "Não identifiquei nenhum lançamento aí.",
@@ -129,48 +147,56 @@ const voice = {
         }),
         "voice.hint": t({
             en: "Try “{example}”",
+            de: "Probier „{example}“",
             es: "Prueba “{example}”",
             fr: "Essayez « {example} »",
             pt: "Experimente “{example}”",
         }),
         "voice.hint.example": t({
             en: "{amount} at {merchant} today",
+            de: "{amount} bei {merchant} heute",
             es: "{amount} en {merchant} hoy",
             fr: "{amount} chez {merchant} aujourd'hui",
             pt: "{amount} em {merchant} hoje",
         }),
         "voice.hint.exampleAccount": t({
             en: "{amount} at {merchant} today on {account}",
+            de: "{amount} bei {merchant} heute mit {account}",
             es: "{amount} en {merchant} hoy con {account}",
             fr: "{amount} chez {merchant} aujourd'hui avec {account}",
             pt: "{amount} em {merchant} hoje com {account}",
         }),
         "voice.hint.fallback": t({
             en: "12 for lunch today",
+            de: "12 fürs Mittagessen heute",
             es: "12 de almuerzo hoy",
             fr: "12 pour un sandwich aujourd'hui",
             pt: "12 no almoço hoje",
         }),
         "voice.limit.last": t({
             en: "Last clip for now",
+            de: "Vorerst die letzte Aufnahme",
             es: "Última grabación por ahora",
             fr: "Dernière dictée pour l'instant",
             pt: "Última gravação por enquanto",
         }),
         "voice.limit.next": t({
             en: "Next clip in {time}",
+            de: "Nächste Aufnahme in {time}",
             es: "Siguiente grabación en {time}",
             fr: "Prochaine dictée dans {time}",
             pt: "Próxima gravação em {time}",
         }),
         "voice.limit.paused": t({
             en: "Voice is paused",
+            de: "Sprache ist pausiert",
             es: "La voz está en pausa",
             fr: "La saisie vocale est en pause",
             pt: "A voz está pausada",
         }),
         "voice.mic.finish": t({
             en: "Done speaking",
+            de: "Fertig gesprochen",
             es: "Terminé de hablar",
             fr: "J'ai terminé",
             pt: "Terminei de falar",
@@ -178,36 +204,42 @@ const voice = {
         // Layout, not just copy: `parseSentence` reads the slot order straight out of these templates.
         "voice.sentence.expense": t({
             en: "Spent {amount} at {merchant} on {category} with {account} {when}",
+            de: "{amount} bei {merchant} für {category} mit {account} {when} ausgegeben",
             es: "Gasté {amount} en {merchant} para {category} con {account} {when}",
             fr: "J'ai dépensé {amount} chez {merchant} pour {category} avec {account} {when}",
             pt: "Gastei {amount} em {merchant} para {category} com {account} {when}",
         }),
         "voice.sentence.income": t({
             en: "Received {amount} from {merchant} for {category} into {account} {when}",
+            de: "{amount} von {merchant} für {category} auf {account} {when} erhalten",
             es: "Recibí {amount} de {merchant} para {category} en {account} {when}",
             fr: "J'ai reçu {amount} de {merchant} pour {category} sur {account} {when}",
             pt: "Recebi {amount} de {merchant} para {category} em {account} {when}",
         }),
         "voice.sentence.recurringIncome": t({
             en: "Receiving {amount} from {merchant} {every} for {category} into {account} from {when}",
+            de: "{amount} von {merchant} {every} für {category} auf {account} ab {when} erhalten",
             es: "Recibo {amount} de {merchant} {every} para {category} en {account} desde {when}",
             fr: "Je reçois {amount} de {merchant} {every} pour {category} sur {account} dès {when}",
             pt: "Recebo {amount} de {merchant} {every} para {category} em {account} a partir de {when}",
         }),
         "voice.sentence.subscription": t({
             en: "Subscribed to {merchant} at {amount} {every} on {account} from {when}",
+            de: "{merchant} für {amount} {every} mit {account} ab {when} abonniert",
             es: "Me suscribí a {merchant} por {amount} {every} con {account} desde {when}",
             fr: "Abonné à {merchant} pour {amount} {every} avec {account} dès {when}",
             pt: "Assinei {merchant} por {amount} {every} com {account} a partir de {when}",
         }),
         "voice.sentence.transfer": t({
             en: "Moved {amount} from {from} to {to} {when}",
+            de: "{amount} von {from} auf {to} {when} umgebucht",
             es: "Moví {amount} de {from} a {to} {when}",
             fr: "J'ai viré {amount} de {from} vers {to} {when}",
             pt: "Movi {amount} de {from} para {to} {when}",
         }),
         "voice.state.listening": t({
             en: "Listening…",
+            de: "Ich höre zu…",
             es: "Escuchando…",
             fr: "À l'écoute…",
             pt: "Ouvindo…",
@@ -215,6 +247,7 @@ const voice = {
         }),
         "voice.state.starting": t({
             en: "Getting ready…",
+            de: "Wird vorbereitet…",
             es: "Preparando…",
             fr: "Préparation…",
             pt: "Preparando…",
@@ -222,6 +255,7 @@ const voice = {
         }),
         "voice.state.thinking": t({
             en: "Writing it down…",
+            de: "Wird notiert…",
             es: "Anotando…",
             fr: "Je note…",
             pt: "Anotando…",
@@ -229,18 +263,21 @@ const voice = {
         }),
         "voice.turn.corrected": t({
             en: "{value}, was {was}",
+            de: "{value}, vorher {was}",
             es: "{value}, antes {was}",
             fr: "{value}, avant {was}",
             pt: "{value}, antes {was}",
         }),
         "voice.turn.field.account": t({
             en: "account",
+            de: "Konto",
             es: "cuenta",
             fr: "compte",
             pt: "conta",
         }),
         "voice.turn.field.amount": t({
             en: "amount",
+            de: "Betrag",
             es: "monto",
             "es-ES": "importe",
             fr: "montant",
@@ -248,24 +285,28 @@ const voice = {
         }),
         "voice.turn.field.category": t({
             en: "category",
+            de: "Kategorie",
             es: "categoría",
             fr: "catégorie",
             pt: "categoria",
         }),
         "voice.turn.field.date": t({
             en: "date",
+            de: "Datum",
             es: "fecha",
             fr: "date",
             pt: "data",
         }),
         "voice.turn.field.merchant": t({
             en: "name",
+            de: "Name",
             es: "nombre",
             fr: "nom",
             pt: "nome",
         }),
         "voice.turn.field.schedule": t({
             en: "schedule",
+            de: "Rhythmus",
             es: "frecuencia",
             fr: "fréquence",
             pt: "recorrência",

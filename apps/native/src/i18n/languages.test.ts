@@ -32,7 +32,7 @@ describe("languageFromTag", () => {
     });
 
     it("returns null for an unsupported language", () => {
-        expect(languageFromTag("de-DE")).toBeNull();
+        expect(languageFromTag("it-IT")).toBeNull();
         expect(languageFromTag("")).toBeNull();
         expect(languageFromTag(null)).toBeNull();
     });
@@ -45,6 +45,6 @@ describe("resolveLanguage", () => {
     });
 
     it("falls back to the default when the device speaks an unsupported language", () => {
-        expect(resolveLanguage("de-DE")).toBe(DEFAULT_LANGUAGE);
+        expect(resolveLanguage("it-IT")).toBe(DEFAULT_LANGUAGE);
     });
 });

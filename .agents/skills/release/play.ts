@@ -14,6 +14,7 @@ const NOTE_LANGUAGES = {
     es: ["es-419", "es-US"],
     "es-ES": ["es-ES"],
     fr: ["fr-FR"],
+    de: ["de-DE"],
     pt: ["pt-BR"],
     "pt-PT": ["pt-PT"],
 } as const;

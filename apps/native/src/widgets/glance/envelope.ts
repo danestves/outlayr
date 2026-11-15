@@ -125,6 +125,7 @@ export function envelope<Copy>(copy: (language: Language) => Copy): WidgetEnvelo
     return {
         locales: {
             en: copy("en"),
+            de: copy("de"),
             es: copy("es"),
             "es-ES": copy("es-ES"),
             fr: copy("fr"),

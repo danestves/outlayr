@@ -41,6 +41,26 @@ const COPY = {
         signedInWith: "Signed in with",
         subject: "Your Outlayr account is ready",
     },
+    de: {
+        account: "Konto",
+        after: "Du kannst jederzeit in den Einstellungen alles exportieren oder löschen.",
+        footer: (email) =>
+            `Gesendet an ${email}, weil diese Adresse ein Outlayr-Konto angelegt hat. Fragen? Schreib an support@tryoutlayr.com.`,
+        intro: "Deine Einträge bleiben auf deinem Handy. Dein Konto bringt dir:",
+        items: [
+            { detail: "Sag, was du ausgegeben hast, und Outlayr schreibt den Eintrag.", label: "Eintrag einsprechen" },
+            { detail: "Mach ein Foto und Outlayr liest den Gesamtbetrag.", label: "Beleg scannen" },
+            {
+                detail: "Gib einen Händler ein und Outlayr schlägt die Kategorie vor.",
+                label: "Intelligentes Ausfüllen",
+            },
+        ],
+        lead: "Dein Outlayr-Konto ist bereit.",
+        passwordProvider: "E-Mail und Passwort",
+        preview: "Was dein Konto dir bringt.",
+        signedInWith: "Angemeldet mit",
+        subject: "Dein Outlayr-Konto ist bereit",
+    },
     es: {
         account: "Cuenta",
         after: "Puedes exportar o borrar todo cuando quieras en Configuración.",

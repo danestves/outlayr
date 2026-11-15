@@ -5,6 +5,7 @@ const auth = {
     content: {
         "auth.adopt.body": t({
             en: "Choose what to keep. Only the first option keeps everything; the other two delete entries permanently.",
+            de: "Wähle, was du behältst. Nur die erste Option behält alles; die anderen beiden löschen Einträge dauerhaft.",
             es: "Elige qué quieres conservar. Solo la primera opción conserva todo; las otras dos borran entradas para siempre.",
             fr: "Choisissez ce que vous gardez. Seule la première option garde tout. Les deux autres suppriment des opérations définitivement.",
             pt: "Escolha o que manter. Só a primeira opção mantém tudo; as outras duas apagam lançamentos para sempre.",
@@ -13,12 +14,14 @@ const auth = {
         }),
         "auth.adopt.confirm.cancel": t({
             en: "Keep both instead",
+            de: "Doch beide behalten",
             es: "Mejor conservar los dos",
             fr: "Plutôt garder les deux",
             pt: "Melhor manter os dois",
         }),
         "auth.adopt.confirm.keepAccount": t({
             en: "This phone's entries will be deleted and cannot be recovered. Your account's ledger is what remains.",
+            de: "Die Einträge dieses Handys werden gelöscht und lassen sich nicht wiederherstellen. Übrig bleibt das Haushaltsbuch deines Kontos.",
             es: "Las entradas de este celular se borrarán y no se podrán recuperar. Solo queda el registro de tu cuenta.",
             "es-ES":
                 "Las entradas de este móvil se borrarán y no se podrán recuperar. Solo queda el registro de tu cuenta.",
@@ -29,6 +32,7 @@ const auth = {
         }),
         "auth.adopt.confirm.keepLocal": t({
             en: "Your account's entries will be deleted and cannot be recovered. This phone's ledger is what remains.",
+            de: "Die Einträge deines Kontos werden gelöscht und lassen sich nicht wiederherstellen. Übrig bleibt das Haushaltsbuch dieses Handys.",
             es: "Las entradas de tu cuenta se borrarán y no se podrán recuperar. Solo queda el registro de este celular.",
             "es-ES":
                 "Las entradas de tu cuenta se borrarán y no se podrán recuperar. Solo queda el registro de este móvil.",
@@ -39,12 +43,14 @@ const auth = {
         }),
         "auth.adopt.confirm.proceed": t({
             en: "Delete and continue",
+            de: "Löschen und fortfahren",
             es: "Borrar y continuar",
             fr: "Supprimer et continuer",
             pt: "Apagar e continuar",
         }),
         "auth.adopt.confirm.title": t({
             en: "This deletes entries",
+            de: "Dadurch werden Einträge gelöscht",
             es: "Esto borra entradas",
             fr: "Des opérations seront supprimées",
             pt: "Isso apaga lançamentos",
@@ -52,18 +58,21 @@ const auth = {
         }),
         "auth.adopt.eyebrow": t({
             en: "Two ledgers",
+            de: "Zwei Haushaltsbücher",
             es: "Dos registros",
             fr: "Deux journaux",
             pt: "Dois históricos",
         }),
         "auth.adopt.failed": t({
             en: "That could not be applied. Nothing was changed on either side. Try again.",
+            de: "Das konnte nicht angewendet werden. Auf keiner Seite wurde etwas geändert. Versuch es noch mal.",
             es: "No se pudo aplicar. No cambió nada en ningún lado. Inténtalo de nuevo.",
             fr: "Impossible d'appliquer ce choix. Rien n'a changé, d'un côté comme de l'autre. Réessayez.",
             pt: "Não foi possível aplicar. Nada mudou em nenhum dos lados. Tente de novo.",
         }),
         "auth.adopt.keepAccount.body": t({
             en: "Deletes every entry on this phone and replaces it with your account's ledger.",
+            de: "Löscht jeden Eintrag auf diesem Handy und ersetzt ihn durch das Haushaltsbuch deines Kontos.",
             es: "Borra cada entrada de este celular y la reemplaza con el registro de tu cuenta.",
             "es-ES": "Borra cada entrada de este móvil y la reemplaza con el registro de tu cuenta.",
             fr: "Supprime toutes les opérations de ce téléphone et les remplace par le journal de votre compte.",
@@ -72,12 +81,14 @@ const auth = {
         }),
         "auth.adopt.keepAccount.title": t({
             en: "Keep only the account's",
+            de: "Nur das des Kontos behalten",
             es: "Conservar solo el de la cuenta",
             fr: "Garder seulement celui du compte",
             pt: "Manter só os da conta",
         }),
         "auth.adopt.keepLocal.body": t({
             en: "Deletes every entry your account holds and replaces it with this phone's ledger.",
+            de: "Löscht jeden Eintrag, den dein Konto enthält, und ersetzt ihn durch das Haushaltsbuch dieses Handys.",
             es: "Borra cada entrada que tiene tu cuenta y la reemplaza con el registro de este celular.",
             "es-ES": "Borra cada entrada que tiene tu cuenta y la reemplaza con el registro de este móvil.",
             fr: "Supprime toutes les opérations de votre compte et les remplace par le journal de ce téléphone.",
@@ -86,6 +97,7 @@ const auth = {
         }),
         "auth.adopt.keepLocal.title": t({
             en: "Keep only this phone's",
+            de: "Nur das dieses Handys behalten",
             es: "Conservar solo el de este celular",
             "es-ES": "Conservar solo el de este móvil",
             fr: "Garder seulement celui de ce téléphone",
@@ -94,6 +106,7 @@ const auth = {
         }),
         "auth.adopt.merge.body": t({
             en: "Every entry from this phone and from your account survives. Nothing is deleted. Duplicate categories are yours to tidy up afterwards.",
+            de: "Jeder Eintrag von diesem Handy und aus deinem Konto bleibt erhalten. Nichts wird gelöscht. Doppelte Kategorien räumst du danach selbst auf.",
             es: "Se quedan todas las entradas de este celular y de tu cuenta. No se borra nada. Si quedan categorías duplicadas, puedes ordenarlas después.",
             "es-ES":
                 "Se quedan todas las entradas de este móvil y de tu cuenta. No se borra nada. Si quedan categorías duplicadas, puedes ordenarlas después.",
@@ -104,12 +117,14 @@ const auth = {
         }),
         "auth.adopt.merge.title": t({
             en: "Keep both",
+            de: "Beide behalten",
             es: "Conservar los dos",
             fr: "Garder les deux",
             pt: "Manter os dois",
         }),
         "auth.adopt.title": t({
             en: "This phone and your account both hold entries",
+            de: "Dieses Handy und dein Konto enthalten beide Einträge",
             es: "Este celular y tu cuenta tienen entradas",
             "es-ES": "Este móvil y tu cuenta tienen entradas",
             fr: "Ce téléphone et votre compte contiennent tous deux des opérations",
@@ -118,6 +133,7 @@ const auth = {
         }),
         "auth.adopt.working": t({
             en: "Reconciling…",
+            de: "Wird abgeglichen…",
             es: "Conciliando…",
             fr: "Rapprochement…",
             pt: "Conciliando…",
@@ -125,12 +141,14 @@ const auth = {
         }),
         "auth.email.change": t({
             en: "Change",
+            de: "Ändern",
             es: "Cambiar",
             fr: "Modifier",
             pt: "Alterar",
         }),
         "auth.email.checking": t({
             en: "Checking the code…",
+            de: "Code wird geprüft…",
             es: "Comprobando el código…",
             fr: "Vérification du code…",
             pt: "Verificando o código…",
@@ -138,42 +156,49 @@ const auth = {
         }),
         "auth.email.code": t({
             en: "Code",
+            de: "Code",
             es: "Código",
             fr: "Code",
             pt: "Código",
         }),
         "auth.email.continue": t({
             en: "Continue with email",
+            de: "Weiter mit E-Mail",
             es: "Continuar con correo",
             fr: "Continuer avec un e-mail",
             pt: "Continuar com e-mail",
         }),
         "auth.email.create": t({
             en: "New here? Create an account",
+            de: "Neu hier? Konto erstellen",
             es: "¿Eres nuevo? Crea una cuenta",
             fr: "Première visite ? Créez un compte",
             pt: "Primeira vez aqui? Crie uma conta",
         }),
         "auth.email.create.action": t({
             en: "Create account",
+            de: "Konto erstellen",
             es: "Crear cuenta",
             fr: "Créer un compte",
             pt: "Criar conta",
         }),
         "auth.email.create.title": t({
             en: "Create an account",
+            de: "Konto erstellen",
             es: "Crea una cuenta",
             fr: "Créer un compte",
             pt: "Crie uma conta",
         }),
         "auth.email.email": t({
             en: "Email",
+            de: "E-Mail",
             es: "Correo",
             fr: "E-mail",
             pt: "E-mail",
         }),
         "auth.email.error.attempts": t({
             en: "Too many tries with that code. Send a new one.",
+            de: "Zu viele Versuche mit diesem Code. Fordere einen neuen an.",
             es: "Demasiados intentos con ese código. Pide uno nuevo.",
             fr: "Trop de tentatives avec ce code. Demandez-en un nouveau.",
             pt: "Muitas tentativas com esse código. Peça um novo.",
@@ -181,6 +206,7 @@ const auth = {
         }),
         "auth.email.error.code": t({
             en: "That code is wrong or expired.",
+            de: "Dieser Code ist falsch oder abgelaufen.",
             es: "Ese código no es válido o ya caducó.",
             "es-ES": "Ese código no es válido o ya ha caducado.",
             fr: "Ce code est erroné ou a expiré.",
@@ -188,6 +214,7 @@ const auth = {
         }),
         "auth.email.error.credentials": t({
             en: "That email and password don't match.",
+            de: "E-Mail-Adresse und Passwort passen nicht zusammen.",
             es: "El correo y la contraseña no coinciden.",
             fr: "Cet e-mail et ce mot de passe ne correspondent pas.",
             pt: "O e-mail e a senha não conferem.",
@@ -195,6 +222,7 @@ const auth = {
         }),
         "auth.email.error.email": t({
             en: "Enter a valid email.",
+            de: "Gib eine gültige E-Mail-Adresse ein.",
             es: "Escribe un correo válido.",
             fr: "Saisissez un e-mail valide.",
             pt: "Digite um e-mail válido.",
@@ -202,6 +230,7 @@ const auth = {
         }),
         "auth.email.error.rateLimited": t({
             en: "Too many tries. Wait a bit and try again.",
+            de: "Zu viele Versuche. Warte kurz und versuch es noch mal.",
             es: "Demasiados intentos. Espera un poco y vuelve a intentarlo.",
             fr: "Trop de tentatives. Patientez un peu, puis réessayez.",
             pt: "Muitas tentativas. Espere um pouco e tente de novo.",
@@ -209,6 +238,7 @@ const auth = {
         }),
         "auth.email.forgot": t({
             en: "Forgot password?",
+            de: "Passwort vergessen?",
             es: "¿Olvidaste tu contraseña?",
             fr: "Mot de passe oublié ?",
             pt: "Esqueceu a senha?",
@@ -216,6 +246,7 @@ const auth = {
         }),
         "auth.email.hidePassword": t({
             en: "Hide password",
+            de: "Passwort verbergen",
             es: "Ocultar contraseña",
             fr: "Masquer le mot de passe",
             pt: "Ocultar senha",
@@ -223,6 +254,7 @@ const auth = {
         }),
         "auth.email.newPassword": t({
             en: "New password",
+            de: "Neues Passwort",
             es: "Contraseña nueva",
             fr: "Nouveau mot de passe",
             pt: "Nova senha",
@@ -230,6 +262,7 @@ const auth = {
         }),
         "auth.email.newPassword.title": t({
             en: "Choose a new password",
+            de: "Wähle ein neues Passwort",
             es: "Elige una contraseña nueva",
             fr: "Choisissez un nouveau mot de passe",
             pt: "Escolha uma nova senha",
@@ -237,6 +270,7 @@ const auth = {
         }),
         "auth.email.password": t({
             en: "Password",
+            de: "Passwort",
             es: "Contraseña",
             fr: "Mot de passe",
             pt: "Senha",
@@ -244,6 +278,7 @@ const auth = {
         }),
         "auth.email.password.title": t({
             en: "Enter your password",
+            de: "Gib dein Passwort ein",
             es: "Escribe tu contraseña",
             fr: "Saisissez votre mot de passe",
             pt: "Digite sua senha",
@@ -251,24 +286,28 @@ const auth = {
         }),
         "auth.email.passwordHint": t({
             en: "8 or more characters",
+            de: "Mindestens 8 Zeichen",
             es: "8 caracteres o más",
             fr: "8 caractères ou plus",
             pt: "8 caracteres ou mais",
         }),
         "auth.email.resend": t({
             en: "Send a new code",
+            de: "Neuen Code senden",
             es: "Enviar un código nuevo",
             fr: "Envoyer un nouveau code",
             pt: "Enviar um novo código",
         }),
         "auth.email.resent": t({
             en: "New code sent.",
+            de: "Neuer Code gesendet.",
             es: "Código nuevo enviado.",
             fr: "Nouveau code envoyé.",
             pt: "Novo código enviado.",
         }),
         "auth.email.reset.action": t({
             en: "Set password",
+            de: "Passwort festlegen",
             es: "Guardar contraseña",
             fr: "Définir le mot de passe",
             pt: "Definir senha",
@@ -276,6 +315,7 @@ const auth = {
         }),
         "auth.email.sending": t({
             en: "Sending code…",
+            de: "Code wird gesendet…",
             es: "Enviando código…",
             fr: "Envoi du code…",
             pt: "Enviando código…",
@@ -283,6 +323,7 @@ const auth = {
         }),
         "auth.email.showPassword": t({
             en: "Show password",
+            de: "Passwort anzeigen",
             es: "Mostrar contraseña",
             fr: "Afficher le mot de passe",
             pt: "Mostrar senha",
@@ -290,6 +331,7 @@ const auth = {
         }),
         "auth.email.signIn.action": t({
             en: "Sign in",
+            de: "Anmelden",
             es: "Iniciar sesión",
             fr: "Se connecter",
             pt: "Entrar",
@@ -297,12 +339,14 @@ const auth = {
         }),
         "auth.email.start.title": t({
             en: "What's your email?",
+            de: "Wie lautet deine E-Mail-Adresse?",
             es: "¿Cuál es tu correo?",
             fr: "Quel est votre e-mail ?",
             pt: "Qual é o seu e-mail?",
         }),
         "auth.email.verify.body": t({
             en: "Enter the code we sent to {email}.",
+            de: "Gib den Code ein, den wir an {email} gesendet haben.",
             es: "Escribe el código que enviamos a {email}.",
             fr: "Saisissez le code envoyé à {email}.",
             pt: "Digite o código que enviamos para {email}.",
@@ -310,6 +354,7 @@ const auth = {
         }),
         "auth.email.verify.title": t({
             en: "Check your email",
+            de: "Sieh in dein Postfach",
             es: "Revisa tu correo",
             fr: "Consultez vos e-mails",
             pt: "Confira seu e-mail",
@@ -317,12 +362,14 @@ const auth = {
         }),
         "auth.google.continue": t({
             en: "Continue with Google",
+            de: "Weiter mit Google",
             es: "Continuar con Google",
             fr: "Continuer avec Google",
             pt: "Continuar com o Google",
         }),
         "auth.restoring.title": t({
             en: "Opening your ledger",
+            de: "Dein Haushaltsbuch wird geöffnet",
             es: "Abriendo tu registro",
             fr: "Ouverture de votre journal",
             pt: "Abrindo seus lançamentos",
@@ -330,6 +377,7 @@ const auth = {
         }),
         "auth.signIn.agreement": t({
             en: "By using Outlayr, you agree to the {terms} and {privacy}.",
+            de: "Wenn du Outlayr nutzt, stimmst du den {terms} und der {privacy} zu.",
             es: "Al usar Outlayr, aceptas los {terms} y la {privacy}.",
             fr: "En utilisant Outlayr, vous acceptez les {terms} et la {privacy}.",
             pt: "Ao usar o Outlayr, você aceita os {terms} e a {privacy}.",
@@ -337,12 +385,14 @@ const auth = {
         }),
         "auth.signIn.begun": t({
             en: "Begun {date}.",
+            de: "Begonnen am {date}.",
             es: "Comenzado el {date}.",
             fr: "Commencé le {date}.",
             pt: "Iniciado em {date}.",
         }),
         "auth.signIn.body": t({
             en: "Your ledger is on this phone and it stays there. An account means it survives losing the phone.",
+            de: "Dein Haushaltsbuch liegt auf diesem Handy und bleibt dort. Mit einem Konto überlebt es auch den Verlust des Handys.",
             es: "Tu registro vive en este celular y ahí se queda. Con una cuenta, sobrevive aunque pierdas el celular.",
             "es-ES":
                 "Tu registro vive en este móvil y ahí se queda. Con una cuenta, sobrevive aunque pierdas el móvil.",
@@ -353,18 +403,21 @@ const auth = {
         }),
         "auth.signIn.eyebrow": t({
             en: "Account",
+            de: "Konto",
             es: "Cuenta",
             fr: "Compte",
             pt: "Conta",
         }),
         "auth.signIn.kept": t({
             en: "Kept in {currency}.",
+            de: "Geführt in {currency}.",
             es: "Se lleva en {currency}.",
             fr: "Tenu en {currency}.",
             pt: "Mantido em {currency}.",
         }),
         "auth.signIn.notNow": t({
             en: "Not now, open my ledger",
+            de: "Nicht jetzt, mein Haushaltsbuch öffnen",
             es: "Ahora no, abrir mi registro",
             fr: "Pas maintenant, ouvrir mon journal",
             pt: "Agora não, abrir meus lançamentos",
@@ -372,6 +425,7 @@ const auth = {
         }),
         "auth.signIn.offline": t({
             en: "Signing in needs a connection. Once you have, your ledger opens offline.",
+            de: "Zum Anmelden brauchst du eine Verbindung. Danach öffnet sich dein Haushaltsbuch auch offline.",
             es: "Para iniciar sesión necesitas conexión. Después, tu registro abre sin conexión.",
             fr: "La connexion nécessite Internet. Une fois connecté, votre journal s'ouvre hors ligne.",
             pt: "Para entrar, você precisa de conexão. Depois disso, seus lançamentos abrem sem conexão.",
@@ -379,6 +433,7 @@ const auth = {
         }),
         "auth.signIn.pending": t({
             en: "Signing in…",
+            de: "Anmeldung läuft…",
             es: "Iniciando sesión…",
             fr: "Connexion…",
             pt: "Entrando…",
@@ -386,6 +441,7 @@ const auth = {
         }),
         "auth.signIn.title": t({
             en: "Keep a copy of this?",
+            de: "Eine Kopie davon behalten?",
             es: "¿Quieres guardar una copia?",
             fr: "Garder une copie ?",
             pt: "Quer manter uma cópia disso?",
@@ -393,6 +449,7 @@ const auth = {
         }),
         "auth.signIn.written": t({
             en: "Written daily at {time}.",
+            de: "Täglich um {time} geschrieben.",
             es: "Se escribe a diario a las {time}.",
             fr: "Écrit chaque jour à {time}.",
             pt: "Escrito todo dia às {time}.",

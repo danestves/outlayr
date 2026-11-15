@@ -5,12 +5,14 @@ const alerts = {
     content: {
         "alerts.dayCard.failedBody": t({
             en: "The image couldn't be drawn.",
+            de: "Das Bild konnte nicht erstellt werden.",
             es: "No se pudo generar la imagen.",
             fr: "L'image n'a pas pu être générée.",
             pt: "Não foi possível gerar a imagem.",
         }),
         "alerts.dayCard.failedTitle": t({
             en: "Couldn't share the day",
+            de: "Tag konnte nicht geteilt werden",
             es: "No se pudo compartir el día",
             fr: "Impossible de partager la journée",
             pt: "Não foi possível compartilhar o dia",
@@ -18,6 +20,7 @@ const alerts = {
         }),
         "alerts.dayCard.share": t({
             en: "Share as Image",
+            de: "Als Bild teilen",
             es: "Compartir como imagen",
             fr: "Partager en image",
             pt: "Compartilhar como imagem",
@@ -25,6 +28,7 @@ const alerts = {
         }),
         "alerts.dayCard.shareTitle": t({
             en: "Share day",
+            de: "Tag teilen",
             es: "Compartir el día",
             fr: "Partager la journée",
             pt: "Compartilhar dia",
@@ -32,12 +36,14 @@ const alerts = {
         }),
         "alerts.dayCard.undrawable": t({
             en: "The image couldn't be drawn on this device.",
+            de: "Das Bild konnte auf diesem Gerät nicht erstellt werden.",
             es: "No se pudo generar la imagen en este dispositivo.",
             fr: "L'image n'a pas pu être générée sur cet appareil.",
             pt: "Não foi possível gerar a imagem neste dispositivo.",
         }),
         "alerts.photo.failed": t({
             en: "Couldn't open your photos. Check Outlayr's permission and try again.",
+            de: "Deine Fotos konnten nicht geöffnet werden. Prüfe die Berechtigung von Outlayr und versuch es noch mal.",
             es: "No se pudieron abrir tus fotos. Revisa el permiso de Outlayr e inténtalo de nuevo.",
             fr: "Impossible d'ouvrir vos photos. Vérifiez l'autorisation d'Outlayr et réessayez.",
             pt: "Não foi possível abrir suas fotos. Verifique a permissão do Outlayr e tente de novo.",
@@ -45,6 +51,7 @@ const alerts = {
         }),
         "alerts.transaction.logAgain": t({
             en: "Log Again",
+            de: "Noch mal erfassen",
             es: "Registrar de nuevo",
             fr: "Saisir à nouveau",
             pt: "Registrar de novo",
@@ -52,12 +59,14 @@ const alerts = {
         }),
         "alerts.transaction.stopRecurring": t({
             en: "Stop Recurring",
+            de: "Wiederholung beenden",
             es: "Dejar de repetir",
             fr: "Ne plus répéter",
             pt: "Parar de repetir",
         }),
         "alerts.transfer.archiveTooLarge": t({
             en: "That zip is too large to import. Export only the databases you need.",
+            de: "Das ZIP ist zu groß für den Import. Exportiere nur die Datenbanken, die du brauchst.",
             es: "Ese zip es demasiado grande para importarlo. Exporta solo las bases de datos que necesites.",
             fr: "Ce zip est trop volumineux pour être importé. Exportez uniquement les bases de données utiles.",
             pt: "Esse zip é grande demais para importar. Exporte só os bancos de dados de que precisa.",
@@ -65,6 +74,7 @@ const alerts = {
         }),
         "alerts.transfer.archiveWithoutCsv": t({
             en: "That zip has no CSV inside. In Notion, export the database as Markdown & CSV.",
+            de: "In diesem ZIP ist keine CSV-Datei. Exportiere die Datenbank in Notion als Markdown & CSV.",
             es: "Ese zip no trae ningún CSV. En Notion, exporta la base de datos como Markdown y CSV.",
             fr: "Ce zip ne contient aucun CSV. Dans Notion, exportez la base de données en Markdown et CSV.",
             pt: "Esse zip não tem nenhum CSV. No Notion, exporte o banco de dados como Markdown e CSV.",
@@ -72,6 +82,7 @@ const alerts = {
         }),
         "alerts.transfer.sharingUnavailable": t({
             en: "Sharing isn't available on this device.",
+            de: "Teilen ist auf diesem Gerät nicht verfügbar.",
             es: "Compartir no está disponible en este dispositivo.",
             fr: "Le partage n'est pas disponible sur cet appareil.",
             pt: "O compartilhamento não está disponível neste dispositivo.",
@@ -79,6 +90,7 @@ const alerts = {
         }),
         "alerts.transfer.unreadableFile": t({
             en: "That file couldn't be read as text.",
+            de: "Diese Datei konnte nicht als Text gelesen werden.",
             es: "No se pudo leer ese archivo como texto.",
             fr: "Ce fichier n'a pas pu être lu comme du texte.",
             pt: "Não foi possível ler esse arquivo como texto.",
@@ -86,12 +98,14 @@ const alerts = {
         }),
         "reminder.daily.catchUp": t({
             en: "Last: {entry}. Tap to catch up.",
+            de: "Zuletzt: {entry}. Tippe, um nachzutragen.",
             es: "Último: {entry}. Toca para ponerte al día.",
             fr: "Dernière saisie : {entry}. Touchez pour rattraper votre retard.",
             pt: "Último: {entry}. Toque para pôr tudo em dia.",
         }),
         "reminder.daily.empty": t({
             en: "Nothing logged yet",
+            de: "Noch nichts erfasst",
             es: "Aún no has registrado nada",
             fr: "Aucune opération saisie",
             pt: "Nada registrado ainda",
@@ -99,6 +113,7 @@ const alerts = {
         }),
         "reminder.daily.first": t({
             en: "Tap to add your first expense.",
+            de: "Tippe, um deine erste Ausgabe hinzuzufügen.",
             es: "Toca para agregar tu primer gasto.",
             "es-ES": "Toca para añadir tu primer gasto.",
             fr: "Touchez pour ajouter votre première dépense.",
@@ -107,18 +122,21 @@ const alerts = {
         }),
         "reminder.daily.lastOn": t({
             en: "Last: {entry}, {day}.",
+            de: "Zuletzt: {entry}, {day}.",
             es: "Último: {entry}, el {day}.",
             fr: "Dernière saisie : {entry}, {day}.",
             pt: "Último: {entry}, {day}.",
         }),
         "reminder.daily.lastYesterday": t({
             en: "Last: {entry}, yesterday.",
+            de: "Zuletzt: {entry}, gestern.",
             es: "Último: {entry}, ayer.",
             fr: "Dernière saisie : {entry}, hier.",
             pt: "Último: {entry}, ontem.",
         }),
         "reminder.daily.since": t({
             en: "Nothing logged since {day}",
+            de: "Seit {day} nichts erfasst",
             es: "Nada registrado desde el {day}",
             fr: "Aucune opération saisie depuis {day}",
             pt: "Nada registrado desde {day}",
@@ -126,6 +144,7 @@ const alerts = {
         }),
         "reminder.daily.today": t({
             en: "Nothing logged today",
+            de: "Heute noch nichts erfasst",
             es: "Nada registrado hoy",
             fr: "Aucune opération saisie aujourd'hui",
             pt: "Nada registrado hoje",
@@ -133,6 +152,7 @@ const alerts = {
         }),
         "reminder.daily.yesterday": t({
             en: "Nothing logged yesterday",
+            de: "Gestern nichts erfasst",
             es: "Nada registrado ayer",
             fr: "Aucune opération saisie hier",
             pt: "Nada registrado ontem",
@@ -140,24 +160,28 @@ const alerts = {
         }),
         "reminder.digest.on": t({
             en: "{count} charges on {day}",
+            de: "{count} Abbuchungen am {day}",
             es: "{count} cobros el {day}",
             fr: "{count} prélèvements {day}",
             pt: "{count} cobranças para {day}",
         }),
         "reminder.digest.today": t({
             en: "{count} charges today",
+            de: "{count} Abbuchungen heute",
             es: "{count} cobros hoy",
             fr: "{count} prélèvements aujourd'hui",
             pt: "{count} cobranças hoje",
         }),
         "reminder.digest.tomorrow": t({
             en: "{count} charges tomorrow",
+            de: "{count} Abbuchungen morgen",
             es: "{count} cobros mañana",
             fr: "{count} prélèvements demain",
             pt: "{count} cobranças amanhã",
         }),
         "reminder.due.untitled": t({
             en: "Subscription",
+            de: "Abo",
             es: "Suscripción",
             fr: "Abonnement",
             pt: "Assinatura",
@@ -165,12 +189,14 @@ const alerts = {
         }),
         "reminder.recap.body": t({
             en: "See how it went and what moved.",
+            de: "Sieh nach, wie es lief und was sich bewegt hat.",
             es: "Mira cómo te fue y qué cambió.",
             fr: "Voyez comment ça s'est passé et ce qui a bougé.",
             pt: "Veja como foi e o que mudou.",
         }),
         "reminder.recap.title": t({
             en: "Your {month} is ready",
+            de: "Dein {month} ist fertig",
             es: "Tu {month} está listo",
             fr: "Votre {month} est prêt",
             pt: "Seu {month} está pronto",

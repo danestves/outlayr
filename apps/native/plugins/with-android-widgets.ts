@@ -63,7 +63,7 @@ const ICONS = {
     ],
 } as const satisfies Readonly<Record<string, readonly Stroke[]>>;
 
-const TRANSLATED_LANGUAGES = ["es", "fr", "pt"] as const;
+const TRANSLATED_LANGUAGES = ["de", "es", "fr", "pt"] as const;
 
 type TranslatedLanguage = (typeof TRANSLATED_LANGUAGES)[number];
 

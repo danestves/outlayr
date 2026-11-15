@@ -5,6 +5,7 @@ const settingsFeatureLab = {
     content: {
         "settings.featureLab.addingSection": t({
             en: "Adding a transaction",
+            de: "Eintrag hinzufügen",
             es: "Al agregar una transacción",
             "es-ES": "Al añadir una transacción",
             fr: "Saisie d'une opération",
@@ -13,12 +14,14 @@ const settingsFeatureLab = {
         }),
         "settings.featureLab.budgetRows": t({
             en: "Budget rows",
+            de: "Budgetzeilen",
             es: "Filas de presupuesto",
             fr: "Lignes de budget",
             pt: "Orçamentos em linhas",
         }),
         "settings.featureLab.budgetRowsNote": t({
             en: "Off lays the budgets out as a two-up grid instead of a list.",
+            de: "Aus zeigt die Budgets als Raster mit zwei Spalten statt als Liste.",
             es: "Si lo desactivas, los presupuestos se muestran en una cuadrícula de dos en dos en vez de una lista.",
             fr: "Désactivé, les budgets s'affichent en grille sur deux colonnes au lieu d'une liste.",
             pt: "Se desativado, os orçamentos aparecem em uma grade, dois por linha, em vez de uma lista.",
@@ -26,18 +29,21 @@ const settingsFeatureLab = {
         }),
         "settings.featureLab.budgetsSection": t({
             en: "Budgets",
+            de: "Budgets",
             es: "Presupuestos",
             fr: "Budgets",
             pt: "Orçamentos",
         }),
         "settings.featureLab.confetti": t({
             en: "Celebrate expenses",
+            de: "Ausgaben feiern",
             es: "Celebrar gastos",
             fr: "Fêter les dépenses",
             pt: "Celebrar despesas",
         }),
         "settings.featureLab.confettiNote": t({
             en: "Throws confetti over a transaction the moment you add it.",
+            de: "Lässt Konfetti über einen Eintrag regnen, sobald du ihn hinzufügst.",
             es: "Lanza confeti sobre una transacción en el momento en que la agregas.",
             "es-ES": "Lanza confeti sobre una transacción en el momento en que la añades.",
             fr: "Lance des confettis sur une opération dès que vous l'ajoutez.",
@@ -46,18 +52,21 @@ const settingsFeatureLab = {
         }),
         "settings.featureLab.experimental": t({
             en: "Experimental: these can change or disappear.",
+            de: "Experimentell: Das kann sich ändern oder wieder verschwinden.",
             es: "Experimental: esto puede cambiar o desaparecer.",
             fr: "Expérimental : ces options peuvent changer ou disparaître.",
             pt: "Experimental: isto pode mudar ou desaparecer.",
         }),
         "settings.featureLab.lineGraph": t({
             en: "Show line graph",
+            de: "Liniendiagramm anzeigen",
             es: "Mostrar gráfico de líneas",
             fr: "Afficher la courbe",
             pt: "Mostrar gráfico de linha",
         }),
         "settings.featureLab.logSection": t({
             en: "The Log",
+            de: "Der Verlauf",
             es: "El registro",
             fr: "Journal",
             pt: "Lançamentos",
@@ -65,6 +74,7 @@ const settingsFeatureLab = {
         }),
         "settings.featureLab.swapTime": t({
             en: "Replace time label",
+            de: "Uhrzeit ersetzen",
             es: "Reemplazar etiqueta de hora",
             fr: "Remplacer l'heure",
             pt: "Trocar o horário pela categoria",
@@ -72,6 +82,7 @@ const settingsFeatureLab = {
         }),
         "settings.featureLab.swapTimeNote": t({
             en: "Each transaction shows its category instead of its time. If you never write your own note, the note is already the category name, so both lines will read the same.",
+            de: "Jeder Eintrag zeigt seine Kategorie statt der Uhrzeit. Wenn du nie eine eigene Notiz schreibst, ist die Notiz schon der Kategoriename, beide Zeilen lesen sich dann gleich.",
             es: "Cada transacción muestra su categoría en vez de su hora. Si nunca escribes tu propia nota, la nota ya es el nombre de la categoría, así que ambas líneas dirán lo mismo.",
             fr: "Chaque opération affiche sa catégorie au lieu de son heure. Si vous n'écrivez jamais de note, la note est déjà le nom de la catégorie, et les deux lignes seront identiques.",
             pt: "Cada lançamento mostra a categoria em vez do horário. Se você nunca escreve uma nota própria, a nota já é o nome da categoria, então as duas linhas vão dizer o mesmo.",
@@ -80,6 +91,7 @@ const settingsFeatureLab = {
         }),
         "settings.featureLab.transactionRowsSection": t({
             en: "Transaction rows",
+            de: "Eintragszeilen",
             es: "Filas de transacción",
             fr: "Lignes d'opération",
             pt: "Linhas de lançamento",

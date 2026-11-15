@@ -5,24 +5,28 @@ const settingsControls = {
     content: {
         "settings.controls.credits": t({
             en: "Credits",
+            de: "Danksagung",
             es: "Créditos",
             fr: "Crédits",
             pt: "Créditos",
         }),
         "settings.controls.export": t({
             en: "Export",
+            de: "Exportieren",
             es: "Exportar",
             fr: "Exporter",
             pt: "Exportar",
         }),
         "settings.controls.import": t({
             en: "Import",
+            de: "Importieren",
             es: "Importar",
             fr: "Importer",
             pt: "Importar",
         }),
         "settings.controls.preview": t({
             en: "Preview",
+            de: "Vorschau",
             es: "Vista previa",
             fr: "Aperçu",
             pt: "Prévia",
@@ -30,6 +34,7 @@ const settingsControls = {
         }),
         "settings.controls.restore": t({
             en: "Restore backup",
+            de: "Sicherung laden",
             es: "Restaurar copia",
             fr: "Restaurer une sauvegarde",
             pt: "Restaurar backup",

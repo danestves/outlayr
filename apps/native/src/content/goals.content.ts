@@ -5,24 +5,28 @@ const goals = {
     content: {
         "goals.a11y.card": t({
             en: "{name}. {saved} of {target}, {percent} percent. {standing}.",
+            de: "{name}. {saved} von {target}, {percent} Prozent. {standing}.",
             es: "{name}. {saved} de {target}, {percent} por ciento. {standing}.",
             fr: "{name}. {saved} sur {target}, {percent} pour cent. {standing}.",
             pt: "{name}. {saved} de {target}, {percent} por cento. {standing}.",
         }),
         "goals.a11y.chart": t({
             en: "Balance against the pace this date demands. {standing}.",
+            de: "Kontostand im Vergleich zum Tempo, das dieses Datum verlangt. {standing}.",
             es: "Saldo frente al ritmo que necesitas para esta fecha. {standing}.",
             fr: "Solde comparé au rythme qu'exige cette date. {standing}.",
             pt: "Saldo comparado ao ritmo que esta data exige. {standing}.",
         }),
         "goals.a11y.noStanding": t({
             en: "no pace to measure",
+            de: "kein Tempo zum Messen",
             es: "sin ritmo que medir",
             fr: "aucun rythme à mesurer",
             pt: "sem ritmo para medir",
         }),
         "goals.a11y.openHint": t({
             en: "Opens the goal",
+            de: "Öffnet das Sparziel",
             es: "Abre la meta",
             fr: "Ouvre l'objectif",
             pt: "Abre a meta",
@@ -30,6 +34,7 @@ const goals = {
         }),
         "goals.a11y.unvalued": t({
             en: "{name}. No exchange rate for this account yet, so its progress cannot be stated.",
+            de: "{name}. Für dieses Konto gibt es noch keinen Wechselkurs, daher lässt sich der Fortschritt nicht angeben.",
             es: "{name}. Aún no hay tasa de cambio para esta cuenta, así que no se puede mostrar su progreso.",
             "es-ES": "{name}. Aún no hay tipo de cambio para esta cuenta, así que no se puede mostrar su progreso.",
             fr: "{name}. Pas encore de taux de change pour ce compte : impossible d'indiquer sa progression.",
@@ -38,6 +43,7 @@ const goals = {
         }),
         "goals.add": t({
             en: "New goal",
+            de: "Neues Ziel",
             es: "Nueva meta",
             fr: "Nouvel objectif",
             pt: "Nova meta",
@@ -45,6 +51,7 @@ const goals = {
         }),
         "goals.ahead": t({
             en: "ahead",
+            de: "voraus",
             es: "adelantada",
             fr: "en avance",
             pt: "adiantada",
@@ -52,6 +59,7 @@ const goals = {
         }),
         "goals.behind": t({
             en: "behind",
+            de: "zurück",
             es: "atrasada",
             fr: "en retard",
             pt: "atrasada",
@@ -59,6 +67,7 @@ const goals = {
         }),
         "goals.card.unvalued": t({
             en: "No rate yet",
+            de: "Noch kein Kurs",
             es: "Sin tasa aún",
             "es-ES": "Sin tipo de cambio aún",
             fr: "Pas encore de taux",
@@ -66,6 +75,7 @@ const goals = {
         }),
         "goals.currencyMoved.body": t({
             en: "The ledger's currency changed while you were setting this goal, so the amount no longer means what it did. Set it again.",
+            de: "Die Währung deiner Einträge hat sich geändert, während du dieses Sparziel angelegt hast, der Betrag bedeutet daher nicht mehr dasselbe. Lege ihn neu fest.",
             es: "La moneda de tu registro cambió mientras creabas esta meta, así que el monto ya no significa lo mismo. Créala de nuevo.",
             "es-ES":
                 "La moneda de tu registro cambió mientras creabas esta meta, así que el importe ya no significa lo mismo. Créala de nuevo.",
@@ -76,6 +86,7 @@ const goals = {
         }),
         "goals.currencyMoved.title": t({
             en: "No goal yet",
+            de: "Noch kein Sparziel",
             es: "No se creó la meta",
             fr: "Objectif non créé",
             pt: "A meta não foi criada",
@@ -83,30 +94,35 @@ const goals = {
         }),
         "goals.detail.monthsLeft": t({
             en: "Months left",
+            de: "Monate übrig",
             es: "Meses restantes",
             fr: "Mois restants",
             pt: "Meses restantes",
         }),
         "goals.detail.of": t({
             en: "of {amount} · {percent}%",
+            de: "von {amount} · {percent} %",
             es: "de {amount} · {percent}%",
             fr: "sur {amount} · {percent} %",
             pt: "de {amount} · {percent}%",
         }),
         "goals.detail.pace": t({
             en: "Pace",
+            de: "Tempo",
             es: "Ritmo",
             fr: "Rythme",
             pt: "Ritmo",
         }),
         "goals.detail.perMonth": t({
             en: "Per month",
+            de: "Pro Monat",
             es: "Al mes",
             fr: "Par mois",
             pt: "Por mês",
         }),
         "goals.detail.unvalued": t({
             en: "No exchange rate for this account yet, so there is nothing to plot against the target.",
+            de: "Für dieses Konto gibt es noch keinen Wechselkurs, daher gibt es nichts, was sich gegen das Ziel darstellen ließe.",
             es: "Aún no hay tasa de cambio para esta cuenta, así que no hay nada que trazar frente al objetivo.",
             "es-ES": "Aún no hay tipo de cambio para esta cuenta, así que no hay nada que trazar frente al objetivo.",
             fr: "Pas encore de taux de change pour ce compte : rien à comparer à l'objectif.",
@@ -115,6 +131,7 @@ const goals = {
         }),
         "goals.detail.verdictAhead": t({
             en: "You're {amount} ahead of where the date needs you.",
+            de: "Du liegst {amount} vor dem, was das Datum verlangt.",
             es: "Llevas {amount} de ventaja sobre lo que pide la fecha.",
             fr: "Vous avez {amount} d'avance sur le rythme prévu.",
             pt: "Você está {amount} à frente do que a data pede.",
@@ -122,12 +139,14 @@ const goals = {
         }),
         "goals.detail.verdictBehind": t({
             en: "You're {amount} short of where the date needs you.",
+            de: "Dir fehlen {amount} zu dem, was das Datum verlangt.",
             es: "Te faltan {amount} para ir al día con la fecha.",
             fr: "Il vous manque {amount} pour être dans les temps.",
             pt: "Faltam {amount} para ficar em dia com a data.",
         }),
         "goals.detail.verdictOnPace": t({
             en: "You're on pace for {date}.",
+            de: "Du liegst im Plan für {date}.",
             es: "Vas a buen ritmo para {date}.",
             fr: "Vous êtes dans les temps pour {date}.",
             pt: "Você está no ritmo para {date}.",
@@ -136,6 +155,7 @@ const goals = {
         // Dateless on purpose: the goal records a deadline, never the day the balance crossed the target.
         "goals.detail.verdictReached": t({
             en: "Reached. There's nothing left to put aside.",
+            de: "Erreicht. Es ist nichts mehr zurückzulegen.",
             es: "Meta alcanzada. Ya no tienes que apartar nada.",
             fr: "Atteint. Plus rien à mettre de côté.",
             pt: "Meta alcançada. Não precisa separar mais nada.",
@@ -143,12 +163,14 @@ const goals = {
         }),
         "goals.editor.account": t({
             en: "Account",
+            de: "Konto",
             es: "Cuenta",
             fr: "Compte",
             pt: "Conta",
         }),
         "goals.editor.accountNote": t({
             en: "Progress is this account's balance, so it can't be swapped.",
+            de: "Der Fortschritt ist der Kontostand dieses Kontos, deshalb lässt es sich nicht tauschen.",
             es: "El progreso es el saldo de esta cuenta, así que no se puede cambiar.",
             fr: "La progression correspond au solde de ce compte : il ne peut donc pas être changé.",
             pt: "O progresso é o saldo desta conta, então ela não pode ser trocada.",
@@ -156,12 +178,14 @@ const goals = {
         }),
         "goals.editor.by": t({
             en: "By",
+            de: "Bis",
             es: "Para",
             fr: "Date cible",
             pt: "Até",
         }),
         "goals.editor.currency": t({
             en: "Set in {from}, read here in {to} at the rate on the day it was set.",
+            de: "Festgelegt in {from}, hier in {to} gelesen, zum Kurs des Tages, an dem es festgelegt wurde.",
             es: "Definida en {from}, mostrada en {to} con la tasa del día en que se creó.",
             "es-ES": "Definida en {from}, mostrada en {to} con el tipo de cambio del día en que se creó.",
             fr: "Défini en {from}, affiché ici en {to} au taux du jour de sa création.",
@@ -170,6 +194,7 @@ const goals = {
         }),
         "goals.editor.delete": t({
             en: "Delete goal",
+            de: "Sparziel löschen",
             es: "Eliminar meta",
             fr: "Supprimer l'objectif",
             pt: "Apagar meta",
@@ -177,12 +202,14 @@ const goals = {
         }),
         "goals.editor.name": t({
             en: "Name",
+            de: "Name",
             es: "Nombre",
             fr: "Nom",
             pt: "Nome",
         }),
         "goals.editor.target": t({
             en: "Target",
+            de: "Zielbetrag",
             es: "Objetivo",
             fr: "Montant cible",
             pt: "Objetivo",
@@ -190,6 +217,7 @@ const goals = {
         }),
         "goals.editor.targetNote": t({
             en: "Committing {amount} a month",
+            de: "{amount} pro Monat zurücklegen",
             es: "Apartas {amount} al mes",
             fr: "{amount} à mettre de côté par mois",
             pt: "Você separa {amount} por mês",
@@ -197,12 +225,14 @@ const goals = {
         }),
         "goals.editor.title": t({
             en: "Edit",
+            de: "Bearbeiten",
             es: "Editar",
             fr: "Modifier",
             pt: "Editar",
         }),
         "goals.empty.body": t({
             en: "A goal names an amount, an account and a date, then tells you what that costs a month.",
+            de: "Ein Sparziel nennt einen Betrag, ein Konto und ein Datum und sagt dir dann, was das pro Monat kostet.",
             es: "Una meta define un monto, una cuenta y una fecha, y te dice cuánto apartar al mes.",
             "es-ES": "Una meta define un importe, una cuenta y una fecha, y te dice cuánto apartar al mes.",
             fr: "Un objectif fixe un montant, un compte et une date, puis vous indique combien mettre de côté chaque mois.",
@@ -211,6 +241,7 @@ const goals = {
         }),
         "goals.failedBody": t({
             en: "Something went wrong saving this goal. Try again.",
+            de: "Beim Speichern dieses Sparziels ist etwas schiefgelaufen. Versuch es noch mal.",
             es: "Algo salió mal al guardar esta meta. Inténtalo de nuevo.",
             fr: "Une erreur s'est produite lors de l'enregistrement de cet objectif. Réessayez.",
             pt: "Algo deu errado ao salvar esta meta. Tente de novo.",
@@ -218,6 +249,7 @@ const goals = {
         }),
         "goals.failedTitle": t({
             en: "Goal not saved",
+            de: "Sparziel nicht gespeichert",
             es: "Meta no guardada",
             fr: "Objectif non enregistré",
             pt: "Meta não salva",
@@ -225,6 +257,7 @@ const goals = {
         }),
         "goals.form.defaultName": t({
             en: "Savings goal",
+            de: "Sparziel",
             es: "Meta de ahorro",
             fr: "Objectif d'épargne",
             pt: "Meta de economia",
@@ -232,6 +265,7 @@ const goals = {
         }),
         "goals.heading": t({
             en: "Goals",
+            de: "Sparziele",
             es: "Metas",
             fr: "Objectifs",
             pt: "Metas",
@@ -239,18 +273,21 @@ const goals = {
         }),
         "goals.onPace": t({
             en: "on pace",
+            de: "im Plan",
             es: "a buen ritmo",
             fr: "dans les temps",
             pt: "no ritmo",
         }),
         "goals.pace": t({
             en: "{amount}/mo",
+            de: "{amount}/Monat",
             es: "{amount}/mes",
             fr: "{amount}/mois",
             pt: "{amount}/mês",
         }),
         "goals.reached": t({
             en: "Reached",
+            de: "Erreicht",
             es: "Alcanzada",
             fr: "Atteint",
             pt: "Alcançada",
@@ -258,6 +295,7 @@ const goals = {
         }),
         "goals.sheet.amountBlank": t({
             en: "an amount",
+            de: "einen Betrag",
             es: "un monto",
             "es-ES": "un importe",
             fr: "un montant",
@@ -265,6 +303,7 @@ const goals = {
         }),
         "goals.sheet.commit": t({
             en: "Set goal",
+            de: "Sparziel anlegen",
             es: "Crear meta",
             fr: "Créer l'objectif",
             pt: "Criar meta",
@@ -272,6 +311,7 @@ const goals = {
         }),
         "goals.sheet.demands": t({
             en: "Demands {amount} a month for {months} months",
+            de: "Verlangt {amount} pro Monat für {months} Monate",
             es: "Necesitas {amount} al mes durante {months} meses",
             fr: "Soit {amount} par mois pendant {months} mois",
             pt: "Você precisa de {amount} por mês durante {months} meses",
@@ -279,6 +319,7 @@ const goals = {
         }),
         "goals.sheet.demandsNow": t({
             en: "That date is here: the whole {amount} is due now",
+            de: "Das Datum ist da: die gesamten {amount} sind jetzt fällig",
             es: "Esa fecha ya llegó: necesitas los {amount} completos ahora",
             fr: "Cette date est arrivée : la totalité ({amount}) est due maintenant",
             pt: "Essa data já chegou: você precisa do total de {amount} agora",
@@ -286,6 +327,7 @@ const goals = {
         }),
         "goals.sheet.editTargetA11y": t({
             en: "Edit target amount",
+            de: "Zielbetrag bearbeiten",
             es: "Editar monto objetivo",
             "es-ES": "Editar importe objetivo",
             fr: "Modifier le montant cible",
@@ -294,6 +336,7 @@ const goals = {
         }),
         "goals.sheet.holds": t({
             en: "Holds {amount} today",
+            de: "Enthält heute {amount}",
             es: "Tiene {amount} hoy",
             fr: "Contient {amount} aujourd'hui",
             pt: "Tem {amount} hoje",
@@ -301,6 +344,7 @@ const goals = {
         // Word order is the translator's: the template owns it, not the tree.
         "goals.sheet.save": t({
             en: "Save goal",
+            de: "Sparziel speichern",
             es: "Guardar meta",
             fr: "Enregistrer l'objectif",
             pt: "Salvar meta",
@@ -308,6 +352,7 @@ const goals = {
         }),
         "goals.sheet.stated": t({
             en: "Put {amount} in {account} by {date}",
+            de: "Bis {date} {amount} auf {account} zurücklegen",
             es: "Junta {amount} en {account} para {date}",
             "es-ES": "Ahorra {amount} en {account} para {date}",
             fr: "Épargner {amount} sur {account} d'ici {date}",
@@ -315,12 +360,14 @@ const goals = {
         }),
         "goals.summary.toGo": t({
             en: "{amount} to go",
+            de: "noch {amount}",
             es: "faltan {amount}",
             fr: "encore {amount}",
             pt: "faltam {amount}",
         }),
         "goals.toGo": t({
             en: "to go",
+            de: "noch",
             es: "por juntar",
             "es-ES": "por ahorrar",
             fr: "à épargner",
@@ -328,6 +375,7 @@ const goals = {
         }),
         "goals.undo.deleted": t({
             en: "Goal deleted",
+            de: "Sparziel gelöscht",
             es: "Meta eliminada",
             fr: "Objectif supprimé",
             pt: "Meta apagada",
@@ -335,6 +383,7 @@ const goals = {
         }),
         "goals.unvalued.body": t({
             en: "{account}'s balance can't be converted yet, and a goal freezes it as its starting point. Try again once its exchange rate is available.",
+            de: "Der Kontostand von {account} lässt sich noch nicht umrechnen, und ein Sparziel hält ihn als Startpunkt fest. Versuch es noch mal, sobald der Wechselkurs verfügbar ist.",
             es: "El saldo de {account} aún no se puede convertir, y una meta lo congela como punto de partida. Inténtalo de nuevo cuando haya tasa de cambio.",
             "es-ES":
                 "El saldo de {account} aún no se puede convertir, y una meta lo congela como punto de partida. Inténtalo de nuevo cuando haya tipo de cambio.",
@@ -345,6 +394,7 @@ const goals = {
         }),
         "goals.unvalued.title": t({
             en: "No goal yet",
+            de: "Noch kein Sparziel",
             es: "No se creó la meta",
             fr: "Objectif non créé",
             pt: "A meta não foi criada",

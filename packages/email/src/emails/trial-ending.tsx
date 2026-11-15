@@ -44,6 +44,20 @@ const COPY = {
         preview: "When the first charge comes, and how to cancel before it.",
         subject: (date) => `Your Outlayr Pro trial ends on ${date}`,
     },
+    de: {
+        after: "Wenn du kündigst, bleibt Pro bis zum Ende der Testphase aktiv.",
+        amount: "Betrag",
+        billedBy: "Abgerechnet von",
+        firstCharge: "Erste Abbuchung",
+        footer: (email) =>
+            `Gesendet an ${email}, weil dieses Konto eine kostenlose Testphase von Outlayr Pro gestartet hat.`,
+        intro: "Wenn du Pro behalten willst, musst du nichts tun. Wenn nicht, kündige vorher, dann zahlst du nichts.",
+        lead: "Deine Testphase von Outlayr Pro endet in zwei Tagen.",
+        manage: "Plan verwalten",
+        perYear: (price) => `${price} / Jahr`,
+        preview: "Wann die erste Abbuchung kommt und wie du vorher kündigst.",
+        subject: (date) => `Deine Testphase von Outlayr Pro endet am ${date}`,
+    },
     es: {
         after: "Si cancelas, Pro sigue activo hasta que termine la prueba.",
         amount: "Monto",

@@ -5,6 +5,7 @@ const receipt = {
     content: {
         "receipt.action.another": t({
             en: "Scan another",
+            de: "Weiteren scannen",
             es: "Escanear otro",
             fr: "Scanner un autre",
             pt: "Escanear outro",
@@ -12,6 +13,7 @@ const receipt = {
         }),
         "receipt.action.camera": t({
             en: "Take a photo",
+            de: "Foto aufnehmen",
             es: "Tomar foto",
             "es-ES": "Hacer foto",
             fr: "Prendre une photo",
@@ -19,30 +21,35 @@ const receipt = {
         }),
         "receipt.action.edit": t({
             en: "Edit",
+            de: "Bearbeiten",
             es: "Editar",
             fr: "Modifier",
             pt: "Editar",
         }),
         "receipt.action.finish": t({
             en: "Finish in the form",
+            de: "Im Formular fertigstellen",
             es: "Terminar en el formulario",
             fr: "Terminer dans le formulaire",
             pt: "Terminar no formulário",
         }),
         "receipt.action.library": t({
             en: "Library",
+            de: "Fotos",
             es: "Galería",
             fr: "Photothèque",
             pt: "Galeria",
         }),
         "receipt.action.retry": t({
             en: "Try again",
+            de: "Noch mal versuchen",
             es: "Intentar de nuevo",
             fr: "Réessayer",
             pt: "Tentar de novo",
         }),
         "receipt.action.save": t({
             en: "Save",
+            de: "Speichern",
             es: "Guardar",
             fr: "Enregistrer",
             pt: "Salvar",
@@ -50,6 +57,7 @@ const receipt = {
         }),
         "receipt.action.settings": t({
             en: "Open Settings",
+            de: "Einstellungen öffnen",
             es: "Abrir Configuración",
             "es-ES": "Abrir Ajustes",
             fr: "Ouvrir Réglages",
@@ -58,12 +66,14 @@ const receipt = {
         }),
         "receipt.close": t({
             en: "Close",
+            de: "Schließen",
             es: "Cerrar",
             fr: "Fermer",
             pt: "Fechar",
         }),
         "receipt.failed.denied": t({
             en: "Outlayr needs the camera to scan a receipt.",
+            de: "Outlayr braucht die Kamera, um einen Beleg zu scannen.",
             es: "Outlayr necesita la cámara para escanear un recibo.",
             "es-ES": "Outlayr necesita la cámara para escanear un ticket.",
             fr: "Outlayr a besoin de l'appareil photo pour scanner un ticket.",
@@ -72,6 +82,7 @@ const receipt = {
         }),
         "receipt.failed.noCamera": t({
             en: "This device has no camera.",
+            de: "Dieses Gerät hat keine Kamera.",
             es: "Este dispositivo no tiene cámara.",
             fr: "Aucun appareil photo disponible.",
             pt: "Este dispositivo não tem câmera.",
@@ -79,6 +90,7 @@ const receipt = {
         }),
         "receipt.failed.notConfigured": t({
             en: "Scanning a receipt needs the cloud tier.",
+            de: "Das Scannen eines Belegs braucht die Cloud-Stufe.",
             es: "Para escanear recibos se necesita el servicio en la nube.",
             "es-ES": "Para escanear tickets se necesita el servicio en la nube.",
             fr: "Le scan de tickets nécessite le service cloud.",
@@ -87,6 +99,7 @@ const receipt = {
         }),
         "receipt.failed.notEntitled": t({
             en: "Your free captures, voice and receipts together, are used up. They come back within 30 days; Pro lifts the limit.",
+            de: "Deine kostenlosen Erfassungen, Sprache und Belege zusammen, sind aufgebraucht. Sie kommen innerhalb von 30 Tagen zurück; Pro hebt das Limit auf.",
             es: "Ya usaste tus capturas gratis (voz y recibos). Se renuevan en menos de 30 días; con Pro no tienes ese límite.",
             "es-ES":
                 "Ya has usado tus capturas gratis (voz y tickets). Se renuevan en menos de 30 días; con Pro no tienes ese límite.",
@@ -97,6 +110,7 @@ const receipt = {
         }),
         "receipt.failed.offline": t({
             en: "You're offline.",
+            de: "Du bist offline.",
             es: "Estás sin conexión.",
             fr: "Vous êtes hors ligne.",
             pt: "Você está sem conexão.",
@@ -104,6 +118,7 @@ const receipt = {
         }),
         "receipt.failed.provider": t({
             en: "Couldn't read the receipt.",
+            de: "Der Beleg konnte nicht gelesen werden.",
             es: "No pude leer el recibo.",
             "es-ES": "No pude leer el ticket.",
             fr: "Impossible de lire le ticket.",
@@ -112,6 +127,7 @@ const receipt = {
         }),
         "receipt.failed.quotaExceeded": t({
             en: "The fair-use limit for captures is reached. It resets within 30 days.",
+            de: "Das Fair-Use-Limit für Erfassungen ist erreicht. Es wird innerhalb von 30 Tagen zurückgesetzt.",
             es: "Llegaste al límite de uso justo de capturas. Se renueva en menos de 30 días.",
             "es-ES": "Has llegado al límite de uso justo de capturas. Se renueva en menos de 30 días.",
             fr: "La limite d'utilisation raisonnable des captures est atteinte. Elle se réinitialise sous 30 jours.",
@@ -120,6 +136,7 @@ const receipt = {
         }),
         "receipt.failed.rateLimited": t({
             en: "That's a lot of receipts at once. Give it a moment.",
+            de: "Das sind viele Belege auf einmal. Gib ihm einen Moment.",
             es: "Son muchos recibos seguidos. Espera un momento.",
             "es-ES": "Son muchos tickets seguidos. Espera un momento.",
             fr: "Beaucoup de tickets d'un coup. Patientez un instant.",
@@ -128,6 +145,7 @@ const receipt = {
         }),
         "receipt.failed.timeout": t({
             en: "That took too long.",
+            de: "Das hat zu lange gedauert.",
             es: "Tardó demasiado.",
             fr: "Cela a pris trop de temps.",
             pt: "Demorou demais.",
@@ -135,6 +153,7 @@ const receipt = {
         }),
         "receipt.failed.unauthenticated": t({
             en: "Sign in to scan a receipt.",
+            de: "Melde dich an, um einen Beleg zu scannen.",
             es: "Inicia sesión para escanear un recibo.",
             "es-ES": "Inicia sesión para escanear un ticket.",
             fr: "Connectez-vous pour scanner un ticket.",
@@ -143,6 +162,7 @@ const receipt = {
         }),
         "receipt.failed.unclear": t({
             en: "Didn't find a receipt in that photo.",
+            de: "Auf diesem Foto war kein Beleg zu finden.",
             es: "No encontré un recibo en esa foto.",
             "es-ES": "No encontré un ticket en esa foto.",
             fr: "Aucun ticket trouvé sur cette photo.",
@@ -151,12 +171,14 @@ const receipt = {
         }),
         "receipt.failed.unreadable": t({
             en: "Couldn't open that photo.",
+            de: "Das Foto konnte nicht geöffnet werden.",
             es: "No pude abrir esa foto.",
             fr: "Impossible d'ouvrir cette photo.",
             pt: "Não consegui abrir essa foto.",
         }),
         "receipt.intro": t({
             en: "A photo of the ticket is enough. The total, the store, the date and every line, read for you.",
+            de: "Ein Foto vom Beleg reicht. Summe, Geschäft, Datum und jede Zeile werden für dich gelesen.",
             es: "Basta con una foto del ticket. Leemos por ti el total, la tienda, la fecha y cada línea.",
             fr: "Une photo du ticket suffit. Total, magasin, date et chaque ligne : tout est lu pour vous.",
             pt: "Basta uma foto do recibo. Lemos para você o total, a loja, a data e cada item.",
@@ -164,24 +186,28 @@ const receipt = {
         }),
         "receipt.items.showAll": t({
             en: "Show all {count}",
+            de: "Alle {count} anzeigen",
             es: "Ver los {count}",
             fr: "Afficher les {count}",
             pt: "Ver os {count}",
         }),
         "receipt.items_one": t({
             en: "1 item",
+            de: "1 Artikel",
             es: "1 artículo",
             fr: "1 article",
             pt: "1 item",
         }),
         "receipt.items_other": t({
             en: "{count} items",
+            de: "{count} Artikel",
             es: "{count} artículos",
             fr: "{count} articles",
             pt: "{count} itens",
         }),
         "receipt.limit.last": t({
             en: "Last scan for now",
+            de: "Vorerst der letzte Scan",
             es: "Último escaneo por ahora",
             fr: "Dernier scan pour l'instant",
             pt: "Último escaneamento por enquanto",
@@ -189,6 +215,7 @@ const receipt = {
         }),
         "receipt.limit.next": t({
             en: "Next scan in {time}",
+            de: "Nächster Scan in {time}",
             es: "Siguiente escaneo en {time}",
             fr: "Prochain scan dans {time}",
             pt: "Próximo escaneamento em {time}",
@@ -196,6 +223,7 @@ const receipt = {
         }),
         "receipt.limit.paused": t({
             en: "Scanning is paused",
+            de: "Scannen ist pausiert",
             es: "El escaneo está en pausa",
             fr: "Le scan est en pause",
             pt: "O escaneamento está pausado",
@@ -204,36 +232,42 @@ const receipt = {
         // The review reads as one line: "€20.56 at Mercadona · Groceries · yesterday".
         "receipt.review.at": t({
             en: "at",
+            de: "bei",
             es: "en",
             fr: "chez",
             pt: "em",
         }),
         "receipt.review.from": t({
             en: "from",
+            de: "von",
             es: "de",
             fr: "de",
             pt: "de",
         }),
         "receipt.review.inferredCurrency": t({
             en: "Currency read from the symbol",
+            de: "Währung am Symbol erkannt",
             es: "Moneda leída del símbolo",
             fr: "Devise déduite du symbole",
             pt: "Moeda identificada pelo símbolo",
         }),
         "receipt.review.noCategory": t({
             en: "No category yet",
+            de: "Noch keine Kategorie",
             es: "Aún sin categoría",
             fr: "Pas encore de catégorie",
             pt: "Ainda sem categoria",
         }),
         "receipt.review.noMerchant": t({
             en: "No store yet",
+            de: "Noch kein Geschäft",
             es: "Aún sin tienda",
             fr: "Pas encore de magasin",
             pt: "Ainda sem loja",
         }),
         "receipt.review.noRate": t({
             en: "No {currency} rate for that day yet",
+            de: "Noch kein {currency}-Kurs für diesen Tag",
             es: "Aún no hay tasa de {currency} para ese día",
             "es-ES": "Aún no hay tipo de cambio de {currency} para ese día",
             fr: "Pas encore de taux {currency} pour ce jour",
@@ -241,42 +275,49 @@ const receipt = {
         }),
         "receipt.review.paid": t({
             en: "Paid with {method}",
+            de: "Bezahlt mit {method}",
             es: "Pagado con {method}",
             fr: "Payé avec {method}",
             pt: "Pago com {method}",
         }),
         "receipt.review.rate": t({
             en: "{rate} {quote} per {base}",
+            de: "{rate} {quote} pro {base}",
             es: "{rate} {quote} por {base}",
             fr: "{rate} {quote} par {base}",
             pt: "{rate} {quote} por {base}",
         }),
         "receipt.review.subtotal": t({
             en: "Subtotal",
+            de: "Zwischensumme",
             es: "Subtotal",
             fr: "Sous-total",
             pt: "Subtotal",
         }),
         "receipt.review.tax": t({
             en: "Tax",
+            de: "Steuer",
             es: "Impuestos",
             fr: "Taxes",
             pt: "Impostos",
         }),
         "receipt.review.tip": t({
             en: "Tip",
+            de: "Trinkgeld",
             es: "Propina",
             fr: "Pourboire",
             pt: "Gorjeta",
         }),
         "receipt.review.total": t({
             en: "Total",
+            de: "Gesamt",
             es: "Total",
             fr: "Total",
             pt: "Total",
         }),
         "receipt.state.preparing": t({
             en: "Preparing the photo…",
+            de: "Foto wird vorbereitet…",
             es: "Preparando la foto…",
             fr: "Préparation de la photo…",
             pt: "Preparando a foto…",
@@ -284,6 +325,7 @@ const receipt = {
         }),
         "receipt.state.reading": t({
             en: "Reading the receipt…",
+            de: "Beleg wird gelesen…",
             es: "Leyendo el recibo…",
             "es-ES": "Leyendo el ticket…",
             fr: "Lecture du ticket…",
@@ -292,6 +334,7 @@ const receipt = {
         }),
         "receipt.title": t({
             en: "Scan a receipt",
+            de: "Beleg scannen",
             es: "Escanear un recibo",
             "es-ES": "Escanear un ticket",
             fr: "Scanner un ticket",

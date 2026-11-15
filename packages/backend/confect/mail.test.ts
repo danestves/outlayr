@@ -16,7 +16,7 @@ const DAY = Date.UTC(2026, 10, 4);
 
 vi.mock(import("./legal"), async (original) => {
     const legal = await original();
-    const changes = { en: [], es: [], fr: [], pt: [] };
+    const changes = { de: [], en: [], es: [], fr: [], pt: [] };
     return {
         ...legal,
         POLICY_NOTICES: [

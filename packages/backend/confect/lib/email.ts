@@ -42,6 +42,14 @@ const CODE_EMAIL = {
         subject: (otp: string) => `Your Outlayr code: ${otp}`,
         verify: "Use this code to confirm your email for Outlayr:",
     },
+    de: {
+        change: "Mit diesem Code änderst du deine Outlayr-E-Mail-Adresse auf diese Adresse:",
+        expiry: (minutes: number) =>
+            `Er läuft in ${minutes} Minuten ab. Wenn du ihn nicht angefordert hast, kannst du diese E-Mail ignorieren.`,
+        reset: "Mit diesem Code setzt du dein Outlayr-Passwort zurück:",
+        subject: (otp: string) => `Dein Outlayr-Code: ${otp}`,
+        verify: "Mit diesem Code bestätigst du deine E-Mail-Adresse bei Outlayr:",
+    },
     es: {
         change: "Usa este código para cambiar tu correo de Outlayr a esta dirección:",
         expiry: (minutes: number) => `Caduca en ${minutes} minutos. Si no lo pediste, puedes ignorar este correo.`,
@@ -79,6 +87,10 @@ const ACCOUNT_EXISTS_EMAIL = {
     en: {
         subject: "You already have an Outlayr account",
         text: "This email already has an Outlayr account. Sign in with it, or choose Forgot password? to set a new one.\n\nIf you didn't ask for this, you can ignore this email.",
+    },
+    de: {
+        subject: "Du hast schon ein Outlayr-Konto",
+        text: "Zu dieser E-Mail-Adresse gibt es schon ein Outlayr-Konto. Melde dich damit an oder wähle Passwort vergessen?, um ein neues festzulegen.\n\nWenn du das nicht angefordert hast, kannst du diese E-Mail ignorieren.",
     },
     es: {
         subject: "Ya tienes una cuenta de Outlayr",

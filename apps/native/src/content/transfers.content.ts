@@ -5,30 +5,35 @@ const transfers = {
     content: {
         "transfers.a11y.balance": t({
             en: "{account}, {balance}",
+            de: "{account}, {balance}",
             es: "{account}, {balance}",
             fr: "{account}, {balance}",
             pt: "{account}, {balance}",
         }),
         "transfers.a11y.balanceChange": t({
             en: "{account}, {before}, then {after}",
+            de: "{account}, {before}, dann {after}",
             es: "{account}, {before}, luego {after}",
             fr: "{account}, {before}, puis {after}",
             pt: "{account}, {before}, depois {after}",
         }),
         "transfers.a11y.missing": t({
             en: "Missing: {field}",
+            de: "Fehlt: {field}",
             es: "Falta: {field}",
             fr: "Manquant : {field}",
             pt: "Falta: {field}",
         }),
         "transfers.a11y.new": t({
             en: "New transfer",
+            de: "Neue Umbuchung",
             es: "Nueva transferencia",
             fr: "Nouveau virement",
             pt: "Nova transferência",
         }),
         "transfers.block.feeOverArrival": t({
             en: "The fee is {amount} more than arrives",
+            de: "Die Gebühr liegt {amount} über dem, was ankommt",
             es: "La comisión supera por {amount} lo que llega",
             fr: "Les frais dépassent de {amount} le montant reçu",
             pt: "A tarifa supera em {amount} o que chega",
@@ -36,6 +41,7 @@ const transfers = {
         }),
         "transfers.block.nothingArrives": t({
             en: "Nothing would arrive. The fee takes it all.",
+            de: "Es würde nichts ankommen. Die Gebühr verbraucht alles.",
             es: "No llegaría nada: la comisión se lo lleva todo.",
             fr: "Rien n'arriverait : les frais prennent tout.",
             pt: "Nada chegaria: a tarifa leva tudo.",
@@ -43,24 +49,28 @@ const transfers = {
         }),
         "transfers.delete.row": t({
             en: "Delete Transfer",
+            de: "Umbuchung löschen",
             es: "Eliminar transferencia",
             fr: "Supprimer le virement",
             pt: "Apagar transferência",
         }),
         "transfers.fee.chargedTo": t({
             en: "Charged to",
+            de: "Abgebucht von",
             es: "Se cobra en",
             fr: "Prélevés sur",
             pt: "Cobrada em",
         }),
         "transfers.fee.included": t({
             en: "Included",
+            de: "Enthalten",
             es: "Incluida",
             fr: "Inclus",
             pt: "Incluída",
         }),
         "transfers.fee.note": t({
             en: "Fee · {from} → {to}",
+            de: "Gebühr · {from} → {to}",
             es: "Comisión · {from} → {to}",
             fr: "Frais · {from} → {to}",
             pt: "Tarifa · {from} → {to}",
@@ -68,24 +78,28 @@ const transfers = {
         }),
         "transfers.fee.onTop": t({
             en: "On top",
+            de: "Obendrauf",
             es: "Aparte",
             fr: "En plus",
             pt: "À parte",
         }),
         "transfers.field.arrives": t({
             en: "Arrives",
+            de: "Kommt an",
             es: "Llega",
             fr: "Arrivée",
             pt: "Chega",
         }),
         "transfers.field.date": t({
             en: "Date",
+            de: "Datum",
             es: "Fecha",
             fr: "Date",
             pt: "Data",
         }),
         "transfers.field.fee": t({
             en: "Fee",
+            de: "Gebühr",
             es: "Comisión",
             fr: "Frais",
             pt: "Tarifa",
@@ -93,6 +107,7 @@ const transfers = {
         }),
         "transfers.field.feeAt": t({
             en: "{account} fee",
+            de: "Gebühr von {account}",
             es: "Comisión de {account}",
             fr: "Frais de {account}",
             pt: "Tarifa de {account}",
@@ -100,6 +115,7 @@ const transfers = {
         }),
         "transfers.field.feeSide": t({
             en: "Fee charged to",
+            de: "Gebühr abgebucht von",
             es: "Comisión cobrada a",
             fr: "Frais prélevés sur",
             pt: "Tarifa cobrada em",
@@ -107,24 +123,28 @@ const transfers = {
         }),
         "transfers.field.from": t({
             en: "From",
+            de: "Von",
             es: "Desde",
             fr: "Depuis",
             pt: "De",
         }),
         "transfers.field.note": t({
             en: "Note",
+            de: "Notiz",
             es: "Nota",
             fr: "Note",
             pt: "Nota",
         }),
         "transfers.field.outside": t({
             en: "From another account",
+            de: "Von einem anderen Konto",
             es: "De otra cuenta",
             fr: "D'un autre compte",
             pt: "De outra conta",
         }),
         "transfers.field.rate": t({
             en: "Rate",
+            de: "Kurs",
             es: "Tasa",
             "es-ES": "Tipo de cambio",
             fr: "Taux",
@@ -132,6 +152,7 @@ const transfers = {
         }),
         "transfers.field.rateType": t({
             en: "Rate source",
+            de: "Kursquelle",
             es: "Fuente de la tasa",
             "es-ES": "Fuente del tipo de cambio",
             fr: "Source du taux",
@@ -139,6 +160,7 @@ const transfers = {
         }),
         "transfers.field.sent": t({
             en: "You send",
+            de: "Du sendest",
             es: "Envías",
             fr: "Vous envoyez",
             pt: "Você envia",
@@ -146,42 +168,49 @@ const transfers = {
         }),
         "transfers.field.to": t({
             en: "To",
+            de: "Auf",
             es: "Hacia",
             fr: "Vers",
             pt: "Para",
         }),
         "transfers.gap.chargedBy": t({
             en: "{account} charged it",
+            de: "{account} hat sie abgebucht",
             es: "Lo cobró {account}",
             fr: "Prélevé par {account}",
             pt: "Cobrado por {account}",
         }),
         "transfers.gap.itsOnTop": t({
             en: "It's on top",
+            de: "Sie kommt obendrauf",
             es: "Es aparte",
             fr: "C'est en plus",
             pt: "É à parte",
         }),
         "transfers.gap.less": t({
             en: "{amount} less arrived",
+            de: "{amount} weniger angekommen",
             es: "Llegaron {amount} de menos",
             fr: "{amount} de moins à l'arrivée",
             pt: "Chegaram {amount} a menos",
         }),
         "transfers.gap.more": t({
             en: "{amount} more arrived",
+            de: "{amount} mehr angekommen",
             es: "Llegaron {amount} de más",
             fr: "{amount} de plus à l'arrivée",
             pt: "Chegaram {amount} a mais",
         }),
         "transfers.gap.outside": t({
             en: "It came from another account",
+            de: "Es kam von einem anderen Konto",
             es: "Salió de otra cuenta",
             fr: "Cela vient d'un autre compte",
             pt: "Veio de outra conta",
         }),
         "transfers.rate.lastUsed": t({
             en: "Last used · {date}",
+            de: "Zuletzt genutzt · {date}",
             es: "Última · {date}",
             "es-ES": "Último · {date}",
             fr: "Dernier utilisé · {date}",
@@ -189,6 +218,7 @@ const transfers = {
         }),
         "transfers.rate.unavailable": t({
             en: "No rate for this pair. Enter one.",
+            de: "Kein Kurs für dieses Paar. Gib einen ein.",
             es: "No hay tasa para este par. Ingresa una.",
             "es-ES": "No hay tipo de cambio para este par. Introduce uno.",
             fr: "Aucun taux pour cette paire. Saisissez-en un.",
@@ -197,6 +227,7 @@ const transfers = {
         }),
         "transfers.save": t({
             en: "Save Transfer",
+            de: "Umbuchung speichern",
             es: "Guardar transferencia",
             fr: "Enregistrer le virement",
             pt: "Salvar transferência",
@@ -204,6 +235,7 @@ const transfers = {
         }),
         "transfers.save.failed": t({
             en: "Couldn't save this transfer. Try again.",
+            de: "Diese Umbuchung konnte nicht gespeichert werden. Versuch es noch mal.",
             es: "No se pudo guardar la transferencia. Inténtalo de nuevo.",
             fr: "Impossible d'enregistrer ce virement. Réessayez.",
             pt: "Não foi possível salvar a transferência. Tente de novo.",
@@ -211,6 +243,7 @@ const transfers = {
         }),
         "transfers.saved.another": t({
             en: "Add another",
+            de: "Weitere hinzufügen",
             es: "Agregar otra",
             "es-ES": "Añadir otra",
             fr: "Ajouter un autre",
@@ -218,12 +251,14 @@ const transfers = {
         }),
         "transfers.saved.from": t({
             en: "From {from}",
+            de: "Von {from}",
             es: "Desde {from}",
             fr: "Depuis {from}",
             pt: "De {from}",
         }),
         "transfers.saved.title": t({
             en: "Transfer added",
+            de: "Umbuchung hinzugefügt",
             es: "Transferencia agregada",
             "es-ES": "Transferencia añadida",
             fr: "Virement ajouté",
@@ -231,12 +266,14 @@ const transfers = {
         }),
         "transfers.sentence.blank.account": t({
             en: "an account",
+            de: "ein Konto",
             es: "una cuenta",
             fr: "un compte",
             pt: "uma conta",
         }),
         "transfers.sentence.blank.amount": t({
             en: "an amount",
+            de: "einen Betrag",
             es: "un monto",
             "es-ES": "un importe",
             fr: "un montant",
@@ -244,6 +281,7 @@ const transfers = {
         }),
         "transfers.sentence.blank.noFee": t({
             en: "No fee",
+            de: "Keine Gebühr",
             es: "Sin comisión",
             fr: "Sans frais",
             pt: "Sem tarifa",
@@ -251,6 +289,7 @@ const transfers = {
         }),
         "transfers.sentence.blank.rate": t({
             en: "a rate",
+            de: "einen Kurs",
             es: "una tasa",
             "es-ES": "un tipo de cambio",
             fr: "un taux",
@@ -258,6 +297,7 @@ const transfers = {
         }),
         "transfers.sentence.fee": t({
             en: "A {fee} fee from {feeSide}.",
+            de: "Eine Gebühr von {fee}, abgebucht von {feeSide}.",
             es: "Comisión de {fee} en {feeSide}.",
             fr: "Frais de {fee} prélevés sur {feeSide}.",
             pt: "Tarifa de {fee} cobrada em {feeSide}.",
@@ -265,6 +305,7 @@ const transfers = {
         }),
         "transfers.sentence.feeArrives": t({
             en: "After a {fee} fee from {feeSide}, {arrives} arrives.",
+            de: "Nach einer Gebühr von {fee}, abgebucht von {feeSide}, kommen {arrives} an.",
             es: "Tras una comisión de {fee} en {feeSide}, llegan {arrives}.",
             fr: "Après {fee} de frais prélevés sur {feeSide}, il reste {arrives}.",
             pt: "Após uma tarifa de {fee} cobrada em {feeSide}, chegam {arrives}.",
@@ -272,6 +313,7 @@ const transfers = {
         }),
         "transfers.sentence.fees": t({
             en: "Fees of {fee} from {feeSide} and {arrivalFee} from {arrivalFeeSide}.",
+            de: "Gebühren von {fee}, abgebucht von {feeSide}, und {arrivalFee}, abgebucht von {arrivalFeeSide}.",
             es: "Comisiones de {fee} en {feeSide} y {arrivalFee} en {arrivalFeeSide}.",
             fr: "Frais de {fee} prélevés sur {feeSide} et de {arrivalFee} sur {arrivalFeeSide}.",
             pt: "Tarifas de {fee} cobradas em {feeSide} e {arrivalFee} em {arrivalFeeSide}.",
@@ -279,6 +321,7 @@ const transfers = {
         }),
         "transfers.sentence.feesArrive": t({
             en: "After fees of {fee} from {feeSide} and {arrivalFee} from {arrivalFeeSide}, {arrives} arrives.",
+            de: "Nach Gebühren von {fee}, abgebucht von {feeSide}, und {arrivalFee}, abgebucht von {arrivalFeeSide}, kommen {arrives} an.",
             es: "Tras comisiones de {fee} en {feeSide} y {arrivalFee} en {arrivalFeeSide}, llegan {arrives}.",
             fr: "Après {fee} de frais prélevés sur {feeSide} et {arrivalFee} sur {arrivalFeeSide}, il reste {arrives}.",
             pt: "Após tarifas de {fee} cobradas em {feeSide} e {arrivalFee} em {arrivalFeeSide}, chegam {arrives}.",
@@ -287,6 +330,7 @@ const transfers = {
         }),
         "transfers.sentence.feeOnTop": t({
             en: "Plus a {fee} fee from {feeSide}.",
+            de: "Dazu eine Gebühr von {fee}, abgebucht von {feeSide}.",
             es: "Más una comisión de {fee} en {feeSide}.",
             fr: "Plus {fee} de frais prélevés sur {feeSide}.",
             pt: "Mais uma tarifa de {fee} cobrada em {feeSide}.",
@@ -294,30 +338,35 @@ const transfers = {
         }),
         "transfers.sentence.move": t({
             en: "Move {amount} from {from} to {to} {when}.",
+            de: "{amount} {when} von {from} auf {to} umbuchen.",
             es: "Mueve {amount} de {from} a {to} {when}.",
             fr: "Virer {amount} depuis {from} vers {to} {when}.",
             pt: "Mova {amount} de {from} para {to} {when}.",
         }),
         "transfers.sentence.noFee": t({
             en: "{fee}.",
+            de: "{fee}.",
             es: "{fee}.",
             fr: "{fee}.",
             pt: "{fee}.",
         }),
         "transfers.sentence.noFeeArrives": t({
             en: "{fee}, {arrives} arrives.",
+            de: "{fee}, es kommen {arrives} an.",
             es: "{fee}, llegan {arrives}.",
             fr: "{fee}, {arrives} arrivent.",
             pt: "{fee}, chegam {arrives}.",
         }),
         "transfers.sentence.outside": t({
             en: "Includes {outside} from another account.",
+            de: "Enthält {outside} von einem anderen Konto.",
             es: "Incluye {outside} de otra cuenta.",
             fr: "Dont {outside} provenant d'un autre compte.",
             pt: "Inclui {outside} de outra conta.",
         }),
         "transfers.sentence.rate": t({
             en: "At the {rateType} rate, {rate}, it arrives as {arrives}.",
+            de: "Zum {rateType}-Kurs {rate} kommen {arrives} an.",
             es: "A la tasa {rateType}, {rate}, llega como {arrives}.",
             "es-ES": "Al tipo de cambio {rateType}, {rate}, llega como {arrives}.",
             fr: "Au taux {rateType}, {rate}, cela fait {arrives}.",
@@ -325,12 +374,14 @@ const transfers = {
         }),
         "transfers.sentence.rateCustom": t({
             en: "At {rateType} rate, {rate}, it arrives as {arrives}.",
+            de: "Zum Kurs {rateType}, {rate}, kommen {arrives} an.",
             es: "A {rateType}, {rate}, llega como {arrives}.",
             fr: "À {rateType}, {rate}, cela fait {arrives}.",
             pt: "Pela {rateType}, {rate}, chega como {arrives}.",
         }),
         "transfers.title": t({
             en: "Transfer",
+            de: "Umbuchung",
             es: "Transferencia",
             fr: "Virement",
             pt: "Transferência",

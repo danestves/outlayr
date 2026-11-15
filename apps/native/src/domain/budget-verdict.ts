@@ -2,7 +2,7 @@ import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 
 import type { Burndown } from "./budget-burndown";
-import { monthAbbrev } from "./dates";
+import { dayOfMonth, monthAbbrev } from "./dates";
 import { formatAmount } from "./money";
 
 export function burndownVerdict(
@@ -13,7 +13,7 @@ export function burndownVerdict(
 ): string | null {
     const { projectedBalance, runwayDate, runwayDay, totalDays } = burndown;
     if (runwayDate && runwayDay != null) {
-        const date = `${runwayDate.getDate()} ${monthAbbrev(runwayDate, language)}`;
+        const date = `${dayOfMonth(runwayDate, language)} ${monthAbbrev(runwayDate, language)}`;
         const early = totalDays - runwayDay;
         return early > 0
             ? t("budgets.hero.verdictRanOutEarly", { date, days: t("budgets.days", { count: early }) })

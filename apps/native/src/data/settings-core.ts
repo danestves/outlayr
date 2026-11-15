@@ -131,6 +131,9 @@ export const mirrorTimeZone = Effect.fn("Settings.mirrorTimeZone")(function* mir
 });
 
 export function ordinalDay(day: number, language: Language = "en"): string {
+    if (language === "de") {
+        return `${day}.`;
+    }
     if (language !== "en") {
         return String(day);
     }

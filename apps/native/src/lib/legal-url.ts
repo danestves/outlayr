@@ -2,6 +2,7 @@ import type { Language } from "@/i18n/languages";
 
 const SITE_LANGUAGE = {
     en: "en",
+    de: "de",
     es: "es",
     "es-ES": "es",
     fr: "fr",
@@ -12,12 +13,14 @@ const SITE_LANGUAGE = {
 export const PRIVACY_SECTIONS = {
     ai: {
         en: "suggestions-voice-and-receipts",
+        de: "vorschläge-sprache-und-belege",
         es: "sugerencias-voz-y-recibos",
         fr: "suggestions-voix-et-tickets",
         pt: "sugestões-voz-e-recibos",
     },
     smartFill: {
         en: "merchant-suggestions-smart-fill",
+        de: "händlervorschläge-intelligentes-ausfüllen",
         es: "sugerencias-de-comercios-autocompletado",
         fr: "suggestions-de-commerçants-remplissage-intelligent",
         pt: "sugestões-de-estabelecimentos-preenchimento-inteligente",

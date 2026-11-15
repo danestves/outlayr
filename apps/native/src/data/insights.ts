@@ -13,7 +13,7 @@ import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import { categories, transactions } from "@/db/schema";
-import { monthAbbrev, monthAbbrevTitle, weekdayInitial } from "@/domain/dates";
+import { dayOfMonth, monthAbbrev, monthAbbrevTitle, weekdayInitial } from "@/domain/dates";
 import type { Language } from "@/i18n/languages";
 import { runtimeLanguage } from "@/i18n/runtime";
 
@@ -557,7 +557,7 @@ export function offsetForDate(
 }
 
 function dayMonth(date: Date, language: Language): string {
-    return `${date.getDate()} ${monthAbbrevTitle(date, language)}`;
+    return `${dayOfMonth(date, language)} ${monthAbbrevTitle(date, language)}`;
 }
 
 export function windowLabel(
@@ -571,7 +571,7 @@ export function windowLabel(
     if (period === "week") {
         const end = addDays(start, 6);
         if (start.getMonth() === end.getMonth()) {
-            return `${start.getDate()} - ${dayMonth(end, language)}`;
+            return `${dayOfMonth(start, language)} - ${dayMonth(end, language)}`;
         }
         return `${dayMonth(start, language)} - ${dayMonth(end, language)}`;
     }

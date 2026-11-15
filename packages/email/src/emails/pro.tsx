@@ -65,6 +65,36 @@ const COPY = {
         renews: "Renews",
         subject: "Outlayr Pro is on",
     },
+    de: {
+        after: {
+            family: "Die Person, die deine Familie organisiert, verwaltet das Abo.",
+            granted: "Es gibt nichts zu kündigen.",
+            lifetime: (store) =>
+                `${store} schickt dir den Beleg. Es ist ein Einmalkauf, also gibt es nichts zu kündigen.`,
+            subscription: (store, date) =>
+                `${store} schickt dir den Beleg. Kündige jederzeit vor dem ${date}, dann bleibt Pro bis dahin aktiv.`,
+            webLifetime: "Es ist ein Einmalkauf, also gibt es nichts zu kündigen.",
+            webSubscription: (date) => `Kündige jederzeit vor dem ${date}, dann bleibt Pro bis dahin aktiv.`,
+        },
+        billedBy: "Abgerechnet von",
+        ends: "Endet",
+        familySharing: "Familienfreigabe",
+        footer: (email) => `Gesendet an ${email}, weil dieses Konto Outlayr Pro hat.`,
+        intro: "Das schaltet es frei:",
+        items: [
+            { label: "Alles wird von selbst erfasst" },
+            { label: "Synchronisierung mit deinem anderen Handy" },
+            { label: "Alle Währungen zusammen" },
+            { label: "Alle Ratenpläne" },
+        ],
+        lead: "Outlayr Pro ist aktiv.",
+        lifetime: "Lifetime",
+        manage: "Abo verwalten",
+        plan: "Plan",
+        preview: "Was Pro freischaltet und wie du es verwaltest.",
+        renews: "Verlängert sich",
+        subject: "Outlayr Pro ist aktiv",
+    },
     es: {
         after: {
             family: "Quien organiza tu familia gestiona la suscripción.",

@@ -10,13 +10,14 @@ const config: IntlayerConfig = {
         defaultLocale: Locales.ENGLISH,
         locales: [
             Locales.ENGLISH,
+            Locales.GERMAN,
             Locales.SPANISH,
             Locales.SPANISH_SPAIN,
             Locales.FRENCH,
             Locales.PORTUGUESE,
             Locales.PORTUGUESE_PORTUGAL,
         ],
-        requiredLocales: [Locales.ENGLISH, Locales.SPANISH, Locales.FRENCH, Locales.PORTUGUESE],
+        requiredLocales: [Locales.ENGLISH, Locales.GERMAN, Locales.SPANISH, Locales.FRENCH, Locales.PORTUGUESE],
         // A half-translated key fails the build instead of falling back to English on a device.
         strictMode: "strict",
     },

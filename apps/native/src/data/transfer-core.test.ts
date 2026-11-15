@@ -308,6 +308,23 @@ describe("guessMapping", () => {
         });
     });
 
+    it("maps a Sparkasse export by its payee, booking day and Betrag", () => {
+        const header = [
+            "Auftragskonto",
+            "Buchungstag",
+            "Valutadatum",
+            "Buchungstext",
+            "Verwendungszweck",
+            "Beguenstigter/Zahlungspflichtiger",
+            "Kontonummer/IBAN",
+            "BIC (SWIFT-Code)",
+            "Betrag",
+            "Waehrung",
+            "Info",
+        ];
+        expect(guessMapping(header)).toMatchObject({ amount: 8, currency: 9, date: 1, note: 5 });
+    });
+
     it("leaves a field it cannot place unassigned", () => {
         expect(guessMapping(["col1", "col2"]).amount).toBeNull();
     });
