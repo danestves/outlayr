@@ -1,3 +1,4 @@
+import { createIsomorphicFn } from "@tanstack/react-start";
 import { ConvexReactClient } from "convex/react";
 
 import { ENV } from "@/env";
@@ -12,6 +13,10 @@ export function convexUrls() {
     }
     return { convexSiteUrl, convexUrl };
 }
+
+export const serverConvexUrl = createIsomorphicFn()
+    .server(() => ENV.CONVEX_INTERNAL_URL ?? convexUrls().convexUrl)
+    .client(() => convexUrls().convexUrl);
 
 let client: ConvexReactClient | undefined;
 

@@ -28,4 +28,5 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [Announcing a policy change](./operations/policy-change.md)
 - [Web billing](./operations/web-billing.md)
 - [Merchant logos](./operations/merchant-logos.md)
+- [Auth signing key (JWKS)](./operations/auth-signing-key.md)
 - [App Store header and search art](../apps/screenshots/app-store-header/README.md)

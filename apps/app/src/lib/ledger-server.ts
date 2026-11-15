@@ -1,3 +1,4 @@
+import { PULL_PAGE_MAX } from "@outlayr/backend/confect/sync";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import type { DehydratedDbState } from "@tanstack/react-db";
 import type { QueryClient } from "@tanstack/react-query";
@@ -21,9 +22,9 @@ import {
     sharedLinksQuery,
 } from "./account-state";
 import type { Profile } from "./account-state";
-import { convexUrls } from "./convex";
+import { convexUrls, serverConvexUrl } from "./convex";
 import { ledgerSeed, syncedTableNames } from "./ledger-db";
-import type { PulledRow } from "./ledger-sync";
+import type { PulledPage, PulledRow } from "./ledger-sync";
 
 const PHOTO_BATCH = 100;
 
@@ -44,37 +45,57 @@ const SessionAnswer = Schema.Struct({
     }),
 });
 
-async function pullAll(client: ConvexHttpClient) {
+const imageKeysOf = (rows: readonly PulledRow[]) =>
+    rows.flatMap(({ deletedAt, fields }) =>
+        // oxlint-disable-next-line anti-slop/no-runtime-typeof -- pullSince types every table's fields loosely; this is the boundary.
+        deletedAt === null && typeof fields.imageKey === "string" ? [fields.imageKey] : []
+    );
+
+// Each page's photos are minted while the next page is pulled. The HTTP client runs mutations one at a time
+// unless told to skip its queue, which put every batch behind the last.
+async function pullLedger(client: ConvexHttpClient) {
     const tables = [...syncedTableNames()];
+    const mintedAt = Date.now();
     const rows: PulledRow[] = [];
+    const keys = new Set<string>();
+    const minting: Promise<MintedPhotos["minted"]>[] = [];
+    const mint = (batch: string[]) => {
+        const urls = client.mutation(api.photos.readUrls, { keys: batch }, { skipQueue: true });
+        // Handled at once, so a failure during the next page cannot crash the process. Promise.all still throws it.
+        urls.catch(() => undefined);
+        minting.push(urls);
+    };
     let cursor = 0;
+    let limit: number | undefined = PULL_PAGE_MAX;
     for (;;) {
-        // oxlint-disable-next-line no-await-in-loop -- each page starts at the cursor the last one reached.
-        const page = await client.query(api.sync.pullSince, { cursor, tables });
+        let page: PulledPage;
+        try {
+            // oxlint-disable-next-line no-await-in-loop -- each page starts at the cursor the last one reached.
+            page = await client.query(api.sync.pullSince, { cursor, limit, tables });
+        } catch (error) {
+            if (limit === undefined) {
+                throw error;
+            }
+            // A ledger whose tables are all large passes Convex's read limit at the big page; the default one fits.
+            limit = undefined;
+            continue;
+        }
         rows.push(...page.rows);
+        const fresh = [...new Set(imageKeysOf(page.rows))].filter((key) => !keys.has(key));
+        for (const key of fresh) {
+            keys.add(key);
+        }
+        for (let index = 0; index < fresh.length; index += PHOTO_BATCH) {
+            mint(fresh.slice(index, index + PHOTO_BATCH));
+        }
         ({ cursor } = page);
         if (!page.hasMore) {
-            return { cursor, rows };
+            break;
         }
     }
-}
-
-const imageKeysOf = (rows: readonly PulledRow[]) => [
-    ...new Set(
-        rows.flatMap(({ deletedAt, fields }) =>
-            // oxlint-disable-next-line anti-slop/no-runtime-typeof -- pullSince types every table's fields loosely; this is the boundary.
-            deletedAt === null && typeof fields.imageKey === "string" ? [fields.imageKey] : []
-        )
-    ),
-];
-
-async function mintPhotos(client: ConvexHttpClient, keys: readonly string[]): Promise<MintedPhotos> {
-    const mintedAt = Date.now();
-    const batches = Array.from({ length: Math.ceil(keys.length / PHOTO_BATCH) }, (_, index) =>
-        keys.slice(index * PHOTO_BATCH, (index + 1) * PHOTO_BATCH)
-    );
-    const minted = await Promise.all(batches.map((batch) => client.mutation(api.photos.readUrls, { keys: batch })));
-    return { keys, minted: minted.flat(), mintedAt };
+    const minted = await Promise.all(minting);
+    const photos: MintedPhotos = { keys: [...keys], minted: minted.flat(), mintedAt };
+    return { cursor, photos, rows };
 }
 
 // The same request better-auth's own getToken makes: the visitor's cookies, addressed to the Convex site.
@@ -109,14 +130,13 @@ async function readProfile(convexSiteUrl: string): Promise<Profile | undefined> 
 // Everything the first frame of a signed-in page shows, read with the visitor's token before the server renders.
 export const serverLedger = createIsomorphicFn()
     .server(async (token: string): Promise<ServerLedger> => {
-        const { convexSiteUrl, convexUrl } = convexUrls();
-        const client = new ConvexHttpClient(convexUrl, { auth: token });
+        const { convexSiteUrl } = convexUrls();
+        const client = new ConvexHttpClient(serverConvexUrl(), { auth: token });
         const profile = readProfile(convexSiteUrl);
-        const [{ cursor, rows }, rates] = await Promise.all([
-            pullAll(client),
+        const [{ cursor, photos, rows }, rates] = await Promise.all([
+            pullLedger(client),
             client.query(api.ledger.exchangeRates, {}),
         ]);
-        const photos = await mintPhotos(client, imageKeysOf(rows));
         return { collections: ledgerSeed(rows, cursor, rates), photos, profile: await profile };
     })
     .client((): Promise<ServerLedger> => Promise.reject(new Error("The ledger is read on the server only")));

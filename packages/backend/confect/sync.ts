@@ -32,6 +32,10 @@ export const PUSH_BATCH_LIMIT = 500;
 
 export const PULL_PAGE_LIMIT = 1000;
 
+// A page reads up to `limit` rows from every table, so a ledger with several huge tables can pass Convex's 32,000
+// document reads at this size. Only the web server asks for it, and it falls back to the default when refused.
+export const PULL_PAGE_MAX = 5000;
+
 const tombstone = {
     deletedAt: replicated.deletedAt,
     restoredAt: replicated.restoredAt,
