@@ -11,12 +11,21 @@ const log = {
             fr: "Ajouter un compte",
             pt: "Adicionar uma conta",
         }),
-        "log.add.import": t({
-            en: "Import a CSV",
-            de: "CSV importieren",
-            es: "Importar un CSV",
-            fr: "Importer un CSV",
-            pt: "Importar um CSV",
+        "log.add.installmentsAny": t({
+            en: "From any app that sells in installments",
+            de: "Aus jeder App, die auf Raten verkauft",
+            es: "Desde cualquier app que venda en cuotas",
+            "es-ES": "Desde cualquier app que venda a plazos",
+            fr: "Depuis toute app qui vend en plusieurs fois",
+            pt: "De qualquer app que venda parcelado",
+            "pt-PT": "De qualquer app que venda a prestações",
+        }),
+        "log.add.installmentsApps": t({
+            en: "{apps} and more",
+            de: "{apps} und mehr",
+            es: "{apps} y más",
+            fr: "{apps} et plus",
+            pt: "{apps} e mais",
         }),
         "log.add.menu": t({
             en: "Add",
@@ -25,6 +34,20 @@ const log = {
             "es-ES": "Añadir",
             fr: "Ajouter",
             pt: "Adicionar",
+        }),
+        "log.add.more": t({
+            en: "Accounts and debts",
+            de: "Konten und Schulden",
+            es: "Cuentas y deudas",
+            fr: "Comptes et dettes",
+            pt: "Contas e dívidas",
+        }),
+        "log.add.moreHint": t({
+            en: "Cards, loans and people",
+            de: "Karten, Kredite und Personen",
+            es: "Tarjetas, préstamos y personas",
+            fr: "Cartes, prêts et personnes",
+            pt: "Cartões, empréstimos e pessoas",
         }),
         "log.add.scan": t({
             en: "Scan a receipt",
@@ -50,6 +73,14 @@ const log = {
             es: "Mover dinero",
             fr: "Faire un virement",
             pt: "Mover dinheiro",
+        }),
+        "log.add.transferHint": t({
+            en: "Between your accounts",
+            de: "Zwischen deinen Konten",
+            es: "Entre tus cuentas",
+            fr: "Entre vos comptes",
+            pt: "Entre suas contas",
+            "pt-PT": "Entre as suas contas",
         }),
         "log.add.voice": t({
             en: "Speak an entry",
