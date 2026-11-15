@@ -9,6 +9,7 @@ import { components, internal } from "../convex/_generated/api";
 import type { CsvImportResult, CsvImportStatus, LabelSuggestion } from "./csvImport.spec";
 import { maybeScheduleGrounded } from "./enrichment";
 import type { GroundedScheduleCtx } from "./enrichment";
+import { CATEGORY_REUSE_TEST, placeCategory } from "./lib/categoryChoice";
 import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { modelCallError, modelSchema } from "./lib/modelCall";
@@ -43,7 +44,9 @@ function buildPrompt(args: RunClassifyArgs): string {
         "Classify each of these transaction labels into one of the user's existing categories.",
         `Labels: ${args.labels.join(", ")}.`,
         `The user's categories, with any nested under them, are: ${describeTree(args.categoryTree)}.`,
-        "For each label, respond with mapping entries of { label, categoryName }. Reuse one of the listed category names verbatim, or set categoryName to null when none fit. Never invent a new category name.",
+        "For each label, decide what kind of purchase it is, then respond with mapping entries of { label, categoryName }.",
+        CATEGORY_REUSE_TEST,
+        "When one fits, set categoryName to its name verbatim, without the parenthesised list. When none fits, set categoryName to null; never invent a new category name.",
     ].join(" ");
 }
 
@@ -74,13 +77,14 @@ export const classify = Effect.fn("CsvImport.classify")(
                 }),
         });
 
-        const known = new Set(args.categoryTree.flatMap((branch) => [branch.name, ...branch.children]));
-
         const suggestions: LabelSuggestion[] = [];
         for (const item of output.mapping) {
-            const categoryName = item.categoryName?.trim();
+            const { categoryName, isNewCategory } = placeCategory(args.categoryTree, {
+                categoryName: item.categoryName,
+                parentCategoryName: null,
+            });
             // An invented category is dropped, not trusted, without failing the rest.
-            if (!(categoryName && known.has(categoryName))) {
+            if (categoryName === null || isNewCategory) {
                 continue;
             }
             suggestions.push({ categoryName, domain: null, label: item.label });

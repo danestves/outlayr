@@ -32,7 +32,7 @@ import spec from "./enrichment.spec";
 import { isForbiddenLogoOrigin } from "./groundedLookup";
 import { openAiGateFor, withinLimit } from "./lib/aiGate";
 import { liveIdentity, optionalUserId } from "./lib/auth";
-import { claudeFastModelId } from "./lib/config";
+import { claudeModelId } from "./lib/config";
 import { outboundHttp } from "./lib/http";
 import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
 import { isPro } from "./revenuecat";
@@ -70,7 +70,7 @@ const sharedCategory = Effect.fn("Enrichment.sharedCategory")(
             admit: () => withinLimit(() => rateLimiter.limit(ctx, "enrichmentGlobal")),
             args,
             feature: "category_suggest",
-            modelId: claudeFastModelId,
+            modelId: claudeModelId,
         });
         const classified = yield* runSuggest(model, {
             categoryTree: CANONICAL_CATEGORY_NAMES[args.income ? "income" : "expense"].map((name) => ({
@@ -160,7 +160,7 @@ const suggest = FunctionImpl.make(
                 }),
                 args,
                 feature: "category_suggest",
-                modelId: claudeFastModelId,
+                modelId: claudeModelId,
             });
 
             const scheduleGrounded = args.groundedLookup

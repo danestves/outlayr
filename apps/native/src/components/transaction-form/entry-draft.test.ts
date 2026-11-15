@@ -66,7 +66,6 @@ function known(overrides: Partial<FormEntryFacts> = {}): FormEntryFacts {
         ledgerCurrency: "USD",
         paidVia: null,
         receipt: undefined,
-        siblings: [groceries],
         ...overrides,
     };
 }
@@ -135,10 +134,7 @@ describe("formEntry", () => {
     it("asks for the suggested category only when none was picked", () => {
         expect(formEntry(typed({ pendingCategory: suggested }), known()).pendingCategory).toBeUndefined();
         expect(formEntry(typed({ category: null, pendingCategory: suggested }), known()).pendingCategory).toStrictEqual(
-            {
-                siblings: [groceries],
-                value: suggested,
-            }
+            suggested
         );
     });
 });

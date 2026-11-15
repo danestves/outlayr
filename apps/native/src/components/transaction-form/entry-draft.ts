@@ -19,7 +19,6 @@ export interface FormEntryFacts {
     ledgerCurrency: string;
     paidVia: PaidVia | null;
     receipt: string | undefined;
-    siblings: NonNullable<EntryCommit["pendingCategory"]>["siblings"];
 }
 
 interface FormEntry extends Required<Pick<EntryCommit, "draft" | "splits">>, Pick<EntryCommit, "pendingCategory"> {
@@ -65,10 +64,7 @@ export function formEntry(value: TransactionFormValues, facts: FormEntryFacts): 
         amount,
         currency,
         draft,
-        pendingCategory:
-            value.category || !value.pendingCategory
-                ? undefined
-                : { siblings: facts.siblings, value: value.pendingCategory },
+        pendingCategory: value.category || !value.pendingCategory ? undefined : value.pendingCategory,
         splits: {
             allocations: isRealSplit(facts.allocations) ? facts.allocations : [],
             decimals: minorUnitsFor(currency),

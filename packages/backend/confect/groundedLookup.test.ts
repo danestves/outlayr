@@ -412,6 +412,7 @@ describe("runGroundedLookupCall for a queued row", () => {
             domain: "care4bag.gr",
             emoji: null,
             merchantName: "Care4Bag",
+            parentCategoryName: null,
             tags: ["luggage"],
         });
         expect(outcome.candidate).toMatchObject({ categoryName: "Travel", merchantName: "Care4Bag" });

@@ -97,6 +97,7 @@ describe("entrySeed", () => {
             income: true,
             installmentDraft: order === null ? undefined : { draft: order.draft, fees: order.fees },
             installments: true,
+            newCategory: { name: "Mantenimiento del carro", parentName: "Vehículo" },
             note: "Bistro",
             receipt: JSON.stringify({
                 items: [{ name: "Bread", price: 3, quantity: 1 }],

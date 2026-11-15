@@ -451,7 +451,7 @@ function keptScan(image: ArrayBuffer): string | null {
 
 interface WriteEntryInput {
     attachment: string | null;
-    categoryId: string;
+    categoryId: string | null;
     draft: ResolvedReceipt;
     onFailed: () => void;
     onSaved: () => void;
@@ -463,6 +463,7 @@ const writeEntry = Effect.fn("ReceiptScan.writeEntry")(function* writeEntry(db: 
         attachments: attachment === null ? [] : [{ id: null, imageKey: null, imageUri: attachment, name: null }],
         db,
         draft: scanEntryDraft(draft, input.categoryId),
+        pendingCategory: draft.pendingCategory ?? undefined,
         source: "scan",
     });
     if (outcome.kind === "failed") {
@@ -510,9 +511,10 @@ function ScanFlowScreen() {
     const paidValuation = useValuationIn(db, paidCurrency);
     const ledgerValuation = useValuationIn(db, currency);
     const rates = pairRates(paidValuation.rates, ledgerValuation.rates, paidCurrency);
-    const savableCategoryId =
-        receipt && stillCurrent(receipt, live) ? (savableReceipt(receipt)?.categoryId ?? null) : null;
-    const categoryName = receipt?.categoryId ? (getCategoryById(db, receipt.categoryId)?.name ?? null) : null;
+    const savable = receipt && stillCurrent(receipt, live) ? savableReceipt(receipt) : null;
+    const categoryName = receipt?.categoryId
+        ? (getCategoryById(db, receipt.categoryId)?.name ?? null)
+        : (receipt?.pendingCategory?.name ?? null);
 
     const close = () => {
         router.back();
@@ -531,13 +533,16 @@ function ScanFlowScreen() {
                 currency: draft.currency,
                 date: draft.date,
                 income: draft.income,
+                newCategory: draft.pendingCategory
+                    ? { name: draft.pendingCategory.name, parentName: draft.pendingCategory.parentName }
+                    : undefined,
                 note: draft.merchant,
                 receipt: serializeReceipt(draft) ?? undefined,
             })
         );
     };
 
-    const save = (draft: ResolvedReceipt, categoryId: string, image: ArrayBuffer) => {
+    const save = (draft: ResolvedReceipt, categoryId: string | null, image: ArrayBuffer) => {
         setSaving(true);
         const attachment = keptScan(image);
         void runFlow(
@@ -578,14 +583,14 @@ function ScanFlowScreen() {
                     <BottomBar
                         disabled={saving}
                         primary={
-                            savableCategoryId === null
+                            savable === null
                                 ? {
                                       label: t("receipt.action.finish"),
                                       onPress: () => openForm(receipt, keptScan(phase.image)),
                                   }
                                 : {
                                       label: t("receipt.action.save"),
-                                      onPress: () => save(receipt, savableCategoryId, phase.image),
+                                      onPress: () => save(receipt, savable.categoryId, phase.image),
                                   }
                         }
                         secondary={{

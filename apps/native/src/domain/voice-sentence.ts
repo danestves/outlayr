@@ -85,7 +85,7 @@ export function sentenceFromResolved(draft: ResolvedVoiceDraft): VoiceSentence {
     return {
         account: confirm(draft.accountId),
         amount: confirm(draft.amount),
-        category: confirm(draft.categoryId),
+        category: confirm(draft.categoryId ?? draft.pendingCategory?.name),
         currency: draft.currency,
         date: confirm(draft.date),
         from: null,

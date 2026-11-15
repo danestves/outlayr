@@ -34,6 +34,7 @@ const ENTRY: ResolvedVoiceEntry = {
     income: false,
     kind: "entry",
     merchant: "Farmatodo",
+    pendingCategory: null,
     recurrence: null,
 };
 

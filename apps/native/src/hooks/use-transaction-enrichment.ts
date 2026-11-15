@@ -5,7 +5,8 @@ import * as Option from "effect/Option";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 import type { RefObject } from "react";
 
-import { findCategoryPreset, presetForName } from "@/data/categories-core";
+import { findCategoryPreset, pendingCategoryFor } from "@/data/categories-core";
+import type { PendingCategory } from "@/data/categories-core";
 import { getCachedEnrichment, setCachedEnrichment } from "@/domain/enrichment-cache";
 import type { RemoteEnrichmentResult } from "@/domain/enrichment-cache";
 import { resolveMerchant } from "@/domain/merchant-resolver";
@@ -24,14 +25,6 @@ const enrichCommand = timedCaptureCommand<RemoteEnrichmentResult | null>({
     operation: "enrich",
     timeout: ENRICHMENT_TIMEOUT,
 });
-
-export interface PendingCategory {
-    color: string;
-    emoji: string | null;
-    icon: string;
-    name: string;
-    parentName: string | null;
-}
 
 export interface EnrichmentSuggestion {
     categoryId: string | null;
@@ -121,21 +114,14 @@ function toCuratedSuggestion(match: MerchantMatch): EnrichmentSuggestion {
 }
 
 function toRemoteSuggestion(result: RemoteEnrichmentResult): EnrichmentSuggestion {
-    const preset = result.categoryName == null ? null : presetForName(result.categoryName);
     return {
         categoryId: null,
         domain: result.domain,
         lookedUp: true,
         pendingCategory:
-            result.categoryName == null || preset == null
+            result.categoryName == null
                 ? null
-                : {
-                      color: preset.color,
-                      emoji: result.emoji ?? null,
-                      icon: preset.icon,
-                      name: result.categoryName,
-                      parentName: result.parentCategoryName ?? null,
-                  },
+                : pendingCategoryFor(result.categoryName, result.parentCategoryName ?? null, result.emoji ?? null),
         pendingTagNames: result.tags,
         source: "remote",
         tagIds: [],

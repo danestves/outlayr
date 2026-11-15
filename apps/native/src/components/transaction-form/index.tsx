@@ -22,7 +22,7 @@ import { useGlobalCurrency } from "@/data/app-meta";
 import type { AttachmentDraft } from "@/data/attachments-core";
 import { useCategoriesByNamespace } from "@/data/categories";
 import { presetLabel } from "@/data/categories-core";
-import type { Category } from "@/data/categories-core";
+import type { Category, PendingCategory } from "@/data/categories-core";
 import { useFavouriteCurrencies } from "@/data/favourite-currencies";
 import { useRecentMerchants } from "@/data/merchant-history";
 import { useTagIdsFor, useTags } from "@/data/tags";
@@ -44,7 +44,6 @@ import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useCreateAccount } from "@/hooks/use-pro-gate";
 import type { SheetRest } from "@/hooks/use-resting-sheet";
 import { useToggleFavouriteCurrency } from "@/hooks/use-toggle-favourite-currency";
-import type { PendingCategory } from "@/hooks/use-transaction-enrichment";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { TranslateFn } from "@/i18n/context";
 import { celebration } from "@/lib/celebration";
@@ -190,7 +189,6 @@ export function TransactionForm(props: TransactionFormProps) {
             ledgerCurrency: globalCurrency,
             paidVia: cardFee.savedPaidVia(value.paidVia),
             receipt: seed?.receipt,
-            siblings: categoriesForNamespace,
         });
         const { amount } = entry;
         const refusal = split.refusal(amount, entry.currency) ?? installmentOrder.problem(amount);

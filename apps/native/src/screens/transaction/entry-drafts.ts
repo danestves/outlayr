@@ -3,7 +3,7 @@ import type { ResolvedReceipt } from "@/domain/receipt-scan";
 import type { ResolvedVoiceEntry } from "@/domain/voice-entry";
 import type { EntryDraft } from "@/state/entry-commit";
 
-export function voiceEntryDraft(spoken: ResolvedVoiceEntry, categoryId: string): EntryDraft {
+export function voiceEntryDraft(spoken: ResolvedVoiceEntry, categoryId: string | null): EntryDraft {
     const { recurrence } = spoken;
     return {
         accountId: spoken.accountId,
@@ -21,7 +21,7 @@ export function voiceEntryDraft(spoken: ResolvedVoiceEntry, categoryId: string):
     };
 }
 
-export function scanEntryDraft(receipt: ResolvedReceipt, categoryId: string): EntryDraft {
+export function scanEntryDraft(receipt: ResolvedReceipt, categoryId: string | null): EntryDraft {
     return {
         accountId: receipt.accountId,
         amount: receipt.amount,

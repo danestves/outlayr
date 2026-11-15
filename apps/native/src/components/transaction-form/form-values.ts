@@ -5,7 +5,8 @@ import type { DeepKeys, DeepValue, UpdateMetaOptions, Updater } from "@tanstack/
 import type { IdentitySelection } from "@/components/identity-picker-shared";
 import { getAccountById, getLastUsedAccount } from "@/data/accounts-core";
 import { cardFeeFor } from "@/data/card-fees-core";
-import { getCategoryById } from "@/data/categories-core";
+import { getCategoryById, pendingCategoryFor } from "@/data/categories-core";
+import type { PendingCategory } from "@/data/categories-core";
 import type { Transaction } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { feeDraftOf } from "@/domain/card-fee";
@@ -15,7 +16,6 @@ import { minorUnitsFor } from "@/domain/money";
 import { numberToNumpad } from "@/domain/numpad";
 import { isPaidVia, paidViaCharge } from "@/domain/paid-via";
 import type { LogAgainDraft } from "@/domain/transaction-actions";
-import type { PendingCategory } from "@/hooks/use-transaction-enrichment";
 
 import { initialEntryRateType, seededRate } from "./entry-rate";
 
@@ -34,6 +34,7 @@ export interface TransactionSeed {
     income?: boolean;
     installmentDraft?: InstallmentSeed;
     installments?: boolean;
+    newCategory?: { name: string; parentName: string | null };
     note?: string;
     receipt?: string;
     recurrence?: { coefficient: number; type: number };
@@ -96,7 +97,9 @@ export function initialFormValues({ copyOf, db, globalCurrency, initial, nameSee
         // it.
         merchantSeed: nameSeed,
         paidVia,
-        pendingCategory: null as PendingCategory | null,
+        pendingCategory: (seedCategory === null && seed?.newCategory
+            ? pendingCategoryFor(seed.newCategory.name, seed.newCategory.parentName)
+            : null) as PendingCategory | null,
         pendingTagNames: [] as readonly string[],
         rateEntry: seededRate(effectiveCurrency, initial?.exchangeRate),
         recurringType:

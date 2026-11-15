@@ -9,7 +9,8 @@ import * as Schema from "effect/Schema";
 import { getAccountById, rememberLastUsedAccount } from "@/data/accounts-core";
 import { attachmentsRepo } from "@/data/attachments-core";
 import type { AttachmentDraft } from "@/data/attachments-core";
-import { ensureCategoryByName } from "@/data/categories-core";
+import { ensureCategoryByName, getCategoryById, presetForName } from "@/data/categories-core";
+import type { PendingCategory } from "@/data/categories-core";
 import { queueEnrichment } from "@/data/enrichment-queue-core";
 import { captureEntrySaved, usualCardFee } from "@/data/entry-filed-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
@@ -21,7 +22,6 @@ import type { Transaction, TransactionInput } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import type { PaidVia } from "@/domain/paid-via";
 import type { Allocation } from "@/domain/split";
-import type { PendingCategory } from "@/hooks/use-transaction-enrichment";
 import { sendEnrichmentQueue } from "@/lib/enrichment-queue";
 import { freshEntries } from "@/lib/fresh-entries";
 import { syncSubscriptionReminders } from "@/lib/subscription-reminder-sync";
@@ -80,10 +80,7 @@ export interface EntryCommit {
         entry: TransactionInput,
         writeExtras: (id: string) => ExtrasWrite
     ) => Effect.Effect<string, unknown> | null;
-    pendingCategory?: {
-        siblings: readonly { id: string; name: string | null; parentId: string | null }[];
-        value: PendingCategory;
-    };
+    pendingCategory?: PendingCategory;
     source: "form" | "onboarding" | "scan" | "voice";
     splits?: { allocations: readonly Allocation[]; decimals: number };
     tags?: { pendingNames: readonly string[]; tagIds: readonly string[] };
@@ -137,18 +134,25 @@ function entryInput(db: Database, draft: EntryDraft, categoryId: string | null):
 const createPendingCategory = Effect.fn("EntryCommit.createPendingCategory")(function* createPendingCategory(
     db: Database,
     income: boolean,
-    pending: NonNullable<EntryCommit["pendingCategory"]>
+    value: PendingCategory
 ) {
-    const { siblings, value } = pending;
-    const parentId =
-        value.parentName == null
-            ? null
-            : (siblings.find((candidate) => candidate.parentId == null && candidate.name === value.parentName)?.id ??
-              null);
+    const parentId = value.parentName == null ? null : yield* ensureParent(db, income, value.parentName);
     return yield* ensureCategoryByName(db, value.name, income, value.icon, value.color, {
         emoji: value.emoji,
         parentId,
     }).pipe(Effect.mapError((cause) => new PendingCategoryError({ cause, income })));
+});
+
+const ensureParent = Effect.fn("EntryCommit.ensureParent")(function* ensureParent(
+    db: Database,
+    income: boolean,
+    parentName: string
+) {
+    const preset = presetForName(parentName);
+    const id = yield* ensureCategoryByName(db, parentName, income, preset.icon, preset.color).pipe(
+        Effect.mapError((cause) => new PendingCategoryError({ cause, income }))
+    );
+    return getCategoryById(db, id)?.parentId == null ? id : null;
 });
 
 const materializeTagIds = Effect.fn("EntryCommit.materializeTagIds")(function* materializeTagIds(

@@ -15,15 +15,14 @@ import {
     GROUNDED_REQUEST_TIMEOUT_MS,
     placeLines,
     rateLimiter,
-    sanitizeCategoryName,
     sanitizeDomain,
     sanitizeEmoji,
     sanitizeMerchantName,
     sanitizeTags,
 } from "./enrichment";
 import { traced } from "./lib/aiTracing";
+import { categoryChoiceLines, sanitizeCategoryName } from "./lib/categoryChoice";
 import { anthropicApiKey, claudeGroundedModelId } from "./lib/config";
-import { describeTree } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { CANONICAL_CATEGORIES, KEY_PATTERN, shouldPublish } from "./lib/merchantTrust";
 import type { KnowledgeCandidate } from "./lib/merchantTrust";
@@ -64,6 +63,7 @@ const GroundedOutput = Schema.Struct({
     domainConfidence: Schema.optional(Schema.NullOr(Schema.Literals(["high", "medium", "low"]))),
     emoji: Schema.optional(Schema.NullOr(Schema.String)),
     merchantName: Schema.optional(Schema.NullOr(Schema.String)),
+    parentCategoryName: Schema.optional(Schema.NullOr(Schema.String)),
     tags: Schema.Array(Schema.String),
 });
 
@@ -77,14 +77,16 @@ const UNPARSEABLE_GROUNDED_OUTPUT: typeof GroundedOutput.Type = {
 };
 
 const JSON_CONTRACT =
-    '{"merchantName": string | null, "domain": string | null, "domainConfidence": "high" | "medium" | "low", "categoryName": string | null, "canonicalCategory": string | null, "emoji": string | null, "tags": string[]}';
+    '{"merchantName": string | null, "domain": string | null, "domainConfidence": "high" | "medium" | "low", "categoryName": string | null, "parentCategoryName": string | null, "canonicalCategory": string | null, "emoji": string | null, "tags": string[]}';
 
 function categoryLines(tree: readonly CategoryBranch[] | undefined): string[] {
     if (tree === undefined || tree.length === 0) {
-        return [`Set categoryName to exactly one of: ${CANONICAL_NAMES_LIST}; or null if none fit confidently.`];
+        return [
+            `Set categoryName to exactly one of: ${CANONICAL_NAMES_LIST}; or null if none fit confidently. Set parentCategoryName to null.`,
+        ];
     }
     return [
-        `Set categoryName to one of the user's categories verbatim when it fits: ${describeTree(tree)}; otherwise to a short new category name.`,
+        ...categoryChoiceLines(tree),
         `Set canonicalCategory to exactly one of: ${CANONICAL_NAMES_LIST}; or null if none fit confidently.`,
     ];
 }
@@ -137,6 +139,7 @@ function parseGroundedOutput(text: string): typeof GroundedOutput.Type {
 
 export interface GroundedAnswer {
     categoryName: string | null;
+    parentCategoryName: string | null;
     domain: string | null;
     emoji: string | null;
     merchantName: string | null;
@@ -195,6 +198,7 @@ export const runGroundedLookupCall = Effect.fn("GroundedLookup.runCall")(functio
     };
     const answer: GroundedAnswer = {
         categoryName,
+        parentCategoryName: sanitizeCategoryName(output.parentCategoryName),
         domain: output.domainConfidence === "high" || output.domainConfidence === "medium" ? domain : null,
         emoji,
         merchantName,

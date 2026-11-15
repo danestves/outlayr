@@ -18,6 +18,7 @@ const spoken: ResolvedVoiceEntry = {
     income: false,
     kind: "entry",
     merchant: "Netflix",
+    pendingCategory: null,
     recurrence: null,
 };
 

@@ -9,7 +9,8 @@ import { components } from "../convex/_generated/api";
 import refs from "./_generated/refs";
 import { ActionCtx, MutationRunner } from "./_generated/services";
 import { withinCaptureAllowance } from "./lib/captures";
-import { clampDate, describeTree, draftCurrency, normalizeDomain, pickKnown, trimTo } from "./lib/ledgerPrompt";
+import { categoryChoiceLines, placeCategory } from "./lib/categoryChoice";
+import { clampDate, draftCurrency, normalizeDomain, pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { modelCallError, modelSchema } from "./lib/modelCall";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
@@ -45,6 +46,7 @@ export const ModelOutput = Schema.Struct({
     ),
     kind: Schema.Literals(["expense", "refund"]),
     merchant: Schema.NullOr(Schema.String),
+    parentCategoryName: Schema.optionalKey(Schema.NullOr(Schema.String)),
     paymentMethod: Schema.NullOr(Schema.String),
     subtotal: Schema.NullOr(Schema.Finite),
     tax: Schema.NullOr(Schema.Finite),
@@ -78,7 +80,8 @@ export function buildPrompt(args: LedgerContext): string {
         `items are the purchased lines in printed order: name as printed (trimmed, without codes and without the quantity that opens the line), quantity (1 when none is printed) and price as the LINE total in the receipt's currency, quantity included. Never include subtotal, tax, tip, discount, total, payment or change lines as items. At most ${MAX_ITEMS} items; a longer receipt keeps its first ${MAX_ITEMS}.`,
         'paymentMethod is how it was paid as printed, in at most 4 words ("Visa •••• 4242", "Cash", "Apple Pay"); null when not printed.',
         'kind is "refund" only for a return or refund slip where money came back to the person; otherwise "expense".',
-        `The person's categories, with any nested under them, are: ${describeTree(args.categoryTree)}. Pick the one that fits the merchant and the items best and answer its name verbatim, or null when none fits. Never invent a category name.`,
+        "The merchant and the items together decide the category.",
+        ...categoryChoiceLines(args.categoryTree),
         args.accounts.length > 0
             ? `Their accounts are: ${args.accounts.join(", ")}. Set accountName verbatim only when the payment line clearly names one of them (a card brand or bank printed there that appears in an account's name, so "Mastercard ••1234" names an account called "Mastercard Santander"); otherwise null.`
             : "They have no accounts; accountName is null.",
@@ -134,11 +137,14 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): typeof
     if (!(output.found && total != null && Number.isFinite(total) && total > 0 && total <= MAX_AMOUNT)) {
         return null;
     }
-    const knownCategories = args.categoryTree.flatMap((branch) => [branch.name, ...branch.children]);
+    const category = placeCategory(args.categoryTree, {
+        categoryName: output.categoryName,
+        parentCategoryName: output.parentCategoryName,
+    });
     const { currency, unresolved: currencyUnresolved } = draftCurrency(output.currency, args.currency);
     return {
         accountName: pickKnown(output.accountName, args.accounts),
-        categoryName: pickKnown(output.categoryName, knownCategories),
+        categoryName: category.categoryName,
         currency,
         currencySource: output.currencyPrinted ? "printed" : "inferred",
         currencyUnresolved,
@@ -147,6 +153,7 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): typeof
         income: output.kind === "refund",
         items: normalizeItems(output.items),
         merchant: trimTo(output.merchant, MAX_MERCHANT_LENGTH) ?? "",
+        parentCategoryName: category.parentCategoryName,
         paymentMethod: trimTo(output.paymentMethod, MAX_PAYMENT_LENGTH),
         subtotal: moneyLine(output.subtotal),
         tax: moneyLine(output.tax),
