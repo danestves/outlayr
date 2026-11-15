@@ -292,7 +292,7 @@ const rowsOf = <Row extends object, Key extends string | number, Utils extends U
 
 interface Watched<Rows extends readonly unknown[]> {
     readonly toArray: Rows;
-    subscribeChanges: (listener: () => void) => { unsubscribe: () => void };
+    subscribeChanges: (listener: () => void, options: { includeInitialState: false }) => { unsubscribe: () => void };
 }
 
 const sameRows = (left: readonly unknown[], right: readonly unknown[]) =>
@@ -300,15 +300,19 @@ const sameRows = (left: readonly unknown[], right: readonly unknown[]) =>
 
 // Not useLiveQuery: the router streams every live query's rows into the page beside the
 // hydrated tables, so each row went twice.
-function rowStore<Rows extends readonly unknown[]>(collection: Watched<Rows>) {
+export function rowStore<Rows extends readonly unknown[]>(collection: Watched<Rows>) {
     let rows = collection.toArray;
     return {
         read: () => rows,
         subscribe: (changed: () => void) => {
-            const subscription = collection.subscribeChanges(() => {
-                rows = collection.toArray;
-                changed();
-            });
+            // Without this, a subscription hides deletes of rows it never delivered, which is every row read at load.
+            const subscription = collection.subscribeChanges(
+                () => {
+                    rows = collection.toArray;
+                    changed();
+                },
+                { includeInitialState: false }
+            );
             // A sync write can land between the render and this subscription.
             const now = collection.toArray;
             if (!sameRows(now, rows)) {
