@@ -977,10 +977,10 @@ const answers = {
                         source: "https://help.copilot.money/en/articles/5944414-exporting-your-transaction-data",
                         text: t({
                             en: "On iPhone, open Settings, scroll to Account, tap Export your transactions, and save the CSV to Files. On a Mac, an iPad, or the web, export from the Transactions tab, all of them or a filtered set.",
-                            de: "Öffne auf dem iPhone die Einstellungen, scrolle zu Konto, tippe auf „Export your transactions“ und sichere die CSV-Datei in Dateien. Auf einem Mac, einem iPad oder im Web exportierst du über den Tab „Transactions“, entweder alle Umsätze oder eine gefilterte Auswahl.",
+                            de: "Öffne auf dem iPhone „Settings“, scrolle zu „Account“, tippe auf „Export your transactions“ und sichere die CSV-Datei in Dateien. Auf einem Mac, einem iPad oder im Web exportierst du über den Tab „Transactions“, entweder alle Umsätze oder eine gefilterte Auswahl.",
                             es: "En iPhone, abre Settings, baja hasta Account, toca Export your transactions y guarda el CSV en Archivos. En una Mac, un iPad o la web, exporta desde la pestaña Transactions, todos o los que filtres.",
                             pt: "No iPhone, abra Settings, role até Account, toque em Export your transactions e salve o CSV em Arquivos. No Mac, no iPad ou na web, exporte pela aba Transactions, todas ou só as filtradas.",
-                            fr: "Sur iPhone, ouvrez Réglages, faites défiler jusqu'à Compte, touchez Exporter vos opérations et enregistrez le CSV dans Fichiers. Sur un Mac, un iPad ou le Web, exportez depuis l'onglet Opérations, toutes ou un ensemble filtré.",
+                            fr: "Sur iPhone, ouvrez Settings, faites défiler jusqu'à Account, touchez Export your transactions et enregistrez le CSV dans Fichiers. Sur un Mac, un iPad ou le Web, exportez depuis l'onglet Transactions, toutes ou un ensemble filtré.",
                         }),
                     },
                     {
