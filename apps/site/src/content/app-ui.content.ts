@@ -62,7 +62,7 @@ const appUi = {
             label: t({
                 en: "Insights for 6 to 12 Sep: $597.95 spent, 74% less than the week before. Income $1,450, net $852.05.",
                 de: "Auswertungen vom 6. bis 12. Sept.: 597,95 $ ausgegeben, 74 % weniger als in der Woche davor. Einnahmen 1.450 $, netto 852,05 $.",
-                es: "Estadísticas del 6 al 12 de sep: $597.95 gastados, 74 % menos que la semana anterior. Ingresos $1,450, neto $852.05.",
+                es: "Estadísticas del 6 al 12 de sep: $597.95 gastados, 74% menos que la semana anterior. Ingresos $1,450, neto $852.05.",
                 pt: "Estatísticas de 6 a 12 de set: $ 597,95 gastos, 74% a menos que na semana anterior. Receita $ 1.450, líquido $ 852,05.",
                 fr: "Statistiques du 6 au 12 sept. : 597,95 $ dépensés, 74 % de moins que la semaine précédente. Revenus 1 450 $, net 852,05 $.",
             }),
