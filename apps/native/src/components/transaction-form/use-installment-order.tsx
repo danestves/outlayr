@@ -8,6 +8,7 @@ import {
     upfrontOf,
 } from "@outlayr/money/installment-draft";
 import type { InstallmentDraft } from "@outlayr/money/installment-draft";
+import { startingDraft } from "@outlayr/money/installment-terms";
 import type { EntryRateType } from "@outlayr/money/rates";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -15,7 +16,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 
 import type { Account } from "@/data/accounts-core";
-import { paymentRate, planIdForPurchase } from "@/data/installment-reads";
+import { lastPlanRows, paymentRate, planIdForPurchase } from "@/data/installment-reads";
 import { installmentsRepo, liveInstallmentsQuery } from "@/data/installments-core";
 import type { InstallmentOrderInput, PaymentSource } from "@/data/installments-core";
 import type { Transaction, TransactionInput } from "@/data/transactions-core";
@@ -157,11 +158,14 @@ export function useInstallmentOrder({
 
     const open = () => {
         setPrompted(true);
+        const upfrontAccountId = sources.find((source) => toAccountKind(source.kind) !== "liability")?.id ?? null;
         setDraft(
             (current) =>
                 current ??
                 seeded?.draft ??
-                newInstallmentDraft(sources.find((source) => toAccountKind(source.kind) !== "liability")?.id ?? null)
+                (account === null
+                    ? newInstallmentDraft(upfrontAccountId)
+                    : startingDraft(account, lastPlanRows(db, account.id), upfrontAccountId))
         );
         setPresented((count) => count + 1);
     };
