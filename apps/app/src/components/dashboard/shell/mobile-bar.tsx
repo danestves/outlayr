@@ -10,9 +10,10 @@ import { useIntlayer } from "react-intlayer";
 
 import { useOpenFlow } from "@/components/dashboard/accounts/flows";
 
+import { AccountSheet } from "./account-menu";
+
 export function MobileBar() {
-    const { account, add, nav } = useIntlayer("dashboard");
-    const openFlow = useOpenFlow();
+    const { account, nav } = useIntlayer("dashboard");
     const page = useLocation({ select: (location) => location.pathname.split("/")[1] });
     let title: ReactNode = nav.dashboard;
     if (page === "insights") {
@@ -55,14 +56,21 @@ export function MobileBar() {
             >
                 <HugeiconsIcon icon={Search01Icon} strokeWidth={2} />
             </Button>
-            <Button
-                aria-label={add.entry.value}
-                className="mx-[5px]"
-                onClick={() => openFlow({ kind: "entry" })}
-                size="icon"
-            >
-                <HugeiconsIcon icon={Add01Icon} size={20} strokeWidth={2} />
-            </Button>
+            <AccountSheet />
         </header>
+    );
+}
+
+export function AddButton() {
+    const { add } = useIntlayer("dashboard");
+    const openFlow = useOpenFlow();
+    return (
+        <Button
+            aria-label={add.entry.value}
+            className="fixed right-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-30 size-14 rounded-full shadow-lg lg:hidden"
+            onClick={() => openFlow({ kind: "entry" })}
+        >
+            <HugeiconsIcon icon={Add01Icon} size={24} strokeWidth={2} />
+        </Button>
     );
 }
