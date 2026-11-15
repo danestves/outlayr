@@ -1,0 +1,48 @@
+diff --git a/dist/cjs/browser/sync/client.js b/dist/cjs/browser/sync/client.js
+index b41c11f..4231bfe 100644
+--- a/dist/cjs/browser/sync/client.js
++++ b/dist/cjs/browser/sync/client.js
+@@ -224,6 +224,19 @@ class BaseConvexClient {
+           }
+           switch (serverMessage.type) {
+             case "Transition": {
++              const start = serverMessage.startVersion;
++              const current = this.remoteQuerySet.version;
++              if (
++                current.querySet !== start.querySet ||
++                current.ts.notEquals(start.ts) ||
++                current.identity !== start.identity
++              ) {
++                this.logger.warn(
++                  `Invalid start version: ${start.ts.toString()}:${start.querySet}:${start.identity}, transitioning from ${current.ts.toString()}:${current.querySet}:${current.identity}. Reconnecting.`
++                );
++                this.webSocketManager.closeAndReconnect("InvalidStartVersion");
++                return { hasSyncedPastLastReconnect: false };
++              }
+               this.observedTimestamp(serverMessage.endVersion.ts);
+               this.authenticationManager.onTransition(serverMessage);
+               this.remoteQuerySet.transition(serverMessage);
+diff --git a/dist/esm/browser/sync/client.js b/dist/esm/browser/sync/client.js
+index 1b38f60..2a94d01 100644
+--- a/dist/esm/browser/sync/client.js
++++ b/dist/esm/browser/sync/client.js
+@@ -213,6 +213,19 @@ export class BaseConvexClient {
+           }
+           switch (serverMessage.type) {
+             case "Transition": {
++              const start = serverMessage.startVersion;
++              const current = this.remoteQuerySet.version;
++              if (
++                current.querySet !== start.querySet ||
++                current.ts.notEquals(start.ts) ||
++                current.identity !== start.identity
++              ) {
++                this.logger.warn(
++                  `Invalid start version: ${start.ts.toString()}:${start.querySet}:${start.identity}, transitioning from ${current.ts.toString()}:${current.querySet}:${current.identity}. Reconnecting.`
++                );
++                this.webSocketManager.closeAndReconnect("InvalidStartVersion");
++                return { hasSyncedPastLastReconnect: false };
++              }
+               this.observedTimestamp(serverMessage.endVersion.ts);
+               this.authenticationManager.onTransition(serverMessage);
+               this.remoteQuerySet.transition(serverMessage);
