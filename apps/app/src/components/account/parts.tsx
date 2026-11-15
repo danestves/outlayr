@@ -1,5 +1,6 @@
 import type { ComponentProps, ReactNode } from "react";
 import { useId, useState } from "react";
+import { useIntlayer } from "react-intlayer";
 
 import { LogoMark } from "../logo-mark";
 
@@ -39,6 +40,7 @@ export function Field({
     secret,
     ...input
 }: Omit<ComponentProps<"input">, "type"> & { label: string; secret?: boolean }) {
+    const copy = useIntlayer("sign-in");
     const id = useId();
     const [shown, setShown] = useState(false);
     return (
@@ -60,7 +62,7 @@ export function Field({
                     onClick={() => setShown(!shown)}
                     type="button"
                 >
-                    {shown ? "Hide" : "Show"}
+                    {shown ? copy.hide : copy.show}
                 </button>
             ) : null}
         </div>
@@ -72,6 +74,7 @@ const NON_DIGITS = /\D/gu;
 const SLOTS = Array.from({ length: CODE_LENGTH }, (_, slot) => slot);
 
 export function CodeField({ onChange, value }: { onChange: (code: string) => void; value: string }) {
+    const copy = useIntlayer("sign-in");
     const [focused, setFocused] = useState(false);
     const active = Math.min(value.length, CODE_LENGTH - 1);
     return (
@@ -87,7 +90,7 @@ export function CodeField({ onChange, value }: { onChange: (code: string) => voi
                 </span>
             ))}
             <input
-                aria-label="Code"
+                aria-label={copy.code.value}
                 autoComplete="one-time-code"
                 autoFocus
                 className="absolute inset-0 w-full cursor-text opacity-0"

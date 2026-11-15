@@ -1,6 +1,8 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
+import type signIn from "@/content/sign-in.content";
+
 export function safeRedirect(target: string | undefined): string {
     return target?.startsWith("/") && !target.startsWith("//") && !target.startsWith("/\\") ? target : "/";
 }
@@ -23,12 +25,14 @@ export function withoutOneTimeToken(response: Response): Response {
 }
 
 const RATE_LIMITED = 429;
-const FAILURES = new Map([
-    ["INVALID_EMAIL", "Enter a valid email."],
-    ["INVALID_EMAIL_OR_PASSWORD", "That email and password don't match."],
-    ["INVALID_OTP", "That code is wrong or expired."],
-    ["OTP_EXPIRED", "That code is wrong or expired."],
-    ["TOO_MANY_ATTEMPTS", "Too many tries with that code. Send a new one."],
+export type FailureKey = keyof (typeof signIn)["content"]["failures"];
+
+const FAILURES = new Map<string, FailureKey>([
+    ["INVALID_EMAIL", "email"],
+    ["INVALID_EMAIL_OR_PASSWORD", "credentials"],
+    ["INVALID_OTP", "code"],
+    ["OTP_EXPIRED", "code"],
+    ["TOO_MANY_ATTEMPTS", "attempts"],
 ]);
 
 export class AuthFailure extends Schema.TaggedError<AuthFailure>()("AuthFailure", {
@@ -45,9 +49,9 @@ export const authRequest = Effect.fn("Account.request")(function* authRequest(
     }
 });
 
-export function failureMessage(error: Pick<AuthFailure, "code" | "status"> = {}): string {
+export function failureKey(error: Pick<AuthFailure, "code" | "status"> = {}): FailureKey {
     if (error.status === RATE_LIMITED) {
-        return "Too many tries. Wait a bit and try again.";
+        return "rateLimited";
     }
-    return (error.code && FAILURES.get(error.code)) || "Sign-in didn't complete. Try again.";
+    return (error.code === undefined ? undefined : FAILURES.get(error.code)) ?? "unknown";
 }
