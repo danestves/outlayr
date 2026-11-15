@@ -157,8 +157,14 @@ export function Terrain({ flat = false }: { flat?: boolean }) {
     const image = `pointer-events-none absolute top-0 left-1/2 -z-10 h-auto max-w-none -translate-x-1/2 select-none ${PLATE_EDGES}`;
     return (
         <>
-            <img alt="" className={`light-only ${image}`} height={height} src={`/goals/${name}.svg`} width={2202} />
-            <img alt="" className={`dark-only ${image}`} height={height} src={`/goals/${name}-dark.svg`} width={2202} />
+            <img alt="" className={`light-only ${image}`} height={height} src={`/art/goals/${name}.svg`} width={2202} />
+            <img
+                alt=""
+                className={`dark-only ${image}`}
+                height={height}
+                src={`/art/goals/${name}-dark.svg`}
+                width={2202}
+            />
         </>
     );
 }
