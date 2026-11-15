@@ -133,7 +133,13 @@ function UpcomingCard() {
     );
 }
 
-const LANGUAGE_NAMES: Record<Locale, string> = { en: "English", es: "Español", fr: "Français", pt: "Português" };
+const LANGUAGE_NAMES: Record<Locale, string> = {
+    de: "Deutsch",
+    en: "English",
+    es: "Español",
+    fr: "Français",
+    pt: "Português",
+};
 
 function LanguageRow() {
     const { language } = useIntlayer("dashboard-settings");

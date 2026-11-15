@@ -3,9 +3,10 @@ import type { Locale } from "@outlayr/shared/i18n";
 import type { Currency } from "../demo/money";
 import { CASTS } from "../demo/sentence-model";
 
-const AMOUNT = /(?:^|\s)((?:(USD|EUR|US\$|[$€])\s*)?(\d+(?:[.,]\d{1,2})?)(?:\s*(USD|EUR))?)(?:[.!?,;:])?(?=\s|$)/gi;
+const AMOUNT = /(?:^|\s)((?:(USD|EUR|US\$|[$€])\s*)?(\d+(?:[.,]\d{1,2})?)(?:\s*(USD|EUR|€))?)(?:[.!?,;:])?(?=\s|$)/gi;
 const CONNECTOR_SUFFIX = {
     en: /\s+for$/i,
+    de: /\s+für$/i,
     es: /\s+por$/i,
     fr: /\s+pour$/i,
     pt: /\s+por$/i,

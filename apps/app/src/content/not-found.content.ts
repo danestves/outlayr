@@ -3,10 +3,17 @@ import type { Dictionary } from "intlayer";
 
 export default {
     content: {
-        home: t({ en: "Open Outlayr", es: "Abrir Outlayr", pt: "Abrir o Outlayr", fr: "Ouvrir Outlayr" }),
-        meta: t({ en: "Error 404", es: "Error 404", pt: "Erro 404", fr: "Erreur 404" }),
+        home: t({
+            en: "Open Outlayr",
+            de: "Outlayr öffnen",
+            es: "Abrir Outlayr",
+            pt: "Abrir o Outlayr",
+            fr: "Ouvrir Outlayr",
+        }),
+        meta: t({ en: "Error 404", de: "Fehler 404", es: "Error 404", pt: "Erro 404", fr: "Erreur 404" }),
         title: t({
             en: "Nothing is filed under this address",
+            de: "Unter dieser Adresse ist nichts abgelegt",
             es: "No hay nada archivado en esta dirección",
             pt: "Não há nada arquivado neste endereço",
             fr: "Rien n'est classé à cette adresse",

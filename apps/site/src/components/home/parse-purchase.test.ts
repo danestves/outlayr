@@ -21,6 +21,15 @@ describe("parsePurchase", () => {
         });
     });
 
+    it("reads a euro sign written after the amount", () => {
+        expect(parsePurchase("balzac coffee 4,50 €", "de")).toStrictEqual({
+            amount: 4.5,
+            category: "Coffee",
+            currency: "EUR",
+            merchant: "Balzac Coffee",
+        });
+    });
+
     it("leaves unfinished fields empty instead of inventing them", () => {
         expect(parsePurchase("corner shop", "en")).toStrictEqual({
             amount: null,

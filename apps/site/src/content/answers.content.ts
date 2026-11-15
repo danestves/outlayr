@@ -13,6 +13,7 @@ import {
 
 const OUTLAYR_LEAD = {
     en: "Outlayr is an open source expense tracker you fill in by sentence, voice, or receipt, free to start.",
+    de: "Outlayr ist ein Open-Source-Ausgaben-Tracker, den du per Satz, Sprache oder Beleg füllst, zum Start kostenlos.",
     es: "Outlayr es una app de código abierto para controlar tus gastos que llenas con una oración, con tu voz o con un recibo, gratis para empezar.",
     fr: "Outlayr est une application open source de suivi des dépenses que vous remplissez par une phrase, à la voix ou avec un reçu, gratuite pour commencer.",
 } as const;
@@ -107,20 +108,44 @@ const OUTLAYR = {
 };
 
 const LABELS = {
-    availability: t({ en: "Available in", es: "Disponible en", pt: "Disponível em", fr: "Disponible sur" }),
-    budgets: t({ en: "Budgets", es: "Presupuestos", pt: "Orçamentos", fr: "Budgets" }),
-    canada: t({ en: "In Canada", es: "En Canadá", pt: "No Canadá", fr: "Au Canada" }),
-    currencies: t({ en: "Currencies", es: "Monedas", pt: "Moedas", fr: "Devises" }),
-    entries: t({ en: "Adding entries", es: "Cómo registras", pt: "Como você registra", fr: "Saisie des opérations" }),
-    focus: t({ en: "Tracks", es: "Sigue", pt: "Acompanha", fr: "Suit" }),
-    free: t({ en: "Free plan", es: "Plan gratis", pt: "Plano grátis", fr: "Offre gratuite" }),
-    license: t({ en: "License", es: "Licencia", pt: "Licença", fr: "Licence" }),
-    phone: t({ en: "On a phone", es: "En el celular", pt: "No celular", fr: "Sur téléphone" }),
-    platforms: t({ en: "Runs on", es: "Funciona en", pt: "Funciona em", fr: "Fonctionne sur" }),
-    price: t({ en: "Price", es: "Precio", pt: "Preço", fr: "Prix" }),
-    style: t({ en: "Budget style", es: "Tipo de presupuesto", pt: "Tipo de orçamento", fr: "Type de budget" }),
-    subscriptions: t({ en: "Subscriptions", es: "Suscripciones", pt: "Assinaturas", fr: "Abonnements" }),
-    watch: t({ en: "Watch out for", es: "Ten en cuenta", pt: "Fique atento a", fr: "Points d'attention" }),
+    availability: t({
+        en: "Available in",
+        de: "Verfügbar für",
+        es: "Disponible en",
+        pt: "Disponível em",
+        fr: "Disponible sur",
+    }),
+    budgets: t({ en: "Budgets", de: "Budgets", es: "Presupuestos", pt: "Orçamentos", fr: "Budgets" }),
+    canada: t({ en: "In Canada", de: "In Kanada", es: "En Canadá", pt: "No Canadá", fr: "Au Canada" }),
+    currencies: t({ en: "Currencies", de: "Währungen", es: "Monedas", pt: "Moedas", fr: "Devises" }),
+    entries: t({
+        en: "Adding entries",
+        de: "Einträge hinzufügen",
+        es: "Cómo registras",
+        pt: "Como você registra",
+        fr: "Saisie des opérations",
+    }),
+    focus: t({ en: "Tracks", de: "Verfolgt", es: "Sigue", pt: "Acompanha", fr: "Suit" }),
+    free: t({ en: "Free plan", de: "Gratis-Plan", es: "Plan gratis", pt: "Plano grátis", fr: "Offre gratuite" }),
+    license: t({ en: "License", de: "Lizenz", es: "Licencia", pt: "Licença", fr: "Licence" }),
+    phone: t({ en: "On a phone", de: "Auf dem Handy", es: "En el celular", pt: "No celular", fr: "Sur téléphone" }),
+    platforms: t({ en: "Runs on", de: "Läuft auf", es: "Funciona en", pt: "Funciona em", fr: "Fonctionne sur" }),
+    price: t({ en: "Price", de: "Preis", es: "Precio", pt: "Preço", fr: "Prix" }),
+    style: t({
+        en: "Budget style",
+        de: "Budget-Art",
+        es: "Tipo de presupuesto",
+        pt: "Tipo de orçamento",
+        fr: "Type de budget",
+    }),
+    subscriptions: t({ en: "Subscriptions", de: "Abos", es: "Suscripciones", pt: "Assinaturas", fr: "Abonnements" }),
+    watch: t({
+        en: "Watch out for",
+        de: "Zu beachten",
+        es: "Ten en cuenta",
+        pt: "Fique atento a",
+        fr: "Points d'attention",
+    }),
 };
 
 const MOVING = {
@@ -969,8 +994,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in 175 countries and regions, Chile and Mexico included, with 165 currencies, in English, Spanish, Portuguese, and French. Fintonic's App Store listing is only in Spain, and the banks it lists operate there.",
-                            es: "Sí. Outlayr se ofrece en 175 países y regiones, entre ellos España, Chile y México, con 165 monedas, en inglés, francés, portugués y español de España y de Latinoamérica. Fintonic solo aparece en la App Store de España y los bancos de su lista operan allí. Su web todavía muestra México y Chile en el selector de país, pero al elegirlos sigues en la web de España.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, Chile and Mexico included, with 165 currencies, in English, Spanish, Portuguese, French, and German. Fintonic's App Store listing is only in Spain, and the banks it lists operate there.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, entre ellos España, Chile y México, con 165 monedas, en inglés, alemán, francés, portugués y español de España y de Latinoamérica. Fintonic solo aparece en la App Store de España y los bancos de su lista operan allí. Su web todavía muestra México y Chile en el selector de país, pero al elegirlos sigues en la web de España.",
                         }),
                         question: t({
                             en: "Does Outlayr work in Chile and Mexico?",
@@ -1281,8 +1306,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in 175 countries and regions, in English, Spanish, Portuguese, and French. Monarch is available in the United States and Canada.",
-                            es: "Sí. Outlayr se ofrece en 175 países y regiones, en inglés, español, portugués y francés. Monarch está disponible en Estados Unidos y Canadá.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, in English, Spanish, Portuguese, French, and German. Monarch is available in the United States and Canada.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, en inglés, español, portugués, francés y alemán. Monarch está disponible en Estados Unidos y Canadá.",
                         }),
                         question: t({
                             en: "Is Outlayr available outside the United States and Canada?",
@@ -1871,8 +1896,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in 175 countries and regions, with 165 currencies, in English, Spanish, Portuguese, and French. Rocket Money is available in the United States, with U.S. banks.",
-                            es: "Sí. Outlayr se ofrece en 175 países y regiones, con 165 monedas, en inglés, español, portugués y francés. Rocket Money está disponible en Estados Unidos, con bancos de EE. UU.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, with 165 currencies, in English, Spanish, Portuguese, French, and German. Rocket Money is available in the United States, with U.S. banks.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, con 165 monedas, en inglés, español, portugués, francés y alemán. Rocket Money está disponible en Estados Unidos, con bancos de EE. UU.",
                         }),
                         question: t({
                             en: "Does Outlayr work outside the United States?",
@@ -2366,8 +2391,8 @@ const answers = {
                     {
                         label: t({ en: "Say it", es: "Díctala" }),
                         text: t({
-                            en: "In your own words, in English, Spanish, Portuguese, or French, up to 45 seconds a clip",
-                            es: "Con tus palabras, en inglés, español, portugués o francés, hasta 45 segundos por grabación",
+                            en: "In your own words, in English, Spanish, Portuguese, French, or German, up to 45 seconds a clip",
+                            es: "Con tus palabras, en inglés, español, portugués, francés o alemán, hasta 45 segundos por grabación",
                         }),
                     },
                     {
@@ -2422,8 +2447,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "English, Spanish, Portuguese, and French. Voice entry listens in the language the app is set to.",
-                            es: "Inglés, español, portugués y francés. El registro por voz escucha en el idioma que tenga la app.",
+                            en: "English, Spanish, Portuguese, French, and German. Voice entry listens in the language the app is set to.",
+                            es: "Inglés, español, portugués, francés y alemán. El registro por voz escucha en el idioma que tenga la app.",
                         }),
                         question: t({ en: "Which languages does it understand?", es: "¿Qué idiomas entiende?" }),
                     },
@@ -2988,8 +3013,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "EveryDollar's mobile app and Premium are US only, and Monarch is for the US and Canada. PocketGuard links accounts in the US and Canada, and Goodbudget's bank sync is for US banks. YNAB imports from select US, Canadian, UK, and EU banks. Spendee connects banks in many countries, including much of Europe and Latin America. Outlayr works in English, Spanish, Portuguese, and French, with 165 currencies.",
-                            es: "La app móvil y el Premium de EveryDollar son solo para EE. UU., y Monarch es para EE. UU. y Canadá. PocketGuard vincula cuentas de EE. UU. y Canadá, y la sincronización de Goodbudget es para bancos de EE. UU. YNAB importa desde algunos bancos de EE. UU., Canadá, Reino Unido y la UE. Spendee conecta bancos de muchos países, entre ellos buena parte de Europa y Latinoamérica. Outlayr funciona en inglés, español, portugués y francés, con 165 monedas.",
+                            en: "EveryDollar's mobile app and Premium are US only, and Monarch is for the US and Canada. PocketGuard links accounts in the US and Canada, and Goodbudget's bank sync is for US banks. YNAB imports from select US, Canadian, UK, and EU banks. Spendee connects banks in many countries, including much of Europe and Latin America. Outlayr works in English, Spanish, Portuguese, French, and German, with 165 currencies.",
+                            es: "La app móvil y el Premium de EveryDollar son solo para EE. UU., y Monarch es para EE. UU. y Canadá. PocketGuard vincula cuentas de EE. UU. y Canadá, y la sincronización de Goodbudget es para bancos de EE. UU. YNAB importa desde algunos bancos de EE. UU., Canadá, Reino Unido y la UE. Spendee conecta bancos de muchos países, entre ellos buena parte de Europa y Latinoamérica. Outlayr funciona en inglés, español, portugués, francés y alemán, con 165 monedas.",
                         }),
                         question: t({
                             en: "Which budget apps work outside the United States?",
@@ -3742,8 +3767,8 @@ const answers = {
                     COST_FAQ,
                     {
                         answer: t({
-                            en: "Yes. The app and this site are in English and Latin American Spanish, and the app is also in Spain's Spanish, in Portuguese from Brazil and from Portugal, and in French.",
-                            es: "Sí. La app y este sitio están en inglés y en español de Latinoamérica, y la app también está en español de España, en portugués de Brasil y de Portugal, y en francés.",
+                            en: "Yes. The app and this site are in English and Latin American Spanish, and the app is also in Spain's Spanish, in Portuguese from Brazil and from Portugal, in French, and in German.",
+                            es: "Sí. La app y este sitio están en inglés y en español de Latinoamérica, y la app también está en español de España, en portugués de Brasil y de Portugal, en francés y en alemán.",
                         }),
                         question: t({ en: "Is Outlayr in Spanish?", es: "¿Outlayr está en español?" }),
                     },
@@ -4671,9 +4696,9 @@ const answers = {
                             {
                                 label: BRAZIL.portuguese,
                                 text: t({
-                                    en: "Yes, along with English, Spanish, and French",
-                                    es: "Sí, además de inglés, español y francés",
-                                    pt: "Sim, além de inglês, espanhol e francês",
+                                    en: "Yes, along with English, Spanish, French, and German",
+                                    es: "Sí, además de inglés, español, francés y alemán",
+                                    pt: "Sim, além de inglês, espanhol, francês e alemão",
                                 }),
                             },
                             {
@@ -4884,9 +4909,9 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in 175 countries and regions, and the app is in Portuguese, English, Spanish, and French. Your app store shows the price for your country.",
-                            es: "Sí. Outlayr se ofrece en 175 países y regiones, y la app está en portugués, inglés, español y francés. Tu tienda de apps muestra el precio de tu país.",
-                            pt: "Sim. O Outlayr é oferecido em 175 países e regiões, e o app está em português, inglês, espanhol e francês. Sua loja de apps mostra o preço do seu país.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, and the app is in Portuguese, English, Spanish, French, and German. Your app store shows the price for your country.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, y la app está en portugués, inglés, español, francés y alemán. Tu tienda de apps muestra el precio de tu país.",
+                            pt: "Sim. O Outlayr é oferecido em 175 países e regiões, e o app está em português, inglês, espanhol, francês e alemão. Sua loja de apps mostra o preço do seu país.",
                         }),
                         question: t({
                             en: "Is Outlayr available in Brazil?",
@@ -5534,9 +5559,9 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr is offered in 175 countries and regions, Canada included, and the app is in French, English, Spanish, and Portuguese. Your app store shows the price for your country.",
-                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Canadá incluido, y la app está en francés, inglés, español y portugués. Tu tienda de apps muestra el precio de tu país.",
-                            fr: "Oui. Outlayr est proposé dans 175 pays et régions, dont le Canada, et l'app est en français, anglais, espagnol et portugais. Votre boutique d'apps affiche le prix de votre pays.",
+                            en: "Yes. Outlayr is offered in 175 countries and regions, Canada included, and the app is in French, English, Spanish, Portuguese, and German. Your app store shows the price for your country.",
+                            es: "Sí. Outlayr se ofrece en 175 países y regiones, Canadá incluido, y la app está en francés, inglés, español, portugués y alemán. Tu tienda de apps muestra el precio de tu país.",
+                            fr: "Oui. Outlayr est proposé dans 175 pays et régions, dont le Canada, et l'app est en français, anglais, espagnol, portugais et allemand. Votre boutique d'apps affiche le prix de votre pays.",
                         }),
                         question: t({
                             en: "Is Outlayr available in France, Quebec, and Belgium?",
@@ -6523,8 +6548,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Rocket Money is available in the United States only, and Monarch in the United States and Canada. PocketGuard links accounts in the US, Canada, and the UK. If your bank is elsewhere, use an app that doesn't link one: Bobby, Subcut, or Outlayr, which comes in English, Spanish, Portuguese, and French. Check your app store to confirm it's offered in your country.",
-                            es: "Rocket Money solo está disponible en Estados Unidos, y Monarch en Estados Unidos y Canadá. PocketGuard vincula cuentas de EE. UU., Canadá y Reino Unido. Si tu banco está en otro país, usa una app que no lo vincule: Bobby, Subcut u Outlayr, que está en inglés, español, portugués y francés. Revisa tu tienda de apps para confirmar que se ofrece en tu país.",
+                            en: "Rocket Money is available in the United States only, and Monarch in the United States and Canada. PocketGuard links accounts in the US, Canada, and the UK. If your bank is elsewhere, use an app that doesn't link one: Bobby, Subcut, or Outlayr, which comes in English, Spanish, Portuguese, French, and German. Check your app store to confirm it's offered in your country.",
+                            es: "Rocket Money solo está disponible en Estados Unidos, y Monarch en Estados Unidos y Canadá. PocketGuard vincula cuentas de EE. UU., Canadá y Reino Unido. Si tu banco está en otro país, usa una app que no lo vincule: Bobby, Subcut u Outlayr, que está en inglés, español, portugués, francés y alemán. Revisa tu tienda de apps para confirmar que se ofrece en tu país.",
                         }),
                         question: t({
                             en: "Which subscription trackers work outside the United States?",
@@ -8325,12 +8350,14 @@ const answers = {
                     {
                         href: t({
                             en: "/templates/expense-tracker-template.xlsx",
+                            de: "/templates/vorlage-haushaltsbuch.xlsx",
                             es: "/templates/plantilla-control-de-gastos.xlsx",
                             pt: "/templates/planilha-controle-financeiro.xlsx",
                             fr: "/templates/modele-budget-mensuel.xlsx",
                         }),
                         label: t({
                             en: "Download for Excel (.xlsx)",
+                            de: "Für Excel herunterladen (.xlsx)",
                             es: "Descargar para Excel (.xlsx)",
                             pt: "Baixar para Excel (.xlsx)",
                             fr: "Télécharger pour Excel (.xlsx)",
@@ -8339,12 +8366,14 @@ const answers = {
                     {
                         href: t({
                             en: "/templates/expense-tracker-template.csv",
+                            de: "/templates/vorlage-haushaltsbuch.csv",
                             es: "/templates/plantilla-control-de-gastos.csv",
                             pt: "/templates/planilha-controle-financeiro.csv",
                             fr: "/templates/modele-budget-mensuel.csv",
                         }),
                         label: t({
                             en: "Download the CSV",
+                            de: "CSV herunterladen",
                             es: "Descargar el CSV",
                             pt: "Baixar o CSV",
                             fr: "Télécharger le CSV",
@@ -8353,81 +8382,96 @@ const answers = {
                 ],
                 facts: [
                     {
-                        label: t({ en: "Sheets", es: "Hojas", pt: "Abas", fr: "Feuilles" }),
+                        label: t({ en: "Sheets", de: "Tabellenblätter", es: "Hojas", pt: "Abas", fr: "Feuilles" }),
                         text: t({
                             en: "Transactions, Summary, and How to import, in an Excel workbook. The CSV is the Transactions sheet on its own",
+                            de: "Buchungen, Übersicht und So importierst du, in einer Excel-Arbeitsmappe. Die CSV-Datei ist nur das Blatt Buchungen",
                             es: "Movimientos, Resumen y Cómo importar, en un libro de Excel. El CSV es solo la hoja Movimientos",
                             pt: "Lançamentos, Resumo e Como importar, em uma planilha de Excel. O CSV é só a aba Lançamentos",
                             fr: "Opérations, Résumé et Comment importer, dans un classeur Excel. Le CSV reprend la seule feuille Opérations",
                         }),
                     },
                     {
-                        label: t({ en: "Summary", es: "Resumen", pt: "Resumo", fr: "Résumé" }),
+                        label: t({ en: "Summary", de: "Übersicht", es: "Resumen", pt: "Resumo", fr: "Résumé" }),
                         text: t({
                             en: "Income, spending, and net for the month and currency you pick, spending against a budget per category, and a chart",
+                            de: "Einnahmen, Ausgaben und Saldo für den Monat und die Währung, die du wählst, die Ausgaben gegen ein Budget pro Kategorie und ein Diagramm",
                             es: "Ingresos, gastos y neto del mes y la moneda que elijas, lo gastado contra un presupuesto por categoría y un gráfico",
                             pt: "Receitas, despesas e saldo do mês e da moeda que você escolher, o gasto de cada categoria contra um orçamento e um gráfico",
                             fr: "Revenus, dépenses et solde du mois et de la devise de votre choix, les dépenses face au budget de chaque catégorie et un graphique",
                         }),
                     },
                     {
-                        label: t({ en: "Columns", es: "Columnas", pt: "Colunas", fr: "Colonnes" }),
+                        label: t({ en: "Columns", de: "Spalten", es: "Columnas", pt: "Colunas", fr: "Colonnes" }),
                         text: t({
                             en: "Date, Note, Amount, Currency, Category, Type",
+                            de: "Datum, Notiz, Betrag, Währung, Kategorie und Typ, mit dem englischen Namen in Klammern, wenn er abweicht",
                             es: "Fecha, Nota, Monto, Moneda, Categoría y Tipo, con el nombre en inglés entre paréntesis",
                             pt: "Data, Nota, Valor, Moeda, Categoria e Tipo, com o nome em inglês entre parênteses",
                             fr: "Date, Libellé, Montant, Devise, Catégorie et Type, avec le nom anglais entre parenthèses quand il diffère",
                         }),
                     },
                     {
-                        label: t({ en: "Opens in", es: "Abre en", pt: "Abre no", fr: "S'ouvre dans" }),
+                        label: t({
+                            en: "Opens in",
+                            de: "Öffnet sich in",
+                            es: "Abre en",
+                            pt: "Abre no",
+                            fr: "S'ouvre dans",
+                        }),
                         text: t({
                             en: "Excel, Numbers, and Google Sheets",
+                            de: "Excel, Numbers und Google Sheets",
                             es: "Excel, Numbers y Google Sheets",
                             pt: "Excel, Numbers e Planilhas Google",
                             fr: "Excel, Numbers et Google Sheets",
                         }),
                     },
                     {
-                        label: t({ en: "Dates", es: "Fechas", pt: "Datas", fr: "Dates" }),
+                        label: t({ en: "Dates", de: "Daten", es: "Fechas", pt: "Datas", fr: "Dates" }),
                         text: t({
                             en: "Year first, like 2026-10-09. Dates like 10/09/2026 work too",
+                            de: "Zuerst das Jahr, wie 2026-10-09. Daten wie 09.10.2026 funktionieren auch",
                             es: "Primero el año, como 2026-10-09. También sirven fechas como 09/10/2026",
                             pt: "Primeiro o ano, como 2026-10-09. Datas como 09/10/2026 também funcionam",
                             fr: "L'année d'abord, comme 2026-10-09. Les dates comme 09/10/2026 fonctionnent aussi",
                         }),
                     },
                     {
-                        label: t({ en: "Amounts", es: "Montos", pt: "Valores", fr: "Montants" }),
+                        label: t({ en: "Amounts", de: "Beträge", es: "Montos", pt: "Valores", fr: "Montants" }),
                         text: t({
                             en: "A number, with a dot or a comma for decimals",
+                            de: "Eine Zahl, mit Punkt oder Komma als Dezimaltrennzeichen",
                             es: "Un número, con punto o coma para los decimales",
                             pt: "Um número, com ponto ou vírgula nos decimais",
                             fr: "Un nombre, avec un point ou une virgule pour les décimales",
                         }),
                     },
                     {
-                        label: t({ en: "Type", es: "Tipo", pt: "Tipo", fr: "Type" }),
+                        label: t({ en: "Type", de: "Typ", es: "Tipo", pt: "Tipo", fr: "Type" }),
                         text: t({
                             en: "Expense or Income",
+                            de: "Expense für eine Ausgabe, Income für eine Einnahme",
                             es: "Expense para un gasto, Income para un ingreso",
                             pt: "Expense para uma despesa, Income para uma receita",
                             fr: "Expense pour une dépense, Income pour un revenu",
                         }),
                     },
                     {
-                        label: t({ en: "Import", es: "Importa", pt: "Importação", fr: "Import" }),
+                        label: t({ en: "Import", de: "Import", es: "Importa", pt: "Importação", fr: "Import" }),
                         text: t({
                             en: "In Settings, under Import data, as a CSV file. From the workbook, save the Transactions sheet as CSV first",
+                            de: "In den Einstellungen unter Daten importieren, als CSV-Datei. Speichere aus der Arbeitsmappe zuerst das Blatt Buchungen als CSV",
                             es: "En Configuración, en Importar datos, como archivo CSV. Desde el libro, guarda antes la hoja Movimientos como CSV",
                             pt: "Em Ajustes, em Importar dados, como arquivo CSV. Na planilha de Excel, salve antes a aba Lançamentos como CSV",
                             fr: "Dans Réglages, sous Importer des données, en fichier CSV. Depuis le classeur, enregistrez d'abord la feuille Opérations en CSV",
                         }),
                     },
                     {
-                        label: t({ en: "Plans", es: "Planes", pt: "Planos", fr: "Formules" }),
+                        label: t({ en: "Plans", de: "Pläne", es: "Planes", pt: "Planos", fr: "Formules" }),
                         text: t({
                             en: "Rows whose category matches one of yours by name import on any plan. Outlayr Pro matches the rest with AI, up to 5,000 rows and 2 MB a file, and creates a category for any still unmatched",
+                            de: "Zeilen, deren Kategorie namentlich einer deiner Kategorien entspricht, werden in jedem Plan importiert. Outlayr Pro ordnet den Rest mit KI zu, bis zu 5.000 Zeilen und 2 MB pro Datei, und legt für jede weiterhin nicht zugeordnete eine Kategorie an",
                             es: "Las filas cuya categoría coincide por nombre con una de las tuyas se importan en cualquier plan. Outlayr Pro asigna el resto con IA, hasta 5,000 filas y 2 MB por archivo, y crea una categoría para cualquiera que siga sin coincidir",
                             pt: "As linhas cuja categoria tem o mesmo nome de uma das suas entram em qualquer plano. O Outlayr Pro associa o resto com IA, até 5.000 linhas e 2 MB por arquivo, e cria uma categoria para as que continuarem sem correspondência",
                             fr: "Les lignes dont la catégorie porte le même nom qu'une des vôtres s'importent avec toutes les formules. Outlayr Pro associe le reste avec l'IA, jusqu'à 5 000 lignes et 2 Mo par fichier, et crée une catégorie pour celles qui restent sans correspondance",
@@ -8438,12 +8482,14 @@ const answers = {
                     {
                         answer: t({
                             en: "Yes, the Excel workbook and the CSV. Use them in any spreadsheet app for as long as you like. Importing into Outlayr is free too for every row whose category matches one of yours by name; the English file uses the categories a new Outlayr ledger starts with. Outlayr Pro matches other category names to yours with AI and creates a category for any still unmatched.",
+                            de: "Ja, die Excel-Arbeitsmappe und die CSV-Datei. Nutze sie in jeder Tabellen-App, so lange du willst. Auch der Import in Outlayr ist kostenlos, für jede Zeile, deren Kategorie namentlich einer deiner Kategorien entspricht. Outlayr Pro ordnet andere Kategorienamen mit KI deinen zu und legt für jeden weiterhin nicht zugeordneten eine Kategorie an.",
                             es: "Sí, tanto el libro de Excel como el CSV. Úsalos en cualquier hoja de cálculo el tiempo que quieras. Importarlos a Outlayr también es gratis para cada fila cuya categoría coincide por nombre con una de las tuyas. Outlayr Pro asigna los demás nombres de categoría a los tuyos con IA y crea una categoría para los que sigan sin coincidir.",
                             pt: "Sim, tanto a planilha de Excel quanto o CSV. Use os dois em qualquer app de planilhas pelo tempo que quiser. Importar para o Outlayr também é grátis para cada linha cuja categoria tem o mesmo nome de uma das suas. O Outlayr Pro associa os outros nomes de categoria aos seus com IA e cria uma categoria para os que continuarem sem correspondência.",
                             fr: "Oui, le classeur Excel comme le CSV. Utilisez-les dans n'importe quel tableur, aussi longtemps que vous voulez. L'import dans Outlayr est gratuit lui aussi pour chaque ligne dont la catégorie porte le même nom qu'une des vôtres. Outlayr Pro associe les autres noms de catégorie aux vôtres avec l'IA et crée une catégorie pour ceux qui restent sans correspondance.",
                         }),
                         question: t({
                             en: "Is the template free?",
+                            de: "Ist die Vorlage kostenlos?",
                             es: "¿La plantilla es gratis?",
                             pt: "A planilha é grátis?",
                             fr: "Le modèle est-il gratuit ?",
@@ -8452,12 +8498,14 @@ const answers = {
                     {
                         answer: t({
                             en: "Yes, and with Numbers. Outlayr reads a CSV with commas between columns. Some spreadsheet apps save CSV files with semicolons where decimals are written with a comma. If yours does, download the CSV from Google Sheets, which uses commas.",
+                            de: "Ja, und auch mit Numbers. Outlayr liest eine CSV-Datei mit Kommas zwischen den Spalten. Manche Tabellen-Apps speichern CSV-Dateien mit Semikolons, wo Dezimalstellen mit Komma geschrieben werden, wie in Deutschland. Wenn deine das tut, lade die CSV-Datei aus Google Sheets herunter, das Kommas verwendet.",
                             es: "Sí, y también con Numbers. Outlayr lee un CSV con comas entre columnas. Algunas hojas de cálculo guardan los CSV con punto y coma en los países donde los decimales se escriben con coma. Si la tuya lo hace, descarga el CSV desde Google Sheets, que usa comas.",
                             pt: "Sim, e também com o Numbers. O Outlayr lê um CSV com vírgulas entre as colunas. Alguns apps de planilha salvam o CSV com ponto e vírgula nos países onde os decimais levam vírgula, como o Brasil. Se o seu fizer isso, baixe o CSV pelo Planilhas Google, que usa vírgulas.",
                             fr: "Oui, et avec Numbers. Outlayr lit un CSV avec des virgules entre les colonnes. Certains tableurs enregistrent les CSV avec des points-virgules dans les pays où les décimales s'écrivent avec une virgule, comme la France. Si c'est le cas du vôtre, téléchargez le CSV depuis Google Sheets, qui utilise des virgules.",
                         }),
                         question: t({
                             en: "Does it work with Excel and Google Sheets?",
+                            de: "Funktioniert sie mit Excel und Google Sheets?",
                             es: "¿Funciona con Excel y Google Sheets?",
                             pt: "Funciona com Excel e Planilhas Google?",
                             fr: "Fonctionne-t-il avec Excel et Google Sheets ?",
@@ -8466,12 +8514,14 @@ const answers = {
                     {
                         answer: t({
                             en: "No. Outlayr imports CSV files only. Open the Transactions sheet and save it as CSV UTF-8, which Excel writes for that sheet alone, then import that file.",
+                            de: "Nein. Outlayr importiert nur CSV-Dateien. Öffne das Blatt Buchungen und speichere es als CSV UTF-8, was Excel nur für dieses eine Blatt schreibt, und importiere dann diese Datei.",
                             es: "No. Outlayr solo importa archivos CSV. Abre la hoja Movimientos y guárdala como CSV UTF-8, que Excel escribe solo para esa hoja, y luego importa ese archivo.",
                             pt: "Não. O Outlayr só importa arquivos CSV. Abra a aba Lançamentos e salve como CSV UTF-8, que o Excel grava só para essa aba, e depois importe esse arquivo.",
                             fr: "Non. Outlayr n'importe que des fichiers CSV. Ouvrez la feuille Opérations et enregistrez-la en CSV UTF-8, qu'Excel écrit pour cette seule feuille, puis importez ce fichier.",
                         }),
                         question: t({
                             en: "Can I import the Excel file directly?",
+                            de: "Kann ich die Excel-Datei direkt importieren?",
                             es: "¿Puedo importar el archivo de Excel directamente?",
                             pt: "Posso importar o arquivo do Excel direto?",
                             fr: "Puis-je importer directement le fichier Excel ?",
@@ -8480,12 +8530,14 @@ const answers = {
                     {
                         answer: t({
                             en: "No. Only the rows on Transactions come in. Set your budgets again in Outlayr in Balances, under Categories, where it also shows where your pace ends.",
+                            de: "Nein. Nur die Zeilen auf Buchungen kommen herein. Lege deine Budgets in Outlayr neu an, unter Kontostände, bei Kategorien, wo die App auch zeigt, wo dein Tempo endet.",
                             es: "No. Solo entran las filas de Movimientos. Vuelve a poner tus presupuestos en Outlayr, en Saldos, en Categorías, donde además te muestra a dónde te lleva tu ritmo.",
                             pt: "Não. Só entram as linhas de Lançamentos. Defina seus orçamentos de novo no Outlayr, em Saldos, em Categorias, onde ele também mostra aonde seu ritmo leva.",
                             fr: "Non. Seules les lignes d'Opérations sont importées. Recréez vos budgets dans Outlayr, dans Soldes, sous Catégories, où l'app montre aussi où mène votre rythme.",
                         }),
                         question: t({
                             en: "Do my budgets import too?",
+                            de: "Werden meine Budgets auch importiert?",
                             es: "¿Mis presupuestos también se importan?",
                             pt: "Meus orçamentos também são importados?",
                             fr: "Mes budgets sont-ils importés aussi ?",
@@ -8494,12 +8546,14 @@ const answers = {
                     {
                         answer: t({
                             en: "It is listed as skipped before anything is saved, with the reason: an unreadable date or amount, or no matching category. With Pro, a category Outlayr does not have yet is created instead. Rows that look already imported are flagged too, so you can leave them out.",
+                            de: "Sie wird vor dem Speichern als übersprungen aufgeführt, mit dem Grund: ein nicht lesbares Datum oder ein nicht lesbarer Betrag oder keine passende Kategorie. Mit Pro wird stattdessen eine Kategorie angelegt, die Outlayr noch nicht hat. Zeilen, die schon importiert aussehen, werden ebenfalls markiert, damit du sie weglassen kannst.",
                             es: "Aparece como omitida antes de guardar, con el motivo: una fecha o un monto ilegible, o sin categoría coincidente. Con Pro, una categoría que Outlayr aún no tiene se crea en su lugar. Las filas que parecen ya importadas también se marcan, para que las dejes fuera.",
                             pt: "Ela aparece como ignorada antes de qualquer coisa ser salva, com o motivo: uma data ou um valor ilegível, ou nenhuma categoria correspondente. Com o Pro, uma categoria que o Outlayr ainda não tem é criada no lugar. Linhas que parecem já importadas também são marcadas, para você deixá-las de fora.",
                             fr: "Elle apparaît comme ignorée avant tout enregistrement, avec la raison : une date ou un montant illisible, ou aucune catégorie correspondante. Avec Pro, une catégorie qu'Outlayr n'a pas encore est créée à la place. Les lignes qui semblent déjà importées sont signalées aussi, pour que vous puissiez les écarter.",
                         }),
                         question: t({
                             en: "What if a row cannot be read?",
+                            de: "Was, wenn eine Zeile nicht lesbar ist?",
                             es: "¿Y si una fila no se puede leer?",
                             pt: "E se uma linha não puder ser lida?",
                             fr: "Et si une ligne est illisible ?",
@@ -8508,6 +8562,7 @@ const answers = {
                 ],
                 lead: t({
                     en: "An expense tracker template is a spreadsheet where you log each expense and it adds them up for you. This one is a free Excel workbook with a monthly summary, spending against a budget per category, and a chart, and also a plain CSV. Both have the columns Outlayr's CSV import reads, for when you move to the app.",
+                    de: "Eine Haushaltsbuch-Vorlage ist eine Tabelle, in der du jede Ausgabe erfasst und die sie für dich zusammenrechnet. Diese hier ist eine kostenlose Excel-Arbeitsmappe mit einer Monatsübersicht, den Ausgaben gegen ein Budget pro Kategorie und einem Diagramm, und es gibt sie auch als einfache CSV-Datei. Beide haben die Spalten, die der CSV-Import von Outlayr liest, für den Tag, an dem du in die App wechselst.",
                     es: "Una plantilla de control de gastos es una hoja de cálculo donde anotas cada gasto y ella hace las sumas por ti. Esta es un libro de Excel gratis con un resumen del mes, lo gastado contra un presupuesto por categoría y un gráfico, y también un CSV simple. Los dos tienen las columnas que lee la importación de CSV de Outlayr, para cuando te cambies a la app.",
                     pt: "Uma planilha de controle de gastos é onde você anota cada despesa e ela faz as contas por você. Esta planilha de controle financeiro é grátis, feita no Excel para organizar o orçamento familiar, com resumo do mês, o gasto de cada categoria contra um orçamento e um gráfico, e vem também como um CSV simples. Os dois arquivos têm as colunas que a importação de CSV do Outlayr lê, para quando você passar para o app.",
                     fr: "Un modèle de budget est un tableau où vous notez chaque dépense et qui fait les totaux à votre place. Celui-ci est un tableau de budget Excel gratuit, avec un résumé mensuel, les dépenses face au budget de chaque catégorie et un graphique, et existe aussi en simple CSV. Les deux fichiers ont les colonnes que lit l'import CSV d'Outlayr, pour le jour où vous passerez à l'app.",
@@ -8515,12 +8570,14 @@ const answers = {
                 meta: {
                     description: t({
                         en: "A free Excel expense tracker with a monthly summary for the currency you pick, spending against a budget by category, and a chart. Also as a CSV.",
+                        de: "Eine kostenlose Excel-Haushaltsbuch-Vorlage mit einer Monatsübersicht für die Währung, die du wählst, den Ausgaben gegen ein Budget pro Kategorie und einem Diagramm. Auch als CSV-Datei.",
                         es: "Plantilla de control de gastos en Excel gratis: resumen del mes por moneda, lo gastado contra un presupuesto por categoría y un gráfico. También en CSV.",
                         pt: "Planilha de gastos grátis no Excel: resumo do mês por moeda, o gasto de cada categoria contra o orçamento e um gráfico. Também em CSV.",
                         fr: "Modèle de budget mensuel Excel gratuit : résumé du mois par devise, dépenses face au budget de chaque catégorie et un graphique. Aussi en CSV.",
                     }),
                     title: t({
                         en: "Free Expense Tracker Template for Excel (2026) · Outlayr",
+                        de: "Kostenlose Haushaltsbuch-Vorlage für Excel (2026) · Outlayr",
                         es: "Plantilla de control de gastos en Excel gratis · Outlayr",
                         pt: "Planilha de controle financeiro grátis no Excel · Outlayr",
                         fr: "Tableau de budget Excel gratuit, modèle mensuel · Outlayr",
@@ -8535,21 +8592,30 @@ const answers = {
                     {
                         text: t({
                             en: "Delete the sample rows and add one row per expense or income. Keep the header row as it is so Outlayr finds each column.",
+                            de: "Lösche die Beispielzeilen und füge pro Ausgabe oder Einnahme eine Zeile hinzu. Lass die Kopfzeile unverändert, damit Outlayr jede Spalte findet.",
                             es: "Borra las filas de ejemplo y agrega una fila por cada gasto o ingreso. Deja la fila de encabezados como está para que Outlayr encuentre cada columna.",
                             pt: "Apague as linhas de exemplo e adicione uma linha para cada despesa ou receita. Deixe a linha de cabeçalhos como está para o Outlayr encontrar cada coluna.",
                             fr: "Supprimez les lignes d'exemple et ajoutez une ligne par dépense ou revenu. Gardez la ligne d'en-têtes telle quelle pour qu'Outlayr trouve chaque colonne.",
                         }),
-                        title: t({ en: "Fill it in", es: "Llénala", pt: "Preencha", fr: "Remplissez-le" }),
+                        title: t({
+                            en: "Fill it in",
+                            de: "Fülle sie aus",
+                            es: "Llénala",
+                            pt: "Preencha",
+                            fr: "Remplissez-le",
+                        }),
                     },
                     {
                         text: t({
                             en: "From the Excel workbook, save only the Transactions sheet as CSV UTF-8. Keep commas between columns, and save the file to Files or iCloud Drive on your iPhone. On Android, save it to Downloads or Google Drive.",
+                            de: "Speichere aus der Excel-Arbeitsmappe nur das Blatt Buchungen als CSV UTF-8. Behalte die Kommas zwischen den Spalten und speichere die Datei in Dateien oder iCloud Drive auf deinem iPhone. Auf Android speicherst du sie in Downloads oder Google Drive.",
                             es: "Desde el libro de Excel, guarda solo la hoja Movimientos como CSV UTF-8. Deja las comas entre columnas y guarda el archivo en Archivos o iCloud Drive en tu iPhone. En Android, guárdalo en Descargas o en Google Drive.",
                             pt: "Na planilha de Excel, salve só a aba Lançamentos como CSV UTF-8. Mantenha as vírgulas entre as colunas e salve o arquivo em Arquivos ou no iCloud Drive do seu iPhone. No Android, salve em Downloads ou no Google Drive.",
                             fr: "Depuis le classeur Excel, enregistrez seulement la feuille Opérations en CSV UTF-8. Gardez les virgules entre les colonnes et enregistrez le fichier dans Fichiers ou iCloud Drive sur votre iPhone. Sur Android, enregistrez-le dans Téléchargements ou Google Drive.",
                         }),
                         title: t({
                             en: "Save it as a CSV",
+                            de: "Als CSV speichern",
                             es: "Guárdala como CSV",
                             pt: "Salve como CSV",
                             fr: "Enregistrez-le en CSV",
@@ -8558,12 +8624,14 @@ const answers = {
                     {
                         text: t({
                             en: "In Settings, tap Import data, then CSV file, and pick the file. Check the rows and tap Import.",
+                            de: "Tippe in den Einstellungen auf Daten importieren, dann auf CSV-Datei, und wähle die Datei. Prüfe die Zeilen und tippe auf Importieren.",
                             es: "En Configuración, toca Importar datos, luego Archivo CSV, y elige el archivo. Revisa las filas y toca Importar.",
                             pt: "Em Ajustes, toque em Importar dados, depois em Arquivo CSV, e escolha o arquivo. Revise as linhas e toque em Importar.",
                             fr: "Dans Réglages, touchez Importer des données, puis Fichier CSV, et choisissez le fichier. Vérifiez les lignes et touchez Importer.",
                         }),
                         title: t({
                             en: "Import it in Outlayr",
+                            de: "In Outlayr importieren",
                             es: "Impórtala en Outlayr",
                             pt: "Importe no Outlayr",
                             fr: "Importez-le dans Outlayr",
@@ -8573,41 +8641,77 @@ const answers = {
                 table: {
                     caption: t({
                         en: "The Summary sheet with the sample rows, for October 2026 in US dollars: 3,200.00 income, 1,776.67 spent, 1,423.33 net. Type a budget next to each category and Left fills in. Change the month or the currency at the top of the sheet.",
+                        de: "Das Blatt Übersicht mit den Beispielzeilen, für Oktober 2026 in Euro: 2.400,00 Einnahmen, 1.087,99 Ausgaben, 1.312,01 netto. Essengehen bleibt bei 0,00, weil das Abendessen in kanadischen Dollar bezahlt wurde. Gib neben jeder Kategorie ein Budget ein, und Übrig füllt sich. Ändere den Monat oder die Währung oben im Blatt.",
                         es: "La hoja Resumen con las filas de ejemplo, para octubre de 2026 en dólares: 1,500.00 de ingresos, 580.59 gastado y 919.41 neto. Salud y Restaurantes quedan en 0.00 porque se pagaron en bolívares y en pesos. Escribe un presupuesto junto a cada categoría y Disponible se llena solo. Cambia el mes o la moneda arriba de la hoja.",
                         pt: "A aba Resumo com as linhas de exemplo, para outubro de 2026 em reais: 6.500,00 de receitas, 3.108,25 de despesas e 3.391,75 de saldo. O Uber em Buenos Aires fica de fora porque foi pago em pesos argentinos. Escreva um orçamento ao lado de cada categoria e Disponível se preenche sozinho. Mude o mês ou a moeda no alto da aba.",
                         fr: "La feuille Résumé avec les lignes d'exemple, pour octobre 2026 en euros : 2 400,00 de revenus, 1 087,99 de dépenses et 1 312,01 de solde. Restaurants reste à 0,00, car le dîner a été payé en dollars canadiens. Saisissez un budget à côté de chaque catégorie et Reste se remplit tout seul. Changez le mois ou la devise en haut de la feuille.",
                     }),
-                    columns: [t({ en: "Spent", es: "Gastado", pt: "Gasto", fr: "Dépensé" })],
-                    corner: t({ en: "Category", es: "Categoría", pt: "Categoria", fr: "Catégorie" }),
+                    columns: [t({ en: "Spent", de: "Ausgegeben", es: "Gastado", pt: "Gasto", fr: "Dépensé" })],
+                    corner: t({ en: "Category", de: "Kategorie", es: "Categoría", pt: "Categoria", fr: "Catégorie" }),
                     rows: [
                         {
-                            cells: [t({ en: "1,450.00", es: "450.00", pt: "2.200,00", fr: "850,00" })],
-                            label: t({ en: "Rent", es: "Renta", pt: "Aluguel", fr: "Loyer" }),
+                            cells: [t({ en: "1,450.00", de: "850,00", es: "450.00", pt: "2.200,00", fr: "850,00" })],
+                            label: t({ en: "Rent", de: "Miete", es: "Renta", pt: "Aluguel", fr: "Loyer" }),
                         },
                         {
-                            cells: [t({ en: "142.18", es: "85.40", pt: "486,90", fr: "96,40" })],
-                            label: t({ en: "Groceries", es: "Supermercado", pt: "Mercado", fr: "Courses" }),
+                            cells: [t({ en: "142.18", de: "96,40", es: "85.40", pt: "486,90", fr: "96,40" })],
+                            label: t({
+                                en: "Groceries",
+                                de: "Lebensmittel",
+                                es: "Supermercado",
+                                pt: "Mercado",
+                                fr: "Courses",
+                            }),
                         },
                         {
-                            cells: [t({ en: "48.20", es: "0.00", pt: "89,70", fr: "18,90" })],
-                            label: t({ en: "Fuel", es: "Salud", pt: "Saúde", fr: "Santé" }),
+                            cells: [t({ en: "48.20", de: "18,90", es: "0.00", pt: "89,70", fr: "18,90" })],
+                            label: t({ en: "Fuel", de: "Gesundheit", es: "Salud", pt: "Saúde", fr: "Santé" }),
                         },
                         {
-                            cells: [t({ en: "96.30", es: "38.20", pt: "214,35", fr: "64,20" })],
-                            label: t({ en: "Utilities", es: "Servicios", pt: "Contas da casa", fr: "Charges" }),
+                            cells: [t({ en: "96.30", de: "64,20", es: "38.20", pt: "214,35", fr: "64,20" })],
+                            label: t({
+                                en: "Utilities",
+                                de: "Nebenkosten",
+                                es: "Servicios",
+                                pt: "Contas da casa",
+                                fr: "Charges",
+                            }),
                         },
                         {
-                            cells: [t({ en: "24.50", es: "0.00", pt: "72,40", fr: "0,00" })],
-                            label: t({ en: "Dining Out", es: "Restaurantes", pt: "Restaurantes", fr: "Restaurants" }),
+                            cells: [t({ en: "24.50", de: "0,00", es: "0.00", pt: "72,40", fr: "0,00" })],
+                            label: t({
+                                en: "Dining Out",
+                                de: "Essengehen",
+                                es: "Restaurantes",
+                                pt: "Restaurantes",
+                                fr: "Restaurants",
+                            }),
                         },
                         {
-                            cells: [t({ en: "15.49", es: "6.99", pt: "44,90", fr: "13,49" })],
-                            label: t({ en: "Entertainment", es: "Entretenimiento", pt: "Lazer", fr: "Loisirs" }),
+                            cells: [t({ en: "15.49", de: "13,49", es: "6.99", pt: "44,90", fr: "13,49" })],
+                            label: t({
+                                en: "Entertainment",
+                                de: "Unterhaltung",
+                                es: "Entretenimiento",
+                                pt: "Lazer",
+                                fr: "Loisirs",
+                            }),
+                        },
+                        {
+                            cells: [t({ en: "0.00", de: "45,00", es: "0.00", pt: "0,00", fr: "45,00" })],
+                            label: t({
+                                en: "Transport",
+                                de: "Verkehr",
+                                es: "Transporte",
+                                pt: "Transporte",
+                                fr: "Transports",
+                            }),
                         },
                     ],
                 },
                 title: t({
                     en: "Free expense tracker template for Excel",
+                    de: "Kostenlose Haushaltsbuch-Vorlage für Excel",
                     es: "Plantilla de control de gastos en Excel, gratis",
                     pt: "Planilha de controle financeiro grátis para Excel",
                     fr: "Modèle de budget mensuel Excel, gratuit",
@@ -8639,8 +8743,8 @@ const answers = {
                     {
                         label: t({ en: "Languages", es: "Idiomas" }),
                         text: t({
-                            en: "English, Spanish, Portuguese, and French, following the app's language",
-                            es: "Inglés, español, portugués y francés, según el idioma de la app",
+                            en: "English, Spanish, Portuguese, French, and German, following the app's language",
+                            es: "Inglés, español, portugués, francés y alemán, según el idioma de la app",
                         }),
                     },
                     {
@@ -8679,8 +8783,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "English, Spanish, Portuguese, and French. Outlayr listens in the language the app is set to.",
-                            es: "Inglés, español, portugués y francés. Outlayr escucha en el idioma que tenga la app.",
+                            en: "English, Spanish, Portuguese, French, and German. Outlayr listens in the language the app is set to.",
+                            es: "Inglés, español, portugués, francés y alemán. Outlayr escucha en el idioma que tenga la app.",
                         }),
                         question: t({
                             en: "Which languages does voice entry understand?",
@@ -8968,6 +9072,7 @@ const answers = {
             guides: {
                 lead: t({
                     en: "How each part of Outlayr works, step by step, with what the free plan includes.",
+                    de: "Wie jeder Teil von Outlayr funktioniert, Schritt für Schritt, mit dem, was der Gratis-Plan enthält.",
                     es: "Cómo funciona cada parte de Outlayr, paso a paso, con lo que incluye el plan gratis.",
                     pt: "Como cada parte do Outlayr funciona, passo a passo, com o que o plano grátis inclui.",
                     fr: "Comment fonctionne chaque partie d'Outlayr, étape par étape, avec ce que comprend la formule gratuite.",
@@ -8975,6 +9080,7 @@ const answers = {
                 meta: {
                     title: t({
                         en: "Expense Tracking Guides · Outlayr",
+                        de: "Guides zum Ausgabenverfolgen · Outlayr",
                         es: "Guías para controlar tus gastos · Outlayr",
                         pt: "Guias para controlar seus gastos · Outlayr",
                         fr: "Guides pour suivre vos dépenses · Outlayr",
@@ -8982,6 +9088,7 @@ const answers = {
                 },
                 title: t({
                     en: "Expense tracking guides, step by step",
+                    de: "Guides zum Ausgabenverfolgen, Schritt für Schritt",
                     es: "Guías para controlar tus gastos, paso a paso",
                     pt: "Guias para controlar seus gastos, passo a passo",
                     fr: "Guides pour suivre vos dépenses, étape par étape",
@@ -8989,20 +9096,28 @@ const answers = {
             },
         },
         labels: {
-            feature: t({ en: "Feature", es: "Función", pt: "Recurso", fr: "Fonctionnalité" }),
+            feature: t({ en: "Feature", de: "Funktion", es: "Función", pt: "Recurso", fr: "Fonctionnalité" }),
             fit: t({
                 en: "Which one fits",
+                de: "Welche passt",
                 es: "Cuál te conviene",
                 pt: "Qual combina com você",
                 fr: "Lequel vous convient",
             }),
             fitHeading: insert(
-                t({ en: "{{name}}, if you", es: "{{name}}, si", pt: "{{name}}, se você", fr: "{{name}}, si vous" })
+                t({
+                    en: "{{name}}, if you",
+                    de: "{{name}}, wenn du",
+                    es: "{{name}}, si",
+                    pt: "{{name}}, se você",
+                    fr: "{{name}}, si vous",
+                })
             ),
-            questions: t({ en: "Questions", es: "Preguntas", pt: "Perguntas", fr: "Questions" }),
+            questions: t({ en: "Questions", de: "Fragen", es: "Preguntas", pt: "Perguntas", fr: "Questions" }),
             checked: insert(
                 t({
                     en: ", checked {{date}}.",
+                    de: ", geprüft am {{date}}.",
                     es: ", revisados el {{date}}.",
                     pt: ", verificados em {{date}}.",
                     fr: ", vérifiées le {{date}}.",
@@ -9011,20 +9126,28 @@ const answers = {
             source: insert(
                 t({
                     en: "{{name}} details from",
+                    de: "Angaben zu {{name}} von",
                     es: "Datos de {{name}} tomados de",
                     pt: "Dados do {{name}} tirados de",
                     fr: "Informations sur {{name}} tirées de",
                 })
             ),
-            steps: t({ en: "How it works", es: "Cómo funciona", pt: "Como funciona", fr: "Comment ça marche" }),
+            steps: t({
+                en: "How it works",
+                de: "So funktioniert es",
+                es: "Cómo funciona",
+                pt: "Como funciona",
+                fr: "Comment ça marche",
+            }),
             summary: {
-                app: t({ en: "App", es: "App", pt: "App", fr: "App" }),
-                bestIf: t({ en: "Who it fits", es: "Para quién es", pt: "Para quem é", fr: "Pour qui" }),
+                app: t({ en: "App", de: "App", es: "App", pt: "App", fr: "App" }),
+                bestIf: t({ en: "Who it fits", de: "Für wen", es: "Para quién es", pt: "Para quem é", fr: "Pour qui" }),
                 platforms: LABELS.platforms,
                 price: LABELS.price,
             },
             byline: t({
                 en: "By Daniel Esteves",
+                de: "Von Daniel Esteves",
                 es: "Por Daniel Esteves",
                 pt: "Por Daniel Esteves",
                 fr: "Par Daniel Esteves",
@@ -9032,6 +9155,7 @@ const answers = {
             updatedOn: insert(
                 t({
                     en: "Updated {{date}}",
+                    de: "Aktualisiert am {{date}}",
                     es: "Actualizado el {{date}}",
                     pt: "Atualizado em {{date}}",
                     fr: "Mis à jour le {{date}}",
@@ -9040,14 +9164,22 @@ const answers = {
             checkedOn: insert(
                 t({
                     en: "Checked {{date}}",
+                    de: "Geprüft am {{date}}",
                     es: "Revisado el {{date}}",
                     pt: "Verificado em {{date}}",
                     fr: "Vérifié le {{date}}",
                 })
             ),
-            contents: t({ en: "On this page", es: "En esta página", pt: "Nesta página", fr: "Sur cette page" }),
+            contents: t({
+                en: "On this page",
+                de: "Auf dieser Seite",
+                es: "En esta página",
+                pt: "Nesta página",
+                fr: "Sur cette page",
+            }),
             picked: t({
                 en: "How we picked",
+                de: "So haben wir ausgewählt",
                 es: "Cómo las elegimos",
                 pt: "Como escolhemos",
                 fr: "Comment nous avons choisi",
@@ -9055,12 +9187,14 @@ const answers = {
             cta: {
                 lead: t({
                     en: "Free to start. No ads on any plan.",
+                    de: "Zum Start kostenlos. In keinem Plan gibt es Werbung.",
                     es: "Gratis para empezar. Sin anuncios en ningún plan.",
                     pt: "Grátis para começar. Sem anúncios em nenhum plano.",
                     fr: "Gratuit pour commencer. Aucune publicité, quelle que soit la formule.",
                 }),
                 title: t({
                     en: "Track every expense in one sentence",
+                    de: "Erfasse jede Ausgabe in einem Satz",
                     es: "Registra cada gasto en una oración",
                     pt: "Registre cada gasto em uma frase",
                     fr: "Notez chaque dépense en une phrase",
@@ -9069,6 +9203,7 @@ const answers = {
             exportsChecked: insert(
                 t({
                     en: "Each export detail links to the page it was read on, checked {{date}}.",
+                    de: "Jedes Export-Detail verlinkt auf die Seite, auf der es abgelesen wurde, geprüft am {{date}}.",
                     es: "Cada dato de exportación enlaza a la página donde se leyó, revisado el {{date}}.",
                     pt: "Cada dado de exportação tem link para a página onde foi lido, verificado em {{date}}.",
                     fr: "Chaque détail d'export renvoie à la page où il a été relevé, vérifié le {{date}}.",
@@ -9077,15 +9212,23 @@ const answers = {
             movingFrom: insert(
                 t({
                     en: "Moving from {{name}}",
+                    de: "Von {{name}} zu Outlayr wechseln",
                     es: "Cómo pasarte desde {{name}}",
                     pt: "Como migrar do {{name}}",
                     fr: "Quitter {{name}} pour Outlayr",
                 })
             ),
-            related: t({ en: "Keep reading", es: "Sigue leyendo", pt: "Continue lendo", fr: "À lire aussi" }),
+            related: t({
+                en: "Keep reading",
+                de: "Weiterlesen",
+                es: "Sigue leyendo",
+                pt: "Continue lendo",
+                fr: "À lire aussi",
+            }),
             sideBySide: insert(
                 t({
                     en: "Outlayr and {{name}}, side by side",
+                    de: "Outlayr und {{name}} im Vergleich",
                     es: "Outlayr y {{name}}, lado a lado",
                     pt: "Outlayr e {{name}} lado a lado",
                     fr: "Outlayr et {{name}} côte à côte",

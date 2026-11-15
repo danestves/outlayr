@@ -5,11 +5,11 @@ in the app, and an email to every confirmed account, at most one email a month. 
 notice from `POLICY_NOTICES`, so a new notice needs no app release. App versions from before the
 sheet show nothing until they update.
 
-1. Edit the document in `apps/site/content/legal/` in en, es, fr and pt, including
+1. Edit the document in `apps/site/content/legal/` in en, de, es, fr and pt, including
    the effective date in its `description`, and set the same day in `LEGAL_DAYS` in
    `apps/site/src/lib/site.ts`.
 2. Append a notice to `POLICY_NOTICES` in `packages/backend/confect/legal.ts`: the document,
-   `effectiveAtMs` as UTC midnight of that day, and the changes in en, es, fr and pt, one short
+   `effectiveAtMs` as UTC midnight of that day, and the changes in en, de, es, fr and pt, one short
    label each with an optional detail. Use a day at least 30 days after the email, because the documents promise that much notice. A change that can't wait may use less, with Daniel's go-ahead. If the PR waits, update the date before merging. Once a date has been emailed, new changes need a new date.
 3. Merge, then run **Deploy the backend** for `production`. Once it is live, the app shows the
    sheet on its next launch to anyone who installed before that day, until they tap Got it.

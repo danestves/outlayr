@@ -6,6 +6,7 @@ declare module "intlayer" {
         es: 1;
         pt: 1;
         fr: 1;
+        de: 1;
     }
 
     interface __RequiredLocalesRegistry {
