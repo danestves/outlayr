@@ -284,6 +284,7 @@ export function Log() {
         produced: insights.perCurrency.map((figures) => figures.currencyCode),
     });
     const sparkline = useSparkline(db, nowMs, logViewLineGraph, headMeasure, period, firstWeekday, currency, rates);
+    const pendingPurchase = usePendingPurchaseRows(db, useDeferredDelete("purchase").pendingId);
     const bars = usePeriodBars(
         db,
         nowMs,
@@ -293,12 +294,11 @@ export function Log() {
         firstWeekday,
         currency,
         rates,
-        upcoming.schedules
+        upcoming.schedules.filter((row) => !pendingPurchase.has(row.id))
     );
     const transferIds = new Set(transferRows.map((transfer) => transfer.id));
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const pendingCuotas = usePendingCuotas(db, pendingId);
-    const pendingPurchase = usePendingPurchaseRows(db, useDeferredDelete("purchase").pendingId);
     const openRowActions = useTransactionRowActions(nowMs, requestDelete);
     const cardOptions = { currency, showCents, swapTimeLabel, use24Hour };
     const shareDay = useDayCardShare(cardOptions);
