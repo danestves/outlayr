@@ -43,6 +43,9 @@ const TOOL_PATHS = [
 
 const PAGE_PATHS = [
     "/",
+    "/about",
+    "/brand",
+    "/open",
     "/support",
     "/privacy",
     "/terms",

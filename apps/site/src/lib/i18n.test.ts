@@ -4,6 +4,7 @@ import { expect, it } from "vite-plus/test";
 import about from "../content/about.content";
 import answers from "../content/answers.content";
 import appUi from "../content/app-ui.content";
+import brand from "../content/brand.content";
 import demo from "../content/demo.content";
 import filmCapture from "../content/film-capture.content";
 import filmChaos from "../content/film-chaos.content";
@@ -11,6 +12,7 @@ import filmLog from "../content/film-log.content";
 import filmMonth from "../content/film-month.content";
 import filmSorted from "../content/film-sorted.content";
 import home from "../content/home.content";
+import open from "../content/open.content";
 import site from "../content/site.content";
 import story from "../content/story.content";
 import support from "../content/support.content";
@@ -34,6 +36,8 @@ const PAGE_CONTENT: Record<string, readonly unknown[]> = {
         filmSorted.content,
         about.content.allGuides,
     ],
+    "/about": [...SHELL, about.content],
+    "/brand": [...SHELL, brand.content],
     "/guides": [...SHELL, answers.content.hubs.guides],
     "/guides/best-budget-apps-canada": [
         ...SHELL,
@@ -56,6 +60,7 @@ const PAGE_CONTENT: Record<string, readonly unknown[]> = {
         answers.content.guides["expense-tracker-template"],
     ],
     "/delete-account": SHELL,
+    "/open": [...SHELL, open.content],
     "/privacy": SHELL,
     "/support": [...SHELL, support.content],
     "/terms": SHELL,
