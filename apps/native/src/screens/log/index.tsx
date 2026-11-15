@@ -305,7 +305,7 @@ export function Log() {
     const groupTail = useTailGrouping<TransactionWithCategory | TransferLogRow>(currency, rates);
     // Filtered like the day sections, or a deleted future row lingers under the undo toast.
     const upcomingRows = showUpcomingSection
-        ? upcoming.rows.filter((row) => !goesWithPendingDelete(row, pendingId))
+        ? upcoming.rows.filter((row) => !goesWithPendingDelete(row, pendingId) && !pendingPurchase.has(row.id))
         : [];
     const today = startOfDay(new Date(nowMs)).getTime();
     const view = { ...cardOptions, language, monthly };
