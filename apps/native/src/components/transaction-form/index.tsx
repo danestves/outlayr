@@ -340,7 +340,11 @@ export function TransactionForm(props: TransactionFormProps) {
     // cascade is a silent no-op.
     useField({ form, name: "income" });
 
-    const [stage, setStage] = useState<StagePosition>({ forward: true, step: "amount" });
+    // Buying in installments starts at the app: its terms decide the plan, and the ladder returns to the amount next.
+    const [stage, setStage] = useState<StagePosition>(() => ({
+        forward: true,
+        step: mode === "create" && seed?.installments === true && !income && account == null ? "account" : "amount",
+    }));
     const stageStep = stage.step;
     const largeText = useAccessibilityTextSize();
     const [stageTurn, setStageTurn] = useState(0);

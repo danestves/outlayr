@@ -155,3 +155,20 @@ export function useOutsidePaymentRows(
               unreviewed: false,
           }));
 }
+
+export function lastPlanRows(db: Database, accountId: string) {
+    const [plan] = db
+        .select({ id: installmentPlans.id })
+        .from(installmentPlans)
+        .where(and(eq(installmentPlans.accountId, accountId), isNull(installmentPlans.deletedAt)))
+        .orderBy(desc(installmentPlans.dateCreated))
+        .limit(1)
+        .all();
+    return plan === undefined
+        ? []
+        : db
+              .select({ amount: installments.amount, dueDate: installments.dueDate, sequence: installments.sequence })
+              .from(installments)
+              .where(and(eq(installments.planId, plan.id), isNull(installments.deletedAt)))
+              .all();
+}

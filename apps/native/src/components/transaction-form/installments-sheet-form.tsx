@@ -74,12 +74,17 @@ export function useInstallmentsSheetForm({
     const total = schedule?.reduce((sum, row) => sum + row.amount, 0) ?? 0;
     const over = schedule && price !== null ? overPrice(schedule, price, currency) : 0;
     const summary = planPhrase(t, { count: draft.count, interval: EVERY_OPTIONS[draft.every], upfront: upfront > 0 });
+    // A share from an app's terms or the last plan, like 25%, gets its own chip so the sheet shows what is set.
+    const setShare = "share" in draft.upfront ? draft.upfront.share : null;
+    const custom = setShare !== null && !UPFRONT_SHARES.some((share) => share === setShare) ? [setShare] : [];
     const shares = [
-        ...UPFRONT_SHARES.map((share) => ({
-            label: `${Math.round(share * PERCENT)}%`,
-            onPress: () => onChange({ ...draft, upfront: { share } }),
-            selected: "share" in draft.upfront && draft.upfront.share === share,
-        })),
+        ...[...UPFRONT_SHARES, ...custom]
+            .sort((a, b) => b - a)
+            .map((share) => ({
+                label: `${Math.round(share * PERCENT)}%`,
+                onPress: () => onChange({ ...draft, upfront: { share } }),
+                selected: "share" in draft.upfront && draft.upfront.share === share,
+            })),
         {
             label: t("installments.none"),
             onPress: () => onChange({ ...draft, upfront: { amount: 0 } }),

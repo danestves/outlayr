@@ -35,6 +35,7 @@
         "./errors": "./src/errors.ts",
         "./favourite-currencies": "./src/favourite-currencies.ts",
         "./installment-draft": "./src/installment-draft.ts",
+        "./installment-terms": "./src/installment-terms.ts",
         "./installments": "./src/installments.ts",
         "./institution-map": "./src/institution-map.ts",
         "./ledger-log": "./src/ledger-log.ts",

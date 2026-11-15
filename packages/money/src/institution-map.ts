@@ -362,6 +362,11 @@ export function installmentAppDomain(name: string): string | null {
     return domain !== null && INSTALLMENT_APP_DOMAINS.has(domain) ? domain : null;
 }
 
+export function installmentAppId(name: string): string | null {
+    const domain = installmentAppDomain(name);
+    return domain === null ? null : (INSTITUTIONS.find((entry) => entry.domain === domain)?.id ?? null);
+}
+
 export function isInstallmentAppAccount(account: { readonly kind: string; readonly name: string }): boolean {
     return toAccountKind(account.kind) === "liability" && installmentAppDomain(account.name) !== null;
 }
