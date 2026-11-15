@@ -1,11 +1,12 @@
 import type { ComponentType } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useMoney } from "@/lib/use-money";
 import type { Act } from "@/stageshow/act";
 import { Count } from "@/stageshow/motion/Count";
 import { Stage } from "@/stageshow/stage";
 
-import { formatMoney, Logo, loopBack, Micro, Ruled } from "./parts";
+import { Logo, loopBack, Micro, Ruled } from "./parts";
 import type { LogoName } from "./parts";
 import { FILM_COMPACT_BELOW, FILM_SIZES } from "./sizes";
 
@@ -111,6 +112,7 @@ function Banesco() {
 
 function Envelope() {
     const copy = useIntlayer("film-chaos");
+    const money = useMoney();
     return (
         <div className="chaos-envelope">
             <svg aria-hidden height="100%" viewBox="0 0 290 180" width="100%">
@@ -118,7 +120,7 @@ function Envelope() {
                 <path d="M0 180 112 74M290 180 178 74" fill="none" stroke="rgb(0 0 0 / 0.08)" strokeWidth="1.5" />
             </svg>
             <span className="chaos-envelope__label">{copy.envelope}</span>
-            <b className="chaos-envelope__amount">$220</b>
+            <b className="chaos-envelope__amount">{money(220, { whole: true })}</b>
         </div>
     );
 }
@@ -185,6 +187,7 @@ function Csv() {
 
 function Amazon() {
     const copy = useIntlayer("film-chaos");
+    const money = useMoney();
     return (
         <div className="chaos-card chaos-amazon">
             <div className="chaos-head-row">
@@ -193,7 +196,7 @@ function Amazon() {
                 <span className="chaos-sub">{copy.amazonDate}</span>
             </div>
             <b className="chaos-title">{copy.amazonTitle}</b>
-            <span className="chaos-sub">$139.00 · Amex Gold ••1009</span>
+            <span className="chaos-sub">{money(139)} · Amex Gold ••1009</span>
             <span className="chaos-order">{copy.amazonOrder} #112-4417203-5521</span>
         </div>
     );
@@ -218,6 +221,7 @@ function Netflix() {
 
 function Spotify() {
     const copy = useIntlayer("film-chaos");
+    const money = useMoney();
     return (
         <div className="chaos-card chaos-spotify">
             <Mark name="spotify" size={38} />
@@ -225,7 +229,7 @@ function Spotify() {
                 <b className="chaos-brand chaos-brand--strong">SPOTIFY USA</b>
                 <span className="chaos-sub">{copy.pending} · Apple Card</span>
             </div>
-            <b className="chaos-amount">$11.99</b>
+            <b className="chaos-amount">{money(11.99)}</b>
         </div>
     );
 }
@@ -337,14 +341,15 @@ const SCRAPS: readonly Scrap[] = [
 
 export function ChaosFilm() {
     const copy = useIntlayer("film-chaos");
+    const money = useMoney();
     const rows = [
-        { amount: "Bs.486,000.00", logo: "banesco", sub: "VES", title: "Banesco" },
-        { amount: "$220.00", logo: "cash", sub: "USD", title: copy.cash.value },
-        { amount: "−$42.00", logo: "costco", sub: `${copy.groceries.value} · Chase`, title: "Costco" },
-        { amount: "−$85.00", logo: "verizon", sub: `${copy.utilities.value} · Chase`, title: "Verizon" },
-        { amount: "−$139.00", logo: "amazon", sub: `${copy.subscriptions.value} · Amex Gold`, title: "Amazon Prime" },
-        { amount: "−$22.99", logo: "netflix", sub: `${copy.subscriptions.value} · Apple Card`, title: "Netflix" },
-        { amount: "−$11.99", logo: "spotify", sub: `${copy.subscriptions.value} · Apple Card`, title: "Spotify" },
+        { amount: money(486_000, { code: "VES" }), logo: "banesco", sub: "VES", title: "Banesco" },
+        { amount: money(220), logo: "cash", sub: "USD", title: copy.cash.value },
+        { amount: money(-42), logo: "costco", sub: `${copy.groceries.value} · Chase`, title: "Costco" },
+        { amount: money(-85), logo: "verizon", sub: `${copy.utilities.value} · Chase`, title: "Verizon" },
+        { amount: money(-139), logo: "amazon", sub: `${copy.subscriptions.value} · Amex Gold`, title: "Amazon Prime" },
+        { amount: money(-22.99), logo: "netflix", sub: `${copy.subscriptions.value} · Apple Card`, title: "Netflix" },
+        { amount: money(-11.99), logo: "spotify", sub: `${copy.subscriptions.value} · Apple Card`, title: "Spotify" },
     ] as const satisfies readonly { amount: string; logo: LogoName; sub: string; title: string }[];
     return (
         <Stage<Scene>
@@ -401,7 +406,7 @@ export function ChaosFilm() {
                                             <Micro>
                                                 <Count
                                                     duration={900}
-                                                    format={(value) => `−${formatMoney(value)}`}
+                                                    format={(value) => money(-value)}
                                                     value={done ? WEEK_SPENT : 0}
                                                 />
                                             </Micro>

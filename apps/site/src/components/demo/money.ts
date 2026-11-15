@@ -1,20 +1,14 @@
-export const CURRENCIES = {
-    CAD: { symbol: "$" },
-    EUR: { symbol: "€" },
-    MXN: { symbol: "MX$" },
-    USD: { symbol: "$" },
-    VES: { symbol: "Bs." },
-} as const;
+import { LANGUAGES } from "@outlayr/shared/i18n";
+import type { Locale } from "@outlayr/shared/i18n";
 
-export type Currency = keyof typeof CURRENCIES;
+import { formatMoney as format } from "@/lib/money";
 
-const THOUSANDS = /\B(?=(\d{3})+(?!\d))/g;
+export type Currency = "BRL" | "EUR" | "MXN" | "USD" | "VES";
 
-export function formatMoney(amount: number, currency: Currency): string {
-    const [integer = "0", fraction = "00"] = Math.abs(amount).toFixed(2).split(".");
-    return `${CURRENCIES[currency].symbol}${integer.replaceAll(THOUSANDS, ",")}.${fraction}`;
+export function formatMoney(amount: number, currency: Currency, locale: Locale): string {
+    return format(Math.abs(amount), currency, LANGUAGES[locale].date, 2);
 }
 
-export function signedMoney(amount: number, currency: Currency, income: boolean): string {
-    return `${income ? "+" : "-"}${formatMoney(amount, currency)}`;
+export function signedMoney(amount: number, currency: Currency, income: boolean, locale: Locale): string {
+    return `${income ? "+" : "-"}${formatMoney(amount, currency, locale)}`;
 }

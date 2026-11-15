@@ -178,7 +178,7 @@ const CASHEA = {
     },
     pt: {
         due: "Parcela 2 de 3 · vence sex, 21 nov",
-        grace: "2 dias de carência, depois $4 por parcela",
+        grace: "2 dias de carência, depois $ 4 por parcela",
         interest: "0% de juros",
         level: "Nível 1",
         purchase: "Geladeira",
@@ -197,8 +197,8 @@ export function CasheaPlate() {
     const { locale } = useLocale();
     const copy = CASHEA[locale];
     return (
-        <Plate side={copy.level} title={`${copy.purchase} · ${formatMoney(600, "USD")}`}>
-            <p className="text-4xl font-semibold tracking-tight tabular-nums">{formatMoney(80, "USD")}</p>
+        <Plate side={copy.level} title={`${copy.purchase} · ${formatMoney(600, "USD", locale)}`}>
+            <p className="text-4xl font-semibold tracking-tight tabular-nums">{formatMoney(80, "USD", locale)}</p>
             <p className="text-muted mt-1">{copy.due}</p>
             <ol className="mt-3">
                 {CASHEA_SCHEDULE.map(({ amount, day, state }, index) => (
@@ -211,7 +211,7 @@ export function CasheaPlate() {
                         <span
                             className={`tabular-nums ${state === "paid" ? "text-income" : ""} ${state === "later" ? "text-muted" : ""}`}
                         >
-                            {formatMoney(amount, "USD")}
+                            {formatMoney(amount, "USD", locale)}
                             {state === "paid" ? " ✓" : ""}
                         </span>
                     </li>

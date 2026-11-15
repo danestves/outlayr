@@ -18,6 +18,7 @@ interface ReadingFormat {
     axis: (value: number) => string;
     date: (day: string) => string;
     month: (key: string) => string;
+    percent: (value: number) => string;
     whole: (value: number) => string;
 }
 

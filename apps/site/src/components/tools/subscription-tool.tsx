@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { formatAmount, parseAmount, subscriptionCost } from "@/lib/calculators";
+import { inputNumber } from "@/lib/money";
 
 import {
     AmountInput,
@@ -16,16 +17,17 @@ import {
     ToolPanel,
     useCadences,
     useRows,
+    useToolLocale,
 } from "./tool-kit";
 
 const SLUG = "subscription-cost-calculator";
 const CADENCES = ["week", "month", "quarter", "year"] as const;
 const EXAMPLES = [
-    { every: "month", price: "15.49" },
-    { every: "month", price: "11.99" },
-    { every: "month", price: "2.99" },
-    { every: "month", price: "40" },
-    { every: "year", price: "99" },
+    { every: "month", price: 15.49 },
+    { every: "month", price: 11.99 },
+    { every: "month", price: 2.99 },
+    { every: "month", price: 40 },
+    { every: "year", price: 99 },
 ] as const;
 const COLUMNS = "grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2rem] md:grid-cols-[minmax(0,1fr)_6rem_6rem_6rem_2rem]";
 
@@ -35,9 +37,15 @@ export function SubscriptionTool() {
     const { labels, pages } = useIntlayer("tools");
     const page = pages[SLUG];
     const cadences = useCadences(CADENCES);
-    const [code, setCode] = useState("USD");
+    const { home, tag } = useToolLocale();
+    const [code, setCode] = useState<string>(home);
     const { add, focusRef, remove, rows, update } = useRows<{ every: Every; name: string; price: string }>(
-        () => EXAMPLES.map((example, index) => ({ ...example, name: page.examples[index]?.value ?? "" })),
+        () =>
+            EXAMPLES.map(({ every, price }, index) => ({
+                every,
+                name: page.examples[index]?.value ?? "",
+                price: inputNumber(price, tag),
+            })),
         { every: "month", name: "", price: "" }
     );
 
@@ -64,7 +72,7 @@ export function SubscriptionTool() {
                 <AppCard
                     figure={
                         <>
-                            {formatAmount(monthly, code)}{" "}
+                            {formatAmount(monthly, code, tag)}{" "}
                             <span className="text-app-muted text-base font-normal">{page.preview.month}</span>
                         </>
                     }
@@ -72,7 +80,7 @@ export function SubscriptionTool() {
                 >
                     <AppRows
                         rows={ranked.map((row) => ({
-                            amount: formatAmount(Math.round(row.yearly / 12), code),
+                            amount: formatAmount(Math.round(row.yearly / 12), code, tag),
                             key: String(row.id),
                             label: row.name,
                         }))}
@@ -119,7 +127,7 @@ export function SubscriptionTool() {
                             value={row.every}
                         />
                         <span className="text-muted hidden text-right font-mono md:block">
-                            {formatAmount(yearly[index] ?? 0, code)}
+                            {formatAmount(yearly[index] ?? 0, code, tag)}
                         </span>
                         <RemoveButton
                             label={`${labels.remove.value} ${nameOf(row.name)}`}

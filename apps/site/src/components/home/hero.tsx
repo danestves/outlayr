@@ -96,7 +96,7 @@ function LivePurchase({ locale }: { locale: Locale }) {
                 data-reveal
             >
                 <p className="min-h-10 text-4xl font-semibold tracking-tight tabular-nums">
-                    {parsed.amount === null ? null : formatMoney(parsed.amount, parsed.currency)}
+                    {parsed.amount === null ? null : formatMoney(parsed.amount, parsed.currency, locale)}
                 </p>
                 <p className="mt-1 min-h-7 text-lg">
                     {parsed.merchant === "" ? null : (

@@ -3,7 +3,8 @@ import type { Locale } from "@outlayr/shared/i18n";
 import type { Currency } from "../demo/money";
 import { CASTS } from "../demo/sentence-model";
 
-const AMOUNT = /(?:^|\s)((?:(USD|EUR|US\$|[$€])\s*)?(\d+(?:[.,]\d{1,2})?)(?:\s*(USD|EUR|€))?)(?:[.!?,;:])?(?=\s|$)/gi;
+const AMOUNT =
+    /(?:^|\s)((?:(USD|EUR|BRL|US\$|R\$|[$€])\s*)?(\d+(?:[.,]\d{1,2})?)(?:\s*(USD|EUR|BRL|R\$|[$€]))?)(?:[.!?,;:])?(?=\s|$)/gi;
 const CONNECTOR_SUFFIX = {
     en: /\s+for$/i,
     de: /\s+für$/i,
@@ -11,7 +12,7 @@ const CONNECTOR_SUFFIX = {
     fr: /\s+pour$/i,
     pt: /\s+por$/i,
 } as const satisfies Record<Locale, RegExp>;
-const PREFERRED_AMOUNT = /(?:USD|EUR|US\$|[$€]|[.,]\d)/i;
+const PREFERRED_AMOUNT = /(?:USD|EUR|BRL|US\$|R\$|[$€]|[.,]\d)/i;
 const WHITESPACE = /\s+/g;
 const WORD = /(^|\s)\S/g;
 
@@ -24,9 +25,28 @@ export interface ParsedPurchase {
 
 interface AmountCandidate {
     amount: number;
-    currency: Currency;
+    currency: Currency | null;
     end: number;
     start: number;
+}
+
+function currencyOf(marker: string | undefined): Currency | null {
+    switch (marker?.toUpperCase()) {
+        case undefined: {
+            return null;
+        }
+        case "€":
+        case "EUR": {
+            return "EUR";
+        }
+        case "R$":
+        case "BRL": {
+            return "BRL";
+        }
+        default: {
+            return "USD";
+        }
+    }
 }
 
 function findAmount(text: string): AmountCandidate | null {
@@ -43,10 +63,9 @@ function findAmount(text: string): AmountCandidate | null {
             continue;
         }
 
-        const currencyMarker = leadingCurrency ?? trailingCurrency;
         const candidate = {
             amount,
-            currency: currencyMarker === "€" || currencyMarker?.toUpperCase() === "EUR" ? "EUR" : "USD",
+            currency: currencyOf(leadingCurrency ?? trailingCurrency),
             end: match.index + matchedText.length,
             start: match.index,
         } satisfies AmountCandidate;
@@ -74,7 +93,7 @@ export function parsePurchase(text: string, locale: Locale): ParsedPurchase {
     return {
         amount: amount?.amount ?? null,
         category: CASTS[locale].knownMerchants.get(merchantKey) ?? null,
-        currency: amount?.currency ?? "USD",
+        currency: amount?.currency ?? CASTS[locale].currency,
         merchant,
     };
 }

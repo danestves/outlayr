@@ -16,10 +16,10 @@ const filmChaos = {
         cash: t({ en: "Cash", de: "Bargeld", es: "Efectivo", pt: "Dinheiro", fr: "Espèces" }),
         csv: t({
             en: "Date,Description,Amount\n09/14/2026,VZWRLSS*APOCC VISB,-85.00\n09/14/2026,POS COSTCO WHSE #1157,-42.00\n09/13/2026,AMZN PRIME*2K4LM0,-139.00",
-            de: "Datum,Beschreibung,Betrag\n14.09.2026,VZWRLSS*APOCC VISB,-85.00\n14.09.2026,POS COSTCO WHSE #1157,-42.00\n13.09.2026,AMZN PRIME*2K4LM0,-139.00",
+            de: "Datum;Beschreibung;Betrag\n14.09.2026;VZWRLSS*APOCC VISB;-85,00\n14.09.2026;POS COSTCO WHSE #1157;-42,00\n13.09.2026;AMZN PRIME*2K4LM0;-139,00",
             es: "Fecha,Descripción,Monto\n14/09/2026,VZWRLSS*APOCC VISB,-85.00\n14/09/2026,POS COSTCO WHSE #1157,-42.00\n13/09/2026,AMZN PRIME*2K4LM0,-139.00",
-            pt: "Data,Descrição,Valor\n14/09/2026,VZWRLSS*APOCC VISB,-85.00\n14/09/2026,POS COSTCO WHSE #1157,-42.00\n13/09/2026,AMZN PRIME*2K4LM0,-139.00",
-            fr: "Date,Libellé,Montant\n14/09/2026,VZWRLSS*APOCC VISB,-85.00\n14/09/2026,POS COSTCO WHSE #1157,-42.00\n13/09/2026,AMZN PRIME*2K4LM0,-139.00",
+            pt: "Data;Descrição;Valor\n14/09/2026;VZWRLSS*APOCC VISB;-85,00\n14/09/2026;POS COSTCO WHSE #1157;-42,00\n13/09/2026;AMZN PRIME*2K4LM0;-139,00",
+            fr: "Date;Libellé;Montant\n14/09/2026;VZWRLSS*APOCC VISB;-85,00\n14/09/2026;POS COSTCO WHSE #1157;-42,00\n13/09/2026;AMZN PRIME*2K4LM0;-139,00",
         }),
         csvFile: t({
             en: "chase_activity_0914.csv",
@@ -38,10 +38,10 @@ const filmChaos = {
         groceries: t({ en: "Groceries", de: "Lebensmittel", es: "Súper", pt: "Mercado", fr: "Courses" }),
         netflixBody: t({
             en: "$22.99 will be charged to your card.",
-            de: "$22.99 werden von deiner Karte abgebucht.",
+            de: "22,99 $ werden von deiner Karte abgebucht.",
             es: "Se cobrarán $22.99 a tu tarjeta.",
-            pt: "$22.99 serão cobrados no seu cartão.",
-            fr: "$22.99 seront débités sur votre carte.",
+            pt: "$ 22,99 serão cobrados no seu cartão.",
+            fr: "22,99 $ seront débités sur votre carte.",
         }),
         netflixTitle: t({
             en: "Your membership renews 1 Oct",

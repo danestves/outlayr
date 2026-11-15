@@ -13,6 +13,7 @@ import {
     RowList,
     ToolPanel,
     useRows,
+    useToolLocale,
 } from "./tool-kit";
 
 const SLUG = "split-expenses-calculator";
@@ -31,7 +32,8 @@ function toneOf(balance: number) {
 export function SplitTool() {
     const { labels, pages } = useIntlayer("tools");
     const page = pages[SLUG];
-    const [code, setCode] = useState("USD");
+    const { home, tag } = useToolLocale();
+    const [code, setCode] = useState<string>(home);
     const { add, focusRef, remove, rows, update } = useRows<{ name: string; paid: string }>(
         () => page.examples.map((name, index) => ({ name: name.value, paid: PAID[index] ?? "" })),
         { name: "", paid: "" }
@@ -86,7 +88,7 @@ export function SplitTool() {
                                 />
                                 <span className={`hidden text-right font-mono md:block ${toneOf(balance)}`}>
                                     {balance > 0 ? "+" : ""}
-                                    {formatAmount(balance, code)}
+                                    {formatAmount(balance, code, tag)}
                                 </span>
                                 <RemoveButton
                                     disabled={rows.length <= MIN_PEOPLE}
@@ -122,7 +124,7 @@ export function SplitTool() {
                                     <td className="py-4 pr-4">{nameOf(transfer.from)}</td>
                                     <td className="py-4 pr-4">{nameOf(transfer.to)}</td>
                                     <td className="py-4 text-right font-mono whitespace-nowrap">
-                                        {formatAmount(transfer.amount, code)}
+                                        {formatAmount(transfer.amount, code, tag)}
                                     </td>
                                 </tr>
                             ))}

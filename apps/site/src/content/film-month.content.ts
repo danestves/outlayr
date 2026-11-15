@@ -26,10 +26,10 @@ const filmMonth = {
         utilities: t({ en: "Utilities", de: "Nebenkosten", es: "Servicios", pt: "Contas da casa", fr: "Charges" }),
         verdict: t({
             en: "$1,685.51 less than 30 Aug – 5 Sep. Rent alone gave back $1,850.00.",
-            de: "$1,685.51 weniger als vom 30. Aug. bis 5. Sept. Allein die Miete brachte $1,850.00 zurück.",
+            de: "1.685,51 $ weniger als vom 30. Aug. bis 5. Sept. Allein die Miete brachte 1.850,00 $ zurück.",
             es: "$1,685.51 menos que 30 ago – 5 sep. Solo Renta bajó $1,850.00.",
-            pt: "$1,685.51 a menos que 30 ago a 5 set. Só Aluguel caiu $1,850.00.",
-            fr: "$1,685.51 de moins que du 30 août au 5 sept., dont $1,850.00 rien que sur Loyer.",
+            pt: "$ 1.685,51 a menos que 30 ago a 5 set. Só Aluguel caiu $ 1.850,00.",
+            fr: "1 685,51 $ de moins que du 30 août au 5 sept., dont 1 850,00 $ rien que sur Loyer.",
         }),
         versus: t({
             en: "vs 30 Aug – 5 Sep",

@@ -27,12 +27,13 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useCurrencyMarks, useMoney } from "@/lib/use-money";
 import type { Act } from "@/stageshow/act";
 import { Collapse } from "@/stageshow/motion/Collapse";
 import { Count } from "@/stageshow/motion/Count";
 import { Stage } from "@/stageshow/stage";
 
-import { FilmIcon, formatMoney, Logo, loopBack, Micro } from "./parts";
+import { FilmIcon, Logo, loopBack, Micro } from "./parts";
 
 import "./log.css";
 
@@ -120,10 +121,9 @@ function Glyph({ name, size = 22, stroke = 1.8 }: { name: GlyphName; size?: numb
     );
 }
 
-const cents = (value: number) => value.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
-
-function Rolling({ prefix = "", value }: { prefix?: string; value: number }) {
-    return <Count duration={900} format={(n) => `${prefix}$${cents(n)}`} value={value} />;
+function Rolling({ value }: { value: number }) {
+    const money = useMoney();
+    return <Count duration={900} format={money} value={value} />;
 }
 
 function StatusBar() {
@@ -235,6 +235,9 @@ function Section({ label, total }: { label: ReactNode; total: ReactNode }) {
 
 function Body({ lit, step }: Scene) {
     const copy = useIntlayer("film-log");
+    const money = useMoney();
+    const { prefix, suffix, tag } = useCurrencyMarks();
+    const cents = (value: number) => value.toLocaleString(tag, { maximumFractionDigits: 2, minimumFractionDigits: 2 });
     const logged = step >= STEP.logged;
     const spent = logged ? SPENT : 0;
     return (
@@ -243,8 +246,9 @@ function Body({ lit, step }: Scene) {
             <div className="log-net">
                 <Micro>{copy.net}</Micro>
                 <div className="log-net-value">
-                    <span className="log-sign">+$</span>
+                    <span className="log-sign">+{prefix}</span>
                     <Count duration={900} format={cents} value={FIGURES.net - spent} />
+                    {suffix === "" ? null : <span className="log-sign log-sign--after">{suffix}</span>}
                 </div>
                 <span className="log-currency">
                     USD
@@ -254,12 +258,12 @@ function Body({ lit, step }: Scene) {
             <div className="log-flow">
                 <div>
                     <Micro>{copy.inLabel}</Micro>
-                    <b className="log-in">+$6,650.00</b>
+                    <b className="log-in">{money(6650, { plus: true })}</b>
                 </div>
                 <div>
                     <Micro>{copy.outLabel}</Micro>
                     <b>
-                        <Rolling prefix="−" value={FIGURES.out + spent} />
+                        <Rolling value={-(FIGURES.out + spent)} />
                     </b>
                 </div>
             </div>
@@ -270,26 +274,26 @@ function Body({ lit, step }: Scene) {
                 name="Chase"
                 sub="USD"
             />
-            <Row amount="$9,450.00" lead={<Logo name="ally" size={34} />} name="Ally Savings" sub="USD" />
-            <Row amount="$3,412.40" lead={<Logo name="zinli" size={34} />} name="Zinli" sub="USD" />
+            <Row amount={money(9450)} lead={<Logo name="ally" size={34} />} name="Ally Savings" sub="USD" />
+            <Row amount={money(3412.4)} lead={<Logo name="zinli" size={34} />} name="Zinli" sub="USD" />
             <p className="log-more">
                 <Micro style={{ color: "var(--film-tint)" }}>{copy.more}</Micro>
             </p>
             <Collapse open={logged}>
-                <Section label={copy.today} total="−$42.00" />
+                <Section label={copy.today} total={money(-42)} />
                 <Row
-                    amount="−$42.00"
+                    amount={money(-42)}
                     lead={<Logo name="costco" size={34} />}
                     lit={lit}
                     name="Costco"
                     sub={copy.nowTime}
                 />
             </Collapse>
-            <Section label={copy.friday} total="−$93.00" />
-            <Row amount="−$4.00" lead={<Lead kind="github" />} name="GitHub" sub={copy.timeLate} />
-            <Row amount="−$89.00" lead={<Lead kind="nike" />} name="Nike" sub={copy.timeEarly} />
-            <Section label={copy.thursday} total="−$17.80" />
-            <Row amount="−$17.80" lead={<Lead kind="lyft" />} name="Lyft" sub={copy.timeNight} />
+            <Section label={copy.friday} total={money(-93)} />
+            <Row amount={money(-4)} lead={<Lead kind="github" />} name="GitHub" sub={copy.timeLate} />
+            <Row amount={money(-89)} lead={<Lead kind="nike" />} name="Nike" sub={copy.timeEarly} />
+            <Section label={copy.thursday} total={money(-17.8)} />
+            <Row amount={money(-17.8)} lead={<Lead kind="lyft" />} name="Lyft" sub={copy.timeNight} />
         </div>
     );
 }
@@ -354,6 +358,9 @@ const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "0", "⌫"] as c
 
 function Sheet({ amount, step }: Scene) {
     const copy = useIntlayer("film-log");
+    const money = useMoney();
+    const { decimal } = useCurrencyMarks();
+    const keyLabel = (key: (typeof KEYS)[number]) => (key === "." ? decimal : key);
     const picked = step >= STEP.picked;
     const merchantActive = step === STEP.name;
     const chips = [
@@ -388,7 +395,7 @@ function Sheet({ amount, step }: Scene) {
                     </span>
                 </span>{" "}
                 <span className="log-word" data-active={step === STEP.amount || undefined}>
-                    {formatMoney(amount)}
+                    {money(amount)}
                 </span>
                 <span className="log-code">USD</span> <span className="log-link">{copy.at}</span>{" "}
                 <span className="log-word" data-active={merchantActive || undefined} data-blank={!picked || undefined}>
@@ -454,7 +461,7 @@ function Sheet({ amount, step }: Scene) {
                             data-target={key === "4" || key === "2" ? `key-${key}` : undefined}
                             key={key}
                         >
-                            {key === "⌫" ? <Glyph name="backspace" size={22} stroke={1.6} /> : key}
+                            {key === "⌫" ? <Glyph name="backspace" size={22} stroke={1.6} /> : keyLabel(key)}
                         </span>
                     ))}
                 </div>

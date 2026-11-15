@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { formatAmount, installmentCost, parseAmount, parsePercent } from "@/lib/calculators";
+import { formatPercent } from "@/lib/money";
 
 import {
     AmountInput,
@@ -17,6 +18,7 @@ import {
     PercentInput,
     ToolPanel,
     useCadences,
+    useToolLocale,
 } from "./tool-kit";
 
 const SLUG = "installment-calculator";
@@ -28,20 +30,22 @@ const MAX_INFLATION = 1000;
 
 type Every = (typeof CADENCES)[number];
 
-function formatRate(rate: number): string {
+function formatRate(rate: number, tag: string): string {
     const percent = rate * 100;
     if (percent > MAX_PERCENT) {
-        return `>${MAX_PERCENT}%`;
+        return `>${formatPercent(MAX_PERCENT, tag)}`;
     }
-    const shown = Number(percent.toFixed(percent < 100 ? 1 : 0));
-    return shown === 0 && percent > 0 ? "<0.1%" : `${shown}%`;
+    const digits = percent < 100 ? 1 : 0;
+    const shown = Number(percent.toFixed(digits));
+    return shown === 0 && percent > 0 ? `<${formatPercent(0.1, tag, 1)}` : formatPercent(shown, tag, digits);
 }
 
 export function InstallmentTool() {
     const { labels, pages } = useIntlayer("tools");
     const page = pages[SLUG];
     const cadences = useCadences(CADENCES);
-    const [code, setCode] = useState("USD");
+    const { home, tag } = useToolLocale();
+    const [code, setCode] = useState<string>(home);
     const [price, setPrice] = useState("400");
     const [down, setDown] = useState("100");
     const [count, setCount] = useState("3");
@@ -67,7 +71,7 @@ export function InstallmentTool() {
     const totalPrice = <Figure code={code} minor={total} />;
     let answer: ReactNode = page.answer.same({ end, total: totalPrice });
     if (kind === "more") {
-        const rate = <span className="font-mono font-medium">{formatRate(annualRate ?? 0)}</span>;
+        const rate = <span className="font-mono font-medium">{formatRate(annualRate ?? 0, tag)}</span>;
         answer = page.answer.more({ amount, end, rate, total: totalPrice });
     } else if (kind === "covered") {
         answer = page.answer.covered({ amount });
@@ -99,10 +103,10 @@ export function InstallmentTool() {
 
     const rows = [
         ...(plan.down > 0
-            ? [{ amount: formatAmount(plan.down, code), done: true, key: "today", label: labels.row.today }]
+            ? [{ amount: formatAmount(plan.down, code, tag), done: true, key: "today", label: labels.row.today }]
             : []),
         ...Array.from({ length: plan.count }, (_, index) => ({
-            amount: formatAmount(plan.payment, code),
+            amount: formatAmount(plan.payment, code, tag),
             key: String(index + 1),
             label: every === "month" ? labels.row.month({ n: index + 1 }) : labels.row.week({ n: (index + 1) * weeks }),
         })),
@@ -127,7 +131,7 @@ export function InstallmentTool() {
                             </p>
                         </>
                     }
-                    figure={formatAmount(total - plan.down, code)}
+                    figure={formatAmount(total - plan.down, code, tag)}
                     title={page.preview.left}
                 >
                     <AppRows rows={rows} />

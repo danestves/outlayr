@@ -25,11 +25,17 @@ it.each([
 });
 
 it.each([
-    { code: "USD", minor: 123_456_789, text: "$1,234,567.89" },
-    { code: "CLP", minor: 15_000, text: "$15,000" },
-    { code: "PEN", minor: -400, text: "-PEN 4.00" },
-])("formats $minor in $code as $text", ({ code, minor, text }) => {
-    expect(formatAmount(minor, code)).toBe(text);
+    { code: "USD", minor: 123_456_789, tag: "en-GB", text: "$1,234,567.89" },
+    { code: "CLP", minor: 15_000, tag: "en-GB", text: "$15,000" },
+    { code: "PEN", minor: -400, tag: "en-GB", text: "-PEN\u00A04.00" },
+    { code: "USD", minor: 123_456, tag: "es-419", text: "$1,234.56" },
+    { code: "EUR", minor: 123_456, tag: "de-DE", text: "1.234,56\u00A0€" },
+    { code: "MXN", minor: 150, tag: "de-DE", text: "1,50\u00A0MX$" },
+    { code: "EUR", minor: 123_456, tag: "fr-FR", text: "1\u202F234,56\u00A0€" },
+    { code: "BRL", minor: 123_456, tag: "pt-BR", text: "R$\u00A01.234,56" },
+    { code: "VES", minor: 4000, tag: "pt-BR", text: "Bs.\u00A040,00" },
+])("formats $minor in $code for $tag as $text", ({ code, minor, tag, text }) => {
+    expect(formatAmount(minor, code, tag)).toBe(text);
 });
 
 it.each([

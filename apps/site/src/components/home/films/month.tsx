@@ -1,9 +1,10 @@
 import { useIntlayer } from "react-intlayer";
 
+import { useMoney, usePercent } from "@/lib/use-money";
 import type { Act } from "@/stageshow/act";
 import { Stage } from "@/stageshow/stage";
 
-import { CategoryTile, formatMoney, loopBack, Micro, Money, Ruled } from "./parts";
+import { CategoryTile, loopBack, Micro, Money, Ruled } from "./parts";
 import type { Category } from "./parts";
 import { FILM_COMPACT_BELOW, FILM_SIZES } from "./sizes";
 
@@ -20,9 +21,9 @@ const END: Scene = { out: false, step: 5 };
 const SPENT = 597.95;
 const BARS = [0.35, 0.09, 0.58, 0.3, 0.95, 0.42, 0];
 const AVERAGE = 0.4;
-const MOVERS: readonly { amount: number; category: Category; change?: string }[] = [
-    { amount: -1850, category: "rent", change: "−100%" },
-    { amount: 122.46, category: "groceries", change: "+95%" },
+const MOVERS: readonly { amount: number; category: Category; change?: number }[] = [
+    { amount: -1850, category: "rent", change: -100 },
+    { amount: 122.46, category: "groceries", change: 95 },
     { amount: 112.34, category: "utilities" },
 ];
 
@@ -42,6 +43,8 @@ const script = async (act: Act<Scene>) => {
 
 export function MonthFilm() {
     const copy = useIntlayer("film-month");
+    const money = useMoney();
+    const percent = usePercent();
     const days = copy.days.value.split(" ");
     return (
         <Stage<Scene>
@@ -62,7 +65,7 @@ export function MonthFilm() {
                             <div className="month-head">
                                 <Micro>{copy.range}</Micro>
                                 <span className="month-chip" data-in={step >= 4 || undefined}>
-                                    −74%
+                                    {percent(-74)}
                                 </span>
                             </div>
                             <div className="film-rise" data-in={step >= 1 || undefined}>
@@ -79,11 +82,11 @@ export function MonthFilm() {
                                 >
                                     <div>
                                         <Micro>{copy.income}</Micro>
-                                        <b className="month-income">{formatMoney(1450, { plus: true })}</b>
+                                        <b className="month-income">{money(1450, { plus: true })}</b>
                                     </div>
                                     <div>
                                         <Micro>{copy.net}</Micro>
-                                        <b>{formatMoney(852.05, { plus: true })}</b>
+                                        <b>{money(852.05, { plus: true })}</b>
                                     </div>
                                 </div>
                             )}
@@ -101,7 +104,7 @@ export function MonthFilm() {
                                     data-in={step >= 4 || undefined}
                                     style={{ "--h": AVERAGE }}
                                 >
-                                    <span>$85</span>
+                                    <span>{money(85, { whole: true })}</span>
                                 </span>
                             </div>
                             <Ruled left={copy.movers} right={copy.versus} />
@@ -115,9 +118,11 @@ export function MonthFilm() {
                                     <CategoryTile category={mover.category} size={compact ? 28 : 30} />
                                     <span className="month-name">{copy[mover.category]}</span>
                                     <span className={mover.amount < 0 ? "month-income" : "month-spend"}>
-                                        {formatMoney(mover.amount, { plus: true })}
+                                        {money(mover.amount, { plus: true })}
                                     </span>
-                                    <span className="month-change">{mover.change ?? copy.fresh}</span>
+                                    <span className="month-change">
+                                        {mover.change === undefined ? copy.fresh : percent(mover.change)}
+                                    </span>
                                 </div>
                             ))}
                         </div>

@@ -18,6 +18,7 @@ import {
     LABEL,
     PercentInput,
     ToolPanel,
+    useToolLocale,
 } from "./tool-kit";
 
 const SLUG = "loan-calculator";
@@ -33,7 +34,8 @@ type Unit = (typeof UNITS)[number];
 export function LoanTool() {
     const { labels, pages } = useIntlayer("tools");
     const page = pages[SLUG];
-    const [code, setCode] = useState("USD");
+    const { home, tag } = useToolLocale();
+    const [code, setCode] = useState<string>(home);
     const [amount, setAmount] = useState("10000");
     const [rate, setRate] = useState("18");
     const [term, setTerm] = useState("36");
@@ -51,7 +53,7 @@ export function LoanTool() {
     });
     const upfront = Math.round((principal * parsePercent(fee, MAX_FEE)) / 100);
     const paid = total + upfront;
-    const number = new Intl.NumberFormat("en-US", {
+    const number = new Intl.NumberFormat(tag, {
         maximumFractionDigits: decimalsFor(code),
         minimumFractionDigits: decimalsFor(code),
     });
@@ -74,7 +76,7 @@ export function LoanTool() {
 
     const last = schedule.at(-1);
     const rows = schedule.map((row, index) => ({
-        amount: formatAmount(row.payment, code),
+        amount: formatAmount(row.payment, code, tag),
         key: String(index),
         label: labels.row.month({ n: index + 1 }),
     }));
@@ -99,13 +101,13 @@ export function LoanTool() {
                             </div>
                             <p className="text-app-muted mt-2 text-sm">
                                 {page.preview.split({
-                                    interest: formatAmount(interest, code),
-                                    principal: formatAmount(Math.max(0, principal), code),
+                                    interest: formatAmount(interest, code, tag),
+                                    principal: formatAmount(Math.max(0, principal), code, tag),
                                 })}
                             </p>
                         </>
                     }
-                    figure={formatAmount(payment, code)}
+                    figure={formatAmount(payment, code, tag)}
                     title={page.preview.payment}
                 >
                     <AppRows rows={rows} />
@@ -146,7 +148,9 @@ export function LoanTool() {
                             <PercentInput onChange={setFee} value={fee} />
                         </span>
                         {upfront > 0 ? (
-                            <span className="text-muted shrink-0 font-mono text-sm">{formatAmount(upfront, code)}</span>
+                            <span className="text-muted shrink-0 font-mono text-sm">
+                                {formatAmount(upfront, code, tag)}
+                            </span>
                         ) : null}
                     </span>
                 </Field>
@@ -182,7 +186,7 @@ export function LoanTool() {
                         ) : null}
                         {last && last.payment !== payment ? (
                             <span className="text-muted">
-                                {page.table.last({ amount: formatAmount(last.payment, code) })}
+                                {page.table.last({ amount: formatAmount(last.payment, code, tag) })}
                             </span>
                         ) : null}
                     </div>

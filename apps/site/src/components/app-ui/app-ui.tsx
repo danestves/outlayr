@@ -3,12 +3,33 @@ import { useIntlayer } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
 import type { IconName } from "@/components/icon";
+import { useCurrencyMarks, useMoney, usePercent } from "@/lib/use-money";
 
 type Size = "lg" | "md";
 
 const SIZE: Record<Size, string> = { lg: "ui ui-lg", md: "ui" };
 
 const STEP = "M0 10V76H13V80H27V84H40V86H53V90H67V93H80V97H93V99H107V104H120V107H133V110H147V113H160";
+
+function Amount({ sign = "", value }: { sign?: string; value: number }) {
+    const { decimal, prefix, suffix, tag } = useCurrencyMarks();
+    const whole = Math.floor(value);
+    const cents = String(Math.round((value - whole) * 100)).padStart(2, "0");
+    return (
+        <p className="ui-amount">
+            <span className="ui-cur">
+                {sign}
+                {prefix}
+            </span>
+            <span data-count={whole}>{whole.toLocaleString(tag)}</span>
+            <span className="ui-cents">
+                {decimal}
+                {cents}
+            </span>
+            {suffix === "" ? null : <span className="ui-cur ui-cur-after">{suffix}</span>}
+        </p>
+    );
+}
 
 function Frame({ children, label, size }: { children: ReactNode; label: string; size: Size }) {
     return (
@@ -55,17 +76,14 @@ function bar(index: number, fill: number): CSSProperties & Record<`--${string}`,
 
 export function BudgetCard({ size = "md" }: { size?: Size }) {
     const { budget } = useIntlayer("appUi");
+    const money = useMoney();
     return (
         <Frame label={budget.label.value} size={size}>
             <div className="ui-row ui-micro">
                 <span>{budget.scope}</span>
                 <span>{budget.daysLeft}</span>
             </div>
-            <p className="ui-amount">
-                <span className="ui-cur">$</span>
-                <span data-count="1018">1,018</span>
-                <span className="ui-cents">.59</span>
-            </p>
+            <Amount value={1018.59} />
             <p className="ui-sub">{budget.left}</p>
             <svg aria-hidden="true" className="ui-chart" viewBox="0 0 400 176">
                 <path className="ui-area" d={`${STEP}V150H0Z`} />
@@ -79,15 +97,15 @@ export function BudgetCard({ size = "md" }: { size?: Size }) {
             <div className="ui-stats">
                 <div>
                     <span className="ui-micro">{budget.limit}</span>
-                    <b>$3,900</b>
+                    <b>{money(3900, { whole: true })}</b>
                 </div>
                 <div>
                     <span className="ui-micro">{budget.spent}</span>
-                    <b>$2,881</b>
+                    <b>{money(2881, { whole: true })}</b>
                 </div>
                 <div>
                     <span className="ui-micro">{budget.aDay}</span>
-                    <b>$57</b>
+                    <b>{money(57, { whole: true })}</b>
                 </div>
             </div>
         </Frame>
@@ -98,31 +116,41 @@ const BARS = [0.35, 0.09, 0.58, 0.3, 0.95, 0.42, 0] as const;
 
 export function InsightsCard({ compact = false, size = "md" }: { compact?: boolean; size?: Size }) {
     const { days, insights } = useIntlayer("appUi");
+    const money = useMoney();
+    const percent = usePercent();
     const movers: { amount: string; icon: IconName; name: ReactNode; pct: ReactNode; tone: string }[] = [
-        { amount: "−$1,850.00", icon: "house", name: insights.rent, pct: "−100%", tone: "ui-income" },
-        { amount: "+$122.46", icon: "shopping-cart", name: insights.groceries, pct: "+95%", tone: "ui-spend" },
-        { amount: "+$112.34", icon: "lightning", name: insights.utilities, pct: insights.fresh, tone: "ui-spend" },
+        { amount: money(-1850), icon: "house", name: insights.rent, pct: percent(-100), tone: "ui-income" },
+        {
+            amount: money(122.46, { plus: true }),
+            icon: "shopping-cart",
+            name: insights.groceries,
+            pct: percent(95),
+            tone: "ui-spend",
+        },
+        {
+            amount: money(112.34, { plus: true }),
+            icon: "lightning",
+            name: insights.utilities,
+            pct: insights.fresh,
+            tone: "ui-spend",
+        },
     ];
     return (
         <Frame label={insights.label.value} size={size}>
             <div className="ui-micro">
                 {insights.range}
-                <span className="ui-chip">−74%</span>
+                <span className="ui-chip">{percent(-74)}</span>
             </div>
-            <p className="ui-amount">
-                <span className="ui-cur">−$</span>
-                <span data-count="597">597</span>
-                <span className="ui-cents">.95</span>
-            </p>
+            <Amount sign="−" value={597.95} />
             <p className="ui-sub">{insights.note}</p>
             <div className="ui-stats ui-stats-2">
                 <div>
                     <span className="ui-micro">{insights.income}</span>
-                    <b className="ui-income">+$1,450.00</b>
+                    <b className="ui-income">{money(1450, { plus: true })}</b>
                 </div>
                 <div>
                     <span className="ui-micro">{insights.net}</span>
-                    <b>+$852.05</b>
+                    <b>{money(852.05, { plus: true })}</b>
                 </div>
             </div>
             {compact ? null : (
@@ -135,7 +163,7 @@ export function InsightsCard({ compact = false, size = "md" }: { compact?: boole
                             </div>
                         ))}
                         <div className="ui-avg">
-                            <span>$85</span>
+                            <span>{money(85, { whole: true })}</span>
                         </div>
                     </div>
                     <div className="ui-row ui-micro ui-ruled ui-section">
@@ -162,25 +190,26 @@ export function InsightsCard({ compact = false, size = "md" }: { compact?: boole
 
 export function UpcomingList({ size = "lg" }: { size?: Size }) {
     const { months, upcoming } = useIntlayer("appUi");
+    const money = useMoney();
     const rows = [
-        { amount: "−$139.00", day: "20", logo: "amazon", month: months.nov, name: "Amazon Prime" },
-        { amount: "−$20.00", day: "8", logo: "chatgpt", month: months.oct, name: "ChatGPT" },
-        { amount: "−$9.99", day: "6", logo: "icloud", month: months.oct, name: "iCloud" },
-        { amount: "−$85.00", day: "5", logo: "verizon", month: months.oct, name: "Verizon" },
-        { amount: "−$11.99", day: "3", logo: "spotify", month: months.oct, name: "Spotify" },
-        { amount: "−$1,850.00", day: "1", logo: "rent", month: months.oct, name: upcoming.rent },
-        { amount: "−$22.99", day: "1", logo: "netflix", month: months.oct, name: "Netflix" },
-        { amount: "−$24.99", day: "15", logo: "planet", month: months.sep, name: "Planet Fitness" },
+        { amount: money(-139), day: "20", logo: "amazon", month: months.nov, name: "Amazon Prime" },
+        { amount: money(-20), day: "8", logo: "chatgpt", month: months.oct, name: "ChatGPT" },
+        { amount: money(-9.99), day: "6", logo: "icloud", month: months.oct, name: "iCloud" },
+        { amount: money(-85), day: "5", logo: "verizon", month: months.oct, name: "Verizon" },
+        { amount: money(-11.99), day: "3", logo: "spotify", month: months.oct, name: "Spotify" },
+        { amount: money(-1850), day: "1", logo: "rent", month: months.oct, name: upcoming.rent },
+        { amount: money(-22.99), day: "1", logo: "netflix", month: months.oct, name: "Netflix" },
+        { amount: money(-24.99), day: "15", logo: "planet", month: months.sep, name: "Planet Fitness" },
     ];
     return (
         <Frame label={upcoming.label.value} size={size}>
             <div className="ui-row ui-micro ui-ruled">
                 <span>{upcoming.title}</span>
-                <span>−$2,163.96</span>
+                <span>{money(-2163.96)}</span>
             </div>
             <div className="ui-row ui-micro">
                 <span>{upcoming.perMonth}</span>
-                <span>−$2,036.54</span>
+                <span>{money(-2036.54)}</span>
             </div>
             <ul className="ui-list">
                 {rows.map((row, index) => (
@@ -201,18 +230,19 @@ export function UpcomingList({ size = "lg" }: { size?: Size }) {
 }
 
 const ACCOUNTS = [
-    { amount: "$12,480.32", code: "USD", logo: "chase", name: "Chase" },
-    { amount: "$9,450.00", code: "USD", logo: "ally", name: "Ally Savings" },
-    { amount: "$3,412.40", code: "USD", logo: "zinli", name: "Zinli" },
-    { amount: "Bs.486,000.00", code: "VES", logo: "banesco", name: "Banesco" },
-    { amount: "$612.80", code: "USD", logo: "paypal", name: "PayPal" },
-    { amount: "−$842.15", code: "USD", logo: "applecard", name: "Apple Card" },
-    { amount: "−$1,240.55", code: "USD", logo: "amex", name: "Amex Gold" },
-    { amount: "$220.00", code: "USD", logo: "cash", name: null },
+    { amount: 12_480.32, code: "USD", logo: "chase", name: "Chase" },
+    { amount: 9450, code: "USD", logo: "ally", name: "Ally Savings" },
+    { amount: 3412.4, code: "USD", logo: "zinli", name: "Zinli" },
+    { amount: 486_000, code: "VES", logo: "banesco", name: "Banesco" },
+    { amount: 612.8, code: "USD", logo: "paypal", name: "PayPal" },
+    { amount: -842.15, code: "USD", logo: "applecard", name: "Apple Card" },
+    { amount: -1240.55, code: "USD", logo: "amex", name: "Amex Gold" },
+    { amount: 220, code: "USD", logo: "cash", name: null },
 ] as const;
 
 export function AccountsList({ size = "lg" }: { size?: Size }) {
     const { accounts } = useIntlayer("appUi");
+    const money = useMoney();
     return (
         <Frame label={accounts.label.value} size={size}>
             <ul className="ui-group">
@@ -223,7 +253,7 @@ export function AccountsList({ size = "lg" }: { size?: Size }) {
                             <span className="ui-name">{account.name ?? accounts.cash}</span>
                             <span className="ui-detail">{account.code}</span>
                         </span>
-                        <span>{account.amount}</span>
+                        <span>{money(account.amount, { code: account.code })}</span>
                         <Icon className="text-app-muted" name="caret-right" />
                     </li>
                 ))}

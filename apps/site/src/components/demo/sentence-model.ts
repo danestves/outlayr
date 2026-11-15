@@ -1,5 +1,7 @@
 import type { Locale } from "@outlayr/shared/i18n";
 
+import { HOME_CURRENCY } from "@/lib/money";
+
 import type { Currency } from "./money";
 
 type Kind = "expense" | "income";
@@ -13,7 +15,7 @@ const GUIDED = ["amount", "merchant", "category", "account"] as const;
 type GuidedStep = (typeof GUIDED)[number];
 const GUIDED_INDEX = new Map<Step, number>(GUIDED.map((step, index) => [step, index]));
 
-export const CURRENCY_CODES = ["USD", "EUR", "MXN", "VES"] as const satisfies readonly Currency[];
+export const CURRENCY_CODES = ["USD", "EUR", "BRL", "MXN", "VES"] as const satisfies readonly Currency[];
 export const WHEN_OPTIONS = ["today", "yesterday"] as const satisfies readonly When[];
 export const CATEGORIES = {
     expense: [
@@ -94,19 +96,9 @@ interface Entry {
     when: When;
 }
 
-export const BLANK: Draft = {
-    account: null,
-    amount: "",
-    category: null,
-    categoryChosen: false,
-    currency: "USD",
-    kind: "expense",
-    merchant: "",
-    when: "today",
-};
-
 interface Cast {
     accounts: readonly string[];
+    currency: Currency;
     entries: readonly [Entry, ...Entry[]];
     knownMerchants: ReadonlyMap<string, string>;
     recentMerchants: Record<Kind, readonly string[]>;
@@ -116,6 +108,7 @@ interface Cast {
 export const CASTS = {
     en: {
         accounts: ["Chase", "Apple Card", "Amex Gold", "Zinli", "Cash", "Ally Savings"],
+        currency: HOME_CURRENCY.en,
         entries: [
             {
                 account: "Chase",
@@ -175,6 +168,7 @@ export const CASTS = {
     },
     es: {
         accounts: ["BBVA", "Mercado Pago", "Nu", "Zinli", "Cash", "Banesco"],
+        currency: HOME_CURRENCY.es,
         entries: [
             {
                 account: "BBVA",
@@ -235,11 +229,12 @@ export const CASTS = {
     },
     de: {
         accounts: ["Sparkasse", "N26", "ING", "Wise", "Bargeld", "Tagesgeld"],
+        currency: HOME_CURRENCY.de,
         entries: [
             {
                 account: "Sparkasse",
                 category: "Groceries",
-                currency: "USD",
+                currency: "EUR",
                 keys: ["4", "2"],
                 kind: "expense",
                 merchant: "REWE",
@@ -248,7 +243,7 @@ export const CASTS = {
             {
                 account: "N26",
                 category: "Transport",
-                currency: "USD",
+                currency: "EUR",
                 keys: ["1", "4", ".", "6"],
                 kind: "expense",
                 merchant: "Deutsche Bahn",
@@ -288,18 +283,19 @@ export const CASTS = {
             income: ["Upwork", "Deel"],
         },
         seedLog: [
-            { amount: 15, category: "Subscriptions", currency: "USD", id: 3, income: false, merchant: "Netflix" },
-            { amount: 54.28, category: "Shopping", currency: "USD", id: 2, income: false, merchant: "dm" },
-            { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "Spotify" },
+            { amount: 15, category: "Subscriptions", currency: "EUR", id: 3, income: false, merchant: "Netflix" },
+            { amount: 54.28, category: "Shopping", currency: "EUR", id: 2, income: false, merchant: "dm" },
+            { amount: 4, category: "Subscriptions", currency: "EUR", id: 1, income: false, merchant: "Spotify" },
         ],
     },
     fr: {
         accounts: ["Boursorama", "Revolut", "Crédit Agricole", "Wise", "Cash", "Livret A"],
+        currency: HOME_CURRENCY.fr,
         entries: [
             {
                 account: "Boursorama",
                 category: "Groceries",
-                currency: "USD",
+                currency: "EUR",
                 keys: ["4", "2"],
                 kind: "expense",
                 merchant: "Carrefour",
@@ -308,7 +304,7 @@ export const CASTS = {
             {
                 account: "Revolut",
                 category: "Transport",
-                currency: "USD",
+                currency: "EUR",
                 keys: ["1", "4", ".", "6"],
                 kind: "expense",
                 merchant: "SNCF",
@@ -348,18 +344,19 @@ export const CASTS = {
             income: ["Upwork", "Deel"],
         },
         seedLog: [
-            { amount: 15, category: "Subscriptions", currency: "USD", id: 3, income: false, merchant: "Netflix" },
-            { amount: 54.28, category: "Shopping", currency: "USD", id: 2, income: false, merchant: "Monoprix" },
-            { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "Spotify" },
+            { amount: 15, category: "Subscriptions", currency: "EUR", id: 3, income: false, merchant: "Netflix" },
+            { amount: 54.28, category: "Shopping", currency: "EUR", id: 2, income: false, merchant: "Monoprix" },
+            { amount: 4, category: "Subscriptions", currency: "EUR", id: 1, income: false, merchant: "Spotify" },
         ],
     },
     pt: {
         accounts: ["Nubank", "Itaú", "Inter", "Wise", "Cash", "Caixa"],
+        currency: HOME_CURRENCY.pt,
         entries: [
             {
                 account: "Nubank",
                 category: "Shopping",
-                currency: "USD",
+                currency: "BRL",
                 keys: ["4", "2"],
                 kind: "expense",
                 merchant: "Mercado Livre",
@@ -368,7 +365,7 @@ export const CASTS = {
             {
                 account: "Inter",
                 category: "Transport",
-                currency: "USD",
+                currency: "BRL",
                 keys: ["1", "4", ".", "6"],
                 kind: "expense",
                 merchant: "Uber",
@@ -386,7 +383,7 @@ export const CASTS = {
             {
                 account: "Itaú",
                 category: "Fashion",
-                currency: "EUR",
+                currency: "BRL",
                 keys: ["8", "9"],
                 kind: "expense",
                 merchant: "Zara",
@@ -408,12 +405,33 @@ export const CASTS = {
             income: ["Upwork", "Deel"],
         },
         seedLog: [
-            { amount: 15, category: "Subscriptions", currency: "USD", id: 3, income: false, merchant: "Netflix" },
-            { amount: 54.28, category: "Shopping", currency: "USD", id: 2, income: false, merchant: "Drogasil" },
-            { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "Spotify" },
+            { amount: 15, category: "Subscriptions", currency: "BRL", id: 3, income: false, merchant: "Netflix" },
+            { amount: 54.28, category: "Shopping", currency: "BRL", id: 2, income: false, merchant: "Drogasil" },
+            { amount: 4, category: "Subscriptions", currency: "BRL", id: 1, income: false, merchant: "Spotify" },
         ],
     },
 } as const satisfies Record<Locale, Cast>;
+
+function blank(currency: Currency): Draft {
+    return {
+        account: null,
+        amount: "",
+        category: null,
+        categoryChosen: false,
+        currency,
+        kind: "expense",
+        merchant: "",
+        when: "today",
+    };
+}
+
+export const BLANKS = {
+    de: blank(CASTS.de.currency),
+    en: blank(CASTS.en.currency),
+    es: blank(CASTS.es.currency),
+    fr: blank(CASTS.fr.currency),
+    pt: blank(CASTS.pt.currency),
+} as const satisfies Record<Locale, Draft>;
 
 const PACE = {
     choose: 750,
@@ -506,7 +524,7 @@ function save(state: State): State {
     };
     return {
         ...state,
-        draft: BLANK,
+        draft: BLANKS[state.locale],
         log: [row, ...state.log].slice(0, LOG_ROWS),
         nextId: state.nextId + 1,
         step: "amount",
@@ -572,7 +590,7 @@ function movesFor(cast: Cast, entry: Entry): Move[] {
     if (entry.kind === "income") {
         moves.push({ type: "kind" });
     }
-    if (entry.currency !== BLANK.currency) {
+    if (entry.currency !== cast.currency) {
         moves.push({ step: "currency", type: "open" }, { type: "currency", value: entry.currency });
     }
     for (const key of entry.keys) {
@@ -583,7 +601,7 @@ function movesFor(cast: Cast, entry: Entry): Move[] {
         moves.push({ type: "choose", value: entry.category });
     }
     moves.push({ type: "choose", value: entry.account });
-    if (entry.when !== BLANK.when) {
+    if (entry.when !== "today") {
         moves.push({ step: "when", type: "open" }, { type: "when", value: entry.when });
     }
     moves.push({ type: "footer" });
@@ -642,7 +660,7 @@ export function reduce(state: State, action: Action): State {
     }
     if (action.type === "restart") {
         const cursor = SCRIPTS[state.locale].starts.findLast((start) => start <= state.cursor) ?? 0;
-        return { ...state, aim: null, cursor, draft: BLANK, needsAmount: false, step: "amount" };
+        return { ...state, aim: null, cursor, draft: BLANKS[state.locale], needsAmount: false, step: "amount" };
     }
     return { ...apply(state, action), aim: null };
 }

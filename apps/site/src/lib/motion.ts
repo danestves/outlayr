@@ -14,7 +14,7 @@ function countUp(element: HTMLElement) {
     const start = performance.now();
     const tick = (now: number) => {
         const progress = Math.min((now - start) / COUNT_MS, 1);
-        write(element, Math.round(target * (1 - (1 - progress) ** 4)).toLocaleString("en-US"));
+        write(element, Math.round(target * (1 - (1 - progress) ** 4)).toLocaleString(document.documentElement.lang));
         if (progress < 1) {
             requestAnimationFrame(tick);
         }

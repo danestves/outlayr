@@ -101,6 +101,11 @@
         font-size: 0.36em;
     }
 
+    & .film-money__sign--after {
+        margin-right: 0;
+        margin-left: 0.25em;
+    }
+
     & .film-money__cents {
         font-size: 0.38em;
     }

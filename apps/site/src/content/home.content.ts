@@ -158,8 +158,8 @@ const home = {
                     en: "Yes. In the United States, Outlayr Pro is $129.99 once, or $7.99 a month or $49.99 a year with 7 days free. Your app store shows the price for your country. There are no ads on any plan.",
                     de: "Ja. In den USA kostet Outlayr Pro einmalig 129,99 $, oder 7,99 $ im Monat oder 49,99 $ im Jahr mit 7 Tagen gratis. Dein App Store zeigt den Preis für dein Land. In keinem Plan gibt es Werbung.",
                     es: "Sí. En Estados Unidos, Outlayr Pro cuesta US$129.99 en un solo pago, o US$7.99 al mes o US$49.99 al año con 7 días gratis. Tu tienda de apps muestra el precio de tu país. No hay anuncios en ningún plan.",
-                    pt: "Sim. Nos Estados Unidos, o Outlayr Pro custa US$129.99 em pagamento único, ou US$7.99 por mês ou US$49.99 por ano com 7 dias grátis. Sua loja de apps mostra o preço do seu país. Não há anúncios em nenhum plano.",
-                    fr: "Oui. Aux États-Unis, Outlayr Pro coûte US$129.99 en un seul paiement, ou US$7.99 par mois ou US$49.99 par an avec 7 jours gratuits. Votre boutique d'apps affiche le prix de votre pays. Aucune formule n'affiche de publicité.",
+                    pt: "Sim. Nos Estados Unidos, o Outlayr Pro custa US$ 129,99 em pagamento único, ou US$ 7,99 por mês ou US$ 49,99 por ano com 7 dias grátis. Sua loja de apps mostra o preço do seu país. Não há anúncios em nenhum plano.",
+                    fr: "Oui. Aux États-Unis, Outlayr Pro coûte 129,99 $US en un seul paiement, ou 7,99 $US par mois ou 49,99 $US par an avec 7 jours gratuits. Votre boutique d'apps affiche le prix de votre pays. Aucune formule n'affiche de publicité.",
                 }),
                 question: t({
                     en: "Can I buy Outlayr Pro once instead of subscribing?",
@@ -310,8 +310,8 @@ const home = {
                 en: "Logging a $42.00 grocery purchase at Costco in Outlayr, from the add menu to the Log.",
                 de: "Erfassen eines Lebensmitteleinkaufs über 42,00 $ bei Costco in Outlayr, vom Hinzufügen-Menü bis zum Verlauf.",
                 es: "Cómo se registra en Outlayr una compra de súper de $42.00 en Costco, desde el menú para agregar hasta el Registro.",
-                pt: "Registrando no Outlayr uma compra de mercado de $42.00 no Costco, do menu de adicionar até os Lançamentos.",
-                fr: "Enregistrement dans Outlayr d'un achat de courses de $42.00 chez Costco, du menu d'ajout jusqu'au Journal.",
+                pt: "Registrando no Outlayr uma compra de mercado de $ 42,00 no Costco, do menu de adicionar até os Lançamentos.",
+                fr: "Enregistrement dans Outlayr d'un achat de courses de 42,00 $ chez Costco, du menu d'ajout jusqu'au Journal.",
             }),
         },
         limits: [
@@ -455,10 +455,10 @@ const home = {
             {
                 alt: t({
                     en: "Outlayr Insights for 6 to 12 September: $597.95 spent, 74% less than the week before, a bar for each day, and the categories that moved most.",
-                    de: "Outlayr Auswertungen für den 6. bis 12. September: $597.95 ausgegeben, 74 % weniger als in der Woche davor, ein Balken für jeden Tag und die Kategorien, die sich am meisten bewegt haben.",
+                    de: "Outlayr Auswertungen für den 6. bis 12. September: 597,95 $ ausgegeben, 74 % weniger als in der Woche davor, ein Balken für jeden Tag und die Kategorien, die sich am meisten bewegt haben.",
                     es: "Estadísticas de Outlayr del 6 al 12 de septiembre: $597.95 gastados, 74% menos que la semana anterior, una barra por día y las categorías que más cambiaron.",
-                    pt: "Estatísticas do Outlayr de 6 a 12 de setembro: $597.95 gastos, 74% a menos que na semana anterior, uma barra para cada dia e as categorias que mais mudaram.",
-                    fr: "Statistiques d'Outlayr du 6 au 12 septembre : $597.95 dépensés, 74 % de moins que la semaine précédente, une barre par jour et les catégories qui ont le plus bougé.",
+                    pt: "Estatísticas do Outlayr de 6 a 12 de setembro: $ 597,95 gastos, 74% a menos que na semana anterior, uma barra para cada dia e as categorias que mais mudaram.",
+                    fr: "Statistiques d'Outlayr du 6 au 12 septembre : 597,95 $ dépensés, 74 % de moins que la semaine précédente, une barre par jour et les catégories qui ont le plus bougé.",
                 }),
                 body: t({
                     en: "Spending by day and by category, income against spending, and net worth over time. Start the month on payday and every chart follows.",
@@ -495,10 +495,10 @@ const home = {
             {
                 alt: t({
                     en: "Outlayr Upcoming entries: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, rent, Netflix, and Planet Fitness, each with its next charge date, and $2,036.54 a month in total.",
-                    de: "Outlayr Demnächst: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, Miete, Netflix und Planet Fitness, jeweils mit dem Datum der nächsten Abbuchung, und insgesamt $2,036.54 im Monat.",
+                    de: "Outlayr Demnächst: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, Miete, Netflix und Planet Fitness, jeweils mit dem Datum der nächsten Abbuchung, und insgesamt 2.036,54 $ im Monat.",
                     es: "Próximos registros en Outlayr: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, la renta, Netflix y Planet Fitness, cada uno con la fecha de su próximo cobro, y $2,036.54 al mes en total.",
-                    pt: "Próximos lançamentos no Outlayr: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, aluguel, Netflix e Planet Fitness, cada um com a data da próxima cobrança, e $2,036.54 por mês no total.",
-                    fr: "Opérations à venir dans Outlayr : Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, loyer, Netflix et Planet Fitness, chacune avec la date de son prochain prélèvement, et $2,036.54 par mois au total.",
+                    pt: "Próximos lançamentos no Outlayr: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, aluguel, Netflix e Planet Fitness, cada um com a data da próxima cobrança, e $ 2.036,54 por mês no total.",
+                    fr: "Opérations à venir dans Outlayr : Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, loyer, Netflix et Planet Fitness, chacune avec la date de son prochain prélèvement, et 2 036,54 $ par mois au total.",
                 }),
                 body: t({
                     en: "Rent, bills, and streaming log themselves on their day. Upcoming lists the next charges and what they add up to each month, and each one can remind you before it charges.",

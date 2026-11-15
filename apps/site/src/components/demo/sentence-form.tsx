@@ -3,6 +3,7 @@ import ArrowUpDownIcon from "@hugeicons/core-free-icons/ArrowUpDownIcon";
 import Eraser01Icon from "@hugeicons/core-free-icons/Eraser01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { capture } from "@outlayr/shared/analytics";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import type { Locale } from "@outlayr/shared/i18n";
 import { useTimeout } from "@outlayr/shared/timeout";
 import { useId, useReducer, useRef, useState } from "react";
@@ -10,10 +11,11 @@ import type { FocusEvent, KeyboardEvent, ReactNode } from "react";
 import { flushSync } from "react-dom";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { decimalSeparator } from "@/lib/money";
+
 import { formatMoney, signedMoney } from "./money";
 import type { Currency } from "./money";
 import {
-    BLANK,
     CASTS,
     CATEGORIES,
     CURRENCY_CODES,
@@ -27,7 +29,7 @@ import {
     isWhole,
     reduce,
 } from "./sentence-model";
-import type { Draft, Step, Target, Visit } from "./sentence-model";
+import type { Draft, Key, Step, Target, Visit } from "./sentence-model";
 import { useAutoplay } from "./use-autoplay";
 import { useNames } from "./use-names";
 
@@ -69,7 +71,12 @@ function Demo({ locale }: { locale: Locale }) {
         const edits = action.type !== "open" && !(action.type === "footer" && !isWhole(state.draft));
         if (action.type === "footer" && isWhole(state.draft)) {
             const merchant = state.draft.merchant.trim() || nameOf(state.draft.category ?? "");
-            const money = signedMoney(amountOf(state.draft), state.draft.currency, state.draft.kind === "income");
+            const money = signedMoney(
+                amountOf(state.draft),
+                state.draft.currency,
+                state.draft.kind === "income",
+                locale
+            );
             setAnnouncement(added({ merchant, money }));
             capture("demo_entry_added", { currency: state.draft.currency, kind: state.draft.kind });
         } else if (action.type === "footer" && reduce(state, action).needsAmount) {
@@ -133,7 +140,7 @@ function Demo({ locale }: { locale: Locale }) {
                                         controls={stageId}
                                         onPress={() => open("amount")}
                                     >
-                                        {formatMoney(amountOf(draft), draft.currency)}
+                                        {formatMoney(amountOf(draft), draft.currency, locale)}
                                     </Slot>
                                     <CodeButton
                                         active={step === "currency"}
@@ -236,7 +243,7 @@ function Demo({ locale }: { locale: Locale }) {
                                     <p className="truncate font-semibold">{row.merchant || nameOf(row.category)}</p>
                                     <p className="text-muted mt-1 flex items-center gap-2 text-sm">
                                         <span className="truncate">{nameOf(row.category)}</span>
-                                        {row.currency === BLANK.currency ? null : (
+                                        {row.currency === CASTS[locale].currency ? null : (
                                             <span className="bg-raised rounded px-1 font-mono text-xs">
                                                 {row.currency}
                                             </span>
@@ -244,7 +251,7 @@ function Demo({ locale }: { locale: Locale }) {
                                     </p>
                                 </div>
                                 <span className="shrink-0 font-mono tabular-nums">
-                                    {signedMoney(row.amount, row.currency, row.income)}
+                                    {signedMoney(row.amount, row.currency, row.income, locale)}
                                 </span>
                             </li>
                         ))}
@@ -274,6 +281,8 @@ function StageBody({
 }) {
     const content = useIntlayer("demo");
     const nameOf = useNames();
+    const decimal = decimalSeparator(LANGUAGES[locale].date);
+    const keyLabel = (key: Key) => (key === "." ? decimal : key);
     switch (step) {
         case "amount": {
             return (
@@ -286,7 +295,7 @@ function StageBody({
                             onClick={() => visit({ key, type: "key" })}
                             type="button"
                         >
-                            {key === "back" ? <DeleteGlyph /> : key}
+                            {key === "back" ? <DeleteGlyph /> : keyLabel(key)}
                         </button>
                     ))}
                 </div>

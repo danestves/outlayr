@@ -250,6 +250,11 @@
         color: var(--color-app-muted);
     }
 
+    .ui-cur-after {
+        margin-right: 0;
+        margin-left: 0.25em;
+    }
+
     .ui-cents {
         font-size: 0.38em;
         letter-spacing: 0;

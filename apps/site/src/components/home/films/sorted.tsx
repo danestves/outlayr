@@ -1,11 +1,12 @@
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useMoney } from "@/lib/use-money";
 import type { Act } from "@/stageshow/act";
 import { Count } from "@/stageshow/motion/Count";
 import { Stage } from "@/stageshow/stage";
 
-import { CategoryTile, FilmIcon, formatMoney, Logo, loopBack, Micro, Money, Ruled } from "./parts";
+import { CategoryTile, FilmIcon, Logo, loopBack, Micro, Money, Ruled } from "./parts";
 import type { LogoName } from "./parts";
 import { FILM_COMPACT_BELOW, FILM_SIZES } from "./sizes";
 
@@ -61,8 +62,6 @@ interface Upcoming {
     name: string;
 }
 
-const money = (value: number) => `$${Math.round(value).toLocaleString("en-US")}`;
-
 function Flip({ from, on, to }: { from: ReactNode; on: boolean; to: ReactNode }) {
     return (
         <span className="sorted-flip" data-on={on || undefined}>
@@ -103,6 +102,7 @@ function Row({
 }
 
 function Chip({ at, step, to }: { at: number; step: number; to: "budget" | "chase" | "upcoming" }) {
+    const money = useMoney();
     let state: "done" | "fly" | undefined;
     if (step === at) {
         state = "fly";
@@ -111,21 +111,22 @@ function Chip({ at, step, to }: { at: number; step: number; to: "budget" | "chas
     }
     return (
         <span className="sorted-chip" data-state={state} data-to={to}>
-            <span>−$42.00</span>
+            <span>{money(-42)}</span>
         </span>
     );
 }
 
 function AccountsPanel({ compact, step }: { compact: boolean; step: number }) {
     const copy = useIntlayer("film-sorted");
+    const money = useMoney();
     const accounts: readonly Account[] = [
-        { amount: "$9,450.00", currency: "USD", logo: "ally", name: "Ally Savings" },
-        { amount: "$3,412.40", currency: "USD", logo: "zinli", name: "Zinli" },
-        { amount: "Bs.486,000.00", currency: "VES", logo: "banesco", name: "Banesco" },
-        { amount: "$612.80", currency: "USD", logo: "paypal", name: "PayPal" },
-        { amount: "−$842.15", currency: "USD", logo: "applecard", name: "Apple Card" },
-        { amount: "−$1,240.55", currency: "USD", logo: "amex", name: "Amex Gold" },
-        { amount: "$220.00", currency: "USD", logo: "cash", name: copy.cash.value },
+        { amount: money(9450), currency: "USD", logo: "ally", name: "Ally Savings" },
+        { amount: money(3412.4), currency: "USD", logo: "zinli", name: "Zinli" },
+        { amount: money(486_000, { code: "VES" }), currency: "VES", logo: "banesco", name: "Banesco" },
+        { amount: money(612.8), currency: "USD", logo: "paypal", name: "PayPal" },
+        { amount: money(-842.15), currency: "USD", logo: "applecard", name: "Apple Card" },
+        { amount: money(-1240.55), currency: "USD", logo: "amex", name: "Amex Gold" },
+        { amount: money(220), currency: "USD", logo: "cash", name: copy.cash.value },
     ];
     return (
         <section className="sorted-accounts sorted-panel film-panel">
@@ -135,9 +136,9 @@ function AccountsPanel({ compact, step }: { compact: boolean; step: number }) {
                     hit={step === 3}
                     logo="chase"
                     name="Chase"
-                    sub={<Flip from="USD" on={step >= 3} to={`Costco ${formatMoney(-42)}`} />}
+                    sub={<Flip from="USD" on={step >= 3} to={`Costco ${money(-42)}`} />}
                 >
-                    <Count duration={900} format={formatMoney} value={step >= 3 ? CHASE.after : CHASE.before} />
+                    <Count duration={900} format={money} value={step >= 3 ? CHASE.after : CHASE.before} />
                 </Row>
                 {(compact ? accounts.slice(0, 1) : accounts).map((account) => (
                     <Row hit={false} key={account.name} logo={account.logo} name={account.name} sub={account.currency}>
@@ -172,6 +173,7 @@ function Chart({ landed }: { landed: boolean }) {
 
 function BudgetPanel({ compact, step }: { compact: boolean; step: number }) {
     const copy = useIntlayer("film-sorted");
+    const money = useMoney();
     const landed = step >= 5;
     return (
         <section className="sorted-budget sorted-panel film-panel">
@@ -185,7 +187,7 @@ function BudgetPanel({ compact, step }: { compact: boolean; step: number }) {
             <p className="sorted-caption">
                 {copy.left}
                 <span className="sorted-tag" data-in={landed || undefined}>
-                    {formatMoney(-42)}
+                    {money(-42)}
                 </span>
             </p>
             <Chart landed={landed} />
@@ -193,7 +195,7 @@ function BudgetPanel({ compact, step }: { compact: boolean; step: number }) {
                 <div className="sorted-stats">
                     <div>
                         <Micro>{copy.limit}</Micro>
-                        <b>$3,900</b>
+                        <b>{money(3900, { whole: true })}</b>
                     </div>
                     <div>
                         <Micro>{copy.spent}</Micro>
@@ -203,7 +205,7 @@ function BudgetPanel({ compact, step }: { compact: boolean; step: number }) {
                     </div>
                     <div>
                         <Micro>{copy.aDay}</Micro>
-                        <b>$57</b>
+                        <b>{money(57, { whole: true })}</b>
                     </div>
                 </div>
             )}
@@ -216,10 +218,10 @@ function BudgetPanel({ compact, step }: { compact: boolean; step: number }) {
                             <Count
                                 className="sorted-of-now"
                                 duration={900}
-                                format={formatMoney}
+                                format={money}
                                 value={landed ? GROCERIES.after : GROCERIES.before}
                             />{" "}
-                            {copy.of} {money(GROCERIES.limit)}
+                            {copy.of} {money(GROCERIES.limit, { whole: true })}
                         </span>
                     </div>
                     <span className="sorted-track">
@@ -236,16 +238,17 @@ function BudgetPanel({ compact, step }: { compact: boolean; step: number }) {
 
 function UpcomingPanel({ compact, step }: { compact: boolean; step: number }) {
     const copy = useIntlayer("film-sorted");
+    const money = useMoney();
     const items: readonly Upcoming[] = [
-        { amount: "−$85.00", date: `5 ${copy.oct.value}`, logo: "verizon", name: "Verizon" },
-        { amount: "−$11.99", date: `3 ${copy.oct.value}`, logo: "spotify", name: "Spotify" },
-        { amount: "−$1,850.00", date: `1 ${copy.oct.value}`, logo: "rent", name: copy.rent.value },
-        { amount: "−$22.99", date: `1 ${copy.oct.value}`, logo: "netflix", name: "Netflix" },
+        { amount: money(-85), date: `5 ${copy.oct.value}`, logo: "verizon", name: "Verizon" },
+        { amount: money(-11.99), date: `3 ${copy.oct.value}`, logo: "spotify", name: "Spotify" },
+        { amount: money(-1850), date: `1 ${copy.oct.value}`, logo: "rent", name: copy.rent.value },
+        { amount: money(-22.99), date: `1 ${copy.oct.value}`, logo: "netflix", name: "Netflix" },
     ];
     const logged = step >= 7;
     return (
         <section className="sorted-upcoming sorted-panel film-panel">
-            <Ruled left={copy.upcoming} right="−$2,163.96" />
+            <Ruled left={copy.upcoming} right={money(-2163.96)} />
             <div className="sorted-list">
                 {(compact ? items.slice(1) : items).map((item) => {
                     const spotify = item.logo === "spotify";
@@ -276,6 +279,7 @@ function UpcomingPanel({ compact, step }: { compact: boolean; step: number }) {
 
 function EntryCard({ compact, step }: { compact: boolean; step: number }) {
     const copy = useIntlayer("film-sorted");
+    const money = useMoney();
     return (
         <div className="sorted-entry" data-in={step >= 1 || undefined}>
             <Logo name="costco" size={compact ? 34 : 40} />
@@ -283,7 +287,7 @@ function EntryCard({ compact, step }: { compact: boolean; step: number }) {
                 <span className="sorted-name">Costco</span>
                 <span className="sorted-sub">{`${copy.groceries.value} · Chase`}</span>
             </span>
-            <span className="sorted-amount">{formatMoney(-42)}</span>
+            <span className="sorted-amount">{money(-42)}</span>
         </div>
     );
 }

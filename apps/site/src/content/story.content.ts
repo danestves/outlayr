@@ -259,7 +259,7 @@ const story = {
             label: t({ en: "The problem", de: "Das Problem", es: "El problema", pt: "O problema", fr: "Le problème" }),
             sentence: [
                 { tag: "", text: t({ en: "Spent", de: "Ausgegeben", es: "Gasté", pt: "Gastei", fr: "J'ai dépensé" }) },
-                { tag: "amount", text: t({ en: "$42.00", de: "$42.00", es: "$42.00", pt: "$42.00", fr: "$42.00" }) },
+                { tag: "amount", text: t({ en: "$42.00", de: "42,00 $", es: "$42.00", pt: "$ 42,00", fr: "42,00 $" }) },
                 { tag: "", text: t({ en: "at", de: "bei", es: "en", pt: "em", fr: "chez" }) },
                 {
                     tag: "merchant",

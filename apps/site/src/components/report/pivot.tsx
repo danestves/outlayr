@@ -23,8 +23,8 @@ function heat(color: string | null, value: number, low: number, high: number) {
     return { background: `color-mix(in oklab, ${color} ${share}%, transparent)` };
 }
 
-const percent = (change: number) =>
-    Math.abs(change) < SMALL_CHANGE ? "0%" : `${change > 0 ? "+" : ""}${Math.round(change * PERCENT)}%`;
+const percent = (change: number, format: (value: number) => string) =>
+    Math.abs(change) < SMALL_CHANGE ? format(0) : `${change > 0 ? "+" : ""}${format(Math.round(change * PERCENT))}`;
 
 function toneOf(change: number, measure: Report["measure"]) {
     if (Math.abs(change) < SMALL_CHANGE || measure === "count" || measure === "average") {
@@ -73,7 +73,7 @@ export function Pivot({ grouping, kind, report, words }: PivotProps) {
                         align="end"
                         className={`${CELL} ${strong ? "font-semibold" : ""} ${row.change === null ? "text-muted-foreground" : toneOf(row.change, measure)}`}
                     >
-                        {row.change === null ? "–" : percent(row.change)}
+                        {row.change === null ? "–" : percent(row.change, words.fmt.percent)}
                     </Table.Cell>
                 ) : null}
             </>
