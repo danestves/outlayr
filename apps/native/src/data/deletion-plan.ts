@@ -133,11 +133,14 @@ function purchasePlan(id: string, standing: Standing): Plan {
         .select({ id: transfers.id })
         .from(transfers)
         .where(and(standing(transfers), eq(transfers.installmentPlanId, id)));
+    // Past tombstones too: deleting pending installments leaves their late fees charged.
+    const cuotas = subquery.select({ id: installments.id }).from(installments).where(eq(installments.planId, id));
     const named = namedGone((column) => inArray(column, purchase.union(paid)), standing);
     const order = ordersGone(eq(installmentPlans.id, id), standing);
     return {
         gone: {
             ...named,
+            transactions: or(named.transactions, inArray(transactions.installmentId, cuotas)),
             installmentPlans: or(named.installmentPlans, order.gone.installmentPlans),
             installments: or(named.installments, order.gone.installments),
             outsidePayments: or(named.outsidePayments, order.gone.outsidePayments),
@@ -311,4 +314,18 @@ export function kept(table: DeletionTable, pending: PendingDeletes): SQL | undef
         })
     );
     return gone === undefined ? undefined : sql`not coalesce(${gone}, 0)`;
+}
+
+/** What a pending purchase delete takes from the lists that read entries past {@link kept}. */
+export function purchaseGoneIds(db: Database, planId: string): ReadonlySet<string> {
+    const { gone } = purchasePlan(planId, (row) => isNull(row.deletedAt));
+    const ids = (["transactions", "transfers", "outsidePayments"] as const).flatMap((name) => {
+        const table = TABLES[name];
+        return db
+            .select({ id: table.id })
+            .from(table)
+            .where(and(isNull(table.deletedAt), gone[name]))
+            .all();
+    });
+    return new Set(ids.map((row) => row.id));
 }

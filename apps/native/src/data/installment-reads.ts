@@ -10,6 +10,7 @@ import type { TransferLogRow } from "@/domain/transfer-log-rows";
 import { marketRateFor } from "@/domain/transfer-rate-options";
 
 import type { Account } from "./accounts-core";
+import { purchaseGoneIds } from "./deletion-plan";
 import { useLiveQuery } from "./live-query";
 import { useTransferRates } from "./transfer-rates";
 
@@ -52,6 +53,10 @@ export function planIdForPurchase(db: Database, transactionId: string): string |
 }
 
 const NO_CUOTAS: ReadonlySet<string> = new Set();
+
+export function usePendingPurchaseRows(db: Database, planId: string | null): ReadonlySet<string> {
+    return useMemo(() => (planId === null ? NO_CUOTAS : purchaseGoneIds(db, planId)), [db, planId]);
+}
 
 export function usePendingCuotas(db: Database, purchaseId: string | null): ReadonlySet<string> {
     return useMemo(() => {

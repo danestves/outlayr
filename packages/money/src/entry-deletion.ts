@@ -144,12 +144,17 @@ export function accountDeletionPlan(books: AccountDeletionBooks, accountId: stri
  */
 export function purchaseDeletionPlan(books: PurchaseDeletionBooks, planId: string) {
     const purchase = books.installmentPlans.find((plan) => plan.id === planId)?.transactionId;
+    const cuotas = new Set(books.installments.filter((row) => row.planId === planId).map((row) => row.id));
     const gone = deletionPlan(books, [
         ...(purchase === undefined ? [] : [purchase]),
         ...liveIds(books.transfers, (move) => move.installmentPlanId === planId),
     ]);
     return {
         ...gone,
+        transactions: new Set([
+            ...gone.transactions,
+            ...liveIds(books.transactions, (row) => row.installmentId != null && cuotas.has(row.installmentId)),
+        ]),
         installmentPlans: new Set([
             ...gone.installmentPlans,
             ...liveIds(books.installmentPlans, (plan) => plan.id === planId),

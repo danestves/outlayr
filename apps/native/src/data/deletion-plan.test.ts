@@ -121,6 +121,7 @@ async function seeded() {
             entry("groceries", { accountId: "card", categoryId: "food" }),
             entry("groceries fee", { accountId: "card", categoryId: "fees", feeForId: "groceries" }),
             entry("groceries payment", { accountId: "cash", installmentId: "g1" }),
+            entry("dropped cuota fee", { accountId: "card", categoryId: "fees", installmentId: "g2" }),
             entry("old lunch", { accountId: "card", categoryId: "food", deletedAt: EARLIER }),
             entry("payoff fee", { accountId: "cash", transferId: "payoff" }),
             entry("tagged wire fee", { categoryId: "tagged", transferId: "tagged move" }),
@@ -151,6 +152,7 @@ async function seeded() {
         { amount: 1, dueDate: AT, id: "i2", planId: "plan", sequence: 1, updatedAt: AT },
         { amount: 1, dueDate: AT, id: "other", planId: "other plan", sequence: 0, updatedAt: AT },
         { amount: 1, dueDate: AT, id: "g1", planId: "groceries plan", sequence: 0, updatedAt: AT },
+        { amount: 1, deletedAt: EARLIER, dueDate: AT, id: "g2", planId: "groceries plan", sequence: 1, updatedAt: AT },
     ]);
     await db.insert(outsidePayments).values([
         { amount: 1, date: AT, id: "outside", planId: "plan", updatedAt: AT },

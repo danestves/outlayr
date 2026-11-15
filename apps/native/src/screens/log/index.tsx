@@ -19,7 +19,7 @@ import { goesWithPendingDelete } from "@/data/card-fees-core";
 import { useCategoryMeta } from "@/data/categories";
 import { useLogOverviewIn } from "@/data/debts";
 import { useFavouriteCurrencies } from "@/data/favourite-currencies";
-import { usePendingCuotas } from "@/data/installment-reads";
+import { usePendingCuotas, usePendingPurchaseRows } from "@/data/installment-reads";
 import { useFilteredTransactions, useUpcomingTransactions } from "@/data/log-filtered";
 import { logPeriodFromStored, storedLogPeriod, useLogInsights, useSparklineRows } from "@/data/log-totals";
 import type { LogPeriod } from "@/data/log-totals";
@@ -298,6 +298,7 @@ export function Log() {
     const transferIds = new Set(transferRows.map((transfer) => transfer.id));
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const pendingCuotas = usePendingCuotas(db, pendingId);
+    const pendingPurchase = usePendingPurchaseRows(db, useDeferredDelete("purchase").pendingId);
     const openRowActions = useTransactionRowActions(nowMs, requestDelete);
     const cardOptions = { currency, showCents, swapTimeLabel, use24Hour };
     const shareDay = useDayCardShare(cardOptions);
@@ -312,8 +313,12 @@ export function Log() {
     const tailTransfers = transferRows.filter((transfer) => transfer.day.getTime() < splitMs);
     const listRows = headListRows(listFilter, head, filteredRows, transferRows, splitMs);
     const tailRows = listFilter === "all" ? mergeByRecency(tail, tailTransfers) : [];
-    const visibleRows = listRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
-    const keptTail = tailRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
+    const visibleRows = listRows.filter(
+        (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
+    );
+    const keptTail = tailRows.filter(
+        (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
+    );
     const visibleTail = keptTail.length === tailRows.length ? tailRows : keptTail;
     const headSections = groupByDay(visibleRows, currency, rates);
     const tailSections = groupTail(visibleTail);

@@ -21,7 +21,7 @@ import { useAccountTransfers } from "@/data/account-transfers";
 import { useAccountBalanceDetails, useAccounts, useAccountTransactions } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
 import { useAccountPayoff, useOutsideMoveRows } from "@/data/debts";
-import { useOutsidePaymentRows } from "@/data/installment-reads";
+import { useOutsidePaymentRows, usePendingPurchaseRows } from "@/data/installment-reads";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import type { Database } from "@/db/client";
@@ -158,7 +158,11 @@ function DetailBody({
     const checkSheetRef = useRef<BottomSheetModal>(null);
     const moveRows = useOutsideMoveRows(db, account, t("debts.field.outside"));
     const liveMoves = moveRows.filter((row) => row.id !== pendingId);
-    const rows = mergeByRecency(mergeByRecency(mergeByRecency(transactionRows, transferRows), outsideRows), liveMoves);
+    const pendingPurchase = usePendingPurchaseRows(db, useDeferredDelete("purchase").pendingId);
+    const rows = mergeByRecency(
+        mergeByRecency(mergeByRecency(transactionRows, transferRows), outsideRows),
+        liveMoves
+    ).filter((row) => !pendingPurchase.has(row.id));
     const sections = groupByDay(rows, account.currency, rates);
     const transferIds = new Set(transferRows.map((transfer) => transfer.id));
     // A transfer id is not a transaction id: `/transactions/[id]` finds nothing behind it.
