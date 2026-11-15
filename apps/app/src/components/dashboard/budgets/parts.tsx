@@ -535,7 +535,7 @@ export function Ghost({
                 alt=""
                 className={`light-only ${image}`}
                 height={height}
-                src={`/budgets/${name}.svg`}
+                src={`/art/budgets/${name}.svg`}
                 style={size}
                 width={width}
             />
@@ -543,7 +543,7 @@ export function Ghost({
                 alt=""
                 className={`dark-only ${image}`}
                 height={height}
-                src={`/budgets/${name}-dark.svg`}
+                src={`/art/budgets/${name}-dark.svg`}
                 style={size}
                 width={width}
             />

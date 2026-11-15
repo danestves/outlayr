@@ -27,12 +27,12 @@ const PUBLIC_FILE_RULES = {
     // Every file under /assets is content-hashed by Vite, so a URL never changes meaning.
     "/assets/**": { headers: { "cache-control": "public, max-age=31536000, immutable" } },
     "/apple-touch-icon.png": A_DAY,
-    "/budgets/**": A_DAY,
+    // Illustrations sit under /art so their rules cannot match a page such as /budgets or /goals/:id.
+    "/art/**": A_DAY,
     "/favicon-dark.png": A_DAY,
     "/favicon-light.png": A_DAY,
     "/favicon.ico": A_DAY,
     "/favicon.svg": A_DAY,
-    "/goals/**": A_DAY,
     "/onboarding-dark.webp": A_DAY,
     "/onboarding-light.webp": A_DAY,
     "/paywall-locked-light.svg": A_DAY,
