@@ -21,6 +21,15 @@ describe("termsFromPlan", () => {
         expect(termsFromPlan(rows).every).toBe("monthly");
     });
 
+    it("keeps a third upfront a third once cents rounding moved it", () => {
+        const rows = [
+            row(0, 33.33, day(2026, 10, 1)),
+            row(1, 33.33, day(2026, 11, 1)),
+            row(2, 33.34, day(2026, 12, 1)),
+        ];
+        expect(termsFromPlan(rows).upfront).toStrictEqual({ share: 1 / 3 });
+    });
+
     it("leaves the cadence out when an edited date fits no option", () => {
         const rows = [row(1, 50, day(2026, 10, 28)), row(2, 50, day(2026, 11, 13)), row(3, 50, day(2026, 11, 25))];
         expect(termsFromPlan(rows)).toStrictEqual({ count: 3, upfront: { amount: 0 } });

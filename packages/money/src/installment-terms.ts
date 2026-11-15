@@ -1,6 +1,6 @@
 import { toAccountKind } from "./account-kind";
 import { startOfLocalDay } from "./calendar";
-import { EVERY_ORDER, EVERY_OPTIONS, newInstallmentDraft } from "./installment-draft";
+import { EVERY_ORDER, EVERY_OPTIONS, newInstallmentDraft, UPFRONT_SHARES } from "./installment-draft";
 import type { InstallmentDraft } from "./installment-draft";
 import { generateSchedule } from "./installments";
 import { installmentAppId } from "./institution-map";
@@ -25,6 +25,15 @@ const APP_TERMS: ReadonlyMap<string, InstallmentTerms> = new Map([
 ]);
 
 const PERCENT = 100;
+// Cents rounding moves a saved ratio off its share ($33.33 of $100), so a near match takes the share itself.
+const KNOWN_SHARES = [...UPFRONT_SHARES, 0.25, 1 / 3];
+const SHARE_TOLERANCE = 0.005;
+
+function shareOf(ratio: number): number {
+    return (
+        KNOWN_SHARES.find((share) => Math.abs(ratio - share) < SHARE_TOLERANCE) ?? Math.round(ratio * PERCENT) / PERCENT
+    );
+}
 
 /** Only what the rows show for sure; a cadence the user edited away from every option is left out. */
 export function termsFromPlan(
@@ -39,8 +48,7 @@ export function termsFromPlan(
     const upfront = rows.find((row) => row.sequence === 0)?.amount ?? 0;
     const terms: Partial<InstallmentTerms> = {
         count: cuotas.length,
-        upfront:
-            upfront > 0 && total > 0 ? { share: Math.round((upfront / total) * PERCENT) / PERCENT } : { amount: 0 },
+        upfront: upfront > 0 && total > 0 ? { share: shareOf(upfront / total) } : { amount: 0 },
     };
     const days = cuotas.map((row) => startOfLocalDay(row.dueDate.getTime()));
     // A plan bought on the 31st clamps its first cuota to Feb 28, so the month's anchor is the latest day seen.
