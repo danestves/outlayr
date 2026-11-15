@@ -103,7 +103,11 @@ export const accountsQuery = queryOptions({
         if (error || !data) {
             throw new Error("Could not list sign-in methods");
         }
-        return data.map(({ createdAt, providerId }) => ({ linkedAt: new Date(createdAt).getTime(), providerId }));
+        return data.map(({ createdAt, id, providerId }) => ({
+            id,
+            linkedAt: new Date(createdAt).getTime(),
+            providerId,
+        }));
     },
     queryKey: ["auth", "accounts"],
     staleTime: AUTH_FRESH_MS,

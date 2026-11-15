@@ -129,7 +129,11 @@ const Sessions = Schema.Array(
     })
 );
 const SignIns = Schema.Array(
-    Schema.Struct({ createdAt: Schema.Union([Schema.String, Schema.Number]), providerId: Schema.String })
+    Schema.Struct({
+        createdAt: Schema.Union([Schema.String, Schema.Number]),
+        id: Schema.String,
+        providerId: Schema.String,
+    })
 );
 
 // Settings pages read these at once, so the server answers them before it renders instead of the browser after.
@@ -155,7 +159,8 @@ export const serverAccountState = createIsomorphicFn()
                 ...accountsQuery,
                 queryFn: async () => {
                     const signIns = await authGet(convexSiteUrl, "/list-accounts", SignIns);
-                    return signIns.map(({ createdAt, providerId }) => ({
+                    return signIns.map(({ createdAt, id, providerId }) => ({
+                        id,
                         linkedAt: new Date(createdAt).getTime(),
                         providerId,
                     }));

@@ -8,9 +8,7 @@ import type { ReactNode } from "react";
 
 import { AUTH_RESTORE_BUDGET_MS, authGate } from "@/domain/auth-gate";
 import type { AuthGate } from "@/domain/auth-gate";
-import { authClient, useAuthClientSession } from "@/lib/auth-client";
-
-type AuthClient = NonNullable<typeof authClient>;
+import { authClient, storedCookie, useAuthClientSession } from "@/lib/auth-client";
 
 export interface AuthSession {
     /** The Better Auth subject, or null whenever the gate is not `signed-in`. */
@@ -51,10 +49,10 @@ export function AuthSessionProvider({ children }: { children: ReactNode }) {
     if (authClient === null) {
         return <AuthSessionContext.Provider value={UNCONFIGURED}>{children}</AuthSessionContext.Provider>;
     }
-    return <LiveSession client={authClient}>{children}</LiveSession>;
+    return <LiveSession>{children}</LiveSession>;
 }
 
-function LiveSession({ client, children }: { client: AuthClient; children: ReactNode }) {
+function LiveSession({ children }: { children: ReactNode }) {
     const { data: session, isPending } = useAuthClientSession();
     const [provisional, setProvisional] = useState(false);
     const restoreExpired = AsyncResult.isSuccess(useAtomValue(restoreBudgetAtom));
@@ -62,7 +60,7 @@ function LiveSession({ client, children }: { client: AuthClient; children: React
     const begin = useCallback(() => setProvisional(true), []);
     const activate = useCallback(() => setProvisional(false), []);
     const reject = useCallback(() => setProvisional(false), []);
-    const restoring = isPending && client.getCookie() !== "";
+    const restoring = isPending && storedCookie() !== "";
     const value = useMemo(
         () => ({ ...sessionView(session, restoring, provisional, restoreExpired), activate, begin, reject }),
         [activate, begin, restoring, provisional, reject, restoreExpired, session]

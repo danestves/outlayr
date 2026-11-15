@@ -8,9 +8,8 @@ import { AuthSessionProvider, useAuthSession } from "./auth-session";
 const mockCookie = { current: "" };
 
 vi.mock<Partial<typeof import("@/lib/auth-client")>>(import("@/lib/auth-client"), () => ({
-    authClient: {
-        getCookie: () => mockCookie.current,
-    } as never,
+    authClient: {} as never,
+    storedCookie: () => mockCookie.current,
     useAuthClientSession: (() => ({ data: null, isPending: true })) as never,
 }));
 

@@ -362,14 +362,14 @@ function Profile({ onOpen }: { onOpen: (dialog: OpenDialog) => void }) {
 function ProviderRow({
     icon: Icon,
     label,
-    linkedAt,
+    linked,
     lastMethod,
     provider,
 }: {
     icon: IconSvgElement;
     label: string;
     lastMethod: boolean;
-    linkedAt: number | undefined;
+    linked: { id: string; linkedAt: number } | undefined;
     provider: "apple" | "google";
 }) {
     const { account } = useIntlayer("dashboard-settings");
@@ -378,7 +378,7 @@ function ProviderRow({
     const dateText = useDateText();
     return (
         <Row
-            hint={linkedAt ? `${account.linkedOn.value} ${dateText(linkedAt)}` : account.notLinked}
+            hint={linked ? `${account.linkedOn.value} ${dateText(linked.linkedAt)}` : account.notLinked}
             label={label}
             leading={
                 <Tile>
@@ -386,7 +386,7 @@ function ProviderRow({
                 </Tile>
             }
         >
-            {linkedAt ? (
+            {linked ? (
                 <AlertDialog>
                     <AlertDialog.Trigger
                         render={
@@ -403,7 +403,7 @@ function ProviderRow({
                             <AlertDialog.Action
                                 onClick={async () => {
                                     try {
-                                        await succeed(authClient.unlinkAccount({ providerId: provider }));
+                                        await succeed(authClient.unlinkAccount({ accountId: linked.id }));
                                         await client.invalidateQueries({ queryKey: accountsQuery.queryKey });
                                     } catch {
                                         toast.add({ title: account.failed.value, type: "destructive" });
@@ -438,9 +438,9 @@ function Methods({ onOpen }: { onOpen: (dialog: OpenDialog) => void }) {
     const { account } = useIntlayer("dashboard-settings");
     const { data } = useQuery(accountsQuery);
     const accounts = data ?? [];
-    const linkedAt = (provider: string) => accounts.find((item) => item.providerId === provider)?.linkedAt;
+    const linked = (provider: string) => accounts.find((item) => item.providerId === provider);
     const signIns = accounts.filter((item) => item.providerId !== "notion");
-    const hasPassword = linkedAt("credential") !== undefined;
+    const hasPassword = linked("credential") !== undefined;
     return (
         <Skeleton loading={data === undefined}>
             <SettingsCard
@@ -455,14 +455,14 @@ function Methods({ onOpen }: { onOpen: (dialog: OpenDialog) => void }) {
                     icon={AppleIcon}
                     label="Apple"
                     lastMethod={signIns.length === 1}
-                    linkedAt={linkedAt("apple")}
+                    linked={linked("apple")}
                     provider="apple"
                 />
                 <ProviderRow
                     icon={GoogleIcon}
                     label="Google"
                     lastMethod={signIns.length === 1}
-                    linkedAt={linkedAt("google")}
+                    linked={linked("google")}
                     provider="google"
                 />
                 <Row
