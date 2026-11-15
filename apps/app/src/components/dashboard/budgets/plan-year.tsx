@@ -25,6 +25,8 @@ import { periodKeyOfMonth, useYearPlan } from "./plan-model";
 import type { YearPlan } from "./plan-model";
 import { usePlanMonths, usePlanName, useShortRunSentence } from "./plan-parts";
 
+const LEFT_UNMEASURED = { height: 0, width: 1110 };
+
 const PERCENT = 100;
 const CHART_HEIGHT = 140;
 const ZERO_LINE = 112;
@@ -187,7 +189,7 @@ function EmptyKpis({ plan }: { plan: YearPlan }) {
 }
 
 function LeftChart({ projection }: { projection: YearProjection }) {
-    const [ref, { width }] = useBox<HTMLElement>();
+    const [ref, { width }] = useBox<HTMLElement>(LEFT_UNMEASURED);
     const money = useMoney();
     const months = usePlanMonths();
     const { chart } = useIntlayer("dashboard-budgets-plan");

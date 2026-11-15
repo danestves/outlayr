@@ -26,6 +26,9 @@ import { useBudgetFlows } from "./flow-context";
 import { MONTHS_AHEAD } from "./model";
 import type { BudgetLine, LineStatus } from "./model";
 
+const GAUGE_UNMEASURED = { height: 0, width: 366 };
+const PACE_UNMEASURED = { height: 0, width: 694 };
+
 export const BADGE = "h-[22px] rounded-md px-2 text-xs font-medium normal-nums";
 export const TINT = "var(--color-app-tint)";
 export const BAD = "var(--color-app-spend)";
@@ -230,7 +233,7 @@ export function PaceGauge({
     marker: number;
     spent: number;
 }) {
-    const [ref, { width }] = useBox<HTMLElement>();
+    const [ref, { width }] = useBox<HTMLElement>(GAUGE_UNMEASURED);
     const { whole } = useWholeMoney(currency);
     const top = Math.max(spent, limit, 1);
     const spentAt = spent / top;
@@ -338,7 +341,7 @@ export function PaceChart({
     limit: number | null;
     total: number;
 }) {
-    const [ref, { width }] = useBox<HTMLElement>();
+    const [ref, { width }] = useBox<HTMLElement>(PACE_UNMEASURED);
     const { whole } = useWholeMoney(currency);
     const date = useDateFormat();
     const top = chartTop(Math.max(limit ?? 0, ...daily));

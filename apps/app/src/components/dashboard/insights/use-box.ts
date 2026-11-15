@@ -7,7 +7,10 @@ interface Box {
 
 const NO_BOX: Box = { height: 0, width: 0 };
 
-/** The size an element is laid out at, so a chart can be drawn in real pixels. `before` stands in until measured. */
+/**
+ * The size an element is laid out at, so a chart can be drawn in real pixels. `before` stands in until measured
+ * and is what the server page draws at, so pass the width the element has in a 1440px window.
+ */
 export function useBox<Element extends HTMLElement = HTMLDivElement>(before: Box = NO_BOX) {
     const ref = useRef<Element>(null);
     const [box, setBox] = useState(before);

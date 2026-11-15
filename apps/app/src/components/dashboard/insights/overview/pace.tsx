@@ -1,4 +1,4 @@
-import { Plot, usePlot, xOf, yOf } from "panelui-web/plot";
+import { Plot } from "panelui-web/plot";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { SkeletonBox } from "skullet/react";
@@ -23,57 +23,68 @@ interface Tick {
     label: string;
 }
 
-/** Day labels where the frame puts them: every day of a week, every seventh of a month, each month of a year. */
-function DayTicks({ ticks }: { ticks: readonly Tick[] }) {
-    const { data, plot } = usePlot();
-    return (
-        <Plot.Overlay>
-            {ticks.map(({ index, label }) => (
-                <span
-                    className={`${AXIS} text-muted-foreground pointer-events-none absolute -bottom-[3px] -translate-x-1/2 whitespace-nowrap`}
-                    key={index}
-                    style={{ left: xOf(index, data.length, plot) }}
-                >
-                    {label}
-                </span>
-            ))}
-        </Plot.Overlay>
-    );
-}
+// Plot's own padding in panelui-web 0.17. The frame is drawn here, outside Plot, because Plot
+// draws only after it measures in the browser, and a server page would arrive without it.
+const PAD = { bottom: 22, left: 10, right: 10, top: 12 };
+
+const xAt = (index: number, total: number) =>
+    total <= 1 ? "50%" : `calc(${PAD.left}px + (100% - ${PAD.left + PAD.right}px) * ${index / (total - 1)})`;
+
+const yAt = (value: number, top: number, shift = 0) =>
+    `calc(${PAD.top}px + (100% - ${PAD.top + PAD.bottom}px) * ${1 - value / top} - ${shift}px)`;
 
 const HALF_LABEL = 7;
+const TAG_RISE = 34;
 
-function ValueTicks({ format, values }: { format: (value: number) => string; values: readonly number[] }) {
-    const { extent, plot } = usePlot();
-    const [floor, top] = extent;
+interface FrameProps {
+    end: number | null;
+    format: (value: number) => string;
+    last: number;
+    rules: readonly number[];
+    tag: ReactNode;
+    ticks: readonly Tick[];
+    top: number;
+    total: number;
+}
+
+/** Rules, axis labels and the tag above today's point, in the places Plot puts its marks. */
+function Frame({ end, format, last, rules, tag, ticks, top, total }: FrameProps) {
     return (
-        <Plot.Overlay>
-            {values.map((value) => (
-                <span
-                    className={`${AXIS} text-muted-foreground pointer-events-none absolute -left-7 leading-[14px]`}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+            {rules.map((value) => (
+                <div
+                    className="border-border absolute border-t"
                     key={value}
-                    style={{ top: yOf(value, plot, floor, top) - HALF_LABEL }}
+                    style={{ left: PAD.left, right: PAD.right, top: yAt(value, top) }}
+                />
+            ))}
+            {rules.map((value) => (
+                <span
+                    className={`${AXIS} text-muted-foreground absolute -left-7 leading-[14px]`}
+                    key={value}
+                    style={{ top: yAt(value, top, HALF_LABEL) }}
                 >
                     {format(value)}
                 </span>
             ))}
-        </Plot.Overlay>
-    );
-}
-
-/** A tag pinned above the last point of the line, as the frame labels where the span stands today. */
-function EndTag({ children, index, value }: { children: ReactNode; index: number; value: number }) {
-    const { data, extent, plot } = usePlot();
-    const [floor, top] = extent;
-    return (
-        <Plot.Overlay>
-            <span
-                className={`${FIGURE} bg-foreground text-background pointer-events-none absolute z-10 flex h-6 min-w-[104px] -translate-x-full items-center justify-center rounded-md px-2 text-xs font-semibold whitespace-nowrap`}
-                style={{ left: xOf(index, data.length, plot), top: yOf(value, plot, floor, top) - 34 }}
-            >
-                {children}
-            </span>
-        </Plot.Overlay>
+            {ticks.map(({ index, label }) => (
+                <span
+                    className={`${AXIS} text-muted-foreground absolute -bottom-[3px] -translate-x-1/2 whitespace-nowrap`}
+                    key={index}
+                    style={{ left: xAt(index, total) }}
+                >
+                    {label}
+                </span>
+            ))}
+            {tag && end !== null && last !== -1 ? (
+                <span
+                    className={`${FIGURE} bg-foreground text-background absolute z-10 flex h-6 min-w-[104px] -translate-x-full items-center justify-center rounded-md px-2 text-xs font-semibold whitespace-nowrap`}
+                    style={{ left: xAt(last, total), top: yAt(end, top, TAG_RISE) }}
+                >
+                    {tag}
+                </span>
+            ) : null}
+        </div>
     );
 }
 
@@ -103,42 +114,51 @@ export function PaceChart({ aspectRatio, label, names, points, tag }: PaceChartP
         return points.length <= WEEK_DAYS || index % WEEK_DAYS === 0 ? [{ index, label: fmt.date(day) }] : [];
     });
     return (
-        <Plot aspectRatio={aspectRatio} curve="linear" data={data} label={label} xDataKey="day" yDomain={[0, roomy]}>
-            {rules.map((value) => (
-                <Plot.Rule color="var(--color-border)" key={value} y={value} />
-            ))}
-            <Plot.Line color={USUAL} dashArray="4 4" dataKey="usual" strokeWidth={1.5} />
-            <Plot.Area color={TINT} dataKey="spent" opacity={0.1} />
-            <Plot.Line color={TINT} dataKey="spent" strokeWidth={2} />
-            <Plot.Dots color={TINT} dataKey="end" ringWidth={2} size={4} />
-            <DayTicks ticks={ticks} />
-            <ValueTicks format={fmt.axis} values={rules} />
-            <Plot.Cursor showLine={false} />
-            <Plot.Tooltip>
-                {(datum) => (
-                    <>
-                        <div className="text-muted-foreground">{fmt.date(String(datum.day))}</div>
-                        {datum.spent === null || datum.spent === undefined ? null : (
-                            <div className={`${FIGURE} flex justify-between gap-4`}>
-                                <span className="font-sans">{names.spent}</span>
-                                {fmt.amount(Number(datum.spent))}
-                            </div>
-                        )}
-                        {datum.usual === null || datum.usual === undefined ? null : (
-                            <div className={`${FIGURE} text-muted-foreground flex justify-between gap-4`}>
-                                <span className="font-sans">{names.usual}</span>
-                                {fmt.amount(Number(datum.usual))}
-                            </div>
-                        )}
-                    </>
-                )}
-            </Plot.Tooltip>
-            {tag && end !== null && last !== -1 ? (
-                <EndTag index={last} value={end}>
-                    {tag(fmt.whole(end))}
-                </EndTag>
-            ) : null}
-        </Plot>
+        <div className="relative">
+            <Plot
+                aspectRatio={aspectRatio}
+                curve="linear"
+                data={data}
+                label={label}
+                xDataKey="day"
+                yDomain={[0, roomy]}
+            >
+                <Plot.Line color={USUAL} dashArray="4 4" dataKey="usual" strokeWidth={1.5} />
+                <Plot.Area color={TINT} dataKey="spent" opacity={0.1} />
+                <Plot.Line color={TINT} dataKey="spent" strokeWidth={2} />
+                <Plot.Dots color={TINT} dataKey="end" ringWidth={2} size={4} />
+                <Plot.Cursor showLine={false} />
+                <Plot.Tooltip>
+                    {(datum) => (
+                        <>
+                            <div className="text-muted-foreground">{fmt.date(String(datum.day))}</div>
+                            {datum.spent === null || datum.spent === undefined ? null : (
+                                <div className={`${FIGURE} flex justify-between gap-4`}>
+                                    <span className="font-sans">{names.spent}</span>
+                                    {fmt.amount(Number(datum.spent))}
+                                </div>
+                            )}
+                            {datum.usual === null || datum.usual === undefined ? null : (
+                                <div className={`${FIGURE} text-muted-foreground flex justify-between gap-4`}>
+                                    <span className="font-sans">{names.usual}</span>
+                                    {fmt.amount(Number(datum.usual))}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </Plot.Tooltip>
+            </Plot>
+            <Frame
+                end={end}
+                format={fmt.axis}
+                last={last}
+                rules={rules}
+                tag={tag && end !== null ? tag(fmt.whole(end)) : null}
+                ticks={ticks}
+                top={roomy}
+                total={points.length}
+            />
+        </div>
     );
 }
 
