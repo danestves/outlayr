@@ -7,6 +7,7 @@ import type {
     CollectionConfig,
     CollectionOptions,
     DbClient,
+    DehydratedDbState,
     NonSingleResult,
     SyncConfig,
     UtilsRecord,
@@ -14,15 +15,15 @@ import type {
 import { ConvexError } from "convex/values";
 import { useMemo } from "react";
 
-import { CONVEX } from "./db";
+import { CONVEX, SERVER } from "./db";
 import type { LedgerConvex } from "./db";
 import type { LedgerBooks } from "./ledger-books";
-import { dropLedger } from "./ledger-cache";
 import { createLedgerSync, isSavedCursor } from "./ledger-sync";
 import type { LedgerSync, PulledRow } from "./ledger-sync";
 import { pushRows } from "./ledger-write";
 
 const convexOf = (db: DbClient) => db.requireDependency<LedgerConvex>(CONVEX);
+const onServer = (db: DbClient) => db.getDependency<boolean>(SERVER) === true;
 
 type TagTable = "tags" | "transactionTags";
 
@@ -33,11 +34,12 @@ type Stored = { [Table in Exclude<keyof LedgerBooks, "appMeta" | "exchangeRates"
 type DocTable = keyof Stored;
 type SyncedTable = DocTable | "appMeta";
 
-export interface MetaRow {
+// oxlint-disable-next-line typescript/consistent-type-definitions -- hydration chunks take string-keyed records, which an interface is not.
+export type MetaRow = {
     key: string;
     updatedAt: number;
     value: string | null;
-}
+};
 
 const metaOf = (row: PulledRow): MetaRow => ({
     key: row.localId,
@@ -107,9 +109,7 @@ export function ledgerSync(db: DbClient) {
     }
     const convex = convexOf(db);
     const engine = createLedgerSync({
-        onStale: () => {
-            void dropLedger().then(() => window.location.reload());
-        },
+        onStale: () => window.location.reload(),
         source: {
             head: () => convex.watchQuery(api.sync.currentSeq, {}),
             pull: (cursor) => convex.watchQuery(api.sync.pullSince, { cursor, tables: syncedTables }),
@@ -126,7 +126,44 @@ interface Storing<Row> {
     rowOf: (pulled: PulledRow) => Row;
 }
 
+type Seeded = DehydratedDbState["collections"][number]["rows"][number];
+
+const seeders = new Map<SyncedTable, (rows: readonly PulledRow[]) => Seeded[]>();
+
+// A row changed while the server paged through the pull comes back again on a later page, so the last copy wins.
+const seederOf =
+    <Row extends object>(storing: Storing<Row>) =>
+    (rows: readonly PulledRow[]) => {
+        const latest = new Map(
+            rows.map((row) => {
+                const value = storing.rowOf(row);
+                return [storing.getKey(value), { deleted: row.deletedAt !== null, value }] as const;
+            })
+        );
+        return [...latest].flatMap(([key, { deleted, value }]) =>
+            deleted && !storing.keepsDeleted ? [] : [{ key, value }]
+        );
+    };
+
+// The server pulls the whole ledger before it renders, so its tables are seeded through hydration and never subscribe.
+// The cursor is held only to hand it on to the browser's tables.
+const serverSync = <Row extends object>(): SyncConfig<Row, string> => {
+    let meta: unknown;
+    return {
+        exportSyncMeta: () => meta,
+        importSyncMeta: (seeded) => {
+            meta = seeded;
+        },
+        sync: ({ markReady }) => {
+            markReady();
+        },
+    };
+};
+
 const syncedConfig = <Row extends object>(db: DbClient, table: SyncedTable, storing: Storing<Row>) => {
+    if (onServer(db)) {
+        return { gcTime: 0, getKey: storing.getKey, id: `ledger.${table}`, sync: serverSync<Row>() };
+    }
     const sync: SyncConfig<Row, string> = {
         exportSyncMeta: () => ledgerSync(db).saved(),
         importSyncMeta: (meta) => {
@@ -157,9 +194,9 @@ const syncedConfig = <Row extends object>(db: DbClient, table: SyncedTable, stor
 
 const docs = <Table extends DocTable>(table: Table, keepsDeleted = true) => {
     syncedTables.push(table);
-    return collectionOptions(`ledger.${table}`, (db) =>
-        syncedConfig(db, table, { getKey: (row: Stored[Table]) => row.localId, keepsDeleted, rowOf: docOf<Table> })
-    );
+    const storing: Storing<Stored[Table]> = { getKey: (row) => row.localId, keepsDeleted, rowOf: docOf<Table> };
+    seeders.set(table, seederOf(storing));
+    return collectionOptions(`ledger.${table}`, (db) => syncedConfig(db, table, storing));
 };
 
 const saveMeta = async (db: DbClient, mutations: readonly { modified: MetaRow }[]) => {
@@ -178,8 +215,10 @@ const saveMeta = async (db: DbClient, mutations: readonly { modified: MetaRow }[
 
 const settings = () => {
     syncedTables.push("appMeta");
+    const storing: Storing<MetaRow> = { getKey: (row) => row.key, keepsDeleted: true, rowOf: metaOf };
+    seeders.set("appMeta", seederOf(storing));
     return collectionOptions("ledger.appMeta", (db): CollectionConfig<MetaRow, string> => ({
-        ...syncedConfig(db, "appMeta", { getKey: (row: MetaRow) => row.key, keepsDeleted: true, rowOf: metaOf }),
+        ...syncedConfig(db, "appMeta", storing),
         onInsert: ({ transaction }) => saveMeta(db, transaction.mutations),
         onUpdate: ({ transaction }) => saveMeta(db, transaction.mutations),
     }));
@@ -192,13 +231,19 @@ export const ledgerCollections = {
     budgets: ledgerTable(docs("budgets")),
     categories: ledgerTable(docs("categories")),
     exchangeRates: collectionOptions("ledger.exchangeRates", (db) =>
-        convexCollectionOptions({
-            client: convexOf(db),
-            getKey: (row) => row._id,
-            queryArgs: {},
-            id: "ledger.exchangeRates",
-            query: api.ledger.exchangeRates,
-        })
+        onServer(db)
+            ? {
+                  getKey: (row: ExchangeRate) => row._id,
+                  id: "ledger.exchangeRates",
+                  sync: serverSync<ExchangeRate>(),
+              }
+            : convexCollectionOptions({
+                  client: convexOf(db),
+                  getKey: (row) => row._id,
+                  queryArgs: {},
+                  id: "ledger.exchangeRates",
+                  query: api.ledger.exchangeRates,
+              })
     ),
     installmentPlans: ledgerTable(docs("installmentPlans")),
     installments: ledgerTable(docs("installments")),
@@ -211,6 +256,31 @@ export const ledgerCollections = {
     transactions: ledgerTable(docs("transactions", false)),
     transfers: ledgerTable(docs("transfers", false)),
 } satisfies Record<keyof LedgerBooks | TagTable, { id: string }>;
+
+export type ExchangeRate = LedgerBooks["exchangeRates"][number];
+
+export const syncedTableNames = (): readonly SyncedTable[] => syncedTables;
+
+// The same chunks a client sync would have written, with the cursor their rows reach.
+export function ledgerSeed(
+    rows: readonly PulledRow[],
+    cursor: number,
+    rates: readonly ExchangeRate[]
+): DehydratedDbState["collections"] {
+    const byTable = Map.groupBy(rows, (row) => row.table);
+    const synced = syncedTables.map((table) => ({
+        collectionId: `ledger.${table}`,
+        rows: seeders.get(table)?.(byTable.get(table) ?? []) ?? [],
+        syncMeta: { cursor },
+    }));
+    return [
+        ...synced,
+        {
+            collectionId: ledgerCollections.exchangeRates.id,
+            rows: rates.map((rate) => ({ key: rate._id, value: rate })),
+        },
+    ];
+}
 
 export const preloadLedger = (db: DbClient) =>
     Promise.all([load(db.collection(ledgerCollections.exchangeRates)), ...openers.map((open) => start(open(db)))]);

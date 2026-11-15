@@ -16,7 +16,6 @@ import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { KpiBand, KpiCell, Trend } from "@/components/dashboard/accounts/parts";
 import { useBox } from "@/components/dashboard/insights/use-box";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { Restoring } from "@/components/dashboard/shell/sampled";
 import { periodKindOf } from "@/lib/dashboard-series-period";
 
 import { BudgetFlowsProvider } from "./budget-flows";
@@ -432,17 +431,9 @@ function EmptyYear({ plan }: { plan: YearPlan }) {
 }
 
 function PlanYearBody() {
-    const { restoring } = useDashboard();
     const year = usePlanYear();
     const plan = useYearPlan(year.year);
     const empty = plan.projection.months.every((month) => month.categories.length === 0);
-    if (empty && restoring) {
-        return (
-            <Restoring>
-                <PlanYearBody />
-            </Restoring>
-        );
-    }
     return (
         <main className="@container flex min-h-full min-w-0 flex-col px-4 pb-5 sm:px-6">
             <YearBar year={year} />

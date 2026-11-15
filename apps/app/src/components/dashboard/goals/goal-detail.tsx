@@ -22,7 +22,6 @@ import { KpiBand, KpiCell, useChartRatio } from "@/components/dashboard/accounts
 import { Y_LABEL, useMonthShort } from "@/components/dashboard/accounts/worth-chart";
 import { useDateFormat, useMonthYear, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { Restoring } from "@/components/dashboard/shell/sampled";
 import { AccountTile } from "@/components/ledger/tiles";
 
 import { useGoalFlows } from "./flow-context";
@@ -569,21 +568,8 @@ function NotFound() {
     );
 }
 
-function SampleDetail() {
-    const [first] = useDashboard().ledger.books.savingsGoals;
-    return first ? <DetailPage goalId={first.localId} /> : null;
-}
-
 function DetailPage({ goalId }: { goalId: string }) {
     const detail = useDetail(goalId);
-    const { restoring } = useDashboard();
-    if (!detail && restoring) {
-        return (
-            <Restoring>
-                <SampleDetail />
-            </Restoring>
-        );
-    }
     if (!detail) {
         return <NotFound />;
     }

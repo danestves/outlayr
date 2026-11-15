@@ -18,7 +18,6 @@ import type { AccountRow } from "@/components/dashboard/accounts/model";
 import { KpiBand, KpiCell } from "@/components/dashboard/accounts/parts";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { Restoring } from "@/components/dashboard/shell/sampled";
 import { AccountTile } from "@/components/ledger/tiles";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
@@ -327,21 +326,8 @@ function NotFound() {
     );
 }
 
-function SampleDetail() {
-    const first = useDashboard().ledger.books.accounts.find((row) => row.kind === "person");
-    return first ? <DetailPage accountId={first.localId} /> : null;
-}
-
 function DetailPage({ accountId }: { accountId: string }) {
     const { accounts, row } = useDetail(accountId);
-    const { restoring } = useDashboard();
-    if (!row && restoring) {
-        return (
-            <Restoring>
-                <SampleDetail />
-            </Restoring>
-        );
-    }
     if (!row) {
         return <NotFound />;
     }

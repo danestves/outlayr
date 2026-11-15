@@ -327,7 +327,10 @@ export function createLedgerSync<Table extends string>({ onStale, source, tables
                 restored.set(table, saved.cursor);
             }
         },
-        saved: (): typeof SavedCursor.Type => ({ cursor: applied }),
+        // Before the first pull, the tables hold only the rows they were seeded with.
+        saved: (): typeof SavedCursor.Type => ({
+            cursor: begun || restored.size === 0 ? applied : Math.min(...restored.values()),
+        }),
         synced: () => {
             if (answered) {
                 return refusal ? Promise.reject(refusal) : Promise.resolve();

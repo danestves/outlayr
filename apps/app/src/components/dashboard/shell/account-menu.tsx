@@ -21,8 +21,8 @@ import * as Skullet from "skullet";
 import { SiteLink } from "@/components/site-link";
 import { useProfile } from "@/lib/account-state";
 import { authClient } from "@/lib/auth-client";
-import { forgetLedger } from "@/lib/ledger-cache";
 import { announceSessionChange } from "@/lib/session";
+import { forgetLedger } from "@/lib/unsent";
 
 export async function signOut() {
     Skullet.forgetShapes();

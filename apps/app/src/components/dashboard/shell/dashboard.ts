@@ -23,7 +23,6 @@ export interface Dashboard {
     ledger: Ledger;
     overview: Overview;
     photos: PhotoUrls;
-    restoring: boolean;
     setFilters: (patch: FilterPatch) => void;
 }
 

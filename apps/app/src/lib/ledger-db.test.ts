@@ -3,8 +3,7 @@ import { ConvexError } from "convex/values";
 import { describe, expect, it } from "vite-plus/test";
 
 import { ledgerDependencies } from "./db";
-import { LEDGER_CACHE_VERSION, snapshotOf, usableSnapshot } from "./ledger-cache";
-import { ledgerBooks, ledgerCollections, preloadLedger } from "./ledger-db";
+import { ledgerBooks, ledgerCollections, ledgerSeed, preloadLedger } from "./ledger-db";
 import type { PulledRow } from "./ledger-sync";
 import { fakeConvex, pulled } from "./test-convex";
 
@@ -22,6 +21,10 @@ const synced = async (rows: readonly PulledRow[]) => {
     await preloadLedger(tab.db);
     return tab;
 };
+
+const seedOf = (rows: readonly PulledRow[]) => ({
+    collections: ledgerSeed(rows, Math.max(0, ...rows.map((row) => row.seq)), []),
+});
 
 const entries = (db: DbClient) =>
     Object.fromEntries(ledgerBooks(db).transactions.map((row) => [row.localId, row.note]));
@@ -63,31 +66,37 @@ describe("ledger sync", () => {
     });
 });
 
-describe("ledger snapshot", () => {
-    it("shows the whole copy before the server answers", async () => {
+describe("server seed", () => {
+    it("shows every seeded row before the browser's own pull answers", async () => {
         const rows = Array.from({ length: ROWS }, (_, index) => entry(`t${index}`, index + 1));
-        const snapshot = snapshotOf((await synced(rows)).db, undefined, "owner");
-        const restored = open({ rows });
-        restored.convex.quiet();
+        const browser = open({ rows });
+        browser.convex.quiet();
 
-        restored.db.hydrate({ collections: snapshot.collections });
-        void preloadLedger(restored.db);
+        browser.db.hydrate(seedOf(rows));
+        void preloadLedger(browser.db);
 
-        expect(ledgerBooks(restored.db).transactions).toHaveLength(ROWS);
+        expect(ledgerBooks(browser.db).transactions).toHaveLength(ROWS);
     });
 
-    it("holds every ledger table, so a table declared outside the load is caught", async () => {
-        const snapshot = snapshotOf((await synced([entry("kept", 1)])).db, undefined, "owner");
-
-        expect(new Set(snapshot.collections.map((chunk) => chunk.collectionId))).toStrictEqual(
+    it("holds every ledger table, so a table declared outside the load is caught", () => {
+        expect(new Set(seedOf([entry("kept", 1)]).collections.map((chunk) => chunk.collectionId))).toStrictEqual(
             new Set(Object.values(ledgerCollections).map((options) => options.id))
         );
     });
 
-    it("pulls only what changed while the page was closed, and loses what was deleted", async () => {
+    it("drops a row deleted between the server's pull pages", () => {
+        const browser = open({ rows: [] });
+
+        browser.db.hydrate(
+            seedOf([entry("kept", 1), entry("deleted", 2), entry("edited", 3), entry("deleted", 4, { deletedAt: 9 })])
+        );
+
+        expect(entries(browser.db)).toStrictEqual({ edited: "entry edited", kept: "entry kept" });
+    });
+
+    it("pulls only what changed after the server rendered, and loses what was deleted", async () => {
         const before = [entry("kept", 1), entry("edited", 2), entry("deleted", 3)];
-        const snapshot = snapshotOf((await synced(before)).db, undefined, "owner");
-        const restored = open({
+        const browser = open({
             rows: [
                 entry("kept", 1),
                 entry("edited", 4, { fields: { note: "new" } }),
@@ -96,37 +105,28 @@ describe("ledger snapshot", () => {
             ],
         });
 
-        restored.db.hydrate({ collections: snapshot.collections });
-        expect(entries(restored.db)).toStrictEqual({
+        browser.db.hydrate(seedOf(before));
+        expect(entries(browser.db)).toStrictEqual({
             deleted: "entry deleted",
             edited: "entry edited",
             kept: "entry kept",
         });
-        await preloadLedger(restored.db);
+        await preloadLedger(browser.db);
 
-        expect(restored.convex.pulls).toStrictEqual([3, 6]);
-        expect(entries(restored.db)).toStrictEqual({ added: "entry added", edited: "new", kept: "entry kept" });
+        expect(browser.convex.pulls).toStrictEqual([3, 6]);
+        expect(entries(browser.db)).toStrictEqual({ added: "entry added", edited: "new", kept: "entry kept" });
     });
 
-    it("starts at the copy's cursor when the shell read the settings before the copy was restored", async () => {
+    it("starts at the seed's cursor when a table opened before the seed arrived", async () => {
         const before = [entry("kept", 1), pulled("appMeta", "showCents", 2, { fields: { value: "true" } })];
-        const snapshot = snapshotOf((await synced(before)).db, undefined, "owner");
-        const restored = open({ rows: [...before, entry("added", 3)] });
+        const browser = open({ rows: [...before, entry("added", 3)] });
 
-        void restored.db.collection(ledgerCollections.appMeta).preload();
+        void browser.db.collection(ledgerCollections.appMeta).preload();
         await Promise.resolve();
-        restored.db.hydrate({ collections: snapshot.collections });
-        await preloadLedger(restored.db);
+        browser.db.hydrate(seedOf(before));
+        await preloadLedger(browser.db);
 
-        expect(restored.convex.pulls).toStrictEqual([2, 3]);
-        expect(entries(restored.db)).toStrictEqual({ added: "entry added", kept: "entry kept" });
-    });
-
-    it("is never handed to another user or to code that reads a newer shape", () => {
-        const snapshot = { collections: [], photos: undefined, userId: "owner", version: LEDGER_CACHE_VERSION };
-
-        expect(usableSnapshot(snapshot, "owner")).toBe(snapshot);
-        expect(usableSnapshot(snapshot, "someone-else")).toBeUndefined();
-        expect(usableSnapshot({ ...snapshot, version: LEDGER_CACHE_VERSION - 1 }, "owner")).toBeUndefined();
+        expect(browser.convex.pulls).toStrictEqual([2, 3]);
+        expect(entries(browser.db)).toStrictEqual({ added: "entry added", kept: "entry kept" });
     });
 });

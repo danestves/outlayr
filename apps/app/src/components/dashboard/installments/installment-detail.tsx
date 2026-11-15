@@ -19,7 +19,6 @@ import { KpiBand, KpiCell } from "@/components/dashboard/accounts/parts";
 import { useGoalMoney } from "@/components/dashboard/goals/parts";
 import { titled, useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { Restoring } from "@/components/dashboard/shell/sampled";
 import { AccountTile } from "@/components/ledger/tiles";
 import { daysBetween } from "@/lib/ledger";
 
@@ -338,21 +337,8 @@ function NotFound() {
     );
 }
 
-function SampleDetail() {
-    const [first] = useDashboard().ledger.books.installmentPlans;
-    return first ? <DetailPage planId={first.localId} /> : null;
-}
-
 function DetailPage({ planId }: { planId: string }) {
     const view = usePlan(planId);
-    const { restoring } = useDashboard();
-    if (!view && restoring) {
-        return (
-            <Restoring>
-                <SampleDetail />
-            </Restoring>
-        );
-    }
     if (!view) {
         return <NotFound />;
     }

@@ -53,7 +53,7 @@ const TransactionsPending = lazy(async () => {
     return { default: pending.TransactionsPending };
 });
 
-// A restored ledger lands inside the hold, so a reload never loads, renders or measures the skeleton.
+// A quick first sync after sign-in lands inside the hold, so the skeleton never loads, renders or measures.
 function useHeld() {
     const [held, setHeld] = useState(true);
     useTimeout(() => setHeld(false), SKELETON_HOLD_MS, undefined);

@@ -7,7 +7,7 @@ import { routerWithDbClient } from "@tanstack/react-router-with-db";
 
 import { ENV } from "@/env";
 import { convexClient } from "@/lib/convex";
-import { ledgerDependencies } from "@/lib/db";
+import { ledgerDependencies, serverDependencies } from "@/lib/db";
 import type { Session } from "@/lib/session";
 
 import { routeTree } from "./routeTree.gen";
@@ -28,7 +28,8 @@ function queryClients() {
 
 export function getRouter() {
     const { convexQueryClient, queryClient } = queryClients();
-    const dbClient = new DbClient(convexQueryClient ? ledgerDependencies(convexQueryClient.convexClient) : {});
+    const ledger = convexQueryClient ? ledgerDependencies(convexQueryClient.convexClient) : {};
+    const dbClient = new DbClient(import.meta.env.SSR ? serverDependencies() : ledger);
     const session: Session = { token: null };
     const router = createRouter({
         context: { convexQueryClient, dbClient, queryClient, session },

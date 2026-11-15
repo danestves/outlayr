@@ -14,7 +14,6 @@ import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { KpiBand, KpiCell } from "@/components/dashboard/accounts/parts";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { Restoring } from "@/components/dashboard/shell/sampled";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { DebtFlowsProvider } from "./debt-flows";
@@ -289,16 +288,8 @@ function EmptyCard({ model }: { model: DebtsModel }) {
 function DebtsList() {
     const { newDebt, somethingIOwe, title } = useIntlayer("dashboard-debts");
     const { model } = useDebts();
-    const { restoring } = useDashboard();
     const { open } = useDebtFlows();
     const empty = model.owesYou.length + model.youOwe.length + model.settled.length + model.cards.length === 0;
-    if (empty && restoring) {
-        return (
-            <Restoring>
-                <DebtsList />
-            </Restoring>
-        );
-    }
     return (
         <main className="@container flex min-h-full min-w-0 flex-col px-4 pb-5 sm:px-6">
             <AccountsBar title={title}>
