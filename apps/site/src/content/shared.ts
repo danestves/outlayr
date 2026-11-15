@@ -26,10 +26,10 @@ export const OPEN_SOURCE_QUESTION = t({
 
 export const BUDGETS_SCREEN_ALT = t({
     en: "Outlayr Budgets screen: $1,018.59 left this month, a spending curve projected past the limit, and the note that on this pace the period ends $319 short.",
-    de: "Outlayr-Bildschirm „Budgets“: $1,018.59 übrig diesen Monat, eine Ausgabenkurve, die über das Limit hinausreicht, und der Hinweis, dass in diesem Tempo am Ende des Zeitraums $319 fehlen.",
+    de: "Outlayr-Bildschirm „Budgets“: 1.018,59 $ übrig diesen Monat, eine Ausgabenkurve, die über das Limit hinausreicht, und der Hinweis, dass in diesem Tempo am Ende des Zeitraums 319 $ fehlen.",
     es: "Pantalla de presupuestos de Outlayr: $1,018.59 disponibles este mes, una curva de gasto que pasa el límite y la nota de que, a este ritmo, te faltarán $319 al final del período.",
-    pt: "Tela de Orçamentos do Outlayr: $1,018.59 restantes neste mês, uma curva de gastos projetada além do limite e o aviso de que, nesse ritmo, o período termina com $319 faltando.",
-    fr: "Écran Budgets d'Outlayr : $1,018.59 restants ce mois-ci, une courbe de dépenses projetée au-delà de la limite, et la mention qu'à ce rythme la période se termine avec $319 de manque.",
+    pt: "Tela de Orçamentos do Outlayr: $ 1.018,59 restantes neste mês, uma curva de gastos projetada além do limite e o aviso de que, nesse ritmo, o período termina com $ 319 faltando.",
+    fr: "Écran Budgets d'Outlayr : 1 018,59 $ restants ce mois-ci, une courbe de dépenses projetée au-delà de la limite, et la mention qu'à ce rythme la période se termine avec 319 $ de manque.",
 });
 
 export const ACCOUNTS_SCREEN_ALT = t({

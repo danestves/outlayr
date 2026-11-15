@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { BLANK, CASTS, CATEGORIES, initialState, press, reduce } from "./sentence-model";
+import { BLANKS, CASTS, CATEGORIES, initialState, press, reduce } from "./sentence-model";
 import type { Key, State } from "./sentence-model";
 
 const typed = (keys: readonly Key[]) => keys.reduce(press, "");
@@ -26,22 +26,22 @@ describe("reduce", () => {
         keys.reduce((next, key) => reduce(next, { key, type: "key" }), state);
 
     it("files a whole draft on the footer press and clears the form", () => {
-        const draft = { ...BLANK, account: "Cash", amount: "9.5", category: "Coffee", merchant: "Blue Bottle" };
+        const draft = { ...BLANKS.en, account: "Cash", amount: "9.5", category: "Coffee", merchant: "Blue Bottle" };
         const next = reduce({ ...INITIAL, draft }, { type: "footer" });
         expect(next.log[0]).toMatchObject({ amount: 9.5, category: "Coffee", merchant: "Blue Bottle" });
         expect(next.log).toHaveLength(INITIAL.log.length);
-        expect(next.draft).toBe(BLANK);
+        expect(next.draft).toBe(BLANKS.en);
     });
 
     it("moves to the first missing step instead of filing a partial draft", () => {
-        const state = visit({ ...INITIAL, draft: BLANK }, ["5"]);
+        const state = visit({ ...INITIAL, draft: BLANKS.en }, ["5"]);
         const next = reduce(state, { type: "footer" });
         expect(next.step).toBe("merchant");
         expect(next.log).toBe(state.log);
     });
 
     it("holds the amount step and asks for an amount until one is typed", () => {
-        const draft = { ...BLANK, account: "Cash", category: "Coffee" };
+        const draft = { ...BLANKS.en, account: "Cash", category: "Coffee" };
         const pressed = reduce({ ...INITIAL, draft, step: "amount" }, { type: "footer" });
         const again = reduce(pressed, { type: "footer" });
         expect(again).toMatchObject({ needsAmount: true, step: "amount" });
@@ -50,18 +50,18 @@ describe("reduce", () => {
     });
 
     it("asks for an amount when Next wraps back to a blank amount", () => {
-        const draft = { ...BLANK, account: "Cash", category: "Coffee" };
+        const draft = { ...BLANKS.en, account: "Cash", category: "Coffee" };
         const next = reduce({ ...INITIAL, draft, step: "merchant" }, { type: "footer" });
         expect(next).toMatchObject({ needsAmount: true, step: "amount" });
     });
 
     it("suggests the category of a known merchant", () => {
-        const next = reduce({ ...INITIAL, draft: BLANK, step: "merchant" }, { type: "name", value: "Costco" });
+        const next = reduce({ ...INITIAL, draft: BLANKS.en, step: "merchant" }, { type: "name", value: "Costco" });
         expect(next.draft.category).toBe("Groceries");
     });
 });
 
-describe.each(["en", "de", "es"] as const)("the %s autoplay", (locale) => {
+describe.each(["en", "de", "es", "fr", "pt"] as const)("the %s autoplay", (locale) => {
     it("picks only options the stage shows and files each entry as scripted", () => {
         const { accounts, entries, recentMerchants } = CASTS[locale];
         for (const entry of entries) {

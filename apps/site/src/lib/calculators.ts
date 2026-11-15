@@ -1,8 +1,9 @@
-import { currencyDisplayFor, decimalsFor } from "@outlayr/money/currency";
+import { decimalsFor } from "@outlayr/money/currency";
+
+import { formatMoney } from "./money";
 
 const NOT_NUMBER = /[^\d.,]/gu;
 const SEPARATORS = /[.,]/gu;
-const GROUPS = /\B(?=(\d{3})+(?!\d))/gu;
 const MAX_DIGITS = 13;
 
 export function parseAmount(text: string, code: string): number {
@@ -15,12 +16,8 @@ export function parseAmount(text: string, code: string): number {
     return Number(`${whole}${fraction.padEnd(decimals, "0")}`);
 }
 
-export function formatAmount(minor: number, code: string): string {
-    const decimals = decimalsFor(code);
-    const { symbol } = currencyDisplayFor(code);
-    const [whole = "0", fraction] = (Math.abs(minor) / 10 ** decimals).toFixed(decimals).split(".");
-    const number = fraction ? `${whole.replaceAll(GROUPS, ",")}.${fraction}` : whole.replaceAll(GROUPS, ",");
-    return `${minor < 0 ? "-" : ""}${symbol === code ? `${code} ` : symbol}${number}`;
+export function formatAmount(minor: number, code: string, tag: string): string {
+    return formatMoney(minor / 10 ** decimalsFor(code), code, tag);
 }
 
 export function formatCodeAmount(minor: number, code: string, lang: string): string {

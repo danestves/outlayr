@@ -8,9 +8,9 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { LocalizedLink } from "@/components/localized-link";
 import { LogoMark } from "@/components/logo-mark";
+import { formatMoney, formatPercent } from "@/lib/money";
 import { reportOf } from "@/lib/report/model";
 import type { Measure, SharedReport } from "@/lib/report/model";
-import { money } from "@/lib/report/money";
 import { monthsOf, reportWords } from "@/lib/report/reading";
 import type { Reading } from "@/lib/report/reading";
 
@@ -32,21 +32,21 @@ function useSharedReading({ currency, unit }: Pick<SharedReport, "currency" | "u
         const dated = datedLocale(locale);
         const monthDay = new Intl.DateTimeFormat(dated, { day: "numeric", month: "short", timeZone: "UTC" });
         const shortMonth = new Intl.DateTimeFormat(dated, { month: "short", timeZone: "UTC" });
-        const compact = new Intl.NumberFormat("en-US", { maximumFractionDigits: 1, notation: "compact" });
-        const share = new Intl.NumberFormat(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+        const compact = new Intl.NumberFormat(dated, { maximumFractionDigits: 1, notation: "compact" });
         const percent = unit === "percent";
         const words = reportWords({
             copy,
             fmt: {
-                axis: (value) => (percent ? `${value}%` : compact.format(value).toLowerCase()),
+                axis: (value) => (percent ? formatPercent(value, dated) : compact.format(value).toLowerCase()),
                 date: (day) => monthDay.format(wallNoon(day)).replace(".", ""),
                 month: (key) => shortMonth.format(wallNoon(`${key}-15`)),
-                whole: (value) => money(value, currency),
+                whole: (value) =>
+                    formatMoney(value, currency, dated, value !== 0 && Math.abs(value) < 0.5 ? undefined : 0),
             },
             locale,
         });
         return percent
-            ? { ...words, measureValue: (_measure: Measure, value: number) => `${share.format(value)}%` }
+            ? { ...words, measureValue: (_measure: Measure, value: number) => formatPercent(value, dated, 1) }
             : words;
     }, [copy, currency, locale, unit]);
 }

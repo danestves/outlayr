@@ -1,21 +1,35 @@
 import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { currencyDisplayFor } from "@outlayr/money/currency";
 import { capture } from "@outlayr/shared/analytics";
+import { LANGUAGES } from "@outlayr/shared/i18n";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { useIntlayer } from "react-intlayer";
+import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
 import { formatAmount, formatCodeAmount } from "@/lib/calculators";
 import type { Cadence } from "@/lib/calculators";
+import { HOME_CURRENCY, moneyParts } from "@/lib/money";
 
 export const LABEL = "text-muted font-mono text-xs";
 export const BARE = "w-full min-w-0 bg-transparent focus-visible:outline-none";
 const SELECT = `select ${BARE} cursor-pointer pr-6`;
 const MAX_ROWS = 5;
-const CURRENCIES = PICKABLE_CURRENCY_CODES.map((code) => ({ label: code, value: code }));
 
 const TONES = { income: "text-income", spend: "text-spend" } as const;
+
+export function useToolLocale() {
+    const { locale } = useLocale();
+    return { home: HOME_CURRENCY[locale], tag: LANGUAGES[locale].date };
+}
+
+function useCurrencyOptions() {
+    const { home } = useToolLocale();
+    return [home, ...PICKABLE_CURRENCY_CODES.filter((code) => code !== home)].map((code) => ({
+        label: code,
+        value: code,
+    }));
+}
 
 export function Figure({
     code,
@@ -28,9 +42,10 @@ export function Figure({
     minor: number;
     tone?: keyof typeof TONES;
 }) {
+    const { tag } = useToolLocale();
     return (
         <span className={`font-mono font-medium whitespace-nowrap ${tone ? TONES[tone] : ""}`}>
-            {lang ? formatCodeAmount(minor, code, lang) : formatAmount(minor, code)}
+            {lang ? formatCodeAmount(minor, code, lang) : formatAmount(minor, code, tag)}
         </span>
     );
 }
@@ -101,11 +116,18 @@ export function AmountInput({
     onChange: (value: string) => void;
     value: string;
 }) {
+    const { tag } = useToolLocale();
+    const parts = moneyParts(1, code, tag);
+    const after =
+        parts.findIndex((part) => part.type === "currency") > parts.findIndex((part) => part.type === "integer");
+    const symbol = (
+        <span aria-hidden="true" className="text-muted">
+            {currencyDisplayFor(code).symbol}
+        </span>
+    );
     return (
         <span className="flex items-baseline gap-1 font-mono">
-            <span aria-hidden="true" className="text-muted">
-                {currencyDisplayFor(code).symbol}
-            </span>
+            {after ? null : symbol}
             <input
                 aria-label={label}
                 autoComplete="off"
@@ -114,6 +136,7 @@ export function AmountInput({
                 onChange={(event) => onChange(event.target.value)}
                 value={value}
             />
+            {after ? symbol : null}
         </span>
     );
 }
@@ -175,9 +198,10 @@ export function useCadences<T extends Cadence>(cadences: readonly T[]) {
 
 export function CurrencyField({ onChange, value }: { onChange: (code: string) => void; value: string }) {
     const { labels } = useIntlayer("tools");
+    const options = useCurrencyOptions();
     return (
         <Field label={labels.currency}>
-            <Choice onChange={onChange} options={CURRENCIES} value={value} />
+            <Choice onChange={onChange} options={options} value={value} />
         </Field>
     );
 }
@@ -264,11 +288,12 @@ export function RemoveButton({
 
 export function InlineCurrency({ onChange, value }: { onChange: (code: string) => void; value: string }) {
     const { labels } = useIntlayer("tools");
+    const options = useCurrencyOptions();
     return (
         <label className="flex items-center gap-3">
             <span className={LABEL}>{labels.currency}</span>
             <span className="w-20 font-mono">
-                <Choice onChange={onChange} options={CURRENCIES} value={value} />
+                <Choice onChange={onChange} options={options} value={value} />
             </span>
         </label>
     );

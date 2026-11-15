@@ -4,6 +4,8 @@ import type { Locale } from "@outlayr/shared/i18n";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { HOME_CURRENCY } from "@/lib/money";
+
 import { formatMoney, signedMoney } from "./money";
 import { useNames } from "./use-names";
 
@@ -40,12 +42,12 @@ const RECEIPT = {
         { left: "DM-DROGERIEMARKT", mark: 1, right: "" },
         { left: "FILIALE 214", mark: null, right: "" },
         { left: "21.09.2026", mark: 2, right: "14:32" },
-        { left: "KÜCHENROLLE", mark: null, right: "17.99" },
-        { left: "WASCHMITTEL PODS", mark: null, right: "12.49" },
-        { left: "BADETUCH", mark: null, right: "19.49" },
-        { left: "ZWISCHENSUMME", mark: null, right: "49.97" },
-        { left: "MWST", mark: null, right: "4.31" },
-        { left: "SUMME", mark: 3, right: "54.28" },
+        { left: "KÜCHENROLLE", mark: null, right: "17,99" },
+        { left: "WASCHMITTEL PODS", mark: null, right: "12,49" },
+        { left: "BADETUCH", mark: null, right: "19,49" },
+        { left: "ZWISCHENSUMME", mark: null, right: "49,97" },
+        { left: "MWST", mark: null, right: "4,31" },
+        { left: "SUMME", mark: 3, right: "54,28" },
         { left: "EC-KARTE", mark: null, right: "•••• 1008" },
     ],
     es: [
@@ -64,24 +66,24 @@ const RECEIPT = {
         { left: "MONOPRIX", mark: 1, right: "" },
         { left: "MAGASIN 214", mark: null, right: "" },
         { left: "21/09/2026", mark: 2, right: "14:32" },
-        { left: "ESSUIE-TOUT", mark: null, right: "17.99" },
-        { left: "LESSIVE CAPSULES", mark: null, right: "12.49" },
-        { left: "SERVIETTE DE BAIN", mark: null, right: "19.49" },
-        { left: "SOUS-TOTAL", mark: null, right: "49.97" },
-        { left: "TVA", mark: null, right: "4.31" },
-        { left: "TOTAL", mark: 3, right: "54.28" },
+        { left: "ESSUIE-TOUT", mark: null, right: "17,99" },
+        { left: "LESSIVE CAPSULES", mark: null, right: "12,49" },
+        { left: "SERVIETTE DE BAIN", mark: null, right: "19,49" },
+        { left: "SOUS-TOTAL", mark: null, right: "49,97" },
+        { left: "TVA", mark: null, right: "4,31" },
+        { left: "TOTAL", mark: 3, right: "54,28" },
         { left: "CB", mark: null, right: "•••• 1008" },
     ],
     pt: [
         { left: "DROGASIL", mark: 1, right: "" },
         { left: "LOJA 214", mark: null, right: "" },
         { left: "21/09/2026", mark: 2, right: "14:32" },
-        { left: "PAPEL TOALHA", mark: null, right: "17.99" },
-        { left: "SABAO EM CAPSULAS", mark: null, right: "12.49" },
-        { left: "TOALHA DE BANHO", mark: null, right: "19.49" },
-        { left: "SUBTOTAL", mark: null, right: "49.97" },
-        { left: "IMPOSTOS", mark: null, right: "4.31" },
-        { left: "TOTAL", mark: 3, right: "54.28" },
+        { left: "PAPEL TOALHA", mark: null, right: "17,99" },
+        { left: "SABAO EM CAPSULAS", mark: null, right: "12,49" },
+        { left: "TOALHA DE BANHO", mark: null, right: "19,49" },
+        { left: "SUBTOTAL", mark: null, right: "49,97" },
+        { left: "IMPOSTOS", mark: null, right: "4,31" },
+        { left: "TOTAL", mark: 3, right: "54,28" },
         { left: "VISA", mark: null, right: "•••• 1008" },
     ],
 } as const satisfies Record<Locale, readonly { left: string; mark: number | null; right: string }[]>;
@@ -103,11 +105,11 @@ const CSV_ROWS = {
         { amount: "-38.90", category: "Dining Out", date: "09/22", label: "TST* SUSHI WAY", matchedAt: 2 },
     ],
     de: [
-        { amount: "-142.18", category: "Shopping", date: "18.09.", label: "AMAZON.DE MKTP", matchedAt: 1 },
-        { amount: "-18.40", category: "Transport", date: "19.09.", label: "DB VERTRIEB GMBH", matchedAt: 1 },
-        { amount: "-4.00", category: "Subscriptions", date: "20.09.", label: "SPOTIFY", matchedAt: 1 },
-        { amount: "-6.25", category: "Coffee", date: "21.09.", label: "BALZAC COFFEE 0412", matchedAt: 2 },
-        { amount: "-38.90", category: "Dining Out", date: "22.09.", label: "LIEFERANDO*RESTAURANT", matchedAt: 2 },
+        { amount: "-142,18", category: "Shopping", date: "18.09.", label: "AMAZON.DE MKTP", matchedAt: 1 },
+        { amount: "-18,40", category: "Transport", date: "19.09.", label: "DB VERTRIEB GMBH", matchedAt: 1 },
+        { amount: "-4,00", category: "Subscriptions", date: "20.09.", label: "SPOTIFY", matchedAt: 1 },
+        { amount: "-6,25", category: "Coffee", date: "21.09.", label: "BALZAC COFFEE 0412", matchedAt: 2 },
+        { amount: "-38,90", category: "Dining Out", date: "22.09.", label: "LIEFERANDO*RESTAURANT", matchedAt: 2 },
     ],
     es: [
         { amount: "-142.18", category: "Shopping", date: "18/09", label: "MERCADOLIBRE*COMPRA", matchedAt: 1 },
@@ -117,18 +119,18 @@ const CSV_ROWS = {
         { amount: "-38.90", category: "Dining Out", date: "22/09", label: "RAPPI*RESTAURANTE", matchedAt: 2 },
     ],
     fr: [
-        { amount: "-142.18", category: "Shopping", date: "18/09", label: "AMAZON MKTP FR", matchedAt: 1 },
-        { amount: "-18.40", category: "Transport", date: "19/09", label: "SNCF INTERNET", matchedAt: 1 },
-        { amount: "-4.00", category: "Subscriptions", date: "20/09", label: "SPOTIFY", matchedAt: 1 },
-        { amount: "-6.25", category: "Coffee", date: "21/09", label: "COLUMBUS CAFE 0412", matchedAt: 2 },
-        { amount: "-38.90", category: "Dining Out", date: "22/09", label: "DELIVEROO*RESTAURANT", matchedAt: 2 },
+        { amount: "-142,18", category: "Shopping", date: "18/09", label: "AMAZON MKTP FR", matchedAt: 1 },
+        { amount: "-18,40", category: "Transport", date: "19/09", label: "SNCF INTERNET", matchedAt: 1 },
+        { amount: "-4,00", category: "Subscriptions", date: "20/09", label: "SPOTIFY", matchedAt: 1 },
+        { amount: "-6,25", category: "Coffee", date: "21/09", label: "COLUMBUS CAFE 0412", matchedAt: 2 },
+        { amount: "-38,90", category: "Dining Out", date: "22/09", label: "DELIVEROO*RESTAURANT", matchedAt: 2 },
     ],
     pt: [
-        { amount: "-142.18", category: "Shopping", date: "18/09", label: "MERCADOLIVRE*COMPRA", matchedAt: 1 },
-        { amount: "-18.40", category: "Transport", date: "19/09", label: "UBER *TRIP", matchedAt: 1 },
-        { amount: "-4.00", category: "Subscriptions", date: "20/09", label: "SPOTIFY", matchedAt: 1 },
-        { amount: "-6.25", category: "Coffee", date: "21/09", label: "STARBUCKS 0412", matchedAt: 2 },
-        { amount: "-38.90", category: "Dining Out", date: "22/09", label: "IFOOD *RESTAURANTE", matchedAt: 2 },
+        { amount: "-142,18", category: "Shopping", date: "18/09", label: "MERCADOLIVRE*COMPRA", matchedAt: 1 },
+        { amount: "-18,40", category: "Transport", date: "19/09", label: "UBER *TRIP", matchedAt: 1 },
+        { amount: "-4,00", category: "Subscriptions", date: "20/09", label: "SPOTIFY", matchedAt: 1 },
+        { amount: "-6,25", category: "Coffee", date: "21/09", label: "STARBUCKS 0412", matchedAt: 2 },
+        { amount: "-38,90", category: "Dining Out", date: "22/09", label: "IFOOD *RESTAURANTE", matchedAt: 2 },
     ],
 } as const satisfies Record<
     Locale,
@@ -161,6 +163,7 @@ function Frame({ children, status, tag }: { children: ReactNode; status: ReactNo
 
 function Logged({ amount, category, merchant }: { amount: number; category: string; merchant: string }) {
     const { log } = useIntlayer("demo");
+    const { locale } = useLocale();
     const nameOf = useNames();
     return (
         <div className={`mt-auto ${FADE_IN}`}>
@@ -170,7 +173,9 @@ function Logged({ amount, category, merchant }: { amount: number; category: stri
                     <p className="truncate font-semibold">{merchant}</p>
                     <p className="text-muted mt-0.5 text-sm">{nameOf(category)}</p>
                 </div>
-                <span className="shrink-0 font-mono tabular-nums">{signedMoney(amount, "USD", false)}</span>
+                <span className="shrink-0 font-mono tabular-nums">
+                    {signedMoney(amount, HOME_CURRENCY[locale], false, locale)}
+                </span>
             </div>
         </div>
     );
@@ -210,7 +215,9 @@ export function SayPanel({ frame }: PanelProps) {
             <div className="flex h-28 shrink-0 flex-col justify-center">
                 {heard ? (
                     <div className={FADE_IN}>
-                        <p className="text-4xl font-semibold tracking-tight tabular-nums">{formatMoney(12.5, "USD")}</p>
+                        <p className="text-4xl font-semibold tracking-tight tabular-nums">
+                            {formatMoney(12.5, HOME_CURRENCY[locale], locale)}
+                        </p>
                         <p className="mt-1 text-lg">
                             <span className="text-muted">{voiceAt}</span> {shop}
                         </p>
@@ -272,7 +279,7 @@ export function ScanPanel({ frame }: PanelProps) {
     const fields = [
         { id: "store", label: scan.store, shownAt: 1, value: STORE[locale] },
         { id: "date", label: scan.date, shownAt: 2, value: scan.dateValue },
-        { id: "total", label: scan.total, shownAt: 3, value: formatMoney(54.28, "USD") },
+        { id: "total", label: scan.total, shownAt: 3, value: formatMoney(54.28, HOME_CURRENCY[locale], locale) },
         { id: "category", label: scan.category, shownAt: 4, value: nameOf("Shopping") },
     ];
     return (

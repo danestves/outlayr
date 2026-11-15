@@ -98,6 +98,11 @@
     font-size: 23px;
 }
 
+.log-sign--after {
+    margin-right: 0;
+    margin-left: 4px;
+}
+
 .log-currency {
     display: inline-flex;
     align-items: center;

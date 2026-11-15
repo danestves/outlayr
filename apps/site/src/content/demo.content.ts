@@ -47,6 +47,13 @@ const demo = {
             next: t({ en: "Next", de: "Weiter", es: "Siguiente", pt: "Próximo", fr: "Suivant" }),
         },
         currencies: {
+            BRL: t({
+                en: "Brazilian Real",
+                de: "Brasilianischer Real",
+                es: "Real brasileño",
+                pt: "Real brasileiro",
+                fr: "Réal brésilien",
+            }),
             EUR: t({ en: "Euro", de: "Euro", es: "Euro", pt: "Euro", fr: "Euro" }),
             MXN: t({
                 en: "Mexican Peso",
@@ -201,10 +208,10 @@ const demo = {
         said: {
             first: t({
                 en: "$12.50 at Blue Bottle for coffee on my Apple Card",
-                de: "$12.50 bei Balzac Coffee für Kaffee mit meiner Sparkasse-Karte",
+                de: "12,50 € bei Balzac Coffee für Kaffee mit meiner Sparkasse-Karte",
                 es: "$12.50 de café en Juan Valdez con mi tarjeta Nu",
-                pt: "$12.50 de café no Starbucks com meu cartão Nubank",
-                fr: "$12.50 chez Columbus Café pour un café avec ma carte Boursorama",
+                pt: "R$ 12,50 de café no Starbucks com meu cartão Nubank",
+                fr: "12,50 € chez Columbus Café pour un café avec ma carte Boursorama",
             }),
             fix: t({
                 en: "Actually, that was yesterday",
@@ -243,10 +250,10 @@ const demo = {
         },
         sizer: t({
             en: "Received $1,450.00 USD from Upwork for Freelance into Zinli yesterday.",
-            de: "Ausgegeben $1,450.00 USD bei einem Händler für eine Kategorie mit einem Konto heute.",
+            de: "Ausgegeben 1.450,00 $ USD bei einem Händler für eine Kategorie mit einem Konto heute.",
             es: "Recibí $1,450.00 USD de un comercio para una categoría en una cuenta ayer.",
-            pt: "Recebi $1,450.00 USD de um estabelecimento para uma categoria em uma conta ontem.",
-            fr: "J'ai dépensé $1,450.00 USD chez un commerçant pour une catégorie avec un compte aujourd'hui.",
+            pt: "Recebi $ 1.450,00 USD de um estabelecimento para uma categoria em uma conta ontem.",
+            fr: "J'ai dépensé 1 450,00 $ USD chez un commerçant pour une catégorie avec un compte aujourd'hui.",
         }),
         status: {
             draft: t({ en: "Draft", de: "Entwurf", es: "Borrador", pt: "Rascunho", fr: "Brouillon" }),

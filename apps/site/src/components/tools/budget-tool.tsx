@@ -3,8 +3,20 @@ import { useIntlayer } from "react-intlayer";
 
 import { BUDGET_SPLITS, PER_YEAR, formatAmount, parseAmount, splitBudget } from "@/lib/calculators";
 import type { BudgetSplit } from "@/lib/calculators";
+import { formatPercent } from "@/lib/money";
 
-import { AmountInput, Choice, CurrencyField, Field, Fields, Figure, LABEL, ToolPanel, useCadences } from "./tool-kit";
+import {
+    AmountInput,
+    Choice,
+    CurrencyField,
+    Field,
+    Fields,
+    Figure,
+    LABEL,
+    ToolPanel,
+    useCadences,
+    useToolLocale,
+} from "./tool-kit";
 
 const SLUG = "50-30-20-budget-calculator";
 const CADENCES = ["week", "twoWeeks", "month", "year"] as const;
@@ -18,7 +30,8 @@ export function BudgetTool() {
     const { labels, pages } = useIntlayer("tools");
     const page = pages[SLUG];
     const cadences = useCadences(CADENCES);
-    const [code, setCode] = useState("USD");
+    const { home, tag } = useToolLocale();
+    const [code, setCode] = useState<string>(home);
     const [income, setIncome] = useState("3000");
     const [every, setEvery] = useState<Every>("month");
     const [split, setSplit] = useState<BudgetSplit>("50-30-20");
@@ -72,9 +85,11 @@ export function BudgetTool() {
                                 <span className="font-semibold">{bucket.name}</span>
                                 <span className="text-muted mt-1 block text-sm">{bucket.text}</span>
                             </th>
-                            <td className={CELL}>{BUDGET_SPLITS[split][index]}%</td>
-                            <td className={CELL}>{formatAmount(month[index] ?? 0, code)}</td>
-                            <td className={`${CELL} hidden sm:table-cell`}>{formatAmount(year[index] ?? 0, code)}</td>
+                            <td className={CELL}>{formatPercent(BUDGET_SPLITS[split][index] ?? 0, tag)}</td>
+                            <td className={CELL}>{formatAmount(month[index] ?? 0, code, tag)}</td>
+                            <td className={`${CELL} hidden sm:table-cell`}>
+                                {formatAmount(year[index] ?? 0, code, tag)}
+                            </td>
                         </tr>
                     ))}
                 </tbody>

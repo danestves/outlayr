@@ -2,6 +2,7 @@ import { Fragment, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
+import { useMoney } from "@/lib/use-money";
 import type { Act } from "@/stageshow/act";
 import { Stage } from "@/stageshow/stage";
 
@@ -171,6 +172,7 @@ function Sentence({
 
 export function CaptureFilm() {
     const copy = useIntlayer("film-capture");
+    const money = useMoney();
     const sentence = copy.sentence.value;
     const slots: Record<Tag, string> = {
         account: copy.slots.account.value,
@@ -316,14 +318,14 @@ export function CaptureFilm() {
                         </div>
                     </div>
                     <div className="cap-result film-panel film-rise" data-in={saved || undefined} data-layout={layout}>
-                        <Ruled left={copy.today} right="−$42.00" />
+                        <Ruled left={copy.today} right={money(-42)} />
                         <div className="cap-row">
                             <Logo name="costco" size={layout === "compact" ? 36 : 40} />
                             <span className="cap-who">
                                 <b>Costco</b>
                                 <Micro>{copy.sub}</Micro>
                             </span>
-                            <span className="cap-amount">−$42.00</span>
+                            <span className="cap-amount">{money(-42)}</span>
                         </div>
                     </div>
                 </div>

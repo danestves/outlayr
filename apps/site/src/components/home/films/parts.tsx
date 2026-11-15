@@ -8,27 +8,18 @@ import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { CSSProperties, ReactNode } from "react";
 
+import { useCurrencyMarks } from "@/lib/use-money";
 import type { Act } from "@/stageshow/act";
 import { Count } from "@/stageshow/motion/Count";
 
 import "./films.css";
 
-const MINUS = "−";
-
 function splitMoney(value: number) {
     const cents = Math.round(Math.abs(value) * 100);
-    return { cents: cents % 100, negative: value < 0 && cents > 0, whole: Math.floor(cents / 100) };
+    return { cents: cents % 100, whole: Math.floor(cents / 100) };
 }
 
-const group = (value: number) => Math.round(value).toLocaleString("en-US");
 const pad = (value: number) => String(Math.round(value)).padStart(2, "0");
-
-export function formatMoney(value: number, { plus = false } = {}) {
-    const { cents, negative, whole } = splitMoney(value);
-    const positive = plus && value > 0 ? "+" : "";
-    const sign = negative ? MINUS : positive;
-    return `${sign}$${group(whole)}.${pad(cents)}`;
-}
 
 export function Micro({ children, style }: { children: ReactNode; style?: CSSProperties }) {
     return (
@@ -48,14 +39,20 @@ export function Ruled({ left, right, style }: { left: ReactNode; right?: ReactNo
 }
 
 export function Money({ value, size, sign = "" }: { sign?: string; size: number; value: number }) {
+    const { decimal, prefix, suffix, tag } = useCurrencyMarks();
     const { cents, whole } = splitMoney(value);
     return (
         <div className="film-money" style={{ fontSize: size }}>
-            <span className="film-money__sign">{sign}$</span>
-            <Count duration={900} format={group} value={whole} />
-            <span className="film-money__cents">
-                .<Count duration={900} format={pad} value={cents} />
+            <span className="film-money__sign">
+                {sign}
+                {prefix}
             </span>
+            <Count duration={900} format={(n) => Math.round(n).toLocaleString(tag)} value={whole} />
+            <span className="film-money__cents">
+                {decimal}
+                <Count duration={900} format={pad} value={cents} />
+            </span>
+            {suffix === "" ? null : <span className="film-money__sign film-money__sign--after">{suffix}</span>}
         </div>
     );
 }

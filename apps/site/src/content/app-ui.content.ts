@@ -19,10 +19,10 @@ const appUi = {
             daysLeft: t({ en: "18d left", de: "noch 18 T.", es: "quedan 18d", pt: "faltam 18d", fr: "encore 18 j" }),
             label: t({
                 en: "Budgets: $1,018.59 left this month of a $3,900 limit, $2,881 spent, $57 a day. On this pace the month ends $319 short.",
-                de: "Budgets: $1,018.59 übrig diesen Monat bei einem Limit von $3,900, $2,881 ausgegeben, $57 pro Tag. In diesem Tempo fehlen am Monatsende $319.",
+                de: "Budgets: 1.018,59 $ übrig diesen Monat bei einem Limit von 3.900 $, 2.881 $ ausgegeben, 57 $ pro Tag. In diesem Tempo fehlen am Monatsende 319 $.",
                 es: "Presupuestos: quedan $1,018.59 este mes de un límite de $3,900, $2,881 gastados, $57 al día. A este ritmo, el mes termina $319 por debajo.",
-                pt: "Orçamentos: $1,018.59 disponíveis este mês de um limite de $3,900, $2,881 gastos, $57 por dia. Nesse ritmo, o mês fecha $319 no vermelho.",
-                fr: "Budgets : $1,018.59 restants ce mois-ci sur une limite de $3,900, $2,881 dépensés, $57 par jour. À ce rythme, le mois se termine avec $319 de déficit.",
+                pt: "Orçamentos: $ 1.018,59 disponíveis este mês de um limite de $ 3.900, $ 2.881 gastos, $ 57 por dia. Nesse ritmo, o mês fecha $ 319 no vermelho.",
+                fr: "Budgets : 1 018,59 $ restants ce mois-ci sur une limite de 3 900 $, 2 881 $ dépensés, 57 $ par jour. À ce rythme, le mois se termine avec 319 $ de déficit.",
             }),
             left: t({
                 en: "left this month",
@@ -61,19 +61,19 @@ const appUi = {
             income: t({ en: "Income", de: "Einnahmen", es: "Ingreso", pt: "Receita", fr: "Revenus" }),
             label: t({
                 en: "Insights for 6 to 12 Sep: $597.95 spent, 74% less than the week before. Income $1,450, net $852.05.",
-                de: "Auswertungen vom 6. bis 12. Sept.: $597.95 ausgegeben, 74 % weniger als in der Woche davor. Einnahmen $1,450, netto $852.05.",
+                de: "Auswertungen vom 6. bis 12. Sept.: 597,95 $ ausgegeben, 74 % weniger als in der Woche davor. Einnahmen 1.450 $, netto 852,05 $.",
                 es: "Estadísticas del 6 al 12 de sep: $597.95 gastados, 74 % menos que la semana anterior. Ingresos $1,450, neto $852.05.",
-                pt: "Estatísticas de 6 a 12 de set: $597.95 gastos, 74% a menos que na semana anterior. Receita $1,450, líquido $852.05.",
-                fr: "Statistiques du 6 au 12 sept. : $597.95 dépensés, 74 % de moins que la semaine précédente. Revenus $1,450, net $852.05.",
+                pt: "Estatísticas de 6 a 12 de set: $ 597,95 gastos, 74% a menos que na semana anterior. Receita $ 1.450, líquido $ 852,05.",
+                fr: "Statistiques du 6 au 12 sept. : 597,95 $ dépensés, 74 % de moins que la semaine précédente. Revenus 1 450 $, net 852,05 $.",
             }),
             movers: t({ en: "Movers", de: "Veränderungen", es: "Cambios", pt: "Variações", fr: "Variations" }),
             net: t({ en: "Net", de: "Netto", es: "Neto", pt: "Líquido", fr: "Net" }),
             note: t({
                 en: "$1,685.51 less than 30 Aug – 5 Sep. Rent alone gave back $1,850.00.",
-                de: "$1,685.51 weniger als vom 30. Aug. bis 5. Sept. Allein die Miete brachte $1,850.00 zurück.",
+                de: "1.685,51 $ weniger als vom 30. Aug. bis 5. Sept. Allein die Miete brachte 1.850,00 $ zurück.",
                 es: "$1,685.51 menos que 30 ago – 5 sep. Solo Renta bajó $1,850.00.",
-                pt: "$1,685.51 a menos que 30 ago a 5 set. Só Aluguel caiu $1,850.00.",
-                fr: "$1,685.51 de moins que du 30 août au 5 sept., dont $1,850.00 rien que sur Loyer.",
+                pt: "$ 1.685,51 a menos que 30 ago a 5 set. Só Aluguel caiu $ 1.850,00.",
+                fr: "1 685,51 $ de moins que du 30 août au 5 sept., dont 1 850,00 $ rien que sur Loyer.",
             }),
             range: t({
                 en: "Spent · 6 – 12 Sep",
@@ -102,10 +102,10 @@ const appUi = {
         upcoming: {
             label: t({
                 en: "Upcoming: $2,036.54 a month across Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, rent, Netflix, and Planet Fitness.",
-                de: "Demnächst: $2,036.54 im Monat für Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, Miete, Netflix und Planet Fitness.",
+                de: "Demnächst: 2.036,54 $ im Monat für Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, Miete, Netflix und Planet Fitness.",
                 es: "Próximos: $2,036.54 al mes entre Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, renta, Netflix y Planet Fitness.",
-                pt: "Próximos: $2,036.54 por mês entre Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, aluguel, Netflix e Planet Fitness.",
-                fr: "À venir : $2,036.54 par mois pour Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, le loyer, Netflix et Planet Fitness.",
+                pt: "Próximos: $ 2.036,54 por mês entre Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, aluguel, Netflix e Planet Fitness.",
+                fr: "À venir : 2 036,54 $ par mois pour Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, le loyer, Netflix et Planet Fitness.",
             }),
             perMonth: t({ en: "Per month", de: "Pro Monat", es: "Al mes", pt: "Por mês", fr: "Par mois" }),
             rent: t({ en: "Rent", de: "Miete", es: "Renta", pt: "Aluguel", fr: "Loyer" }),

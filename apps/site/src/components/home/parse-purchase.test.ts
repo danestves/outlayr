@@ -30,6 +30,16 @@ describe("parsePurchase", () => {
         });
     });
 
+    it.each([
+        { currency: "EUR", locale: "de", text: "balzac coffee 4,50" },
+        { currency: "EUR", locale: "fr", text: "columbus café 4,50" },
+        { currency: "BRL", locale: "pt", text: "starbucks 4,50" },
+        { currency: "BRL", locale: "en", text: "starbucks R$ 4,50" },
+        { currency: "USD", locale: "de", text: "balzac coffee 4,50 $" },
+    ] as const)("reads '$text' on /$locale as $currency", ({ currency, locale, text }) => {
+        expect(parsePurchase(text, locale)).toMatchObject({ amount: 4.5, currency });
+    });
+
     it("leaves unfinished fields empty instead of inventing them", () => {
         expect(parsePurchase("corner shop", "en")).toStrictEqual({
             amount: null,
