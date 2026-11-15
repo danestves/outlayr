@@ -1,22 +1,21 @@
-import ArrowDataTransferHorizontalIcon from "@hugeicons-pro/core-stroke-rounded/ArrowDataTransferHorizontalIcon";
-import BankIcon from "@hugeicons-pro/core-stroke-rounded/BankIcon";
+import {
+    Box,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuPopup,
+    RNHostView,
+    Text as ComposeText,
+} from "@expo/ui/jetpack-compose";
+import ArrowRight01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowRight01Icon";
 import Cancel01Icon from "@hugeicons-pro/core-stroke-rounded/Cancel01Icon";
-import FileImportIcon from "@hugeicons-pro/core-stroke-rounded/FileImportIcon";
-import Mic01Icon from "@hugeicons-pro/core-stroke-rounded/Mic01Icon";
 import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
-import ReceiptDollarIcon from "@hugeicons-pro/core-stroke-rounded/ReceiptDollarIcon";
-import ScanIcon from "@hugeicons-pro/core-stroke-rounded/ScanIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import type { IconSvgElement } from "@hugeicons/react-native";
-import { router, useFocusEffect } from "expo-router";
-import type { Href } from "expo-router";
-import { useEffect, useRef, useState } from "react";
-import { BackHandler, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import { useFocusEffect } from "expo-router";
+import { useState } from "react";
+import { Pressable, View } from "react-native";
 import Animated, {
     createAnimatedComponent,
-    FadeIn,
-    FadeInDown,
-    FadeOut,
     interpolate,
     interpolateColor,
     useAnimatedReaction,
@@ -25,14 +24,10 @@ import Animated, {
     withSpring,
 } from "react-native-reanimated";
 
-import { ImportSheet } from "@/components/import-sheet/import-sheet";
-import type { ImportSheetHandle } from "@/components/import-sheet/import-sheet";
-import { Text } from "@/components/text";
-import { useDatabase } from "@/contexts/local-data-context";
-import { useBankAccounts } from "@/data/accounts";
-import { useCreateAccount } from "@/hooks/use-pro-gate";
+import { MaterialHost } from "@/components/material-host";
+import type { AddMenuRow } from "@/components/use-log-add-menu";
+import { useLogAddMenu } from "@/components/use-log-add-menu";
 import { useTranslation } from "@/i18n/context";
-import { importDraftStore } from "@/lib/import-draft-store";
 import { useHaptics } from "@/lib/use-haptics";
 import { withAlpha } from "@/theme/shade";
 import { useMaterialColors } from "@/theme/use-material-colors";
@@ -42,54 +37,86 @@ const AnimatedPressable = createAnimatedComponent(Pressable);
 const FAB_SIZE = 56;
 const FAB_CORNER = 16;
 const EDGE = 16;
-const ITEM_HEIGHT = 56;
-const ITEM_GAP = 4;
-const MENU_GAP = 8;
 const ICON_SIZE = 24;
 const ICON_STROKE = 1.8;
-const LABEL_LINE = 24;
-const ITEM_PADDING_Y = 32;
-const SCRIM_ALPHA = 0.32;
 const PRESSED_ALPHA = 0.12;
 const FAB_ELEVATION = 6;
-const ITEM_ELEVATION = 3;
-const STAGGER_MS = 30;
 const MORPH = { damping: 22, mass: 0.6, stiffness: 320 } as const;
 
-interface AddAction {
-    href: Href | null;
-    icon: IconSvgElement;
-    key: string;
+const LABEL_STYLE = { fontFamily: "GoogleSansFlex_500Medium", fontSize: 16, lineHeight: 24 } as const;
+const SUPPORTING_STYLE = { fontFamily: "GoogleSansFlex_400Regular", fontSize: 14, lineHeight: 20 } as const;
+
+function MenuGlyph({ icon }: { icon: IconSvgElement }) {
+    const m3 = useMaterialColors();
+    return (
+        <RNHostView matchContents>
+            <View style={{ height: ICON_SIZE, width: ICON_SIZE }}>
+                <HugeiconsIcon color={m3.onSurfaceVariant} icon={icon} size={ICON_SIZE} strokeWidth={ICON_STROKE} />
+            </View>
+        </RNHostView>
+    );
+}
+
+function MenuItem({
+    description,
+    glyph,
+    label,
+    onClick,
+    position,
+    trailing,
+}: {
+    description?: string;
+    glyph: IconSvgElement;
     label: string;
+    onClick: () => void;
+    position: { count: number; index: number };
+    trailing?: IconSvgElement;
+}) {
+    const m3 = useMaterialColors();
+    return (
+        <DropdownMenuItem
+            elementColors={{ textColor: m3.onSurface }}
+            onClick={onClick}
+            // oxlint-disable-next-line anti-slop/no-shape-in-symbol-names -- @expo/ui's prop that turns on the Material 3 Expressive item
+            shape={position}
+        >
+            <DropdownMenuItem.Text>
+                <ComposeText style={LABEL_STYLE}>{label}</ComposeText>
+            </DropdownMenuItem.Text>
+            {description === undefined ? null : (
+                <DropdownMenuItem.SupportingText>
+                    <ComposeText color={m3.onSurfaceVariant} style={SUPPORTING_STYLE}>
+                        {description}
+                    </ComposeText>
+                </DropdownMenuItem.SupportingText>
+            )}
+            <DropdownMenuItem.LeadingIcon>
+                <MenuGlyph icon={glyph} />
+            </DropdownMenuItem.LeadingIcon>
+            {trailing === undefined ? null : (
+                <DropdownMenuItem.TrailingIcon>
+                    <MenuGlyph icon={trailing} />
+                </DropdownMenuItem.TrailingIcon>
+            )}
+        </DropdownMenuItem>
+    );
 }
 
-// The least-reached-for items drop first as the text grows; the transaction always stays.
-function fabMenuFit(actionCount: number, room: number, fontScale: number): number {
-    const itemHeight = Math.max(ITEM_HEIGHT, LABEL_LINE * fontScale + ITEM_PADDING_Y);
-    const space = room - EDGE - FAB_SIZE - MENU_GAP - EDGE;
-    const fitting = Math.floor((space + ITEM_GAP) / (itemHeight + ITEM_GAP));
-    return Math.min(actionCount, Math.max(1, fitting));
-}
-
-// Same actions, order and routes as the iOS dial.
 export function FloatingAddButton() {
     const m3 = useMaterialColors();
     const t = useTranslation();
     const haptics = useHaptics();
-    const { fontScale } = useWindowDimensions();
+    const { more, rows } = useLogAddMenu();
     const [open, setOpen] = useState(false);
-    const [room, setRoom] = useState(0);
+    const [moreOpen, setMoreOpen] = useState(false);
     const progress = useSharedValue(0);
-    const navigating = useRef(false);
-    const importSheetRef = useRef<ImportSheetHandle>(null);
-    const canTransfer = useBankAccounts(useDatabase()).length >= 2;
 
-    useFocusEffect(() => {
-        navigating.current = false;
-        return () => {
-            setOpen(false);
-        };
-    });
+    const close = () => {
+        setMoreOpen(false);
+        setOpen(false);
+    };
+
+    useFocusEffect(() => close);
 
     useAnimatedReaction(
         () => open,
@@ -98,62 +125,14 @@ export function FloatingAddButton() {
         }
     );
 
-    // oxlint-disable-next-line outlayr/react-effect-budget -- registers the Android back handler while the menu is open
-    useEffect(() => {
-        if (!open) {
-            return;
-        }
-        const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-            setOpen(false);
-            return true;
-        });
-        return () => subscription.remove();
-    }, [open]);
-
-    const toggle = (next: boolean) => {
-        setOpen(next);
-        haptics("selection");
+    const choose = (row: AddMenuRow) => {
+        close();
+        row.onPress();
     };
 
-    const createAccount = useCreateAccount();
-    const select = ({ href, key }: AddAction) => {
-        setOpen(false);
-        if (key === "account") {
-            createAccount();
-            return;
-        }
-        if (href === null) {
-            importDraftStore.setStep(importDraftStore.getResumeStep());
-            importSheetRef.current?.present();
-            return;
-        }
-        if (navigating.current) {
-            return;
-        }
-        navigating.current = true;
-        router.push(href);
-    };
-
-    // Ranked by how often each is reached for, since the fit drops from the end.
-    const ranked: AddAction[] = [
-        { href: "/transactions/create", icon: ReceiptDollarIcon, key: "transaction", label: t("log.add.transaction") },
-        ...(canTransfer
-            ? [
-                  {
-                      href: "/transactions/transfers/create" as const,
-                      icon: ArrowDataTransferHorizontalIcon,
-                      key: "transfer",
-                      label: t("log.add.transfer"),
-                  },
-              ]
-            : []),
-        { href: "/transactions/voice", icon: Mic01Icon, key: "voice", label: t("log.add.voice") },
-        { href: "/transactions/scan", icon: ScanIcon, key: "scan", label: t("log.add.scan") },
-        { href: null, icon: FileImportIcon, key: "import", label: t("log.add.import") },
-        { href: null, icon: BankIcon, key: "account", label: t("log.add.account") },
-    ];
-    const kept = room === 0 ? ranked.length : fabMenuFit(ranked.length, room, fontScale);
-    const actions = ranked.slice(0, kept).reverse();
+    // The dropdown opens above the button, so the row nearest the + is the last one drawn.
+    const nearestLast = [...rows].reverse();
+    const count = nearestLast.length + 1;
 
     const fabStyle = useAnimatedStyle(() => ({
         backgroundColor: interpolateColor(progress.get(), [0, 1], [m3.primaryContainer, m3.primary]),
@@ -169,107 +148,81 @@ export function FloatingAddButton() {
     }));
 
     return (
-        <>
-            {/* Measures the screen's content area, which is what the menu has to fit in. */}
-            <View
-                onLayout={(event) => setRoom(event.nativeEvent.layout.height)}
-                pointerEvents="none"
-                style={StyleSheet.absoluteFill}
-                testID="fab-room"
-            />
-            {open ? (
-                <Animated.View
-                    entering={FadeIn.duration(150)}
-                    exiting={FadeOut.duration(150)}
-                    style={StyleSheet.absoluteFill}
-                >
-                    <Pressable
-                        accessibilityLabel={t("common.close")}
+        <MaterialHost matchContents style={{ bottom: EDGE, position: "absolute", right: EDGE }}>
+            <Box>
+                <RNHostView matchContents>
+                    <AnimatedPressable
+                        accessibilityLabel={t("log.add.menu")}
                         accessibilityRole="button"
-                        onPress={() => toggle(false)}
-                        style={[StyleSheet.absoluteFill, { backgroundColor: withAlpha(m3.scrim, SCRIM_ALPHA) }]}
-                    />
-                </Animated.View>
-            ) : null}
-            <View className="absolute items-end" pointerEvents="box-none" style={{ bottom: EDGE, right: EDGE }}>
-                {open ? (
-                    <View className="items-end" style={{ gap: ITEM_GAP, marginBottom: MENU_GAP }}>
-                        {actions.map((action, index) => (
+                        accessibilityState={{ expanded: open }}
+                        android_ripple={{ color: withAlpha(m3.onPrimaryContainer, PRESSED_ALPHA) }}
+                        className="items-center justify-center overflow-hidden"
+                        onPress={() => {
+                            haptics("selection");
+                            setOpen(!open);
+                        }}
+                        style={[{ elevation: FAB_ELEVATION, height: FAB_SIZE, width: FAB_SIZE }, fabStyle]}
+                    >
+                        <Animated.View className="absolute" style={plusStyle}>
+                            <HugeiconsIcon
+                                color={m3.onPrimaryContainer}
+                                icon={PlusSignIcon}
+                                size={ICON_SIZE}
+                                strokeWidth={ICON_STROKE}
+                            />
+                        </Animated.View>
+                        <Animated.View className="absolute" style={closeStyle}>
+                            <HugeiconsIcon
+                                color={m3.onPrimary}
+                                icon={Cancel01Icon}
+                                size={ICON_SIZE}
+                                strokeWidth={ICON_STROKE}
+                            />
+                        </Animated.View>
+                    </AnimatedPressable>
+                </RNHostView>
+                <DropdownMenuPopup anchorPosition="above" expanded={open} onDismissRequest={close}>
+                    <DropdownMenuGroup>
+                        <Box>
                             <MenuItem
-                                action={action}
-                                delay={(actions.length - 1 - index) * STAGGER_MS}
-                                key={action.key}
-                                onSelect={select}
+                                description={more.description}
+                                glyph={more.glyph}
+                                label={more.label}
+                                onClick={() => setMoreOpen(true)}
+                                position={{ count, index: 0 }}
+                                trailing={ArrowRight01Icon}
+                            />
+                            <DropdownMenuPopup
+                                anchorPosition="start"
+                                expanded={moreOpen}
+                                onDismissRequest={() => setMoreOpen(false)}
+                            >
+                                <DropdownMenuGroup>
+                                    {more.rows.map((row, index) => (
+                                        <MenuItem
+                                            glyph={row.glyph}
+                                            key={row.id}
+                                            label={row.label}
+                                            onClick={() => choose(row)}
+                                            position={{ count: more.rows.length, index }}
+                                        />
+                                    ))}
+                                </DropdownMenuGroup>
+                            </DropdownMenuPopup>
+                        </Box>
+                        {nearestLast.map((row, index) => (
+                            <MenuItem
+                                description={row.description}
+                                glyph={row.glyph}
+                                key={row.id}
+                                label={row.label}
+                                onClick={() => choose(row)}
+                                position={{ count, index: index + 1 }}
                             />
                         ))}
-                    </View>
-                ) : null}
-                <AnimatedPressable
-                    accessibilityLabel={t("log.add.menu")}
-                    accessibilityRole="button"
-                    accessibilityState={{ expanded: open }}
-                    android_ripple={{ color: withAlpha(m3.onPrimaryContainer, PRESSED_ALPHA) }}
-                    className="items-center justify-center overflow-hidden"
-                    onPress={() => toggle(!open)}
-                    style={[{ elevation: FAB_ELEVATION, height: FAB_SIZE, width: FAB_SIZE }, fabStyle]}
-                >
-                    <Animated.View className="absolute" style={plusStyle}>
-                        <HugeiconsIcon
-                            color={m3.onPrimaryContainer}
-                            icon={PlusSignIcon}
-                            size={ICON_SIZE}
-                            strokeWidth={ICON_STROKE}
-                        />
-                    </Animated.View>
-                    <Animated.View className="absolute" style={closeStyle}>
-                        <HugeiconsIcon
-                            color={m3.onPrimary}
-                            icon={Cancel01Icon}
-                            size={ICON_SIZE}
-                            strokeWidth={ICON_STROKE}
-                        />
-                    </Animated.View>
-                </AnimatedPressable>
-            </View>
-            <ImportSheet ref={importSheetRef} />
-        </>
-    );
-}
-
-function MenuItem({
-    action,
-    delay,
-    onSelect,
-}: {
-    action: AddAction;
-    delay: number;
-    onSelect: (action: AddAction) => void;
-}) {
-    const m3 = useMaterialColors();
-    return (
-        <Animated.View
-            entering={FadeInDown.springify().delay(delay)}
-            exiting={FadeOut.duration(100)}
-            style={{ elevation: ITEM_ELEVATION }}
-            className="bg-m3-primary-container overflow-hidden rounded-full"
-        >
-            <Pressable
-                accessibilityLabel={action.label}
-                accessibilityRole="button"
-                android_ripple={{ color: withAlpha(m3.onPrimaryContainer, PRESSED_ALPHA) }}
-                className="min-h-14 flex-row items-center gap-3 py-2 pr-6 pl-5"
-                onPress={() => onSelect(action)}
-            >
-                <HugeiconsIcon
-                    color={m3.onPrimaryContainer}
-                    icon={action.icon}
-                    size={ICON_SIZE}
-                    strokeWidth={ICON_STROKE}
-                />
-                <Text className="font-sans-medium text-body text-m3-on-primary-container shrink" numberOfLines={2}>
-                    {action.label}
-                </Text>
-            </Pressable>
-        </Animated.View>
+                    </DropdownMenuGroup>
+                </DropdownMenuPopup>
+            </Box>
+        </MaterialHost>
     );
 }
