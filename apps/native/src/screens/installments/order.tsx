@@ -38,23 +38,29 @@ function OrderLoaded({ entry, leave, nowMs }: { entry: PlanWithStanding; leave: 
     const money = (value: number) => formatAmount(value, plan.currency, showCents, language);
     const name = orderName(t, purchase);
     const planLine = orderPlanPhrase(t, standing.rows);
-    const { cuotaSheetRef, deletePending, edit, editing, pay, setEditing } = useOrderActions(entry, leave);
+    const { cuotaSheetRef, deleteEverything, deletePending, edit, editing, pay, setEditing } = useOrderActions(
+        entry,
+        leave
+    );
     const feeSuggestion = lateFeeSuggestion(standing);
 
     return (
         <>
             <ScreenHeader title={name} />
             <Stack.Screen.BackButton displayMode="minimal" />
-            {standing.finished ? null : (
-                <Stack.Toolbar placement="right">
-                    <Stack.Toolbar.Menu accessibilityLabel={t("installments.order")}>
-                        <Stack.Toolbar.Icon {...toolbarIcon("more")} />
-                        <Stack.Toolbar.MenuAction destructive icon="trash" onPress={deletePending}>
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Menu accessibilityLabel={t("installments.order")}>
+                    <Stack.Toolbar.Icon {...toolbarIcon("more")} />
+                    {standing.finished ? null : (
+                        <Stack.Toolbar.MenuAction destructive icon="calendar.badge.minus" onPress={deletePending}>
                             {t("installments.deletePending")}
                         </Stack.Toolbar.MenuAction>
-                    </Stack.Toolbar.Menu>
-                </Stack.Toolbar>
-            )}
+                    )}
+                    <Stack.Toolbar.MenuAction destructive icon="trash" onPress={deleteEverything}>
+                        {t("installments.deleteEverything")}
+                    </Stack.Toolbar.MenuAction>
+                </Stack.Toolbar.Menu>
+            </Stack.Toolbar>
             <ScrollView
                 className="bg-background"
                 contentContainerStyle={{ paddingBottom: 40, paddingHorizontal: 20 }}

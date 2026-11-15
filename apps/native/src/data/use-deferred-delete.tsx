@@ -70,6 +70,7 @@ export const flushDeferredDeletes = registry.flushAll;
 export function usePendingDeletes(): PendingDeletes {
     const account = useDeferredDelete("account").pendingId;
     const category = useDeferredDelete("category").pendingId;
+    const purchase = useDeferredDelete("purchase").pendingId;
     const row = useDeferredDelete("row").pendingId;
-    return { account, category, row };
+    return { account, category, purchase, row };
 }

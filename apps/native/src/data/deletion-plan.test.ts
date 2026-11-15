@@ -1,4 +1,9 @@
-import { accountDeletionPlan, categoryDeletionPlan, deletionPlan } from "@outlayr/money/entry-deletion";
+import {
+    accountDeletionPlan,
+    categoryDeletionPlan,
+    deletionPlan,
+    purchaseDeletionPlan,
+} from "@outlayr/money/entry-deletion";
 import { and, isNull } from "drizzle-orm";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 import * as Effect from "effect/Effect";
@@ -116,6 +121,7 @@ async function seeded() {
             entry("groceries", { accountId: "card", categoryId: "food" }),
             entry("groceries fee", { accountId: "card", categoryId: "fees", feeForId: "groceries" }),
             entry("groceries payment", { accountId: "cash", installmentId: "g1" }),
+            entry("dropped cuota fee", { accountId: "card", categoryId: "fees", installmentId: "g2" }),
             entry("old lunch", { accountId: "card", categoryId: "food", deletedAt: EARLIER }),
             entry("payoff fee", { accountId: "cash", transferId: "payoff" }),
             entry("tagged wire fee", { categoryId: "tagged", transferId: "tagged move" }),
@@ -146,6 +152,7 @@ async function seeded() {
         { amount: 1, dueDate: AT, id: "i2", planId: "plan", sequence: 1, updatedAt: AT },
         { amount: 1, dueDate: AT, id: "other", planId: "other plan", sequence: 0, updatedAt: AT },
         { amount: 1, dueDate: AT, id: "g1", planId: "groceries plan", sequence: 0, updatedAt: AT },
+        { amount: 1, deletedAt: EARLIER, dueDate: AT, id: "g2", planId: "groceries plan", sequence: 1, updatedAt: AT },
     ]);
     await db.insert(outsidePayments).values([
         { amount: 1, date: AT, id: "outside", planId: "plan", updatedAt: AT },
@@ -201,6 +208,7 @@ const planned = (gone: Partial<Record<DeletionTable, Set<string>>>) => idsBy((ta
 const PLANS = {
     account: accountDeletionPlan,
     category: categoryDeletionPlan,
+    purchase: (books: Books, id: string) => ({ ...purchaseDeletionPlan(books, id), detached: {} }),
     row: (books: Books, id: string) => ({
         ...deletionPlan(books, [id]),
         detached: {},
@@ -286,6 +294,8 @@ const CASES: [string, Kind, string][] = [
     ["an outside move", "row", "cash adjustment"],
     ["a category with a financed purchase, a fee in another category and a subcategory", "category", "food"],
     ["a category holding a transfer's fee, which takes the transfer", "category", "tagged"],
+    ["a financed purchase deleted from its plan, with every payment and fee", "purchase", "groceries plan"],
+    ["a plan whose purchase is missing", "purchase", "other plan"],
     ["a card, which keeps its entries and loses its plans, transfers, goal and adjustment", "account", "card"],
     ["a person, whose entries go with them, a fee held elsewhere too", "account", "ana"],
 ];

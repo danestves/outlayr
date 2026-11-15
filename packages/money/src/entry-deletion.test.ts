@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { accountDeletionPlan, categoryDeletionPlan } from "./entry-deletion";
+import { accountDeletionPlan, categoryDeletionPlan, purchaseDeletionPlan } from "./entry-deletion";
 
 const EARLIER = 1;
 
@@ -124,6 +124,51 @@ describe("categoryDeletionPlan", () => {
             outsidePayments: new Set(),
             transactions: new Set(),
             transfers: new Set(),
+        });
+    });
+});
+
+describe("purchaseDeletionPlan", () => {
+    it("takes the purchase, its schedule and fees, and every payment made on it, leaving other plans alone", () => {
+        const plan = purchaseDeletionPlan(
+            {
+                installmentPlans: [
+                    row("sofa plan", { transactionId: "sofa" }),
+                    row("lamp plan", { transactionId: "lamp" }),
+                ],
+                installments: [
+                    row("sofa 1", { planId: "sofa plan" }),
+                    row("sofa 2", { planId: "sofa plan" }),
+                    row("lamp 1", { planId: "lamp plan" }),
+                ],
+                outsidePayments: [
+                    row("sofa outside", { planId: "sofa plan" }),
+                    row("lamp outside", { planId: "lamp plan" }),
+                ],
+                transactions: [
+                    row("sofa", {}),
+                    row("sofa fee", { feeForId: "sofa" }),
+                    row("sofa 1 fee", { installmentId: "sofa 1" }),
+                    row("upfront fee", { transferId: "upfront" }),
+                    { ...row("old upfront fee", { transferId: "upfront" }), deletedAt: EARLIER },
+                    row("lamp", {}),
+                    row("lamp payment fee", { transferId: "lamp payment" }),
+                ],
+                transfers: [
+                    row("upfront", { installmentPlanId: "sofa plan" }),
+                    row("second payment", { installmentPlanId: "sofa plan" }),
+                    row("lamp payment", { installmentPlanId: "lamp plan" }),
+                    row("unrelated", {}),
+                ],
+            },
+            "sofa plan"
+        );
+        expect(plan).toStrictEqual({
+            installmentPlans: new Set(["sofa plan"]),
+            installments: new Set(["sofa 1", "sofa 2"]),
+            outsidePayments: new Set(["sofa outside"]),
+            transactions: new Set(["sofa", "sofa fee", "sofa 1 fee", "upfront fee"]),
+            transfers: new Set(["upfront", "second payment"]),
         });
     });
 });

@@ -14,13 +14,14 @@ import { accountsRepo } from "./accounts-core";
 import { budgetsRepo } from "./budgets-core";
 import { categoriesRepo } from "./categories-core";
 import { deleteOutsideMove } from "./debts-core";
+import { installmentsRepo } from "./installments-core";
 import { savingsGoalsRepo } from "./savings-goals-core";
 import { transactionsRepo } from "./transactions-core";
 import { transfersRepo } from "./transfers-core";
 
 export const UNDO_WINDOW_MS = 10_000;
 
-const DeferredDeleteKinds = Schema.Literals(["account", "budget", "category", "goal", "recurring", "row"]);
+const DeferredDeleteKinds = Schema.Literals(["account", "budget", "category", "goal", "purchase", "recurring", "row"]);
 
 // `recurring` ends a schedule rather than deleting, but it is irreversible once written and wants the same window.
 export type DeferredDeleteKind = typeof DeferredDeleteKinds.Type;
@@ -88,6 +89,12 @@ const SPECS = {
         failedBody: "goals.failedBody",
         failedTitle: "goals.failedTitle",
         undoTitle: "goals.undo.deleted",
+    },
+    purchase: {
+        commit: (db, id) => installmentsRepo.deletePurchase(db, id),
+        failedBody: "installments.failedBody",
+        failedTitle: "installments.failedTitle",
+        undoTitle: "installments.undo.deleted",
     },
     recurring: {
         commit: (db, id) => transactionsRepo.stopRecurring(db, id),

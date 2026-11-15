@@ -19,7 +19,7 @@ import { goesWithPendingDelete } from "@/data/card-fees-core";
 import { useCategoryMeta } from "@/data/categories";
 import { useLogOverviewIn } from "@/data/debts";
 import { useFavouriteCurrencies } from "@/data/favourite-currencies";
-import { usePendingCuotas } from "@/data/installment-reads";
+import { usePendingCuotas, usePendingPurchaseRows } from "@/data/installment-reads";
 import { useFilteredTransactions, useUpcomingTransactions } from "@/data/log-filtered";
 import { logPeriodFromStored, storedLogPeriod, useLogInsights, useSparklineRows } from "@/data/log-totals";
 import type { LogPeriod } from "@/data/log-totals";
@@ -284,6 +284,7 @@ export function Log() {
         produced: insights.perCurrency.map((figures) => figures.currencyCode),
     });
     const sparkline = useSparkline(db, nowMs, logViewLineGraph, headMeasure, period, firstWeekday, currency, rates);
+    const pendingPurchase = usePendingPurchaseRows(db, useDeferredDelete("purchase").pendingId);
     const bars = usePeriodBars(
         db,
         nowMs,
@@ -293,7 +294,7 @@ export function Log() {
         firstWeekday,
         currency,
         rates,
-        upcoming.schedules
+        upcoming.schedules.filter((row) => !pendingPurchase.has(row.id))
     );
     const transferIds = new Set(transferRows.map((transfer) => transfer.id));
     const { pendingId, requestDelete } = useDeferredDelete("row");
@@ -304,7 +305,7 @@ export function Log() {
     const groupTail = useTailGrouping<TransactionWithCategory | TransferLogRow>(currency, rates);
     // Filtered like the day sections, or a deleted future row lingers under the undo toast.
     const upcomingRows = showUpcomingSection
-        ? upcoming.rows.filter((row) => !goesWithPendingDelete(row, pendingId))
+        ? upcoming.rows.filter((row) => !goesWithPendingDelete(row, pendingId) && !pendingPurchase.has(row.id))
         : [];
     const today = startOfDay(new Date(nowMs)).getTime();
     const view = { ...cardOptions, language, monthly };
@@ -312,8 +313,12 @@ export function Log() {
     const tailTransfers = transferRows.filter((transfer) => transfer.day.getTime() < splitMs);
     const listRows = headListRows(listFilter, head, filteredRows, transferRows, splitMs);
     const tailRows = listFilter === "all" ? mergeByRecency(tail, tailTransfers) : [];
-    const visibleRows = listRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
-    const keptTail = tailRows.filter((row) => !goesWithPendingDelete(row, pendingId, pendingCuotas));
+    const visibleRows = listRows.filter(
+        (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
+    );
+    const keptTail = tailRows.filter(
+        (row) => !goesWithPendingDelete(row, pendingId, pendingCuotas) && !pendingPurchase.has(row.id)
+    );
     const visibleTail = keptTail.length === tailRows.length ? tailRows : keptTail;
     const headSections = groupByDay(visibleRows, currency, rates);
     const tailSections = groupTail(visibleTail);

@@ -53,23 +53,29 @@ function OrderLoaded({ entry, leave, nowMs }: { entry: PlanWithStanding; leave: 
     const account = useAccounts(db).find((row) => row.id === plan.accountId);
     const money = (value: number) => formatAmount(value, plan.currency, showCents, language);
     const planLine = orderPlanPhrase(t, standing.rows);
-    const { cuotaSheetRef, deletePending, edit, editing, pay, setEditing } = useOrderActions(entry, leave);
+    const { cuotaSheetRef, deleteEverything, deletePending, edit, editing, pay, setEditing } = useOrderActions(
+        entry,
+        leave
+    );
     const feeSuggestion = lateFeeSuggestion(standing);
 
     return (
         <View className="bg-m3-surface flex-1">
             <ScreenHeader title={orderName(t, purchase)} />
             <Stack.Screen.BackButton displayMode="minimal" />
-            {standing.finished ? null : (
-                <Stack.Toolbar placement="right">
-                    <Stack.Toolbar.Menu accessibilityLabel={t("installments.order")}>
-                        <Stack.Toolbar.Icon {...toolbarIcon("more")} />
+            <Stack.Toolbar placement="right">
+                <Stack.Toolbar.Menu accessibilityLabel={t("installments.order")}>
+                    <Stack.Toolbar.Icon {...toolbarIcon("more")} />
+                    {standing.finished ? null : (
                         <Stack.Toolbar.MenuAction destructive onPress={deletePending}>
                             {t("installments.deletePending")}
                         </Stack.Toolbar.MenuAction>
-                    </Stack.Toolbar.Menu>
-                </Stack.Toolbar>
-            )}
+                    )}
+                    <Stack.Toolbar.MenuAction destructive onPress={deleteEverything}>
+                        {t("installments.deleteEverything")}
+                    </Stack.Toolbar.MenuAction>
+                </Stack.Toolbar.Menu>
+            </Stack.Toolbar>
             <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 24, paddingHorizontal: 16 }}>
                 <View className="items-center gap-1 pt-6 pb-4">
                     <MonoLabel>{t("installments.leftToPay")}</MonoLabel>
