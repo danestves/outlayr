@@ -24,3 +24,88 @@ index b95efa2..d2e227d 100644
    return !snapPoints.some(
      (sp) =>
        sp === 'half' ||
+diff --git a/build/community/bottom-sheet/BottomSheet.android.js b/build/community/bottom-sheet/BottomSheet.android.js
+index cafa206..53aae85 100644
+--- a/build/community/bottom-sheet/BottomSheet.android.js
++++ b/build/community/bottom-sheet/BottomSheet.android.js
+@@ -99,13 +99,18 @@ function findNearestSnapPointIndex(snapPoints, position) {
+         fireCloseCallbacks
+     ]);
+     const methods = useMemo(()=>{
++        // hide() rejects when the native handler is unbound (content not drawn or already gone); close anyway.
++        const close = ()=>{
++            const finishClose = ()=>{
++                setIsOpen(false);
++                pendingIndexRef.current = null;
++                fireCloseCallbacks();
++            };
++            sheetRef.current?.hide().then(finishClose, finishClose);
++        };
+         const snapToIndex = (index)=>{
+             if (index === -1) {
+-                sheetRef.current?.hide().then(()=>{
+-                    setIsOpen(false);
+-                    pendingIndexRef.current = null;
+-                    fireCloseCallbacks();
+-                });
++                close();
+                 return;
+             }
+             const clampedIndex = clampIndex(index);
+@@ -125,13 +130,6 @@ function findNearestSnapPointIndex(snapPoints, position) {
+             }
+             onChangeRef.current?.(clampedIndex);
+         };
+-        const close = ()=>{
+-            sheetRef.current?.hide().then(()=>{
+-                setIsOpen(false);
+-                pendingIndexRef.current = null;
+-                fireCloseCallbacks();
+-            });
+-        };
+         return {
+             snapToIndex,
+             snapToPosition: (position)=>snapToIndex(findNearestSnapPointIndex(snapPointsProp, position)),
+diff --git a/src/community/bottom-sheet/BottomSheet.android.tsx b/src/community/bottom-sheet/BottomSheet.android.tsx
+index 2900e12..ba70cdd 100644
+--- a/src/community/bottom-sheet/BottomSheet.android.tsx
++++ b/src/community/bottom-sheet/BottomSheet.android.tsx
+@@ -125,13 +125,19 @@ export function BottomSheet(props: BottomSheetProps) {
+   }, [fireCloseCallbacks]);
+ 
+   const methods: BottomSheetMethods = useMemo(() => {
++    // hide() rejects when the native handler is unbound (content not drawn or already gone); close anyway.
++    const close = () => {
++      const finishClose = () => {
++        setIsOpen(false);
++        pendingIndexRef.current = null;
++        fireCloseCallbacks();
++      };
++      sheetRef.current?.hide().then(finishClose, finishClose);
++    };
++
+     const snapToIndex = (index: number) => {
+       if (index === -1) {
+-        sheetRef.current?.hide().then(() => {
+-          setIsOpen(false);
+-          pendingIndexRef.current = null;
+-          fireCloseCallbacks();
+-        });
++        close();
+         return;
+       }
+       const clampedIndex = clampIndex(index);
+@@ -152,13 +158,6 @@ export function BottomSheet(props: BottomSheetProps) {
+       onChangeRef.current?.(clampedIndex);
+     };
+ 
+-    const close = () => {
+-      sheetRef.current?.hide().then(() => {
+-        setIsOpen(false);
+-        pendingIndexRef.current = null;
+-        fireCloseCallbacks();
+-      });
+-    };
+ 
+     return {
+       snapToIndex,
