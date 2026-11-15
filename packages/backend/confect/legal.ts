@@ -642,8 +642,8 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Where you heard about us",
                 },
                 {
-                    detail: "The copy the website keeps in your browser now also holds what your settings show, such as your name, email, plan, and signed-in devices, so those pages load at once. Signing out deletes it.",
-                    label: "What the website copy holds",
+                    detail: "Our servers now build each website page from your synced ledger, so your browser no longer keeps a copy of it. An entry you save waits in your browser only until our servers confirm it, and signing out deletes it.",
+                    label: "Your ledger on the website",
                 },
                 {
                     detail: "When you import data into your ledger on this website, it tells PostHog the kind of import and how many rows it brought in, rounded to a range such as 10 to 99, as the app already does.",
@@ -692,8 +692,8 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Woher du uns kennst",
                 },
                 {
-                    detail: "Die Kopie, die die Website in deinem Browser aufbewahrt, enthält jetzt auch, was deine Einstellungen zeigen, etwa Name, E-Mail-Adresse, Plan und angemeldete Geräte, damit diese Seiten sofort laden. Beim Abmelden wird sie gelöscht.",
-                    label: "Was die Kopie der Website enthält",
+                    detail: "Unsere Server bauen jede Seite der Website jetzt aus deinem synchronisierten Haushaltsbuch, daher behält dein Browser keine Kopie mehr davon. Ein Eintrag, den du speicherst, wartet nur so lange in deinem Browser, bis unsere Server ihn bestätigen, und beim Abmelden wird er gelöscht.",
+                    label: "Dein Haushaltsbuch auf der Website",
                 },
                 {
                     detail: "Wenn du auf dieser Website Daten in dein Journal importierst, teilt sie PostHog die Art des Imports mit und wie viele Zeilen er gebracht hat, gerundet auf einen Bereich wie 10 bis 99, wie es die App schon tut.",
@@ -742,8 +742,8 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Dónde supiste de nosotros",
                 },
                 {
-                    detail: "La copia que el sitio web guarda en tu navegador ahora también incluye lo que muestra tu Configuración, como tu nombre, correo, plan y dispositivos con sesión iniciada, para que esas páginas carguen al instante. Al cerrar sesión se borra.",
-                    label: "Qué guarda la copia del sitio web",
+                    detail: "Nuestros servidores ahora arman cada página del sitio web a partir de tu registro sincronizado, así que tu navegador ya no guarda una copia. Una entrada que guardas espera en tu navegador solo hasta que nuestros servidores la confirman, y al cerrar sesión se borra.",
+                    label: "Tu registro en el sitio web",
                 },
                 {
                     detail: "Cuando importas datos a tu registro en este sitio web, le dice a PostHog el tipo de importación y cuántas filas trajo, redondeado a un rango como de 10 a 99, como ya lo hace la app.",
@@ -792,8 +792,8 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Comment vous nous avez connus",
                 },
                 {
-                    detail: "La copie que le site web garde dans votre navigateur contient désormais aussi ce qu'affichent vos Réglages, comme votre nom, votre e-mail, votre formule et les appareils connectés, pour que ces pages se chargent tout de suite. Se déconnecter la supprime.",
-                    label: "Ce que contient la copie du site web",
+                    detail: "Nos serveurs construisent désormais chaque page du site web à partir de votre journal synchronisé : votre navigateur n’en garde donc plus de copie. Une opération que vous enregistrez attend dans votre navigateur seulement jusqu’à ce que nos serveurs la confirment, et se déconnecter la supprime.",
+                    label: "Votre journal sur le site web",
                 },
                 {
                     detail: "Quand vous importez des données dans votre journal sur ce site web, il indique à PostHog le type d'import et combien de lignes il a ajoutées, arrondi à une fourchette comme 10 à 99, comme le fait déjà l'app.",
@@ -842,8 +842,8 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Onde você nos conheceu",
                 },
                 {
-                    detail: "A cópia que o site guarda no seu navegador agora também inclui o que os seus Ajustes mostram, como seu nome, e-mail, plano e dispositivos conectados, para que essas páginas carreguem na hora. Sair da conta apaga a cópia.",
-                    label: "O que a cópia do site guarda",
+                    detail: "Nossos servidores agora montam cada página do site a partir dos seus lançamentos sincronizados, então seu navegador não guarda mais uma cópia deles. Um lançamento que você salva espera no seu navegador só até nossos servidores confirmá-lo, e sair da conta o apaga.",
+                    label: "Seus lançamentos no site",
                 },
                 {
                     detail: "Quando você importa dados para seu livro-caixa neste site, ele informa ao PostHog o tipo de importação e quantas linhas ela trouxe, arredondado a uma faixa como de 10 a 99, como o app já faz.",
