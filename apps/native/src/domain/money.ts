@@ -24,6 +24,7 @@ type DeviceNumbers = Pick<Locale, "decimalSeparator" | "digitGroupingSeparator" 
 type RegionalLanguage = Exclude<Language, "en">;
 
 const REGIONAL_FALLBACK = {
+    de: { decimal: ",", group: ".", tag: "de-DE" },
     es: { decimal: ".", group: ",", tag: "es-419" },
     "es-ES": { decimal: ",", group: ".", tag: "es-ES" },
     fr: { decimal: ",", group: "\u202F", tag: "fr-FR" },

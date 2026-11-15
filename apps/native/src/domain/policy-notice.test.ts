@@ -8,13 +8,15 @@ const notice = (
     document: PolicyNotice["document"] = "privacy",
     postedAtMs = effectiveAtMs
 ): PolicyNotice => ({
-    changes: { en: [], es: [], fr: [], pt: [] },
+    changes: { de: [], en: [], es: [], fr: [], pt: [] },
     document,
     effectiveAtMs,
     postedAtMs,
 });
 
-const change = (label: string) => ({ changes: { en: [{ label }], es: [{ label }], fr: [{ label }], pt: [{ label }] } });
+const change = (label: string) => ({
+    changes: { de: [{ label }], en: [{ label }], es: [{ label }], fr: [{ label }], pt: [{ label }] },
+});
 
 test("merges every unseen day into one notice per document, dated by its newest change", () => {
     const november = { ...notice(Date.UTC(2026, 10, 2)), ...change("Notion") };
@@ -39,11 +41,11 @@ test("merges every unseen day into one notice per document, dated by its newest 
 test("a change repeated on a later day shows once, in its newest wording", () => {
     const older = {
         ...notice(Date.UTC(2026, 10, 2)),
-        changes: { en: [{ detail: "old", label: "Invites" }], es: [], fr: [], pt: [] },
+        changes: { de: [], en: [{ detail: "old", label: "Invites" }], es: [], fr: [], pt: [] },
     };
     const newer = {
         ...notice(Date.UTC(2026, 10, 4)),
-        changes: { en: [{ detail: "new", label: "Invites" }], es: [], fr: [], pt: [] },
+        changes: { de: [], en: [{ detail: "new", label: "Invites" }], es: [], fr: [], pt: [] },
     };
 
     expect(pendingNotices([older, newer], { privacy: 0, terms: 0 })[0]?.changes.en).toStrictEqual([

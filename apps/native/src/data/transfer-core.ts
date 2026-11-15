@@ -92,10 +92,23 @@ export interface ColumnMapping {
 }
 
 const HEADER_HINTS = {
-    amount: ["amount", "value", "total", "sum", "debit", "price", "cost", "monto", "importe", "valor", "precio"],
-    category: ["category", "categories", "tag", "categoria", "etiqueta"],
-    currency: ["currency", "code", "ccy", "moneda", "moeda", "divisa"],
-    date: ["date", "time", "posted", "when", "fecha", "data"],
+    amount: [
+        "amount",
+        "value",
+        "total",
+        "sum",
+        "debit",
+        "price",
+        "cost",
+        "monto",
+        "importe",
+        "valor",
+        "precio",
+        "betrag",
+    ],
+    category: ["category", "categories", "tag", "categoria", "etiqueta", "kategorie"],
+    currency: ["currency", "wahrung", "waehrung", "code", "ccy", "moneda", "moeda", "divisa"],
+    date: ["date", "time", "posted", "when", "fecha", "data", "buchungstag", "buchungsdatum", "datum"],
     exchangeRate: ["exchange rate", "rate"],
     exchangeRateType: ["exchange rate type", "rate type"],
     note: [
@@ -114,11 +127,26 @@ const HEADER_HINTS = {
         "descricao",
         "detalle",
         "comercio",
+        "notiz",
+        "beguenstigter",
+        "zahlungsbeteiligter",
+        "empfanger",
+        "verwendungszweck",
     ],
-    type: ["type", "direction", "kind", "tipo"],
+    type: ["type", "direction", "kind", "tipo", "typ"],
 } satisfies Record<keyof ColumnMapping, readonly string[]>;
 
 const COMBINING_MARKS = /\p{M}/gu;
+
+const LETTER = /\p{L}/u;
+const startsWord = (cell: string, hint: string) => {
+    for (let at = cell.indexOf(hint); at !== -1; at = cell.indexOf(hint, at + 1)) {
+        if (at === 0 || !LETTER.test(cell[at - 1] ?? "")) {
+            return true;
+        }
+    }
+    return false;
+};
 
 // Match specific overlapping labels before their general substring forms;
 // unlike object keys, this order is not changed by property-sorting formatters.
@@ -153,7 +181,7 @@ export function guessMapping(header: readonly string[]): ColumnMappingGuess {
 
     for (const field of HEADER_MATCH_ORDER) {
         for (const hint of HEADER_HINTS[field]) {
-            const index = normalized.findIndex((cell, at) => !taken.has(at) && cell.includes(hint));
+            const index = normalized.findIndex((cell, at) => !taken.has(at) && startsWord(cell, hint));
             if (index !== -1) {
                 guess[field] = index;
                 taken.add(index);

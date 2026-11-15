@@ -7,12 +7,14 @@ const aiConsent = {
     content: {
         "aiConsent.allow": t({
             en: "Allow",
+            de: "Erlauben",
             es: "Permitir",
             fr: "Autoriser",
             pt: "Permitir",
         }),
         "aiConsent.eyebrow": t({
             en: "Smart features",
+            de: "Intelligente Funktionen",
             es: "Funciones inteligentes",
             fr: "Fonctions intelligentes",
             pt: "Recursos inteligentes",
@@ -20,6 +22,7 @@ const aiConsent = {
         }),
         "aiConsent.fine": t({
             en: "Category suggestions never include amounts, dates, or accounts. We don't keep recordings, photos, screenshots, or notifications.",
+            de: "Kategorievorschläge enthalten nie Beträge, Datumsangaben oder Konten. Wir speichern keine Aufnahmen, Fotos, Screenshots oder Benachrichtigungen.",
             es: "Las sugerencias de categoría nunca incluyen montos, fechas ni cuentas. No guardamos grabaciones, fotos, capturas ni notificaciones.",
             "es-ES":
                 "Las sugerencias de categoría nunca incluyen importes, fechas ni cuentas. No guardamos grabaciones, fotos, capturas ni notificaciones.",
@@ -30,6 +33,7 @@ const aiConsent = {
         }),
         "aiConsent.lead": t({
             en: "These features need an account and go through our server to third-party AI providers, which turn recordings into text, read receipts and bank notifications, and suggest categories. Apart from what a statement you import shows, they never get your name, email, or account ID.",
+            de: "Diese Funktionen brauchen ein Konto und laufen über unseren Server zu KI-Anbietern von Drittanbietern, die Aufnahmen in Text umwandeln, Belege und Banknachrichten lesen und Kategorien vorschlagen. Abgesehen von dem, was ein importierter Kontoauszug zeigt, erhalten sie nie deinen Namen, deine E-Mail-Adresse oder deine Konto-ID.",
             es: "Estas funciones necesitan una cuenta y pasan por nuestro servidor hacia proveedores de IA externos, que convierten las grabaciones en texto, leen recibos y notificaciones del banco, y sugieren categorías. Salvo lo que muestre un estado de cuenta que importes, nunca reciben tu nombre, tu correo ni el ID de tu cuenta.",
             fr: "Ces fonctions nécessitent un compte et passent par notre serveur vers des fournisseurs d'IA tiers, qui transcrivent les enregistrements, lisent les tickets et les notifications bancaires, et suggèrent des catégories. Hormis ce que montre un relevé que vous importez, ils ne reçoivent jamais votre nom, votre e-mail ni l'identifiant de votre compte.",
             pt: "Estes recursos precisam de uma conta e passam pelo nosso servidor até provedores de IA terceiros, que transformam gravações em texto, leem recibos e notificações do banco e sugerem categorias. Fora o que aparece num extrato que você importar, eles nunca recebem seu nome, e-mail ou ID da conta.",
@@ -38,6 +42,7 @@ const aiConsent = {
         }),
         "aiConsent.lookup": t({
             en: "Web lookup",
+            de: "Websuche",
             es: "Búsqueda web",
             fr: "Recherche web",
             pt: "Busca na web",
@@ -45,6 +50,7 @@ const aiConsent = {
         }),
         "aiConsent.lookupSends": t({
             en: "The AI provider may search the web for a merchant's name",
+            de: "Der KI-Anbieter kann im Web nach dem Namen eines Händlers suchen",
             es: "El proveedor de IA puede buscar en la web el nombre de un comercio",
             fr: "Le fournisseur d'IA peut rechercher le nom d'un commerçant sur le web",
             pt: "O provedor de IA pode buscar na web o nome de um estabelecimento",
@@ -52,12 +58,14 @@ const aiConsent = {
         }),
         "aiConsent.notifications": t({
             en: "Bank notifications",
+            de: "Banknachrichten",
             es: "Notificaciones del banco",
             fr: "Notifications bancaires",
             pt: "Notificações do banco",
         }),
         "aiConsent.notificationsSends": t({
             en: "The title and text of each notification that shows an amount, and your language",
+            de: "Titel und Text jeder Benachrichtigung, die einen Betrag zeigt, und deine Sprache",
             es: "El título y el texto de cada notificación que muestra un monto, y tu idioma",
             "es-ES": "El título y el texto de cada notificación que muestra un importe, y tu idioma",
             fr: "Le titre et le texte de chaque notification qui affiche un montant, et votre langue",
@@ -66,12 +74,14 @@ const aiConsent = {
         }),
         "aiConsent.notNow": t({
             en: "Not now",
+            de: "Nicht jetzt",
             es: "Ahora no",
             fr: "Pas maintenant",
             pt: "Agora não",
         }),
         "aiConsent.planScan": t({
             en: "Installment plan import",
+            de: "Import von Ratenplänen",
             es: "Importar un plan de cuotas",
             fr: "Import d'échéancier",
             pt: "Importar compra parcelada",
@@ -79,6 +89,7 @@ const aiConsent = {
         }),
         "aiConsent.planScanSends": t({
             en: "The screenshot, the account's name, currency, language, region, and today's date",
+            de: "Der Screenshot, Name und Währung des Kontos, die Sprache, die Region und das heutige Datum",
             es: "La captura, el nombre de la cuenta, la moneda, el idioma, la región y la fecha de hoy",
             fr: "La capture d'écran, le nom du compte, la devise, la langue, la région et la date du jour",
             pt: "A captura de tela, o nome da conta, a moeda, o idioma, a região e a data de hoje",
@@ -86,12 +97,14 @@ const aiConsent = {
         }),
         "aiConsent.privacy": t({
             en: "Privacy policy",
+            de: "Datenschutzerklärung",
             es: "Política de privacidad",
             fr: "Politique de confidentialité",
             pt: "Política de privacidade",
         }),
         "aiConsent.scan": t({
             en: "Receipt scan",
+            de: "Belegscan",
             es: "Escanear un recibo",
             "es-ES": "Escanear un ticket",
             fr: "Scan de ticket",
@@ -100,12 +113,14 @@ const aiConsent = {
         }),
         "aiConsent.scanSends": t({
             en: "The photo, plus the same details as voice entry and your region",
+            de: "Das Foto, dazu dieselben Angaben wie bei der Spracheingabe und deine Region",
             es: "La foto, más los mismos datos que al dictar y tu región",
             fr: "La photo, plus les mêmes données que la saisie vocale et votre région",
             pt: "A foto, mais os mesmos dados do ditado e a sua região",
         }),
         "aiConsent.statement": t({
             en: "Bank statements",
+            de: "Kontoauszüge",
             es: "Estados de cuenta",
             "es-ES": "Extractos bancarios",
             fr: "Relevés bancaires",
@@ -113,6 +128,7 @@ const aiConsent = {
         }),
         "aiConsent.statementSends": t({
             en: "The text of a PDF statement you choose to import, with long account and card numbers masked. It includes your name and address if printed. We delete the file after reading it",
+            de: "Der Text eines PDF-Kontoauszugs, den du zum Import auswählst, wobei lange Konto- und Kartennummern verdeckt sind. Er enthält deinen Namen und deine Adresse, wenn sie aufgedruckt sind. Wir löschen die Datei nach dem Lesen",
             es: "El texto del PDF de estado de cuenta que elijas importar, con los números largos de cuenta y tarjeta ocultos. Incluye tu nombre y dirección si aparecen. Borramos el archivo después de leerlo",
             "es-ES":
                 "El texto del extracto en PDF que elijas importar, con los números largos de cuenta y tarjeta ocultos. Incluye tu nombre y dirección si aparecen. Borramos el archivo después de leerlo",
@@ -123,18 +139,21 @@ const aiConsent = {
         }),
         "aiConsent.suggestions": t({
             en: "Category suggestions",
+            de: "Kategorievorschläge",
             es: "Sugerencias de categoría",
             fr: "Suggestions de catégorie",
             pt: "Sugestões de categoria",
         }),
         "aiConsent.suggestionsSends": t({
             en: "Merchant names, expense or income, currency, language, region, and your category names. On import, CSV descriptions with long numbers removed.",
+            de: "Händlernamen, Ausgabe oder Einnahme, Währung, Sprache, Region und die Namen deiner Kategorien. Beim Import die CSV-Beschreibungen ohne lange Zahlen.",
             es: "Nombres de comercios, si es gasto o ingreso, la moneda, el idioma, la región y los nombres de tus categorías. Al importar, las descripciones del CSV sin los números largos.",
             fr: "Noms des commerçants, dépense ou revenu, devise, langue, région et vos noms de catégories. À l'import, les libellés du CSV sans les longs numéros.",
             pt: "Nomes de estabelecimentos, se é despesa ou receita, a moeda, o idioma, a região e os nomes das suas categorias. Na importação, as descrições do CSV sem os números longos.",
         }),
         "aiConsent.title": t({
             en: "Send data to third-party AI providers?",
+            de: "Daten an KI-Anbieter von Drittanbietern senden?",
             es: "¿Enviar datos a proveedores de IA externos?",
             fr: "Envoyer des données à des fournisseurs d'IA tiers ?",
             pt: "Enviar dados a provedores de IA terceiros?",
@@ -142,6 +161,7 @@ const aiConsent = {
         }),
         "aiConsent.voice": t({
             en: "Voice entry",
+            de: "Spracheingabe",
             es: "Dictar un registro",
             fr: "Saisie vocale",
             pt: "Ditar um lançamento",
@@ -149,6 +169,7 @@ const aiConsent = {
         }),
         "aiConsent.voiceSends": t({
             en: "The recording, your account and category names, currency, language, and today's date",
+            de: "Die Aufnahme, die Namen deiner Konten und Kategorien, Währung, Sprache und das heutige Datum",
             es: "La grabación, los nombres de tus cuentas y categorías, la moneda, el idioma y la fecha de hoy",
             fr: "L'enregistrement, les noms de vos comptes et catégories, la devise, la langue et la date du jour",
             pt: "A gravação, os nomes das suas contas e categorias, a moeda, o idioma e a data de hoje",

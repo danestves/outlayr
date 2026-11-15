@@ -7,11 +7,11 @@ import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 import { runtimeLanguage } from "@/i18n/runtime";
 
-import { monthAbbrev } from "./dates";
+import { dayOfMonth, monthAbbrev } from "./dates";
 import { daysBetween } from "./local-day";
 
 function dayMonth(date: Date, language: Language): string {
-    return `${date.getDate()} ${monthAbbrev(date, language)}`;
+    return `${dayOfMonth(date, language)} ${monthAbbrev(date, language)}`;
 }
 
 function twoDigitYear(date: Date): string {

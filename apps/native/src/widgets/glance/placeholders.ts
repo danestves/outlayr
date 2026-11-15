@@ -46,6 +46,7 @@ const trendWindow = (caption: string) => ({
 
 const QUICK_ADD_LABELS: Record<Language, string> = {
     en: "Add a transaction",
+    de: "Eintrag hinzufügen",
     es: "Agregar una transacción",
     "es-ES": "Añadir una transacción",
     fr: "Ajouter une opération",

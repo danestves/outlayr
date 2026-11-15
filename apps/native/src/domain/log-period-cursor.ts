@@ -3,7 +3,7 @@ import { addDays, addMonths, firstOfMonth, startOfDay, startOfWeek } from "@outl
 import type { Language } from "@/i18n/languages";
 import { runtimeLanguage } from "@/i18n/runtime";
 
-import { monthAbbrevTitle } from "./dates";
+import { dayOfMonth, monthAbbrevTitle } from "./dates";
 
 export type CursorUnit = "day" | "week" | "month";
 
@@ -65,14 +65,14 @@ export function cursorLabel(
     const month = monthAbbrevTitle(start, language);
     switch (unit) {
         case "day": {
-            return `${start.getDate()} ${month} ${start.getFullYear()}`;
+            return `${dayOfMonth(start, language)} ${month} ${start.getFullYear()}`;
         }
         case "month": {
             return `${month} ${start.getFullYear()}`;
         }
         case "week": {
             const end = addDays(start, 6);
-            return `${start.getDate()} ${month} – ${end.getDate()} ${monthAbbrevTitle(end, language)}`;
+            return `${dayOfMonth(start, language)} ${month} – ${dayOfMonth(end, language)} ${monthAbbrevTitle(end, language)}`;
         }
         default: {
             const unhandled: never = unit;

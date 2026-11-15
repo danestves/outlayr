@@ -1,0 +1,8 @@
+{
+    "ios": {
+        "NSCameraUsageDescription": "Outlayr nutzt die Kamera, um einen Beleg zu scannen oder ein Foto an einen Eintrag anzuhängen. Gescannte Fotos gehen zum Auslesen an Anthropic. Angehängte Fotos nicht.",
+        "NSFaceIDUsageDescription": "Outlayr nutzt Face ID, um dein Journal zu entsperren.",
+        "NSMicrophoneUsageDescription": "Outlayr hört zu, während du einen Eintrag einsprichst. Die Aufnahme geht an ElevenLabs, das sie für dich transkribiert.",
+        "NSPhotoLibraryUsageDescription": "Outlayr nutzt deine Fotos, um einem Eintrag ein Logo zu geben, ein Foto anzuhängen oder einen Beleg oder einen Ratenkauf zu scannen. Gescannte Fotos gehen zum Auslesen an Anthropic. Alle anderen nicht."
+    }
+}

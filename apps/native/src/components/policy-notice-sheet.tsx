@@ -36,7 +36,7 @@ import { useColors } from "@/theme/use-colors";
 
 const noticeLanguage = (language: Language) => {
     const subtag = languageSubtag(language);
-    return subtag === "es" || subtag === "fr" || subtag === "pt" ? subtag : "en";
+    return subtag === "de" || subtag === "es" || subtag === "fr" || subtag === "pt" ? subtag : "en";
 };
 
 const LIST_MAX_SCREEN_SHARE = 0.5;

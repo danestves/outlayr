@@ -18,6 +18,7 @@ const decodeUpdateNotes = Schema.decodeUnknownSync(
     Schema.fromJsonString(
         Schema.Struct({
             en: notes,
+            de: notes,
             es: notes,
             "es-ES": notes,
             fr: notes,
@@ -162,33 +163,42 @@ const ANDROID_WIDGETS = [
     {
         description: {
             en: "Your balance, and one tap to log by amount, voice or receipt.",
+            de: "Dein Kontostand und ein Tipp zum Erfassen per Betrag, Sprache oder Beleg.",
             es: "Tu saldo, y un toque para registrar por monto, voz o recibo.",
             fr: "Votre solde, et une touche pour saisir par montant, voix ou ticket.",
             pt: "Seu saldo, e um toque para registrar por valor, voz ou recibo.",
         },
-        displayName: { en: "Balance", es: "Saldo", fr: "Solde", pt: "Saldo" },
+        displayName: { en: "Balance", de: "Kontostand", es: "Saldo", fr: "Solde", pt: "Saldo" },
         name: "Wallet",
         size: { minHeight: 110, minWidth: 250, targetCellHeight: 2, targetCellWidth: 4 },
     },
     {
         description: {
             en: "What you spent today, with quick ways to log.",
+            de: "Was du heute ausgegeben hast, mit schnellen Wegen zum Erfassen.",
             es: "Lo que gastaste hoy, con formas rápidas de registrar.",
             fr: "Vos dépenses du jour, avec des saisies rapides.",
             pt: "O que você gastou hoje, com formas rápidas de registrar.",
         },
-        displayName: { en: "Spent Today", es: "Gastado hoy", fr: "Dépensé aujourd'hui", pt: "Gasto hoje" },
+        displayName: {
+            en: "Spent Today",
+            de: "Heute ausgegeben",
+            es: "Gastado hoy",
+            fr: "Dépensé aujourd'hui",
+            pt: "Gasto hoje",
+        },
         name: "Today",
         size: { minHeight: 110, minWidth: 110, targetCellHeight: 2, targetCellWidth: 2 },
     },
     {
         description: {
             en: "Balance, today's spending and what is left in your budget.",
+            de: "Kontostand, heutige Ausgaben und was von deinem Budget übrig ist.",
             es: "Saldo, el gasto de hoy y lo que queda del presupuesto.",
             fr: "Solde, dépenses du jour et reste du budget.",
             pt: "Saldo, gasto de hoje e o que resta do orçamento.",
         },
-        displayName: { en: "Overview", es: "Resumen", fr: "Aperçu", pt: "Resumo" },
+        displayName: { en: "Overview", de: "Übersicht", es: "Resumen", fr: "Aperçu", pt: "Resumo" },
         name: "Overview",
         size: { minHeight: 110, minWidth: 250, targetCellHeight: 2, targetCellWidth: 4 },
     },
@@ -196,12 +206,14 @@ const ANDROID_WIDGETS = [
         configurable: true,
         description: {
             en: "Your latest entries, with the period total you pick.",
+            de: "Deine letzten Einträge, mit der Summe für den gewählten Zeitraum.",
             es: "Tus últimos registros, con el total del período que elijas.",
             fr: "Vos dernières opérations, avec le total de la période choisie.",
             pt: "Seus últimos lançamentos, com o total do período que escolher.",
         },
         displayName: {
             en: "Recent Entries",
+            de: "Letzte Einträge",
             es: "Últimos registros",
             fr: "Opérations récentes",
             pt: "Últimos lançamentos",
@@ -213,22 +225,30 @@ const ANDROID_WIDGETS = [
         configurable: true,
         description: {
             en: "Spend, income and net for the period, with where the money went.",
+            de: "Ausgaben, Einnahmen und Saldo des Zeitraums, und wohin das Geld geflossen ist.",
             es: "Gasto, ingresos y neto del período, y en qué se fue el dinero.",
             fr: "Dépenses, revenus et solde de la période, et où est allé l'argent.",
             pt: "Gastos, receitas e saldo do período, e para onde foi o dinheiro.",
         },
-        displayName: { en: "Insights", es: "Estadísticas", fr: "Statistiques", pt: "Estatísticas" },
+        displayName: { en: "Insights", de: "Auswertungen", es: "Estadísticas", fr: "Statistiques", pt: "Estatísticas" },
         name: "Trends",
         size: { minHeight: 110, minWidth: 110, targetCellHeight: 2, targetCellWidth: 2 },
     },
     {
         description: {
             en: "One tap opens a new expense.",
+            de: "Ein Tipp öffnet eine neue Ausgabe.",
             es: "Un toque abre un gasto nuevo.",
             fr: "Une touche ouvre une nouvelle dépense.",
             pt: "Um toque abre uma nova despesa.",
         },
-        displayName: { en: "Quick Add", es: "Registro rápido", fr: "Ajout rapide", pt: "Adicionar rápido" },
+        displayName: {
+            en: "Quick Add",
+            de: "Schnell hinzufügen",
+            es: "Registro rápido",
+            fr: "Ajout rapide",
+            pt: "Adicionar rápido",
+        },
         name: "QuickAdd",
         size: { minHeight: 40, minWidth: 40, targetCellHeight: 1, targetCellWidth: 1 },
     },
@@ -244,6 +264,7 @@ const QUICK_ACTIONS = [
         iosIcon: "symbol:plus.circle.fill",
         title: {
             en: "Log Expense",
+            de: "Ausgabe erfassen",
             es: "Registrar gasto",
             fr: "Saisir une dépense",
             pt: "Registrar despesa",
@@ -257,6 +278,7 @@ const QUICK_ACTIONS = [
         iosIcon: "symbol:arrow.down.circle.fill",
         title: {
             en: "Log Income",
+            de: "Einnahme erfassen",
             es: "Registrar ingreso",
             fr: "Saisir un revenu",
             pt: "Registrar receita",
@@ -268,14 +290,21 @@ const QUICK_ACTIONS = [
         href: "outlayr://search",
         id: "search",
         iosIcon: "symbol:magnifyingglass",
-        title: { en: "Search Entries", es: "Buscar", fr: "Rechercher", pt: "Buscar", "pt-PT": "Pesquisar" },
+        title: {
+            en: "Search Entries",
+            de: "Suchen",
+            es: "Buscar",
+            fr: "Rechercher",
+            pt: "Buscar",
+            "pt-PT": "Pesquisar",
+        },
     },
     {
         glyph: "budgets",
         href: "outlayr://budgets",
         id: "budgets",
         iosIcon: "symbol:chart.pie.fill",
-        title: { en: "Balances", es: "Saldos", fr: "Soldes", pt: "Saldos", "pt-PT": "Saldos" },
+        title: { en: "Balances", de: "Kontostände", es: "Saldos", fr: "Soldes", pt: "Saldos", "pt-PT": "Saldos" },
     },
 ] as const satisfies readonly QuickAction[];
 
@@ -375,6 +404,7 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
         usesAppleSignIn: true,
     },
     locales: {
+        de: "./locales/de.json",
         es: "./locales/es.json",
         "es-ES": "./locales/es-ES.json",
         fr: "./locales/fr.json",
@@ -386,7 +416,7 @@ const getConfig = ({ config }: ConfigContext): ExpoConfig => ({
     platforms: ["ios", "android"],
     plugins: [
         "expo-router",
-        ["expo-localization", { supportedLocales: ["en", "es", "es-ES", "fr", "pt", "pt-PT"] }],
+        ["expo-localization", { supportedLocales: ["en", "de", "es", "es-ES", "fr", "pt", "pt-PT"] }],
         "expo-image",
         "expo-sqlite",
         [

@@ -5,12 +5,14 @@ const settingsNotifications = {
     content: {
         "settings.notifications.channel": t({
             en: "Reminders",
+            de: "Erinnerungen",
             es: "Recordatorios",
             fr: "Rappels",
             pt: "Lembretes",
         }),
         "settings.notifications.custom": t({
             en: "Custom time",
+            de: "Eigene Uhrzeit",
             es: "Hora personalizada",
             fr: "Heure personnalisée",
             pt: "Horário personalizado",
@@ -18,6 +20,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.deniedBody": t({
             en: "Outlayr cannot ask again once you have declined. Turn notifications on for Outlayr in iOS Settings and this switch will follow.",
+            de: "Outlayr kann nach einer Ablehnung nicht erneut fragen. Aktiviere Mitteilungen für Outlayr in den iOS-Einstellungen, dann folgt dieser Schalter.",
             es: "Como ya las rechazaste, Outlayr no puede volver a preguntarte. Activa las notificaciones de Outlayr en Configuración y este interruptor se actualizará solo.",
             "es-ES":
                 "Como ya las has rechazado, Outlayr no puede volver a preguntarte. Activa las notificaciones de Outlayr en Ajustes y este interruptor se actualizará solo.",
@@ -28,6 +31,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.deniedBody.android": t({
             en: "Outlayr cannot ask again once you have declined. Turn notifications on for Outlayr in your phone's settings and this switch will follow.",
+            de: "Outlayr kann nach einer Ablehnung nicht erneut fragen. Aktiviere Benachrichtigungen für Outlayr in den Einstellungen deines Handys, dann folgt dieser Schalter.",
             es: "Como ya las rechazaste, Outlayr no puede volver a preguntarte. Activa las notificaciones de Outlayr en la configuración del celular y este interruptor se actualizará solo.",
             "es-ES":
                 "Como ya las has rechazado, Outlayr no puede volver a preguntarte. Activa las notificaciones de Outlayr en los ajustes del móvil y este interruptor se actualizará solo.",
@@ -38,12 +42,14 @@ const settingsNotifications = {
         }),
         "settings.notifications.deniedTitle": t({
             en: "Notifications are off",
+            de: "Benachrichtigungen sind aus",
             es: "Las notificaciones están desactivadas",
             fr: "Notifications désactivées",
             pt: "As notificações estão desativadas",
         }),
         "settings.notifications.evening": t({
             en: "Every evening",
+            de: "Jeden Abend",
             es: "Cada noche",
             fr: "Chaque soir",
             pt: "Toda noite",
@@ -51,12 +57,14 @@ const settingsNotifications = {
         }),
         "settings.notifications.eveningDetail": t({
             en: "A nudge at {time}, once the day is mostly done.",
+            de: "Ein Anstoß um {time}, wenn der Tag fast vorbei ist.",
             es: "Un aviso a las {time}, cuando el día ya casi termina.",
             fr: "Un petit rappel à {time}, quand la journée est presque finie.",
             pt: "Um lembrete às {time}, quando o dia já está quase no fim.",
         }),
         "settings.notifications.footer": t({
             en: "Only on days with nothing logged. From this device, never a server.",
+            de: "Nur an Tagen ohne Einträge. Kommt von diesem Gerät, nie von einem Server.",
             es: "Solo los días sin nada registrado. Desde este dispositivo, nunca desde un servidor.",
             fr: "Uniquement les jours sans opération saisie. Depuis cet appareil, jamais depuis un serveur.",
             pt: "Só nos dias sem nada registrado. Deste dispositivo, nunca de um servidor.",
@@ -64,6 +72,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.installmentFooter": t({
             en: "At your reminder time, the day before each installment you still owe, and before the day you said you'd pay a debt.",
+            de: "Zur Uhrzeit deiner Erinnerung, am Tag vor jeder Rate, die du noch schuldest, und vor dem Tag, an dem du eine Schuld zurückzahlen wolltest.",
             es: "A la hora de tus recordatorios, el día antes de cada cuota que aún debes y del día en que dijiste que pagarías una deuda.",
             fr: "À l'heure de vos rappels, la veille de chaque échéance restant due, et avant le jour où vous avez prévu de rembourser une dette.",
             pt: "No horário dos seus lembretes, no dia anterior a cada parcela que você ainda deve e antes do dia em que você disse que pagaria uma dívida.",
@@ -72,6 +81,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.installmentSection": t({
             en: "Installments",
+            de: "Raten",
             es: "Cuotas",
             fr: "Échéances",
             pt: "Parcelas",
@@ -79,6 +89,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.installmentToggle": t({
             en: "Remind me the day before",
+            de: "Am Tag vorher erinnern",
             es: "Avísame el día antes",
             fr: "Me rappeler la veille",
             pt: "Me avise no dia anterior",
@@ -86,6 +97,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.morning": t({
             en: "Every morning",
+            de: "Jeden Morgen",
             es: "Cada mañana",
             fr: "Chaque matin",
             pt: "Toda manhã",
@@ -93,6 +105,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.morningDetail": t({
             en: "A nudge at {time}, before the day has spent anything.",
+            de: "Ein Anstoß um {time}, bevor am Tag etwas ausgegeben wurde.",
             es: "Un aviso a las {time}, antes de que hayas gastado algo.",
             fr: "Un petit rappel à {time}, avant toute dépense de la journée.",
             pt: "Um lembrete às {time}, antes de você gastar qualquer coisa no dia.",
@@ -100,18 +113,21 @@ const settingsNotifications = {
         }),
         "settings.notifications.nextAt": t({
             en: "Next reminder at {time}.",
+            de: "Nächste Erinnerung um {time}.",
             es: "Próximo recordatorio a las {time}.",
             fr: "Prochain rappel à {time}.",
             pt: "Próximo lembrete às {time}.",
         }),
         "settings.notifications.notNow": t({
             en: "Not now",
+            de: "Nicht jetzt",
             es: "Ahora no",
             fr: "Pas maintenant",
             pt: "Agora não",
         }),
         "settings.notifications.openSettings": t({
             en: "Open Settings",
+            de: "Einstellungen öffnen",
             es: "Abrir Configuración",
             "es-ES": "Abrir Ajustes",
             fr: "Ouvrir Réglages",
@@ -120,12 +136,14 @@ const settingsNotifications = {
         }),
         "settings.notifications.section": t({
             en: "Daily reminder",
+            de: "Tägliche Erinnerung",
             es: "Recordatorio diario",
             fr: "Rappel quotidien",
             pt: "Lembrete diário",
         }),
         "settings.notifications.subscriptionFooter": t({
             en: "Each subscription decides how far ahead it warns you, on its own screen. Off silences all of them without changing what any one of them says.",
+            de: "Jedes Abo legt auf seinem eigenen Bildschirm fest, wie früh es dich warnt. Aus schaltet alle stumm, ohne zu ändern, was bei einem einzelnen eingestellt ist.",
             es: "Cada suscripción define en su propia pantalla con cuánta anticipación te avisa. Si lo desactivas, se silencian todas sin cambiar su configuración.",
             fr: "Chaque abonnement choisit, sur son propre écran, combien de temps à l'avance vous prévenir. Désactiver ce réglage les met tous en sourdine sans rien changer à leurs paramètres.",
             pt: "Cada assinatura define, na própria tela, com quanta antecedência te avisa. Desativar silencia todas, sem mudar o que cada uma diz.",
@@ -134,6 +152,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.subscriptionSection": t({
             en: "Subscription charges",
+            de: "Abo-Abbuchungen",
             es: "Cobros de suscripciones",
             fr: "Prélèvements d'abonnements",
             pt: "Cobranças de assinaturas",
@@ -141,6 +160,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.subscriptionToggle": t({
             en: "Warn me before a charge",
+            de: "Vor einer Abbuchung warnen",
             es: "Avísame antes de un cobro",
             fr: "Me prévenir avant un prélèvement",
             pt: "Me avise antes de uma cobrança",
@@ -148,6 +168,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.time": t({
             en: "Time",
+            de: "Uhrzeit",
             es: "Hora",
             fr: "Heure",
             pt: "Horário",
@@ -155,6 +176,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.toggle": t({
             en: "Remind me to log",
+            de: "Ans Erfassen erinnern",
             es: "Recuérdame registrar",
             fr: "Me rappeler de saisir",
             pt: "Me lembre de registrar",
@@ -162,6 +184,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.whenSection": t({
             en: "When",
+            de: "Wann",
             es: "Cuándo",
             fr: "Quand",
             pt: "Quando",

@@ -53,6 +53,13 @@ describe("amount", () => {
         ["fr", "J'ai payé 1 500,50 euros pour le café", 1500.5],
         ["fr", "J'ai payé 1 500,50 euros pour le café", 1500.5],
         ["fr", "J'ai payé 15,99 euros pour le café", 15.99],
+        ["de", "Ich habe 1.500,50 Euro für Kaffee bezahlt", 1500.5],
+        ["de", "Ich habe 15,99 Euro für Kaffee bezahlt", 15.99],
+        ["de", "Ich habe 1.500 Euro für Miete bezahlt", 1500],
+        ["de", "Ich habe 3 Tausend Euro für Miete bezahlt", 3000],
+        ["de", "50 Euro bei REWE am 5. Mai", 50],
+        ["de", "Ich habe am 5. Mai 50 Euro bezahlt", 50],
+        ["de", "Ich habe am 5,50 Euro bezahlt", 5.5],
     ] as const)("%s: %s", (language, text, expected) => {
         expect(parse(text, language, { final: true }).amount?.value).toBe(expected);
     });
@@ -159,6 +166,8 @@ describe("transfers", () => {
         ["pt", "Transferi 200 dólares da Banesco para a Zelle", "Banesco", "Zelle"],
         ["fr", "J'ai transféré 200 euros de Banesco à Zelle", "Banesco", "Zelle"],
         ["fr", "J'ai viré 200 euros de mon compte Zelle vers Banesco USD", "Zelle", "Banesco USD"],
+        ["de", "Ich habe 200 Euro von Banesco auf Zelle überwiesen", "Banesco", "Zelle"],
+        ["de", "Ich habe 200 Euro von meinem Konto Zelle auf Banesco USD verschoben", "Zelle", "Banesco USD"],
     ] as const)("%s: %s", (language, text, from, to) => {
         const draft = parse(text, language, { final: true });
         expect(draft.kind?.value).toBe("transfer");
@@ -207,6 +216,10 @@ describe("income", () => {
         ["fr", "J'ai reçu 500 euros", true],
         ["fr", "On m'a payé 500 euros", true],
         ["fr", "J'ai payé 40 euros", false],
+        ["de", "Ich habe 500 Euro bekommen", true],
+        ["de", "Mir wurden 500 Euro überwiesen", true],
+        ["de", "Mein Gehalt von 2.500 Euro", true],
+        ["de", "Ich habe 40 Euro bezahlt", false],
     ] as const)("%s: %s", (language, text, expected) => {
         expect(parse(text, language, { final: true }).income?.value).toBe(expected);
     });
@@ -233,6 +246,8 @@ describe("dates", () => {
         expect(parse("pagué anteayer", "es").date?.value.getDate()).toBe(9);
         expect(parse("paguei ontem", "pt").date?.value.getDate()).toBe(10);
         expect(parse("j'ai payé avant-hier", "fr").date?.value.getDate()).toBe(9);
+        expect(parse("ich habe gestern bezahlt", "de").date?.value.getDate()).toBe(10);
+        expect(parse("ich habe vorgestern bezahlt", "de").date?.value.getDate()).toBe(9);
     });
 
     it("keeps the clock for today and noon for other days", () => {
@@ -248,11 +263,13 @@ describe("dates", () => {
         expect(day(parse("pagué el sábado ok", "es"))).toBe(7);
         expect(day(parse("paguei na terça-feira ok", "pt"))).toBe(10);
         expect(day(parse("j'ai payé vendredi dernier", "fr"))).toBe(6);
+        expect(day(parse("ich habe am Freitag bezahlt ok", "de"))).toBe(6);
     });
 
     it("skips an upcoming weekday and waits on a weekday at the tail", () => {
         expect(parse("paid next friday ok", "en").date).toBeNull();
         expect(parse("pagué el lunes que viene", "es").date).toBeNull();
+        expect(parse("ich habe nächsten Freitag bezahlt", "de").date).toBeNull();
         expect(parse("pagué el lunes", "es").date).toBeNull();
         expect(parse("pagué el lunes", "es", { final: true }).date?.value.getDate()).toBe(9);
     });
@@ -287,6 +304,13 @@ describe("recurrence", () => {
         ["fr", "15 euros chaque mois", 1, RECURRING_TYPE.monthly],
         ["fr", "15 euros toutes les 2 semaines", 2, RECURRING_TYPE.weekly],
         ["fr", "15 euros par an", 1, RECURRING_TYPE.yearly],
+        ["de", "15 Euro jeden Monat", 1, RECURRING_TYPE.monthly],
+        ["de", "15 Euro alle 2 Wochen", 2, RECURRING_TYPE.weekly],
+        ["de", "15 Euro jeden zweiten Monat", 2, RECURRING_TYPE.monthly],
+        ["de", "15 Euro jedes Jahr", 1, RECURRING_TYPE.yearly],
+        ["de", "15 Euro jeden Tag", 1, RECURRING_TYPE.daily],
+        ["de", "15 Euro wöchentlich", 1, RECURRING_TYPE.weekly],
+        ["de", "15 Euro jährlich", 1, RECURRING_TYPE.yearly],
     ] as const)("%s: %s", (language, text, coefficient, type) => {
         expect(parse(text, language).recurrence?.value).toStrictEqual({ coefficient, type });
     });
@@ -320,6 +344,9 @@ describe("while the text grows", () => {
         ["pt", "Transferi 200 dólares da Banesco para a Zelle ontem"],
         ["fr", "J'ai payé 1 500,50 euros pour le café avec Banesco USD hier chaque mois"],
         ["fr", "J'ai transféré 200 euros de Banesco à Zelle hier"],
+        ["de", "Ich habe 1.500,50 Euro für Café mit Banesco USD gestern jeden Monat bezahlt"],
+        ["de", "Ich überweise 200 Euro von Banesco auf Zelle gestern"],
+        ["de", "Mir wurden 40 Euro Salary am Montag überwiesen"],
     ] as const;
 
     const FIELDS = [

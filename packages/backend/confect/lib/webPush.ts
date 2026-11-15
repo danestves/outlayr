@@ -155,6 +155,7 @@ export const reminderDue = (
 
 const NUDGE = {
     en: "Nothing logged today. Add it before you forget.",
+    de: "Heute noch nichts erfasst. Trag es ein, bevor du es vergisst.",
     es: "Hoy no registraste nada. Agrégalo antes de que se te olvide.",
     fr: "Rien de saisi aujourd'hui. Ajoutez-le avant d'oublier.",
     pt: "Nada registrado hoje. Adicione antes que esqueça.",

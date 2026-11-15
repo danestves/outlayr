@@ -19,10 +19,14 @@ function dateName(key: string, language: Language, params?: Readonly<Record<stri
     });
 }
 
+export function dayOfMonth(date: Date, language: Language = runtimeLanguage()): string {
+    return language === "de" ? `${date.getDate()}.` : String(date.getDate());
+}
+
 /** e.g. "7 Jul". Noon keeps the key's calendar day whatever the zone offset. */
 export function formatDayMonth(dateKey: string, language: Language = runtimeLanguage()): string {
     const date = new Date(`${dateKey}T12:00:00`);
-    return `${date.getDate()} ${monthAbbrevTitle(date, language)}`;
+    return `${dayOfMonth(date, language)} ${monthAbbrevTitle(date, language)}`;
 }
 
 export function monthAbbrevTitle(date: Date, language: Language = runtimeLanguage()): string {
@@ -63,14 +67,14 @@ export function formatMonthHeader(date: Date, language: Language = runtimeLangua
 
 export function formatDateHeader(day: Date, now: Date = new Date(), language: Language = runtimeLanguage()): string {
     const weekday = dateName(`dates.weekday.${day.getDay()}`, language).toUpperCase();
-    const base = `${weekday}, ${day.getDate()} ${monthAbbrev(day, language)}`;
+    const base = `${weekday}, ${dayOfMonth(day, language)} ${monthAbbrev(day, language)}`;
     return day.getFullYear() < now.getFullYear() ? `${base} '${String(day.getFullYear()).slice(-2)}` : base;
 }
 
 /** e.g. "Sat, 7 Nov", with the year once it leaves the current one, as a yearly cadence does on its first step. */
 export function formatChargeDate(date: Date, now: Date = new Date(), language: Language = runtimeLanguage()): string {
     const weekday = dateName(`dates.weekday.${date.getDay()}`, language);
-    const base = `${weekday}, ${date.getDate()} ${monthAbbrevTitle(date, language)}`;
+    const base = `${weekday}, ${dayOfMonth(date, language)} ${monthAbbrevTitle(date, language)}`;
     return date.getFullYear() === now.getFullYear() ? base : `${base} ${date.getFullYear()}`;
 }
 
@@ -102,15 +106,15 @@ export function formatDueMark(date: Date, from: Date, language: Language = runti
 }
 
 export function formatWeekdayDay(date: Date, language: Language = runtimeLanguage()): string {
-    return `${dateName(`dates.weekday.${date.getDay()}`, language)} ${date.getDate()}`;
+    return `${dateName(`dates.weekday.${date.getDay()}`, language)} ${dayOfMonth(date, language)}`;
 }
 
 export function formatUpcomingDate(date: Date, language: Language = runtimeLanguage()): string {
-    return `${date.getDate()} ${monthAbbrev(date, language)}`;
+    return `${dayOfMonth(date, language)} ${monthAbbrev(date, language)}`;
 }
 
 export function formatSentenceDate(date: Date, language: Language = runtimeLanguage()): string {
-    return `${date.getDate()} ${monthAbbrevTitle(date, language)}`;
+    return `${dayOfMonth(date, language)} ${monthAbbrevTitle(date, language)}`;
 }
 
 /** The 24-hour form pads the hour as those locales write it; the 12-hour form must not ("09:04 PM"). */
@@ -136,5 +140,5 @@ export function formatTargetMonth(date: Date, language: Language = runtimeLangua
 }
 
 export function formatTargetDate(date: Date, language: Language = runtimeLanguage()): string {
-    return `${date.getDate()} ${formatTargetMonth(date, language)}`;
+    return `${dayOfMonth(date, language)} ${formatTargetMonth(date, language)}`;
 }

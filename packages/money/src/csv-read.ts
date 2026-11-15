@@ -95,18 +95,18 @@ const DATE_FORMATS = [
 ] as const;
 
 const MONTH_NAMES = [
-    ["january", "jan", "enero", "ene", "janeiro"],
-    ["february", "feb", "febrero", "fevereiro", "fev"],
-    ["march", "mar", "marzo", "marco"],
+    ["january", "jan", "enero", "ene", "janeiro", "januar"],
+    ["february", "feb", "febrero", "fevereiro", "fev", "februar"],
+    ["march", "mar", "marzo", "marco", "marz", "maerz"],
     ["april", "apr", "abril", "abr"],
     ["may", "mayo", "maio", "mai"],
-    ["june", "jun", "junio", "junho"],
-    ["july", "jul", "julio", "julho"],
+    ["june", "jun", "junio", "junho", "juni"],
+    ["july", "jul", "julio", "julho", "juli"],
     ["august", "aug", "agosto", "ago"],
     ["september", "sep", "sept", "septiembre", "setiembre", "set", "setembro"],
-    ["october", "oct", "octubre", "outubro", "out"],
+    ["october", "oct", "octubre", "outubro", "out", "oktober", "okt"],
     ["november", "nov", "noviembre", "novembro"],
-    ["december", "dec", "diciembre", "dic", "dezembro", "dez"],
+    ["december", "dec", "diciembre", "dic", "dezembro", "dez", "dezember"],
 ] as const;
 const MONTH_BY_NAME = new Map<string, number>(
     MONTH_NAMES.flatMap((names, index) => names.map((name) => [name, index + 1] as const))
@@ -114,7 +114,7 @@ const MONTH_BY_NAME = new Map<string, number>(
 const MONTH_FIRST_LONG =
     /^(?<month>\p{L}+)\.?\s+(?<day>\d{1,2}),\s*(?<year>\d{4})(?:\s+(?<hours>\d{1,2}):(?<minutes>\d{2})\s*(?:(?<meridiem>[ap])\.?\s?m\.?)?)?$/iu;
 const DAY_FIRST_LONG =
-    /^(?<day>\d{1,2})\s+(?:de\s+)?(?<month>\p{L}+)\.?\s+(?:de\s+)?(?<year>\d{4})(?:\s+(?<hours>\d{1,2}):(?<minutes>\d{2})\s*(?:(?<meridiem>[ap])\.?\s?m\.?)?)?$/iu;
+    /^(?<day>\d{1,2})\.?\s+(?:de\s+)?(?<month>\p{L}+)\.?\s+(?:de\s+)?(?<year>\d{4})(?:\s+(?<hours>\d{1,2}):(?<minutes>\d{2})\s*(?:(?<meridiem>[ap])\.?\s?m\.?)?)?$/iu;
 const COMBINING_MARKS = /\p{M}/gu;
 
 const TOKENS = ["yyyy", "MM", "dd", "HH", "mm", "ss"] as const;

@@ -10,5 +10,8 @@ export function flyleafDate(date: Date, language: Language): string {
     if (language === "en") {
         return `${month} ${day}, ${year}`;
     }
+    if (language === "de") {
+        return `${day}. ${month} ${year}`;
+    }
     return language === "fr" ? `${day} ${month} ${year}` : `${day} de ${month} de ${year}`;
 }

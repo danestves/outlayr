@@ -5,36 +5,42 @@ const update = {
     content: {
         "update.failed": t({
             en: "The update did not install. Try again.",
+            de: "Das Update wurde nicht installiert. Versuch es noch mal.",
             es: "La actualización no se instaló. Inténtalo de nuevo.",
             fr: "La mise à jour ne s'est pas installée. Réessayez.",
             pt: "A atualização não foi instalada. Tente de novo.",
         }),
         "update.later": t({
             en: "Later",
+            de: "Später",
             es: "Después",
             fr: "Plus tard",
             pt: "Depois",
         }),
         "update.meta": t({
             en: "Update · {version} · {date}",
+            de: "Update · {version} · {date}",
             es: "Actualización · {version} · {date}",
             fr: "Mise à jour · {version} · {date}",
             pt: "Atualização · {version} · {date}",
         }),
         "update.now": t({
             en: "Update now",
+            de: "Jetzt aktualisieren",
             es: "Actualizar ahora",
             fr: "Mettre à jour",
             pt: "Atualizar agora",
         }),
         "update.title": t({
             en: "What's new",
+            de: "Neuigkeiten",
             es: "Novedades",
             fr: "Nouveautés",
             pt: "Novidades",
         }),
         "update.updating": t({
             en: "Updating, the app restarts when it is done",
+            de: "Aktualisierung läuft, die App startet danach neu",
             es: "Actualizando, la app se reinicia al terminar",
             fr: "Mise à jour en cours, l'app redémarrera à la fin",
             pt: "Atualizando, o app reinicia ao terminar",

@@ -59,6 +59,32 @@ const COPY = {
         reply: "Questions? Reply to this email.",
         takesEffect: "Takes effect",
     },
+    de: {
+        after: "Du musst nichts tun. Du kannst jederzeit in den Einstellungen deine Daten exportieren oder löschen.",
+        both: {
+            lead: (date) => `Unsere Datenschutzerklärung und unsere Nutzungsbedingungen ändern sich am ${date}.`,
+            subject: "Änderungen an unserer Datenschutzerklärung und unseren Nutzungsbedingungen",
+        },
+        documents: {
+            privacy: {
+                intro: "Was sich in der Datenschutzerklärung ändert:",
+                lead: (date) => `Unsere Datenschutzerklärung ändert sich am ${date}.`,
+                subject: "Änderungen an unserer Datenschutzerklärung",
+            },
+            terms: {
+                intro: "Was sich in den Nutzungsbedingungen ändert:",
+                lead: (date) => `Unsere Nutzungsbedingungen ändern sich am ${date}.`,
+                subject: "Änderungen an unseren Nutzungsbedingungen",
+            },
+        },
+        footer: (email) => `Ein Servicehinweis, gesendet an ${email} und an alle anderen Outlayr-Konten.`,
+        keepUsing: (date) =>
+            `Wenn du Outlayr am ${date} oder danach weiter nutzt, gelten die neuen Bedingungen. Wenn du nicht einverstanden bist, kündige vorher jedes Abo und lösche dein Konto.`,
+        link: "Neue Fassung lesen",
+        preview: "Was sich ändert und ab wann.",
+        reply: "Fragen? Antworte auf diese E-Mail.",
+        takesEffect: "Tritt in Kraft",
+    },
     es: {
         after: "No tienes que hacer nada. Puedes exportar o borrar tus datos cuando quieras en Configuración.",
         both: {

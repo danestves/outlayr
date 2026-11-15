@@ -5,6 +5,7 @@ const onboarding = {
     content: {
         "onboarding.autoLog.applePay.detail": t({
             en: "Card taps log themselves",
+            de: "Kartenzahlungen werden von selbst erfasst",
             es: "Cada pago con la tarjeta se registra solo",
             fr: "Chaque paiement par carte s'enregistre seul",
             pt: "Cada pagamento com o cartão se registra sozinho",
@@ -12,6 +13,7 @@ const onboarding = {
         }),
         "onboarding.autoLog.bank.detail": t({
             en: "Purchases in your bank's notifications",
+            de: "Käufe aus den Benachrichtigungen deiner Bank",
             es: "Compras en las notificaciones de tu banco",
             fr: "Achats dans les notifications de votre banque",
             pt: "Compras nas notificações do seu banco",
@@ -19,12 +21,14 @@ const onboarding = {
         }),
         "onboarding.autoLog.count": t({
             en: "{on} of {total} on",
+            de: "{on} von {total} an",
             es: "{on} de {total} activados",
             fr: "{on} sur {total} activés",
             pt: "{on} de {total} ativados",
         }),
         "onboarding.autoLog.eyebrow": t({
             en: "Auto-log",
+            de: "Auto-Erfassung",
             es: "Registro automático",
             fr: "Saisie automatique",
             pt: "Registro automático",
@@ -32,12 +36,14 @@ const onboarding = {
         }),
         "onboarding.autoLog.setUp": t({
             en: "Set up",
+            de: "Einrichten",
             es: "Configurar",
             fr: "Configurer",
             pt: "Configurar",
         }),
         "onboarding.autoLog.title": t({
             en: "Let Outlayr do the typing",
+            de: "Lass Outlayr das Tippen übernehmen",
             es: "Deja que Outlayr escriba por ti",
             fr: "Laissez Outlayr saisir pour vous",
             pt: "Deixe o Outlayr digitar por você",
@@ -45,12 +51,14 @@ const onboarding = {
         }),
         "onboarding.bankTexts.action": t({
             en: "Turn it on",
+            de: "Aktivieren",
             es: "Activar",
             fr: "Activer",
             pt: "Ativar",
         }),
         "onboarding.bankTexts.footnote": t({
             en: "Opens Settings. You choose which senders it reads.",
+            de: "Öffnet die Einstellungen. Du wählst, welche Absender gelesen werden.",
             es: "Abre Ajustes. Tú eliges qué remitentes lee.",
             fr: "Ouvre les Paramètres. Vous choisissez les expéditeurs lus.",
             pt: "Abre as Configurações. Você escolhe quais remetentes ele lê.",
@@ -58,12 +66,14 @@ const onboarding = {
         }),
         "onboarding.bankTexts.textMessage": t({
             en: "Text message",
+            de: "SMS",
             es: "Mensaje de texto",
             fr: "SMS",
             pt: "Mensagem de texto",
         }),
         "onboarding.bankTexts.title": t({
             en: "Your bank's texts log themselves",
+            de: "Die SMS deiner Bank werden von selbst erfasst",
             es: "Los mensajes de tu banco se registran solos",
             fr: "Les SMS de votre banque s'enregistrent seuls",
             pt: "As mensagens do seu banco se registram sozinhas",
@@ -71,6 +81,7 @@ const onboarding = {
         }),
         "onboarding.cover.line": t({
             en: "A ledger you keep by hand. Every entry yours, on this device.",
+            de: "Ein Haushaltsbuch, das du von Hand führst. Jeder Eintrag gehört dir, auf diesem Gerät.",
             es: "Un registro que llevas a mano. Cada entrada es tuya, en este dispositivo.",
             fr: "Un journal tenu à la main. Chaque opération vous appartient, sur cet appareil.",
             pt: "Um livro-caixa que você preenche à mão. Cada lançamento é seu, neste dispositivo.",
@@ -78,12 +89,14 @@ const onboarding = {
         }),
         "onboarding.cover.noSignUp": t({
             en: "No sign-up, no code.",
+            de: "Ohne Registrierung, ohne Code.",
             es: "Sin crear cuenta, sin código.",
             fr: "Sans inscription, sans code.",
             pt: "Sem criar conta, sem código.",
         }),
         "onboarding.currency.body": t({
             en: "Everything totals in this. Change it any time; old entries keep their own.",
+            de: "Alle Summen laufen in dieser Währung. Du kannst sie jederzeit ändern; alte Einträge behalten ihre eigene.",
             es: "Todo se suma en esta moneda. Cámbiala cuando quieras; las entradas anteriores conservan la suya.",
             fr: "Tous les totaux sont dans cette devise. Modifiable à tout moment : les anciennes opérations gardent la leur.",
             pt: "Tudo é somado nesta moeda. Mude quando quiser; os lançamentos antigos mantêm a deles.",
@@ -91,24 +104,28 @@ const onboarding = {
         }),
         "onboarding.currency.change": t({
             en: "Change",
+            de: "Ändern",
             es: "Cambiar",
             fr: "Changer",
             pt: "Alterar",
         }),
         "onboarding.currency.eyebrow": t({
             en: "Currency",
+            de: "Währung",
             es: "Moneda",
             fr: "Devise",
             pt: "Moeda",
         }),
         "onboarding.currency.openHint": t({
             en: "Opens the currency list",
+            de: "Öffnet die Währungsliste",
             es: "Abre la lista de monedas",
             fr: "Ouvre la liste des devises",
             pt: "Abre a lista de moedas",
         }),
         "onboarding.currency.picker.searchPlaceholder": t({
             en: "Search currencies",
+            de: "Währung suchen",
             es: "Buscar monedas",
             fr: "Rechercher une devise",
             pt: "Buscar moedas",
@@ -116,12 +133,14 @@ const onboarding = {
         }),
         "onboarding.currency.picker.title": t({
             en: "Select a currency",
+            de: "Währung auswählen",
             es: "Selecciona una moneda",
             fr: "Choisir une devise",
             pt: "Escolha uma moeda",
         }),
         "onboarding.currency.saveFailed.body": t({
             en: "Outlayr could not record your currency. Try again.",
+            de: "Outlayr konnte deine Währung nicht speichern. Versuch es noch mal.",
             es: "Outlayr no pudo registrar tu moneda. Inténtalo de nuevo.",
             fr: "Outlayr n'a pas pu enregistrer votre devise. Réessayez.",
             pt: "O Outlayr não conseguiu registrar sua moeda. Tente de novo.",
@@ -129,6 +148,7 @@ const onboarding = {
         }),
         "onboarding.currency.saveFailed.title": t({
             en: "Could not save",
+            de: "Speichern nicht möglich",
             es: "No se pudo guardar",
             fr: "Enregistrement impossible",
             pt: "Não foi possível salvar",
@@ -136,6 +156,7 @@ const onboarding = {
         }),
         "onboarding.currency.saving": t({
             en: "Saving…",
+            de: "Wird gespeichert…",
             es: "Guardando…",
             fr: "Enregistrement…",
             pt: "Salvando…",
@@ -143,12 +164,14 @@ const onboarding = {
         }),
         "onboarding.currency.shortcut": t({
             en: "I already have an account",
+            de: "Ich habe schon ein Konto",
             es: "Ya tengo una cuenta",
             fr: "J'ai déjà un compte",
             pt: "Já tenho uma conta",
         }),
         "onboarding.currency.title": t({
             en: "What are your numbers in?",
+            de: "In was rechnest du?",
             es: "¿En qué moneda manejas tu dinero?",
             fr: "Dans quelle devise comptez-vous ?",
             pt: "Em qual moeda você controla seu dinheiro?",
@@ -156,18 +179,21 @@ const onboarding = {
         }),
         "onboarding.firstEntry.eyebrow": t({
             en: "First line",
+            de: "Erste Zeile",
             es: "Primera línea",
             fr: "Première ligne",
             pt: "Primeira linha",
         }),
         "onboarding.firstEntry.finishFailed": t({
             en: "Setup didn't finish. Try again.",
+            de: "Die Einrichtung wurde nicht abgeschlossen. Versuch es noch mal.",
             es: "La configuración no terminó. Inténtalo de nuevo.",
             fr: "La configuration n'a pas abouti. Réessayez.",
             pt: "A configuração não terminou. Tente de novo.",
         }),
         "onboarding.firstEntry.later": t({
             en: "Later",
+            de: "Später",
             es: "Más tarde",
             fr: "Plus tard",
             pt: "Depois",
@@ -175,12 +201,14 @@ const onboarding = {
         }),
         "onboarding.firstEntry.sentence": t({
             en: "Spent {amount} on {category} today.",
+            de: "Heute {amount} für {category} ausgegeben.",
             es: "Gasté {amount} en {category} hoy.",
             fr: "J'ai dépensé {amount} pour {category} aujourd'hui.",
             pt: "Gastei {amount} em {category} hoje.",
         }),
         "onboarding.firstEntry.title": t({
             en: "What did you last pay for?",
+            de: "Wofür hast du zuletzt bezahlt?",
             es: "¿Qué fue lo último que pagaste?",
             fr: "Qu'avez-vous payé en dernier ?",
             pt: "Qual foi a última coisa que você pagou?",
@@ -188,12 +216,14 @@ const onboarding = {
         }),
         "onboarding.heardFrom.detail": t({
             en: "Where? (optional)",
+            de: "Wo? (optional)",
             es: "¿Dónde? (opcional)",
             fr: "Où ? (facultatif)",
             pt: "Onde? (opcional)",
         }),
         "onboarding.heardFrom.eyebrow": t({
             en: "Saved · {amount} {category}",
+            de: "Gespeichert · {amount} {category}",
             es: "Guardado · {amount} {category}",
             fr: "Enregistré · {amount} {category}",
             pt: "Salvo · {amount} {category}",
@@ -201,6 +231,7 @@ const onboarding = {
         }),
         "onboarding.heardFrom.skip": t({
             en: "Skip",
+            de: "Überspringen",
             es: "Omitir",
             fr: "Passer",
             pt: "Pular",
@@ -208,18 +239,21 @@ const onboarding = {
         }),
         "onboarding.heardFrom.source.ai_assistant": t({
             en: "AI assistant",
+            de: "KI-Assistent",
             es: "Un asistente de IA",
             fr: "Un assistant IA",
             pt: "Um assistente de IA",
         }),
         "onboarding.heardFrom.source.ai_assistant.hint": t({
             en: "ChatGPT, Claude, Gemini, Perplexity",
+            de: "ChatGPT, Claude, Gemini, Perplexity",
             es: "ChatGPT, Claude, Gemini, Perplexity",
             fr: "ChatGPT, Claude, Gemini, Perplexity",
             pt: "ChatGPT, Claude, Gemini, Perplexity",
         }),
         "onboarding.heardFrom.source.app_store": t({
             en: "App Store search",
+            de: "Suche im App Store",
             es: "Búsqueda en App Store",
             fr: "Recherche sur l'App Store",
             pt: "Busca na App Store",
@@ -227,6 +261,7 @@ const onboarding = {
         }),
         "onboarding.heardFrom.source.app_store.android": t({
             en: "Google Play search",
+            de: "Suche in Google Play",
             es: "Búsqueda en Google Play",
             fr: "Recherche sur Google Play",
             pt: "Busca no Google Play",
@@ -234,54 +269,63 @@ const onboarding = {
         }),
         "onboarding.heardFrom.source.friend": t({
             en: "A friend",
+            de: "Ein Freund oder Bekannter",
             es: "Un amigo o familiar",
             fr: "Un ami ou un proche",
             pt: "Um amigo ou familiar",
         }),
         "onboarding.heardFrom.source.instagram": t({
             en: "Instagram",
+            de: "Instagram",
             es: "Instagram",
             fr: "Instagram",
             pt: "Instagram",
         }),
         "onboarding.heardFrom.source.linkedin": t({
             en: "LinkedIn",
+            de: "LinkedIn",
             es: "LinkedIn",
             fr: "LinkedIn",
             pt: "LinkedIn",
         }),
         "onboarding.heardFrom.source.other": t({
             en: "Something else",
+            de: "Etwas anderes",
             es: "Otro lugar",
             fr: "Autre chose",
             pt: "Outro lugar",
         }),
         "onboarding.heardFrom.source.reddit_hn": t({
             en: "Reddit or Hacker News",
+            de: "Reddit oder Hacker News",
             es: "Reddit o Hacker News",
             fr: "Reddit ou Hacker News",
             pt: "Reddit ou Hacker News",
         }),
         "onboarding.heardFrom.source.search": t({
             en: "Google or Bing",
+            de: "Google oder Bing",
             es: "Google o Bing",
             fr: "Google ou Bing",
             pt: "Google ou Bing",
         }),
         "onboarding.heardFrom.source.tiktok": t({
             en: "TikTok",
+            de: "TikTok",
             es: "TikTok",
             fr: "TikTok",
             pt: "TikTok",
         }),
         "onboarding.heardFrom.source.x": t({
             en: "X",
+            de: "X",
             es: "X",
             fr: "X",
             pt: "X",
         }),
         "onboarding.heardFrom.title": t({
             en: "How did you hear about Outlayr?",
+            de: "Wie hast du von Outlayr erfahren?",
             es: "¿Cómo conociste Outlayr?",
             fr: "Comment avez-vous connu Outlayr ?",
             pt: "Como você conheceu o Outlayr?",
@@ -289,6 +333,7 @@ const onboarding = {
         }),
         "onboarding.rhythm.body": t({
             en: "One quiet nudge each evening. iOS isn't asked for permission until your first entry is saved.",
+            de: "Jeden Abend ein leiser Anstoß. iOS wird erst um Erlaubnis gefragt, wenn dein erster Eintrag gespeichert ist.",
             es: "Un aviso discreto cada noche. iOS no te pide permiso hasta que guardes tu primera entrada.",
             fr: "Un rappel discret chaque soir. iOS ne demandera l'autorisation qu'après l'enregistrement de votre première opération.",
             pt: "Um lembrete discreto toda noite. O iOS só pede permissão depois que você salvar seu primeiro lançamento.",
@@ -297,6 +342,7 @@ const onboarding = {
         }),
         "onboarding.rhythm.body.android": t({
             en: "One quiet nudge each evening. Android won't ask for permission until your first entry is saved.",
+            de: "Jeden Abend ein leiser Anstoß. Android fragt erst um Erlaubnis, wenn dein erster Eintrag gespeichert ist.",
             es: "Un aviso discreto cada noche. Android no te pide permiso hasta que guardes tu primera entrada.",
             fr: "Un rappel discret chaque soir. Android ne demandera l'autorisation qu'après l'enregistrement de votre première opération.",
             pt: "Um lembrete discreto toda noite. O Android só pede permissão depois que você salvar seu primeiro lançamento.",
@@ -305,24 +351,28 @@ const onboarding = {
         }),
         "onboarding.rhythm.eyebrow": t({
             en: "Rhythm",
+            de: "Rhythmus",
             es: "Ritmo",
             fr: "Rythme",
             pt: "Ritmo",
         }),
         "onboarding.rhythm.none": t({
             en: "Don't remind me",
+            de: "Nicht erinnern",
             es: "No me recuerdes",
             fr: "Pas de rappel",
             pt: "Não me lembre",
         }),
         "onboarding.rhythm.notifToday": t({
             en: "Time to write today's lines.",
+            de: "Zeit, die Zeilen von heute zu schreiben.",
             es: "Hora de escribir las líneas de hoy.",
             fr: "C'est l'heure d'écrire les lignes du jour.",
             pt: "Hora de escrever as linhas de hoje.",
         }),
         "onboarding.rhythm.notifYesterday": t({
             en: "Yesterday you wrote 3 lines.",
+            de: "Gestern hast du 3 Zeilen geschrieben.",
             es: "Ayer escribiste 3 líneas.",
             fr: "Hier, vous avez écrit 3 lignes.",
             pt: "Ontem você escreveu 3 linhas.",
@@ -330,6 +380,7 @@ const onboarding = {
         }),
         "onboarding.rhythm.remind": t({
             en: "Remind me at {time}",
+            de: "Um {time} erinnern",
             es: "Recuérdame a las {time}",
             fr: "Me le rappeler à {time}",
             pt: "Me lembre às {time}",
@@ -337,6 +388,7 @@ const onboarding = {
         }),
         "onboarding.rhythm.title": t({
             en: "A ledger only works if you write in it.",
+            de: "Ein Haushaltsbuch funktioniert nur, wenn du hineinschreibst.",
             es: "Un registro solo funciona si escribes en él.",
             fr: "Un journal ne sert que si vous écrivez dedans.",
             pt: "Um livro-caixa só funciona se você escrever nele.",
@@ -344,12 +396,14 @@ const onboarding = {
         }),
         "onboarding.welcome.begun": t({
             en: "Begun {date}",
+            de: "Begonnen am {date}",
             es: "Comenzado el {date}",
             fr: "Commencé le {date}",
             pt: "Iniciado em {date}",
         }),
         "onboarding.welcome.title": t({
             en: "Welcome to Outlayr",
+            de: "Willkommen bei Outlayr",
             es: "Te damos la bienvenida a Outlayr",
             fr: "Bienvenue dans Outlayr",
             pt: "Boas-vindas ao Outlayr",

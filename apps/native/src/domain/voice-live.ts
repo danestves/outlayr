@@ -244,8 +244,81 @@ const FR = {
     weekdays: ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"].map((day) => phrase(day)),
 } as const satisfies Lexicon;
 
+const DE = {
+    cadences: [
+        { re: phrase("taglich", "pro tag"), type: RECURRING_TYPE.daily },
+        { re: phrase("wochentlich", "pro woche"), type: RECURRING_TYPE.weekly },
+        { re: phrase("monatlich", "pro monat", "im monat"), type: RECURRING_TYPE.monthly },
+        { re: phrase("jahrlich", "pro jahr", "im jahr"), type: RECURRING_TYPE.yearly },
+    ],
+    days: [
+        { ago: 0, re: phrase("heute") },
+        { ago: 1, re: phrase("gestern") },
+        { ago: 2, re: phrase("vorgestern") },
+    ],
+    decimal: ",",
+    every: phrase("(?:jede[nsmr]?|alle) (?:(\\d+|zwei|zweite[nsmr]?) )?(tag|woche|monat|jahr)(?:e|en|n|s)?"),
+    expense: phrase("ausgegeben", "gekauft", "eingekauft", "bezahlt", "bezahlte", "gezahlt", "kaufte", "zahlte"),
+    from: new Set(["von", "vom", "aus"]),
+    future: {
+        after: /^\s*(?:(?:nachste|kommende)[nsmr]?\s+woche|in\s+einer\s+woche)/u,
+        before: /(?:nachste|kommende)[nsmr]?\s*$/u,
+    },
+    income: phrase(
+        "mir (?:\\S+ ){0,6}(?:uberweisen|uberwiesen|uberweist|ausgezahlt|bezahlt|gezahlt|gutgeschrieben)",
+        "bekommen",
+        "bekam",
+        "erhalten",
+        "erhielt",
+        "gehalt",
+        "lohn",
+        "verdient",
+        "verkauft",
+        "verkaufte",
+        "zuruckerstattet",
+        "zuruckgezahlt",
+        "ruckerstattung",
+        "ruckzahlung",
+        "erstattung",
+        "erstattet",
+        "einnahmen?",
+        "einkommen",
+        "bonus"
+    ),
+    skip: new Set([
+        "mein",
+        "meine",
+        "meinem",
+        "meinen",
+        "meiner",
+        "das",
+        "die",
+        "der",
+        "dem",
+        "den",
+        "konto",
+        "karte",
+        "wallet",
+    ]),
+    to: new Set(["an", "auf", "nach", "zu", "zum", "zur", "in", "ins"]),
+    transferStrong: phrase(
+        "(?<!\\bmir (?:\\S+ ){0,6})uberweis(?:e|en|t)",
+        "(?<!\\bmir (?:\\S+ ){0,6})uberwiesen",
+        "umgebucht",
+        "umbuch(?:e|en|t|ung)",
+        "verschoben",
+        "verschieb(?:e|en|t)",
+        "ubertrag(?:e|en|t)"
+    ),
+    transferWeak: phrase("geschickt", "schick(?:e|en|t)", "gesendet", "send(?:e|en|et)"),
+    weekdays: ["sonntag", "montag", "dienstag", "mittwoch", "donnerstag", "freitag", "samstag|sonnabend"].map((day) =>
+        phrase(day)
+    ),
+} as const satisfies Lexicon;
+
 const LEXICONS = {
     en: EN,
+    de: DE,
     es: ES,
     "es-ES": ES,
     fr: FR,
@@ -279,6 +352,7 @@ const WORD_CURRENCY: ReadonlyMap<string, string> = new Map([
     ["euro", "EUR"],
     ["euros", "EUR"],
     ["pound", "GBP"],
+    ["pfund", "GBP"],
     ["pounds", "GBP"],
     ["real", "BRL"],
     ["reais", "BRL"],
@@ -290,6 +364,7 @@ const WORD_CURRENCY: ReadonlyMap<string, string> = new Map([
 const MULTIPLIER: ReadonlyMap<string, number> = new Map([
     ["k", 1000],
     ["mil", 1000],
+    ["tausend", 1000],
     ["thousand", 1000],
     ["lucas", 1000],
     ["luca", 1000],
@@ -297,6 +372,7 @@ const MULTIPLIER: ReadonlyMap<string, number> = new Map([
     ["millions", 1_000_000],
     ["millon", 1_000_000],
     ["millones", 1_000_000],
+    ["millionen", 1_000_000],
     ["milhao", 1_000_000],
     ["milhoes", 1_000_000],
 ]);
@@ -347,6 +423,20 @@ const NOT_MONEY_AFTER: ReadonlySet<string> = new Set([
     "ans",
     "annee",
     "annees",
+    "stunde",
+    "stunden",
+    "minuten",
+    "tag",
+    "tage",
+    "tagen",
+    "woche",
+    "wochen",
+    "monat",
+    "monate",
+    "monaten",
+    "jahr",
+    "jahre",
+    "jahren",
 ]);
 
 const ORDINAL_SUFFIX: ReadonlySet<string> = new Set(["th", "st", "nd", "rd", "er", "eme", "o", "a"]);
@@ -397,6 +487,13 @@ const MONTHS: ReadonlySet<string> = new Set([
     "octobre",
     "novembre",
     "decembre",
+    "januar",
+    "februar",
+    "marz",
+    "juni",
+    "juli",
+    "oktober",
+    "dezember",
     "jan",
     "feb",
     "apr",
@@ -407,7 +504,7 @@ const MONTHS: ReadonlySet<string> = new Set([
 ]);
 
 const OF_WORDS: ReadonlySet<string> = new Set(["de", "del", "of"]);
-const DAY_BEFORE: ReadonlySet<string> = new Set(["dia", "day", "at", "las", "as", "el", "le"]);
+const DAY_BEFORE: ReadonlySet<string> = new Set(["dia", "day", "at", "las", "as", "el", "le", "am"]);
 const YEAR_BEFORE: ReadonlySet<string> = new Set([...OF_WORDS, "in", "year", "ano", "an", "annee"]);
 
 const NUMBER = /\d{1,3}(?:[   ]\d{3}(?!\d))+(?:[.,]\d+)?|\d+(?:[.,]\d+)*/gu;
@@ -526,6 +623,12 @@ function looksLikeDate(folded: string, start: number, end: number, value: number
     }
     if (after !== null && OF_WORDS.has(after.word) && nextWord !== null && MONTHS.has(nextWord.word)) {
         return true;
+    }
+    if (after === null && folded[end] === "." && Number.isInteger(value) && value <= 31) {
+        const ordinalMonth = wordAfter(folded, end + 1);
+        if (ordinalMonth !== null && MONTHS.has(ordinalMonth.word)) {
+            return true;
+        }
     }
     const previous = lastWord(folded.slice(0, start));
     if (MONTHS.has(previous)) {
@@ -713,8 +816,12 @@ function dateOf(lexicon: Lexicon, folded: string, now: Date, final: boolean): Fo
 }
 
 function typeOfUnit(unit: string): RecurringType {
+    if (unit.startsWith("jahr")) {
+        return RECURRING_TYPE.yearly;
+    }
     switch (unit.charAt(0)) {
         case "d":
+        case "t":
         case "j": {
             return RECURRING_TYPE.daily;
         }
@@ -735,7 +842,7 @@ function countOf(count: string | undefined): number {
     if (count === undefined) {
         return 1;
     }
-    return count === "other" ? 2 : Number(count);
+    return count === "other" || count.startsWith("zwei") ? 2 : Number(count);
 }
 
 function recurrenceOf(lexicon: Lexicon, folded: string): Found<ResolvedRecurrence> | null {

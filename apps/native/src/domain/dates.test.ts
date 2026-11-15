@@ -136,6 +136,10 @@ describe("formatChargeDate", () => {
         expect(formatChargeDate(new Date(2026, 10, 7), NOW, "es")).toBe("sáb, 7 nov");
     });
 
+    it("writes the German day as an ordinal", () => {
+        expect(formatChargeDate(new Date(2026, 9, 7), NOW, "de")).toBe("Mi., 7. Okt.");
+    });
+
     it("adds the year only once the charge leaves the current one", () => {
         expect(formatChargeDate(new Date(2027, 1, 7), NOW, "en")).toBe("Sun, 7 Feb 2027");
     });

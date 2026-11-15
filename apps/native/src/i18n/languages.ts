@@ -1,4 +1,4 @@
-export const SUPPORTED_LANGUAGES = ["en", "es", "es-ES", "fr", "pt", "pt-PT"] as const;
+export const SUPPORTED_LANGUAGES = ["en", "de", "es", "es-ES", "fr", "pt", "pt-PT"] as const;
 
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
@@ -7,6 +7,7 @@ export const DEFAULT_LANGUAGE: Language = "en";
 /** Endonyms: someone stuck in a language they cannot read must still recognise their own. */
 const LANGUAGE_NAMES = {
     en: "English",
+    de: "Deutsch",
     es: "Español",
     "es-ES": "Español (España)",
     fr: "Français",

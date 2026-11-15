@@ -14,8 +14,11 @@ const MARK_URL = "https://tryoutlayr.com/apple-touch-icon.png";
 const PREVIEW_LENGTH = 200;
 const PREVIEW_FILL = " ‌​‍﻿";
 
-const GREETING = { en: "Hi,", es: "Hola,", fr: "Bonjour,", pt: "Olá," } satisfies Record<Language, string>;
-const COLON = { en: ": ", es: ": ", fr: " : ", pt: ": " } satisfies Record<Language, string>;
+const GREETING = { en: "Hi,", de: "Hallo,", es: "Hola,", fr: "Bonjour,", pt: "Olá," } satisfies Record<
+    Language,
+    string
+>;
+const COLON = { en: ": ", de: ": ", es: ": ", fr: " : ", pt: ": " } satisfies Record<Language, string>;
 
 const presentation = { border: 0, cellPadding: 0, cellSpacing: 0, role: "presentation", width: "100%" } as const;
 const paragraph: CSSProperties = { color: INK, fontSize: 16, lineHeight: "25px", margin: "0 0 16px" };

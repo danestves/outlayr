@@ -5,12 +5,14 @@ const watch = {
     content: {
         "watch.all": t({
             en: "All",
+            de: "Alle",
             es: "Todas",
             fr: "Toutes",
             pt: "Todas",
         }),
         "watch.average": t({
             en: "Avg",
+            de: "Ø",
             es: "Prom.",
             "es-ES": "Media",
             fr: "Moy.",
@@ -18,6 +20,7 @@ const watch = {
         }),
         "watch.empty": t({
             en: "Nothing logged yet",
+            de: "Noch nichts erfasst",
             es: "Nada registrado aún",
             fr: "Aucune opération saisie",
             pt: "Nada registrado ainda",
@@ -25,18 +28,21 @@ const watch = {
         }),
         "watch.recent": t({
             en: "Recent",
+            de: "Zuletzt",
             es: "Recientes",
             fr: "Récentes",
             pt: "Recentes",
         }),
         "watch.spent": t({
             en: "spent",
+            de: "ausgegeben",
             es: "gastado",
             fr: "dépensé",
             pt: "gasto",
         }),
         "watch.week": t({
             en: "Last 7 days",
+            de: "Letzte 7 Tage",
             es: "Últimos 7 días",
             fr: "7 derniers jours",
             pt: "Últimos 7 dias",

@@ -177,6 +177,11 @@ describe("parseCsvDate with a month name", () => {
         expect(parseCsvDate("15 de diciembre de 2025", "d MMMM yyyy")).toStrictEqual(new Date(2025, 11, 15));
     });
 
+    it("reads a German day with its ordinal dot", () => {
+        expect(parseCsvDate("2. März 2026", "d MMMM yyyy")).toStrictEqual(new Date(2026, 2, 2));
+        expect(parseCsvDate("15. Okt. 2025", "d MMMM yyyy")).toStrictEqual(new Date(2025, 9, 15));
+    });
+
     it("reads a time after a day-first date", () => {
         expect(parseCsvDate("9 de octubre de 2026 21:30", "d MMMM yyyy")).toStrictEqual(new Date(2026, 9, 9, 21, 30));
         expect(parseCsvDate("9 de octubre de 2026 9:30 p. m.", "d MMMM yyyy")).toStrictEqual(

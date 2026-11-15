@@ -5,7 +5,7 @@ export const LegalDocument = Schema.Literals(["privacy", "terms"]);
 const Changes = Schema.Array(Schema.Struct({ detail: Schema.optional(Schema.String), label: Schema.String }));
 
 export const PolicyNotice = Schema.Struct({
-    changes: Schema.Struct({ en: Changes, es: Changes, fr: Changes, pt: Changes }),
+    changes: Schema.Struct({ en: Changes, de: Changes, es: Changes, fr: Changes, pt: Changes }),
     document: LegalDocument,
     effectiveAtMs: Schema.Number,
     postedAtMs: Schema.Number,
@@ -22,6 +22,16 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Emails about your account",
                 },
                 { detail: "Kept with your account so those emails arrive in it.", label: "Your app's language" },
+            ],
+            de: [
+                {
+                    detail: "Eine Willkommensnachricht bei der Anmeldung, eine Nachricht, wenn Pro beginnt, und Hinweise wie dieser, bevor sich eine Richtlinie ändert.",
+                    label: "E-Mails zu deinem Konto",
+                },
+                {
+                    detail: "Wird mit deinem Konto gespeichert, damit diese E-Mails in deiner Sprache ankommen.",
+                    label: "Die Sprache der App",
+                },
             ],
             es: [
                 {
@@ -72,6 +82,20 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "With Smart fill on, a notification Outlayr logs that shows an amount goes to our AI provider so it can read the merchant, amount, and currency. Its text isn't kept.",
                     label: "Reading bank notifications",
+                },
+            ],
+            de: [
+                {
+                    detail: "Mit Pro importierst du aus deinen Notion-Datenbanken. Den Zugriffsschlüssel von Notion bewahren wir verschlüsselt auf, bis du die Verbindung trennst oder dein Konto löschst.",
+                    label: "Notion verbinden",
+                },
+                {
+                    detail: "Mit eingeschaltetem „Analysedaten teilen“: angelegte Budgets, geteilte Karten, Importe, Exporte, Änderungen an Einstellungen und Links, die die App öffnen. Nie Beträge, Namen oder Notizen.",
+                    label: "Welche Funktionen du nutzt",
+                },
+                {
+                    detail: "Mit eingeschaltetem „Intelligentes Ausfüllen“ geht eine Benachrichtigung, die Outlayr erfasst und die einen Betrag zeigt, an unseren KI-Anbieter, damit er Händler, Betrag und Währung lesen kann. Ihr Text wird nicht gespeichert.",
+                    label: "Lesen von Bank-Benachrichtigungen",
                 },
             ],
             es: [
@@ -130,6 +154,16 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Notification reading",
                 },
             ],
+            de: [
+                {
+                    detail: "Zu den Plänen hinzugefügt, mit der Angabe, wie lange eine Verbindung besteht.",
+                    label: "Notion-Verbindung in Pro",
+                },
+                {
+                    detail: "Zu den KI-Funktionen hinzugefügt. Einträge, die dabei erfasst werden, werden ohne Entwurf gespeichert und zur Prüfung für dich markiert.",
+                    label: "Lesen von Benachrichtigungen",
+                },
+            ],
             es: [
                 {
                     detail: "Se suma a los planes, junto con cuánto dura una conexión.",
@@ -173,6 +207,12 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Invites",
                 },
             ],
+            de: [
+                {
+                    detail: "Freunde, die du einlädst, sehen deinen Vornamen. Du siehst ihren und an wie vielen Tagen sie etwas erfasst haben, bis zu drei, nie was.",
+                    label: "Einladungen",
+                },
+            ],
             es: [
                 {
                     detail: "Los amigos que invitas ven tu nombre de pila. Tú ves el suyo y cuántos días registraron, hasta tres, nunca qué.",
@@ -204,6 +244,12 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Invites",
                 },
             ],
+            de: [
+                {
+                    detail: "Ein Freund erhält einen Monat Pro, und du bekommst einen, wenn er an drei Tagen etwas erfasst. Bis zu 12 im Jahr, ohne Barwert.",
+                    label: "Einladungen",
+                },
+            ],
             es: [
                 {
                     detail: "Un amigo recibe un mes de Pro, y tú recibes uno cuando registra tres días. Hasta 12 al año, sin valor en efectivo.",
@@ -230,6 +276,12 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
     {
         changes: {
             en: [{ detail: "Cash, a bank account and a card now fit without Pro.", label: "3 free accounts" }],
+            de: [
+                {
+                    detail: "Bargeld, ein Bankkonto und eine Karte passen jetzt auch ohne Pro.",
+                    label: "3 kostenlose Konten",
+                },
+            ],
             es: [
                 {
                     detail: "El efectivo, una cuenta bancaria y una tarjeta ahora caben sin Pro.",
@@ -267,6 +319,20 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "With Pro, opening your ledger on the website saves an unencrypted copy in your browser so it loads faster. Signing out deletes it.",
                     label: "Website ledger",
+                },
+            ],
+            de: [
+                {
+                    detail: "Mit Pro geht ein Kontoauszug, den du auswählst, an unseren Server und sein Text mit maskierten langen Zahlen an unseren KI-Anbieter. Der Text enthält deinen Namen und deine Adresse, falls sie aufgedruckt sind. Die Datei wird danach gelöscht. Wenn du KI-Funktionen schon erlaubt hast, musst du nichts tun, und wir fragen nicht noch einmal.",
+                    label: "Lesen von PDF-Kontoauszügen",
+                },
+                {
+                    detail: "Die App holt Logos jetzt von unserem eigenen Server. Logo.dev und Google sehen deine IP-Adresse nicht mehr.",
+                    label: "Woher Logos kommen",
+                },
+                {
+                    detail: "Mit Pro speichert das Öffnen deines Journals auf der Website eine unverschlüsselte Kopie in deinem Browser, damit es schneller lädt. Beim Abmelden wird sie gelöscht.",
+                    label: "Journal auf der Website",
                 },
             ],
             es: [
@@ -328,6 +394,16 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "When we email you about changes",
                 },
             ],
+            de: [
+                {
+                    detail: "Eine Website, die du für einen Händler hinzufügst, kommt mit seinem Namen und einer allgemeinen Kategorie in unsere geteilte Händlerliste, damit andere das Logo sehen. Sie ist nicht mit dir verknüpft.",
+                    label: "Website eines Händlers hinzufügen",
+                },
+                {
+                    detail: "Wir schreiben dir jetzt per E-Mail, bevor sich diese Richtlinie oder unsere Bedingungen wesentlich ändern. Andere Änderungen, etwa klarere Formulierungen, veröffentlichen wir nur auf der Website.",
+                    label: "Wann wir dir wegen Änderungen schreiben",
+                },
+            ],
             es: [
                 {
                     detail: "El sitio web que agregues para un comercio, con su nombre y una categoría general, entra en nuestra lista compartida para que otros vean el logo. No está vinculado a ti.",
@@ -371,6 +447,12 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Adding a merchant's website",
                 },
             ],
+            de: [
+                {
+                    detail: "Eine Website, die du für einen Händler hinzufügst, kann mit allen geteilt werden und bleibt nach dem Löschen deines Kontos auf der geteilten Liste, bis sie abläuft.",
+                    label: "Website eines Händlers hinzufügen",
+                },
+            ],
             es: [
                 {
                     detail: "El sitio web que agregues para un comercio se puede compartir con todos y sigue en la lista compartida después de que elimines tu cuenta, hasta que caduque.",
@@ -412,6 +494,24 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "If you buy Pro on the web, Stripe receives your name, email, account ID, and the payment details you enter.",
                     label: "Stripe, for purchases on the web",
+                },
+            ],
+            de: [
+                {
+                    detail: "Der Text eines PDF-Kontoauszugs, den du importierst, geht mit maskierten langen Zahlen an Anthropic und kann deinen Namen und deine Adresse enthalten.",
+                    label: "Import von Kontoauszügen",
+                },
+                {
+                    detail: "PostHog löscht deine Analyse-Ereignisse in einem späteren Durchlauf, sie können also noch eine Weile bestehen bleiben, nachdem die App dein Konto als gelöscht meldet.",
+                    label: "Dein Konto löschen",
+                },
+                {
+                    detail: "Eine iCloud- oder Google-Sicherung deines Handys kann eine Kopie deines Journals behalten, nachdem du die App gelöscht hast, und sie wiederherstellen, wenn du sie neu installierst.",
+                    label: "Handy-Sicherungen",
+                },
+                {
+                    detail: "Wenn du Pro im Web kaufst, erhält Stripe deinen Namen, deine E-Mail-Adresse, deine Konto-ID und die Zahlungsdaten, die du eingibst.",
+                    label: "Stripe, für Käufe im Web",
                 },
             ],
             es: [
@@ -479,6 +579,12 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Web purchases are sold through Link, a Stripe service, which charges you and sends your receipts. You cancel in Settings › Plan on the web, and deleting your account cancels a web subscription.",
                     label: "Buying Pro on the web",
+                },
+            ],
+            de: [
+                {
+                    detail: "Web-Käufe werden über Link verkauft, einen Dienst von Stripe, der dich belastet und dir deine Belege schickt. Du kündigst im Web unter Einstellungen › Plan, und das Löschen deines Kontos kündigt ein Web-Abo.",
+                    label: "Pro im Web kaufen",
                 },
             ],
             es: [
@@ -554,6 +660,56 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "In the icon picker you can paste a link to a website or an image. Our logo server fetches that logo or image and keeps a copy, and when you save the entry, the merchant name and that logo join the shared merchant list so other people who log that merchant see it. It isn't linked to you.",
                     label: "Logos from a link",
+                },
+            ],
+            de: [
+                {
+                    detail: "Änderungen, die deine Daten oder Rechte betreffen, kündigen wir mindestens 30 Tage vorher in der App und per E-Mail an, mit höchstens einer E-Mail im Monat, außer eine Änderung kann nicht warten. Neue optionale Funktionen werden hier ab dem Tag ihrer Veröffentlichung beschrieben und in der nächsten E-Mail aufgeführt.",
+                    label: "Wie wir dich über Änderungen informieren",
+                },
+                {
+                    detail: "Wenn du die tägliche Erinnerung in einem Webbrowser einschaltest, prüfen unsere Server, ob du an diesem Tag etwas erfasst hast, und senden sie über den Push-Dienst dieses Browsers. Sie enthält keine Beträge oder Einträge.",
+                    label: "Erinnerungen im Web",
+                },
+                {
+                    detail: "Regeln, die du im Web anlegst, um Einträge zuzuordnen, werden mit deinem Journal synchronisiert: ihre Namen, wonach sie suchen und die Kategorie und Tags, die sie setzen.",
+                    label: "Regeln im Web",
+                },
+                {
+                    detail: "Wenn du im Web einen Link für einen Bericht einschaltest, bewahren unsere Server eine Kopie dieses Berichts auf, auf Wunsch mit Prozenten statt Beträgen, und zeigen sie jedem mit dem Link, bis du ihn ausschaltest, er abläuft oder du dein Konto löschst.",
+                    label: "Bericht per Link teilen",
+                },
+                {
+                    detail: "Wenn du im Web eine kostenlose Pro-Testphase startest, schreiben wir dir zwei Tage vor der ersten Abbuchung per E-Mail mit Datum, Betrag und dem Weg zur Kündigung.",
+                    label: "Eine Erinnerung vor dem Ende einer Testphase",
+                },
+                {
+                    detail: "Wiederkehrende Zahlungen, die du im Web pausierst, und bis wann, werden mit deinem Journal synchronisiert, ebenso Händler mit wiederholten Zahlungen, die du als nicht wiederkehrend markierst.",
+                    label: "Wiederkehrendes im Web",
+                },
+                {
+                    detail: "Nach deinem ersten Eintrag können die App und diese Website fragen, woher du Outlayr kennst. Die Antwort ist freiwillig und geht mit den übrigen Analysedaten an PostHog.",
+                    label: "Woher du uns kennst",
+                },
+                {
+                    detail: "Die Kopie, die die Website in deinem Browser aufbewahrt, enthält jetzt auch, was deine Einstellungen zeigen, etwa Name, E-Mail-Adresse, Plan und angemeldete Geräte, damit diese Seiten sofort laden. Beim Abmelden wird sie gelöscht.",
+                    label: "Was die Kopie der Website enthält",
+                },
+                {
+                    detail: "Wenn du auf dieser Website Daten in dein Journal importierst, teilt sie PostHog die Art des Imports mit und wie viele Zeilen er gebracht hat, gerundet auf einen Bereich wie 10 bis 99, wie es die App schon tut.",
+                    label: "Importe im Web",
+                },
+                {
+                    detail: "Auf Android hat jetzt jeder Absender einen eigenen Schalter für Textnachrichten, statt eines einzigen für die ganze App. Kurznummern, von denen Banken senden, sind eingeschaltet, sobald du Bank-SMS einschaltest, und Namen und Telefonnummern bleiben aus, bis du jede einzeln einschaltest. Das Handy behält die neueste Nachricht jedes Absenders, und eine Nachricht wird ohne Namen oder Nummer des Absenders zum Lesen gesendet.",
+                    label: "Bank-SMS auf Android",
+                },
+                {
+                    detail: "Die Spracheingabe sendet das Audio jetzt schon beim Sprechen an ElevenLabs, über unseren Server bei Cloudflare, der nichts davon speichert. Der Text geht dann wie bisher mit deinen Konto- und Kategorienamen an unseren Server.",
+                    label: "Spracheingabe während du sprichst",
+                },
+                {
+                    detail: "In der Symbolauswahl kannst du einen Link zu einer Website oder einem Bild einfügen. Unser Logo-Server holt dieses Logo oder Bild und behält eine Kopie, und wenn du den Eintrag speicherst, kommen der Händlername und dieses Logo in die geteilte Händlerliste, damit andere Personen, die diesen Händler erfassen, es sehen. Es ist nicht mit dir verknüpft.",
+                    label: "Logos aus einem Link",
                 },
             ],
             es: [
@@ -721,6 +877,16 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "If you paste a link to an image, you confirm you have the right to share it. We show it to everyone who logs that merchant and may remove it at any time.",
                     label: "Images you paste",
+                },
+            ],
+            de: [
+                {
+                    detail: "Eine wesentliche Änderung kündigen wir mindestens 30 Tage vorher in der App und per E-Mail an. Eine neue optionale Funktion kann ab dem Tag ihrer Veröffentlichung gelten, und ein neues Konto folgt der Fassung, die bei der Anmeldung veröffentlicht ist.",
+                    label: "Wie sich diese Bedingungen ändern",
+                },
+                {
+                    detail: "Wenn du einen Link zu einem Bild einfügst, bestätigst du, dass du das Recht hast, es zu teilen. Wir zeigen es allen, die diesen Händler erfassen, und können es jederzeit entfernen.",
+                    label: "Eingefügte Bilder",
                 },
             ],
             es: [

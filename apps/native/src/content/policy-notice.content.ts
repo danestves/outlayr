@@ -5,6 +5,7 @@ const policyNotice = {
     content: {
         "policyNotice.accept": t({
             en: "Using Outlayr from that date means you accept these changes.",
+            de: "Wenn du Outlayr ab diesem Datum weiter nutzt, stimmst du diesen Änderungen zu.",
             es: "Si sigues usando Outlayr desde esa fecha, aceptas estos cambios.",
             fr: "Utiliser Outlayr à partir de cette date vaut acceptation de ces changements.",
             pt: "Usar o Outlayr a partir dessa data significa aceitar essas mudanças.",
@@ -12,18 +13,21 @@ const policyNotice = {
         }),
         "policyNotice.both": t({
             en: "Updates to our Privacy Policy and Terms of Use",
+            de: "Änderungen an unserer Datenschutzerklärung und unseren Nutzungsbedingungen",
             es: "Cambios en nuestra Política de privacidad y nuestros Términos de uso",
             fr: "Mise à jour de notre politique de confidentialité et de nos conditions d'utilisation",
             pt: "Mudanças na nossa Política de Privacidade e nos nossos Termos de Uso",
         }),
         "policyNotice.meta": t({
             en: "Takes effect · {date}",
+            de: "Gilt ab · {date}",
             es: "Entra en vigor · {date}",
             fr: "Entrée en vigueur · {date}",
             pt: "Entra em vigor · {date}",
         }),
         "policyNotice.ok": t({
             en: "Got it",
+            de: "Verstanden",
             es: "Entendido",
             fr: "Compris",
             pt: "Entendi",
@@ -31,30 +35,35 @@ const policyNotice = {
         }),
         "policyNotice.privacy": t({
             en: "Updates to our Privacy Policy",
+            de: "Änderungen an unserer Datenschutzerklärung",
             es: "Cambios en nuestra Política de privacidad",
             fr: "Mise à jour de notre politique de confidentialité",
             pt: "Mudanças na nossa Política de Privacidade",
         }),
         "policyNotice.privacyName": t({
             en: "Privacy Policy",
+            de: "Datenschutzerklärung",
             es: "Política de privacidad",
             fr: "Politique de confidentialité",
             pt: "Política de Privacidade",
         }),
         "policyNotice.read": t({
             en: "Read the new version",
+            de: "Neue Fassung lesen",
             es: "Leer la nueva versión",
             fr: "Lire la nouvelle version",
             pt: "Ler a nova versão",
         }),
         "policyNotice.terms": t({
             en: "Updates to our Terms of Use",
+            de: "Änderungen an unseren Nutzungsbedingungen",
             es: "Cambios en nuestros Términos de uso",
             fr: "Mise à jour de nos conditions d'utilisation",
             pt: "Mudanças nos nossos Termos de Uso",
         }),
         "policyNotice.termsName": t({
             en: "Terms of Use",
+            de: "Nutzungsbedingungen",
             es: "Términos de uso",
             fr: "Conditions d'utilisation",
             pt: "Termos de Uso",

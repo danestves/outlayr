@@ -45,6 +45,7 @@ export function pendingNotices(
                       ...newer,
                       changes: {
                           en: mergeChanges(newer.changes.en, notice.changes.en),
+                          de: mergeChanges(newer.changes.de, notice.changes.de),
                           es: mergeChanges(newer.changes.es, notice.changes.es),
                           fr: mergeChanges(newer.changes.fr, notice.changes.fr),
                           pt: mergeChanges(newer.changes.pt, notice.changes.pt),

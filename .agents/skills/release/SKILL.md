@@ -67,7 +67,7 @@ Before an `OTA` or `BUILD`, run `node --import tsx scripts/licenses.ts --check` 
 
 ## 3. Message
 
-The in-app What's new sheet shows the notes for the app's language verbatim, split on `\n`. Write them to an `ota/` folder as `en.txt`, `es.txt`, `es-ES.txt`, `fr.txt`, `pt.txt` and `pt-PT.txt`, each for its market like the store notes below. Builds older than the per-language notes show `en.txt`.
+The in-app What's new sheet shows the notes for the app's language verbatim, split on `\n`. Write them to an `ota/` folder as `en.txt`, `de.txt`, `es.txt`, `es-ES.txt`, `fr.txt`, `pt.txt` and `pt-PT.txt`, each for its market like the store notes below. Builds older than the per-language notes show `en.txt`.
 
 - One line per change a user would notice, written in their words: "Typing in the transaction form no longer stutters".
 - No bullet marks, semicolons, or em dashes.
@@ -76,12 +76,12 @@ The in-app What's new sheet shows the notes for the app's language verbatim, spl
 Collect them into one JSON object and check it before dispatching. The publish refuses a set missing any app language, but only after the backend has deployed:
 
 ```sh
-notes=$(jq -n --rawfile en ota/en.txt --rawfile es ota/es.txt --rawfile es-ES ota/es-ES.txt \
+notes=$(jq -n --rawfile en ota/en.txt --rawfile de ota/de.txt --rawfile es ota/es.txt --rawfile es-ES ota/es-ES.txt \
   --rawfile fr ota/fr.txt --rawfile pt ota/pt.txt --rawfile pt-PT ota/pt-PT.txt '$ARGS.named')
 UPDATE_NOTES="$notes" npx expo config --type public >/dev/null
 ```
 
-Store notes cover the same changes in every app language, as plain text with a little personality. Write them to a `notes/` folder as `en.txt`, `es.txt`, `es-ES.txt`, `fr.txt`, `pt.txt` and `pt-PT.txt`. Each is written for its market, not translated word for word: `es-ES` says "ticket" and "importe", `pt-PT` says "talão" and "registo", matching the app.
+Store notes cover the same changes in every app language, as plain text with a little personality. Write them to a `notes/` folder as `en.txt`, `de.txt`, `es.txt`, `es-ES.txt`, `fr.txt`, `pt.txt` and `pt-PT.txt`. Each is written for its market, not translated word for word: `es-ES` says "ticket" and "importe", `pt-PT` says "talão" and "registo", matching the app.
 
 - One short line on what the release is about, a blank line, then one `•` line per change.
 - Lead with what the person gets, or the question they'd ask: "Owe the plumber for today's job? Log it and pick when you'll pay".
@@ -90,7 +90,7 @@ Store notes cover the same changes in every app language, as plain text with a l
 - App Store: the version's What's New, for every locale the listing has, set before that version goes to review. Apple refuses it on a first version. The App Store version has to carry the build's version: create it with `asc versions create` when a build starts a new one.
 
   ```sh
-  for pair in en-US:en en-GB:en en-AU:en es-MX:es es-ES:es-ES fr-FR:fr pt-BR:pt pt-PT:pt-PT; do
+  for pair in en-US:en en-GB:en en-AU:en de-DE:de es-MX:es es-ES:es-ES fr-FR:fr pt-BR:pt pt-PT:pt-PT; do
     asc apps info edit --app 6801652978 --version <version> --platform IOS --locale "${pair%%:*}" --whats-new "$(cat "notes/${pair#*:}.txt")"
   done
   ```
