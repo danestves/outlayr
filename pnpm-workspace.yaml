@@ -12,14 +12,14 @@ allowBuilds:
     unrs-resolver: false
 catalog:
     "@better-auth/expo": 1.7.16
-    "@confect/cli": ^10.4.1
-    "@confect/core": ^10.4.1
-    "@confect/server": ^10.4.1
-    "@convex-dev/agent": ^0.7.8
+    "@confect/cli": ^10.6.0
+    "@confect/core": ^10.6.0
+    "@confect/server": ^10.6.0
+    "@convex-dev/agent": ^0.7.9
     "@convex-dev/better-auth": ^0.13.0
     "@effect/atom-react": ^4.0.7
     better-auth: 1.7.16
-    convex: ^1.48.0
+    convex: ^1.50.0
     dotenv: ^18.0.9
     effect: ^4.0.7
     intlayer: ^9.7.0
@@ -65,9 +65,7 @@ minimumReleaseAgeExclude:
     - panelui-web@0.17.0
 
 patchedDependencies:
-    "@convex-dev/agent@0.7.8": patches/@convex-dev__agent@0.7.8.patch
-    "@confect/server@10.4.1": patches/@confect__server@10.4.1.patch
-    convex@1.48.0: patches/convex@1.48.0.patch
+    convex@1.50.0: patches/convex@1.50.0.patch
     "@expo/ui@58.0.28": patches/@expo__ui@58.0.28.patch
     "@hugeicons/react-native@1.0.16": patches/@hugeicons__react-native@1.0.16.patch
     "@intlayer/engine@9.7.0": patches/@intlayer__engine@9.7.0.patch
