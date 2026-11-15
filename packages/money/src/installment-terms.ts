@@ -43,18 +43,27 @@ export function termsFromPlan(
             upfront > 0 && total > 0 ? { share: Math.round((upfront / total) * PERCENT) / PERCENT } : { amount: 0 },
     };
     const days = cuotas.map((row) => startOfLocalDay(row.dueDate.getTime()));
+    // A plan bought on the 31st clamps its first cuota to Feb 28, so the month's anchor is the latest day seen.
+    const anchorDay = Math.max(...cuotas.map((row) => row.dueDate.getDate()));
+    const monthly = days.every((dayMs, index) => {
+        const month = new Date(first.dueDate.getFullYear(), first.dueDate.getMonth() + index, 1);
+        const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+        return dayMs === new Date(month.getFullYear(), month.getMonth(), Math.min(anchorDay, lastDay)).getTime();
+    });
     const every =
         cuotas.length < 2
             ? undefined
             : EVERY_ORDER.find((option) =>
-                  generateSchedule({
-                      amount: { total: cuotas.length },
-                      count: cuotas.length,
-                      currency: "USD",
-                      firstDue: first.dueDate,
-                      interval: EVERY_OPTIONS[option],
-                      purchaseDay: first.dueDate,
-                  }).every((row, index) => row.dueDate.getTime() === days[index])
+                  option === "monthly"
+                      ? monthly
+                      : generateSchedule({
+                            amount: { total: cuotas.length },
+                            count: cuotas.length,
+                            currency: "USD",
+                            firstDue: first.dueDate,
+                            interval: EVERY_OPTIONS[option],
+                            purchaseDay: first.dueDate,
+                        }).every((row, index) => row.dueDate.getTime() === days[index])
               );
     return every === undefined ? terms : { ...terms, every };
 }

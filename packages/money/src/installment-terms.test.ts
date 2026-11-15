@@ -16,9 +16,9 @@ describe("termsFromPlan", () => {
         expect(termsFromPlan(rows)).toStrictEqual({ count: 3, every: "days14", upfront: { share: 0.6 } });
     });
 
-    it("keeps a month clamped to its last day monthly", () => {
-        const rows = [row(1, 50, day(2027, 1, 31)), row(2, 50, day(2027, 2, 28)), row(3, 50, day(2027, 3, 31))];
-        expect(termsFromPlan(rows)).toStrictEqual({ count: 3, every: "monthly", upfront: { amount: 0 } });
+    it("keeps a plan bought on the 31st monthly when its first cuota is clamped", () => {
+        const rows = [row(1, 50, day(2027, 2, 28)), row(2, 50, day(2027, 3, 31)), row(3, 50, day(2027, 4, 30))];
+        expect(termsFromPlan(rows).every).toBe("monthly");
     });
 
     it("leaves the cadence out when an edited date fits no option", () => {
