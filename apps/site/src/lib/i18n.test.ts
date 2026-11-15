@@ -59,6 +59,17 @@ const PAGE_CONTENT: Record<string, readonly unknown[]> = {
         answers.content.labels,
         answers.content.guides["expense-tracker-template"],
     ],
+    "/compare": [
+        ...SHELL,
+        answers.content.hubs.compare,
+        ...Object.values(answers.content.compare).map((page) => [page.rival, page.site, page.summary]),
+    ],
+    ...Object.fromEntries(
+        Object.entries(answers.content.compare).map(([slug, page]) => [
+            `/compare/${slug}`,
+            [...SHELL, answers.content.labels, page],
+        ])
+    ),
     "/delete-account": SHELL,
     "/open": [...SHELL, open.content],
     "/privacy": SHELL,
