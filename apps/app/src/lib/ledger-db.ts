@@ -130,16 +130,20 @@ type Seeded = DehydratedDbState["collections"][number]["rows"][number];
 
 const seeders = new Map<SyncedTable, (rows: readonly PulledRow[]) => Seeded[]>();
 
+// A row changed while the server paged through the pull comes back again on a later page, so the last copy wins.
 const seederOf =
     <Row extends object>(storing: Storing<Row>) =>
-    (rows: readonly PulledRow[]) =>
-        rows.flatMap((row) => {
-            if (row.deletedAt !== null && !storing.keepsDeleted) {
-                return [];
-            }
-            const value = storing.rowOf(row);
-            return [{ key: storing.getKey(value), value }];
-        });
+    (rows: readonly PulledRow[]) => {
+        const latest = new Map(
+            rows.map((row) => {
+                const value = storing.rowOf(row);
+                return [storing.getKey(value), { deleted: row.deletedAt !== null, value }] as const;
+            })
+        );
+        return [...latest].flatMap(([key, { deleted, value }]) =>
+            deleted && !storing.keepsDeleted ? [] : [{ key, value }]
+        );
+    };
 
 // The server pulls the whole ledger before it renders, so its tables are seeded through hydration and never subscribe.
 // The cursor is held only to hand it on to the browser's tables.

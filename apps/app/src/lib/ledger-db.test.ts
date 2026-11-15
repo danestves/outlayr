@@ -84,6 +84,16 @@ describe("server seed", () => {
         );
     });
 
+    it("drops a row deleted between the server's pull pages", () => {
+        const browser = open({ rows: [] });
+
+        browser.db.hydrate(
+            seedOf([entry("kept", 1), entry("deleted", 2), entry("edited", 3), entry("deleted", 4, { deletedAt: 9 })])
+        );
+
+        expect(entries(browser.db)).toStrictEqual({ edited: "entry edited", kept: "entry kept" });
+    });
+
     it("pulls only what changed after the server rendered, and loses what was deleted", async () => {
         const before = [entry("kept", 1), entry("edited", 2), entry("deleted", 3)];
         const browser = open({
