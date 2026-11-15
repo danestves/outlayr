@@ -4,9 +4,10 @@ import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { routerWithDbClient } from "@tanstack/react-router-with-db";
+import { ConvexHttpClient } from "convex/browser";
 
 import { ENV } from "@/env";
-import { convexClient } from "@/lib/convex";
+import { convexClient, serverConvexUrl } from "@/lib/convex";
 import { ledgerDependencies, serverDependencies } from "@/lib/db";
 import type { Session } from "@/lib/session";
 
@@ -17,6 +18,9 @@ function queryClients() {
         return { convexQueryClient: undefined, queryClient: new QueryClient() };
     }
     const convexQueryClient = new ConvexQueryClient(convexClient());
+    if (import.meta.env.SSR) {
+        convexQueryClient.serverHttpClient = new ConvexHttpClient(serverConvexUrl());
+    }
     const queryClient = new QueryClient({
         defaultOptions: {
             queries: { queryFn: convexQueryClient.queryFn(), queryKeyHashFn: convexQueryClient.hashFn() },

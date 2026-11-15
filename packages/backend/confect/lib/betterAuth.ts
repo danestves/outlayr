@@ -259,6 +259,7 @@ function createAuth(ctx: GenericCtx<DataModel>) {
             crossDomain({ siteUrl }),
             convex({
                 authConfig,
+                jwks: process.env.JWKS,
                 jwksRotateOnTokenGenerationError: true,
                 jwt: { expirationSeconds: CONVEX_JWT_SECONDS },
             }),

@@ -17,6 +17,7 @@ import { noteLoggedDay } from "./referrals";
 import { requirePro } from "./revenuecat";
 import {
     PULL_PAGE_LIMIT,
+    PULL_PAGE_MAX,
     PUSH_BATCH_LIMIT,
     PushTooLarge,
     toWire,
@@ -247,7 +248,7 @@ const pullSince = FunctionImpl.make(
             const reader = yield* DatabaseReader;
             const userId = yield* requireUserId(ctx);
             yield* requirePro(ctx, userId);
-            const limit = Math.min(Math.max(Math.trunc(args.limit ?? PULL_PAGE_LIMIT), 1), PULL_PAGE_LIMIT);
+            const limit = Math.min(Math.max(Math.trunc(args.limit ?? PULL_PAGE_LIMIT), 1), PULL_PAGE_MAX);
 
             const tables: readonly SyncedTable[] = args.tables ?? SYNCED_TABLES;
             const pages = yield* Effect.all(
