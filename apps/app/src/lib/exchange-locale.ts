@@ -6,6 +6,7 @@ const ENGLISH = "en-US";
 const REGIONAL_FALLBACK = new Map([
     ["es", "es-419"],
     ["fr", "fr-FR"],
+    ["de", "de-DE"],
     ["pt", "pt-BR"],
 ]);
 

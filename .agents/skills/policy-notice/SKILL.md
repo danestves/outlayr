@@ -45,7 +45,7 @@ Take the first row that matches:
 | Verdict | When | Do |
 | --- | --- | --- |
 | **ASK DANIEL** | The change could alter the operator, sell or transfer data, or reach someone under the age limit, or you can't tell which row fits. | Stop before merging and name the question. |
-| **DOCS MISSING** | Any question above is yes, but the documents don't say it yet. | Update privacy or terms in en, es, fr and pt, then check again. |
+| **DOCS MISSING** | Any question above is yes, but the documents don't say it yet. | Update privacy or terms in en, de, es, fr and pt, then check again. |
 | **CONSENT, THEN EMAIL** | Data goes to a new third party or AI provider, or data already collected gets a materially different use. New features sending a new kind of data to an allowed AI provider: ask Daniel whether the existing permission covers it. | Ask in the app before the data flows, and don't apply the change to old data without that permission. Email alone isn't enough. Then follow **EMAIL**. |
 | **ADVANCE NOTICE** | Pro loses something material (Terms: "in advance"), or Outlayr or Pro is shutting down (Terms: try for 30 days). | Tell Daniel the required lead time before scheduling. Then follow **EMAIL**. |
 | **EMAIL** | Any other change that needs notice under the promises above. | Add a `POLICY_NOTICES` entry to the next monthly email, dated at least 30 days after it, and follow [the runbook](../../../docs/operations/policy-change.md). |
@@ -66,7 +66,7 @@ These traps come from how the notice code works:
 - **Bump `postedAtMs` with every change.** A new install skips notices posted before it, because it signs up under the version already on the site. Set it to the UTC midnight after the change ships; a stale one hides the change from everyone who installed since.
 - **Changes in the same month share one date.** Merge them under the same future date, before that date is emailed.
 - **The sheet doesn't replace the email.** It reaches people only when they open a recent app. People who don't open the app, or run a version older than the sheet, only hear by email.
-- **All the dates match.** The effective date in en, es, fr and pt, `LEGAL_DAYS`, and `effectiveAtMs`.
+- **All the dates match.** The effective date in en, de, es, fr and pt, `LEGAL_DAYS`, and `effectiveAtMs`.
 
 Whether a date has been emailed isn't in the repo. It's in `mailState.notices` on production, so ask Daniel unless he has given you production access.
 

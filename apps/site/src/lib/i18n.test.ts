@@ -19,7 +19,7 @@ import tools from "../content/tools.content";
 const SHELL = [site.content];
 const TOOL = [...SHELL, tools.content.labels, answers.content.labels];
 
-// What each page translated into pt and fr renders, so a string missing pt or fr cannot fall back to English there.
+// What each gated page renders, so a string missing its locale cannot fall back to English there.
 const PAGE_CONTENT: Record<string, readonly unknown[]> = {
     "/": [
         ...SHELL,
@@ -77,7 +77,7 @@ function untranslated(node: unknown, locale: string, path: string): string[] {
     return Object.entries(node).flatMap(([key, child]) => untranslated(child, locale, `${path}.${key}`));
 }
 
-it("translates every string a pt or fr page renders", () => {
+it("translates every string a gated page renders", () => {
     for (const [locale, paths] of Object.entries(TRANSLATED)) {
         for (const path of paths) {
             const content = PAGE_CONTENT[path];

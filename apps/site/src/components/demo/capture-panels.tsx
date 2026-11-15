@@ -12,12 +12,13 @@ const FADE_IN =
 
 export const COFFEE_SHOP = {
     en: "Blue Bottle",
+    de: "Balzac Coffee",
     es: "Juan Valdez",
     fr: "Columbus Café",
     pt: "Starbucks",
 } as const satisfies Record<Locale, string>;
 
-const STORE = { en: "Target", es: "Farmatodo", fr: "Monoprix", pt: "Drogasil" } as const satisfies Record<
+const STORE = { en: "Target", de: "dm", es: "Farmatodo", fr: "Monoprix", pt: "Drogasil" } as const satisfies Record<
     Locale,
     string
 >;
@@ -34,6 +35,18 @@ const RECEIPT = {
         { left: "TAX", mark: null, right: "4.31" },
         { left: "TOTAL", mark: 3, right: "54.28" },
         { left: "AMEX", mark: null, right: "•••• 1008" },
+    ],
+    de: [
+        { left: "DM-DROGERIEMARKT", mark: 1, right: "" },
+        { left: "FILIALE 214", mark: null, right: "" },
+        { left: "21.09.2026", mark: 2, right: "14:32" },
+        { left: "KÜCHENROLLE", mark: null, right: "17.99" },
+        { left: "WASCHMITTEL PODS", mark: null, right: "12.49" },
+        { left: "BADETUCH", mark: null, right: "19.49" },
+        { left: "ZWISCHENSUMME", mark: null, right: "49.97" },
+        { left: "MWST", mark: null, right: "4.31" },
+        { left: "SUMME", mark: 3, right: "54.28" },
+        { left: "EC-KARTE", mark: null, right: "•••• 1008" },
     ],
     es: [
         { left: "FARMATODO", mark: 1, right: "" },
@@ -75,6 +88,7 @@ const RECEIPT = {
 
 const CSV_FILE = {
     en: "chase-activity.csv",
+    de: "sparkasse-umsaetze.csv",
     es: "bbva-movimientos.csv",
     fr: "boursorama-releve.csv",
     pt: "nubank-extrato.csv",
@@ -87,6 +101,13 @@ const CSV_ROWS = {
         { amount: "-4.00", category: "Subscriptions", date: "09/20", label: "GITHUB", matchedAt: 1 },
         { amount: "-6.25", category: "Coffee", date: "09/21", label: "SQ *BLUE BOTTLE COFFEE", matchedAt: 2 },
         { amount: "-38.90", category: "Dining Out", date: "09/22", label: "TST* SUSHI WAY", matchedAt: 2 },
+    ],
+    de: [
+        { amount: "-142.18", category: "Shopping", date: "18.09.", label: "AMAZON.DE MKTP", matchedAt: 1 },
+        { amount: "-18.40", category: "Transport", date: "19.09.", label: "DB VERTRIEB GMBH", matchedAt: 1 },
+        { amount: "-4.00", category: "Subscriptions", date: "20.09.", label: "SPOTIFY", matchedAt: 1 },
+        { amount: "-6.25", category: "Coffee", date: "21.09.", label: "BALZAC COFFEE 0412", matchedAt: 2 },
+        { amount: "-38.90", category: "Dining Out", date: "22.09.", label: "LIEFERANDO*RESTAURANT", matchedAt: 2 },
     ],
     es: [
         { amount: "-142.18", category: "Shopping", date: "18/09", label: "MERCADOLIBRE*COMPRA", matchedAt: 1 },

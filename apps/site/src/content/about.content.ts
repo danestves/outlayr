@@ -4,7 +4,13 @@ import type { Dictionary } from "intlayer";
 const about = {
     content: {
         allComparisons: t({ en: "All comparisons", es: "Todas las comparativas" }),
-        allGuides: t({ en: "All guides", es: "Todas las guías", pt: "Todos os guias", fr: "Tous les guides" }),
+        allGuides: t({
+            en: "All guides",
+            de: "Alle Guides",
+            es: "Todas las guías",
+            pt: "Todos os guias",
+            fr: "Tous les guides",
+        }),
         contact: {
             lead: t({
                 en: "For support, press, or a question about the app.",
@@ -62,8 +68,8 @@ const about = {
             {
                 label: t({ en: "Languages", es: "Idiomas" }),
                 text: t({
-                    en: "English, Spanish from Latin America and from Spain, Portuguese from Brazil and from Portugal, and French.",
-                    es: "Inglés, español de Latinoamérica y de España, portugués de Brasil y de Portugal, y francés.",
+                    en: "English, Spanish from Latin America and from Spain, Portuguese from Brazil and from Portugal, French, and German.",
+                    es: "Inglés, español de Latinoamérica y de España, portugués de Brasil y de Portugal, francés y alemán.",
                 }),
             },
             {

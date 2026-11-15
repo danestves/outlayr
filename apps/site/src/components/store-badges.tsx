@@ -5,6 +5,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 const APP_STORE_BADGE = {
     en: "/badges/app-store.svg",
+    de: "/badges/app-store-de.svg",
     es: "/badges/app-store-es.svg",
     fr: "/badges/app-store-fr.svg",
     pt: "/badges/app-store-pt.svg",
@@ -12,6 +13,7 @@ const APP_STORE_BADGE = {
 
 const GOOGLE_PLAY_BADGE = {
     en: "/badges/google-play",
+    de: "/badges/google-play-de",
     es: "/badges/google-play-es",
     fr: "/badges/google-play-fr",
     pt: "/badges/google-play-pt",

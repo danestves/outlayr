@@ -61,7 +61,7 @@ describe("reduce", () => {
     });
 });
 
-describe.each(["en", "es"] as const)("the %s autoplay", (locale) => {
+describe.each(["en", "de", "es"] as const)("the %s autoplay", (locale) => {
     it("picks only options the stage shows and files each entry as scripted", () => {
         const { accounts, entries, recentMerchants } = CASTS[locale];
         for (const entry of entries) {

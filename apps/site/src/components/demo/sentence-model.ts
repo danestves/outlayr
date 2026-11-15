@@ -233,6 +233,66 @@ export const CASTS = {
             { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "Spotify" },
         ],
     },
+    de: {
+        accounts: ["Sparkasse", "N26", "ING", "Wise", "Bargeld", "Tagesgeld"],
+        entries: [
+            {
+                account: "Sparkasse",
+                category: "Groceries",
+                currency: "USD",
+                keys: ["4", "2"],
+                kind: "expense",
+                merchant: "REWE",
+                when: "today",
+            },
+            {
+                account: "N26",
+                category: "Transport",
+                currency: "USD",
+                keys: ["1", "4", ".", "6"],
+                kind: "expense",
+                merchant: "Deutsche Bahn",
+                when: "today",
+            },
+            {
+                account: "Wise",
+                category: "Freelance",
+                currency: "USD",
+                keys: ["1", "4", "5", "0"],
+                kind: "income",
+                merchant: "Upwork",
+                when: "yesterday",
+            },
+            {
+                account: "ING",
+                category: "Fashion",
+                currency: "EUR",
+                keys: ["8", "9"],
+                kind: "expense",
+                merchant: "Zara",
+                when: "today",
+            },
+        ],
+        knownMerchants: new Map([
+            ["rewe", "Groceries"],
+            ["balzac coffee", "Coffee"],
+            ["lieferando", "Dining Out"],
+            ["dm", "Shopping"],
+            ["netflix", "Subscriptions"],
+            ["deutsche bahn", "Transport"],
+            ["spotify", "Subscriptions"],
+            ["zara", "Fashion"],
+        ]),
+        recentMerchants: {
+            expense: ["REWE", "Deutsche Bahn", "Zara", "dm", "Lieferando", "Spotify"],
+            income: ["Upwork", "Deel"],
+        },
+        seedLog: [
+            { amount: 15, category: "Subscriptions", currency: "USD", id: 3, income: false, merchant: "Netflix" },
+            { amount: 54.28, category: "Shopping", currency: "USD", id: 2, income: false, merchant: "dm" },
+            { amount: 4, category: "Subscriptions", currency: "USD", id: 1, income: false, merchant: "Spotify" },
+        ],
+    },
     fr: {
         accounts: ["Boursorama", "Revolut", "Crédit Agricole", "Wise", "Cash", "Livret A"],
         entries: [
@@ -540,6 +600,7 @@ function scriptOf(cast: Cast) {
 
 const SCRIPTS = {
     en: scriptOf(CASTS.en),
+    de: scriptOf(CASTS.de),
     es: scriptOf(CASTS.es),
     fr: scriptOf(CASTS.fr),
     pt: scriptOf(CASTS.pt),

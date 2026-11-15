@@ -1,0 +1,9 @@
+﻿Datum (Date),Notiz (Note),Betrag (Amount),Währung (Currency),Kategorie (Category),Typ (Type)
+2026-10-01,Gehalt,2400.00,EUR,Gehalt,Income
+2026-10-01,Miete,850.00,EUR,Miete,Expense
+2026-10-03,dm,96.40,EUR,Lebensmittel,Expense
+2026-10-05,Apotheke,18.90,EUR,Gesundheit,Expense
+2026-10-08,Stromrechnung,64.20,EUR,Nebenkosten,Expense
+2026-10-11,Abendessen in Montreal,58.00,CAD,Essengehen,Expense
+2026-10-14,Netflix,13.49,EUR,Unterhaltung,Expense
+2026-10-18,Deutsche Bahn,45.00,EUR,Verkehr,Expense
