@@ -2,6 +2,8 @@ import { utcDateString } from "@outlayr/money/dates";
 import { roundMoney } from "@outlayr/money/round";
 import type { RateTable } from "@outlayr/money/valuation";
 
+import { pendingCategoryFor } from "@/data/categories-core";
+import type { PendingCategory } from "@/data/categories-core";
 import type { ReceiptDraft, ReceiptItem } from "@/lib/cloud-ai";
 
 import { minorUnitsFor } from "./money";
@@ -23,6 +25,7 @@ export interface ResolvedReceipt {
     income: boolean;
     items: ReceiptItem[];
     merchant: string;
+    pendingCategory: PendingCategory | null;
     paymentMethod: string | null;
     subtotal: number | null;
     tax: number | null;
@@ -58,6 +61,10 @@ export function resolveReceipt({
         draft.categoryName,
         (candidate) => candidate.name
     );
+    const pendingCategory =
+        category === null && !categoriesOmitted && draft.categoryName !== null
+            ? pendingCategoryFor(draft.categoryName, draft.parentCategoryName ?? null)
+            : null;
     const account = uniqueMatch(accounts, draft.accountName, (candidate) => candidate.name);
     return {
         accountId: account?.id ?? null,
@@ -74,19 +81,23 @@ export function resolveReceipt({
         items: draft.items.map((item) => ({ ...item, price: roundMoney(item.price, minorUnitsFor(paid)) })),
         merchant: draft.merchant,
         paymentMethod: draft.paymentMethod,
+        pendingCategory,
         subtotal: roundLine(draft.subtotal, paid),
         tax: roundLine(draft.tax, paid),
         tip: roundLine(draft.tip, paid),
     };
 }
 
-export function savableReceipt(receipt: ResolvedReceipt): { categoryId: string } | null {
+export function savableReceipt(
+    receipt: ResolvedReceipt
+): { categoryId: string | null; pendingCategory: PendingCategory | null } | null {
     const named = receipt.merchant.trim().length > 0;
     const placed = !(receipt.accountUnresolved || receipt.categoryUnresolved || receipt.currencyUnresolved);
-    if (receipt.categoryId === null || receipt.amount <= 0 || !named || !placed) {
+    const filed = receipt.categoryId !== null || receipt.pendingCategory !== null;
+    if (!filed || receipt.amount <= 0 || !named || !placed) {
         return null;
     }
-    return { categoryId: receipt.categoryId };
+    return { categoryId: receipt.categoryId, pendingCategory: receipt.pendingCategory };
 }
 
 export function formatQuantity(quantity: number): string {

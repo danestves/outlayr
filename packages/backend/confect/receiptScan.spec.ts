@@ -63,6 +63,7 @@ export const ReceiptDraft = Schema.Struct({
     income: Schema.Boolean,
     items: Schema.Array(ReceiptItem),
     merchant: Schema.String,
+    parentCategoryName: Schema.optionalKey(Schema.NullOr(Schema.String)),
     paymentMethod: Schema.NullOr(Schema.String),
     subtotal: Schema.NullOr(Schema.Number),
     tax: Schema.NullOr(Schema.Number),

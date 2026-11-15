@@ -9,7 +9,7 @@ import { ActionCtx, MutationCtx } from "./_generated/services";
 import { openAiGate, refuse } from "./lib/aiGate";
 import { liveIdentity } from "./lib/auth";
 import { admitCapture } from "./lib/captures";
-import { claudeFastModelId } from "./lib/config";
+import { claudeModelId } from "./lib/config";
 import { admitScan, failure, rateLimiter, readReceipt } from "./receiptScan";
 import spec, { ReceiptScanInput } from "./receiptScan.spec";
 
@@ -49,7 +49,7 @@ const scan = FunctionImpl.make(
                 }),
                 args,
                 feature: "receipt_scan",
-                modelId: claudeFastModelId,
+                modelId: claudeModelId,
             });
             return yield* readReceipt(model, args.image, {
                 accounts: args.accounts,

@@ -16,7 +16,7 @@ import { applyToTree, BACKGROUND_REQUEST_TIMEOUT_MS, rateLimiter, runSuggest } f
 import { groundedAnswer } from "./groundedLookup";
 import type { GroundedCallDeps } from "./groundedLookup";
 import { traced } from "./lib/aiTracing";
-import { anthropicApiKey, claudeFastModelId, claudeGroundedModelId } from "./lib/config";
+import { anthropicApiKey, claudeGroundedModelId, claudeModelId } from "./lib/config";
 import type { EnrichmentResult } from "./lib/enrichmentResult";
 import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
 import { runEdge, runTransactionEdge } from "./lib/runEdge";
@@ -101,22 +101,17 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
             deps.grounded
         );
         if (deep !== null && (deep.categoryName !== null || deep.domain !== null || deep.merchantName !== null)) {
-            return yield* share(
-                ctx,
-                row,
-                applyToTree(row.categoryTree, { ...deep, parentCategoryName: null }),
-                yield* claudeGroundedModelId
-            );
+            return yield* share(ctx, row, applyToTree(row.categoryTree, deep), yield* claudeGroundedModelId);
         }
     }
-    const fastModelId = yield* claudeFastModelId;
+    const modelId = yield* claudeModelId;
     let model = deps.fast;
     if (model === undefined) {
         const apiKey = yield* anthropicApiKey;
         if (Option.isNone(apiKey)) {
             return null;
         }
-        model = traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(fastModelId), "background_suggest", {
+        model = traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "background_suggest", {
             distinctId,
         });
     }
@@ -129,7 +124,7 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
         regionCode: row.regionCode,
         timeoutMs: BACKGROUND_REQUEST_TIMEOUT_MS,
     });
-    return yield* share(ctx, row, fast, fastModelId);
+    return yield* share(ctx, row, fast, modelId);
 });
 
 const workJob: (ctx: ActionCtx, jobId: Id<"enrichmentJobs">) => Effect.Effect<null> = Effect.fn("EnrichmentQueue.work")(

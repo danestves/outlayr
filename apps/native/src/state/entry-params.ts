@@ -22,6 +22,8 @@ export interface EntryParams {
     income?: LinkParam;
     installmentDraft?: LinkParam;
     installments?: LinkParam;
+    newCategory?: LinkParam;
+    newCategoryParent?: LinkParam;
     note?: LinkParam;
     receipt?: LinkParam;
     recurringCoefficient?: LinkParam;
@@ -40,6 +42,18 @@ function plainNumber(param: LinkParam | undefined): number {
     return PLAIN_DECIMAL.test(text) ? Number(text) : Number.NaN;
 }
 
+const MAX_CATEGORY_NAME_LENGTH = 40;
+
+function categoryNameParam(param: string | undefined): string | null {
+    const name = param?.trim() ?? "";
+    return name.length > 0 && name.length <= MAX_CATEGORY_NAME_LENGTH ? name : null;
+}
+
+function seededNewCategory(name: string | undefined, parentName: string | undefined) {
+    const categoryName = categoryNameParam(name);
+    return categoryName === null ? undefined : { name: categoryName, parentName: categoryNameParam(parentName) };
+}
+
 export function entryHref(seed: TransactionSeed) {
     const { recurrence } = seed;
     const params = {
@@ -55,6 +69,8 @@ export function entryHref(seed: TransactionSeed) {
         installmentDraft:
             seed.installmentDraft === undefined ? undefined : encodeInstallmentSeed(seed.installmentDraft),
         installments: seed.installments ? "1" : undefined,
+        newCategory: seed.newCategory?.name,
+        newCategoryParent: seed.newCategory?.parentName ?? undefined,
         note: seed.note,
         receipt: seed.receipt,
         recurringCoefficient: recurrence === undefined ? undefined : String(recurrence.coefficient),
@@ -75,6 +91,8 @@ export function entrySeed({
     income,
     installmentDraft,
     installments,
+    newCategory,
+    newCategoryParent,
     note,
     receipt,
     recurringCoefficient,
@@ -101,6 +119,7 @@ export function entrySeed({
         income: income === "1",
         installmentDraft: parseInstallmentSeed(single(installmentDraft)),
         installments: installments === "1",
+        newCategory: seededNewCategory(single(newCategory), single(newCategoryParent)),
         note: single(note),
         receipt: parseReceipt(seededReceipt) === null ? undefined : seededReceipt,
         recurrence:

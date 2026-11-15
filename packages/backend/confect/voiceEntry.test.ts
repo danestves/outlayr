@@ -135,6 +135,7 @@ describe("normalizeDraft", () => {
             income: false,
             kind: "entry",
             merchant: "Starbucks",
+            parentCategoryName: null,
             recurrence: null,
         });
     });
@@ -188,15 +189,27 @@ describe("normalizeDraft", () => {
         });
     });
 
-    it("drops a category the ledger does not have, keeps an unknown account as spoken, and case-folds the known", () => {
+    it("keeps an unknown account as spoken and case-folds the known names", () => {
         const answer = { ...MODEL_ANSWER, accountName: "Visa", categoryName: "groceries" };
         expect(normalizeDraft(answer, BASE_ARGS)).toMatchObject({ accountName: "Visa", categoryName: "Groceries" });
         expect(normalizeDraft({ ...MODEL_ANSWER, accountName: "amex" }, BASE_ARGS)).toMatchObject({
             accountName: "Amex",
         });
-        expect(normalizeDraft({ ...MODEL_ANSWER, categoryName: "Toys" }, BASE_ARGS)).toMatchObject({
-            categoryName: null,
+    });
+
+    it("proposes a new category with a new parent, and never nests under a subcategory", () => {
+        const proposed = { ...MODEL_ANSWER, categoryName: "Car maintenance", parentCategoryName: "Vehicle" };
+        expect(normalizeDraft(proposed, BASE_ARGS)).toMatchObject({
+            categoryName: "Car maintenance",
+            parentCategoryName: "Vehicle",
         });
+        const underKnown = { ...MODEL_ANSWER, categoryName: "Toys", parentCategoryName: "food" };
+        expect(normalizeDraft(underKnown, BASE_ARGS)).toMatchObject({
+            categoryName: "Toys",
+            parentCategoryName: "Food",
+        });
+        const underChild = { ...MODEL_ANSWER, categoryName: "Toys", parentCategoryName: "Coffee" };
+        expect(normalizeDraft(underChild, BASE_ARGS)).toMatchObject({ parentCategoryName: null });
     });
 
     it("a date outside the window, not a date, or a day the calendar lacks becomes today", () => {

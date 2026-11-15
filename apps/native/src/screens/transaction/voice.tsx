@@ -479,6 +479,8 @@ function failedActions(
     };
 }
 
+type Filing = NonNullable<ReturnType<typeof savableEntry>>;
+
 interface WriteDone {
     onFailed: () => void;
     onSaved: () => void;
@@ -487,10 +489,15 @@ interface WriteDone {
 const writeEntry = Effect.fn("VoiceThread.writeEntry")(function* writeEntry(
     db: Database,
     draft: ResolvedVoiceEntry,
-    categoryId: string,
+    filing: Filing,
     done: WriteDone
 ) {
-    const outcome = yield* commitEntry({ db, draft: voiceEntryDraft(draft, categoryId), source: "voice" });
+    const outcome = yield* commitEntry({
+        db,
+        draft: voiceEntryDraft(draft, filing.categoryId),
+        pendingCategory: filing.pendingCategory ?? undefined,
+        source: "voice",
+    });
     if (outcome.kind === "failed") {
         // The row did not land; the form has the failure strip this screen lacks.
         done.onFailed();
@@ -640,7 +647,7 @@ function VoiceThreadScreen() {
     const saying = SAYING.has(phase.kind);
     const { heardWords, sentence } = useVoiceSentence({ context, currency, heard, partial, phase, resolved, turns });
     useHandoffHaptics(phase.kind);
-    const savableCategoryId = entry && stillCurrent(entry, live) ? (savableEntry(entry)?.categoryId ?? null) : null;
+    const savableFiling = entry && stillCurrent(entry, live) ? savableEntry(entry) : null;
 
     const close = () => {
         cancel();
@@ -660,6 +667,10 @@ function VoiceThreadScreen() {
                 date: draft.date,
                 details: draft.details ?? undefined,
                 income: draft.income,
+                newCategory:
+                    draft.pendingCategory === null
+                        ? undefined
+                        : { name: draft.pendingCategory.name, parentName: draft.pendingCategory.parentName },
                 note: draft.merchant,
                 recurrence: draft.recurrence ?? undefined,
             })
@@ -699,10 +710,10 @@ function VoiceThreadScreen() {
         }
     };
 
-    const save = (draft: ResolvedVoiceEntry, categoryId: string) => {
+    const save = (draft: ResolvedVoiceEntry, filing: Filing) => {
         setSaving(true);
         void runFlow(
-            writeEntry(db, draft, categoryId, {
+            writeEntry(db, draft, filing, {
                 onFailed: () => {
                     setSaving(false);
                     if (navigation.isFocused()) {
@@ -764,9 +775,9 @@ function VoiceThreadScreen() {
     if (entry) {
         secondary = { label: t("voice.action.edit"), onPress: () => openForm(entry) };
         primary =
-            savableCategoryId === null
+            savableFiling === null
                 ? { label: t("voice.action.finish"), onPress: () => openForm(entry) }
-                : { label: t("voice.action.save"), onPress: () => save(entry, savableCategoryId) };
+                : { label: t("voice.action.save"), onPress: () => save(entry, savableFiling) };
     } else if (transfer) {
         secondary = { label: t("voice.action.edit"), onPress: () => openTransferForm(transfer) };
         primary = transferLegs
@@ -853,7 +864,9 @@ function VoiceThreadScreen() {
             {sentence ? (
                 <VoiceSentenceView
                     accountName={(id) => accounts.find((account) => account.id === id)?.name ?? null}
-                    categoryName={(id) => getCategoryById(db, id)?.name ?? null}
+                    categoryName={(id) =>
+                        getCategoryById(db, id)?.name ?? (entry?.pendingCategory?.name === id ? id : null)
+                    }
                     currency={currency}
                     onEdit={onEdit}
                     sentence={sentence}

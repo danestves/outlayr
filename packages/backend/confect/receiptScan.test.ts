@@ -85,6 +85,7 @@ describe("normalizeDraft", () => {
                 { name: "Pan chapata", price: 1.25, quantity: 1 },
             ],
             merchant: "Mercadona",
+            parentCategoryName: null,
             paymentMethod: "Visa •••• 4242",
             subtotal: null,
             tax: 1.32,
@@ -120,10 +121,24 @@ describe("normalizeDraft", () => {
         expect(normalizeDraft({ ...MODEL_ANSWER, date: "2024-09-05" }, CONTEXT)?.date).toBe("2024-09-05");
     });
 
-    it("names the ledger did not offer become null rather than guesses", () => {
-        const draft = normalizeDraft({ ...MODEL_ANSWER, accountName: "Amex", categoryName: "Snacks" }, CONTEXT);
-        expect(draft?.accountName).toBeNull();
-        expect(draft?.categoryName).toBeNull();
+    it("an unknown account becomes null rather than a guess", () => {
+        expect(normalizeDraft({ ...MODEL_ANSWER, accountName: "Amex" }, CONTEXT)?.accountName).toBeNull();
+    });
+
+    it("a new category keeps a new parent, and a known one maps to the ledger's spelling with no parent", () => {
+        const created = normalizeDraft(
+            { ...MODEL_ANSWER, categoryName: "Car wash", parentCategoryName: "Vehicle" },
+            CONTEXT
+        );
+        expect(created?.categoryName).toBe("Car wash");
+        expect(created?.parentCategoryName).toBe("Vehicle");
+
+        const known = normalizeDraft(
+            { ...MODEL_ANSWER, categoryName: "coffee", parentCategoryName: "Vehicle" },
+            CONTEXT
+        );
+        expect(known?.categoryName).toBe("Coffee");
+        expect(known?.parentCategoryName).toBeNull();
     });
 
     it("a refund slip is income", () => {

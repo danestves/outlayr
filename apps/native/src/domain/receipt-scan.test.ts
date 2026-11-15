@@ -78,9 +78,22 @@ describe("resolveReceipt", () => {
     });
 });
 
+describe("a category the ledger lacks", () => {
+    it("becomes a pending category under its parent and the receipt is still savable", () => {
+        const receipt = resolve({ ...DRAFT, categoryName: "Car wash", parentCategoryName: "Vehicle" });
+
+        expect(receipt.categoryId).toBeNull();
+        expect(receipt.pendingCategory).toMatchObject({ name: "Car wash", parentName: "Vehicle" });
+        expect(savableReceipt(receipt)?.pendingCategory?.name).toBe("Car wash");
+    });
+});
+
 describe("savableReceipt", () => {
     it("needs a category, a positive amount, a merchant, and no account it could not place", () => {
-        expect(savableReceipt(resolve(DRAFT))).toStrictEqual({ categoryId: "cat-groceries" });
+        expect(savableReceipt(resolve(DRAFT))).toStrictEqual({
+            categoryId: "cat-groceries",
+            pendingCategory: null,
+        });
         const twoVisas = resolveReceipt({
             accounts: [...ACCOUNTS, { currency: "EUR", id: "acc-visa-eur", name: "visa" }],
             categories: CATEGORIES,
@@ -113,7 +126,7 @@ describe("savableReceipt", () => {
         });
         expect(fewerCategories.categoryId).toBe("cat-groceries");
         expect(savableReceipt(fewerCategories)).toBeNull();
-        expect(savableReceipt(resolve({ ...DRAFT, categoryName: "Unknown" }))).toBeNull();
+        expect(savableReceipt(resolve({ ...DRAFT, categoryName: null }))).toBeNull();
         expect(savableReceipt(resolve({ ...DRAFT, merchant: "  " }))).toBeNull();
         expect(savableReceipt(resolve({ ...DRAFT, currency: "JPY", total: 0.4 }))).toBeNull();
     });

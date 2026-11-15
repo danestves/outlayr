@@ -20,15 +20,8 @@ import { components } from "../convex/_generated/api";
 import { query } from "../convex/_generated/server";
 import type { ActionCtx, MutationCtx, QueryCtx } from "../convex/_generated/server";
 import { liveIdentity } from "./lib/auth";
-import {
-    clampDate,
-    describeTree,
-    draftCurrency,
-    MAX_NAME_LENGTH,
-    normalizeDomain,
-    pickKnown,
-    trimTo,
-} from "./lib/ledgerPrompt";
+import { categoryChoiceLines, placeCategory } from "./lib/categoryChoice";
+import { clampDate, draftCurrency, MAX_NAME_LENGTH, normalizeDomain, pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { modelCallError, modelSchema } from "./lib/modelCall";
 import { runTransactionEdge } from "./lib/runEdge";
@@ -82,6 +75,7 @@ export interface VoiceEntryDraft extends VoiceDraftBase {
     domain: string | null;
     income: boolean;
     kind: "entry";
+    parentCategoryName?: string | null;
     merchant: string;
     recurrence: VoiceRecurrence | null;
 }
@@ -124,6 +118,7 @@ export const ModelOutput = Schema.Struct({
     kind: Schema.Literals(["expense", "income", "transfer"]),
     merchant: Schema.NullOr(Schema.String),
     // Optional: a required field the model skips would fail the whole tool call.
+    parentCategoryName: Schema.optionalKey(Schema.NullOr(Schema.String)),
     quotes: Schema.optionalKey(
         Schema.Array(Schema.Struct({ field: Schema.Literals(QUOTE_FIELDS), text: Schema.String }))
     ),
@@ -173,7 +168,8 @@ export function buildPrompt(args: LedgerContext): string {
         "details is anything else worth keeping (what was bought, who it was for); null when the merchant already says it all.",
         'domain is the merchant\'s primary web domain, a bare hostname ("carrefour.es", "mercadona.es", "netflix.com"), only when you know it with confidence for that merchant in the person\'s region; otherwise null. Never for a transfer or a person.',
         'recurrence is set only when the words say the charge repeats ("every month", "monthly", "a subscription", "weekly", "every two weeks"): the unit and how many units apart, e.g. {"every": 1, "unit": "month"}; otherwise null. A transfer has no recurrence.',
-        `The person's categories, with any nested under them, are: ${describeTree(args.categoryTree)}. Pick the one that fits best and answer its name verbatim, or null when none fits. Never invent a category name. A transfer has no category.`,
+        ...categoryChoiceLines(args.categoryTree),
+        "A transfer has no category.",
         args.accounts.length > 0
             ? `Their accounts are: ${args.accounts.join(", ")}. Set accountName verbatim when one is said or clearly implied ("on the Amex"); otherwise null. For a transfer, accountName is the account the money left and toAccountName the one it reached; toAccountName is null for the other kinds.`
             : "They have no accounts; accountName and toAccountName are null.",
@@ -197,7 +193,6 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): VoiceD
     if (!(output.found && amount != null && Number.isFinite(amount) && amount > 0 && amount <= MAX_AMOUNT)) {
         return null;
     }
-    const knownCategories = args.categoryTree.flatMap((branch) => [branch.name, ...branch.children]);
     const { currency } = draftCurrency(output.currency, args.currency);
     const base = {
         amount,
@@ -215,15 +210,20 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): VoiceD
                 pickKnown(output.toAccountName, args.accounts) ?? trimTo(output.toAccountName, MAX_NAME_LENGTH),
         };
     }
+    const placed = placeCategory(args.categoryTree, {
+        categoryName: output.categoryName,
+        parentCategoryName: output.parentCategoryName,
+    });
     return {
         ...base,
         // An unknown account comes back as spoken, so the client can tell "none named" from "named but unplaced".
         accountName: pickKnown(output.accountName, args.accounts) ?? trimTo(output.accountName, MAX_NAME_LENGTH),
-        categoryName: pickKnown(output.categoryName, knownCategories),
+        categoryName: placed.categoryName,
         domain: normalizeDomain(output.domain),
         income: output.kind === "income",
         kind: "entry",
         merchant: trimTo(output.merchant, MAX_MERCHANT_LENGTH) ?? "",
+        parentCategoryName: placed.parentCategoryName,
         recurrence: normalizeRecurrence(output.recurrence),
     };
 }

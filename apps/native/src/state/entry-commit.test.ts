@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vite-plus/test";
 import { Meta } from "@/data/app-meta-core";
 import { getTransactionById } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
-import { tags, transactions } from "@/db/schema";
+import { categories, tags, transactions } from "@/db/schema";
 import { migratedSqlite, testDatabase, withAsyncTransactions } from "@/db/test-database";
 import { Reminders } from "@/lib/reminders";
 
@@ -99,6 +99,33 @@ describe("commitEntry", () => {
         expect(outcome).toStrictEqual({ kind: "failed", missingCategory: false });
         await expect(db.select().from(transactions)).resolves.toStrictEqual([]);
         await expect(db.select().from(tags)).resolves.toStrictEqual([]);
+    });
+
+    it("creates a suggested category's new parent and files the category beneath it", async () => {
+        const { db } = ledger();
+
+        const outcome = await commit({
+            db,
+            draft: DRAFT,
+            pendingCategory: {
+                color: "#336699",
+                emoji: null,
+                icon: "Wrench01",
+                name: "Mantenimiento del carro",
+                parentName: "Vehículo",
+            },
+            source: "form",
+        });
+
+        if (outcome.kind !== "saved") {
+            throw new Error("The entry did not save");
+        }
+        const rows = await db.select().from(categories);
+        const parent = rows.find((row) => row.name === "Vehículo");
+        const child = rows.find((row) => row.name === "Mantenimiento del carro");
+        expect(parent?.parentId).toBeNull();
+        expect(child?.parentId).toBe(parent?.id);
+        expect(getTransactionById(db, outcome.id)?.categoryId).toBe(child?.id);
     });
 
     it("keeps a subscription whose back-fill fails, flags it, and still syncs reminders", async () => {

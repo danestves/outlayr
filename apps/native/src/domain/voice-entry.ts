@@ -2,6 +2,8 @@ import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import type { RecurringType } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";
 
+import { pendingCategoryFor } from "@/data/categories-core";
+import type { PendingCategory } from "@/data/categories-core";
 import { PROPOSE_DRAFT_TOOL } from "@/lib/cloud-ai";
 import type { ProposedDraft, VoiceDraft, VoiceQuote, VoiceRecurrence } from "@/lib/cloud-ai";
 
@@ -25,6 +27,7 @@ export interface ResolvedVoiceEntry {
     income: boolean;
     kind: "entry";
     merchant: string;
+    pendingCategory: PendingCategory | null;
     recurrence: ResolvedRecurrence | null;
 }
 
@@ -151,6 +154,19 @@ export function resolveVoiceDraft({
         (candidate) => candidate.name
     );
 
+    const proposed = draft.categoryName;
+    const known = (name: string) =>
+        categories.some(
+            (candidate) =>
+                candidate.income === draft.income &&
+                candidate.name !== null &&
+                foldName(candidate.name) === foldName(name)
+        );
+    const pendingCategory =
+        proposed != null && category === null && !categoriesOmitted && !known(proposed)
+            ? pendingCategoryFor(proposed, draft.parentCategoryName ?? null)
+            : null;
+
     const spent = draft.currency ?? currency;
     const account = findAccount(draft.accountName);
     return {
@@ -166,6 +182,7 @@ export function resolveVoiceDraft({
         income: draft.income,
         kind: "entry",
         merchant: draft.merchant,
+        pendingCategory,
         recurrence: resolveRecurrence(draft.recurrence),
     };
 }
@@ -188,11 +205,15 @@ export function transferStillCurrent(
     return legs.every((leg) => leg === null || live.accountIds.has(leg.id));
 }
 
-export function savableEntry(draft: ResolvedVoiceEntry): { categoryId: string } | null {
+export function savableEntry(
+    draft: ResolvedVoiceEntry
+): { categoryId: string | null; pendingCategory: PendingCategory | null } | null {
     const named = draft.merchant.trim().length > 0;
     const placed = !(draft.accountUnresolved || draft.categoryUnresolved);
-    const ready = draft.categoryId !== null && draft.amount > 0 && named && placed;
-    return ready && draft.categoryId !== null ? { categoryId: draft.categoryId } : null;
+    const filed = draft.categoryId !== null || draft.pendingCategory !== null;
+    return filed && draft.amount > 0 && named && placed
+        ? { categoryId: draft.categoryId, pendingCategory: draft.pendingCategory }
+        : null;
 }
 
 export function savableTransfer(draft: ResolvedVoiceTransfer): { from: AccountCandidate; to: AccountCandidate } | null {

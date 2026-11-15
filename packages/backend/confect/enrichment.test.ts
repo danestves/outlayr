@@ -732,18 +732,52 @@ describe("runSuggest sanitisation", () => {
         });
     });
 
-    it("drops a parent the user does not have", async () => {
+    it("keeps a new parent, so a category and its group are created together", async () => {
         const model = mockModel({
-            categoryName: "Streaming",
+            categoryName: "Car maintenance",
             domain: null,
             emoji: null,
             isNewCategory: true,
-            parentCategoryName: "Invented Parent",
+            parentCategoryName: "Vehicle",
             tags: [],
         });
 
         await expect(Effect.runPromise(runSuggest(model, BASE_ARGS))).resolves.toMatchObject({
+            categoryName: "Car maintenance",
+            isNewCategory: true,
+            parentCategoryName: "Vehicle",
+        });
+    });
+
+    it("drops a parent that is one of the user's subcategories", async () => {
+        const model = mockModel({
+            categoryName: "Organic",
+            domain: null,
+            emoji: null,
+            isNewCategory: true,
+            parentCategoryName: "Supermarket",
+            tags: [],
+        });
+
+        await expect(Effect.runPromise(runSuggest(model, BASE_ARGS))).resolves.toMatchObject({
+            isNewCategory: true,
             parentCategoryName: null,
+        });
+    });
+
+    it("reads an echoed branch description as the branch it names", async () => {
+        const model = mockModel({
+            categoryName: "Groceries (containing Supermarket)",
+            domain: null,
+            emoji: null,
+            isNewCategory: true,
+            parentCategoryName: null,
+            tags: [],
+        });
+
+        await expect(Effect.runPromise(runSuggest(model, BASE_ARGS))).resolves.toMatchObject({
+            categoryName: "Groceries",
+            isNewCategory: false,
         });
     });
 

@@ -138,7 +138,7 @@ describe("resolveVoiceDraft", () => {
         expect(doubledAccount).toMatchObject({ accountUnresolved: true, categoryId: "cat-coffee" });
         expect(savableEntry(doubledAccount)).toBeNull();
         expect(unnamedAccount).toMatchObject({ accountId: null, accountUnresolved: false });
-        expect(savableEntry(unnamedAccount)).toStrictEqual({ categoryId: "cat-coffee" });
+        expect(savableEntry(unnamedAccount)).toStrictEqual({ categoryId: "cat-coffee", pendingCategory: null });
     });
 
     it("a transfer resolves both accounts and takes the leaving account's currency when none was said", () => {
@@ -176,11 +176,34 @@ describe("resolveVoiceDraft", () => {
     });
 });
 
+describe("a category the ledger lacks", () => {
+    it("becomes a pending category under its proposed parent and is savable without an id", () => {
+        const resolved = resolve({ ...DRAFT, categoryName: "Toys", parentCategoryName: "Kids" });
+        if (resolved.kind !== "entry") {
+            throw new Error("Expected an entry draft");
+        }
+        expect(resolved.categoryId).toBeNull();
+        expect(resolved.pendingCategory).toMatchObject({ name: "Toys", parentName: "Kids" });
+        expect(savableEntry(resolved)).toMatchObject({ categoryId: null, pendingCategory: { name: "Toys" } });
+    });
+
+    it("is not proposed when the ledger already has the name, even if the name is ambiguous", () => {
+        const twice = resolveVoiceDraft({
+            accounts: ACCOUNTS,
+            categories: [...CATEGORIES, { id: "cat-coffee-2", income: false, name: "coffee" }],
+            currency: "USD",
+            draft: DRAFT,
+            now: NOW,
+        });
+        expect(twice).toMatchObject({ categoryId: null, pendingCategory: null });
+    });
+});
+
 describe("savableEntry", () => {
     it("needs a resolved category, an amount that survived rounding, and a merchant", () => {
         const whole = resolve(DRAFT);
         const dust = resolve({ ...DRAFT, amount: 0.001 });
-        const uncategorised = resolve({ ...DRAFT, categoryName: "Toys" });
+        const uncategorised = resolve({ ...DRAFT, categoryName: null });
         if (whole.kind !== "entry" || dust.kind !== "entry" || uncategorised.kind !== "entry") {
             throw new Error("Expected entry drafts");
         }
@@ -188,7 +211,7 @@ describe("savableEntry", () => {
         if (nameless.kind !== "entry") {
             throw new Error("Expected an entry draft");
         }
-        expect(savableEntry(whole)).toStrictEqual({ categoryId: "cat-coffee" });
+        expect(savableEntry(whole)).toStrictEqual({ categoryId: "cat-coffee", pendingCategory: null });
         expect(savableEntry(dust)).toBeNull();
         expect(savableEntry(uncategorised)).toBeNull();
         expect(savableEntry(nameless)).toBeNull();

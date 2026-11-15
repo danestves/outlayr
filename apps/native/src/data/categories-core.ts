@@ -636,6 +636,14 @@ export function findCategoryPreset(categoryName: string): SuggestedCategoryPrese
 }
 
 // Hashed, not random, so a suggestion no preset covers keeps its colour across devices and re-renders.
+export interface PendingCategory {
+    color: string;
+    emoji: string | null;
+    icon: string;
+    name: string;
+    parentName: string | null;
+}
+
 export function presetForName(categoryName: string): SuggestedCategoryPreset {
     const exact = findCategoryPreset(categoryName);
     if (exact != null) {
@@ -647,6 +655,15 @@ export function presetForName(categoryName: string): SuggestedCategoryPreset {
         hash = (hash * 31 + categoryName.charCodeAt(index)) >>> 0;
     }
     return ALL_CATEGORY_PRESETS[hash % ALL_CATEGORY_PRESETS.length];
+}
+
+export function pendingCategoryFor(
+    name: string,
+    parentName: string | null,
+    emoji: string | null = null
+): PendingCategory {
+    const preset = presetForName(name);
+    return { color: preset.color, emoji, icon: preset.icon, name, parentName };
 }
 
 // The icon is picked free BEFORE `create`, which rejects an icon collision namespace-wide.

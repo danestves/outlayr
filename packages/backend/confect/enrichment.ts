@@ -10,7 +10,8 @@ import * as Schema from "effect/Schema";
 import { components, internal } from "../convex/_generated/api";
 import type { ActionCtx, MutationCtx } from "../convex/_generated/server";
 import type { Suggestion } from "./enrichment.spec";
-import { describeTree, LANGUAGE_PATTERN } from "./lib/ledgerPrompt";
+import { categoryChoiceLines, placeCategory } from "./lib/categoryChoice";
+import { LANGUAGE_PATTERN } from "./lib/ledgerPrompt";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";
 import { modelCallError, modelSchema } from "./lib/modelCall";
@@ -18,7 +19,6 @@ import { DOMAIN_PATTERN, MAX_DOMAIN_LENGTH, MAX_TAG_LENGTH, MAX_TAGS, PICTOGRAPH
 
 export const MIN_NAME_LENGTH = 3;
 export const MAX_NAME_LENGTH = 64;
-const MAX_CATEGORY_NAME_LENGTH = 40;
 const MAX_KNOWN_CATEGORY_NAMES = 60;
 /** The action's own budget under the client's 9s `Promise.race` abort. */
 export const REQUEST_TIMEOUT_MS = 8000;
@@ -48,6 +48,7 @@ function domainAccepted(confidence: (typeof DOMAIN_CONFIDENCE)[number] | null | 
 const ModelOutput = Schema.Struct({
     /** Brand before domain measurably fixes the domain's spelling. */
     brand: Schema.optionalKey(Schema.NullOr(Schema.String)),
+    purchase: Schema.optionalKey(Schema.NullOr(Schema.String)),
     categoryName: Schema.NullOr(Schema.String),
     domain: Schema.NullOr(Schema.String),
     /** Only `high` keeps the domain, so the prompt can demand a best guess. */
@@ -122,17 +123,6 @@ export function sanitizeMerchantName(name: string | null): string | null {
     return trimmed.length === 0 || trimmed.length > MAX_NAME_LENGTH ? null : trimmed;
 }
 
-export function sanitizeCategoryName(name: string | null): string | null {
-    if (name === null) {
-        return null;
-    }
-    const trimmed = name.trim();
-    if (trimmed.length === 0 || trimmed.length > MAX_CATEGORY_NAME_LENGTH) {
-        return null;
-    }
-    return trimmed;
-}
-
 const REGION_CODE_PATTERN = /^[A-Z]{2}$/;
 
 /** Client-submitted: validated before it reaches a prompt. */
@@ -187,9 +177,8 @@ function buildPrompt(
     return [
         `Classify this ${kind} transaction merchant name: "${name}".`,
         DESCRIPTOR_LINE,
-        `The user's categories, with any nested under them, are: ${describeTree(tree)}.`,
-        "Reuse one of those names verbatim when it fits, and set parentCategoryName to null.",
-        "Otherwise suggest a short new category name. If it clearly belongs beneath one of the user's existing top-level categories, set parentCategoryName to that name exactly; if it stands on its own, set parentCategoryName to null.",
+        "Set purchase to what the money most likely paid for, in a few words.",
+        ...categoryChoiceLines(tree),
         "Set emoji to a single emoji that suits the category, or null.",
         "Suggest at most 3 short tags.",
         DOMAIN_LINE,
@@ -233,27 +222,11 @@ export interface TreeCandidate {
 
 /** The same merchant can be new for one user and known for another. */
 export function applyToTree(tree: readonly CategoryBranch[], candidate: TreeCandidate): Omit<Suggestion, "grounding"> {
-    const cappedTree = tree.slice(0, MAX_KNOWN_CATEGORY_NAMES);
-    const everyName = cappedTree.flatMap((branch) => [branch.name, ...branch.children]);
-
-    const { categoryName } = candidate;
-    const isNewCategory = categoryName !== null && !everyName.includes(categoryName);
-    // A parent must be a top-level name actually sent: nothing upstream knows this ledger.
-    const parentCategoryName =
-        isNewCategory &&
-        candidate.parentCategoryName !== null &&
-        candidate.parentCategoryName !== categoryName &&
-        cappedTree.some((branch) => branch.name === candidate.parentCategoryName)
-            ? candidate.parentCategoryName
-            : null;
-
     return {
-        categoryName,
+        ...placeCategory(tree.slice(0, MAX_KNOWN_CATEGORY_NAMES), candidate),
         domain: candidate.domain,
         emoji: candidate.emoji,
-        isNewCategory,
         merchantName: candidate.merchantName ?? null,
-        parentCategoryName,
         tags: [...candidate.tags],
     };
 }
@@ -275,18 +248,18 @@ export const runSuggest = Effect.fn("Enrichment.runSuggest")(function* runSugges
                 model,
                 output: Output.object({ schema: modelOutputSchema }),
                 prompt: buildPrompt(args.name, args.income, args.locale, args.regionCode, args.currency, tree),
-                reasoning: "none",
+                reasoning: "low",
             }),
     });
 
     const suggestion: Suggestion = {
         ...applyToTree(args.categoryTree, {
-            categoryName: sanitizeCategoryName(output.categoryName),
+            categoryName: output.categoryName,
             // A guessed domain is a wrong logo; only null lets the grounded tier take over.
             domain: domainAccepted(output.domainConfidence) ? sanitizeDomain(output.domain) : null,
             emoji: sanitizeEmoji(output.emoji ?? null),
             merchantName: sanitizeMerchantName(output.brand ?? null),
-            parentCategoryName: sanitizeCategoryName(output.parentCategoryName ?? null),
+            parentCategoryName: output.parentCategoryName ?? null,
             tags: sanitizeTags(output.tags),
         }),
         grounding: false,
