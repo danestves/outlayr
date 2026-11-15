@@ -1,7 +1,7 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import type { Doc } from "@outlayr/backend/convex/_generated/dataModel";
 import { convexCollectionOptions } from "@tanstack/convex-db-collection";
-import { collectionOptions, useLiveQuery } from "@tanstack/react-db";
+import { collectionOptions, useDbClient } from "@tanstack/react-db";
 import type {
     Collection,
     CollectionConfig,
@@ -13,7 +13,7 @@ import type {
     UtilsRecord,
 } from "@tanstack/react-db";
 import { ConvexError } from "convex/values";
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
 import { CONVEX, SERVER } from "./db";
 import type { LedgerConvex } from "./db";
@@ -290,10 +290,42 @@ const rowsOf = <Row extends object, Key extends string | number, Utils extends U
     options: CollectionOptions<Row, Key, never, Utils> & NonSingleResult
 ) => db.collection(options).toArray;
 
-function useRows<Row extends object, Key extends string | number, Utils extends UtilsRecord>(
+interface Watched<Rows extends readonly unknown[]> {
+    readonly toArray: Rows;
+    subscribeChanges: (listener: () => void) => { unsubscribe: () => void };
+}
+
+const sameRows = (left: readonly unknown[], right: readonly unknown[]) =>
+    left.length === right.length && left.every((row, index) => row === right[index]);
+
+// Not useLiveQuery: the router streams every live query's rows into the page beside the
+// hydrated tables, so each row went twice.
+function rowStore<Rows extends readonly unknown[]>(collection: Watched<Rows>) {
+    let rows = collection.toArray;
+    return {
+        read: () => rows,
+        subscribe: (changed: () => void) => {
+            const subscription = collection.subscribeChanges(() => {
+                rows = collection.toArray;
+                changed();
+            });
+            // A sync write can land between the render and this subscription.
+            const now = collection.toArray;
+            if (!sameRows(now, rows)) {
+                rows = now;
+                changed();
+            }
+            return () => subscription.unsubscribe();
+        },
+    };
+}
+
+export function useRows<Row extends object, Key extends string | number, Utils extends UtilsRecord>(
     options: CollectionOptions<Row, Key, never, Utils> & NonSingleResult
 ) {
-    return useLiveQuery({ query: (q) => q.from({ row: options }), queryKey: [options.id] }).data;
+    const collection = useDbClient().collection(options);
+    const store = useMemo(() => rowStore(collection), [collection]);
+    return useSyncExternalStore(store.subscribe, store.read, store.read);
 }
 
 export const ledgerBooks = (db: DbClient): LedgerBooks => ({
