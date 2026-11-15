@@ -282,6 +282,7 @@ async function startOver() {
 }
 
 function NotSynced({ error }: ErrorComponentProps) {
+    const copy = useIntlayer("not-synced");
     if (error instanceof Error && proRequired(error)) {
         return (
             <Suspense fallback={null}>
@@ -290,10 +291,10 @@ function NotSynced({ error }: ErrorComponentProps) {
         );
     }
     return (
-        <Screen title="Could not load your ledger">
-            <Muted>Try again in a moment.</Muted>
+        <Screen title={copy.title}>
+            <Muted>{copy.body}</Muted>
             <button className={SOLID_PILL} onClick={startOver} type="button">
-                Try again
+                {copy.retry}
             </button>
         </Screen>
     );

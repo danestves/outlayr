@@ -2,8 +2,10 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { useIntlayer } from "react-intlayer";
 
-import { AuthFailure, authRequest, failureMessage } from "@/lib/account";
+import { AuthFailure, authRequest, failureKey } from "@/lib/account";
+import type { FailureKey } from "@/lib/account";
 import { authClient } from "@/lib/auth-client";
 
 import { SiteLink } from "../site-link";
@@ -17,12 +19,13 @@ const SHOW_AT_LEAST_MS = 300;
 type Step = "create" | "reset" | "sign-in" | "verify";
 
 export function SignInFlow({ onDone, target }: { onDone: () => void; target: string }) {
+    const copy = useIntlayer("sign-in");
     const [step, setStep] = useState<Step>("sign-in");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [code, setCode] = useState("");
     const [busy, setBusy] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<FailureKey | null>(null);
     const [resent, setResent] = useState(false);
     const [sendingCode, setSendingCode] = useState(false);
 
@@ -39,7 +42,7 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
         setBusy(true);
         Effect.runFork(
             program.pipe(
-                Effect.catchTags({ AuthFailure: (failure) => Effect.sync(() => setError(failureMessage(failure))) }),
+                Effect.catchTags({ AuthFailure: (failure) => Effect.sync(() => setError(failureKey(failure))) }),
                 Effect.ensuring(Effect.sync(() => setBusy(false)))
             )
         );
@@ -146,35 +149,35 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
     const newPasswordReady = password.length >= MIN_PASSWORD_LENGTH;
     const changeEmail = (
         <button className={TEXT_BUTTON} onClick={() => go("sign-in")} type="button">
-            Use another email
+            {copy.otherEmail}
         </button>
     );
 
     if (step === "create") {
         return (
-            <Screen title="Create an account">
+            <Screen title={copy.createTitle}>
                 <form onSubmit={create}>
                     <Field
                         autoComplete="email"
-                        label="Email"
+                        label={copy.email.value}
                         onChange={(event) => setEmail(event.target.value.trim())}
                         value={email}
                     />
                     <Field
                         autoComplete="new-password"
-                        label="Password"
+                        label={copy.password.value}
                         onChange={(event) => setPassword(event.target.value)}
-                        placeholder="8 or more characters"
+                        placeholder={copy.passwordHint.value}
                         secret
                         value={password}
                     />
-                    <ErrorLine message={error} />
+                    <ErrorLine message={error === null ? null : copy.failures[error].value} />
                     <button className={SOLID_PILL} disabled={busy || !email || !newPasswordReady} type="submit">
-                        Create account
+                        {copy.createAccount}
                     </button>
                 </form>
                 <button className={`${TEXT_BUTTON} mt-2`} onClick={() => go("sign-in")} type="button">
-                    Back to sign in
+                    {copy.backToSignIn}
                 </button>
             </Screen>
         );
@@ -182,8 +185,8 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
 
     if (step === "verify") {
         return (
-            <Screen title="Check your email">
-                <Muted>Code sent to {email}</Muted>
+            <Screen title={copy.verifyTitle}>
+                <Muted>{copy.codeSent({ email })}</Muted>
                 <CodeField
                     onChange={(next) => {
                         setCode(next);
@@ -193,18 +196,18 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
                     }}
                     value={code}
                 />
-                <ErrorLine message={error} />
+                <ErrorLine message={error === null ? null : copy.failures[error].value} />
                 <button
                     className={SOLID_PILL}
                     disabled={busy || code.length < CODE_LENGTH}
                     onClick={() => verify(code)}
                     type="button"
                 >
-                    Verify
+                    {copy.verify}
                 </button>
                 <div className="mt-2 flex flex-col items-center">
                     <button className={TEXT_BUTTON} onClick={resendVerification} type="button">
-                        {resent ? "New code sent" : "Send a new code"}
+                        {resent ? copy.resent : copy.resend}
                     </button>
                     {changeEmail}
                 </div>
@@ -214,30 +217,30 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
 
     if (step === "reset") {
         return (
-            <Screen title="Reset your password">
-                <Muted>Enter the code we sent to {email} and choose a new password.</Muted>
+            <Screen title={copy.resetTitle}>
+                <Muted>{copy.resetBody({ email })}</Muted>
                 <form onSubmit={reset}>
                     <CodeField onChange={setCode} value={code} />
                     <Field
                         autoComplete="new-password"
-                        label="New password"
+                        label={copy.newPassword.value}
                         onChange={(event) => setPassword(event.target.value)}
-                        placeholder="8 or more characters"
+                        placeholder={copy.passwordHint.value}
                         secret
                         value={password}
                     />
-                    <ErrorLine message={error} />
+                    <ErrorLine message={error === null ? null : copy.failures[error].value} />
                     <button
                         className={SOLID_PILL}
                         disabled={busy || code.length < CODE_LENGTH || !newPasswordReady}
                         type="submit"
                     >
-                        Set password
+                        {copy.setPassword}
                     </button>
                 </form>
                 <div className="mt-2 flex flex-col items-center">
                     <button className={TEXT_BUTTON} onClick={resendReset} type="button">
-                        {resent ? "New code sent" : "Send a new code"}
+                        {resent ? copy.resent : copy.resend}
                     </button>
                     {changeEmail}
                 </div>
@@ -246,58 +249,61 @@ export function SignInFlow({ onDone, target }: { onDone: () => void; target: str
     }
 
     return (
-        <Screen title="Sign in to Outlayr">
+        <Screen title={copy.title}>
             <button className={`${SOLID_PILL} mb-2.5`} disabled={busy} onClick={() => social("apple")} type="button">
                 <AppleGlyph />
-                Continue with Apple
+                {copy.apple}
             </button>
             <button className={LINE_PILL} disabled={busy} onClick={() => social("google")} type="button">
                 <GoogleGlyph />
-                Continue with Google
+                {copy.google}
             </button>
-            <p className="text-app-muted my-3.5 text-xs">or</p>
+            <p className="text-app-muted my-3.5 text-xs">{copy.or}</p>
             <form onSubmit={signIn}>
                 <Field
                     autoComplete="email"
-                    label="Email"
+                    label={copy.email.value}
                     onChange={(event) => setEmail(event.target.value.trim())}
                     inputMode="email"
                     value={email}
                 />
                 <Field
                     autoComplete="current-password"
-                    label="Password"
+                    label={copy.password.value}
                     onChange={(event) => setPassword(event.target.value)}
                     secret
                     value={password}
                 />
-                <ErrorLine message={error} />
+                <ErrorLine message={error === null ? null : copy.failures[error].value} />
                 <button className={LINE_PILL} disabled={busy || !email || !password} type="submit">
-                    Sign in
+                    {copy.signIn}
                 </button>
             </form>
             <div className="mt-2 flex justify-center gap-2">
                 <button className={TEXT_BUTTON} disabled={busy} onClick={() => go("create")} type="button">
-                    Create account
+                    {copy.createAccount}
                 </button>
                 {sendingCode ? (
-                    <output className="text-app-muted px-2 py-2 text-sm">Sending code…</output>
+                    <output className="text-app-muted px-2 py-2 text-sm">{copy.sendingCode}</output>
                 ) : (
                     <button className={TEXT_BUTTON} disabled={busy} onClick={requestReset} type="button">
-                        Forgot password?
+                        {copy.forgot}
                     </button>
                 )}
             </div>
             <p className="text-app-muted mt-4 text-xs">
-                By continuing you accept the{" "}
-                <SiteLink className="underline" to="/terms">
-                    Terms
-                </SiteLink>{" "}
-                and{" "}
-                <SiteLink className="underline" to="/privacy">
-                    Privacy Policy
-                </SiteLink>
-                .
+                {copy.agreement({
+                    privacy: (
+                        <SiteLink className="underline" to="/privacy">
+                            {copy.privacy}
+                        </SiteLink>
+                    ),
+                    terms: (
+                        <SiteLink className="underline" to="/terms">
+                            {copy.terms}
+                        </SiteLink>
+                    ),
+                })}
             </p>
         </Screen>
     );

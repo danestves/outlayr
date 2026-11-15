@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
-import { AuthFailure, authRequest, failureMessage, safeRedirect, withoutOneTimeToken } from "./account";
+import { AuthFailure, authRequest, failureKey, safeRedirect, withoutOneTimeToken } from "./account";
 
 describe("safeRedirect", () => {
     it("keeps a path on this site, query included", () => {
@@ -28,19 +28,17 @@ describe("withoutOneTimeToken", () => {
     });
 });
 
-describe("failureMessage", () => {
+describe("failureKey", () => {
     it("names a wrong password", () => {
-        expect(failureMessage({ code: "INVALID_EMAIL_OR_PASSWORD", status: 401 })).toBe(
-            "That email and password don't match."
-        );
+        expect(failureKey({ code: "INVALID_EMAIL_OR_PASSWORD", status: 401 })).toBe("credentials");
     });
 
     it("reports rate limits whatever the code", () => {
-        expect(failureMessage({ code: "SOMETHING", status: 429 })).toMatch(/Too many tries/u);
+        expect(failureKey({ code: "SOMETHING", status: 429 })).toBe("rateLimited");
     });
 
     it("falls back for unknown failures", () => {
-        expect(failureMessage()).toBe("Sign-in didn't complete. Try again.");
+        expect(failureKey()).toBe("unknown");
     });
 });
 
@@ -52,8 +50,8 @@ describe("authRequest", () => {
         expect(failure).toEqual(new AuthFailure({ code: "INVALID_OTP", status: 400 }));
     });
 
-    it("turns a rejected call into a failure that gets the generic message", async () => {
+    it("turns a rejected call into a failure that gets the generic copy", async () => {
         const failure = await Effect.runPromise(Effect.flip(authRequest(() => Promise.reject(new Error("offline")))));
-        expect(failureMessage(failure)).toBe("Sign-in didn't complete. Try again.");
+        expect(failureKey(failure)).toBe("unknown");
     });
 });
