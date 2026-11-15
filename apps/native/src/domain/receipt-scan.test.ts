@@ -86,6 +86,19 @@ describe("a category the ledger lacks", () => {
         expect(receipt.pendingCategory).toMatchObject({ name: "Car wash", parentName: "Vehicle" });
         expect(savableReceipt(receipt)?.pendingCategory?.name).toBe("Car wash");
     });
+
+    it("is not proposed when the ledger holds the name twice, so the receipt waits for a pick", () => {
+        const receipt = resolveReceipt({
+            accounts: ACCOUNTS,
+            categories: [...CATEGORIES, { id: "cat-groceries-2", income: false, name: "groceries" }],
+            currency: "USD",
+            draft: DRAFT,
+            now: NOW,
+        });
+
+        expect(receipt).toMatchObject({ categoryId: null, pendingCategory: null });
+        expect(savableReceipt(receipt)).toBeNull();
+    });
 });
 
 describe("savableReceipt", () => {

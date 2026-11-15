@@ -72,7 +72,7 @@ interface ResolveArgs {
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 /** Case-insensitive, like `transfer-core.ts:categoryKey`. */
-const foldName = (value: string) => value.trim().toLowerCase();
+export const foldName = (value: string) => value.trim().toLowerCase();
 
 // Today keeps the clock so the entry sorts among today's rows; other days land at noon, clear of DST edges.
 export function spokenDateToLocal(date: string, now: Date): Date {

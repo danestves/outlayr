@@ -7,7 +7,7 @@ import type { PendingCategory } from "@/data/categories-core";
 import type { ReceiptDraft, ReceiptItem } from "@/lib/cloud-ai";
 
 import { minorUnitsFor } from "./money";
-import { spokenDateToLocal, uniqueMatch } from "./voice-entry";
+import { foldName, spokenDateToLocal, uniqueMatch } from "./voice-entry";
 import type { AccountCandidate, CategoryCandidate } from "./voice-entry";
 
 export interface ResolvedReceipt {
@@ -56,14 +56,14 @@ export function resolveReceipt({
     now,
 }: ResolveArgs): ResolvedReceipt {
     const paid = draft.currency ?? currency;
-    const category = uniqueMatch(
-        categories.filter((candidate) => candidate.income === draft.income),
-        draft.categoryName,
-        (candidate) => candidate.name
-    );
+    const sameKind = categories.filter((candidate) => candidate.income === draft.income);
+    const proposed = draft.categoryName;
+    const category = uniqueMatch(sameKind, proposed, (candidate) => candidate.name);
+    const known = (name: string) =>
+        sameKind.some((candidate) => candidate.name !== null && foldName(candidate.name) === foldName(name));
     const pendingCategory =
-        category === null && !categoriesOmitted && draft.categoryName !== null
-            ? pendingCategoryFor(draft.categoryName, draft.parentCategoryName ?? null)
+        proposed !== null && category === null && !categoriesOmitted && !known(proposed)
+            ? pendingCategoryFor(proposed, draft.parentCategoryName ?? null)
             : null;
     const account = uniqueMatch(accounts, draft.accountName, (candidate) => candidate.name);
     return {
