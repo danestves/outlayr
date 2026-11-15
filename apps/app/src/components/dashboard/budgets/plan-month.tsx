@@ -36,6 +36,8 @@ import type { PlanCategoryMeta, YearPlan } from "./plan-model";
 import { PlanUsed, usePlanName } from "./plan-parts";
 import { BACK, PARENT, PlanCrumbs } from "./plan-year";
 
+const SPENT_UNMEASURED = { height: 0, width: 686 };
+
 const PERCENT = 100;
 const HALF = 0.5;
 const MUTED = "var(--color-muted-foreground)";
@@ -423,7 +425,7 @@ function SpentChart({ view }: { view: MonthView }) {
     const { whole } = useWholeMoney(ledger.currency);
     const money = useMoney();
     const date = useDateFormat();
-    const [ref, { width }] = useBox<HTMLElement>();
+    const [ref, { width }] = useBox<HTMLElement>(SPENT_UNMEASURED);
     const { month, period } = view;
     const through = period.to < ledger.today ? period.to : ledger.today;
     const byDay = new Map<string, number>();

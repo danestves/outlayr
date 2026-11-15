@@ -6,6 +6,8 @@ import { useBox } from "../use-box";
 import { axisFor } from "./model";
 import type { Slot } from "./model";
 
+const STACKED_UNMEASURED = { height: 0, width: 1102 };
+
 const GUTTER = 34;
 const FOOT = 20;
 const HEAD = 6;
@@ -80,7 +82,7 @@ interface StackedProps {
 
 /** Bars stacked by group, the largest at the bottom, with one bar far above the rest cut off by a break. */
 export function StackedChart({ aspect, format, label, labelOf, renderTip, slots, ticks }: StackedProps) {
-    const [ref, { width }] = useBox();
+    const [ref, { width }] = useBox(STACKED_UNMEASURED);
     const [active, setActive] = useState<number | null>(null);
     const above = axisFor(slots.map((slot) => slot.parts.reduce((all, part) => all + Math.max(part.value, 0), 0)));
     const below = axisFor(slots.map((slot) => slot.parts.reduce((all, part) => all + Math.max(-part.value, 0), 0)));

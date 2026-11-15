@@ -12,6 +12,9 @@ import { axisFor } from "./model";
 import type { BreakdownRow, Flow, Subs, Weekly } from "./model";
 import { CELL_BASE, HEAD, NUM, OpenButton, Row, Table } from "./parts";
 
+const WEEKS_UNMEASURED = { height: 0, width: 766 };
+const COMPARE_UNMEASURED = { height: 0, width: 1102 };
+
 const PERCENT = 100;
 const DONUT = 280;
 const COMPARE_HEIGHT = 256;
@@ -173,7 +176,7 @@ interface TagWeeksProps {
 
 /** One tag's weeks as bars; the biggest week is lit until another is hovered. */
 export function TagWeeks({ color, compact, label, rangeOf, weeks, whole }: TagWeeksProps) {
-    const [ref, { width }] = useBox();
+    const [ref, { width }] = useBox(WEEKS_UNMEASURED);
     const [hovered, setHovered] = useState<number | null>(null);
     const values = weeks.map((week) => Math.abs(week.value));
     const top = Math.max(...values, 0);
@@ -263,7 +266,7 @@ interface CompareChartProps {
 }
 
 export function CompareChart({ baseLabel, compact, whole, currentLabel, format, rows }: CompareChartProps) {
-    const [ref, { width }] = useBox();
+    const [ref, { width }] = useBox(COMPARE_UNMEASURED);
     const [active, setActive] = useState<string | null>(null);
     const shown = rows
         .toSorted(
