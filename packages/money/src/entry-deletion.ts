@@ -28,6 +28,10 @@ export interface AccountDeletionBooks extends DeletionBooks {
     transfers: readonly (Live & { fromAccountId: string; installmentPlanId?: string | null; toAccountId: string })[];
 }
 
+export interface PurchaseDeletionBooks extends DeletionBooks {
+    transfers: readonly (Live & { installmentPlanId?: string | null })[];
+}
+
 export interface CategoryDeletionBooks extends DeletionBooks {
     budgetPlans: readonly (Live & { categoryId: string })[];
     budgets: readonly (Live & { categoryId?: string | null })[];
@@ -131,6 +135,30 @@ export function accountDeletionPlan(books: AccountDeletionBooks, accountId: stri
             ...liveIds(books.outsidePayments, (row) => plans.has(row.planId)),
         ]),
         savingsGoals: liveIds(books.savingsGoals, (goal) => goal.accountId === accountId),
+    };
+}
+
+/**
+ * A plan deleted with everything it brought: the purchase, its schedule and fees, and every payment made on it with
+ * their fees, as if it was never bought.
+ */
+export function purchaseDeletionPlan(books: PurchaseDeletionBooks, planId: string) {
+    const purchase = books.installmentPlans.find((plan) => plan.id === planId)?.transactionId;
+    const gone = deletionPlan(books, [
+        ...(purchase === undefined ? [] : [purchase]),
+        ...liveIds(books.transfers, (move) => move.installmentPlanId === planId),
+    ]);
+    return {
+        ...gone,
+        installmentPlans: new Set([
+            ...gone.installmentPlans,
+            ...liveIds(books.installmentPlans, (plan) => plan.id === planId),
+        ]),
+        installments: new Set([...gone.installments, ...liveIds(books.installments, (row) => row.planId === planId)]),
+        outsidePayments: new Set([
+            ...gone.outsidePayments,
+            ...liveIds(books.outsidePayments, (row) => row.planId === planId),
+        ]),
     };
 }
 

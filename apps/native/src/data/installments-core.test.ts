@@ -367,6 +367,28 @@ describe("deleting an order", () => {
         await expect(db.select().from(installments).where(isNull(installments.deletedAt))).resolves.toStrictEqual([]);
     });
 
+    it("deletes the purchase with every payment and fee, putting each balance back where it was", async () => {
+        const planId = await order();
+        await Effect.runPromise(
+            installmentsRepo.recordPayment(db, { amount: 20, date: PURCHASE, planId, source: fromBank(20) })
+        );
+        await Effect.runPromise(
+            installmentsRepo.recordPayment(db, { amount: 5, date: PURCHASE, planId, source: null })
+        );
+        const [last] = await db.select().from(installments).where(eq(installments.sequence, 3));
+        await Effect.runPromise(
+            installmentsRepo.addFee(db, { amount: 4, date: PURCHASE, installmentId: last?.id ?? "" })
+        );
+
+        await Effect.runPromise(installmentsRepo.deletePurchase(db, planId));
+
+        expect(readPlans(db, PURCHASE)).toStrictEqual([]);
+        await expect(balanceOf(cashea, tonight)).resolves.toBe(0);
+        await expect(balanceOf(bank, tonight)).resolves.toBe(0);
+        await expect(db.select().from(transactions).where(isNull(transactions.deletedAt))).resolves.toStrictEqual([]);
+        await expect(db.select().from(transfers).where(isNull(transfers.deletedAt))).resolves.toStrictEqual([]);
+    });
+
     it("leaves a finished order as it is", async () => {
         const planId = await startedBefore(3);
         const before = await db.select().from(installments);

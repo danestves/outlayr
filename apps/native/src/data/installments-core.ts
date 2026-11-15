@@ -69,6 +69,7 @@ const InstallmentsOperation = Schema.Literals([
     "delete-installment",
     "delete-outside-payment",
     "delete-plan",
+    "delete-purchase",
     "remove-fee",
     "record-payment",
     "update-installment",
@@ -448,6 +449,18 @@ export const installmentsRepo = {
                 .update(outsidePayments)
                 .set({ deletedAt: now, updatedAt: now })
                 .where(and(eq(outsidePayments.id, id), isNull(outsidePayments.deletedAt)))
+        );
+    }),
+
+    deletePurchase: Effect.fn("Installments.deletePurchase")(function* deletePurchase(
+        db: Database,
+        planId: string,
+        now: Date = new Date()
+    ) {
+        yield* transaction(
+            db,
+            tombstone(db, "purchase", planId, now),
+            (cause) => new InstallmentsError({ cause, operation: "delete-purchase" })
         );
     }),
 

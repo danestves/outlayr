@@ -7,6 +7,7 @@ import { Alert } from "react-native";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useInstallmentPlans } from "@/data/installments";
 import type { InstallmentRow, PlanWithStanding } from "@/data/installments-core";
+import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
@@ -62,6 +63,7 @@ export function useOrderActions({ plan, standing }: PlanWithStanding, leave: () 
         },
         SILENT
     );
+    const { requestDelete } = useDeferredDelete("purchase");
     const cuotaSheetRef = useRef<BottomSheetModal>(null);
     const [editing, setEditing] = useState<InstallmentRow | null>(null);
 
@@ -83,7 +85,14 @@ export function useOrderActions({ plan, standing }: PlanWithStanding, leave: () 
             },
         ]);
 
+    // No confirmation: the undo toast holds the write and outlives this screen, which the hidden plan closes.
+    const deleteEverything = () => {
+        haptics("warning");
+        requestDelete(plan.id, { body: t("installments.undo.body") });
+        leave();
+    };
+
     const live = editing && (standing.rows.find(({ row }) => row.id === editing.id)?.row ?? editing);
 
-    return { cuotaSheetRef, deletePending, edit, editing: live, pay, setEditing };
+    return { cuotaSheetRef, deleteEverything, deletePending, edit, editing: live, pay, setEditing };
 }

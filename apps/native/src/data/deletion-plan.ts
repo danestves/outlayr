@@ -123,6 +123,32 @@ function orderPlan(id: string, standing: Standing): Plan {
     return { detached: { transfers: inArray(transfers.installmentPlanId, order.orders) }, gone: order.gone };
 }
 
+// As if never bought: the purchase as its own delete would take it, and every payment made on the plan with its fees.
+function purchasePlan(id: string, standing: Standing): Plan {
+    const purchase = subquery
+        .select({ id: installmentPlans.transactionId })
+        .from(installmentPlans)
+        .where(eq(installmentPlans.id, id));
+    const paid = subquery
+        .select({ id: transfers.id })
+        .from(transfers)
+        .where(and(standing(transfers), eq(transfers.installmentPlanId, id)));
+    const named = namedGone((column) => inArray(column, purchase.union(paid)), standing);
+    const order = ordersGone(eq(installmentPlans.id, id), standing);
+    return {
+        gone: {
+            ...named,
+            installmentPlans: or(named.installmentPlans, order.gone.installmentPlans),
+            installments: or(named.installments, order.gone.installments),
+            outsidePayments: or(named.outsidePayments, order.gone.outsidePayments),
+        },
+        retired: {
+            columns: { recurringType: RECURRING_TYPE.none, reminderLeadDays: null },
+            entries: inArray(transactions.id, purchase),
+        },
+    };
+}
+
 /**
  * `onDelete: "set null"` never fires for a tombstone, so entries are detached here. A person's entries are the debt
  * itself, so they go with them (no schedule left for the orphan repair to revive), and so do the account's goals.
@@ -185,15 +211,15 @@ function categoryPlan(id: string, standing: Standing): Plan {
     };
 }
 
-const PLANS = { account: accountPlan, category: categoryPlan, plan: orderPlan, row: rowPlan };
+const PLANS = { account: accountPlan, category: categoryPlan, plan: orderPlan, purchase: purchasePlan, row: rowPlan };
 
 export type DeletionKind = keyof typeof PLANS;
 
-const UNDOABLE = ["account", "category", "row"] as const;
+const UNDOABLE = ["account", "category", "purchase", "row"] as const;
 
 export type PendingDeletes = Record<(typeof UNDOABLE)[number], string | null>;
 
-export const NO_PENDING_DELETES: PendingDeletes = { account: null, category: null, row: null };
+export const NO_PENDING_DELETES: PendingDeletes = { account: null, category: null, purchase: null, row: null };
 
 const DeletionPlanOperation = Schema.Literals(["restore", "tombstone"]);
 
