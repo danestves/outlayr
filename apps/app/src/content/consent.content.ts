@@ -8,8 +8,8 @@ export default {
             en: "this-website",
             de: "diese-website",
             es: "este-sitio-web",
-            pt: "this-website",
-            fr: "this-website",
+            pt: "este-site",
+            fr: "ce-site-web",
         }),
         body: t({
             en: "A cookie lets us count repeat visits and see which pages help.",
