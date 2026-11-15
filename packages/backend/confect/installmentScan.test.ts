@@ -49,7 +49,19 @@ const row = (
     ...extra,
 });
 
+const NO_SUMMARY = {
+    cuotaAmount: null,
+    cuotasLeft: null,
+    feeDue: null,
+    paidSoFar: null,
+    price: null,
+    purchaseDay: null,
+    purchaseMonth: null,
+    purchaseYear: null,
+};
+
 const MODEL_ANSWER: ModelOutput = {
+    ...NO_SUMMARY,
     accountName: "cashea",
     currency: "usd",
     found: true,
@@ -112,6 +124,58 @@ describe("normalizePlan", () => {
             row(index + 1, 1, 1, 10, { year: 2026 + index })
         );
         expect(normalizePlan({ ...MODEL_ANSWER, rows: tooLong }, CONTEXT)).toBeNull();
+    });
+
+    it("rebuilds a totals-only screen as the shape closest to its unpaid amount, keeping the price and the paid amount exact", () => {
+        const daka = {
+            ...MODEL_ANSWER,
+            cuotasLeft: 1,
+            paidSoFar: 253.58,
+            price: 316.99,
+            purchaseDay: 22,
+            purchaseMonth: 10,
+            purchaseYear: 2026,
+            rows: [],
+        };
+        expect(normalizePlan(daka, { ...CONTEXT, today: "2026-11-15" })?.rows).toStrictEqual([
+            { amount: 126.8, dueDate: "2026-10-22", fee: 0, paid: true, sequence: 0 },
+            { amount: 63.39, dueDate: "2026-11-05", fee: 0, paid: true, sequence: 1 },
+            { amount: 63.39, dueDate: "2026-11-19", fee: 0, paid: true, sequence: 2 },
+            { amount: 63.41, dueDate: "2026-12-03", fee: 0, paid: false, sequence: 3 },
+        ]);
+        expect(normalizePlan({ ...daka, feeDue: 4, paidSoFar: 250 }, CONTEXT)?.rows).toStrictEqual([
+            { amount: 123.22, dueDate: "2026-10-22", fee: 0, paid: true, sequence: 0 },
+            { amount: 63.39, dueDate: "2026-11-05", fee: 0, paid: true, sequence: 1 },
+            { amount: 63.39, dueDate: "2026-11-19", fee: 0, paid: true, sequence: 2 },
+            { amount: 66.99, dueDate: "2026-12-03", fee: 4, paid: false, sequence: 3 },
+        ]);
+    });
+
+    it("breaks a tie between shapes by how many cuotas the purchase date says are due, down to no upfront", () => {
+        const sixCuotas = {
+            ...MODEL_ANSWER,
+            cuotasLeft: 4,
+            paidSoFar: 300,
+            price: 500,
+            purchaseDay: 20,
+            purchaseMonth: 9,
+            purchaseYear: 2026,
+            rows: [],
+        };
+        expect(normalizePlan(sixCuotas, CONTEXT)?.rows.map(({ amount, paid }) => [amount, paid])).toStrictEqual([
+            [200, true],
+            [50, true],
+            [50, true],
+            [50, false],
+            [50, false],
+            [50, false],
+            [50, false],
+        ]);
+        const noUpfront = { ...sixCuotas, cuotasLeft: 7, paidSoFar: 250, price: 600, purchaseDay: 1, purchaseMonth: 8 };
+        const rows = normalizePlan(noUpfront, CONTEXT)?.rows ?? [];
+        expect([rows.length, rows[0]?.sequence, rows.filter((planned) => planned.paid).length]).toStrictEqual([
+            12, 1, 5,
+        ]);
     });
 
     it("a nonsense fee is no fee, and unknown names or currencies become null", () => {
