@@ -3,6 +3,7 @@
 import betterAuthTest from "@convex-dev/better-auth/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
 import { isDynamicBaseURLConfig, resolveDynamicBaseURL } from "better-auth";
+import { verifyProviderIdToken } from "better-auth/oauth2";
 import { apple as appleProvider } from "better-auth/social-providers";
 import { convexTest } from "convex-test";
 import { decodeJwt, exportJWK, generateKeyPair, SignJWT } from "jose";
@@ -131,23 +132,24 @@ describe("auth", () => {
 
     it("signs in on the web with the Services ID and keeps verifying native id tokens against the bundle id", async () => {
         const apple = await resolveApple({ APPLE_WEB_CLIENT_ID: "com.danestves.outlayr.si" });
-        const { privateKey, publicKey } = await generateKeyPair("ES256");
-        const jwk = { ...(await exportJWK(publicKey)), alg: "ES256", kid: "apple-test" };
+        const { privateKey, publicKey } = await generateKeyPair("RS256");
+        const jwk = { ...(await exportJWK(publicKey)), alg: "RS256", kid: "apple-test" };
         vi.stubGlobal(
             "fetch",
             vi.fn(async () => Response.json({ keys: [jwk] }))
         );
         const nativeIdToken = await new SignJWT({ nonce: "native-nonce" })
-            .setProtectedHeader({ alg: "ES256", kid: "apple-test" })
+            .setProtectedHeader({ alg: "RS256", kid: "apple-test" })
             .setIssuer("https://appleid.apple.com")
             .setAudience("com.tryoutlayr.app")
             .setSubject("001234.apple-subject")
             .setIssuedAt()
+            .setExpirationTime("10m")
             .sign(privateKey);
 
         expect(apple.clientId).toBe("com.danestves.outlayr.si");
         expect(decodeJwt(apple.clientSecret).sub).toBe("com.danestves.outlayr.si");
-        await expect(appleProvider(apple).verifyIdToken(nativeIdToken, "native-nonce")).resolves.toBeTruthy();
+        await expect(verifyProviderIdToken(appleProvider(apple), nativeIdToken, "native-nonce")).resolves.toBeTruthy();
     });
 
     it("disables Better Auth public deletion while the resumable job owns deletion", async () => {

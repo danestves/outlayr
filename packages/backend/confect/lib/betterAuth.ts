@@ -323,7 +323,14 @@ function createAuth(ctx: GenericCtx<DataModel>) {
 }
 
 async function linkedAccessToken(ctx: GenericCtx<DataModel>, providerId: string, userId: string): Promise<string> {
-    const tokens = await createAuth(ctx).api.getAccessToken({ body: { providerId, userId } });
+    const auth = createAuth(ctx);
+    const { internalAdapter } = await auth.$context;
+    const accounts = await internalAdapter.findAccounts(userId);
+    const account = accounts.find((linked) => linked.providerId === providerId);
+    if (account === undefined) {
+        throw new Error(`No ${providerId} account is linked`);
+    }
+    const tokens = await auth.api.getAccessToken({ body: { accountId: account.id, userId } });
     return tokens.accessToken;
 }
 

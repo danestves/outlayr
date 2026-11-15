@@ -1,11 +1,12 @@
-import { expoClient } from "@better-auth/expo/client";
+import { expoClient, getCookie, storageAdapter } from "@better-auth/expo/client";
+import type { ExpoClientStorage } from "@better-auth/expo/client";
 import { convexClient } from "@convex-dev/better-auth/client/plugins";
 import type { BetterAuthClientPlugin } from "better-auth/client";
 import type { emailOTP } from "better-auth/plugins/email-otp";
 import { createAuthClient } from "better-auth/react";
 import { ConvexReactClient } from "convex/react";
 import Constants from "expo-constants";
-import { AFTER_FIRST_UNLOCK, getItem, setItem } from "expo-secure-store";
+import { AFTER_FIRST_UNLOCK, getItem, getItemAsync, setItem, setItemAsync } from "expo-secure-store";
 
 import { runtimeLanguage } from "@/i18n/runtime";
 
@@ -22,13 +23,18 @@ const emailCodes = {
     id: "email-otp",
 } satisfies BetterAuthClientPlugin;
 
-function readKeychain(key: string): string | null {
-    try {
-        return getItem(key, keychain);
-    } catch {
-        return null;
-    }
-}
+const keychainStorage = {
+    getItem: (key) => {
+        try {
+            return getItem(key, keychain);
+        } catch {
+            return null;
+        }
+    },
+    getItemAsync: (key) => getItemAsync(key, keychain).catch(() => null),
+    setItem: (key, value) => setItem(key, value, keychain),
+    setItemAsync: (key, value) => setItemAsync(key, value, keychain),
+} satisfies ExpoClientStorage;
 
 function createCloudRuntime() {
     if (cloudConfiguration() !== "configured") {
@@ -64,14 +70,13 @@ function createCloudRuntime() {
                 emailCodes,
                 expoClient({
                     scheme,
-                    storage: {
-                        getItem: readKeychain,
-                        setItem: (key, value) => setItem(key, value, keychain),
-                    },
+                    storage: keychainStorage,
                     storagePrefix: scheme,
                 }),
             ],
         }),
+        // The launch gate decides during render, before the async getCookie() could resolve.
+        storedCookie: () => getCookie(storageAdapter(keychainStorage).getItem(`${scheme}_cookie`)),
         convex: new ConvexReactClient(convexUrl, {
             unsavedChangesWarning: false,
         }),
