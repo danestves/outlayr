@@ -8,6 +8,8 @@ import { intlayer } from "vite-intlayer";
 import { defineConfig } from "vite-plus";
 
 const SECURITY_HEADERS = {
+    // A signed-in page carries the visitor's whole ledger in its HTML, so no cache may keep one.
+    "cache-control": "private, no-store",
     "content-security-policy": "frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
     "permissions-policy": "camera=(), geolocation=(), microphone=()",
     "referrer-policy": "strict-origin-when-cross-origin",

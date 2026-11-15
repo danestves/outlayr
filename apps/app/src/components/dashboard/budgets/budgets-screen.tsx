@@ -24,7 +24,6 @@ import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { KpiBand, KpiCell, Trend } from "@/components/dashboard/accounts/parts";
 import { useCategoryName, useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { Restoring } from "@/components/dashboard/shell/sampled";
 
 import { BudgetFlowsProvider } from "./budget-flows";
 import { useBudgetFlows } from "./flow-context";
@@ -626,17 +625,10 @@ function NoData() {
 
 function BudgetsBody() {
     const { title } = useIntlayer("dashboard-budgets");
-    const { ledger, restoring } = useDashboard();
+    const { ledger } = useDashboard();
     const { period } = useBudgetMonth();
     const model = useMemo(() => budgetsOverview(ledger, period), [ledger, period]);
     const hasBudgets = model.lines.length > 0 || model.overall !== null;
-    if (!model.hasData && !hasBudgets && restoring) {
-        return (
-            <Restoring>
-                <BudgetsBody />
-            </Restoring>
-        );
-    }
     let body: ReactNode = <NoData />;
     if (hasBudgets) {
         body = (

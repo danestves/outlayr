@@ -20,7 +20,6 @@ import { KpiBand, KpiCell } from "@/components/dashboard/accounts/parts";
 import { useGoalMoney } from "@/components/dashboard/goals/parts";
 import { useDateFormat } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { Restoring } from "@/components/dashboard/shell/sampled";
 import { AccountTile } from "@/components/ledger/tiles";
 
 import { InstallmentFlowsProvider } from "./installment-flows";
@@ -441,19 +440,11 @@ function ComingUpCard({ accountId, summary }: { accountId: string; summary: Inst
 function InstallmentsList() {
     const { title } = useIntlayer("dashboard-installments");
     const { summary, views } = useModel();
-    const { restoring } = useDashboard();
     const empty = views.length === 0;
     const [accountId, setAccountId] = useState(ALL);
     const [tab, setTab] = useState<Tab>(
         summary.active.length === 0 && summary.paidOff.length > 0 ? "paidOff" : "orders"
     );
-    if (empty && restoring) {
-        return (
-            <Restoring>
-                <InstallmentsList />
-            </Restoring>
-        );
-    }
     return (
         <main className="@container flex min-h-full min-w-0 flex-col px-4 pb-5 sm:px-6">
             <AccountsBar title={title}>

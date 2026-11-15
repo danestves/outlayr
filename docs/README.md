@@ -18,7 +18,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [Identity fly-up and Apple Zoom](./internals/identity-fly-up.md)
 - [Add button beside the tab bar (parked)](./internals/add-button-beside-tab-bar.md)
 - [Referrals](./internals/referrals.md)
-- [Web app: local first](./internals/web-local-first.md)
+- [Web app: server render, local clicks](./internals/web-rendering.md)
 - [App meta registry](./internals/app-meta.md)
 - [Web rules](./internals/web-rules.md)
 - [Web recurring](./internals/web-recurring.md)

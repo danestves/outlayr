@@ -4,7 +4,6 @@ import { ConvexError } from "convex/values";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { ledgerDependencies } from "./db";
-import { snapshotOf } from "./ledger-cache";
 import { ledgerCommitter } from "./ledger-committer";
 import { ledgerBooks, preloadLedger } from "./ledger-db";
 import type { LedgerPusher } from "./ledger-write";
@@ -36,7 +35,7 @@ const openTab = async (push: Push) => {
     return db;
 };
 
-const saved = (db: DbClient) => JSON.stringify(snapshotOf(db, undefined, "owner").collections);
+const saved = (db: DbClient) => JSON.stringify(db.dehydrate().collections);
 
 const turn = () =>
     new Promise<void>((resolve) => {
@@ -214,15 +213,15 @@ describe("ledger committer", () => {
         expect(shown(db)).toStrictEqual(["a"]);
     });
 
-    it("shows a closed tab's unsent rows at once on a restored copy, and sends them once", async () => {
+    it("shows a closed tab's unsent rows at once on a server-seeded page, and sends them once", async () => {
         const closed = await openTab(unanswered);
         ledgerCommitter(closed, "owner").commit([entry("a")]);
-        const copy = snapshotOf(closed, undefined, "owner");
+        const seed = closed.dehydrate();
         const convex = fakeConvex();
         const push = vi.spyOn(convex, "mutation");
         convex.quiet();
         const db = new DbClient(ledgerDependencies(convex));
-        db.hydrate({ collections: copy.collections });
+        db.hydrate({ collections: seed.collections });
         const loaded = preloadLedger(db);
         const committer = ledgerCommitter(db, "owner");
 

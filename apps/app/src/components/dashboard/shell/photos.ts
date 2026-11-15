@@ -1,20 +1,17 @@
 import type { ConvexQueryClient } from "@convex-dev/react-query";
 import { api } from "@outlayr/backend/convex/_generated/api";
-import { keepPreviousData, queryOptions, useQuery } from "@tanstack/react-query";
-import type { QueryClient } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions, skipToken, useQuery } from "@tanstack/react-query";
 import { useRouteContext } from "@tanstack/react-router";
 
 import type { Overview, PhotoUrls } from "@/components/ledger/overview";
 
-export const PHOTO_REMINT_MS = 50 * 60_000;
+const PHOTO_REMINT_MS = 50 * 60_000;
 const MIN_REMINT_WAIT_MS = 60_000;
 const PHOTO_URLS = "photoUrls";
 
 export const NO_PHOTOS: PhotoUrls = new Map();
 
-export const isPhotoKey = (queryKey: readonly unknown[]) => queryKey[0] === PHOTO_URLS;
-
-export const photoMintUsable = (mintedAt: number, now: number) => now - mintedAt < PHOTO_REMINT_MS;
+const photoMintUsable = (mintedAt: number, now: number) => now - mintedAt < PHOTO_REMINT_MS;
 
 export function photoKeys({ balances, upcoming }: Overview) {
     const looks = [
@@ -24,10 +21,39 @@ export function photoKeys({ balances, upcoming }: Overview) {
     return [...new Set(looks.flatMap((look) => (look?.imageKey ? [look.imageKey] : [])))].toSorted();
 }
 
-export const photoUrlsQuery = (convex: ConvexQueryClient | undefined, keys: readonly string[]) =>
+export interface MintedPhotos {
+    keys: readonly string[];
+    minted: readonly { key: string; url: string }[];
+    mintedAt: number;
+}
+
+export const photoSeedQuery = queryOptions<MintedPhotos>({
+    gcTime: Number.POSITIVE_INFINITY,
+    queryFn: skipToken,
+    queryKey: ["photoSeed"],
+    staleTime: Number.POSITIVE_INFINITY,
+});
+
+export const usePhotoSeed = () => useQuery(photoSeedQuery).data;
+
+function seededFor(seed: MintedPhotos | undefined, keys: readonly string[]) {
+    if (!seed || !photoMintUsable(seed.mintedAt, Date.now())) {
+        return undefined;
+    }
+    const asked = new Set(seed.keys);
+    if (!keys.every((key) => asked.has(key))) {
+        return undefined;
+    }
+    const wanted = new Set(keys);
+    return seed.minted.filter((photo) => wanted.has(photo.key));
+}
+
+export const photoUrlsQuery = (convex: ConvexQueryClient | undefined, keys: readonly string[], seed?: MintedPhotos) =>
     queryOptions({
         enabled: Boolean(convex) && keys.length > 0,
         gcTime: PHOTO_REMINT_MS,
+        initialData: seededFor(seed, keys),
+        initialDataUpdatedAt: seed?.mintedAt,
         queryFn: async () => {
             if (!convex) {
                 return [];
@@ -40,33 +66,14 @@ export const photoUrlsQuery = (convex: ConvexQueryClient | undefined, keys: read
         staleTime: PHOTO_REMINT_MS,
     });
 
-export interface MintedPhotos {
-    keys: readonly string[];
-    minted: readonly { key: string; url: string }[];
-    mintedAt: number;
-}
-
-export function mintedPhotos(client: QueryClient, keys: readonly string[]): MintedPhotos | undefined {
-    const { queryKey } = photoUrlsQuery(undefined, keys);
-    const minted = client.getQueryData(queryKey);
-    return minted && { keys, minted, mintedAt: client.getQueryState(queryKey)?.dataUpdatedAt ?? 0 };
-}
-
-export function seedPhotos(client: QueryClient, photos: MintedPhotos | undefined) {
-    if (photos && photoMintUsable(photos.mintedAt, Date.now())) {
-        client.setQueryData(photoUrlsQuery(undefined, photos.keys).queryKey, [...photos.minted], {
-            updatedAt: photos.mintedAt,
-        });
-    }
-}
-
 export const toPhotoUrls = (minted: readonly { key: string; url: string }[]): PhotoUrls =>
     new Map(minted.map((photo) => [photo.key, photo.url]));
 
 export function usePhotoUrls(overview: Overview): PhotoUrls {
     const { convexQueryClient } = useRouteContext({ from: "/_account/_app" });
+    const seed = usePhotoSeed();
     const { data } = useQuery({
-        ...photoUrlsQuery(convexQueryClient, photoKeys(overview)),
+        ...photoUrlsQuery(convexQueryClient, photoKeys(overview), seed),
         placeholderData: keepPreviousData,
         select: toPhotoUrls,
     });

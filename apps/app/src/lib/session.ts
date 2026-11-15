@@ -4,8 +4,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import { authServer } from "./auth-server";
-import { tokenWaitOf } from "./token-wait";
-import type { TokenWait } from "./token-wait";
+import { signedOutOf } from "./token-wait";
 
 const MS_PER_SECOND = 1000;
 const URL_SAFE = /[-_]/gu;
@@ -33,9 +32,9 @@ export const userOf = (token: string) => Option.getOrUndefined(claimsOf(token))?
 
 const isLive = (token: string) => Option.exists(claimsOf(token), (claims) => claims.exp * MS_PER_SECOND > Date.now());
 
-export const tokenWait = createIsomorphicFn()
-    .server(() => tokenWaitOf(new Headers(getRequestHeaders())))
-    .client((): TokenWait => "none");
+export const signedOut = createIsomorphicFn()
+    .server(() => signedOutOf(new Headers(getRequestHeaders())))
+    .client(() => false);
 
 export async function currentToken(session: Session) {
     if (session.token && isLive(session.token)) {

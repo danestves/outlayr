@@ -1,18 +1,8 @@
 import { convexQuery } from "@convex-dev/react-query";
 import { api } from "@outlayr/backend/convex/_generated/api";
-import {
-    dehydrate,
-    hydrate,
-    matchQuery,
-    queryOptions,
-    skipToken,
-    useQuery,
-    useQueryClient,
-} from "@tanstack/react-query";
-import type { DehydratedState, Query, QueryClient, QueryKey } from "@tanstack/react-query";
-import { useEffect, useSyncExternalStore } from "react";
-
-import { PHOTO_REMINT_MS, isPhotoKey, photoMintUsable } from "@/components/dashboard/shell/photos";
+import { queryOptions, skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 
 import { authClient } from "./auth-client";
 import { convexClient } from "./convex";
@@ -82,7 +72,7 @@ const profileQuery = queryOptions<Profile>({
 
 interface ListedSession {
     id: string;
-    updatedAt: Date | string;
+    updatedAt: Date | number | string;
     userAgent?: string | null;
 }
 
@@ -132,55 +122,10 @@ export function useProfileMirror() {
     }, [client, session]);
 }
 
-const COPIED: readonly QueryKey[] = [
-    limitsQuery.queryKey,
-    notionQuery.queryKey,
-    referralsQuery.queryKey,
-    connectionsQuery.queryKey,
-    sharedLinksQuery.queryKey,
-    pushConfigQuery.queryKey,
-    pushEndpointQuery.queryKey,
-    planQuery.queryKey,
-    profileQuery.queryKey,
-    sessionsQuery.queryKey,
-    accountsQuery.queryKey,
-];
-
-const REMINDERS = reminderQuery(null).queryKey.slice(0, 2);
-
-const NULL_IS_NO_ANSWER: readonly QueryKey[] = [planQuery.queryKey, limitsQuery.queryKey, referralsQuery.queryKey];
-
-const oneOf = (keys: readonly QueryKey[], query: Query) =>
-    keys.some((queryKey) => matchQuery({ exact: true, queryKey }, query));
-
-const isAccountState = (query: Query) => oneOf(COPIED, query) || matchQuery({ queryKey: REMINDERS }, query);
-
-const answered = (query: Query) =>
-    query.state.status === "success" && !(query.state.data === null && oneOf(NULL_IS_NO_ANSWER, query));
-
-export const accountStateOf = (client: QueryClient, now = Date.now()): DehydratedState =>
-    dehydrate(client, {
-        shouldDehydrateMutation: () => false,
-        shouldDehydrateQuery: (query) =>
-            answered(query) &&
-            (isPhotoKey(query.queryKey) ? photoMintUsable(query.state.dataUpdatedAt, now) : isAccountState(query)),
-    });
-
-export function restoreAccountState(client: QueryClient, copied: DehydratedState | undefined, now = Date.now()) {
-    if (!copied) {
-        return;
+export function seedProfile(client: QueryClient, profile: Profile | undefined) {
+    if (profile) {
+        client.setQueryData(profileQuery.queryKey, profile);
     }
-    const photos = copied.queries.filter(({ queryKey }) => isPhotoKey(queryKey));
-    hydrate(
-        client,
-        { mutations: [], queries: copied.queries.filter(({ queryKey }) => !isPhotoKey(queryKey)) },
-        { defaultOptions: { queries: kept } }
-    );
-    hydrate(
-        client,
-        { mutations: [], queries: photos.filter(({ state }) => photoMintUsable(state.dataUpdatedAt, now)) },
-        { defaultOptions: { queries: { gcTime: PHOTO_REMINT_MS } } }
-    );
 }
 
 const unlessKnown = { staleTime: Number.POSITIVE_INFINITY } as const;
@@ -199,22 +144,4 @@ export function warmAccountState(client: QueryClient) {
         .fetchQuery({ ...pushEndpointQuery, ...unlessKnown })
         .then(({ endpoint }) => client.prefetchQuery({ ...reminderQuery(endpoint), ...unlessKnown }))
         .catch(() => undefined);
-}
-
-const copiedAt = (client: QueryClient) =>
-    Math.max(
-        0,
-        ...client
-            .getQueryCache()
-            .getAll()
-            .filter((query) => isPhotoKey(query.queryKey) || isAccountState(query))
-            .map((query) => query.state.dataUpdatedAt)
-    );
-
-export function useAccountStateStamp(client: QueryClient) {
-    return useSyncExternalStore(
-        (notify) => client.getQueryCache().subscribe(notify),
-        () => copiedAt(client),
-        () => 0
-    );
 }

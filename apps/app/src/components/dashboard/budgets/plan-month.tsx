@@ -22,7 +22,6 @@ import { KpiBand, KpiCell, Trend } from "@/components/dashboard/accounts/parts";
 import { useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useBox } from "@/components/dashboard/insights/use-box";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { Restoring } from "@/components/dashboard/shell/sampled";
 import { UNCATEGORIZED_ID } from "@/lib/dashboard-series-ledger";
 import { isPeriodKey, periodKeyOf, periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
@@ -686,7 +685,7 @@ function EmptyMonth({ view }: { view: MonthView }) {
 }
 
 function PlanMonthBody({ periodKey }: { periodKey: string }) {
-    const { ledger, restoring } = useDashboard();
+    const { ledger } = useDashboard();
     const key = monthKeyOf(periodKey);
     const { year } = monthKeyParts(key);
     const plan = useYearPlan(year);
@@ -696,13 +695,6 @@ function PlanMonthBody({ periodKey }: { periodKey: string }) {
     }
     const view: MonthView = { month, period: periodOf(periodKey, ledger.firstDayOfMonth), plan, year };
     const empty = month.categories.length === 0;
-    if (empty && restoring) {
-        return (
-            <Restoring>
-                <PlanMonthBody periodKey={periodKey} />
-            </Restoring>
-        );
-    }
     let body: ReactNode;
     if (empty) {
         body = <EmptyMonth view={view} />;

@@ -109,7 +109,7 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 
 **Web app (`apps/app`):**
 
-- Local first: a reload paints from the browser's copy of the ledger and a click never waits on the network. Read `docs/internals/web-local-first.md` before adding a route, a loader, or a data source under `apps/app`
+- Server rendered: a load paints the real page from a ledger the server read with the visitor's token, and a click never waits on the network. Read `docs/internals/web-rendering.md` before adding a route, a loader, or a data source under `apps/app`
 
 **Effect (v4):**
 

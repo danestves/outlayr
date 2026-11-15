@@ -21,7 +21,6 @@ import { KpiBand, KpiCell, Trend } from "@/components/dashboard/accounts/parts";
 import { useCategoryName, useDateFormat, useWholeMoney } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { Restoring } from "@/components/dashboard/shell/sampled";
 import { LookTile, MerchantTile } from "@/components/ledger/tiles";
 import { editedBudget } from "@/lib/budget-writes";
 import type { LedgerRow } from "@/lib/dashboard-series-ledger";
@@ -510,22 +509,10 @@ function NotFound() {
     );
 }
 
-function SampleDetail() {
-    const first = useDashboard().ledger.books.budgets.find((row) => row.deletedAt === null && row.categoryId !== null);
-    return first?.categoryId ? <DetailPage categoryId={first.categoryId} /> : null;
-}
-
 function DetailPage({ categoryId }: { categoryId: string }) {
-    const { ledger, restoring } = useDashboard();
+    const { ledger } = useDashboard();
     const { period } = useBudgetMonth();
     const detail = useMemo(() => budgetDetail(ledger, categoryId, period), [categoryId, ledger, period]);
-    if (!detail && restoring) {
-        return (
-            <Restoring>
-                <SampleDetail />
-            </Restoring>
-        );
-    }
     if (!detail) {
         return <NotFound />;
     }

@@ -3,7 +3,7 @@ import { keepPreviousData, useQueries } from "@tanstack/react-query";
 import { useRouteContext } from "@tanstack/react-router";
 import { useMemo } from "react";
 
-import { photoUrlsQuery, toPhotoUrls } from "@/components/dashboard/shell/photos";
+import { photoUrlsQuery, toPhotoUrls, usePhotoSeed } from "@/components/dashboard/shell/photos";
 import type { TileLook } from "@/components/ledger/tiles";
 import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
@@ -42,6 +42,7 @@ const mergedPhotos = (results: readonly { data?: readonly { key: string; url: st
 
 export function useImageUrls(keys: readonly string[]) {
     const { convexQueryClient } = useRouteContext({ from: "/_account/_app" });
+    const seed = usePhotoSeed();
     const batches = useMemo(
         () =>
             Array.from({ length: Math.ceil(keys.length / PHOTO_URL_BATCH) }, (_, index) =>
@@ -52,7 +53,7 @@ export function useImageUrls(keys: readonly string[]) {
     return useQueries({
         combine: mergedPhotos,
         queries: batches.map((batch) => ({
-            ...photoUrlsQuery(convexQueryClient, batch),
+            ...photoUrlsQuery(convexQueryClient, batch, seed),
             placeholderData: keepPreviousData,
         })),
     });
