@@ -8024,8 +8024,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Outlayr works without an account. Signing in turns on extras such as sync across devices, voice entry, receipt scans, and merchant suggestions.",
-                            es: "No. Outlayr funciona sin cuenta. Al iniciar sesión se activan extras como sincronizar entre dispositivos, dictar registros, escanear recibos y las sugerencias de comercios.",
+                            en: "No. Outlayr works without an account. Some extras need one, such as voice entry, receipt scans, merchant suggestions, and sync across devices with Pro.",
+                            es: "No. Outlayr funciona sin cuenta. Algunos extras la necesitan, como dictar registros, escanear recibos, las sugerencias de comercios y sincronizar entre dispositivos con Pro.",
                         }),
                         question: t({
                             en: "Do I need to sign up to use it?",
@@ -8273,8 +8273,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Outlayr never links bank accounts, and it works without an account. Signing in turns on extras such as sync across devices, voice entry, receipt scans, and merchant suggestions.",
-                            es: "No. Outlayr nunca conecta cuentas bancarias, y funciona sin cuenta. Al iniciar sesión se activan extras como sincronizar entre dispositivos, dictar registros, escanear recibos y las sugerencias de comercios.",
+                            en: "No. Outlayr never links bank accounts, and it works without an account. Some extras need one, such as voice entry, receipt scans, merchant suggestions, and sync across devices with Pro.",
+                            es: "No. Outlayr nunca conecta cuentas bancarias, y funciona sin cuenta. Algunos extras la necesitan, como dictar registros, escanear recibos, las sugerencias de comercios y sincronizar entre dispositivos con Pro.",
                         }),
                         question: t({
                             en: "Do I need to link my bank or sign up?",
