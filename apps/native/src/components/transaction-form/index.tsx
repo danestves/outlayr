@@ -501,6 +501,8 @@ export function TransactionForm(props: TransactionFormProps) {
     const router = useRouter();
     const createAccount = useCreateAccount();
     const containerHeight = useSharedValue(0);
+    const [layoutHeight, setLayoutHeight] = useState(0);
+    const keyboardOffset = layoutHeight === 0 ? 0 : Math.max(windowHeight - layoutHeight, 0);
     const heroRestTop = useDerivedValue(() => HERO_REST_TOP);
     const announceSaved = (value: TransactionFormValues, amount: number) => {
         const chosen = value.category ?? value.pendingCategory;
@@ -927,6 +929,7 @@ export function TransactionForm(props: TransactionFormProps) {
                 className="flex-1"
                 onLayout={(e) => {
                     containerHeight.set(e.nativeEvent.layout.height);
+                    setLayoutHeight(e.nativeEvent.layout.height);
                 }}
             >
                 {/* First, so an Android sheet's own header (`cta.android.tsx`) lands above the scroller. */}
@@ -968,6 +971,7 @@ export function TransactionForm(props: TransactionFormProps) {
                     curtainHues={curtainHues}
                     failure={saveFailure}
                     fieldFocused={note.focused}
+                    keyboardOffset={keyboardOffset}
                     followsStage={largeText}
                     sheet={mode === "edit"}
                 >
@@ -1058,17 +1062,17 @@ export function TransactionForm(props: TransactionFormProps) {
                     ) : null}
                 </FormScroll>
 
-                {/* Only the steps with a text field lift over the keyboard; the rest are what it should uncover.
-                Hidden, not unmounted, while the note types: the step keeps its query and skips its entrance. */}
+                {/* Only steps with a text field lift over the keyboard. Hidden, not unmounted, while the note types.
+                Directly in the sheet, offset by its top: the keyboard's screen position is compared to its frame. */}
                 {resting ? null : (
-                    <View className={note.focused ? "hidden" : undefined}>
-                        <KeyboardAvoidingView
-                            behavior="padding"
-                            enabled={stageTakesTyping(stageStep, installmentsNarrowed) && !largeText}
-                        >
-                            <StagePartContext value="pinned">{stageFields}</StagePartContext>
-                        </KeyboardAvoidingView>
-                    </View>
+                    <KeyboardAvoidingView
+                        behavior="padding"
+                        className={note.focused ? "hidden" : undefined}
+                        keyboardVerticalOffset={keyboardOffset}
+                        enabled={stageTakesTyping(stageStep, installmentsNarrowed) && !largeText}
+                    >
+                        <StagePartContext value="pinned">{stageFields}</StagePartContext>
+                    </KeyboardAvoidingView>
                 )}
 
                 <SubscribeFields selector={(s) => ({ amount: s.values.amount })} store={form.store}>

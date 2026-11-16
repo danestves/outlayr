@@ -31,6 +31,8 @@ export interface FormScrollProps {
     fieldFocused: boolean;
     /** Large text: the stage scrolls inline, and the form follows it to each new step. */
     followsStage: boolean;
+    /** The sheet's distance from the screen top, which the keyboard's screen position is measured against. */
+    keyboardOffset: number;
     /** Android only: pins the failure strip on the sheet's surface. */
     sheet?: boolean;
 }
@@ -47,6 +49,7 @@ export function FormScroll({
     failure,
     fieldFocused,
     followsStage,
+    keyboardOffset,
 }: FormScrollProps) {
     const colors = useColors();
     const isDark = useIsDark();
@@ -55,7 +58,12 @@ export function FormScroll({
 
     return (
         <StageScrollContext value={stageScroll}>
-            <KeyboardAvoidingView behavior="padding" className="flex-1" enabled={fieldFocused}>
+            <KeyboardAvoidingView
+                behavior="padding"
+                className="flex-1"
+                enabled={fieldFocused}
+                keyboardVerticalOffset={keyboardOffset}
+            >
                 {/* The curtain is the Host's background: a sibling would hide content from the scroll-edge lookup. */}
                 <Host
                     style={{
