@@ -25,6 +25,7 @@ export function useEntryNote({ contentWidth, hidden, onEdit, seeded }: EntryNote
     const [open, setOpen] = useState(seeded.length > 0);
     const [asked, setAsked] = useState(false);
     const [summary, setSummary] = useState(seeded);
+    const [focused, setFocused] = useState(false);
 
     const line = summary.length === 0 ? null : t("transaction.sentence.extra.note", { note: summary });
 
@@ -48,11 +49,13 @@ export function useEntryNote({ contentWidth, hidden, onEdit, seeded }: EntryNote
                         className="text-body text-foreground min-h-24"
                         defaultValue={seeded}
                         multiline
+                        onBlur={() => setFocused(false)}
                         onChangeText={(next) => {
                             notesRef.current = next;
                             onEdit();
                         }}
                         onEndEditing={() => setSummary(notesRef.current)}
+                        onFocus={() => setFocused(true)}
                         placeholder={t("transaction.field.notesPlaceholder")}
                         placeholderTextColor={colors.muted}
                         textAlignVertical="top"
@@ -61,5 +64,6 @@ export function useEntryNote({ contentWidth, hidden, onEdit, seeded }: EntryNote
             </FormScrollItem>
         ) : null;
 
-    return { item, line, read: () => notesRef.current, verb };
+    // An unmounting input never blurs, so a note closed while typing would otherwise keep the stage hidden.
+    return { focused: focused && item !== null, item, line, read: () => notesRef.current, verb };
 }

@@ -967,6 +967,7 @@ export function TransactionForm(props: TransactionFormProps) {
                     bottomInset={resting ? 0 : 40}
                     curtainHues={curtainHues}
                     failure={saveFailure}
+                    fieldFocused={note.focused}
                     followsStage={largeText}
                     sheet={mode === "edit"}
                 >
@@ -1045,7 +1046,7 @@ export function TransactionForm(props: TransactionFormProps) {
 
                     {note.item}
 
-                    {largeText && !resting ? (
+                    {largeText && !resting && !note.focused ? (
                         <>
                             <FormScrollStageTarget id={stageTarget} key={stageTarget} />
                             <FormScrollItem>
@@ -1057,17 +1058,17 @@ export function TransactionForm(props: TransactionFormProps) {
                     ) : null}
                 </FormScroll>
 
-                {/* Only the steps with a text field lift over the keyboard; the rest are what it should uncover. */}
+                {/* Only the steps with a text field lift over the keyboard; the rest are what it should uncover.
+                Hidden, not unmounted, while the note types: the step keeps its query and skips its entrance. */}
                 {resting ? null : (
-                    <KeyboardAvoidingView
-                        behavior="padding"
-                        enabled={
-                            (stageStep === "merchant" || (stageStep === "account" && installmentsNarrowed)) &&
-                            !largeText
-                        }
-                    >
-                        <StagePartContext value="pinned">{stageFields}</StagePartContext>
-                    </KeyboardAvoidingView>
+                    <View className={note.focused ? "hidden" : undefined}>
+                        <KeyboardAvoidingView
+                            behavior="padding"
+                            enabled={stageTakesTyping(stageStep, installmentsNarrowed) && !largeText}
+                        >
+                            <StagePartContext value="pinned">{stageFields}</StagePartContext>
+                        </KeyboardAvoidingView>
+                    </View>
                 )}
 
                 <SubscribeFields selector={(s) => ({ amount: s.values.amount })} store={form.store}>
@@ -1099,6 +1100,10 @@ export function TransactionForm(props: TransactionFormProps) {
             </View>
         </PortalProvider>
     );
+}
+
+function stageTakesTyping(step: StageStep, installmentsNarrowed: boolean) {
+    return step === "merchant" || step === "currency" || (step === "account" && installmentsNarrowed);
 }
 
 function categorySlotOf(
