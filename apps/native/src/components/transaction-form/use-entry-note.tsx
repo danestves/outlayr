@@ -30,6 +30,9 @@ export function useEntryNote({ contentWidth, hidden, onEdit, seeded }: EntryNote
         key: "note",
         label: t("transaction.sentence.add.note"),
         onPress: () => {
+            if (open) {
+                setSummary(notesRef.current);
+            }
             setOpen((current) => !current);
             setAsked(true);
         },
@@ -38,7 +41,7 @@ export function useEntryNote({ contentWidth, hidden, onEdit, seeded }: EntryNote
     const item =
         open && !hidden ? (
             <NoteField
-                defaultValue={seeded}
+                defaultValue={summary}
                 label={t("transaction.field.notes")}
                 onChange={(next) => {
                     notesRef.current = next;
@@ -56,6 +59,6 @@ export function useEntryNote({ contentWidth, hidden, onEdit, seeded }: EntryNote
             />
         ) : null;
 
-    // An unmounting input never blurs, so a note closed while typing would otherwise keep the stage hidden.
+    // An unmounting input never blurs: closing it from the chip syncs the summary, and focus is gated on the item.
     return { focused: focused && item !== null, item, line, read: () => notesRef.current, verb };
 }
