@@ -10,10 +10,11 @@
     "es-ES",
     "fr",
     "pt-BR",
-    "pt-PT"
+    "pt-PT",
+    "de"
   ],
-  "locale": "pt-BR",
-  "device": "iphone",
+  "locale": "de",
+  "device": "android",
   "orientation": "portrait",
   "appIcon": "/app-icon.png",
   "slidesByDevice": {
@@ -27,7 +28,8 @@
           "es-ES": "OUTLAYR",
           "fr": "OUTLAYR",
           "pt-BR": "OUTLAYR",
-          "pt-PT": "OUTLAYR"
+          "pt-PT": "OUTLAYR",
+          "de": "OUTLAYR"
         },
         "headline": {
           "en": "Every account.\nOne page.",
@@ -35,7 +37,8 @@
           "es-ES": "Todas tus cuentas.\nEn una sola vista.",
           "fr": "Tous vos comptes.\nUne seule page.",
           "pt-BR": "Todas as contas.\nNuma tela só.",
-          "pt-PT": "Todas as contas.\nNum só ecrã."
+          "pt-PT": "Todas as contas.\nNum só ecrã.",
+          "de": "Jedes Konto.\nEine Seite."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/01.png",
         "transforms": {
@@ -56,7 +59,8 @@
           "es-ES": "SUSCRIPCIONES",
           "fr": "ABONNEMENTS",
           "pt-BR": "ASSINATURAS",
-          "pt-PT": "SUBSCRIÇÕES"
+          "pt-PT": "SUBSCRIÇÕES",
+          "de": "ABOS"
         },
         "headline": {
           "en": "Each subscription.\nOne monthly total.",
@@ -64,7 +68,8 @@
           "es-ES": "Tus suscripciones.\nUn total al mes.",
           "fr": "Vos abonnements.\nUn total par mois.",
           "pt-BR": "Cada assinatura.\nUm total por mês.",
-          "pt-PT": "Cada subscrição.\nUm total por mês."
+          "pt-PT": "Cada subscrição.\nUm total por mês.",
+          "de": "Jedes Abo.\nEine Summe."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/10.png",
         "transforms": {
@@ -85,7 +90,8 @@
           "es-ES": "EL REGISTRO",
           "fr": "LA SAISIE",
           "pt-BR": "O LANÇAMENTO",
-          "pt-PT": "O REGISTO"
+          "pt-PT": "O REGISTO",
+          "de": "DER EINTRAG"
         },
         "headline": {
           "en": "Log it in\none sentence.",
@@ -93,7 +99,8 @@
           "es-ES": "Apúntalo en\nuna frase.",
           "fr": "Notez-le en\nune phrase.",
           "pt-BR": "Anote em\numa frase.",
-          "pt-PT": "Registe-o\nnuma frase."
+          "pt-PT": "Registe-o\nnuma frase.",
+          "de": "Ein Satz\ngenügt."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/02.png"
       },
@@ -106,7 +113,8 @@
           "es-ES": "RITMO",
           "fr": "RYTHME",
           "pt-BR": "RITMO",
-          "pt-PT": "RITMO"
+          "pt-PT": "RITMO",
+          "de": "TEMPO"
         },
         "headline": {
           "en": "You'll end the\nmonth $319 short.",
@@ -114,7 +122,8 @@
           "es-ES": "Este mes te\nvan a faltar €319.",
           "fr": "Il vous manquera\n€319 ce mois-ci.",
           "pt-BR": "Vai faltar R$1.596\nno fim do mês.",
-          "pt-PT": "Vão faltar €319\neste mês."
+          "pt-PT": "Vão faltar €319\neste mês.",
+          "de": "Der Monat endet\n$516 zu knapp."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/04.png",
         "transforms": {
@@ -135,7 +144,8 @@
           "es-ES": "WIDGETS",
           "fr": "WIDGETS",
           "pt-BR": "WIDGETS",
-          "pt-PT": "WIDGETS"
+          "pt-PT": "WIDGETS",
+          "de": "WIDGETS"
         },
         "headline": {
           "en": "Without opening\nthe app.",
@@ -143,7 +153,8 @@
           "es-ES": "Sin abrir\nsiquiera la app.",
           "fr": "Sans même\nouvrir l'app.",
           "pt-BR": "Sem nem\nabrir o app.",
-          "pt-PT": "Sem sequer\nabrir a app."
+          "pt-PT": "Sem sequer\nabrir a app.",
+          "de": "Ohne die App\nzu öffnen."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/09.png"
       },
@@ -156,7 +167,8 @@
           "es-ES": "ESTADÍSTICAS",
           "fr": "STATISTIQUES",
           "pt-BR": "ESTATÍSTICAS",
-          "pt-PT": "ESTATÍSTICAS"
+          "pt-PT": "ESTATÍSTICAS",
+          "de": "AUSWERTUNGEN"
         },
         "headline": {
           "en": "Where the week\nactually went.",
@@ -164,7 +176,8 @@
           "es-ES": "En qué se te ha\nido la semana.",
           "fr": "Où est passée\nvotre semaine.",
           "pt-BR": "Para onde foi\nsua semana.",
-          "pt-PT": "Para onde foi\na sua semana."
+          "pt-PT": "Para onde foi\na sua semana.",
+          "de": "Wohin die Woche\nwirklich ging."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/05.png",
         "transforms": {
@@ -191,7 +204,8 @@
           "es-ES": "CUENTAS",
           "fr": "COMPTES",
           "pt-BR": "CONTAS",
-          "pt-PT": "CONTAS"
+          "pt-PT": "CONTAS",
+          "de": "KONTEN"
         },
         "headline": {
           "en": "Two currencies.\nOne ledger.",
@@ -199,7 +213,8 @@
           "es-ES": "Dos monedas.\nUn solo registro.",
           "fr": "Deux devises.\nUn seul registre.",
           "pt-BR": "Duas moedas.\nUm só controle.",
-          "pt-PT": "Duas moedas.\nUm só registo."
+          "pt-PT": "Duas moedas.\nUm só registo.",
+          "de": "Zwei Währungen.\nEin Kassenbuch."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/06.png"
       },
@@ -212,7 +227,8 @@
           "es-ES": "METAS",
           "fr": "OBJECTIFS",
           "pt-BR": "METAS",
-          "pt-PT": "OBJETIVOS"
+          "pt-PT": "OBJETIVOS",
+          "de": "SPARZIELE"
         },
         "headline": {
           "en": "Japan in April.\nYou're on pace.",
@@ -220,7 +236,8 @@
           "es-ES": "Japón en abril.\nVas a buen ritmo.",
           "fr": "Japon en avril.\nDans les temps.",
           "pt-BR": "Japão em abril.\nNo ritmo certo.",
-          "pt-PT": "Japão em abril.\nEstá no ritmo."
+          "pt-PT": "Japão em abril.\nEstá no ritmo.",
+          "de": "Japan im April.\nDu bist im Plan."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/08.png",
         "transforms": {
@@ -241,7 +258,8 @@
           "es-ES": "CINCO FORMAS",
           "fr": "CINQ FAÇONS",
           "pt-BR": "CINCO JEITOS",
-          "pt-PT": "CINCO FORMAS"
+          "pt-PT": "CINCO FORMAS",
+          "de": "FÜNF WEGE"
         },
         "headline": {
           "en": "Type it, say it,\nor snap it.",
@@ -249,7 +267,8 @@
           "es-ES": "Escríbelo, dilo\no hazle una foto.",
           "fr": "Tapez, dictez\nou photographiez.",
           "pt-BR": "Digite, fale\nou tire uma foto.",
-          "pt-PT": "Escreva, diga\nou tire uma foto."
+          "pt-PT": "Escreva, diga\nou tire uma foto.",
+          "de": "Tippen, sagen,\nabfotografieren."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/03.png",
         "transforms": {
@@ -276,7 +295,8 @@
           "es-ES": "AVISOS",
           "fr": "RAPPELS",
           "pt-BR": "LEMBRETES",
-          "pt-PT": "LEMBRETES"
+          "pt-PT": "LEMBRETES",
+          "de": "ERINNERUNGEN"
         },
         "headline": {
           "en": "A reminder before\neach charge.",
@@ -284,7 +304,8 @@
           "es-ES": "Un aviso antes\nde cada cargo.",
           "fr": "Un rappel avant\nchaque paiement.",
           "pt-BR": "Um aviso antes\nde cada cobrança.",
-          "pt-PT": "Um aviso antes\nde cada cobrança."
+          "pt-PT": "Um aviso antes\nde cada cobrança.",
+          "de": "Ein Hinweis vor\njeder Abbuchung."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/11.png",
         "transforms": {
@@ -305,61 +326,156 @@
     ],
     "android": [
       {
-        "id": "s_mtyz8xqn_5",
+        "id": "de-log",
         "layout": "hero",
         "label": {
-          "en": "MEET YOUR APP"
+          "de": "OUTLAYR"
         },
         "headline": {
-          "en": "Sell one\nidea per slide."
+          "de": "Jedes Konto.\nEine Seite."
         },
-        "screenshot": ""
+        "screenshot": "/screenshots/android/phone/de/01-log.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
       },
       {
-        "id": "s_mtyz8xqn_6",
-        "layout": "device-bottom",
-        "label": {
-          "en": "FEATURE 01"
-        },
-        "headline": {
-          "en": "Your headline\nlives here."
-        },
-        "screenshot": ""
-      },
-      {
-        "id": "s_mtyz8xqn_7",
-        "layout": "two-devices",
-        "label": {
-          "en": "FEATURE 02"
-        },
-        "headline": {
-          "en": "Show two\nscreens at once."
-        },
-        "screenshot": "",
-        "screenshotSecondary": ""
-      },
-      {
-        "id": "s_mtyz8xqn_8",
+        "id": "de-add-menu",
         "layout": "device-top",
         "label": {
-          "en": "FEATURE 03"
+          "de": "FÜNF WEGE"
         },
         "headline": {
-          "en": "Flip the contrast\nfor visual rhythm."
+          "de": "Tippen, sagen,\nabfotografieren."
         },
-        "screenshot": "",
-        "inverted": true
+        "screenshot": "/screenshots/android/phone/de/02-add-menu.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": -516,
+            "width": 790,
+            "height": 1756
+          }
+        }
       },
       {
-        "id": "s_mtyz8xqn_9",
-        "layout": "no-device",
+        "id": "de-insights",
+        "layout": "hero",
         "label": {
-          "en": "MORE"
+          "de": "AUSWERTUNGEN"
         },
         "headline": {
-          "en": "And so\nmuch more."
+          "de": "Wohin die Woche\nwirklich ging."
         },
-        "screenshot": ""
+        "screenshot": "/screenshots/android/phone/de/03-insights.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
+      },
+      {
+        "id": "de-entry",
+        "layout": "hero",
+        "label": {
+          "de": "DER EINTRAG"
+        },
+        "headline": {
+          "de": "Ein Satz genügt."
+        },
+        "screenshot": "/screenshots/android/phone/de/04-entry.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
+      },
+      {
+        "id": "de-pace",
+        "layout": "hero",
+        "label": {
+          "de": "TEMPO"
+        },
+        "headline": {
+          "de": "Der Monat endet\n$516 zu knapp."
+        },
+        "screenshot": "/screenshots/android/phone/de/05-pace.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
+      },
+      {
+        "id": "de-budgets",
+        "layout": "hero",
+        "label": {
+          "de": "LIMITS"
+        },
+        "headline": {
+          "de": "Jede Kategorie.\nIhr eigenes Limit."
+        },
+        "screenshot": "/screenshots/android/phone/de/06-budgets.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
+      },
+      {
+        "id": "de-goals",
+        "layout": "hero",
+        "label": {
+          "de": "SPARZIELE"
+        },
+        "headline": {
+          "de": "Japan im April.\nDu bist im Plan."
+        },
+        "screenshot": "/screenshots/android/phone/de/07-goals.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
+      },
+      {
+        "id": "de-subscriptions",
+        "layout": "hero",
+        "label": {
+          "de": "ABOS"
+        },
+        "headline": {
+          "de": "Jedes Abo.\nEine Summe."
+        },
+        "screenshot": "/screenshots/android/phone/de/08-upcoming.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
       }
     ],
     "ipad": [
@@ -626,13 +742,15 @@
     ],
     "feature-graphic": [
       {
-        "id": "s_mtyz8xqn_h",
+        "id": "de-feature",
         "layout": "feature-graphic",
         "label": {},
         "headline": {
-          "en": "Your tagline goes here."
+          "de": "Jedes Abo.\nEine Summe im Monat."
         },
-        "screenshot": ""
+        "screenshot": "",
+        "inverted": false,
+        "backgroundColor": "#F2F1EC"
       }
     ],
     "duo-outer": [

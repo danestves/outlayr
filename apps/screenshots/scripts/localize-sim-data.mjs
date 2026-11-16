@@ -28,6 +28,37 @@ const ES_CATEGORIES = {
 };
 
 const LANGUAGES = {
+    de: {
+        accounts: { "Ally Savings": "Ally Sparkonto", Cash: "Bargeld" },
+        budgets: { "Monthly spending": "Monatsausgaben" },
+        categories: {
+            Business: "Geschäftlich",
+            Coffee: "Kaffee",
+            "Dining Out": "Auswärts essen",
+            Entertainment: "Freizeit",
+            Freelance: "Freiberuflich",
+            Fuel: "Tanken",
+            Gifts: "Geschenke",
+            Groceries: "Lebensmittel",
+            Healthcare: "Gesundheit",
+            Home: "Zuhause",
+            Paycheck: "Gehalt",
+            "Phone & Internet": "Handy und Internet",
+            Rent: "Miete",
+            Shopping: "Einkäufe",
+            Subscriptions: "Abos",
+            Transport: "Mobilität",
+            Travel: "Reisen",
+            Utilities: "Nebenkosten",
+        },
+        goals: {
+            "Emergency fund": "Notgroschen",
+            "Japan, April": "Japan, April",
+            "New MacBook": "Neues MacBook",
+        },
+        notes: { Rent: "Miete" },
+        tags: { Warehouse: "Großmarkt" },
+    },
     es: {
         accounts: { "Ally Savings": "Ahorros Ally", Cash: "Efectivo" },
         budgets: { "Monthly spending": "Gasto mensual" },
@@ -123,7 +154,7 @@ const LANGUAGES = {
 };
 
 if (!target || (language !== "en" && !LANGUAGES[language])) {
-    throw new Error("Usage: localize-sim-data.mjs <UDID | android:SERIAL | db:PATH> en|es|es-ES|fr|pt|pt-PT");
+    throw new Error("Usage: localize-sim-data.mjs <UDID | android:SERIAL | db:PATH> en|de|es|es-ES|fr|pt|pt-PT");
 }
 
 const TABLES = [
