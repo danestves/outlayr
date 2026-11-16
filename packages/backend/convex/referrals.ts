@@ -11,4 +11,5 @@ export const pendingGrant = registeredFunctions.pendingGrant;
 export const redeem = registeredFunctions.redeem;
 export const releaseBanked = registeredFunctions.releaseBanked;
 export const revoked = registeredFunctions.revoked;
+export const rewardPaidFriends = registeredFunctions.rewardPaidFriends;
 export const sweepGrants = registeredFunctions.sweepGrants;

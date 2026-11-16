@@ -102,6 +102,13 @@ export default GroupSpec.make()
     )
     .addFunction(
         FunctionSpec.internalMutation({
+            name: "rewardPaidFriends",
+            args: () => ({ cursor: Schema.NullOr(Schema.String) }),
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
             name: "creditBanked",
             args: () => ({ userId: Schema.String }),
             returns: () => Schema.Null,

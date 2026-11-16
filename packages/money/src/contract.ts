@@ -70,6 +70,10 @@ export function referralLink(code: string, language: string): string {
 
 export const REFERRAL_DAYS_TO_EARN = 3;
 
+export const REFERRALS_PAID_FROM_MS = Date.UTC(2027, 0, 1);
+
+export const referralsEarnOnPayment = (now: number) => now >= REFERRALS_PAID_FROM_MS;
+
 export const REFERRAL_YEARLY_CAP = 12;
 
 export const REFERRAL_CAP_WINDOW_MS = 365 * 86_400_000;

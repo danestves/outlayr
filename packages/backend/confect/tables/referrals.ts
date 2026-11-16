@@ -17,4 +17,5 @@ export default Table.make(() =>
 )
     .index("by_referredId", ["referredId"])
     .index("by_referrerId_and_claimedAt", ["referrerId", "claimedAt"])
-    .index("by_referrerId_and_rewardedAt", ["referrerId", "rewardedAt"]);
+    .index("by_referrerId_and_rewardedAt", ["referrerId", "rewardedAt"])
+    .index("by_status", ["status"]);

@@ -1,5 +1,10 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { normalizeReferralCode, PRO_ENTITLEMENT_ID, REFERRAL_YEARLY_CAP } from "@outlayr/money/contract";
+import {
+    normalizeReferralCode,
+    PRO_ENTITLEMENT_ID,
+    REFERRAL_YEARLY_CAP,
+    referralsEarnOnPayment,
+} from "@outlayr/money/contract";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
@@ -34,9 +39,11 @@ import {
     mirroredPro,
     newCode,
     nullOnMissing,
+    paidForPro,
     referralLimiter,
     refusalFor,
     rewardFor,
+    rewardReferrer,
     scheduleGrant,
     yearStart,
 } from "./referrals";
@@ -386,6 +393,36 @@ const sweepGrants = FunctionImpl.make(
     }, Effect.orDie)
 );
 
+const rewardPaidFriends = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "rewardPaidFriends",
+    Effect.fn("Referrals.rewardPaidFriends")(function* rewardPaidFriends({ cursor }) {
+        if (!referralsEarnOnPayment(yield* Clock.currentTimeMillis)) {
+            return null;
+        }
+        const ctx = yield* MutationCtx;
+        const page = yield* (yield* DatabaseReader)
+            .table("referrals")
+            .index("by_status", (q) => q.eq("status", "counting"))
+            .paginate({ cursor, numItems: SWEEP_PAGE });
+        for (const referral of page.page) {
+            const subscriptions = yield* Effect.promise(() =>
+                revenuecat.getAllSubscriptions(ctx, { appUserId: referral.referredId })
+            );
+            if (paidForPro(subscriptions)) {
+                yield* rewardReferrer(referral);
+            }
+        }
+        if (!page.isDone) {
+            yield* (yield* Scheduler).runAfter(Duration.zero, refs.internal.referrals.rewardPaidFriends, {
+                cursor: page.continueCursor,
+            });
+        }
+        return null;
+    }, Effect.orDie)
+);
+
 const creditBanked = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -419,6 +456,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(releaseBanked),
     Layer.provide(bankedMonths),
     Layer.provide(sweepGrants),
+    Layer.provide(rewardPaidFriends),
     Layer.provide(creditBanked),
     GroupImpl.finalize
 );
