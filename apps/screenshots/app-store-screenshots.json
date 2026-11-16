@@ -10,10 +10,11 @@
     "es-ES",
     "fr",
     "pt-BR",
-    "pt-PT"
+    "pt-PT",
+    "de"
   ],
-  "locale": "pt-BR",
-  "device": "iphone",
+  "locale": "de",
+  "device": "android",
   "orientation": "portrait",
   "appIcon": "/app-icon.png",
   "slidesByDevice": {
@@ -305,61 +306,156 @@
     ],
     "android": [
       {
-        "id": "s_mtyz8xqn_5",
+        "id": "de-log",
         "layout": "hero",
         "label": {
-          "en": "MEET YOUR APP"
+          "de": "OUTLAYR"
         },
         "headline": {
-          "en": "Sell one\nidea per slide."
+          "de": "Jedes Konto.\nEine Seite."
         },
-        "screenshot": ""
+        "screenshot": "/screenshots/android/phone/de/01-log.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
       },
       {
-        "id": "s_mtyz8xqn_6",
-        "layout": "device-bottom",
-        "label": {
-          "en": "FEATURE 01"
-        },
-        "headline": {
-          "en": "Your headline\nlives here."
-        },
-        "screenshot": ""
-      },
-      {
-        "id": "s_mtyz8xqn_7",
-        "layout": "two-devices",
-        "label": {
-          "en": "FEATURE 02"
-        },
-        "headline": {
-          "en": "Show two\nscreens at once."
-        },
-        "screenshot": "",
-        "screenshotSecondary": ""
-      },
-      {
-        "id": "s_mtyz8xqn_8",
+        "id": "de-add-menu",
         "layout": "device-top",
         "label": {
-          "en": "FEATURE 03"
+          "de": "FÜNF WEGE"
         },
         "headline": {
-          "en": "Flip the contrast\nfor visual rhythm."
+          "de": "Tippen, sagen,\nabfotografieren."
         },
-        "screenshot": "",
-        "inverted": true
+        "screenshot": "/screenshots/android/phone/de/02-add-menu.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": -516,
+            "width": 790,
+            "height": 1756
+          }
+        }
       },
       {
-        "id": "s_mtyz8xqn_9",
-        "layout": "no-device",
+        "id": "de-insights",
+        "layout": "hero",
         "label": {
-          "en": "MORE"
+          "de": "AUSWERTUNGEN"
         },
         "headline": {
-          "en": "And so\nmuch more."
+          "de": "Wohin die Woche\nwirklich ging."
         },
-        "screenshot": ""
+        "screenshot": "/screenshots/android/phone/de/03-insights.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
+      },
+      {
+        "id": "de-entry",
+        "layout": "hero",
+        "label": {
+          "de": "DER EINTRAG"
+        },
+        "headline": {
+          "de": "Ein Satz genügt."
+        },
+        "screenshot": "/screenshots/android/phone/de/04-entry.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
+      },
+      {
+        "id": "de-pace",
+        "layout": "hero",
+        "label": {
+          "de": "TEMPO"
+        },
+        "headline": {
+          "de": "Der Monat endet\n$516 zu knapp."
+        },
+        "screenshot": "/screenshots/android/phone/de/05-pace.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
+      },
+      {
+        "id": "de-budgets",
+        "layout": "hero",
+        "label": {
+          "de": "LIMITS"
+        },
+        "headline": {
+          "de": "Jede Kategorie.\nIhr eigenes Limit."
+        },
+        "screenshot": "/screenshots/android/phone/de/06-budgets.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
+      },
+      {
+        "id": "de-goals",
+        "layout": "hero",
+        "label": {
+          "de": "SPARZIELE"
+        },
+        "headline": {
+          "de": "Japan im April.\nDu bist im Plan."
+        },
+        "screenshot": "/screenshots/android/phone/de/07-goals.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
+      },
+      {
+        "id": "de-subscriptions",
+        "layout": "hero",
+        "label": {
+          "de": "ABOS"
+        },
+        "headline": {
+          "de": "Jedes Abo.\nEine Summe."
+        },
+        "screenshot": "/screenshots/android/phone/de/08-upcoming.png",
+        "transforms": {
+          "device": {
+            "x": 145,
+            "y": 539,
+            "width": 790,
+            "height": 1756
+          }
+        }
       }
     ],
     "ipad": [
@@ -626,13 +722,15 @@
     ],
     "feature-graphic": [
       {
-        "id": "s_mtyz8xqn_h",
+        "id": "de-feature",
         "layout": "feature-graphic",
         "label": {},
         "headline": {
-          "en": "Your tagline goes here."
+          "de": "Jedes Abo.\nEine Summe im Monat."
         },
-        "screenshot": ""
+        "screenshot": "",
+        "inverted": false,
+        "backgroundColor": "#F2F1EC"
       }
     ],
     "duo-outer": [
