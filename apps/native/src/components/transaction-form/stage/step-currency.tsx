@@ -68,7 +68,7 @@ export function StepCurrency({
                 onToggleFavourite={onToggleFavourite}
                 query={query}
                 selected={selected}
-                style={keyboardUp || largeText ? { height: listHeight } : { minHeight: listHeight }}
+                style={largeText ? { height: listHeight } : { minHeight: listHeight }}
             />
         </View>
     );
