@@ -16,8 +16,9 @@ import { useBankAccounts } from "@/data/accounts";
 import { getAccountById } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useAiConsent } from "@/data/settings";
-import { PLAN_SCREENSHOT_LIMIT, planImport } from "@/domain/installment-scan";
+import { matchedAccount, PLAN_SCREENSHOT_LIMIT, planImport } from "@/domain/installment-scan";
 import { paywallHref } from "@/domain/paywall-trigger";
+import { boundedPromptNames } from "@/domain/prompt-budget";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
 import { useCreateLiability } from "@/hooks/use-pro-gate";
 import { useProEntitled } from "@/hooks/use-pro-locked";
@@ -54,10 +55,10 @@ const FAILURES = {
     unclear: "installments.scan.unclear",
 } as const satisfies Record<ScanFailure, TranslatableKey>;
 
-function soleImport(scan: InstallmentScan | null, account: Account) {
+function soleImport(scan: InstallmentScan | null, account: Account, accounts: readonly Account[]) {
     const [plan, ...others] = scan?.plans ?? [];
     const alone = plan !== undefined && others.length === 0 && scan?.skipped.length === 0;
-    return alone ? planImport(plan, account) : null;
+    return alone && matchedAccount(plan, accounts, account).id === account.id ? planImport(plan, account) : null;
 }
 
 function useLiabilities() {
@@ -78,7 +79,7 @@ function ScanFlow({ account, photos }: { account: Account; photos: readonly Scan
         context: null,
         initialPhotos: photos,
         onReview: (scan) => {
-            const sole = soleImport(scan, account);
+            const sole = soleImport(scan, account, liabilities);
             if (sole?.kind === "ready") {
                 const { order } = sole;
                 router.replace(
@@ -97,7 +98,13 @@ function ScanFlow({ account, photos }: { account: Account; photos: readonly Scan
         selectionLimit: PLAN_SCREENSHOT_LIMIT,
         send: (image, today, moreImages) =>
             api({
-                accounts: [account.name, ...liabilities.filter((row) => row.id !== account.id).map((row) => row.name)],
+                accounts: boundedPromptNames({
+                    accounts: [
+                        account.name,
+                        ...liabilities.filter((row) => row.id !== account.id).map((row) => row.name),
+                    ],
+                    categoryTree: [],
+                }).accounts,
                 currency: account.currency,
                 image,
                 language: localeTag,
@@ -113,7 +120,7 @@ function ScanFlow({ account, photos }: { account: Account; photos: readonly Scan
     const limitToast = <LimitToast feature="receiptScan" {...limit} />;
 
     const scan = phase.kind === "review" ? phase.draft : null;
-    const sole = soleImport(scan, account);
+    const sole = soleImport(scan, account, liabilities);
 
     const close = () => router.back();
     const choose: BarAction = { icon: Image01Icon, label: t("installments.scan.choose"), onPress: chooseFromLibrary };

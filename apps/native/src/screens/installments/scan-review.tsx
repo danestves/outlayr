@@ -64,6 +64,7 @@ export function ScanReview({
     const [excluded, setExcluded] = useState<ReadonlySet<number>>(new Set());
     const [picking, setPicking] = useState<number | null>(null);
     const [busy, setBusy] = useState(false);
+    const [saved, setSaved] = useState<ReadonlySet<number>>(new Set());
     const nowMs = useNow();
     const today = new Date(nowMs);
     const unnamed = t("installments.scan.review.unnamed");
@@ -81,7 +82,7 @@ export function ScanReview({
         }
         return { account, index, kind: "ready", name, order: result.order, standing };
     });
-    const ready = reviewed.filter((row) => row.kind === "ready");
+    const ready = reviewed.filter((row) => row.kind === "ready").filter((row) => !saved.has(row.index));
     const blocked = reviewed.filter((row) => row.kind !== "ready");
     const picked = ready.filter((row) => !excluded.has(row.index));
     const currencies = new Set(picked.map((row) => row.account.currency));
@@ -104,7 +105,10 @@ export function ScanReview({
         SILENT
     );
 
-    const toggle = (index: number) =>
+    const toggle = (index: number) => {
+        if (busy) {
+            return;
+        }
         setExcluded((current) => {
             const next = new Set(current);
             if (!next.delete(index)) {
@@ -112,7 +116,11 @@ export function ScanReview({
             }
             return next;
         });
+    };
     const pickAccount = (index: number) => {
+        if (busy) {
+            return;
+        }
         setPicking(index);
         sheet.current?.present();
     };
@@ -123,6 +131,12 @@ export function ScanReview({
             imports: picked.map(({ account, name, order }) => ({ account, name, order })),
             onFeesFailed: () =>
                 notifyFailure({ body: t("installments.failedBody"), title: t("installments.failedTitle") }),
+            onSaved: (position) => {
+                const row = picked[position];
+                if (row !== undefined) {
+                    setSaved((current) => new Set(current).add(row.index));
+                }
+            },
         });
     };
 

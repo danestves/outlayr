@@ -3,7 +3,6 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 
 import type { Account } from "@/data/accounts-core";
-import { queueEnrichment } from "@/data/enrichment-queue-core";
 import { installmentsRepo, liveInstallmentsQuery } from "@/data/installments-core";
 import type { InstallmentOrderInput } from "@/data/installments-core";
 import type { Database } from "@/db/client";
@@ -12,6 +11,8 @@ import { appRuntime } from "@/lib/runtime";
 import { rearmInstallmentReminders } from "@/state/surfaces-commands";
 
 import { createRuntimeCommand } from "./atom-command";
+import { queueLookup } from "./entry-commit";
+import { logged } from "./entry-save";
 
 type SeededFee = InstallmentSeed["fees"][number];
 
@@ -78,12 +79,14 @@ const importScannedOrders = Effect.fn("InstallmentOrder.importScannedOrders")(fu
     db,
     imports,
     onFeesFailed,
+    onSaved,
 }: {
     db: Database;
     imports: readonly ScannedImport[];
     onFeesFailed: () => void;
+    onSaved: (position: number) => void;
 }) {
-    for (const { account, name, order } of imports) {
+    for (const [position, { account, name, order }] of imports.entries()) {
         const schedule = draftSchedule(order.draft, order.price, order.purchaseDay, account.currency);
         if (schedule === null) {
             continue;
@@ -107,9 +110,9 @@ const importScannedOrders = Effect.fn("InstallmentOrder.importScannedOrders")(fu
                 upfront: schedule.some((row) => row.sequence === 0) ? null : undefined,
             },
             order.fees,
-            { onFeesFailed, onOrdered: () => undefined }
+            { onFeesFailed, onOrdered: () => onSaved(position) }
         );
-        yield* queueEnrichment(db, transactionId);
+        yield* logged("Failed to queue the merchant lookup")(queueLookup(db, transactionId));
     }
 });
 

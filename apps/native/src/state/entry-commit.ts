@@ -206,7 +206,7 @@ const writeEntry = Effect.fn("EntryCommit.write")(function* writeEntry(commit: E
     return yield* transactionsRepo.create(db, entry, { inSameTransaction });
 });
 
-const queueLookup = Effect.fn("EntryCommit.queueLookup")(function* queueLookup(db: Database, id: string) {
+export const queueLookup = Effect.fn("EntryCommit.queueLookup")(function* queueLookup(db: Database, id: string) {
     if (!(yield* readRemoteEnrichment(db))) {
         return;
     }

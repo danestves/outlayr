@@ -215,6 +215,11 @@ describe("pending payments list", () => {
             { amount: 13.13, dueDate: "2026-11-20", fee: 0, paid: false, sequence: 2 },
         ]);
         expect(normalizePlan(listed("Too far", [row(7, 11, 20, 10)], 6), today)).toBeNull();
+        expect(
+            normalizePlan(listed("Paid", [row(2, 11, 15, 23.33, { paid: true })], 4), today)?.rows.map(
+                ({ paid }) => paid
+            )
+        ).toStrictEqual([true, true, false, false]);
     });
 
     it("merges one order printed on two rows, taking its cadence from them, and keeps clashing orders apart", () => {
@@ -227,6 +232,9 @@ describe("pending payments list", () => {
                     listed("movilmar", [row(4, 12, 21, 44.17)], 6),
                     listed("Crocs", [row(2, 11, 15, 50)], 6),
                     { ...listed("Farmatodo", [], 3), cuotaCount: null },
+                    { ...listed("Zara", [row(1, 11, 10, 30, { paid: true })], 3), currency: null },
+                    { ...listed("Zara", [row(2, 11, 24, 30)], 3), currency: "eur" },
+                    listed("Crocs", [row(2, 11, 29, 23.33)], 6),
                 ],
             },
             today
@@ -240,7 +248,8 @@ describe("pending payments list", () => {
             ["2027-01-20", false],
             ["2027-02-19", false],
         ]);
-        expect(result.plans.map((plan) => plan.name)).toStrictEqual(["Movilmar", "Crocs", "Crocs"]);
+        expect(result.plans.map((plan) => plan.name)).toStrictEqual(["Movilmar", "Crocs", "Crocs", "Zara", "Crocs"]);
+        expect(result.plans[3]?.currency).toBe("EUR");
         expect(result.plan).toStrictEqual(result.plans[0]);
         expect(result.skipped).toStrictEqual(["Farmatodo"]);
     });

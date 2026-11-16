@@ -213,7 +213,7 @@ function listRows(order: ModelOrder, count: number, todayMs: number): PlannedRow
             ? Math.round((last.ms - first.ms) / DAY_MS / (last.row.sequence - first.row.sequence))
             : EVERY_OPTIONS.days14.every;
     const cadenceMs = Math.min(MAX_CADENCE_DAYS, Math.max(MIN_CADENCE_DAYS, spanDays)) * DAY_MS;
-    const firstUnpaid = cuotas.find(({ row }) => !row.paid)?.row.sequence ?? count + 1;
+    const firstUnpaid = cuotas.find(({ row }) => !row.paid)?.row.sequence ?? last.row.sequence + 1;
     const planned = Array.from({ length: count }, (_, index): PlannedRow => {
         const sequence = index + 1;
         const exact = cuotas.find(({ row }) => row.sequence === sequence);
@@ -350,6 +350,15 @@ function orderKey(order: ModelOrder): string | null {
     return name ? `${order.provider?.trim().toLowerCase() ?? ""}\u0000${name}` : null;
 }
 
+function sameRow(a: ModelRow, b: ModelRow): boolean {
+    return (
+        a.amount === b.amount &&
+        a.month === b.month &&
+        a.day === b.day &&
+        (a.year === null || b.year === null || a.year === b.year)
+    );
+}
+
 export function mergeOrders(orders: readonly ModelOrder[]): ModelOrder[] {
     const merged: ModelOrder[] = [];
     for (const order of orders) {
@@ -358,9 +367,10 @@ export function mergeOrders(orders: readonly ModelOrder[]): ModelOrder[] {
         const seen = merged[index];
         const clashes =
             seen !== undefined &&
-            order.rows.some((row) =>
-                seen.rows.some((other) => other.sequence === row.sequence && other.amount !== row.amount)
-            );
+            ((seen.currency !== null && order.currency !== null && seen.currency !== order.currency) ||
+                order.rows.some((row) =>
+                    seen.rows.some((other) => other.sequence === row.sequence && !sameRow(other, row))
+                ));
         if (seen === undefined || clashes) {
             merged.push(order);
             continue;
@@ -368,7 +378,9 @@ export function mergeOrders(orders: readonly ModelOrder[]): ModelOrder[] {
         const added = order.rows.filter((row) => !seen.rows.some((other) => other.sequence === row.sequence));
         merged[index] = {
             ...seen,
+            accountName: seen.accountName ?? order.accountName,
             cuotaCount: Math.max(seen.cuotaCount ?? 0, order.cuotaCount ?? 0) || null,
+            currency: seen.currency ?? order.currency,
             rows: [...seen.rows, ...added],
         };
     }
