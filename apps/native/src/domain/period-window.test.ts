@@ -21,9 +21,8 @@ test("keeps last period's clock time across the March DST change", () => {
     expect(inNewYork("previous-day", 2024, 2, 11, 0, 0, 2024, 2, 11, 15, 30)).toBe("[[2,10,0,0],[2,10,15,30]]");
 });
 
-test("stops at the end of a shorter month instead of running into this one", () => {
-    const window = previousPeriodWindow("month", new Date(2026, 2, 1), new Date(2026, 2, 31, 9));
+test("compares 29 February with the last day of last February", () => {
+    const window = previousPeriodWindow("year", new Date(2024, 0, 1), new Date(2024, 1, 29, 12));
 
-    expect(window.start).toStrictEqual(new Date(2026, 1, 1));
-    expect(window.end.getTime()).toBe(new Date(2026, 2, 1).getTime() - 1);
+    expect(window.end).toStrictEqual(new Date(2023, 1, 28, 12));
 });

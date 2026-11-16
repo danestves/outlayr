@@ -9,6 +9,15 @@ export interface PeriodWindow {
     start: Date;
 }
 
+// `addMonths` overflows: 31 March minus a month is 3 March, so a short month ends on its last day instead.
+function monthsBack(date: Date, months: number): Date {
+    const shifted = addMonths(date, -months);
+    if (shifted.getDate() !== date.getDate()) {
+        shifted.setDate(0);
+    }
+    return shifted;
+}
+
 function stepBack(period: ComparedPeriod, date: Date): Date {
     switch (period) {
         case "day": {
@@ -18,10 +27,10 @@ function stepBack(period: ComparedPeriod, date: Date): Date {
             return addDays(date, -7);
         }
         case "month": {
-            return addMonths(date, -1);
+            return monthsBack(date, 1);
         }
         case "year": {
-            return addMonths(date, -12);
+            return monthsBack(date, 12);
         }
         default: {
             return period satisfies never;
@@ -31,7 +40,6 @@ function stepBack(period: ComparedPeriod, date: Date): Date {
 
 /** The previous period cut as far in as this one has run, so a Wednesday compares with last Wednesday. */
 export function previousPeriodWindow(period: ComparedPeriod, start: Date, now: Date): PeriodWindow {
-    // Calendar steps keep the clock time across a DST change; the cap stops 31 March overflowing February.
-    const end = Math.min(stepBack(period, now).getTime(), start.getTime() - 1);
-    return { end: new Date(end), start: stepBack(period, start) };
+    // Calendar steps, not elapsed time, so a DST change keeps the clock time.
+    return { end: stepBack(period, now), start: stepBack(period, start) };
 }
