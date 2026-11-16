@@ -2,16 +2,14 @@ import type { EntryRateType } from "@outlayr/money/rates";
 
 import { roundToMinorUnits } from "@/domain/money";
 
-/** `value` is the person's currency per unit of the account's. */
 export interface DebtRate {
     type: EntryRateType;
-    value: number;
+    personPerAccount: number;
 }
 
 const DRIFTING_CURRENCY = "VES";
 const STEADY_CURRENCY = "USD";
 
-// A debt in bolívares grows with every repayment at a later BCV rate, so someone new is kept in dollars by default.
 export function newPersonCurrency(accountCurrency: string | null, fallback: string): string {
     if (accountCurrency === null) {
         return fallback;
@@ -20,12 +18,9 @@ export function newPersonCurrency(accountCurrency: string | null, fallback: stri
 }
 
 interface TheirSideInput {
-    /** In the account's currency. */
     amount: number;
-    /** That day's official rate, the person's currency per unit of the account's. */
     market: number | null;
     personCurrency: string;
-    /** What the user typed for the person's side, 0 while untouched. */
     typed: number;
 }
 
@@ -37,7 +32,7 @@ export function debtTheirSide({ amount, market, personCurrency, typed }: TheirSi
     }
     const rate: DebtRate =
         market !== null && theirAmount === prefill
-            ? { type: "official", value: market }
-            : { type: "custom", value: theirAmount / amount };
+            ? { type: "official", personPerAccount: market }
+            : { type: "custom", personPerAccount: theirAmount / amount };
     return { rate, theirAmount };
 }

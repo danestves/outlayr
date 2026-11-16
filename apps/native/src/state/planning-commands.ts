@@ -37,16 +37,13 @@ const trackBudgetCreated = (kind: "category" | "overall") =>
 export interface DebtDraft {
     account: Account | null;
     amount: number;
-    /** Set for a sale on credit, which records income instead of a movement. */
     category: Category | null;
     date: Date;
     newName: string;
     note: string;
     person: Account | null;
-    /** A new person's currency; an existing person keeps theirs. */
     personCurrency: string;
     rate: DebtRate | null;
-    /** The person's side of a cross-currency movement, in their currency. */
     theirAmount: number;
     verb: DebtVerb;
 }

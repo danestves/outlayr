@@ -70,7 +70,7 @@ describe("recording a debt with a person", () => {
                 account: { accountId: banesco, amount: 3650, currency: "VES" },
                 date: OCT_2,
                 person: { accountId: ana, amount: 100, currency: "USD" },
-                rate: { type: "official", value: 1 / 36.48 },
+                rate: { type: "official", personPerAccount: 1 / 36.48 },
                 verb: "lent",
             })
         );
@@ -79,7 +79,7 @@ describe("recording a debt with a person", () => {
                 account: { accountId: banesco, amount: 4000, currency: "VES" },
                 date: NOW,
                 person: { accountId: ana, amount: 100, currency: "USD" },
-                rate: { type: "official", value: 1 / 40 },
+                rate: { type: "official", personPerAccount: 1 / 40 },
                 verb: "gotPaidBack",
             })
         );

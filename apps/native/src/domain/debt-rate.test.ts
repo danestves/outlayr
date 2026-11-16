@@ -7,7 +7,7 @@ const BCV = 1 / 245;
 describe("the person's side of a debt across currencies", () => {
     it("fills it at that day's official rate and keeps that rate", () => {
         expect(debtTheirSide({ amount: 10_000, market: BCV, personCurrency: "USD", typed: 0 })).toStrictEqual({
-            rate: { type: "official", value: BCV },
+            rate: { type: "official", personPerAccount: BCV },
             theirAmount: 40.82,
         });
     });
@@ -16,13 +16,13 @@ describe("the person's side of a debt across currencies", () => {
         const side = debtTheirSide({ amount: 10_000, market: BCV, personCurrency: "USD", typed: 42 });
         expect(side.theirAmount).toBe(42);
         expect(side.rate?.type).toBe("custom");
-        expect(side.rate?.value).toBeCloseTo(42 / 10_000, 12);
+        expect(side.rate?.personPerAccount).toBeCloseTo(42 / 10_000, 12);
     });
 
     it("still reads as official when the typed amount is the one it filled in", () => {
         expect(debtTheirSide({ amount: 10_000, market: BCV, personCurrency: "USD", typed: 40.82 }).rate).toStrictEqual({
             type: "official",
-            value: BCV,
+            personPerAccount: BCV,
         });
     });
 

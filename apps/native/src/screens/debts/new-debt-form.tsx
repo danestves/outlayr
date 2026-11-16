@@ -58,7 +58,6 @@ export function resolvePerson(people: readonly Account[], personId: string | und
 interface DraftInput {
     amountText: string;
     category: Category | null;
-    /** The account the money moves through; null for a sale on credit. */
     funding: Account | null;
     market: number | null;
     name: string;
@@ -102,13 +101,12 @@ function readDraft(input: DraftInput) {
     };
 }
 
-// "BCV 245.00 Bs": quoted the way people say it, bolívares per dollar rather than the stored dollars per bolívar.
 function rateCaption(t: TranslateFn, language: Language, from: string, to: string, rate: DebtRate | null) {
     if (rate === null) {
         return null;
     }
     const inverse = pairQuotedInverse(from, to);
-    const figure = `${formatRateFigure(quotePairRate(inverse, rate.value), language)} ${pairUnitSymbols(from, to, inverse).quote}`;
+    const figure = `${formatRateFigure(quotePairRate(inverse, rate.personPerAccount), language)} ${pairUnitSymbols(from, to, inverse).quote}`;
     if (rate.type === "custom") {
         return t("debts.rate.typed", { rate: figure });
     }

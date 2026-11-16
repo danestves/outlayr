@@ -32,7 +32,6 @@ export class DebtsError extends Schema.TaggedError<DebtsError>()("DebtsError", {
 export interface PersonInput {
     currency: string;
     name: string;
-    /** Signed like the balance: negative when you owe them, positive when they owe you. */
     openingBalance?: number;
 }
 
@@ -45,7 +44,6 @@ export const createPerson = Effect.fn("Debts.createPerson")(function* createPers
     });
 });
 
-/** In that account's own currency. */
 export interface DebtLeg {
     accountId: string;
     amount: number;
@@ -57,16 +55,14 @@ export interface DebtMovementInput {
     date: Date;
     note?: string;
     person: DebtLeg;
-    /** Only read across currencies; without one the rate is the one the legs imply. */
     rate: DebtRate | null;
     verb: DebtVerb;
 }
 
-// Stored as the transfer editor does: an official rate as quoted, rather than the one the rounded legs imply.
 export function debtTransferInput(input: DebtMovementInput): TransferInput {
     const { from, to } = debtLegs(input.verb, { account: input.account, person: input.person });
     const crossCurrency = from.currency !== to.currency;
-    const perAccount = input.rate?.value ?? input.person.amount / input.account.amount;
+    const perAccount = input.rate?.personPerAccount ?? input.person.amount / input.account.amount;
     const rate = from === input.account ? perAccount : 1 / perAccount;
     return {
         date: input.date,
