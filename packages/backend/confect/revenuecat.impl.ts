@@ -10,6 +10,7 @@ import { ActionCtx, Auth, MutationCtx, MutationRunner, QueryCtx, QueryRunner } f
 import { optionalUserId } from "./lib/auth";
 import { revenueCatSecretKey } from "./lib/config";
 import { outboundHttp } from "./lib/http";
+import { forgetRevokedGrant, mirroredPro } from "./referrals";
 import { isPro, listsPro, revenuecat, storeSubscriber, syncLimiter } from "./revenuecat";
 import spec from "./revenuecat.spec";
 
@@ -22,7 +23,9 @@ const mirrorSubscriber = FunctionImpl.make(
         const subscriber: RevenueCatSubscriber = JSON.parse(args.subscriber);
         // `syncSubscriber` never removes, and a revoked entitlement is absent rather than expired, so the mirror is
         // cleared when it disagrees. The re-sync below runs in the same transaction.
-        if (!listsPro(subscriber) && (yield* isPro(ctx, args.appUserId))) {
+        const mirrored = listsPro(subscriber) ? null : yield* mirroredPro(ctx, args.appUserId);
+        if (mirrored !== null) {
+            yield* forgetRevokedGrant(mirrored);
             yield* Effect.promise(() => revenuecat.deleteCustomer(ctx, { appUserId: args.appUserId }));
         }
         yield* Effect.promise(() => revenuecat.syncSubscriber(ctx, { appUserId: args.appUserId, subscriber }));

@@ -109,14 +109,18 @@ interface Claimant {
     readonly hadPro: boolean;
     readonly now: number;
     readonly referrerId: string;
+    readonly referrerInvitedBy: string | null;
     readonly userId: string;
 }
 
 export function refusalFor(claimant: Claimant): Refusal | null {
-    return claimant.referrerId === claimant.userId ? "own" : ineligibility(claimant);
+    const own = claimant.referrerId === claimant.userId || claimant.referrerInvitedBy === claimant.userId;
+    return own ? "own" : ineligibility(claimant);
 }
 
-export function ineligibility(claimant: Omit<Claimant, "referrerId" | "userId">): Exclude<Refusal, "own"> | null {
+export function ineligibility(
+    claimant: Omit<Claimant, "referrerId" | "referrerInvitedBy" | "userId">
+): Exclude<Refusal, "own"> | null {
     if (claimant.alreadyRedeemed) {
         return "used";
     }
@@ -124,6 +128,16 @@ export function ineligibility(claimant: Omit<Claimant, "referrerId" | "userId">)
         return "notNew";
     }
     return claimant.hadPro ? "hadPro" : null;
+}
+
+export function grantReason(invitedBy: string | null, monthsEarned: number): string {
+    const parts = [
+        invitedBy === null ? null : `friend month for redeeming the invite of ${invitedBy}`,
+        monthsEarned === 0
+            ? null
+            : `${monthsEarned} month${monthsEarned === 1 ? "" : "s"} earned inviting friends this year`,
+    ].filter((part) => part !== null);
+    return `Referral: ${parts.join("; ")}`;
 }
 
 export function firstName(name: string | null | undefined): string | null {
@@ -170,6 +184,36 @@ export const creditMonths = Effect.fn("Referrals.creditMonths")(function* credit
         yield* scheduler.runAfter(delay, refs.internal.referrals.releaseBanked, { userId });
     }
     return reward;
+});
+
+export const forgetRevokedGrant = Effect.fn("Referrals.forgetRevokedGrant")(function* forgetRevokedGrant(entitlement: {
+    readonly appUserId: string;
+    readonly expiresAtMs?: number;
+    readonly isSandbox: boolean;
+    readonly store?: string;
+}) {
+    const now = yield* Clock.currentTimeMillis;
+    const cutShort =
+        !entitlement.isSandbox &&
+        entitlement.store === "PROMOTIONAL" &&
+        entitlement.expiresAtMs !== undefined &&
+        entitlement.expiresAtMs > now;
+    if (!cutShort) {
+        return;
+    }
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const userId = entitlement.appUserId;
+    const [reward, invite] = yield* Effect.all([
+        reader.table("referralRewards").get("by_userId", userId).pipe(Effect.catchTags(nullOnMissing)),
+        reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing)),
+    ]);
+    if (reward !== null) {
+        yield* writer.table("referralRewards").patch(reward._id, { bankedMonths: 0, promoEndsAt: null });
+    }
+    if (invite?.status === "counting") {
+        yield* writer.table("referrals").patch(invite._id, { status: "capped" });
+    }
 });
 
 export const scheduleGrant = Effect.fn("Referrals.scheduleGrant")(function* scheduleGrant(

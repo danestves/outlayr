@@ -4,7 +4,7 @@ Give a friend a month of Pro, get one back. The backend is `packages/backend/con
 
 ## Rules
 
-- A friend redeems one code ever, from an account under 7 days old that has never had Pro. "Never had Pro" asks RevenueCat and the mirror both: the mirror only knows what webhooks and syncs brought it.
+- A friend redeems one code ever, from an account under 7 days old that has never had Pro. A code from the friend you invited counts as your own: two new accounts could otherwise trade codes for a month each and later earn one off each other. "Never had Pro" asks RevenueCat and the mirror both: the mirror only knows what webhooks and syncs brought it.
 - The inviter's month lands on the friend's third UTC day with a new synced entry, each counted day at least 20 hours after the last. `sync.push` counts it, so it needs no client report. Days come from the server clock: an offset taken from the client could be faked to cover three local days in one moment.
 - An inviter earns at most 12 months in any 365 days. Lifetime owners earn nothing.
 
@@ -14,7 +14,8 @@ Give a friend a month of Pro, get one back. The backend is `packages/backend/con
 - **A grant does not defer a store charge.** A month earned while a paid plan runs is banked in `referralRewards.bankedMonths` and granted after the plan ends.
 - **`onEntitlementDeactivated` misses natural expiry.** convex-revenuecat 0.3.2 fires it only for an entitlement the mirror still counted active before the event. When an EXPIRATION lands, its `expiresAtMs` has already passed. Banked months wait on `releaseBanked` instead, scheduled an hour after the plan's end; a renewed plan banks them again from the new end.
 - **Deleting an account forgets its invites.** `purgeUserBatch` removes the code, the invites both ways and the banked months, and RevenueCat erases the customer. A new account from the same person counts as new. A friend's invite that already earned a month stays without their id or name, so it still counts toward the inviter's 12.
-- **The daily sweep resends any reserved month the mirror does not show as covered.** To revoke a referral month from the RevenueCat dashboard, also clear that user's `referralRewards.promoEndsAt`, or the sweep grants it again.
+- **A revoke has to clear the reservation.** The 1-minute safety net and the daily sweep resend any reserved month the mirror does not show as covered. `forgetRevokedGrant` runs from the `onEntitlementDeactivated` hook and from `mirrorSubscriber` when a store read stops listing Pro first (that path leaves the hook no transition to see): a promotional Pro that ends before its `expiresAtMs` was revoked from the dashboard, so it clears the user's `promoEndsAt` and banked months and stops their own invite from earning the inviter a month. A revoke from before the hook existed needs `referrals:revoked` run by hand with the grant's end as `expiresAtMs`.
+- **The dashboard calls every grant `rc_promo_pro_custom`.** RevenueCat names promotional products by entitlement and duration, and an absolute end is `custom`. Each grant also sets the customer attribute `promo_reason` (who invited them, months earned inviting this year) so the customer page says why.
 
 ## Testing locally
 
