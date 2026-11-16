@@ -4,7 +4,7 @@ import type { LogPeriod } from "@/data/log-totals";
 import { LOG_PERIOD_ORDER } from "@/data/log-totals";
 import type { TranslateFn } from "@/i18n/context";
 
-import { PERIOD_PHRASE_KEY } from "../labels";
+import { HEAD_PERIOD_KEY } from "../labels";
 
 const MANAGE_CURRENCIES_ACTION = "log.currency.manage";
 const CURRENCY_PREFIX = "currency:";
@@ -27,7 +27,7 @@ export function logPeriodActions(period: LogPeriod, t: TranslateFn): MenuAction[
             subactions: LOG_PERIOD_ORDER.map((option) => ({
                 id: `${PERIOD_PREFIX}${option}`,
                 state: checked(option === period),
-                title: t(PERIOD_PHRASE_KEY[option]),
+                title: t(HEAD_PERIOD_KEY[option]),
             })),
             title: t("log.toolbar.period"),
         },
