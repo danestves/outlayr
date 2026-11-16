@@ -1,4 +1,4 @@
-import { addDays, addMonths, firstOfMonth, startOfDay, startOfWeek } from "@outlayr/money/calendar";
+import { addDays, addMonths, firstOfMonth, startOfDay } from "@outlayr/money/calendar";
 
 import type { LogMeasure } from "./log-measure";
 
@@ -92,30 +92,4 @@ export function sparklineSeries(
         }
         return { amount: bucket, date: edge };
     });
-}
-
-export function sparklineRange(period: "day" | "week" | "month" | "year" | "all", now: Date, firstWeekday = 1): number {
-    const today = startOfDay(now);
-    const day = 86_400_000;
-    if (period === "month") {
-        return Math.round((today.getTime() - firstOfMonth(now).getTime()) / day) + 1;
-    }
-    if (period === "year") {
-        return now.getMonth() + 1;
-    }
-    return Math.round((today.getTime() - startOfWeek(now, firstWeekday).getTime()) / day) + 1;
-}
-
-export function sparklineIsPositive(measure: LogMeasure, points: readonly SparklinePoint[]): boolean {
-    switch (measure) {
-        case "net": {
-            return (points[0]?.amount ?? 0) < (points.at(-1)?.amount ?? 0);
-        }
-        case "in": {
-            return true;
-        }
-        default: {
-            return false;
-        }
-    }
 }

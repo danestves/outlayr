@@ -1,7 +1,7 @@
 import { Pressable, View } from "react-native";
 
 import { useDisplaySettings } from "@/contexts/display-settings-context";
-import { formatDayHeader } from "@/domain/dates";
+import { formatDayHeader, formatDayTitle } from "@/domain/dates";
 import type { DaySection } from "@/domain/day-sections";
 import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
@@ -16,6 +16,8 @@ interface DaySectionHeaderProps {
     first?: boolean;
     /** Replaces the day name on a section that spans more than one day. */
     label?: string;
+    /** The Log's sentence-case day name over a hairline, in place of the mono label. */
+    plain?: boolean;
     onConfirmNew?: () => void;
     newCount?: number;
     onShare?: () => void;
@@ -29,16 +31,24 @@ export function DaySectionHeader({
     newCount = 0,
     onConfirmNew,
     onShare,
+    plain = false,
 }: DaySectionHeaderProps) {
     const { showCents } = useDisplaySettings().state;
     // Consuming the language re-renders this on a change; `formatDayHeader`'s default is invisible to React.
     const { language } = useLanguage();
     const t = useTranslation();
     const largeText = useAccessibilityTextSize();
+    const dayName = label ?? (plain ? formatDayTitle : formatDayHeader)(section.day, undefined, language);
     const body = (
         <>
             <View className={cn("flex-row items-baseline justify-between gap-2", largeText && "flex-wrap")}>
-                <MonoLabel>{label ?? formatDayHeader(section.day, undefined, language)}</MonoLabel>
+                {plain ? (
+                    <Text className="text-muted text-footnote font-sans" numberOfLines={1}>
+                        {dayName}
+                    </Text>
+                ) : (
+                    <MonoLabel>{dayName}</MonoLabel>
+                )}
                 <DayTotal showCents={showCents} totals={section.totals} />
             </View>
             {newCount > 0 && onConfirmNew ? (
@@ -51,11 +61,16 @@ export function DaySectionHeader({
                     </Pressable>
                 </View>
             ) : null}
-            {/* A 1.3 stroke with round caps, not a 1px border. */}
-            <View className="bg-border" style={{ borderRadius: 0.65, height: 1.3 }} />
+            {plain ? (
+                <View className="bg-border h-px" />
+            ) : (
+                // A 1.3 stroke with round caps, not a 1px border.
+                <View className="bg-border" style={{ borderRadius: 0.65, height: 1.3 }} />
+            )}
         </>
     );
-    const className = first ? "gap-1.25 pt-2.5" : "gap-1.25 pt-7";
+    const topPadding = plain ? "pt-6" : "pt-7";
+    const className = cn(plain ? "gap-1.5" : "gap-1.25", first ? "pt-2.5" : topPadding);
 
     if (!onShare) {
         return <View className={className}>{body}</View>;

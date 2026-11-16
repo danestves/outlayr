@@ -77,7 +77,7 @@ const SETTINGS = defineMeta({
     insightsTimeFrame: { default: 1, schema: NumberText, scope: "synced" },
     logInsightsTimeFrame: { default: 2, schema: NumberText, scope: "synced" },
     logInsightsType: { default: 1, schema: NumberText, scope: "synced" },
-    logViewLineGraph: { default: false, schema: BoolText, scope: "synced" },
+    logViewLineGraph: { default: true, schema: BoolText, scope: "synced" },
     notificationHour: { default: 8, schema: NumberText, scope: "device" },
     notificationMinute: { default: 0, schema: NumberText, scope: "device" },
     notificationOption: { default: 1, schema: NumberText, scope: "device" },

@@ -15,7 +15,7 @@ import { useLanguage, useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 
 import { HERO_TYPE } from "./hero-type";
-import { ROW_TYPE } from "./row-type";
+import { COMPACT_ROW_TYPE, CompactRowsContext, ROW_TYPE } from "./row-type";
 import { FontScaleCapContext, Text } from "./text";
 import { cn, tv } from "./tw";
 
@@ -227,6 +227,7 @@ export function HeroNumber({
 const rowAmount = tv({
     base: `${ROW_TYPE.amount} text-foreground`,
     variants: {
+        compact: { true: COMPACT_ROW_TYPE.amount },
         income: { true: "text-income" },
         isFuture: { true: "text-future" },
         struck: { true: "line-through" },
@@ -257,6 +258,7 @@ export function RowAmount({
     const { language } = useLanguage();
     const hidden = use(AmountsHiddenContext);
     const largeText = useAccessibilityTextSize();
+    const compact = use(CompactRowsContext);
     const sign = transfer ? (transferSign ?? "") : signFor(income);
     return (
         <Text
@@ -267,7 +269,10 @@ export function RowAmount({
                     : rowAmountLabel({ amount, code, income: transfer ? null : income, showCents, transferSign }, t)
             }
             adjustsFontSizeToFit={largeText}
-            className={cn(rowAmount({ income: !transfer && income === true, isFuture, struck }), "tabular-nums")}
+            className={cn(
+                rowAmount({ compact, income: !transfer && income === true, isFuture, struck }),
+                "tabular-nums"
+            )}
             numberOfLines={1}
         >
             {sign}

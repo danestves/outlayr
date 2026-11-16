@@ -3,7 +3,6 @@ import { use } from "react";
 import { Pressable, View } from "react-native";
 
 import { AmountsHiddenContext } from "@/components/amount-text";
-import { MonoLabel } from "@/components/mono-label";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
@@ -48,22 +47,33 @@ function MonthLimit({
     const filled = over ? 1 : Math.min(1, Math.max(0, budget.spent / (budget.amount || 1)));
     const status = over
         ? t("log.limit.over", { amount: money(-budget.leftover) })
-        : `${t("log.limit.left", { amount: money(budget.leftover) })} · ${t("budgets.perDay", {
-              amount: money(leftPerDay(budget.leftover, budget.window, now), false),
-          })}`;
+        : t("log.limit.left", { amount: money(budget.leftover) });
+    const perDay = over
+        ? null
+        : t("budgets.perDay", { amount: money(leftPerDay(budget.leftover, budget.window, now), false) });
     const limit =
         figureCurrency === currency ? money(budget.amount, false) : `${money(budget.amount, false)} ${currency}`;
 
     return (
         <Pressable
-            accessibilityLabel={t("log.limit.a11y", { limit, status })}
+            accessibilityLabel={t("log.limit.a11y", { limit, status: perDay ? `${status} · ${perDay}` : status })}
             accessibilityRole="button"
-            className="gap-1.5 pt-3"
+            className="border-border gap-2 border-t py-3"
             onPress={onPress}
         >
-            <MonoLabel>{t("log.limit.label", { limit })}</MonoLabel>
+            <View className="flex-row flex-wrap items-baseline justify-between gap-x-2">
+                <Text className="text-muted text-footnote" numberOfLines={1}>
+                    {t("log.limit.label", { limit })}
+                </Text>
+                <Text className="text-muted text-footnote tabular-nums" numberOfLines={1}>
+                    <Text className={cn("font-sans-semibold", over ? "text-over-budget" : "text-foreground")}>
+                        {status}
+                    </Text>
+                    {perDay ? ` · ${perDay}` : null}
+                </Text>
+            </View>
             <View className="justify-center">
-                <View className={cn("h-1 overflow-hidden rounded-full", over ? "bg-rail-over" : "bg-rail-track")}>
+                <View className={cn("h-2 overflow-hidden rounded-full", over ? "bg-rail-over" : "bg-rail-track")}>
                     <View
                         className={cn("h-full rounded-full", over ? "bg-over-budget" : "bg-foreground")}
                         style={{ width: `${filled * 100}%` }}
@@ -71,21 +81,16 @@ function MonthLimit({
                 </View>
                 {over ? null : (
                     <View
-                        className="bg-muted absolute h-2.5 w-px"
+                        className="bg-foreground absolute h-3.5 w-0.5 rounded-full"
                         style={{ left: `${budgetPace(budget.window, now).elapsed * 100}%` }}
                     />
                 )}
             </View>
-            <View className="flex-row flex-wrap justify-between gap-x-2">
-                <Text className={cn("text-footnote tabular-nums", over ? "text-over-budget" : "text-muted")}>
-                    {status}
+            {ahead > 0 ? (
+                <Text className="text-footnote text-over-budget tabular-nums">
+                    {t("log.limit.overPace", { amount: money(ahead, false) })}
                 </Text>
-                {ahead > 0 ? (
-                    <Text className="text-footnote text-over-budget tabular-nums">
-                        {t("log.limit.overPace", { amount: money(ahead, false) })}
-                    </Text>
-                ) : null}
-            </View>
+            ) : null}
         </Pressable>
     );
 }

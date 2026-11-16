@@ -1,4 +1,4 @@
-import { firstOfMonth, startOfDay, startOfWeek, startOfYear } from "@outlayr/money/calendar";
+import { addDays, addMonths, firstOfMonth, startOfDay, startOfWeek, startOfYear } from "@outlayr/money/calendar";
 import { cellFigures } from "@outlayr/money/currency-totals";
 import { valueDatedRowsIn } from "@outlayr/money/valuation";
 import type { RateTable } from "@outlayr/money/valuation";
@@ -9,6 +9,7 @@ import { transactions } from "@/db/schema";
 import type { LogFigures } from "@/domain/log-measure";
 
 import { logCellQuery, toCurrencyCells } from "./cell-query";
+import type { CellRow } from "./cell-query";
 import { kept } from "./deletion-plan";
 import { NO_READ, useLiveQuery } from "./live-query";
 import { usePendingDeletes } from "./use-deferred-delete";
@@ -52,6 +53,45 @@ export function logPeriodStart(period: LogPeriod, now: Date, firstWeekday: numbe
             return null;
         }
     }
+}
+
+type ComparedPeriod = Exclude<LogPeriod, "all">;
+
+export interface PeriodWindow {
+    end: Date;
+    start: Date;
+}
+
+function previousStart(period: ComparedPeriod, start: Date): Date {
+    switch (period) {
+        case "day": {
+            return addDays(start, -1);
+        }
+        case "week": {
+            return addDays(start, -7);
+        }
+        case "month": {
+            return addMonths(start, -1);
+        }
+        case "year": {
+            return addMonths(start, -12);
+        }
+        default: {
+            return period satisfies never;
+        }
+    }
+}
+
+/** The previous period cut as far in as this one has run, so a Wednesday compares with last Wednesday. */
+export function previousPeriodWindow(period: LogPeriod, now: Date, firstWeekday: number): PeriodWindow | null {
+    const start = logPeriodStart(period, now, firstWeekday);
+    if (period === "all" || start === null) {
+        return null;
+    }
+    const before = previousStart(period, start);
+    // Capped at the boundary: 31 March runs further in than February has days.
+    const end = Math.min(before.getTime() + (now.getTime() - start.getTime()), start.getTime() - 1);
+    return { end: new Date(end), start: before };
 }
 
 // Net is a running balance from the first entry, so it takes no lower bound. The valuation is passed in because the
@@ -131,9 +171,31 @@ export function useLogInsights(
         [nowMs, period, firstWeekday, pending],
         nowMs
     );
+    return insightsFrom(rows, globalCurrency, rates);
+}
 
+/** The same span of the period before, for the head's trend. Null for all-time. */
+export function usePreviousLogInsights(
+    db: Database,
+    nowMs: number,
+    period: LogPeriod,
+    firstWeekday: number,
+    globalCurrency: string,
+    rates?: RateTable
+): LogInsights | null {
+    const window = previousPeriodWindow(period, new Date(nowMs), firstWeekday);
+    const pending = usePendingDeletes();
+    const rows = useLiveQuery(
+        transactions,
+        () => (window ? logCellQuery(db, window.start, window.end, pending) : NO_READ),
+        [nowMs, period, firstWeekday, pending],
+        nowMs
+    );
+    return window ? insightsFrom(rows, globalCurrency, rates) : null;
+}
+
+function insightsFrom(rows: readonly CellRow[], globalCurrency: string, rates: RateTable | undefined): LogInsights {
     const ordered = cellFigures(toCurrencyCells(rows), globalCurrency, rates);
-
     const dominant = ordered[0] ?? {
         count: 0,
         currencyCode: globalCurrency,
@@ -141,7 +203,6 @@ export function useLogInsights(
         income: 0,
     };
     const others = ordered.slice(1);
-
     return {
         dominant,
         others,

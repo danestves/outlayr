@@ -61,8 +61,23 @@ export function formatRelativeDay(date: Date, now: Date = new Date(), language: 
     return relativeDayName(date, now, language) ?? formatChargeDate(date, now, language);
 }
 
+export function formatMonthTitle(date: Date, language: Language = runtimeLanguage()): string {
+    return `${dateName(`dates.monthLong.${date.getMonth()}`, language)} ${date.getFullYear()}`;
+}
+
 export function formatMonthHeader(date: Date, language: Language = runtimeLanguage()): string {
-    return `${dateName(`dates.monthLong.${date.getMonth()}`, language)} ${date.getFullYear()}`.toUpperCase();
+    return formatMonthTitle(date, language).toUpperCase();
+}
+
+/** e.g. "Yesterday" or "Thu, 29 Oct": `formatDayHeader` in sentence case. */
+export function formatDayTitle(day: Date, now: Date = new Date(), language: Language = runtimeLanguage()): string {
+    const relative = relativeDayName(day, now, language);
+    if (relative) {
+        return relative;
+    }
+    const weekday = dateName(`dates.weekday.${day.getDay()}`, language);
+    const base = `${weekday}, ${dayOfMonth(day, language)} ${monthAbbrevTitle(day, language)}`;
+    return day.getFullYear() < now.getFullYear() ? `${base} '${String(day.getFullYear()).slice(-2)}` : base;
 }
 
 export function formatDateHeader(day: Date, now: Date = new Date(), language: Language = runtimeLanguage()): string {
