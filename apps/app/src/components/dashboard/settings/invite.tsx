@@ -8,6 +8,7 @@ import {
     REFERRAL_DAYS_TO_EARN,
     REFERRAL_YEARLY_CAP,
     referralLink,
+    referralsEarnOnPayment,
 } from "@outlayr/money/contract";
 import { earnedThisYear, monthsEarned, rewardsToAnnounce } from "@outlayr/money/referrals";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -114,6 +115,11 @@ function ClaimBody({
     const copy = useIntlayer("dashboard-invite");
     const toast = useToast();
     const [busy, setBusy] = useState(false);
+    const [paid] = useState(() => referralsEarnOnPayment(Date.now()));
+    let shared = paid ? copy.claim.sharedFriendPaid : copy.claim.sharedFriend({ days: REFERRAL_DAYS_TO_EARN });
+    if (name) {
+        shared = paid ? copy.claim.sharedPaid({ name }) : copy.claim.shared({ days: REFERRAL_DAYS_TO_EARN, name });
+    }
     const claim = async () => {
         setBusy(true);
         const status = await convexClient()
@@ -134,11 +140,7 @@ function ClaimBody({
                 <Dialog.Description>{copy.claim.startsNow}</Dialog.Description>
             </Dialog.Header>
             <Dialog.Body>
-                <p className="text-muted-foreground text-sm leading-5">
-                    {name
-                        ? copy.claim.shared({ days: REFERRAL_DAYS_TO_EARN, name })
-                        : copy.claim.sharedFriend({ days: REFERRAL_DAYS_TO_EARN })}
-                </p>
+                <p className="text-muted-foreground text-sm leading-5">{shared}</p>
             </Dialog.Body>
             <Dialog.Footer>
                 <Dialog.Close render={<Button variant="secondary" />}>{copy.claim.notNow}</Dialog.Close>
@@ -264,6 +266,16 @@ function FriendsCard({
             month: "short",
             year: new Date(at).getFullYear() === thisYear ? undefined : "numeric",
         });
+    const paid = referralsEarnOnPayment(now);
+    const progressOf = (friend: Friend) => {
+        if (friend.rewardedAt !== null) {
+            const date = rewardDate(friend.rewardedAt);
+            return paid
+                ? copy.bought({ date })
+                : copy.done({ date, days: Math.max(friend.daysLogged, REFERRAL_DAYS_TO_EARN) });
+        }
+        return paid ? copy.waiting : copy.logged({ days: friend.daysLogged, total: REFERRAL_DAYS_TO_EARN });
+    };
     const ordered = friends.toSorted((a, b) => (b.rewardedAt ?? 0) - (a.rewardedAt ?? 0));
     const count = friends.length;
     return (
@@ -290,7 +302,7 @@ function FriendsCard({
                     <div className="flex flex-col items-center px-5 pt-6 pb-8 text-center">
                         <b className="text-sm font-semibold">{copy.emptyTitle}</b>
                         <p className="text-muted-foreground mt-1 text-[13px] leading-5">
-                            {copy.emptyBody({ days: REFERRAL_DAYS_TO_EARN })}
+                            {paid ? copy.emptyBodyPaid : copy.emptyBody({ days: REFERRAL_DAYS_TO_EARN })}
                         </p>
                         <Button className="mt-4" onClick={onShare}>
                             <HugeiconsIcon icon={Share01Icon} size={16} />
@@ -318,14 +330,7 @@ function FriendsCard({
                                             <span className="max-w-[120px] truncate">{name}</span>
                                         </span>
                                     </Table.Cell>
-                                    <Table.Cell className="text-muted-foreground">
-                                        {friend.rewardedAt === null
-                                            ? copy.logged({ days: friend.daysLogged, total: REFERRAL_DAYS_TO_EARN })
-                                            : copy.done({
-                                                  date: rewardDate(friend.rewardedAt),
-                                                  days: Math.max(friend.daysLogged, REFERRAL_DAYS_TO_EARN),
-                                              })}
-                                    </Table.Cell>
+                                    <Table.Cell className="text-muted-foreground">{progressOf(friend)}</Table.Cell>
                                     <Table.Cell align="end">
                                         <Badge dot variant={friend.status === "rewarded" ? "success" : "outline"}>
                                             {copy.status[friend.status]}
@@ -369,17 +374,19 @@ function RewardLanded({ onShare, overview }: { onShare: () => void; overview: Re
     };
     const count = shown.friends.length;
     const [first] = shown.friends;
+    const name = first?.name ?? unnamed.value;
+    const paid = referralsEarnOnPayment(now);
+    let who = paid ? copy.landed.whoManyPaid({ count }) : copy.landed.whoMany({ count, days: REFERRAL_DAYS_TO_EARN });
+    if (count === 1) {
+        who = paid ? copy.landed.whoPaid({ name }) : copy.landed.who({ days: REFERRAL_DAYS_TO_EARN, name });
+    }
     const until = overview.promoEndsAt;
     const banked = overview.bankedMonths > 0 || until === null;
     return (
         <Dialog onOpenChange={(open) => open || dismiss()} open={shown.at > seenAt}>
             <Dialog.Content className="app-shell">
                 <Dialog.Header>
-                    <Dialog.Title>
-                        {count === 1 && first
-                            ? copy.landed.who({ days: REFERRAL_DAYS_TO_EARN, name: first.name ?? unnamed.value })
-                            : copy.landed.whoMany({ count, days: REFERRAL_DAYS_TO_EARN })}
-                    </Dialog.Title>
+                    <Dialog.Title>{who}</Dialog.Title>
                     <Dialog.Description>
                         {count === 1 ? copy.landed.earnedOne : copy.landed.earnedMany({ count })}
                     </Dialog.Description>
@@ -502,7 +509,9 @@ export function Invite() {
                         <SettingsCard
                             footer={
                                 <span className="text-muted-foreground text-[13px]">
-                                    {copy.footnote({ cap: REFERRAL_YEARLY_CAP, days: REFERRAL_DAYS_TO_EARN })}
+                                    {referralsEarnOnPayment(now)
+                                        ? copy.footnotePaid({ cap: REFERRAL_YEARLY_CAP })
+                                        : copy.footnote({ cap: REFERRAL_YEARLY_CAP, days: REFERRAL_DAYS_TO_EARN })}
                                 </span>
                             }
                             title={copy.headline}

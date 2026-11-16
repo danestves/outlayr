@@ -15,7 +15,7 @@ intro: "Esta política explica o que o Outlayr coleta, para onde vai, por quanto
 - Este site também usa o PostHog, com um cookie. Se você estiver no EEE ou no Reino Unido, ele pergunta antes. Altere sua resposta no rodapé, em **Cookies**.
 - Com o Outlayr Pro, você pode conectar o Notion para importar despesas dos seus bancos de dados do Notion. Guardamos a chave de acesso do Notion criptografada nos nossos servidores para que você possa importar de novo, até você desconectar o Notion ou apagar sua conta. O que lemos do Notion passa pelo nosso servidor até o seu dispositivo e não é guardado.
 - Você pode conectar um assistente de IA, como o Claude, à sua conta. Depois que você o aprova, ele pode ler o que seus dispositivos sincronizaram e, com o Outlayr Pro, adicionar lançamentos. O que ele lê é tratado conforme a política de privacidade desse assistente.
-- Se você convidar amigos, cada um vê seu primeiro nome no seu convite, e você vê o primeiro nome deles, em quantos dias eles registraram lançamentos, até três, e a data do terceiro. Nunca o que eles registraram.
+- Se você convidar amigos, cada um vê seu primeiro nome no seu convite, e você vê o primeiro nome deles, se compraram o Pro e quando. Nunca o que eles registraram nem quanto pagaram.
 - Sem anúncios e sem rastreamento entre apps de outras empresas. Não vendemos suas informações pessoais nem as compartilhamos para publicidade.
 - Você pode apagar sua conta e tudo o que foi sincronizado com ela pelo app a qualquer momento: **Ajustes › Conta › Apagar conta**.
 
@@ -52,7 +52,7 @@ Todo tipo de dado que o Outlayr trata, em um só lugar. As seções abaixo expli
 | Endereço web, endereço IP | Logos | Nossos servidores (Cloudflare) | Endereço web guardado com o logo; endereço IP não guardado |
 | Link de imagem, a imagem | Seletor de ícone | Nossos servidores (Cloudflare), compartilhado com todos | Guardado com a imagem até ser removido; endereço IP não guardado. Não vinculado a você |
 | Registros de compra, ID de usuário, nome, e-mail | Abertura do app, Pro | RevenueCat, Apple, Google ou Stripe, nossos servidores | Até a exclusão da conta |
-| Código de convite, quem convidou quem, primeiros nomes, dias com lançamentos até três e a data do terceiro, meses ganhos | Convites | Nossos servidores, RevenueCat | Até a exclusão da conta |
+| Código de convite, quem convidou quem, primeiros nomes, se o amigo comprou o Pro e quando, meses ganhos | Convites | Nossos servidores, RevenueCat | Até a exclusão da conta |
 | ID de instalação, versão do app, erros | Verificação de atualizações | Expo | Política da Expo |
 | Telas, recursos usados, erros, ID de instalação, modelo do dispositivo | Uso do app | PostHog | Até a exclusão da conta, ou política do PostHog se você nunca iniciar sessão |
 | Recurso, modelo, tokens, custo, velocidade e erros de cada solicitação de IA | Sugestões, leitura de notificações, voz, escaneamentos, importações | PostHog | Com Compartilhar análises ativado, até a exclusão da conta. Caso contrário, política do PostHog |
@@ -251,7 +251,7 @@ Nosso servidor consulta a RevenueCat sobre o seu ID de conta para confirmar o Pr
 
 Com a sessão iniciada, você recebe um código de convite. Quem abrir seu código ou link no app vê seu primeiro nome.
 
-Quando um amigo o resgata, registramos quem convidou quem, o primeiro nome dele, em quantos dias diferentes ele sincronizou um lançamento novo, até três, e quando chegou o terceiro. Sua página de convites lista o primeiro nome de cada amigo, essa contagem e essa data, nunca os lançamentos ou valores deles. Para verificar se a conta de um amigo é nova e nunca teve o Pro, nosso servidor consulta a RevenueCat sobre ela.
+Quando um amigo o resgata, registramos quem convidou quem e o primeiro nome dele. Para verificar se a conta de um amigo é nova e nunca teve o Pro, e depois se ele comprou o Pro, nosso servidor consulta a RevenueCat sobre ela. Um teste grátis ou um mês de convite não conta. Sua página de convites lista o primeiro nome de cada amigo, se ele comprou o Pro e a data em que isso rendeu um mês para você, nunca os lançamentos, os valores ou quanto ele pagou.
 
 Os meses de Pro ganhos com convites são concedidos pela RevenueCat. Seu código de convite, os convites que você enviou, o convite que você resgatou e os meses que esperam o fim do seu plano pago são apagados junto com sua conta, e seu nome sai das listas dos seus amigos. Se o convite que você resgatou já rendeu um mês ao seu amigo, ele continua na lista dele sem o seu nome, para que ainda conte para o limite anual dele.
 
@@ -340,7 +340,7 @@ A [tabela acima](#dados-em-resumo) lista por quanto tempo cada tipo de dado é g
 - As solicitações de sugestão de estabelecimentos não são guardadas depois de respondidas. As que ficam na fila em segundo plano esperam no nosso servidor até o seu dispositivo buscar a resposta.
 - O idioma do seu app e o registro de quais avisos de boas-vindas, do Pro e de mudanças você recebeu são apagados junto com sua conta.
 - Os contadores de uso que aplicam os limites de escaneamentos, lançamentos por voz, sugestões e leitura de notificações guardam apenas contagens, associadas ao seu ID de conta, e são apagados junto com sua conta.
-- Os registros de convites (seu código, quem convidou quem, primeiros nomes, dias com lançamentos e meses ganhos ou em espera) são apagados junto com a conta à qual pertencem. Um convite que rendeu um mês perde o nome do amigo quando a conta do amigo é apagada, e fica até a conta de quem convidou ser apagada.
+- Os registros de convites (seu código, quem convidou quem, primeiros nomes, se o amigo comprou o Pro e meses ganhos ou em espera) são apagados junto com a conta à qual pertencem. Um convite que rendeu um mês perde o nome do amigo quando a conta do amigo é apagada, e fica até a conta de quem convidou ser apagada.
 - Os itens da lista compartilhada de estabelecimentos não estão vinculados a ninguém. Eles são atualizados após 30 ou 90 dias.
 - Os eventos de análise vinculados à sua conta são apagados junto com ela. O PostHog os apaga em um lote posterior, então eles podem continuar lá por um tempo depois que o app informar que a exclusão terminou. Os eventos de uma instalação que nunca iniciou sessão levam apenas um ID de instalação aleatório e são guardados conforme a política de retenção do PostHog. Os registros de solicitações de IA enviados enquanto Compartilhar análises estava desativado levam um ID aleatório em vez do seu ID de conta, além do ID da conversa no lançamento por voz, e são guardados da mesma forma.
 - Os eventos do site levam um ID aleatório do navegador, ou um código que muda diariamente se você recusou os cookies, e são guardados conforme a política de retenção do PostHog.

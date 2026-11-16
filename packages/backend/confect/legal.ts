@@ -661,6 +661,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "In the icon picker you can paste a link to a website or an image. Our logo server fetches that logo or image and keeps a copy, and when you save the entry, the merchant name and that logo join the shared merchant list so other people who log that merchant see it. It isn't linked to you.",
                     label: "Logos from a link",
                 },
+                {
+                    detail: "You earn a month when a friend you invited buys Pro, instead of when they log on three days. You see whether they bought it, never what they paid.",
+                    label: "Invites",
+                },
             ],
             de: [
                 {
@@ -710,6 +714,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "In der Symbolauswahl kannst du einen Link zu einer Website oder einem Bild einfügen. Unser Logo-Server holt dieses Logo oder Bild und behält eine Kopie, und wenn du den Eintrag speicherst, kommen der Händlername und dieses Logo in die geteilte Händlerliste, damit andere Personen, die diesen Händler erfassen, es sehen. Es ist nicht mit dir verknüpft.",
                     label: "Logos aus einem Link",
+                },
+                {
+                    detail: "Du bekommst einen Monat, wenn ein eingeladener Freund Pro kauft, statt wenn er an drei Tagen erfasst. Du siehst, ob er es gekauft hat, nie, was er bezahlt hat.",
+                    label: "Einladungen",
                 },
             ],
             es: [
@@ -761,6 +769,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "En el selector de ícono puedes pegar un enlace a un sitio web o a una imagen. Nuestro servidor de logos busca ese logo o esa imagen y guarda una copia, y al guardar la entrada, el nombre del comercio y ese logo se suman a la lista compartida de comercios para que otras personas que registren ese comercio lo vean. No se vincula contigo.",
                     label: "Logos desde un enlace",
                 },
+                {
+                    detail: "Ganas un mes cuando un amigo que invitaste compra Pro, en lugar de cuando registra en tres días. Ves si lo compró, nunca cuánto pagó.",
+                    label: "Invitaciones",
+                },
             ],
             fr: [
                 {
@@ -810,6 +822,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Dans le sélecteur d'icône, vous pouvez coller un lien vers un site web ou une image. Notre serveur de logos récupère ce logo ou cette image et en garde une copie, et quand vous enregistrez l'opération, le nom du commerçant et ce logo rejoignent la liste partagée des commerçants pour que les autres personnes qui enregistrent ce commerçant le voient. Ce n'est pas lié à vous.",
                     label: "Des logos à partir d'un lien",
+                },
+                {
+                    detail: "Vous gagnez un mois quand un ami que vous avez invité achète Pro, au lieu de quand il saisit des opérations trois jours. Vous voyez s'il l'a acheté, jamais ce qu'il a payé.",
+                    label: "Invitations",
                 },
             ],
             pt: [
@@ -861,11 +877,15 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "No seletor de ícone você pode colar um link para um site ou uma imagem. Nosso servidor de logos busca esse logo ou essa imagem e guarda uma cópia, e quando você salva o lançamento, o nome do estabelecimento e esse logo entram na lista compartilhada de estabelecimentos para que outras pessoas que registram esse estabelecimento o vejam. Não é vinculado a você.",
                     label: "Logos a partir de um link",
                 },
+                {
+                    detail: "Você ganha um mês quando um amigo que você convidou compra o Pro, em vez de quando ele registra em três dias. Você vê se ele comprou, nunca quanto pagou.",
+                    label: "Convites",
+                },
             ],
         },
         document: "privacy",
         effectiveAtMs: Date.UTC(2027, 0, 1),
-        postedAtMs: Date.UTC(2026, 10, 15),
+        postedAtMs: Date.UTC(2026, 10, 16),
     },
     {
         changes: {
@@ -878,6 +898,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "If you paste a link to an image, you confirm you have the right to share it. We show it to everyone who logs that merchant and may remove it at any time.",
                     label: "Images you paste",
                 },
+                {
+                    detail: "You get a month when a friend you invited buys Pro, monthly, yearly or lifetime, instead of when they log on three days. A free trial or a month from an invite doesn't count.",
+                    label: "Months from invites",
+                },
             ],
             de: [
                 {
@@ -887,6 +911,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Wenn du einen Link zu einem Bild einfügst, bestätigst du, dass du das Recht hast, es zu teilen. Wir zeigen es allen, die diesen Händler erfassen, und können es jederzeit entfernen.",
                     label: "Eingefügte Bilder",
+                },
+                {
+                    detail: "Du bekommst einen Monat, wenn ein eingeladener Freund Pro kauft, monatlich, jährlich oder auf Lebenszeit, statt wenn er an drei Tagen erfasst. Eine Testphase oder ein Monat aus einer Einladung zählt nicht.",
+                    label: "Monate aus Einladungen",
                 },
             ],
             es: [
@@ -898,6 +926,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Si pegas un enlace a una imagen, confirmas que tienes derecho a compartirla. La mostramos a todas las personas que registren ese comercio y podemos eliminarla en cualquier momento.",
                     label: "Imágenes que pegas",
                 },
+                {
+                    detail: "Recibes un mes cuando un amigo que invitaste compra Pro, mensual, anual o de por vida, en lugar de cuando registra en tres días. Una prueba gratis o un mes por invitación no cuenta.",
+                    label: "Meses por invitaciones",
+                },
             ],
             fr: [
                 {
@@ -907,6 +939,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Si vous collez un lien vers une image, vous confirmez avoir le droit de la partager. Nous la montrons à toutes les personnes qui enregistrent ce commerçant et pouvons la supprimer à tout moment.",
                     label: "Les images que vous collez",
+                },
+                {
+                    detail: "Vous recevez un mois quand un ami que vous avez invité achète Pro, mensuel, annuel ou à vie, au lieu de quand il saisit des opérations trois jours. Un essai gratuit ou un mois obtenu par invitation ne compte pas.",
+                    label: "Mois obtenus par invitation",
                 },
             ],
             pt: [
@@ -918,11 +954,15 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Se você colar um link para uma imagem, confirma que tem direito de compartilhá-la. Nós a mostramos a todos que registram esse estabelecimento e podemos removê-la a qualquer momento.",
                     label: "Imagens que você cola",
                 },
+                {
+                    detail: "Você ganha um mês quando um amigo que você convidou compra o Pro, mensal, anual ou vitalício, em vez de quando ele registra em três dias. Um teste grátis ou um mês de convite não conta.",
+                    label: "Meses por convites",
+                },
             ],
         },
         document: "terms",
         effectiveAtMs: Date.UTC(2027, 0, 1),
-        postedAtMs: Date.UTC(2026, 10, 15),
+        postedAtMs: Date.UTC(2026, 10, 16),
     },
 ];
 

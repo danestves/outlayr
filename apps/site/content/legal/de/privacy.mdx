@@ -15,7 +15,7 @@ intro: "Diese Erklärung beschreibt, was Outlayr erhebt, wohin es gelangt, wie l
 - Auch diese Website nutzt PostHog, mit einem Cookie. Wenn du dich im EWR oder im Vereinigten Königreich befindest, fragt sie vorher. Ändere deine Antwort in der Fußzeile unter **Cookies**.
 - Mit Outlayr Pro kannst du Notion verbinden, um Ausgaben aus deinen Notion-Datenbanken zu importieren. Wir speichern den Zugriffsschlüssel von Notion verschlüsselt auf unseren Servern, damit du erneut importieren kannst, bis du Notion trennst oder dein Konto löschst. Was wir aus Notion lesen, läuft über unseren Server auf dein Gerät und wird nicht gespeichert.
 - Du kannst einen KI-Assistenten wie Claude mit deinem Konto verbinden. Sobald du ihn freigibst, kann er lesen, was deine Geräte synchronisiert haben, und mit Outlayr Pro Einträge hinzufügen. Was er liest, unterliegt der Datenschutzerklärung dieses Assistenten.
-- Wenn du Freunde einlädst, sieht jeder deinen Vornamen in deiner Einladung, und du siehst ihren Vornamen, an wie vielen Tagen sie bis zu drei Tage erfasst haben, und das Datum des dritten. Nie, was sie erfasst haben.
+- Wenn du Freunde einlädst, sieht jeder deinen Vornamen in deiner Einladung, und du siehst ihren Vornamen, ob sie Pro gekauft haben und wann. Nie, was sie erfasst oder bezahlt haben.
 - Keine Werbung und kein Tracking über die Apps anderer Unternehmen hinweg. Wir verkaufen deine personenbezogenen Daten nicht und geben sie nicht für Werbung weiter.
 - Du kannst dein Konto und alles, was damit synchronisiert wurde, jederzeit in der App löschen: **Einstellungen › Konto › Konto löschen**.
 
@@ -52,7 +52,7 @@ Jede Art von Daten, die Outlayr verarbeitet, an einer Stelle. Die folgenden Absc
 | Webadresse, IP-Adresse | Logos | Unsere Server (Cloudflare) | Webadresse wird mit dem Logo gespeichert; IP-Adresse nicht gespeichert |
 | Bildlink, das Bild | Symbolauswahl | Unsere Server (Cloudflare), mit allen geteilt | Mit dem Bild gespeichert, bis es entfernt wird; IP-Adresse nicht gespeichert. Nicht mit dir verknüpft |
 | Kaufbelege, Nutzer-ID, Name, E-Mail | App-Start, Pro | RevenueCat, Apple, Google oder Stripe, unsere Server | Bis zur Kontolöschung |
-| Einladungscode, wer wen eingeladen hat, Vornamen, bis zu drei erfasste Tage und das Datum des dritten, verdiente Monate | Einladungen | Unsere Server, RevenueCat | Bis zur Kontolöschung |
+| Einladungscode, wer wen eingeladen hat, Vornamen, ob der Freund Pro gekauft hat und wann, verdiente Monate | Einladungen | Unsere Server, RevenueCat | Bis zur Kontolöschung |
 | Installations-ID, App-Version, Fehler | Update-Prüfungen | Expo | Richtlinie von Expo |
 | Bildschirme, genutzte Funktionen, Fehler, Installations-ID, Gerätemodell | App-Nutzung | PostHog | Bis zur Kontolöschung, oder Richtlinie von PostHog, wenn du dich nie anmeldest |
 | Funktion, Modell, Tokens, Kosten, Geschwindigkeit und Fehler jeder KI-Anfrage | Vorschläge, Lesen von Benachrichtigungen, Sprache, Scans, Importe | PostHog | Bei eingeschaltetem „Analysedaten teilen“ bis zur Kontolöschung. Sonst Richtlinie von PostHog |
@@ -251,7 +251,7 @@ Unser Server fragt RevenueCat zu deiner Konto-ID, um Pro zu bestätigen, und Rev
 
 Wenn du angemeldet bist, erhältst du einen Einladungscode. Jeder, der deinen Code oder Link in der App öffnet, sieht deinen Vornamen.
 
-Wenn ein Freund ihn einlöst, erfassen wir, wer wen eingeladen hat, seinen Vornamen, an wie vielen verschiedenen Tagen er einen neuen Eintrag synchronisiert hat, bis zu drei, und wann der dritte ankam. Deine Einladungsseite listet den Vornamen jedes Freundes, diese Zahl und dieses Datum auf, nie seine Einträge oder Beträge. Um zu prüfen, dass das Konto eines Freundes neu ist und nie Pro hatte, fragt unser Server RevenueCat dazu.
+Wenn ein Freund ihn einlöst, erfassen wir, wer wen eingeladen hat, und seinen Vornamen. Um zu prüfen, dass das Konto eines Freundes neu ist und nie Pro hatte, und später, ob er Pro gekauft hat, fragt unser Server RevenueCat dazu. Eine Testphase oder ein Monat aus einer Einladung zählt nicht. Deine Einladungsseite listet den Vornamen jedes Freundes auf, ob er Pro gekauft hat, und das Datum, an dem dir das einen Monat brachte, nie seine Einträge, Beträge oder was er bezahlt hat.
 
 Monate von Pro aus Einladungen werden über RevenueCat gutgeschrieben. Dein Einladungscode, die Einladungen, die du gesendet hast, die Einladung, die du eingelöst hast, und alle Monate, die darauf warten, dass dein bezahlter Tarif endet, werden mit deinem Konto gelöscht, und dein Name verschwindet aus den Listen deiner Freunde. Wenn die Einladung, die du eingelöst hast, deinem Freund bereits einen Monat eingebracht hat, bleibt sie ohne deinen Namen auf seiner Liste und zählt so weiter für sein Jahreslimit.
 
@@ -340,7 +340,7 @@ Die [Tabelle oben](#daten-auf-einen-blick) nennt, wie lange jede Art von Daten a
 - Anfragen für Händlervorschläge werden nach der Antwort nicht aufbewahrt. Im Hintergrund eingereihte warten auf unserem Server, bis dein Gerät die Antwort abholt.
 - Deine App-Sprache und der Nachweis, welche Willkommens-, Pro- und Änderungsmitteilungen du erhalten hast, werden mit deinem Konto gelöscht.
 - Nutzungszähler, die Limits für Scans, Spracheingaben, Vorschläge und das Lesen von Benachrichtigungen durchsetzen, enthalten nur Zählwerte, sind deiner Konto-ID zugeordnet und werden mit deinem Konto gelöscht.
-- Einladungsdatensätze (dein Code, wer wen eingeladen hat, Vornamen, erfasste Tage und verdiente oder wartende Monate) werden mit dem Konto gelöscht, zu dem sie gehören. Eine Einladung, die einen Monat eingebracht hat, verliert den Namen des Freundes, wenn das Konto des Freundes gelöscht wird, und bleibt, bis das Konto des Einladenden gelöscht wird.
+- Einladungsdatensätze (dein Code, wer wen eingeladen hat, Vornamen, ob der Freund Pro gekauft hat, und verdiente oder wartende Monate) werden mit dem Konto gelöscht, zu dem sie gehören. Eine Einladung, die einen Monat eingebracht hat, verliert den Namen des Freundes, wenn das Konto des Freundes gelöscht wird, und bleibt, bis das Konto des Einladenden gelöscht wird.
 - Einträge der gemeinsamen Händlerliste sind mit niemandem verknüpft. Sie werden nach 30 oder 90 Tagen aktualisiert.
 - Mit deinem Konto verknüpfte Analyseereignisse werden mit ihm gelöscht. PostHog löscht sie in einem späteren Durchlauf, sodass sie noch eine Weile bestehen können, nachdem die App die abgeschlossene Löschung meldet. Ereignisse einer Installation, die sich nie angemeldet hat, enthalten nur eine zufällige Installations-ID und werden nach der Aufbewahrungsrichtlinie von PostHog aufbewahrt. Protokolle von KI-Anfragen, die gesendet wurden, als „Analysedaten teilen“ ausgeschaltet war, enthalten statt deiner Konto-ID eine zufällige ID, für die Spracheingabe zusätzlich die Gesprächs-ID, und werden auf dieselbe Weise aufbewahrt.
 - Website-Ereignisse enthalten eine zufällige Browser-ID, oder einen Code, der sich täglich ändert, wenn du Cookies abgelehnt hast, und werden nach der Aufbewahrungsrichtlinie von PostHog aufbewahrt.
