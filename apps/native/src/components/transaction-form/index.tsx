@@ -970,8 +970,6 @@ export function TransactionForm(props: TransactionFormProps) {
                     bottomInset={resting ? 0 : 40}
                     curtainHues={curtainHues}
                     failure={saveFailure}
-                    fieldFocused={note.focused}
-                    keyboardOffset={keyboardOffset}
                     followsStage={largeText}
                     sheet={mode === "edit"}
                 >
