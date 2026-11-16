@@ -54,10 +54,16 @@ export function SplitAmount({
                 value={whole}
             />
             {parts.fraction ? (
-                <Text className={`${typeClass} text-muted tabular-nums`} style={style}>
-                    {parts.locale.decimal}
-                    {parts.fraction}
-                </Text>
+                <FlowFigure
+                    className={`${typeClass} text-muted tabular-nums`}
+                    flush
+                    fontFamily={fontFamily}
+                    format={{ minimumIntegerDigits: parts.minorUnits, useGrouping: false }}
+                    locale={parts.locale}
+                    prefix={parts.locale.decimal}
+                    size={size}
+                    value={Number(parts.fraction)}
+                />
             ) : null}
         </View>
     );

@@ -39,10 +39,22 @@ interface FlowFigureProps {
     size?: number;
     /** Drawn as plain text after `prefix`, with no digit roll. */
     text?: string;
+    /** iOS gives the zero-width-space strut an advance, a visible gap when one figure follows another. */
+    flush?: boolean;
     value: number;
 }
 
-export function FlowFigure({ className, fontFamily, format, locale, prefix, size, text, value }: FlowFigureProps) {
+export function FlowFigure({
+    className,
+    flush,
+    fontFamily,
+    format,
+    locale,
+    prefix,
+    size,
+    text,
+    value,
+}: FlowFigureProps) {
     const resolved = useResolveClassNames(className ?? "");
     const { color, fontSize, fontVariant, fontWeight } = resolved;
     const fontScaleCap = use(FontScaleCapContext);
@@ -66,7 +78,11 @@ export function FlowFigure({ className, fontFamily, format, locale, prefix, size
             <Text
                 accessible={false}
                 className={className}
-                style={[size == null ? undefined : { fontSize: size }, fontFamily == null ? undefined : { fontFamily }]}
+                style={[
+                    size == null ? undefined : { fontSize: size },
+                    fontFamily == null ? undefined : { fontFamily },
+                    flush ? { width: 0 } : undefined,
+                ]}
             >
                 {BASELINE_STRUT}
             </Text>
