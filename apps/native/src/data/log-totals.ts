@@ -88,10 +88,9 @@ export function previousPeriodWindow(period: LogPeriod, now: Date, firstWeekday:
     if (period === "all" || start === null) {
         return null;
     }
-    const before = previousStart(period, start);
-    // Capped at the boundary: 31 March runs further in than February has days.
-    const end = Math.min(before.getTime() + (now.getTime() - start.getTime()), start.getTime() - 1);
-    return { end: new Date(end), start: before };
+    // Shifted by calendar units so a DST change keeps the clock time, and capped because 31 March overflows February.
+    const end = Math.min(previousStart(period, now).getTime(), start.getTime() - 1);
+    return { end: new Date(end), start: previousStart(period, start) };
 }
 
 // Net is a running balance from the first entry, so it takes no lower bound. The valuation is passed in because the

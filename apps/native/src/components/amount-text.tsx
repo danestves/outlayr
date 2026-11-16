@@ -14,8 +14,9 @@ import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 
+import { COMPACT_ROW_TYPE, CompactRowsContext } from "./compact-rows";
 import { HERO_TYPE } from "./hero-type";
-import { COMPACT_ROW_TYPE, CompactRowsContext, ROW_TYPE } from "./row-type";
+import { ROW_TYPE } from "./row-type";
 import { FontScaleCapContext, Text } from "./text";
 import { cn, tv } from "./tw";
 
