@@ -27,6 +27,7 @@ import {
     firstName,
     GRANT_RETRY_MINUTES,
     grantOwed,
+    grantReason,
     grantWorthRetrying,
     ineligibility,
     mirroredPro,
@@ -38,7 +39,7 @@ import {
     scheduleGrant,
 } from "./referrals";
 import spec from "./referrals.spec";
-import { grantPromotional, listsPro, revenuecat, storeSubscriber } from "./revenuecat";
+import { grantPromotional, labelPromotional, listsPro, revenuecat, storeSubscriber } from "./revenuecat";
 import type { RevenueCatError } from "./revenuecat";
 
 const FRIENDS_LIMIT = 100;
@@ -155,8 +156,9 @@ const claim = FunctionImpl.make(
         }
         const ctx = yield* MutationCtx;
         const reader = yield* DatabaseReader;
-        const [redeemed, user, entitlements] = yield* Effect.all([
+        const [redeemed, ownerReferral, user, entitlements] = yield* Effect.all([
             reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing)),
+            reader.table("referrals").get("by_referredId", owner.userId).pipe(Effect.catchTags(nullOnMissing)),
             Effect.promise(() => authComponent.getAnyUserById(ctx, userId)),
             Effect.promise(() => revenuecat.getAllEntitlements(ctx, { appUserId: userId })),
         ]);
@@ -167,6 +169,7 @@ const claim = FunctionImpl.make(
             hadPro: hadPro || entitlements.some((entitlement) => entitlement.entitlementId === PRO_ENTITLEMENT_ID),
             now,
             referrerId: owner.userId,
+            referrerInvitedBy: ownerReferral?.referrerId ?? null,
             userId,
         });
         if (refusal !== null) {
@@ -188,21 +191,60 @@ const claim = FunctionImpl.make(
     }, Effect.orDie)
 );
 
-const promoEnd = FunctionImpl.make(
+const pendingGrant = FunctionImpl.make(
     databaseSchema,
     spec,
-    "promoEnd",
-    Effect.fn("Referrals.promoEnd")(function* promoEnd({ userId }) {
+    "pendingGrant",
+    Effect.fn("Referrals.pendingGrant")(function* pendingGrant({ userId }) {
         const reader = yield* DatabaseReader;
         const row = yield* reader
             .table("referralRewards")
             .get("by_userId", userId)
             .pipe(Effect.catchTags(nullOnMissing));
         const endsAt = row?.promoEndsAt ?? null;
-        if (endsAt === null) {
+        if (endsAt === null || !grantOwed(yield* mirroredPro(yield* QueryCtx, userId), endsAt)) {
             return null;
         }
-        return grantOwed(yield* mirroredPro(yield* QueryCtx, userId), endsAt) ? endsAt : null;
+        const [invite, earned] = yield* Effect.all([
+            reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing)),
+            reader
+                .table("referrals")
+                .index("by_referrerId_and_rewardedAt", (q) => q.eq("referrerId", userId).gt("rewardedAt", 0))
+                .collect(),
+        ]);
+        return { endsAt, reason: grantReason(invite?.referrerId ?? null, earned.length) };
+    }, Effect.orDie)
+);
+
+const revoked = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "revoked",
+    Effect.fn("Referrals.revoked")(function* revoked(args) {
+        const now = yield* Clock.currentTimeMillis;
+        const cutShort =
+            !args.isSandbox &&
+            args.entitlementId === PRO_ENTITLEMENT_ID &&
+            args.store === "PROMOTIONAL" &&
+            args.expiresAtMs !== undefined &&
+            args.expiresAtMs > now;
+        if (!cutShort) {
+            return null;
+        }
+        const reader = yield* DatabaseReader;
+        const writer = yield* DatabaseWriter;
+        const userId = args.appUserId;
+        const [reward, invite] = yield* Effect.all([
+            reader.table("referralRewards").get("by_userId", userId).pipe(Effect.catchTags(nullOnMissing)),
+            reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing)),
+        ]);
+        if (reward !== null) {
+            yield* writer.table("referralRewards").patch(reward._id, { bankedMonths: 0, promoEndsAt: null });
+        }
+        if (invite?.status === "counting") {
+            yield* writer.table("referrals").patch(invite._id, { status: "capped" });
+        }
+        return null;
     }, Effect.orDie)
 );
 
@@ -230,11 +272,12 @@ const retryGrant = Effect.fn("Referrals.retryGrant")(function* retryGrant(
 
 const sendGrant = Effect.fn("Referrals.sendGrant")(function* sendGrant(userId: string) {
     const { runQuery } = yield* QueryRunner;
-    const endsAt = yield* runQuery(refs.internal.referrals.promoEnd, { userId });
-    if (endsAt === null || endsAt <= (yield* Clock.currentTimeMillis)) {
+    const pending = yield* runQuery(refs.internal.referrals.pendingGrant, { userId });
+    if (pending === null || pending.endsAt <= (yield* Clock.currentTimeMillis)) {
         return;
     }
-    const subscriber = yield* grantPromotional(userId, endsAt).pipe(Effect.provide(outboundHttp));
+    const subscriber = yield* grantPromotional(userId, pending.endsAt).pipe(Effect.provide(outboundHttp));
+    yield* labelPromotional(userId, pending.reason).pipe(Effect.provide(outboundHttp));
     const { runMutation } = yield* MutationRunner;
     yield* runMutation(refs.internal.revenuecat.mirrorSubscriber, {
         appUserId: userId,
@@ -384,7 +427,8 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(ensureCode),
     Layer.provide(overview),
     Layer.provide(claim),
-    Layer.provide(promoEnd),
+    Layer.provide(pendingGrant),
+    Layer.provide(revoked),
     Layer.provide(grant),
     Layer.provide(redeem),
     Layer.provide(releaseBanked),

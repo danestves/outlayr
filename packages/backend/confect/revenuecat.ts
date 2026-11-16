@@ -19,7 +19,7 @@ const REVENUECAT_TIMEOUT = Duration.seconds(10);
 const SUBSCRIBERS_URL = "https://api.revenuecat.com/v1/subscribers";
 
 export const revenuecat: RevenueCat = new RevenueCat(components.revenuecat, {
-    hooks: { onEntitlementActivated: internal.mail.claimPro },
+    hooks: { onEntitlementActivated: internal.mail.claimPro, onEntitlementDeactivated: internal.referrals.revoked },
 });
 
 export class ProRequired extends Schema.TaggedError<ProRequired>()("ProRequired", {
@@ -126,6 +126,28 @@ export const grantPromotional = Effect.fn("RevenueCat.grantPromotional")(functio
         Effect.catchTags({ HttpClientError: grantTransport, SchemaError: grantTransport, TimeoutError: grantTransport })
     );
     return subscriber;
+});
+
+const labelUnsent = (cause: unknown) => Console.warn("[revenuecat] promotional label not set", cause);
+
+export const labelPromotional = Effect.fn("RevenueCat.labelPromotional")(function* labelPromotional(
+    appUserId: string,
+    reason: string
+) {
+    const secretKey = yield* revenueCatSecretKey;
+    if (Option.isNone(secretKey)) {
+        return;
+    }
+    yield* HttpClient.execute(
+        HttpClientRequest.post(`${subscriberUrl(appUserId)}/attributes`).pipe(
+            HttpClientRequest.bearerToken(secretKey.value),
+            HttpClientRequest.bodyJsonUnsafe({ attributes: { promo_reason: { value: reason } } })
+        )
+    ).pipe(
+        Effect.flatMap((response) => (isOk(response.status) ? Effect.void : labelUnsent(response.status))),
+        Effect.timeout(REVENUECAT_TIMEOUT),
+        Effect.catchTags({ HttpClientError: labelUnsent, TimeoutError: labelUnsent })
+    );
 });
 
 /** Whether an authoritative payload still lists Pro at all, expired or not. */

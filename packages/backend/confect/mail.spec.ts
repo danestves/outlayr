@@ -28,6 +28,16 @@ export const Entitlement = {
     store: Schema.optional(Store),
 };
 
+export const EntitlementHook = {
+    ...Entitlement,
+    appUserId: Schema.String,
+    entitlementId: Schema.String,
+    isSandbox: Schema.Boolean,
+    ownershipType: Schema.optional(Schema.Literals(["PURCHASED", "FAMILY_SHARED", "UNKNOWN"])),
+    purchasedAtMs: Schema.optional(Schema.Number),
+    sourceEventType: Schema.String,
+};
+
 const Recipient = Schema.Struct({ email: Schema.String, language: Language, userId: Schema.String });
 
 export default GroupSpec.make()
@@ -55,15 +65,7 @@ export default GroupSpec.make()
     .addFunction(
         FunctionSpec.internalMutation({
             name: "claimPro",
-            args: () => ({
-                ...Entitlement,
-                appUserId: Schema.String,
-                entitlementId: Schema.String,
-                isSandbox: Schema.Boolean,
-                ownershipType: Schema.optional(Schema.Literals(["PURCHASED", "FAMILY_SHARED", "UNKNOWN"])),
-                purchasedAtMs: Schema.optional(Schema.Number),
-                sourceEventType: Schema.String,
-            }),
+            args: () => EntitlementHook,
             returns: () => Schema.Null,
         })
     )

@@ -109,14 +109,18 @@ interface Claimant {
     readonly hadPro: boolean;
     readonly now: number;
     readonly referrerId: string;
+    readonly referrerInvitedBy: string | null;
     readonly userId: string;
 }
 
 export function refusalFor(claimant: Claimant): Refusal | null {
-    return claimant.referrerId === claimant.userId ? "own" : ineligibility(claimant);
+    const own = claimant.referrerId === claimant.userId || claimant.referrerInvitedBy === claimant.userId;
+    return own ? "own" : ineligibility(claimant);
 }
 
-export function ineligibility(claimant: Omit<Claimant, "referrerId" | "userId">): Exclude<Refusal, "own"> | null {
+export function ineligibility(
+    claimant: Omit<Claimant, "referrerId" | "referrerInvitedBy" | "userId">
+): Exclude<Refusal, "own"> | null {
     if (claimant.alreadyRedeemed) {
         return "used";
     }
@@ -124,6 +128,14 @@ export function ineligibility(claimant: Omit<Claimant, "referrerId" | "userId">)
         return "notNew";
     }
     return claimant.hadPro ? "hadPro" : null;
+}
+
+export function grantReason(invitedBy: string | null, monthsEarned: number): string {
+    const parts = [
+        invitedBy === null ? null : `friend month for redeeming the invite of ${invitedBy}`,
+        monthsEarned === 0 ? null : `${monthsEarned} month${monthsEarned === 1 ? "" : "s"} earned inviting friends`,
+    ].filter((part) => part !== null);
+    return `Referral: ${parts.join("; ")}`;
 }
 
 export function firstName(name: string | null | undefined): string | null {

@@ -296,7 +296,7 @@ describe("redeeming an invite", () => {
         });
     });
 
-    it("refuses the inviter's own code, a second invite, an older account and anyone who has had Pro", async () => {
+    it("refuses the inviter's own code, their friend's code, a second invite, an older account and anyone who has had Pro", async () => {
         const t = harness();
         const { code, inviter } = await inviterWithCode(t);
         const other = await inviterWithCode(t);
@@ -305,7 +305,9 @@ describe("redeeming an invite", () => {
         const lapsed = await seedAuthUser(t);
         rc.plans.set(lapsed.userId, [{ end: START - DAY_MS, product: "monthly", store: "app_store" }]);
 
+        const friendCode = await authenticatedAs(t, friend).mutation(api.referrals.ensureCode, {});
         await expect(redeem(t, inviter, code)).resolves.toBe("own");
+        await expect(redeem(t, inviter, friendCode)).resolves.toBe("own");
         await expect(redeem(t, friend, other.code)).resolves.toBe("used");
         await expect(redeem(t, older, code)).resolves.toBe("notNew");
         await expect(redeem(t, lapsed, code)).resolves.toBe("hadPro");
@@ -513,6 +515,31 @@ describe("granting through RevenueCat", () => {
         await vi.advanceTimersByTimeAsync(30_000);
 
         await expect(claiming).resolves.toBe("claimed");
+    });
+
+    it("keeps a month revoked in RevenueCat revoked, and the inviter earns nothing from that friend", async () => {
+        const t = harness();
+        const { code, inviter } = await inviterWithCode(t);
+        const friend = await joinedFriend(t, code);
+        const [granted] = rc.grants;
+        rc.plans.set(friend.userId, [{ end: Date.now(), product: "rc_promo_pro_custom", store: "promotional" }]);
+
+        await t.mutation(internal.referrals.revoked, {
+            appUserId: friend.userId,
+            entitlementId: "pro",
+            expiresAtMs: granted?.endsAt,
+            isSandbox: false,
+            sourceEventType: "CANCELLATION",
+            store: "PROMOTIONAL",
+        });
+        await onLastDay(t, friend);
+        vi.setSystemTime(START + DAY_MS);
+        await logEntry(t, friend);
+        await t.mutation(internal.referrals.sweepGrants, { cursor: null });
+        await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+        expect(rc.grants).toStrictEqual([granted]);
+        await expect(rewardsOf(t, inviter)).resolves.toBeNull();
     });
 
     it("leaves RevenueCat alone when no banked month is left, as after the account is deleted", async () => {

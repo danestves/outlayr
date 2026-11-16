@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import * as Schema from "effect/Schema";
 
+import { EntitlementHook } from "./mail.spec";
 import { ReferralStatus } from "./tables/referrals";
 
 const Refusal = ["invalid", "own", "used", "notNew", "hadPro"] as const;
@@ -59,9 +60,16 @@ export default GroupSpec.make()
     )
     .addFunction(
         FunctionSpec.internalQuery({
-            name: "promoEnd",
+            name: "pendingGrant",
             args: () => ({ userId: Schema.String }),
-            returns: () => Schema.NullOr(Schema.Number),
+            returns: () => Schema.NullOr(Schema.Struct({ endsAt: Schema.Number, reason: Schema.String })),
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            name: "revoked",
+            args: () => EntitlementHook,
+            returns: () => Schema.Null,
         })
     )
     .addFunction(
