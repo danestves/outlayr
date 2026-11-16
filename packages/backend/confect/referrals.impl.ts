@@ -25,6 +25,7 @@ import { outboundHttp } from "./lib/http";
 import {
     creditMonths,
     firstName,
+    forgetRevokedGrant,
     GRANT_RETRY_MINUTES,
     grantOwed,
     grantReason,
@@ -221,28 +222,8 @@ const revoked = FunctionImpl.make(
     spec,
     "revoked",
     Effect.fn("Referrals.revoked")(function* revoked(args) {
-        const now = yield* Clock.currentTimeMillis;
-        const cutShort =
-            !args.isSandbox &&
-            args.entitlementId === PRO_ENTITLEMENT_ID &&
-            args.store === "PROMOTIONAL" &&
-            args.expiresAtMs !== undefined &&
-            args.expiresAtMs > now;
-        if (!cutShort) {
-            return null;
-        }
-        const reader = yield* DatabaseReader;
-        const writer = yield* DatabaseWriter;
-        const userId = args.appUserId;
-        const [reward, invite] = yield* Effect.all([
-            reader.table("referralRewards").get("by_userId", userId).pipe(Effect.catchTags(nullOnMissing)),
-            reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing)),
-        ]);
-        if (reward !== null) {
-            yield* writer.table("referralRewards").patch(reward._id, { bankedMonths: 0, promoEndsAt: null });
-        }
-        if (invite?.status === "counting") {
-            yield* writer.table("referrals").patch(invite._id, { status: "capped" });
+        if (args.entitlementId === PRO_ENTITLEMENT_ID) {
+            yield* forgetRevokedGrant(args);
         }
         return null;
     }, Effect.orDie)

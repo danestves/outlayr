@@ -542,6 +542,24 @@ describe("granting through RevenueCat", () => {
         await expect(rewardsOf(t, inviter)).resolves.toBeNull();
     });
 
+    it("keeps a revoked month revoked when a store sync sees the revoke before the webhook", async () => {
+        const t = harness();
+        const { code } = await inviterWithCode(t);
+        const friend = await joinedFriend(t, code);
+        const [granted] = rc.grants;
+        rc.plans.set(friend.userId, []);
+
+        await t.mutation(internal.revenuecat.mirrorSubscriber, {
+            appUserId: friend.userId,
+            subscriber: JSON.stringify({ entitlements: {}, subscriptions: {} }),
+        });
+        await t.mutation(internal.referrals.sweepGrants, { cursor: null });
+        await t.finishAllScheduledFunctions(vi.runAllTimers);
+
+        expect(rc.grants).toStrictEqual([granted]);
+        await expect(referralOf(t, friend)).resolves.toMatchObject({ status: "capped" });
+    });
+
     it("leaves RevenueCat alone when no banked month is left, as after the account is deleted", async () => {
         const t = harness();
         const gone = await seedAuthUser(t);

@@ -184,6 +184,36 @@ export const creditMonths = Effect.fn("Referrals.creditMonths")(function* credit
     return reward;
 });
 
+export const forgetRevokedGrant = Effect.fn("Referrals.forgetRevokedGrant")(function* forgetRevokedGrant(entitlement: {
+    readonly appUserId: string;
+    readonly expiresAtMs?: number;
+    readonly isSandbox: boolean;
+    readonly store?: string;
+}) {
+    const now = yield* Clock.currentTimeMillis;
+    const cutShort =
+        !entitlement.isSandbox &&
+        entitlement.store === "PROMOTIONAL" &&
+        entitlement.expiresAtMs !== undefined &&
+        entitlement.expiresAtMs > now;
+    if (!cutShort) {
+        return;
+    }
+    const reader = yield* DatabaseReader;
+    const writer = yield* DatabaseWriter;
+    const userId = entitlement.appUserId;
+    const [reward, invite] = yield* Effect.all([
+        reader.table("referralRewards").get("by_userId", userId).pipe(Effect.catchTags(nullOnMissing)),
+        reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing)),
+    ]);
+    if (reward !== null) {
+        yield* writer.table("referralRewards").patch(reward._id, { bankedMonths: 0, promoEndsAt: null });
+    }
+    if (invite?.status === "counting") {
+        yield* writer.table("referrals").patch(invite._id, { status: "capped" });
+    }
+});
+
 export const scheduleGrant = Effect.fn("Referrals.scheduleGrant")(function* scheduleGrant(
     userId: string,
     delay: Duration.Duration = Duration.zero
