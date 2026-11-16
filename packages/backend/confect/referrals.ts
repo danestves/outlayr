@@ -133,7 +133,9 @@ export function ineligibility(
 export function grantReason(invitedBy: string | null, monthsEarned: number): string {
     const parts = [
         invitedBy === null ? null : `friend month for redeeming the invite of ${invitedBy}`,
-        monthsEarned === 0 ? null : `${monthsEarned} month${monthsEarned === 1 ? "" : "s"} earned inviting friends`,
+        monthsEarned === 0
+            ? null
+            : `${monthsEarned} month${monthsEarned === 1 ? "" : "s"} earned inviting friends this year`,
     ].filter((part) => part !== null);
     return `Referral: ${parts.join("; ")}`;
 }

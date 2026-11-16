@@ -1,5 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { normalizeReferralCode, PRO_ENTITLEMENT_ID } from "@outlayr/money/contract";
+import { normalizeReferralCode, PRO_ENTITLEMENT_ID, REFERRAL_YEARLY_CAP } from "@outlayr/money/contract";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
@@ -38,6 +38,7 @@ import {
     refusalFor,
     rewardFor,
     scheduleGrant,
+    yearStart,
 } from "./referrals";
 import spec from "./referrals.spec";
 import { grantPromotional, labelPromotional, listsPro, revenuecat, storeSubscriber } from "./revenuecat";
@@ -206,12 +207,15 @@ const pendingGrant = FunctionImpl.make(
         if (endsAt === null || !grantOwed(yield* mirroredPro(yield* QueryCtx, userId), endsAt)) {
             return null;
         }
+        const now = yield* Clock.currentTimeMillis;
         const [invite, earned] = yield* Effect.all([
             reader.table("referrals").get("by_referredId", userId).pipe(Effect.catchTags(nullOnMissing)),
             reader
                 .table("referrals")
-                .index("by_referrerId_and_rewardedAt", (q) => q.eq("referrerId", userId).gt("rewardedAt", 0))
-                .collect(),
+                .index("by_referrerId_and_rewardedAt", (q) =>
+                    q.eq("referrerId", userId).gt("rewardedAt", yearStart(now))
+                )
+                .take(REFERRAL_YEARLY_CAP),
         ]);
         return { endsAt, reason: grantReason(invite?.referrerId ?? null, earned.length) };
     }, Effect.orDie)
