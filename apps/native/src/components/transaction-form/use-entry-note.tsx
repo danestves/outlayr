@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { TextInput } from "react-native";
 import Animated from "react-native-reanimated";
 
+import { cn } from "@/components/tw";
 import { useTranslation } from "@/i18n/context";
 import { useColors } from "@/theme/use-colors";
 
@@ -46,7 +47,9 @@ export function useEntryNote({ contentWidth, hidden, onEdit, seeded }: EntryNote
                 <Animated.View entering={revealEntering()} style={{ width: contentWidth }}>
                     <TextInput
                         accessibilityLabel={t("transaction.field.notes")}
-                        className="text-body text-foreground min-h-24"
+                        // Capped while typing so the text view scrolls to its own caret: the form cannot follow a
+                        // native field into a growing note, and the typed line would sink under the keyboard.
+                        className={cn("text-body text-foreground min-h-24", focused ? "max-h-36" : null)}
                         defaultValue={seeded}
                         multiline
                         onBlur={() => setFocused(false)}
