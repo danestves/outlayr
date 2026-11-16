@@ -15,7 +15,6 @@ import { REQUEST_TIMEOUT_MS } from "./receiptScan";
 import type { ScanStatus } from "./receiptScan.spec";
 
 export const MAX_INSTALLMENTS = 48;
-const MAX_ORDERS = 20;
 const MAX_PROVIDER_LENGTH = 40;
 const MAX_NAME_LENGTH = 80;
 const MIN_CADENCE_DAYS = 7;
@@ -382,7 +381,7 @@ export function normalizePlans(output: ModelOutput, context: PlanContext): typeo
     }
     const plans: (typeof InstallmentPlanDraft.Type)[] = [];
     const skipped: string[] = [];
-    for (const order of mergeOrders(output.orders).slice(0, MAX_ORDERS)) {
+    for (const order of mergeOrders(output.orders)) {
         const plan = normalizePlan(order, context);
         const name = trimTo(order.name, MAX_NAME_LENGTH);
         if (plan !== null) {
