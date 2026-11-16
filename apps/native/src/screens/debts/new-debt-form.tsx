@@ -15,14 +15,22 @@ import { getLastUsedAccount } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
 import type { Category } from "@/data/categories-core";
+import { useTransferRates } from "@/data/transfer-rates";
 import { useNow } from "@/data/use-now";
 import { comesFromPerson, debtChoices, debtStanding } from "@/domain/debt-choices";
+import { debtTheirSide, newPersonCurrency } from "@/domain/debt-rate";
+import type { DebtRate } from "@/domain/debt-rate";
 import type { DebtVerb } from "@/domain/debts";
 import { addLocalMonths } from "@/domain/local-day";
 import { minorUnitsFor, roundToMinorUnits } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
+import { formatRateFigure, pairQuotedInverse, pairUnitSymbols, quotePairRate } from "@/domain/transaction-entry-rate";
+import { quotedByBcv } from "@/domain/transaction-form-labels";
+import { marketRateFor } from "@/domain/transfer-rate-options";
 import { useCreateAccount, useOpenPaywall, usePayoffPlanGate, usePeopleCapped } from "@/hooks/use-pro-gate";
-import { useTranslation } from "@/i18n/context";
+import { useLanguage, useTranslation } from "@/i18n/context";
+import type { TranslateFn } from "@/i18n/context";
+import type { Language } from "@/i18n/languages";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
@@ -32,6 +40,7 @@ import { rearmInstallmentReminders } from "@/state/surfaces-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
 const MAX_SUGGESTIONS = 4;
+const OFFICIAL = ["official"] as const;
 
 const sameName = (a: string, b: string) => a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
 
@@ -47,32 +56,63 @@ export function resolvePerson(people: readonly Account[], personId: string | und
 }
 
 interface DraftInput {
-    account: Account | null;
     amountText: string;
     category: Category | null;
+    /** The account the money moves through; null for a sale on credit. */
+    funding: Account | null;
+    market: number | null;
     name: string;
-    newCurrency: string;
     person: Account | null;
+    personCurrency: string;
     soldOnCredit: boolean;
     theirText: string;
 }
 
 function readDraft(input: DraftInput) {
-    const { account, category, person, soldOnCredit } = input;
-    const before = !soldOnCredit && account === null && person === null;
-    const currency = (soldOnCredit ? null : account?.currency) ?? person?.currency ?? input.newCurrency;
+    const { category, funding, person, personCurrency, soldOnCredit } = input;
+    const before = funding === null && person === null && !soldOnCredit;
+    const currency = funding?.currency ?? personCurrency;
     const amount = roundToMinorUnits(numpadToNumber(input.amountText), currency);
-    const crossCurrency = !soldOnCredit && person !== null && account !== null && person.currency !== account.currency;
-    const theirAmount = person === null ? 0 : roundToMinorUnits(numpadToNumber(input.theirText), person.currency);
+    const crossCurrency = funding !== null && funding.currency !== personCurrency;
+    const side = crossCurrency
+        ? debtTheirSide({
+              amount,
+              market: input.market,
+              personCurrency,
+              typed: roundToMinorUnits(numpadToNumber(input.theirText), personCurrency),
+          })
+        : null;
     const newName = person === null ? input.name.trim() : "";
     const complete =
         amount > 0 &&
         (person !== null || newName !== "") &&
         (!soldOnCredit || category !== null) &&
-        (!crossCurrency || theirAmount > 0);
-    const theirCurrency = crossCurrency ? person.currency : null;
-    const pickCurrency = person === null && (soldOnCredit || account === null);
-    return { amount, before, complete, currency, newName, pickCurrency, theirAmount, theirCurrency };
+        (side === null || side.theirAmount > 0);
+    return {
+        amount,
+        before,
+        complete,
+        currency,
+        newName,
+        personCurrency,
+        pickCurrency: person === null,
+        rate: side?.rate ?? null,
+        theirAmount: side?.theirAmount ?? 0,
+        theirCurrency: crossCurrency ? personCurrency : null,
+    };
+}
+
+// "BCV 245.00 Bs": quoted the way people say it, bolívares per dollar rather than the stored dollars per bolívar.
+function rateCaption(t: TranslateFn, language: Language, from: string, to: string, rate: DebtRate | null) {
+    if (rate === null) {
+        return null;
+    }
+    const inverse = pairQuotedInverse(from, to);
+    const figure = `${formatRateFigure(quotePairRate(inverse, rate.value), language)} ${pairUnitSymbols(from, to, inverse).quote}`;
+    if (rate.type === "custom") {
+        return t("debts.rate.typed", { rate: figure });
+    }
+    return t(quotedByBcv(from, to) ? "debts.rate.bcv" : "debts.rate.official", { rate: figure });
 }
 
 function isDirty(edits: { amountText: string; name: string; note: string; payBackBy: Date | null }) {
@@ -95,6 +135,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
     const db = useDatabase();
     const openPaywall = useOpenPaywall();
     const t = useTranslation();
+    const { language } = useLanguage();
     const haptics = useHaptics();
     const people = usePeople(db);
     const banks = useBankAccounts(db);
@@ -111,9 +152,13 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
     const [category, setCategory] = useState<Category | null>(null);
     const [accountId, setAccountId] = useState<string | null>(() => getLastUsedAccount(db)?.id ?? banks[0]?.id ?? null);
     const account = banks.find((row) => row.id === accountId) ?? null;
-    const [newCurrency, setNewCurrency] = useState(globalCurrency);
+    const [pickedCurrency, setPickedCurrency] = useState<string | null>(null);
     const [amountText, setAmountTextState] = useState("");
     const [theirText, setTheirText] = useState("");
+    const setNewCurrency = (code: string) => {
+        setPickedCurrency(code);
+        setTheirText("");
+    };
     const [date, setDate] = useState(() => new Date());
     const [note, setNoteState] = useState("");
     const [payBackBy, setPayBackByState] = useState<Date | null>(null);
@@ -155,7 +200,23 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
     const incoming = !soldOnCredit && comesFromPerson(verb);
     const choice = choices.find((option) => comesFromPerson(option.verb) === incoming) ?? choices[0];
 
-    const draft = readDraft({ account, amountText, category, name, newCurrency, person, soldOnCredit, theirText });
+    const funding = soldOnCredit ? null : account;
+    const personCurrency =
+        person?.currency ?? pickedCurrency ?? newPersonCurrency(funding?.currency ?? null, globalCurrency);
+    const fundingCurrency = funding?.currency ?? personCurrency;
+    const { official } = useTransferRates(db, [fundingCurrency, personCurrency], OFFICIAL);
+    const market = official === undefined ? null : marketRateFor(fundingCurrency, personCurrency, date, official);
+    const draft = readDraft({
+        amountText,
+        category,
+        funding,
+        market,
+        name,
+        person,
+        personCurrency,
+        soldOnCredit,
+        theirText,
+    });
 
     const saveDebt = useAtomAction(
         saveDebtCommand,
@@ -191,11 +252,12 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
             account,
             amount: draft.amount,
             category: soldOnCredit ? category : null,
-            currency: draft.currency,
             date,
             newName: draft.newName,
             note: note.trim(),
             person,
+            personCurrency: draft.personCurrency,
+            rate: draft.rate,
             theirAmount: draft.theirAmount,
             verb: choice.verb,
         };
@@ -237,6 +299,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
         payBackBy,
         person,
         personLabel: t(incoming ? "debts.field.personFrom" : "debts.field.personTo"),
+        rateCaption: rateCaption(t, language, fundingCurrency, personCurrency, draft.rate),
         setAccountId,
         setAmountText,
         setCategory,
@@ -259,7 +322,7 @@ export function NewDebtSheets({ form }: { form: ReturnType<typeof useNewDebtForm
     const db = useDatabase();
     const t = useTranslation();
     const createAccount = useCreateAccount();
-    const { accountSheet, amountSheet, categorySheet, currencySheet, person, theirSheet } = form;
+    const { accountSheet, amountSheet, categorySheet, currencySheet, theirSheet } = form;
 
     return (
         <>
@@ -271,19 +334,17 @@ export function NewDebtSheets({ form }: { form: ReturnType<typeof useNewDebtForm
                 ref={amountSheet}
                 value={form.amountText}
             />
-            {person === null ? null : (
-                <AmountEntrySheet
-                    code={person.currency}
-                    minorUnits={minorUnitsFor(person.currency)}
-                    onChange={form.setTheirText}
-                    onDone={() => theirSheet.current?.dismiss()}
-                    ref={theirSheet}
-                    value={form.theirText}
-                />
-            )}
+            <AmountEntrySheet
+                code={form.personCurrency}
+                minorUnits={minorUnitsFor(form.personCurrency)}
+                onChange={form.setTheirText}
+                onDone={() => theirSheet.current?.dismiss()}
+                ref={theirSheet}
+                value={form.theirText}
+            />
             <AccountPickerSheet
                 db={db}
-                noneLabel={person === null ? undefined : t("debts.field.outside")}
+                noneLabel={form.person === null ? undefined : t("debts.field.outside")}
                 onCreate={() => {
                     accountSheet.current?.dismiss();
                     createAccount();
@@ -308,7 +369,7 @@ export function NewDebtSheets({ form }: { form: ReturnType<typeof useNewDebtForm
                     form.setNewCurrency(code);
                 }}
                 ref={currencySheet}
-                selected={form.currency}
+                selected={form.personCurrency}
             />
         </>
     );

@@ -38,6 +38,38 @@ function selectValue(value: string) {
     );
 }
 
+interface TheirSideFieldProps {
+    amount: string;
+    caption: string | null;
+    ground: string;
+    label: string;
+    onPress: () => void;
+}
+
+function TheirSideField({ amount, caption, ground, label, onPress }: TheirSideFieldProps) {
+    return (
+        <OutlinedSelectField
+            accessibilityValue={caption === null ? amount : `${amount}, ${caption}`}
+            dropdown={false}
+            ground={ground}
+            label={label}
+            onPress={onPress}
+            value={
+                <View className="flex-row items-center gap-3">
+                    <Text className="text-body text-m3-on-surface flex-1" numberOfLines={1}>
+                        {amount}
+                    </Text>
+                    {caption === null ? null : (
+                        <Text className="text-caption text-m3-on-surface-variant tabular-nums" numberOfLines={1}>
+                            {caption}
+                        </Text>
+                    )}
+                </View>
+            }
+        />
+    );
+}
+
 function SaveAction({ disabled, label, onPress }: { disabled: boolean; label: string; onPress: () => void }) {
     return (
         <Stack.Toolbar placement="right">
@@ -138,25 +170,24 @@ export function NewDebt(props: NewDebtProps) {
                             value={selectValue(form.accountValue)}
                         />
                     )}
-                    {theirCurrency === null ? null : (
-                        <OutlinedSelectField
-                            accessibilityValue={formatAmount(form.theirAmount, theirCurrency, true, language)}
-                            dropdown={false}
-                            ground={m3.surface}
-                            label={t("debts.field.theirSide", { currency: theirCurrency })}
-                            onPress={() => present(form.theirSheet)}
-                            value={selectValue(formatAmount(form.theirAmount, theirCurrency, true, language))}
-                        />
-                    )}
                     {form.pickCurrency ? (
                         <OutlinedSelectField
-                            accessibilityValue={currency}
+                            accessibilityValue={form.personCurrency}
                             ground={m3.surface}
                             label={t("debts.field.currency")}
                             onPress={() => present(form.currencySheet)}
-                            value={selectValue(currency)}
+                            value={selectValue(form.personCurrency)}
                         />
                     ) : null}
+                    {theirCurrency === null ? null : (
+                        <TheirSideField
+                            amount={formatAmount(form.theirAmount, theirCurrency, true, language)}
+                            caption={form.rateCaption}
+                            ground={m3.surface}
+                            label={t("debts.field.theirSide", { currency: theirCurrency })}
+                            onPress={() => present(form.theirSheet)}
+                        />
+                    )}
                     {form.before ? null : (
                         <OutlinedDateField
                             ground={m3.surface}

@@ -1,4 +1,3 @@
-import type { EntryRateType } from "@outlayr/money/rates";
 import type { TransferInput } from "@outlayr/money/transfer-row";
 import { and, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -7,6 +6,7 @@ import * as Schema from "effect/Schema";
 import type { Database } from "@/db/client";
 import { outsideMoves } from "@/db/schema";
 import { comesFromPerson } from "@/domain/debt-choices";
+import type { DebtRate } from "@/domain/debt-rate";
 import { debtLegs } from "@/domain/debts";
 import type { DebtVerb } from "@/domain/debts";
 import { newId } from "@/domain/ids";
@@ -57,18 +57,21 @@ export interface DebtMovementInput {
     date: Date;
     note?: string;
     person: DebtLeg;
-    rateType: EntryRateType | null;
+    /** Only read across currencies; without one the rate is the one the legs imply. */
+    rate: DebtRate | null;
     verb: DebtVerb;
 }
 
-// Each leg is already in its account's currency and the stored rate is the one they imply, so it reads back as typed.
+// Stored as the transfer editor does: an official rate as quoted, rather than the one the rounded legs imply.
 export function debtTransferInput(input: DebtMovementInput): TransferInput {
     const { from, to } = debtLegs(input.verb, { account: input.account, person: input.person });
     const crossCurrency = from.currency !== to.currency;
+    const perAccount = input.rate?.value ?? input.person.amount / input.account.amount;
+    const rate = from === input.account ? perAccount : 1 / perAccount;
     return {
         date: input.date,
-        exchangeRate: crossCurrency ? to.amount / from.amount : 1,
-        exchangeRateType: crossCurrency ? input.rateType : null,
+        exchangeRate: crossCurrency ? rate : 1,
+        exchangeRateType: crossCurrency ? (input.rate?.type ?? "custom") : null,
         fromAccountId: from.accountId,
         fromAmount: from.amount,
         fromCurrency: from.currency,
