@@ -1,9 +1,14 @@
-import { BottomSheetFlatList, BottomSheetModal, BottomSheetTextInput } from "@expo/ui/community/bottom-sheet";
+import {
+    BottomSheetFlatList,
+    BottomSheetModal,
+    BottomSheetTextInput,
+    useBottomSheet,
+} from "@expo/ui/community/bottom-sheet";
 import * as Cause from "effect/Cause";
 import type * as Effect from "effect/Effect";
 import { useRef, useState } from "react";
 import type { Ref } from "react";
-import { Pressable, View } from "react-native";
+import { Platform, Pressable, View } from "react-native";
 
 import type { TagRow } from "@/data/tags-core";
 import { findTagByName, isUsableTagName, normalizeTagName } from "@/domain/tags";
@@ -51,6 +56,25 @@ function CreateTagRow({ name, onPress }: { name: string; onPress: () => void }) 
             <AppSymbol name="plus.circle.fill" size={18} tintColor={colors.tint} type="monochrome" />
             <Text className="font-sans-medium text-body text-foreground">{t("transaction.tags.create", { name })}</Text>
         </Pressable>
+    );
+}
+
+// The Material sheet stays put when the keyboard opens, so at its half height the field sits behind it.
+function TagSearchField({ onChangeText, value }: { onChangeText: (next: string) => void; value: string }) {
+    const colors = useColors();
+    const t = useTranslation();
+    const sheet = useBottomSheet();
+    return (
+        <BottomSheetTextInput
+            autoCapitalize="none"
+            autoCorrect={false}
+            onChangeText={onChangeText}
+            onFocus={Platform.OS === "android" ? () => sheet.expand() : undefined}
+            placeholder={t("transaction.tags.searchPlaceholder")}
+            placeholderTextColor={colors.muted}
+            style={[SEARCH_FIELD, { color: colors.foreground }]}
+            value={value}
+        />
     );
 }
 
@@ -129,15 +153,7 @@ export function TagPickerSheet({
                                 type="monochrome"
                                 weight="semibold"
                             />
-                            <BottomSheetTextInput
-                                autoCapitalize="none"
-                                autoCorrect={false}
-                                onChangeText={setQuery}
-                                placeholder={t("transaction.tags.searchPlaceholder")}
-                                placeholderTextColor={colors.muted}
-                                style={[SEARCH_FIELD, { color: colors.foreground }]}
-                                value={query}
-                            />
+                            <TagSearchField onChangeText={setQuery} value={query} />
                         </View>
                     </View>
 
