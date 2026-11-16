@@ -1,3 +1,4 @@
+import { FREE_CAPTURES, PRO_CAPTURES } from "@outlayr/money/capture-allowance";
 import { t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
@@ -316,7 +317,7 @@ const home = {
         },
         limits: [
             {
-                free: "20",
+                free: String(FREE_CAPTURES),
                 label: t({
                     en: "Captures every 30 days",
                     de: "Erfassungen alle 30 Tage",
@@ -324,7 +325,7 @@ const home = {
                     pt: "Capturas a cada 30 dias",
                     fr: "Captures tous les 30 jours",
                 }),
-                pro: "500",
+                pro: String(PRO_CAPTURES),
             },
             {
                 free: "3",
