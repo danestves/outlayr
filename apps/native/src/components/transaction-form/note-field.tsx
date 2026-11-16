@@ -17,7 +17,7 @@ export interface NoteFieldProps {
 }
 
 // A SwiftUI field, not a React Native one: the form's SwiftUI ScrollView keeps only its own focused fields clear of
-// the keyboard, following the caret as the note grows.
+// the keyboard. It does not re-scroll as the field grows, so the field holds four lines and scrolls its own caret.
 export function NoteField({ defaultValue, label, onChange, onFocusChange, placeholder }: NoteFieldProps) {
     const colors = useColors();
     const text = useNativeState(defaultValue);
@@ -28,7 +28,7 @@ export function NoteField({ defaultValue, label, onChange, onFocusChange, placeh
             modifiers={[
                 BODY,
                 foregroundStyle(colors.foreground),
-                lineLimit({ max: 8, min: 4 }),
+                lineLimit({ max: 4, min: 4 }),
                 accessibilityLabel(label),
             ]}
             onFocusChange={onFocusChange}
