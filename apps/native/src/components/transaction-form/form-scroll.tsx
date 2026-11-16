@@ -2,7 +2,6 @@ import { Host, RNHostView, ScrollView, useNativeState, VStack } from "@expo/ui/s
 import {
     animation,
     blur,
-    defaultScrollAnchorForRole,
     id as scrollId,
     onAppear,
     padding,
@@ -82,8 +81,6 @@ export function FormScroll({
                             // The note's return key writes a newline, so only a drag puts the keyboard away.
                             scrollDismissesKeyboard("immediately"),
                             ...(followsStage ? [scrollPosition(stageScroll, { anchor: "top" })] : []),
-                            // The focused note is the last item, so holding the bottom keeps the typed line in view.
-                            ...(fieldFocused ? [defaultScrollAnchorForRole("bottom", "sizeChanges")] : []),
                         ]}
                     >
                         <VStack
