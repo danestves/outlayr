@@ -39,9 +39,9 @@ it.each([
 });
 
 it.each([
-    { expected: 8_911_054, from: "usd", minor: 10_000, rate: 891.1054 },
+    { expected: 8_911_054, from: "foreign", minor: 10_000, rate: 891.1054 },
     { expected: 10_000, from: "local", minor: 8_911_054, rate: 891.1054 },
-    { expected: 159_750, from: "usd", minor: 100, rate: 1597.5 },
+    { expected: 159_750, from: "foreign", minor: 100, rate: 1597.5 },
     { expected: 0, from: "local", minor: 100, rate: 1570 },
     { expected: 1, from: "local", minor: 785, rate: 1570 },
 ] as const)("converts $minor from $from at $rate to $expected", ({ expected, from, minor, rate }) => {

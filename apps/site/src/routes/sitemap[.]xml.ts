@@ -1,4 +1,4 @@
-import { LANGUAGES, pageUrl, publishedLocales } from "@outlayr/shared/i18n";
+import { LANGUAGES, fallbackLocale, pageUrl, publishedLocales } from "@outlayr/shared/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { defaultLocale, getIntlayer } from "intlayer";
 
@@ -41,7 +41,7 @@ function sitemap(): string {
         return published.map((locale) => {
             const alternates = [
                 ...published.map((alternate) => [LANGUAGES[alternate].hreflang, pageUrl(path, alternate)]),
-                ["x-default", pageUrl(path, defaultLocale)],
+                ["x-default", pageUrl(path, fallbackLocale(path))],
             ].map(([hreflang, href]) => `<xhtml:link rel="alternate" hreflang="${hreflang}" href="${href}"/>`);
             return [
                 "<url>",

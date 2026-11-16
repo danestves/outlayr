@@ -84,6 +84,18 @@ export function isPublished(path: string, locale: Locale): boolean {
     return TRANSLATED[locale]?.has(path.replace(TRAILING_SLASH, "")) ?? true;
 }
 
+// Their searchers write in Spanish, so hreflang x-default sends unmatched languages to the Spanish page.
+const SPANISH_FIRST: ReadonlySet<string> = new Set([
+    "/guides/how-to-pay-cashea",
+    "/tools/dolar-bcv-hoy",
+    "/tools/dolar-hoy-argentina",
+    "/tools/dolar-hoy-bolivia",
+]);
+
+export function fallbackLocale(path: string): Locale {
+    return SPANISH_FIRST.has(path.replace(TRAILING_SLASH, "")) ? "es" : defaultLocale;
+}
+
 export function publishedLocales(path: string): Locale[] {
     return locales.filter((locale) => isPublished(path, locale));
 }

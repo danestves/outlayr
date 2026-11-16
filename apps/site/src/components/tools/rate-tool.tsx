@@ -13,13 +13,13 @@ const MAX_AMOUNT = 100_000_000_000;
 const DATE_LENGTH = "2026-11-03".length;
 const SERVICE_URL = "https://dolarapi.com";
 
-type From = "local" | "usd";
+type From = "foreign" | "local";
 
 export function RateTool({ rates, slug }: { rates: readonly Rate[] | null; slug: RateSlug }) {
     const { labels, pages } = useIntlayer("tools");
     const { locale } = useLocale();
     const [amount, setAmount] = useState("1");
-    const [from, setFrom] = useState<From>("usd");
+    const [from, setFrom] = useState<From>("foreign");
     const [kind, setKind] = useState<Rate["kind"]>();
     const { currency, numberLocale, timeZone } = RATE_MARKETS[slug];
     const lang = locale === "es" ? numberLocale : LANGUAGES[locale].lang;
@@ -35,8 +35,8 @@ export function RateTool({ rates, slug }: { rates: readonly Rate[] | null; slug:
         );
     }
 
-    const fromCode = from === "usd" ? "USD" : currency;
-    const toCode = from === "usd" ? currency : "USD";
+    const fromCode = from === "foreign" ? selected.base : currency;
+    const toCode = from === "foreign" ? currency : selected.base;
     const minor = Math.min(MAX_AMOUNT, parseAmount(amount, fromCode));
     const price = new Intl.NumberFormat(lang, { maximumFractionDigits: 4, minimumFractionDigits: 2 });
     const facts = rates.map((rate) => {
@@ -83,8 +83,8 @@ export function RateTool({ rates, slug }: { rates: readonly Rate[] | null; slug:
                         <Choice
                             onChange={setFrom}
                             options={[
-                                { label: `USD → ${currency}`, value: "usd" },
-                                { label: `${currency} → USD`, value: "local" },
+                                { label: `${selected.base} → ${currency}`, value: "foreign" },
+                                { label: `${currency} → ${selected.base}`, value: "local" },
                             ]}
                             value={from}
                         />

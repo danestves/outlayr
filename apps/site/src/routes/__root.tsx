@@ -1,6 +1,6 @@
 import geist from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import { startAnalytics } from "@outlayr/shared/analytics";
-import { LANGUAGES, localeFromParam, pageUrl, publishedLocales } from "@outlayr/shared/i18n";
+import { LANGUAGES, fallbackLocale, localeFromParam, pageUrl, publishedLocales } from "@outlayr/shared/i18n";
 import type { Locale } from "@outlayr/shared/i18n";
 import { THEME_SCRIPT, paintTheme, readTheme } from "@outlayr/shared/theme";
 import { SITE_URL, SUPPORT_EMAIL } from "@outlayr/shared/urls";
@@ -8,7 +8,7 @@ import { HeadContent, Scripts, createRootRoute, useMatches, useParams } from "@t
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import * as Effect from "effect/Effect";
-import { defaultLocale, getIntlayer, getPathWithoutLocale } from "intlayer";
+import { getIntlayer, getPathWithoutLocale } from "intlayer";
 import { useEffect, useLayoutEffect } from "react";
 import type { ReactNode } from "react";
 import { IntlayerProvider } from "react-intlayer";
@@ -124,7 +124,7 @@ export const Route = createRootRoute({
                               hrefLang: LANGUAGES[alternate].hreflang,
                               rel: "alternate",
                           })),
-                          { href: pageUrl(path, defaultLocale), hrefLang: "x-default", rel: "alternate" },
+                          { href: pageUrl(path, fallbackLocale(path)), hrefLang: "x-default", rel: "alternate" },
                       ]
                     : []),
                 { href: appCss, rel: "stylesheet" },

@@ -8,40 +8,46 @@ export const RATE_MARKETS = {
         buy: false,
         currency: "VES",
         key: "fuente",
-        kinds: [{ api: "oficial", dateOnly: true, kind: "bcv", source: "https://www.bcv.org.ve/" }],
+        kinds: [
+            { api: "oficial", base: "USD", dateOnly: true, kind: "bcv", source: "https://www.bcv.org.ve/" },
+            { api: "oficial", base: "EUR", dateOnly: true, kind: "bcvEur", source: "https://www.bcv.org.ve/" },
+        ],
         maxAgeMs: 7 * DAY_MS,
         numberLocale: "es-VE",
         prices: ["promedio"],
         timeZone: "America/Caracas",
-        url: "https://ve.dolarapi.com/v1/dolares",
+        url: "https://ve.dolarapi.com/v1/cotizaciones",
     },
     "dolar-hoy-argentina": {
         buy: true,
         currency: "ARS",
         key: "casa",
         kinds: [
-            { api: "blue", dateOnly: false, kind: "blue", source: "https://dolarhoy.com/" },
+            { api: "blue", base: "USD", dateOnly: false, kind: "blue", source: "https://dolarhoy.com/" },
             {
                 api: "oficial",
+                base: "USD",
                 dateOnly: false,
                 kind: "oficial",
                 source: "https://www.ambito.com/contenidos/dolar.html",
             },
-            { api: "bolsa", dateOnly: false, kind: "mep", source: "https://dolarhoy.com/" },
-            { api: "contadoconliqui", dateOnly: false, kind: "ccl", source: "https://dolarhoy.com/" },
+            { api: "bolsa", base: "USD", dateOnly: false, kind: "mep", source: "https://dolarhoy.com/" },
+            { api: "contadoconliqui", base: "USD", dateOnly: false, kind: "ccl", source: "https://dolarhoy.com/" },
             {
                 api: "tarjeta",
+                base: "USD",
                 dateOnly: false,
                 kind: "tarjeta",
                 source: "https://www.ambito.com/contenidos/dolar.html",
             },
             {
                 api: "mayorista",
+                base: "USD",
                 dateOnly: false,
                 kind: "mayorista",
                 source: "https://www.ambito.com/contenidos/dolar.html",
             },
-            { api: "cripto", dateOnly: false, kind: "cripto", source: "https://dolarhoy.com/" },
+            { api: "cripto", base: "USD", dateOnly: false, kind: "cripto", source: "https://dolarhoy.com/" },
         ],
         maxAgeMs: 2 * DAY_MS,
         numberLocale: "es-AR",
@@ -56,11 +62,12 @@ export const RATE_MARKETS = {
         kinds: [
             {
                 api: "binance",
+                base: "USD",
                 dateOnly: false,
                 kind: "binance",
                 source: "https://p2p.binance.com/es/trade/all-payments/USDT?fiat=BOB",
             },
-            { api: "oficial", dateOnly: true, kind: "bcb", source: "https://www.bcb.gob.bo/" },
+            { api: "oficial", base: "USD", dateOnly: true, kind: "bcb", source: "https://www.bcb.gob.bo/" },
         ],
         maxAgeMs: 3 * DAY_MS,
         numberLocale: "es-BO",
@@ -71,9 +78,11 @@ export const RATE_MARKETS = {
 } as const;
 
 export type RateSlug = keyof typeof RATE_MARKETS;
+export type RateBase = (typeof RATE_MARKETS)[RateSlug]["kinds"][number]["base"];
 export type RateKind = (typeof RATE_MARKETS)[RateSlug]["kinds"][number]["kind"];
 
 export interface Rate {
+    base: RateBase;
     buy: number | null;
     dateOnly: boolean;
     kind: RateKind;
@@ -87,7 +96,7 @@ const Quote = Schema.Struct({
     compra: Schema.optional(Schema.NullOr(Schema.Number)),
     fechaActualizacion: Schema.String,
     fuente: Schema.optional(Schema.String),
-    moneda: Schema.Literal("USD"),
+    moneda: Schema.Literals(["USD", "EUR"]),
     promedio: Schema.optional(Schema.NullOr(Schema.Number)),
     venta: Schema.optional(Schema.NullOr(Schema.Number)),
 });
@@ -109,8 +118,8 @@ const isPositive = (value: number | null | undefined): value is number =>
 
 export function parseRates(slug: RateSlug, quotes: readonly Quote[], now: number): Rate[] {
     const market = RATE_MARKETS[slug];
-    return market.kinds.flatMap(({ api, dateOnly, kind, source }) => {
-        const quote = quotes.find((entry) => entry[market.key] === api);
+    return market.kinds.flatMap(({ api, base, dateOnly, kind, source }) => {
+        const quote = quotes.find((entry) => entry[market.key] === api && entry.moneda === base);
         if (!quote) {
             return [];
         }
@@ -121,6 +130,7 @@ export function parseRates(slug: RateSlug, quotes: readonly Quote[], now: number
         }
         return [
             {
+                base,
                 buy: market.buy && isPositive(quote.compra) ? quote.compra : null,
                 dateOnly,
                 kind,

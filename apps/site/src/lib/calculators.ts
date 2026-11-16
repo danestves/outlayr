@@ -26,8 +26,8 @@ export function formatCodeAmount(minor: number, code: string, lang: string): str
     return `${number.format(minor / 10 ** decimals)} ${code}`;
 }
 
-export function convertAtRate(minor: number, rate: number, from: "local" | "usd"): number {
-    return Math.round(from === "usd" ? minor * rate : minor / rate);
+export function convertAtRate(minor: number, rate: number, from: "foreign" | "local"): number {
+    return Math.round(from === "foreign" ? minor * rate : minor / rate);
 }
 
 export const PER_YEAR = { month: 12, quarter: 4, twoWeeks: 26, week: 52, year: 1 } as const;

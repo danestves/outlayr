@@ -24,6 +24,22 @@ const VENEZUELA = [
         promedio: 891.1054,
         venta: null,
     },
+    {
+        compra: null,
+        fechaActualizacion: "2026-11-03T19:04:50.264Z",
+        fuente: "paralelo",
+        moneda: "EUR",
+        promedio: 1153.41,
+        venta: null,
+    },
+    {
+        compra: null,
+        fechaActualizacion: "2026-11-03T00:00:00-04:00",
+        fuente: "oficial",
+        moneda: "EUR",
+        promedio: 985.2201,
+        venta: null,
+    },
 ];
 
 const [, BCV] = VENEZUELA;
@@ -35,13 +51,23 @@ const ARGENTINA = [
     { casa: "tarjeta", compra: 1976, fechaActualizacion: "2026-11-03T16:00:00.000Z", moneda: "USD", venta: 2041 },
 ];
 
-it("keeps only the official BCV quote for Venezuela, whatever else the API returns", () => {
+it("keeps only the official BCV dollar and euro for Venezuela, never the parallel ones", () => {
     expect(read("dolar-bcv-hoy", VENEZUELA)).toEqual([
         {
+            base: "USD",
             buy: null,
             dateOnly: true,
             kind: "bcv",
             rate: 891.1054,
+            source: "https://www.bcv.org.ve/",
+            updatedAt: "2026-11-03T00:00:00-04:00",
+        },
+        {
+            base: "EUR",
+            buy: null,
+            dateOnly: true,
+            kind: "bcvEur",
+            rate: 985.2201,
             source: "https://www.bcv.org.ve/",
             updatedAt: "2026-11-03T00:00:00-04:00",
         },
@@ -58,7 +84,7 @@ it("reads only the BCV average for Venezuela, even when the official row carries
 
 it("ignores rows in another currency or with a broken shape, and keeps the valid ones", () => {
     const body = [
-        { ...BCV, moneda: "EUR", promedio: 960 },
+        { ...BCV, moneda: "GBP", promedio: 960 },
         { ...BCV, fechaActualizacion: null, fuente: "paralelo" },
         { ...BCV, fuente: "paralelo", promedio: "1004.32" },
         BCV,
