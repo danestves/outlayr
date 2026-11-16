@@ -21,6 +21,7 @@ import { savingsGoalsRepo } from "@/data/savings-goals-core";
 import type { SavingsGoalPatch } from "@/data/savings-goals-core";
 import type { Database } from "@/db/client";
 import { comesFromPerson } from "@/domain/debt-choices";
+import type { DebtRate } from "@/domain/debt-rate";
 import type { DebtVerb } from "@/domain/debts";
 import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
@@ -36,14 +37,13 @@ const trackBudgetCreated = (kind: "category" | "overall") =>
 export interface DebtDraft {
     account: Account | null;
     amount: number;
-    /** Set for a sale on credit, which records income instead of a movement. */
     category: Category | null;
-    currency: string;
     date: Date;
     newName: string;
     note: string;
     person: Account | null;
-    /** The person's side of a cross-currency movement, in their currency. */
+    personCurrency: string;
+    rate: DebtRate | null;
     theirAmount: number;
     verb: DebtVerb;
 }
@@ -58,7 +58,7 @@ export interface OweDraft {
 }
 
 export const writeDebt = Effect.fn("Planning.writeDebt")(function* writeDebt(db: Database, draft: DebtDraft) {
-    const { account, amount, category, currency, person } = draft;
+    const { account, amount, category, person, personCurrency: currency } = draft;
     const note = draft.note === "" ? undefined : draft.note;
     if (category !== null) {
         const buyer = person ?? { currency, id: yield* createPerson(db, { currency, name: draft.newName }) };
@@ -83,7 +83,7 @@ export const writeDebt = Effect.fn("Planning.writeDebt")(function* writeDebt(db:
         date: draft.date,
         note,
         person: { accountId: target.id, amount: crossCurrency ? draft.theirAmount : amount, currency: target.currency },
-        rateType: crossCurrency ? "custom" : null,
+        rate: crossCurrency ? draft.rate : null,
         verb: draft.verb,
     });
     return target.id;

@@ -59,6 +59,7 @@ import { useColors } from "@/theme/use-colors";
 import { NewDebtSheets, present, useNewDebtForm } from "./new-debt-form";
 import type { NewDebtProps } from "./new-debt-form";
 
+const CAPTION = font({ textStyle: "footnote" });
 const CHEVRON = font({ design: "rounded", textStyle: "footnote", weight: "semibold" });
 const SUGGESTION_TILE = 22;
 const PLACEHOLDER = { style: "tertiary", type: "hierarchical" } as const;
@@ -159,16 +160,6 @@ export function NewDebt(props: NewDebtProps) {
                                 value={form.accountValue}
                             />
                         )}
-                        {theirCurrency === null ? null : (
-                            <>
-                                <Divider modifiers={hairline} />
-                                <PickerField
-                                    label={t("debts.field.theirSide", { currency: theirCurrency })}
-                                    onPress={() => present(form.theirSheet)}
-                                    value={formatAmount(form.theirAmount, theirCurrency, true, language)}
-                                />
-                            </>
-                        )}
                         {form.pickCurrency ? (
                             <>
                                 <Divider modifiers={hairline} />
@@ -176,10 +167,21 @@ export function NewDebt(props: NewDebtProps) {
                                     chevron
                                     label={t("debts.field.currency")}
                                     onPress={() => present(form.currencySheet)}
-                                    value={currency}
+                                    value={form.personCurrency}
                                 />
                             </>
                         ) : null}
+                        {theirCurrency === null ? null : (
+                            <>
+                                <Divider modifiers={hairline} />
+                                <PickerField
+                                    caption={form.rateCaption}
+                                    label={t("debts.field.theirSide", { currency: theirCurrency })}
+                                    onPress={() => present(form.theirSheet)}
+                                    value={formatAmount(form.theirAmount, theirCurrency, true, language)}
+                                />
+                            </>
+                        )}
                         {form.before ? null : (
                             <>
                                 <Divider modifiers={hairline} />
@@ -327,14 +329,18 @@ function PersonSuggestion({ onPick, person }: { onPick: () => void; person: Acco
 }
 
 interface PickerFieldProps {
+    caption?: string | null;
     chevron?: boolean;
     label: string;
     onPress: () => void;
     value: string;
 }
 
-function PickerField({ chevron = false, label, onPress, value }: PickerFieldProps) {
+function PickerField({ caption = null, chevron = false, label, onPress, value }: PickerFieldProps) {
     const colors = useColors();
+    const valueText = (
+        <SwiftText modifiers={[BODY, lineLimit(1), foregroundStyle(colors.foreground)]}>{value}</SwiftText>
+    );
     return (
         <HStack
             modifiers={[
@@ -344,12 +350,19 @@ function PickerField({ chevron = false, label, onPress, value }: PickerFieldProp
                 accessibilityElement("combine"),
                 accessibilityAddTraits(["isButton"]),
                 accessibilityLabel(label),
-                accessibilityValue(value),
+                accessibilityValue(caption === null ? value : `${value}, ${caption}`),
             ]}
         >
             <SwiftText modifiers={[BODY, rowLabel]}>{label}</SwiftText>
             <Spacer />
-            <SwiftText modifiers={[BODY, lineLimit(1), foregroundStyle(colors.foreground)]}>{value}</SwiftText>
+            {caption === null ? (
+                valueText
+            ) : (
+                <VStack alignment="trailing" spacing={2}>
+                    {valueText}
+                    <SwiftText modifiers={[CAPTION, lineLimit(1), foregroundStyle(colors.muted)]}>{caption}</SwiftText>
+                </VStack>
+            )}
             {chevron ? <Image color={colors.muted} modifiers={[CHEVRON]} systemName="chevron.up.chevron.down" /> : null}
         </HStack>
     );

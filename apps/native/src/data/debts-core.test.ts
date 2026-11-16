@@ -48,7 +48,7 @@ describe("recording a debt with a person", () => {
                 account: { accountId: zinli, amount: 100, currency: "USD" },
                 date: OCT_2,
                 person: { accountId: pedro, amount: 100, currency: "USD" },
-                rateType: null,
+                rate: null,
                 verb: "borrowed",
             })
         );
@@ -70,16 +70,50 @@ describe("recording a debt with a person", () => {
                 account: { accountId: banesco, amount: 3650, currency: "VES" },
                 date: OCT_2,
                 person: { accountId: ana, amount: 100, currency: "USD" },
-                rateType: "official",
+                rate: { type: "official", personPerAccount: 1 / 36.48 },
                 verb: "lent",
             })
         );
+        const repaid = await Effect.runPromise(
+            recordDebtMovement(db, {
+                account: { accountId: banesco, amount: 4000, currency: "VES" },
+                date: NOW,
+                person: { accountId: ana, amount: 100, currency: "USD" },
+                rate: { type: "official", personPerAccount: 1 / 40 },
+                verb: "gotPaidBack",
+            })
+        );
 
-        await expect(balanceOf(db, ana)).resolves.toBe(100);
-        await expect(balanceOf(db, banesco)).resolves.toBe(1350);
+        await expect(balanceOf(db, ana)).resolves.toBe(0);
+        await expect(balanceOf(db, banesco)).resolves.toBe(5350);
+        const lent = await Effect.runPromise(transfersRepo.getById(db, id));
+        expect(lent).toMatchObject({ exchangeRateType: "official", fromCurrency: "VES", toCurrency: "USD" });
+        expect(lent?.exchangeRate).toBeCloseTo(1 / 36.48, 12);
+        const back = await Effect.runPromise(transfersRepo.getById(db, repaid));
+        expect(back).toMatchObject({ exchangeRateType: "official", fromCurrency: "USD", toCurrency: "VES" });
+        expect(back?.exchangeRate).toBeCloseTo(40, 10);
+    });
+
+    it("stores a typed person's side as a custom rate the legs imply", async () => {
+        const db = migratedDatabase({ foreignKeys: false });
+        const banesco = await Effect.runPromise(
+            accountsRepo.create(db, { currency: "VES", initialBalance: 0, name: "Banesco" })
+        );
+        const ana = await Effect.runPromise(createPerson(db, { currency: "USD", name: "Ana" }));
+
+        const id = await Effect.runPromise(
+            recordDebtMovement(db, {
+                account: { accountId: banesco, amount: 4200, currency: "VES" },
+                date: OCT_2,
+                person: { accountId: ana, amount: 100, currency: "USD" },
+                rate: null,
+                verb: "gotPaidBack",
+            })
+        );
+
         const stored = await Effect.runPromise(transfersRepo.getById(db, id));
-        expect(stored).toMatchObject({ exchangeRateType: "official", fromCurrency: "VES", toCurrency: "USD" });
-        expect(stored?.exchangeRate).toBeCloseTo(100 / 3650, 10);
+        expect(stored?.exchangeRateType).toBe("custom");
+        expect(stored?.exchangeRate).toBeCloseTo(42, 10);
     });
 
     it("counts a sale on credit as income once, titled as a sale, and being paid back only settles it", async () => {
@@ -113,7 +147,7 @@ describe("recording a debt with a person", () => {
                 account: { accountId: zinli, amount: 35, currency: "USD" },
                 date: OCT_2,
                 person: { accountId: ana, amount: 35, currency: "USD" },
-                rateType: null,
+                rate: null,
                 verb: "gotPaidBack",
             })
         );
@@ -155,7 +189,7 @@ describe("recording a debt with a person", () => {
                 account: { accountId: zinli, amount: 80, currency: "USD" },
                 date: OCT_2,
                 person: { accountId: jose, amount: 80, currency: "USD" },
-                rateType: null,
+                rate: null,
                 verb: "paidBack",
             })
         );

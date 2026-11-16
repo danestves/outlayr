@@ -1,4 +1,3 @@
-import type { EntryRateType } from "@outlayr/money/rates";
 import type { TransferInput } from "@outlayr/money/transfer-row";
 import { and, eq, isNull } from "drizzle-orm";
 import * as Effect from "effect/Effect";
@@ -7,6 +6,7 @@ import * as Schema from "effect/Schema";
 import type { Database } from "@/db/client";
 import { outsideMoves } from "@/db/schema";
 import { comesFromPerson } from "@/domain/debt-choices";
+import type { DebtRate } from "@/domain/debt-rate";
 import { debtLegs } from "@/domain/debts";
 import type { DebtVerb } from "@/domain/debts";
 import { newId } from "@/domain/ids";
@@ -32,7 +32,6 @@ export class DebtsError extends Schema.TaggedError<DebtsError>()("DebtsError", {
 export interface PersonInput {
     currency: string;
     name: string;
-    /** Signed like the balance: negative when you owe them, positive when they owe you. */
     openingBalance?: number;
 }
 
@@ -45,7 +44,6 @@ export const createPerson = Effect.fn("Debts.createPerson")(function* createPers
     });
 });
 
-/** In that account's own currency. */
 export interface DebtLeg {
     accountId: string;
     amount: number;
@@ -57,18 +55,19 @@ export interface DebtMovementInput {
     date: Date;
     note?: string;
     person: DebtLeg;
-    rateType: EntryRateType | null;
+    rate: DebtRate | null;
     verb: DebtVerb;
 }
 
-// Each leg is already in its account's currency and the stored rate is the one they imply, so it reads back as typed.
 export function debtTransferInput(input: DebtMovementInput): TransferInput {
     const { from, to } = debtLegs(input.verb, { account: input.account, person: input.person });
     const crossCurrency = from.currency !== to.currency;
+    const perAccount = input.rate?.personPerAccount ?? input.person.amount / input.account.amount;
+    const rate = from === input.account ? perAccount : 1 / perAccount;
     return {
         date: input.date,
-        exchangeRate: crossCurrency ? to.amount / from.amount : 1,
-        exchangeRateType: crossCurrency ? input.rateType : null,
+        exchangeRate: crossCurrency ? rate : 1,
+        exchangeRateType: crossCurrency ? (input.rate?.type ?? "custom") : null,
         fromAccountId: from.accountId,
         fromAmount: from.amount,
         fromCurrency: from.currency,

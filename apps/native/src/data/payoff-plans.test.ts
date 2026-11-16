@@ -153,7 +153,7 @@ describe("setting payoff plans", () => {
                     account: { accountId: zinli, amount, currency: "USD" },
                     date: at(day),
                     person: { accountId: pedro, amount, currency: "USD" },
-                    rateType: null,
+                    rate: null,
                     verb,
                 })
             );
