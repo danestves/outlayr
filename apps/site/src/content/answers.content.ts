@@ -1433,7 +1433,7 @@ const answers = {
                 ],
                 related: [
                     "/guides/best-expense-tracker-apps",
-                    "/guides/multi-currency-expense-tracker",
+                    "/guides/budget-app-without-bank-account",
                     "/compare/wallet",
                 ] satisfies PageRef[],
                 rival: "Fintonic",
@@ -7926,7 +7926,7 @@ const answers = {
                 related: [
                     "/guides/best-budget-apps",
                     "/tools/50-30-20-budget-calculator",
-                    "/tools/installment-calculator",
+                    "/guides/budget-app-without-bank-account",
                 ] satisfies PageRef[],
                 steps: [
                     {
@@ -7954,6 +7954,456 @@ const answers = {
                 title: t({
                     en: "Plan a budget and see where this pace ends",
                     es: "Arma tu presupuesto y ve a dónde te lleva este ritmo",
+                }),
+            },
+            "budget-app-without-bank-account": {
+                facts: [
+                    {
+                        label: t({ en: "Bank link", es: "Conexión al banco" }),
+                        text: t({
+                            en: "None. Outlayr never links bank accounts",
+                            es: "Ninguna. Outlayr nunca conecta cuentas bancarias",
+                        }),
+                    },
+                    {
+                        label: t({ en: "How entries get in", es: "Cómo entran los registros" }),
+                        text: t({
+                            en: "One sentence, voice, receipt scan, or CSV import",
+                            es: "Una oración, voz, escaneo de recibos o importación de CSV",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Account", es: "Cuenta" }),
+                        text: t({
+                            en: "Not needed to log and budget. Only sync, voice entry, receipt scans, and Pro ask you to sign in",
+                            es: "No hace falta para registrar y presupuestar. Solo la sincronización, la voz, los recibos y Pro piden iniciar sesión",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Where your data lives", es: "Dónde están tus datos" }),
+                        text: t({
+                            en: "On your phone. Without an account, entries, amounts, and notes never leave it",
+                            es: "En tu celular. Sin una cuenta, los registros, montos y notas nunca salen de él",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Budgets", es: "Presupuestos" }),
+                        text: t({
+                            en: "A limit per category or per month, and where your pace ends",
+                            es: "Un límite por categoría o por mes, y a dónde te lleva el ritmo",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Price", es: "Precio" }),
+                        text: t({
+                            en: "Free to start, open source, on iPhone and Android",
+                            es: "Gratis para empezar, de código abierto, en iPhone y Android",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "Yes. Log each purchase as you make it, set a limit per category or per month, and Outlayr shows where your pace ends. Nothing is pulled from your bank, so what you see is what you logged.",
+                            es: "Sí. Registra cada compra cuando la haces, pon un límite por categoría o por mes, y Outlayr te muestra a dónde te lleva el ritmo. No se trae nada de tu banco, así que lo que ves es lo que registraste.",
+                        }),
+                        question: t({
+                            en: "Can I budget without linking my bank account?",
+                            es: "¿Puedo hacer un presupuesto sin vincular mi cuenta bancaria?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. Outlayr never links bank accounts. You keep your accounts, cards, and cash as accounts you name yourself, and you fill them in.",
+                            es: "No. Outlayr nunca conecta cuentas bancarias. Tus cuentas, tarjetas y efectivo son cuentas con el nombre que tú les pongas, y las llenas tú.",
+                        }),
+                        question: t({
+                            en: "Does Outlayr connect to my bank?",
+                            es: "¿Outlayr se conecta a mi banco?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. Outlayr works without an account. You sign in only to sync across devices, use voice entry, scan receipts, or buy Pro.",
+                            es: "No. Outlayr funciona sin cuenta. Solo inicias sesión para sincronizar entre dispositivos, dictar registros, escanear recibos o comprar Pro.",
+                        }),
+                        question: t({
+                            en: "Do I need to sign up to use it?",
+                            es: "¿Necesito crear una cuenta para usarla?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "It takes one sentence, your voice, or a photo of the receipt, and the amount, merchant, category, account, date, and currency are filled in for you. Typing works with no signal. Voice entry and receipt scanning need a connection.",
+                            es: "Basta una oración, tu voz o una foto del recibo, y el monto, el comercio, la categoría, la cuenta, la fecha y la moneda se llenan solos. Escribir funciona sin señal. La voz y el escaneo de recibos necesitan conexión.",
+                        }),
+                        question: t({
+                            en: "Isn't logging every expense by hand slow?",
+                            es: "¿Registrar cada gasto a mano no es lento?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "On your phone. It reaches our servers only if you sign in and turn on sync, or use a feature that needs them, like receipt scanning. Outlayr has no ads, and your data is never sold.",
+                            es: "En tu celular. Solo llega a nuestros servidores si inicias sesión y activas la sincronización, o si usas una función que los necesite, como el escaneo de recibos. Outlayr no tiene anuncios y tus datos nunca se venden.",
+                        }),
+                        question: t({
+                            en: "Where is my data stored?",
+                            es: "¿Dónde se guardan mis datos?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Export a CSV from your bank's website or another app and import it. You are handing Outlayr a file, not a login. Duplicates are skipped, and a row with no matching category is listed as skipped.",
+                            es: "Sí. Exporta un CSV desde la web de tu banco u otra app e impórtalo. Le entregas un archivo a Outlayr, no tus claves. Los duplicados se omiten, y una fila sin categoría que coincida aparece como omitida.",
+                        }),
+                        question: t({
+                            en: "Can I bring my history in without linking the bank?",
+                            es: "¿Puedo traer mi historial sin conectar el banco?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Logging, budgets, goals, insights, and subscriptions are free. The free plan includes 30 voice or receipt captures every 30 days, 3 accounts, and 2 category budgets. Outlayr Pro raises those limits.",
+                            es: "Sí. Registrar, los presupuestos, las metas, las estadísticas y las suscripciones son gratis. El plan gratis incluye 30 capturas por voz o recibo cada 30 días, 3 cuentas y 2 presupuestos por categoría. Outlayr Pro sube esos límites.",
+                        }),
+                        question: t({
+                            en: "Is it free?",
+                            es: "¿Es gratis?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "You can budget without linking your bank. Log each purchase by sentence, voice, or receipt, set a limit per category or per month, and see where your pace ends. Outlayr never links bank accounts, and your ledger stays on your phone.",
+                    es: "Puedes llevar un presupuesto sin vincular tu banco. Registra cada compra con una oración, tu voz o un recibo, pon un límite por categoría o por mes, y mira a dónde te lleva el ritmo. Outlayr nunca conecta cuentas bancarias, y tu registro se queda en tu celular.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Budget and track expenses without linking your bank. Log by sentence, voice, or receipt, set limits, and keep your ledger on your phone. Outlayr is free to start and open source.",
+                        es: "Lleva tu presupuesto y tus gastos sin vincular tu banco. Registra con una oración, tu voz o un recibo, pon límites y guarda tu registro en tu celular. Outlayr es gratis para empezar y de código abierto.",
+                    }),
+                    title: t({
+                        en: "Budget App Without Linking Your Bank · Outlayr",
+                        es: "App de presupuesto sin vincular el banco · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Apps such as PocketGuard, Copilot, and Monarch sync linked bank accounts. That saves typing, and it means the app reads your bank transactions. Outlayr takes the other route: you enter what you spend, and nothing is pulled from a bank.",
+                                es: "Apps como PocketGuard, Copilot y Monarch sincronizan cuentas de banco vinculadas. Eso te ahorra escribir, y significa que la app lee los movimientos de tu banco. Outlayr toma el otro camino: tú anotas lo que gastas, y no se trae nada de un banco.",
+                            }),
+                            t({
+                                en: "The cost is that each purchase starts with you. Outlayr keeps that short: one sentence, one phrase said out loud, or a photo of the receipt.",
+                                es: "El costo es que cada compra empieza contigo. Outlayr lo mantiene corto: una oración, una frase dicha en voz alta o una foto del recibo.",
+                            }),
+                        ],
+                        id: "linking",
+                        title: t({ en: "What linking a bank means", es: "Qué significa vincular un banco" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Name your accounts after what you have: a card, a bank account, cash. Each keeps its own balance. Every purchase you log goes to one of them and to a category, and budgets add up from those entries.",
+                                es: "Ponle a tus cuentas el nombre de lo que tienes: una tarjeta, una cuenta de banco, efectivo. Cada una tiene su propio saldo. Cada compra que registras va a una de ellas y a una categoría, y los presupuestos se suman con esos registros.",
+                            }),
+                            t({
+                                en: "Subscriptions log themselves on their day, with a monthly cost and a reminder before each charge, so the charges you would forget to type still show up.",
+                                es: "Las suscripciones se registran solas en su día, con un costo mensual y un aviso antes de cada cobro, así que los cobros que se te olvidarían anotar igual aparecen.",
+                            }),
+                        ],
+                        id: "by-hand",
+                        title: t({
+                            en: "How budgeting works without a link",
+                            es: "Cómo funciona el presupuesto sin vínculo",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Your ledger is stored on your phone. Without an account, your entries, amounts, and notes never leave it. With Pro, sync keeps a copy on our servers until you delete your account.",
+                                es: "Tu registro se guarda en tu celular. Sin una cuenta, tus registros, montos y notas nunca salen de él. Con Pro, la sincronización guarda una copia en nuestros servidores hasta que elimines tu cuenta.",
+                            }),
+                            t({
+                                en: "Voice entries, receipt scans, and merchant suggestions are processed by Anthropic and ElevenLabs, and recordings and scanned photos are not stored.",
+                                es: "Las entradas por voz, los escaneos de recibos y las sugerencias de comercios los procesan Anthropic y ElevenLabs, y no guardamos las grabaciones ni las fotos escaneadas.",
+                            }),
+                            t({
+                                en: "On iPhone there is an optional Shortcuts automation that reads the purchase notifications your bank's app sends. It does not connect to your bank account.",
+                                es: "En iPhone hay una automatización opcional de Atajos que lee las notificaciones de compra que envía la app de tu banco. No se conecta a tu cuenta bancaria.",
+                            }),
+                        ],
+                        id: "privacy",
+                        title: t({ en: "Where your data lives", es: "Dónde están tus datos" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Other apps also work by hand. Monefy records a purchase in two taps and is free at its core. Wallet by BudgetBakers has a free tier for tracking by hand, with bank sync in Premium. Goodbudget budgets with envelopes on a free plan, with bank sync for US banks in Premium. Spendee has cash wallets in several currencies, with bank sync in its Premium plan.",
+                                es: "Otras apps también funcionan a mano. Monefy registra una compra en dos toques y es gratis en lo básico. Wallet by BudgetBakers tiene un plan gratis para registrar a mano, con sincronización bancaria en Premium. Goodbudget presupuesta por sobres con un plan gratis, con sincronización de bancos de EE. UU. en Premium. Spendee tiene billeteras de efectivo en varias monedas, con sincronización bancaria en su plan Premium.",
+                            }),
+                            t({
+                                en: "Pick by how you want to enter purchases. Envelopes suit Goodbudget, two taps suit Monefy, and a sentence, your voice, or a receipt suit Outlayr.",
+                                es: "Elige según cómo quieras anotar las compras. Los sobres van con Goodbudget, los dos toques con Monefy, y una oración, tu voz o un recibo con Outlayr.",
+                            }),
+                        ],
+                        id: "alternatives",
+                        title: t({ en: "Other apps that work by hand", es: "Otras apps que funcionan a mano" }),
+                    },
+                ],
+                related: [
+                    "/guides/how-to-track-expenses",
+                    "/guides/best-expense-tracker-apps",
+                    "/compare/monefy",
+                ] satisfies PageRef[],
+                steps: [
+                    {
+                        text: t({
+                            en: "A card, a bank account, cash. Name each one yourself.",
+                            es: "Una tarjeta, una cuenta de banco, efectivo. Ponle tú el nombre a cada una.",
+                        }),
+                        title: t({ en: "Add your accounts", es: "Agrega tus cuentas" }),
+                    },
+                    {
+                        text: t({
+                            en: "Type a sentence, say it, or scan the receipt, right after you pay.",
+                            es: "Escribe una oración, dila o escanea el recibo, apenas pagues.",
+                        }),
+                        title: t({ en: "Log each purchase", es: "Registra cada compra" }),
+                    },
+                    {
+                        text: t({
+                            en: "Set a limit per category or per month, and watch where your pace ends.",
+                            es: "Pon un límite por categoría o por mes, y mira a dónde te lleva el ritmo.",
+                        }),
+                        title: t({ en: "Set a limit", es: "Pon un límite" }),
+                    },
+                ],
+                title: t({
+                    en: "Budget without linking your bank account",
+                    es: "Presupuesto sin vincular tu cuenta bancaria",
+                }),
+            },
+            "expense-tracker-venezuela": {
+                facts: [
+                    {
+                        label: t({ en: "Currencies", es: "Monedas" }),
+                        text: t({
+                            en: "Dollars, bolívares, and euros side by side, 165 in all",
+                            es: "Dólares, bolívares y euros juntos, 165 en total",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Bolívar rates", es: "Tasas en bolívares" }),
+                        text: t({
+                            en: "USD (BCV), EUR (BCV), or My rate",
+                            es: "USD (BCV), EUR (BCV) o Mi tasa",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Installments", es: "Cuotas" }),
+                        text: t({
+                            en: "Cashea and other buy now, pay later apps, with a reminder the day before each one",
+                            es: "Cashea y otras apps de compra en cuotas, con un aviso el día antes de cada una",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Bank link", es: "Conexión al banco" }),
+                        text: t({
+                            en: "None. You log each purchase yourself",
+                            es: "Ninguna. Registras tú cada compra",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Account", es: "Cuenta" }),
+                        text: t({
+                            en: "Not needed to log and budget",
+                            es: "No hace falta para registrar y presupuestar",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Price", es: "Precio" }),
+                        text: t({
+                            en: "Free to start, open source, on iPhone and Android",
+                            es: "Gratis para empezar, de código abierto, en iPhone y Android",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "Outlayr is an open source app for iPhone and Android that logs each purchase in the currency you paid, dollars or bolívares, and adds everything up in your main currency. You fill it in with a sentence, your voice, or a receipt, and it is free to start.",
+                            es: "Outlayr es una app de código abierto para iPhone y Android que registra cada compra en la moneda en que pagaste, dólares o bolívares, y suma todo en tu moneda principal. La llenas con una oración, con tu voz o con un recibo, y es gratis para empezar.",
+                        }),
+                        question: t({
+                            en: "Which app tracks expenses in dollars and bolívares?",
+                            es: "¿Qué app sirve para controlar gastos en dólares y bolívares?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. For a purchase in bolívares you can pick USD (BCV) or EUR (BCV), the rates the Banco Central de Venezuela publishes, which Outlayr gets through Cotizave. The BCV publishes one rate per business day.",
+                            es: "Sí. Para una compra en bolívares puedes elegir USD (BCV) o EUR (BCV), las tasas que publica el Banco Central de Venezuela y que Outlayr toma de Cotizave. El BCV publica una tasa por día hábil.",
+                        }),
+                        question: t({
+                            en: "Does Outlayr use the BCV rate?",
+                            es: "¿Outlayr usa la tasa del BCV?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Choose My rate and type the rate you actually got. You can also tap the dollar amount and type what you paid in dollars, and Outlayr works out the rate from the two amounts. The rate stays with the entry, so what you already logged does not change when the rate moves.",
+                            es: "Sí. Elige Mi tasa y escribe la que te dieron. También puedes tocar el monto en dólares y escribir lo que pagaste en dólares, y Outlayr calcula la tasa a partir de los dos montos. La tasa se queda con el registro, así que lo que ya registraste no cambia cuando la tasa se mueve.",
+                        }),
+                        question: t({
+                            en: "What if I paid at a different rate?",
+                            es: "¿Y si pagué a otra tasa?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Outlayr tracks purchases in installments from apps such as Cashea: the upfront payment, each installment, and any late fees, with a reminder the day before each one is due. Outlayr is not affiliated with Cashea, and paying still happens in the Cashea app.",
+                            es: "Sí. Outlayr lleva las compras en cuotas de apps como Cashea: la inicial, cada cuota y los recargos por atraso, con un aviso el día antes de cada pago. Outlayr no está afiliada a Cashea, y el pago se sigue haciendo en la app de Cashea.",
+                        }),
+                        question: t({
+                            en: "Can I track my Cashea installments?",
+                            es: "¿Puedo llevar mis cuotas de Cashea?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. Outlayr never links bank accounts, and it works without an account. You sign in only to sync across devices, use voice entry, scan receipts, or buy Pro.",
+                            es: "No. Outlayr nunca conecta cuentas bancarias, y funciona sin cuenta. Solo inicias sesión para sincronizar entre dispositivos, dictar registros, escanear recibos o comprar Pro.",
+                        }),
+                        question: t({
+                            en: "Do I need to link my bank or sign up?",
+                            es: "¿Tengo que conectar mi banco o crear una cuenta?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Typing an entry works with no signal, because entries save on your phone first. Voice entry and receipt scanning need a connection. If there is no rate yet for the day of an entry, Outlayr says so, and the entry counts in dollars once it has one.",
+                            es: "Escribir un registro funciona sin señal, porque los registros se guardan primero en tu celular. La voz y el escaneo de recibos necesitan conexión. Si todavía no hay tasa para el día de un registro, Outlayr te lo dice, y el registro suma en dólares cuando tenga una.",
+                        }),
+                        question: t({
+                            en: "Does it work without internet?",
+                            es: "¿Funciona sin internet?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Logging in any currency, budgets, goals, insights, and subscriptions are free. The free plan holds accounts in 2 currencies, and Outlayr Pro allows any number.",
+                            es: "Sí. Registrar en cualquier moneda, los presupuestos, las metas, las estadísticas y las suscripciones son gratis. El plan gratis permite cuentas en 2 monedas, y Outlayr Pro permite las que quieras.",
+                        }),
+                        question: t({
+                            en: "Is it free?",
+                            es: "¿Es gratis?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "Outlayr is an expense tracker for Venezuela that keeps dollars and bolívares in one place. Log each purchase in the currency you paid, pick the BCV rate or type the one you got, and read every total in your main currency.",
+                    es: "Outlayr es una app para controlar gastos en Venezuela que junta dólares y bolívares en un solo lugar. Registra cada compra en la moneda en que pagaste, elige la tasa del BCV o escribe la que te dieron, y lee todos los totales en tu moneda principal.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Track your spending in Venezuela in dollars and bolívares. Use the BCV rate or your own, keep Cashea installments, and budget in one main currency. Free to start.",
+                        es: "Controla tus gastos en Venezuela en dólares y bolívares. Usa la tasa del BCV o la tuya, lleva tus cuotas de Cashea y haz tu presupuesto en una sola moneda. Gratis para empezar.",
+                    }),
+                    title: t({
+                        en: "Expense Tracker for Venezuela: Dollars and Bolívares · Outlayr",
+                        es: "App para controlar gastos en Venezuela: dólares y bolívares · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Log each purchase in the currency you paid. A dollar card, a bolívar bank account, and cash each keep their own balance, and every total, budget, and chart reads in your main currency, which can be the dollar.",
+                                es: "Registra cada compra en la moneda en que pagaste. Una tarjeta en dólares, una cuenta de banco en bolívares y el efectivo tienen cada uno su propio saldo, y todos los totales, presupuestos y gráficos se leen en tu moneda principal, que puede ser el dólar.",
+                            }),
+                            t({
+                                en: "Changing dollars into bolívares between your own accounts is a transfer, not spending.",
+                                es: "Cambiar dólares a bolívares entre tus propias cuentas es una transferencia, no un gasto.",
+                            }),
+                        ],
+                        id: "two-currencies",
+                        title: t({
+                            en: "Dollars and bolívares in one ledger",
+                            es: "Dólares y bolívares en un solo registro",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "For a purchase in bolívares, Outlayr offers USD (BCV) and EUR (BCV), both from the rates the Banco Central de Venezuela publishes. The rate is the one from the day of the purchase, and it stays with the entry.",
+                                es: "Para una compra en bolívares, Outlayr te ofrece USD (BCV) y EUR (BCV), las dos de las tasas que publica el Banco Central de Venezuela. La tasa es la del día de la compra, y se queda con el registro.",
+                            }),
+                            t({
+                                en: "If a shop priced something in dollars and charged you in bolívares, log the bolívar amount, tap the dollar amount, and type the dollar price. The rate comes out of the two. To see today's BCV rate and convert an amount, use the BCV dollar calculator.",
+                                es: "Si una tienda puso el precio en dólares y te cobró en bolívares, registra el monto en bolívares, toca el monto en dólares y escribe el precio en dólares. La tasa sale de los dos. Para ver la tasa del BCV de hoy y convertir un monto, usa la calculadora del dólar BCV.",
+                            }),
+                        ],
+                        id: "rates",
+                        title: t({ en: "The BCV rate, or the one you got", es: "La tasa del BCV, o la que te dieron" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Buying in installments adds a payment every 14 days that is easy to lose track of. Outlayr keeps the upfront payment, each installment, and any late fee next to the rest of your spending, with a reminder the day before each one is due.",
+                                es: "Comprar en cuotas agrega un pago cada 14 días que es fácil de perder de vista. Outlayr guarda la inicial, cada cuota y los recargos por atraso junto al resto de tus gastos, con un aviso el día antes de cada pago.",
+                            }),
+                            t({
+                                en: "For an order already in progress, take a screenshot of its payment plan and Outlayr fills in each payment and what is already paid. The free plan holds 2 installment apps.",
+                                es: "Para una compra que ya va por la mitad, toma una captura de su plan de pagos y Outlayr llena cada cuota y lo que ya pagaste. El plan gratis permite 2 apps de cuotas.",
+                            }),
+                        ],
+                        id: "installments",
+                        title: t({ en: "Installments, like Cashea", es: "Compras en cuotas, como Cashea" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Outlayr does not link your bank, so nothing is pulled from your account. Your ledger is stored on your phone, and without an account your entries, amounts, and notes never leave it.",
+                                es: "Outlayr no conecta tu banco, así que no se trae nada de tu cuenta. Tu registro se guarda en tu celular, y sin una cuenta tus registros, montos y notas nunca salen de él.",
+                            }),
+                        ],
+                        id: "privacy",
+                        title: t({ en: "No bank link, no sign-up", es: "Sin banco conectado y sin cuenta" }),
+                    },
+                ],
+                related: [
+                    "/tools/dolar-bcv-hoy",
+                    "/guides/how-to-pay-cashea",
+                    "/guides/multi-currency-expense-tracker",
+                ] satisfies PageRef[],
+                steps: [
+                    {
+                        text: t({
+                            en: "Every total, budget, and chart reads in it.",
+                            es: "Todos los totales, presupuestos y gráficos se leen en ella.",
+                        }),
+                        title: t({ en: "Pick your main currency", es: "Elige tu moneda principal" }),
+                    },
+                    {
+                        text: t({
+                            en: "Tap the currency in the sentence and pick dollars, bolívares, or the one on the receipt.",
+                            es: "Toca la moneda en la oración y elige dólares, bolívares o la del recibo.",
+                        }),
+                        title: t({ en: "Log in the currency you paid", es: "Registra en la moneda en que pagaste" }),
+                    },
+                    {
+                        text: t({
+                            en: "For bolívares, tap the rate and pick USD (BCV), EUR (BCV), or My rate.",
+                            es: "En bolívares, toca la tasa y elige USD (BCV), EUR (BCV) o Mi tasa.",
+                        }),
+                        title: t({ en: "Check the rate", es: "Revisa la tasa" }),
+                    },
+                ],
+                title: t({
+                    en: "Track expenses in Venezuela, in dollars and bolívares",
+                    es: "Controla tus gastos en Venezuela, en dólares y bolívares",
                 }),
             },
             "how-to-pay-cashea": {
@@ -8169,7 +8619,7 @@ const answers = {
                 related: [
                     "/tools/installment-calculator",
                     "/tools/dolar-bcv-hoy",
-                    "/guides/best-expense-tracker-apps-latin-america",
+                    "/guides/expense-tracker-venezuela",
                 ] satisfies PageRef[],
                 steps: [
                     {
@@ -8374,7 +8824,7 @@ const answers = {
                 ],
                 related: [
                     "/guides/expense-tracker-template",
-                    "/tools/50-30-20-budget-calculator",
+                    "/guides/budget-app-without-bank-account",
                     "/guides/budget-planner",
                 ] satisfies PageRef[],
                 steps: [
@@ -8889,7 +9339,7 @@ const answers = {
                 ],
                 plateAlt: ACCOUNTS_SCREEN_ALT,
                 related: [
-                    "/tools/split-expenses-calculator",
+                    "/guides/expense-tracker-venezuela",
                     "/compare/spendee",
                     "/guides/track-money-sent-home",
                 ] satisfies PageRef[],

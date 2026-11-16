@@ -25,6 +25,8 @@ const SITE_PATHS = [
     "/guides/best-open-source-expense-tracker-apps",
     "/guides/best-subscription-tracker-apps",
     "/guides/budget-planner",
+    "/guides/budget-app-without-bank-account",
+    "/guides/expense-tracker-venezuela",
     "/guides/how-to-pay-cashea",
     "/guides/how-to-track-expenses",
     "/guides/mint-alternative",

@@ -91,6 +91,13 @@ const site = {
                     pt: "Melhores apps de assinaturas",
                     fr: "Meilleures apps d'abonnements",
                 }),
+                "budget-app-without-bank-account": t({
+                    en: "Budget without a bank link",
+                    de: "Budget ohne Bankverbindung",
+                    es: "Presupuesto sin vincular el banco",
+                    pt: "Orçamento sem conectar o banco",
+                    fr: "Budget sans lien bancaire",
+                }),
                 "budget-planner": t({
                     en: "Budgets",
                     de: "Budgets",
@@ -104,6 +111,13 @@ const site = {
                     es: "Plantilla de Excel",
                     pt: "Modelo de planilha",
                     fr: "Modèle de tableur",
+                }),
+                "expense-tracker-venezuela": t({
+                    en: "Expenses in Venezuela",
+                    de: "Ausgaben in Venezuela",
+                    es: "Gastos en Venezuela",
+                    pt: "Gastos na Venezuela",
+                    fr: "Dépenses au Venezuela",
                 }),
                 "how-to-pay-cashea": t({
                     en: "How to pay Cashea",
