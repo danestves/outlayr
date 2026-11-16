@@ -1,5 +1,11 @@
 import { decimalsFor } from "@outlayr/money/currency";
-import { draftSchedule, EVERY_OPTIONS, EVERY_ORDER, MAX_INSTALLMENT_COUNT } from "@outlayr/money/installment-draft";
+import {
+    draftSchedule,
+    EVERY_OPTIONS,
+    EVERY_ORDER,
+    MAX_INSTALLMENT_COUNT,
+    paidBeforeCount,
+} from "@outlayr/money/installment-draft";
 import type { EveryOption, InstallmentDraft } from "@outlayr/money/installment-draft";
 import { generateSchedule } from "@outlayr/money/installments";
 import { roundMoney } from "@outlayr/money/round";
@@ -9,8 +15,10 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import type { InstallmentPlanDraft } from "@/lib/cloud-ai";
 
-import { addLocalDays, addLocalMonths } from "./local-day";
+import { addLocalDays, addLocalMonths, daysBetween, startOfLocalDay } from "./local-day";
 import { AMOUNT_CEILING } from "./numpad";
+
+export const PLAN_SCREENSHOT_LIMIT = 5;
 
 export interface InstallmentSeed {
     draft: InstallmentDraft;
@@ -188,5 +196,68 @@ export function scannedOrder(plan: InstallmentPlanDraft, currency: string): Scan
         fees: rows.filter((row) => row.fee > 0).map((row) => ({ amount: row.fee, sequence: row.sequence })),
         price,
         purchaseDay,
+    };
+}
+
+interface PlanAccount {
+    currency: string;
+    name: string;
+}
+
+export function matchedAccount<A extends PlanAccount>(
+    plan: InstallmentPlanDraft,
+    accounts: readonly A[],
+    fallback: A
+): A {
+    const provider = plan.provider?.trim().toLowerCase();
+    return (
+        accounts.find((account) => account.name === plan.accountName) ??
+        accounts.find((account) => provider !== undefined && account.name.trim().toLowerCase() === provider) ??
+        fallback
+    );
+}
+
+export type PlanImport =
+    | { kind: "ready"; order: ScannedOrder }
+    | { currency: string; kind: "foreign" }
+    | { kind: "unclear" };
+
+export function planImport(plan: InstallmentPlanDraft, account: PlanAccount): PlanImport {
+    if (plan.currency !== null && plan.currency !== account.currency) {
+        return { currency: plan.currency, kind: "foreign" };
+    }
+    const order = scannedOrder(plan, account.currency);
+    return order === null ? { kind: "unclear" } : { kind: "ready", order };
+}
+
+export interface PlanStanding {
+    count: number;
+    left: number;
+    next: { amount: number; daysLate: number; dueDate: Date; sequence: number } | null;
+}
+
+export function scannedStanding(order: ScannedOrder, currency: string, today: Date): PlanStanding | null {
+    const schedule = draftSchedule(order.draft, order.price, order.purchaseDay, currency);
+    if (schedule === null) {
+        return null;
+    }
+    const paid = paidBeforeCount(order.draft, schedule, today);
+    const open = schedule.filter((row) => row.sequence > paid);
+    const [next] = open;
+    return {
+        count: schedule.filter((row) => row.sequence > 0).length,
+        left: roundMoney(
+            open.reduce((sum, row) => sum + row.amount, 0),
+            decimalsFor(currency)
+        ),
+        next:
+            next === undefined
+                ? null
+                : {
+                      amount: next.amount,
+                      daysLate: Math.max(0, daysBetween(next.dueDate.getTime(), startOfLocalDay(today.getTime()))),
+                      dueDate: next.dueDate,
+                      sequence: next.sequence,
+                  },
     };
 }

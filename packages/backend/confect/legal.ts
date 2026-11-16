@@ -665,6 +665,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "You earn a month when a friend you invited buys Pro, instead of when they log on three days. You see whether they bought it, never what they paid.",
                     label: "Invites",
                 },
+                {
+                    detail: "You can choose up to 5 screenshots at once, and each order on them becomes its own plan. Along with them we send the names of your cards and loans, so each plan goes into the right one, and Claude also reads each order's name.",
+                    label: "Installment plan import",
+                },
             ],
             de: [
                 {
@@ -718,6 +722,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Du bekommst einen Monat, wenn ein eingeladener Freund Pro kauft, statt wenn er an drei Tagen erfasst. Du siehst, ob er es gekauft hat, nie, was er bezahlt hat.",
                     label: "Einladungen",
+                },
+                {
+                    detail: "Du kannst bis zu 5 Screenshots auf einmal wählen, und jede Bestellung darauf wird ein eigener Plan. Dazu senden wir die Namen deiner Karten und Kredite, damit jeder Plan im richtigen landet, und Claude liest auch den Namen jeder Bestellung.",
+                    label: "Import von Ratenplänen",
                 },
             ],
             es: [
@@ -773,6 +781,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Ganas un mes cuando un amigo que invitaste compra Pro, en lugar de cuando registra en tres días. Ves si lo compró, nunca cuánto pagó.",
                     label: "Invitaciones",
                 },
+                {
+                    detail: "Puedes elegir hasta 5 capturas a la vez, y cada compra que aparece en ellas se vuelve su propio plan. Junto con ellas enviamos los nombres de tus tarjetas y préstamos, para que cada plan quede en la correcta, y Claude también lee el nombre de cada compra.",
+                    label: "Importación de planes de cuotas",
+                },
             ],
             fr: [
                 {
@@ -826,6 +838,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Vous gagnez un mois quand un ami que vous avez invité achète Pro, au lieu de quand il saisit des opérations trois jours. Vous voyez s'il l'a acheté, jamais ce qu'il a payé.",
                     label: "Invitations",
+                },
+                {
+                    detail: "Vous pouvez choisir jusqu'à 5 captures d'écran à la fois, et chaque commande qui y figure devient son propre échéancier. Nous envoyons avec elles les noms de vos cartes et prêts, pour que chaque échéancier aille dans le bon, et Claude lit aussi le nom de chaque commande.",
+                    label: "Import d'échéanciers",
                 },
             ],
             pt: [
@@ -881,6 +897,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Você ganha um mês quando um amigo que você convidou compra o Pro, em vez de quando ele registra em três dias. Você vê se ele comprou, nunca quanto pagou.",
                     label: "Convites",
                 },
+                {
+                    detail: "Você pode escolher até 5 capturas de tela de uma vez, e cada pedido nelas vira um parcelamento próprio. Junto com elas enviamos os nomes dos seus cartões e empréstimos, para que cada parcelamento vá para o certo, e o Claude também lê o nome de cada pedido.",
+                    label: "Importação de parcelamentos",
+                },
             ],
         },
         document: "privacy",
@@ -902,6 +922,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "You get a month when a friend you invited buys Pro, monthly, yearly or lifetime, instead of when they log on three days. A free trial, a refunded purchase, or a month from an invite doesn't count.",
                     label: "Months from invites",
                 },
+                {
+                    detail: "One import of up to 5 screenshots counts as one capture.",
+                    label: "Installment plan import",
+                },
             ],
             de: [
                 {
@@ -915,6 +939,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Du bekommst einen Monat, wenn ein eingeladener Freund Pro kauft, monatlich, jährlich oder auf Lebenszeit, statt wenn er an drei Tagen erfasst. Eine Testphase, ein erstatteter Kauf oder ein Monat aus einer Einladung zählt nicht.",
                     label: "Monate aus Einladungen",
+                },
+                {
+                    detail: "Ein Import mit bis zu 5 Screenshots zählt als eine Erfassung.",
+                    label: "Import von Ratenplänen",
                 },
             ],
             es: [
@@ -930,6 +958,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Recibes un mes cuando un amigo que invitaste compra Pro, mensual, anual o de por vida, en lugar de cuando registra en tres días. Una prueba gratis, una compra reembolsada o un mes por invitación no cuenta.",
                     label: "Meses por invitaciones",
                 },
+                {
+                    detail: "Una importación de hasta 5 capturas cuenta como una captura.",
+                    label: "Importación de planes de cuotas",
+                },
             ],
             fr: [
                 {
@@ -944,6 +976,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Vous recevez un mois quand un ami que vous avez invité achète Pro, mensuel, annuel ou à vie, au lieu de quand il saisit des opérations trois jours. Un essai gratuit, un achat remboursé ou un mois obtenu par invitation ne compte pas.",
                     label: "Mois obtenus par invitation",
                 },
+                {
+                    detail: "Un import d'au plus 5 captures d'écran compte comme une capture.",
+                    label: "Import d'échéanciers",
+                },
             ],
             pt: [
                 {
@@ -957,6 +993,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Você ganha um mês quando um amigo que você convidou compra o Pro, mensal, anual ou vitalício, em vez de quando ele registra em três dias. Um teste grátis, uma compra reembolsada ou um mês de convite não conta.",
                     label: "Meses por convites",
+                },
+                {
+                    detail: "Uma importação de até 5 capturas de tela conta como uma captura.",
+                    label: "Importação de parcelamentos",
                 },
             ],
         },

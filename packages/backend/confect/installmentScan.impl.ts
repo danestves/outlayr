@@ -32,7 +32,7 @@ const scan = FunctionImpl.make(
                 feature: "installment_scan",
                 modelId: claudeModelId,
             });
-            return yield* readInstallmentPlan(model, args.image, {
+            return yield* readInstallmentPlan(model, [args.image, ...(args.moreImages ?? [])], {
                 accounts: args.accounts,
                 currency: args.currency,
                 language: args.language,

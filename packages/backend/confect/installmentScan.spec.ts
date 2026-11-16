@@ -4,12 +4,15 @@ import * as Schema from "effect/Schema";
 import { CurrencyCode, IsoDay, JpegImage, LanguageTag, RegionCode, withinNameBudget } from "./lib/captureArgs";
 import { ScanStatus } from "./receiptScan.spec";
 
+export const MAX_MORE_IMAGES = 4;
+
 export const installmentScanArgs = {
     accounts: Schema.Array(Schema.String),
     aiConsent: Schema.optional(Schema.Number),
     currency: Schema.String,
     image: Schema.instanceOf(ArrayBuffer),
     language: Schema.optional(Schema.String),
+    moreImages: Schema.optional(Schema.Array(Schema.instanceOf(ArrayBuffer))),
     regionCode: Schema.optional(Schema.String),
     shareAnalytics: Schema.optional(Schema.Boolean),
     today: Schema.String,
@@ -20,6 +23,7 @@ export const InstallmentScanInput = Schema.Struct({
     currency: CurrencyCode,
     image: JpegImage,
     language: Schema.optional(LanguageTag),
+    moreImages: Schema.optional(Schema.Array(JpegImage).check(Schema.isMaxLength(MAX_MORE_IMAGES))),
     regionCode: Schema.optional(RegionCode),
     today: IsoDay,
 }).check(withinNameBudget);
@@ -35,11 +39,17 @@ const PlanRow = Schema.Struct({
 export const InstallmentPlanDraft = Schema.Struct({
     accountName: Schema.NullOr(Schema.String),
     currency: Schema.NullOr(Schema.String),
+    name: Schema.NullOr(Schema.String),
     provider: Schema.NullOr(Schema.String),
     rows: Schema.Array(PlanRow),
 });
 
-export const InstallmentScanResult = Schema.Struct({ plan: Schema.NullOr(InstallmentPlanDraft), status: ScanStatus });
+export const InstallmentScanResult = Schema.Struct({
+    plan: Schema.NullOr(InstallmentPlanDraft),
+    plans: Schema.Array(InstallmentPlanDraft),
+    skipped: Schema.Array(Schema.String),
+    status: ScanStatus,
+});
 
 export default GroupSpec.make().addFunction(
     FunctionSpec.publicAction({ args: () => installmentScanArgs, name: "scan", returns: () => InstallmentScanResult })

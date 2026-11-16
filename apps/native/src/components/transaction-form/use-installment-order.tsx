@@ -4,15 +4,13 @@ import { draftSchedule, paidBeforeCount, planPrice, upfrontOf } from "@outlayr/m
 import type { InstallmentDraft } from "@outlayr/money/installment-draft";
 import { startingDraft } from "@outlayr/money/installment-terms";
 import type { EntryRateType } from "@outlayr/money/rates";
-import * as Cause from "effect/Cause";
-import * as Effect from "effect/Effect";
+import type * as Effect from "effect/Effect";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 
 import type { Account } from "@/data/accounts-core";
 import { lastPlanRows, paymentRate, planIdForPurchase } from "@/data/installment-reads";
-import { installmentsRepo, liveInstallmentsQuery } from "@/data/installments-core";
-import type { InstallmentOrderInput, PaymentSource } from "@/data/installments-core";
+import type { PaymentSource } from "@/data/installments-core";
 import type { Transaction, TransactionInput } from "@/data/transactions-core";
 import type { Database } from "@/db/client";
 import { paymentSource, paymentSources } from "@/domain/installment-payment";
@@ -21,7 +19,8 @@ import { formatAmount } from "@/domain/money";
 import { transactionRateError } from "@/domain/transaction-entry-rate";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { notifyFailure } from "@/lib/notify";
-import { askForInstallmentReminders, rearmInstallmentReminders } from "@/state/surfaces-commands";
+import { placeOrder } from "@/state/installment-orders";
+import { askForInstallmentReminders } from "@/state/surfaces-commands";
 
 import { InstallmentsSheet } from "./installments-sheet";
 import type { SentenceVerb } from "./sentence/fact-glyphs";
@@ -43,61 +42,6 @@ interface InstallmentOrderArgs {
     seeded: InstallmentSeed | undefined;
     turn: number;
 }
-
-type SeededFee = InstallmentSeed["fees"][number];
-
-const addSeededFees = Effect.fn("InstallmentOrder.addSeededFees")(function* addSeededFees(
-    db: Database,
-    fees: readonly SeededFee[],
-    orderPlanId: string,
-    paidOutside: number,
-    onFailed: () => void
-) {
-    const cuotas = liveInstallmentsQuery(db)
-        .all()
-        .filter((row) => row.planId === orderPlanId);
-    yield* Effect.all(
-        fees.map((fee) =>
-            Effect.gen(function* addFee() {
-                const cuota = cuotas.find((row) => row.sequence === fee.sequence);
-                if (cuota === undefined) {
-                    return;
-                }
-                const charged = new Date(Math.min(cuota.dueDate.getTime(), Date.now()));
-                yield* installmentsRepo.addFee(db, { amount: fee.amount, date: charged, installmentId: cuota.id });
-                if (fee.sequence <= paidOutside) {
-                    yield* installmentsRepo.recordPayment(db, {
-                        amount: fee.amount,
-                        date: charged,
-                        planId: orderPlanId,
-                        source: null,
-                    });
-                }
-            }).pipe(Effect.uninterruptible)
-        ),
-        { concurrency: "unbounded" }
-    ).pipe(
-        Effect.catchCause((cause) =>
-            Effect.sync(() => {
-                console.error("Failed to save a scanned late fee", Cause.squash(cause));
-                onFailed();
-            })
-        )
-    );
-});
-
-const placeOrder = Effect.fn("InstallmentOrder.placeOrder")(function* placeOrder<E>(
-    db: Database,
-    order: InstallmentOrderInput<E>,
-    fees: readonly SeededFee[],
-    callbacks: { onFeesFailed: () => void; onOrdered: () => void }
-) {
-    const { planId, transactionId } = yield* installmentsRepo.createOrder(db, order);
-    callbacks.onOrdered();
-    yield* addSeededFees(db, fees, planId, order.installmentsPaidOutside ?? 0, callbacks.onFeesFailed);
-    rearmInstallmentReminders(db);
-    return transactionId;
-});
 
 // Editing an entry that has an order opens the order instead: its rows are edited there, never regenerated here.
 export function useInstallmentOrder({

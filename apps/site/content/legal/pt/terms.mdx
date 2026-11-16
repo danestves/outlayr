@@ -87,7 +87,7 @@ O limite do Pro para lançamentos por voz e escaneamentos de recibos é um limit
 
 ### Como as capturas são contadas
 
-- Uma captura é um áudio de voz, uma foto de recibo ou uma captura de tela de parcelamento. Lançamentos por voz, escaneamentos de recibos e importações de parcelamentos compartilham uma única cota.
+- Uma captura é um áudio de voz, uma foto de recibo ou uma importação de parcelamentos de até 5 capturas de tela. Lançamentos por voz, escaneamentos de recibos e importações de parcelamentos compartilham uma única cota.
 - Uma captura conta assim que nosso servidor a aceita, antes de a IA lê-la. Um áudio sem nenhuma transação, uma foto sem recibo ou parcelamento e uma correção falada contam como uma cada.
 - A cota funciona em janelas de 30 dias. Quando ela acaba, o app avisa você. As capturas usadas voltam em até 30 dias. No plano grátis, fazer upgrade para o Pro remove o limite na hora.
 - Há limites separados de curto prazo para a rapidez com que você pode enviar capturas, consultas de estabelecimentos e importações. Quando você atinge um deles, a voz ou o escaneamento pausa por pouco tempo e o app mostra quando o próximo estará disponível.
@@ -201,7 +201,7 @@ Alguns recursos usam inteligência artificial, operada pelos provedores de IA te
 
 - **Lançamento por voz.** Você descreve uma transação em voz alta. Ela é transcrita e transformada em um rascunho de lançamento, que você pode corrigir falando de novo.
 - **Escaneamento de recibos.** Você tira uma foto de um recibo. O total, a loja, a data e os itens são lidos em um rascunho de lançamento.
-- **Importação de parcelamentos.** Você escolhe uma captura de tela do plano de pagamento de um pedido. O valor, a data de vencimento, a multa por atraso e se está paga, de cada parcela, são lidos em um rascunho de parcelamento.
+- **Importação de parcelamentos.** Você escolhe até 5 capturas de tela dos planos de pagamento dos seus pedidos. O nome de cada pedido e, de cada parcela, o valor, a data de vencimento, a multa por atraso e se está paga são lidos em rascunhos de parcelamento.
 - **Sugestões de estabelecimentos.** A partir do nome de um estabelecimento, o Outlayr sugere uma categoria, tags e o site da empresa, que é usado para mostrar o logo dela. Você pode desativar isso em Ajustes, “Preenchimento inteligente”.
 - **Leitura de notificações.** Quando o Outlayr registra uma compra a partir de uma notificação de banco ou cartão, a IA identifica se ela informa uma compra, um dinheiro que você recebeu ou uma cobrança recusada, e o valor, a moeda e o estabelecimento. Você pode desativar isso em Ajustes, “Preenchimento inteligente”.
 - **Associação por IA na importação (Pro).** Quando você importa um arquivo CSV, os nomes de estabelecimentos que seu celular não conseguiu associar são associados às suas categorias. Valores, datas e o próprio arquivo não são enviados.
@@ -211,7 +211,7 @@ Alguns recursos usam inteligência artificial, operada pelos provedores de IA te
 
 A IA pode ouvir mal, ler mal ou chutar. Ela pode errar um valor, uma moeda, uma data, um estabelecimento, uma categoria ou um item, ou deixar algum de fora.
 
-- Lançamentos por voz, escaneamentos de recibos e importações de parcelamentos produzem um rascunho. Nada é salvo até você tocar em Salvar, e cabe a você conferir o rascunho antes.
+- Lançamentos por voz, escaneamentos de recibos e importações de parcelamentos produzem um rascunho. Nada é salvo até você tocar em Salvar ou Adicionar, e cabe a você conferir o rascunho antes.
 - Os lançamentos registrados a partir de notificações são salvos sem rascunho e marcados para você revisar em Lançamentos. Confira cada um e corrija o que estiver errado.
 - Algumas sugestões são aplicadas sem uma revisão separada, como um logo consultado de novo em segundo plano depois que você salva um lançamento. Confira seus lançamentos e corrija o que estiver errado.
 - Se você salvar um valor errado, o lançamento, seus saldos e seus orçamentos continuam errados até você corrigir. Na medida em que a lei permitir, não somos responsáveis por perdas decorrentes de confiar em um resultado da IA que você não conferiu.

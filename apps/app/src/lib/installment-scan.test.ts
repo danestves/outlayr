@@ -15,6 +15,7 @@ const row = (sequence: number, dueDate: string, amount: number, paid = false, fe
 const scanned = (rows: ScannedPlan["rows"]): ScannedPlan => ({
     accountName: null,
     currency: "USD",
+    name: null,
     provider: null,
     rows,
 });

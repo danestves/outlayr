@@ -38,6 +38,11 @@ export type InstallmentPlanDraft = typeof InstallmentPlanDraftSchema.Type;
 
 export type InstallmentPlanRow = InstallmentPlanDraft["rows"][number];
 
+export interface InstallmentScan {
+    readonly plans: readonly InstallmentPlanDraft[];
+    readonly skipped: readonly string[];
+}
+
 const INVALID_RESPONSE = { ok: false, reason: "invalidResponse" } as const;
 
 export type ScanRefusal = Exclude<ScanStatus, "ok">;
@@ -80,11 +85,13 @@ export function receiptScanTransport(): ReceiptScanFn {
         );
 }
 
-export type InstallmentScanRequest = Omit<ScanRequest, "categoryTree">;
+export interface InstallmentScanRequest extends Omit<ScanRequest, "categoryTree"> {
+    moreImages: readonly ArrayBuffer[];
+}
 
 export type InstallmentScanFn = (
     args: InstallmentScanRequest
-) => Effect.Effect<ScanOutcome<InstallmentPlanDraft>, CloudError>;
+) => Effect.Effect<ScanOutcome<InstallmentScan>, CloudError>;
 
 const decodeInstallmentScanResult = Schema.decodeUnknownOption(InstallmentScanResult);
 
@@ -94,7 +101,8 @@ export function installmentScanTransport(): InstallmentScanFn {
             Effect.map((reply) =>
                 Option.match(decodeInstallmentScanResult(reply), {
                     onNone: () => INVALID_RESPONSE,
-                    onSome: ({ plan, status }) => scanOutcome(status, plan),
+                    onSome: ({ plans, skipped, status }) =>
+                        scanOutcome(status, plans.length === 0 ? null : { plans, skipped }),
                 })
             )
         );

@@ -3,13 +3,21 @@ import { describe, expect, it } from "vite-plus/test";
 
 import type { InstallmentPlanDraft, InstallmentPlanRow } from "@/lib/cloud-ai";
 
-import { encodeInstallmentSeed, parseInstallmentSeed, scannedOrder } from "./installment-scan";
+import {
+    encodeInstallmentSeed,
+    matchedAccount,
+    parseInstallmentSeed,
+    planImport,
+    scannedOrder,
+    scannedStanding,
+} from "./installment-scan";
 
 const day = (year: number, month: number, date: number) => new Date(year, month - 1, date);
 
 const cashea = (rows: InstallmentPlanRow[]): InstallmentPlanDraft => ({
     accountName: "Cashea",
     currency: "USD",
+    name: null,
     provider: "Cashea",
     rows,
 });
@@ -127,5 +135,45 @@ describe("installment seed param", () => {
         ["an unknown cadence", JSON.stringify({ ...valid, every: "daily" })],
     ])("rejects %s", (_name, param) => {
         expect(parseInstallmentSeed(param)).toBeUndefined();
+    });
+});
+
+describe("one plan of a scanned list", () => {
+    const accounts = [
+        { currency: "USD", name: "Cashea" },
+        { currency: "USD", name: " krece " },
+        { currency: "VES", name: "Visa" },
+    ] as const;
+    const [casheaAccount, kreceAccount, visa] = accounts;
+
+    it("files into the account the model named, else the one carrying the provider's name, else the scanned one", () => {
+        const plan = cashea([row(1, "2026-11-15", 23.33, false)]);
+        expect(matchedAccount({ ...plan, accountName: "Visa" }, accounts, casheaAccount)).toBe(visa);
+        expect(matchedAccount({ ...plan, accountName: null, provider: "Krece" }, accounts, casheaAccount)).toBe(
+            kreceAccount
+        );
+        expect(matchedAccount({ ...plan, accountName: null, provider: "Lysto" }, accounts, visa)).toBe(visa);
+    });
+
+    it("is foreign when the plan's currency is not its account's", () => {
+        const plan = cashea([row(1, "2026-11-15", 23.33, false)]);
+        expect(planImport(plan, visa)).toStrictEqual({ currency: "USD", kind: "foreign" });
+        expect(planImport({ ...plan, currency: null }, visa).kind).toBe("ready");
+    });
+
+    it("owes the unpaid cuotas from the first one due, counting its days late from today", () => {
+        const plan = cashea([
+            row(1, "2026-11-01", 23.33, true),
+            ...["2026-11-15", "2026-11-29", "2026-12-13", "2026-12-27", "2027-01-10"].map((dueDate, index) =>
+                row(index + 2, dueDate, 23.33, false)
+            ),
+        ]);
+        const result = planImport(plan, casheaAccount);
+        if (result.kind !== "ready") {
+            throw new Error(`Expected a ready plan, got ${result.kind}`);
+        }
+        const standing = scannedStanding(result.order, "USD", new Date(2026, 10, 16, 20, 30));
+        expect(standing).toMatchObject({ count: 6, left: 116.65, next: { daysLate: 1, sequence: 2 } });
+        expect(scannedStanding(result.order, "USD", new Date(2026, 10, 15, 9))?.next?.daysLate).toBe(0);
     });
 });

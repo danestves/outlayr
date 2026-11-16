@@ -3,22 +3,23 @@ import { useRouter } from "expo-router";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useAiConsent } from "@/data/settings";
 import { newId } from "@/domain/ids";
-import { photoFrom } from "@/hooks/use-receipt-scan";
+import { PLAN_SCREENSHOT_LIMIT } from "@/domain/installment-scan";
+import { photosFrom } from "@/hooks/use-receipt-scan";
 import type { ScanPhoto } from "@/hooks/use-receipt-scan";
 import { useAuthSession } from "@/lib/auth-session";
 import { SILENT } from "@/state/atom-command";
 import { pickInstallmentPhotoCommand } from "@/state/installment-flow-commands";
 import { useAtomAction } from "@/state/use-atom-action";
 
-let handedOff: { photo: ScanPhoto; token: string } | null = null;
+let handedOff: { photos: readonly ScanPhoto[]; token: string } | null = null;
 
-function handOff(photo: ScanPhoto): string {
-    handedOff = { photo, token: newId() };
+function handOff(photos: readonly ScanPhoto[]): string {
+    handedOff = { photos, token: newId() };
     return handedOff.token;
 }
 
-export function handedOffPhoto(token: string | undefined): ScanPhoto | null {
-    return handedOff !== null && handedOff.token === token ? handedOff.photo : null;
+export function handedOffPhotos(token: string | undefined): readonly ScanPhoto[] {
+    return handedOff !== null && handedOff.token === token ? handedOff.photos : [];
 }
 
 export function useScreenshotImport(accountId: string): () => void {
@@ -31,9 +32,9 @@ export function useScreenshotImport(accountId: string): () => void {
         {
             onFailure: () => openScan(),
             onSuccess: (result) => {
-                const photo = photoFrom(result);
-                if (photo !== null) {
-                    openScan(handOff(photo));
+                const photos = photosFrom(result).slice(0, PLAN_SCREENSHOT_LIMIT);
+                if (photos.length > 0) {
+                    openScan(handOff(photos));
                 }
             },
         },
