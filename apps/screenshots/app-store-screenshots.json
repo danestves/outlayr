@@ -117,12 +117,12 @@
           "de": "TEMPO"
         },
         "headline": {
-          "en": "You'll end the\nmonth $319 short.",
-          "es": "Este mes te\nvan a faltar $319.",
-          "es-ES": "Este mes te\nvan a faltar €319.",
-          "fr": "Il vous manquera\n€319 ce mois-ci.",
-          "pt-BR": "Vai faltar R$1.596\nno fim do mês.",
-          "pt-PT": "Vão faltar €319\neste mês.",
+          "en": "You'll end the\nmonth $516 short.",
+          "es": "Este mes te\nvan a faltar $516.",
+          "es-ES": "Este mes te\nvan a faltar €516.",
+          "fr": "Il vous manquera\n€516 ce mois-ci.",
+          "pt-BR": "Vai faltar R$2.579\nno fim do mês.",
+          "pt-PT": "Vão faltar €516\neste mês.",
           "de": "Der Monat endet\n$516 zu knapp."
         },
         "screenshot": "/screenshots/apple/iphone/{locale}/04.png",
@@ -329,12 +329,24 @@
         "id": "de-log",
         "layout": "hero",
         "label": {
+          "en": "OUTLAYR",
+          "es": "OUTLAYR",
+          "es-ES": "OUTLAYR",
+          "fr": "OUTLAYR",
+          "pt-BR": "OUTLAYR",
+          "pt-PT": "OUTLAYR",
           "de": "OUTLAYR"
         },
         "headline": {
+          "en": "Every account.\nOne page.",
+          "es": "Tus cuentas.\nUna sola vista.",
+          "es-ES": "Todas tus cuentas.\nEn una sola vista.",
+          "fr": "Tous vos comptes.\nUne seule page.",
+          "pt-BR": "Todas as contas.\nNuma tela só.",
+          "pt-PT": "Todas as contas.\nNum só ecrã.",
           "de": "Jedes Konto.\nEine Seite."
         },
-        "screenshot": "/screenshots/android/phone/de/01-log.png",
+        "screenshot": "/screenshots/android/phone/{locale}/01-log.png",
         "transforms": {
           "device": {
             "x": 145,
@@ -348,12 +360,24 @@
         "id": "de-add-menu",
         "layout": "device-top",
         "label": {
+          "en": "FIVE WAYS IN",
+          "es": "CINCO MANERAS",
+          "es-ES": "CINCO FORMAS",
+          "fr": "CINQ FAÇONS",
+          "pt-BR": "CINCO JEITOS",
+          "pt-PT": "CINCO FORMAS",
           "de": "FÜNF WEGE"
         },
         "headline": {
+          "en": "Type it, say it,\nor snap it.",
+          "es": "Escríbelo, dilo\no tómale una foto.",
+          "es-ES": "Escríbelo, dilo\no hazle una foto.",
+          "fr": "Tapez, dictez\nou photographiez.",
+          "pt-BR": "Digite, fale\nou tire uma foto.",
+          "pt-PT": "Escreva, diga\nou tire uma foto.",
           "de": "Tippen, sagen,\nabfotografieren."
         },
-        "screenshot": "/screenshots/android/phone/de/02-add-menu.png",
+        "screenshot": "/screenshots/android/phone/{locale}/02-add-menu.png",
         "transforms": {
           "device": {
             "x": 145,
@@ -367,12 +391,24 @@
         "id": "de-insights",
         "layout": "hero",
         "label": {
+          "en": "INSIGHTS",
+          "es": "ANÁLISIS",
+          "es-ES": "ESTADÍSTICAS",
+          "fr": "STATISTIQUES",
+          "pt-BR": "ESTATÍSTICAS",
+          "pt-PT": "ESTATÍSTICAS",
           "de": "AUSWERTUNGEN"
         },
         "headline": {
+          "en": "Where the week\nactually went.",
+          "es": "A dónde se fue\ntu semana.",
+          "es-ES": "En qué se te ha\nido la semana.",
+          "fr": "Où est passée\nvotre semaine.",
+          "pt-BR": "Para onde foi\nsua semana.",
+          "pt-PT": "Para onde foi\na sua semana.",
           "de": "Wohin die Woche\nwirklich ging."
         },
-        "screenshot": "/screenshots/android/phone/de/03-insights.png",
+        "screenshot": "/screenshots/android/phone/{locale}/03-insights.png",
         "transforms": {
           "device": {
             "x": 145,
@@ -386,12 +422,24 @@
         "id": "de-entry",
         "layout": "hero",
         "label": {
+          "en": "THE ENTRY",
+          "es": "EL REGISTRO",
+          "es-ES": "EL REGISTRO",
+          "fr": "LA SAISIE",
+          "pt-BR": "O LANÇAMENTO",
+          "pt-PT": "O REGISTO",
           "de": "DER EINTRAG"
         },
         "headline": {
+          "en": "Log it in\none sentence.",
+          "es": "Anótalo en\nuna frase.",
+          "es-ES": "Apúntalo en\nuna frase.",
+          "fr": "Notez-le en\nune phrase.",
+          "pt-BR": "Anote em\numa frase.",
+          "pt-PT": "Registe-o\nnuma frase.",
           "de": "Ein Satz genügt."
         },
-        "screenshot": "/screenshots/android/phone/de/04-entry.png",
+        "screenshot": "/screenshots/android/phone/{locale}/04-entry.png",
         "transforms": {
           "device": {
             "x": 145,
@@ -405,12 +453,24 @@
         "id": "de-pace",
         "layout": "hero",
         "label": {
+          "en": "PACE",
+          "es": "RITMO",
+          "es-ES": "RITMO",
+          "fr": "RYTHME",
+          "pt-BR": "RITMO",
+          "pt-PT": "RITMO",
           "de": "TEMPO"
         },
         "headline": {
+          "en": "You'll end the\nmonth $516 short.",
+          "es": "Este mes te\nvan a faltar $516.",
+          "es-ES": "Este mes te\nvan a faltar €516.",
+          "fr": "Il vous manquera\n€516 ce mois-ci.",
+          "pt-BR": "Vai faltar R$2.579\nno fim do mês.",
+          "pt-PT": "Vão faltar €516\neste mês.",
           "de": "Der Monat endet\n$516 zu knapp."
         },
-        "screenshot": "/screenshots/android/phone/de/05-pace.png",
+        "screenshot": "/screenshots/android/phone/{locale}/05-pace.png",
         "transforms": {
           "device": {
             "x": 145,
@@ -424,12 +484,24 @@
         "id": "de-budgets",
         "layout": "hero",
         "label": {
+          "en": "LIMITS",
+          "es": "LÍMITES",
+          "es-ES": "LÍMITES",
+          "fr": "LIMITES",
+          "pt-BR": "LIMITES",
+          "pt-PT": "LIMITES",
           "de": "LIMITS"
         },
         "headline": {
+          "en": "Every category.\nIts own limit.",
+          "es": "Cada categoría.\nSu propio límite.",
+          "es-ES": "Cada categoría.\nSu propio límite.",
+          "fr": "Chaque catégorie.\nSa propre limite.",
+          "pt-BR": "Cada categoria.\nSeu próprio limite.",
+          "pt-PT": "Cada categoria.\nO seu limite.",
           "de": "Jede Kategorie.\nIhr eigenes Limit."
         },
-        "screenshot": "/screenshots/android/phone/de/06-budgets.png",
+        "screenshot": "/screenshots/android/phone/{locale}/06-budgets.png",
         "transforms": {
           "device": {
             "x": 145,
@@ -443,12 +515,24 @@
         "id": "de-goals",
         "layout": "hero",
         "label": {
+          "en": "GOALS",
+          "es": "METAS",
+          "es-ES": "METAS",
+          "fr": "OBJECTIFS",
+          "pt-BR": "METAS",
+          "pt-PT": "OBJETIVOS",
           "de": "SPARZIELE"
         },
         "headline": {
+          "en": "Japan in April.\nYou're on pace.",
+          "es": "Japón en abril.\nVas a buen ritmo.",
+          "es-ES": "Japón en abril.\nVas a buen ritmo.",
+          "fr": "Japon en avril.\nDans les temps.",
+          "pt-BR": "Japão em abril.\nNo ritmo certo.",
+          "pt-PT": "Japão em abril.\nEstá no ritmo.",
           "de": "Japan im April.\nDu bist im Plan."
         },
-        "screenshot": "/screenshots/android/phone/de/07-goals.png",
+        "screenshot": "/screenshots/android/phone/{locale}/07-goals.png",
         "transforms": {
           "device": {
             "x": 145,
@@ -462,12 +546,24 @@
         "id": "de-subscriptions",
         "layout": "hero",
         "label": {
+          "en": "SUBSCRIPTIONS",
+          "es": "SUSCRIPCIONES",
+          "es-ES": "SUSCRIPCIONES",
+          "fr": "ABONNEMENTS",
+          "pt-BR": "ASSINATURAS",
+          "pt-PT": "SUBSCRIÇÕES",
           "de": "ABOS"
         },
         "headline": {
+          "en": "Each subscription.\nOne monthly total.",
+          "es": "Tus suscripciones.\nUn total al mes.",
+          "es-ES": "Tus suscripciones.\nUn total al mes.",
+          "fr": "Vos abonnements.\nUn total par mois.",
+          "pt-BR": "Cada assinatura.\nUm total por mês.",
+          "pt-PT": "Cada subscrição.\nUm total por mês.",
           "de": "Jedes Abo.\nEine Summe."
         },
-        "screenshot": "/screenshots/android/phone/de/08-upcoming.png",
+        "screenshot": "/screenshots/android/phone/{locale}/08-upcoming.png",
         "transforms": {
           "device": {
             "x": 145,
