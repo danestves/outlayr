@@ -1164,7 +1164,7 @@ const tools = {
                 related: [
                     "/guides/how-to-pay-cashea",
                     "/guides/best-expense-tracker-apps-latin-america",
-                    "/tools/dolar-hoy-bolivia",
+                    "/guides/expense-tracker-venezuela",
                 ] satisfies PageRef[],
                 title: t({
                     en: "BCV dollar and euro today: the official rates in Venezuela",
