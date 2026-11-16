@@ -112,13 +112,8 @@ const tools = {
                         pt: "Oficial (BCB)",
                         fr: "Officiel (BCB)",
                     }),
-                    bcv: t({
-                        en: "Official (BCV)",
-                        de: "Offiziell (BCV)",
-                        es: "Oficial (BCV)",
-                        pt: "Oficial (BCV)",
-                        fr: "Officiel (BCV)",
-                    }),
+                    bcv: t({ en: "USD (BCV)", de: "USD (BCV)", es: "USD (BCV)", pt: "USD (BCV)", fr: "USD (BCV)" }),
+                    bcvEur: t({ en: "EUR (BCV)", de: "EUR (BCV)", es: "EUR (BCV)", pt: "EUR (BCV)", fr: "EUR (BCV)" }),
                     binance: t({
                         en: "Parallel (Binance P2P)",
                         de: "Parallel (Binance P2P)",
@@ -146,13 +141,13 @@ const tools = {
                     oficial: t({ en: "Official", de: "Offiziell", es: "Oficial", pt: "Oficial", fr: "Officiel" }),
                     tarjeta: t({ en: "Card", de: "Karte", es: "Tarjeta", pt: "Cartão", fr: "Carte" }),
                 },
-                rate: t({ en: "Dollar", de: "Dollar", es: "Dólar", pt: "Dólar", fr: "Dollar" }),
+                rate: t({ en: "Rate", de: "Kurs", es: "Tasa", pt: "Taxa", fr: "Taux" }),
                 result: insert(
                     t({
                         en: "{{from}} is {{to}} at the {{rate}} rate",
                         de: "{{from}} entsprechen {{to}} zum Kurs {{rate}}",
-                        es: "{{from}} son {{to}} al dólar {{rate}}",
-                        pt: "{{from}} são {{to}} no dólar {{rate}}",
+                        es: "{{from}} son {{to}} a la tasa {{rate}}",
+                        pt: "{{from}} são {{to}} na taxa {{rate}}",
                         fr: "{{from}} font {{to}} au taux {{rate}}",
                     })
                 ),
@@ -1112,6 +1107,16 @@ const tools = {
                     },
                     {
                         answer: t({
+                            en: "The BCV publishes an official rate for the euro too, on the same day as the dollar one. Pick EUR (BCV) in the calculator to turn euros into bolívares and back. Its row shows the date it is valid for.",
+                            es: "El BCV también publica una tasa oficial para el euro, el mismo día que la del dólar. Elige EUR (BCV) en la calculadora para pasar euros a bolívares y bolívares a euros. Su fila muestra la fecha para la que vale.",
+                        }),
+                        question: t({
+                            en: "What is the BCV euro rate today?",
+                            es: "¿Cuál es la tasa del euro BCV hoy?",
+                        }),
+                    },
+                    {
+                        answer: t({
                             en: "The BCV publishes a rate for each business day, so it changes once a day and not minute by minute. Its row on this page shows the date it is valid for.",
                             es: "El BCV publica una tasa para cada día hábil, así que cambia una vez al día y no minuto a minuto. Su fila en esta página muestra la fecha para la que vale.",
                         }),
@@ -1133,23 +1138,23 @@ const tools = {
                     PRIVACY_FAQ,
                 ],
                 lead: t({
-                    en: "Today's official BCV rate for the dollar in Venezuela, with a calculator to turn dollars into bolívares and back.",
-                    es: "La tasa oficial del BCV para el dólar en Venezuela hoy, con una calculadora para convertir bolívares a dólares y dólares a bolívares.",
+                    en: "Today's official BCV rates for the dollar and the euro in Venezuela, with a calculator to turn dollars or euros into bolívares and back.",
+                    es: "La tasa oficial del BCV para el dólar y el euro en Venezuela hoy, con una calculadora para convertir bolívares a dólares o euros y al revés.",
                 }),
                 meta: {
                     title: t({
-                        en: "BCV Dollar Rate Today and USD to Bolívar Calculator",
-                        es: "Calculadora dólar BCV: convertir bolívares a dólares hoy",
+                        en: "BCV Dollar and Euro Rate Today, Bolívar Calculator",
+                        es: "Calculadora dólar y euro BCV: bolívares a dólares hoy",
                     }),
                 },
                 method: [
                     t({
-                        en: "The official rate is the one the Banco Central de Venezuela publishes. It is published for a date, so its row shows that date and no time.",
-                        es: "La tasa oficial es la que publica el Banco Central de Venezuela. Se publica para una fecha, así que su fila muestra esa fecha y no una hora.",
+                        en: "Both rates are the official ones the Banco Central de Venezuela publishes, one for the dollar and one for the euro. Each is published for a date, so its row shows that date and no time.",
+                        es: "Las dos tasas son las oficiales que publica el Banco Central de Venezuela, una para el dólar y otra para el euro. Cada una se publica para una fecha, así que su fila muestra esa fecha y no una hora.",
                     }),
                     t({
-                        en: "The calculator multiplies dollars by the rate you pick, or divides bolívares by it, and rounds to the cent. Banks and shops can give you a different rate, so use it as a reference.",
-                        es: "La calculadora multiplica los dólares por la tasa que elijas, o divide los bolívares entre ella, y redondea al centavo. Los bancos y las tiendas pueden darte otra tasa, así que úsala como referencia.",
+                        en: "The calculator multiplies dollars or euros by the rate you pick, or divides bolívares by it, and rounds to the cent. Banks and shops can give you a different rate, so use it as a reference.",
+                        es: "La calculadora multiplica los dólares o los euros por la tasa que elijas, o divide los bolívares entre ella, y redondea al centavo. Los bancos y las tiendas pueden darte otra tasa, así que úsala como referencia.",
                     }),
                     t({
                         en: "This page refreshes the rates from DolarApi every few hours, so a rate can be a few hours old, and each row shows when its source last updated it. If DolarApi can't be reached, the page says so instead of showing an old number.",
@@ -1162,8 +1167,8 @@ const tools = {
                     "/tools/dolar-hoy-bolivia",
                 ] satisfies PageRef[],
                 title: t({
-                    en: "BCV dollar today: the official rate in Venezuela",
-                    es: "Calculadora dólar BCV: la tasa oficial de hoy",
+                    en: "BCV dollar and euro today: the official rates in Venezuela",
+                    es: "Calculadora dólar y euro BCV: la tasa oficial de hoy",
                 }),
             },
             "dolar-hoy-argentina": {
