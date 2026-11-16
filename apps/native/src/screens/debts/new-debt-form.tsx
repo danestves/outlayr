@@ -22,7 +22,7 @@ import { debtTheirSide, newPersonCurrency } from "@/domain/debt-rate";
 import type { DebtRate } from "@/domain/debt-rate";
 import type { DebtVerb } from "@/domain/debts";
 import { addLocalMonths } from "@/domain/local-day";
-import { minorUnitsFor, roundToMinorUnits } from "@/domain/money";
+import { formatFixed, minorUnitsFor, roundToMinorUnits } from "@/domain/money";
 import { numpadToNumber } from "@/domain/numpad";
 import { formatRateFigure, pairQuotedInverse, pairUnitSymbols, quotePairRate } from "@/domain/transaction-entry-rate";
 import { quotedByBcv } from "@/domain/transaction-form-labels";
@@ -41,6 +41,7 @@ import { useAtomAction } from "@/state/use-atom-action";
 
 const MAX_SUGGESTIONS = 4;
 const OFFICIAL = ["official"] as const;
+const CAPTION_DECIMALS = 2;
 
 const sameName = (a: string, b: string) => a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
 
@@ -106,7 +107,9 @@ function rateCaption(t: TranslateFn, language: Language, from: string, to: strin
         return null;
     }
     const inverse = pairQuotedInverse(from, to);
-    const figure = `${formatRateFigure(quotePairRate(inverse, rate.personPerAccount), language)} ${pairUnitSymbols(from, to, inverse).quote}`;
+    const quoted = quotePairRate(inverse, rate.personPerAccount);
+    const digits = quoted >= 1 ? formatFixed(quoted, CAPTION_DECIMALS, language) : formatRateFigure(quoted, language);
+    const figure = `${digits} ${pairUnitSymbols(from, to, inverse).quote}`;
     if (rate.type === "custom") {
         return t("debts.rate.typed", { rate: figure });
     }
