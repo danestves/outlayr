@@ -1,4 +1,4 @@
-import { TextField, useNativeState } from "@expo/ui/swift-ui";
+import { Text, TextField, useNativeState } from "@expo/ui/swift-ui";
 import { accessibilityLabel, foregroundStyle, lineLimit } from "@expo/ui/swift-ui/modifiers";
 
 import { useColors } from "@/theme/use-colors";
@@ -33,8 +33,11 @@ export function NoteField({ defaultValue, label, onChange, onFocusChange, placeh
             ]}
             onFocusChange={onFocusChange}
             onTextChange={onChange}
-            placeholder={placeholder}
             text={text}
-        />
+        >
+            <TextField.Placeholder>
+                <Text modifiers={[BODY, foregroundStyle(colors.muted)]}>{placeholder}</Text>
+            </TextField.Placeholder>
+        </TextField>
     );
 }

@@ -1048,7 +1048,7 @@ export function TransactionForm(props: TransactionFormProps) {
 
                     {note.item}
 
-                    {largeText && !resting && !note.focused ? (
+                    {largeText && !resting ? (
                         <>
                             <FormScrollStageTarget id={stageTarget} key={stageTarget} />
                             <FormScrollItem>
