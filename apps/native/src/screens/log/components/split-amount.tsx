@@ -32,6 +32,7 @@ export function SplitAmount({
     const hidden = use(AmountsHiddenContext);
     const parts = amountParts(magnitude, code, showCents, language);
     const style = fontFamily ? { fontFamily, fontSize: size } : { fontSize: size };
+    const whole = Math.trunc(roundMoney(magnitude, parts.minorUnits));
 
     if (hidden) {
         return (
@@ -50,7 +51,7 @@ export function SplitAmount({
                 locale={parts.locale}
                 prefix={`${positive ? "+" : "-"}${symbolPrefix(parts.symbol)}`}
                 size={size}
-                value={Math.trunc(roundMoney(magnitude, parts.minorUnits))}
+                value={whole}
             />
             {parts.fraction ? (
                 <Text className={`${typeClass} text-muted tabular-nums`} style={style}>
