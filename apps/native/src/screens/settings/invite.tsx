@@ -130,9 +130,10 @@ function FriendRow({ friend, paid }: { friend: ReferredFriend; paid: boolean }) 
                 ? t("referrals.friend.bought", { date })
                 : t("referrals.friend.done", { date, days: REFERRAL_DAYS_TO_EARN });
         }
-        return paid
-            ? t("referrals.friend.waiting")
-            : t("referrals.friend.logged", { days: friend.daysLogged, total: REFERRAL_DAYS_TO_EARN });
+        if (!paid) {
+            return t("referrals.friend.logged", { days: friend.daysLogged, total: REFERRAL_DAYS_TO_EARN });
+        }
+        return friend.status === "counting" ? t("referrals.friend.waiting") : null;
     })();
     const trailing = {
         capped: t("referrals.friend.capped"),
@@ -142,7 +143,7 @@ function FriendRow({ friend, paid }: { friend: ReferredFriend; paid: boolean }) 
     }[friend.status];
     return (
         <Animated.View
-            accessibilityLabel={`${name}. ${caption}. ${trailing}`}
+            accessibilityLabel={[name, caption, trailing].filter(Boolean).join(". ")}
             accessible
             className="border-border flex-row items-center gap-3 border-b py-3"
             entering={FadeIn}
@@ -153,7 +154,7 @@ function FriendRow({ friend, paid }: { friend: ReferredFriend; paid: boolean }) 
             </View>
             <View className="flex-1">
                 <Text className="text-foreground text-body font-sans-semibold">{name}</Text>
-                <Text className="text-muted text-subtitle">{caption}</Text>
+                {caption === null ? null : <Text className="text-muted text-subtitle">{caption}</Text>}
             </View>
             <Text
                 className={

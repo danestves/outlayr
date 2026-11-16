@@ -899,7 +899,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Images you paste",
                 },
                 {
-                    detail: "You get a month when a friend you invited buys Pro, monthly, yearly or lifetime, instead of when they log on three days. A free trial or a month from an invite doesn't count.",
+                    detail: "You get a month when a friend you invited buys Pro, monthly, yearly or lifetime, instead of when they log on three days. A free trial, a refunded purchase, or a month from an invite doesn't count.",
                     label: "Months from invites",
                 },
             ],
@@ -913,7 +913,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Eingefügte Bilder",
                 },
                 {
-                    detail: "Du bekommst einen Monat, wenn ein eingeladener Freund Pro kauft, monatlich, jährlich oder auf Lebenszeit, statt wenn er an drei Tagen erfasst. Eine Testphase oder ein Monat aus einer Einladung zählt nicht.",
+                    detail: "Du bekommst einen Monat, wenn ein eingeladener Freund Pro kauft, monatlich, jährlich oder auf Lebenszeit, statt wenn er an drei Tagen erfasst. Eine Testphase, ein erstatteter Kauf oder ein Monat aus einer Einladung zählt nicht.",
                     label: "Monate aus Einladungen",
                 },
             ],
@@ -927,7 +927,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Imágenes que pegas",
                 },
                 {
-                    detail: "Recibes un mes cuando un amigo que invitaste compra Pro, mensual, anual o de por vida, en lugar de cuando registra en tres días. Una prueba gratis o un mes por invitación no cuenta.",
+                    detail: "Recibes un mes cuando un amigo que invitaste compra Pro, mensual, anual o de por vida, en lugar de cuando registra en tres días. Una prueba gratis, una compra reembolsada o un mes por invitación no cuenta.",
                     label: "Meses por invitaciones",
                 },
             ],
@@ -941,7 +941,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Les images que vous collez",
                 },
                 {
-                    detail: "Vous recevez un mois quand un ami que vous avez invité achète Pro, mensuel, annuel ou à vie, au lieu de quand il saisit des opérations trois jours. Un essai gratuit ou un mois obtenu par invitation ne compte pas.",
+                    detail: "Vous recevez un mois quand un ami que vous avez invité achète Pro, mensuel, annuel ou à vie, au lieu de quand il saisit des opérations trois jours. Un essai gratuit, un achat remboursé ou un mois obtenu par invitation ne compte pas.",
                     label: "Mois obtenus par invitation",
                 },
             ],
@@ -955,7 +955,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     label: "Imagens que você cola",
                 },
                 {
-                    detail: "Você ganha um mês quando um amigo que você convidou compra o Pro, mensal, anual ou vitalício, em vez de quando ele registra em três dias. Um teste grátis ou um mês de convite não conta.",
+                    detail: "Você ganha um mês quando um amigo que você convidou compra o Pro, mensal, anual ou vitalício, em vez de quando ele registra em três dias. Um teste grátis, uma compra reembolsada ou um mês de convite não conta.",
                     label: "Meses por convites",
                 },
             ],

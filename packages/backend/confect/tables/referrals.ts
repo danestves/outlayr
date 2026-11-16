@@ -8,6 +8,7 @@ export default Table.make(() =>
         claimedAt: Schema.Number,
         daysLogged: Schema.Number,
         lastCountedAt: Schema.NullOr(Schema.Number),
+        paidWith: Schema.optional(Schema.String),
         referredId: Schema.String,
         referredName: Schema.NullOr(Schema.String),
         referrerId: Schema.String,
@@ -18,4 +19,5 @@ export default Table.make(() =>
     .index("by_referredId", ["referredId"])
     .index("by_referrerId_and_claimedAt", ["referrerId", "claimedAt"])
     .index("by_referrerId_and_rewardedAt", ["referrerId", "rewardedAt"])
-    .index("by_status", ["status"]);
+    .index("by_status", ["status"])
+    .index("by_paidWith", ["paidWith"]);

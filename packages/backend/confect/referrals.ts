@@ -226,7 +226,7 @@ export const scheduleGrant = Effect.fn("Referrals.scheduleGrant")(function* sche
     yield* scheduler.runAfter(delay, refs.internal.referrals.grant, { attempt: 0, userId });
 });
 
-type Progress = Partial<Pick<Referral, "daysLogged" | "lastCountedAt">>;
+type Progress = Partial<Pick<Referral, "daysLogged" | "lastCountedAt" | "paidWith">>;
 
 export const rewardReferrer = Effect.fn("Referrals.rewardReferrer")(function* rewardReferrer(
     referral: Referral,
@@ -279,20 +279,31 @@ export const noteLoggedDay = Effect.fn("Referrals.noteLoggedDay")(function* note
     yield* rewardReferrer(referral, counted);
 });
 
-export function paidForPro(
+export function purchasesSince(
     subscriptions: readonly Pick<
         Subscription,
-        "environment" | "isFamilyShare" | "periodType" | "refundedAtMs" | "store"
-    >[]
-): boolean {
-    return subscriptions.some(
-        (subscription) =>
-            subscription.environment === "PRODUCTION" &&
-            subscription.store !== "PROMOTIONAL" &&
-            subscription.periodType !== "TRIAL" &&
-            subscription.refundedAtMs === undefined &&
-            !subscription.isFamilyShare
-    );
+        | "environment"
+        | "isFamilyShare"
+        | "originalPurchasedAtMs"
+        | "originalTransactionId"
+        | "periodType"
+        | "purchasedAtMs"
+        | "refundedAtMs"
+        | "store"
+    >[],
+    claimedAt: number
+): string[] {
+    return subscriptions
+        .filter(
+            (subscription) =>
+                subscription.environment === "PRODUCTION" &&
+                subscription.store !== "PROMOTIONAL" &&
+                subscription.periodType !== "TRIAL" &&
+                subscription.refundedAtMs === undefined &&
+                !subscription.isFamilyShare &&
+                (subscription.originalPurchasedAtMs ?? subscription.purchasedAtMs) >= claimedAt
+        )
+        .map((subscription) => subscription.originalTransactionId);
 }
 
 export const GRANT_RETRY_MINUTES = [1, 5, 30, 120, 720] as const;

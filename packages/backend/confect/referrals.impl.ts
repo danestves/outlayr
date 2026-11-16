@@ -10,6 +10,7 @@ import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -39,7 +40,7 @@ import {
     mirroredPro,
     newCode,
     nullOnMissing,
-    paidForPro,
+    purchasesSince,
     referralLimiter,
     refusalFor,
     rewardFor,
@@ -406,12 +407,20 @@ const rewardPaidFriends = FunctionImpl.make(
             .table("referrals")
             .index("by_status", (q) => q.eq("status", "counting"))
             .paginate({ cursor, numItems: SWEEP_PAGE });
+        const reader = yield* DatabaseReader;
         for (const referral of page.page) {
             const subscriptions = yield* Effect.promise(() =>
                 revenuecat.getAllSubscriptions(ctx, { appUserId: referral.referredId })
             );
-            if (paidForPro(subscriptions)) {
-                yield* rewardReferrer(referral);
+            for (const paidWith of purchasesSince(subscriptions, referral.claimedAt)) {
+                const used = yield* reader
+                    .table("referrals")
+                    .index("by_paidWith", (q) => q.eq("paidWith", paidWith))
+                    .first();
+                if (Option.isNone(used)) {
+                    yield* rewardReferrer(referral, { paidWith });
+                    break;
+                }
             }
         }
         if (!page.isDone) {

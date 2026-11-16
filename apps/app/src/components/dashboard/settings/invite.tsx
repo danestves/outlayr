@@ -274,7 +274,10 @@ function FriendsCard({
                 ? copy.bought({ date })
                 : copy.done({ date, days: Math.max(friend.daysLogged, REFERRAL_DAYS_TO_EARN) });
         }
-        return paid ? copy.waiting : copy.logged({ days: friend.daysLogged, total: REFERRAL_DAYS_TO_EARN });
+        if (!paid) {
+            return copy.logged({ days: friend.daysLogged, total: REFERRAL_DAYS_TO_EARN });
+        }
+        return friend.status === "counting" ? copy.waiting : null;
     };
     const ordered = friends.toSorted((a, b) => (b.rewardedAt ?? 0) - (a.rewardedAt ?? 0));
     const count = friends.length;
