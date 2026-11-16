@@ -270,7 +270,7 @@ function FriendsCard({
     const progressOf = (friend: Friend) => {
         if (friend.rewardedAt !== null) {
             const date = rewardDate(friend.rewardedAt);
-            return paid
+            return referralsEarnOnPayment(friend.rewardedAt)
                 ? copy.bought({ date })
                 : copy.done({ date, days: Math.max(friend.daysLogged, REFERRAL_DAYS_TO_EARN) });
         }
@@ -375,7 +375,7 @@ function RewardLanded({ onShare, overview }: { onShare: () => void; overview: Re
     const count = shown.friends.length;
     const [first] = shown.friends;
     const name = first?.name ?? unnamed.value;
-    const paid = referralsEarnOnPayment(now);
+    const paid = shown.friends.every((friend) => referralsEarnOnPayment(friend.rewardedAt ?? now));
     let who = paid ? copy.landed.whoManyPaid({ count }) : copy.landed.whoMany({ count, days: REFERRAL_DAYS_TO_EARN });
     if (count === 1) {
         who = paid ? copy.landed.whoPaid({ name }) : copy.landed.who({ days: REFERRAL_DAYS_TO_EARN, name });

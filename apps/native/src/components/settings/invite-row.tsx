@@ -95,7 +95,7 @@ function LandedSheet({
     const count = friends.length;
     const [first] = friends;
     const name = first?.name ?? t("referrals.friend.unnamed");
-    const paid = referralsEarnOnPayment(now);
+    const paid = friends.every((friend) => referralsEarnOnPayment(friend.rewardedAt ?? now));
     let who = paid
         ? t("referrals.landed.whoManyPaid", { count })
         : t("referrals.landed.whoMany", { count, days: REFERRAL_DAYS_TO_EARN });

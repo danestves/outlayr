@@ -126,7 +126,7 @@ function FriendRow({ friend, paid }: { friend: ReferredFriend; paid: boolean }) 
     const caption = (() => {
         if (friend.rewardedAt !== null) {
             const date = formatSentenceDate(new Date(friend.rewardedAt), language);
-            return paid
+            return referralsEarnOnPayment(friend.rewardedAt)
                 ? t("referrals.friend.bought", { date })
                 : t("referrals.friend.done", { date, days: REFERRAL_DAYS_TO_EARN });
         }
