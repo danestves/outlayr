@@ -87,7 +87,7 @@ La limite de Pro sur les saisies vocales et les scans de tickets est une limite 
 
 ### Comment les captures sont comptées
 
-- Une capture correspond à un extrait vocal, une photo de ticket ou une capture d’écran d’échéancier. Les saisies vocales, les scans de tickets et les imports d’échéanciers partagent un même quota.
+- Une capture correspond à un extrait vocal, une photo de ticket ou un import d’échéanciers d’au plus 5 captures d’écran. Les saisies vocales, les scans de tickets et les imports d’échéanciers partagent un même quota.
 - Une capture est comptée dès que notre serveur l’accepte, avant que l’IA la lise. Un extrait ne contenant aucune transaction, une photo ne contenant ni ticket ni échéancier, et une correction dictée comptent chacun pour une capture.
 - Le quota fonctionne par périodes de 30 jours. Lorsqu’il est épuisé, l’app vous le signale. Les captures utilisées redeviennent disponibles dans un délai de 30 jours. Dans la formule gratuite, passer à Pro lève la limite immédiatement.
 - Des limites distinctes à court terme s’appliquent à la fréquence à laquelle vous pouvez envoyer des captures, des recherches de commerçants et des imports. Lorsque vous en atteignez une, la saisie vocale ou le scan est brièvement suspendu et l’app indique quand le prochain sera disponible.
@@ -201,7 +201,7 @@ Certaines fonctionnalités utilisent l’intelligence artificielle, exécutée p
 
 - **Saisie vocale.** Vous décrivez une transaction à voix haute. Elle est transcrite et transformée en un brouillon d’opération, que vous pouvez corriger en parlant de nouveau.
 - **Scan de ticket.** Vous prenez une photo d’un ticket. Le total, le magasin, la date et les articles sont lus et placés dans un brouillon d’opération.
-- **Import d’échéancier.** Vous choisissez une capture d’écran du plan de paiement d’une commande. Le montant de chaque échéance, sa date d’échéance, les frais de retard et si elle est payée sont lus et placés dans un brouillon d’échéancier.
+- **Import d’échéancier.** Vous choisissez jusqu’à 5 captures d’écran des plans de paiement de vos commandes. Le nom de chaque commande, ainsi que le montant de chaque échéance, sa date d’échéance, les frais de retard et si elle est payée sont lus et placés dans des brouillons d’échéancier.
 - **Suggestions de commerçants.** À partir du nom d’un commerçant, Outlayr suggère une catégorie, des étiquettes et le site web de l’entreprise, qui sert à afficher son logo. Vous pouvez désactiver cette fonction dans Réglages, « Remplissage intelligent ».
 - **Lecture des notifications.** Lorsque Outlayr enregistre un achat à partir d’une notification de banque ou de carte, l’IA détermine si elle signale un achat, de l’argent reçu ou un paiement refusé, ainsi que le montant, la devise et le commerçant. Vous pouvez désactiver cette fonction dans Réglages, « Remplissage intelligent ».
 - **Association par IA à l’import (Pro).** Lorsque vous importez un fichier CSV, les noms de commerçants que votre téléphone n’a pas pu associer sont associés à vos catégories. Les montants, les dates et le fichier lui-même ne sont pas envoyés.

@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
-import { normalizePlan, MAX_INSTALLMENTS } from "./installmentScan";
-import type { ModelOutput } from "./installmentScan";
+import { normalizePlan, normalizePlans, MAX_INSTALLMENTS } from "./installmentScan";
+import type { ModelOrder } from "./installmentScan";
 import { MAX_IMAGE_BYTES } from "./lib/captureArgs";
 import { captureLimiter, FREE_CAPTURE_CONFIG } from "./lib/captures";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
@@ -37,7 +37,7 @@ const row = (
     month: number,
     day: number,
     amount: number,
-    extra: Partial<ModelOutput["rows"][0]> = {}
+    extra: Partial<ModelOrder["rows"][0]> = {}
 ) => ({
     amount,
     day,
@@ -51,6 +51,7 @@ const row = (
 
 const NO_SUMMARY = {
     cuotaAmount: null,
+    cuotaCount: null,
     cuotasLeft: null,
     feeDue: null,
     paidSoFar: null,
@@ -60,11 +61,11 @@ const NO_SUMMARY = {
     purchaseYear: null,
 };
 
-const MODEL_ANSWER: ModelOutput = {
+const MODEL_ANSWER: ModelOrder = {
     ...NO_SUMMARY,
     accountName: "cashea",
     currency: "usd",
-    found: true,
+    name: null,
     provider: "  Cashea ",
     rows: [
         row(2, 7, 6, 33.8),
@@ -74,7 +75,7 @@ const MODEL_ANSWER: ModelOutput = {
     ],
 };
 
-const datesOf = (output: ModelOutput, today = CONTEXT.today) =>
+const datesOf = (output: ModelOrder, today = CONTEXT.today) =>
     normalizePlan(output, { ...CONTEXT, today })?.rows.map((planned) => planned.dueDate) ?? null;
 
 describe("normalizePlan", () => {
@@ -82,6 +83,7 @@ describe("normalizePlan", () => {
         expect(normalizePlan(MODEL_ANSWER, CONTEXT)).toStrictEqual({
             accountName: "Cashea",
             currency: null,
+            name: null,
             provider: "Cashea",
             rows: [
                 { amount: 67.6, dueDate: "2026-06-08", fee: 0, paid: true, sequence: 0 },
@@ -115,8 +117,7 @@ describe("normalizePlan", () => {
         ).toBeNull();
     });
 
-    it("is null when nothing was found, a cuota is missing or unpriced, or only the upfront is shown", () => {
-        expect(normalizePlan({ ...MODEL_ANSWER, found: false }, CONTEXT)).toBeNull();
+    it("is null when a cuota is missing or unpriced, or only the upfront is shown", () => {
         expect(normalizePlan({ ...MODEL_ANSWER, rows: [row(0, 6, 8, 60), row(2, 7, 6, 30)] }, CONTEXT)).toBeNull();
         expect(normalizePlan({ ...MODEL_ANSWER, rows: [row(1, 6, 8, 0)] }, CONTEXT)).toBeNull();
         expect(normalizePlan({ ...MODEL_ANSWER, rows: [row(0, 6, 8, 60)] }, CONTEXT)).toBeNull();
@@ -189,6 +190,71 @@ describe("normalizePlan", () => {
     });
 });
 
+const listed = (name: string, rows: ModelOrder["rows"], cuotaCount: number): ModelOrder => ({
+    ...MODEL_ANSWER,
+    accountName: "Cashea",
+    cuotaCount,
+    name,
+    rows,
+});
+
+describe("pending payments list", () => {
+    const today = { ...CONTEXT, today: "2026-11-16" };
+
+    it("rebuilds a whole plan from one printed cuota, earlier cuotas paid and later ones every 14 days", () => {
+        expect(normalizePlan(listed("Crocs", [row(2, 11, 15, 23.33)], 6), today)?.rows).toStrictEqual([
+            { amount: 23.33, dueDate: "2026-11-01", fee: 0, paid: true, sequence: 1 },
+            { amount: 23.33, dueDate: "2026-11-15", fee: 0, paid: false, sequence: 2 },
+            { amount: 23.33, dueDate: "2026-11-29", fee: 0, paid: false, sequence: 3 },
+            { amount: 23.33, dueDate: "2026-12-13", fee: 0, paid: false, sequence: 4 },
+            { amount: 23.33, dueDate: "2026-12-27", fee: 0, paid: false, sequence: 5 },
+            { amount: 23.33, dueDate: "2027-01-10", fee: 0, paid: false, sequence: 6 },
+        ]);
+        expect(normalizePlan(listed("Arturos", [row(2, 11, 20, 13.13)], 2), today)?.rows).toStrictEqual([
+            { amount: 13.13, dueDate: "2026-11-06", fee: 0, paid: true, sequence: 1 },
+            { amount: 13.13, dueDate: "2026-11-20", fee: 0, paid: false, sequence: 2 },
+        ]);
+        expect(normalizePlan(listed("Too far", [row(7, 11, 20, 10)], 6), today)).toBeNull();
+    });
+
+    it("merges one order printed on two rows, taking its cadence from them, and keeps clashing orders apart", () => {
+        const result = normalizePlans(
+            {
+                found: true,
+                orders: [
+                    listed("Movilmar", [row(3, 11, 21, 44.17)], 6),
+                    listed("Crocs", [row(2, 11, 15, 23.33)], 6),
+                    listed("movilmar", [row(4, 12, 21, 44.17)], 6),
+                    listed("Crocs", [row(2, 11, 15, 50)], 6),
+                    { ...listed("Farmatodo", [], 3), cuotaCount: null },
+                ],
+            },
+            today
+        );
+        const movilmar = result.plans[0]?.rows.map(({ dueDate, paid }) => [dueDate, paid]);
+        expect(movilmar).toStrictEqual([
+            ["2026-09-22", true],
+            ["2026-10-22", true],
+            ["2026-11-21", false],
+            ["2026-12-21", false],
+            ["2027-01-20", false],
+            ["2027-02-19", false],
+        ]);
+        expect(result.plans.map((plan) => plan.name)).toStrictEqual(["Movilmar", "Crocs", "Crocs"]);
+        expect(result.plan).toStrictEqual(result.plans[0]);
+        expect(result.skipped).toStrictEqual(["Farmatodo"]);
+    });
+
+    it("is unclear when nothing was found or no order could be rebuilt", () => {
+        expect(
+            normalizePlans({ found: false, orders: [listed("Crocs", [row(2, 11, 15, 23.33)], 6)] }, today)
+        ).toStrictEqual({ plan: null, plans: [], skipped: [], status: "unclear" });
+        expect(
+            normalizePlans({ found: true, orders: [{ ...listed("Farmatodo", [], 3), cuotaCount: null }] }, today).status
+        ).toBe("unclear");
+    });
+});
+
 describe("scan guard ladder", () => {
     it("never sends a screenshot from a build that asked about other AI providers", async () => {
         vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
@@ -205,7 +271,7 @@ describe("scan guard ladder", () => {
         vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
         const t = convexTest(schema, modules);
         const asUser = authenticatedAs(t, await seedAuthUser(t));
-        const invalid = { plan: null, status: "invalid" };
+        const invalid = { plan: null, plans: [], skipped: [], status: "invalid" };
 
         const cases = [
             { image: new ArrayBuffer(MAX_IMAGE_BYTES + 1) },
@@ -215,6 +281,8 @@ describe("scan guard ladder", () => {
             { currency: "usd" },
             { regionCode: "Venezuela" },
             { accounts: ["x".repeat(81)] },
+            { moreImages: Array.from({ length: 5 }, () => JPEG) },
+            { moreImages: [new ArrayBuffer(0)] },
         ];
         await expect(
             Promise.all(cases.map((args) => asUser.action(api.installmentScan.scan, { ...BASE_ARGS, ...args })))
@@ -238,6 +306,8 @@ describe("scan guard ladder", () => {
 
         await expect(asUser.action(api.installmentScan.scan, BASE_ARGS)).resolves.toStrictEqual({
             plan: null,
+            plans: [],
+            skipped: [],
             status: "notEntitled",
         });
     });

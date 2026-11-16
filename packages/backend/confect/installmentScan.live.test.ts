@@ -20,7 +20,7 @@ describe.skipIf(!live)("installment scan, live", () => {
             const result = await Effect.runPromise(
                 readInstallmentPlan(
                     anthropic(process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID),
-                    bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+                    [bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)],
                     {
                         accounts: ["Cashea", "Visa"],
                         currency: "USD",

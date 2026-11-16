@@ -16,7 +16,7 @@ import { useBankAccounts } from "@/data/accounts";
 import { getAccountById } from "@/data/accounts-core";
 import type { Account } from "@/data/accounts-core";
 import { useAiConsent } from "@/data/settings";
-import { scannedOrder } from "@/domain/installment-scan";
+import { PLAN_SCREENSHOT_LIMIT, planImport } from "@/domain/installment-scan";
 import { paywallHref } from "@/domain/paywall-trigger";
 import { useLocaleTag } from "@/hooks/use-locale-tag";
 import { useCreateLiability } from "@/hooks/use-pro-gate";
@@ -29,7 +29,7 @@ import type { TranslatableKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { useAuthSession } from "@/lib/auth-session";
 import { installmentScanTransport } from "@/lib/cloud-ai";
-import type { InstallmentPlanDraft } from "@/lib/cloud-ai";
+import type { InstallmentScan } from "@/lib/cloud-ai";
 import {
     BottomBar,
     FAILURE_KEY,
@@ -43,7 +43,8 @@ import type { BarAction } from "@/screens/transaction/scan";
 import { entryHref } from "@/state/entry-params";
 import { useColors } from "@/theme/use-colors";
 
-import { handedOffPhoto } from "./use-screenshot-import";
+import { ScanReview } from "./scan-review";
+import { handedOffPhotos } from "./use-screenshot-import";
 
 const FAILURES = {
     ...FAILURE_KEY,
@@ -53,14 +54,19 @@ const FAILURES = {
     unclear: "installments.scan.unclear",
 } as const satisfies Record<ScanFailure, TranslatableKey>;
 
-function reviewedOrder(plan: InstallmentPlanDraft | null, account: Account) {
-    const foreign = plan?.currency != null && plan.currency !== account.currency ? plan.currency : null;
-    const order = plan === null || foreign !== null ? null : scannedOrder(plan, account.currency);
-    return { foreign, order };
+function soleImport(scan: InstallmentScan | null, account: Account) {
+    const [plan, ...others] = scan?.plans ?? [];
+    const alone = plan !== undefined && others.length === 0 && scan?.skipped.length === 0;
+    return alone ? planImport(plan, account) : null;
 }
 
-function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | null }) {
+function useLiabilities() {
+    return useBankAccounts(useDatabase()).filter((row) => toAccountKind(row.kind) === "liability");
+}
+
+function ScanFlow({ account, photos }: { account: Account; photos: readonly ScanPhoto[] }) {
     const router = useRouter();
+    const liabilities = useLiabilities();
     const t = useTranslation();
     const colors = useColors();
     const entitled = useProEntitled();
@@ -68,12 +74,13 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
     const regionCode = useRegionCode();
     const stageBox = useStageBox();
     const [api] = useState(installmentScanTransport);
-    const { chooseFromLibrary, phase, reset, retry } = useImageScan<null, InstallmentPlanDraft>({
+    const { chooseFromLibrary, phase, reset, retry } = useImageScan<null, InstallmentScan>({
         context: null,
-        initialPhoto: photo,
-        onReview: (draft) => {
-            const { order } = reviewedOrder(draft, account);
-            if (order !== null) {
+        initialPhotos: photos,
+        onReview: (scan) => {
+            const sole = soleImport(scan, account);
+            if (sole?.kind === "ready") {
+                const { order } = sole;
                 router.replace(
                     entryHref({
                         accountId: account.id,
@@ -87,12 +94,14 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
             }
         },
         owner: "installment-scan",
-        send: (image, today) =>
+        selectionLimit: PLAN_SCREENSHOT_LIMIT,
+        send: (image, today, moreImages) =>
             api({
-                accounts: [account.name],
+                accounts: [account.name, ...liabilities.filter((row) => row.id !== account.id).map((row) => row.name)],
                 currency: account.currency,
                 image,
                 language: localeTag,
+                moreImages,
                 regionCode,
                 today,
             }),
@@ -103,14 +112,27 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
     );
     const limitToast = <LimitToast feature="receiptScan" {...limit} />;
 
-    const plan = phase.kind === "review" ? phase.draft : null;
-    const { foreign, order } = reviewedOrder(plan, account);
+    const scan = phase.kind === "review" ? phase.draft : null;
+    const sole = soleImport(scan, account);
 
     const close = () => router.back();
     const choose: BarAction = { icon: Image01Icon, label: t("installments.scan.choose"), onPress: chooseFromLibrary };
     const shown = phase.kind === "idle" || phase.kind === "picking" ? null : phase.photo;
 
-    if (phase.kind === "scanning" || order !== null) {
+    if (scan !== null && sole === null) {
+        return (
+            <ScanReview
+                accounts={liabilities}
+                fallback={account}
+                onClose={close}
+                onDone={close}
+                plans={scan.plans}
+                skipped={scan.skipped}
+            />
+        );
+    }
+
+    if (phase.kind === "scanning" || sole?.kind === "ready") {
         return (
             <ScanShell
                 bottom={
@@ -135,13 +157,13 @@ function ScanFlow({ account, photo }: { account: Account; photo: ScanPhoto | nul
         let message: string | null = null;
         if (phase.kind === "review") {
             message =
-                foreign === null
-                    ? t(FAILURES.unclear)
-                    : t("installments.scan.currency", {
+                sole?.kind === "foreign"
+                    ? t("installments.scan.currency", {
                           account: account.name,
                           currency: account.currency,
-                          plan: foreign,
-                      });
+                          plan: sole.currency,
+                      })
+                    : t(FAILURES.unclear);
         } else {
             message = isLimitRefusal(phase.reason) ? null : t(FAILURES[phase.reason]);
             if (phase.reason === "notEntitled" && !entitled) {
@@ -191,13 +213,13 @@ function Intro() {
 }
 
 // A link without a usable `accountId` (the bare URL scheme, or a deleted account) asks which liability owns the plan.
-function AccountChoice({ photo }: { photo: ScanPhoto | null }) {
+function AccountChoice({ photos }: { photos: readonly ScanPhoto[] }) {
     const router = useRouter();
     const t = useTranslation();
     const db = useDatabase();
     const sheet = useRef<BottomSheetModal>(null);
     const createLiability = useCreateLiability();
-    const liabilities = useBankAccounts(db).filter((account) => toAccountKind(account.kind) === "liability");
+    const liabilities = useLiabilities();
     const [account, setAccount] = useState<Account | null>(null);
     // Latched, so a second liability arriving through sync mid-scan cannot unmount the flow.
     if (account === null && liabilities.length === 1) {
@@ -215,7 +237,7 @@ function AccountChoice({ photo }: { photo: ScanPhoto | null }) {
         </ScanShell>
     );
     if (account) {
-        body = <ScanFlow account={account} photo={photo} />;
+        body = <ScanFlow account={account} photos={photos} />;
     } else if (liabilities.length > 1) {
         const pick: BarAction = { label: t("installments.scan.pickAccount"), onPress: () => sheet.current?.present() };
         body = (
@@ -248,7 +270,7 @@ export function InstallmentScanScreen({ accountId, photo }: { accountId?: string
     const { gate } = useAuthSession();
     const consent = useAiConsent(db, "aiConsentPlanScan");
     const [account] = useState(() => (accountId === undefined ? null : getAccountById(db, accountId)));
-    const [picked] = useState(() => handedOffPhoto(photo));
+    const [picked] = useState(() => handedOffPhotos(photo));
     if (gate !== "signed-in") {
         return <ScanGateScreen failures={FAILURES} gate={gate} />;
     }
@@ -256,7 +278,7 @@ export function InstallmentScanScreen({ accountId, photo }: { accountId?: string
         return <AiConsentGate />;
     }
     if (account === null) {
-        return <AccountChoice photo={picked} />;
+        return <AccountChoice photos={picked} />;
     }
-    return <ScanFlow account={account} photo={picked} />;
+    return <ScanFlow account={account} photos={picked} />;
 }

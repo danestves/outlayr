@@ -48,17 +48,29 @@ export interface ScanPhoto {
 type ScanPhase<Context, Draft> =
     | { kind: "idle" }
     | { kind: "picking"; source: ScanSource }
-    | { kind: "scanning"; photo: ScanPhoto }
-    | { context: Context; draft: Draft; image: ArrayBuffer; kind: "review"; photo: ScanPhoto }
-    | { kind: "failed"; photo: ScanPhoto | null; reason: ScanFailure };
+    | { kind: "scanning"; more: readonly ScanPhoto[]; photo: ScanPhoto }
+    | {
+          context: Context;
+          draft: Draft;
+          image: ArrayBuffer;
+          kind: "review";
+          more: readonly ScanPhoto[];
+          photo: ScanPhoto;
+      }
+    | { kind: "failed"; more: readonly ScanPhoto[]; photo: ScanPhoto | null; reason: ScanFailure };
 
-type ScanSend<Draft> = (image: ArrayBuffer, today: string) => Effect.Effect<ScanOutcome<Draft>, unknown>;
+type ScanSend<Draft> = (
+    image: ArrayBuffer,
+    today: string,
+    more: readonly ArrayBuffer[]
+) => Effect.Effect<ScanOutcome<Draft>, unknown>;
 
 interface UseImageScanArgs<Context, Draft> {
     context: Context;
-    initialPhoto?: ScanPhoto | null;
+    initialPhotos?: readonly ScanPhoto[];
     onReview?: (draft: Draft) => void;
     owner: PickOwner;
+    selectionLimit?: number;
     send: ScanSend<Draft>;
 }
 
@@ -73,7 +85,7 @@ export interface UseImageScanResult<Context, Draft> {
     phase: ScanPhase<Context, Draft>;
     reset: () => void;
     retry: () => void;
-    scan: (photo: ScanPhoto) => void;
+    scan: (photo: ScanPhoto, more?: readonly ScanPhoto[]) => void;
     takePhoto: () => void;
 }
 
@@ -89,20 +101,25 @@ const FAILURE_FOR = {
     unclear: "unclear",
 } as const satisfies Record<ScanRefusal, ScanFailure>;
 
-export function photoFrom(result: ImagePickerResult): ScanPhoto | null {
-    const asset = result.canceled ? undefined : result.assets[0];
-    return asset === undefined ? null : { height: asset.height, uri: asset.uri, width: asset.width };
+export function photosFrom(result: ImagePickerResult): ScanPhoto[] {
+    return result.canceled ? [] : result.assets.map(({ height, uri, width }) => ({ height, uri, width }));
 }
 
-const libraryPick = (owner: PickOwner) =>
+export function photoFrom(result: ImagePickerResult): ScanPhoto | null {
+    return photosFrom(result)[0] ?? null;
+}
+
+export const libraryPick = (owner: PickOwner, selectionLimit = 1) =>
     launchPick(
         owner,
         Effect.tryPromise(() =>
             launchImageLibraryAsync({
                 allowsEditing: false,
+                allowsMultipleSelection: selectionLimit > 1,
                 mediaTypes: ["images"],
                 preferredAssetRepresentationMode: UIImagePickerPreferredAssetRepresentationMode.Compatible,
                 quality: 0.9,
+                selectionLimit,
             })
         )
     );
@@ -114,52 +131,60 @@ interface ScanPorts<Context, Draft> {
     latest: () => { context: Context; onReview?: (draft: Draft) => void; send: ScanSend<Draft> };
     owner: PickOwner;
     scanCommand: ReturnType<typeof timedCaptureCommand<ScanOutcome<Draft>>>;
+    selectionLimit: number;
     setPhase: (phase: ScanPhase<Context, Draft>) => void;
 }
 
 const readPhoto = Effect.fn("ReceiptScan.read")(function* readPhoto<Context, Draft>(
     ports: ScanPorts<Context, Draft>,
     photo: ScanPhoto,
+    more: readonly ScanPhoto[],
     take: number
 ) {
-    ports.setPhase({ kind: "scanning", photo });
-    const prepared = yield* entryMedia
-        .prepareReceiptImage(photo.uri)
-        .pipe(Effect.catchCause(() => Effect.succeed(null)));
+    ports.setPhase({ kind: "scanning", more, photo });
+    const prepared = yield* Effect.all(
+        [photo, ...more].map((each) =>
+            entryMedia.prepareReceiptImage(each.uri).pipe(
+                Effect.map((ready) => ready?.bytes ?? null),
+                Effect.catchCause(() => Effect.succeed(null))
+            )
+        )
+    );
     if (!ports.isCurrent(take)) {
         return;
     }
-    if (prepared === null) {
-        ports.setPhase({ kind: "failed", photo, reason: "unreadable" });
+    const ready = prepared.filter((each) => each !== null);
+    const [bytes, ...moreBytes] = ready;
+    if (bytes === undefined || ready.length < prepared.length) {
+        ports.setPhase({ kind: "failed", more, photo, reason: "unreadable" });
         return;
     }
     const { context: sentContext, send: sent } = ports.latest();
-    const { bytes } = prepared;
     const controller = ports.beginScan();
     const result = yield* fromCommand(ports.scanCommand, {
-        call: sent(bytes, localIsoDate(new Date())),
+        call: sent(bytes, localIsoDate(new Date()), moreBytes),
         signal: controller.signal,
     }).pipe(Effect.exit);
     if (!ports.isCurrent(take)) {
         return;
     }
     if (Exit.isFailure(result)) {
-        ports.setPhase({ kind: "failed", photo, reason: "offline" });
+        ports.setPhase({ kind: "failed", more, photo, reason: "offline" });
         return;
     }
     const settled = Option.getOrNull(result.value);
     if (settled === null) {
-        ports.setPhase({ kind: "failed", photo, reason: "timeout" });
+        ports.setPhase({ kind: "failed", more, photo, reason: "timeout" });
         return;
     }
     if (settled.ok) {
-        ports.setPhase({ context: sentContext, draft: settled.draft, image: bytes, kind: "review", photo });
+        ports.setPhase({ context: sentContext, draft: settled.draft, image: bytes, kind: "review", more, photo });
         ports.latest().onReview?.(settled.draft);
         return;
     }
     const reason = FAILURE_FOR[settled.reason];
     trackCapturesWall(reason);
-    ports.setPhase({ kind: "failed", photo, reason });
+    ports.setPhase({ kind: "failed", more, photo, reason });
 });
 
 const pickPhotoFromCamera = Effect.fn("ReceiptScan.pickFromCamera")(function* pickPhotoFromCamera<Context, Draft>(
@@ -169,7 +194,7 @@ const pickPhotoFromCamera = Effect.fn("ReceiptScan.pickFromCamera")(function* pi
     const permission = yield* duringHandoff(Effect.tryPromise(() => requestCameraPermissionsAsync())).pipe(Effect.exit);
     if (Exit.isFailure(permission)) {
         if (ports.isCurrent(take)) {
-            ports.setPhase({ kind: "failed", photo: null, reason: "noCamera" });
+            ports.setPhase({ kind: "failed", more: [], photo: null, reason: "noCamera" });
         }
         return;
     }
@@ -177,7 +202,7 @@ const pickPhotoFromCamera = Effect.fn("ReceiptScan.pickFromCamera")(function* pi
         return;
     }
     if (!permission.value.granted) {
-        ports.setPhase({ kind: "failed", photo: null, reason: "denied" });
+        ports.setPhase({ kind: "failed", more: [], photo: null, reason: "denied" });
         return;
     }
     const result = yield* launchPick(
@@ -193,7 +218,7 @@ const pickPhotoFromCamera = Effect.fn("ReceiptScan.pickFromCamera")(function* pi
     if (Exit.isFailure(result)) {
         // On iOS the launch only rejects on a device with no camera (the simulator, or a broken lens).
         if (ports.isCurrent(take)) {
-            ports.setPhase({ kind: "failed", photo: null, reason: "noCamera" });
+            ports.setPhase({ kind: "failed", more: [], photo: null, reason: "noCamera" });
         }
         return;
     }
@@ -204,10 +229,10 @@ const pickPhotoFromLibrary = Effect.fn("ReceiptScan.pickFromLibrary")(function* 
     ports: ScanPorts<Context, Draft>,
     take: number
 ) {
-    const result = yield* libraryPick(ports.owner).pipe(Effect.exit);
+    const result = yield* libraryPick(ports.owner, ports.selectionLimit).pipe(Effect.exit);
     if (Exit.isFailure(result)) {
         if (ports.isCurrent(take)) {
-            ports.setPhase({ kind: "failed", photo: null, reason: "unreadable" });
+            ports.setPhase({ kind: "failed", more: [], photo: null, reason: "unreadable" });
         }
         return;
     }
@@ -225,14 +250,15 @@ export function useReceiptScan<Context>({ context, request, transport }: UseRece
 
 export function useImageScan<Context, Draft>({
     context,
-    initialPhoto = null,
+    initialPhotos = [],
     onReview,
     owner,
+    selectionLimit = 1,
     send,
 }: UseImageScanArgs<Context, Draft>): UseImageScanResult<Context, Draft> {
-    const [firstPhoto] = useState(initialPhoto);
+    const [[firstPhoto, ...firstMore]] = useState(initialPhotos);
     const [phase, setPhase] = useState<ScanPhase<Context, Draft>>(
-        firstPhoto === null ? { kind: "idle" } : { kind: "scanning", photo: firstPhoto }
+        firstPhoto === undefined ? { kind: "idle" } : { kind: "scanning", more: firstMore, photo: firstPhoto }
     );
     const takeRef = useRef(0);
     const scanAbortRef = useRef<AbortController | null>(null);
@@ -255,12 +281,12 @@ export function useImageScan<Context, Draft>({
         if (take !== takeRef.current) {
             return;
         }
-        const photo = photoFrom(result);
-        if (photo === null) {
+        const [photo, ...more] = photosFrom(result).slice(0, selectionLimit);
+        if (photo === undefined) {
             setPhase({ kind: "idle" });
             return;
         }
-        start(readPhoto(ports, photo, take));
+        start(readPhoto(ports, photo, more, take));
     };
 
     const ports: ScanPorts<Context, Draft> = {
@@ -274,14 +300,15 @@ export function useImageScan<Context, Draft>({
         latest: () => latest.current,
         owner,
         scanCommand,
+        selectionLimit,
         setPhase,
     };
 
     // Android can tear the app down under the picker: that launch never resolves, so its photo is picked up here.
     const adoptPending = useEffectEvent((result: ImagePickerResult, take: number) => adopt(result, take));
     const startMounted = useEffectEvent(() => {
-        if (firstPhoto !== null) {
-            start(readPhoto(ports, firstPhoto, supersedeTake()));
+        if (firstPhoto !== undefined) {
+            start(readPhoto(ports, firstPhoto, firstMore, supersedeTake()));
         }
         const take = takeRef.current;
         start(
@@ -310,13 +337,13 @@ export function useImageScan<Context, Draft>({
         start(pickPhotoFromLibrary(ports, take));
     };
 
-    const scan = (photo: ScanPhoto) => {
-        start(readPhoto(ports, photo, supersedeTake()));
+    const scan = (photo: ScanPhoto, more: readonly ScanPhoto[] = []) => {
+        start(readPhoto(ports, photo, more, supersedeTake()));
     };
 
     const retry = () => {
         if (phase.kind === "failed" && phase.photo !== null) {
-            scan(phase.photo);
+            scan(phase.photo, phase.more);
         }
     };
 

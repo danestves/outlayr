@@ -57,6 +57,7 @@ describe("useReceiptScan on Android", () => {
         await waitFor(() => {
             expect(result.current.phase).toStrictEqual({
                 kind: "scanning",
+                more: [],
                 photo: { height: 4000, uri: "file:///cache/pending.jpg", width: 3000 },
             });
         });
