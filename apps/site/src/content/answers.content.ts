@@ -7975,8 +7975,8 @@ const answers = {
                     {
                         label: t({ en: "Account", es: "Cuenta" }),
                         text: t({
-                            en: "Not needed to log and budget. Only sync, voice entry, receipt scans, and Pro ask you to sign in",
-                            es: "No hace falta para registrar y presupuestar. Solo la sincronización, la voz, los recibos y Pro piden iniciar sesión",
+                            en: "Not needed to log and budget. Sync, voice entry, receipt scans, and merchant suggestions ask you to sign in",
+                            es: "No hace falta para registrar y presupuestar. La sincronización, la voz, los recibos y las sugerencias de comercios piden iniciar sesión",
                         }),
                     },
                     {
@@ -8024,8 +8024,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Outlayr works without an account. You sign in only to sync across devices, use voice entry, scan receipts, or buy Pro.",
-                            es: "No. Outlayr funciona sin cuenta. Solo inicias sesión para sincronizar entre dispositivos, dictar registros, escanear recibos o comprar Pro.",
+                            en: "No. Outlayr works without an account. Signing in turns on extras such as sync across devices, voice entry, receipt scans, and merchant suggestions.",
+                            es: "No. Outlayr funciona sin cuenta. Al iniciar sesión se activan extras como sincronizar entre dispositivos, dictar registros, escanear recibos y las sugerencias de comercios.",
                         }),
                         question: t({
                             en: "Do I need to sign up to use it?",
@@ -8054,8 +8054,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Export a CSV from your bank's website or another app and import it. You are handing Outlayr a file, not a login. Duplicates are skipped, and a row with no matching category is listed as skipped.",
-                            es: "Sí. Exporta un CSV desde la web de tu banco u otra app e impórtalo. Le entregas un archivo a Outlayr, no tus claves. Los duplicados se omiten, y una fila sin categoría que coincida aparece como omitida.",
+                            en: "Yes. Export a CSV from your bank's website or another app and import it. You are handing Outlayr a file, not a login. Duplicates are skipped, and on the free plan a row with no matching category is listed as skipped.",
+                            es: "Sí. Exporta un CSV desde la web de tu banco u otra app e impórtalo. Le entregas un archivo a Outlayr, no tus claves. Los duplicados se omiten, y en el plan gratis una fila sin categoría que coincida aparece como omitida.",
                         }),
                         question: t({
                             en: "Can I bring my history in without linking the bank?",
@@ -8273,8 +8273,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Outlayr never links bank accounts, and it works without an account. You sign in only to sync across devices, use voice entry, scan receipts, or buy Pro.",
-                            es: "No. Outlayr nunca conecta cuentas bancarias, y funciona sin cuenta. Solo inicias sesión para sincronizar entre dispositivos, dictar registros, escanear recibos o comprar Pro.",
+                            en: "No. Outlayr never links bank accounts, and it works without an account. Signing in turns on extras such as sync across devices, voice entry, receipt scans, and merchant suggestions.",
+                            es: "No. Outlayr nunca conecta cuentas bancarias, y funciona sin cuenta. Al iniciar sesión se activan extras como sincronizar entre dispositivos, dictar registros, escanear recibos y las sugerencias de comercios.",
                         }),
                         question: t({
                             en: "Do I need to link my bank or sign up?",
