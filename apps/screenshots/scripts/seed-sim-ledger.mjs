@@ -281,7 +281,7 @@ const missing = REQUIRED_CATEGORIES.filter((name) => !CATEGORY[name]);
 if (missing.length > 0) {
     throw new Error(
         `Categories are not in English (missing: ${missing.join(", ")}). ` +
-            `Run: node apps/screenshots/scripts/localize-sim-data.mjs ${udid} en`
+            `Run: node apps/screenshots/scripts/localize-sim-data.mjs ${deviceTarget} en`
     );
 }
 
@@ -541,14 +541,17 @@ for (const [index, goal] of GOALS.entries()) {
     );
 }
 
-if (LEDGER_CURRENCY !== "USD") {
+const seededQuotes = [...new Set(ACCOUNTS.map((account) => account.currency))].filter((code) => code !== "USD");
+if (seededQuotes.length > 0) {
     const rows = [];
     for (let time = RATES_FROM; time <= RATES_THROUGH; time += DAY_MS) {
         const date = new Date(time).toISOString().slice(0, 10);
-        rows.push(`(${q(date)}, ${NOW}, ${q(LEDGER_CURRENCY)}, ${region.rate}, 'official', 'seed')`);
+        for (const quote of seededQuotes) {
+            rows.push(`(${q(date)}, ${NOW}, ${q(quote)}, ${rateOf(quote)}, 'official', 'seed')`);
+        }
     }
     statements.push(
-        `DELETE FROM exchangeRates WHERE quote = ${q(LEDGER_CURRENCY)} AND rateType = 'official';`,
+        `DELETE FROM exchangeRates WHERE quote IN (${seededQuotes.map(q).join(", ")}) AND rateType = 'official';`,
         `INSERT INTO exchangeRates (date, fetchedAt, quote, rate, rateType, source) VALUES ${rows.join(", ")};`,
         `INSERT OR REPLACE INTO appMeta (key, value) VALUES ('currency', ${q(LEDGER_CURRENCY)}), ('currencyChosen', 'true'), ('lastRatesPullAt', '${RATES_PULLED_AT}');`
     );
