@@ -24,6 +24,7 @@ import { ActionMenu } from "./action-menu";
 import type { ActionMenuItem } from "./action-menu";
 import { AmountsHiddenContext, RowAmount } from "./amount-text";
 import { CategoryIconTile } from "./category-icon-tile";
+import { COMPACT_ROW_TYPE, CompactRowsContext } from "./compact-rows";
 import { MonoLabel } from "./mono-label";
 import { RowPressable } from "./row-pressable";
 import { ROW_TYPE } from "./row-type";
@@ -55,6 +56,9 @@ function inListCurrency(
         : { amount: figure.amount, currency: kept };
 }
 
+const REGULAR_TILE = { radius: TILE_RADIUS, size: TILE_SIZE } as const;
+const COMPACT_TILE = { radius: 10, size: 32 } as const;
+
 interface UnderAmountProps {
     fee: Figure | undefined;
     future: boolean;
@@ -81,10 +85,15 @@ function arrivedLabel(
 function UnderAmount({ fee, future, moved, original, sentCurrency, showCents }: UnderAmountProps) {
     const t = useTranslation();
     const { language } = useLanguage();
+    const compact = use(CompactRowsContext);
     if (use(AmountsHiddenContext)) {
         return null;
     }
-    const className = cn(ROW_TYPE.subtitle, "tabular-nums", future ? "text-subtle" : "text-muted");
+    const className = cn(
+        compact ? COMPACT_ROW_TYPE.subtitle : ROW_TYPE.subtitle,
+        "tabular-nums",
+        future ? "text-subtle" : "text-muted"
+    );
     if (moved === undefined) {
         return (
             <>
@@ -157,6 +166,7 @@ function RowMeta({
 }: RowMetaProps) {
     const t = useTranslation();
     const colors = useColors();
+    const compact = use(CompactRowsContext);
     const showOriginal = restated && !use(AmountsHiddenContext);
     const detailsLine = details || (itemCount ? t("receipt.items", { count: itemCount }) : null);
     return (
@@ -164,7 +174,10 @@ function RowMeta({
             <View className="flex-row flex-wrap items-center gap-1.25">
                 <Text
                     accessibilityLabel={fee ? t("log.row.feeIncluded", { subtitle }) : undefined}
-                    className={cn(ROW_TYPE.subtitle, future ? "text-subtle" : "text-muted")}
+                    className={cn(
+                        compact ? COMPACT_ROW_TYPE.subtitle : ROW_TYPE.subtitle,
+                        future ? "text-subtle" : "text-muted"
+                    )}
                     numberOfLines={stacked ? 2 : 1}
                 >
                     {subtitle}
@@ -266,11 +279,16 @@ function RowTitle({
     stacked: boolean;
     unreviewed: boolean;
 }) {
+    const compact = use(CompactRowsContext);
     return (
         <View className="flex-row items-center gap-1.5">
             {unreviewed ? <View className="bg-tint size-2 rounded-full" /> : null}
             <Text
-                className={cn(ROW_TYPE.title, "shrink", future ? "text-future" : "text-foreground")}
+                className={cn(
+                    compact ? COMPACT_ROW_TYPE.title : ROW_TYPE.title,
+                    "shrink",
+                    future ? "text-future" : "text-foreground"
+                )}
                 numberOfLines={stacked ? 2 : 1}
             >
                 {note}
@@ -290,6 +308,49 @@ function withGuessedCategory(
     return swapped ? `${categoryName}?` : `${categoryName}? · ${timeLabel}`;
 }
 
+function RowTile({
+    future,
+    isTransfer,
+    transaction,
+}: {
+    future: boolean;
+    isTransfer: boolean;
+    transaction: TransactionRowProps["transaction"];
+}) {
+    const colors = useColors();
+    const tile = use(CompactRowsContext) ? COMPACT_TILE : REGULAR_TILE;
+    if (transaction.ends) {
+        return <TransferTile ends={transaction.ends} future={future} radius={tile.radius} size={tile.size} />;
+    }
+    const isFee = transaction.feeForId != null || (transaction.transferId != null && !isTransfer);
+    const identity = isFee
+        ? { color: FALLBACK_IDENTITY_COLOR, emoji: null, icon: null }
+        : resolveTransactionIdentity(transaction);
+    return (
+        <View>
+            <CategoryIconTile
+                color={isTransfer ? colors.transfer : identity.color}
+                emoji={identity.emoji}
+                future={future}
+                glyph={isFee ? feeGlyph : undefined}
+                icon={identity.icon}
+                imageUri={transaction.imageUri}
+                radius={tile.radius}
+                size={tile.size}
+                type="solid"
+            />
+            {transaction.recurringType > 0 ? (
+                <View
+                    className="bg-surface-secondary absolute rounded-md"
+                    style={{ bottom: BADGE_OFFSET, padding: 3, right: BADGE_OFFSET }}
+                >
+                    <HugeiconsIcon color={colors.foreground} icon={RefreshIcon} size={12} strokeWidth={2} />
+                </View>
+            ) : null}
+        </View>
+    );
+}
+
 export function TransactionRow({
     transaction,
     currency,
@@ -302,19 +363,14 @@ export function TransactionRow({
     upcomingLabel,
 }: TransactionRowProps) {
     const { showCents, swapTimeLabel, use24Hour } = useDisplaySettings().state;
-    const colors = useColors();
     const t = useTranslation();
     const { language } = useLanguage();
     const stacked = useAccessibilityTextSize();
+    const compact = use(CompactRowsContext);
     const date = new Date(transaction.date);
     const future = forcedFuture ?? isFuture(date);
     const code = transaction.currency ?? currency;
     const isTransfer = transaction.transferId === transaction.id;
-    const isFee = transaction.feeForId != null || (transaction.transferId != null && !isTransfer);
-    const identity = isFee
-        ? { color: FALLBACK_IDENTITY_COLOR, emoji: null, icon: null }
-        : resolveTransactionIdentity(transaction);
-    const recurring = transaction.recurringType > 0;
     const rateNeeded = isTransactionRateNeeded(transaction);
     const foreignCode = transaction.currency && transaction.currency !== currency ? transaction.currency : null;
     const shown = rowFigure(transaction, currency, isTransfer);
@@ -373,7 +429,11 @@ export function TransactionRow({
             accessibilityHint={menuItems?.length ? t("log.row.actionsHint") : undefined}
             accessibilityRole="button"
             // The menu snapshots this row into its preview, so the row carries its own ground.
-            className={cn("bg-background flex-row gap-3 py-2", stacked ? "items-start" : "items-center")}
+            className={cn(
+                "bg-background flex-row gap-3",
+                compact ? "py-1.5" : "py-2",
+                stacked ? "items-start" : "items-center"
+            )}
             onAccessibilityAction={
                 onDelete
                     ? (event: AccessibilityActionEvent) => {
@@ -385,32 +445,8 @@ export function TransactionRow({
             }
             onPress={() => onPress(transaction.id)}
         >
-            {transaction.ends ? (
-                <TransferTile ends={transaction.ends} future={future} />
-            ) : (
-                <View>
-                    <CategoryIconTile
-                        color={isTransfer ? colors.transfer : identity.color}
-                        emoji={identity.emoji}
-                        future={future}
-                        glyph={isFee ? feeGlyph : undefined}
-                        icon={identity.icon}
-                        imageUri={transaction.imageUri}
-                        radius={TILE_RADIUS}
-                        size={TILE_SIZE}
-                        type="solid"
-                    />
-                    {recurring ? (
-                        <View
-                            className="bg-surface-secondary absolute rounded-md"
-                            style={{ bottom: BADGE_OFFSET, padding: 3, right: BADGE_OFFSET }}
-                        >
-                            <HugeiconsIcon color={colors.foreground} icon={RefreshIcon} size={12} strokeWidth={2} />
-                        </View>
-                    ) : null}
-                </View>
-            )}
-            <View className="flex-1 gap-0.5">
+            <RowTile future={future} isTransfer={isTransfer} transaction={transaction} />
+            <View className={cn("flex-1", !compact && "gap-0.5")}>
                 <RowTitle
                     future={future}
                     note={transaction.note}

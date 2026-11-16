@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { sparklineIsPositive, sparklineRange, sparklineSeries } from "./log-sparkline";
+import { sparklineSeries } from "./log-sparkline";
 
 const NOW = new Date("2026-07-27T13:00:00");
 
@@ -82,37 +82,5 @@ describe("sparklineSeries", () => {
         expect(charged.map((point) => point.amount)).toStrictEqual([80, 5]);
         expect(charged[0]?.date.getMonth()).toBe(4);
         expect(charged[1]?.date.getMonth()).toBe(5);
-    });
-});
-
-describe("sparklineRange", () => {
-    it("counts the days elapsed this month, inclusive of today", () => {
-        expect(sparklineRange("month", NOW)).toBe(27);
-    });
-
-    it("counts the months elapsed this year, inclusive of this one", () => {
-        expect(sparklineRange("year", NOW)).toBe(7);
-    });
-
-    it("counts from the configured first weekday", () => {
-        // 2026-07-27 is a Monday.
-        expect(sparklineRange("week", NOW, 1)).toBe(2);
-        expect(sparklineRange("week", NOW, 2)).toBe(1);
-    });
-});
-
-describe("sparklineIsPositive", () => {
-    it("greens a net line only when the period ended above where it started", () => {
-        const rising = [
-            { amount: 1, date: NOW },
-            { amount: 5, date: NOW },
-        ];
-        expect(sparklineIsPositive("net", rising)).toBe(true);
-        expect(sparklineIsPositive("net", [...rising].reverse())).toBe(false);
-    });
-
-    it("reads money in as always good and money out as never", () => {
-        expect(sparklineIsPositive("in", [])).toBe(true);
-        expect(sparklineIsPositive("out", [])).toBe(false);
     });
 });

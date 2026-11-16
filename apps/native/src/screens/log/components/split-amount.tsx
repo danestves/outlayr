@@ -1,0 +1,70 @@
+import { roundMoney } from "@outlayr/money/round";
+import { use } from "react";
+import { View } from "react-native";
+
+import { AmountsHiddenContext, FlowFigure } from "@/components/amount-text";
+import { Text } from "@/components/text";
+import { AMOUNT_MASK, amountParts, symbolPrefix } from "@/domain/money";
+import { useLanguage } from "@/i18n/context";
+
+interface SplitAmountProps {
+    code: string;
+    fontFamily?: string;
+    magnitude: number;
+    positive: boolean;
+    showCents: boolean;
+    size: number;
+    toneClass: string;
+    typeClass: string;
+}
+
+export function SplitAmount({
+    code,
+    fontFamily,
+    magnitude,
+    positive,
+    showCents,
+    size,
+    toneClass,
+    typeClass,
+}: SplitAmountProps) {
+    const { language } = useLanguage();
+    const hidden = use(AmountsHiddenContext);
+    const parts = amountParts(magnitude, code, showCents, language);
+    const style = fontFamily ? { fontFamily, fontSize: size } : { fontSize: size };
+    const whole = Math.trunc(roundMoney(magnitude, parts.minorUnits));
+
+    if (hidden) {
+        return (
+            <Text className={`${typeClass} ${toneClass}`} numberOfLines={1} style={style}>
+                {symbolPrefix(parts.symbol)}
+                {AMOUNT_MASK}
+            </Text>
+        );
+    }
+    return (
+        <View className="flex-row items-baseline">
+            <FlowFigure
+                className={`${typeClass} ${toneClass} tabular-nums`}
+                fontFamily={fontFamily}
+                format={{ maximumFractionDigits: 0, useGrouping: true }}
+                locale={parts.locale}
+                prefix={`${positive ? "+" : "-"}${symbolPrefix(parts.symbol)}`}
+                size={size}
+                value={whole}
+            />
+            {parts.fraction ? (
+                <FlowFigure
+                    className={`${typeClass} text-muted tabular-nums`}
+                    flush
+                    fontFamily={fontFamily}
+                    format={{ minimumIntegerDigits: parts.minorUnits, useGrouping: false }}
+                    locale={parts.locale}
+                    prefix={parts.locale.decimal}
+                    size={size}
+                    value={Number(parts.fraction)}
+                />
+            ) : null}
+        </View>
+    );
+}

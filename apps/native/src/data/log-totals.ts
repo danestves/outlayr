@@ -7,8 +7,10 @@ import { and, asc, gte, isNull, lte } from "drizzle-orm";
 import type { Database } from "@/db/client";
 import { transactions } from "@/db/schema";
 import type { LogFigures } from "@/domain/log-measure";
+import { previousPeriodWindow } from "@/domain/period-window";
 
 import { logCellQuery, toCurrencyCells } from "./cell-query";
+import type { CellRow } from "./cell-query";
 import { kept } from "./deletion-plan";
 import { NO_READ, useLiveQuery } from "./live-query";
 import { usePendingDeletes } from "./use-deferred-delete";
@@ -131,9 +133,32 @@ export function useLogInsights(
         [nowMs, period, firstWeekday, pending],
         nowMs
     );
+    return insightsFrom(rows, globalCurrency, rates);
+}
 
+/** The same span of the period before, for the head's trend. Null for all-time. */
+export function usePreviousLogInsights(
+    db: Database,
+    nowMs: number,
+    period: LogPeriod,
+    firstWeekday: number,
+    globalCurrency: string,
+    rates?: RateTable
+): LogInsights | null {
+    const start = logPeriodStart(period, new Date(nowMs), firstWeekday);
+    const window = period === "all" || start === null ? null : previousPeriodWindow(period, start, new Date(nowMs));
+    const pending = usePendingDeletes();
+    const rows = useLiveQuery(
+        transactions,
+        () => (window ? logCellQuery(db, window.start, window.end, pending) : NO_READ),
+        [nowMs, period, firstWeekday, pending],
+        nowMs
+    );
+    return window ? insightsFrom(rows, globalCurrency, rates) : null;
+}
+
+function insightsFrom(rows: readonly CellRow[], globalCurrency: string, rates: RateTable | undefined): LogInsights {
     const ordered = cellFigures(toCurrencyCells(rows), globalCurrency, rates);
-
     const dominant = ordered[0] ?? {
         count: 0,
         currencyCode: globalCurrency,
@@ -141,7 +166,6 @@ export function useLogInsights(
         income: 0,
     };
     const others = ordered.slice(1);
-
     return {
         dominant,
         others,

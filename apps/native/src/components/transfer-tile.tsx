@@ -12,10 +12,17 @@ const BADGE_SIZE = 20;
 const BADGE_RADIUS = 6;
 const BADGE_RING = 2;
 
-export function TransferTile({ ends, future }: { ends: NonNullable<TransferLogRow["ends"]>; future: boolean }) {
+interface TransferTileProps {
+    ends: NonNullable<TransferLogRow["ends"]>;
+    future: boolean;
+    radius?: number;
+    size?: number;
+}
+
+export function TransferTile({ ends, future, radius = TILE_RADIUS, size = TILE_SIZE }: TransferTileProps) {
     return (
         <View>
-            <AccountTile account={ends.from} future={future} radius={TILE_RADIUS} size={TILE_SIZE} />
+            <AccountTile account={ends.from} future={future} radius={radius} size={size} />
             <View
                 className="bg-background absolute"
                 style={{

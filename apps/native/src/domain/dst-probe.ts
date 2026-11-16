@@ -15,6 +15,7 @@ import { formatDayHeader } from "./dates";
 import { cumulativeByDay, periodProgress } from "./insights-answers";
 import { daysBetween, localDayKey } from "./local-day";
 import { loggedDays } from "./month-days";
+import { previousPeriodWindow } from "./period-window";
 import { reminderFireAt } from "./subscription-reminder";
 
 const [kind = "", ...rest] = process.argv.slice(2);
@@ -224,6 +225,15 @@ async function answer(): Promise<string> {
                     dueDate.getHours(),
                 ])
             );
+        }
+        case "previous-day":
+        case "previous-week": {
+            const { end, start } = previousPeriodWindow(
+                kind === "previous-day" ? "day" : "week",
+                localDate(0),
+                localDate(5)
+            );
+            return JSON.stringify([start, end].map((d) => [d.getMonth(), d.getDate(), d.getHours(), d.getMinutes()]));
         }
         default: {
             throw new Error(`unknown probe: ${kind}`);

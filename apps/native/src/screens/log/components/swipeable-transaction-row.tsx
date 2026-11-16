@@ -7,6 +7,7 @@ import Animated from "react-native-reanimated";
 
 import type { ActionMenuItem } from "@/components/action-menu";
 import { ArrivalMark } from "@/components/arrival-mark";
+import { CompactRowsContext } from "@/components/compact-rows";
 import { Text } from "@/components/text";
 import { TransactionRow } from "@/components/transaction-row";
 import type { TransactionWithCategory } from "@/data/transactions";
@@ -76,15 +77,17 @@ export function SwipeableTransactionRow({
                 rightThreshold={40}
             >
                 <Animated.View className="bg-background">
-                    <TransactionRow
-                        currency={currency}
-                        dated={dated}
-                        menuItems={menuItems}
-                        onDelete={onDelete}
-                        onPress={onPress}
-                        rates={rates}
-                        transaction={transaction}
-                    />
+                    <CompactRowsContext value>
+                        <TransactionRow
+                            currency={currency}
+                            dated={dated}
+                            menuItems={menuItems}
+                            onDelete={onDelete}
+                            onPress={onPress}
+                            rates={rates}
+                            transaction={transaction}
+                        />
+                    </CompactRowsContext>
                 </Animated.View>
             </ReanimatedSwipeable>
             {fresh ? <ArrivalMark key={id} onSettled={settle} /> : null}

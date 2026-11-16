@@ -14,6 +14,7 @@ import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 
+import { COMPACT_ROW_TYPE, CompactRowsContext } from "./compact-rows";
 import { HERO_TYPE } from "./hero-type";
 import { ROW_TYPE } from "./row-type";
 import { FontScaleCapContext, Text } from "./text";
@@ -38,10 +39,22 @@ interface FlowFigureProps {
     size?: number;
     /** Drawn as plain text after `prefix`, with no digit roll. */
     text?: string;
+    /** iOS gives the zero-width-space strut an advance, a visible gap when one figure follows another. */
+    flush?: boolean;
     value: number;
 }
 
-export function FlowFigure({ className, fontFamily, format, locale, prefix, size, text, value }: FlowFigureProps) {
+export function FlowFigure({
+    className,
+    flush,
+    fontFamily,
+    format,
+    locale,
+    prefix,
+    size,
+    text,
+    value,
+}: FlowFigureProps) {
     const resolved = useResolveClassNames(className ?? "");
     const { color, fontSize, fontVariant, fontWeight } = resolved;
     const fontScaleCap = use(FontScaleCapContext);
@@ -65,7 +78,11 @@ export function FlowFigure({ className, fontFamily, format, locale, prefix, size
             <Text
                 accessible={false}
                 className={className}
-                style={[size == null ? undefined : { fontSize: size }, fontFamily == null ? undefined : { fontFamily }]}
+                style={[
+                    size == null ? undefined : { fontSize: size },
+                    fontFamily == null ? undefined : { fontFamily },
+                    flush ? { width: 0 } : undefined,
+                ]}
             >
                 {BASELINE_STRUT}
             </Text>
@@ -227,6 +244,7 @@ export function HeroNumber({
 const rowAmount = tv({
     base: `${ROW_TYPE.amount} text-foreground`,
     variants: {
+        compact: { true: COMPACT_ROW_TYPE.amount },
         income: { true: "text-income" },
         isFuture: { true: "text-future" },
         struck: { true: "line-through" },
@@ -257,6 +275,7 @@ export function RowAmount({
     const { language } = useLanguage();
     const hidden = use(AmountsHiddenContext);
     const largeText = useAccessibilityTextSize();
+    const compact = use(CompactRowsContext);
     const sign = transfer ? (transferSign ?? "") : signFor(income);
     return (
         <Text
@@ -267,7 +286,10 @@ export function RowAmount({
                     : rowAmountLabel({ amount, code, income: transfer ? null : income, showCents, transferSign }, t)
             }
             adjustsFontSizeToFit={largeText}
-            className={cn(rowAmount({ income: !transfer && income === true, isFuture, struck }), "tabular-nums")}
+            className={cn(
+                rowAmount({ compact, income: !transfer && income === true, isFuture, struck }),
+                "tabular-nums"
+            )}
             numberOfLines={1}
         >
             {sign}

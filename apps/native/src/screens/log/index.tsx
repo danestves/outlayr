@@ -1,10 +1,9 @@
 import { SectionList } from "@legendapp/list/section-list";
 import { addDays, addMonths, startOfDay } from "@outlayr/money/calendar";
-import { valueDatedRowsIn } from "@outlayr/money/valuation";
 import type { RateTable } from "@outlayr/money/valuation";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { DaySectionHeader } from "@/components/day-section-header";
@@ -21,7 +20,13 @@ import { useLogOverviewIn } from "@/data/debts";
 import { useFavouriteCurrencies } from "@/data/favourite-currencies";
 import { usePendingCuotas, usePendingPurchaseRows } from "@/data/installment-reads";
 import { useFilteredTransactions, useUpcomingTransactions } from "@/data/log-filtered";
-import { logPeriodFromStored, storedLogPeriod, useLogInsights, useSparklineRows } from "@/data/log-totals";
+import {
+    logPeriodFromStored,
+    storedLogPeriod,
+    useLogInsights,
+    usePreviousLogInsights,
+    useSparklineRows,
+} from "@/data/log-totals";
 import type { LogPeriod } from "@/data/log-totals";
 import { useLoggedTransactions } from "@/data/transactions";
 import type { TransactionWithCategory } from "@/data/transactions";
@@ -33,7 +38,7 @@ import { useValuationIn } from "@/data/use-valuation";
 import { useValuedCurrencies } from "@/data/valued-currencies";
 import type { Database } from "@/db/client";
 import { BALANCES_ACCOUNTS } from "@/domain/balances";
-import { formatMonthHeader } from "@/domain/dates";
+import { formatMonthTitle } from "@/domain/dates";
 import { groupByDay, groupByDayAsItGrows, groupByMonth, joinDaySections } from "@/domain/day-sections";
 import type { DayGroupable } from "@/domain/day-sections";
 import { logCurrencyOptions } from "@/domain/log-currency-options";
@@ -44,12 +49,10 @@ import type { LogMeasure, NarrowedMeasure } from "@/domain/log-measure";
 import { cursorStart } from "@/domain/log-period-cursor";
 import type { CursorUnit } from "@/domain/log-period-cursor";
 import { scopeHasFigures, scopeTotals } from "@/domain/log-scope-figures";
-import { sparklineIsPositive, sparklineRange, sparklineSeries } from "@/domain/log-sparkline";
+import { sparklineSeries } from "@/domain/log-sparkline";
 import { paywallHref } from "@/domain/paywall-trigger";
-import { barWindow, periodBars } from "@/domain/period-bars";
 import { mergeByRecency } from "@/domain/transfer-log-rows";
 import type { TransferLogRow } from "@/domain/transfer-log-rows";
-import { chargesBetween } from "@/domain/upcoming";
 import { useReviewAsk } from "@/hooks/use-review-ask";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { useDayCardShare } from "@/lib/use-day-card-share";
@@ -79,7 +82,6 @@ function useSparkline(
     enabled: boolean,
     measure: LogMeasure,
     period: LogPeriod,
-    firstWeekday: number,
     displayCurrency: string,
     rates: RateTable
 ): SparklineData | null {
@@ -99,51 +101,12 @@ function useSparkline(
     if (!enabled || period === "all") {
         return null;
     }
-    const now = new Date(nowMs);
-    const points = sparklineSeries(rows, measure, period, now);
-    return {
-        byMonth: period === "year",
-        points,
-        positive: sparklineIsPositive(measure, points),
-        range: sparklineRange(period, now, firstWeekday),
-    };
+    return { byMonth: period === "year", points: sparklineSeries(rows, measure, period, new Date(nowMs)) };
 }
 
-function usePeriodBars(
-    db: Database,
-    nowMs: number,
-    enabled: boolean,
-    measure: LogMeasure,
-    period: LogPeriod,
-    firstWeekday: number,
-    displayCurrency: string,
-    rates: RateTable,
-    schedules: readonly TransactionWithCategory[]
-) {
-    const now = new Date(nowMs);
-    const barPeriod = period === "week" || period === "month" ? period : null;
-    const window = barPeriod ? barWindow(barPeriod, now, firstWeekday) : null;
-    const rows = useSparklineRows(
-        db,
-        nowMs,
-        enabled && window !== null,
-        false,
-        window?.start ?? null,
-        displayCurrency,
-        rates
-    );
-
-    if (!enabled || !barPeriod || !window) {
-        return null;
-    }
-    const income = measure === "in";
-    const charges = income ? [] : chargesBetween(schedules, now, addDays(startOfDay(now), 1), window.end);
-    const due = valueDatedRowsIn(charges, displayCurrency, rates).map((amount, index) => ({
-        amount,
-        date: charges[index].date,
-    }));
-    const logged = rows.filter((row) => row.income === income);
-    return { period: barPeriod, rows: periodBars(barPeriod, now, firstWeekday, logged, due) };
+/** Starts under the name: the 32 tile plus the 12 gap. */
+function RowHairline() {
+    return <View className="bg-border ml-11 h-px" />;
 }
 
 function headListRows(
@@ -275,6 +238,7 @@ export function Log() {
     const showUpcomingSection = filter === "upcoming" || (listFilter === "all" && showUpcoming);
     const upcoming = useUpcomingTransactions(db, nowMs, showUpcomingSoon, showUpcomingSection);
     const insights = useLogInsights(db, nowMs, period, firstWeekday, currency, rates);
+    const previousInsights = usePreviousLogInsights(db, nowMs, period, firstWeekday, currency, rates);
     const mainBudget = useCurrentMainBudget(db, nowMs, period === "month");
     const currencyOptions = logCurrencyOptions({
         // `rates` holds only the on-screen currency (#237); USD passes via the frozen `amountUsd`.
@@ -283,19 +247,8 @@ export function Log() {
         global: globalCurrency,
         produced: insights.perCurrency.map((figures) => figures.currencyCode),
     });
-    const sparkline = useSparkline(db, nowMs, logViewLineGraph, headMeasure, period, firstWeekday, currency, rates);
+    const sparkline = useSparkline(db, nowMs, logViewLineGraph, headMeasure, period, currency, rates);
     const pendingPurchase = usePendingPurchaseRows(db, useDeferredDelete("purchase").pendingId);
-    const bars = usePeriodBars(
-        db,
-        nowMs,
-        filter === "all",
-        headMeasure,
-        period,
-        firstWeekday,
-        currency,
-        rates,
-        upcoming.schedules.filter((row) => !pendingPurchase.has(row.id))
-    );
     const transferIds = new Set(transferRows.map((transfer) => transfer.id));
     const { pendingId, requestDelete } = useDeferredDelete("row");
     const pendingCuotas = usePendingCuotas(db, pendingId);
@@ -365,10 +318,6 @@ export function Log() {
 
     const toolbar = (
         <LogToolbar
-            period={period}
-            onPeriod={(next) => {
-                setNumberSetting({ db, key: "logInsightsTimeFrame", value: storedLogPeriod(next) });
-            }}
             filter={filter}
             onFilter={(next) => {
                 setNarrowed(null);
@@ -409,6 +358,7 @@ export function Log() {
                 keyExtractor={(item) => item.id}
                 itemsAreEqual={logEntriesEqual}
                 stickySectionHeadersEnabled={false}
+                ItemSeparatorComponent={RowHairline}
                 recycleItems
                 onEndReachedThreshold={0.5}
                 onEndReached={() => {
@@ -426,9 +376,8 @@ export function Log() {
                     <>
                         {filter === "all" ? (
                             <LogInsights
-                                bars={bars}
-                                nowMs={nowMs}
                                 insights={insights}
+                                previous={previousInsights}
                                 limit={{
                                     budget: mainBudget,
                                     currency: globalCurrency,
@@ -438,6 +387,13 @@ export function Log() {
                                 narrowed={narrowed}
                                 onNarrow={setNarrowed}
                                 period={period}
+                                onPeriod={(next) => {
+                                    setNumberSetting({
+                                        db,
+                                        key: "logInsightsTimeFrame",
+                                        value: storedLogPeriod(next),
+                                    });
+                                }}
                                 displayCurrency={currency}
                                 currencyOptions={currencyOptions}
                                 onDisplayCurrency={setDisplayOverride}
@@ -505,7 +461,8 @@ export function Log() {
                         <DaySectionHeader
                             section={section}
                             first={section.first}
-                            label={monthly ? formatMonthHeader(section.day, language) : undefined}
+                            plain
+                            label={monthly ? formatMonthTitle(section.day, language) : undefined}
                             newCount={newIds.length}
                             onConfirmNew={() => markReviewed({ db, ids: newIds })}
                             onShare={monthly ? undefined : () => shareDay(section)}

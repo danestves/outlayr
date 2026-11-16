@@ -1,11 +1,13 @@
+import ArrowRight01Icon from "@hugeicons-pro/core-stroke-rounded/ArrowRight01Icon";
 import PlusSignIcon from "@hugeicons-pro/core-stroke-rounded/PlusSignIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import type { AccountsOverview, OverviewRow } from "@outlayr/money/account-overview";
+import type { AccountsOverview } from "@outlayr/money/account-overview";
 import { currencyTotals } from "@outlayr/money/currency-totals";
 import { landingDate } from "@outlayr/money/recurrence";
 import type { RateTable } from "@outlayr/money/valuation";
 import { use } from "react";
-import { ScrollView, useWindowDimensions, View } from "react-native";
+import type { ReactNode } from "react";
+import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
 
 import { AmountsHiddenContext } from "@/components/amount-text";
 import { CategoryIconTile } from "@/components/category-icon-tile";
@@ -13,12 +15,12 @@ import { MonoLabel } from "@/components/mono-label";
 import { TapMenu } from "@/components/tap-menu";
 import { Text } from "@/components/text";
 import { cn } from "@/components/tw";
-import { Widget, WIDGET_SIZE } from "@/components/widget-card";
+import { WIDGET_SIZE } from "@/components/widget-card";
 import type { Account } from "@/data/accounts-core";
 import { DUE_WINDOW_DAYS } from "@/data/debts-due";
 import type { TransactionWithCategory } from "@/data/transactions";
 import { formatSignedAmount } from "@/domain/account-display";
-import { formatDueDay, formatDueMark } from "@/domain/dates";
+import { formatDueDay } from "@/domain/dates";
 import { foldFees } from "@/domain/day-sections";
 import { formatAmount, maskedAmount } from "@/domain/money";
 import { resolveTransactionIdentity } from "@/domain/transaction-identity";
@@ -32,12 +34,113 @@ import type { DebtsSummary } from "./accounts-block";
 
 const GAP = 10;
 const GUTTER = 20;
-const NEXT_SHOWN = 3;
-const LOGOS_SHOWN = 4;
-const LOGO_SIZE = 24;
-const START_GLYPH = 12;
+const CHIPS_SHOWN = 3;
+const CHIP_SIZE = 20;
+const CHIP_OVERLAP = -8;
+const START_GLYPH = 11;
+const CARD_SHADOW = { boxShadow: "0 1px 4px rgba(23, 21, 15, 0.08)" } as const;
 
-interface UpcomingWidgetProps {
+interface ShelfChip {
+    color: string;
+    emoji?: string | null;
+    future?: boolean;
+    icon: string | null | undefined;
+    id: string;
+    imageUri?: string | null;
+}
+
+const NO_CHIPS: readonly ShelfChip[] = [];
+
+interface ShelfCardProps {
+    accessibilityHint?: string;
+    accessibilityLabel: string;
+    cap?: ReactNode;
+    chips?: readonly ShelfChip[];
+    figure: string;
+    figureClass?: string;
+    more?: number;
+    onPress?: () => void;
+    title: string;
+    unit: string;
+    width: number;
+}
+
+function ShelfCard({
+    accessibilityHint,
+    accessibilityLabel,
+    cap,
+    chips = NO_CHIPS,
+    figure,
+    figureClass = "text-foreground",
+    more = 0,
+    onPress,
+    title,
+    unit,
+    width,
+}: ShelfCardProps) {
+    const colors = useColors();
+    return (
+        <Pressable
+            accessibilityHint={accessibilityHint}
+            accessibilityLabel={accessibilityLabel}
+            accessibilityRole="button"
+            className="bg-card rounded-[20px] px-3 py-2.5 active:opacity-70"
+            onPress={onPress}
+            style={[CARD_SHADOW, { width }]}
+        >
+            <View className="flex-row items-center justify-between gap-1">
+                <MonoLabel className="shrink" numberOfLines={1}>
+                    {title}
+                </MonoLabel>
+                {onPress ? (
+                    <HugeiconsIcon color={colors.muted} icon={ArrowRight01Icon} size={14} strokeWidth={2} />
+                ) : null}
+            </View>
+            <Text
+                adjustsFontSizeToFit
+                className={cn("font-sans-semibold text-headline mt-0.5 leading-[22px] tabular-nums", figureClass)}
+                minimumFontScale={0.6}
+                numberOfLines={1}
+            >
+                {figure}
+            </Text>
+            <View className="min-h-5 flex-row items-center justify-between gap-1.5">
+                {cap ?? (
+                    <Text className="font-sans-medium text-label text-muted shrink" numberOfLines={1}>
+                        {unit}
+                    </Text>
+                )}
+                {chips.length > 0 ? (
+                    <View className="flex-row items-center gap-1">
+                        <View className="flex-row">
+                            {chips.map((chip, index) => (
+                                <View
+                                    className="bg-card rounded-full p-[1.5px]"
+                                    key={chip.id}
+                                    style={index > 0 ? { marginLeft: CHIP_OVERLAP } : undefined}
+                                >
+                                    <CategoryIconTile
+                                        color={chip.color}
+                                        emoji={chip.emoji}
+                                        future={chip.future}
+                                        icon={chip.icon}
+                                        imageUri={chip.imageUri}
+                                        radius={CHIP_SIZE / 2}
+                                        size={CHIP_SIZE}
+                                        type="solid"
+                                    />
+                                </View>
+                            ))}
+                        </View>
+                        {more > 0 ? <Text className="text-eyebrow text-muted font-mono">{`+${more}`}</Text> : null}
+                    </View>
+                ) : null}
+            </View>
+        </Pressable>
+    );
+}
+
+interface UpcomingCardProps {
     currency: string;
     nowMs: number;
     onOpen: () => void;
@@ -47,7 +150,7 @@ interface UpcomingWidgetProps {
     width: number;
 }
 
-function UpcomingWidget({ rows, currency, rates, nowMs, showCents, onOpen, width }: UpcomingWidgetProps) {
+function UpcomingCard({ rows, currency, rates, nowMs, showCents, onOpen, width }: UpcomingCardProps) {
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
@@ -63,50 +166,38 @@ function UpcomingWidget({ rows, currency, rates, nowMs, showCents, onOpen, width
             .join(" / ");
     }
     const unit = t("log.shelf.weekAhead");
-    const next = foldFees(rows).slice(0, NEXT_SHOWN);
+    const next = foldFees(rows).slice(0, CHIPS_SHOWN);
     const title = t("log.upcoming.heading");
     const spoken = next.map(
         (row) => `${row.note || row.categoryName}, ${formatDueDay(landingDate(row, now), now, language)}`
     );
 
     return (
-        <Widget
+        <ShelfCard
             accessibilityHint={t("log.upcoming.openHint")}
             accessibilityLabel={[title, `${hidden ? t("log.amounts.hidden") : figure} ${unit}`, ...spoken].join(", ")}
+            chips={next.map((row) => {
+                const identity = resolveTransactionIdentity(row);
+                return {
+                    color: row.transferId === row.id ? colors.transfer : identity.color,
+                    emoji: identity.emoji,
+                    future: true,
+                    icon: identity.icon,
+                    id: row.id,
+                    imageUri: row.imageUri,
+                };
+            })}
             figure={figure}
-            figureClass="text-future"
+            figureClass="text-muted"
             onPress={onOpen}
             title={title}
             unit={unit}
             width={width}
-        >
-            <View className={cn("flex-row", next.length === NEXT_SHOWN ? "justify-between" : "gap-3.5")}>
-                {next.map((row) => {
-                    const identity = resolveTransactionIdentity(row);
-                    return (
-                        <View className="items-center gap-1.25" key={row.id}>
-                            <CategoryIconTile
-                                color={row.transferId === row.id ? colors.transfer : identity.color}
-                                emoji={identity.emoji}
-                                future
-                                icon={identity.icon}
-                                imageUri={row.imageUri}
-                                radius={8}
-                                size={30}
-                                type="solid"
-                            />
-                            <MonoLabel className="text-micro text-subtle" numberOfLines={1}>
-                                {formatDueMark(landingDate(row, now), now, language)}
-                            </MonoLabel>
-                        </View>
-                    );
-                })}
-            </View>
-        </Widget>
+        />
     );
 }
 
-interface AccountsWidgetProps {
+interface AccountsCardProps {
     accounts: readonly Account[];
     currency: string;
     onOpen: () => void;
@@ -115,7 +206,7 @@ interface AccountsWidgetProps {
     width: number;
 }
 
-function AccountsWidget({ accounts, overview, currency, showCents, onOpen, width }: AccountsWidgetProps) {
+function AccountsCard({ accounts, overview, currency, showCents, onOpen, width }: AccountsCardProps) {
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
@@ -125,9 +216,10 @@ function AccountsWidget({ accounts, overview, currency, showCents, onOpen, width
     if (overview == null) {
         const prompt = t("accounts.add.prompt");
         return (
-            <Widget
+            <ShelfCard
                 accessibilityLabel={`${title}, ${prompt}`}
-                figure=""
+                figure={hidden ? maskedAmount(currency) : formatAmount(0, currency, showCents, language)}
+                figureClass="text-muted"
                 onPress={onOpen}
                 title={title}
                 unit={prompt}
@@ -137,70 +229,40 @@ function AccountsWidget({ accounts, overview, currency, showCents, onOpen, width
     }
 
     const byId = new Map(accounts.map((account) => [account.id, account]));
-    const colorOf = (row: OverviewRow) => {
-        const account = byId.get(row.id);
-        return account?.imageColor ?? account?.customColor ?? colors.foreground;
-    };
     const total = hidden ? maskedAmount(currency) : formatSignedAmount(overview.total, currency, showCents, language);
     const count = t("log.shelf.accounts", { count: overview.count });
     const unit = overview.exact ? count : `${count} · ${currency}?`;
-    const held = overview.rows.filter((row) => row.balance > 0);
-    const lead = held.slice(0, 3);
-    const rest = held.slice(3).reduce((sum, row) => sum + row.balance, 0);
-    const shown = overview.rows.slice(0, LOGOS_SHOWN);
+    const chips = overview.rows.slice(0, CHIPS_SHOWN).flatMap((row) => {
+        const account = byId.get(row.id);
+        return account
+            ? [
+                  {
+                      color: account.imageColor ?? account.customColor ?? colors.foreground,
+                      emoji: account.emoji,
+                      icon: account.icon,
+                      id: row.id,
+                      imageUri: account.imageUri,
+                  },
+              ]
+            : [];
+    });
 
     return (
-        <Widget
+        <ShelfCard
             accessibilityHint={t("accounts.overview.openHint")}
             accessibilityLabel={`${title}, ${hidden ? t("log.amounts.hidden") : total}, ${unit}`}
+            chips={chips}
             figure={total}
+            more={overview.rows.length - CHIPS_SHOWN}
             onPress={onOpen}
             title={title}
             unit={unit}
             width={width}
-        >
-            <View className="gap-2.5">
-                {lead.length > 0 ? (
-                    <View className="h-1.5 flex-row gap-0.5 overflow-hidden rounded-full">
-                        {lead.map((row) => (
-                            <View key={row.id} style={{ backgroundColor: colorOf(row), flex: row.balance }} />
-                        ))}
-                        {rest > 0 ? <View className="bg-border" style={{ flex: rest }} /> : null}
-                    </View>
-                ) : null}
-                <View className="flex-row items-center gap-1.5">
-                    <View className="flex-row">
-                        {shown.map((row, index) => {
-                            const account = byId.get(row.id);
-                            return account ? (
-                                <View
-                                    className="bg-card rounded-[9px] p-0.5"
-                                    key={row.id}
-                                    style={index > 0 ? { marginLeft: -8 } : undefined}
-                                >
-                                    <CategoryIconTile
-                                        color={colorOf(row)}
-                                        emoji={account.emoji}
-                                        icon={account.icon}
-                                        imageUri={account.imageUri}
-                                        radius={7}
-                                        size={LOGO_SIZE}
-                                        type="solid"
-                                    />
-                                </View>
-                            ) : null;
-                        })}
-                    </View>
-                    {overview.rows.length > LOGOS_SHOWN ? (
-                        <Text className="font-sans-semibold text-footnote text-subtle">{`+${overview.rows.length - LOGOS_SHOWN}`}</Text>
-                    ) : null}
-                </View>
-            </View>
-        </Widget>
+        />
     );
 }
 
-function NoDebtsWidget({ currency, showCents, width }: { currency: string; showCents: boolean; width: number }) {
+function NoDebtsCard({ currency, showCents, width }: { currency: string; showCents: boolean; width: number }) {
     const t = useTranslation();
     const { language } = useLanguage();
     const colors = useColors();
@@ -212,30 +274,31 @@ function NoDebtsWidget({ currency, showCents, width }: { currency: string; showC
 
     return (
         <TapMenu accessibilityLabel={title} items={items}>
-            <Widget
+            <ShelfCard
                 accessibilityLabel={`${title}, ${figure}, ${unit}`}
+                cap={
+                    <View className="shrink flex-row items-center gap-2.5">
+                        {[t("debts.verb.lent"), t("debts.verb.borrowed")].map((start) => (
+                            <View className="shrink flex-row items-center gap-0.5" key={start}>
+                                <HugeiconsIcon color={colors.tint} icon={PlusSignIcon} size={START_GLYPH} />
+                                <Text className="font-sans-medium text-label text-tint shrink" numberOfLines={1}>
+                                    {start}
+                                </Text>
+                            </View>
+                        ))}
+                    </View>
+                }
                 figure={figure}
-                figureClass="text-subtle"
+                figureClass="text-muted"
                 title={title}
                 unit={unit}
                 width={width}
-            >
-                <View className="gap-1">
-                    {[t("debts.verb.lent"), t("debts.verb.borrowed")].map((start) => (
-                        <View className="flex-row items-center gap-1.5" key={start}>
-                            <HugeiconsIcon color={colors.tint} icon={PlusSignIcon} size={START_GLYPH} />
-                            <Text className="font-sans-medium text-footnote text-tint" numberOfLines={1}>
-                                {start}
-                            </Text>
-                        </View>
-                    ))}
-                </View>
-            </Widget>
+            />
         </TapMenu>
     );
 }
 
-function DebtsWidget({
+function DebtsCard({
     debts,
     showCents,
     onOpen,
@@ -261,7 +324,7 @@ function DebtsWidget({
     const figure = format(debts.youOwe);
 
     return (
-        <Widget
+        <ShelfCard
             accessibilityLabel={`${title}, ${figure}, ${unit}`}
             figure={figure}
             onPress={onOpen}
@@ -309,10 +372,18 @@ export function LogShelf({
         width = WIDGET_SIZE;
     }
 
-    const widgets = (
+    const cards = (
         <>
+            <AccountsCard
+                accounts={accounts}
+                currency={currency}
+                onOpen={onOpenAccounts}
+                overview={overview}
+                showCents={showCents}
+                width={width}
+            />
             {upcoming.length > 0 ? (
-                <UpcomingWidget
+                <UpcomingCard
                     currency={currency}
                     nowMs={nowMs}
                     onOpen={onOpenUpcoming}
@@ -323,27 +394,20 @@ export function LogShelf({
                 />
             ) : null}
             {debts === null ? (
-                <NoDebtsWidget currency={currency} showCents={showCents} width={width} />
+                <NoDebtsCard currency={currency} showCents={showCents} width={width} />
             ) : (
-                <DebtsWidget debts={debts} onOpen={onOpenDebts} showCents={showCents} width={width} />
+                <DebtsCard debts={debts} onOpen={onOpenDebts} showCents={showCents} width={width} />
             )}
-            <AccountsWidget
-                accounts={accounts}
-                currency={currency}
-                onOpen={onOpenAccounts}
-                overview={overview}
-                showCents={showCents}
-                width={width}
-            />
         </>
     );
 
     if (stacked) {
-        return <View className="gap-2.5 pt-3 pb-1.5">{widgets}</View>;
+        return <View className="gap-2.5 pt-1 pb-2.5">{cards}</View>;
     }
     return (
         <ScrollView
-            contentContainerStyle={{ gap: GAP, paddingHorizontal: GUTTER, paddingVertical: 12 }}
+            // Vertical padding keeps the cards' shadow inside the scroll view's clip.
+            contentContainerStyle={{ gap: GAP, paddingBottom: 10, paddingHorizontal: GUTTER, paddingTop: 4 }}
             decelerationRate="fast"
             horizontal
             scrollEnabled={scrolls}
@@ -351,7 +415,7 @@ export function LogShelf({
             snapToInterval={scrolls ? WIDGET_SIZE + GAP : undefined}
             style={{ marginHorizontal: -GUTTER }}
         >
-            {widgets}
+            {cards}
         </ScrollView>
     );
 }
