@@ -1,5 +1,5 @@
 import type { ReferralOverview } from "@outlayr/backend/confect/referrals.spec";
-import { REFERRAL_DAYS_TO_EARN, REFERRAL_YEARLY_CAP } from "@outlayr/money/contract";
+import { REFERRAL_DAYS_TO_EARN, REFERRAL_YEARLY_CAP, referralsEarnOnPayment } from "@outlayr/money/contract";
 import { useIsFocused, useRouter } from "expo-router";
 import { BottomSheet } from "panelui-native/components/bottom-sheet";
 import { Button } from "panelui-native/components/button";
@@ -94,13 +94,16 @@ function LandedSheet({
     const now = useTickingNow(false);
     const count = friends.length;
     const [first] = friends;
-    const who =
-        count === 1 && first
-            ? t("referrals.landed.who", {
-                  days: REFERRAL_DAYS_TO_EARN,
-                  name: first.name ?? t("referrals.friend.unnamed"),
-              })
-            : t("referrals.landed.whoMany", { count, days: REFERRAL_DAYS_TO_EARN });
+    const name = first?.name ?? t("referrals.friend.unnamed");
+    const paid = friends.every((friend) => referralsEarnOnPayment(friend.rewardedAt ?? now));
+    let who = paid
+        ? t("referrals.landed.whoManyPaid", { count })
+        : t("referrals.landed.whoMany", { count, days: REFERRAL_DAYS_TO_EARN });
+    if (count === 1) {
+        who = paid
+            ? t("referrals.landed.whoPaid", { name })
+            : t("referrals.landed.who", { days: REFERRAL_DAYS_TO_EARN, name });
+    }
     const until = overview.promoEndsAt;
     const banked = overview.bankedMonths > 0 || until === null;
 

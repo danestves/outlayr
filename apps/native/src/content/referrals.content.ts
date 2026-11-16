@@ -70,6 +70,15 @@ const referrals = {
             pt: "{name} vê seu primeiro nome e quantos dias você registrou, até {days}.",
             "pt-PT": "{name} vê o seu primeiro nome e quantos dias registou, até {days}.",
         }),
+        "referrals.claim.sharedPaid": t({
+            en: "{name} sees your first name and whether you buy Pro.",
+            de: "{name} sieht deinen Vornamen und ob du Pro kaufst.",
+            es: "{name} ve tu primer nombre y si compras Pro.",
+            "es-ES": "{name} ve tu nombre y si compras Pro.",
+            fr: "{name} voit votre prénom et si vous achetez Pro.",
+            pt: "{name} vê seu primeiro nome e se você compra o Pro.",
+            "pt-PT": "{name} vê o seu primeiro nome e se compra o Pro.",
+        }),
         "referrals.claim.sharedFriend": t({
             en: "Your friend sees your first name and how many days you've logged, up to {days}.",
             de: "Dein Freund sieht deinen Vornamen und an wie vielen Tagen du erfasst hast, bis zu {days}.",
@@ -78,6 +87,15 @@ const referrals = {
             fr: "Votre ami voit votre prénom et combien de jours vous avez saisis, jusqu'à {days}.",
             pt: "Seu amigo vê seu primeiro nome e quantos dias você registrou, até {days}.",
             "pt-PT": "O seu amigo vê o seu primeiro nome e quantos dias registou, até {days}.",
+        }),
+        "referrals.claim.sharedFriendPaid": t({
+            en: "Your friend sees your first name and whether you buy Pro.",
+            de: "Dein Freund sieht deinen Vornamen und ob du Pro kaufst.",
+            es: "Tu amigo ve tu primer nombre y si compras Pro.",
+            "es-ES": "Tu amigo ve tu nombre y si compras Pro.",
+            fr: "Votre ami voit votre prénom et si vous achetez Pro.",
+            pt: "Seu amigo vê seu primeiro nome e se você compra o Pro.",
+            "pt-PT": "O seu amigo vê o seu primeiro nome e se compra o Pro.",
         }),
         "referrals.claim.startsAtSignIn": t({
             en: "Starts when you sign in. Nothing renews.",
@@ -170,6 +188,14 @@ const referrals = {
             pt: "Um mês chega quando um amigo registra {days} dias. Até {cap} por ano.",
             "pt-PT": "Um mês chega quando um amigo regista {days} dias. Até {cap} por ano.",
         }),
+        "referrals.footnotePaid": t({
+            en: "A month lands when a friend buys Pro. Up to {cap} a year.",
+            de: "Ein Monat kommt, wenn ein Freund Pro kauft. Bis zu {cap} pro Jahr.",
+            es: "Recibes un mes cuando un amigo compra Pro. Hasta {cap} al año.",
+            fr: "Un mois arrive quand un ami achète Pro. Jusqu'à {cap} par an.",
+            pt: "Um mês chega quando um amigo compra o Pro. Até {cap} por ano.",
+            "pt-PT": "Um mês chega quando um amigo compra o Pro. Até {cap} por ano.",
+        }),
         "referrals.friend.capped": t({
             en: "Yearly limit",
             de: "Jahreslimit",
@@ -185,6 +211,14 @@ const referrals = {
             pt: "Registrou {days} dias · {date}",
             "pt-PT": "Registou {days} dias · {date}",
         }),
+        "referrals.friend.bought": t({
+            en: "Bought Pro · {date}",
+            de: "Pro gekauft · {date}",
+            es: "Compró Pro · {date}",
+            fr: "A acheté Pro · {date}",
+            pt: "Comprou o Pro · {date}",
+            "pt-PT": "Comprou o Pro · {date}",
+        }),
         "referrals.friend.lifetime": t({
             en: "Lifetime",
             de: "Lebenslang",
@@ -199,6 +233,14 @@ const referrals = {
             fr: "{days} jours saisis sur {total}",
             pt: "Registrou {days} de {total} dias",
             "pt-PT": "Registou {days} de {total} dias",
+        }),
+        "referrals.friend.waiting": t({
+            en: "No purchase yet",
+            de: "Noch kein Kauf",
+            es: "Aún sin compra",
+            fr: "Pas encore d'achat",
+            pt: "Nenhuma compra ainda",
+            "pt-PT": "Ainda sem compra",
         }),
         "referrals.friend.month": t({
             en: "+1 month",
@@ -307,6 +349,14 @@ const referrals = {
             pt: "{name} registrou {days} dias",
             "pt-PT": "{name} registou {days} dias",
         }),
+        "referrals.landed.whoPaid": t({
+            en: "{name} bought Pro",
+            de: "{name} hat Pro gekauft",
+            es: "{name} compró Pro",
+            fr: "{name} a acheté Pro",
+            pt: "{name} comprou o Pro",
+            "pt-PT": "{name} comprou o Pro",
+        }),
         "referrals.landed.whoMany": t({
             en: "{count} friends logged {days} days",
             de: "{count} Freunde haben an {days} Tagen erfasst",
@@ -314,6 +364,14 @@ const referrals = {
             fr: "{count} amis ont saisi {days} jours",
             pt: "{count} amigos registraram {days} dias",
             "pt-PT": "{count} amigos registaram {days} dias",
+        }),
+        "referrals.landed.whoManyPaid": t({
+            en: "{count} friends bought Pro",
+            de: "{count} Freunde haben Pro gekauft",
+            es: "{count} amigos compraron Pro",
+            fr: "{count} amis ont acheté Pro",
+            pt: "{count} amigos compraram o Pro",
+            "pt-PT": "{count} amigos compraram o Pro",
         }),
         "referrals.refusal.hadPro": t({
             en: "Invites are for accounts that never had Pro.",

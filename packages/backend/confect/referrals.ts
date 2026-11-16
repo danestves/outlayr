@@ -6,8 +6,10 @@ import {
     REFERRAL_CODE_LENGTH,
     REFERRAL_DAYS_TO_EARN,
     REFERRAL_YEARLY_CAP,
+    referralsEarnOnPayment,
 } from "@outlayr/money/contract";
 import { DAY_MS } from "@outlayr/money/ledger-zone";
+import type { Subscription } from "convex-revenuecat";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -224,25 +226,15 @@ export const scheduleGrant = Effect.fn("Referrals.scheduleGrant")(function* sche
     yield* scheduler.runAfter(delay, refs.internal.referrals.grant, { attempt: 0, userId });
 });
 
-export const noteLoggedDay = Effect.fn("Referrals.noteLoggedDay")(function* noteLoggedDay(userId: string) {
+type Progress = Partial<Pick<Referral, "daysLogged" | "lastCountedAt" | "paidWith">>;
+
+export const rewardReferrer = Effect.fn("Referrals.rewardReferrer")(function* rewardReferrer(
+    referral: Referral,
+    progress: Progress = {}
+) {
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
-    const referral = yield* reader
-        .table("referrals")
-        .get("by_referredId", userId)
-        .pipe(Effect.catchTags(nullOnMissing));
-    if (referral === null || referral.status !== "counting") {
-        return;
-    }
     const now = yield* Clock.currentTimeMillis;
-    const counted = countDay(referral, now);
-    if (counted === null) {
-        return;
-    }
-    if (counted.daysLogged < REFERRAL_DAYS_TO_EARN) {
-        yield* writer.table("referrals").patch(referral._id, counted);
-        return;
-    }
     const earnedThisYear = yield* reader
         .table("referrals")
         .index("by_referrerId_and_rewardedAt", (q) =>
@@ -250,19 +242,69 @@ export const noteLoggedDay = Effect.fn("Referrals.noteLoggedDay")(function* note
         )
         .take(REFERRAL_YEARLY_CAP);
     if (earnedThisYear.length >= REFERRAL_YEARLY_CAP) {
-        yield* writer.table("referrals").patch(referral._id, { ...counted, status: "capped" });
+        yield* writer.table("referrals").patch(referral._id, { ...progress, status: "capped" });
         return;
     }
     const reward = yield* creditMonths(referral.referrerId, 1);
     if (reward === "none") {
-        yield* writer.table("referrals").patch(referral._id, { ...counted, status: "lifetime" });
+        yield* writer.table("referrals").patch(referral._id, { ...progress, status: "lifetime" });
         return;
     }
-    yield* writer.table("referrals").patch(referral._id, { ...counted, rewardedAt: now, status: "rewarded" });
+    yield* writer.table("referrals").patch(referral._id, { ...progress, rewardedAt: now, status: "rewarded" });
     if (reward === "grant") {
         yield* scheduleGrant(referral.referrerId);
     }
 });
+
+export const noteLoggedDay = Effect.fn("Referrals.noteLoggedDay")(function* noteLoggedDay(userId: string) {
+    const now = yield* Clock.currentTimeMillis;
+    if (referralsEarnOnPayment(now)) {
+        return;
+    }
+    const referral = yield* (yield* DatabaseReader)
+        .table("referrals")
+        .get("by_referredId", userId)
+        .pipe(Effect.catchTags(nullOnMissing));
+    if (referral === null || referral.status !== "counting") {
+        return;
+    }
+    const counted = countDay(referral, now);
+    if (counted === null) {
+        return;
+    }
+    if (counted.daysLogged < REFERRAL_DAYS_TO_EARN) {
+        yield* (yield* DatabaseWriter).table("referrals").patch(referral._id, counted);
+        return;
+    }
+    yield* rewardReferrer(referral, counted);
+});
+
+export function purchasesSince(
+    subscriptions: readonly Pick<
+        Subscription,
+        | "environment"
+        | "isFamilyShare"
+        | "originalPurchasedAtMs"
+        | "originalTransactionId"
+        | "periodType"
+        | "purchasedAtMs"
+        | "refundedAtMs"
+        | "store"
+    >[],
+    claimedAt: number
+): string[] {
+    return subscriptions
+        .filter(
+            (subscription) =>
+                subscription.environment === "PRODUCTION" &&
+                subscription.store !== "PROMOTIONAL" &&
+                subscription.periodType !== "TRIAL" &&
+                subscription.refundedAtMs === undefined &&
+                !subscription.isFamilyShare &&
+                (subscription.originalPurchasedAtMs ?? subscription.purchasedAtMs) >= claimedAt
+        )
+        .map((subscription) => subscription.originalTransactionId);
+}
 
 export const GRANT_RETRY_MINUTES = [1, 5, 30, 120, 720] as const;
 

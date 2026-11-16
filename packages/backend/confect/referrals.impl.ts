@@ -1,10 +1,16 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import { normalizeReferralCode, PRO_ENTITLEMENT_ID, REFERRAL_YEARLY_CAP } from "@outlayr/money/contract";
+import {
+    normalizeReferralCode,
+    PRO_ENTITLEMENT_ID,
+    REFERRAL_YEARLY_CAP,
+    referralsEarnOnPayment,
+} from "@outlayr/money/contract";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -34,9 +40,11 @@ import {
     mirroredPro,
     newCode,
     nullOnMissing,
+    purchasesSince,
     referralLimiter,
     refusalFor,
     rewardFor,
+    rewardReferrer,
     scheduleGrant,
     yearStart,
 } from "./referrals";
@@ -386,6 +394,44 @@ const sweepGrants = FunctionImpl.make(
     }, Effect.orDie)
 );
 
+const rewardPaidFriends = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "rewardPaidFriends",
+    Effect.fn("Referrals.rewardPaidFriends")(function* rewardPaidFriends({ cursor }) {
+        if (!referralsEarnOnPayment(yield* Clock.currentTimeMillis)) {
+            return null;
+        }
+        const ctx = yield* MutationCtx;
+        const page = yield* (yield* DatabaseReader)
+            .table("referrals")
+            .index("by_status", (q) => q.eq("status", "counting"))
+            .paginate({ cursor, numItems: SWEEP_PAGE });
+        const reader = yield* DatabaseReader;
+        for (const referral of page.page) {
+            const subscriptions = yield* Effect.promise(() =>
+                revenuecat.getAllSubscriptions(ctx, { appUserId: referral.referredId })
+            );
+            for (const paidWith of purchasesSince(subscriptions, referral.claimedAt)) {
+                const used = yield* reader
+                    .table("referrals")
+                    .index("by_paidWith", (q) => q.eq("paidWith", paidWith))
+                    .first();
+                if (Option.isNone(used)) {
+                    yield* rewardReferrer(referral, { paidWith });
+                    break;
+                }
+            }
+        }
+        if (!page.isDone) {
+            yield* (yield* Scheduler).runAfter(Duration.zero, refs.internal.referrals.rewardPaidFriends, {
+                cursor: page.continueCursor,
+            });
+        }
+        return null;
+    }, Effect.orDie)
+);
+
 const creditBanked = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -419,6 +465,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(releaseBanked),
     Layer.provide(bankedMonths),
     Layer.provide(sweepGrants),
+    Layer.provide(rewardPaidFriends),
     Layer.provide(creditBanked),
     GroupImpl.finalize
 );

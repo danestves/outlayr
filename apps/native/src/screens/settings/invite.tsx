@@ -7,6 +7,7 @@ import {
     REFERRAL_DAYS_TO_EARN,
     REFERRAL_YEARLY_CAP,
     referralLink,
+    referralsEarnOnPayment,
 } from "@outlayr/money/contract";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
@@ -42,6 +43,7 @@ function InviteView({ accountId }: { accountId: string }) {
     const code = overview?.code ?? (AsyncResult.isSuccess(ensured) ? ensured.value : null);
     const friends = overview?.friends ?? [];
     const earned = monthsEarned(friends);
+    const [paid] = useState(() => referralsEarnOnPayment(Date.now()));
 
     return (
         <SettingsScreen>
@@ -59,12 +61,14 @@ function InviteView({ accountId }: { accountId: string }) {
                     title={t("referrals.friends")}
                 >
                     {friends.map((friend) => (
-                        <FriendRow friend={friend} key={friend.id} />
+                        <FriendRow friend={friend} key={friend.id} paid={paid} />
                     ))}
                 </SettingsSection>
             ) : null}
             <Text className="text-muted text-subtitle pt-3">
-                {t("referrals.footnote", { cap: REFERRAL_YEARLY_CAP, days: REFERRAL_DAYS_TO_EARN })}
+                {paid
+                    ? t("referrals.footnotePaid", { cap: REFERRAL_YEARLY_CAP })
+                    : t("referrals.footnote", { cap: REFERRAL_YEARLY_CAP, days: REFERRAL_DAYS_TO_EARN })}
             </Text>
             {overview?.canRedeem ? <EnterCode /> : null}
         </SettingsScreen>
@@ -115,17 +119,22 @@ function CodeBlock({ code }: { code: string | null }) {
     );
 }
 
-function FriendRow({ friend }: { friend: ReferredFriend }) {
+function FriendRow({ friend, paid }: { friend: ReferredFriend; paid: boolean }) {
     const t = useTranslation();
     const { language } = useLanguage();
     const name = friend.name ?? t("referrals.friend.unnamed");
-    const caption =
-        friend.rewardedAt === null
-            ? t("referrals.friend.logged", { days: friend.daysLogged, total: REFERRAL_DAYS_TO_EARN })
-            : t("referrals.friend.done", {
-                  date: formatSentenceDate(new Date(friend.rewardedAt), language),
-                  days: REFERRAL_DAYS_TO_EARN,
-              });
+    const caption = (() => {
+        if (friend.rewardedAt !== null) {
+            const date = formatSentenceDate(new Date(friend.rewardedAt), language);
+            return referralsEarnOnPayment(friend.rewardedAt)
+                ? t("referrals.friend.bought", { date })
+                : t("referrals.friend.done", { date, days: REFERRAL_DAYS_TO_EARN });
+        }
+        if (!paid) {
+            return t("referrals.friend.logged", { days: friend.daysLogged, total: REFERRAL_DAYS_TO_EARN });
+        }
+        return friend.status === "counting" ? t("referrals.friend.waiting") : null;
+    })();
     const trailing = {
         capped: t("referrals.friend.capped"),
         counting: t("referrals.friend.pending"),
@@ -134,7 +143,7 @@ function FriendRow({ friend }: { friend: ReferredFriend }) {
     }[friend.status];
     return (
         <Animated.View
-            accessibilityLabel={`${name}. ${caption}. ${trailing}`}
+            accessibilityLabel={[name, caption, trailing].filter(Boolean).join(". ")}
             accessible
             className="border-border flex-row items-center gap-3 border-b py-3"
             entering={FadeIn}
@@ -145,7 +154,7 @@ function FriendRow({ friend }: { friend: ReferredFriend }) {
             </View>
             <View className="flex-1">
                 <Text className="text-foreground text-body font-sans-semibold">{name}</Text>
-                <Text className="text-muted text-subtitle">{caption}</Text>
+                {caption === null ? null : <Text className="text-muted text-subtitle">{caption}</Text>}
             </View>
             <Text
                 className={

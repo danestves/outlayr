@@ -2,7 +2,7 @@
 
 import { HOUR } from "@convex-dev/rate-limiter";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
-import { normalizeReferralCode } from "@outlayr/money/contract";
+import { normalizeReferralCode, REFERRALS_PAID_FROM_MS } from "@outlayr/money/contract";
 import { DAY_MS } from "@outlayr/money/ledger-zone";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
@@ -38,6 +38,7 @@ const SUBSCRIBER_PATH = /\/v1\/subscribers\/([^/]+)(\/entitlements\/pro\/promoti
 interface Plan {
     end: number | null;
     product: string;
+    purchasedAt?: number;
     store: "app_store" | "promotional";
 }
 
@@ -71,8 +72,9 @@ function fakeRevenueCat() {
                     {
                         expires_date: iso(plan.end),
                         is_sandbox: false,
+                        original_purchase_date: iso(plan.purchasedAt ?? START),
                         period_type: "normal",
-                        purchase_date: iso(START),
+                        purchase_date: iso(plan.purchasedAt ?? START),
                         store: plan.store,
                     },
                 ])
@@ -278,6 +280,69 @@ describe("days logged", () => {
 
         expect(rc.grants).toContainEqual({ endsAt, userId: inviter.userId });
         await expect(t.run((ctx) => runEdge(isPro(ctx, inviter.userId)))).resolves.toBeTruthy();
+    });
+});
+
+describe("invites earned by a paying friend", () => {
+    it("waits for the friend's first payment instead of logged days, and their free month does not count", async () => {
+        vi.setSystemTime(REFERRALS_PAID_FROM_MS + HOUR);
+        const t = harness();
+        const { code, inviter } = await inviterWithCode(t);
+        const friend = await joinedFriend(t, code);
+        const sweep = async () => {
+            await t.mutation(internal.referrals.rewardPaidFriends, { cursor: null });
+            await t.finishAllScheduledFunctions(vi.runAllTimers);
+        };
+
+        for (const day of [0, 1, 2]) {
+            vi.setSystemTime(REFERRALS_PAID_FROM_MS + HOUR + day * DAY_MS);
+            await logEntry(t, friend);
+        }
+        await sweep();
+        await expect(referralOf(t, friend)).resolves.toMatchObject({ rewardedAt: null, status: "counting" });
+
+        rc.plans.set(friend.userId, [
+            ...(rc.plans.get(friend.userId) ?? []),
+            {
+                end: addMonthsUtc(Date.now(), 1),
+                product: "outlayr_pro_monthly",
+                purchasedAt: Date.now(),
+                store: "app_store",
+            },
+        ]);
+        await authenticatedAs(t, friend).action(api.revenuecat.syncFromStore, {});
+        await sweep();
+
+        const referral = await referralOf(t, friend);
+        expect(referral).toMatchObject({ status: "rewarded" });
+        expect(rc.grants).toContainEqual({
+            endsAt: addMonthsUtc(referral?.rewardedAt ?? 0, 1),
+            userId: inviter.userId,
+        });
+    });
+
+    it("counts only a purchase made after the invite, and only once when it moves to another invited account", async () => {
+        vi.setSystemTime(REFERRALS_PAID_FROM_MS + HOUR);
+        const t = harness();
+        const { code } = await inviterWithCode(t);
+        const buyer = await joinedFriend(t, code);
+        const other = await joinedFriend(t, code);
+        const owns = async (who: SeededIdentity, purchasedAt: number) => {
+            rc.plans.set(who.userId, [{ end: null, product: "outlayr_pro_lifetime", purchasedAt, store: "app_store" }]);
+            await authenticatedAs(t, who).action(api.revenuecat.syncFromStore, {});
+            await t.mutation(internal.referrals.rewardPaidFriends, { cursor: null });
+            await t.finishAllScheduledFunctions(vi.runAllTimers);
+        };
+
+        await owns(buyer, START);
+        await expect(referralOf(t, buyer)).resolves.toMatchObject({ status: "counting" });
+
+        await owns(buyer, Date.now());
+        rc.plans.delete(buyer.userId);
+        await owns(other, Date.now());
+
+        await expect(referralOf(t, buyer)).resolves.toMatchObject({ status: "rewarded" });
+        await expect(referralOf(t, other)).resolves.toMatchObject({ status: "counting" });
     });
 });
 

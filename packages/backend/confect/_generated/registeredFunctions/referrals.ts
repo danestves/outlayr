@@ -18,5 +18,6 @@ export default {
 ["releaseBanked"]: RegisteredConvexFunction.register({ ...definitions["releaseBanked"], handler: forward(definitions["releaseBanked"].handler) }),
 ["bankedMonths"]: RegisteredConvexFunction.register({ ...definitions["bankedMonths"], handler: forward(definitions["bankedMonths"].handler) }),
 ["sweepGrants"]: RegisteredConvexFunction.register({ ...definitions["sweepGrants"], handler: forward(definitions["sweepGrants"].handler) }),
+["rewardPaidFriends"]: RegisteredConvexFunction.register({ ...definitions["rewardPaidFriends"], handler: forward(definitions["rewardPaidFriends"].handler) }),
 ["creditBanked"]: RegisteredConvexFunction.register({ ...definitions["creditBanked"], handler: forward(definitions["creditBanked"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../referrals.spec")["default"]>;

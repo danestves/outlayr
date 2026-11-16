@@ -1,7 +1,12 @@
 import { useAtomValue } from "@effect/atom-react/Hooks";
 import GiftIcon from "@hugeicons-pro/core-stroke-rounded/GiftIcon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
-import { formatReferralCode, normalizeReferralCode, REFERRAL_DAYS_TO_EARN } from "@outlayr/money/contract";
+import {
+    formatReferralCode,
+    normalizeReferralCode,
+    REFERRAL_DAYS_TO_EARN,
+    referralsEarnOnPayment,
+} from "@outlayr/money/contract";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { Button } from "panelui-native/components/button";
@@ -112,6 +117,15 @@ function Invite({ code }: { code: string }) {
 
 function ClaimActions({ code, name }: { code: string; name: string | null }) {
     const t = useTranslation();
+    const [paid] = useState(() => referralsEarnOnPayment(Date.now()));
+    let shared = paid
+        ? t("referrals.claim.sharedFriendPaid")
+        : t("referrals.claim.sharedFriend", { days: REFERRAL_DAYS_TO_EARN });
+    if (name) {
+        shared = paid
+            ? t("referrals.claim.sharedPaid", { name })
+            : t("referrals.claim.shared", { days: REFERRAL_DAYS_TO_EARN, name });
+    }
     const router = useRouter();
     const leave = useLeave();
     const haptics = useHaptics();
@@ -150,11 +164,7 @@ function ClaimActions({ code, name }: { code: string; name: string | null }) {
                 <Text className="text-muted text-subtitle text-center">
                     {signedIn ? t("referrals.claim.startsNow") : t("referrals.claim.startsAtSignIn")}
                 </Text>
-                <Text className="text-muted text-caption text-center">
-                    {name
-                        ? t("referrals.claim.shared", { days: REFERRAL_DAYS_TO_EARN, name })
-                        : t("referrals.claim.sharedFriend", { days: REFERRAL_DAYS_TO_EARN })}
-                </Text>
+                <Text className="text-muted text-caption text-center">{shared}</Text>
             </View>
             <StepCta
                 busy={busy}

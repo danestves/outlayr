@@ -78,6 +78,15 @@ const dashboardInvite = {
                 pt: "Um mês chega quando um amigo registra {{days}} dias. Até {{cap}} por ano.",
             })
         ),
+        footnotePaid: insert(
+            t({
+                en: "A month lands when a friend buys Pro. Up to {{cap}} a year.",
+                de: "Ein Monat kommt, wenn ein Freund Pro kauft. Bis zu {{cap}} pro Jahr.",
+                es: "Recibes un mes cuando un amigo compra Pro. Hasta {{cap}} al año.",
+                fr: "Un mois arrive quand un ami achète Pro. Jusqu'à {{cap}} par an.",
+                pt: "Um mês chega quando um amigo compra o Pro. Até {{cap}} por ano.",
+            })
+        ),
         enter: t({
             en: "Have an invite code?",
             de: "Hast du einen Einladungscode?",
@@ -177,6 +186,13 @@ const dashboardInvite = {
                 pt: "Registrou {{days}} de {{total}} dias",
             })
         ),
+        waiting: t({
+            en: "No purchase yet",
+            de: "Noch kein Kauf",
+            es: "Aún sin compra",
+            fr: "Pas encore d'achat",
+            pt: "Nenhuma compra ainda",
+        }),
         done: insert(
             t({
                 en: "Logged {{days}} days · {{date}}",
@@ -184,6 +200,15 @@ const dashboardInvite = {
                 es: "Registró {{days}} días · {{date}}",
                 fr: "{{days}} jours saisis · {{date}}",
                 pt: "Registrou {{days}} dias · {{date}}",
+            })
+        ),
+        bought: insert(
+            t({
+                en: "Bought Pro · {{date}}",
+                de: "Pro gekauft · {{date}}",
+                es: "Compró Pro · {{date}}",
+                fr: "A acheté Pro · {{date}}",
+                pt: "Comprou o Pro · {{date}}",
             })
         ),
         status: {
@@ -214,6 +239,13 @@ const dashboardInvite = {
                 pt: "Um mês chega quando um amigo registra {{days}} dias.",
             })
         ),
+        emptyBodyPaid: t({
+            en: "A month lands when a friend buys Pro.",
+            de: "Ein Monat kommt, wenn ein Freund Pro kauft.",
+            es: "Recibes un mes cuando un amigo compra Pro.",
+            fr: "Un mois arrive quand un ami achète Pro.",
+            pt: "Um mês chega quando um amigo compra o Pro.",
+        }),
         loadFailed: t({
             en: "Couldn't load your invite.",
             de: "Deine Einladung konnte nicht geladen werden.",
@@ -255,6 +287,15 @@ const dashboardInvite = {
                     pt: "{{name}} vê seu primeiro nome e quantos dias você registrou, até {{days}}.",
                 })
             ),
+            sharedPaid: insert(
+                t({
+                    en: "{{name}} sees your first name and whether you buy Pro.",
+                    de: "{{name}} sieht deinen Vornamen und ob du Pro kaufst.",
+                    es: "{{name}} ve tu primer nombre y si compras Pro.",
+                    fr: "{{name}} voit votre prénom et si vous achetez Pro.",
+                    pt: "{{name}} vê seu primeiro nome e se você compra o Pro.",
+                })
+            ),
             sharedFriend: insert(
                 t({
                     en: "Your friend sees your first name and how many days you've logged, up to {{days}}.",
@@ -264,6 +305,13 @@ const dashboardInvite = {
                     pt: "Seu amigo vê seu primeiro nome e quantos dias você registrou, até {{days}}.",
                 })
             ),
+            sharedFriendPaid: t({
+                en: "Your friend sees your first name and whether you buy Pro.",
+                de: "Dein Freund sieht deinen Vornamen und ob du Pro kaufst.",
+                es: "Tu amigo ve tu primer nombre y si compras Pro.",
+                fr: "Votre ami voit votre prénom et si vous achetez Pro.",
+                pt: "Seu amigo vê seu primeiro nome e se você compra o Pro.",
+            }),
             notNow: t({ en: "Not now", de: "Nicht jetzt", es: "Ahora no", fr: "Pas maintenant", pt: "Agora não" }),
             confirm: t({
                 en: "Claim month",
@@ -290,6 +338,15 @@ const dashboardInvite = {
                     pt: "{{name}} registrou {{days}} dias",
                 })
             ),
+            whoPaid: insert(
+                t({
+                    en: "{{name}} bought Pro",
+                    de: "{{name}} hat Pro gekauft",
+                    es: "{{name}} compró Pro",
+                    fr: "{{name}} a acheté Pro",
+                    pt: "{{name}} comprou o Pro",
+                })
+            ),
             whoMany: insert(
                 t({
                     en: "{{count}} friends logged {{days}} days",
@@ -297,6 +354,15 @@ const dashboardInvite = {
                     es: "{{count}} amigos registraron {{days}} días",
                     fr: "{{count}} amis ont saisi {{days}} jours",
                     pt: "{{count}} amigos registraram {{days}} dias",
+                })
+            ),
+            whoManyPaid: insert(
+                t({
+                    en: "{{count}} friends bought Pro",
+                    de: "{{count}} Freunde haben Pro gekauft",
+                    es: "{{count}} amigos compraron Pro",
+                    fr: "{{count}} amis ont acheté Pro",
+                    pt: "{{count}} amigos compraram o Pro",
                 })
             ),
             earnedOne: t({

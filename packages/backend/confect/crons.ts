@@ -23,4 +23,14 @@ export default CronJobs.make()
         CronJob.make("resend open referral grants", Duration.hours(24), refs.internal.referrals.sweepGrants, {
             cursor: null,
         })
+    )
+    .add(
+        CronJob.make(
+            "reward invites whose friend paid",
+            Duration.hours(24),
+            refs.internal.referrals.rewardPaidFriends,
+            {
+                cursor: null,
+            }
+        )
     );
