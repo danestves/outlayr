@@ -3,6 +3,7 @@ import { View } from "react-native";
 
 import { Sentence } from "../../sentence/sentence";
 import { SentenceBlank } from "../../sentence/sentence-blank";
+import { SentenceInput } from "../../sentence/sentence-input";
 import { SentenceToggle } from "../../sentence/sentence-toggle";
 import { SentenceValue } from "../../sentence/sentence-value";
 import type { SentenceFigure } from "../../sentence/sentence-value";
@@ -22,6 +23,12 @@ export interface TransactionSentenceLabels {
     rate: { blank: string; converted: string; field: string; source: string };
     template: string;
     when: { field: string };
+}
+
+export interface TransactionMerchantField {
+    maxLength: number;
+    onChange: (next: string) => void;
+    onSubmit: () => void;
 }
 
 export interface TransactionRateClause {
@@ -60,6 +67,8 @@ interface TransactionSentenceProps {
     fee: string | null;
     labels: TransactionSentenceLabels;
     merchant: string | null;
+    /** Set while the name is the step: the slot becomes the field the keyboard types into. */
+    merchantField?: TransactionMerchantField;
     merchantTile?: ReactNode;
     onAccountPress: () => void;
     onAmountPress: () => void;
@@ -91,6 +100,7 @@ export function TransactionSentence({
     fee,
     labels,
     merchant,
+    merchantField,
     merchantTile,
     onAccountPress,
     onAmountPress,
@@ -107,6 +117,43 @@ export function TransactionSentence({
     let { template } = labels;
     if (rate !== undefined) {
         template = rate.missing ? `${template} ${rate.template}` : continueSentence(template, rate.template);
+    }
+    let merchantSlot: ReactNode;
+    if (merchantField) {
+        merchantSlot = (
+            <SentenceInput
+                accessibilityLabel={labels.merchant.field}
+                maxLength={merchantField.maxLength}
+                onChange={merchantField.onChange}
+                onSubmit={merchantField.onSubmit}
+                placeholder={labels.merchant.placeholder}
+                value={merchant ?? ""}
+            >
+                {merchantTile}
+            </SentenceInput>
+        );
+    } else if (merchant === null) {
+        merchantSlot = (
+            <SentenceBlank
+                accessibilityLabel={labels.merchant.field}
+                active={activeSlot === "merchant"}
+                label={labels.merchant.placeholder}
+                onPress={onMerchantPress}
+                optional
+                optionalHint={labels.optional}
+            />
+        );
+    } else {
+        merchantSlot = (
+            <SentenceValue
+                accessibilityLabel={labels.merchant.field}
+                active={activeSlot === "merchant"}
+                onPress={onMerchantPress}
+                value={merchant}
+            >
+                {merchantTile}
+            </SentenceValue>
+        );
     }
     let paidViaSlot: ReactNode = null;
     if (paidVia !== undefined) {
@@ -237,26 +284,7 @@ export function TransactionSentence({
                         value={labels.kind.verb}
                     />
                 ),
-                merchant:
-                    merchant === null ? (
-                        <SentenceBlank
-                            accessibilityLabel={labels.merchant.field}
-                            active={activeSlot === "merchant"}
-                            label={labels.merchant.placeholder}
-                            onPress={onMerchantPress}
-                            optional
-                            optionalHint={labels.optional}
-                        />
-                    ) : (
-                        <SentenceValue
-                            accessibilityLabel={labels.merchant.field}
-                            active={activeSlot === "merchant"}
-                            onPress={onMerchantPress}
-                            value={merchant}
-                        >
-                            {merchantTile}
-                        </SentenceValue>
-                    ),
+                merchant: merchantSlot,
                 paidVia: paidViaSlot,
                 rate:
                     rate === undefined ? null : (

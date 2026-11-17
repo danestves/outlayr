@@ -9,6 +9,7 @@ import type { SentenceFactKey, SentenceVerb } from "./fact-glyphs";
 import type { TransactionSentenceMark } from "./slots";
 import { TransactionSentence } from "./transaction-sentence";
 import type {
+    TransactionMerchantField,
     TransactionPaidViaClause,
     TransactionRateClause,
     TransactionSentenceLabels,
@@ -36,6 +37,7 @@ interface SentenceBodyProps {
     fee: string | null;
     labels: TransactionSentenceLabels;
     merchant: string | null;
+    merchantField?: TransactionMerchantField;
     merchantTile?: ReactNode;
     onAccountPress: () => void;
     coach?: ReactNode;
@@ -74,6 +76,7 @@ export function TransactionSentenceBody({
     feeLine,
     labels,
     merchant,
+    merchantField,
     merchantTile,
     onAccountPress,
     onAmountPress,
@@ -135,6 +138,7 @@ export function TransactionSentenceBody({
                 fee={fee}
                 labels={labels}
                 merchant={merchant}
+                merchantField={merchantField}
                 merchantTile={merchantTile}
                 onAccountPress={onAccountPress}
                 onAmountPress={onAmountPress}

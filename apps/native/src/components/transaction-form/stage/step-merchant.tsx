@@ -1,15 +1,16 @@
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 
 import { ROUNDED, Text, TextInput } from "@/components/text";
 import { useColors } from "@/theme/use-colors";
 
+import { StageOption } from "./stage-option";
 import { StageOptionRow } from "./stage-options";
 import type { StageOptionItem } from "./stage-options";
 
 const RULE_HEIGHT = 2;
 
-// Matches `MerchantSlot`, which writes the same string into the same column.
-const MAX_NAME_LENGTH = 50;
+// The column limit, shared by the sentence's inline field and this panel.
+export const MAX_NAME_LENGTH = 50;
 
 export interface StepMerchantProps {
     /** Not the sentence's label: both fields are on screen at once, and one label on two inputs is ambiguous. */
@@ -86,5 +87,32 @@ export function StepMerchant({
                 </View>
             )}
         </View>
+    );
+}
+
+export interface MerchantChipsProps {
+    names: readonly string[];
+    onPick: (name: string) => void;
+    value: string;
+}
+
+// The field is the sentence's own slot, so the step is only the names to pick from. Taps persist: a pick must land
+// while the keyboard is still up.
+export function MerchantChips({ names, onPick, value }: MerchantChipsProps) {
+    if (names.length === 0) {
+        return null;
+    }
+    return (
+        <ScrollView
+            contentContainerClassName="gap-2"
+            horizontal
+            keyboardShouldPersistTaps="always"
+            showsHorizontalScrollIndicator={false}
+            testID="stage-merchant-chips"
+        >
+            {names.map((name) => (
+                <StageOption key={name} label={name} onPress={() => onPick(name)} selected={name === value} />
+            ))}
+        </ScrollView>
     );
 }

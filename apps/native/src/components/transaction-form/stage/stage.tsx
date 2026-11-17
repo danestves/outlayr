@@ -74,6 +74,8 @@ export interface StageAction {
 export type StageFooter = StageAction & { tone?: StageTone };
 
 interface StageContentProps {
+    /** No surface and no header: the step floats over the form, its field living in the sentence. */
+    bare?: boolean;
     children: ReactNode;
     footer?: StageFooter;
     forward?: boolean;
@@ -111,6 +113,7 @@ function StageRightMeta({ action, node }: { action?: StageAction; node?: ReactNo
 // from the accessibility tree.
 export function TransactionStage({
     backLabel,
+    bare = false,
     children,
     footer,
     forward = true,
@@ -165,11 +168,16 @@ export function TransactionStage({
     return (
         <FontScaleCapContext value={fontScaleCap}>
             <View
-                className={cn("border-separator border-t pt-[15px]", inline ? null : "bg-background px-5")}
+                className={cn(
+                    bare ? "pt-2" : "border-separator border-t pt-[15px]",
+                    inline ? null : cn("px-5", bare ? null : "bg-background")
+                )}
                 style={inline ? undefined : bottomPad}
             >
                 {/* Absolute, so the title holds the centre line whatever controls the step has on either side. */}
-                <View className={cn(largeText ? "min-h-[38px]" : "h-[38px]", "flex-row items-center")}>
+                <View
+                    className={cn(largeText ? "min-h-[38px]" : "h-[38px]", "flex-row items-center", bare && "hidden")}
+                >
                     {onBack ? (
                         <GlassButton
                             accessibilityLabel={backLabel}
@@ -188,7 +196,12 @@ export function TransactionStage({
                 </View>
 
                 {/* pt-3 keeps a keypad from reading as one block with the header above it. */}
-                <Animated.View className="pt-3" entering={stageBodyEntering(forward)} key={stepKey} testID="stage-body">
+                <Animated.View
+                    className={bare ? undefined : "pt-3"}
+                    entering={stageBodyEntering(forward)}
+                    key={stepKey}
+                    testID="stage-body"
+                >
                     {children}
                 </Animated.View>
 
