@@ -75,17 +75,21 @@ const results = FunctionImpl.make(
             return [];
         }
         const reader = yield* DatabaseReader;
+        const devices = args.deviceId === undefined ? [undefined] : [undefined, args.deviceId];
         const jobs = yield* Effect.all(
-            (["done", "failed"] as const).map((status) =>
-                reader
-                    .table("enrichmentJobs")
-                    .index("by_user_and_status", (q) => q.eq("userId", userId).eq("status", status))
-                    .take(MAX_RESULTS)
+            devices.flatMap((deviceId) =>
+                (["done", "failed"] as const).map((status) =>
+                    reader
+                        .table("enrichmentJobs")
+                        .index("by_user_device_and_status", (q) =>
+                            q.eq("userId", userId).eq("deviceId", deviceId).eq("status", status)
+                        )
+                        .take(MAX_RESULTS)
+                )
             ),
             { concurrency: "unbounded" }
         );
-        const mine = jobs.flat().filter((row) => row.deviceId === undefined || row.deviceId === args.deviceId);
-        return mine.map((row) => ({
+        return jobs.flat().map((row) => ({
             localId: row.localId,
             name: row.name,
             result: row.result ?? null,

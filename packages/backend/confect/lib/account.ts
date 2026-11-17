@@ -38,7 +38,7 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
     const suggestions = yield* Effect.promise(() =>
         ctx.db
             .query("enrichmentJobs")
-            .withIndex("by_user_and_status", (q) => q.eq("userId", userId))
+            .withIndex("by_user_device_and_status", (q) => q.eq("userId", userId))
             .take(PURGE_BATCH)
     );
     if (suggestions.length > 0) {

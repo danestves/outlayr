@@ -22,4 +22,4 @@ export default Table.make(() =>
     })
 )
     .index("by_user_and_localId", ["userId", "localId"])
-    .index("by_user_and_status", ["userId", "status"]);
+    .index("by_user_device_and_status", ["userId", "deviceId", "status"]);
