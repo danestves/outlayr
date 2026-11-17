@@ -57,11 +57,11 @@ const story = {
                 t({ en: "5 languages", de: "5 Sprachen", es: "5 idiomas", pt: "5 idiomas", fr: "5 langues" }),
             ],
             spec: t({
-                en: "Platforms: iPhone, Android, web. Logging: type, voice, receipt, Apple Pay on iPhone. Never links your bank.",
-                de: "Plattformen: iPhone, Android, Web. Erfassen: Tippen, Sprache, Beleg, Apple Pay auf dem iPhone. Verknüpft nie dein Bankkonto.",
-                es: "Plataformas: iPhone, Android, web. Registro: texto, voz, recibo, Apple Pay en iPhone. Nunca conecta tu banco.",
-                pt: "Plataformas: iPhone, Android, web. Registro: texto, voz, recibo, Apple Pay no iPhone. Nunca conecta seu banco.",
-                fr: "Plateformes : iPhone, Android, web. Saisie : texte, voix, ticket, Apple Pay sur iPhone. Ne connecte jamais votre banque.",
+                en: "Platforms: iPhone, Android, web app with Pro. Logging: type, voice, receipt, Apple Pay on iPhone. Never links your bank.",
+                de: "Plattformen: iPhone, Android, Web-App mit Pro. Erfassen: Tippen, Sprache, Beleg, Apple Pay auf dem iPhone. Verknüpft nie dein Bankkonto.",
+                es: "Plataformas: iPhone, Android, app web con Pro. Registro: texto, voz, recibo, Apple Pay en iPhone. Nunca conecta tu banco.",
+                pt: "Plataformas: iPhone, Android, app web com o Pro. Registro: texto, voz, recibo, Apple Pay no iPhone. Nunca conecta seu banco.",
+                fr: "Plateformes : iPhone, Android, app web avec Pro. Saisie : texte, voix, ticket, Apple Pay sur iPhone. Ne connecte jamais votre banque.",
             }),
         },
         how: {

@@ -233,11 +233,11 @@ const brand = {
                 fr: "GPL-3.0 pour l'app, AGPL-3.0 pour le serveur",
             }),
             platforms: t({
-                en: "iPhone (iOS 18 or later), Android, web",
-                de: "iPhone (iOS 18 oder neuer), Android, Web",
-                es: "iPhone (iOS 18 o posterior), Android, web",
-                pt: "iPhone (iOS 18 ou posterior), Android, web",
-                fr: "iPhone (iOS 18 ou version ultérieure), Android, web",
+                en: "iPhone (iOS 18 or later), Android, and a web app with Pro",
+                de: "iPhone (iOS 18 oder neuer), Android und eine Web-App mit Pro",
+                es: "iPhone (iOS 18 o posterior), Android y una app web con Pro",
+                pt: "iPhone (iOS 18 ou posterior), Android e um app web com o Pro",
+                fr: "iPhone (iOS 18 ou version ultérieure), Android et une app web avec Pro",
             }),
             price: insert(
                 t({
