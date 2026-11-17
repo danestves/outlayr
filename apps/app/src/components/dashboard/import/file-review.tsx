@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
-import { accountFacts } from "@/components/dashboard/accounts/model";
+import { heldBalance } from "@/components/dashboard/accounts/model";
 import { useCategoryLook } from "@/components/dashboard/rules/parts";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
@@ -117,7 +117,7 @@ export function BalanceCheck({
     const { money } = useDisplayFormat();
     const currency = useAccountCurrency()(accountId);
     const account = openAccounts(ledger.books).find((row) => row.localId === accountId);
-    const balance = useMemo(() => accountFacts(ledger, accountId).balance, [accountId, ledger]);
+    const balance = useMemo(() => heldBalance(ledger, accountId), [accountId, ledger]);
     const after = added.written ? balance : balance + added.net;
     const off = after - statement.end;
     const matches = Math.abs(off) < MATCHED;

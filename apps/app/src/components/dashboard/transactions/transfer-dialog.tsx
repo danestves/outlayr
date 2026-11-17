@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { AmountInput, FlowDialog } from "@/components/dashboard/accounts/fields";
-import { accountRows, cardStatement, flowsOf, isCard, plansOn } from "@/components/dashboard/accounts/model";
+import { accountRows, isCard, statementOf } from "@/components/dashboard/accounts/model";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile } from "@/components/ledger/tiles";
@@ -44,8 +44,7 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
     const rows = accountRows(ledger, overview);
     const [values, setValues] = useState<NewTransferValues>(() => {
         const row = rows.find((each) => each.id === accountId);
-        const statement =
-            row && cardStatement(row, flowsOf(ledger, accountId), ledger.today, plansOn(ledger, accountId));
+        const statement = row && statementOf(ledger, row);
         return newTransferValues(ledger, accountId, row && isCard(row) ? (statement?.due ?? 0) : null, Date.now());
     });
     const [problem, setProblem] = useState<NewTransferProblem | null>(null);

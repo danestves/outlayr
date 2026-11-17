@@ -33,7 +33,7 @@ import type { AccountFlow, AccountType } from "./flows";
 import { Glyph } from "./glyph";
 import { IdentityPicker, logoIdentity, logoUrl } from "./identity-picker";
 import type { Identity } from "./identity-picker";
-import { accountFacts } from "./model";
+import { heldBalance } from "./model";
 
 type Account = LedgerBooks["accounts"][number];
 
@@ -225,7 +225,7 @@ export function AccountForm({
         [ledger.currency, overview.balances.accounts]
     );
     const editing = account !== null;
-    const startBalance = account ? accountFacts(ledger, account.localId).balance : 0;
+    const startBalance = account ? heldBalance(ledger, account.localId) : 0;
     const start = startValues(account, startType, startBalance, ledger.currency);
 
     const form = useForm({
@@ -235,14 +235,17 @@ export function AccountForm({
             const magnitude = parseAmount(value.balanceText, decimals);
             const balance = value.negative ? -magnitude : magnitude;
             const draft = accountDraft(value, parseAmount(value.limitText, decimals));
-            const { books } = committer.current();
+            const { books, opening } = committer.current();
+            if (account && opening !== null && value.currency !== account.currency) {
+                return;
+            }
             const at = Date.now();
             const moneyTouched =
                 value.balanceText !== start.balanceText ||
                 value.negative !== start.negative ||
                 value.currency !== start.currency;
             const row = account
-                ? editedAccount(books, account, draft, moneyTouched ? balance : null, at)
+                ? editedAccount(books, account, draft, moneyTouched ? balance : null, at, opening)
                 : createdAccount(books, draft, balance, crypto.randomUUID(), at);
             void committer.commit([row], { failed: flows.saveFailed.value }).then((saved) => {
                 if (!saved) {
@@ -286,6 +289,7 @@ export function AccountForm({
     const card = !editing && type === "card";
     const createTitle = card ? flows.newCardTitle : flows.newTitle;
     const dim = name.trim() === "" && !attempted;
+    const recasting = account !== null && ledger.opening !== null && currency !== account.currency;
     return (
         <FlowDialog label={editing ? flows.editTitle : createTitle}>
             <Dialog.Body>
@@ -430,7 +434,12 @@ export function AccountForm({
                 <Button className={FOOTER_PILL} onClick={onClose} variant="secondary">
                     {flows.cancel}
                 </Button>
-                <Button className={dim ? `opacity-50 ${FOOTER_PILL}` : FOOTER_PILL} form={id} type="submit">
+                <Button
+                    className={dim ? `opacity-50 ${FOOTER_PILL}` : FOOTER_PILL}
+                    disabled={recasting}
+                    form={id}
+                    type="submit"
+                >
                     {card ? flows.saveCard : flows.saveAccount}
                 </Button>
             </Dialog.Footer>

@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { Glyph } from "@/components/dashboard/accounts/glyph";
-import { accountFacts } from "@/components/dashboard/accounts/model";
+import { heldBalance } from "@/components/dashboard/accounts/model";
 import { KpiBand } from "@/components/dashboard/accounts/parts";
 import { useCategoryLook } from "@/components/dashboard/rules/parts";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -460,7 +460,7 @@ export function DoneStep({ finished, onAnother }: { finished: Finished; onAnothe
     const record = records.find((row) => row.id === finished.recordId);
     const { draft, statement } = finished;
     const accountId = draft.targets.includes("account") ? null : draft.intoAccountId;
-    const balance = accountId === null ? null : accountFacts(ledger, accountId).balance;
+    const balance = accountId === null ? null : heldBalance(ledger, accountId);
     const accountName = ledger.books.accounts.find((row) => row.localId === accountId)?.name ?? "";
 
     if (!record) {

@@ -13,7 +13,7 @@ import type { LedgerBooks } from "@/lib/ledger-books";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { AmountInput, amountText, Fact, FlowDialog } from "./fields";
-import { accountFacts } from "./model";
+import { heldBalance } from "./model";
 
 type Account = LedgerBooks["accounts"][number];
 
@@ -23,7 +23,7 @@ export function CheckDialog({ account, onClose }: { account: Account; onClose: (
     const { flows } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const { currency, name } = account;
-    const has = accountFacts(ledger, account.localId).balance;
+    const has = heldBalance(ledger, account.localId);
     const [different, setDifferent] = useState(false);
     const [negative, setNegative] = useState(has < 0);
     const [text, setText] = useState(() => amountText(Math.abs(has), currency));

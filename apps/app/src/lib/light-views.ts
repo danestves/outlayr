@@ -1,5 +1,6 @@
 import type { PushRow } from "@outlayr/backend/confect/sync";
 
+import { accountsCovered } from "@/components/dashboard/accounts/model";
 import { homeCovered } from "@/components/dashboard/home/model";
 import { listCovered, rangeOf } from "@/components/dashboard/transactions/model";
 import { pageQueryOf } from "@/components/dashboard/transactions/search";
@@ -10,7 +11,7 @@ import type { Ledger } from "./dashboard-series-ledger";
 import { periodKeyOf, periodOf } from "./dashboard-series-period";
 import type { Period } from "./dashboard-series-period";
 
-const LIGHT_MONTHS = { "/": 13, "/transactions": 1 } as const;
+const LIGHT_MONTHS = { "/": 13, "/accounts": 12, "/transactions": 1 } as const;
 
 export type LightPath = keyof typeof LIGHT_MONTHS;
 
@@ -31,6 +32,9 @@ export function viewCovered(ledger: Ledger, period: Period, pathname: string, se
     switch (pathname) {
         case "/": {
             return homeCovered(ledger, period);
+        }
+        case "/accounts": {
+            return accountsCovered(ledger);
         }
         case "/transactions": {
             const { custom, span } = pageQueryOf(search);

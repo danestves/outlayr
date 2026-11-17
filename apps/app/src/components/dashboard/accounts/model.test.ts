@@ -107,7 +107,6 @@ describe("statement cycle", () => {
 describe("card statement", () => {
     const card = {
         currency: "USD",
-        initialBalance: -200,
         openedDay: "2026-01-01",
         paymentDay: 20,
         statementDay: 25,
@@ -119,7 +118,7 @@ describe("card statement", () => {
             { day: "2026-10-26", value: 300 },
             { day: "2026-11-02", value: -82.45 },
         ];
-        expect(cardStatement(card, flows, "2026-11-08", [])).toMatchObject({
+        expect(cardStatement(card, { flows, start: -200 }, "2026-11-08", [])).toMatchObject({
             due: 1340.3,
             overdue: false,
             since: 82.45,
@@ -127,8 +126,13 @@ describe("card statement", () => {
     });
 
     it("never asks for less than zero and turns overdue after the due day", () => {
-        expect(cardStatement(card, [{ day: "2026-10-28", value: 900 }], "2026-11-08", [])?.due).toBe(0);
-        expect(cardStatement(card, [], "2026-11-21", [])).toMatchObject({ due: 200, overdue: true });
+        expect(
+            cardStatement(card, { flows: [{ day: "2026-10-28", value: 900 }], start: -200 }, "2026-11-08", [])?.due
+        ).toBe(0);
+        expect(cardStatement(card, { flows: [], start: -200 }, "2026-11-21", [])).toMatchObject({
+            due: 200,
+            overdue: true,
+        });
     });
 
     it("leaves out installments billed after the due day, unless bought after the close", () => {
@@ -136,9 +140,13 @@ describe("card statement", () => {
         const billed = { day: "2026-11-14", remaining: 50, sequence: 1 };
         const rows = [billed, later];
         const flows = [{ day: "2026-10-03", value: -600 }];
-        expect(cardStatement(card, flows, "2026-11-08", [{ purchaseDay: "2026-10-03", rows }])?.due).toBe(650);
-        expect(cardStatement(card, flows, "2026-11-08", [{ purchaseDay: "2026-10-30", rows }])?.due).toBe(800);
-        expect(cardStatement(card, flows, "2026-11-08", [{ purchaseDay: null, rows }])?.due).toBe(800);
+        expect(
+            cardStatement(card, { flows, start: -200 }, "2026-11-08", [{ purchaseDay: "2026-10-03", rows }])?.due
+        ).toBe(650);
+        expect(
+            cardStatement(card, { flows, start: -200 }, "2026-11-08", [{ purchaseDay: "2026-10-30", rows }])?.due
+        ).toBe(800);
+        expect(cardStatement(card, { flows, start: -200 }, "2026-11-08", [{ purchaseDay: null, rows }])?.due).toBe(800);
     });
 
     it("lists apart exactly what the payment leaves out, so nothing owed counts twice", () => {
@@ -152,7 +160,9 @@ describe("card statement", () => {
     });
 
     it("shows no amount when the card is newer than the close", () => {
-        expect(cardStatement({ ...card, openedDay: "2026-11-01" }, [], "2026-11-08", [])?.due).toBeNull();
+        expect(
+            cardStatement({ ...card, openedDay: "2026-11-01" }, { flows: [], start: -200 }, "2026-11-08", [])?.due
+        ).toBeNull();
     });
 });
 

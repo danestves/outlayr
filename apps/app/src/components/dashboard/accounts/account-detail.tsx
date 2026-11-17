@@ -69,7 +69,6 @@ import {
     plansOn,
     accountRows,
     accountSeries,
-    cardStatement,
     checkedAge,
     flowsOf,
     inMain,
@@ -80,6 +79,7 @@ import {
     rangeDays,
     ratesFor,
     spentByCategory,
+    statementOf,
 } from "./model";
 import type { AccountEntry, AccountRow, WorthRange } from "./model";
 import { KpiBand, KpiCell, Meter, PhoneAction, PhoneItem, Segments, Trend, useCheckedText } from "./parts";
@@ -316,7 +316,7 @@ function CardKpis({ row }: { row: AccountRow }) {
     const { money } = useDisplayFormat();
     const { whole } = useWholeMoney(row.currency);
     const date = useDateFormat();
-    const statement = cardStatement(row, flowsOf(ledger, row.id), ledger.today, plansOn(ledger, row.id));
+    const statement = statementOf(ledger, row);
     const limit = row.creditLimit ?? 0;
     const available = Math.max(0, limit + row.balance);
     const used = limit > 0 ? Math.min(1, Math.max(0, -row.balance / limit)) : 0;
