@@ -326,6 +326,8 @@ const LEXICONS = {
     "pt-PT": PT,
 } as const satisfies Record<Language, Lexicon>;
 
+const ALL_LEXICONS: readonly Lexicon[] = [...new Set(Object.values(LEXICONS))];
+
 // A symbol or ISO code also reads before the number ("$20", "usd 20"); a word only after it ("20 dolares").
 const SYMBOL_CURRENCY: ReadonlyMap<string, string> = new Map([
     ["$", "USD"],
@@ -518,6 +520,7 @@ const WORD_BEFORE = /(\p{L}+)[  ]?$/u;
 const SYMBOL_BEFORE = /(r\$|us\$|[$€£]|\p{L}+)\.?[  ]?$/u;
 const WORDS_BEFORE = /(?:\p{L}+\s+){1,3}$/u;
 const WHITESPACE = /\s+/;
+const LETTER_RUN = /\p{L}+/gu;
 const GROUP_HEAD = /^\d{1,3}$/;
 const GROUP_REST = /^\d{3}$/;
 
@@ -703,6 +706,7 @@ const foldName = (name: string) => fold(name).trim().split(WHITESPACE).join(" ")
 
 // Spanish says b and v alike, so the transcriber writes "Vanesco" for an account named Banesco.
 const betacism = (folded: string) => folded.replaceAll("v", "b");
+const asSpoken = (folded: string) => folded;
 
 const MIN_NAME_LENGTH = 2;
 
@@ -889,22 +893,61 @@ function sourceCurrency(accounts: LiveContext["accounts"], from: Mention | null)
     return source === undefined ? null : found(source.currency, from.start, from.end);
 }
 
+function cueCount(lexicon: Lexicon, folded: string, words: readonly string[]): number {
+    const cueWords = words.filter((word) => lexicon.skip.has(word) || lexicon.from.has(word) || lexicon.to.has(word));
+    const phrases = [
+        lexicon.expense,
+        lexicon.income,
+        lexicon.transferStrong,
+        lexicon.transferWeak,
+        lexicon.every,
+        ...lexicon.days.map((day) => day.re),
+        ...lexicon.cadences.map((cadence) => cadence.re),
+        ...lexicon.weekdays,
+    ];
+    return cueWords.length + phrases.filter((re) => re.test(folded)).length;
+}
+
+function spokenLexicon(preferred: Lexicon, folded: string): Lexicon {
+    const words = folded.match(LETTER_RUN) ?? [];
+    let best = preferred;
+    let bestCount = cueCount(preferred, folded, words);
+    for (const lexicon of ALL_LEXICONS) {
+        const count = cueCount(lexicon, folded, words);
+        if (count > bestCount) {
+            best = lexicon;
+            bestCount = count;
+        }
+    }
+    return best;
+}
+
+function prepareReading(context: LiveContext, spoken: (folded: string) => string) {
+    return {
+        accounts: prepareNames(context.accounts, spoken),
+        expenseCategories: prepareNames(
+            context.categories.filter((category) => !category.income),
+            spoken
+        ),
+        incomeCategories: prepareNames(
+            context.categories.filter((category) => category.income),
+            spoken
+        ),
+        spoken,
+    };
+}
+
 /** Folds the user's names once; the returned function is cheap enough to run on every partial transcript. */
 export function createLiveParser(context: LiveContext): (text: string, options?: LiveParseOptions) => LiveDraft {
-    const lexicon: Lexicon = LEXICONS[context.language];
-    const spoken = context.language.startsWith("es") ? betacism : (folded: string) => folded;
-    const accounts = prepareNames(context.accounts, spoken);
-    const expenseCategories = prepareNames(
-        context.categories.filter((category) => !category.income),
-        spoken
-    );
-    const incomeCategories = prepareNames(
-        context.categories.filter((category) => category.income),
-        spoken
-    );
+    const preferred: Lexicon = LEXICONS[context.language];
+    const plain = prepareReading(context, asSpoken);
+    const withBetacism = prepareReading(context, betacism);
+    const readingOf = (lexicon: Lexicon) => (lexicon === ES ? withBetacism : plain);
 
     return (text, { final = false } = {}) => {
         const folded = fold(text);
+        const lexicon = spokenLexicon(preferred, folded);
+        const { accounts, expenseCategories, incomeCategories, spoken } = readingOf(lexicon);
         const chosen = amountCandidates(folded, lexicon.decimal, final);
         const candidate = chosen.find((item) => item.currency !== null) ?? chosen[0];
         const currency = candidate?.currency ?? null;

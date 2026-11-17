@@ -1,9 +1,25 @@
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
+import { languageSubtag, SUPPORTED_LANGUAGES } from "@/i18n/languages";
+
 export const SCRIBE_SAMPLE_RATE = 16_000;
 // apps/voice-relay forwards the socket so ElevenLabs never sees the phone, as the privacy policy says.
 const SCRIBE_RELAY = "wss://voice.tryoutlayr.com";
+const SCRIBE_LANGUAGES = [...new Set(SUPPORTED_LANGUAGES.map(languageSubtag))];
+const CURRENCY_KEYTERMS = [
+    "dollars",
+    "dólares",
+    "bucks",
+    "euros",
+    "pounds",
+    "Pfund",
+    "reais",
+    "reales",
+    "bolívares",
+    "bolivars",
+    "pesos",
+];
 
 export const ScribeFailureReason = Schema.Literals([
     "unauthenticated",
@@ -95,9 +111,17 @@ export function scribeUrl({ language, token }: Pick<ScribeStreamOptions, "langua
         audio_format: `pcm_${SCRIBE_SAMPLE_RATE}`,
         commit_strategy: "manual",
         language_code: language,
-        model_id: "scribe_v2_realtime",
+        model_id: "scribe_v3_live",
         token,
     });
+    for (const other of SCRIBE_LANGUAGES) {
+        if (other !== language) {
+            query.append("secondary_languages", other);
+        }
+    }
+    for (const keyterm of CURRENCY_KEYTERMS) {
+        query.append("keyterms", keyterm);
+    }
     return `${SCRIBE_RELAY}/v1/speech-to-text/realtime?${query.toString()}`;
 }
 

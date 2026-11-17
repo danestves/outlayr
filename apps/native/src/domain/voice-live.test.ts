@@ -388,3 +388,25 @@ describe("while the text grows", () => {
         expect(settled.income?.value).toBe(false);
     });
 });
+
+describe("spoken language", () => {
+    it("reads what was said in another language than the app's", () => {
+        const spanish = parse("Pagué 12,50 en el mercado ayer con mi Banesco", "en", { final: true });
+        expect(spanish.amount?.value).toBe(12.5);
+        expect(spanish.date?.value.getDate()).toBe(10);
+        expect(spanish.categoryId?.value).toBe("mercado");
+        expect(spanish.accountId?.value).toBe("banesco");
+
+        const english = parse("I paid 1,500 for groceries yesterday", "es", { final: true });
+        expect(english.amount?.value).toBe(1500);
+        expect(english.date?.value.getDate()).toBe(10);
+        expect(english.categoryId?.value).toBe("groceries");
+    });
+
+    it("transfers between accounts named in another language than the app's", () => {
+        const draft = parse("transferí 20 de Zelle a Banesco USD", "en", { final: true });
+        expect(draft.kind?.value).toBe("transfer");
+        expect(draft.fromAccountId?.value).toBe("zelle");
+        expect(draft.toAccountId?.value).toBe("banesco-usd");
+    });
+});

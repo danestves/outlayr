@@ -175,7 +175,7 @@ export function buildPrompt(args: LedgerContext): string {
             : "They have no accounts; accountName and toAccountName are null.",
         "found is false when the words carry no amount and correct nothing (a greeting, a question, noise); then every other field may be null.",
         'quotes lists, for each field the latest sentence actually says, the words it was read from, copied character for character from that sentence, e.g. {"field": "amount", "text": "doce cincuenta"}. Leave out fields the sentence does not say, including ones a correction carries over.',
-        args.language ? `The speaker's language is ${args.language}.` : "",
+        args.language ? `The app is in ${args.language}; they may speak another language.` : "",
     ]
         .filter((line) => line.length > 0)
         .join(" ");
