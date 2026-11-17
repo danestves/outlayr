@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { View } from "react-native";
+import { Platform, View } from "react-native";
 
 import { useColors } from "@/theme/use-colors";
 
@@ -10,6 +10,11 @@ import { SentenceWash } from "./sentence-wash";
 
 // Same clearance as `SentenceValue`'s rule, so the slot keeps its underline when it turns into a field.
 const RULE_BOTTOM = 7;
+
+// UIKit draws a field's line-height slack above its glyphs, Text draws it below, so on iOS the field keeps its
+// natural height pinned to the top of the line box.
+const FIELD_CLASS = Platform.OS === "ios" ? "top-0 right-0 left-0" : "inset-0";
+const LEADING = /\bleading-\S+/g;
 
 interface SentenceInputProps {
     accessibilityLabel: string;
@@ -48,7 +53,11 @@ export function SentenceInput({
                     autoCapitalize="words"
                     autoCorrect={false}
                     autoFocus
-                    className={cn(textClassName, "text-foreground absolute inset-0 p-0")}
+                    className={cn(
+                        Platform.OS === "ios" ? textClassName.replaceAll(LEADING, "") : textClassName,
+                        "text-foreground absolute p-0",
+                        FIELD_CLASS
+                    )}
                     maxLength={maxLength}
                     onChangeText={onChange}
                     onSubmitEditing={onSubmit}
