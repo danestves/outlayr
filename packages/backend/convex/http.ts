@@ -5,6 +5,7 @@ import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
+import { captureEnrich } from "../confect/captureLookup";
 import { authComponent, createAuth } from "../confect/lib/betterAuth";
 import { legacyWebOrigin, revenueCatWebhookAuth, siteUrl } from "../confect/lib/config";
 import { runEdge, runEdgeSync } from "../confect/lib/runEdge";
@@ -58,6 +59,13 @@ http.route({
     }),
     method: "POST",
     path: "/billing/checkout",
+});
+
+// The Wallet intent's only door, opened by a per-device key instead of a session: it runs on a locked phone.
+http.route({
+    handler: httpAction((ctx, request) => runEdge(captureEnrich(ctx, request))),
+    method: "POST",
+    path: "/capture/enrich",
 });
 
 http.route({

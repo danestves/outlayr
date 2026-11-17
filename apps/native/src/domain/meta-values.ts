@@ -75,6 +75,8 @@ export const PendingWrite = Schema.Struct({
     card: Schema.optional(Schema.NullOr(Schema.String)),
     category: Schema.NullOr(Schema.String).pipe(Schema.withDecodingDefault(Effect.succeed(null))),
     categoryId: Schema.optional(Schema.NullOr(Schema.String)),
+    /** Set when the intent asked the server about the merchant: the row takes this id, which keys the answer. */
+    captureId: Schema.optional(Schema.NullOr(Schema.String)),
     /** Beats `amountText` when the automation pinned one. */
     currency: Schema.optional(Schema.NullOr(Schema.String)),
     /** Epoch ms: when the intent ran, not when the app drained it. */

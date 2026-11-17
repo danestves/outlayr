@@ -373,6 +373,23 @@ describe("the name and category a pending write is filed under", () => {
         expect(decision).toMatchObject({ categoryId: "cat-expense", kind: "file", lookup: false });
     });
 
+    it("waits for the answer the Wallet intent already got instead of asking again", () => {
+        const captured = walletWrite("a", { captureId: "cap-1" });
+        const none = { fallback: null, known: null, lookups: true };
+
+        expect(decidePendingWrite(captured, facts({ captured: new Set(["cap-1"]), category: none }))).toMatchObject({
+            categoryId: null,
+            kind: "file",
+            lookup: false,
+        });
+    });
+
+    it("asks itself when the server never got the intent's capture", () => {
+        const captured = walletWrite("a", { captureId: "cap-1" });
+
+        expect(decidePendingWrite(captured, facts({ captured: new Set(["cap-2"]) }))).toMatchObject({ lookup: true });
+    });
+
     it("drops a pending write with no category to file it under", () => {
         const none = facts({ category: { fallback: null, known: null, lookups: false } });
 

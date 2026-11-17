@@ -126,6 +126,16 @@ describe("applyPendingWrites", () => {
         expect(replay).toStrictEqual({ applied: 0, autologged: 0 });
     });
 
+    it("files a captured Wallet purchase under its capture id, where the server keeps the answer", async () => {
+        const captured = walletWrite("tap", { captureId: "cap-1" });
+
+        await Effect.runPromise(applyPendingWrites(db, [captured], NOW, undefined, undefined, new Set(["cap-1"])));
+
+        const [row] = await db.select({ categoryId: transactions.categoryId, id: transactions.id }).from(transactions);
+        expect(row).toStrictEqual({ categoryId: null, id: "cap-1" });
+        await expect(Effect.runPromise(Meta.get(db, "enrichmentOutbox"))).resolves.toStrictEqual([]);
+    });
+
     it("reads a notification job's amount and merchant, and files it by account", async () => {
         await seedAccounts(db);
         const job = walletWrite("push", {

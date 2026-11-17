@@ -142,7 +142,7 @@ interface DrainResult {
 
 const NOTHING_DRAINED: DrainResult = { applied: 0, autologged: 0 };
 
-type Batch = Pick<PendingWriteFacts, "access" | "ledger" | "usage">;
+type Batch = Pick<PendingWriteFacts, "access" | "captured" | "ledger" | "usage">;
 
 const filedRows = Effect.fn("PendingWrites.filedRows")(function* filedRows(db: Database, ledger: Batch["ledger"]) {
     const ids = [...new Set(ledger.map((entry) => entry.txId))];
@@ -317,7 +317,7 @@ const createEntry = Effect.fn("PendingWrites.createEntry")(function* createEntry
             income: write.income,
             note,
         },
-        { logoCandidate }
+        { id: write.captureId ?? undefined, logoCandidate }
     );
     if (lookup) {
         yield* queueEnrichment(db, id);
@@ -379,7 +379,8 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     jobs: PendingWrite[],
     now: Date = new Date(),
     knownAccess?: AutologAccess,
-    reads?: NotificationReads
+    reads?: NotificationReads,
+    captured?: ReadonlySet<string>
 ) {
     if (jobs.length === 0) {
         return NOTHING_DRAINED;
@@ -405,7 +406,7 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
         if (!write) {
             continue;
         }
-        const decision = yield* decide(db, write, { access, ledger, usage }, now);
+        const decision = yield* decide(db, write, { access, captured, ledger, usage }, now);
         if (decision.kind === "duplicate") {
             if (decision.relink) {
                 const entry = { at, date: write.date, id: write.id, key: null, txId: decision.txId };
@@ -571,7 +572,7 @@ const runDrain = Effect.fn("PendingWrites.runDrain")(function* runDrain(
     const reads = reader ? yield* reader(db, [...waiting, ...claimed.jobs]) : undefined;
     const now = new Date();
     const released = yield* applyPendingWrites(db, waiting, now, access, reads);
-    const fresh = yield* applyPendingWrites(db, claimed.jobs, now, access, reads);
+    const fresh = yield* applyPendingWrites(db, claimed.jobs, now, access, reads, claimed.captured);
     if (waiting.length > 0) {
         yield* writeAutologWaiting(db, []);
     }

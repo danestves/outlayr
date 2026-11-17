@@ -5,15 +5,19 @@ import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 
+import { subscribeToSettingChanges } from "@/data/database-changes";
 import { applyEnrichmentAnswer } from "@/data/enrichment-queue-core";
 import type { AnsweredJob } from "@/data/enrichment-queue-core";
+import { drainDevicePendingWrites } from "@/data/pending-writes";
 import type { Database } from "@/db/client";
 import { persistLogo } from "@/lib/persist-logo";
 
-import { launchAndForegrounds, listen, WatchAppState } from "./app-events";
+import { appStates, launchAndForegrounds, listen, signals, WatchAppState } from "./app-events";
 import type { Watch } from "./app-events";
+import { syncCaptureLookup } from "./capture-lookup";
 import { enrichmentQueueTransport, watchEnrichmentResults } from "./cloud-enrichment-queue";
 import type { CloudError } from "./cloud-error";
+import { subscribeCloudAuthenticated } from "./convex";
 import { sendEnrichmentQueue } from "./enrichment-queue";
 import { discardLogo } from "./logo-backfill";
 import { fetchMerchantImage } from "./logo-fetch";
@@ -34,6 +38,8 @@ export class EnrichmentSyncError extends Schema.TaggedError<EnrichmentSyncError>
 export const EnrichmentResults = Context.Reference<{
     readonly ack: (localIds: string[]) => Effect.Effect<null, CloudError>;
     readonly apply: (db: Database, job: AnsweredJob) => Effect.Effect<void, unknown, HttpClient.HttpClient>;
+    /** A Wallet capture's answer can arrive before its row is filed, and an answer with no row is acked away. */
+    readonly drain: (db: Database) => Effect.Effect<unknown, unknown>;
     readonly watch: Watch<AnsweredJob[]>;
 }>("outlayr/lib/EnrichmentSync/EnrichmentResults", {
     defaultValue: () => ({
@@ -47,6 +53,7 @@ export const EnrichmentResults = Context.Reference<{
                 persist: persistLogo,
             });
         }),
+        drain: drainDevicePendingWrites,
         watch: watchEnrichmentResults,
     }),
 });
@@ -70,30 +77,49 @@ export const make = Effect.gen(function* make() {
         const settle = (jobs: AnsweredJob[]) =>
             // Answers for one merchant may create the same category or tag, and `ensure*` only dedupes when they land
             // one at a time.
-            Effect.all(
-                jobs.map((job) =>
-                    results
-                        .apply(db, job)
-                        .pipe(
-                            Effect.provideService(HttpClient.HttpClient, http),
-                            Effect.mapError(failedAt("apply")),
-                            Effect.catchTags({ EnrichmentSyncError: warn })
-                        )
-                ),
-                { discard: true }
-            ).pipe(
+            results.drain(db).pipe(
+                Effect.catchCause((cause) => Effect.logWarning("[outlayr] drain before answers failed", cause)),
                 Effect.andThen(
-                    results
-                        .ack(jobs.map((job) => job.localId))
-                        .pipe(Effect.mapError(failedAt("settle")), Effect.catchTags({ EnrichmentSyncError: warn }))
-                ),
-                Effect.uninterruptible
+                    Effect.all(
+                        jobs.map((job) =>
+                            results
+                                .apply(db, job)
+                                .pipe(
+                                    Effect.provideService(HttpClient.HttpClient, http),
+                                    Effect.mapError(failedAt("apply")),
+                                    Effect.catchTags({ EnrichmentSyncError: warn })
+                                )
+                        ),
+                        { discard: true }
+                    ).pipe(
+                        Effect.andThen(
+                            results
+                                .ack(jobs.map((job) => job.localId))
+                                .pipe(
+                                    Effect.mapError(failedAt("settle")),
+                                    Effect.catchTags({ EnrichmentSyncError: warn })
+                                )
+                        ),
+                        Effect.uninterruptible
+                    )
+                )
             );
 
         yield* Effect.all(
             [
                 listen(results.watch).pipe(Stream.runForEach(settle)),
                 launchAndForegrounds(watchAppState).pipe(Stream.runForEach(() => sendEnrichmentQueue(db))),
+                Stream.mergeAll(
+                    [
+                        launchAndForegrounds(watchAppState),
+                        appStates(watchAppState, "background"),
+                        signals(subscribeCloudAuthenticated),
+                        signals((listener) =>
+                            subscribeToSettingChanges(db, listener, ["aiConsentV2", "aiEnrichment", "groundedLookup"])
+                        ),
+                    ],
+                    { concurrency: "unbounded" }
+                ).pipe(Stream.runForEach(() => syncCaptureLookup(db))),
             ],
             { concurrency: "unbounded", discard: true }
         );

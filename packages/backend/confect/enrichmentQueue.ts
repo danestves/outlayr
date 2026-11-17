@@ -38,7 +38,7 @@ export interface ResolveDeps {
 
 type JobCtx = Pick<ActionCtx, "runMutation" | "runQuery" | "runAction" | "meta">;
 
-const share = Effect.fn("EnrichmentQueue.share")(function* share(
+export const share = Effect.fn("EnrichmentQueue.share")(function* share(
     ctx: JobCtx,
     row: EnrichmentJobsDoc,
     answer: typeof EnrichmentResult.Type,
