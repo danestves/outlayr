@@ -39,6 +39,7 @@
         "./installments": "./src/installments.ts",
         "./institution-map": "./src/institution-map.ts",
         "./ledger-log": "./src/ledger-log.ts",
+        "./ledger-cells": "./src/ledger-cells.ts",
         "./ledger-view": "./src/ledger-view.ts",
         "./ledger-zone": "./src/ledger-zone.ts",
         "./limit-projection": "./src/limit-projection.ts",

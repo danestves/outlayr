@@ -144,6 +144,21 @@ describe("purging an account", () => {
         expect(stateAtEnd).toBeNull();
     });
 
+    it("removes the cells summed from the caller's ledger and leaves another account's", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const other = await seedProUser(t, { email: "other@example.com" });
+        await t.run(async (ctx) => {
+            await ctx.db.insert("ledgerCells", { cells: [], month: "2026-01", userId: owner.userId });
+            await ctx.db.insert("ledgerCells", { cells: [], month: "2026-01", userId: other.userId });
+        });
+
+        await purgeAll(t, owner.userId);
+
+        const left = await t.run((ctx) => ctx.db.query("ledgerCells").collect());
+        expect(left.map((row) => row.userId)).toStrictEqual([other.userId]);
+    });
+
     it("frees the account's photos and forgets what they weighed", async () => {
         // The Convex-storage path: the R2 branch needs a component convex-test cannot register.
         const t = harness();

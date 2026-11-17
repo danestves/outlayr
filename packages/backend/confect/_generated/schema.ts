@@ -11,6 +11,7 @@ import exchangeRates from "./tables/exchangeRates";
 import groundedSpend from "./tables/groundedSpend";
 import installmentPlans from "./tables/installmentPlans";
 import installments from "./tables/installments";
+import ledgerCells from "./tables/ledgerCells";
 import mailState from "./tables/mailState";
 import mainBudget from "./tables/mainBudget";
 import merchantKnowledge from "./tables/merchantKnowledge";
@@ -47,6 +48,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly groundedSpend: typeof groundedSpend;
   readonly installmentPlans: typeof installmentPlans;
   readonly installments: typeof installments;
+  readonly ledgerCells: typeof ledgerCells;
   readonly mailState: typeof mailState;
   readonly mainBudget: typeof mainBudget;
   readonly merchantKnowledge: typeof merchantKnowledge;
@@ -82,6 +84,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   groundedSpend,
   installmentPlans,
   installments,
+  ledgerCells,
   mailState,
   mainBudget,
   merchantKnowledge,

@@ -35,6 +35,7 @@ export const seqCounter = Effect.fn("Sync.seqCounter")(function* seqCounter(user
                 ? writer.table("syncState").patch(state._id, { nextSeq: next })
                 : writer.table("syncState").insert({ nextSeq: next, userId });
         }),
+        cells: state?.cells,
         nextSeq,
     };
 });

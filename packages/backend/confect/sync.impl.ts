@@ -10,6 +10,8 @@ import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx } from "./_generated/services";
 import { optionalUserId, requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
+import { MONEY_TABLES, scheduleCellRefresh } from "./lib/ledgerCells";
+import type { MoneyTable } from "./lib/ledgerCells";
 import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
 import { incomingWins, SYNCED_TABLES } from "./lib/syncTables";
 import type { SyncedTable } from "./lib/syncTables";
@@ -49,6 +51,13 @@ const writeRow = Effect.fn("Sync.writeRow")(function* writeRow<T extends SyncedT
     const rows = (yield* DatabaseWriter).table<SyncedTable>(table);
     yield* existing ? rows.patch(existing._id, doc) : rows.insert(doc);
 });
+
+const moneyTables = new Set<string>(MONEY_TABLES);
+
+const isMoneyRow = (row: PushRow): row is Extract<PushRow, { table: MoneyTable }> => moneyTables.has(row.table);
+
+const cellInstants = (row: PushRow, existing: SyncedDoc | null) =>
+    isMoneyRow(row) ? [row.fields.date, ...(existing && "date" in existing ? [existing.date] : [])] : [];
 
 // A switch: a runtime table name erases the per-table type that catches a payload drifting from tables/.
 const upsert = Effect.fn("Sync.upsert")(function* upsert(
@@ -177,6 +186,7 @@ const push = FunctionImpl.make(
             let accepted = 0;
             let skipped = 0;
             let loggedEntry = false;
+            const movedCells: number[] = [];
             const reEmittedPolicyWinners = new Set<string>();
 
             // Rows are applied in order: `seq` is handed out one per accepted row, and two rows for the same localId
@@ -197,6 +207,7 @@ const push = FunctionImpl.make(
                         // came from.
                         const winner = existing as Docs["transactions"];
                         yield* writer.table("transactions").patch(winner._id, { seq: nextSeq });
+                        movedCells.push(winner.date);
                         nextSeq += 1;
                         reEmittedPolicyWinners.add(key);
                     }
@@ -214,12 +225,14 @@ const push = FunctionImpl.make(
                     seq: nextSeq,
                     userId,
                 });
+                movedCells.push(...cellInstants(row, existing));
                 nextSeq += 1;
                 accepted += 1;
                 loggedEntry ||= row.table === "transactions" && existing === null && row.deletedAt === null;
             }
 
             yield* counter.advanceTo(nextSeq);
+            yield* scheduleCellRefresh(userId, counter.cells, movedCells);
             if (loggedEntry) {
                 yield* noteLoggedDay(userId);
             }

@@ -5,4 +5,5 @@ import { outsideMoveFields, replicated } from "../lib/syncTables";
 
 export default Table.make(() => Schema.Struct({ ...replicated, ...outsideMoveFields }))
     .index("by_user_and_seq", ["userId", "seq"])
-    .index("by_user_and_localId", ["userId", "localId"]);
+    .index("by_user_and_localId", ["userId", "localId"])
+    .index("by_user_and_deletedAt_and_date", ["userId", "deletedAt", "date"]);

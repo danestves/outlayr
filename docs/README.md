@@ -8,6 +8,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 
 - [Glossary](../GLOSSARY.md)
 - [Convex sync](./internals/convex-sync.md)
+- [Ledger cells](./internals/ledger-cells.md)
 - [Confect backend layout](./internals/confect.md)
 - [Linting and formatting](./internals/linting.md)
 - [Effect services](./internals/effect-services.md)
