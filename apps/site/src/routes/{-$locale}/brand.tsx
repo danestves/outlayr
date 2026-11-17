@@ -2,7 +2,7 @@ import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { APP_STORE_URL, APP_URL, PLAY_STORE_URL, SITE_URL, SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -96,6 +96,7 @@ function Facts() {
     const { facts } = useIntlayer("brand");
     const { locale } = useLocale();
     const [copied, setCopied] = useState(false);
+    const sheet = useRef<HTMLDListElement>(null);
     const prices = proPrices(null, "en");
     const price = facts.price({
         monthly: `${prices.monthly.whole}${prices.monthly.fraction}`,
@@ -155,10 +156,18 @@ function Facts() {
             ),
         },
     ];
-    const copy = async () => {
-        await navigator.clipboard.writeText(rows.map((row) => `${row.label}: ${row.text}`).join("\n"));
+    const onCopied = () => {
         setCopied(true);
         setTimeout(() => setCopied(false), COPIED_MS);
+    };
+    const selectSheet = () => {
+        if (sheet.current) {
+            window.getSelection()?.selectAllChildren(sheet.current);
+        }
+    };
+    const copy = () => {
+        const text = rows.map((row) => `${row.label}: ${row.text}`).join("\n");
+        return navigator.clipboard ? navigator.clipboard.writeText(text).then(onCopied, selectSheet) : selectSheet();
     };
     return (
         <section className={SECTION}>
@@ -173,7 +182,7 @@ function Facts() {
                     {copied ? facts.copied : facts.copy}
                 </button>
             </div>
-            <dl className="border-foreground mt-16 border-t" data-reveal>
+            <dl className="border-foreground mt-16 border-t" data-reveal ref={sheet}>
                 {rows.map((row) => (
                     <div
                         className="border-border grid gap-1 border-b py-4 md:grid-cols-[12rem_1fr] md:gap-6"

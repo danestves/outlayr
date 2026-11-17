@@ -47,6 +47,7 @@ const INLINE = new Set([
     "time",
     "u",
 ]);
+const MARKED = new Set(["a", "b", "code", "del", "em", "i", "kbd", "mark", "s", "strong", "sub", "sup"]);
 const OPENS_WITH_GAP = /^[\s.,;:!?)]/u;
 const ENDS_WITH_GAP = /\s$/u;
 
@@ -55,26 +56,29 @@ function isLayout(element: ElementNode | null | undefined) {
 }
 
 // A flex or grid container lays out "<span>Accounts</span><span>3</span>" as two cells, but markdown would join them.
-// Links are left alone because the space would land inside their brackets.
+// Text inside a link, code or emphasis is left alone because the space would land inside its markdown syntax.
 const layoutGaps = createPlugin(() => {
     const pending = new WeakSet<ElementNode>();
     const holdsText = new WeakSet<ElementNode>();
     let last = "";
     return {
         processAttributes(node) {
-            if (node.index > 0 && node.name !== "a" && INLINE.has(node.name) && isLayout(node.parent)) {
+            if (node.index > 0 && INLINE.has(node.name) && isLayout(node.parent)) {
                 pending.add(node);
             }
         },
         processTextNode(node) {
             let item: ElementNode | undefined;
+            let marked = false;
             for (let element = node.parent; element && !item; element = element.parent) {
+                marked ||= MARKED.has(element.name);
                 if (pending.delete(element)) {
                     item = element;
                 }
             }
             const gap =
                 item?.parent != null &&
+                !marked &&
                 holdsText.has(item.parent) &&
                 !ENDS_WITH_GAP.test(last) &&
                 !OPENS_WITH_GAP.test(node.value);
