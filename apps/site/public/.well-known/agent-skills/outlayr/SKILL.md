@@ -39,7 +39,7 @@ Leave out transfers between the user's own accounts and credit card payments. Th
 
 ## Importing
 
-The user opens the Log, taps the add button, and picks **Import a CSV**. Outlayr guesses the columns from the header, shows a preview of every row it will write and every row it cannot read, and asks the user to link categories before anything is saved.
+The user opens **Settings › Import** and picks **CSV file**. Outlayr guesses the columns from the header, shows a preview of every row it will write and every row it cannot read, and asks the user to link categories before anything is saved.
 
 A Notion database can come in the same way: in Notion, **••• › Export › Markdown & CSV**, then in Outlayr **Settings › Import › Notion** and choose the zip. Outlayr reads the CSV inside on the phone, prefers the `_all` file that holds every row, and drops the links Notion adds to relation cells. A template with separate tables, such as Expenses and Income, comes in as one list, with the Income rows marked as income; lookup tables like Categories or Accounts are left out.
 
