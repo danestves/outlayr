@@ -16,7 +16,8 @@ export type MoneyTable = (typeof MONEY_TABLES)[number];
 
 const REFRESH_DAYS = 64;
 
-const MONTH_CELLS_MAX = 8000;
+// A cell weighs about 250 bytes and a document holds 1 MiB.
+const MONTH_CELLS_MAX = 2500;
 
 const MONTH_KEY_LENGTH = 7;
 
@@ -165,7 +166,7 @@ export const refreshDays = Effect.fn("LedgerCells.refreshDays")(function* refres
         const kept = (existing?.cells ?? []).filter((cell) => !refreshed.has(cell.dateKey));
         const stored = yield* writeMonth(userId, month, existing, [...kept, ...fresh.flat()].sort(compareLedgerCells));
         if (!stored) {
-            return yield* setCells(userId, state, { building: true, run });
+            return yield* setCells(userId, state, { building: true, run: run + 1 });
         }
     }
 });

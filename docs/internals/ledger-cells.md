@@ -34,7 +34,7 @@ The refresh runs in a scheduled mutation after the write, not inside it. The cel
 
 - Absent: never built. Writes schedule nothing.
 - `version` other than `LEDGER_CELLS_VERSION`: built by older code. Writes schedule nothing, and a reader must rebuild before it trusts them.
-- `building: true`: a rebuild is running, or one died, or a month outgrew a document. A reader must use the rows.
+- `building: true`: a rebuild is running, or one died, or a month outgrew a document (2,500 cells, to stay inside 1 MiB). A reader must use the rows. A refresh that hits that cap also moves `run` on, so a rebuild still walking cannot finish and vouch for the month it could not store.
 - `building: false` at the current version: the cells match the rows.
 
 `ledgerCells.rebuild` with `step: null` drops the user's cells, sets `building`, and walks the ledger one month a step, each step scheduling the next, so any ledger fits a mutation's read limits. Writes that land during the walk refresh their own days, and the walk overwrites those months from the rows when it reaches them. `run` counts rebuilds: a step whose run is no longer the current one stops, so starting over a stuck rebuild is safe.

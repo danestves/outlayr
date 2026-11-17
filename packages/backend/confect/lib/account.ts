@@ -12,7 +12,7 @@ const r2 = new R2(components.r2);
 /** Bounded by a mutation's document budget; the caller re-runs until done. */
 export const PURGE_BATCH = 200;
 
-const CELLS_PURGE_BATCH = 24;
+const CELLS_PURGE_BATCH = 8;
 
 /** Photos first: they live outside Convex, so a half-finished purge could orphan one forever. */
 export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purgeUserBatch(
