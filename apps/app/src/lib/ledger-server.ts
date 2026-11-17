@@ -94,8 +94,9 @@ async function pullLedger(client: ConvexHttpClient) {
             break;
         }
     }
+    // Only the wait left after the last page: batches minted during the pull cost the page nothing.
     const minted = await timed(
-        "photos",
+        "photos-wait",
         () => Promise.all(minting),
         (batches) => `${batches.length} batches`
     );
