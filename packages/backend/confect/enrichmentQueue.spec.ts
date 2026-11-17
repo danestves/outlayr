@@ -46,7 +46,7 @@ export default GroupSpec.make()
     .addFunction(FunctionSpec.convexInternalMutation<typeof settled>()("settled"))
     .addFunction(
         FunctionSpec.publicQuery({
-            args: () => ({}),
+            args: () => ({ deviceId: Schema.optional(Schema.String) }),
             name: "results",
             returns: () =>
                 Schema.Array(

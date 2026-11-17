@@ -23,25 +23,30 @@ const KEY_BYTES = 32;
 
 const hex = (bytes: Uint8Array) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 
-const deviceLabel = () => {
-    const stored = sharedStore?.get(CAPTURE_DEVICE_KEY);
+/** Also scopes the results watch, so only this phone collects the answers its captures asked for. */
+export const captureDeviceLabel = () => (sharedStore ? labelIn(sharedStore) : undefined);
+
+type Store = NonNullable<typeof sharedStore>;
+
+function labelIn(store: Store): string {
+    const stored = store.get(CAPTURE_DEVICE_KEY);
     if (stored) {
         return stored;
     }
     const minted = newId();
-    sharedStore?.set(CAPTURE_DEVICE_KEY, minted);
+    store.set(CAPTURE_DEVICE_KEY, minted);
     return minted;
+}
+
+const clearLocal = (store: Store) => {
+    store.remove(CAPTURE_SNAPSHOT_KEY);
+    store.setCaptureKey(null);
 };
 
-const clearLocal = () => {
-    sharedStore?.remove(CAPTURE_SNAPSHOT_KEY);
-    sharedStore?.setCaptureKey(null);
-};
-
-const mintKey = Effect.fn("CaptureLookup.mintKey")(function* mintKey() {
+const mintKey = Effect.fn("CaptureLookup.mintKey")(function* mintKey(store: Store) {
     const key = hex(yield* Effect.tryPromise(() => getRandomBytesAsync(KEY_BYTES)));
-    yield* cloudMutation(api.captureLookup.register, { deviceId: deviceLabel(), key });
-    return sharedStore?.setCaptureKey(key) === true;
+    yield* cloudMutation(api.captureLookup.register, { deviceId: labelIn(store), key });
+    return store.setCaptureKey(key);
 });
 
 /**
@@ -55,11 +60,11 @@ export const syncCaptureLookup = Effect.fn("CaptureLookup.sync")(
             return;
         }
         if (!isCloudAuthenticated() || !CONVEX_SITE_URL || !(yield* readRemoteEnrichment(db))) {
-            clearLocal();
+            clearLocal(sharedStore);
             return;
         }
         const status = sharedStore.captureKeyStatus();
-        if (status === "unavailable" || (status === "absent" && !(yield* mintKey()))) {
+        if (status === "unavailable" || (status === "absent" && !(yield* mintKey(sharedStore)))) {
             return;
         }
         const device = firstLocale();
@@ -83,8 +88,8 @@ export const forgetCaptureLookup = Effect.fn("CaptureLookup.forget")(
         if (!sharedStore?.captureKeyStatus) {
             return;
         }
-        clearLocal();
-        yield* cloudMutation(api.captureLookup.revoke, { deviceId: deviceLabel() });
+        clearLocal(sharedStore);
+        yield* cloudMutation(api.captureLookup.revoke, { deviceId: labelIn(sharedStore) });
     },
     Effect.catchCause((cause) => Effect.logWarning("[outlayr] capture key not revoked", cause))
 );

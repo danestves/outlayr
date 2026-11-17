@@ -87,7 +87,7 @@ async function capture(t: TestClient, body: unknown, fast: MockLanguageModelV3 =
 const jobs = (t: TestClient) => t.run((ctx) => ctx.db.query("enrichmentJobs").collect());
 
 describe("capture lookup", () => {
-    it("answers on the spot and leaves the answer under the capture id for the app", async () => {
+    it("answers on the spot and leaves the answer under the capture id for the capturing phone only", async () => {
         const t = setup();
         const user = await deviceWithKey(t);
         const fast = model({
@@ -103,7 +103,9 @@ describe("capture lookup", () => {
 
         expect(status).toBe(200);
         expect(body).toMatchObject({ answer: { categoryName: "Travel", merchantName: "Care4Bag" }, queued: false });
-        const results = await authenticatedAs(t, user).query(api.enrichmentQueue.results, {});
+        const results = await authenticatedAs(t, user).query(api.enrichmentQueue.results, { deviceId: "phone" });
+        const elsewhere = await authenticatedAs(t, user).query(api.enrichmentQueue.results, { deviceId: "tablet" });
+        expect(elsewhere).toStrictEqual([]);
         expect(results).toStrictEqual([
             expect.objectContaining({
                 localId: CAPTURE.captureId,

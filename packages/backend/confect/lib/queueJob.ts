@@ -21,6 +21,7 @@ export interface JobArgs {
     readonly aiConsent?: number | undefined;
     readonly categoryTree: readonly { readonly children: readonly string[]; readonly name: string }[];
     readonly currency?: string | undefined;
+    readonly deviceId?: string | undefined;
     readonly groundedLookup: boolean;
     readonly income: boolean;
     readonly localId: string;
@@ -61,6 +62,7 @@ export const insertJob = Effect.fn("EnrichmentQueue.insertJob")(function* insert
     return yield* writer.table("enrichmentJobs").insert({
         categoryTree: args.categoryTree,
         currency: sanitizeCurrencyCode(args.currency),
+        deviceId: args.deviceId,
         grounded,
         income: args.income,
         localId: args.localId,

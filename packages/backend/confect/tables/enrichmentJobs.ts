@@ -7,6 +7,8 @@ export default Table.make(() =>
     Schema.Struct({
         categoryTree: Schema.Array(Schema.Struct({ children: Schema.Array(Schema.String), name: Schema.String })),
         currency: Schema.optional(Schema.String),
+        /** Set on a Wallet capture: only the phone that filed the row can apply its answer, so only it sees the job. */
+        deviceId: Schema.optional(Schema.String),
         grounded: Schema.Boolean,
         income: Schema.Boolean,
         localId: Schema.String,

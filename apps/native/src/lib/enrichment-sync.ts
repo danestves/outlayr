@@ -78,7 +78,6 @@ export const make = Effect.gen(function* make() {
             // Answers for one merchant may create the same category or tag, and `ensure*` only dedupes when they land
             // one at a time.
             results.drain(db).pipe(
-                Effect.catchCause((cause) => Effect.logWarning("[outlayr] drain before answers failed", cause)),
                 Effect.andThen(
                     Effect.all(
                         jobs.map((job) =>
@@ -102,7 +101,9 @@ export const make = Effect.gen(function* make() {
                         ),
                         Effect.uninterruptible
                     )
-                )
+                ),
+                // Unacked, the answers come back on the next watch, after a drain that filed their rows.
+                Effect.catchCause((cause) => Effect.logWarning("[outlayr] drain before answers failed", cause))
             );
 
         yield* Effect.all(

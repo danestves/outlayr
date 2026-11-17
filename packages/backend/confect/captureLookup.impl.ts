@@ -80,7 +80,7 @@ const open = FunctionImpl.make(
         const jobId =
             captureId.length === 0 || captureId.length > MAX_ID_LENGTH
                 ? null
-                : yield* insertJob(owner.userId, { ...args, localId: captureId });
+                : yield* insertJob(owner.userId, { ...args, deviceId: owner.deviceId, localId: captureId });
         const job =
             jobId === null
                 ? null

@@ -68,7 +68,7 @@ const results = FunctionImpl.make(
     databaseSchema,
     spec,
     "results",
-    Effect.fn("EnrichmentQueue.results")(function* results() {
+    Effect.fn("EnrichmentQueue.results")(function* results(args) {
         const ctx = yield* QueryCtx;
         const userId = yield* optionalUserId(ctx);
         if (userId === null) {
@@ -84,7 +84,8 @@ const results = FunctionImpl.make(
             ),
             { concurrency: "unbounded" }
         );
-        return jobs.flat().map((row) => ({
+        const mine = jobs.flat().filter((row) => row.deviceId === undefined || row.deviceId === args.deviceId);
+        return mine.map((row) => ({
             localId: row.localId,
             name: row.name,
             result: row.result ?? null,
