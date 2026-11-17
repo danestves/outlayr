@@ -253,7 +253,18 @@ function Guide() {
     }
     for (const section of "more" in guide ? guide.more : []) {
         sections.push({
-            body: <Prose paragraphs={section.body} />,
+            body: (
+                <>
+                    <Prose paragraphs={section.body} />
+                    {"sources" in section ? (
+                        <p className="mt-4">
+                            {section.sources.map((source) => (
+                                <Source href={source.value} key={source.value} />
+                            ))}
+                        </p>
+                    ) : null}
+                </>
+            ),
             id: section.id.value,
             title: section.title,
         });

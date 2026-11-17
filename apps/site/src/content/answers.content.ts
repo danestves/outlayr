@@ -12650,8 +12650,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Usually no. On Google Play you keep access until the end of the period you paid for and are not charged again. Refunds depend on who billed you and their policy.",
-                            es: "Por lo general no. En Google Play conservas el acceso hasta el final del período que pagaste y no te vuelven a cobrar. Los reembolsos dependen de quién te cobró y de su política.",
+                            en: "Usually no. Canceling stops the renewal, and on Google Play you keep access until the end of the period you paid for. If you bought it with a Google Play payment plan, you still owe the remaining payments on that plan. Refunds depend on who billed you and their policy.",
+                            es: "Por lo general no. Cancelar detiene la renovación, y en Google Play conservas el acceso hasta el final del período que pagaste. Si la compraste con un plan de pagos de Google Play, igual debes los pagos que quedan de ese plan. Los reembolsos dependen de quién te cobró y de su política.",
                         }),
                         question: t({
                             en: "Do I get my money back when I cancel?",
@@ -12671,7 +12671,7 @@ const answers = {
                 ],
                 lead: t({
                     en: "Cancel it with whoever bills you: in Subscriptions in your Apple settings for App Store charges, in Subscriptions in Google Play for Google charges, or in your account settings on the service's website if you pay it there.",
-                    es: "Cancélala con quien te cobra: en Suscripciones dentro de la configuración de Apple si paga el App Store, en Suscripciones de Google Play si paga Google, o en la configuración de tu cuenta en la web del servicio si pagas ahí.",
+                    es: "Cancélala con quien te cobra: en Suscripciones dentro de la configuración de Apple si te cobra el App Store, en Suscripciones de Google Play si te cobra Google Play, o en la configuración de tu cuenta en la web del servicio si pagas ahí.",
                 }),
                 meta: {
                     description: t({
@@ -12758,6 +12758,10 @@ const answers = {
                             }),
                         ],
                         id: "statement",
+                        sources: [
+                            "https://support.apple.com/en-us/120164",
+                            "https://support.google.com/googleplay/answer/2851610",
+                        ],
                         title: t({
                             en: "How the charge shows on your statement",
                             es: "Cómo aparece el cobro en tu estado de cuenta",
@@ -12809,8 +12813,8 @@ const answers = {
                         label: t({ en: "After you cancel", es: "Después de cancelar" }),
                         source: "https://support.google.com/googleplay/answer/7018481",
                         text: t({
-                            en: "It stays active until the end of the time you already paid for, with no new charge",
-                            es: "Sigue activa hasta el final del tiempo que ya pagaste, sin un cobro nuevo",
+                            en: "Canceling stops the renewal, and it stays active until the end of the time you already paid for. On a payment plan you still owe the remaining payments",
+                            es: "Cancelar detiene la renovación, y sigue activa hasta el final del tiempo que ya pagaste. En un plan de pagos igual debes los pagos que quedan",
                         }),
                     },
                     {
@@ -12948,6 +12952,7 @@ const answers = {
                             }),
                         ],
                         id: "statement",
+                        sources: ["https://support.google.com/googleplay/answer/2851610"],
                         title: t({
                             en: "How the charge shows on your statement",
                             es: "Cómo aparece el cobro en tu estado de cuenta",
@@ -13173,6 +13178,7 @@ const answers = {
                             }),
                         ],
                         id: "statement",
+                        sources: ["https://support.apple.com/en-us/120164"],
                         title: t({
                             en: "How the charge shows on your statement",
                             es: "Cómo aparece el cobro en tu estado de cuenta",
@@ -13216,8 +13222,8 @@ const answers = {
                         label: t({ en: "Deleting the app", es: "Borrar la app" }),
                         source: "https://help.openai.com/en/articles/7232927-canceling-your-chatgpt-subscription",
                         text: t({
-                            en: "Does not cancel it. Deleting your ChatGPT account does not cancel an App Store subscription either",
-                            es: "No la cancela. Borrar tu cuenta de ChatGPT tampoco cancela una suscripción del App Store",
+                            en: "Uninstalling does not cancel it. Deleting your ChatGPT account cancels a plan billed by OpenAI, but not one billed by the App Store or Google Play",
+                            es: "Desinstalarla no la cancela. Borrar tu cuenta de ChatGPT cancela un plan que cobra OpenAI, pero no uno que cobra el App Store o Google Play",
                         }),
                     },
                     {
@@ -13240,8 +13246,8 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "No. OpenAI says uninstalling the ChatGPT app does not cancel your subscription, and deleting your ChatGPT account does not cancel one billed by the App Store. Cancel it where you subscribed.",
-                            es: "No. OpenAI dice que desinstalar la app de ChatGPT no cancela tu suscripción, y que borrar tu cuenta de ChatGPT no cancela una que cobra el App Store. Cancélala donde te suscribiste.",
+                            en: "No. OpenAI says uninstalling the ChatGPT app does not cancel your subscription. Deleting your ChatGPT account cancels a plan billed by OpenAI on chatgpt.com, but OpenAI says to cancel an App Store or Google Play subscription in the store first. To stop future charges, cancel where you subscribed.",
+                            es: "No. OpenAI dice que desinstalar la app de ChatGPT no cancela tu suscripción. Borrar tu cuenta de ChatGPT cancela un plan que cobra OpenAI en chatgpt.com, pero OpenAI pide cancelar primero en la tienda una suscripción del App Store o de Google Play. Para dejar de pagar, cancélala donde te suscribiste.",
                         }),
                         question: t({
                             en: "Does deleting the ChatGPT app cancel my subscription?",
@@ -13250,8 +13256,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "You probably subscribed in the iPhone or Android app, so Apple or Google bills you. Cancel it in Subscriptions in your Apple settings or in Google Play.",
-                            es: "Seguramente te suscribiste desde la app de iPhone o Android, así que te cobra Apple o Google. Cancélala en Suscripciones dentro de la configuración de Apple o en Google Play.",
+                            en: "Check your purchase receipt to see who billed you. If it was Apple or Google Play, cancel it in Subscriptions in your Apple settings or in Google Play. If you paid on chatgpt.com, sign in to the same ChatGPT account in another browser and open Billing again.",
+                            es: "Revisa tu recibo de compra para ver quién te cobró. Si fue Apple o Google Play, cancélala en Suscripciones dentro de la configuración de Apple o en Google Play. Si pagaste en chatgpt.com, entra con la misma cuenta de ChatGPT en otro navegador y vuelve a abrir Facturación.",
                         }),
                         question: t({
                             en: "Why don't I see Cancel plan in ChatGPT's settings?",
@@ -13306,6 +13312,10 @@ const answers = {
                                 en: "4. Under Cancel plan, select Cancel.",
                                 es: "4. En Cancelar plan (Cancel plan), selecciona Cancelar.",
                             }),
+                            t({
+                                en: "5. Check your billing status to make sure the plan no longer renews.",
+                                es: "5. Revisa el estado de tu facturación para confirmar que el plan ya no se renueva.",
+                            }),
                         ],
                         id: "web",
                         title: t({ en: "On the web", es: "En la web" }),
@@ -13336,8 +13346,12 @@ const answers = {
                             }),
                             t({ en: "2. Tap ChatGPT.", es: "2. Toca ChatGPT." }),
                             t({
-                                en: "3. Tap Cancel subscription. On a computer, go to play.google.com/store/account/subscriptions, click Manage next to ChatGPT, then Cancel subscription.",
-                                es: "3. Toca Cancelar suscripción. En una computadora, entra a play.google.com/store/account/subscriptions, haz clic en Administrar junto a ChatGPT y luego en Cancelar suscripción.",
+                                en: "3. Tap Cancel subscription and follow the instructions to confirm. On a computer, go to play.google.com/store/account/subscriptions, click Manage next to ChatGPT, then Cancel subscription, pick a reason if asked, and click Continue.",
+                                es: "3. Toca Cancelar suscripción y sigue las instrucciones para confirmar. En una computadora, entra a play.google.com/store/account/subscriptions, haz clic en Administrar junto a ChatGPT, luego en Cancelar suscripción, elige un motivo si te lo pide y haz clic en Continuar.",
+                            }),
+                            t({
+                                en: "4. Check that ChatGPT no longer shows as renewing in Subscriptions.",
+                                es: "4. Revisa que ChatGPT ya no aparezca con renovación en Suscripciones.",
                             }),
                         ],
                         id: "android",
@@ -13346,8 +13360,8 @@ const answers = {
                     {
                         body: [
                             t({
-                                en: "If you don't see the option, it's billed elsewhere. No Cancel plan under Billing on chatgpt.com usually means Apple or Google bills you, so check Subscriptions on the phone you subscribed from. A ChatGPT Business plan is canceled in the workspace's billing settings.",
-                                es: "Si no ves la opción, te la cobran en otro lado. Si no aparece Cancelar plan en Facturación de chatgpt.com, por lo general te cobra Apple o Google, así que revisa Suscripciones en el celular desde donde te suscribiste. Un plan ChatGPT Business se cancela en la configuración de facturación del espacio de trabajo.",
+                                en: "If you don't see the option, check your purchase receipt for who billed you: OpenAI, Apple, or Google Play. A subscription bought on chatgpt.com doesn't show in Apple or Google Play subscriptions. If you paid on chatgpt.com and Billing shows no options, sign in to the same ChatGPT account in another browser and try again. A ChatGPT Business plan is canceled in the workspace's billing settings.",
+                                es: "Si no ves la opción, revisa tu recibo de compra para ver quién te cobró: OpenAI, Apple o Google Play. Una suscripción comprada en chatgpt.com no aparece en las suscripciones de Apple ni de Google Play. Si pagaste en chatgpt.com y Facturación no muestra opciones, entra con la misma cuenta de ChatGPT en otro navegador y vuelve a intentarlo. Un plan ChatGPT Business se cancela en la configuración de facturación del espacio de trabajo.",
                             }),
                         ],
                         id: "elsewhere",
@@ -13361,6 +13375,10 @@ const answers = {
                             }),
                         ],
                         id: "statement",
+                        sources: [
+                            "https://support.apple.com/en-us/120164",
+                            "https://support.google.com/googleplay/answer/2851610",
+                        ],
                         title: t({
                             en: "How the charge shows on your statement",
                             es: "Cómo aparece el cobro en tu estado de cuenta",
