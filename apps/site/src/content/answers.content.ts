@@ -12630,8 +12630,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Look at who bills you. A receipt from Apple or a charge from apple.com/bill means Apple. A charge that starts with GOOGLE* means Google; if it's also in your Google Play order history, it's Google Play, otherwise cancel it in that Google service, such as YouTube. Anything else is most likely billed by the service itself, so cancel on its website.",
-                            es: "Fíjate en quién te cobra. Un recibo de Apple o un cobro de apple.com/bill es Apple. Un cobro que empieza con GOOGLE* es de Google; si también aparece en tu historial de pedidos de Google Play, es Google Play, si no, cancélalo en ese servicio de Google, como YouTube. Cualquier otro muy probablemente lo cobra el servicio, así que cancela en su web.",
+                            en: "Look at who bills you. A receipt from Apple or a charge from apple.com/bill means Apple. A charge that starts with GOOGLE* means Google; if it's also in your Google Play order history, it's Google Play. If not, check your other Google accounts, or cancel it in that Google service, such as YouTube. Anything else is most likely billed by the service itself, so cancel on its website.",
+                            es: "Fíjate en quién te cobra. Un recibo de Apple o un cobro de apple.com/bill es Apple. Un cobro que empieza con GOOGLE* es de Google; si también aparece en tu historial de pedidos de Google Play, es Google Play. Si no, revisa tus otras cuentas de Google, o cancélalo en ese servicio de Google, como YouTube. Cualquier otro muy probablemente lo cobra el servicio, así que cancela en su web.",
                         }),
                         question: t({
                             en: "How do I know where I'm paying for a subscription?",
@@ -12670,7 +12670,7 @@ const answers = {
                     },
                 ],
                 lead: t({
-                    en: "Cancel it with whoever bills you: in Subscriptions in your Apple settings for App Store charges, in Subscriptions in Google Play for Google charges, or in your account settings on the service's website if you pay it there.",
+                    en: "Cancel it with whoever bills you: in Subscriptions in your Apple settings for App Store charges, in Subscriptions in Google Play for Google Play charges, or in your account settings on the service's website if you pay it there.",
                     es: "Cancélala con quien te cobra: en Suscripciones dentro de la configuración de Apple si te cobra el App Store, en Suscripciones de Google Play si te cobra Google Play, o en la configuración de tu cuenta en la web del servicio si pagas ahí.",
                 }),
                 meta: {
