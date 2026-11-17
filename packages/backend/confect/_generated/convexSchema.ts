@@ -12,6 +12,7 @@ import exchangeRates from "./tables/exchangeRates";
 import groundedSpend from "./tables/groundedSpend";
 import installmentPlans from "./tables/installmentPlans";
 import installments from "./tables/installments";
+import ledgerCells from "./tables/ledgerCells";
 import mailState from "./tables/mailState";
 import mainBudget from "./tables/mainBudget";
 import merchantKnowledge from "./tables/merchantKnowledge";
@@ -48,6 +49,7 @@ export default $defineSchema({
   groundedSpend: $Table.tableDefinition(groundedSpend),
   installmentPlans: $Table.tableDefinition(installmentPlans),
   installments: $Table.tableDefinition(installments),
+  ledgerCells: $Table.tableDefinition(ledgerCells),
   mailState: $Table.tableDefinition(mailState),
   mainBudget: $Table.tableDefinition(mainBudget),
   merchantKnowledge: $Table.tableDefinition(merchantKnowledge),

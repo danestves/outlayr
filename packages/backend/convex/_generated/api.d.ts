@@ -23,6 +23,7 @@ import type * as groundedSpend from "../groundedSpend.js";
 import type * as http from "../http.js";
 import type * as installmentScan from "../installmentScan.js";
 import type * as ledger from "../ledger.js";
+import type * as ledgerCells from "../ledgerCells.js";
 import type * as legal from "../legal.js";
 import type * as limits from "../limits.js";
 import type * as mail from "../mail.js";
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   installmentScan: typeof installmentScan;
   ledger: typeof ledger;
+  ledgerCells: typeof ledgerCells;
   legal: typeof legal;
   limits: typeof limits;
   mail: typeof mail;

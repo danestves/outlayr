@@ -13,6 +13,7 @@ import type { TransactionsDoc } from "./_generated/docs";
 import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationCtx } from "./_generated/services";
 import { dieAsConvexError } from "./lib/convexError";
+import { scheduleCellRefresh } from "./lib/ledgerCells";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
 import {
@@ -218,6 +219,7 @@ const logEntry = FunctionImpl.make(
                 userId,
             });
             yield* counter.advanceTo(counter.nextSeq + 1);
+            yield* scheduleCellRefresh(userId, counter.cells, [date]);
             return entry;
         },
         Effect.catchTags({

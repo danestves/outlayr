@@ -12,6 +12,8 @@ const r2 = new R2(components.r2);
 /** Bounded by a mutation's document budget; the caller re-runs until done. */
 export const PURGE_BATCH = 200;
 
+const CELLS_PURGE_BATCH = 24;
+
 /** Photos first: they live outside Convex, so a half-finished purge could orphan one forever. */
 export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purgeUserBatch(
     ctx: MutationCtx,
@@ -64,6 +66,21 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
             { concurrency: "unbounded", discard: true }
         );
         return { done: false, removed: rows.length };
+    }
+
+    // After the rows: a refresh still queued then finds no rows and writes nothing back.
+    const cells = yield* Effect.promise(() =>
+        ctx.db
+            .query("ledgerCells")
+            .withIndex("by_user_and_month", (q) => q.eq("userId", userId))
+            .take(CELLS_PURGE_BATCH)
+    );
+    if (cells.length > 0) {
+        yield* Effect.all(
+            cells.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
+            { concurrency: "unbounded", discard: true }
+        );
+        return { done: false, removed: cells.length };
     }
 
     const invites = yield* Effect.promise(() =>
