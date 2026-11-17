@@ -3,10 +3,10 @@ import type { DayLevel } from "panelui-web/day-grid";
 
 import { categoryBudgets, change, spendSeries } from "../../../lib/dashboard-series";
 import type { CategoryBudget } from "../../../lib/dashboard-series";
-import { endOfDay, prepareLedger, rowsBetween, round, startOfDay, total } from "../../../lib/dashboard-series-ledger";
+import { endOfDay, rowsBetween, round, startOfDay, total } from "../../../lib/dashboard-series-ledger";
 import type { Ledger, LedgerRow, Scope } from "../../../lib/dashboard-series-ledger";
 import { netWorthPoints } from "../../../lib/dashboard-series-net-worth";
-import { daysFrom, periodKeyOf, periodOf, priorSlice, shiftPeriodKey } from "../../../lib/dashboard-series-period";
+import { daysFrom, periodOf, priorSlice, shiftPeriodKey } from "../../../lib/dashboard-series-period";
 import type { Period } from "../../../lib/dashboard-series-period";
 import { foldFees } from "./rows";
 
@@ -216,11 +216,6 @@ export function homeCovered(ledger: Ledger, period: Period) {
         !carries &&
         [...categoryBudgets(ledger, period).values()].every((standing) => reaches(standing.from))
     );
-}
-
-export function homeOpensWith(books: Ledger["books"], now: number, opening: Ledger["opening"]) {
-    const ledger = prepareLedger(books, now, opening);
-    return homeCovered(ledger, periodOf(periodKeyOf(ledger.today, ledger.firstDayOfMonth), ledger.firstDayOfMonth));
 }
 
 export function whatIfStep(income: number) {
