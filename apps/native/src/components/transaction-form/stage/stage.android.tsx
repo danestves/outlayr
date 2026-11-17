@@ -84,6 +84,7 @@ function StageRightMeta({ action, node }: { action?: StageAction; node?: ReactNo
 
 export const TransactionStage: typeof TransactionStageBase = ({
     backLabel,
+    bare = false,
     children,
     footer,
     forward = true,
@@ -99,7 +100,7 @@ export const TransactionStage: typeof TransactionStageBase = ({
     const part = use(StagePartContext);
     const largeText = useAccessibilityTextSize();
     const fontScaleCap = largeText ? LARGE_TEXT_STAGE_FONT_SCALE_CAP : STAGE_FONT_SCALE_CAP;
-    const buttonOnly = part === "pinned" && largeText;
+    const buttonOnly = part === "pinned" && largeText && !bare;
     const inline = part === "inline";
     const ready = (footer?.tone ?? "primary") === "primary";
     // The part that draws the back button owns the press: at large text the pinned part is only the footer.
@@ -144,11 +145,14 @@ export const TransactionStage: typeof TransactionStageBase = ({
     return (
         <FontScaleCapContext value={fontScaleCap}>
             <View
-                className={cn("pt-[15px]", inline ? null : "bg-m3-surface-container rounded-t-[28px] px-4")}
+                className={cn(
+                    bare ? "pt-2" : "pt-[15px]",
+                    inline ? null : cn("px-4", bare ? null : "bg-m3-surface-container rounded-t-[28px]")
+                )}
                 style={inline ? undefined : bottomPad}
             >
                 {/* Centred on the panel, not after the back button, so it sits in the same place on every step. */}
-                <View className={cn(largeText ? "min-h-12" : "h-12", "flex-row items-center")}>
+                <View className={cn(largeText ? "min-h-12" : "h-12", "flex-row items-center", bare && "hidden")}>
                     {onBack ? (
                         <Pressable
                             accessibilityLabel={backLabel}
@@ -172,7 +176,12 @@ export const TransactionStage: typeof TransactionStageBase = ({
                     <StageRightMeta action={rightAction} node={right} />
                 </View>
 
-                <Animated.View className="pt-3" entering={stageBodyEntering(forward)} key={stepKey} testID="stage-body">
+                <Animated.View
+                    className={bare ? undefined : "pt-3"}
+                    entering={stageBodyEntering(forward)}
+                    key={stepKey}
+                    testID="stage-body"
+                >
                     {children}
                 </Animated.View>
 

@@ -434,14 +434,6 @@ const transaction = {
             fr: "Nom",
             pt: "Nome",
         }),
-        "transaction.field.namePlaceholder": t({
-            en: "Netflix, Groceries…",
-            de: "Netflix, Lebensmittel…",
-            es: "Netflix, Súper…",
-            fr: "Netflix, Courses…",
-            pt: "Netflix, Mercado…",
-            "pt-PT": "Netflix, Supermercado…",
-        }),
         "transaction.field.notes": t({
             en: "Notes",
             de: "Notizen",
@@ -798,20 +790,6 @@ const transaction = {
             pt: "Desbloquear",
         }),
         // Not `transaction.field.name`: the sentence's inline field carries that label and both are on screen at once.
-        "transaction.merchant.field": t({
-            en: "Merchant name",
-            de: "Name des Händlers",
-            es: "Nombre del comercio",
-            fr: "Nom du commerçant",
-            pt: "Nome do estabelecimento",
-        }),
-        "transaction.merchant.recent": t({
-            en: "Recently",
-            de: "Zuletzt",
-            es: "Recientes",
-            fr: "Récents",
-            pt: "Recentes",
-        }),
         "transaction.new.title": t({
             en: "New",
             de: "Neu",

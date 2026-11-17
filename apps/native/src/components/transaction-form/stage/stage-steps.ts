@@ -27,6 +27,7 @@ export interface StagePosition {
 }
 
 export interface StageStepContent {
+    bare?: boolean;
     body: ReactNode;
     footer?: StageFooter;
     rightAction?: StageAction;

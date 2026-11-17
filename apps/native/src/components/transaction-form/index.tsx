@@ -81,7 +81,7 @@ import { StepAccountInstallments } from "./stage/step-account-installments";
 import { StepCategory } from "./stage/step-category";
 import { StepCurrency } from "./stage/step-currency";
 import { StepDate } from "./stage/step-date";
-import { StepMerchant } from "./stage/step-merchant";
+import { MAX_NAME_LENGTH, MerchantChips } from "./stage/step-merchant";
 import { StepWhen } from "./stage/step-when";
 import { useAttachmentDraft } from "./use-attachment-draft";
 import { useCardFee } from "./use-card-fee";
@@ -347,6 +347,8 @@ export function TransactionForm(props: TransactionFormProps) {
     }));
     const stageStep = stage.step;
     const largeText = useAccessibilityTextSize();
+    // The name's chips are one short row, so even at large text they stay pinned over the keyboard.
+    const stageInline = largeText && stageStep !== "merchant";
     const [stageTurn, setStageTurn] = useState(0);
     const stageTarget = `stage-${stageTurn}`;
     const goStage = (step: StageStep, forward: boolean) => {
@@ -754,14 +756,14 @@ export function TransactionForm(props: TransactionFormProps) {
             }
             case "merchant": {
                 return {
+                    bare: true,
                     body: (
-                        <StepMerchant
-                            accessibilityLabel={t("transaction.merchant.field")}
-                            onChange={handleStageMerchantChange}
-                            placeholder={t("transaction.field.namePlaceholder")}
-                            recent={recentNames}
-                            recentLabel={t("transaction.merchant.recent")}
-                            suggestions={suggestMerchants(merchant, MERCHANT_SUGGESTION_LIMIT, recentNames)}
+                        <MerchantChips
+                            names={merchantNames(merchant, recentNames)}
+                            onPick={(name) => {
+                                handleStageMerchantChange(name);
+                                stageFooter(amountNumber, name).onPress();
+                            }}
                             value={merchant}
                         />
                     ),
@@ -811,9 +813,10 @@ export function TransactionForm(props: TransactionFormProps) {
                 />
             );
         }
-        const { body, footer, rightAction, title } = stageStepContent(stageStep, amountNumber, merchant);
+        const { bare, body, footer, rightAction, title } = stageStepContent(stageStep, amountNumber, merchant);
         return (
             <TransactionStage
+                bare={bare}
                 backLabel={t("common.back")}
                 footer={
                     footer ??
@@ -970,7 +973,7 @@ export function TransactionForm(props: TransactionFormProps) {
                     bottomInset={resting ? 0 : 40}
                     curtainHues={curtainHues}
                     failure={saveFailure}
-                    followsStage={largeText}
+                    followsStage={stageInline}
                     sheet={mode === "edit"}
                 >
                     <SubscribeFields
@@ -1012,6 +1015,15 @@ export function TransactionForm(props: TransactionFormProps) {
                                             language,
                                         })}
                                         merchant={merchantSeed.length === 0 ? null : merchantSeed}
+                                        merchantField={
+                                            stageStep === "merchant" && !resting
+                                                ? {
+                                                      maxLength: MAX_NAME_LENGTH,
+                                                      onChange: handleStageMerchantChange,
+                                                      onSubmit: () => stageFooter(amountNumber, merchantSeed).onPress(),
+                                                  }
+                                                : undefined
+                                        }
                                         merchantTile={merchantTile}
                                         when={whenLabel}
                                     />
@@ -1048,7 +1060,7 @@ export function TransactionForm(props: TransactionFormProps) {
 
                     {note.item}
 
-                    {largeText && !resting ? (
+                    {stageInline && !resting ? (
                         <>
                             <FormScrollStageTarget id={stageTarget} key={stageTarget} />
                             <FormScrollItem>
@@ -1067,7 +1079,7 @@ export function TransactionForm(props: TransactionFormProps) {
                         behavior="padding"
                         className={note.focused ? "hidden" : undefined}
                         keyboardVerticalOffset={keyboardOffset}
-                        enabled={stageTakesTyping(stageStep, installmentsNarrowed) && !largeText}
+                        enabled={stageTakesTyping(stageStep, installmentsNarrowed) && !stageInline}
                     >
                         <StagePartContext value="pinned">{stageFields}</StagePartContext>
                     </KeyboardAvoidingView>
@@ -1102,6 +1114,13 @@ export function TransactionForm(props: TransactionFormProps) {
             </View>
         </PortalProvider>
     );
+}
+
+// The user's own names first, narrowed by what is typed, then the catalogue's.
+function merchantNames(query: string, recent: readonly string[]) {
+    const needle = query.trim().toLocaleLowerCase();
+    const own = needle === "" ? recent : recent.filter((name) => name.toLocaleLowerCase().includes(needle));
+    return [...new Set([...own, ...suggestMerchants(query, MERCHANT_SUGGESTION_LIMIT, recent)])];
 }
 
 function stageTakesTyping(step: StageStep, installmentsNarrowed: boolean) {
