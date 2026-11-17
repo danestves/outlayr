@@ -5,6 +5,7 @@ import * as Struct from "effect/Struct";
 import { Id } from "./_generated/id";
 import enrichmentJobs from "./_generated/tables/enrichmentJobs";
 import { EnrichmentResult } from "./lib/enrichmentResult";
+import { ApnsEnvironment, PushTarget } from "./tables/captureKeys";
 
 export const MIN_KEY_LENGTH = 32;
 export const MAX_KEY_LENGTH = 128;
@@ -61,6 +62,46 @@ export default GroupSpec.make()
                 result: Schema.NullOr(EnrichmentResult),
             }),
             name: "settle",
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
+        FunctionSpec.publicMutation({
+            args: () => ({
+                deviceId: Schema.String,
+                environment: ApnsEnvironment,
+                secret: Schema.String,
+                token: Schema.String,
+            }),
+            name: "setPush",
+            returns: () => Schema.Boolean,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalQuery({
+            args: () => ({ deviceId: Schema.String, userId: Schema.String }),
+            name: "pushTarget",
+            returns: () => Schema.NullOr(PushTarget),
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalMutation({
+            args: () => ({ deviceId: Schema.String, token: Schema.String, userId: Schema.String }),
+            name: "dropPush",
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
+        FunctionSpec.internalAction({
+            args: () => ({
+                captureId: Schema.String,
+                deviceId: Schema.String,
+                locale: Schema.optional(Schema.String),
+                name: Schema.String,
+                result: EnrichmentResult,
+                userId: Schema.String,
+            }),
+            name: "push",
             returns: () => Schema.Null,
         })
     );
