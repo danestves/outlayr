@@ -11,9 +11,8 @@ import { SentenceWash } from "./sentence-wash";
 // Same clearance as `SentenceValue`'s rule, so the slot keeps its underline when it turns into a field.
 const RULE_BOTTOM = 7;
 
-// UIKit draws a field's line-height slack above its glyphs, Text draws it below, so on iOS the field keeps its
-// natural height pinned to the top of the line box.
-const FIELD_CLASS = Platform.OS === "ios" ? "top-0 right-0 left-0" : "inset-0";
+// UIKit draws a field's line-height slack above its glyphs, where Text centers them in the line. Without it the
+// field centers its own line, which lands on the sentence's baseline.
 const LEADING = /\bleading-\S+/g;
 
 interface SentenceInputProps {
@@ -55,8 +54,7 @@ export function SentenceInput({
                     autoFocus
                     className={cn(
                         Platform.OS === "ios" ? textClassName.replaceAll(LEADING, "") : textClassName,
-                        "text-foreground absolute p-0",
-                        FIELD_CLASS
+                        "text-foreground absolute inset-0 p-0"
                     )}
                     maxLength={maxLength}
                     onChangeText={onChange}
