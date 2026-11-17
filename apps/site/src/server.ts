@@ -1,7 +1,8 @@
 import { htmlToMarkdown } from "@mdream/js";
+import type { ElementNode } from "@mdream/js";
 import { clean } from "@mdream/js/clean";
 import { negotiateContent } from "@mdream/js/negotiate";
-import { filterPlugin, frontmatterPlugin, isolateMainPlugin } from "@mdream/js/plugins";
+import { createPlugin, filterPlugin, frontmatterPlugin, isolateMainPlugin } from "@mdream/js/plugins";
 import { SITE_URL } from "@outlayr/shared/urls";
 import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 import * as Effect from "effect/Effect";
@@ -24,6 +25,77 @@ const HIDDEN = [
     "[data-kicker]",
     ".dark-only",
 ];
+
+const LAYOUT = /(?:^|\s)(?:[a-z0-9]+:)*(?:inline-)?(?:flex|grid)(?=\s|$)/u;
+const INLINE = new Set([
+    "a",
+    "abbr",
+    "b",
+    "code",
+    "data",
+    "em",
+    "i",
+    "kbd",
+    "label",
+    "mark",
+    "s",
+    "small",
+    "span",
+    "strong",
+    "sub",
+    "sup",
+    "time",
+    "u",
+]);
+const MARKED = new Set(["a", "b", "code", "del", "em", "i", "kbd", "mark", "s", "strong", "sub", "sup"]);
+const OPENS_WITH_GAP = /^[\s.,;:!?)]/u;
+const ENDS_WITH_GAP = /\s$/u;
+
+function isLayout(element: ElementNode | null | undefined) {
+    return LAYOUT.test(element?.attributes.class ?? "");
+}
+
+// A flex or grid container lays out "<span>Accounts</span><span>3</span>" as two cells, but markdown would join them.
+// Text inside a link, code or emphasis is left alone because the space would land inside its markdown syntax.
+const layoutGaps = createPlugin(() => {
+    const pending = new WeakSet<ElementNode>();
+    const holdsText = new WeakSet<ElementNode>();
+    let last = "";
+    return {
+        processAttributes(node) {
+            if (node.index > 0 && INLINE.has(node.name) && isLayout(node.parent)) {
+                pending.add(node);
+            }
+        },
+        processTextNode(node) {
+            let item: ElementNode | undefined;
+            let marked = false;
+            for (let element = node.parent; element && !item; element = element.parent) {
+                marked ||= MARKED.has(element.name);
+                if (pending.delete(element)) {
+                    item = element;
+                }
+            }
+            const gap =
+                item?.parent != null &&
+                !marked &&
+                holdsText.has(item.parent) &&
+                !ENDS_WITH_GAP.test(last) &&
+                !OPENS_WITH_GAP.test(node.value);
+            let inline = true;
+            for (let element = node.parent; element && inline; element = element.parent) {
+                if (isLayout(element)) {
+                    holdsText.add(element);
+                }
+                inline = INLINE.has(element.name);
+            }
+            if (node.value !== "") {
+                last = node.value;
+            }
+            return gap ? { content: ` ${node.value}`, skip: false } : undefined;
+        },
+    };
+});
 
 const DEFINITION_LIST: readonly (readonly [RegExp, string])[] = [
     [/<\/?dl\b[^>]*>/gu, ""],
@@ -76,6 +148,7 @@ function toMarkdown(html: string): string {
             frontmatterPlugin({ additionalFields: bylineFields(html) }),
             isolateMainPlugin(),
             filterPlugin({ exclude: HIDDEN }),
+            layoutGaps,
         ],
     });
 }

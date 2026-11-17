@@ -28,6 +28,9 @@ export function Hero() {
                     >
                         {hero.title}
                     </h1>
+                    <p className="text-muted mt-6 max-w-[680px] text-lg delay-150 md:text-xl" data-reveal>
+                        {story.hero.definition}
+                    </p>
                     <LivePurchase key={locale} locale={locale} />
                     <div className="mt-10 delay-300" data-reveal>
                         <StoreBadges placement="hero" />
@@ -40,6 +43,9 @@ export function Hero() {
                             </li>
                         ))}
                     </ul>
+                    <p className="text-muted mt-3 max-w-[680px] text-sm delay-500" data-reveal>
+                        {story.hero.spec}
+                    </p>
                 </div>
                 <div className="relative mt-8 delay-200 lg:col-span-5 lg:mt-16" data-reveal>
                     <div className="relative mx-auto w-3/5 max-w-80 sm:w-1/2 lg:w-2/3">

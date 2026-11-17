@@ -1,6 +1,8 @@
 import { insert, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
+import { PRODUCT_DEFINITION } from "./shared";
+
 const brand = {
     content: {
         claims: {
@@ -163,6 +165,97 @@ const brand = {
             pt: "Baixar tudo",
             fr: "Tout télécharger",
         }),
+        facts: {
+            copied: t({ en: "Copied", de: "Kopiert", es: "Copiado", pt: "Copiado", fr: "Copié" }),
+            copy: t({
+                en: "Copy as text",
+                de: "Als Text kopieren",
+                es: "Copiar como texto",
+                pt: "Copiar como texto",
+                fr: "Copier en texte",
+            }),
+            definition: PRODUCT_DEFINITION,
+            labels: {
+                contact: t({ en: "Contact", de: "Kontakt", es: "Contacto", pt: "Contato", fr: "Contact" }),
+                languages: t({ en: "Languages", de: "Sprachen", es: "Idiomas", pt: "Idiomas", fr: "Langues" }),
+                launch: t({
+                    en: "On the App Store",
+                    de: "Im App Store",
+                    es: "En el App Store",
+                    pt: "Na App Store",
+                    fr: "Sur l'App Store",
+                }),
+                license: t({
+                    en: "Open source",
+                    de: "Open Source",
+                    es: "Código abierto",
+                    pt: "Código aberto",
+                    fr: "Open source",
+                }),
+                links: t({ en: "Links", de: "Links", es: "Enlaces", pt: "Links", fr: "Liens" }),
+                maker: t({ en: "Maker", de: "Entwickler", es: "Creador", pt: "Criador", fr: "Créateur" }),
+                platforms: t({
+                    en: "Platforms",
+                    de: "Plattformen",
+                    es: "Plataformas",
+                    pt: "Plataformas",
+                    fr: "Plateformes",
+                }),
+                price: t({
+                    en: "Price, US",
+                    de: "Preis, USA",
+                    es: "Precio, EE. UU.",
+                    pt: "Preço, EUA",
+                    fr: "Prix, États-Unis",
+                }),
+            },
+            languages: t({
+                en: "English, Spanish, Portuguese, French, German",
+                de: "Englisch, Spanisch, Portugiesisch, Französisch, Deutsch",
+                es: "Inglés, español, portugués, francés, alemán",
+                pt: "Inglês, espanhol, português, francês, alemão",
+                fr: "Anglais, espagnol, portugais, français, allemand",
+            }),
+            launch: insert(
+                t({
+                    en: "Since {{date}}",
+                    de: "Seit {{date}}",
+                    es: "Desde el {{date}}",
+                    pt: "Desde {{date}}",
+                    fr: "Depuis le {{date}}",
+                })
+            ),
+            license: t({
+                en: "GPL-3.0 for the app, AGPL-3.0 for the server",
+                de: "GPL-3.0 für die App, AGPL-3.0 für den Server",
+                es: "GPL-3.0 para la app, AGPL-3.0 para el servidor",
+                pt: "GPL-3.0 para o app, AGPL-3.0 para o servidor",
+                fr: "GPL-3.0 pour l'app, AGPL-3.0 pour le serveur",
+            }),
+            platforms: t({
+                en: "iPhone (iOS 18 or later), Android, and a web app with Pro",
+                de: "iPhone (iOS 18 oder neuer), Android und eine Web-App mit Pro",
+                es: "iPhone (iOS 18 o posterior), Android y una app web con Pro",
+                pt: "iPhone (iOS 18 ou posterior), Android e um app web com o Pro",
+                fr: "iPhone (iOS 18 ou version ultérieure), Android et une app web avec Pro",
+            }),
+            price: insert(
+                t({
+                    en: "Free plan, no ads on any plan. Outlayr Pro is {{monthly}} a month, {{yearly}} a year with 7 days free, or {{once}} once. Prices vary by country.",
+                    de: "Gratis-Plan, in keinem Plan Werbung. Outlayr Pro kostet {{monthly}} im Monat, {{yearly}} im Jahr mit 7 Tagen gratis oder {{once}} einmalig. Die Preise variieren je nach Land.",
+                    es: "Plan gratis, sin anuncios en ningún plan. Outlayr Pro cuesta {{monthly}} al mes, {{yearly}} al año con 7 días gratis o {{once}} una sola vez. Los precios varían según el país.",
+                    pt: "Plano grátis, sem anúncios em nenhum plano. O Outlayr Pro custa {{monthly}} por mês, {{yearly}} por ano com 7 dias grátis ou {{once}} uma única vez. Os preços variam por país.",
+                    fr: "Offre gratuite, sans publicité sur aucune offre. Outlayr Pro coûte {{monthly}} par mois, {{yearly}} par an avec 7 jours offerts, ou {{once}} en une seule fois. Les prix varient selon les pays.",
+                })
+            ),
+            title: t({
+                en: "Fact sheet",
+                de: "Steckbrief",
+                es: "Ficha técnica",
+                pt: "Ficha técnica",
+                fr: "Fiche d'identité",
+            }),
+        },
         files: {
             appIcon: t({
                 en: "App icon",

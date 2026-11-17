@@ -400,11 +400,11 @@ const home = {
         },
         plansCopy: {
             footnote: t({
-                en: "A capture is one voice entry or one receipt scan, and needs you signed in. Pro is billed monthly or yearly, or bought once, at the price your app store shows in your country.",
-                de: "Eine Erfassung ist eine Spracheingabe oder ein Belegscan und setzt voraus, dass du angemeldet bist. Pro wird monatlich oder jährlich abgerechnet oder einmalig gekauft, zum Preis, den dein App Store in deinem Land zeigt.",
-                es: "Una captura es un registro por voz o un escaneo de recibo, y requiere que hayas iniciado sesión. Pro se cobra al mes o al año, o se compra una sola vez, al precio que muestra tu tienda de apps en tu país.",
-                pt: "Uma captura é um lançamento por voz ou um escaneamento de recibo, e exige que você tenha entrado na sua conta. O Pro é cobrado por mês ou por ano, ou comprado uma vez só, pelo preço que sua loja de apps mostra no seu país.",
-                fr: "Une capture correspond à une saisie vocale ou à un scan de ticket, et nécessite d'être connecté. Pro est facturé au mois ou à l'année, ou acheté en une fois, au prix affiché par votre boutique d'apps dans votre pays.",
+                en: "A capture is one voice clip, one receipt photo, or one installment plan import of up to 5 screenshots, and needs you signed in. Pro is billed monthly or yearly, or bought once, at the price your app store shows in your country.",
+                de: "Eine Erfassung ist ein Sprachclip, ein Belegfoto oder ein Import von Ratenplänen mit bis zu 5 Screenshots und setzt voraus, dass du angemeldet bist. Pro wird monatlich oder jährlich abgerechnet oder einmalig gekauft, zum Preis, den dein App Store in deinem Land zeigt.",
+                es: "Una captura es un clip de voz, una foto de un recibo o una importación de planes de cuotas de hasta 5 capturas de pantalla, y requiere que hayas iniciado sesión. Pro se cobra al mes o al año, o se compra una sola vez, al precio que muestra tu tienda de apps en tu país.",
+                pt: "Uma captura é um áudio de voz, uma foto de recibo ou uma importação de parcelamentos de até 5 capturas de tela, e exige que você tenha entrado na sua conta. O Pro é cobrado por mês ou por ano, ou comprado uma vez só, pelo preço que sua loja de apps mostra no seu país.",
+                fr: "Une capture correspond à un extrait vocal, une photo de ticket ou un import d’échéanciers d’au plus 5 captures d’écran, et nécessite d'être connecté. Pro est facturé au mois ou à l'année, ou acheté en une fois, au prix affiché par votre boutique d'apps dans votre pays.",
             }),
             lead: t({
                 en: "The tracker is free. Pro lifts the limits and adds sync.",
