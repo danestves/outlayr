@@ -34,11 +34,10 @@ export function ScheduleTile({ name, seed, size = "lg" }: { name: string; seed: 
     const { ledger } = useDashboard();
     const category = ledger.books.categories.find((row) => row.localId === seed.categoryId);
     const look = entryLook(seed, category);
-    const imageUrl = photoSrc(look.imageKey);
-    if (imageUrl || !(look.icon || look.emoji)) {
-        return <MerchantTile imageUrl={imageUrl} name={name || "?"} size={size} />;
+    if (look.icon || look.emoji) {
+        return <LookTile look={look} plain size={size} />;
     }
-    return <LookTile look={look} plain size={size} />;
+    return <MerchantTile imageUrl={photoSrc(look.imageKey)} name={name || "?"} size={size} />;
 }
 
 export function NameCell({ name, seed }: { name: string; seed: TileSeed }) {
