@@ -80,7 +80,7 @@ export function PeriodChip() {
 }
 
 export function AccountsChip({ quiet }: { quiet: boolean }) {
-    const { filters, ledger, photos, setFilters } = useDashboard();
+    const { filters, ledger, setFilters } = useDashboard();
     const { filters: copy } = useIntlayer("dashboard");
     const { money } = useDisplayFormat();
     const accounts = useMemo(() => openAccounts(ledger.books), [ledger.books]);
@@ -113,7 +113,7 @@ export function AccountsChip({ quiet }: { quiet: boolean }) {
                                     setFilters({ accounts: toggledAccounts(filters.accounts, account.localId) })
                                 }
                             />
-                            <AccountTile account={accountLook(account)} photos={photos} size="sm" />
+                            <AccountTile account={accountLook(account)} size="sm" />
                             <span className="min-w-0 truncate">{account.name}</span>
                             <span
                                 className={`${FIGURE} text-muted-foreground ml-auto pl-2 text-[13px] whitespace-nowrap`}

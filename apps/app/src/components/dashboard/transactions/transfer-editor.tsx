@@ -78,7 +78,7 @@ export function TransferEditor({
     doc: TransferDoc;
     onDelete: () => void;
 }) {
-    const { ledger, photos } = useDashboard();
+    const { ledger } = useDashboard();
     const committer = useLedgerCommitter();
     const { bulk, detail, form } = useIntlayer("dashboard-transactions");
     const { locale } = useExchangeLocale();
@@ -162,7 +162,7 @@ export function TransferEditor({
             (row) => (row.localId === values.fromId || row.localId === values.toId) && row.archivedAt != null
         ),
     ].map((row) => ({
-        icon: <AccountTile account={accountLook(row)} photos={photos} size="sm" />,
+        icon: <AccountTile account={accountLook(row)} size="sm" />,
         label: row.name,
         value: row.localId,
     }));

@@ -14,6 +14,7 @@ import { Route as HealthRouteImport } from './routes/health'
 import { Route as AccountAppRouteImport } from './routes/_account/_app'
 import { Route as AccountConnectRouteImport } from './routes/_account/connect'
 import { Route as AccountLoginRouteImport } from './routes/_account/login'
+import { Route as PhotosSplatRouteImport } from './routes/photos/$'
 import { Route as AccountAppIndexRouteImport } from './routes/_account/_app.index'
 import { Route as AccountAppImportRouteImport } from './routes/_account/_app.import'
 import { Route as AccountAppInsightsRouteImport } from './routes/_account/_app.insights'
@@ -85,6 +86,11 @@ const AccountLoginRoute = AccountLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => AccountRoute,
+} as any)
+const PhotosSplatRoute = PhotosSplatRouteImport.update({
+  id: '/photos/$',
+  path: '/photos/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AccountAppIndexRoute = AccountAppIndexRouteImport.update({
   id: '/',
@@ -353,6 +359,7 @@ export interface FileRoutesByFullPath {
   '/health': typeof HealthRoute
   '/connect': typeof AccountConnectRoute
   '/login': typeof AccountLoginRoute
+  '/photos/$': typeof PhotosSplatRoute
   '/import': typeof AccountAppImportRouteWithChildren
   '/insights': typeof AccountAppInsightsRouteWithChildren
   '/onboarding': typeof AccountAppOnboardingRoute
@@ -406,6 +413,7 @@ export interface FileRoutesByTo {
   '/health': typeof HealthRoute
   '/connect': typeof AccountConnectRoute
   '/login': typeof AccountLoginRoute
+  '/photos/$': typeof PhotosSplatRoute
   '/onboarding': typeof AccountAppOnboardingRoute
   '/recurring': typeof AccountAppRecurringRoute
   '/rules': typeof AccountAppRulesRoute
@@ -458,6 +466,7 @@ export interface FileRoutesById {
   '/_account/_app': typeof AccountAppRouteWithChildren
   '/_account/connect': typeof AccountConnectRoute
   '/_account/login': typeof AccountLoginRoute
+  '/photos/$': typeof PhotosSplatRoute
   '/_account/_app/import': typeof AccountAppImportRouteWithChildren
   '/_account/_app/insights': typeof AccountAppInsightsRouteWithChildren
   '/_account/_app/onboarding': typeof AccountAppOnboardingRoute
@@ -514,6 +523,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/connect'
     | '/login'
+    | '/photos/$'
     | '/import'
     | '/insights'
     | '/onboarding'
@@ -567,6 +577,7 @@ export interface FileRouteTypes {
     | '/health'
     | '/connect'
     | '/login'
+    | '/photos/$'
     | '/onboarding'
     | '/recurring'
     | '/rules'
@@ -618,6 +629,7 @@ export interface FileRouteTypes {
     | '/_account/_app'
     | '/_account/connect'
     | '/_account/login'
+    | '/photos/$'
     | '/_account/_app/import'
     | '/_account/_app/insights'
     | '/_account/_app/onboarding'
@@ -671,6 +683,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AccountRoute: typeof AccountRouteWithChildren
   HealthRoute: typeof HealthRoute
+  PhotosSplatRoute: typeof PhotosSplatRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -710,6 +723,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/login'
       preLoaderRoute: typeof AccountLoginRouteImport
       parentRoute: typeof AccountRoute
+    }
+    '/photos/$': {
+      id: '/photos/$'
+      path: '/photos/$'
+      fullPath: '/photos/$'
+      preLoaderRoute: typeof PhotosSplatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_account/_app/': {
       id: '/_account/_app/'
@@ -1201,6 +1221,7 @@ const AccountRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AccountRoute: AccountRouteWithChildren,
   HealthRoute: HealthRoute,
+  PhotosSplatRoute: PhotosSplatRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

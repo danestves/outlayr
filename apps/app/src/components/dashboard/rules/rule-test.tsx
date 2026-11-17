@@ -5,9 +5,9 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { MerchantTile } from "@/components/ledger/tiles";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { photoSrc } from "@/lib/photo-src";
 import type { Rule, Run } from "@/lib/rules";
 
-import { useImageUrls } from "../home/catalog";
 import { QuietTable } from "../home/setup";
 import type { RulesData } from "./data";
 import { CategoryBadge, FIGURE, HEAD, LIT, TagMarks, useShortDay } from "./parts";
@@ -39,7 +39,6 @@ export function RuleTest({ data, onBack, rule, run }: { data: RulesData; onBack:
     const { ledger } = useDashboard();
     const { money } = useDisplayFormat();
     const shortDay = useShortDay();
-    const photos = useImageUrls([...new Set(run.matched.flatMap((entry) => entry.imageKey ?? []))]);
     if (run.matched.length === 0) {
         const [only] = rule.conditions;
         const named = rule.conditions.length === 1 && only && only.field !== "amount" && only.value !== "";
@@ -98,10 +97,7 @@ export function RuleTest({ data, onBack, rule, run }: { data: RulesData; onBack:
                                 </Table.Cell>
                                 <Table.Cell className={CELL}>
                                     <div className="flex items-center gap-2.5 text-sm font-medium">
-                                        <MerchantTile
-                                            imageUrl={entry.imageKey ? photos.get(entry.imageKey) : undefined}
-                                            name={entry.note}
-                                        />
+                                        <MerchantTile imageUrl={photoSrc(entry.imageKey)} name={entry.note} />
                                         <span className="max-w-44 truncate">{entry.note}</span>
                                     </div>
                                 </Table.Cell>

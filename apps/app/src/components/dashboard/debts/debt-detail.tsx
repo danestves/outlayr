@@ -240,7 +240,6 @@ function ProgressCard({ row }: { row: DebtRow }) {
 }
 
 function AccountCell({ accounts, movement }: { accounts: readonly AccountRow[]; movement: Movement }) {
-    const { photos } = useDashboard();
     const { detail } = useIntlayer("dashboard-debts");
     if (movement.kind === "boughtOnCredit" || movement.kind === "soldOnCredit") {
         return <span className="text-muted-foreground">–</span>;
@@ -251,7 +250,7 @@ function AccountCell({ accounts, movement }: { accounts: readonly AccountRow[]; 
     }
     return (
         <span className="flex min-w-0 items-center gap-2">
-            <AccountTile account={account.look} photos={photos} size="sm" />
+            <AccountTile account={account.look} size="sm" />
             <span className="truncate">{account.name}</span>
         </span>
     );

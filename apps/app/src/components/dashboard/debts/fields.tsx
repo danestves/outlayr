@@ -13,7 +13,6 @@ import { useIntlayer } from "react-intlayer";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import type { AccountRow } from "@/components/dashboard/accounts/model";
 import { useDateFormat } from "@/components/dashboard/home/format";
-import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile } from "@/components/ledger/tiles";
 import { parseAmount } from "@/lib/account-writes";
 
@@ -137,7 +136,6 @@ export function AccountPick({
     value: string | null;
 }) {
     const { form } = useIntlayer("dashboard-debts");
-    const { photos } = useDashboard();
     const picked = rows.find((row) => row.id === value);
     return (
         <Select
@@ -149,17 +147,13 @@ export function AccountPick({
             value={value ?? NONE}
         >
             <Select.Trigger aria-label={label} className={picked ? "" : "text-muted-foreground"}>
-                {picked ? <AccountTile account={picked.look} photos={photos} size="sm" /> : null}
+                {picked ? <AccountTile account={picked.look} size="sm" /> : null}
                 <Select.Value />
             </Select.Trigger>
             <Select.Content className={POPUP}>
                 <Select.Item value={NONE}>{form.none}</Select.Item>
                 {rows.map((row) => (
-                    <Select.Item
-                        icon={<AccountTile account={row.look} photos={photos} size="sm" />}
-                        key={row.id}
-                        value={row.id}
-                    >
+                    <Select.Item icon={<AccountTile account={row.look} size="sm" />} key={row.id} value={row.id}>
                         {row.name}
                     </Select.Item>
                 ))}

@@ -44,9 +44,8 @@ export const peopleOf = (model: DebtsModel) => [...model.owesYou, ...model.youOw
 export const liveLine = (row: DebtRow) => (row.line?.endedOn === null ? row.line : null);
 
 export function PersonTile({ row }: { row: DebtRow }) {
-    const { photos } = useDashboard();
     if (row.card) {
-        return <AccountTile account={row.account.look} photos={photos} size="lg" />;
+        return <AccountTile account={row.account.look} size="lg" />;
     }
     return (
         <span className="bg-app-fill text-muted-foreground flex size-[26px] shrink-0 items-center justify-center rounded-full text-[11px] font-medium">

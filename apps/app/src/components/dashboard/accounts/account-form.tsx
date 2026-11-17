@@ -25,6 +25,7 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { createdAccount, editedAccount, parseAmount } from "@/lib/account-writes";
 import type { LedgerBooks } from "@/lib/ledger-books";
+import { photoSrc } from "@/lib/photo-src";
 
 import { AmountInput, amountText, CurrencyField, FlowDialog, focusNode } from "./fields";
 import { useAccountFlows } from "./flows";
@@ -213,7 +214,7 @@ export function AccountForm({
     onSwitch: (flow: AccountFlow) => void;
     type: AccountType;
 }) {
-    const { ledger, overview, photos } = useDashboard();
+    const { ledger, overview } = useDashboard();
     const committer = useLedgerCommitter();
     const { reopen } = useAccountFlows();
     const { flows } = useIntlayer("dashboard-accounts");
@@ -266,7 +267,7 @@ export function AccountForm({
     const identity = useStore(form.store, (state) => state.values.identity);
     const name = useStore(form.store, (state) => state.values.name);
     const attempted = useStore(form.store, (state) => state.submissionAttempts > 0);
-    const seenPhoto = account?.imageKey ? photos.get(account.imageKey) : undefined;
+    const seenPhoto = photoSrc(account?.imageKey);
 
     const pickType = (next: AccountType) => {
         form.setFieldValue("type", next);

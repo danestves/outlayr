@@ -22,7 +22,7 @@ const LIST = "app-shell ph-no-capture z-[60] max-h-80 overflow-y-auto";
 
 /** Category, Account and Date for the picked entries, which stay picked so another action can follow. */
 export function BulkActions({ className, ids, kinds }: { className: string; ids: string[]; kinds: boolean[] }) {
-    const { ledger, photos } = useDashboard();
+    const { ledger } = useDashboard();
     const committer = useLedgerCommitter(entryNotices);
     const { bulk, form } = useIntlayer("dashboard-transactions");
     const dayInput = useRef<HTMLInputElement>(null);
@@ -70,7 +70,7 @@ export function BulkActions({ className, ids, kinds }: { className: string; ids:
                 <Menu.Content className={LIST} sideOffset={6}>
                     {openAccounts(ledger.books).map((row) => (
                         <Menu.Item key={row.localId} onClick={() => apply(toAccount(row.localId))}>
-                            <AccountTile account={accountLook(row)} photos={photos} size="sm" />
+                            <AccountTile account={accountLook(row)} size="sm" />
                             {row.name}
                         </Menu.Item>
                     ))}

@@ -133,7 +133,6 @@ function SourcePick({
     value: string;
 }) {
     const { pay } = useIntlayer("dashboard-installments");
-    const { photos } = useDashboard();
     const format = useGoalMoney();
     const picked = sources.find((source) => source.id === value);
     const ban = <Glyph icon={BanIcon} className="text-muted-foreground" size={16} />;
@@ -144,13 +143,13 @@ function SourcePick({
     return (
         <Select items={items} onValueChange={(next) => next !== null && onPick(next)} value={value}>
             <Select.Trigger aria-label={pay.from.value}>
-                {picked ? <AccountTile account={picked.look} photos={photos} size="sm" /> : ban}
+                {picked ? <AccountTile account={picked.look} size="sm" /> : ban}
                 <Select.Value />
             </Select.Trigger>
             <Select.Content alignItemWithTrigger={false} className={POPUP}>
                 {sources.map((source) => (
                     <Select.Item
-                        icon={<AccountTile account={source.look} photos={photos} size="sm" />}
+                        icon={<AccountTile account={source.look} size="sm" />}
                         key={source.id}
                         value={source.id}
                     >

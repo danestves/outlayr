@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo } from "react";
 
-import type { Overview, PhotoUrls } from "@/components/ledger/overview";
+import type { Overview } from "@/components/ledger/overview";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { periodKeyOf, periodOf } from "@/lib/dashboard-series-period";
 import type { Period } from "@/lib/dashboard-series-period";
@@ -22,7 +22,6 @@ export interface Dashboard {
     filters: DashboardFilters;
     ledger: Ledger;
     overview: Overview;
-    photos: PhotoUrls;
     setFilters: (patch: FilterPatch) => void;
 }
 

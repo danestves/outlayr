@@ -178,7 +178,7 @@ function AccountField({
     onPick: (id: string | null) => void;
     value: string | null;
 }) {
-    const { ledger, photos } = useDashboard();
+    const { ledger } = useDashboard();
     const { purchase } = useIntlayer("dashboard-accounts");
     const cards = openAccounts(ledger.books).filter((row) => row.kind === "liability");
     const chosen = cards.find((row) => row.localId === value);
@@ -194,7 +194,7 @@ function AccountField({
                     value={value}
                 >
                     <Select.Trigger icon={CHEVRON}>
-                        {chosen ? <AccountTile account={accountLook(chosen)} photos={photos} size="sm" /> : null}
+                        {chosen ? <AccountTile account={accountLook(chosen)} size="sm" /> : null}
                         <Select.Value placeholder={purchase.pick.value} />
                     </Select.Trigger>
                     <Select.Content alignItemWithTrigger={false} className={CONTENT}>

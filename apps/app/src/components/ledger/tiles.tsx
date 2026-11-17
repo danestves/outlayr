@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 import { useLocale } from "react-intlayer";
 
 import { CATEGORY_ICONS } from "@/components/ledger/category-icons";
-import type { PhotoUrls } from "@/components/ledger/overview";
+import { photoSrc } from "@/lib/photo-src";
 import { cn } from "@/lib/utils";
 
 export const NEUTRAL_TILE = "#767676";
@@ -77,13 +77,12 @@ function SymbolGlyph({ look, size }: { look: Pick<TileLook, "emoji" | "icon">; s
 
 interface LookTileProps {
     look: TileLook;
-    photos?: PhotoUrls;
     plain?: boolean;
     size?: TileSize;
 }
 
-export function LookTile({ look, photos, plain = false, size = "md" }: LookTileProps) {
-    const imageUrl = look.imageKey ? photos?.get(look.imageKey) : undefined;
+export function LookTile({ look, plain = false, size = "md" }: LookTileProps) {
+    const imageUrl = photoSrc(look.imageKey);
     return (
         <Tile
             color={plain ? "var(--color-muted)" : (look.color ?? NEUTRAL_TILE)}
@@ -113,17 +112,9 @@ function accountInitials(account: AccountLook, locale: string) {
     return account.icon || account.emoji ? null : [...account.name.trim()][0]?.toLocaleUpperCase(locale);
 }
 
-export function AccountTile({
-    account,
-    photos,
-    size = "md",
-}: {
-    account: AccountLook;
-    photos?: PhotoUrls;
-    size?: TileSize;
-}) {
+export function AccountTile({ account, size = "md" }: { account: AccountLook; size?: TileSize }) {
     const { locale } = useLocale();
-    const imageUrl = account.imageKey ? photos?.get(account.imageKey) : undefined;
+    const imageUrl = photoSrc(account.imageKey);
     const initials = accountInitials(account, locale);
     return (
         <Tile
@@ -141,21 +132,13 @@ export function AccountTile({
     );
 }
 
-export function TransferTile({
-    from,
-    photos,
-    to,
-}: {
-    from: AccountLook | null;
-    photos?: PhotoUrls;
-    to: AccountLook | null;
-}) {
+export function TransferTile({ from, to }: { from: AccountLook | null; to: AccountLook | null }) {
     return (
         <span className="relative shrink-0">
-            {from ? <AccountTile account={from} photos={photos} size="lg" /> : <FeeTile />}
+            {from ? <AccountTile account={from} size="lg" /> : <FeeTile />}
             {to ? (
                 <span className="absolute -right-1.5 -bottom-1.5 rounded-[7px] bg-(--tile-ring) p-0.5">
-                    <AccountTile account={to} photos={photos} size="xs" />
+                    <AccountTile account={to} size="xs" />
                 </span>
             ) : null}
         </span>

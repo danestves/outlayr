@@ -23,7 +23,6 @@ import { DashboardPending } from "@/components/dashboard/pending";
 import { DashboardContext, useFilters } from "@/components/dashboard/shell/dashboard";
 import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filters";
 import type { FilterPatch } from "@/components/dashboard/shell/filters";
-import { photoSeedQuery, usePhotoUrls } from "@/components/dashboard/shell/photos";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 import { seedProfile, warmAccountState } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
@@ -60,7 +59,6 @@ export const Route = createFileRoute("/_account/_app")({
             if (import.meta.env.SSR) {
                 const seed = await serverLedger(token);
                 context.dbClient.hydrate({ collections: seed.collections });
-                context.queryClient.setQueryData(photoSeedQuery.queryKey, seed.photos);
                 seedProfile(context.queryClient, seed.profile);
             }
             await preloadLedger(context.dbClient);
@@ -228,7 +226,6 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
     const overview = useMemo(() => ledgerGlance(books, asOf), [books, asOf]);
     useTurnover(overview.nextChangeAt, setAsOf);
     const ledger = useMemo(() => prepareLedger(books, asOf), [books, asOf]);
-    const photos = usePhotoUrls(overview);
     useLiveLedger(loaded.userId);
     const filters = useFilters(search, ledger);
     const dashboard = useMemo(
@@ -236,11 +233,10 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
             filters,
             ledger,
             overview,
-            photos,
             setFilters: (patch: FilterPatch) =>
                 navigate({ resetScroll: false, search: (prev) => ({ ...prev, ...searchPatch(patch) }), to: "." }),
         }),
-        [filters, ledger, navigate, overview, photos]
+        [filters, ledger, navigate, overview]
     );
     return (
         <DashboardContext value={dashboard}>

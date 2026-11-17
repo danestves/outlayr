@@ -14,8 +14,7 @@ import MoreVerticalIcon from "@hugeicons/core-free-icons/MoreVerticalIcon";
 import SafeIcon from "@hugeicons/core-free-icons/SafeIcon";
 import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
 import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
-import { useQuery } from "@tanstack/react-query";
-import { Link, useNavigate, useRouteContext } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Badge } from "panelui-web/badge";
 import { Button } from "panelui-web/button";
 import { Frame } from "panelui-web/frame";
@@ -30,7 +29,6 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { useDateFormat, useWholeMoney, titled } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
-import { NO_PHOTOS, photoUrlsQuery, toPhotoUrls } from "@/components/dashboard/shell/photos";
 import { AccountTile, LookTile } from "@/components/ledger/tiles";
 import { archivedAccount } from "@/lib/account-writes";
 import { addDays } from "@/lib/ledger";
@@ -680,9 +678,8 @@ function CardsCard({ model, sort }: { model: ListModel; sort: AccountSort }) {
 }
 
 function UpcomingLead({ row }: { row: UpcomingRow }) {
-    const { photos } = useDashboard();
     if (row.source.kind === "charge") {
-        return <LookTile look={row.source.charge.look} photos={photos} plain size="lg" />;
+        return <LookTile look={row.source.charge.look} plain size="lg" />;
     }
     return (
         <span className={ICON_TILE}>
@@ -1025,10 +1022,6 @@ function ArchivedRows({ rows }: { rows: readonly ArchivedRow[] }) {
     const { columns, flows } = useIntlayer("dashboard-accounts");
     const { money } = useDisplayFormat();
     const date = useDateFormat();
-    const convex = useRouteContext({ from: "/_account/_app", select: (context) => context.convexQueryClient });
-    // The shell mints photos only for open accounts, so an archived logo or photo is minted when it is looked at.
-    const keys = [...new Set(rows.flatMap((row) => (row.look?.imageKey ? [row.look.imageKey] : [])))].toSorted();
-    const { data: photos = NO_PHOTOS } = useQuery({ ...photoUrlsQuery(convex, keys), select: toPhotoUrls });
     return (
         <DataTable
             density="comfortable"
@@ -1040,7 +1033,7 @@ function ArchivedRows({ rows }: { rows: readonly ArchivedRow[] }) {
                     <Cell>
                         <div className="flex min-w-0 items-center gap-2.5">
                             <span className="shrink-0 opacity-60">
-                                <AccountTile account={row.look} photos={photos} size="lg" />
+                                <AccountTile account={row.look} size="lg" />
                             </span>
                             <div className="min-w-0">
                                 <b className="text-muted-foreground block truncate text-sm leading-[18px] font-medium">

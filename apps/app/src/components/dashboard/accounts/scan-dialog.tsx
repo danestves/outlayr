@@ -135,7 +135,6 @@ function AccountPick({
     onPick: (id: string) => void;
     value: string | null;
 }) {
-    const { photos } = useDashboard();
     const { scan } = useIntlayer("dashboard-installments");
     const chosen = cards.find((row) => row.localId === value);
     return (
@@ -147,7 +146,7 @@ function AccountPick({
                 value={value}
             >
                 <Select.Trigger icon={<Glyph icon={ArrowDown01Icon} size={16} />}>
-                    {chosen ? <AccountTile account={accountLook(chosen)} photos={photos} size="sm" /> : null}
+                    {chosen ? <AccountTile account={accountLook(chosen)} size="sm" /> : null}
                     <Select.Value />
                 </Select.Trigger>
                 <Select.Content className="app-shell z-[60]">
