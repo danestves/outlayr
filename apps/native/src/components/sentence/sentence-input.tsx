@@ -19,6 +19,9 @@ const LEADING = /\bleading-\S+/g;
 // room, or the field scrolls its text sideways for a frame and its caret jumps.
 const FIELD_OVERHANG = 32;
 
+// Not "transparent": Fabric on Android reads a zero color as unset and draws the field's text in its default ink.
+const INVISIBLE_INK = "rgba(0,0,0,0.01)";
+
 interface SentenceInputProps {
     accessibilityLabel: string;
     children?: ReactNode;
@@ -70,7 +73,7 @@ export function SentenceInput({
                     onSubmitEditing={onSubmit}
                     returnKeyType="next"
                     selectionColor={colors.tint}
-                    style={{ color: "transparent", right: -FIELD_OVERHANG }}
+                    style={{ color: INVISIBLE_INK, right: -FIELD_OVERHANG }}
                     submitBehavior="submit"
                     testID="sentence-merchant-field"
                     value={value}
