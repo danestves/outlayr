@@ -75,6 +75,27 @@ export function FactList({
     );
 }
 
+export function Takeaways({ items }: { items: readonly (ReactNode & { value: string })[] }) {
+    const { labels } = useIntlayer("answers");
+    return (
+        <section aria-labelledby="takeaways" className="mt-8 max-w-[680px] delay-200" data-reveal>
+            <h2 className="text-muted font-mono text-xs" id="takeaways">
+                {labels.takeaways}
+            </h2>
+            <ol className="mt-3 flex flex-col gap-2.5">
+                {items.map((item, index) => (
+                    <li className="flex gap-3" key={item.value}>
+                        <span aria-hidden="true" className="text-tint shrink-0 pt-0.5 font-mono text-sm">
+                            {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span>{item}</span>
+                    </li>
+                ))}
+            </ol>
+        </section>
+    );
+}
+
 export function Prose({ paragraphs }: { paragraphs: readonly (ReactNode & { value: string })[] }) {
     return (
         <div className="text-muted mt-8 flex max-w-2xl flex-col gap-4 text-lg">
@@ -151,7 +172,7 @@ export function CompareTable({
 }: {
     columns: readonly { id: string; muted?: boolean; name: ReactNode }[];
     corner: string;
-    rows: readonly { cells: readonly string[]; id: string; label: ReactNode }[];
+    rows: readonly { cells: readonly string[]; id: string; label: ReactNode; strong?: boolean }[];
 }) {
     const last = columns.length - 1;
     const paired = columns.length === 2;
@@ -188,7 +209,7 @@ export function CompareTable({
                             </th>
                             {columns.map((column, index) => (
                                 <td
-                                    className={`md:table-cell md:py-4 ${column.muted ? "text-muted" : ""} ${index < last ? "md:pr-6" : ""} ${paired ? "" : "pt-2"}`}
+                                    className={`md:table-cell md:py-4 ${column.muted ? "text-muted" : ""} ${index < last ? "md:pr-6" : ""} ${paired ? "" : "pt-2"} ${item.strong ? "font-semibold" : ""}`}
                                     key={column.id}
                                 >
                                     {paired ? null : (
@@ -248,6 +269,7 @@ export function Article({
     children,
     dated,
     hub,
+    intro,
     lead,
     related,
     sections,
@@ -259,6 +281,7 @@ export function Article({
     children?: ReactNode;
     dated?: { day: Date; label: "checkedOn" | "updatedOn" };
     hub: "/compare" | "/guides" | "/tools";
+    intro?: ReactNode;
     lead: ReactNode;
     related: readonly PageRef[];
     sections: readonly ArticleSection[];
@@ -283,6 +306,7 @@ export function Article({
                     <p className="text-muted mt-6 max-w-[680px] text-lg delay-200 md:text-xl" data-reveal>
                         {lead}
                     </p>
+                    {intro}
                     <p className="text-muted mt-8 font-mono text-xs delay-300" data-reveal>
                         <LocalizedLink className="fluid hover:text-foreground" hash="maker" to="/about">
                             {labels.byline}

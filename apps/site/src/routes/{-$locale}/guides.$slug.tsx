@@ -14,6 +14,7 @@ import {
     Prose,
     Questions,
     Source,
+    Takeaways,
 } from "@/components/answers/article";
 import type { ArticleSection } from "@/components/answers/article";
 import { CanadaPlate, CasheaPlate } from "@/components/answers/guide-plates";
@@ -294,6 +295,7 @@ function Guide() {
             }
             dated={{ day: guideUpdated(slug), label: "updatedOn" }}
             hub="/guides"
+            intro={"takeaways" in guide ? <Takeaways items={guide.takeaways} /> : null}
             lead={guide.lead}
             related={guide.related}
             sections={sections}

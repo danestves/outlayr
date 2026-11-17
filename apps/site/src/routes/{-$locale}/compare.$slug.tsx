@@ -50,6 +50,11 @@ function Compare() {
         <Article
             dated={{ day: checked, label: "checkedOn" }}
             hub="/compare"
+            intro={
+                <p className="mt-4 max-w-[680px] text-lg delay-200 md:text-xl" data-reveal>
+                    {page.verdict}
+                </p>
+            }
             lead={page.lead}
             related={page.related}
             sections={[
@@ -62,11 +67,19 @@ function Compare() {
                                     { id: "rival", muted: true, name: page.rival },
                                 ]}
                                 corner={labels.feature.value}
-                                rows={page.rows.map((row) => ({
-                                    cells: [row.outlayr.value, row.rival.value],
-                                    id: row.label.value,
-                                    label: row.label,
-                                }))}
+                                rows={[
+                                    {
+                                        cells: [page.bestFor.outlayr.value, page.bestFor.rival.value],
+                                        id: "best-for",
+                                        label: labels.bestFor,
+                                        strong: true,
+                                    },
+                                    ...page.rows.map((row) => ({
+                                        cells: [row.outlayr.value, row.rival.value],
+                                        id: row.label.value,
+                                        label: row.label,
+                                    })),
+                                ]}
                             />
                             <p className="text-muted mt-4 text-sm">
                                 {labels.source({ name: page.rival.value })}{" "}
