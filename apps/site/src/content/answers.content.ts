@@ -889,6 +889,20 @@ const YNAB = {
     summary: t(RIVALS.ynab),
 };
 
+const BEST_OF = {
+    bank: t({ en: "Bank link", es: "Conexión al banco" }),
+    bankNeeded: t({ en: "Bank link needed?", es: "¿Hay que vincular el banco?" }),
+    bestFor: t({ en: "Best for", es: "Ideal para" }),
+    conversion: t({ en: "Conversion", es: "Conversión" }),
+    monthly: t({ en: "Monthly", es: "Al mes" }),
+    outlayr: t({
+        en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
+        es: "Outlayr es la app de gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+    }),
+    outlayrBank: t({ en: "No, it never links one", es: "No, nunca se conecta a uno" }),
+    yearly: t({ en: "Yearly", es: "Al año" }),
+};
+
 const answers = {
     content: {
         compare: {
@@ -7634,131 +7648,13 @@ const answers = {
                     {
                         facts: [
                             {
-                                label: LABELS.price,
-                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                label: BEST_OF.bestFor,
                                 text: t({
-                                    en: "Free to start, with in-app purchases from $0.99 to $2.99 in the US App Store, including one that unlocks a subscription limit",
-                                    es: "Gratis para empezar, con compras dentro de la app de US$0.99 a US$2.99 en el App Store de EE. UU., entre ellas una que desbloquea un límite de suscripciones",
+                                    en: "Tracking subscriptions without linking a bank",
+                                    es: "Controlar suscripciones sin vincular un banco",
                                 }),
                             },
-                            {
-                                label: LABELS.entries,
-                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
-                                text: t({
-                                    en: "Picked from hundreds of known subscriptions, or added by hand",
-                                    es: "Las eliges entre cientos de suscripciones conocidas o las agregas a mano",
-                                }),
-                            },
-                            {
-                                label: LABELS.subscriptions,
-                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
-                                text: t({
-                                    en: "What they cost each month, and a notice when a bill is due",
-                                    es: "Cuánto cuestan al mes y un aviso cuando vence un cobro",
-                                }),
-                            },
-                            {
-                                label: LABELS.currencies,
-                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
-                                text: t({
-                                    en: "Several, with exchange rates updated daily",
-                                    es: "Varias, con tasas de cambio que se actualizan a diario",
-                                }),
-                            },
-                            {
-                                label: LABELS.platforms,
-                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
-                                text: "iPhone",
-                            },
-                            {
-                                label: t({ en: "Privacy", es: "Privacidad" }),
-                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
-                                text: t({
-                                    en: "Its listing describes no bank or email connection. It says the app may collect identifiers, purchase history, usage data, and diagnostics",
-                                    es: "Su ficha no describe ninguna conexión con el banco ni con el correo. Dice que la app puede recopilar identificadores, historial de compras, datos de uso y diagnósticos",
-                                }),
-                            },
-                            {
-                                label: LABELS.watch,
-                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
-                                text: t({
-                                    en: "iPhone only, and you add each subscription yourself",
-                                    es: "Solo para iPhone, y agregas tú cada suscripción",
-                                }),
-                            },
-                        ],
-                        name: "Bobby",
-                        slug: "bobby",
-                        summary: t({
-                            en: "Bobby is an iPhone app that keeps a list of your subscriptions and notifies you when a bill is due.",
-                            es: "Bobby es una app para iPhone que guarda la lista de tus suscripciones y te avisa cuando vence un cobro.",
-                        }),
-                    },
-                    {
-                        facts: [
-                            {
-                                label: LABELS.price,
-                                source: "https://www.monarch.com/pricing",
-                                text: t({
-                                    en: "$14.99 a month or $99.99 a year, after a 7-day trial. Plus is $199.99 a year",
-                                    de: "14,99 $ im Monat oder 99,99 $ im Jahr, nach einer 7-tägigen Testphase. Plus kostet 199,99 $ im Jahr",
-                                    es: "US$14.99 al mes o US$99.99 al año, después de una prueba de 7 días. Plus cuesta US$199.99 al año",
-                                    pt: "US$ 14,99 por mês ou US$ 99,99 por ano, após 7 dias de teste. O Plus custa US$ 199,99 por ano",
-                                    fr: "14,99 $ US par mois ou 99,99 $ US par an, après un essai de 7 jours. Plus coûte 199,99 $ US par an",
-                                }),
-                            },
-                            {
-                                label: LABELS.entries,
-                                source: "https://www.monarch.com/features/tracking",
-                                text: t({
-                                    en: "Synced from linked accounts",
-                                    de: "Von verknüpften Konten synchronisiert",
-                                    es: "Sincronizados desde cuentas vinculadas",
-                                    pt: "Sincronizado das contas vinculadas",
-                                    fr: "Synchronisées depuis les comptes liés",
-                                }),
-                            },
-                            {
-                                label: LABELS.subscriptions,
-                                source: "https://www.monarch.com/features/tracking",
-                                text: t({
-                                    en: "Found in your transactions and shown as a list or a calendar, with reminders",
-                                    es: "Las detecta en tus movimientos y las muestra en lista o en calendario, con avisos",
-                                }),
-                            },
-                            {
-                                label: LABELS.availability,
-                                source: "https://www.monarch.com/download",
-                                text: t({ en: "The United States and Canada", es: "Estados Unidos y Canadá" }),
-                            },
-                            {
-                                label: LABELS.platforms,
-                                source: "https://www.monarch.com/download",
-                                text: t({ en: "Web, iPhone, iPad, Android", es: "Web, iPhone, iPad, Android" }),
-                            },
-                            {
-                                label: t({ en: "Privacy", es: "Privacidad" }),
-                                source: "https://www.monarch.com/pricing",
-                                text: t({
-                                    en: "Holds your transaction history from linked accounts. Monarch says it never sells your financial data",
-                                    es: "Guarda el historial de movimientos de tus cuentas vinculadas. Monarch dice que nunca vende tus datos financieros",
-                                }),
-                            },
-                            {
-                                label: LABELS.watch,
-                                source: "https://www.monarch.com/pricing",
-                                text: t({
-                                    en: "No free plan after the 7-day trial, and only in the United States and Canada",
-                                    es: "No tiene plan gratis después de la prueba de 7 días, y solo funciona en Estados Unidos y Canadá",
-                                }),
-                            },
-                        ],
-                        name: "Monarch",
-                        slug: "monarch",
-                        summary: t(RIVALS.monarch),
-                    },
-                    {
-                        facts: [
+                            { label: BEST_OF.bankNeeded, text: BEST_OF.outlayrBank },
                             { label: LABELS.price, text: OUTLAYR.price },
                             { label: LABELS.entries, text: OUTLAYR.entries },
                             { label: LABELS.subscriptions, text: OUTLAYR_SUBSCRIPTIONS },
@@ -7788,10 +7684,181 @@ const answers = {
                         ],
                         name: "Outlayr",
                         slug: "outlayr",
-                        summary: t(OUTLAYR_LEAD),
+                        summary: BEST_OF.outlayr,
                     },
                     {
                         facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                text: t({
+                                    en: "People who know what they pay for and want a plain list on iPhone",
+                                    es: "Quienes ya saben lo que pagan y quieren una lista simple en iPhone",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bankNeeded,
+                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                text: t({ en: "No", es: "No" }),
+                            },
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                text: t({
+                                    en: "Free to start, with in-app purchases from $0.99 to $2.99 in the US App Store, including one that unlocks a subscription limit",
+                                    es: "Gratis para empezar, con compras dentro de la app de US$0.99 a US$2.99 en el App Store de EE. UU., entre ellas una que desbloquea un límite de suscripciones",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                text: t({
+                                    en: "Picked from hundreds of known subscriptions, or added by hand",
+                                    es: "Las eliges entre cientos de suscripciones conocidas o las agregas a mano",
+                                }),
+                            },
+                            {
+                                label: LABELS.subscriptions,
+                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                text: t({
+                                    en: "What they cost each month, and a notice when a bill is due",
+                                    es: "Cuánto cuestan al mes y un aviso cuando vence un cobro",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                text: t({
+                                    en: "Several",
+                                    es: "Varias",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                text: "iPhone",
+                            },
+                            {
+                                label: t({ en: "Privacy", es: "Privacidad" }),
+                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                text: t({
+                                    en: "Its listing describes no bank or email connection",
+                                    es: "Su ficha no describe ninguna conexión con el banco ni con el correo",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://apps.apple.com/us/app/bobby-track-subscriptions/id1059152023",
+                                text: t({
+                                    en: "iPhone only, and you add each subscription yourself",
+                                    es: "Solo para iPhone, y agregas tú cada suscripción",
+                                }),
+                            },
+                        ],
+                        name: "Bobby",
+                        slug: "bobby",
+                        summary: t({
+                            en: "Bobby is an iPhone app that keeps a list of your subscriptions and notifies you when a bill is due.",
+                            es: "Bobby es una app para iPhone que guarda la lista de tus suscripciones y te avisa cuando vence un cobro.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://www.monarch.com/pricing",
+                                text: t({
+                                    en: "Subscriptions next to budgets and investments from linked accounts, in the US or Canada",
+                                    es: "Tus suscripciones junto a presupuestos e inversiones de cuentas vinculadas, en EE. UU. o Canadá",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bankNeeded,
+                                source: "https://help.monarch.com/hc/en-us/articles/4890751141908-Tracking-Recurring-Expenses-and-Bills",
+                                text: t({
+                                    en: "Optional. You can add accounts and recurring bills by hand; automatic detection needs linked accounts",
+                                    es: "Opcional. Puedes agregar cuentas y pagos recurrentes a mano; la detección automática necesita cuentas vinculadas",
+                                }),
+                            },
+                            {
+                                label: LABELS.price,
+                                source: "https://www.monarch.com/pricing",
+                                text: t({
+                                    en: "$14.99 a month or $99.99 a year, after a 7-day trial. Plus is $199.99 a year",
+                                    de: "14,99 $ im Monat oder 99,99 $ im Jahr, nach einer 7-tägigen Testphase. Plus kostet 199,99 $ im Jahr",
+                                    es: "US$14.99 al mes o US$99.99 al año, después de una prueba de 7 días. Plus cuesta US$199.99 al año",
+                                    pt: "US$ 14,99 por mês ou US$ 99,99 por ano, após 7 dias de teste. O Plus custa US$ 199,99 por ano",
+                                    fr: "14,99 $ US par mois ou 99,99 $ US par an, après un essai de 7 jours. Plus coûte 199,99 $ US par an",
+                                }),
+                            },
+                            {
+                                label: LABELS.entries,
+                                source: "https://www.monarch.com/",
+                                text: t({
+                                    en: "Synced from linked accounts",
+                                    de: "Von verknüpften Konten synchronisiert",
+                                    es: "Sincronizados desde cuentas vinculadas",
+                                    pt: "Sincronizado das contas vinculadas",
+                                    fr: "Synchronisées depuis les comptes liés",
+                                }),
+                            },
+                            {
+                                label: LABELS.subscriptions,
+                                source: "https://www.monarch.com/features/tracking",
+                                text: t({
+                                    en: "Found in your transactions and shown as a list or a calendar, with reminders",
+                                    es: "Las detecta en tus movimientos y las muestra en lista o en calendario, con avisos",
+                                }),
+                            },
+                            {
+                                label: LABELS.availability,
+                                source: "https://www.monarch.com/canada",
+                                text: t({ en: "The United States and Canada", es: "Estados Unidos y Canadá" }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.monarch.com/",
+                                text: t({ en: "Web, iPhone, iPad, Android", es: "Web, iPhone, iPad, Android" }),
+                            },
+                            {
+                                label: t({ en: "Privacy", es: "Privacidad" }),
+                                source: "https://www.monarch.com/pricing",
+                                text: t({
+                                    en: "Holds your transaction history from linked accounts. Monarch says it never sells your financial data",
+                                    es: "Guarda el historial de movimientos de tus cuentas vinculadas. Monarch dice que nunca vende tus datos financieros",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.monarch.com/pricing",
+                                text: t({
+                                    en: "No free plan after the 7-day trial, and only in the United States and Canada",
+                                    es: "No tiene plan gratis después de la prueba de 7 días, y solo funciona en Estados Unidos y Canadá",
+                                }),
+                            },
+                        ],
+                        name: "Monarch",
+                        slug: "monarch",
+                        summary: t(RIVALS.monarch),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://apps.apple.com/us/app/pocketguard-budget-app/id949414211",
+                                text: t({
+                                    en: "Recurring charges found in linked accounts, then canceled by you",
+                                    es: "Cobros recurrentes que encuentra en tus cuentas vinculadas, para que los canceles tú",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bankNeeded,
+                                source: "https://apps.apple.com/us/app/pocketguard-budget-app/id949414211",
+                                text: t({
+                                    en: "To find subscriptions, yes. Cash accounts work without one",
+                                    es: "Para encontrar suscripciones, sí. Las cuentas de efectivo funcionan sin banco",
+                                }),
+                            },
                             {
                                 label: LABELS.price,
                                 source: "https://apps.apple.com/us/app/pocketguard-budget-app/id949414211",
@@ -7802,15 +7869,15 @@ const answers = {
                             },
                             {
                                 label: t({ en: "Pay once", es: "Pago único" }),
-                                source: "https://pocketguard.com/pricing/",
+                                source: "https://www.pocketguard.com/pricing",
                                 text: t({
-                                    en: "Its site offers some customers a one-time plan, priced by country",
-                                    es: "Su sitio les ofrece a algunos clientes un plan de pago único, con precio según el país",
+                                    en: "Its site offers a lifetime plan you pay once, priced by location",
+                                    es: "Su sitio ofrece un plan de por vida que pagas una vez, con precio según dónde estés",
                                 }),
                             },
                             {
                                 label: LABELS.entries,
-                                source: "https://pocketguard.com/pricing/",
+                                source: "https://www.pocketguard.com/pricing",
                                 text: t({
                                     en: "Synced from linked accounts, plus cash transactions and file import",
                                     de: "Von verknüpften Konten synchronisiert, dazu Bargeldumsätze und Dateiimport",
@@ -7821,7 +7888,7 @@ const answers = {
                             },
                             {
                                 label: LABELS.subscriptions,
-                                source: "https://pocketguard.com/cancel-subscriptions/",
+                                source: "https://www.pocketguard.com/pricing",
                                 text: t({
                                     en: "Found in linked accounts. You cancel each one with the service",
                                     es: "Las encuentra en tus cuentas vinculadas. Tú cancelas cada una con el servicio",
@@ -7829,7 +7896,7 @@ const answers = {
                             },
                             {
                                 label: LABELS.availability,
-                                source: "https://pocketguard.com/",
+                                source: "https://apps.apple.com/us/app/pocketguard-budget-app/id949414211",
                                 text: t({
                                     en: "Linked accounts at institutions in the US, Canada, and the UK",
                                     es: "Cuentas vinculadas de instituciones en EE. UU., Canadá y Reino Unido",
@@ -7837,7 +7904,7 @@ const answers = {
                             },
                             {
                                 label: LABELS.platforms,
-                                source: "https://pocketguard.com/pricing/",
+                                source: "https://www.pocketguard.com/pricing",
                                 text: t({
                                     en: "Web, iPhone, Apple Watch, Android",
                                     de: "Web, iPhone, Apple Watch, Android",
@@ -7848,15 +7915,15 @@ const answers = {
                             },
                             {
                                 label: t({ en: "Privacy", es: "Privacidad" }),
-                                source: "https://pocketguard.com/security/",
+                                source: "https://apps.apple.com/us/app/pocketguard-budget-app/id949414211",
                                 text: t({
-                                    en: "Reads your transactions through Plaid, Finicity, or Salt Edge with read-only access. PocketGuard says it can't move money and doesn't sell your data",
-                                    es: "Lee tus movimientos a través de Plaid, Finicity o Salt Edge con acceso de solo lectura. PocketGuard dice que no puede mover dinero y que no vende tus datos",
+                                    en: "Reads your transactions through Plaid, Finicity, Salt Edge, or Apple Wallet with read-only access. PocketGuard says it never stores your bank login",
+                                    es: "Lee tus movimientos a través de Plaid, Finicity, Salt Edge o Apple Wallet con acceso de solo lectura. PocketGuard dice que nunca guarda tus datos de acceso al banco",
                                 }),
                             },
                             {
                                 label: LABELS.watch,
-                                source: "https://pocketguard.com/pricing/",
+                                source: "https://www.pocketguard.com/pricing",
                                 text: t({
                                     en: "No free plan after the 7-day trial, and you cancel each subscription with the service yourself",
                                     es: "No tiene plan gratis después de la prueba de 7 días, y cancelas tú cada suscripción con el servicio",
@@ -7870,6 +7937,19 @@ const answers = {
                     {
                         facts: [
                             {
+                                label: BEST_OF.bestFor,
+                                source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+                                text: t({
+                                    en: "People in the United States who want its team to cancel subscriptions for them",
+                                    es: "Quienes viven en Estados Unidos y quieren que su equipo cancele suscripciones por ellos",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bankNeeded,
+                                source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+                                text: t({ en: "Yes", es: "Sí" }),
+                            },
+                            {
                                 label: LABELS.price,
                                 source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
                                 text: t({
@@ -7882,7 +7962,7 @@ const answers = {
                             },
                             {
                                 label: LABELS.entries,
-                                source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+                                source: "https://help.rocketmoney.com/en/articles/4402227-adding-transactions-manually",
                                 text: t({
                                     en: "Synced from linked accounts. Manual transactions are a Premium feature",
                                     de: "Von verknüpften Konten synchronisiert. Manuelle Umsätze sind eine Premium-Funktion",
@@ -7893,18 +7973,18 @@ const answers = {
                             },
                             {
                                 label: LABELS.subscriptions,
-                                source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+                                source: "https://help.rocketmoney.com/en/articles/934410-how-long-does-it-take-rocket-money-to-cancel-a-subscription",
                                 text: t({
-                                    en: "Found in linked accounts. Its team cancels them for Premium members, usually in 2 to 10 days",
-                                    es: "Las encuentra en tus cuentas vinculadas. Su equipo las cancela para los miembros Premium, normalmente en 2 a 10 días",
+                                    en: "Found in linked accounts. Its team cancels them for Premium members, usually in 2 to 10 business days",
+                                    es: "Las encuentra en tus cuentas vinculadas. Su equipo las cancela para los miembros Premium, normalmente en 2 a 10 días hábiles",
                                 }),
                             },
                             {
                                 label: t({ en: "Bills", es: "Facturas" }),
-                                source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+                                source: "https://help.rocketmoney.com/en/articles/2217739-how-much-does-rocket-money-cost",
                                 text: t({
-                                    en: "Its team negotiates bills on Premium+, at no additional cost beyond the $15 a month",
-                                    es: "Su equipo negocia tus facturas con Premium+, sin costo adicional a los US$15 al mes",
+                                    en: "Since November 2, 2026, its team negotiates bills only on Premium+, with no success fee",
+                                    es: "Desde el 2 de noviembre de 2026, su equipo negocia facturas solo con Premium+, sin cobrar comisión por éxito",
                                 }),
                             },
                             {
@@ -7920,7 +8000,7 @@ const answers = {
                             },
                             {
                                 label: LABELS.platforms,
-                                source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+                                source: "https://help.rocketmoney.com/en/articles/2677184-premium-membership-features",
                                 text: t({
                                     en: "iPhone, Android. Web is a Premium feature",
                                     de: "iPhone, Android. Web ist eine Premium-Funktion",
@@ -7931,10 +8011,10 @@ const answers = {
                             },
                             {
                                 label: t({ en: "Privacy", es: "Privacidad" }),
-                                source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+                                source: "https://help.rocketmoney.com/en/articles/934647-is-rocket-money-secure",
                                 text: t({
-                                    en: "Connects through Plaid and holds your transaction history. Rocket Money says your bank credentials are never stored on its servers",
-                                    es: "Se conecta a través de Plaid y guarda el historial de tus movimientos. Rocket Money dice que tus credenciales del banco nunca se guardan en sus servidores",
+                                    en: "Connects through Plaid, which receives your bank login directly, and holds your transaction history",
+                                    es: "Se conecta a través de Plaid, que recibe directamente tus datos de acceso al banco, y guarda el historial de tus movimientos",
                                 }),
                             },
                             {
@@ -7953,6 +8033,22 @@ const answers = {
                     {
                         facts: [
                             {
+                                label: BEST_OF.bestFor,
+                                source: "https://apps.apple.com/us/app/id6758765733",
+                                text: t({
+                                    en: "Finding subscriptions in a statement file on iPhone or iPad, without linking a bank",
+                                    es: "Encontrar suscripciones en un archivo de estado de cuenta en iPhone o iPad, sin vincular un banco",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bankNeeded,
+                                source: "https://apps.apple.com/us/app/id6758765733",
+                                text: t({
+                                    en: "No, it reads a statement file you upload",
+                                    es: "No, lee un archivo de estado de cuenta que subes",
+                                }),
+                            },
+                            {
                                 label: LABELS.price,
                                 source: "https://apps.apple.com/us/app/id6758765733",
                                 text: t({
@@ -7964,8 +8060,8 @@ const answers = {
                                 label: LABELS.entries,
                                 source: "https://apps.apple.com/us/app/id6758765733",
                                 text: t({
-                                    en: "Imported from Gmail receipts, your App Store subscriptions, or a bank statement file. Statement import is a Pro feature",
-                                    es: "Se importan desde recibos de Gmail, tus suscripciones del App Store o un archivo de estado de cuenta. Importar estados de cuenta es una función Pro",
+                                    en: "Imported from your Apple subscriptions, a bank statement file (CSV or PDF), or a screenshot of your transactions. Statement import is a Pro feature",
+                                    es: "Se importan desde tus suscripciones de Apple, un archivo de estado de cuenta (CSV o PDF) o una captura de pantalla de tus movimientos. Importar estados de cuenta es una función Pro",
                                 }),
                             },
                             {
@@ -7985,8 +8081,8 @@ const answers = {
                                 label: t({ en: "Privacy", es: "Privacidad" }),
                                 source: "https://apps.apple.com/us/app/id6758765733",
                                 text: t({
-                                    en: "Data stays on your device, with optional iCloud sync. Statements and receipts you import go to a service that reads them. Its privacy label says purchase history and identifiers may be used for third-party advertising",
-                                    es: "Los datos se quedan en tu dispositivo, con sincronización opcional en iCloud. Los estados de cuenta y recibos que importas van a un servicio que los lee. Su etiqueta de privacidad dice que el historial de compras y los identificadores pueden usarse para publicidad de terceros",
+                                    en: "Data stays on your device, with optional iCloud sync. Statements and receipts you import go to a service that reads them",
+                                    es: "Los datos se quedan en tu dispositivo, con sincronización opcional en iCloud. Los estados de cuenta y recibos que importas van a un servicio que los lee",
                                 }),
                             },
                             {
@@ -8001,60 +8097,17 @@ const answers = {
                         name: "Subcut",
                         slug: "subcut",
                         summary: t({
-                            en: "Subcut is an iPhone and iPad app that finds subscriptions in your Gmail receipts or a bank statement file, without linking a bank.",
-                            es: "Subcut es una app para iPhone y iPad que encuentra suscripciones en tus recibos de Gmail o en un archivo de estado de cuenta, sin vincular un banco.",
+                            en: "Subcut is an iPhone and iPad app that finds subscriptions in your Apple account or a bank statement file, without linking a bank.",
+                            es: "Subcut es una app para iPhone y iPad que encuentra suscripciones en tu cuenta de Apple o en un archivo de estado de cuenta, sin vincular un banco.",
                         }),
                     },
                 ],
-                facts: [
-                    {
-                        label: "Bobby",
-                        text: t({
-                            en: "Best if you know what you pay for and want a plain list on iPhone, with no bank or email connection",
-                            es: "Ideal si ya sabes lo que pagas y quieres una lista simple en iPhone, sin conectar el banco ni el correo",
-                        }),
-                    },
-                    {
-                        label: "Monarch",
-                        text: t({
-                            en: "Best if you want subscriptions next to budgets and investments from linked accounts, in the US or Canada",
-                            es: "Ideal si quieres tus suscripciones junto a presupuestos e inversiones de cuentas vinculadas, en EE. UU. o Canadá",
-                        }),
-                    },
-                    {
-                        label: "Outlayr",
-                        text: t({
-                            en: "Best if you want subscriptions in the same log as your daily spending, in any of 165 currencies, on a free plan",
-                            es: "Ideal si quieres tus suscripciones en el mismo registro que tus gastos del día, en cualquiera de 165 monedas, con un plan gratis",
-                        }),
-                    },
-                    {
-                        label: "PocketGuard",
-                        text: t({
-                            en: "Best if you want recurring charges found in linked accounts, then cancel them yourself",
-                            es: "Ideal si quieres que encuentre los cobros recurrentes en tus cuentas vinculadas y cancelarlos tú",
-                        }),
-                    },
-                    {
-                        label: "Rocket Money",
-                        text: t({
-                            en: "Best if you live in the United States and want its team to cancel subscriptions for you",
-                            es: "Ideal si vives en Estados Unidos y quieres que su equipo cancele suscripciones por ti",
-                        }),
-                    },
-                    {
-                        label: "Subcut",
-                        text: t({
-                            en: "Best if you use Gmail on an iPhone or iPad and want subscriptions found without linking a bank",
-                            es: "Ideal si usas Gmail en iPhone o iPad y quieres que encuentre tus suscripciones sin vincular un banco",
-                        }),
-                    },
-                ],
+                columns: [BEST_OF.bestFor, BEST_OF.bankNeeded, LABELS.price],
                 faq: [
                     {
                         answer: t({
-                            en: "It depends on whether you need the app to find your subscriptions. PocketGuard, Monarch, and Rocket Money find them in linked accounts, and in the United States Rocket Money's team can also cancel them on Premium. Subcut finds them in Gmail receipts or a statement file. Bobby and Outlayr work from a list you add yourself, and Outlayr logs each charge next to your daily spending.",
-                            es: "Depende de si necesitas que la app encuentre tus suscripciones. PocketGuard, Monarch y Rocket Money las encuentran en tus cuentas vinculadas, y en Estados Unidos el equipo de Rocket Money también puede cancelarlas con Premium. Subcut las encuentra en recibos de Gmail o en un archivo de estado de cuenta. Bobby y Outlayr funcionan con una lista que agregas tú, y Outlayr registra cada cobro junto a tus gastos diarios.",
+                            en: "It depends on whether you need the app to find your subscriptions. Outlayr is best for tracking subscriptions without linking a bank: you add each one, and it logs every charge next to your daily spending. Bobby keeps a plain list on iPhone, and Subcut finds them in a statement file. PocketGuard, Monarch, and Rocket Money find them in linked accounts, and in the United States Rocket Money's team can also cancel them on Premium.",
+                            es: "Depende de si necesitas que la app encuentre tus suscripciones. Outlayr es la mejor para controlar suscripciones sin vincular un banco: agregas cada una, y registra cada cobro junto a tus gastos diarios. Bobby lleva una lista simple en iPhone, y Subcut las encuentra en un archivo de estado de cuenta. PocketGuard, Monarch y Rocket Money las encuentran en tus cuentas vinculadas, y en Estados Unidos el equipo de Rocket Money también puede cancelarlas con Premium.",
                         }),
                         question: t({
                             en: "What is the best app to track subscriptions?",
@@ -8073,8 +8126,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "No. Bobby and Outlayr work from a list you add yourself, and Subcut can read Gmail receipts or a statement file instead. The apps that find subscriptions in linked accounts are Rocket Money, Monarch, and PocketGuard.",
-                            es: "No. Bobby y Outlayr funcionan con una lista que agregas tú, y Subcut puede leer recibos de Gmail o un archivo de estado de cuenta. Las apps que encuentran suscripciones en cuentas vinculadas son Rocket Money, Monarch y PocketGuard.",
+                            en: "No. Bobby and Outlayr work from a list you add yourself, and Subcut can read a statement file or a screenshot instead. The apps that find subscriptions in linked accounts are Rocket Money, Monarch, and PocketGuard.",
+                            es: "No. Bobby y Outlayr funcionan con una lista que agregas tú, y Subcut puede leer un archivo de estado de cuenta o una captura de pantalla. Las apps que encuentran suscripciones en cuentas vinculadas son Rocket Money, Monarch y PocketGuard.",
                         }),
                         question: t({
                             en: "Do I have to link my bank to track subscriptions?",
@@ -8103,13 +8156,13 @@ const answers = {
                     },
                 ],
                 lead: t({
-                    en: "The best subscription tracker depends on how you want charges found. To catch the ones you forgot, link a bank with Rocket Money (US only), Monarch, or PocketGuard, or read your Gmail receipts with Subcut. To share neither, keep your own list in Bobby or Outlayr. Outlayr is ours, and it doesn't find subscriptions for you, cancel them, or negotiate bills.",
-                    es: "La mejor app para controlar suscripciones depende de cómo quieres encontrar los cobros. Para dar con los que olvidaste, vincula tu banco con Rocket Money (solo en EE. UU.), Monarch o PocketGuard, o lee tus recibos de Gmail con Subcut. Para no compartir ninguno de los dos, lleva tu propia lista en Bobby o en Outlayr. Outlayr es nuestra, y no encuentra suscripciones por ti, no las cancela ni negocia facturas.",
+                    en: "The best subscription tracker depends on how you want charges found. To catch the ones you forgot, Rocket Money (US only), Monarch, and PocketGuard read your linked bank accounts, and Subcut reads a statement file. To share nothing, keep your own list in Outlayr or Bobby. Outlayr is ours, and it doesn't find subscriptions for you, cancel them, or negotiate bills.",
+                    es: "La mejor app para controlar suscripciones depende de cómo quieres encontrar los cobros. Para dar con los que olvidaste, Rocket Money (solo en EE. UU.), Monarch y PocketGuard leen tus cuentas bancarias vinculadas, y Subcut lee un archivo de estado de cuenta. Para no compartir nada, lleva tu propia lista en Outlayr o en Bobby. Outlayr es nuestra, y no encuentra suscripciones por ti, no las cancela ni negocia facturas.",
                 }),
                 meta: {
                     description: t({
-                        en: "Six subscription tracker apps compared by how they find charges: bank link, Gmail receipts, or your own list. Prices, free plans, and privacy. Outlayr is ours.",
-                        es: "Seis apps de suscripciones según cómo encuentran los cobros: banco, recibos de Gmail o tu propia lista. Precios, planes gratis y privacidad. Outlayr es nuestra.",
+                        en: "Six subscription tracker apps compared: who each is best for, whether it needs a bank link, price, and privacy. Outlayr is ours.",
+                        es: "Seis apps de suscripciones comparadas: para quién es cada una, si hay que vincular el banco, precio y privacidad. Outlayr es nuestra.",
                     }),
                     title: t({
                         en: "Best Subscription Tracker Apps (2026), Free and Paid",
@@ -8124,8 +8177,8 @@ const answers = {
                                 es: "Las apps que se vinculan al banco leen tus movimientos y buscan cobros que se repiten, así que encuentran las suscripciones que olvidaste, sin importar con qué tarjeta las pagas. Rocket Money, Monarch y PocketGuard funcionan así. Rocket Money puede encontrarlas gratis en Estados Unidos; Monarch y PocketGuard cuestan de US$74.99 a US$99.99 al año. A cambio, la app y su proveedor de datos ven el historial de tus movimientos, y tu banco tiene que estar soportado, lo que aquí significa EE. UU., Canadá o Reino Unido.",
                             }),
                             t({
-                                en: "Email-based apps read receipts and confirmation emails instead, so you don't share bank access. Subcut does this with Gmail and is free for up to 5 subscriptions. The tradeoff is that you give the app access to your inbox, and it can only find what sent a receipt to that address.",
-                                es: "Las apps que leen el correo revisan recibos y correos de confirmación, así que no compartes el acceso a tu banco. Subcut lo hace con Gmail y es gratis hasta 5 suscripciones. A cambio, le das a la app acceso a tu correo, y solo encuentra lo que mandó un recibo a esa dirección.",
+                                en: "File-based apps read a statement you download instead, so you don't share bank access. Subcut does this with a CSV or PDF statement on its Pro plan, and is free for up to 5 subscriptions. The tradeoff is that the statement goes to a service that reads it, and you upload a new one to catch new charges.",
+                                es: "Las apps que leen archivos revisan un estado de cuenta que descargas, así que no compartes el acceso a tu banco. Subcut lo hace con un estado de cuenta en CSV o PDF en su plan Pro, y es gratis hasta 5 suscripciones. A cambio, el estado de cuenta va a un servicio que lo lee, y tienes que subir uno nuevo para encontrar cobros nuevos.",
                             }),
                             t({
                                 en: "Manual lists like Bobby and Outlayr need no connection and work with any bank, in any country, for free or a few dollars. They share the least, but you have to know what you pay for and type it in, and a price change won't show up until you edit it.",
@@ -8138,8 +8191,8 @@ const answers = {
                         ],
                         id: t({ en: "how-to-choose", es: "como-elegir" }),
                         title: t({
-                            en: "How to choose: bank link, email, or manual list",
-                            es: "Cómo elegir: banco, correo o lista manual",
+                            en: "How to choose: bank link, statement file, or manual list",
+                            es: "Cómo elegir: banco, estado de cuenta o lista manual",
                         }),
                     },
                     {
@@ -8162,8 +8215,8 @@ const answers = {
                 ],
                 picked: [
                     t({
-                        en: "Each app here shows what your subscriptions cost, and they differ in how the subscriptions get in: from linked accounts, from email or files, or by hand. They are in alphabetical order, not ranked.",
-                        es: "Cada app de esta lista te muestra cuánto cuestan tus suscripciones, y se diferencian en cómo entran: desde cuentas vinculadas, desde el correo o archivos, o a mano. Van en orden alfabético, no por puesto.",
+                        en: "Each app here shows what your subscriptions cost, and they differ in how the subscriptions get in: from linked accounts, from files, or by hand. Outlayr is ours, so it comes first; the rest are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista te muestra cuánto cuestan tus suscripciones, y se diferencian en cómo entran: desde cuentas vinculadas, desde archivos o a mano. Outlayr es nuestra, así que va primero; las demás van en orden alfabético, no por puesto.",
                     }),
                     t({
                         en: "Every detail about the other apps was read on that app's own site, help center, or store listing on the date below the table, and links to the page it came from. These are the facts as each app states them, not results of our own testing.",
@@ -8178,14 +8231,1144 @@ const answers = {
                     "/tools/subscription-cost-calculator",
                     "/guides/subscription-tracker",
                     "/compare/rocket-money",
+                    "/guides/how-much-do-budget-apps-cost",
                 ] satisfies PageRef[],
                 sources: t({
                     en: "Each detail about the other apps links to the page it was read on",
                     es: "Los datos de las otras apps enlazan a la página donde se leyeron",
                 }),
                 title: t({
-                    en: "The best subscription tracker apps, by what you need",
-                    es: "Las mejores apps para controlar suscripciones, según lo que necesitas",
+                    en: "The best subscription tracker apps in 2026",
+                    es: "Las mejores apps para controlar suscripciones en 2026",
+                }),
+            },
+            "best-multi-currency-budget-apps": {
+                apps: [
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                text: t({
+                                    en: "Logging spending in several currencies without linking a bank",
+                                    es: "Registrar gastos en varias monedas sin vincular un banco",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                text: t({
+                                    en: "165, and you can log in any of them on the free plan",
+                                    es: "165, y puedes registrar en cualquiera de ellas con el plan gratis",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.conversion,
+                                text: t({
+                                    en: "Each entry converts at the rate from the day you paid, or one you type. Rates refresh every hour",
+                                    es: "Cada registro se convierte con la tasa del día en que pagaste, o con la que escribas. Las tasas se actualizan cada hora",
+                                }),
+                            },
+                            { label: BEST_OF.bank, text: BEST_OF.outlayrBank },
+                            { label: LABELS.price, text: OUTLAYR.price },
+                            { label: LABELS.platforms, text: OUTLAYR.platforms },
+                            {
+                                label: LABELS.watch,
+                                text: t({
+                                    en: "The free plan holds accounts in 2 currencies and auto-logs 30 Apple Pay or notification entries a month. Nothing comes from your bank",
+                                    es: "El plan gratis admite cuentas en 2 monedas y registra solos 30 pagos de Apple Pay o notificaciones al mes. Nada llega desde tu banco",
+                                }),
+                            },
+                        ],
+                        name: "Outlayr",
+                        slug: "outlayr",
+                        summary: BEST_OF.outlayr,
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://lunchmoney.app/features/",
+                                text: t({
+                                    en: "Budgeting on the web with bank imports added up in one home currency",
+                                    es: "Hacer tu presupuesto en la web con movimientos del banco sumados en una sola moneda principal",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://support.lunchmoney.app/settings/multicurrency",
+                                text: t({ en: "Over 160", es: "Más de 160" }),
+                            },
+                            {
+                                label: BEST_OF.conversion,
+                                source: "https://support.lunchmoney.app/settings/multicurrency",
+                                text: t({
+                                    en: "Rates are fetched daily, and each transaction uses the rate from its own date",
+                                    es: "Las tasas se buscan a diario, y cada movimiento usa la tasa de su propia fecha",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://support.lunchmoney.app/guides/automatic-imports",
+                                text: t({
+                                    en: "Optional, through Plaid, for banks in the US, Canada, and 17 European countries",
+                                    es: "Opcional, a través de Plaid, para bancos de EE. UU., Canadá y 17 países de Europa",
+                                }),
+                            },
+                            {
+                                label: LABELS.price,
+                                source: "https://lunchmoney.app/pricing",
+                                text: t({
+                                    en: "$10 a month, or $60 to $150 a year at a price you pick, after a 30-day trial",
+                                    es: "US$10 al mes, o de US$60 a US$150 al año según el precio que elijas, después de una prueba de 30 días",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://lunchmoney.app/features/",
+                                text: t({
+                                    en: "Web, with a companion app for iPhone and Android",
+                                    es: "Web, con una app complementaria para iPhone y Android",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://lunchmoney.app/pricing",
+                                text: t({
+                                    en: "No free plan after the trial, and the phone app is a companion to the web app",
+                                    es: "No tiene plan gratis después de la prueba, y la app del teléfono complementa a la web",
+                                }),
+                            },
+                        ],
+                        name: "Lunch Money",
+                        slug: "lunch-money",
+                        summary: t({
+                            en: "Lunch Money is a paid budgeting web app that adds up accounts in over 160 currencies in your home currency.",
+                            es: "Lunch Money es una app web de presupuesto de pago que suma cuentas en más de 160 monedas en tu moneda principal.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://monefy.com/",
+                                text: t({
+                                    en: "A simple phone tracker where you set each exchange rate yourself",
+                                    es: "Un control de gastos simple en el teléfono donde pones tú cada tasa de cambio",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://monefy.com/faq/",
+                                text: t({ en: "150+", es: "Más de 150" }),
+                            },
+                            {
+                                label: BEST_OF.conversion,
+                                source: "https://monefy.com/faq/",
+                                text: t({
+                                    en: "You type each rate with the date it starts. With no rate, it converts 1 to 1",
+                                    es: "Escribes cada tasa con la fecha en que empieza. Si no hay tasa, convierte 1 a 1",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://monefy.com/",
+                                text: t({ en: "No", es: "No" }),
+                            },
+                            {
+                                label: LABELS.price,
+                                source: "https://monefy.com/",
+                                text: t({
+                                    en: "Free, with an optional Premium upgrade",
+                                    es: "Gratis, con una mejora Premium opcional",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://monefy.com/",
+                                text: t({ en: "iPhone, Android", es: "iPhone, Android" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://monefy.com/faq/",
+                                text: t({
+                                    en: "No automatic rates: you enter each one, and a missing rate counts 1 to 1",
+                                    es: "No tiene tasas automáticas: pones cada una, y si falta una tasa cuenta 1 a 1",
+                                }),
+                            },
+                        ],
+                        name: "Monefy",
+                        slug: "monefy",
+                        summary: t({
+                            en: "Monefy is a free phone expense tracker with 150+ currencies, where you enter the exchange rates yourself.",
+                            es: "Monefy es una app gratis de gastos para el teléfono con más de 150 monedas, donde pones tú las tasas de cambio.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://www.pocketsmith.com/tour/multi-currency/",
+                                text: t({
+                                    en: "Accounts and assets in several countries, with net worth in one base currency",
+                                    es: "Cuentas y bienes en varios países, con tu patrimonio en una sola moneda base",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://www.pocketsmith.com/tour/multi-currency/",
+                                text: t({
+                                    en: "Many, plus Bitcoin, gold, and silver. No count stated",
+                                    es: "Muchas, además de Bitcoin, oro y plata. No indica cuántas",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.conversion,
+                                source: "https://www.pocketsmith.com/features/",
+                                text: t({
+                                    en: "Automatic, at daily rates, into a base currency you choose",
+                                    es: "Automática, con tasas diarias, a una moneda base que eliges",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://my.pocketsmith.com/plans",
+                                text: t({
+                                    en: "Optional. Foundation connects 6 banks from 1 country, and higher plans connect banks in every country",
+                                    es: "Opcional. Foundation conecta 6 bancos de 1 país, y los planes superiores conectan bancos de todos los países",
+                                }),
+                            },
+                            {
+                                label: LABELS.price,
+                                source: "https://my.pocketsmith.com/plans",
+                                text: t({
+                                    en: "Free for 2 accounts. Foundation is $14.95 a month, or $9.99 a month billed yearly. Flourish and Fortune cost more",
+                                    es: "Gratis para 2 cuentas. Foundation cuesta US$14.95 al mes, o US$9.99 al mes con pago anual. Flourish y Fortune cuestan más",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.pocketsmith.com/mobile-app/",
+                                text: t({
+                                    en: "Web, with a companion app for iOS and Android",
+                                    es: "Web, con una app complementaria para iOS y Android",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://my.pocketsmith.com/plans",
+                                text: t({
+                                    en: "The free plan holds 2 accounts, and Foundation connects banks from 1 country only",
+                                    es: "El plan gratis admite 2 cuentas, y Foundation solo conecta bancos de 1 país",
+                                }),
+                            },
+                        ],
+                        name: "PocketSmith",
+                        slug: "pocketsmith",
+                        summary: t({
+                            en: "PocketSmith is a web budgeting and forecasting app that converts accounts in many currencies into a base currency at daily rates.",
+                            es: "PocketSmith es una app web de presupuesto y proyecciones que convierte cuentas en muchas monedas a una moneda base con tasas diarias.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://apps.apple.com/us/app/expense-budget-app-spendee/id635861140",
+                                text: t({
+                                    en: "Travelers who want a phone app with a wallet for each currency",
+                                    es: "Viajeros que quieren una app en el teléfono con una billetera por moneda",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://www.spendee.com/help/currency-exchange-rate/",
+                                text: t({
+                                    en: "Several, one per wallet. No count stated",
+                                    es: "Varias, una por billetera. No indica cuántas",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.conversion,
+                                source: "https://www.spendee.com/help/currency-exchange-rate/",
+                                text: t({
+                                    en: "Fills in the current rate when you add a transaction, and you can type your own",
+                                    es: "Pone la tasa del momento cuando agregas un movimiento, y puedes escribir la tuya",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://www.spendee.com/help/connect-bank-account/",
+                                text: t({
+                                    en: "Optional, on Premium, with over 9,000 banks",
+                                    es: "Opcional, con Premium, con más de 9,000 bancos",
+                                }),
+                            },
+                            {
+                                label: LABELS.price,
+                                source: "https://www.spendee.com/pricing",
+                                text: t({
+                                    en: "Free for one cash wallet. Plus is $3.99 a month or $27.99 a year, and Premium $7.99 a month or $44.99 a year",
+                                    es: "Gratis para una billetera de efectivo. Plus cuesta US$3.99 al mes o US$27.99 al año, y Premium US$7.99 al mes o US$44.99 al año",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://www.spendee.com/",
+                                text: t({
+                                    en: "Web, iPhone, iPad, Android",
+                                    es: "Web, iPhone, iPad, Android",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.spendee.com/help/currency-exchange-rate/",
+                                text: t({
+                                    en: "The free plan has one cash wallet, and a wallet's currency can't be changed later",
+                                    es: "El plan gratis tiene una sola billetera de efectivo, y la moneda de una billetera no se puede cambiar después",
+                                }),
+                            },
+                        ],
+                        name: "Spendee",
+                        slug: "spendee",
+                        summary: t({
+                            en: "Spendee is a budget app for phones and the web where each wallet keeps its own currency.",
+                            es: "Spendee es una app de presupuesto para el teléfono y la web donde cada billetera tiene su propia moneda.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://toshl.com/currencies/",
+                                text: t({
+                                    en: "Many currencies, crypto included, with rates that refresh every hour",
+                                    es: "Muchas monedas, incluidas criptomonedas, con tasas que se actualizan cada hora",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://apps.apple.com/us/app/toshl-finance-best-budget/id921590251",
+                                text: t({
+                                    en: "Almost 200, including cryptocurrencies",
+                                    es: "Casi 200, incluidas criptomonedas",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.conversion,
+                                source: "https://toshl.com/currencies/",
+                                text: t({
+                                    en: "Rates refresh every hour, a past date uses that day's rate, and you can set your own",
+                                    es: "Las tasas se actualizan cada hora, una fecha pasada usa la tasa de ese día, y puedes poner la tuya",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://toshl.com/pricing/",
+                                text: t({
+                                    en: "Optional, on the Medici plan",
+                                    es: "Opcional, con el plan Medici",
+                                }),
+                            },
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/us/app/toshl-finance-best-budget/id921590251",
+                                text: t({
+                                    en: "Free for 2 accounts. Pro is $2.99 a month or $19.99 a year, and Medici $4.99 a month or $39.99 a year in the US App Store",
+                                    es: "Gratis para 2 cuentas. Pro cuesta US$2.99 al mes o US$19.99 al año, y Medici US$4.99 al mes o US$39.99 al año en el App Store de EE. UU.",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://toshl.com/pricing/",
+                                text: t({ en: "Web, iPhone, Android", es: "Web, iPhone, Android" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://toshl.com/pricing/",
+                                text: t({
+                                    en: "The free plan holds 2 accounts and 2 budgets, and bank sync needs Medici",
+                                    es: "El plan gratis admite 2 cuentas y 2 presupuestos, y la sincronización con el banco requiere Medici",
+                                }),
+                            },
+                        ],
+                        name: "Toshl Finance",
+                        slug: "toshl",
+                        summary: t({
+                            en: "Toshl Finance is a budget app for phones and the web with almost 200 currencies and hourly exchange rates.",
+                            es: "Toshl Finance es una app de presupuesto para el teléfono y la web con casi 200 monedas y tasas de cambio que se actualizan cada hora.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://apps.apple.com/us/app/wallet-daily-budget-profit/id1032467659",
+                                text: t({
+                                    en: "Bank sync across accounts in different currencies, with sharing for a family",
+                                    es: "Sincronizar con el banco cuentas en distintas monedas, y compartirlas con la familia",
+                                }),
+                            },
+                            {
+                                label: LABELS.currencies,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "Full multi-currency support. No count stated",
+                                    es: "Soporte completo para varias monedas. No indica cuántas",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.conversion,
+                                source: "https://help.budgetbakers.com/wallet/a/change-the-main-currency-9663226850706",
+                                text: t({
+                                    en: "Exchange rates are calculated automatically, and each record takes the currency of its account",
+                                    es: "Las tasas de cambio se calculan solas, y cada registro toma la moneda de su cuenta",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({
+                                    en: "Optional, on Premium, with over 15,000 institutions",
+                                    es: "Opcional, con Premium, con más de 15,000 instituciones",
+                                }),
+                            },
+                            {
+                                label: LABELS.price,
+                                source: "https://apps.apple.com/us/app/wallet-daily-budget-profit/id1032467659",
+                                text: t({
+                                    en: "Free for manual tracking. Premium purchases in the US App Store run from $5.99 to $49.99, including Lifetime Premium at $49.99",
+                                    es: "Gratis para registrar a mano. Las compras Premium en el App Store de EE. UU. van de US$5.99 a US$49.99, incluido Premium de por vida a US$49.99",
+                                }),
+                            },
+                            {
+                                label: LABELS.platforms,
+                                source: "https://budgetbakers.com/en/products/wallet/",
+                                text: t({ en: "Web, iPhone, Android", es: "Web, iPhone, Android" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://help.budgetbakers.com/wallet/a/change-the-main-currency-9663226850706",
+                                text: t({
+                                    en: "The main currency can't be changed without deleting your data and starting over",
+                                    es: "La moneda principal no se puede cambiar sin borrar tus datos y empezar de cero",
+                                }),
+                            },
+                        ],
+                        name: "Wallet",
+                        slug: "wallet",
+                        summary: t({
+                            en: "Wallet by BudgetBakers is a budget app for phones and the web that converts between currencies automatically, with bank sync on Premium.",
+                            es: "Wallet de BudgetBakers es una app de presupuesto para el teléfono y la web que convierte entre monedas sola, con sincronización bancaria en Premium.",
+                        }),
+                    },
+                ],
+                columns: [BEST_OF.bestFor, LABELS.currencies, BEST_OF.conversion, BEST_OF.bank, LABELS.price],
+                faq: [
+                    {
+                        answer: t({
+                            en: "It depends on how you want rates and transactions handled. Lunch Money and PocketSmith convert bank imports into one home currency on the web. Toshl Finance has almost 200 currencies with hourly rates, and Wallet converts automatically with bank sync on Premium. Outlayr logs each purchase in any of 165 currencies at the rate from the day you paid, without linking a bank.",
+                            es: "Depende de cómo quieres manejar las tasas y los movimientos. Lunch Money y PocketSmith convierten los movimientos del banco a una sola moneda principal en la web. Toshl Finance tiene casi 200 monedas con tasas que se actualizan cada hora, y Wallet convierte solo, con sincronización bancaria en Premium. Outlayr registra cada compra en cualquiera de 165 monedas con la tasa del día en que pagaste, sin vincular un banco.",
+                        }),
+                        question: t({
+                            en: "What is the best budget app for multiple currencies?",
+                            es: "¿Cuál es la mejor app de presupuesto para varias monedas?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Outlayr lets you log in any of its 165 currencies on the free plan, with accounts in 2 currencies. Monefy's core app is free with 150+ currencies, but you type each rate. Toshl Finance and PocketSmith are free for 2 accounts, Spendee for one wallet, and Wallet for manual tracking. Lunch Money has a 30-day trial and no free plan.",
+                            es: "Sí. Outlayr te deja registrar en cualquiera de sus 165 monedas con el plan gratis, con cuentas en 2 monedas. La app básica de Monefy es gratis con más de 150 monedas, pero escribes tú cada tasa. Toshl Finance y PocketSmith son gratis para 2 cuentas, Spendee para una billetera y Wallet para registrar a mano. Lunch Money tiene una prueba de 30 días y no tiene plan gratis.",
+                        }),
+                        question: t({
+                            en: "Is there a free multi-currency budget app?",
+                            es: "¿Hay una app de presupuesto gratis para varias monedas?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. Outlayr and Monefy never link a bank. In Lunch Money, PocketSmith, Spendee, Toshl Finance, and Wallet the bank link is optional, and in most of them it comes with a paid plan.",
+                            es: "No. Outlayr y Monefy nunca se vinculan a un banco. En Lunch Money, PocketSmith, Spendee, Toshl Finance y Wallet la conexión al banco es opcional, y en la mayoría viene con un plan de pago.",
+                        }),
+                        question: t({
+                            en: "Do I have to link my bank to budget in several currencies?",
+                            es: "¿Tengo que vincular mi banco para llevar un presupuesto en varias monedas?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Outlayr and Lunch Money use the rate from the date of each purchase, so entries you already logged don't move when the rate does, and Toshl Finance suggests the saved rate for a past date. Outlayr, Spendee, and Toshl Finance also let you type the rate you actually got. Monefy uses only the rates you enter.",
+                            es: "Outlayr y Lunch Money usan la tasa de la fecha de cada compra, así que lo que ya registraste no cambia cuando la tasa se mueve, y Toshl Finance sugiere la tasa guardada para una fecha pasada. Outlayr, Spendee y Toshl Finance también te dejan escribir la tasa que te dieron. Monefy solo usa las tasas que pones tú.",
+                        }),
+                        question: t({
+                            en: "Which exchange rate do these apps use?",
+                            es: "¿Qué tasa de cambio usan estas apps?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "The best multi-currency budget app depends on who does the converting. Lunch Money, PocketSmith, Toshl Finance, Spendee, and Wallet convert for you and can link a bank. Monefy has you type each rate. Outlayr logs each purchase in any of 165 currencies at the rate from the day you paid, and never links your bank. Outlayr is ours.",
+                    es: "La mejor app de presupuesto para varias monedas depende de quién hace la conversión. Lunch Money, PocketSmith, Toshl Finance, Spendee y Wallet convierten por ti y pueden vincular un banco. En Monefy escribes tú cada tasa. Outlayr registra cada compra en cualquiera de 165 monedas con la tasa del día en que pagaste, y nunca se conecta a tu banco. Outlayr es nuestra.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Seven multi-currency budget apps compared: currencies, how conversion works, bank link, and price, each detail linked to its source. Outlayr is ours.",
+                        es: "Siete apps de presupuesto para varias monedas: monedas, cómo convierten, conexión al banco y precio, cada dato enlazado a su fuente. Outlayr es nuestra.",
+                    }),
+                    title: t({
+                        en: "Best Multi-Currency Budget Apps (2026)",
+                        es: "Mejores apps de presupuesto multimoneda (2026)",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Check three things. First, the rate: an app that converts at the rate from the day you paid keeps old entries steady, while one that converts at today's rate moves your past totals. Second, whether you can type the rate you actually got, which matters when a card or exchange house charges a different rate than the market. Third, whether each account keeps its own currency, so a dollar card and cash in euros stay apart.",
+                                es: "Revisa tres cosas. Primero, la tasa: una app que convierte con la tasa del día en que pagaste mantiene firmes los registros viejos, mientras que una que convierte con la tasa de hoy mueve tus totales pasados. Segundo, si puedes escribir la tasa que te dieron, algo importante cuando una tarjeta o una casa de cambio cobra una tasa distinta a la del mercado. Tercero, si cada cuenta tiene su propia moneda, para que una tarjeta en dólares y el efectivo en euros no se mezclen.",
+                            }),
+                            t({
+                                en: "Then decide on the bank link. If your bank is supported and you want transactions imported, Lunch Money, PocketSmith, Wallet, Spendee, and Toshl Finance offer it, mostly on paid plans. If your banks aren't supported, or you'd rather not share access, an app that never links one, like Outlayr or Monefy, works the same in any country.",
+                                es: "Después decide lo de la conexión al banco. Si tu banco está soportado y quieres que los movimientos lleguen solos, Lunch Money, PocketSmith, Wallet, Spendee y Toshl Finance lo ofrecen, casi siempre en planes de pago. Si tus bancos no están soportados, o prefieres no compartir el acceso, una app que nunca se conecta a uno, como Outlayr o Monefy, funciona igual en cualquier país.",
+                            }),
+                        ],
+                        id: t({ en: "how-to-choose", es: "como-elegir" }),
+                        title: t({
+                            en: "How to choose a multi-currency budget app",
+                            es: "Cómo elegir una app de presupuesto para varias monedas",
+                        }),
+                    },
+                ],
+                picked: [
+                    t({
+                        en: "Each app here keeps money in more than one currency and adds it up in one main currency. They differ in where rates come from and whether they link a bank. Outlayr is ours, so it comes first; the rest are in alphabetical order, not ranked.",
+                        es: "Cada app de esta lista maneja dinero en más de una moneda y lo suma en una moneda principal. Se diferencian en de dónde salen las tasas y en si se vinculan a un banco. Outlayr es nuestra, así que va primero; las demás van en orden alfabético, no por puesto.",
+                    }),
+                    t({
+                        en: "Every detail about the other apps was read on that app's own site, help center, or store listing on the date below the table, and links to the page it came from. Where an app doesn't state a number, the table says so. These are the facts as each app states them, not results of our own testing.",
+                        es: "Cada dato de las otras apps se leyó en el sitio, el centro de ayuda o la ficha de la tienda de esa app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Cuando una app no da una cifra, la tabla lo dice. Son los datos tal como los da cada app, no resultados de pruebas nuestras.",
+                    }),
+                ],
+                related: [
+                    "/guides/multi-currency-expense-tracker",
+                    "/compare/wallet",
+                    "/guides/how-much-do-budget-apps-cost",
+                ] satisfies PageRef[],
+                sources: t({
+                    en: "Each detail about the other apps links to the page it was read on",
+                    es: "Los datos de las otras apps enlazan a la página donde se leyeron",
+                }),
+                title: t({
+                    en: "The best multi-currency budget apps in 2026",
+                    es: "Las mejores apps de presupuesto multimoneda en 2026",
+                }),
+            },
+            "how-much-do-budget-apps-cost": {
+                apps: [
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                text: t({
+                                    en: "Tracking spending without linking a bank, on a free plan",
+                                    es: "Controlar tus gastos sin vincular un banco, con un plan gratis",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                text: t({
+                                    en: "Yes, with no ads. 30 voice or receipt captures every 30 days",
+                                    es: "Sí, sin anuncios. 30 capturas de voz o de recibos cada 30 días",
+                                }),
+                            },
+                            { label: BEST_OF.monthly, text: t({ en: "$7.99", es: "US$7.99" }) },
+                            {
+                                label: BEST_OF.yearly,
+                                text: t({
+                                    en: "$49.99 with 7 days free, or $129.99 once",
+                                    es: "US$49.99 con 7 días gratis, o US$129.99 en un solo pago",
+                                }),
+                            },
+                            { label: BEST_OF.bank, text: BEST_OF.outlayrBank },
+                            {
+                                label: LABELS.watch,
+                                text: t({
+                                    en: "The free plan auto-logs 30 Apple Pay or notification entries a month, and Pro prices vary by country",
+                                    es: "El plan gratis registra solos 30 pagos de Apple Pay o notificaciones al mes, y los precios de Pro cambian según el país",
+                                }),
+                            },
+                        ],
+                        name: "Outlayr",
+                        slug: "outlayr",
+                        summary: BEST_OF.outlayr,
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://www.copilot.money/",
+                                text: t({
+                                    en: "Apple users who want spending, saving, and investing in one app",
+                                    es: "Usuarios de Apple que quieren sus gastos, ahorros e inversiones en una sola app",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                source: "https://www.copilot.money/pricing",
+                                text: t({ en: "None listed", es: "No aparece ninguno" }),
+                            },
+                            {
+                                label: BEST_OF.monthly,
+                                source: "https://apps.apple.com/us/app/copilot-track-budget-money/id1447330651",
+                                text: t({ en: "$18 in the US App Store", es: "US$18 en el App Store de EE. UU." }),
+                            },
+                            {
+                                label: BEST_OF.yearly,
+                                source: "https://www.copilot.money/pricing",
+                                text: t({
+                                    en: "$109, shown as a limited-time offer instead of $119",
+                                    es: "US$109, como oferta por tiempo limitado en lugar de US$119",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://www.copilot.money/pricing",
+                                text: t({
+                                    en: "Yes, more than 16,000 banks included",
+                                    es: "Sí, incluye más de 16,000 bancos",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.copilot.money/pricing",
+                                text: t({
+                                    en: "Runs on iPhone, iPad, Mac, and the web. No Android app is listed",
+                                    es: "Funciona en iPhone, iPad, Mac y la web. No aparece una app para Android",
+                                }),
+                            },
+                        ],
+                        name: "Copilot Money",
+                        slug: "copilot",
+                        summary: t({
+                            en: "Copilot Money is a paid finance app for Apple devices and the web, with bank connections included in its one plan.",
+                            es: "Copilot Money es una app de finanzas de pago para dispositivos Apple y la web, con la conexión al banco incluida en su único plan.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://www.ramseysolutions.com/money/everydollar",
+                                text: t({
+                                    en: "Zero-based budgeting, alone or shared with a partner",
+                                    es: "Presupuesto base cero, solo o compartido con tu pareja",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                source: "https://www.ramseysolutions.com/money/everydollar",
+                                text: t({
+                                    en: "Yes, with transactions entered by hand",
+                                    es: "Sí, con los movimientos registrados a mano",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.monthly,
+                                source: "https://www.ramseysolutions.com/money/everydollar",
+                                text: t({ en: "$17.99", es: "US$17.99" }),
+                            },
+                            {
+                                label: BEST_OF.yearly,
+                                source: "https://www.ramseysolutions.com/money/everydollar",
+                                text: t({
+                                    en: "$79.99, after a 14-day Premium trial",
+                                    es: "US$79.99, después de una prueba de Premium de 14 días",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://www.ramseysolutions.com/money/everydollar",
+                                text: t({ en: "Optional, on Premium", es: "Opcional, con Premium" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.ramseysolutions.com/money/everydollar",
+                                text: t({
+                                    en: "Bank connection, the debt payoff tracker, reports, and CSV export need Premium",
+                                    es: "La conexión al banco, el seguimiento de deudas, los reportes y exportar a CSV requieren Premium",
+                                }),
+                            },
+                        ],
+                        name: "EveryDollar",
+                        slug: "everydollar",
+                        summary: t(RIVALS.everydollar),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://goodbudget.com/how-it-works/",
+                                text: t({
+                                    en: "Families and couples who budget with envelopes",
+                                    es: "Familias y parejas que hacen su presupuesto con sobres",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                source: "https://goodbudget.com/signup",
+                                text: t({
+                                    en: "Yes: 10 + 10 envelopes, 1 account, 2 devices, and 1 year of history",
+                                    es: "Sí: 10 + 10 sobres, 1 cuenta, 2 dispositivos y 1 año de historial",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.monthly,
+                                source: "https://goodbudget.com/signup",
+                                text: t({ en: "$10", es: "US$10" }),
+                            },
+                            {
+                                label: BEST_OF.yearly,
+                                source: "https://goodbudget.com/signup",
+                                text: t({ en: "$80", es: "US$80" }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://goodbudget.com/signup",
+                                text: t({
+                                    en: "Optional, US banks, on Premium",
+                                    es: "Opcional, bancos de EE. UU., con Premium",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://goodbudget.com/signup",
+                                text: t({
+                                    en: "The free plan keeps 1 year of history on 2 devices",
+                                    es: "El plan gratis guarda 1 año de historial en 2 dispositivos",
+                                }),
+                            },
+                        ],
+                        name: "Goodbudget",
+                        slug: "goodbudget",
+                        summary: t({
+                            en: "Goodbudget is an envelope budgeting app for the web, iPhone, and Android, free to start.",
+                            es: "Goodbudget es una app de presupuesto por sobres para la web, iPhone y Android, gratis para empezar.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://lunchmoney.app/features/",
+                                text: t({
+                                    en: "Budgeting on the web with bank imports in more than one currency",
+                                    es: "Hacer tu presupuesto en la web con movimientos del banco en más de una moneda",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                source: "https://lunchmoney.app/pricing",
+                                text: t({ en: "No, a 30-day trial", es: "No, una prueba de 30 días" }),
+                            },
+                            {
+                                label: BEST_OF.monthly,
+                                source: "https://lunchmoney.app/pricing",
+                                text: t({ en: "$10", es: "US$10" }),
+                            },
+                            {
+                                label: BEST_OF.yearly,
+                                source: "https://lunchmoney.app/pricing",
+                                text: t({
+                                    en: "$60 to $150, at a price you pick",
+                                    es: "De US$60 a US$150, según el precio que elijas",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://support.lunchmoney.app/guides/automatic-imports",
+                                text: t({ en: "Optional, through Plaid", es: "Opcional, a través de Plaid" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://lunchmoney.app/pricing",
+                                text: t({
+                                    en: "No free plan after the trial, and the phone app is a companion to the web app",
+                                    es: "No tiene plan gratis después de la prueba, y la app del teléfono complementa a la web",
+                                }),
+                            },
+                        ],
+                        name: "Lunch Money",
+                        slug: "lunch-money",
+                        summary: t({
+                            en: "Lunch Money is a paid budgeting web app that adds up accounts in over 160 currencies in your home currency.",
+                            es: "Lunch Money es una app web de presupuesto de pago que suma cuentas en más de 160 monedas en tu moneda principal.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://www.monarch.com/pricing",
+                                text: t({
+                                    en: "Full budgeting with a list and calendar of recurring bills, from linked accounts",
+                                    es: "Un presupuesto completo con lista y calendario de cobros recurrentes, desde cuentas vinculadas",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                source: "https://www.monarch.com/pricing",
+                                text: t({
+                                    en: "No, a 7-day trial",
+                                    es: "No, una prueba de 7 días",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.monthly,
+                                source: "https://apps.apple.com/us/app/monarch-budget-track-money/id1459319842",
+                                text: t({ en: "$14.99", es: "US$14.99" }),
+                            },
+                            {
+                                label: BEST_OF.yearly,
+                                source: "https://www.monarch.com/pricing",
+                                text: t({
+                                    en: "$99.99. Plus is $199.99",
+                                    es: "US$99.99. Plus cuesta US$199.99",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://help.monarch.com/hc/en-us/articles/4890751141908-Tracking-Recurring-Expenses-and-Bills",
+                                text: t({
+                                    en: "Optional. You can add accounts and recurring bills by hand; automatic detection needs linked accounts",
+                                    es: "Opcional. Puedes agregar cuentas y pagos recurrentes a mano; la detección automática necesita cuentas vinculadas",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.monarch.com/pricing",
+                                text: t({
+                                    en: "No free plan after the 7-day trial",
+                                    es: "No tiene plan gratis después de la prueba de 7 días",
+                                }),
+                            },
+                        ],
+                        name: "Monarch",
+                        slug: "monarch",
+                        summary: t(RIVALS.monarch),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://apps.apple.com/us/app/pocketguard-budget-app/id949414211",
+                                text: t({
+                                    en: "Budgeting from linked accounts or cash, with banks in the US, Canada, or the UK",
+                                    es: "Un presupuesto desde cuentas vinculadas o en efectivo, con bancos de EE. UU., Canadá o Reino Unido",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                source: "https://www.pocketguard.com/pricing",
+                                text: t({
+                                    en: "No, a 7-day trial",
+                                    es: "No, una prueba de 7 días",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.monthly,
+                                source: "https://www.pocketguard.com/pricing",
+                                text: t({ en: "$12.99", es: "US$12.99" }),
+                            },
+                            {
+                                label: BEST_OF.yearly,
+                                source: "https://www.pocketguard.com/pricing",
+                                text: t({
+                                    en: "$74.99, or a lifetime plan priced by location",
+                                    es: "US$74.99, o un plan de por vida con precio según dónde estés",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://apps.apple.com/us/app/pocketguard-budget-app/id949414211",
+                                text: t({
+                                    en: "Optional. Cash accounts work without one",
+                                    es: "Opcional. Las cuentas de efectivo funcionan sin banco",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.pocketguard.com/pricing",
+                                text: t({
+                                    en: "No free plan after the 7-day trial",
+                                    es: "No tiene plan gratis después de la prueba de 7 días",
+                                }),
+                            },
+                        ],
+                        name: "PocketGuard",
+                        slug: "pocketguard",
+                        summary: t(RIVALS.pocketguard),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://help.rocketmoney.com/en/articles/2217739-how-much-does-rocket-money-cost",
+                                text: t({
+                                    en: "People in the United States who want subscriptions found and canceled for them",
+                                    es: "Quienes viven en Estados Unidos y quieren que les encuentren y cancelen sus suscripciones",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                source: "https://help.rocketmoney.com/en/articles/2217739-how-much-does-rocket-money-cost",
+                                text: t({
+                                    en: "Yes: subscription tracking, spend reviews, and bill reminders",
+                                    es: "Sí: seguimiento de suscripciones, revisión de gastos y avisos de facturas",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.monthly,
+                                source: "https://www.rocketmoney.com/learn/personal-finance/how-much-does-rocket-money-cost",
+                                text: t({
+                                    en: "Premium is pay what you want, typically $7 to $14. Premium+ is $15",
+                                    es: "Premium es paga lo que quieras, normalmente de US$7 a US$14. Premium+ cuesta US$15",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.yearly,
+                                source: "https://help.rocketmoney.com/en/articles/2217739-how-much-does-rocket-money-cost",
+                                text: t({
+                                    en: "None listed",
+                                    es: "No aparece ninguno",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://help.rocketmoney.com/en/articles/79778-does-rocket-money-support-international-banks",
+                                text: t({
+                                    en: "Yes, U.S. banks only",
+                                    es: "Sí, solo bancos de EE. UU.",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://help.rocketmoney.com/en/articles/79778-does-rocket-money-support-international-banks",
+                                text: t({
+                                    en: "Only in the United States, and cancellation needs Premium",
+                                    es: "Solo en Estados Unidos, y la cancelación requiere Premium",
+                                }),
+                            },
+                        ],
+                        name: "Rocket Money",
+                        slug: "rocket-money",
+                        summary: t(RIVALS.rocketMoney),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://apps.apple.com/us/app/expense-budget-app-spendee/id635861140",
+                                text: t({
+                                    en: "A low-cost phone budget, including on trips",
+                                    es: "Un presupuesto económico en el teléfono, también de viaje",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                source: "https://www.spendee.com/pricing",
+                                text: t({
+                                    en: "Yes, one cash wallet and one budget",
+                                    es: "Sí, una billetera de efectivo y un presupuesto",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.monthly,
+                                source: "https://www.spendee.com/pricing",
+                                text: t({
+                                    en: "Plus $3.99, Premium $7.99",
+                                    es: "Plus US$3.99, Premium US$7.99",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.yearly,
+                                source: "https://www.spendee.com/pricing",
+                                text: t({
+                                    en: "Plus $27.99, Premium $44.99",
+                                    es: "Plus US$27.99, Premium US$44.99",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://www.spendee.com/help/connect-bank-account/",
+                                text: t({ en: "Optional, on Premium", es: "Opcional, con Premium" }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.spendee.com/pricing",
+                                text: t({
+                                    en: "Prices vary by country and store, and the free plan has one wallet",
+                                    es: "Los precios cambian según el país y la tienda, y el plan gratis tiene una sola billetera",
+                                }),
+                            },
+                        ],
+                        name: "Spendee",
+                        slug: "spendee",
+                        summary: t({
+                            en: "Spendee is a budget app for phones and the web, free for one wallet, with two paid plans.",
+                            es: "Spendee es una app de presupuesto para el teléfono y la web, gratis para una billetera, con dos planes de pago.",
+                        }),
+                    },
+                    {
+                        facts: [
+                            {
+                                label: BEST_OF.bestFor,
+                                source: "https://www.ynab.com/",
+                                text: t({
+                                    en: "A hands-on method where you decide what each dollar is for before you spend it",
+                                    es: "Un método práctico en el que decides para qué es cada dólar antes de gastarlo",
+                                }),
+                            },
+                            {
+                                label: LABELS.free,
+                                source: "https://www.ynab.com/pricing",
+                                text: t({ en: "No, a 34-day trial", es: "No, una prueba de 34 días" }),
+                            },
+                            {
+                                label: BEST_OF.monthly,
+                                source: "https://www.ynab.com/pricing",
+                                text: t({ en: "$14.99", es: "US$14.99" }),
+                            },
+                            {
+                                label: BEST_OF.yearly,
+                                source: "https://www.ynab.com/pricing",
+                                text: t({
+                                    en: "$109, shared with up to 6 people",
+                                    es: "US$109, para compartir con hasta 6 personas",
+                                }),
+                            },
+                            {
+                                label: BEST_OF.bank,
+                                source: "https://www.ynab.com/pricing",
+                                text: t({
+                                    en: "Direct import from select US, Canadian, UK, and EU banks, or file import",
+                                    es: "Importa directo de algunos bancos de EE. UU., Canadá, Reino Unido y la UE, o desde un archivo",
+                                }),
+                            },
+                            {
+                                label: LABELS.watch,
+                                source: "https://www.ynab.com/pricing",
+                                text: t({
+                                    en: "No free plan after the 34-day trial",
+                                    es: "No tiene plan gratis después de la prueba de 34 días",
+                                }),
+                            },
+                        ],
+                        name: "YNAB",
+                        slug: "ynab",
+                        summary: t(RIVALS.ynab),
+                    },
+                ],
+                columns: [LABELS.free, BEST_OF.monthly, BEST_OF.yearly, BEST_OF.bank],
+                faq: [
+                    {
+                        answer: t({
+                            en: "In the US, the cheapest yearly plan of each app here costs $27.99 to $109, and 5 of the 10 also have a free plan: Outlayr, EveryDollar, Goodbudget, Rocket Money, and Spendee. YNAB, Monarch, Copilot Money, PocketGuard, and Lunch Money are paid after a trial.",
+                            es: "En EE. UU., el plan anual más barato de cada app de esta lista cuesta de US$27.99 a US$109, y 5 de las 10 también tienen un plan gratis: Outlayr, EveryDollar, Goodbudget, Rocket Money y Spendee. YNAB, Monarch, Copilot Money, PocketGuard y Lunch Money son de pago después de una prueba.",
+                        }),
+                        question: t({
+                            en: "How much does a budget app cost?",
+                            es: "¿Cuánto cuesta una app de presupuesto?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes, at every app here that lists both, though Lunch Money lets you choose to pay more. YNAB is $14.99 a month or $109 a year, EveryDollar $17.99 or $79.99, Goodbudget $10 or $80, and Outlayr $7.99 or $49.99. Pay monthly only if you aren't sure you'll keep the app.",
+                            es: "Sí, en todas las apps de esta lista que muestran ambos, aunque Lunch Money te deja elegir pagar más. YNAB cuesta US$14.99 al mes o US$109 al año, EveryDollar US$17.99 o US$79.99, Goodbudget US$10 o US$80, y Outlayr US$7.99 o US$49.99. Paga mes a mes solo si no estás seguro de quedarte con la app.",
+                        }),
+                        question: t({
+                            en: "Is a yearly plan cheaper than paying monthly?",
+                            es: "¿Sale más barato el plan anual que pagar cada mes?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Rocket Money's free plan links U.S. banks to find subscriptions. EveryDollar, Goodbudget, and Spendee keep bank connection for their paid plans, and Monarch, Copilot Money, YNAB, PocketGuard, and Lunch Money have no free plan. Outlayr never links a bank on any plan.",
+                            es: "El plan gratis de Rocket Money vincula bancos de EE. UU. para encontrar suscripciones. EveryDollar, Goodbudget y Spendee dejan la conexión al banco para sus planes de pago, y Monarch, Copilot Money, YNAB, PocketGuard y Lunch Money no tienen plan gratis. Outlayr nunca se conecta a un banco, en ningún plan.",
+                        }),
+                        question: t({
+                            en: "Which free budget apps link a bank?",
+                            es: "¿Qué apps de presupuesto gratis se vinculan al banco?",
+                        }),
+                    },
+                    COST_FAQ,
+                ],
+                lead: t({
+                    en: "In the US, the cheapest yearly plan of each budget app here costs $27.99 to $109, and 5 of the 10 also have a free plan. Outlayr is ours: free, or $49.99 a year for Pro, and it never links your bank.",
+                    es: "En EE. UU., el plan anual más barato de cada app de presupuesto de esta lista cuesta de US$27.99 a US$109, y 5 de las 10 también tienen un plan gratis. Outlayr es nuestra: gratis, o US$49.99 al año por Pro, y nunca se conecta a tu banco.",
+                }),
+                meta: {
+                    description: t({
+                        en: "Current US prices for 10 budget apps in one table: free plan, monthly, yearly, and bank link, each linked to its source. Outlayr is ours.",
+                        es: "Precios actuales en EE. UU. de 10 apps de presupuesto en una tabla: plan gratis, al mes, al año y conexión al banco, cada dato enlazado a su fuente. Outlayr es nuestra.",
+                    }),
+                    title: t({
+                        en: "How Much Do Budget Apps Cost? (2026 Prices)",
+                        es: "¿Cuánto cuestan las apps de presupuesto? (precios 2026)",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "The price mostly buys the bank link. Monarch, Copilot Money, YNAB, and Lunch Money include it in their one paid plan, and EveryDollar, Goodbudget, and Spendee add it on a paid tier. Free plans cap something else: Goodbudget at 1 account and 1 year of history, Spendee at one wallet, and Outlayr at 3 accounts and 30 voice or receipt captures every 30 days.",
+                                es: "Lo que más pagas es la conexión al banco. Monarch, Copilot Money, YNAB y Lunch Money la incluyen en su único plan de pago, y EveryDollar, Goodbudget y Spendee la agregan en un plan de pago. Los planes gratis limitan otra cosa: Goodbudget a 1 cuenta y 1 año de historial, Spendee a una billetera, y Outlayr a 3 cuentas y 30 capturas de voz o de recibos cada 30 días.",
+                            }),
+                            t({
+                                en: "Prices here are what each app shows for the US. App stores set local prices in other countries, so check yours before you buy. A trial that turns into a yearly charge is easy to forget: set a reminder for the day before it ends.",
+                                es: "Los precios de esta lista son los que cada app muestra para EE. UU. Las tiendas de apps ponen precios locales en otros países, así que revisa el tuyo antes de comprar. Una prueba que se convierte en un cobro anual es fácil de olvidar: ponte un aviso para el día antes de que termine.",
+                            }),
+                        ],
+                        id: t({ en: "what-you-pay-for", es: "que-pagas" }),
+                        title: t({
+                            en: "What the price pays for",
+                            es: "Qué pagas con el precio",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Turn each plan into a yearly cost: a monthly price counts 12 times, so $14.99 a month is $179.88 a year. Add the other subscriptions you pay for to see what one more app adds. The subscription cost calculator linked below does the math, and nothing you type leaves your browser.",
+                                es: "Convierte cada plan en un costo anual: un precio mensual cuenta 12 veces, así que US$14.99 al mes son US$179.88 al año. Suma las otras suscripciones que pagas para ver cuánto agrega una app más. La calculadora de suscripciones que está enlazada abajo hace la cuenta, y nada de lo que escribes sale de tu navegador.",
+                            }),
+                        ],
+                        id: t({ en: "yearly-cost", es: "costo-anual" }),
+                        title: t({
+                            en: "How to work out what an app costs you in a year",
+                            es: "Cómo calcular cuánto te cuesta una app al año",
+                        }),
+                    },
+                ],
+                picked: [
+                    t({
+                        en: "These are 10 widely used budget and expense apps with a published US price. Outlayr is ours, so it comes first; the rest are in alphabetical order, not ranked.",
+                        es: "Son 10 apps de presupuesto y gastos muy usadas con un precio publicado para EE. UU. Outlayr es nuestra, así que va primero; las demás van en orden alfabético, no por puesto.",
+                    }),
+                    t({
+                        en: "Every price was read on the app's own pricing page, help center, or US App Store listing on the date below the table, and links to the page it came from. Where an app shows no price for a plan, the table says so. Prices change, so check the app before you pay.",
+                        es: "Cada precio se leyó en la página de precios, el centro de ayuda o la ficha del App Store de EE. UU. de la app en la fecha que aparece bajo la tabla, y enlaza a la página de donde salió. Cuando una app no muestra el precio de un plan, la tabla lo dice. Los precios cambian, así que revisa la app antes de pagar.",
+                    }),
+                ],
+                related: [
+                    "/tools/subscription-cost-calculator",
+                    "/compare/ynab",
+                    "/compare/monarch",
+                    "/compare/rocket-money",
+                ] satisfies PageRef[],
+                sources: t({
+                    en: "Each price links to the page it was read on",
+                    es: "Cada precio enlaza a la página donde se leyó",
+                }),
+                title: t({
+                    en: "How much do budget apps cost in 2026?",
+                    es: "¿Cuánto cuestan las apps de presupuesto en 2026?",
                 }),
             },
             "budget-planner": {
