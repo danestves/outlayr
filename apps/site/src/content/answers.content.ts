@@ -8995,8 +8995,8 @@ const answers = {
                         label: t({ en: "Bank linking", es: "Conexión al banco" }),
                         source: "https://www.rocketmoney.com/security",
                         text: t({
-                            en: "Through Plaid, which handles the connection. For most banks you sign in on the bank's own screen, and Rocket Money gets a token, not your password",
-                            es: "A través de Plaid, que se encarga de la conexión. Con la mayoría de los bancos inicias sesión en la pantalla del propio banco, y Rocket Money recibe un token, no tu contraseña",
+                            en: "Through Plaid, which handles the connection. Rocket Money says it never sees or stores your bank password, and works from a token Plaid receives once your bank verifies you",
+                            es: "A través de Plaid, que se encarga de la conexión. Rocket Money dice que nunca ve ni guarda la contraseña de tu banco, y trabaja con un token que Plaid recibe cuando tu banco te verifica",
                         }),
                     },
                     {
