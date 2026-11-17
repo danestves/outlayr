@@ -60,18 +60,6 @@ const decodeLegacyQueue = Schema.decodeUnknownOption(
     Schema.Array(Schema.NullOr(PendingWrite).pipe(Schema.catchDecoding(() => Effect.succeedSome(null))))
 );
 
-const decodeCaptureRecord = Schema.decodeUnknownOption(
-    Schema.fromJsonString(
-        Schema.Struct({ answer: Schema.optional(Schema.NullOr(Schema.Unknown)), queued: Schema.Boolean })
-    )
-);
-
-// The intent writes the record before it asks, so a record alone doesn't mean the server took the capture.
-export function serverTookCapture(raw: string | null | undefined): boolean {
-    const record = decodeCaptureRecord(raw);
-    return Option.isSome(record) && (record.value.answer != null || record.value.queued);
-}
-
 function parsePendingWrite(line: string): PendingWrite | null {
     try {
         return Option.getOrNull(decodePendingWrite(JSON.parse(line)));

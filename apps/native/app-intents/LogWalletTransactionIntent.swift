@@ -104,6 +104,9 @@ struct LogWalletTransactionIntent: AppIntent {
             captureId: captureId
         )
         guard await SharedStore.enqueue(write) else {
+            if firstRun {
+                await SharedStore.releasePurchase(purchase)
+            }
             let at = ranAt ?? Date().timeIntervalSince1970 * 1000
             await SharedStore.armMissedTap(at: at, merchant: name, card: cardText, after: nil)
             return .result(dialog: IntentDialog("Couldn't save this purchase."))
@@ -113,23 +116,14 @@ struct LogWalletTransactionIntent: AppIntent {
         }
 
         let shownAmount = amount.trimmingCharacters(in: .whitespacesAndNewlines)
-        let line = Self.cardLine(card: cardText, snapshot: pushSnapshot)
         // After the enqueue: a run cut short while waiting still leaves the purchase queued.
         var answer: CaptureAnswer?
         if let captureId {
-            let notice = CaptureNotice(
-                amount: shownAmount,
-                card: cardText,
-                cardLabel: line.label,
-                pickCard: line.pick,
-                walletWrite: write.id
-            )
             answer = await CaptureLookup.ask(
                 captureId: captureId,
                 name: name,
                 currency: pinnedCurrency,
-                income: side == .income,
-                notice: notice
+                income: side == .income
             )?.answer
         }
         if firstRun {
@@ -141,9 +135,13 @@ struct LogWalletTransactionIntent: AppIntent {
                 snapshot: pushSnapshot,
                 answer: answer
             )
-            var userInfo: [AnyHashable: Any] = ["walletWrite": write.id, "pickCard": push.pickCard]
+            // The notification extension rebuilds this one from these keys when the queued answer is pushed.
+            var userInfo: [AnyHashable: Any] = ["amount": shownAmount, "walletWrite": write.id, "pickCard": push.pickCard]
             if let cardText {
                 userInfo["card"] = cardText
+            }
+            if let cardLabel = Self.cardLine(card: cardText, snapshot: pushSnapshot).label {
+                userInfo["cardLabel"] = cardLabel
             }
             await SharedStore.post(
                 title: push.title,

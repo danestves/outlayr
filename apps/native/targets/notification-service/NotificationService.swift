@@ -2,33 +2,12 @@ import CryptoKit
 import Foundation
 import UserNotifications
 
-// Copies of the records in app-intents/CaptureLookup.swift: an extension can't compile the app's sources.
-struct CaptureAnswer: Codable {
+struct CaptureAnswer: Decodable {
     let categoryName: String?
-    let domain: String?
-    let emoji: String?
-    let isNewCategory: Bool
     let merchantName: String?
-    let parentCategoryName: String?
-    let tags: [String]
 }
 
-struct CaptureNotice: Codable {
-    let amount: String
-    let card: String?
-    let cardLabel: String?
-    let pickCard: Bool
-    let walletWrite: String
-}
-
-struct CaptureRecord: Codable {
-    var answer: CaptureAnswer?
-    var queued: Bool
-    let name: String
-    let notice: CaptureNotice?
-}
-
-struct CapturePush: Codable {
+struct CapturePush: Decodable {
     let answer: CaptureAnswer
     let id: String
     let name: String
@@ -36,7 +15,6 @@ struct CapturePush: Codable {
 
 final class NotificationService: UNNotificationServiceExtension {
     private static let store = UserDefaults(suiteName: "group.com.tryoutlayr.app")
-    private static let recordPrefix = "captureAnswer."
     private static let secretKey = "capturePushSecret"
 
     private var contentHandler: ((UNNotificationContent) -> Void)?
@@ -51,55 +29,54 @@ final class NotificationService: UNNotificationServiceExtension {
         guard let push = Self.open(request.content.userInfo),
               let content = request.content.mutableCopy() as? UNMutableNotificationContent
         else {
-            contentHandler(request.content)
+            deliver(request.content)
             return
         }
-        let record = Self.settle(push)
-        let shown = push.answer.merchantName ?? push.name
-        if let notice = record?.notice {
-            content.title = shown.isEmpty ? notice.amount : "\(notice.amount) · \(shown)"
-            content.body = [push.answer.categoryName, notice.cardLabel].compactMap { $0 }.joined(separator: " · ")
-            var tap: [String: Any] = ["walletWrite": notice.walletWrite, "pickCard": notice.pickCard]
-            if let card = notice.card {
-                tap["card"] = card
-            }
-            // expo-notifications hands a remote notification's `body` to the tap handler as its data.
-            content.userInfo["body"] = tap
-        } else {
-            content.title = shown
-            content.body = push.answer.categoryName ?? ""
+        let center = UNUserNotificationCenter.current()
+        center.getDeliveredNotifications { delivered in
+            let posted = delivered.first { $0.request.identifier == push.id }?.request.content.userInfo
+            Self.rename(content, push: push, posted: posted)
+            center.removeDeliveredNotifications(withIdentifiers: [push.id])
+            self.deliver(content)
         }
-        content.userInfo["capture"] = nil
-        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [push.id])
-        contentHandler(content)
     }
 
     override func serviceExtensionTimeWillExpire() {
-        if let contentHandler, let original {
-            contentHandler(original)
+        if let original {
+            deliver(original)
         }
     }
 
-    private static func open(_ userInfo: [AnyHashable: Any]) -> CapturePush? {
+    private func deliver(_ content: UNNotificationContent) {
+        contentHandler?(content)
+        contentHandler = nil
+    }
+
+    static func rename(_ content: UNMutableNotificationContent, push: CapturePush, posted: [AnyHashable: Any]?) {
+        let shown = push.answer.merchantName ?? push.name
+        content.userInfo["capture"] = nil
+        guard let posted, let amount = posted["amount"] as? String, let walletWrite = posted["walletWrite"] as? String else {
+            content.title = shown
+            content.body = push.answer.categoryName ?? ""
+            return
+        }
+        content.title = shown.isEmpty ? amount : "\(amount) · \(shown)"
+        content.body = [push.answer.categoryName, posted["cardLabel"] as? String].compactMap { $0 }.joined(separator: " · ")
+        var tap: [String: Any] = ["walletWrite": walletWrite, "pickCard": posted["pickCard"] as? Bool ?? false]
+        if let card = posted["card"] as? String {
+            tap["card"] = card
+        }
+        // expo-notifications hands a remote notification's `body` to the tap handler as its data.
+        content.userInfo["body"] = tap
+    }
+
+    static func open(_ userInfo: [AnyHashable: Any]) -> CapturePush? {
         guard let sealed = (userInfo["capture"] as? String).flatMap({ Data(base64Encoded: $0) }),
               let secret = store?.string(forKey: secretKey).flatMap(bytes(hex:)),
               let box = try? AES.GCM.SealedBox(combined: sealed),
               let plain = try? AES.GCM.open(box, using: SymmetricKey(data: secret))
         else { return nil }
         return try? JSONDecoder().decode(CapturePush.self, from: plain)
-    }
-
-    private static func settle(_ push: CapturePush) -> CaptureRecord? {
-        let key = recordPrefix + push.id
-        guard let raw = store?.string(forKey: key),
-              var record = try? JSONDecoder().decode(CaptureRecord.self, from: Data(raw.utf8))
-        else { return nil }
-        record.answer = push.answer
-        record.queued = false
-        if let data = try? JSONEncoder().encode(record) {
-            store?.set(String(decoding: data, as: UTF8.self), forKey: key)
-        }
-        return record
     }
 
     private static func bytes(hex: String) -> Data? {

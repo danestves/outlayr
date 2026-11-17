@@ -96,6 +96,10 @@ enum SharedStore {
         await PushLedger.shared.claim(key, repeatsOnSettle: false)
     }
 
+    static func releasePurchase(_ key: String) async {
+        await PushLedger.shared.release(key)
+    }
+
     static func post(
         title: String,
         body: String,
@@ -105,6 +109,8 @@ enum SharedStore {
     ) async {
         let center = UNUserNotificationCenter.current()
         guard await center.notificationSettings().authorizationStatus == .authorized else { return }
+        // A capture push that landed first already shows the answer under this identifier.
+        if await center.deliveredNotifications().contains(where: { $0.request.identifier == identifier }) { return }
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body

@@ -5,7 +5,6 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { getIosPushNotificationServiceEnvironmentAsync } from "expo-application";
 import { getRandomBytesAsync } from "expo-crypto";
-import { getDevicePushTokenAsync, getPermissionsAsync } from "expo-notifications";
 import { Platform } from "react-native";
 
 import { Meta } from "@/data/app-meta-core";
@@ -79,10 +78,14 @@ const registerPush = Effect.fn("CaptureLookup.registerPush")(function* registerP
     if (Platform.OS !== "ios" || pushRefused || (yield* Clock.currentTimeMillis) < CAPTURE_PUSH_EFFECTIVE_AT_MS) {
         return;
     }
-    if (!(yield* Effect.tryPromise(() => getPermissionsAsync())).granted) {
+    // On demand: importing expo-notifications starts its token side effects in every suite that reaches this file.
+    const notifications = yield* Effect.tryPromise(() => import("expo-notifications"));
+    if (!(yield* Effect.tryPromise(() => notifications.getPermissionsAsync())).granted) {
         return;
     }
-    const { data: token } = yield* Effect.tryPromise(() => getDevicePushTokenAsync()).pipe(Effect.timeout(TOKEN_WAIT));
+    const { data: token } = yield* Effect.tryPromise(() => notifications.getDevicePushTokenAsync()).pipe(
+        Effect.timeout(TOKEN_WAIT)
+    );
     const environment =
         (yield* Effect.tryPromise(() => getIosPushNotificationServiceEnvironmentAsync())) ??
         (__DEV__ ? "development" : "production");
@@ -111,8 +114,9 @@ export const syncCaptureLookup = Effect.fn("CaptureLookup.sync")(
         }
         if (!isCloudAuthenticated() || !CONVEX_SITE_URL || !(yield* readRemoteEnrichment(db))) {
             if (isCloudAuthenticated() && sharedStore.captureKeyStatus() === "present") {
-                // Smart fill off forgets the key and push address server side too; the key stays until that lands.
+                // The secret goes first so a push on its way can't be opened; the key stays until the revoke lands.
                 sharedStore.remove(CAPTURE_SNAPSHOT_KEY);
+                forgetPush(sharedStore);
                 yield* cloudMutation(api.captureLookup.revoke, { deviceId: labelIn(sharedStore) });
             }
             clearLocal(sharedStore);
