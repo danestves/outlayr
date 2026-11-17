@@ -1,6 +1,14 @@
 const PATH = "/v1/speech-to-text/realtime";
 const UPSTREAM = "https://api.elevenlabs.io";
-const FORWARDED_PARAMS = ["audio_format", "commit_strategy", "language_code", "model_id", "token"] as const;
+const FORWARDED_PARAMS = [
+    "audio_format",
+    "commit_strategy",
+    "keyterms",
+    "language_code",
+    "model_id",
+    "secondary_languages",
+    "token",
+] as const;
 
 const refuse = (status: number) => new Response(null, { status });
 
@@ -10,9 +18,8 @@ function upstreamUrl(request: URL): URL | null {
     }
     const url = new URL(PATH, UPSTREAM);
     for (const name of FORWARDED_PARAMS) {
-        const value = request.searchParams.get(name);
-        if (value !== null) {
-            url.searchParams.set(name, value);
+        for (const value of request.searchParams.getAll(name)) {
+            url.searchParams.append(name, value);
         }
     }
     return url;

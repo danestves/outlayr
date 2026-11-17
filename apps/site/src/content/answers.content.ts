@@ -3421,8 +3421,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "English, Spanish, Portuguese, French, and German. Voice entry listens in the language the app is set to.",
-                            es: "Inglés, español, portugués, francés y alemán. El registro por voz escucha en el idioma que tenga la app.",
+                            en: "English, Spanish, Portuguese, French, and German. Speak in any of them, whatever language the app is set to.",
+                            es: "Inglés, español, portugués, francés y alemán. Puedes hablar en cualquiera, sin importar el idioma de la app.",
                         }),
                         question: t({ en: "Which languages does it understand?", es: "¿Qué idiomas entiende?" }),
                     },
@@ -10363,8 +10363,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "English, Spanish, Portuguese, French, and German. Outlayr listens in the language the app is set to.",
-                            es: "Inglés, español, portugués, francés y alemán. Outlayr escucha en el idioma que tenga la app.",
+                            en: "English, Spanish, Portuguese, French, and German. Speak in any of them, whatever language the app is set to.",
+                            es: "Inglés, español, portugués, francés y alemán. Puedes hablar en cualquiera, sin importar el idioma de la app.",
                         }),
                         question: t({
                             en: "Which languages does voice entry understand?",
