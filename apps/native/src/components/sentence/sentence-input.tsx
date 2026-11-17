@@ -16,7 +16,7 @@ const RULE_BOTTOM = 7;
 const LEADING = /\bleading-\S+/g;
 
 // A keystroke lands in the native field a frame before the copy widens the slot. The overhang gives that character
-// room, or the field scrolls its text sideways for a frame and every letter jumps.
+// room, or the field scrolls its text sideways for a frame and its caret jumps.
 const FIELD_OVERHANG = 32;
 
 interface SentenceInputProps {
@@ -29,8 +29,8 @@ interface SentenceInputProps {
     value: string;
 }
 
-// The hidden copy gives the row its baseline and width: an iOS TextInput has no baseline, so the sentence would align
-// its bottom edge and drop the typed text below the other words.
+// The copy draws the text and the field only the caret: the copy is laid out in the same commit as the slot's width,
+// so letters never outrun it. It also gives the row a baseline, which an iOS TextInput lacks.
 export function SentenceInput({
     accessibilityLabel,
     children,
@@ -48,7 +48,12 @@ export function SentenceInput({
             <SentenceWash active />
             {children}
             <View>
-                <Text aria-hidden className={cn(textClassName, "pr-0.5 opacity-0")} numberOfLines={1}>
+                <Text
+                    aria-hidden
+                    className={cn(textClassName, "pr-0.5")}
+                    numberOfLines={1}
+                    style={{ color: value === "" ? colors.muted : colors.foreground }}
+                >
                     {value === "" ? placeholder : value}
                 </Text>
                 <TextInput
@@ -58,16 +63,14 @@ export function SentenceInput({
                     autoFocus
                     className={cn(
                         Platform.OS === "ios" ? textClassName.replaceAll(LEADING, "") : textClassName,
-                        "text-foreground absolute top-0 bottom-0 left-0 p-0"
+                        "absolute top-0 bottom-0 left-0 p-0"
                     )}
                     maxLength={maxLength}
                     onChangeText={onChange}
                     onSubmitEditing={onSubmit}
-                    placeholder={placeholder}
-                    placeholderTextColor={colors.muted}
                     returnKeyType="next"
                     selectionColor={colors.tint}
-                    style={{ right: -FIELD_OVERHANG }}
+                    style={{ color: "transparent", right: -FIELD_OVERHANG }}
                     submitBehavior="submit"
                     testID="sentence-merchant-field"
                     value={value}
