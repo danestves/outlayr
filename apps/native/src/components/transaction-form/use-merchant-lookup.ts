@@ -48,6 +48,7 @@ interface SavedEntry {
     txCurrency: string | null;
 }
 
+const LOGO_WAIT_MS = 3000;
 export function useMerchantLookup({
     allTags,
     categories,
@@ -94,6 +95,7 @@ export function useMerchantLookup({
     const touchedSinceLookupRef = useRef<Set<LookupSlot>>(new Set());
     const suggestedDomainRef = useRef<string | null>(null);
     const logoRequestRef = useRef(0);
+    const logoFlowRef = useRef<Promise<unknown> | null>(null);
     const [unfoundKey, setUnfoundKey] = useState<string | null>(null);
     const websiteRef = useRef<(MerchantWebsiteLogo & { key: string }) | null>(null);
 
@@ -246,7 +248,7 @@ export function useMerchantLookup({
             form.setFieldValue("pendingTagNames", [], QUIET);
             setTagsSource("initial");
         }
-        void runFlow(
+        logoFlowRef.current = runFlow(
             attachLogo(suggestion.domain).pipe(
                 Effect.flatMap((landed) =>
                     Effect.sync(() => {
@@ -368,6 +370,17 @@ export function useMerchantLookup({
         onMerchantChange: enrichment.onNameChange,
         pending: enrichment.pending,
         queueable: (merchant: string) => remoteEnrichment && merchant.trim() !== "",
+        settleMerchant: async (name: string) => {
+            logoFlowRef.current = null;
+            await enrichment.settleNow(name);
+            // A slow logo host must not hold the save; the logo backfill paints a bare row on a later pass.
+            await Promise.race([
+                logoFlowRef.current,
+                new Promise((resolve) => {
+                    setTimeout(resolve, LOGO_WAIT_MS);
+                }),
+            ]);
+        },
         releaseCategory: () => setCategorySource("initial"),
         sources: { categorySource, identitySource, tagsSource } satisfies LookupSources,
         unfoundMerchant: (merchant: string) => remoteEnrichment && unfoundKey === merchantKey(merchant),

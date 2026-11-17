@@ -6,7 +6,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import { PortalHost, PortalProvider } from "panelui-native/primitives/portal";
 import type { ComponentProps, RefObject } from "react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
 import { Keyboard, KeyboardAvoidingView, Pressable, View, useWindowDimensions } from "react-native";
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
 
@@ -673,6 +673,20 @@ export function TransactionForm(props: TransactionFormProps) {
 
     const moduleSteps = { ...cardFee.steps, ...rate.steps, ...schedule.steps };
 
+    // A picked name moves on only once its lookup has painted the slots, or the save outruns the ledger's category.
+    const [namePick, setNamePick] = useState<{ amountNumber: number; name: string } | null>(null);
+    const pressForPick = useEffectEvent((pick: { amountNumber: number; name: string }) => {
+        if (stageStep === "merchant" && form.state.values.merchant === pick.name) {
+            stageFooter(pick.amountNumber, pick.name).onPress();
+        }
+    });
+    // oxlint-disable-next-line outlayr/react-effect-budget -- presses the footer for a picked name in the render after its lookup's suggestion committed, so the press reads that category and logo
+    useEffect(() => {
+        if (namePick !== null) {
+            pressForPick(namePick);
+        }
+    }, [namePick]);
+
     const pickAccount = (picked: Account | null, amountNumber: number, merchant: string) => {
         form.setFieldValue("account", picked);
         setAccountDeclined(picked === null);
@@ -761,8 +775,9 @@ export function TransactionForm(props: TransactionFormProps) {
                         <MerchantChips
                             names={merchantNames(merchant, recentNames)}
                             onPick={(name) => {
-                                handleStageMerchantChange(name);
-                                stageFooter(amountNumber, name).onPress();
+                                form.setFieldValue("merchantSeed", name);
+                                form.setFieldValue("merchant", name);
+                                void lookup.settleMerchant(name).then(() => setNamePick({ amountNumber, name }));
                             }}
                             value={merchant}
                         />
