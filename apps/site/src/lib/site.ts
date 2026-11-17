@@ -59,12 +59,15 @@ const LISTS_RECHECKED = {
     "best-expense-tracker-apps-latin-america": new Date(Date.UTC(2026, 10, 3)),
     "best-open-source-expense-tracker-apps": new Date(Date.UTC(2026, 10, 7)),
     "best-subscription-tracker-apps": new Date(Date.UTC(2026, 10, 7)),
+    "50-30-20-rule": new Date(Date.UTC(2026, 10, 17)),
     "budget-app-without-bank-account": new Date(Date.UTC(2026, 10, 16)),
+    "budget-categories": new Date(Date.UTC(2026, 10, 17)),
     "expense-tracker-venezuela": new Date(Date.UTC(2026, 10, 16)),
     "how-to-pay-cashea": new Date(Date.UTC(2026, 10, 7)),
     "mint-alternative": new Date(Date.UTC(2026, 9, 23)),
     "multi-currency-expense-tracker": new Date(Date.UTC(2026, 10, 11)),
     "track-money-sent-home": new Date(Date.UTC(2026, 10, 3)),
+    "what-is-rocket-money": new Date(Date.UTC(2026, 10, 17)),
     "ynab-alternatives": new Date(Date.UTC(2026, 9, 23)),
 };
 

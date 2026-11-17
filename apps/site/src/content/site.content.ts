@@ -105,6 +105,27 @@ const site = {
                     pt: "Orçamentos",
                     fr: "Budgets",
                 }),
+                "budget-categories": t({
+                    en: "Budget categories",
+                    de: "Budgetkategorien",
+                    es: "Categorías de presupuesto",
+                    pt: "Categorias de orçamento",
+                    fr: "Catégories de budget",
+                }),
+                "50-30-20-rule": t({
+                    en: "The 50/30/20 rule",
+                    de: "Die 50/30/20-Regel",
+                    es: "La regla 50/30/20",
+                    pt: "A regra 50/30/20",
+                    fr: "La règle 50/30/20",
+                }),
+                "what-is-rocket-money": t({
+                    en: "What is Rocket Money?",
+                    de: "Was ist Rocket Money?",
+                    es: "¿Qué es Rocket Money?",
+                    pt: "O que é o Rocket Money?",
+                    fr: "Qu'est-ce que Rocket Money ?",
+                }),
                 "expense-tracker-template": t({
                     en: "Spreadsheet template",
                     de: "Tabellenvorlage",

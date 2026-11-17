@@ -8395,6 +8395,871 @@ const answers = {
                     es: "Arma tu presupuesto y ve a dónde te lleva este ritmo",
                 }),
             },
+            "budget-categories": {
+                facts: [
+                    {
+                        label: t({ en: "To start", es: "Para empezar" }),
+                        text: t({
+                            en: "10 expense categories and 4 for income",
+                            es: "10 categorías de gasto y 4 de ingreso",
+                        }),
+                    },
+                    {
+                        label: t({ en: "First limits", es: "Primeros límites" }),
+                        text: t({
+                            en: "What you spent last month, not a guess",
+                            es: "Lo que gastaste el mes pasado, no un cálculo a ojo",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Split one when", es: "Divide una cuando" }),
+                        text: t({
+                            en: "It hides two habits, like groceries and eating out",
+                            es: "Esconde dos hábitos, como el supermercado y comer fuera",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Review", es: "Revisión" }),
+                        text: t({
+                            en: "10 minutes a week, and a close at month end",
+                            es: "10 minutos cada semana y un cierre al final del mes",
+                        }),
+                    },
+                    {
+                        label: t({ en: "In Outlayr", es: "En Outlayr" }),
+                        text: t({
+                            en: "10 ready when you install it, 13 more suggested, or your own with an icon or emoji",
+                            es: "10 listas al instalarla, 13 más sugeridas, o las tuyas con un ícono o emoji",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Free plan", es: "Plan gratis" }),
+                        text: t({
+                            en: "2 category budgets plus one overall. Unlimited with Pro",
+                            es: "2 presupuestos por categoría más uno general. Sin límite con Pro",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "Housing, groceries, eating out, transport, utilities, phone and internet, healthcare, and entertainment cover the bills most people pay every month. Outlayr starts you with them as ten categories: Groceries, Dining Out, Transport, Fuel, Rent, Home, Utilities, Phone & Internet, Healthcare, and Entertainment.",
+                            es: "Vivienda, supermercado, comer fuera, transporte, servicios, teléfono e internet, salud y entretenimiento cubren las cuentas que casi todos pagan cada mes. Outlayr te las da como diez categorías: Supermercado, Restaurantes, Transporte, Gasolina, Renta, Hogar, Servicios, Teléfono e internet, Salud y Entretenimiento.",
+                        }),
+                        question: t({
+                            en: "What are the main budget categories?",
+                            es: "¿Cuáles son las categorías de presupuesto principales?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "6 to 10 at first. With too many, every expense becomes a decision and it is easier to quit. Add or split a category only when you would use it every month.",
+                            es: "Entre 6 y 10 al principio. Con demasiadas, cada gasto se vuelve una decisión y es más fácil dejarlo. Agrega o divide una categoría solo cuando la vayas a usar todos los meses.",
+                        }),
+                        question: t({
+                            en: "How many budget categories should I have?",
+                            es: "¿Cuántas categorías de presupuesto debo tener?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "A category is where an expense goes. A budget is the limit you put on a category, or on all of them, for a day, a week, a month, or a year.",
+                            es: "Una categoría es donde va un gasto. Un presupuesto es el límite que le pones a una categoría, o a todas, por un día, una semana, un mes o un año.",
+                        }),
+                        question: t({
+                            en: "What is the difference between a category and a budget?",
+                            es: "¿Qué diferencia hay entre una categoría y un presupuesto?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Treat savings as money you set aside first, not as spending. In Outlayr, a savings goal names an amount, an account, and a date, and tells you what that costs a month.",
+                            es: "Trata el ahorro como dinero que apartas primero, no como un gasto. En Outlayr, una meta de ahorro tiene un monto, una cuenta y una fecha, y te dice cuánto te cuesta al mes.",
+                        }),
+                        question: t({
+                            en: "Should savings be a budget category?",
+                            es: "¿El ahorro debe ser una categoría del presupuesto?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. In Settings, under Categories, you can rename them, change the icon or emoji, reorder them, add subcategories, and add your own.",
+                            es: "Sí. En Configuración, en Categorías, puedes cambiarles el nombre, el ícono o el emoji, reordenarlas, agregar subcategorías y crear las tuyas.",
+                        }),
+                        question: t({
+                            en: "Can I change the categories in Outlayr?",
+                            es: "¿Puedo cambiar las categorías en Outlayr?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "Budget categories are the groups you sort your spending into, like rent, groceries, or dining out, so you can give each one a limit. Here is a list of ten to start with, the same ten Outlayr sets up when you install it, how to size each limit, and an example in dollars and pesos.",
+                    es: "Las categorías de presupuesto son los grupos en los que ordenas tus gastos, como renta, supermercado o restaurantes, para ponerle un límite a cada uno. Aquí tienes una lista de diez para empezar, las mismas diez que Outlayr crea al instalarla, cómo calcular cada límite y un ejemplo en dólares y en pesos.",
+                }),
+                meta: {
+                    description: t({
+                        en: "What budget categories are, a list of ten to start with, how to pick a limit for each one, and a worked example in dollars and pesos.",
+                        es: "Qué son las categorías de presupuesto, una lista de diez para empezar, cómo elegir el límite de cada una y un ejemplo en dólares y en pesos.",
+                    }),
+                    title: t({
+                        en: "Budget Categories: The List to Start With (2026) · Outlayr",
+                        es: "Categorías de presupuesto: la lista para empezar (2026) · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Budget categories are the labels you sort every expense into, such as rent, groceries, or transport, so you can see where your money goes and set a limit for each one.",
+                                es: "Las categorías de presupuesto son las etiquetas en las que ordenas cada gasto, como renta, supermercado o transporte, para ver a dónde se va tu dinero y ponerle un límite a cada una.",
+                            }),
+                            t({
+                                en: "A good list is short enough that filing an expense takes no thought, and specific enough that each category points to one habit you could change.",
+                                es: "Una buena lista es lo bastante corta para que anotar un gasto no te haga pensar, y lo bastante específica para que cada categoría apunte a un hábito que podrías cambiar.",
+                            }),
+                        ],
+                        id: "what-are-budget-categories",
+                        title: t({ en: "What are budget categories?", es: "¿Qué son las categorías de presupuesto?" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Outlayr creates ten expense categories when you install it: Groceries, Dining Out, Transport, Fuel, Rent, Home, Utilities, Phone & Internet, Healthcare, and Entertainment. Income gets four: Paycheck, Freelance, Business, and Gifts.",
+                                es: "Outlayr crea diez categorías de gasto al instalarla: Supermercado, Restaurantes, Transporte, Gasolina, Renta, Hogar, Servicios, Teléfono e internet, Salud y Entretenimiento. Para los ingresos crea cuatro: Sueldo, Freelance, Negocio y Regalos.",
+                            }),
+                            t({
+                                en: "When something doesn't fit, it suggests 13 more: Coffee, Subscriptions, Fitness, Shopping, Fashion, Travel, Education, Gifts, Pets, Family, Personal Care, Insurance, and Taxes. Add one only when you would use it every month; the rest can wait.",
+                                es: "Cuando algo no encaja, te sugiere 13 más: Café, Suscripciones, Deporte, Compras, Ropa, Viajes, Educación, Regalos, Mascotas, Familia, Cuidado personal, Seguros e Impuestos. Agrega una solo cuando la vayas a usar todos los meses; las demás pueden esperar.",
+                            }),
+                        ],
+                        id: "list",
+                        title: t({ en: "The list to start with", es: "La lista para empezar" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Start from what you actually spent. Add up last month per category, or the last two or three if you have them, and use that as the first limit. A limit you already know you can't keep only teaches you to ignore it.",
+                                es: "Parte de lo que de verdad gastaste. Suma el mes pasado por categoría, o los últimos dos o tres si los tienes, y usa eso como primer límite. Un límite que ya sabes que no vas a cumplir solo te enseña a ignorarlo.",
+                            }),
+                            t({
+                                en: "Fixed costs like Rent and Phone & Internet get a limit equal to the bill. Then trim one or two of the categories that are a choice, like Dining Out or Entertainment, by an amount you can live with.",
+                                es: "Los gastos fijos como Renta y Teléfono e internet llevan un límite igual a la factura. Después recorta una o dos de las categorías que son una elección, como Restaurantes o Entretenimiento, en un monto con el que puedas vivir.",
+                            }),
+                            t({
+                                en: "With no history yet, the 50/30/20 rule gives a first split: half of what you take home for needs, 30% for wants, and 20% for savings. After a month of logging, move the limits to your real numbers.",
+                                es: "Si todavía no tienes historial, la regla 50/30/20 te da un primer reparto: la mitad de lo que te llega para necesidades, 30% para gustos y 20% para ahorro. Después de un mes de registros, mueve los límites a tus números reales.",
+                            }),
+                        ],
+                        id: "limits",
+                        title: t({ en: "How to pick limits", es: "Cómo elegir los límites" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "The table above uses take-home pay of $3,000 a month in the United States and MX$20,000 in Mexico. The eight needs (Rent, Groceries, Transport, Fuel, Home, Utilities, Phone & Internet, and Healthcare) add up to 50%: $1,500, or MX$10,000. Dining Out and Entertainment take 10%: $300, or MX$2,000.",
+                                es: "La tabla de arriba usa un sueldo neto de US$3,000 al mes en Estados Unidos y de MX$20,000 en México. Las ocho necesidades (Renta, Supermercado, Transporte, Gasolina, Hogar, Servicios, Teléfono e internet y Salud) suman 50%: US$1,500, o MX$10,000. Restaurantes y Entretenimiento se llevan 10%: US$300, o MX$2,000.",
+                            }),
+                            t({
+                                en: "That leaves 40%, $1,200 or MX$8,000: 20% for savings and 20% for the wants the ten don't cover. The shares are an example, not a rule. When rent takes more, the other needs or the wants get less.",
+                                es: "Eso deja 40%, US$1,200 o MX$8,000: 20% para ahorro y 20% para los gustos que las diez no cubren. Los porcentajes son un ejemplo, no una regla. Cuando la renta se lleva más, las otras necesidades o los gustos reciben menos.",
+                            }),
+                            t({
+                                en: "If you are paid in one currency and spend in another, keep your budgets in the currency you are paid in. Outlayr adds up each entry in your main currency at the rate of its own day, so a purchase in pesos counts against a limit in dollars.",
+                                es: "Si te pagan en una moneda y gastas en otra, lleva tus presupuestos en la moneda en que te pagan. Outlayr suma cada registro en tu moneda principal con la tasa de su propio día, así que una compra en pesos cuenta contra un límite en dólares.",
+                            }),
+                        ],
+                        id: "example",
+                        title: t({ en: "A worked example in two currencies", es: "Un ejemplo en dos monedas" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
+                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+                            }),
+                            t({
+                                en: "1. Open Settings, then Categories. The ten above are already there. Tap one of the 13 under Suggested to add it, or add your own with a name and an icon or emoji.",
+                                es: "1. Abre Configuración y luego Categorías. Las diez de arriba ya están ahí. Toca una de las 13 en Sugeridas para agregarla, o crea la tuya con un nombre y un ícono o emoji.",
+                            }),
+                            t({
+                                en: "2. In Balances, under Categories, pick a category and set its limit. Categories without a budget show what you typically spend, and Outlayr replays your last period against the limit you pick.",
+                                es: "2. En Saldos, en Categorías, elige una categoría y ponle un límite. Las categorías sin presupuesto muestran lo que gastas normalmente, y Outlayr repasa tu último período con el límite que elijas.",
+                            }),
+                            t({
+                                en: "3. Log as you spend. Each entry lands in a category and updates what is left, and the budget says where your current pace ends.",
+                                es: "3. Registra al gastar. Cada registro cae en una categoría y actualiza lo que queda, y el presupuesto te dice a dónde te lleva tu ritmo.",
+                            }),
+                            t({
+                                en: "4. At month end, look at which limits held and move the ones that didn't. The free plan includes 2 category budgets plus the overall one; Outlayr Pro has no limit.",
+                                es: "4. Al final del mes, mira qué límites se cumplieron y mueve los que no. El plan gratis incluye 2 presupuestos por categoría además del general; Outlayr Pro no tiene límite.",
+                            }),
+                        ],
+                        id: "outlayr",
+                        title: t({ en: "How to do it in Outlayr", es: "Cómo hacerlo en Outlayr" }),
+                    },
+                ],
+                plateAlt: BUDGETS_SCREEN_ALT,
+                related: [
+                    "/guides/50-30-20-rule",
+                    "/guides/budget-planner",
+                    "/tools/50-30-20-budget-calculator",
+                ] satisfies PageRef[],
+                table: {
+                    caption: t({
+                        en: "An example on take-home pay of $3,000 or MX$20,000 a month. The other 40% goes to savings and to wants these ten don't cover.",
+                        es: "Un ejemplo con un sueldo neto de US$3,000 o MX$20,000 al mes. El otro 40% va al ahorro y a los gustos que estas diez no cubren.",
+                    }),
+                    columns: [
+                        t({ en: "What goes in it", es: "Qué va ahí" }),
+                        t({ en: "Example on $3,000", es: "Ejemplo con US$3,000" }),
+                        t({ en: "Example on MX$20,000", es: "Ejemplo con MX$20,000" }),
+                    ],
+                    corner: t({ en: "Category", es: "Categoría" }),
+                    rows: [
+                        {
+                            cells: [
+                                t({ en: "Rent or mortgage", es: "Alquiler o hipoteca" }),
+                                t({ en: "$720 (24%)", es: "US$720 (24%)" }),
+                                t({ en: "MX$4,800", es: "MX$4,800" }),
+                            ],
+                            label: t({ en: "Rent", es: "Renta" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "Food you cook at home", es: "La comida que preparas en casa" }),
+                                t({ en: "$300 (10%)", es: "US$300 (10%)" }),
+                                t({ en: "MX$2,000", es: "MX$2,000" }),
+                            ],
+                            label: t({ en: "Groceries", es: "Supermercado" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "Restaurants, takeout, delivery",
+                                    es: "Restaurantes, comida para llevar, delivery",
+                                }),
+                                t({ en: "$180 (6%)", es: "US$180 (6%)" }),
+                                t({ en: "MX$1,200", es: "MX$1,200" }),
+                            ],
+                            label: t({ en: "Dining Out", es: "Restaurantes" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "Bus, metro, rides, parking", es: "Autobús, metro, taxis, estacionamiento" }),
+                                t({ en: "$90 (3%)", es: "US$90 (3%)" }),
+                                t({ en: "MX$600", es: "MX$600" }),
+                            ],
+                            label: t({ en: "Transport", es: "Transporte" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "Gas for the car or motorbike", es: "Gasolina del carro o la moto" }),
+                                t({ en: "$90 (3%)", es: "US$90 (3%)" }),
+                                t({ en: "MX$600", es: "MX$600" }),
+                            ],
+                            label: t({ en: "Fuel", es: "Gasolina" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "Repairs, cleaning, things for the house",
+                                    es: "Reparaciones, limpieza, cosas para la casa",
+                                }),
+                                t({ en: "$60 (2%)", es: "US$60 (2%)" }),
+                                t({ en: "MX$400", es: "MX$400" }),
+                            ],
+                            label: t({ en: "Home", es: "Hogar" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "Power, water, gas", es: "Luz, agua, gas" }),
+                                t({ en: "$120 (4%)", es: "US$120 (4%)" }),
+                                t({ en: "MX$800", es: "MX$800" }),
+                            ],
+                            label: t({ en: "Utilities", es: "Servicios" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "Mobile plan and home internet",
+                                    es: "Plan del celular e internet de la casa",
+                                }),
+                                t({ en: "$60 (2%)", es: "US$60 (2%)" }),
+                                t({ en: "MX$400", es: "MX$400" }),
+                            ],
+                            label: t({ en: "Phone & Internet", es: "Teléfono e internet" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "Doctor, pharmacy, dentist", es: "Médico, farmacia, dentista" }),
+                                t({ en: "$60 (2%)", es: "US$60 (2%)" }),
+                                t({ en: "MX$400", es: "MX$400" }),
+                            ],
+                            label: t({ en: "Healthcare", es: "Salud" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "Movies, games, going out", es: "Cine, juegos, salidas" }),
+                                t({ en: "$120 (4%)", es: "US$120 (4%)" }),
+                                t({ en: "MX$800", es: "MX$800" }),
+                            ],
+                            label: t({ en: "Entertainment", es: "Entretenimiento" }),
+                        },
+                    ],
+                },
+                title: t({
+                    en: "Budget categories: the list to start with (2026)",
+                    es: "Categorías de presupuesto: la lista para empezar (2026)",
+                }),
+            },
+            "50-30-20-rule": {
+                facts: [
+                    {
+                        label: t({ en: "Needs", es: "Necesidades" }),
+                        text: t({
+                            en: "50%: rent, groceries, utilities, transport, insurance, minimum debt payments",
+                            es: "50%: renta, supermercado, servicios, transporte, seguros, pagos mínimos de deudas",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Wants", es: "Gustos" }),
+                        text: t({
+                            en: "30%: eating out, streaming, shopping, trips",
+                            es: "30%: comer fuera, streaming, compras, viajes",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Savings and debt", es: "Ahorro y deudas" }),
+                        text: t({
+                            en: "20%: emergency fund, retirement, paying debt down faster",
+                            es: "20%: fondo de emergencia, retiro, pagar deudas más rápido",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Based on", es: "Se calcula sobre" }),
+                        text: t({
+                            en: "Take-home pay, after taxes and deductions",
+                            es: "El sueldo neto, después de impuestos y descuentos",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Where it comes from", es: "De dónde viene" }),
+                        text: t({
+                            en: "All Your Worth (2005), by Elizabeth Warren and Amelia Warren Tyagi",
+                            es: "All Your Worth (2005), de Elizabeth Warren y Amelia Warren Tyagi",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Calculator", es: "Calculadora" }),
+                        text: t({
+                            en: "Free, for weekly, two weekly, monthly, or yearly pay",
+                            es: "Gratis, para sueldo semanal, quincenal, mensual o anual",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "Of every 100 you take home, spend up to 50 on what you must pay, up to 30 on what you choose to, and keep at least 20 for savings or extra debt payments.",
+                            es: "De cada 100 que te llegan, gasta hasta 50 en lo que tienes que pagar, hasta 30 en lo que eliges, y guarda al menos 20 para ahorro o para pagar deudas más rápido.",
+                        }),
+                        question: t({
+                            en: "What is the 50/30/20 rule in simple terms?",
+                            es: "¿Qué es la regla 50/30/20 en pocas palabras?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "On net pay: what lands in your account after taxes and deductions. If your employer takes retirement savings out of your paycheck, you can count it toward the 20%.",
+                            es: "Sobre el sueldo neto: lo que te llega a la cuenta después de impuestos y descuentos. Si tu empresa te descuenta un aporte para el retiro, puedes contarlo dentro del 20%.",
+                        }),
+                        question: t({
+                            en: "Is the 50/30/20 rule based on gross or net pay?",
+                            es: "¿La regla 50/30/20 se calcula sobre el sueldo bruto o el neto?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Minimum payments are needs. Anything you pay above the minimum counts as savings, since it lowers what you owe.",
+                            es: "Los pagos mínimos son necesidades. Lo que pagues por encima del mínimo cuenta como ahorro, porque baja lo que debes.",
+                        }),
+                        question: t({ en: "Where do debt payments go?", es: "¿Dónde van los pagos de deudas?" }),
+                    },
+                    {
+                        answer: t({
+                            en: "With a high rent, often not at first. Use it as a starting point, or try 60/20/20 or 70/20/10, and adjust after a month of logging. What matters most is that savings gets its share before wants do.",
+                            es: "Con una renta alta, muchas veces no al principio. Úsala como punto de partida, o prueba 60/20/20 o 70/20/10, y ajusta después de un mes de registros. Lo que más importa es que el ahorro reciba su parte antes que los gustos.",
+                        }),
+                        question: t({
+                            en: "Is the 50/30/20 rule realistic?",
+                            es: "¿La regla 50/30/20 es realista?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Not as a preset. You set it up with an overall budget for needs and wants, category budgets for the wants you want to watch, and a savings goal for the 20%.",
+                            es: "No como plantilla. La armas con un presupuesto general para necesidades y gustos, presupuestos por categoría para los gustos que quieras vigilar y una meta de ahorro para el 20%.",
+                        }),
+                        question: t({
+                            en: "Does Outlayr have a 50/30/20 budget?",
+                            es: "¿Outlayr tiene un presupuesto 50/30/20?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "The 50/30/20 rule is a budgeting rule that splits your take-home pay three ways: 50% for needs, 30% for wants, and 20% for savings and paying down debt. Below is what goes in each part, a worked example in dollars and pesos, and how to set it up in Outlayr.",
+                    es: "La regla 50/30/20 es una regla de presupuesto que reparte tu sueldo neto en tres partes: 50% para necesidades, 30% para gustos y 20% para ahorrar y pagar deudas. Aquí tienes qué va en cada parte, un ejemplo en dólares y en pesos, y cómo armarla en Outlayr.",
+                }),
+                meta: {
+                    description: t({
+                        en: "The 50/30/20 rule splits take-home pay into 50% needs, 30% wants, and 20% savings. What goes in each part, a worked example, and when to change the split.",
+                        es: "La regla 50/30/20 reparte el sueldo neto en 50% necesidades, 30% gustos y 20% ahorro. Qué va en cada parte, un ejemplo con números y cuándo cambiar el reparto.",
+                    }),
+                    title: t({
+                        en: "What Is the 50/30/20 Rule? A Worked Example · Outlayr",
+                        es: "Qué es la regla 50/30/20: un ejemplo con números · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "The 50/30/20 rule is a way to budget that gives half of your take-home pay to needs, 30% to wants, and 20% to savings and debt.",
+                                es: "La regla 50/30/20 es una forma de presupuestar que le da la mitad de tu sueldo neto a las necesidades, 30% a los gustos y 20% al ahorro y las deudas.",
+                            }),
+                            t({
+                                en: "Elizabeth Warren and her daughter, Amelia Warren Tyagi, set it out in their 2005 book All Your Worth: The Ultimate Lifetime Money Plan. It is a starting split, not a law: it tells you how much room each part gets before you have a month of real numbers.",
+                                es: "La propusieron Elizabeth Warren y su hija, Amelia Warren Tyagi, en su libro de 2005 All Your Worth: The Ultimate Lifetime Money Plan. Es un reparto para empezar, no una ley: te dice cuánto espacio tiene cada parte antes de que tengas un mes de números reales.",
+                            }),
+                        ],
+                        id: "what-is-the-50-30-20-rule",
+                        title: t({ en: "What is the 50/30/20 rule?", es: "¿Qué es la regla 50/30/20?" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Needs are the bills you have to pay to live and work: rent, groceries, utilities, transport, insurance, and the minimum on each debt.",
+                                es: "Las necesidades son las cuentas que tienes que pagar para vivir y trabajar: renta, supermercado, servicios, transporte, seguros y el pago mínimo de cada deuda.",
+                            }),
+                            t({
+                                en: "Wants are what you could cut without a penalty, like eating out, streaming, shopping, and trips. Savings is what you set aside, plus anything you pay on a debt above the minimum.",
+                                es: "Los gustos son lo que podrías recortar sin una penalidad, como comer fuera, streaming, compras y viajes. El ahorro es lo que apartas, más lo que pagues de una deuda por encima del mínimo.",
+                            }),
+                        ],
+                        id: "parts",
+                        title: t({ en: "Needs, wants, and savings", es: "Necesidades, gustos y ahorro" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Take $3,000 a month after taxes. Needs get up to $1,500, wants up to $900, and $600 goes to savings or debt. On MX$20,000, the same split is MX$10,000, MX$6,000, and MX$4,000.",
+                                es: "Toma US$3,000 al mes después de impuestos. Las necesidades reciben hasta US$1,500, los gustos hasta US$900, y US$600 van al ahorro o las deudas. Con MX$20,000, el mismo reparto da MX$10,000, MX$6,000 y MX$4,000.",
+                            }),
+                            t({
+                                en: "Now say rent alone is $1,100. With groceries at $300, utilities at $120, and transport at $90, needs reach $1,610, which is $110 over. Take the $110 from wants, which leaves $790, and keep the $600 for savings as it is.",
+                                es: "Ahora digamos que la renta sola es de US$1,100. Con el supermercado en US$300, los servicios en US$120 y el transporte en US$90, las necesidades llegan a US$1,610, US$110 de más. Saca esos US$110 de los gustos, que quedan en US$790, y deja los US$600 del ahorro como están.",
+                            }),
+                        ],
+                        id: "example",
+                        title: t({ en: "A worked example", es: "Un ejemplo con números" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "If rent takes most of your pay, needs can run past 50%. A 60/20/20 or 70/20/10 split is a more honest start, and the calculator does those too.",
+                                es: "Si la renta se lleva casi todo tu sueldo, las necesidades pueden pasar del 50%. Un reparto 60/20/20 o 70/20/10 es un comienzo más honesto, y la calculadora también los hace.",
+                            }),
+                            t({
+                                en: "If your income changes from month to month, build the split on a low month and treat anything above it as extra savings.",
+                                es: "Si tu ingreso cambia de un mes a otro, arma el reparto con un mes bajo y trata lo que pase de ahí como ahorro extra.",
+                            }),
+                        ],
+                        id: "when-it-does-not-fit",
+                        title: t({ en: "When 50/30/20 doesn't fit", es: "Cuando el 50/30/20 no encaja" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
+                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+                            }),
+                            t({
+                                en: "1. Work out your three amounts with the 50/30/20 calculator.",
+                                es: "1. Calcula tus tres montos con la calculadora 50/30/20.",
+                            }),
+                            t({
+                                en: "2. In Balances, under Categories, set one overall budget for needs and wants together: 80% of your take-home pay.",
+                                es: "2. En Saldos, en Categorías, pon un presupuesto general para necesidades y gustos juntos: el 80% de tu sueldo neto.",
+                            }),
+                            t({
+                                en: "3. Add category budgets for the wants that leak most, like Dining Out or Entertainment. The free plan includes 2 category budgets; Outlayr Pro has no limit.",
+                                es: "3. Agrega presupuestos por categoría para los gustos donde más se te va el dinero, como Restaurantes o Entretenimiento. El plan gratis incluye 2 presupuestos por categoría; Outlayr Pro no tiene límite.",
+                            }),
+                            t({
+                                en: "4. For the 20%, create a savings goal in Balances. A goal names an amount, an account, and a date, and tells you what that costs a month.",
+                                es: "4. Para el 20%, crea una meta de ahorro en Saldos. Una meta tiene un monto, una cuenta y una fecha, y te dice cuánto te cuesta al mes.",
+                            }),
+                            t({
+                                en: "5. If you are paid on the 15th, set your month to start on the 15th in Settings, under Time frames, so budgets run from payday to payday.",
+                                es: "5. Si te pagan el 15, pon que tu mes empiece el 15 en Configuración, en Períodos de tiempo, para que los presupuestos corran de un día de pago al siguiente.",
+                            }),
+                        ],
+                        id: "outlayr",
+                        title: t({ en: "How to do it in Outlayr", es: "Cómo hacerlo en Outlayr" }),
+                    },
+                ],
+                plateAlt: BUDGETS_SCREEN_ALT,
+                related: [
+                    "/tools/50-30-20-budget-calculator",
+                    "/guides/budget-categories",
+                    "/guides/budget-planner",
+                ] satisfies PageRef[],
+                table: {
+                    caption: t({
+                        en: "Worked on take-home pay, after taxes. Paid every two weeks? Multiply one paycheck by 26 and divide by 12 to get a month.",
+                        es: "Calculado sobre el sueldo neto, después de impuestos. ¿Te pagan cada dos semanas? Multiplica un pago por 26 y divide entre 12 para tener el mes.",
+                    }),
+                    columns: [
+                        t({ en: "Share", es: "Porcentaje" }),
+                        t({ en: "On $3,000 a month", es: "Con US$3,000 al mes" }),
+                        t({ en: "On MX$20,000 a month", es: "Con MX$20,000 al mes" }),
+                    ],
+                    corner: t({ en: "Part", es: "Parte" }),
+                    rows: [
+                        {
+                            cells: [
+                                t({ en: "50%", es: "50%" }),
+                                t({ en: "$1,500", es: "US$1,500" }),
+                                t({ en: "MX$10,000", es: "MX$10,000" }),
+                            ],
+                            label: t({ en: "Needs", es: "Necesidades" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "30%", es: "30%" }),
+                                t({ en: "$900", es: "US$900" }),
+                                t({ en: "MX$6,000", es: "MX$6,000" }),
+                            ],
+                            label: t({ en: "Wants", es: "Gustos" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "20%", es: "20%" }),
+                                t({ en: "$600", es: "US$600" }),
+                                t({ en: "MX$4,000", es: "MX$4,000" }),
+                            ],
+                            label: t({ en: "Savings and debt", es: "Ahorro y deudas" }),
+                        },
+                    ],
+                },
+                title: t({
+                    en: "The 50/30/20 rule, with a worked example",
+                    es: "La regla 50/30/20, con un ejemplo con números",
+                }),
+            },
+            "what-is-rocket-money": {
+                facts: [
+                    {
+                        label: t({ en: "What it is", es: "Qué es" }),
+                        source: "https://www.rocketmoney.com/",
+                        text: t({
+                            en: "A US money app that links your bank accounts to find subscriptions, track spending, and set budgets",
+                            es: "Una app de finanzas de Estados Unidos que se conecta a tus cuentas bancarias para encontrar suscripciones, seguir tus gastos y armar presupuestos",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Price", es: "Precio" }),
+                        source: "https://help.rocketmoney.com/en/articles/2217739-how-much-does-rocket-money-cost",
+                        text: t({
+                            en: "Free plan. Premium is pay what you want, typically $7 to $14 a month, with 7 days free. Premium+ is $15 a month plus tax",
+                            es: "Plan gratis. Premium cuesta lo que quieras pagar, normalmente entre US$7 y US$14 al mes, con 7 días gratis. Premium+ cuesta US$15 al mes más impuestos",
+                        }),
+                    },
+                    {
+                        label: t({ en: "The catch", es: "El detalle" }),
+                        source: "https://help.rocketmoney.com/en/articles/2667173-why-is-rocket-money-charging-me",
+                        text: t({
+                            en: "Most of what it is known for is paid. Cancelling subscriptions for you is Premium, and since November 2, 2026 bill negotiation is Premium+ only",
+                            es: "Casi todo lo que la hace conocida es de pago. Que cancelen suscripciones por ti es Premium, y desde el 2 de noviembre de 2026 negociar facturas es solo Premium+",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Who it fits", es: "Para quién es" }),
+                        source: "https://www.rocketmoney.com/terms",
+                        text: t({
+                            en: "Adults in the United States who are fine linking their banks. Its terms say the service is for US users only",
+                            es: "Adultos en Estados Unidos a los que no les molesta conectar sus bancos. Sus términos dicen que el servicio es solo para usuarios en Estados Unidos",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Bank linking", es: "Conexión al banco" }),
+                        source: "https://www.rocketmoney.com/security",
+                        text: t({
+                            en: "Through Plaid, which receives your bank login. Rocket Money says it never sees those credentials",
+                            es: "A través de Plaid, que recibe los datos de acceso a tu banco. Rocket Money dice que nunca ve esas credenciales",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "Its help center lists the usual reasons: the Premium price you chose, charged once the 7-day trial ends; Premium+ at $15 a month; or a success fee on a bill negotiation submitted before November 2, 2026, of 35% to 60% of the first year's savings. Lines that say Rocket Money Smart Savings are transfers into your own savings goal, not charges. If you don't recall an account, someone who shares that bank account may be paying for Premium.",
+                            es: "Su centro de ayuda da las razones más comunes: el precio de Premium que elegiste, que se cobra al terminar la prueba de 7 días; Premium+ a US$15 al mes; o una comisión por una negociación de factura enviada antes del 2 de noviembre de 2026, de entre 35% y 60% del ahorro del primer año. Los movimientos que dicen Rocket Money Smart Savings son transferencias a tu propia meta de ahorro, no cobros. Si no recuerdas tener una cuenta, alguien que comparte esa cuenta bancaria puede estar pagando Premium.",
+                        }),
+                        question: t({
+                            en: "Why is Rocket Money charging me?",
+                            es: "¿Por qué Rocket Money me está cobrando?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "In the app, open Settings, then Membership, then Manage Membership, slide the price to $0 a month, and tap Cancel Subscription. On the website, use Manage in the upper right. Cancelling Premium doesn't delete your Rocket Money account, and negotiations already in progress keep going.",
+                            es: "En la app, abre Settings, luego Membership y luego Manage Membership, desliza el precio a US$0 al mes y toca Cancel Subscription. En la web, usa Manage arriba a la derecha. La app está en inglés, así que los botones tienen esos nombres. Cancelar Premium no borra tu cuenta de Rocket Money, y las negociaciones que ya están en curso siguen.",
+                        }),
+                        question: t({
+                            en: "How do I cancel Rocket Money Premium?",
+                            es: "¿Cómo cancelo Rocket Money Premium?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes, it is a real company and a real app. On November 17, 2026, its Better Business Bureau profile showed an A+ rating, accredited since 2020, with 204 complaints in the last three years and customer reviews averaging 1.36 out of 5. On Trustpilot it had 4.0 from 4,241 reviews. Recent complaints are mostly about charges people did not expect and fees asked up front for bill negotiation.",
+                            es: "Sí, es una empresa real y una app real. El 17 de noviembre de 2026, su perfil en el Better Business Bureau mostraba una calificación A+, acreditada desde 2020, con 204 quejas en los últimos tres años y reseñas de clientes con un promedio de 1.36 de 5. En Trustpilot tenía 4.0 con 4,241 reseñas. Las quejas recientes son sobre todo por cobros que la gente no esperaba y comisiones pedidas por adelantado para negociar facturas.",
+                        }),
+                        question: t({ en: "Is Rocket Money legit?", es: "¿Rocket Money es confiable?" }),
+                    },
+                    {
+                        answer: t({
+                            en: "The basic plan is. It tracks subscriptions, reviews your spending, reminds you of bills, and allows up to 2 category budgets. Unlimited budgets, manual transactions, net worth, credit reports, web access, and data export are Premium.",
+                            es: "El plan básico sí. Sigue suscripciones, revisa tus gastos, te recuerda las facturas y permite hasta 2 presupuestos por categoría. Los presupuestos ilimitados, los movimientos manuales, el patrimonio neto, los reportes de crédito, la versión web y la exportación de datos son Premium.",
+                        }),
+                        question: t({ en: "Is Rocket Money free?", es: "¿Rocket Money es gratis?" }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. Its terms say the service is intended only for users in the United States, and it links US bank accounts.",
+                            es: "No. Sus términos dicen que el servicio es solo para usuarios en Estados Unidos, y se conecta a cuentas bancarias de Estados Unidos.",
+                        }),
+                        question: t({
+                            en: "Does Rocket Money work outside the United States?",
+                            es: "¿Rocket Money funciona fuera de Estados Unidos?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "If you don't want to link a bank, live outside the United States, or spend in more than one currency, yes. Outlayr does not cancel subscriptions or negotiate bills for you; it shows what each subscription costs and can remind you before it charges.",
+                            es: "Si no quieres conectar un banco, vives fuera de Estados Unidos o gastas en más de una moneda, sí. Outlayr no cancela suscripciones ni negocia facturas por ti; te muestra cuánto cuesta cada suscripción y puede avisarte antes del cobro.",
+                        }),
+                        question: t({
+                            en: "Is Outlayr an alternative to Rocket Money?",
+                            es: "¿Outlayr es una alternativa a Rocket Money?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "Rocket Money is a US personal finance app that links your bank accounts to find subscriptions, track spending, and set budgets, with paid plans whose team cancels subscriptions and negotiates bills for you. Here is what it does, what it costs, and the complaints worth knowing, each checked on rocketmoney.com, its help center, and review sites. Outlayr, which we make, is in the table for comparison.",
+                    es: "Rocket Money es una app de finanzas personales de Estados Unidos que se conecta a tus cuentas bancarias para encontrar suscripciones, seguir tus gastos y armar presupuestos, con planes de pago cuyo equipo cancela suscripciones y negocia facturas por ti. Aquí tienes qué hace, cuánto cuesta y las quejas que vale la pena conocer, cada dato revisado en rocketmoney.com, su centro de ayuda y sitios de reseñas. Outlayr, la app que hacemos nosotros, está en la tabla para comparar.",
+                }),
+                meta: {
+                    description: t({
+                        en: "What Rocket Money is, what it does, what the free plan and Premium cost, the complaints about charges and cancelling, and how it compares with Outlayr.",
+                        es: "Qué es Rocket Money, qué hace, cuánto cuestan el plan gratis y Premium, las quejas por cobros y cancelaciones, y cómo se compara con Outlayr.",
+                    }),
+                    title: t({
+                        en: "What Is Rocket Money? An Honest Review (2026) · Outlayr",
+                        es: "¿Qué es Rocket Money? Una reseña honesta (2026) · Outlayr",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "Rocket Money is a budgeting and subscription app for the United States that reads your linked bank and card accounts to show what you spend, which subscriptions you pay, and what bills are coming.",
+                                es: "Rocket Money es una app de presupuesto y suscripciones para Estados Unidos que lee tus cuentas bancarias y tarjetas conectadas para mostrarte lo que gastas, qué suscripciones pagas y qué facturas vienen.",
+                            }),
+                            t({
+                                en: "You link accounts through Plaid, and transactions sync on their own. The free plan covers the basics. Premium, at a price you pick, adds unlimited budgets and a team that cancels subscriptions for you. Premium+, at $15 a month, adds Rowan, an AI assistant you text, and bill negotiation with no success fee.",
+                                es: "Conectas tus cuentas a través de Plaid y los movimientos se sincronizan solos. El plan gratis cubre lo básico. Premium, al precio que elijas, agrega presupuestos ilimitados y un equipo que cancela suscripciones por ti. Premium+, a US$15 al mes, agrega Rowan, un asistente con IA al que le escribes por mensaje, y la negociación de facturas sin comisión.",
+                            }),
+                        ],
+                        id: "what-is-rocket-money",
+                        title: t({ en: "What is Rocket Money?", es: "¿Qué es Rocket Money?" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Subscriptions. It finds recurring charges in your linked accounts and lists them with their dates. With Premium, its team can cancel one for you, which it says takes 2 to 10 days.",
+                                es: "Suscripciones. Encuentra los cobros recurrentes en tus cuentas conectadas y los muestra con sus fechas. Con Premium, su equipo puede cancelar una por ti, lo que según la empresa tarda de 2 a 10 días.",
+                            }),
+                            t({
+                                en: "Budgets and spending. It sorts transactions by category and tracks them against budgets: up to 2 category budgets on the free plan, unlimited with Premium. Manual transactions are a Premium feature.",
+                                es: "Presupuestos y gastos. Ordena los movimientos por categoría y los compara con tus presupuestos: hasta 2 presupuestos por categoría en el plan gratis, ilimitados con Premium. Los movimientos manuales son una función Premium.",
+                            }),
+                            t({
+                                en: "Bill negotiation. Its concierge asks providers to lower bills like internet or phone. Since November 2, 2026 it is only in Premium+, with no success fee. Before that, it charged 35% to 60% of the first year's savings.",
+                                es: "Negociación de facturas. Su equipo le pide a los proveedores que bajen facturas como la de internet o el teléfono. Desde el 2 de noviembre de 2026 está solo en Premium+, sin comisión. Antes cobraba entre 35% y 60% del ahorro del primer año.",
+                            }),
+                            t({
+                                en: "Also in Premium: net worth, Experian credit reports, shared accounts, the web version, and data export. Smart Savings moves money into savings goals on its own.",
+                                es: "También en Premium: patrimonio neto, reportes de crédito de Experian, cuentas compartidas, la versión web y la exportación de datos. Smart Savings pasa dinero a metas de ahorro por su cuenta.",
+                            }),
+                        ],
+                        id: "features",
+                        title: t({ en: "Features", es: "Funciones" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "The pricing is the part people misread. Premium is pay what you want on a sliding scale, typically $7 to $14 a month, and Rocket Money says the range can change. You pick the amount at sign-up, the first 7 days are free, and then that amount is charged. You can change it later in Settings, under Membership.",
+                                es: "El precio es la parte que más se malinterpreta. Premium cuesta lo que quieras pagar en una escala, normalmente entre US$7 y US$14 al mes, y Rocket Money dice que el rango puede cambiar. Eliges el monto al registrarte, los primeros 7 días son gratis y luego se cobra ese monto. Puedes cambiarlo después en Settings, en Membership.",
+                            }),
+                            t({
+                                en: "Most complaints on the Better Business Bureau and Trustpilot are about charges people did not expect, being asked for a negotiation fee before they could check the savings, and trouble closing an account. It is a fair app if you read the plan before you start the trial.",
+                                es: "La mayoría de las quejas en el Better Business Bureau y en Trustpilot son por cobros que la gente no esperaba, por pedir la comisión de negociación antes de poder comprobar el ahorro y por problemas para cerrar la cuenta. Es una app correcta si lees el plan antes de empezar la prueba.",
+                            }),
+                        ],
+                        id: "cost",
+                        title: t({ en: "What it costs, and the complaints", es: "Cuánto cuesta, y las quejas" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
+                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+                            }),
+                            t({
+                                en: "Rocket Money does the work for you if you are in the United States and willing to link your banks: entries arrive on their own, and its team cancels and negotiates. Outlayr asks you to log each entry, in exchange for no bank connection, any country, and any currency. The full comparison, with how to move your data, is on the Rocket Money alternative page.",
+                                es: "Rocket Money hace el trabajo por ti si estás en Estados Unidos y estás dispuesto a conectar tus bancos: los movimientos llegan solos, y su equipo cancela y negocia. Outlayr te pide registrar cada gasto, a cambio de no conectar ningún banco, cualquier país y cualquier moneda. La comparación completa, con cómo pasar tus datos, está en la página de alternativa a Rocket Money.",
+                            }),
+                        ],
+                        id: "outlayr",
+                        title: t({ en: "Rocket Money vs Outlayr", es: "Rocket Money vs Outlayr" }),
+                    },
+                ],
+                related: [
+                    "/compare/rocket-money",
+                    "/guides/best-subscription-tracker-apps",
+                    "/guides/budget-app-without-bank-account",
+                ] satisfies PageRef[],
+                table: {
+                    caption: t({
+                        en: "Rocket Money plans and prices as listed on rocketmoney.com and its help center, checked November 17, 2026.",
+                        es: "Planes y precios de Rocket Money según rocketmoney.com y su centro de ayuda, revisados el 17 de noviembre de 2026.",
+                    }),
+                    columns: [
+                        t({ en: "Rocket Money free", es: "Rocket Money gratis" }),
+                        t({ en: "Rocket Money paid", es: "Rocket Money de pago" }),
+                        t({ en: "Outlayr", es: "Outlayr" }),
+                    ],
+                    corner: t({ en: "Plan", es: "Plan" }),
+                    rows: [
+                        {
+                            cells: [
+                                t({ en: "$0", es: "US$0" }),
+                                t({
+                                    en: "Premium: pay what you want, typically $7 to $14 a month, 7 days free. Premium+: $15 a month plus tax",
+                                    es: "Premium: lo que quieras pagar, normalmente US$7 a US$14 al mes, 7 días gratis. Premium+: US$15 al mes más impuestos",
+                                }),
+                                OUTLAYR.price,
+                            ],
+                            label: t({ en: "Price", es: "Precio" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "Links US bank accounts through Plaid",
+                                    es: "Conecta cuentas bancarias de Estados Unidos a través de Plaid",
+                                }),
+                                t({
+                                    en: "Links US bank accounts through Plaid",
+                                    es: "Conecta cuentas bancarias de Estados Unidos a través de Plaid",
+                                }),
+                                t({ en: "Never links a bank", es: "Nunca se conecta a un banco" }),
+                            ],
+                            label: t({ en: "Bank linking", es: "Conexión al banco" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "Synced from linked accounts",
+                                    es: "Sincronizados desde las cuentas conectadas",
+                                }),
+                                t({
+                                    en: "Synced, plus manual transactions",
+                                    es: "Sincronizados, más movimientos manuales",
+                                }),
+                                t({
+                                    en: "Sentence, voice, receipt, Apple Pay, or CSV import",
+                                    es: "Oración, voz, recibo, Apple Pay o importación de CSV",
+                                }),
+                            ],
+                            label: t({ en: "How entries get in", es: "Cómo entran los registros" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "Up to 2 category budgets", es: "Hasta 2 presupuestos por categoría" }),
+                                t({ en: "Unlimited", es: "Ilimitados" }),
+                                t({
+                                    en: "2 category budgets plus one overall free. Unlimited with Pro",
+                                    es: "2 por categoría más uno general gratis. Ilimitados con Pro",
+                                }),
+                            ],
+                            label: t({ en: "Budgets", es: "Presupuestos" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "Found and listed for you", es: "Las encuentra y te las muestra" }),
+                                t({ en: "Its team cancels them for you", es: "Su equipo las cancela por ti" }),
+                                t({
+                                    en: "Listed, with a reminder before each charge if you want one. You cancel them yourself",
+                                    es: "Listadas, con un aviso antes de cada cobro si lo quieres. Las cancelas tú",
+                                }),
+                            ],
+                            label: t({ en: "Subscriptions", es: "Suscripciones" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "No", es: "No" }),
+                                t({ en: "Premium+ only, no success fee", es: "Solo Premium+, sin comisión" }),
+                                t({ en: "No", es: "No" }),
+                            ],
+                            label: t({ en: "Bill negotiation", es: "Negociación de facturas" }),
+                        },
+                        {
+                            cells: [
+                                t({ en: "The United States", es: "Estados Unidos" }),
+                                t({ en: "The United States", es: "Estados Unidos" }),
+                                t({
+                                    en: "175 countries and regions, 165 currencies",
+                                    es: "175 países y regiones, 165 monedas",
+                                }),
+                            ],
+                            label: t({ en: "Where it works", es: "Dónde funciona" }),
+                        },
+                        {
+                            cells: [
+                                t({
+                                    en: "Seeing your US subscriptions and spending in one place",
+                                    es: "Ver tus suscripciones y gastos de Estados Unidos en un solo lugar",
+                                }),
+                                t({
+                                    en: "Having a team cancel subscriptions and negotiate bills for you",
+                                    es: "Que un equipo cancele suscripciones y negocie facturas por ti",
+                                }),
+                                t({
+                                    en: "Tracking by hand with no bank link, anywhere, in any currency",
+                                    es: "Llevar tus gastos a mano sin conectar el banco, en cualquier país y moneda",
+                                }),
+                            ],
+                            label: t({ en: "Best for", es: "Ideal para" }),
+                        },
+                    ],
+                },
+                title: t({
+                    en: "What Is Rocket Money? An Honest Review (2026)",
+                    es: "¿Qué es Rocket Money? Una reseña honesta (2026)",
+                }),
+            },
             "budget-app-without-bank-account": {
                 facts: [
                     {
