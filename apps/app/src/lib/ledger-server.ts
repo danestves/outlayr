@@ -1,3 +1,4 @@
+import { merchantLogoUrl } from "@outlayr/backend/confect/lib/photoKeys";
 import { PULL_PAGE_MAX } from "@outlayr/backend/confect/sync";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import type { DehydratedDbState } from "@tanstack/react-db";
@@ -60,6 +61,7 @@ async function pullLedger(client: ConvexHttpClient) {
     const rows: PulledRow[] = [];
     const keys = new Set<string>();
     const minting: Promise<MintedPhotos["minted"]>[] = [];
+    const logos: { key: string; url: string }[] = [];
     const mint = (batch: string[]) => {
         const urls = client.mutation(api.photos.readUrls, { keys: batch }, { skipQueue: true });
         // Handled at once, so a failure during the next page cannot crash the process. Promise.all still throws it.
@@ -82,12 +84,22 @@ async function pullLedger(client: ConvexHttpClient) {
             continue;
         }
         rows.push(...page.rows);
-        const fresh = [...new Set(imageKeysOf(page.rows))].filter((key) => !keys.has(key));
-        for (const key of fresh) {
+        const owned: string[] = [];
+        for (const key of new Set(imageKeysOf(page.rows))) {
+            if (keys.has(key)) {
+                continue;
+            }
             keys.add(key);
+            // A merchant logo's URL is public and fixed, so only the visitor's own photos need a signed one.
+            const logo = merchantLogoUrl(key);
+            if (logo) {
+                logos.push({ key, url: logo });
+            } else {
+                owned.push(key);
+            }
         }
-        for (let index = 0; index < fresh.length; index += PHOTO_BATCH) {
-            mint(fresh.slice(index, index + PHOTO_BATCH));
+        for (let index = 0; index < owned.length; index += PHOTO_BATCH) {
+            mint(owned.slice(index, index + PHOTO_BATCH));
         }
         ({ cursor } = page);
         if (!page.hasMore) {
@@ -98,9 +110,9 @@ async function pullLedger(client: ConvexHttpClient) {
     const minted = await timed(
         "photos-wait",
         () => Promise.all(minting),
-        (batches) => `${batches.length} batches`
+        (batches) => `${batches.length} batches, ${logos.length} logos`
     );
-    const photos: MintedPhotos = { keys: [...keys], minted: minted.flat(), mintedAt };
+    const photos: MintedPhotos = { keys: [...keys], minted: [...logos, ...minted.flat()], mintedAt };
     return { cursor, photos, rows };
 }
 
