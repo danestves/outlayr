@@ -48,13 +48,15 @@ export function Sentence<TSlot extends string>({
             <View className={cn("flex-row flex-wrap items-baseline", gapClassName)}>
                 {clusters.map((cluster, index) => (
                     <Animated.View
-                        className="flex-row items-baseline"
+                        className="shrink flex-row items-baseline"
                         entering={clusterEntering(index)}
                         key={`${index}:${cluster.atoms.map((atom) => atom.value).join(",")}`}
                     >
                         {cluster.atoms.map((atom, atomIndex) =>
                             atom.kind === "slot" ? (
-                                <View key={`${atomIndex}:${atom.value}`}>{fills.get(atom.value) ?? null}</View>
+                                <View className="shrink" key={`${atomIndex}:${atom.value}`}>
+                                    {fills.get(atom.value) ?? null}
+                                </View>
                             ) : (
                                 <Text className={textClassName} key={`${atomIndex}:${atom.value}`}>
                                     {atom.value}

@@ -50,10 +50,10 @@ export function SentenceInput({
     const [overflowing, setOverflowing] = useState(false);
 
     return (
-        <View className="flex-row items-baseline gap-1.5">
+        <View className="shrink flex-row items-baseline gap-1.5">
             <SentenceWash active />
             {children}
-            <View>
+            <View className="shrink">
                 <Text
                     aria-hidden
                     className={cn(textClassName, "pr-0.5", overflowing && "opacity-0")}
@@ -62,10 +62,10 @@ export function SentenceInput({
                 >
                     {value === "" ? placeholder : value}
                 </Text>
-                {/* As wide as the slot, so it wraps only once the copy above is cut short. */}
+                {/* Same box as the copy, so it wraps exactly when the copy would be cut short. */}
                 <Text
                     aria-hidden
-                    className={cn(textClassName, "absolute top-0 right-0 left-0 opacity-0")}
+                    className={cn(textClassName, "absolute top-0 right-0 left-0 pr-0.5 opacity-0")}
                     onTextLayout={(event) => setOverflowing(event.nativeEvent.lines.length > 1)}
                     pointerEvents="none"
                 >
