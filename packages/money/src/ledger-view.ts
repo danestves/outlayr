@@ -12,6 +12,7 @@ import { decimalsFor } from "./currency";
 import { toCells } from "./currency-totals";
 import type { CurrencyCell, CurrencyEntry } from "./currency-totals";
 import { utcDateString } from "./dates";
+import type { OpeningCell } from "./ledger-cells";
 import { accountLook, buildLog, entryLook, placed } from "./ledger-log";
 import type { AccountSource, CategorySource, EntrySource, TransferSource } from "./ledger-log";
 import {
@@ -130,6 +131,11 @@ function groupCells(entries: readonly LegEntry[], key: (entry: LegEntry) => stri
 }
 
 const customName = (name: string | null) => (name?.trim() ? name.trim() : null);
+
+export interface LedgerOpening {
+    cells: readonly OpeningCell[];
+    cutoff: number;
+}
 
 export interface LedgerClock {
     now: number;
@@ -307,18 +313,30 @@ export function accountBalances(
     },
     currency: string,
     rates: RateTable,
-    { now, offsetAt }: LedgerClock
+    { now, offsetAt }: LedgerClock,
+    opening: LedgerOpening | null = null
 ) {
     const accounts = live(books.accounts)
         .filter((account) => (account.archivedAt ?? null) === null)
         .sort((a, b) => a.sortOrder - b.sortOrder);
+    const since = opening?.cutoff ?? Number.NEGATIVE_INFINITY;
+    const carried = new Map<string, OpeningCell[]>();
+    for (const cell of opening?.cells ?? []) {
+        carried.set(cell.accountId, [...(carried.get(cell.accountId) ?? []), cell]);
+    }
     const ledger = new Map<string, LegEntry[]>(accounts.map((account) => [account.localId, []]));
     for (const row of happened(books.transactions, now).sort(bySeq)) {
+        if (row.date < since) {
+            continue;
+        }
         if (row.accountId) {
             ledger.get(row.accountId)?.push({ ...row, date: new Date(row.date), leg: "flow" });
         }
     }
     for (const row of happened(books.transfers, now).sort(bySeq)) {
+        if (row.date < since) {
+            continue;
+        }
         const date = new Date(row.date);
         ledger.get(row.fromAccountId)?.push({
             amount: row.fromAmount,
@@ -343,7 +361,8 @@ export function accountBalances(
     for (const row of [...books.outsidePayments].sort(bySeq)) {
         const accountId = planAccount.get(row.planId);
         const accountCurrency = accountId === undefined ? undefined : currencyOf.get(accountId);
-        if (row.deletedAt !== null || row.date > now || accountId === undefined || accountCurrency === undefined) {
+        const counted = row.deletedAt === null && row.date <= now && row.date >= since;
+        if (!counted || accountId === undefined || accountCurrency === undefined) {
             continue;
         }
         ledger.get(accountId)?.push({
@@ -357,7 +376,8 @@ export function accountBalances(
     }
     for (const row of [...books.outsideMoves].sort(bySeq)) {
         const accountCurrency = currencyOf.get(row.accountId);
-        if (row.deletedAt !== null || row.date > now || accountCurrency === undefined) {
+        const counted = row.deletedAt === null && row.date <= now && row.date >= since;
+        if (!counted || accountCurrency === undefined) {
             continue;
         }
         ledger.get(row.accountId)?.push({
@@ -371,12 +391,13 @@ export function accountBalances(
     }
     const overview = accountsOverview(
         accounts.map((row) => ({ ...row, id: row.localId })),
-        accounts.flatMap((account) =>
-            groupCells(ledger.get(account.localId) ?? [], (entry) => entry.leg).map((cell) => ({
+        accounts.flatMap((account) => [
+            ...(carried.get(account.localId) ?? []),
+            ...groupCells(ledger.get(account.localId) ?? [], (entry) => entry.leg).map((cell) => ({
                 ...cell,
                 accountId: account.localId,
-            }))
-        ),
+            })),
+        ]),
         currency,
         rates,
         new Date(now)
@@ -393,10 +414,13 @@ export function accountBalances(
             }
             const own = accountBalance(
                 account,
-                groupCells(
-                    ledger.get(account.localId) ?? [],
-                    (entry) => `${entry.leg}|${isoDay(entry.date.getTime(), offsetAt(entry.date.getTime()))}`
-                ),
+                [
+                    ...(carried.get(account.localId) ?? []),
+                    ...groupCells(
+                        ledger.get(account.localId) ?? [],
+                        (entry) => `${entry.leg}|${isoDay(entry.date.getTime(), offsetAt(entry.date.getTime()))}`
+                    ),
+                ],
                 rates
             );
             return [
@@ -655,8 +679,12 @@ function viewOf(books: LedgerRows, now: number) {
     };
 }
 
-function glanceOf(books: LedgerRows, { clock, currency, rates }: ReturnType<typeof viewOf>) {
-    const balances = accountBalances(books, currency, rates, clock);
+function glanceOf(
+    books: LedgerRows,
+    { clock, currency, rates }: ReturnType<typeof viewOf>,
+    opening: LedgerOpening | null = null
+) {
+    const balances = accountBalances(books, currency, rates, clock, opening);
     return {
         balances: {
             ...balances,
@@ -667,8 +695,8 @@ function glanceOf(books: LedgerRows, { clock, currency, rates }: ReturnType<type
     };
 }
 
-export function ledgerGlance(books: LedgerRows, now: number) {
-    return glanceOf(books, viewOf(books, now));
+export function ledgerGlance(books: LedgerRows, now: number, opening: LedgerOpening | null = null) {
+    return glanceOf(books, viewOf(books, now), opening);
 }
 
 export function ledgerOverview(books: LedgerRows, now: number) {

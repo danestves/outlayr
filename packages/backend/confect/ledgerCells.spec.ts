@@ -3,6 +3,13 @@ import * as Schema from "effect/Schema";
 
 export default GroupSpec.make()
     .addFunction(
+        FunctionSpec.publicMutation({
+            name: "build",
+            args: () => ({}),
+            returns: () => Schema.Null,
+        })
+    )
+    .addFunction(
         FunctionSpec.internalMutation({
             name: "refresh",
             args: () => ({ days: Schema.Array(Schema.Number), userId: Schema.String }),

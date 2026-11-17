@@ -1,7 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import * as Schema from "effect/Schema";
 
-import { PulledRow, PushRow, SyncedTableName } from "./sync";
+import { OpeningCell, PulledRow, PushRow, SyncedTableName } from "./sync";
 
 export default GroupSpec.make()
     .addFunction(
@@ -21,6 +21,20 @@ export default GroupSpec.make()
             }),
             returns: () =>
                 Schema.Struct({ cursor: Schema.Number, hasMore: Schema.Boolean, rows: Schema.Array(PulledRow) }),
+        })
+    )
+    .addFunction(
+        FunctionSpec.publicQuery({
+            name: "pullRecent",
+            args: () => ({ since: Schema.Number, tables: Schema.Array(SyncedTableName) }),
+            returns: () =>
+                Schema.NullOr(
+                    Schema.Struct({
+                        opening: Schema.Array(OpeningCell),
+                        rows: Schema.Array(PulledRow),
+                        since: Schema.Number,
+                    })
+                ),
         })
     )
     .addFunction(

@@ -96,6 +96,18 @@ export const PulledRow = Schema.Struct({
     updatedAt: Schema.Number,
 });
 
+export const OpeningCell = Schema.Struct({
+    accountId: Schema.String,
+    amount: Schema.Number,
+    amountUsd: Schema.Number,
+    count: Schema.Number,
+    currencyCode: Schema.NullOr(Schema.String),
+    dateKey: Schema.String,
+    income: Schema.Boolean,
+    unconvertedAmount: Schema.Number,
+    unconvertedCount: Schema.Number,
+});
+
 export type SyncedDoc = Docs[SyncedTable];
 
 export class AccountDeleting extends Schema.TaggedError<AccountDeleting>()("AccountDeleting", {

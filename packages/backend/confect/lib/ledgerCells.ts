@@ -1,5 +1,5 @@
 import { utcDateString } from "@outlayr/money/dates";
-import { compareLedgerCells, LEDGER_CELLS_VERSION, ledgerCellsOf } from "@outlayr/money/ledger-cells";
+import { compareLedgerCells, LEDGER_CELLS_VERSION, ledgerCellsOf, openingCells } from "@outlayr/money/ledger-cells";
 import type { LedgerCell } from "@outlayr/money/ledger-cells";
 import { DAY_MS, utcDayStart } from "@outlayr/money/ledger-zone";
 import * as Duration from "effect/Duration";
@@ -47,7 +47,7 @@ const monthDoc = Effect.fn("LedgerCells.monthDoc")(function* monthDoc(userId: st
         .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
 });
 
-const live = Effect.fn("LedgerCells.live")(function* live(userId: string, from: number, to: number) {
+export const liveRows = Effect.fn("LedgerCells.liveRows")(function* liveRows(userId: string, from: number, to: number) {
     const reader = yield* DatabaseReader;
     return {
         outsideMoves: reader
@@ -74,7 +74,7 @@ const live = Effect.fn("LedgerCells.live")(function* live(userId: string, from: 
 });
 
 const liveCells = Effect.fn("LedgerCells.liveCells")(function* liveCells(userId: string, from: number, to: number) {
-    const rows = yield* live(userId, from, to);
+    const rows = yield* liveRows(userId, from, to);
     return ledgerCellsOf(
         yield* Effect.all(
             {
@@ -172,7 +172,7 @@ export const refreshDays = Effect.fn("LedgerCells.refreshDays")(function* refres
 });
 
 const firstLiveMonth = Effect.fn("LedgerCells.firstLiveMonth")(function* firstLiveMonth(userId: string, from: number) {
-    const rows = yield* live(userId, from, Number.POSITIVE_INFINITY);
+    const rows = yield* liveRows(userId, from, Number.POSITIVE_INFINITY);
     const first: readonly Option.Option<{ date: number }>[] = yield* Effect.all(
         [rows.outsideMoves.first(), rows.outsidePayments.first(), rows.transactions.first(), rows.transfers.first()],
         { concurrency: "unbounded" }
@@ -220,4 +220,45 @@ export const rebuildCells = Effect.fn("LedgerCells.rebuildCells")(function* rebu
         return yield* setCells(userId, yield* syncStateOf(userId), { building: false, run });
     }
     yield* scheduler.runAfter(Duration.zero, refs.internal.ledgerCells.rebuild, { step: { month, run }, userId });
+});
+
+export const startCells = Effect.fn("LedgerCells.startCells")(function* startCells(userId: string) {
+    const state = yield* syncStateOf(userId);
+    if (state?.cells?.version !== LEDGER_CELLS_VERSION) {
+        yield* rebuildCells(userId, null);
+    }
+});
+
+export const openingBefore = Effect.fn("LedgerCells.openingBefore")(function* openingBefore(
+    userId: string,
+    cutoff: number
+) {
+    const reader = yield* DatabaseReader;
+    const state = yield* syncStateOf(userId);
+    if (state?.cells?.version !== LEDGER_CELLS_VERSION || state.cells.building) {
+        return null;
+    }
+    const [months, accounts, plans] = yield* Effect.all(
+        [
+            reader
+                .table("ledgerCells")
+                .index("by_user_and_month", (q) => q.eq("userId", userId).lte("month", monthKey(cutoff)))
+                .collect(),
+            reader
+                .table("accounts")
+                .index("by_user_and_seq", (q) => q.eq("userId", userId))
+                .collect(),
+            reader
+                .table("installmentPlans")
+                .index("by_user_and_seq", (q) => q.eq("userId", userId))
+                .collect(),
+        ],
+        { concurrency: "unbounded" }
+    );
+    const day = utcDateString(cutoff);
+    return openingCells(
+        months.flatMap((month) => month.cells.filter((cell) => cell.dateKey < day)),
+        accounts,
+        plans
+    );
 });
