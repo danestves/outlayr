@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { Platform, View } from "react-native";
 
@@ -45,6 +46,8 @@ export function SentenceInput({
 }: SentenceInputProps) {
     const { textClassName } = useSentenceStyle();
     const colors = useColors();
+    // Past a line the slot stops growing, so the field can draw and scroll its own text without outrunning it.
+    const [overflowing, setOverflowing] = useState(false);
 
     return (
         <View className="flex-row items-baseline gap-1.5">
@@ -53,11 +56,20 @@ export function SentenceInput({
             <View>
                 <Text
                     aria-hidden
-                    className={cn(textClassName, "pr-0.5")}
+                    className={cn(textClassName, "pr-0.5", overflowing && "opacity-0")}
                     numberOfLines={1}
                     style={{ color: value === "" ? colors.muted : colors.foreground }}
                 >
                     {value === "" ? placeholder : value}
+                </Text>
+                {/* As wide as the slot, so it wraps only once the copy above is cut short. */}
+                <Text
+                    aria-hidden
+                    className={cn(textClassName, "absolute top-0 right-0 left-0 opacity-0")}
+                    onTextLayout={(event) => setOverflowing(event.nativeEvent.lines.length > 1)}
+                    pointerEvents="none"
+                >
+                    {value}
                 </Text>
                 <TextInput
                     accessibilityLabel={accessibilityLabel}
@@ -73,7 +85,11 @@ export function SentenceInput({
                     onSubmitEditing={onSubmit}
                     returnKeyType="next"
                     selectionColor={colors.tint}
-                    style={{ color: INVISIBLE_INK, right: -FIELD_OVERHANG }}
+                    style={
+                        overflowing
+                            ? { color: colors.foreground, right: 0 }
+                            : { color: INVISIBLE_INK, right: -FIELD_OVERHANG }
+                    }
                     submitBehavior="submit"
                     testID="sentence-merchant-field"
                     value={value}

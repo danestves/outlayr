@@ -129,7 +129,7 @@ export function TransactionStage({
     const part = use(StagePartContext);
     const largeText = useAccessibilityTextSize();
     const fontScaleCap = largeText ? LARGE_TEXT_STAGE_FONT_SCALE_CAP : STAGE_FONT_SCALE_CAP;
-    const buttonOnly = part === "pinned" && largeText;
+    const buttonOnly = part === "pinned" && largeText && !bare;
     const inline = part === "inline";
     const tone = footer?.tone ?? "primary";
     const bottomPad = { paddingBottom: keyboardShown ? KEYBOARD_BOTTOM_PAD : Math.max(BOTTOM_PAD, insets.bottom) };

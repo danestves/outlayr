@@ -100,7 +100,7 @@ export const TransactionStage: typeof TransactionStageBase = ({
     const part = use(StagePartContext);
     const largeText = useAccessibilityTextSize();
     const fontScaleCap = largeText ? LARGE_TEXT_STAGE_FONT_SCALE_CAP : STAGE_FONT_SCALE_CAP;
-    const buttonOnly = part === "pinned" && largeText;
+    const buttonOnly = part === "pinned" && largeText && !bare;
     const inline = part === "inline";
     const ready = (footer?.tone ?? "primary") === "primary";
     // The part that draws the back button owns the press: at large text the pinned part is only the footer.
