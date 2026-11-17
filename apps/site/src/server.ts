@@ -5,6 +5,8 @@ import { filterPlugin, frontmatterPlugin, isolateMainPlugin } from "@mdream/js/p
 import { SITE_URL } from "@outlayr/shared/urls";
 import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 const HIDDEN = [
     "aside",
@@ -35,11 +37,46 @@ function flattenDefinitions(html: string): string {
     return DEFINITION_LIST.reduce((out, [pattern, replacement]) => out.replace(pattern, replacement), html);
 }
 
+const LD_JSON = /<script\b[^>]*type="application\/ld\+json"[^>]*>([^<]*)<\/script>/gu;
+
+const LinkedNode = Schema.Struct({
+    "@id": Schema.optional(Schema.String),
+    author: Schema.optional(Schema.Struct({ "@id": Schema.String })),
+    dateModified: Schema.optional(Schema.String),
+    name: Schema.optional(Schema.String),
+});
+
+const decodeLinkedData = Schema.decodeUnknownOption(
+    Schema.fromJsonString(Schema.Union([Schema.Struct({ "@graph": Schema.Array(LinkedNode) }), LinkedNode]))
+);
+
+// The byline and date render in the body, which the front matter never sees, so read them from the page's JSON-LD.
+function bylineFields(html: string) {
+    const nodes = [...html.matchAll(LD_JSON)]
+        .flatMap(([, json]) => Option.toArray(decodeLinkedData(json)))
+        .flatMap((block) => ("@graph" in block ? block["@graph"] : [block]));
+    const authorId = nodes.find((node) => node.author)?.author?.["@id"];
+    const author = authorId === undefined ? undefined : nodes.find((node) => node["@id"] === authorId)?.name;
+    const updated = nodes.find((node) => node.dateModified)?.dateModified;
+    const fields: Record<string, string> = {};
+    if (author !== undefined) {
+        fields.author = author;
+    }
+    if (updated !== undefined) {
+        fields.updated = updated;
+    }
+    return fields;
+}
+
 function toMarkdown(html: string): string {
     return htmlToMarkdown(flattenDefinitions(html), {
         clean: clean(),
         origin: SITE_URL,
-        plugins: [frontmatterPlugin(), isolateMainPlugin(), filterPlugin({ exclude: HIDDEN })],
+        plugins: [
+            frontmatterPlugin({ additionalFields: bylineFields(html) }),
+            isolateMainPlugin(),
+            filterPlugin({ exclude: HIDDEN }),
+        ],
     });
 }
 

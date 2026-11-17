@@ -6,7 +6,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 import { Article, CompareTable, DELAYS, FactList, Questions } from "@/components/answers/article";
 import { Icon } from "@/components/icon";
 import { hasKey } from "@/lib/has-key";
-import { answerTrail, faqPage, ldJson, pageMeta, webPage } from "@/lib/seo";
+import { FOUNDER_ID, answerTrail, faqPage, ldJson, pageMeta, webPage } from "@/lib/seo";
 import { EXPORTS_CHECKED, compareUpdated, longDate, rivalChecked } from "@/lib/site";
 
 export const Route = createFileRoute("/{-$locale}/compare/$slug")({
@@ -25,6 +25,7 @@ export const Route = createFileRoute("/{-$locale}/compare/$slug")({
                 ldJson(answerTrail(locale, "compare", slug, rival.title)),
                 ldJson(
                     webPage(locale, `/compare/${slug}`, {
+                        author: { "@id": FOUNDER_ID },
                         dateModified: compareUpdated(slug).toISOString().slice(0, 10),
                     })
                 ),

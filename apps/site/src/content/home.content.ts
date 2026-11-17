@@ -2,13 +2,7 @@ import { FREE_CAPTURES, PRO_CAPTURES } from "@outlayr/money/capture-allowance";
 import { t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
-import {
-    ACCOUNTS_SCREEN_ALT,
-    BUDGETS_SCREEN_ALT,
-    OPEN_SOURCE_ANSWER,
-    OPEN_SOURCE_QUESTION,
-    RECEIPT_SCAN_ANSWER,
-} from "./shared";
+import { ACCOUNTS_SCREEN_ALT, BUDGETS_SCREEN_ALT, OPEN_SOURCE_ANSWER, OPEN_SOURCE_QUESTION } from "./shared";
 
 const home = {
     content: {
@@ -124,11 +118,11 @@ const home = {
         faq: [
             {
                 answer: t({
-                    en: "Outlayr is an open source mobile expense tracker, budget app, and subscription tracker, made by danestves LLC. You log a purchase by typing one sentence, saying it, or scanning the receipt. Budgets, savings goals, subscriptions, and insights update as you log, in any of 165 currencies, in English, Spanish, Portuguese, French, or German.",
-                    de: "Outlayr ist ein Open-Source-Ausgaben-Tracker, eine Budget-App und ein Abo-Tracker fürs Handy, gemacht von danestves LLC. Du erfasst einen Einkauf, indem du einen Satz tippst, ihn einsprichst oder den Beleg scannst. Budgets, Sparziele, Abos und Auswertungen aktualisieren sich beim Erfassen, in jeder von 165 Währungen, auf Englisch, Spanisch, Portugiesisch, Französisch oder Deutsch.",
-                    es: "Outlayr es una app móvil de código abierto para controlar tus gastos, tu presupuesto y tus suscripciones, hecha por danestves LLC. Registras una compra escribiendo una oración, dictándola o escaneando el recibo. Los presupuestos, las metas de ahorro, las suscripciones y las estadísticas se actualizan a medida que registras, en cualquiera de 165 monedas, en inglés, español, portugués, francés o alemán.",
-                    pt: "O Outlayr é um app de código aberto para controlar seus gastos, seu orçamento e suas assinaturas no celular, feito pela danestves LLC. Você registra uma compra digitando uma frase, falando ou escaneando o recibo. Orçamentos, metas de economia, assinaturas e estatísticas se atualizam conforme você registra, em qualquer uma de 165 moedas, em inglês, espanhol, português, francês ou alemão.",
-                    fr: "Outlayr est une app mobile open source pour suivre vos dépenses, votre budget et vos abonnements, créée par danestves LLC. Vous enregistrez un achat en tapant une phrase, en la dictant ou en scannant le ticket. Les budgets, les objectifs d'épargne, les abonnements et les statistiques se mettent à jour au fil de vos saisies, dans l'une des 165 devises, en anglais, espagnol, portugais, français ou allemand.",
+                    en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies. It is an open source budget app and subscription tracker for iPhone and Android, made by danestves LLC. Budgets, savings goals, subscriptions, and insights update as you log, in English, Spanish, Portuguese, French, or German.",
+                    de: "Outlayr ist der Ausgaben-Tracker, der nie dein Bankkonto verknüpft: Erfasse per Satz, Sprache, Beleg oder Apple Pay, in jeder von 165 Währungen. Outlayr ist eine Open-Source-Budget-App und ein Abo-Tracker für iPhone und Android, gemacht von danestves LLC. Budgets, Sparziele, Abos und Auswertungen aktualisieren sich beim Erfassen, auf Englisch, Spanisch, Portugiesisch, Französisch oder Deutsch.",
+                    es: "Outlayr es la app de gastos que nunca conecta tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas. Es una app de código abierto para tu presupuesto y tus suscripciones, para iPhone y Android, hecha por danestves LLC. Los presupuestos, las metas de ahorro, las suscripciones y las estadísticas se actualizan a medida que registras, en inglés, español, portugués, francés o alemán.",
+                    pt: "O Outlayr é o app de controle de gastos que nunca conecta seu banco: registre por frase, voz, recibo ou Apple Pay, em qualquer uma de 165 moedas. É um app de código aberto para seu orçamento e suas assinaturas, para iPhone e Android, feito pela danestves LLC. Orçamentos, metas de economia, assinaturas e estatísticas se atualizam conforme você registra, em inglês, espanhol, português, francês ou alemão.",
+                    fr: "Outlayr est l'app de suivi des dépenses qui ne connecte jamais votre banque : saisissez par une phrase, la voix, un ticket ou Apple Pay, dans l'une des 165 devises. C'est une app open source pour votre budget et vos abonnements, sur iPhone et Android, créée par danestves LLC. Les budgets, les objectifs d'épargne, les abonnements et les statistiques se mettent à jour au fil de vos saisies, en anglais, espagnol, portugais, français ou allemand.",
                 }),
                 question: t({
                     en: "What is Outlayr?",
@@ -136,6 +130,22 @@ const home = {
                     es: "¿Qué es Outlayr?",
                     pt: "O que é o Outlayr?",
                     fr: "Qu'est-ce qu'Outlayr ?",
+                }),
+            },
+            {
+                answer: t({
+                    en: "No. Outlayr never links your bank or asks for a bank login. You log by sentence, voice, receipt or Apple Pay, or import a CSV.",
+                    de: "Nein. Outlayr verknüpft nie dein Bankkonto und fragt nie nach deinem Bank-Login. Du erfasst per Satz, Sprache, Beleg oder Apple Pay oder importierst eine CSV-Datei.",
+                    es: "No. Outlayr nunca conecta tu banco ni te pide tu usuario del banco. Registras con una oración, tu voz, un recibo o Apple Pay, o importas un CSV.",
+                    pt: "Não. O Outlayr nunca conecta seu banco nem pede o login do banco. Você registra por frase, voz, recibo ou Apple Pay, ou importa um CSV.",
+                    fr: "Non. Outlayr ne connecte jamais votre banque et ne demande jamais vos identifiants bancaires. Vous saisissez par une phrase, la voix, un ticket ou Apple Pay, ou vous importez un CSV.",
+                }),
+                question: t({
+                    en: "Does Outlayr need my bank login?",
+                    de: "Braucht Outlayr meinen Bank-Login?",
+                    es: "¿Outlayr necesita el usuario de mi banco?",
+                    pt: "O Outlayr precisa do login do meu banco?",
+                    fr: "Outlayr a-t-il besoin de mes identifiants bancaires ?",
                 }),
             },
             {
@@ -203,7 +213,13 @@ const home = {
                 }),
             },
             {
-                answer: RECEIPT_SCAN_ANSWER,
+                answer: t({
+                    en: "Outlayr reads the store, the date, the total, and every line from a photo of the receipt, then fills in the entry for you to save. Take the photo or pick one from your library. Scanning needs an account, and each scan counts as one capture.",
+                    de: "Outlayr liest Geschäft, Datum, Summe und jede Zeile aus einem Foto des Belegs und füllt den Eintrag aus, damit du ihn speicherst. Mach das Foto oder wähle eines aus deiner Fotomediathek. Fürs Scannen brauchst du ein Konto, und jeder Scan zählt als eine Erfassung.",
+                    es: "Outlayr lee la tienda, la fecha, el total y cada línea de una foto del recibo, y llena el registro para que lo guardes. Toma la foto o elige una de tu galería. Para escanear necesitas una cuenta, y cada escaneo equivale a una captura.",
+                    pt: "O Outlayr lê o estabelecimento, a data, o total e cada item de uma foto do recibo, e preenche o lançamento para você salvar. Tire a foto ou escolha uma da sua galeria. Para escanear, você precisa de uma conta, e cada escaneamento conta como uma captura.",
+                    fr: "Outlayr lit le commerce, la date, le total et chaque ligne sur une photo du ticket, puis remplit l'opération pour que vous l'enregistriez. Prenez la photo ou choisissez-en une dans votre galerie. Le scan nécessite un compte, et chaque scan compte comme une capture.",
+                }),
                 question: t({
                     en: "How does receipt scanning work?",
                     de: "Wie funktioniert das Scannen von Belegen?",
@@ -214,18 +230,18 @@ const home = {
             },
             {
                 answer: t({
-                    en: "Yes. Outlayr supports 165 currencies. You can log a purchase in any of them, and totals convert to your main currency at the rate from the day it happened. Each account keeps its own currency: the free plan includes two, Pro allows more.",
-                    de: "Ja. Outlayr unterstützt 165 Währungen. Du kannst einen Einkauf in jeder davon erfassen, und die Summen werden zum Kurs des Tages, an dem er passiert ist, in deine Hauptwährung umgerechnet. Jedes Konto behält seine eigene Währung: Der Gratis-Plan enthält zwei, mit Pro sind es mehr.",
-                    es: "Sí. Outlayr admite 165 monedas. Puedes registrar una compra en cualquiera de ellas, y los totales se convierten a tu moneda principal con la tasa del día de la compra. Cada cuenta tiene su propia moneda: el plan gratis incluye dos y Pro permite más.",
-                    pt: "Sim. O Outlayr aceita 165 moedas. Você pode registrar uma compra em qualquer uma delas, e os totais são convertidos para sua moeda principal com a cotação do dia da compra. Cada conta tem sua própria moeda: o plano grátis inclui duas e o Pro permite mais.",
-                    fr: "Oui. Outlayr prend en charge 165 devises. Vous pouvez enregistrer un achat dans n'importe laquelle, et les totaux sont convertis dans votre devise principale au taux du jour de l'achat. Chaque compte a sa propre devise : la formule gratuite en inclut deux, Pro en permet davantage.",
+                    en: "Yes, 165 currencies. Totals convert to your main currency at the rate from the day of each purchase.",
+                    de: "Ja, 165 Währungen. Summen werden zum Kurs vom Tag jedes Einkaufs in deine Hauptwährung umgerechnet.",
+                    es: "Sí, 165 monedas. Los totales se convierten a tu moneda principal con la tasa del día de cada compra.",
+                    pt: "Sim, 165 moedas. Os totais são convertidos para sua moeda principal com a cotação do dia de cada compra.",
+                    fr: "Oui, 165 devises. Les totaux sont convertis dans votre devise principale au taux du jour de chaque achat.",
                 }),
                 question: t({
-                    en: "Can I track expenses in different currencies?",
-                    de: "Kann ich Ausgaben in verschiedenen Währungen verfolgen?",
-                    es: "¿Puedo registrar gastos en distintas monedas?",
-                    pt: "Posso registrar gastos em moedas diferentes?",
-                    fr: "Puis-je suivre mes dépenses dans plusieurs devises ?",
+                    en: "Does Outlayr support multiple currencies?",
+                    de: "Unterstützt Outlayr mehrere Währungen?",
+                    es: "¿Outlayr admite varias monedas?",
+                    pt: "O Outlayr aceita várias moedas?",
+                    fr: "Outlayr prend-il en charge plusieurs devises ?",
                 }),
             },
             {
