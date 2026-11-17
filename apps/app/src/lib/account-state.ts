@@ -132,6 +132,9 @@ export function seedProfile(client: QueryClient, profile: Profile | undefined) {
     }
 }
 
+export const offerProfile = (client: QueryClient, profile: Profile | undefined) =>
+    seedProfile(client, client.getQueryData(profileQuery.queryKey) ?? profile);
+
 const unlessKnown = { staleTime: Number.POSITIVE_INFINITY } as const;
 
 export function warmAccountState(client: QueryClient) {

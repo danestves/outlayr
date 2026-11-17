@@ -25,7 +25,7 @@ import { DashboardContext, useFilters } from "@/components/dashboard/shell/dashb
 import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filters";
 import type { FilterPatch } from "@/components/dashboard/shell/filters";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
-import { seedProfile, warmAccountState } from "@/lib/account-state";
+import { offerProfile, warmAccountState } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { watchKeyboardInset } from "@/lib/keyboard-inset";
@@ -64,7 +64,7 @@ export const Route = createFileRoute("/_account/_app")({
                 const seed = await serverLedger(token, path ? { asOf, path } : null);
                 ({ opening } = seed);
                 context.dbClient.hydrate({ collections: seed.collections });
-                seedProfile(context.queryClient, seed.profile);
+                offerProfile(context.queryClient, seed.profile);
             }
             await preloadLedger(context.dbClient);
         } catch (error) {

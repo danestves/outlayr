@@ -3,6 +3,7 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
+import type { Profile } from "./account-state";
 import { authServer } from "./auth-server";
 import { timed } from "./server-timing";
 import { signedOutOf } from "./token-wait";
@@ -13,6 +14,17 @@ const URL_SAFE = /[-_]/gu;
 const decodeClaims = Schema.decodeUnknownOption(
     Schema.fromJsonString(Schema.Struct({ exp: Schema.Number, sub: Schema.String }))
 );
+const decodeProfile = Schema.decodeUnknownOption(
+    Schema.fromJsonString(
+        Schema.Struct({
+            email: Schema.String,
+            emailVerified: Schema.Boolean,
+            name: Schema.String,
+            sessionId: Schema.String,
+            sub: Schema.String,
+        })
+    )
+);
 
 const readToken = createServerFn({ method: "GET" }).handler(
     async () => (await timed("token", () => authServer().getToken())) ?? null
@@ -22,14 +34,21 @@ export interface Session {
     token: string | null;
 }
 
-const claimsOf = (token: string) => {
+const payloadOf = (token: string) => {
     const payload = token.split(".")[1]?.replaceAll(URL_SAFE, (char) => (char === "-" ? "+" : "/")) ?? "";
     try {
-        return decodeClaims(atob(payload));
+        return new TextDecoder().decode(Uint8Array.from(atob(payload), (char) => char.codePointAt(0) ?? 0));
     } catch {
-        return Option.none();
+        return "";
     }
 };
+
+const claimsOf = (token: string) => decodeClaims(payloadOf(token));
+
+export const tokenProfile = (token: string): Profile | undefined =>
+    Option.getOrUndefined(
+        Option.map(decodeProfile(payloadOf(token)), ({ sub, ...claims }) => ({ ...claims, id: sub, image: null }))
+    );
 
 export const userOf = (token: string) => Option.getOrUndefined(claimsOf(token))?.sub;
 
