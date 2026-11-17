@@ -17,6 +17,7 @@ final class NotificationService: UNNotificationServiceExtension {
     private static let store = UserDefaults(suiteName: "group.com.tryoutlayr.app")
     private static let secretKey = "capturePushSecret"
 
+    private let lock = NSLock()
     private var contentHandler: ((UNNotificationContent) -> Void)?
     private var original: UNNotificationContent?
 
@@ -36,8 +37,9 @@ final class NotificationService: UNNotificationServiceExtension {
         center.getDeliveredNotifications { delivered in
             let posted = delivered.first { $0.request.identifier == push.id }?.request.content.userInfo
             Self.rename(content, push: push, posted: posted)
+            guard let handler = self.takeHandler() else { return }
             center.removeDeliveredNotifications(withIdentifiers: [push.id])
-            self.deliver(content)
+            handler(content)
         }
     }
 
@@ -48,8 +50,16 @@ final class NotificationService: UNNotificationServiceExtension {
     }
 
     private func deliver(_ content: UNNotificationContent) {
-        contentHandler?(content)
+        takeHandler()?(content)
+    }
+
+    // The lookup callback and expiry run on different threads; only the first one delivers.
+    private func takeHandler() -> ((UNNotificationContent) -> Void)? {
+        lock.lock()
+        defer { lock.unlock() }
+        let handler = contentHandler
         contentHandler = nil
+        return handler
     }
 
     static func rename(_ content: UNMutableNotificationContent, push: CapturePush, posted: [AnyHashable: Any]?) {
