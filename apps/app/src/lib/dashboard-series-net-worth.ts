@@ -224,6 +224,30 @@ const legOf = (key: string): FlowLeg => {
     return leg === "inbound" || leg === "outbound" ? leg : "flow";
 };
 
+export function ownBalanceAt(ledger: Ledger, accountId: string, instant: number) {
+    const { holders, list } = movementsOf(ledger);
+    const holder = holders.find((each) => each.id === accountId);
+    if (!holder) {
+        return 0;
+    }
+    const piles = new Map<string, CurrencyEntry[]>();
+    for (const movement of list) {
+        if (movement.accountId === accountId && movement.at <= instant) {
+            const pile = piles.get(movement.key) ?? [];
+            pile.push(movement.entry);
+            piles.set(movement.key, pile);
+        }
+    }
+    let total = holder.initialBalance + holder.carried;
+    for (const entries of piles.values()) {
+        const [cell] = toCells(entries);
+        if (cell) {
+            total += (cell.income ? 1 : -1) * valueCell(cell, holder.currency, ledger.rates);
+        }
+    }
+    return roundMoney(total, decimalsFor(holder.currency));
+}
+
 export function accountFlows(ledger: Ledger, accountId: string): AccountFlow[] {
     const { holders, list } = movementsOf(ledger);
     const holder = holders.find((each) => each.id === accountId);

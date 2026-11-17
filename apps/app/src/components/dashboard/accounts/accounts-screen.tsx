@@ -25,6 +25,7 @@ import { Table } from "panelui-web/table";
 import { useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
+import { Skeleton } from "skullet/react";
 
 import { useDateFormat, useWholeMoney, titled } from "@/components/dashboard/home/format";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
@@ -40,21 +41,20 @@ import {
     accountRows,
     archivedRows,
     byCurrency,
-    cardStatement,
     changeSince,
     checkedAge,
     creditLine,
-    flowsOf,
     goalRows,
     groupRows,
     monthStart,
     niceDomain,
-    plansOn,
     rangeDays,
     ratesFor,
     recentBalances,
     sortRows,
+    statementOf,
     storedSort,
+    TRANSFER_ROWS,
     upcomingRows,
     worthSeries,
 } from "./model";
@@ -83,7 +83,6 @@ export const SPEND = "var(--color-app-spend)";
 const RECENT_DAYS = 30;
 const UPCOMING_DAYS = 30;
 const UPCOMING_ROWS = 5;
-const TRANSFER_ROWS = 7;
 export const PERCENT = 100;
 const LIST_CHART = 778 / 200;
 const LINE_CHART = 778 / 190;
@@ -572,7 +571,7 @@ export function useStatementText() {
     const { money } = useDisplayFormat();
     const date = useDateFormat();
     return (row: AccountRow) => {
-        const statement = cardStatement(row, flowsOf(ledger, row.id), ledger.today, plansOn(ledger, row.id));
+        const statement = statementOf(ledger, row);
         if (!statement) {
             return null;
         }
@@ -1046,7 +1045,7 @@ function ArchivedRows({ rows }: { rows: readonly ArchivedRow[] }) {
                         </div>
                     </Cell>
                     <Cell className="dash-figure text-muted-foreground">
-                        {row.lastDay === null ? "" : date.full(row.lastDay)}
+                        {row.lastDay === null ? "" : date.full(row.lastDay ?? row.archivedDay)}
                     </Cell>
                     <Cell className="text-muted-foreground" figure>
                         {money(row.balance, row.currency)}
@@ -1105,7 +1104,9 @@ function ArchivedCard() {
                 </span>
             }
         >
-            <ArchivedRows rows={rows} />
+            <Skeleton loading={rows.some((row) => row.lastDay === undefined)}>
+                <ArchivedRows rows={rows} />
+            </Skeleton>
         </Card>
     );
 }

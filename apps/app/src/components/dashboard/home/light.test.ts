@@ -11,7 +11,8 @@ import type { LedgerBooks } from "@/lib/ledger-books";
 import { categoryBudgets, kpis } from "../../../lib/dashboard-series";
 import { prepareLedger, rowsBetween, total } from "../../../lib/dashboard-series-ledger";
 import { periodOf } from "../../../lib/dashboard-series-period";
-import { reachesOpening } from "../../../lib/light-views";
+import { lightSince, reachesOpening } from "../../../lib/light-views";
+import { accountRows, accountsCovered, statementOf } from "../accounts/model";
 import { periodKeysOf } from "../shell/period-keys";
 import { listCovered, queryRows, tally } from "../transactions/model";
 import { accountBalances, budgetRows, everyDay, homeCovered, sparks } from "./model";
@@ -245,5 +246,75 @@ describe("Home on the rows since thirteen months back", () => {
         expect(reachesOpening(light, saved("new", CUTOFF - DAY_MS))).toBe(true);
         expect(reachesOpening(light, saved(old?.localId ?? "", NOW))).toBe(true);
         expect(reachesOpening({ books: recent, opening: null }, saved("new", CUTOFF - DAY_MS))).toBe(false);
+    });
+});
+
+describe("Accounts on the rows since twelve months back", () => {
+    const PURCHASE = Date.parse("2026-04-15T16:00:00Z");
+    const MONTH_MS = 30 * DAY_MS;
+
+    function carded(): LedgerBooks {
+        const all = books();
+        return {
+            ...all,
+            accounts: all.accounts.map((row) =>
+                row.localId === "card" ? { ...row, creditLimit: 5000, paymentDay: 5, statementDay: 20 } : row
+            ),
+            installmentPlans: [doc<"installmentPlans">("plan", { accountId: "card", transactionId: "purchase" })],
+            installments: Array.from({ length: 6 }, (_, index) =>
+                doc<"installments">(`installment-${index}`, {
+                    amount: 100,
+                    dueDate: PURCHASE + (index + 1) * MONTH_MS,
+                    planId: "plan",
+                    sequence: index + 1,
+                })
+            ),
+            outsidePayments: all.outsidePayments
+                .filter((row) => row.date > PURCHASE)
+                .slice(0, 3)
+                .map((row) => ({ ...row, amount: 50 })),
+            transactions: [
+                ...all.transactions,
+                doc<"transactions">("purchase", {
+                    accountId: "card",
+                    amount: 600,
+                    amountUsd: 650,
+                    categoryId: "food",
+                    currency: "EUR",
+                    date: PURCHASE,
+                    day: PURCHASE,
+                    exchangeRate: null,
+                    exchangeRateType: null,
+                    income: false,
+                    note: "Laptop",
+                    recurringCoefficient: 1,
+                    recurringEndDate: null,
+                    recurringType: 0,
+                }),
+            ],
+        };
+    }
+
+    const accounts = (rows: LedgerBooks, opening: Parameters<typeof prepareLedger>[2] = null) => {
+        const ledger = prepareLedger(rows, NOW, opening);
+        const listed = accountRows(ledger, ledgerGlance(rows, NOW, opening));
+        const card = listed.find((row) => row.id === "card");
+        return { balances: listed.map((row) => row.value), statement: card ? statementOf(ledger, card) : null };
+    };
+
+    it("shows the balances and card statement the whole ledger gives", () => {
+        const all = carded();
+        const { opening, recent } = opened(all, lightSince("/accounts", NOW));
+        const light = accounts(recent, opening);
+
+        expect(accountsCovered(prepareLedger(recent, NOW, opening))).toBe(true);
+        expect(light.statement?.due).toBeGreaterThan(0);
+        expect(light).toStrictEqual(accounts(all));
+    });
+
+    it("waits for the whole ledger when a plan was bought before the cutoff", () => {
+        const { opening, recent } = opened(books(), lightSince("/accounts", NOW));
+
+        expect(accountsCovered(prepareLedger(recent, NOW, opening))).toBe(false);
     });
 });

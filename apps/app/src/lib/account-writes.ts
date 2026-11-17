@@ -3,6 +3,7 @@ import { canonicalUsd } from "@outlayr/money/canonical-usd";
 import { decimalsFor } from "@outlayr/money/currency";
 import { accountDeletionPlan } from "@outlayr/money/entry-deletion";
 import { accountBalances, rateTableOf, settingsOf, zoneOf } from "@outlayr/money/ledger-view";
+import type { LedgerOpening } from "@outlayr/money/ledger-view";
 import type { RateLookup } from "@outlayr/money/rates";
 import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { roundMoney } from "@outlayr/money/round";
@@ -136,13 +137,21 @@ export function createdAccount(
 }
 
 /** The opening balance that lands on `balance` today, given everything already booked on the account. */
-export function openingFor(books: LedgerBooks, account: Account, balance: number, currency: string, at: number) {
+export function openingFor(
+    books: LedgerBooks,
+    account: Account,
+    balance: number,
+    currency: string,
+    at: number,
+    opening: LedgerOpening | null
+) {
     const settings = settingsOf(books.appMeta);
     const [held] = accountBalances(
         { ...books, accounts: [{ ...account, archivedAt: null, currency, deletedAt: null, initialBalance: 0 }] },
         settings.currency,
         rateTableOf(books.exchangeRates),
-        { now: at, offsetAt: zoneOf(settings.timeZone, books.transactions, at) }
+        { now: at, offsetAt: zoneOf(settings.timeZone, books.transactions, at) },
+        opening
     ).accounts;
     return roundMoney(balance - (held?.balance ?? 0), decimalsFor(currency));
 }
@@ -153,10 +162,11 @@ export function editedAccount(
     account: Account,
     draft: AccountDraft,
     balance: number | null,
-    at: number
+    at: number,
+    opening: LedgerOpening | null
 ): CommitRow {
     const initialBalance =
-        balance === null ? account.initialBalance : openingFor(books, account, balance, draft.currency, at);
+        balance === null ? account.initialBalance : openingFor(books, account, balance, draft.currency, at, opening);
     const moved = initialBalance !== account.initialBalance || draft.currency !== account.currency;
     return nextRow(
         "accounts",

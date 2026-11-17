@@ -105,12 +105,11 @@ const statementOf = (ledger: Ledger) =>
     cardStatement(
         {
             currency: "USD",
-            initialBalance: -1200,
             openedDay: "2026-01-01",
             paymentDay: 20,
             statementDay: 25,
-        } as Pick<AccountRow, "currency" | "initialBalance" | "openedDay" | "paymentDay" | "statementDay">,
-        flowsOf(ledger, "amex"),
+        } as Pick<AccountRow, "currency" | "openedDay" | "paymentDay" | "statementDay">,
+        { flows: flowsOf(ledger, "amex"), start: -1200 },
         ledger.today,
         []
     );

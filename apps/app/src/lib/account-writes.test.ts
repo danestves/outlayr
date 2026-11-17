@@ -241,12 +241,12 @@ describe("balances", () => {
 
     it("backs the opening out of what is booked, so the account lands on the typed balance", () => {
         const spent = entry("spent", { accountId: "chase", amount: 40 });
-        const row = editedAccount(books({ accounts: [chase], transactions: [spent] }), chase, draft, 500, AT);
+        const row = editedAccount(books({ accounts: [chase], transactions: [spent] }), chase, draft, 500, AT, null);
         expect(row).toMatchObject({ fields: { initialBalance: 540, initialBalanceUsd: 540 } });
     });
 
     it("leaves the opening alone when the form did not touch the money", () => {
-        const row = editedAccount(books({ accounts: [chase] }), chase, draft, null, AT);
+        const row = editedAccount(books({ accounts: [chase] }), chase, draft, null, AT, null);
         expect(row).toMatchObject({ fields: { initialBalance: 100, initialBalanceUsd: 100 } });
     });
 

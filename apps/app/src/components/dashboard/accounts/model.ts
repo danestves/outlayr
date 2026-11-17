@@ -13,7 +13,7 @@ import { convertUsdSum, valueDatedRowsIn } from "@outlayr/money/valuation";
 import { deletedAccount } from "../../../lib/account-writes";
 import { endOfDay, openAccounts, startOfDay } from "../../../lib/dashboard-series-ledger";
 import type { Ledger } from "../../../lib/dashboard-series-ledger";
-import { accountFlows, netWorthPoints } from "../../../lib/dashboard-series-net-worth";
+import { accountFlows, netWorthPoints, ownBalanceAt } from "../../../lib/dashboard-series-net-worth";
 import type { AccountFlow } from "../../../lib/dashboard-series-net-worth";
 import { addDays, daysBetween } from "../../../lib/ledger";
 import type { Overview } from "../../ledger/overview";
@@ -71,8 +71,17 @@ export function accountRows(ledger: Ledger, overview: Overview): AccountRow[] {
 /** A zero opening balance has no real date, so history starts at the first movement when that is earlier. */
 function openedOn(ledger: Ledger, row: Ledger["books"]["accounts"][number]) {
     const day = isoDay(row.initialBalanceDate, ledger.offsetAt(row.initialBalanceDate));
-    const [first] = row.initialBalance === 0 ? flowsOf(ledger, row.localId) : [];
-    return first && first.day < day ? first.day : day;
+    const first = row.initialBalance === 0 ? firstFlowDay(ledger, row.localId) : undefined;
+    return first !== undefined && first < day ? first : day;
+}
+
+function firstFlowDay(ledger: Ledger, accountId: string) {
+    const { opening } = ledger;
+    if (opening?.cells.some((cell) => cell.accountId === accountId)) {
+        const before = opening.cutoff - 1;
+        return isoDay(before, ledger.offsetAt(before));
+    }
+    return flowsOf(ledger, accountId)[0]?.day;
 }
 
 const clockOf = ({ now, offsetAt }: Ledger) => ({ now, offsetAt });
@@ -80,7 +89,12 @@ const clockOf = ({ now, offsetAt }: Ledger) => ({ now, offsetAt });
 /** The balance as if the account were open: `accountBalances` leaves archived ones out of every total. */
 function heldAsOpen(ledger: Ledger, row: Ledger["books"]["accounts"][number]) {
     const books = { ...ledger.books, accounts: [{ ...row, archivedAt: null }] };
-    return accountBalances(books, ledger.currency, ledger.rates, clockOf(ledger)).accounts[0];
+    return accountBalances(books, ledger.currency, ledger.rates, clockOf(ledger), ledger.opening).accounts[0];
+}
+
+export function heldBalance(ledger: Ledger, accountId: string) {
+    const row = ledger.books.accounts.find((each) => each.localId === accountId);
+    return (row && heldAsOpen(ledger, row)?.balance) ?? 0;
 }
 
 export interface AccountFacts {
@@ -98,7 +112,10 @@ export interface AccountFacts {
  * What the archive and delete dialogs state. `netAfter` is the archive figure: an archived account already left net
  * worth, and its transfers stay. Delete takes transfers with it, so it states `netAfterDelete`.
  */
-export function accountFacts(ledger: Ledger, accountId: string): AccountFacts {
+export function accountFacts(ledger: Ledger, accountId: string): AccountFacts | null {
+    if (ledger.opening !== null) {
+        return null;
+    }
     const { accounts, installmentPlans, outsideMoves, transactions, transfers } = ledger.books;
     const onAccount = (entry: { accountId?: string | null; deletedAt: number | null }) =>
         entry.deletedAt === null && entry.accountId === accountId;
@@ -120,6 +137,9 @@ export function accountFacts(ledger: Ledger, accountId: string): AccountFacts {
 
 /** Net worth once the delete lands: the account's transfers and fees also leave the accounts on the other side. */
 export function netAfterDelete(ledger: Ledger, account: Ledger["books"]["accounts"][number]) {
+    if (ledger.opening !== null) {
+        return null;
+    }
     const { books } = ledger;
     const changes = new Map(
         deletedAccount(books, account, ledger.now).map((row) => [`${row.table}|${row.localId}`, row])
@@ -147,7 +167,7 @@ export interface ArchivedRow {
     balance: number;
     currency: string;
     id: string;
-    lastDay: string | null;
+    lastDay: string | null | undefined;
     look: ReturnType<typeof accountLook>;
     name: string;
 }
@@ -176,20 +196,26 @@ export function archivedRows(ledger: Ledger): ArchivedRow[] {
         }
     }
     const dayOf = (at: number) => isoDay(at, ledger.offsetAt(at));
+    const cutoff = ledger.opening?.cutoff ?? Number.NEGATIVE_INFINITY;
+    const folded = new Set(ledger.opening?.cells.map((cell) => cell.accountId));
+    const lastDayOf = (id: string) => {
+        const last = lastAt.get(id);
+        if (folded.has(id) && (last === undefined || last < cutoff)) {
+            return undefined;
+        }
+        return last === undefined ? null : dayOf(last);
+    };
     return shelved
         .toSorted((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0))
-        .map((row) => {
-            const last = lastAt.get(row.localId);
-            return {
-                archivedDay: dayOf(row.archivedAt ?? ledger.now),
-                balance: heldAsOpen(ledger, row)?.balance ?? 0,
-                currency: row.currency,
-                id: row.localId,
-                lastDay: last === undefined ? null : dayOf(last),
-                look: accountLook(row),
-                name: row.name,
-            };
-        });
+        .map((row) => ({
+            archivedDay: dayOf(row.archivedAt ?? ledger.now),
+            balance: heldAsOpen(ledger, row)?.balance ?? 0,
+            currency: row.currency,
+            id: row.localId,
+            lastDay: lastDayOf(row.localId),
+            look: accountLook(row),
+            name: row.name,
+        }));
 }
 
 export type AccountSort = "balance" | "order";
@@ -281,8 +307,8 @@ export const billedApart = (
 ) => plan.rows.filter((each) => plan.purchaseDay !== null && (plan.purchaseDay > closedOn || each.day > dueOn));
 
 export function cardStatement(
-    row: Pick<AccountRow, "currency" | "initialBalance" | "openedDay" | "paymentDay" | "statementDay">,
-    flows: readonly Pick<AccountFlow, "day" | "value">[],
+    row: Pick<AccountRow, "currency" | "openedDay" | "paymentDay" | "statementDay">,
+    { flows, start }: { flows: readonly Pick<AccountFlow, "day" | "value">[]; start: number },
     today: string,
     plans: readonly Pick<PlanRow, "purchaseDay" | "rows">[]
 ): CardStatement | null {
@@ -291,7 +317,7 @@ export function cardStatement(
     }
     const cycle = statementCycle(row.statementDay, row.paymentDay, today);
     const decimals = decimalsFor(row.currency);
-    let atClose = row.initialBalance;
+    let atClose = start;
     let inSince = 0;
     let since = 0;
     for (const flow of flows) {
@@ -317,6 +343,25 @@ export function cardStatement(
         overdue: due !== null && due > 0 && cycle.dueOn < today,
         since: roundMoney(since, decimals),
     };
+}
+
+export function statementOf(
+    ledger: Ledger,
+    row: Pick<AccountRow, "currency" | "id" | "openedDay" | "paymentDay" | "statementDay">
+) {
+    if (row.statementDay === null || row.paymentDay === null) {
+        return null;
+    }
+    const { closedOn } = statementCycle(row.statementDay, row.paymentDay, ledger.today);
+    return cardStatement(
+        row,
+        {
+            flows: flowsOf(ledger, row.id).filter((flow) => flow.day > closedOn),
+            start: ownBalanceAt(ledger, row.id, endOfDay(ledger, closedOn)),
+        },
+        ledger.today,
+        plansOn(ledger, row.id)
+    );
 }
 
 export interface PeriodFlows {
@@ -456,6 +501,38 @@ export function planRows(ledger: Ledger): PlanRow[] {
 export const plansOn = (ledger: Ledger, accountId: string) =>
     planRows(ledger).filter((plan) => plan.accountId === accountId);
 
+export const TRANSFER_ROWS = 7;
+
+export function accountsCovered(ledger: Ledger) {
+    const { opening } = ledger;
+    if (opening === null) {
+        return true;
+    }
+    const reaches = (day: string) => endOfDay(ledger, day) + 1 >= opening.cutoff;
+    const open = openAccounts(ledger.books);
+    const openIds = new Set(open.map((row) => row.localId));
+    const bought = new Map(ledger.books.transactions.map((row) => [row.localId, row]));
+    const [oldestWorth] = rangeDays(ledger, "year");
+    return (
+        (oldestWorth === undefined || reaches(oldestWorth)) &&
+        open.every(
+            (row) =>
+                row.statementDay == null ||
+                row.paymentDay == null ||
+                reaches(statementCycle(row.statementDay, row.paymentDay, ledger.today).closedOn)
+        ) &&
+        ledger.books.installmentPlans.every((plan) => {
+            const purchase = bought.get(plan.transactionId);
+            return (
+                plan.deletedAt !== null ||
+                !openIds.has(plan.accountId) ||
+                (purchase !== undefined && purchase.deletedAt === null && purchase.date >= opening.cutoff)
+            );
+        }) &&
+        ledger.transfers.length >= TRANSFER_ROWS
+    );
+}
+
 export type UpcomingSource =
     | { accountName: string; kind: "statement" }
     | { count: number; kind: "installment"; name: string; sequence: number }
@@ -482,7 +559,7 @@ export function upcomingRows(ledger: Ledger, overview: Overview, through: string
     const cards = open.filter((row) => row.kind === "liability" && (!accountId || row.id === accountId));
     const openIds = new Set(open.map((row) => row.id));
     const statements = cards.flatMap((row): UpcomingRow[] => {
-        const statement = cardStatement(row, flowsOf(ledger, row.id), ledger.today, plansOn(ledger, row.id));
+        const statement = statementOf(ledger, row);
         if (!statement?.due || statement.cycle.dueOn > through) {
             return [];
         }
