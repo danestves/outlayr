@@ -84,6 +84,8 @@ export function guideUpdated(slug: string): Date {
     return checked > GUIDES_UPDATED ? checked : GUIDES_UPDATED;
 }
 
+export const HELP_UPDATED = new Date(Date.UTC(2026, 10, 17));
+
 export const LEGAL_DAYS = {
     "delete-account": new Date(Date.UTC(2026, 10, 9)),
     privacy: new Date(Date.UTC(2027, 0, 1)),

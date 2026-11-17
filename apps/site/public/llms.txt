@@ -187,3 +187,16 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 ## Contact
 
 - support@tryoutlayr.com
+
+## Help
+
+One question per page, answered in the first sentence, with steps on iPhone and Android. Spanish versions are under https://tryoutlayr.com/es/help.
+
+- [Help](https://tryoutlayr.com/help): every help article
+- [How does Apple Pay logging work?](https://tryoutlayr.com/help/how-does-apple-pay-logging-work): the Shortcuts automation on iPhone, Google Wallet and bank notifications on Android, and the free plan's 30 auto-logged entries a month
+- [Can I track expenses in several currencies?](https://tryoutlayr.com/help/can-i-track-expenses-in-several-currencies): yes, 165 currencies, a currency per account, and totals at each purchase day's rate
+- [Does Outlayr link my bank?](https://tryoutlayr.com/help/does-outlayr-link-my-bank): no; how to log without a bank connection and import a CSV or, with Pro, a bank statement PDF
+- [How do I add an expense by voice?](https://tryoutlayr.com/help/how-do-i-add-an-expense-by-voice): Speak an entry, languages, and the free plan's 30 captures every 30 days
+- [How do I scan a receipt?](https://tryoutlayr.com/help/how-do-i-scan-a-receipt): Scan a receipt, what it reads, and the capture limits
+- [How do subscription reminders work?](https://tryoutlayr.com/help/how-do-subscription-reminders-work): a reminder on the day or up to a week before, and charges that log themselves
+- [How do I track a Cashea or Klarna installment purchase?](https://tryoutlayr.com/help/how-do-i-track-an-installment-purchase): Buy in installments, paying each cuota, late fees, the day-before reminder, and importing an order from screenshots

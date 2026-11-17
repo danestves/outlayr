@@ -284,6 +284,7 @@ const site = {
             compare: t({ en: "Compare", de: "Vergleichen", es: "Comparar", pt: "Comparar", fr: "Comparer" }),
             email: t({ en: "Email", de: "E-Mail", es: "Correo", pt: "E-mail", fr: "E-mail" }),
             guides: t({ en: "Guides", de: "Guides", es: "Guías", pt: "Guias", fr: "Guides" }),
+            help: t({ en: "Help", de: "Hilfe", es: "Ayuda", pt: "Ajuda", fr: "Aide" }),
             language: t({ en: "Language", de: "Sprache", es: "Idioma", pt: "Idioma", fr: "Langue" }),
             listings: {
                 alternativeTo: t({
