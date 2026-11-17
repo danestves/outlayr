@@ -1,7 +1,7 @@
 import Search01Icon from "@hugeicons-pro/core-stroke-rounded/Search01Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { useState } from "react";
-import { View } from "react-native";
+import { View, useWindowDimensions } from "react-native";
 
 import { SEARCH_FIELD } from "@/components/search-field-style";
 import { TextInput } from "@/components/text";
@@ -9,6 +9,7 @@ import { useAccessibilityTextSize } from "@/hooks/use-accessibility-text-size";
 import { useColors } from "@/theme/use-colors";
 
 import { CurrencyPickerList } from "../../currency-picker-list";
+import { useStageKeyboardHeight } from "./use-keyboard-shown";
 
 export interface StepCurrencyProps {
     favourites: readonly string[];
@@ -34,6 +35,13 @@ export function StepCurrency({
     const colors = useColors();
     const largeText = useAccessibilityTextSize();
     const [query, setQuery] = useState("");
+    const keyboardHeight = useStageKeyboardHeight();
+    const { height: windowHeight } = useWindowDimensions();
+    const keyboardUp = keyboardHeight > 0;
+    // The stage rides on the search keyboard, so the list gets its share of what the keyboard leaves.
+    const listHeight = keyboardUp
+        ? Math.round((listMinHeight * (windowHeight - keyboardHeight)) / windowHeight)
+        : listMinHeight;
 
     return (
         <View className="gap-1">
@@ -60,7 +68,7 @@ export function StepCurrency({
                 onToggleFavourite={onToggleFavourite}
                 query={query}
                 selected={selected}
-                style={largeText ? { height: listMinHeight } : { minHeight: listMinHeight }}
+                style={largeText ? { height: listHeight } : { minHeight: listHeight }}
             />
         </View>
     );

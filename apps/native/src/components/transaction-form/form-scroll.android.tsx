@@ -23,40 +23,59 @@ interface FormScrollControl {
 
 const FormScrollContext = createContext<FormScrollControl | null>(null);
 
-// Edge-to-edge means the window never resizes for the keyboard, so nothing else moves the note out from under it.
+// Edge-to-edge means the window never resizes for the keyboard, so nothing else moves the focused field out from
+// under it. Rechecked when the frame or content changes too: the stage hides behind the note and the note grows.
 function useKeyboardOverlap(
     frame: RefObject<ViewInstance | null>,
     scroll: RefObject<ScrollViewInstance | null>,
-    offset: RefObject<number>
+    toTop: boolean
 ) {
+    const keyboardTop = useRef<number | null>(null);
     const [overlap, setOverlap] = useState(0);
 
-    useKeyboardEvent("keyboardDidShow", (event) => {
-        frame.current?.measureInWindow((_x, y, _width, height) => {
-            const covered = Math.max(0, y + height - event.endCoordinates.screenY);
+    const revealFocused = () => {
+        const top = keyboardTop.current;
+        if (top === null) {
+            return;
+        }
+        const input = TextInput.State.currentlyFocusedInput();
+        const content = scroll.current?.getInnerViewRef();
+        frame.current?.measureInWindow((_x, frameY, _width, height) => {
+            const covered = Math.max(0, frameY + height - top);
             setOverlap(covered);
-            const input = TextInput.State.currentlyFocusedInput();
-            const content = scroll.current?.getInnerViewRef();
             if (input == null || content == null || covered === 0) {
                 return;
             }
-            input.measureLayout(content, (_left, top, _inputWidth, inputHeight) => {
-                const visibleBottom = offset.current + height - covered;
-                const fieldBottom = top + inputHeight + KEYBOARD_GAP;
-                if (fieldBottom > visibleBottom) {
-                    scroll.current?.scrollTo({ animated: true, y: offset.current + fieldBottom - visibleBottom });
-                }
+            // Measured, not tracked from onScroll: a frame that grows clamps the offset without a scroll event.
+            content.measureInWindow((_contentX, contentY) => {
+                const scrolled = frameY - contentY;
+                input.measureLayout(content, (_left, inputTop, _inputWidth, inputHeight) => {
+                    const hidden = inputTop + inputHeight + KEYBOARD_GAP - (scrolled + height - covered);
+                    if (toTop) {
+                        scroll.current?.scrollTo({ animated: true, y: Math.max(0, inputTop - KEYBOARD_GAP) });
+                    } else if (hidden > 0) {
+                        scroll.current?.scrollTo({ animated: true, y: scrolled + hidden });
+                    }
+                });
             });
         });
-    });
-    useKeyboardEvent("keyboardDidHide", () => setOverlap(0));
+    };
 
-    return overlap;
+    useKeyboardEvent("keyboardDidShow", (event) => {
+        keyboardTop.current = event.endCoordinates.screenY;
+        revealFocused();
+    });
+    useKeyboardEvent("keyboardDidHide", () => {
+        keyboardTop.current = null;
+        setOverlap(0);
+    });
+
+    return { overlap, revealFocused };
 }
 
 // No identity curtain: below Android's opaque app bar it is a band with a hard top edge. No blur behind the picker
 // either: a Material sheet brings its own scrim.
-export const FormScroll: typeof FormScrollBase = ({ bottomInset, children, failure, sheet }) => {
+export const FormScroll: typeof FormScrollBase = ({ bottomInset, children, failure, followsStage, sheet }) => {
     const m3 = useMaterialColors();
     const sheetSurface = useSheetSurface();
     const stripFill = sheet ? sheetSurface : m3.surface;
@@ -64,7 +83,8 @@ export const FormScroll: typeof FormScrollBase = ({ bottomInset, children, failu
     const scroll = useRef<ScrollViewInstance>(null);
     const offset = useRef(0);
     const visibleHeight = useRef(0);
-    const overlap = useKeyboardOverlap(frame, scroll, offset);
+    // Large text types inside the inline stage: its suggestions sit below the field and need the room.
+    const { overlap, revealFocused } = useKeyboardOverlap(frame, scroll, followsStage);
     const [failureHeight, setFailureHeight] = useState(0);
 
     const [control] = useState<FormScrollControl>(() => ({
@@ -79,7 +99,7 @@ export const FormScroll: typeof FormScrollBase = ({ bottomInset, children, failu
 
     return (
         <FormScrollContext value={control}>
-            <View className="flex-1" ref={frame}>
+            <View className="flex-1" onLayout={revealFocused} ref={frame}>
                 <ScrollView
                     contentContainerStyle={{
                         gap: 16,
@@ -90,6 +110,7 @@ export const FormScroll: typeof FormScrollBase = ({ bottomInset, children, failu
                     // The note's return key writes a newline, so a drag is the only way to put the keyboard away.
                     keyboardDismissMode="on-drag"
                     keyboardShouldPersistTaps="handled"
+                    onContentSizeChange={revealFocused}
                     onLayout={(event) => {
                         visibleHeight.current = event.nativeEvent.layout.height;
                     }}
