@@ -15,7 +15,9 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
     const { pricing } = useIntlayer("story");
     const { locale } = useLocale();
     const { lang } = LANGUAGES[locale];
-    const prices = proPrices(useLoaderData({ from: "__root__" }), locale);
+    const visitorCountry = useLoaderData({ from: "__root__" });
+    // /pricing states US prices in its copy, so its cards must not localize
+    const prices = proPrices(standalone ? null : visitorCountry, locale);
     return (
         <section className={`${CONTAINER} scroll-mt-24 py-24`} id="pricing">
             <p className={LABEL} data-reveal>
