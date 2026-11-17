@@ -91,6 +91,20 @@ const site = {
                     pt: "Melhores apps de assinaturas",
                     fr: "Meilleures apps d'abonnements",
                 }),
+                "best-multi-currency-budget-apps": t({
+                    en: "Best multi-currency budget apps",
+                    de: "Beste Budget-Apps für mehrere Währungen",
+                    es: "Mejores apps de presupuesto multimoneda",
+                    pt: "Melhores apps de orçamento multimoeda",
+                    fr: "Meilleures apps de budget multidevise",
+                }),
+                "how-much-do-budget-apps-cost": t({
+                    en: "What budget apps cost",
+                    de: "Was Budget-Apps kosten",
+                    es: "Cuánto cuestan las apps de presupuesto",
+                    pt: "Quanto custam os apps de orçamento",
+                    fr: "Ce que coûtent les apps de budget",
+                }),
                 "budget-app-without-bank-account": t({
                     en: "Budget without a bank link",
                     de: "Budget ohne Bankverbindung",

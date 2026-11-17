@@ -25,6 +25,8 @@ const SITE_PATHS = [
     "/guides/best-budget-apps-france",
     "/guides/best-open-source-expense-tracker-apps",
     "/guides/best-subscription-tracker-apps",
+    "/guides/best-multi-currency-budget-apps",
+    "/guides/how-much-do-budget-apps-cost",
     "/guides/budget-planner",
     "/guides/budget-categories",
     "/guides/50-30-20-rule",

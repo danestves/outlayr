@@ -38,6 +38,8 @@ const PLATES = {
     "best-expense-tracker-apps-latin-america": null,
     "best-open-source-expense-tracker-apps": null,
     "best-subscription-tracker-apps": null,
+    "best-multi-currency-budget-apps": null,
+    "how-much-do-budget-apps-cost": null,
     "budget-app-without-bank-account": null,
     "budget-planner": "04",
     "budget-categories": "04",
@@ -306,23 +308,35 @@ function Guide() {
         >
             {"apps" in guide ? (
                 <>
-                    <CompareTable
-                        columns={[
-                            { id: "best-if", name: labels.summary.bestIf },
-                            { id: "price", name: labels.summary.price },
-                            { id: "platforms", name: labels.summary.platforms },
-                        ]}
-                        corner={labels.summary.app.value}
-                        rows={guide.apps.map((app) => ({
-                            cells: [
-                                textOf(guide.facts, app.name.value),
-                                textOf(app.facts, labels.summary.price.value),
-                                textOf(app.facts, labels.summary.platforms.value),
-                            ],
-                            id: app.slug.value,
-                            label: app.name,
-                        }))}
-                    />
+                    {"columns" in guide ? (
+                        <CompareTable
+                            columns={guide.columns.map((column) => ({ id: column.value, name: column }))}
+                            corner={labels.summary.app.value}
+                            rows={guide.apps.map((app) => ({
+                                cells: guide.columns.map((column) => textOf(app.facts, column.value)),
+                                id: app.slug.value,
+                                label: app.name,
+                            }))}
+                        />
+                    ) : (
+                        <CompareTable
+                            columns={[
+                                { id: "best-if", name: labels.summary.bestIf },
+                                { id: "price", name: labels.summary.price },
+                                { id: "platforms", name: labels.summary.platforms },
+                            ]}
+                            corner={labels.summary.app.value}
+                            rows={guide.apps.map((app) => ({
+                                cells: [
+                                    textOf(guide.facts, app.name.value),
+                                    textOf(app.facts, labels.summary.price.value),
+                                    textOf(app.facts, labels.summary.platforms.value),
+                                ],
+                                id: app.slug.value,
+                                label: app.name,
+                            }))}
+                        />
+                    )}
                     <p className="text-muted mt-4 text-sm">
                         {guide.sources}
                         {labels.checked({ date: longDate(listChecked(slug), LANGUAGES[locale].date) })}
