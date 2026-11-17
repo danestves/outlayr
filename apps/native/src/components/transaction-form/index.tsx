@@ -6,7 +6,7 @@ import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { useRouter } from "expo-router";
 import { PortalHost, PortalProvider } from "panelui-native/primitives/portal";
 import type { ComponentProps, RefObject } from "react";
-import { useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Keyboard, KeyboardAvoidingView, Pressable, View, useWindowDimensions } from "react-native";
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
 
@@ -16,6 +16,7 @@ import { SubscribeFields } from "@/components/form/subscribe-fields";
 import type { IdentitySelection } from "@/components/identity-picker-shared";
 import { ReceiptLines } from "@/components/receipt/receipt-lines";
 import { useAppSettings, useSetting } from "@/contexts/display-settings-context";
+import { useIdentityReads } from "@/contexts/identity-draft-context";
 import { useBankAccounts, usePeople } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency } from "@/data/app-meta";
@@ -178,6 +179,7 @@ export function TransactionForm(props: TransactionFormProps) {
             exchangeRate: entryRateOf(value.rateEntry, value.txCurrency ?? globalCurrency),
         });
 
+    const identityReads = useIdentityReads();
     const submitEntry = (value: TransactionFormValues): Effect.Effect<boolean> | null => {
         setSaveFailure(null);
 
@@ -185,7 +187,8 @@ export function TransactionForm(props: TransactionFormProps) {
             allocations: split.allocations,
             details: note.read(),
             fee: cardFee.input,
-            identity,
+            // Read fresh: a chip pick submits from the render before its logo committed.
+            identity: identityReads.draft(),
             ledgerCurrency: globalCurrency,
             paidVia: cardFee.savedPaidVia(value.paidVia),
             receipt: seed?.receipt,
@@ -351,7 +354,10 @@ export function TransactionForm(props: TransactionFormProps) {
     const stageInline = largeText && stageStep !== "merchant";
     const [stageTurn, setStageTurn] = useState(0);
     const stageTarget = `stage-${stageTurn}`;
+    // Bumped by every tap and step change: a pending pick presses only while it is the latest thing the user did.
+    const namePickRef = useRef(0);
     const goStage = (step: StageStep, forward: boolean) => {
+        namePickRef.current += 1;
         // Unconditional: no step arrives focused, so a standing keyboard would cover the arriving one.
         Keyboard.dismiss();
         rest?.onWake();
@@ -622,13 +628,17 @@ export function TransactionForm(props: TransactionFormProps) {
 
     const categorySlot = categorySlotOf({ category, pendingCategory, searching: lookup.categoryPending }, colors, t);
 
-    const answersFor = (amountNumber: number, merchant: string): GuidedAnswers => ({
+    const answersFor = (
+        amountNumber: number,
+        merchant: string,
+        chosen: Category | PendingCategory | null = category ?? pendingCategory
+    ): GuidedAnswers => ({
         account:
             account != null ||
             accountDeclined ||
             (allAccounts.length === 0 && !seed?.accountUnresolved && !installmentsNarrowed),
         amount: amountNumber > 0,
-        category: categorySlot.label !== null || lookup.queueable(merchant),
+        category: chosen !== null || lookup.queueable(merchant),
         merchant: merchant.trim() !== "",
     });
 
@@ -637,8 +647,12 @@ export function TransactionForm(props: TransactionFormProps) {
         goStage(next, next !== "amount");
     };
 
-    const stageFooter = (amountNumber: number, merchant: string): StageFooter => {
-        const { onward, saves } = footerPlan(answersFor(amountNumber, merchant), stageStep);
+    const stageFooter = (
+        amountNumber: number,
+        merchant: string,
+        chosen: Category | PendingCategory | null = category ?? pendingCategory
+    ): StageFooter => {
+        const { onward, saves } = footerPlan(answersFor(amountNumber, merchant, chosen), stageStep);
         return {
             label: saves ? ctaLabel : t("common.next"),
             onPress: () => {
@@ -672,20 +686,6 @@ export function TransactionForm(props: TransactionFormProps) {
     });
 
     const moduleSteps = { ...cardFee.steps, ...rate.steps, ...schedule.steps };
-
-    // A picked name moves on only once its lookup has painted the slots, or the save outruns the ledger's category.
-    const [namePick, setNamePick] = useState<{ amountNumber: number; name: string } | null>(null);
-    const pressForPick = useEffectEvent((pick: { amountNumber: number; name: string }) => {
-        if (stageStep === "merchant" && form.state.values.merchant === pick.name) {
-            stageFooter(pick.amountNumber, pick.name).onPress();
-        }
-    });
-    // oxlint-disable-next-line outlayr/react-effect-budget -- presses the footer for a picked name in the render after its lookup's suggestion committed, so the press reads that category and logo
-    useEffect(() => {
-        if (namePick !== null) {
-            pressForPick(namePick);
-        }
-    }, [namePick]);
 
     const pickAccount = (picked: Account | null, amountNumber: number, merchant: string) => {
         form.setFieldValue("account", picked);
@@ -777,7 +777,19 @@ export function TransactionForm(props: TransactionFormProps) {
                             onPick={(name) => {
                                 form.setFieldValue("merchantSeed", name);
                                 form.setFieldValue("merchant", name);
-                                void lookup.settleMerchant(name).then(() => setNamePick({ amountNumber, name }));
+                                namePickRef.current += 1;
+                                const pick = namePickRef.current;
+                                // Pressed after the lookup lands, or the save outruns the category and logo.
+                                void lookup.settleMerchant(name).then((open) => {
+                                    const {
+                                        category: settled,
+                                        merchant: current,
+                                        pendingCategory: pending,
+                                    } = form.state.values;
+                                    if (open && pick === namePickRef.current && current === name) {
+                                        stageFooter(amountNumber, name, settled ?? pending).onPress();
+                                    }
+                                });
                             }}
                             value={merchant}
                         />

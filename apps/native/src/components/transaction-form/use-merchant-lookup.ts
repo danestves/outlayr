@@ -380,6 +380,7 @@ export function useMerchantLookup({
                     setTimeout(resolve, LOGO_WAIT_MS);
                 }),
             ]);
+            return !enrichment.cancelled();
         },
         releaseCategory: () => setCategorySource("initial"),
         sources: { categorySource, identitySource, tagsSource } satisfies LookupSources,

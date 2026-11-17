@@ -80,6 +80,8 @@ export interface UseTransactionEnrichmentResult {
     lookupNow: () => void;
     onNameChange: (next: string) => void;
     pending: boolean;
+    /** Whether the form closed or enrichment turned off since the last `settleNow`. */
+    cancelled: () => boolean;
     /** `onNameChange` without the debounce, settling once the name's tiers have answered. */
     settleNow: (next: string) => Promise<void>;
     userAsked: () => boolean;
@@ -391,7 +393,8 @@ const runGroundedFollowUp: (ports: EnrichmentPorts) => Effect.Effect<void> = Eff
 const runTiers = Effect.fn("TransactionEnrichment.runTiers")(function* runTiers(
     ports: EnrichmentPorts,
     key: string,
-    force: boolean
+    force: boolean,
+    replaceInFlight: boolean
 ) {
     const { curatedFallbackRef, inFlightRef, lastRemoteOutcomeRef, latest, nameRef } = ports;
     const match = resolveMerchant(key);
@@ -441,7 +444,8 @@ const runTiers = Effect.fn("TransactionEnrichment.runTiers")(function* runTiers(
         return;
     }
     if (inFlightRef.current.has(key)) {
-        if (!force) {
+        // A caller awaiting the answer can't await another call's request, so it takes the name over instead.
+        if (!replaceInFlight) {
             return;
         }
         supersedeInFlight(ports);
@@ -449,7 +453,7 @@ const runTiers = Effect.fn("TransactionEnrichment.runTiers")(function* runTiers(
     yield* runRemote(ports, key);
 });
 
-const runLookup = Effect.fn("TransactionEnrichment.run")(function* runLookup(ports: EnrichmentPorts) {
+const runLookup = Effect.fn("TransactionEnrichment.run")(function* runLookup(ports: EnrichmentPorts, settling = false) {
     const { forceRef, nameRef, rememberedRef } = ports;
     // Read first: every early return below is final, and a force left standing would skip the next lookup's
     // cache.
@@ -464,7 +468,7 @@ const runLookup = Effect.fn("TransactionEnrichment.run")(function* runLookup(por
     }
     if (force) {
         rememberedRef.current = { categoryId: null, key };
-        yield* runTiers(ports, key, true);
+        yield* runTiers(ports, key, true, true);
         return;
     }
     // Forked so the curated tier paints without waiting on the ledger read; joined so a caller awaiting the lookup
@@ -473,7 +477,7 @@ const runLookup = Effect.fn("TransactionEnrichment.run")(function* runLookup(por
         logged("Failed to recall the merchant category")(recallFromLedger(ports, key)),
         { startImmediately: true }
     );
-    yield* runTiers(ports, key, false);
+    yield* runTiers(ports, key, false, settling);
     yield* Fiber.join(recall);
 });
 
@@ -505,6 +509,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     // The user asked for this merchant's lookup and has not retyped the name: guards that keep suggestions off filled
     // fields lift, and the save carries the answer to the merchant's other rows.
     const userAskedRef = useRef(false);
+    const cancelledRef = useRef(false);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const groundedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const recheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -580,16 +585,13 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     const settleNow = async (next: string) => {
         userAskedRef.current = false;
         nameRef.current = next;
+        cancelledRef.current = false;
         if (!latest.current.enabled) {
             return;
         }
         clearTimers(ports);
-        // A debounced call already out for this name can't be awaited, and `runTiers` would return on it.
-        if (inFlightRef.current.has(merchantKey(next))) {
-            supersedeInFlight(ports);
-        }
         groundedTimerRef.current = setTimeout(() => start(runGroundedFollowUp(ports)), GROUNDED_IDLE_MS);
-        await settle(runLookup(ports));
+        await settle(runLookup(ports, true));
     };
 
     const lookupNow = () => {
@@ -615,6 +617,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
     };
 
     const cancel = useEffectEvent(() => {
+        cancelledRef.current = true;
         clearTimers(ports);
         supersedeRequest(ports);
         inFlightRef.current.clear();
@@ -675,6 +678,7 @@ export function useTransactionEnrichment(args: UseTransactionEnrichmentArgs): Us
         lookupNow,
         onNameChange,
         pending: pending || forcing,
+        cancelled: () => cancelledRef.current,
         settleNow,
         userAsked: () => userAskedRef.current,
     };
