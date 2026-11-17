@@ -7,6 +7,7 @@ import { useId, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
+import { LocalizedLink } from "@/components/localized-link";
 import { Page } from "@/components/page";
 import { fold } from "@/lib/fold";
 import { faqPage, ldJson, pageMeta } from "@/lib/seo";
@@ -37,7 +38,7 @@ function EmailButton() {
 }
 
 function Support() {
-    const { answers, filter, intro, title } = useIntlayer("support");
+    const { answers, filter, help, intro, title } = useIntlayer("support");
     const [query, setQuery] = useState("");
     const inputId = useId();
     const words = fold(query).split(" ").filter(Boolean);
@@ -48,8 +49,15 @@ function Support() {
     const none = !shown.includes(true);
     return (
         <Page lead={intro} title={title}>
-            <div className="mt-10 delay-300" data-reveal>
+            <div className="mt-10 flex flex-wrap items-center gap-3 delay-300" data-reveal>
                 <EmailButton />
+                <LocalizedLink
+                    className="fluid bg-surface hover:bg-foreground/5 group inline-flex items-center gap-2 rounded-full px-6 py-3 text-base font-semibold"
+                    to="/help"
+                >
+                    {help}
+                    <Icon className="fluid text-muted group-hover:translate-x-0.5" name="arrow-right" />
+                </LocalizedLink>
             </div>
             <section className="mt-24">
                 <search className="relative block max-w-md" data-reveal>

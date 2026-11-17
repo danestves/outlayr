@@ -280,7 +280,7 @@ export function Article({
     badges?: boolean;
     children?: ReactNode;
     dated?: { day: Date; label: "checkedOn" | "updatedOn" };
-    hub: "/compare" | "/guides" | "/tools";
+    hub: "/compare" | "/guides" | "/help" | "/tools";
     intro?: ReactNode;
     lead: ReactNode;
     related: readonly PageRef[];

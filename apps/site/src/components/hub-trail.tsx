@@ -3,7 +3,13 @@ import { useIntlayer } from "react-intlayer";
 import { Icon } from "./icon";
 import { LocalizedLink } from "./localized-link";
 
-const HUBS = { "/blog": "blog", "/compare": "compare", "/guides": "guides", "/tools": "tools" } as const;
+const HUBS = {
+    "/blog": "blog",
+    "/compare": "compare",
+    "/guides": "guides",
+    "/help": "help",
+    "/tools": "tools",
+} as const;
 
 export function HubTrail({ hub }: { hub: keyof typeof HUBS }) {
     const { footer } = useIntlayer("site");

@@ -44,7 +44,12 @@ export function ldJson(data: Json) {
 
 const TRAILING_PERIOD = /\.$/u;
 
-export function answerTrail(locale: Locale, hub: "blog" | "compare" | "guides" | "tools", slug: string, title: string) {
+export function answerTrail(
+    locale: Locale,
+    hub: "blog" | "compare" | "guides" | "help" | "tools",
+    slug: string,
+    title: string
+) {
     const crumbs = [
         { name: "Outlayr", url: pageUrl("/", locale) },
         { name: getIntlayer("site", locale).footer[hub], url: pageUrl(`/${hub}`, locale) },
@@ -150,7 +155,7 @@ export function webPage(locale: Locale, path: string, fields: { readonly [key: s
     };
 }
 
-export function hubTrail(locale: Locale, hub: "blog" | "compare" | "guides" | "tools") {
+export function hubTrail(locale: Locale, hub: "blog" | "compare" | "guides" | "help" | "tools") {
     const crumbs = [
         { name: "Outlayr", url: pageUrl("/", locale) },
         { name: getIntlayer("site", locale).footer[hub], url: pageUrl(`/${hub}`, locale) },

@@ -261,6 +261,13 @@ const support = {
                 fr: "Essayez remboursement ou résilier",
             }),
         },
+        help: t({
+            en: "Step-by-step help",
+            de: "Hilfe Schritt für Schritt",
+            es: "Ayuda paso a paso",
+            pt: "Ajuda passo a passo",
+            fr: "Aide pas à pas",
+        }),
         intro: t({
             en: "Write to us and include what you tapped and what happened. Screenshots help.",
             de: "Schreib uns und nenne, worauf du getippt hast und was passiert ist. Screenshots helfen.",

@@ -3,11 +3,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { defaultLocale, getIntlayer } from "intlayer";
 
 import { postDay, postsIn } from "@/lib/posts";
-import { compareUpdated, guideUpdated, legalInForce } from "@/lib/site";
+import { HELP_UPDATED, compareUpdated, guideUpdated, legalInForce } from "@/lib/site";
 
 function pages(): [path: string, updated: Date | null][] {
     const { compare, guides } = getIntlayer("answers");
     const { pages: tools } = getIntlayer("tools");
+    const { articles } = getIntlayer("help");
     const rivals = Object.keys(compare).map((slug): [string, Date] => [`/compare/${slug}`, compareUpdated(slug)]);
     const answers = Object.keys(guides).map((slug): [string, Date] => [`/guides/${slug}`, guideUpdated(slug)]);
     const posts = postsIn(defaultLocale).map((post): [string, Date] => [
@@ -24,11 +25,13 @@ function pages(): [path: string, updated: Date | null][] {
         ["/terms", legalInForce("terms")],
         ["/privacy", legalInForce("privacy")],
         ["/delete-account", legalInForce("delete-account")],
+        ["/help", HELP_UPDATED],
         ["/guides", new Date(Math.max(...answers.map(([, updated]) => updated.getTime())))],
         ["/compare", new Date(Math.max(...rivals.map(([, checked]) => checked.getTime())))],
         ["/tools", null],
         ["/blog", posts.length > 0 ? new Date(Math.max(...posts.map(([, updated]) => updated.getTime()))) : null],
         ...answers,
+        ...Object.keys(articles).map((slug): [string, Date] => [`/help/${slug}`, HELP_UPDATED]),
         ...posts,
         ...Object.keys(tools).map((slug): [string, null] => [`/tools/${slug}`, null]),
         ...rivals,

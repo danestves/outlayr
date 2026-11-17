@@ -83,6 +83,7 @@ export function SiteFooter() {
                             <Item to="/blog">{footer.blog}</Item>
                             <Item to="/compare">{footer.compare}</Item>
                             <Item to="/tools">{footer.tools}</Item>
+                            <Item to="/help">{footer.help}</Item>
                             <Item to="/support">{footer.support}</Item>
                             <li>
                                 <a className={LINK} href={SOURCE_URL}>
