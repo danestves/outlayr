@@ -7,12 +7,13 @@ import answers from "../content/answers.content";
 import brand from "../content/brand.content";
 import home from "../content/home.content";
 import open from "../content/open.content";
+import pricing from "../content/pricing.content";
 import site from "../content/site.content";
 import support from "../content/support.content";
 import tools from "../content/tools.content";
 import { publishedSitePaths } from "./site-paths";
 
-const DICTIONARIES = { about, answers, brand, home, open, site, support, tools };
+const DICTIONARIES = { about, answers, brand, home, open, pricing, site, support, tools };
 
 vi.mock("intlayer", async (importOriginal) => {
     const actual = await importOriginal<typeof import("intlayer")>();

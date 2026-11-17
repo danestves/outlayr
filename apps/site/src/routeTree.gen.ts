@@ -27,6 +27,7 @@ import { Route as Char123LocaleChar125BrandRouteImport } from './routes/{-$local
 import { Route as Char123LocaleChar125DeleteAccountRouteImport } from './routes/{-$locale}/delete-account'
 import { Route as Char123LocaleChar125DownloadRouteImport } from './routes/{-$locale}/download'
 import { Route as Char123LocaleChar125OpenRouteImport } from './routes/{-$locale}/open'
+import { Route as Char123LocaleChar125PricingRouteImport } from './routes/{-$locale}/pricing'
 import { Route as Char123LocaleChar125PrivacyRouteImport } from './routes/{-$locale}/privacy'
 import { Route as Char123LocaleChar125SupportRouteImport } from './routes/{-$locale}/support'
 import { Route as Char123LocaleChar125TermsRouteImport } from './routes/{-$locale}/terms'
@@ -145,6 +146,12 @@ const Char123LocaleChar125OpenRoute =
     path: '/open',
     getParentRoute: () => Char123LocaleChar125RouteRoute,
   } as any)
+const Char123LocaleChar125PricingRoute =
+  Char123LocaleChar125PricingRouteImport.update({
+    id: '/pricing',
+    path: '/pricing',
+    getParentRoute: () => Char123LocaleChar125RouteRoute,
+  } as any)
 const Char123LocaleChar125PrivacyRoute =
   Char123LocaleChar125PrivacyRouteImport.update({
     id: '/privacy',
@@ -254,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
   '/{-$locale}/download': typeof Char123LocaleChar125DownloadRoute
   '/{-$locale}/open': typeof Char123LocaleChar125OpenRoute
+  '/{-$locale}/pricing': typeof Char123LocaleChar125PricingRoute
   '/{-$locale}/privacy': typeof Char123LocaleChar125PrivacyRoute
   '/{-$locale}/support': typeof Char123LocaleChar125SupportRoute
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
@@ -288,6 +296,7 @@ export interface FileRoutesByTo {
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
   '/{-$locale}/download': typeof Char123LocaleChar125DownloadRoute
   '/{-$locale}/open': typeof Char123LocaleChar125OpenRoute
+  '/{-$locale}/pricing': typeof Char123LocaleChar125PricingRoute
   '/{-$locale}/privacy': typeof Char123LocaleChar125PrivacyRoute
   '/{-$locale}/support': typeof Char123LocaleChar125SupportRoute
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
@@ -324,6 +333,7 @@ export interface FileRoutesById {
   '/{-$locale}/delete-account': typeof Char123LocaleChar125DeleteAccountRoute
   '/{-$locale}/download': typeof Char123LocaleChar125DownloadRoute
   '/{-$locale}/open': typeof Char123LocaleChar125OpenRoute
+  '/{-$locale}/pricing': typeof Char123LocaleChar125PricingRoute
   '/{-$locale}/privacy': typeof Char123LocaleChar125PrivacyRoute
   '/{-$locale}/support': typeof Char123LocaleChar125SupportRoute
   '/{-$locale}/terms': typeof Char123LocaleChar125TermsRoute
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/delete-account'
     | '/{-$locale}/download'
     | '/{-$locale}/open'
+    | '/{-$locale}/pricing'
     | '/{-$locale}/privacy'
     | '/{-$locale}/support'
     | '/{-$locale}/terms'
@@ -395,6 +406,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/delete-account'
     | '/{-$locale}/download'
     | '/{-$locale}/open'
+    | '/{-$locale}/pricing'
     | '/{-$locale}/privacy'
     | '/{-$locale}/support'
     | '/{-$locale}/terms'
@@ -430,6 +442,7 @@ export interface FileRouteTypes {
     | '/{-$locale}/delete-account'
     | '/{-$locale}/download'
     | '/{-$locale}/open'
+    | '/{-$locale}/pricing'
     | '/{-$locale}/privacy'
     | '/{-$locale}/support'
     | '/{-$locale}/terms'
@@ -591,6 +604,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char123LocaleChar125OpenRouteImport
       parentRoute: typeof Char123LocaleChar125RouteRoute
     }
+    '/{-$locale}/pricing': {
+      id: '/{-$locale}/pricing'
+      path: '/pricing'
+      fullPath: '/{-$locale}/pricing'
+      preLoaderRoute: typeof Char123LocaleChar125PricingRouteImport
+      parentRoute: typeof Char123LocaleChar125RouteRoute
+    }
     '/{-$locale}/privacy': {
       id: '/{-$locale}/privacy'
       path: '/privacy'
@@ -706,6 +726,7 @@ interface Char123LocaleChar125RouteRouteChildren {
   Char123LocaleChar125DeleteAccountRoute: typeof Char123LocaleChar125DeleteAccountRoute
   Char123LocaleChar125DownloadRoute: typeof Char123LocaleChar125DownloadRoute
   Char123LocaleChar125OpenRoute: typeof Char123LocaleChar125OpenRoute
+  Char123LocaleChar125PricingRoute: typeof Char123LocaleChar125PricingRoute
   Char123LocaleChar125PrivacyRoute: typeof Char123LocaleChar125PrivacyRoute
   Char123LocaleChar125SupportRoute: typeof Char123LocaleChar125SupportRoute
   Char123LocaleChar125TermsRoute: typeof Char123LocaleChar125TermsRoute
@@ -732,6 +753,7 @@ const Char123LocaleChar125RouteRouteChildren: Char123LocaleChar125RouteRouteChil
       Char123LocaleChar125DeleteAccountRoute,
     Char123LocaleChar125DownloadRoute: Char123LocaleChar125DownloadRoute,
     Char123LocaleChar125OpenRoute: Char123LocaleChar125OpenRoute,
+    Char123LocaleChar125PricingRoute: Char123LocaleChar125PricingRoute,
     Char123LocaleChar125PrivacyRoute: Char123LocaleChar125PrivacyRoute,
     Char123LocaleChar125SupportRoute: Char123LocaleChar125SupportRoute,
     Char123LocaleChar125TermsRoute: Char123LocaleChar125TermsRoute,

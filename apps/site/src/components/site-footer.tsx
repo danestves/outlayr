@@ -76,9 +76,7 @@ export function SiteFooter() {
                             <Item hash="features" to="/">
                                 {nav.features}
                             </Item>
-                            <Item hash="pricing" to="/">
-                                {nav.pricing}
-                            </Item>
+                            <Item to="/pricing">{nav.pricing}</Item>
                         </Column>
                         <Column title={footer.resources}>
                             <Item to="/guides">{footer.guides}</Item>

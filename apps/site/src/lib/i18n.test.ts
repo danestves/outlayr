@@ -13,6 +13,7 @@ import filmMonth from "../content/film-month.content";
 import filmSorted from "../content/film-sorted.content";
 import home from "../content/home.content";
 import open from "../content/open.content";
+import pricing from "../content/pricing.content";
 import site from "../content/site.content";
 import story from "../content/story.content";
 import support from "../content/support.content";
@@ -35,6 +36,15 @@ const PAGE_CONTENT: Record<string, readonly unknown[]> = {
         filmMonth.content,
         filmSorted.content,
         about.content.allGuides,
+        pricing.content.more,
+    ],
+    "/pricing": [
+        ...SHELL,
+        pricing.content,
+        home.content.limits,
+        home.content.plansCopy,
+        home.content.proOnly,
+        story.content.pricing,
     ],
     "/about": [...SHELL, about.content],
     "/brand": [...SHELL, brand.content],

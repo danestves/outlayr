@@ -6,6 +6,7 @@ import * as Schema from "effect/Schema";
 import { getIntlayer, getLocalizedUrl } from "intlayer";
 
 import { fold } from "./fold";
+import { usPrices } from "./pro-prices";
 
 export interface SitePage {
     description?: string;
@@ -17,6 +18,7 @@ const SPACES = /\s+/u;
 
 function sitePages(locale: Locale): SitePage[] {
     const home = getIntlayer("home", locale);
+    const pricing = getIntlayer("pricing", locale);
     const about = getIntlayer("about", locale);
     const brand = getIntlayer("brand", locale);
     const support = getIntlayer("support", locale);
@@ -26,6 +28,11 @@ function sitePages(locale: Locale): SitePage[] {
     const tools = getIntlayer("tools", locale);
     return [
         { description: home.meta.description, path: "/", title: home.meta.title },
+        {
+            description: pricing.meta.description(usPrices(locale)),
+            path: "/pricing",
+            title: pricing.meta.title,
+        },
         { description: about.meta.description, path: "/about", title: about.meta.title },
         { description: brand.meta.description, path: "/brand", title: brand.meta.title },
         { description: support.meta.description, path: "/support", title: support.meta.title },

@@ -59,6 +59,7 @@ const COMPARE_PATHS = [
 
 const PAGE_PATHS = [
     "/",
+    "/pricing",
     "/about",
     "/brand",
     ...COMPARE_PATHS,
