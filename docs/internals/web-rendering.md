@@ -70,3 +70,5 @@ The HTML of every `_app` page holds the visitor's whole ledger and account state
 ## Measuring
 
 Measure a production build against a backend with real latency, not `vp dev` on localhost: a local Convex hides the round trips the server pull pays. In production the server reaches Convex over the Docker network (`CONVEX_INTERNAL_URL`, `serverConvexUrl`), not back through Cloudflare, and the pull asks for one big page (`PULL_PAGE_MAX`). Each extra serial call on the load path costs a round trip, so mint and fetch beside the pull, never after it. Watch the HTML size too: 242 rows come to about 360 KB, 46 KB gzipped.
+
+Every server render reports its steps in the `Server-Timing` header (`timed` in `lib/server-timing.ts`, `total` in `src/server.ts`), so the browser's Network panel shows where a slow load went. Wrap a new server step on the load path in `timed`. The HTML response also carries a `Link` header for the page's scripts, styles and fonts, which Cloudflare replays as a 103 Early Hints on later visits; it only reads `preload` and `preconnect`, so `src/server.ts` rewrites `modulepreload`.

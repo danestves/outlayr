@@ -4,6 +4,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import { authServer } from "./auth-server";
+import { timed } from "./server-timing";
 import { signedOutOf } from "./token-wait";
 
 const MS_PER_SECOND = 1000;
@@ -13,7 +14,9 @@ const decodeClaims = Schema.decodeUnknownOption(
     Schema.fromJsonString(Schema.Struct({ exp: Schema.Number, sub: Schema.String }))
 );
 
-const readToken = createServerFn({ method: "GET" }).handler(async () => (await authServer().getToken()) ?? null);
+const readToken = createServerFn({ method: "GET" }).handler(
+    async () => (await timed("token", () => authServer().getToken())) ?? null
+);
 
 export interface Session {
     token: string | null;

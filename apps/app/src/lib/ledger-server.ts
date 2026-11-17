@@ -25,6 +25,7 @@ import type { Profile } from "./account-state";
 import { convexUrls, serverConvexUrl } from "./convex";
 import { ledgerSeed, syncedTableNames } from "./ledger-db";
 import type { PulledPage, PulledRow } from "./ledger-sync";
+import { timed } from "./server-timing";
 
 const PHOTO_BATCH = 100;
 
@@ -93,7 +94,11 @@ async function pullLedger(client: ConvexHttpClient) {
             break;
         }
     }
-    const minted = await Promise.all(minting);
+    const minted = await timed(
+        "photos",
+        () => Promise.all(minting),
+        (batches) => `${batches.length} batches`
+    );
     const photos: MintedPhotos = { keys: [...keys], minted: minted.flat(), mintedAt };
     return { cursor, photos, rows };
 }
@@ -132,10 +137,14 @@ export const serverLedger = createIsomorphicFn()
     .server(async (token: string): Promise<ServerLedger> => {
         const { convexSiteUrl } = convexUrls();
         const client = new ConvexHttpClient(serverConvexUrl(), { auth: token });
-        const profile = readProfile(convexSiteUrl);
+        const profile = timed("profile", () => readProfile(convexSiteUrl));
         const [{ cursor, photos, rows }, rates] = await Promise.all([
-            pullLedger(client),
-            client.query(api.ledger.exchangeRates, {}),
+            timed(
+                "pull",
+                () => pullLedger(client),
+                (pulled) => `${pulled.rows.length} rows`
+            ),
+            timed("rates", () => client.query(api.ledger.exchangeRates, {})),
         ]);
         return { collections: ledgerSeed(rows, cursor, rates), photos, profile: await profile };
     })
@@ -163,29 +172,31 @@ export const serverAccountState = createIsomorphicFn()
         const plan = convex
             ? [client.prefetchQuery({ ...planQuery, queryFn: () => convex.action(api.billing.plan, {}) })]
             : [];
-        await Promise.all([
-            client.prefetchQuery(limitsQuery),
-            client.prefetchQuery(notionQuery),
-            client.prefetchQuery(referralsQuery),
-            client.prefetchQuery(connectionsQuery),
-            client.prefetchQuery(sharedLinksQuery),
-            client.prefetchQuery(pushConfigQuery),
-            ...plan,
-            client.prefetchQuery({
-                ...sessionsQuery,
-                queryFn: async () => sessionRows(await authGet(convexSiteUrl, "/list-sessions", Sessions)),
-            }),
-            client.prefetchQuery({
-                ...accountsQuery,
-                queryFn: async () => {
-                    const signIns = await authGet(convexSiteUrl, "/list-accounts", SignIns);
-                    return signIns.map(({ createdAt, id, providerId }) => ({
-                        id,
-                        linkedAt: new Date(createdAt).getTime(),
-                        providerId,
-                    }));
-                },
-            }),
-        ]);
+        await timed("account", () =>
+            Promise.all([
+                client.prefetchQuery(limitsQuery),
+                client.prefetchQuery(notionQuery),
+                client.prefetchQuery(referralsQuery),
+                client.prefetchQuery(connectionsQuery),
+                client.prefetchQuery(sharedLinksQuery),
+                client.prefetchQuery(pushConfigQuery),
+                ...plan,
+                client.prefetchQuery({
+                    ...sessionsQuery,
+                    queryFn: async () => sessionRows(await authGet(convexSiteUrl, "/list-sessions", Sessions)),
+                }),
+                client.prefetchQuery({
+                    ...accountsQuery,
+                    queryFn: async () => {
+                        const signIns = await authGet(convexSiteUrl, "/list-accounts", SignIns);
+                        return signIns.map(({ createdAt, id, providerId }) => ({
+                            id,
+                            linkedAt: new Date(createdAt).getTime(),
+                            providerId,
+                        }));
+                    },
+                }),
+            ])
+        );
     })
     .client(() => Promise.resolve());
