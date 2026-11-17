@@ -154,7 +154,11 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
         return null;
     }
     const second = escalation(request, first, firstTry.answer);
-    const final = second === null ? firstTry : ((yield* suggest(second)) ?? firstTry);
+    const retry =
+        second === null
+            ? null
+            : yield* suggest(second).pipe(Effect.catchTags({ ModelCallError: () => Effect.succeed(null) }));
+    const final = retry ?? firstTry;
     return yield* share(ctx, row, final.answer, final.modelId);
 });
 

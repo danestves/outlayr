@@ -436,7 +436,7 @@ function setOf(testCase: Case) {
 }
 
 describe.skipIf(!enabled)("routing arms on runSuggest", () => {
-    it("runs every case on every arm", async () => {
+    it("runs every case on every arm", { timeout: 900_000 }, async () => {
         const cases = SETS[SET] ?? [];
         const queue = ARMS.flatMap((arm) =>
             Array.from({ length: arm.runs }, (_, run) => cases.map((testCase) => ({ arm, run, testCase }))).flat()

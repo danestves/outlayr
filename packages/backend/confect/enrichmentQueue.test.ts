@@ -263,6 +263,34 @@ describe("model route", () => {
         await expect(sharedModelId(setup())).resolves.toBe(CLAUDE_MODEL_ID);
     });
 
+    it("keeps the Haiku answer when the Sonnet retry fails", async () => {
+        const t = setup();
+        const haiku = fastModel({
+            brand: "Care4Bag",
+            categoryName: "Luggage",
+            domain: null,
+            isNewCategory: true,
+            tags: [],
+        });
+        let calls = 0;
+        const fast = new MockLanguageModelV3({
+            doGenerate: async (options) => {
+                calls += 1;
+                if (calls > 1) {
+                    throw new Error("overloaded");
+                }
+                return haiku.doGenerate(options);
+            },
+        });
+
+        const answer = await t.action((ctx) =>
+            Effect.runPromise(resolveJob(ctx, queuedRow({ categoryTree: [] }), { fast }))
+        );
+
+        expect(calls).toBe(2);
+        expect(answer).toMatchObject({ categoryName: "Luggage", isNewCategory: true, merchantName: "Care4Bag" });
+    });
+
     it("keeps a background job off Sonnet once GROUNDED_BUDGET_MICROS closes the budget", async () => {
         await expect(sharedModelId(setup(), { GROUNDED_BUDGET_MICROS: "0" })).resolves.toBe(CLAUDE_FAST_MODEL_ID);
     });

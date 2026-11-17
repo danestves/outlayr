@@ -28,7 +28,7 @@ export const RouteRequest = Schema.Struct({
 export type RouteRequest = typeof RouteRequest.Type;
 
 export const Route = Schema.Struct({
-    effort: Effort,
+    effort: Schema.NullOr(Effort),
     feature: Feature,
     grounded: Schema.Boolean,
     maxTokens: Schema.NullOr(Schema.Int),
@@ -41,8 +41,8 @@ const DEFAULTS = {
     background_suggest: { effort: "low", grounded: false, maxTokens: null, model: "fast" },
     category_suggest: { effort: "low", grounded: false, maxTokens: null, model: "fast" },
     csv_import: { effort: "low", grounded: false, maxTokens: null, model: "fast" },
-    // Medium is Haiku's own default, which the grounded call always ran at.
-    grounded_lookup: { effort: "medium", grounded: true, maxTokens: null, model: "fast" },
+    // Null sends no effort or thinking setting, as the grounded call always did.
+    grounded_lookup: { effort: null, grounded: true, maxTokens: null, model: "fast" },
     installment_scan: { effort: "low", grounded: false, maxTokens: null, model: "standard" },
     notification_read: { effort: "low", grounded: false, maxTokens: null, model: "fast" },
     // A chunk answers with a few hundred rows, far past the provider's default cap.

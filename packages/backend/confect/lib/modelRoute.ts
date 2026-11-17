@@ -9,7 +9,7 @@ export const routeMiddleware = ({
 }: Pick<Route, "effort" | "maxTokens">): LanguageModelMiddleware => ({
     transformParams: async ({ params }) => ({
         ...params,
-        reasoning: effort,
+        reasoning: effort ?? params.reasoning,
         maxOutputTokens: maxTokens ?? params.maxOutputTokens,
     }),
 });
