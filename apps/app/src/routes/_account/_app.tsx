@@ -20,7 +20,6 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Muted, SOLID_PILL, Screen } from "@/components/account/parts";
 import { AccountFlowsProvider } from "@/components/dashboard/accounts/flows";
-import { homeCovered } from "@/components/dashboard/home/model";
 import { DashboardPending } from "@/components/dashboard/pending";
 import { DashboardContext, useFilters } from "@/components/dashboard/shell/dashboard";
 import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filters";
@@ -34,6 +33,7 @@ import type { LedgerBooks } from "@/lib/ledger-books";
 import { ledgerCommitter } from "@/lib/ledger-committer";
 import { ledgerSync, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
 import { serverLedger } from "@/lib/ledger-server";
+import { lightPathOf, viewCovered } from "@/lib/light-views";
 import { onboardingDue, readProgress, subscribeProgress } from "@/lib/onboarding";
 import { currentToken, onSessionChange, userOf } from "@/lib/session";
 import { watchSync } from "@/lib/sync-status";
@@ -60,8 +60,8 @@ export const Route = createFileRoute("/_account/_app")({
         let opening: LedgerOpening | null = null;
         try {
             if (import.meta.env.SSR) {
-                const home = location.pathname === "/" && location.searchStr === "";
-                const seed = await serverLedger(token, home ? { asOf } : null);
+                const path = lightPathOf(location.pathname, location.searchStr);
+                const seed = await serverLedger(token, path ? { asOf, path } : null);
                 ({ opening } = seed);
                 context.dbClient.hydrate({ collections: seed.collections });
                 seedProfile(context.queryClient, seed.profile);
@@ -241,8 +241,10 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
     const ledger = useMemo(() => prepareLedger(books, asOf, opening), [books, asOf, opening]);
     useLiveLedger(loaded.userId, setLanding);
     const filters = useFilters(search, ledger);
-    const home = useLocation({ select: (location) => location.pathname === "/" });
-    const waiting = opening !== null && !(home && homeCovered(ledger, filters.period));
+    const pathname = useLocation({ select: (location) => location.pathname });
+    const pageSearch = useLocation({ select: (location) => location.search });
+    const [stranded, setStranded] = useState(false);
+    const waiting = opening !== null && (stranded || !viewCovered(ledger, filters.period, pathname, pageSearch));
     if (waiting && landing instanceof Error) {
         throw landing;
     }
@@ -251,6 +253,7 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
             filters,
             ledger,
             overview,
+            strand: () => setStranded(true),
             setFilters: (patch: FilterPatch) =>
                 navigate({ resetScroll: false, search: (prev) => ({ ...prev, ...searchPatch(patch) }), to: "." }),
         }),

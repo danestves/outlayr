@@ -23,6 +23,7 @@ export interface Dashboard {
     ledger: Ledger;
     overview: Overview;
     setFilters: (patch: FilterPatch) => void;
+    strand: () => void;
 }
 
 export const DashboardContext = createContext<Dashboard | null>(null);

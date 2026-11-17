@@ -11,7 +11,9 @@ import type { LedgerBooks } from "@/lib/ledger-books";
 import { categoryBudgets, kpis } from "../../../lib/dashboard-series";
 import { prepareLedger, rowsBetween, total } from "../../../lib/dashboard-series-ledger";
 import { periodOf } from "../../../lib/dashboard-series-period";
+import { reachesOpening } from "../../../lib/light-views";
 import { periodKeysOf } from "../shell/period-keys";
+import { listCovered, queryRows, tally } from "../transactions/model";
 import { accountBalances, budgetRows, everyDay, homeCovered, sparks } from "./model";
 
 const NOW = Date.parse("2026-10-10T15:00:00Z");
@@ -134,10 +136,10 @@ function books(budget: Partial<Doc<"budgets">> = {}): LedgerBooks {
     };
 }
 
-function opened(all: LedgerBooks) {
+function opened(all: LedgerBooks, cutoff = CUTOFF) {
     const before = <Row extends { date: number; deletedAt: number | null }>(rows: readonly Row[]) =>
-        rows.filter((row) => row.deletedAt === null && row.date < CUTOFF);
-    const since = <Row extends { date: number }>(rows: readonly Row[]) => rows.filter((row) => row.date >= CUTOFF);
+        rows.filter((row) => row.deletedAt === null && row.date < cutoff);
+    const since = <Row extends { date: number }>(rows: readonly Row[]) => rows.filter((row) => row.date >= cutoff);
     const opening = {
         cells: openingCells(
             ledgerCellsOf({
@@ -149,14 +151,14 @@ function opened(all: LedgerBooks) {
             all.accounts,
             all.installmentPlans
         ),
-        cutoff: CUTOFF,
+        cutoff,
     };
     const recent: LedgerBooks = {
         ...all,
         outsideMoves: since(all.outsideMoves),
         outsidePayments: since(all.outsidePayments),
         transactions: all.transactions.filter(
-            (row) => row.deletedAt === null && (row.date >= CUTOFF || row.recurringType > 0)
+            (row) => row.deletedAt === null && (row.date >= cutoff || row.recurringType > 0)
         ),
         transfers: since(all.transfers),
     };
@@ -198,5 +200,50 @@ describe("Home on the rows since thirteen months back", () => {
 
         expect(homeCovered(prepareLedger(recent, NOW, opening), periodOf("2026-07", 1))).toBe(false);
         expect(homeCovered(prepareLedger(carrying.recent, NOW, carrying.opening), october)).toBe(false);
+    });
+
+    it("lists a month of entries as the whole ledger does, from the rows since the month before", () => {
+        const all = books();
+        const { opening, recent } = opened(all, Date.UTC(2026, 8, 1));
+        const light = prepareLedger(recent, NOW, opening);
+        const whole = prepareLedger(all, NOW);
+        const listed = (ledger: typeof light) => {
+            const rows = queryRows(
+                ledger,
+                {
+                    accounts: [],
+                    categories: [],
+                    max: null,
+                    min: null,
+                    q: "",
+                    range: october,
+                    sort: "newest",
+                    type: undefined,
+                },
+                () => ""
+            );
+            return { rows, totals: tally(ledger, rows) };
+        };
+
+        expect(listCovered(light, october)).toBe(true);
+        expect(listCovered(light, periodOf("2026-08", 1))).toBe(false);
+        expect(listCovered(light, null)).toBe(false);
+        expect(listed(light).rows.length).toBeGreaterThan(20);
+        expect(listed(light)).toStrictEqual(listed(whole));
+    });
+
+    it("stops trusting the opening once a save reaches the rows it stands for", () => {
+        const { opening, recent } = opened(books());
+        const saved = (localId: string, date: number) =>
+            // SAFETY: the check reads the table, the id and the date only.
+            [{ fields: { date }, localId, table: "transactions" }] as unknown as Parameters<typeof reachesOpening>[1];
+        const old = recent.transactions.find((row) => row.date < CUTOFF);
+        const light = { books: recent, opening };
+
+        expect(old).toBeDefined();
+        expect(reachesOpening(light, saved("new", NOW))).toBe(false);
+        expect(reachesOpening(light, saved("new", CUTOFF - DAY_MS))).toBe(true);
+        expect(reachesOpening(light, saved(old?.localId ?? "", NOW))).toBe(true);
+        expect(reachesOpening({ books: recent, opening: null }, saved("new", CUTOFF - DAY_MS))).toBe(false);
     });
 });

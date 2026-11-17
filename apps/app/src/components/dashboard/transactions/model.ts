@@ -1,4 +1,4 @@
-import { round } from "../../../lib/dashboard-series-ledger";
+import { round, startOfDay } from "../../../lib/dashboard-series-ledger";
 import type { Ledger, LedgerRow } from "../../../lib/dashboard-series-ledger";
 import { periodOf, shiftPeriodKey } from "../../../lib/dashboard-series-period";
 import { figureOf, foldFees, viewRows } from "../home/rows";
@@ -48,6 +48,18 @@ export function rangeOf(
             return periodOf(key, firstDayOfMonth);
         }
     }
+}
+
+export function listCovered(ledger: Pick<Ledger, "now" | "offsetAt" | "opening" | "rows">, range: Range | null) {
+    const { opening } = ledger;
+    if (opening === null) {
+        return true;
+    }
+    return (
+        range !== null &&
+        startOfDay(ledger, range.from) >= opening.cutoff &&
+        ledger.rows.some((row) => row.at >= opening.cutoff && row.at <= ledger.now)
+    );
 }
 
 export interface LedgerQuery {

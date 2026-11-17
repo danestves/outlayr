@@ -8,8 +8,6 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import { ConvexHttpClient } from "convex/browser";
 import * as Schema from "effect/Schema";
 
-import { homeOpensWith } from "@/components/dashboard/home/model";
-
 import {
     accountsQuery,
     connectionsQuery,
@@ -27,6 +25,8 @@ import { convexUrls, serverConvexUrl } from "./convex";
 import { ledgerSeed, pulledBooks, syncedTableNames } from "./ledger-db";
 import type { ExchangeRate } from "./ledger-db";
 import type { PulledPage, PulledRow } from "./ledger-sync";
+import { lightSince, opensLight } from "./light-views";
+import type { LightPath } from "./light-views";
 import { timed } from "./server-timing";
 
 export interface ServerLedger {
@@ -72,13 +72,16 @@ async function pullLedger(client: ConvexHttpClient) {
     }
 }
 
-const HOME_MONTHS = 13;
+interface LightLoad {
+    asOf: number;
+    path: LightPath;
+}
 
-async function pullHome(client: ConvexHttpClient, rates: Promise<readonly ExchangeRate[]>, asOf: number) {
-    const today = new Date(asOf);
-    const since = Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - HOME_MONTHS, 1);
+async function pullLight(client: ConvexHttpClient, rates: Promise<readonly ExchangeRate[]>, { asOf, path }: LightLoad) {
     const tables = syncedTableNames().filter((table) => table !== "transactionTags");
-    const page = await client.query(api.sync.pullRecent, { since, tables }).catch(() => undefined);
+    const page = await client
+        .query(api.sync.pullRecent, { since: lightSince(path, asOf), tables })
+        .catch(() => undefined);
     if (page === undefined) {
         return null;
     }
@@ -87,7 +90,7 @@ async function pullHome(client: ConvexHttpClient, rates: Promise<readonly Exchan
         return null;
     }
     const opening = { cells: page.opening, cutoff: page.since };
-    return homeOpensWith(pulledBooks(page.rows, await rates), asOf, opening)
+    return opensLight(path, pulledBooks(page.rows, await rates), asOf, opening)
         ? { cursor: 0, opening, rows: page.rows }
         : null;
 }
@@ -123,16 +126,16 @@ async function readProfile(convexSiteUrl: string): Promise<Profile | undefined> 
 
 // Everything the first frame of a signed-in page shows, read with the visitor's token before the server renders.
 export const serverLedger = createIsomorphicFn()
-    .server(async (token: string, home: { asOf: number } | null): Promise<ServerLedger> => {
+    .server(async (token: string, light: LightLoad | null): Promise<ServerLedger> => {
         const { convexSiteUrl } = convexUrls();
         const client = new ConvexHttpClient(serverConvexUrl(), { auth: token });
         const profile = timed("profile", () => readProfile(convexSiteUrl));
         const rates = timed("rates", () => client.query(api.ledger.exchangeRates, {}));
         const pull = async () =>
-            (home
+            (light
                 ? await timed(
                       "recent",
-                      () => pullHome(client, rates, home.asOf),
+                      () => pullLight(client, rates, light),
                       (pulled) => (pulled ? `${pulled.rows.length} rows, ${pulled.opening.cells.length} cells` : "none")
                   )
                 : null) ??
