@@ -16,6 +16,7 @@ import {
     planQuery,
     pushConfigQuery,
     referralsQuery,
+    seedProfile,
     sessionRows,
     sessionsQuery,
     sharedLinksQuery,
@@ -28,6 +29,7 @@ import type { PulledPage, PulledRow } from "./ledger-sync";
 import { lightSince, opensLight } from "./light-views";
 import type { LightPath } from "./light-views";
 import { timed } from "./server-timing";
+import { tokenProfile } from "./session";
 
 export interface ServerLedger {
     collections: DehydratedDbState["collections"];
@@ -129,7 +131,7 @@ export const serverLedger = createIsomorphicFn()
     .server(async (token: string, light: LightLoad | null): Promise<ServerLedger> => {
         const { convexSiteUrl } = convexUrls();
         const client = new ConvexHttpClient(serverConvexUrl(), { auth: token });
-        const profile = timed("profile", () => readProfile(convexSiteUrl));
+        const profile = tokenProfile(token) ?? timed("profile", () => readProfile(convexSiteUrl));
         const rates = timed("rates", () => client.query(api.ledger.exchangeRates, {}));
         const pull = async () =>
             (light
@@ -180,6 +182,7 @@ export const serverAccountState = createIsomorphicFn()
                 client.prefetchQuery(sharedLinksQuery),
                 client.prefetchQuery(pushConfigQuery),
                 ...plan,
+                readProfile(convexSiteUrl).then((profile) => seedProfile(client, profile)),
                 client.prefetchQuery({
                     ...sessionsQuery,
                     queryFn: async () => sessionRows(await authGet(convexSiteUrl, "/list-sessions", Sessions)),
