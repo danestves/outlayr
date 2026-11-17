@@ -11,7 +11,7 @@ const { default: server } = await import("./server");
 
 const PAGE = `<html><head><title>Outlayr</title></head><body>
 <nav>Menu</nav>
-<main><h1>Track every expense.</h1><span aria-hidden="true">Decoration</span><img class="dark-only" alt="Dark shot" src="/a.webp"/><dl class="grid"><dt class="label">Currencies</dt><dd>165, at the rate of the day</dd></dl><ul><li><div><p data-kicker>Calculators</p><h3><a href="/tools/split">Split expenses calculator</a></h3></div></li></ul></main>
+<main><h1>Track every expense.</h1><span aria-hidden="true">Decoration</span><img class="dark-only" alt="Dark shot" src="/a.webp"/><dl class="grid"><dt class="label">Currencies</dt><dd>165, at the rate of the day</dd></dl><ul><li><div><p data-kicker>Calculators</p><h3><a href="/tools/split">Split expenses calculator</a></h3></div></li></ul><ul><li class="flex justify-between"><span class="flex gap-3"><svg></svg>Accounts</span><span class="font-mono">3</span></li></ul><p class="flex flex-wrap gap-2"><span>Spent</span> <span>$42.00</span><span>.</span></p></main>
 <footer>Legal</footer>
 </body></html>`;
 
@@ -39,6 +39,8 @@ it("serves the main content as markdown to a client that prefers it, even on a n
     expect(markdown).not.toMatch(/<\/?d[dlt]\b/u);
     expect(markdown).toContain("### [Split expenses calculator](https://tryoutlayr.com/tools/split)");
     expect(markdown).not.toContain("Calculators");
+    expect(markdown).toContain("- Accounts 3");
+    expect(markdown).toContain("Spent $42.00.");
     for (const hidden of ["Menu", "Decoration", "Dark shot", "Legal"]) {
         expect(markdown).not.toContain(hidden);
     }

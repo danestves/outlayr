@@ -1,7 +1,8 @@
-import { localeFromParam } from "@outlayr/shared/i18n";
-import { SUPPORT_EMAIL } from "@outlayr/shared/urls";
+import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
+import { APP_STORE_URL, APP_URL, PLAY_STORE_URL, SITE_URL, SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -11,6 +12,7 @@ import { LogoMark } from "@/components/logo-mark";
 import { Page } from "@/components/page";
 import { proPrices } from "@/lib/pro-prices";
 import { ldJson, pageMeta, webPage } from "@/lib/seo";
+import { SOURCE_URL } from "@/lib/site";
 
 const SECTION = "py-24";
 const HEADING = "text-4xl font-semibold tracking-tight md:text-5xl";
@@ -37,6 +39,10 @@ const SHOTS = [
     { id: "subscriptions", name: "10" },
 ] as const;
 const MODES = ["light", "dark"] as const;
+const MAKER = "Daniel Esteves, danestves LLC";
+const APP_STORE_SINCE = Date.UTC(2026, 9, 29);
+const LINKS = [SITE_URL, APP_URL, APP_STORE_URL, PLAY_STORE_URL] as const;
+const COPIED_MS = 2000;
 // The clips open on an empty frame, so each preview seeks to a second where the app is on screen.
 const FILMS = [
     { name: "chaos", poster: 3 },
@@ -70,6 +76,7 @@ function Brand() {
                 {download}
                 <span className="tabular font-mono text-xs opacity-60">ZIP</span>
             </a>
+            <Facts />
             <Pitch />
             <Claims />
             <Logos />
@@ -78,6 +85,106 @@ function Brand() {
             <Broll />
             <Contact />
         </Page>
+    );
+}
+
+function bareUrl(url: string) {
+    return url.replace(/^https:\/\//u, "");
+}
+
+function Facts() {
+    const { facts } = useIntlayer("brand");
+    const { locale } = useLocale();
+    const [copied, setCopied] = useState(false);
+    const prices = proPrices(null, "en");
+    const price = facts.price({
+        monthly: `${prices.monthly.whole}${prices.monthly.fraction}`,
+        once: prices.once,
+        yearly: prices.yearly,
+    });
+    const since = facts.launch({
+        date: new Intl.DateTimeFormat(LANGUAGES[locale].date, { dateStyle: "long", timeZone: "UTC" }).format(
+            APP_STORE_SINCE
+        ),
+    });
+    const rows = [
+        {
+            label: "Outlayr",
+            text: facts.definition.value,
+            value: <strong className="font-semibold">{facts.definition}</strong>,
+        },
+        { label: facts.labels.platforms.value, text: facts.platforms.value, value: facts.platforms },
+        { label: facts.labels.price.value, text: price.value, value: price },
+        { label: facts.labels.languages.value, text: facts.languages.value, value: facts.languages },
+        {
+            label: facts.labels.license.value,
+            text: `${facts.license.value}, ${SOURCE_URL}`,
+            value: (
+                <>
+                    {facts.license},{" "}
+                    <a className="underline-offset-4 hover:underline" href={SOURCE_URL}>
+                        {bareUrl(SOURCE_URL)}
+                    </a>
+                </>
+            ),
+        },
+        { label: facts.labels.maker.value, text: MAKER, value: MAKER },
+        { label: facts.labels.launch.value, text: since.value, value: since },
+        {
+            label: facts.labels.links.value,
+            text: LINKS.join(" · "),
+            value: (
+                <ul className="flex flex-col gap-1">
+                    {LINKS.map((url) => (
+                        <li key={url}>
+                            <a className="break-all underline-offset-4 hover:underline" href={url}>
+                                {bareUrl(url)}
+                            </a>
+                        </li>
+                    ))}
+                </ul>
+            ),
+        },
+        {
+            label: facts.labels.contact.value,
+            text: SUPPORT_EMAIL,
+            value: (
+                <a className="underline-offset-4 hover:underline" href={`mailto:${SUPPORT_EMAIL}`}>
+                    {SUPPORT_EMAIL}
+                </a>
+            ),
+        },
+    ];
+    const copy = async () => {
+        await navigator.clipboard.writeText(rows.map((row) => `${row.label}: ${row.text}`).join("\n"));
+        setCopied(true);
+        setTimeout(() => setCopied(false), COPIED_MS);
+    };
+    return (
+        <section className={SECTION}>
+            <div className="flex items-baseline justify-between gap-6" data-reveal>
+                <h2 className={HEADING}>{facts.title}</h2>
+                <button
+                    aria-live="polite"
+                    className={`${LABEL} fluid hover:text-foreground shrink-0 underline underline-offset-4`}
+                    onClick={copy}
+                    type="button"
+                >
+                    {copied ? facts.copied : facts.copy}
+                </button>
+            </div>
+            <dl className="border-foreground mt-16 border-t" data-reveal>
+                {rows.map((row) => (
+                    <div
+                        className="border-border grid gap-1 border-b py-4 md:grid-cols-[12rem_1fr] md:gap-6"
+                        key={row.label}
+                    >
+                        <dt className={`${LABEL} md:pt-1`}>{row.label}</dt>
+                        <dd className="max-w-[65ch]">{row.value}</dd>
+                    </div>
+                ))}
+            </dl>
+        </section>
     );
 }
 
