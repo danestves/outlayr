@@ -4139,8 +4139,8 @@ const answers = {
                         es: "Cada pago envía el monto, el comercio y la tarjeta, y cada tarjeta se guarda en la cuenta que elijas.",
                     }),
                     t({
-                        en: "It works on the free plan and uses none of your 30 voice or receipt captures.",
-                        es: "Funciona en el plan gratis y no gasta ninguna de tus 30 capturas de voz o de recibos.",
+                        en: "The free plan logs 30 of these a month, apart from your 30 voice or receipt captures. Outlayr Pro has no cap.",
+                        es: "El plan gratis registra 30 de estas al mes, aparte de tus 30 capturas de voz o de recibos. Outlayr Pro no tiene límite.",
                     }),
                     t({
                         en: "For cards outside Apple Pay, a second automation logs the purchase notifications your bank's app sends.",
@@ -8621,8 +8621,8 @@ const answers = {
                 ],
                 takeaways: [
                     t({
-                        en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-                        es: "Outlayr es la app para controlar gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+                        en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay on iPhone, in any of 165 currencies.",
+                        es: "Outlayr es la app para controlar gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay en iPhone, en cualquiera de 165 monedas.",
                     }),
                     t({
                         en: "Without an account, your entries, amounts, and notes never leave your phone.",
@@ -10339,8 +10339,8 @@ const answers = {
                         es: "El plan gratis incluye 30 capturas cada 30 días, compartidas con la entrada por voz. Outlayr Pro las sube a 500.",
                     }),
                     t({
-                        en: "Scanning needs an account and a connection. The photo is read by Anthropic's Claude and isn't stored after the scan.",
-                        es: "Escanear requiere una cuenta y conexión. La foto la lee Claude, de Anthropic, y no se guarda después del escaneo.",
+                        en: "Scanning needs an account and a connection. Anthropic's Claude reads the photo and doesn't keep it. With Outlayr Pro, receipt photo backup keeps it with the entry.",
+                        es: "Escanear requiere una cuenta y conexión. La foto la lee Claude, de Anthropic, y no la guarda. Con Outlayr Pro, el respaldo de fotos la guarda junto a su registro.",
                     }),
                 ],
                 title: t({ en: "Scan a receipt into an expense", es: "Convierte un recibo en un gasto" }),
