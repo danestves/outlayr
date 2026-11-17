@@ -8,6 +8,7 @@ import {
     parseQueue,
     QUEUE_FILE,
     releasePendingWrites,
+    serverTookCapture,
 } from "./queue-file";
 import type { PendingWrite, QueueFiles } from "./queue-file";
 
@@ -147,5 +148,20 @@ describe("autologSourceOf", () => {
         expect(autologSourceOf(write("b", { dedupeKey: "notification:expense:you paid" }))).toBe("notification");
         expect(autologSourceOf(write("c", { categoryId: "cat-1" }))).toBe("watch");
         expect(autologSourceOf(write("d"))).toBe("shortcut");
+    });
+});
+
+describe("serverTookCapture", () => {
+    const answer = { categoryName: "Groceries", isNewCategory: false, merchantName: "Care4Bag", tags: [] };
+
+    it("leaves a capture whose request never landed to the drain's own lookup", () => {
+        expect(serverTookCapture(JSON.stringify({ name: "CARE4BAG", queued: false }))).toBe(false);
+        expect(serverTookCapture(null)).toBe(false);
+        expect(serverTookCapture("{")).toBe(false);
+    });
+
+    it("trusts a queued capture and a final answer, so the drain never asks twice", () => {
+        expect(serverTookCapture(JSON.stringify({ name: "CARE4BAG", queued: true }))).toBe(true);
+        expect(serverTookCapture(JSON.stringify({ answer, name: "CARE4BAG", queued: false }))).toBe(true);
     });
 });

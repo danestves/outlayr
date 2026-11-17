@@ -9,6 +9,7 @@ import {
     QUEUE_DIRECTORY,
     QUEUE_FILE,
     releasePendingWrites as releaseQueue,
+    serverTookCapture,
 } from "./queue-file";
 import type { ClaimedWrites, QueueFiles } from "./queue-file";
 import { sharedStore } from "./shared-store";
@@ -190,7 +191,7 @@ const CAPTURE_ANSWER_PREFIX = "captureAnswer.";
 
 const captureIds = ({ jobs }: ClaimedWrites) => jobs.flatMap((job) => (job.captureId ? [job.captureId] : []));
 
-const answerOf = (captureId: string) => sharedStore?.get(`${CAPTURE_ANSWER_PREFIX}${captureId}`) ?? null;
+const serverTook = (captureId: string) => serverTookCapture(sharedStore?.get(`${CAPTURE_ANSWER_PREFIX}${captureId}`));
 
 /**
  * Nothing is deleted here: the caller commits, then calls {@link releasePendingWrites}, so a force-quit mid-drain
@@ -200,7 +201,7 @@ export function claimPendingWrites(): ClaimedWrites {
     try {
         adoptLegacyQueue();
         const claimed = claimQueue(queueFiles);
-        return { ...claimed, captured: new Set(captureIds(claimed).filter((id) => answerOf(id) != null)) };
+        return { ...claimed, captured: new Set(captureIds(claimed).filter(serverTook)) };
     } catch (error) {
         console.warn("[outlayr] pending writes unreadable", error);
         return { jobs: [], names: [] };

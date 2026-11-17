@@ -77,9 +77,11 @@ struct LogWalletTransactionIntent: AppIntent {
             card: card
         )
         let pushSnapshot = SharedStore.walletPush()
+        // The second run of one tap (authorize, then settle) neither asks the server again nor pushes again.
+        let firstRun = await SharedStore.claimPurchase(purchase)
         // The privacy policy sends only merchants the phone can't place, as the in-app lookup does.
         let known = Self.knownCategory(merchant: name, side: side, snapshot: pushSnapshot) != nil
-        let captureId = !known && CaptureLookup.canAsk(name) ? UUID().uuidString.lowercased() : nil
+        let captureId = firstRun && !known && CaptureLookup.canAsk(name) ? UUID().uuidString.lowercased() : nil
         let pinnedCurrency = currency?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .uppercased()
@@ -110,29 +112,47 @@ struct LogWalletTransactionIntent: AppIntent {
             SharedStore.disarmMissedTap(at: ranAt)
         }
 
+        let shownAmount = amount.trimmingCharacters(in: .whitespacesAndNewlines)
+        let line = Self.cardLine(card: cardText, snapshot: pushSnapshot)
         // After the enqueue: a run cut short while waiting still leaves the purchase queued.
         var answer: CaptureAnswer?
         if let captureId {
+            let notice = CaptureNotice(
+                amount: shownAmount,
+                card: cardText,
+                cardLabel: line.label,
+                pickCard: line.pick,
+                walletWrite: write.id
+            )
             answer = await CaptureLookup.ask(
                 captureId: captureId,
                 name: name,
                 currency: pinnedCurrency,
-                income: side == .income
+                income: side == .income,
+                notice: notice
             )?.answer
         }
-        let push = Self.push(
-            amount: amount.trimmingCharacters(in: .whitespacesAndNewlines),
-            merchant: name,
-            card: cardText,
-            side: side,
-            snapshot: pushSnapshot,
-            answer: answer
-        )
-        var userInfo: [AnyHashable: Any] = ["walletWrite": write.id, "pickCard": push.pickCard]
-        if let cardText {
-            userInfo["card"] = cardText
+        if firstRun {
+            let push = Self.push(
+                amount: shownAmount,
+                merchant: name,
+                card: cardText,
+                side: side,
+                snapshot: pushSnapshot,
+                answer: answer
+            )
+            var userInfo: [AnyHashable: Any] = ["walletWrite": write.id, "pickCard": push.pickCard]
+            if let cardText {
+                userInfo["card"] = cardText
+            }
+            await SharedStore.post(
+                title: push.title,
+                body: push.body,
+                userInfo: userInfo,
+                identifier: captureId ?? UUID().uuidString,
+                purchase: purchase
+            )
         }
-        await SharedStore.notify(title: push.title, body: push.body, userInfo: userInfo, purchase: purchase)
         let summary = name.isEmpty ? "Logged \(amount)" : "Logged \(amount) at \(name)"
         return .result(dialog: IntentDialog("\(summary)."))
     }
@@ -147,12 +167,15 @@ struct LogWalletTransactionIntent: AppIntent {
     ) -> (title: String, body: String, pickCard: Bool) {
         let shown = answer?.merchantName ?? merchant
         let title = shown.isEmpty ? amount : "\(amount) · \(shown)"
-        let line = card.flatMap { snapshot?.cards[$0] }
-        let cardLabel = line.map(\.label) ?? card
-        let pickCard = line?.pick ?? false
+        let (cardLabel, pickCard) = cardLine(card: card, snapshot: snapshot)
         let category = knownCategory(merchant: merchant, side: side, snapshot: snapshot) ?? answer?.categoryName
         let newPlace = merchant.isEmpty || category != nil || pickCard ? nil : snapshot?.newPlace
         return (title, [category, cardLabel, newPlace].compactMap { $0 }.joined(separator: " · "), pickCard)
+    }
+
+    static func cardLine(card: String?, snapshot: WalletPushSnapshot?) -> (label: String?, pick: Bool) {
+        let line = card.flatMap { snapshot?.cards[$0] }
+        return (line.map(\.label) ?? card, line?.pick ?? false)
     }
 
     /// The category of this merchant's newest row, matched the way the drain's

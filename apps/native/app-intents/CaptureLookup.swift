@@ -30,10 +30,24 @@ struct CaptureAnswer: Codable {
     let tags: [String]
 }
 
-/// The endpoint's reply, kept as is under `answerPrefix + captureId` for the drain.
 struct CaptureOutcome: Codable {
     let answer: CaptureAnswer?
     let queued: Bool
+}
+
+struct CaptureNotice: Codable {
+    let amount: String
+    let card: String?
+    let cardLabel: String?
+    let pickCard: Bool
+    let walletWrite: String
+}
+
+struct CaptureRecord: Codable {
+    var answer: CaptureAnswer?
+    var queued: Bool
+    let name: String
+    let notice: CaptureNotice?
 }
 
 private struct CaptureRequest: Encodable {
@@ -112,8 +126,14 @@ enum CaptureLookup {
         }
     }
 
-    /// Any failure returns nil and leaves no outcome, so the app looks the merchant up itself on open.
-    static func ask(captureId: String, name: String, currency: String?, income: Bool) async -> CaptureOutcome? {
+    /// Any failure returns nil and leaves the record unanswered, so the app looks the merchant up itself on open.
+    static func ask(
+        captureId: String,
+        name: String,
+        currency: String?,
+        income: Bool,
+        notice: CaptureNotice
+    ) async -> CaptureOutcome? {
         guard let raw = SharedStore.store?.string(forKey: snapshotKey),
               let snapshot = try? JSONDecoder().decode(CaptureLookupSnapshot.self, from: Data(raw.utf8)),
               let url = URL(string: snapshot.url),
@@ -132,6 +152,8 @@ enum CaptureLookup {
                     shareAnalytics: snapshot.shareAnalytics
                 )
               ) else { return nil }
+        var record = CaptureRecord(answer: nil, queued: false, name: name, notice: notice)
+        store(record, captureId: captureId)
         var request = URLRequest(url: url, timeoutInterval: timeout)
         request.httpMethod = "POST"
         request.httpBody = body
@@ -145,9 +167,15 @@ enum CaptureLookup {
             return nil
         }
         guard status == 200,
-              let outcome = try? JSONDecoder().decode(CaptureOutcome.self, from: data),
-              let stored = String(data: data, encoding: .utf8) else { return nil }
-        SharedStore.store?.set(stored, forKey: answerPrefix + captureId)
+              let outcome = try? JSONDecoder().decode(CaptureOutcome.self, from: data) else { return nil }
+        record.answer = outcome.answer
+        record.queued = outcome.queued
+        store(record, captureId: captureId)
         return outcome
+    }
+
+    private static func store(_ record: CaptureRecord, captureId: String) {
+        guard let data = try? JSONEncoder().encode(record) else { return }
+        SharedStore.store?.set(String(decoding: data, as: UTF8.self), forKey: answerPrefix + captureId)
     }
 }
