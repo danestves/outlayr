@@ -15,6 +15,10 @@ const RULE_BOTTOM = 7;
 // field centers its own line, which lands on the sentence's baseline.
 const LEADING = /\bleading-\S+/g;
 
+// A keystroke lands in the native field a frame before the copy widens the slot. The overhang gives that character
+// room, or the field scrolls its text sideways for a frame and every letter jumps.
+const FIELD_OVERHANG = 32;
+
 interface SentenceInputProps {
     accessibilityLabel: string;
     children?: ReactNode;
@@ -54,7 +58,7 @@ export function SentenceInput({
                     autoFocus
                     className={cn(
                         Platform.OS === "ios" ? textClassName.replaceAll(LEADING, "") : textClassName,
-                        "text-foreground absolute inset-0 p-0"
+                        "text-foreground absolute top-0 bottom-0 left-0 p-0"
                     )}
                     maxLength={maxLength}
                     onChangeText={onChange}
@@ -63,6 +67,7 @@ export function SentenceInput({
                     placeholderTextColor={colors.muted}
                     returnKeyType="next"
                     selectionColor={colors.tint}
+                    style={{ right: -FIELD_OVERHANG }}
                     submitBehavior="submit"
                     testID="sentence-merchant-field"
                     value={value}
