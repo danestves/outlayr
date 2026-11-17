@@ -290,6 +290,15 @@ export function createLedgerSync<Table extends string>({ onStale, source, tables
         follow();
     };
 
+    const synced = () => {
+        if (answered) {
+            return refusal ? Promise.reject(refusal) : Promise.resolve();
+        }
+        return new Promise<void>((resolve, reject) => {
+            awaiting.add({ reject, resolve });
+        });
+    };
+
     return {
         attach: (table: Table, sink: SyncSink) => {
             sinks.set(table, sink);
@@ -331,13 +340,10 @@ export function createLedgerSync<Table extends string>({ onStale, source, tables
         saved: (): typeof SavedCursor.Type => ({
             cursor: begun || restored.size === 0 ? applied : Math.min(...restored.values()),
         }),
-        synced: () => {
-            if (answered) {
-                return refusal ? Promise.reject(refusal) : Promise.resolve();
-            }
-            return new Promise<void>((resolve, reject) => {
-                awaiting.add({ reject, resolve });
-            });
+        landed: async () => {
+            await synced();
+            await landing;
         },
+        synced,
     };
 }

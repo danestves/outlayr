@@ -1,11 +1,14 @@
 import { PULL_PAGE_MAX } from "@outlayr/backend/confect/sync";
 import { api } from "@outlayr/backend/convex/_generated/api";
+import type { LedgerOpening } from "@outlayr/money/ledger-view";
 import type { DehydratedDbState } from "@tanstack/react-db";
 import type { QueryClient } from "@tanstack/react-query";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { ConvexHttpClient } from "convex/browser";
 import * as Schema from "effect/Schema";
+
+import { homeOpensWith } from "@/components/dashboard/home/model";
 
 import {
     accountsQuery,
@@ -21,12 +24,14 @@ import {
 } from "./account-state";
 import type { Profile } from "./account-state";
 import { convexUrls, serverConvexUrl } from "./convex";
-import { ledgerSeed, syncedTableNames } from "./ledger-db";
+import { ledgerSeed, pulledBooks, syncedTableNames } from "./ledger-db";
+import type { ExchangeRate } from "./ledger-db";
 import type { PulledPage, PulledRow } from "./ledger-sync";
 import { timed } from "./server-timing";
 
 export interface ServerLedger {
     collections: DehydratedDbState["collections"];
+    opening: LedgerOpening | null;
     profile: Profile | undefined;
 }
 
@@ -62,9 +67,29 @@ async function pullLedger(client: ConvexHttpClient) {
         rows.push(...page.rows);
         ({ cursor } = page);
         if (!page.hasMore) {
-            return { cursor, rows };
+            return { cursor, opening: null, rows };
         }
     }
+}
+
+const HOME_MONTHS = 13;
+
+async function pullHome(client: ConvexHttpClient, rates: Promise<readonly ExchangeRate[]>, asOf: number) {
+    const today = new Date(asOf);
+    const since = Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - HOME_MONTHS, 1);
+    const tables = syncedTableNames().filter((table) => table !== "transactionTags");
+    const page = await client.query(api.sync.pullRecent, { since, tables }).catch(() => undefined);
+    if (page === undefined) {
+        return null;
+    }
+    if (page === null) {
+        client.mutation(api.ledgerCells.build, {}).catch(() => undefined);
+        return null;
+    }
+    const opening = { cells: page.opening, cutoff: page.since };
+    return homeOpensWith(pulledBooks(page.rows, await rates), asOf, opening)
+        ? { cursor: 0, opening, rows: page.rows }
+        : null;
 }
 
 // The same request better-auth's own getToken makes: the visitor's cookies, addressed to the Convex site.
@@ -98,19 +123,26 @@ async function readProfile(convexSiteUrl: string): Promise<Profile | undefined> 
 
 // Everything the first frame of a signed-in page shows, read with the visitor's token before the server renders.
 export const serverLedger = createIsomorphicFn()
-    .server(async (token: string): Promise<ServerLedger> => {
+    .server(async (token: string, home: { asOf: number } | null): Promise<ServerLedger> => {
         const { convexSiteUrl } = convexUrls();
         const client = new ConvexHttpClient(serverConvexUrl(), { auth: token });
         const profile = timed("profile", () => readProfile(convexSiteUrl));
-        const [{ cursor, rows }, rates] = await Promise.all([
-            timed(
+        const rates = timed("rates", () => client.query(api.ledger.exchangeRates, {}));
+        const pull = async () =>
+            (home
+                ? await timed(
+                      "recent",
+                      () => pullHome(client, rates, home.asOf),
+                      (pulled) => (pulled ? `${pulled.rows.length} rows, ${pulled.opening.cells.length} cells` : "none")
+                  )
+                : null) ??
+            (await timed(
                 "pull",
                 () => pullLedger(client),
                 (pulled) => `${pulled.rows.length} rows`
-            ),
-            timed("rates", () => client.query(api.ledger.exchangeRates, {})),
-        ]);
-        return { collections: ledgerSeed(rows, cursor, rates), profile: await profile };
+            ));
+        const [{ cursor, opening, rows }, rateRows] = await Promise.all([pull(), rates]);
+        return { collections: ledgerSeed(rows, cursor, rateRows), opening, profile: await profile };
     })
     .client((): Promise<ServerLedger> => Promise.reject(new Error("The ledger is read on the server only")));
 

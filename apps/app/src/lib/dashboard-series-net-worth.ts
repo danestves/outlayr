@@ -20,6 +20,7 @@ interface Movement {
 }
 
 interface Holder {
+    carried: number;
     currency: string;
     id: string;
     initialBalance: number;
@@ -98,8 +99,18 @@ function movementsOf(ledger: Ledger): Movements {
             });
         }
     }
+    const since = ledger.opening?.cutoff ?? Number.NEGATIVE_INFINITY;
+    const carried = new Map<string, number>();
+    for (const cell of ledger.opening?.cells ?? []) {
+        const currency = currencyOf.get(cell.accountId);
+        if (currency !== undefined) {
+            const value = valueCell(cell, currency, ledger.rates);
+            carried.set(cell.accountId, (carried.get(cell.accountId) ?? 0) + (cell.income ? value : -value));
+        }
+    }
     const prepared = {
         holders: live.map((row) => ({
+            carried: carried.get(row.localId) ?? 0,
             currency: row.currency,
             id: row.localId,
             initialBalance: row.initialBalance,
@@ -109,7 +120,7 @@ function movementsOf(ledger: Ledger): Movements {
                     ? null
                     : isoDay(row.initialBalanceDate, ledger.offsetAt(row.initialBalanceDate)),
         })),
-        list: list.toSorted((a, b) => a.at - b.at),
+        list: list.filter((movement) => movement.at >= since).toSorted((a, b) => a.at - b.at),
     };
     movementsByLedger.set(ledger, prepared);
     return prepared;
@@ -174,7 +185,7 @@ export function netWorthPoints(ledger: Ledger, scope: Scope, instants: readonly 
             if (holder.opened !== null && holder.opened > day && instant < ledger.now) {
                 return [];
             }
-            let total = holder.initialBalance;
+            let total = holder.initialBalance + holder.carried;
             for (const pile of piles.values()) {
                 total += pile.value;
             }

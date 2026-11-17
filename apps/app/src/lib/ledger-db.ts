@@ -261,6 +261,27 @@ export type ExchangeRate = LedgerBooks["exchangeRates"][number];
 
 export const syncedTableNames = (): readonly SyncedTable[] => syncedTables;
 
+export function pulledBooks(rows: readonly PulledRow[], exchangeRates: readonly ExchangeRate[]): LedgerBooks {
+    const byTable = Map.groupBy(rows, (row) => row.table);
+    const docsIn = <Table extends DocTable>(table: Table) => (byTable.get(table) ?? []).map(docOf<Table>);
+    return {
+        accounts: docsIn("accounts"),
+        appMeta: (byTable.get("appMeta") ?? []).map(metaOf),
+        budgetPlans: docsIn("budgetPlans"),
+        budgets: docsIn("budgets"),
+        categories: docsIn("categories"),
+        exchangeRates,
+        installmentPlans: docsIn("installmentPlans"),
+        installments: docsIn("installments"),
+        mainBudget: docsIn("mainBudget"),
+        outsideMoves: docsIn("outsideMoves"),
+        outsidePayments: docsIn("outsidePayments"),
+        savingsGoals: docsIn("savingsGoals"),
+        transactions: docsIn("transactions"),
+        transfers: docsIn("transfers"),
+    };
+}
+
 // The same chunks a client sync would have written, with the cursor their rows reach.
 export function ledgerSeed(
     rows: readonly PulledRow[],
