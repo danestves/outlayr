@@ -4,6 +4,7 @@ import type { Locale } from "@outlayr/shared/i18n";
 // No dictionary imports, so WebMCP tools register without downloading content. site-paths.test.ts keeps it in sync.
 const SITE_PATHS = [
     "/",
+    "/pricing",
     "/about",
     "/brand",
     "/support",

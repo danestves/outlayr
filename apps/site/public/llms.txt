@@ -50,6 +50,7 @@ Outlayr, the app by danestves LLC, is not affiliated with Outlayr, Inc. (outlayr
 ## Pages
 
 - [Home](https://tryoutlayr.com/): product overview, plans, and answers to common questions
+- [Pricing page](https://tryoutlayr.com/pricing): free and Pro side by side, US prices, what a capture is, cancelling, and buying Pro once. Also in Spanish at https://tryoutlayr.com/es/pricing
 - [Pricing](https://tryoutlayr.com/pricing.md): the free plan's limits and Outlayr Pro's US prices and features, in plain markdown
 - [About](https://tryoutlayr.com/about): Outlayr at a glance, with the maker, debts and installments, platforms, languages, plans, US prices and free-plan limits, where data lives, the source code, and what Outlayr does not do
 - [Support](https://tryoutlayr.com/support): restoring and cancelling Pro, refunds, exporting and deleting data

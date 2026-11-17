@@ -90,12 +90,27 @@ const PRO_OFFERS = [
     { name: "Outlayr Pro, once", price: "129.99" },
 ];
 
+function proOffers(locale: Locale) {
+    const url = pageUrl("/pricing", locale);
+    return PRO_OFFERS.map((offer) => ({ "@type": "Offer", priceCurrency: "USD", url, ...offer }));
+}
+
 function offers(locale: Locale) {
-    const url = `${pageUrl("/", locale)}#pricing`;
-    return [
-        { "@type": "Offer", name: "Outlayr", price: "0", priceCurrency: "USD" },
-        ...PRO_OFFERS.map((offer) => ({ "@type": "Offer", priceCurrency: "USD", url, ...offer })),
-    ];
+    return [{ "@type": "Offer", name: "Outlayr", price: "0", priceCurrency: "USD" }, ...proOffers(locale)];
+}
+
+export function proProduct(locale: Locale, description: string) {
+    return {
+        "@context": "https://schema.org",
+        "@id": `${SITE_URL}/pricing#pro`,
+        "@type": "Product",
+        brand: { "@id": ORGANIZATION_ID },
+        description,
+        image: `${SITE_URL}${LANGUAGES[locale].image}`,
+        isRelatedTo: { "@id": APP_ID },
+        name: "Outlayr Pro",
+        offers: proOffers(locale),
+    };
 }
 
 export function mobileApp(locale: Locale, description: string, fields: { readonly [key: string]: Json } = {}) {

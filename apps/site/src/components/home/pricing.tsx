@@ -3,13 +3,15 @@ import { useLoaderData } from "@tanstack/react-router";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Icon } from "@/components/icon";
+import { LocalizedLink } from "@/components/localized-link";
 import { CONTAINER } from "@/lib/layout";
 import { proPrices } from "@/lib/pro-prices";
 
 import { HEADING, LABEL } from "./problem";
 
-export function Pricing() {
+export function Pricing({ standalone = false }: { standalone?: boolean }) {
     const { limits, plansCopy, proOnly } = useIntlayer("home");
+    const { more } = useIntlayer("pricing");
     const { pricing } = useIntlayer("story");
     const { locale } = useLocale();
     const { lang } = LANGUAGES[locale];
@@ -93,6 +95,17 @@ export function Pricing() {
                       })
                     : pricing.note}{" "}
                 {plansCopy.footnote}
+                {standalone ? null : (
+                    <>
+                        {" "}
+                        <LocalizedLink
+                            className="fluid hover:text-foreground underline decoration-current/30 underline-offset-4"
+                            to="/pricing"
+                        >
+                            {more}
+                        </LocalizedLink>
+                    </>
+                )}
             </p>
         </section>
     );

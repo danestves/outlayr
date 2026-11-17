@@ -30,3 +30,8 @@ export function proPrices(country: string | null, language: string) {
         yearly: format.format(yearly),
     };
 }
+
+export function usPrices(language: string) {
+    const { monthly, once, yearly } = proPrices(null, language);
+    return { monthly: `${monthly.whole}${monthly.fraction}`, once, yearly };
+}

@@ -16,6 +16,7 @@ function pages(): [path: string, updated: Date | null][] {
     ]);
     return [
         ["/", null],
+        ["/pricing", null],
         ["/support", null],
         ["/about", null],
         ["/brand", null],

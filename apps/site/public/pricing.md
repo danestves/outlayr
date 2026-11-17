@@ -1,6 +1,6 @@
 # Outlayr pricing
 
-Outlayr is a mobile expense tracker on the App Store for iPhone and on Google Play for Android. It is free to start, with no ads on any plan. Outlayr Pro raises the limits and adds sync.
+Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies. It is on the App Store for iPhone and on Google Play for Android. It is free to start, with no ads on any plan. Outlayr Pro raises the limits and adds sync. Cancel anytime from your app store, or buy it once.
 
 | Plan | US price | Billing |
 |---|---|---|
@@ -12,6 +12,8 @@ Outlayr is a mobile expense tracker on the App Store for iPhone and on Google Pl
 Prices vary by country. Google Play and the App Store show your price before you buy.
 
 ## Limits
+
+A capture is one voice clip, one receipt photo, or one installment plan import of up to 5 screenshots, and needs you signed in. Typing a sentence never uses one.
 
 | | Free | Pro |
 |---|---|---|
@@ -39,6 +41,7 @@ Logging by sentence, voice, or receipt, budgets, savings goals, insights, subscr
 
 ## Links
 
+- Pricing page: https://tryoutlayr.com/pricing
 - Plans and answers: https://tryoutlayr.com/
 - Restoring, cancelling, and refunds: https://tryoutlayr.com/support
 - Terms of Use: https://tryoutlayr.com/terms
