@@ -7774,10 +7774,10 @@ const answers = {
                             },
                             {
                                 label: BEST_OF.bankNeeded,
-                                source: "https://www.monarch.com/pricing",
+                                source: "https://help.monarch.com/hc/en-us/articles/4890751141908-Tracking-Recurring-Expenses-and-Bills",
                                 text: t({
-                                    en: "Yes, it works from linked accounts",
-                                    es: "Sí, funciona con cuentas vinculadas",
+                                    en: "Optional. You can add accounts and recurring bills by hand; automatic detection needs linked accounts",
+                                    es: "Opcional. Puedes agregar cuentas y pagos recurrentes a mano; la detección automática necesita cuentas vinculadas",
                                 }),
                             },
                             {
@@ -8446,10 +8446,10 @@ const answers = {
                             },
                             {
                                 label: LABELS.platforms,
-                                source: "https://apps.apple.com/us/app/pocketsmith-sidekick/id1159515083",
+                                source: "https://www.pocketsmith.com/mobile-app/",
                                 text: t({
-                                    en: "Web, with a companion app for iPhone and iPad",
-                                    es: "Web, con una app complementaria para iPhone y iPad",
+                                    en: "Web, with a companion app for iOS and Android",
+                                    es: "Web, con una app complementaria para iOS y Android",
                                 }),
                             },
                             {
@@ -9035,10 +9035,10 @@ const answers = {
                             },
                             {
                                 label: BEST_OF.bank,
-                                source: "https://www.monarch.com/",
+                                source: "https://help.monarch.com/hc/en-us/articles/4890751141908-Tracking-Recurring-Expenses-and-Bills",
                                 text: t({
-                                    en: "Yes, it works from linked accounts",
-                                    es: "Sí, funciona con cuentas vinculadas",
+                                    en: "Optional. You can add accounts and recurring bills by hand; automatic detection needs linked accounts",
+                                    es: "Opcional. Puedes agregar cuentas y pagos recurrentes a mano; la detección automática necesita cuentas vinculadas",
                                 }),
                             },
                             {
