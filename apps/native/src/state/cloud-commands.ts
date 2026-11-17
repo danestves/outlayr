@@ -50,7 +50,7 @@ export const signOutCommand = createRuntimeCommand(appRuntime, {
             navigateToLedger: input.navigateToLedger,
             quiesce: quiesce(input.db),
             signOut: () =>
-                forgetCaptureLookup(input.db).pipe(
+                forgetCaptureLookup().pipe(
                     Effect.andThen(Effect.tryPromise(() => input.client.signOut())),
                     Effect.asVoid
                 ),

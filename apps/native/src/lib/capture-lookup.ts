@@ -5,8 +5,8 @@ import { getRandomBytesAsync } from "expo-crypto";
 import { Meta } from "@/data/app-meta-core";
 import { categoryTree } from "@/data/enrichment-queue-core";
 import { readRemoteEnrichment } from "@/data/settings-core";
-import { getOrCreateDeviceId } from "@/data/sync-outbox-core";
 import type { Database } from "@/db/client";
+import { newId } from "@/domain/ids";
 import { firstLocale } from "@/i18n/device-language";
 
 import { CONVEX_SITE_URL } from "./cloud-configuration";
@@ -16,19 +16,31 @@ import { sharedStore } from "./shared-store";
 /** Mirrors `snapshotKey` in `app-intents/CaptureLookup.swift`; its presence is what lets the intent ask. */
 const CAPTURE_SNAPSHOT_KEY = "captureLookup";
 
+// Its own label rather than the sync device id, which the privacy policy ties to ordering synced edits.
+const CAPTURE_DEVICE_KEY = "captureDevice";
+
 const KEY_BYTES = 32;
 
 const hex = (bytes: Uint8Array) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+
+const deviceLabel = () => {
+    const stored = sharedStore?.get(CAPTURE_DEVICE_KEY);
+    if (stored) {
+        return stored;
+    }
+    const minted = newId();
+    sharedStore?.set(CAPTURE_DEVICE_KEY, minted);
+    return minted;
+};
 
 const clearLocal = () => {
     sharedStore?.remove(CAPTURE_SNAPSHOT_KEY);
     sharedStore?.setCaptureKey(null);
 };
 
-const mintKey = Effect.fn("CaptureLookup.mintKey")(function* mintKey(db: Database) {
+const mintKey = Effect.fn("CaptureLookup.mintKey")(function* mintKey() {
     const key = hex(yield* Effect.tryPromise(() => getRandomBytesAsync(KEY_BYTES)));
-    const deviceId = yield* getOrCreateDeviceId(db);
-    yield* cloudMutation(api.captureLookup.register, { deviceId, key });
+    yield* cloudMutation(api.captureLookup.register, { deviceId: deviceLabel(), key });
     return sharedStore?.setCaptureKey(key) === true;
 });
 
@@ -47,7 +59,7 @@ export const syncCaptureLookup = Effect.fn("CaptureLookup.sync")(
             return;
         }
         const status = sharedStore.captureKeyStatus();
-        if (status === "unavailable" || (status === "absent" && !(yield* mintKey(db)))) {
+        if (status === "unavailable" || (status === "absent" && !(yield* mintKey()))) {
             return;
         }
         const device = firstLocale();
@@ -67,13 +79,12 @@ export const syncCaptureLookup = Effect.fn("CaptureLookup.sync")(
 
 /** Before sign-out, while the session can still revoke the key server side. */
 export const forgetCaptureLookup = Effect.fn("CaptureLookup.forget")(
-    function* forgetCaptureLookup(db: Database) {
+    function* forgetCaptureLookup() {
         if (!sharedStore?.captureKeyStatus) {
             return;
         }
         clearLocal();
-        const deviceId = yield* getOrCreateDeviceId(db);
-        yield* cloudMutation(api.captureLookup.revoke, { deviceId });
+        yield* cloudMutation(api.captureLookup.revoke, { deviceId: deviceLabel() });
     },
     Effect.catchCause((cause) => Effect.logWarning("[outlayr] capture key not revoked", cause))
 );
