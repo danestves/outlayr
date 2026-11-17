@@ -1,3 +1,5 @@
+import type { PushRow } from "@outlayr/backend/confect/sync";
+
 import { homeCovered } from "@/components/dashboard/home/model";
 import { listCovered, rangeOf } from "@/components/dashboard/transactions/model";
 import { pageQueryOf } from "@/components/dashboard/transactions/search";
@@ -38,6 +40,26 @@ export function viewCovered(ledger: Ledger, period: Period, pathname: string, se
             return false;
         }
     }
+}
+
+export function reachesOpening({ books, opening }: Pick<Ledger, "books" | "opening">, rows: readonly PushRow[]) {
+    if (opening === null) {
+        return false;
+    }
+    return rows.some((row) => {
+        switch (row.table) {
+            case "outsideMoves":
+            case "outsidePayments":
+            case "transactions":
+            case "transfers": {
+                const held = books[row.table].find((doc) => doc.localId === row.localId);
+                return row.fields.date < opening.cutoff || (held !== undefined && held.date < opening.cutoff);
+            }
+            default: {
+                return false;
+            }
+        }
+    });
 }
 
 export function opensLight(path: LightPath, books: Ledger["books"], now: number, opening: Ledger["opening"]) {

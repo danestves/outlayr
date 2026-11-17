@@ -243,7 +243,8 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
     const filters = useFilters(search, ledger);
     const pathname = useLocation({ select: (location) => location.pathname });
     const pageSearch = useLocation({ select: (location) => location.search });
-    const waiting = !viewCovered(ledger, filters.period, pathname, pageSearch);
+    const [stranded, setStranded] = useState(false);
+    const waiting = opening !== null && (stranded || !viewCovered(ledger, filters.period, pathname, pageSearch));
     if (waiting && landing instanceof Error) {
         throw landing;
     }
@@ -252,6 +253,7 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
             filters,
             ledger,
             overview,
+            strand: () => setStranded(true),
             setFilters: (patch: FilterPatch) =>
                 navigate({ resetScroll: false, search: (prev) => ({ ...prev, ...searchPatch(patch) }), to: "." }),
         }),

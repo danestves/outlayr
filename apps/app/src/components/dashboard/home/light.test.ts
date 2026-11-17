@@ -11,6 +11,7 @@ import type { LedgerBooks } from "@/lib/ledger-books";
 import { categoryBudgets, kpis } from "../../../lib/dashboard-series";
 import { prepareLedger, rowsBetween, total } from "../../../lib/dashboard-series-ledger";
 import { periodOf } from "../../../lib/dashboard-series-period";
+import { reachesOpening } from "../../../lib/light-views";
 import { periodKeysOf } from "../shell/period-keys";
 import { listCovered, queryRows, tally } from "../transactions/model";
 import { accountBalances, budgetRows, everyDay, homeCovered, sparks } from "./model";
@@ -229,5 +230,20 @@ describe("Home on the rows since thirteen months back", () => {
         expect(listCovered(light, null)).toBe(false);
         expect(listed(light).rows.length).toBeGreaterThan(20);
         expect(listed(light)).toStrictEqual(listed(whole));
+    });
+
+    it("stops trusting the opening once a save reaches the rows it stands for", () => {
+        const { opening, recent } = opened(books());
+        const saved = (localId: string, date: number) =>
+            // SAFETY: the check reads the table, the id and the date only.
+            [{ fields: { date }, localId, table: "transactions" }] as unknown as Parameters<typeof reachesOpening>[1];
+        const old = recent.transactions.find((row) => row.date < CUTOFF);
+        const light = { books: recent, opening };
+
+        expect(old).toBeDefined();
+        expect(reachesOpening(light, saved("new", NOW))).toBe(false);
+        expect(reachesOpening(light, saved("new", CUTOFF - DAY_MS))).toBe(true);
+        expect(reachesOpening(light, saved(old?.localId ?? "", NOW))).toBe(true);
+        expect(reachesOpening({ books: recent, opening: null }, saved("new", CUTOFF - DAY_MS))).toBe(false);
     });
 });

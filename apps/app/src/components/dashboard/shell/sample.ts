@@ -245,5 +245,6 @@ export function sampleDashboard(now: number): Dashboard {
         ledger,
         overview: ledgerGlance(books, now),
         setFilters: () => undefined,
+        strand: () => undefined,
     };
 }
