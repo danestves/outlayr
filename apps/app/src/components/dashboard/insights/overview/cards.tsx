@@ -7,6 +7,7 @@ import { SkeletonBox } from "skullet/react";
 import { Glyph } from "@/components/dashboard/accounts/glyph";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { LookTile, MerchantTile } from "@/components/ledger/tiles";
+import { photoSrc } from "@/lib/photo-src";
 
 import { useInsightsFormat } from "../format";
 import { Bones, Card, FIGURE, NOTE, OnwardButton, ROW, Swatch, Tray, onwardSearch } from "../parts";
@@ -17,7 +18,7 @@ const SHOWN_CHARGES = 4;
 const SHOWN_CATEGORIES = 6;
 
 export function SubscriptionsCard({ className, subscriptions }: { className?: string; subscriptions: Subscriptions }) {
-    const { ledger, photos } = useDashboard();
+    const { ledger } = useDashboard();
     const copy = useIntlayer("dashboard-insights-overview").subscriptions;
     const fmt = useInsightsFormat(ledger);
     const { charges, next, perMonth, perYear } = subscriptions;
@@ -47,13 +48,9 @@ export function SubscriptionsCard({ className, subscriptions }: { className?: st
             {charges.slice(0, SHOWN_CHARGES).map((charge) => (
                 <div className={ROW} key={charge.id}>
                     {charge.look.icon || charge.look.emoji ? (
-                        <LookTile look={charge.look} photos={photos} plain size="lg" />
+                        <LookTile look={charge.look} plain size="lg" />
                     ) : (
-                        <MerchantTile
-                            imageUrl={charge.look.imageKey ? photos.get(charge.look.imageKey) : undefined}
-                            name={charge.note}
-                            size="lg"
-                        />
+                        <MerchantTile imageUrl={photoSrc(charge.look.imageKey)} name={charge.note} size="lg" />
                     )}
                     <span className="min-w-0 truncate">{charge.note}</span>
                     <span className={`${FIGURE} ml-auto`}>{fmt.amount(charge.perMonth)}</span>

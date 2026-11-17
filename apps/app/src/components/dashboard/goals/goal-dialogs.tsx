@@ -51,10 +51,9 @@ const LABEL = "data-invalid:text-foreground has-[[aria-invalid=true]]:text-foreg
 const LOCKED = "bg-app-fill/40 text-muted-foreground flex h-9 w-full items-center gap-2 rounded-lg border px-3 text-sm";
 
 function Locked({ row }: { row: Pick<AccountRow, "look" | "name"> }) {
-    const { photos } = useDashboard();
     return (
         <div className={LOCKED}>
-            <AccountTile account={row.look} photos={photos} size="sm" />
+            <AccountTile account={row.look} size="sm" />
             <span className="min-w-0 truncate">{row.name}</span>
             <Glyph icon={SquareLock02Icon} className="ml-auto flex-none" size={15} />
         </div>
@@ -80,7 +79,6 @@ function AccountPick({
     value: string | null;
 }) {
     const { dialog } = useIntlayer("dashboard-goals");
-    const { photos } = useDashboard();
     const format = useGoalMoney();
     const picked = rows.find((row) => row.id === value);
     return (
@@ -90,7 +88,7 @@ function AccountPick({
             value={value}
         >
             <Select.Trigger aria-label={dialog.account.value} className="[&>[data-slot=select-value]]:flex-none">
-                {picked ? <AccountTile account={picked.look} photos={photos} size="sm" /> : null}
+                {picked ? <AccountTile account={picked.look} size="sm" /> : null}
                 <Select.Value placeholder={dialog.noAccounts.value} />
                 {picked ? (
                     <span className="dash-figure text-muted-foreground ml-auto truncate ps-2 text-xs">
@@ -100,11 +98,7 @@ function AccountPick({
             </Select.Trigger>
             <Select.Content className={POPUP}>
                 {rows.map((row) => (
-                    <Select.Item
-                        icon={<AccountTile account={row.look} photos={photos} size="sm" />}
-                        key={row.id}
-                        value={row.id}
-                    >
+                    <Select.Item icon={<AccountTile account={row.look} size="sm" />} key={row.id} value={row.id}>
                         {row.name}
                     </Select.Item>
                 ))}
@@ -536,7 +530,7 @@ function DeleteGoal({ onClose, view }: { onClose: () => void; view: GoalView }) 
 }
 
 function AddMoney({ onClose, view }: { onClose: () => void; view: GoalView }) {
-    const { ledger, overview, photos } = useDashboard();
+    const { ledger, overview } = useDashboard();
     const committer = useLedgerCommitter();
     const { add, cancel, dialog } = useIntlayer("dashboard-goals");
     const copy = useIntlayer("dashboard-goals");
@@ -553,7 +547,7 @@ function AddMoney({ onClose, view }: { onClose: () => void; view: GoalView }) {
     };
     const sources = transferAccounts(ledger.books).filter((row) => row.localId !== view.account.id);
     const options = sources.map((row) => ({
-        icon: <AccountTile account={accountLook(row)} photos={photos} size="sm" />,
+        icon: <AccountTile account={accountLook(row)} size="sm" />,
         label: row.name,
         value: row.localId,
     }));

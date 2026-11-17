@@ -172,12 +172,12 @@ export function useCheckedText() {
 }
 
 export function AccountCell({ note, row }: { note?: ReactNode; row: AccountRow }) {
-    const { ledger, photos } = useDashboard();
+    const { ledger } = useDashboard();
     const checked = useCheckedText();
     const age = checkedAge(row.checkedAt, ledger);
     return (
         <div className="flex min-w-0 items-center gap-2.5">
-            <AccountTile account={row.look} photos={photos} size="lg" />
+            <AccountTile account={row.look} size="lg" />
             <div className="min-w-0">
                 <b className="block truncate text-sm leading-[18px] font-medium">{row.name}</b>
                 <small className="text-muted-foreground block truncate text-xs leading-4">

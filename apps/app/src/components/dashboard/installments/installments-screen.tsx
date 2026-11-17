@@ -150,10 +150,9 @@ function OrdersTable({ views }: { views: readonly PlanView[] }) {
 }
 
 function AccountName({ view }: { view: PlanView }) {
-    const { photos } = useDashboard();
     return (
         <span className="flex min-w-0 items-center gap-2 text-[13px]">
-            <AccountTile account={view.account.look} photos={photos} size="sm" />
+            <AccountTile account={view.account.look} size="sm" />
             <span className="truncate">{view.account.name}</span>
         </span>
     );
@@ -204,7 +203,6 @@ function AccountFilter({
     views: readonly PlanView[];
 }) {
     const { tabs } = useIntlayer("dashboard-installments");
-    const { photos } = useDashboard();
     const accounts = [...new Map(views.map((view) => [view.account.id, view.account])).values()];
     const picked = accounts.find((account) => account.id === value);
     const items = [
@@ -214,7 +212,7 @@ function AccountFilter({
     return (
         <Select items={items} onValueChange={(next) => next !== null && onPick(next)} value={picked ? value : ALL}>
             <Select.Trigger aria-label={tabs.allAccounts.value} className="w-auto gap-2 text-[13px]" size="sm">
-                {picked ? <AccountTile account={picked.look} photos={photos} size="sm" /> : null}
+                {picked ? <AccountTile account={picked.look} size="sm" /> : null}
                 <Select.Value />
             </Select.Trigger>
             <Select.Content align="end" className={POPUP}>
@@ -222,7 +220,7 @@ function AccountFilter({
                 <Select.Separator />
                 {accounts.map((account) => (
                     <Select.Item
-                        icon={<AccountTile account={account.look} photos={photos} size="sm" />}
+                        icon={<AccountTile account={account.look} size="sm" />}
                         key={account.id}
                         value={account.id}
                     >

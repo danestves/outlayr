@@ -45,7 +45,7 @@ import { CandidateDetail, DetectedEmpty, DetectedTable } from "./detected";
 import { ConfirmDialog, DeleteDialog, LogDialog, PauseDialog } from "./dialogs";
 import { ScheduleDrawer } from "./drawer";
 import type { ScheduleActions } from "./menu";
-import { LivePhotos, useCategoryLook, useDay, useRepeatText } from "./parts";
+import { useCategoryLook, useDay, useRepeatText } from "./parts";
 import { PausedTable } from "./paused";
 import { ScheduleForm } from "./schedule-form";
 import { NEW_SCHEDULE, RECURRING_TABS, dayOf, monthOf, sortOf, tabOf } from "./search";
@@ -599,9 +599,5 @@ export function RecurringScreen({ data, search, setSearch, writes }: ScreenProps
 
 export function LiveRecurring({ search, setSearch }: Pick<ScreenProps, "search" | "setSearch">) {
     const data = useRecurringData();
-    return (
-        <LivePhotos model={data.model}>
-            <RecurringScreen data={data} search={search} setSearch={setSearch} writes={useRecurringWrites()} />
-        </LivePhotos>
-    );
+    return <RecurringScreen data={data} search={search} setSearch={setSearch} writes={useRecurringWrites()} />;
 }

@@ -46,8 +46,8 @@ import { AccountTile, LookTile, MerchantTile } from "@/components/ledger/tiles";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { photoSrc } from "@/lib/photo-src";
 
-import { useImageUrls } from "../home/catalog";
 import {
     AccountsBar,
     Card,
@@ -109,7 +109,7 @@ function useMonthName() {
 }
 
 function DetailBar({ row }: { row: AccountRow }) {
-    const { ledger, photos } = useDashboard();
+    const { ledger } = useDashboard();
     const { actions, detail, flows } = useIntlayer("dashboard-accounts");
     const { open } = useAccountFlows();
     const card = isCard(row);
@@ -127,7 +127,7 @@ function DetailBar({ row }: { row: AccountRow }) {
                     >
                         <Glyph icon={ArrowLeft02Icon} className="text-muted-foreground" />
                     </Button>
-                    <AccountTile account={row.look} photos={photos} size="lg" />
+                    <AccountTile account={row.look} size="lg" />
                     <span className="truncate">{row.name}</span>
                     {row.currency === ledger.currency ? null : (
                         <Badge className="dash-figure ml-1 shrink-0" variant="outline">
@@ -585,7 +585,6 @@ function TransactionsCard({ row }: { row: AccountRow }) {
         }
     );
     const shown = category ? entries.filter((entry) => entry.categoryId === category) : entries;
-    const photos = useImageUrls([...new Set(shown.flatMap((entry) => entry.imageKey ?? []))]);
     const chosen = category ? ledger.categories.get(category) : undefined;
     const deleteEntries = useDeleteEntries();
     const [opened, setOpened] = useState<{ id: string; start?: EntryStart } | null>(null);
@@ -714,10 +713,7 @@ function TransactionsCard({ row }: { row: AccountRow }) {
                                 <Table.Row className="has-data-popup-open:bg-muted/40">
                                     <Cell>
                                         <span className="flex min-w-0 items-center gap-2.5 text-sm font-medium">
-                                            <EntryTile
-                                                entry={entry}
-                                                imageUrl={entry.imageKey ? photos.get(entry.imageKey) : undefined}
-                                            />
+                                            <EntryTile entry={entry} imageUrl={photoSrc(entry.imageKey)} />
                                             <span className="max-w-[120px] truncate sm:max-w-[260px]">{title}</span>
                                         </span>
                                     </Cell>

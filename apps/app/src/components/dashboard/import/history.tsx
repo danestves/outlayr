@@ -54,14 +54,13 @@ function useAccountNamed() {
 
 export function IntoCell({ record }: { record: Pick<ImportRecord, "accountIds"> }) {
     const { home } = useIntlayer("dashboard-import");
-    const { photos } = useDashboard();
     const named = useAccountNamed();
     const [first] = record.accountIds;
     const account = record.accountIds.length === 1 && first ? named(first) : null;
     if (account) {
         return (
             <span className="text-muted-foreground flex min-w-0 items-center gap-2">
-                <AccountTile account={accountLook(account)} photos={photos} size="sm" />
+                <AccountTile account={accountLook(account)} size="sm" />
                 <span className="truncate">{account.name}</span>
             </span>
         );

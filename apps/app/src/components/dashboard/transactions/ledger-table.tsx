@@ -10,8 +10,9 @@ import { useIntlayer } from "react-intlayer";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { FeeTile, MerchantTile, TransferTile } from "@/components/ledger/tiles";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { photoSrc } from "@/lib/photo-src";
 
-import { useCatalog, useImageUrls } from "../home/catalog";
+import { useCatalog } from "../home/catalog";
 import type { Catalog } from "../home/catalog";
 import { useCategoryName } from "../home/format";
 import { figureOf } from "../home/rows";
@@ -69,7 +70,7 @@ function EntryRowView({
     selected,
     stripe,
 }: EntryRowProps) {
-    const { ledger, photos: accountPhotos } = useDashboard();
+    const { ledger } = useDashboard();
     const { transactions: copy } = useIntlayer("dashboard-home");
     const { bulk, installmentOf, recurring: recurringLabel } = useIntlayer("dashboard-transactions");
     const categoryName = useCategoryName();
@@ -158,11 +159,7 @@ function EntryRowView({
             <Table.Row aria-rowindex={index + 2} className={tone}>
                 {pickCell(`${accountName(row.fromId)} → ${accountName(row.toId)}`)}
                 {merchantCell(
-                    <TransferTile
-                        from={catalog.account(row.fromId)}
-                        photos={accountPhotos}
-                        to={catalog.account(row.toId)}
-                    />,
+                    <TransferTile from={catalog.account(row.fromId)} to={catalog.account(row.toId)} />,
                     `${accountName(row.fromId)} → ${accountName(row.toId)}`,
                     copy.transfer.value,
                     false
@@ -230,8 +227,6 @@ function stripesOf(lines: readonly Line[]) {
     return stripes;
 }
 
-const uniqueKeys = (keyList: string) => (keyList === "" ? [] : [...new Set(keyList.split(" "))]);
-
 /** Turns on the checkbox column. */
 export interface TablePicking {
     all: boolean;
@@ -281,14 +276,6 @@ export function LedgerTable({
     const stripes = useMemo(() => stripesOf(lines), [lines]);
     const { after, before, body, first, last } = useLineWindow(heights);
     const shown = lines.slice(first, last);
-    const keyList = shown
-        .flatMap((line) => {
-            const key =
-                line.type === "row" && !("fromId" in line.row) ? catalog.transaction(line.row.id)?.imageKey : null;
-            return key ? [key] : [];
-        })
-        .join(" ");
-    const photos = useImageUrls(uniqueKeys(keyList));
     const columns = (account ? 4 : 3) + (picking ? 1 : 0);
     return (
         <Table
@@ -353,7 +340,7 @@ export function LedgerTable({
                                 account={account}
                                 catalog={catalog}
                                 day={grouped ? "" : dayText(line.row.day)}
-                                imageUrl={imageKey ? photos?.get(imageKey) : undefined}
+                                imageUrl={photoSrc(imageKey)}
                                 index={index}
                                 installment={raw?.installmentId ? tags.get(raw.installmentId) : undefined}
                                 key={line.row.id}

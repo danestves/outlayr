@@ -14,10 +14,10 @@ import { FeeTile, MerchantTile, TransferTile } from "@/components/ledger/tiles";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { periodOf } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { photoSrc } from "@/lib/photo-src";
 
 import { CardFrame } from "./card-frame";
-import { useCatalog, useImageUrls } from "./catalog";
-import type { Catalog } from "./catalog";
+import { useCatalog } from "./catalog";
 import { useCategoryName, useDateFormat } from "./format";
 import type { SetupState } from "./model";
 import { figureOf, foldFees, viewRows } from "./rows";
@@ -43,17 +43,8 @@ const SECOND_LINE = "dash-figure text-muted-foreground block text-xs leading-4";
 const ARRIVAL_LINE =
     "dash-figure text-muted-foreground flex justify-end text-xs leading-4 @max-sm:w-0 @max-sm:min-w-full";
 
-const imageKeys = (catalog: Catalog, rows: readonly FoldedRow[]) => [
-    ...new Set(
-        rows.flatMap((row) => {
-            const key = "fromId" in row ? null : catalog.transaction(row.id)?.imageKey;
-            return key ? [key] : [];
-        })
-    ),
-];
-
 export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
-    const { filters, ledger, photos: accountPhotos, setFilters } = useDashboard();
+    const { filters, ledger, setFilters } = useDashboard();
     const { add } = useIntlayer("dashboard");
     const { open } = useAccountFlows();
     const { setup: setupCopy, transactions: copy } = useIntlayer("dashboard-home");
@@ -75,8 +66,6 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
         [filters.accounts, filters.categories, filters.period, ledger, tab]
     );
     const rows = useMemo(() => every.slice(0, ROWS_SHOWN), [every]);
-    const headKeys = useMemo(() => imageKeys(catalog, rows), [catalog, rows]);
-    const headPhotos = useImageUrls(headKeys);
     const tableId = useId();
     if (quiet) {
         const current = periodOf(filters.currentKey, ledger.firstDayOfMonth);
@@ -223,7 +212,6 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                             <span className="flex items-center gap-3 font-medium">
                                                 <TransferTile
                                                     from={catalog.account(row.fromId)}
-                                                    photos={accountPhotos}
                                                     to={catalog.account(row.toId)}
                                                 />
                                                 <span className="min-w-0">
@@ -274,11 +262,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                             {standsAlone ? (
                                                 <FeeTile />
                                             ) : (
-                                                <MerchantTile
-                                                    imageUrl={imageKey ? headPhotos?.get(imageKey) : undefined}
-                                                    name={merchant}
-                                                    size="lg"
-                                                />
+                                                <MerchantTile imageUrl={photoSrc(imageKey)} name={merchant} size="lg" />
                                             )}
                                             <span className="min-w-0">
                                                 <Link

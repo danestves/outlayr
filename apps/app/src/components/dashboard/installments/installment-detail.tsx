@@ -179,7 +179,6 @@ function NextCell({ view }: { view: PlanView }) {
 
 function Kpis({ view }: { view: PlanView }) {
     const { columns, detail, kpi, progress } = useIntlayer("dashboard-installments");
-    const { photos } = useDashboard();
     const { locale } = useLocale();
     const format = useGoalMoney();
     const due = useDueText();
@@ -214,7 +213,7 @@ function Kpis({ view }: { view: PlanView }) {
                 value={format(view.price, view.currency)}
             >
                 <span className="flex min-w-0 items-center gap-2">
-                    <AccountTile account={view.account.look} photos={photos} size="xs" />
+                    <AccountTile account={view.account.look} size="xs" />
                     {note(every ? `${view.account.name} · ${titled(every, locale)}` : view.account.name)}
                 </span>
             </KpiCell>

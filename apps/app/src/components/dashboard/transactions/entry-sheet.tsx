@@ -20,8 +20,9 @@ import { AccountTile, FeeTile, MerchantTile } from "@/components/ledger/tiles";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
 import { isFinanced } from "@/lib/entry-writes";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { photoSrc } from "@/lib/photo-src";
 
-import { useCatalog, useImageUrls } from "../home/catalog";
+import { useCatalog } from "../home/catalog";
 import { timeOfDay, useCategoryName } from "../home/format";
 import { figureOf } from "../home/rows";
 import type { FoldedRow } from "../home/rows";
@@ -295,7 +296,7 @@ function ReadEntry({
     total: string;
     when: string;
 }) {
-    const { ledger, photos } = useDashboard();
+    const { ledger } = useDashboard();
     const { transactions: copy } = useIntlayer("dashboard-home");
     const words = useIntlayer("dashboard-transactions");
     const { bulk, detail, form } = words;
@@ -337,7 +338,7 @@ function ReadEntry({
                     )}
                 </Line>
                 <Line label={copy.columns.account} onPress={onEdit}>
-                    {account ? <AccountTile account={accountLook(account)} photos={photos} size="sm" /> : null}
+                    {account ? <AccountTile account={accountLook(account)} size="sm" /> : null}
                     <span className="truncate font-medium">{account?.name ?? copy.noAccount}</span>
                 </Line>
                 <Line label={form.currency} onPress={onEdit}>
@@ -445,7 +446,6 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
     const { clockTime, money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
     const raw = "fromId" in row ? undefined : catalog.transaction(row.id);
-    const photos = useImageUrls(raw?.imageKey ? [raw.imageKey] : []);
     const figure = figureOf(ledger, row);
     const accountTrigger = useRef<HTMLButtonElement>(null);
     const categoryTrigger = useRef<HTMLButtonElement>(null);
@@ -468,7 +468,7 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
         );
     }
     const doc = editableDoc(ledger, row);
-    const imageUrl = raw?.imageKey ? photos?.get(raw.imageKey) : undefined;
+    const imageUrl = photoSrc(raw?.imageKey);
     const total = money(row.income ? figure.amount : -figure.amount, ledger.currency, "always");
     const logAgain = doc
         ? () => {
@@ -529,7 +529,7 @@ function EntryBody({ onClose, onDelete, onStep, row, start }: Omit<EntrySheetPro
 }
 
 function TransferBody({ onDelete, row }: { onDelete: () => void; row: Extract<FoldedRow, { fromId: string }> }) {
-    const { ledger, photos } = useDashboard();
+    const { ledger } = useDashboard();
     const { detail } = useIntlayer("dashboard-transactions");
     const { money } = useDisplayFormat();
     const catalog = useCatalog(ledger);
@@ -542,7 +542,7 @@ function TransferBody({ onDelete, row }: { onDelete: () => void; row: Extract<Fo
         const look = id === null ? null : catalog.account(id);
         return (
             <span className="text-foreground flex items-center gap-2 font-medium whitespace-nowrap">
-                {look ? <AccountTile account={look} photos={photos} size="md" /> : null}
+                {look ? <AccountTile account={look} size="md" /> : null}
                 {id === null ? "" : ledger.accounts.get(id)?.name}
             </span>
         );

@@ -68,6 +68,10 @@ export default defineConfig({
                 "/**": { headers: SECURITY_HEADERS },
                 "/connect": UNFRAMEABLE,
                 "/login": UNFRAMEABLE,
+                // The photo route sets its own cache-control, which the rule above would overwrite. h3 resets
+                // any inherited rule set to false, but types that only for cache, redirect and proxy.
+                // @ts-expect-error -- see above.
+                "/photos/**": { headers: false },
                 ...PUBLIC_FILE_RULES,
             },
             // A file requested before its deploy is live would 404 with these cache headers, and Cloudflare keeps it.

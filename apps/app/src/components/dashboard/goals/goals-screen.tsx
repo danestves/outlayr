@@ -115,10 +115,9 @@ function GoalLink({ view }: { view: GoalView }) {
 }
 
 function AccountName({ view }: { view: GoalView }) {
-    const { photos } = useDashboard();
     return (
         <span className="flex min-w-0 items-center gap-2 text-[13px]">
-            <AccountTile account={view.account.look} photos={photos} size="sm" />
+            <AccountTile account={view.account.look} size="sm" />
             <span className="truncate">{view.account.name}</span>
         </span>
     );

@@ -36,7 +36,7 @@ function Balance({ children }: { children: ReactNode }) {
 }
 
 export function TransferDialog({ accountId, onClose }: { accountId: string; onClose: () => void }) {
-    const { ledger, overview, photos } = useDashboard();
+    const { ledger, overview } = useDashboard();
     const committer = useLedgerCommitter();
     const { flows } = useIntlayer("dashboard-accounts");
     const { detail, form } = useIntlayer("dashboard-transactions");
@@ -58,7 +58,7 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
     const open = transferAccounts(ledger.books);
     const here = ledger.books.accounts.find((row) => row.localId === accountId);
     const options = [...open, ...(here && !open.includes(here) ? [here] : [])].map((row) => ({
-        icon: <AccountTile account={accountLook(row)} photos={photos} size="sm" />,
+        icon: <AccountTile account={accountLook(row)} size="sm" />,
         label: row.name,
         value: row.localId,
     }));

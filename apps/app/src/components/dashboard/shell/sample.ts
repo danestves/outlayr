@@ -8,7 +8,6 @@ import { periodKeyOf, periodOf } from "@/lib/dashboard-series-period";
 import type { LedgerBooks } from "@/lib/ledger-books";
 
 import type { Dashboard } from "./dashboard";
-import { NO_PHOTOS } from "./photos";
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 24 * HOUR_MS;
@@ -245,7 +244,6 @@ export function sampleDashboard(now: number): Dashboard {
         },
         ledger,
         overview: ledgerGlance(books, now),
-        photos: NO_PHOTOS,
         setFilters: () => undefined,
     };
 }

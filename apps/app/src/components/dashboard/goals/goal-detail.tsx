@@ -458,7 +458,6 @@ function Contributions({ view }: { view: GoalView }) {
 }
 
 function GoalCard({ view }: { view: GoalView }) {
-    const { photos } = useDashboard();
     const { dialog, summary } = useIntlayer("dashboard-goals");
     const format = useGoalMoney();
     const monthYear = useMonthYear();
@@ -486,7 +485,7 @@ function GoalCard({ view }: { view: GoalView }) {
                         params={{ accountId: view.account.id }}
                         to="/accounts/$accountId"
                     >
-                        <AccountTile account={view.account.look} photos={photos} size="sm" />
+                        <AccountTile account={view.account.look} size="sm" />
                         <span className="truncate">{view.account.name}</span>
                     </Link>
                 </div>

@@ -10,6 +10,7 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { AccountTile, LookTile, MerchantTile } from "@/components/ledger/tiles";
 import { addDays } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { photoSrc } from "@/lib/photo-src";
 
 import { CardFrame } from "./card-frame";
 import { useCatalog } from "./catalog";
@@ -24,7 +25,7 @@ const UPCOMING_DAYS = 30;
 const ROW = "flex h-10 items-center gap-2.5 font-medium";
 
 export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
-    const { filters, ledger, overview, photos } = useDashboard();
+    const { filters, ledger, overview } = useDashboard();
     const { open } = useAccountFlows();
     const { panel: copy, setup: setupCopy } = useIntlayer("dashboard-home");
     const date = useDateFormat();
@@ -117,7 +118,7 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                         className={`flex min-h-10 flex-wrap items-center gap-x-2.5 font-medium ${account.dimmed ? "opacity-40" : ""}`}
                         key={account.key}
                     >
-                        <AccountTile account={account.look} photos={photos} size="lg" />
+                        <AccountTile account={account.look} size="lg" />
                         <span className="min-w-18 flex-[1_1_0] truncate">{account.name}</span>
                         <span className="dash-figure ml-auto whitespace-nowrap">
                             {money(account.balance, ledger.currency)}
@@ -149,12 +150,10 @@ export function Accounts({ quiet, setup }: { quiet: boolean; setup: SetupState |
                             return (
                                 <div className={ROW} key={charge.id}>
                                     {charge.look.icon || charge.look.emoji ? (
-                                        <LookTile look={charge.look} photos={photos} plain size="lg" />
+                                        <LookTile look={charge.look} plain size="lg" />
                                     ) : (
                                         <MerchantTile
-                                            imageUrl={
-                                                charge.look.imageKey ? photos?.get(charge.look.imageKey) : undefined
-                                            }
+                                            imageUrl={photoSrc(charge.look.imageKey)}
                                             name={charge.note}
                                             size="lg"
                                         />

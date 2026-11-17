@@ -297,7 +297,7 @@ function EntryFields({
     problem: EntryProblem | null;
     values: EntryValues;
 }) {
-    const { ledger, overview, photos } = useDashboard();
+    const { ledger, overview } = useDashboard();
     const { form, kind } = useIntlayer("dashboard-transactions");
     const quiet = layout === "drawer";
     const accounts = openAccounts(ledger.books);
@@ -384,7 +384,7 @@ function EntryFields({
                             { label: form.none.value, value: NO_ACCOUNT },
                             ...[...accounts, ...(account && !accounts.includes(account) ? [account] : [])].map(
                                 (row) => ({
-                                    icon: <AccountTile account={accountLook(row)} photos={photos} size="sm" />,
+                                    icon: <AccountTile account={accountLook(row)} size="sm" />,
                                     label: row.name,
                                     value: row.localId,
                                 })

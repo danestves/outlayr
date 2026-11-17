@@ -186,7 +186,7 @@ function AccountRows({
     matches: (name: string) => boolean;
     quiet: boolean;
 }) {
-    const { filters, ledger, photos, setFilters } = useDashboard();
+    const { filters, ledger, setFilters } = useDashboard();
     const { money } = useDisplayFormat();
     const balances = useMemo(
         () =>
@@ -204,7 +204,7 @@ function AccountRows({
                         on={filters.accounts.includes(account.localId)}
                         onToggle={() => setFilters({ accounts: toggledAccounts(filters.accounts, account.localId) })}
                     >
-                        <AccountTile account={accountLook(account)} photos={photos} size="sm" />
+                        <AccountTile account={accountLook(account)} size="sm" />
                         <span className="min-w-0 truncate">{account.name}</span>
                     </CheckRow>
                 ))}

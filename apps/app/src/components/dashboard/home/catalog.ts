@@ -1,9 +1,6 @@
 import { accountLook } from "@outlayr/money/ledger-log";
-import { keepPreviousData, useQueries } from "@tanstack/react-query";
-import { useRouteContext } from "@tanstack/react-router";
 import { useMemo } from "react";
 
-import { photoUrlsQuery, toPhotoUrls, usePhotoSeed } from "@/components/dashboard/shell/photos";
 import type { TileLook } from "@/components/ledger/tiles";
 import { NEUTRAL_COLOR } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
@@ -33,28 +30,4 @@ export type Catalog = ReturnType<typeof catalogOf>;
 
 export function useCatalog(ledger: Pick<Ledger, "books" | "budgetTargets" | "categories">) {
     return useMemo(() => catalogOf(ledger), [ledger]);
-}
-
-const PHOTO_URL_BATCH = 100;
-
-const mergedPhotos = (results: readonly { data?: readonly { key: string; url: string }[] }[]) =>
-    toPhotoUrls(results.flatMap((result) => result.data ?? []));
-
-export function useImageUrls(keys: readonly string[]) {
-    const { convexQueryClient } = useRouteContext({ from: "/_account/_app" });
-    const seed = usePhotoSeed();
-    const batches = useMemo(
-        () =>
-            Array.from({ length: Math.ceil(keys.length / PHOTO_URL_BATCH) }, (_, index) =>
-                keys.slice(index * PHOTO_URL_BATCH, (index + 1) * PHOTO_URL_BATCH)
-            ),
-        [keys]
-    );
-    return useQueries({
-        combine: mergedPhotos,
-        queries: batches.map((batch) => ({
-            ...photoUrlsQuery(convexQueryClient, batch, seed),
-            placeholderData: keepPreviousData,
-        })),
-    });
 }

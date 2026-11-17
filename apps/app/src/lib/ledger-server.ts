@@ -1,4 +1,3 @@
-import { merchantLogoUrl } from "@outlayr/backend/confect/lib/photoKeys";
 import { PULL_PAGE_MAX } from "@outlayr/backend/confect/sync";
 import { api } from "@outlayr/backend/convex/_generated/api";
 import type { DehydratedDbState } from "@tanstack/react-db";
@@ -7,8 +6,6 @@ import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { ConvexHttpClient } from "convex/browser";
 import * as Schema from "effect/Schema";
-
-import type { MintedPhotos } from "@/components/dashboard/shell/photos";
 
 import {
     accountsQuery,
@@ -28,11 +25,8 @@ import { ledgerSeed, syncedTableNames } from "./ledger-db";
 import type { PulledPage, PulledRow } from "./ledger-sync";
 import { timed } from "./server-timing";
 
-const PHOTO_BATCH = 100;
-
 export interface ServerLedger {
     collections: DehydratedDbState["collections"];
-    photos: MintedPhotos;
     profile: Profile | undefined;
 }
 
@@ -47,27 +41,9 @@ const SessionAnswer = Schema.Struct({
     }),
 });
 
-const imageKeysOf = (rows: readonly PulledRow[]) =>
-    rows.flatMap(({ deletedAt, fields }) =>
-        // oxlint-disable-next-line anti-slop/no-runtime-typeof -- pullSince types every table's fields loosely; this is the boundary.
-        deletedAt === null && typeof fields.imageKey === "string" ? [fields.imageKey] : []
-    );
-
-// Each page's photos are minted while the next page is pulled. The HTTP client runs mutations one at a time
-// unless told to skip its queue, which put every batch behind the last.
 async function pullLedger(client: ConvexHttpClient) {
     const tables = [...syncedTableNames()];
-    const mintedAt = Date.now();
     const rows: PulledRow[] = [];
-    const keys = new Set<string>();
-    const minting: Promise<MintedPhotos["minted"]>[] = [];
-    const logos: { key: string; url: string }[] = [];
-    const mint = (batch: string[]) => {
-        const urls = client.mutation(api.photos.readUrls, { keys: batch }, { skipQueue: true });
-        // Handled at once, so a failure during the next page cannot crash the process. Promise.all still throws it.
-        urls.catch(() => undefined);
-        minting.push(urls);
-    };
     let cursor = 0;
     let limit: number | undefined = PULL_PAGE_MAX;
     for (;;) {
@@ -84,36 +60,11 @@ async function pullLedger(client: ConvexHttpClient) {
             continue;
         }
         rows.push(...page.rows);
-        const owned: string[] = [];
-        for (const key of new Set(imageKeysOf(page.rows))) {
-            if (keys.has(key)) {
-                continue;
-            }
-            keys.add(key);
-            // A merchant logo's URL is public and fixed, so only the visitor's own photos need a signed one.
-            const logo = merchantLogoUrl(key);
-            if (logo) {
-                logos.push({ key, url: logo });
-            } else {
-                owned.push(key);
-            }
-        }
-        for (let index = 0; index < owned.length; index += PHOTO_BATCH) {
-            mint(owned.slice(index, index + PHOTO_BATCH));
-        }
         ({ cursor } = page);
         if (!page.hasMore) {
-            break;
+            return { cursor, rows };
         }
     }
-    // Only the wait left after the last page: batches minted during the pull cost the page nothing.
-    const minted = await timed(
-        "photos-wait",
-        () => Promise.all(minting),
-        (batches) => `${batches.length} batches, ${logos.length} logos`
-    );
-    const photos: MintedPhotos = { keys: [...keys], minted: [...logos, ...minted.flat()], mintedAt };
-    return { cursor, photos, rows };
 }
 
 // The same request better-auth's own getToken makes: the visitor's cookies, addressed to the Convex site.
@@ -151,7 +102,7 @@ export const serverLedger = createIsomorphicFn()
         const { convexSiteUrl } = convexUrls();
         const client = new ConvexHttpClient(serverConvexUrl(), { auth: token });
         const profile = timed("profile", () => readProfile(convexSiteUrl));
-        const [{ cursor, photos, rows }, rates] = await Promise.all([
+        const [{ cursor, rows }, rates] = await Promise.all([
             timed(
                 "pull",
                 () => pullLedger(client),
@@ -159,7 +110,7 @@ export const serverLedger = createIsomorphicFn()
             ),
             timed("rates", () => client.query(api.ledger.exchangeRates, {})),
         ]);
-        return { collections: ledgerSeed(rows, cursor, rates), photos, profile: await profile };
+        return { collections: ledgerSeed(rows, cursor, rates), profile: await profile };
     })
     .client((): Promise<ServerLedger> => Promise.reject(new Error("The ledger is read on the server only")));
 

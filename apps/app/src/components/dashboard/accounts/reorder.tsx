@@ -27,7 +27,6 @@ const moved = (ids: readonly string[], id: string, to: number) => {
 
 function Rows({ onMove, rows }: { onMove: (id: string, to: number) => void; rows: readonly AccountRow[] }) {
     const { flows } = useIntlayer("dashboard-accounts");
-    const { photos } = useDashboard();
     const { money } = useDisplayFormat();
     const list = useRef<HTMLDivElement>(null);
     const [dragging, setDragging] = useState<string | null>(null);
@@ -91,7 +90,7 @@ function Rows({ onMove, rows }: { onMove: (id: string, to: number) => void; rows
                         <span className="dash-figure text-muted-foreground w-[18px] shrink-0 text-end text-xs">
                             {index + 1}
                         </span>
-                        <AccountTile account={row.look} photos={photos} size="lg" />
+                        <AccountTile account={row.look} size="lg" />
                         <div className="min-w-0 flex-1">
                             <b className="block truncate text-sm leading-[18px] font-medium">{row.name}</b>
                             <small className="text-muted-foreground block truncate text-sm leading-5">

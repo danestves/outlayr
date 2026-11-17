@@ -32,9 +32,9 @@ export function useEntryDay() {
 }
 
 export function useAccountOptions() {
-    const { ledger, photos } = useDashboard();
+    const { ledger } = useDashboard();
     return openAccounts(ledger.books).map((row) => ({
-        icon: <AccountTile account={accountLook(row)} photos={photos} size="sm" />,
+        icon: <AccountTile account={accountLook(row)} size="sm" />,
         label: row.name,
         value: row.localId,
     }));
