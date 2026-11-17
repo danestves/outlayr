@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { route } from "@outlayr/model-router/route";
 import type { UserIdentity } from "convex/server";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -9,7 +10,6 @@ import { ActionCtx, MutationCtx } from "./_generated/services";
 import { openAiGate, refuse } from "./lib/aiGate";
 import { liveIdentity } from "./lib/auth";
 import { admitCapture } from "./lib/captures";
-import { claudeModelId } from "./lib/config";
 import { admitScan, failure, rateLimiter, readReceipt } from "./receiptScan";
 import spec, { ReceiptScanInput } from "./receiptScan.spec";
 
@@ -48,8 +48,7 @@ const scan = FunctionImpl.make(
                     yield* admitScan(caller);
                 }),
                 args,
-                feature: "receipt_scan",
-                modelId: claudeModelId,
+                route: route({ feature: "receipt_scan" }),
             });
             return yield* readReceipt(model, args.image, {
                 accounts: args.accounts,

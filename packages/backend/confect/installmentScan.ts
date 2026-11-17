@@ -435,7 +435,6 @@ export const readInstallmentPlan = Effect.fn("InstallmentScan.readInstallmentPla
                     ],
                     model,
                     output: Output.object({ schema: modelOutputSchema }),
-                    reasoning: "low",
                     system: buildPrompt(context),
                 }),
         });

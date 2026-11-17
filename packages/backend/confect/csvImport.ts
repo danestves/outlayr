@@ -73,7 +73,6 @@ export const classify = Effect.fn("CsvImport.classify")(
                     model,
                     output: Output.object({ schema: modelOutputSchema }),
                     prompt: buildPrompt(args),
-                    reasoning: "low",
                 }),
         });
 

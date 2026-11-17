@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { route } from "@outlayr/model-router/route";
 import type { UserIdentity } from "convex/server";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -9,7 +10,6 @@ import { ActionCtx } from "./_generated/services";
 import { failure, readInstallmentPlan } from "./installmentScan";
 import spec, { InstallmentScanInput } from "./installmentScan.spec";
 import { openAiGate, refuse } from "./lib/aiGate";
-import { claudeModelId } from "./lib/config";
 import { admitScan } from "./receiptScan";
 
 const isInstallmentScanInput = Schema.is(InstallmentScanInput);
@@ -29,8 +29,7 @@ const scan = FunctionImpl.make(
                     yield* admitScan(caller);
                 }),
                 args,
-                feature: "installment_scan",
-                modelId: claudeModelId,
+                route: route({ feature: "installment_scan" }),
             });
             return yield* readInstallmentPlan(model, [args.image, ...(args.moreImages ?? [])], {
                 accounts: args.accounts,

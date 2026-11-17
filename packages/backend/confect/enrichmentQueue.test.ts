@@ -7,6 +7,7 @@ import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import { MockLanguageModelV3 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
@@ -14,6 +15,7 @@ import { api, internal } from "../convex/_generated/api";
 import type { Doc } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
 import { resolveJob } from "./enrichmentQueue";
+import { CLAUDE_FAST_MODEL_ID, CLAUDE_MODEL_ID } from "./lib/models";
 import { authenticatedAs, seedAuthUser, seedProUser } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");
@@ -232,6 +234,37 @@ describe("shared answers", () => {
         );
 
         await expect(t.run((ctx) => ctx.db.query("merchantKnowledge").collect())).resolves.toStrictEqual([]);
+    });
+});
+
+describe("model route", () => {
+    const sharedModelId = async (t: ReturnType<typeof setup>, env: Record<string, string> = {}) => {
+        const fast = fastModel({
+            brand: "Care4Bag",
+            categoryName: "Travel",
+            domain: "care4bag.gr",
+            domainConfidence: "high",
+            isNewCategory: true,
+            tags: [],
+        });
+        const config = ConfigProvider.fromEnv({ env });
+        await t.action((ctx) =>
+            Effect.runPromise(
+                resolveJob(ctx, queuedRow({ categoryTree: [] }), { fast }).pipe(
+                    Effect.provideService(ConfigProvider.ConfigProvider, config)
+                )
+            )
+        );
+        const [known] = await t.run((ctx) => ctx.db.query("merchantKnowledge").collect());
+        return known?.modelId;
+    };
+
+    it("retries a new-category answer on Sonnet while the budget is open", async () => {
+        await expect(sharedModelId(setup())).resolves.toBe(CLAUDE_MODEL_ID);
+    });
+
+    it("keeps a background job off Sonnet once GROUNDED_BUDGET_MICROS closes the budget", async () => {
+        await expect(sharedModelId(setup(), { GROUNDED_BUDGET_MICROS: "0" })).resolves.toBe(CLAUDE_FAST_MODEL_ID);
     });
 });
 

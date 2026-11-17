@@ -1,5 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { vOnCompleteValidator, Workpool } from "@convex-dev/workpool";
+import { escalation, route } from "@outlayr/model-router/route";
+import type { Route } from "@outlayr/model-router/route";
 import { knowledgeKey, knowledgeKeys } from "@outlayr/money/merchant-key";
 import { v } from "convex/values";
 import * as Clock from "effect/Clock";
@@ -16,10 +18,12 @@ import { applyToTree, BACKGROUND_REQUEST_TIMEOUT_MS, rateLimiter, runSuggest } f
 import { groundedAnswer } from "./groundedLookup";
 import type { GroundedCallDeps } from "./groundedLookup";
 import { traced } from "./lib/aiTracing";
-import { anthropicApiKey, claudeGroundedModelId, claudeModelId } from "./lib/config";
+import { anthropicApiKey } from "./lib/config";
 import type { EnrichmentResult } from "./lib/enrichmentResult";
 import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
+import { routedModelId } from "./lib/modelRoute";
 import { runEdge, runTransactionEdge } from "./lib/runEdge";
+import { budgetConfig, estimateMicros } from "./lib/spend";
 
 export const MIN_NAME_LENGTH = 3;
 export const MAX_ACK_IDS = 100;
@@ -66,6 +70,18 @@ export const share = Effect.fn("EnrichmentQueue.share")(function* share(
     return answer;
 });
 
+// The grounded lookup's own headroom test, so `GROUNDED_BUDGET_MICROS=0` also keeps background jobs off Sonnet.
+const budgetState = Effect.fn("EnrichmentQueue.budgetState")(function* budgetState(ctx: JobCtx) {
+    const config = yield* budgetConfig();
+    const count = yield* estimateMicros();
+    // The limiter throws, not refuses, when one charge outgrows a shard's capacity, as a zero budget does.
+    if (count > config.rate / config.shards) {
+        return "exhausted";
+    }
+    const { ok } = yield* Effect.promise(() => rateLimiter.check(ctx, "groundedBudgetMicros", { config, count }));
+    return ok ? "open" : "exhausted";
+});
+
 export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* resolveJob(
     ctx: JobCtx,
     row: EnrichmentJobsDoc,
@@ -101,30 +117,45 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
             deps.grounded
         );
         if (deep !== null && (deep.categoryName !== null || deep.domain !== null || deep.merchantName !== null)) {
-            return yield* share(ctx, row, applyToTree(row.categoryTree, deep), yield* claudeGroundedModelId);
+            return yield* share(
+                ctx,
+                row,
+                applyToTree(row.categoryTree, deep),
+                yield* routedModelId(route({ feature: "grounded_lookup" }))
+            );
         }
     }
-    const modelId = yield* claudeModelId;
-    let model = deps.fast;
-    if (model === undefined) {
-        const apiKey = yield* anthropicApiKey;
-        if (Option.isNone(apiKey)) {
+    const apiKey = yield* anthropicApiKey;
+    const request = { budget: yield* budgetState(ctx), feature: "background_suggest", name: row.name } as const;
+    const suggest = Effect.fn("EnrichmentQueue.suggest")(function* suggest(chosen: Route) {
+        const modelId = yield* routedModelId(chosen);
+        const model =
+            deps.fast ??
+            (Option.isSome(apiKey)
+                ? traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), chosen, { distinctId })
+                : null);
+        if (model === null) {
             return null;
         }
-        model = traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), "background_suggest", {
-            distinctId,
+        const { grounding: _grounding, ...answer } = yield* runSuggest(model, {
+            categoryTree: row.categoryTree,
+            currency: row.currency,
+            income: row.income,
+            locale: row.locale,
+            name: row.name,
+            regionCode: row.regionCode,
+            timeoutMs: BACKGROUND_REQUEST_TIMEOUT_MS,
         });
-    }
-    const { grounding: _grounding, ...fast } = yield* runSuggest(model, {
-        categoryTree: row.categoryTree,
-        currency: row.currency,
-        income: row.income,
-        locale: row.locale,
-        name: row.name,
-        regionCode: row.regionCode,
-        timeoutMs: BACKGROUND_REQUEST_TIMEOUT_MS,
+        return { answer, modelId };
     });
-    return yield* share(ctx, row, fast, modelId);
+    const first = route(request);
+    const firstTry = yield* suggest(first);
+    if (firstTry === null) {
+        return null;
+    }
+    const second = escalation(request, first, firstTry.answer);
+    const final = second === null ? firstTry : ((yield* suggest(second)) ?? firstTry);
+    return yield* share(ctx, row, final.answer, final.modelId);
 });
 
 const workJob: (ctx: ActionCtx, jobId: Id<"enrichmentJobs">) => Effect.Effect<null> = Effect.fn("EnrichmentQueue.work")(

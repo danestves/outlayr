@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 
+import { route } from "@outlayr/model-router/route";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { convexTest } from "convex-test";
 import * as Effect from "effect/Effect";
@@ -9,7 +10,6 @@ import schema from "../../convex/schema";
 import { authenticatedAs, seedAuthUser } from "../test.helpers";
 import { openAiGate, refuse } from "./aiGate";
 import type { AiRefused } from "./aiGate";
-import { claudeFastModelId } from "./config";
 import { runEdge } from "./runEdge";
 
 const modules = import.meta.glob("../../convex/**/*.ts");
@@ -30,7 +30,7 @@ function knock(t: Pick<Harness, "run">, { admit = Effect.void, ...args }: Attemp
     const rungs = vi.fn(() => admit);
     const outcome = t.run((ctx) =>
         runEdge(
-            openAiGate(ctx, { admit: rungs, args, feature: "gate_test", modelId: claudeFastModelId }).pipe(
+            openAiGate(ctx, { admit: rungs, args, route: route({ feature: "category_suggest" }) }).pipe(
                 Effect.map(({ distinctId }) => ({ distinctId: distinctId ?? null, status: "admitted" as const })),
                 Effect.catchTags({ AiRefused: ({ status }) => Effect.succeed({ status }) })
             )

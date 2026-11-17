@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import type { UserIdentity } from "convex/server";
 import * as Clock from "effect/Clock";
@@ -13,7 +14,6 @@ import spec from "./csvImport.spec";
 import type { LabelSuggestion } from "./csvImport.spec";
 import { sanitizeRegionCode } from "./enrichment";
 import { openAiGate, proOnly, refuse, withinLimit } from "./lib/aiGate";
-import { claudeFastModelId } from "./lib/config";
 import { perUserBurst } from "./lib/limits";
 
 const csvImport = FunctionImpl.make(
@@ -36,8 +36,7 @@ const csvImport = FunctionImpl.make(
                     yield* withinLimit(() => rateLimiter.limit(ctx, "csvImportGlobal"));
                 }),
                 args,
-                feature: "csv_import",
-                modelId: claudeFastModelId,
+                route: route({ feature: "csv_import" }),
             });
 
             // After the rate limits, so the shared table cannot be probed faster than the model.

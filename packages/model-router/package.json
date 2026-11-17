@@ -1,0 +1,23 @@
+{
+    "name": "@outlayr/model-router",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "exports": {
+        "./route": "./src/route.ts"
+    },
+    "scripts": {
+        "check-types": "tsc --noEmit",
+        "score-eval": "node scripts/score-eval.ts",
+        "test": "vp test run"
+    },
+    "dependencies": {
+        "effect": "catalog:"
+    },
+    "devDependencies": {
+        "@outlayr/config": "workspace:*",
+        "@types/node": "^26.6.5",
+        "typescript": "catalog:",
+        "vite": "catalog:"
+    }
+}

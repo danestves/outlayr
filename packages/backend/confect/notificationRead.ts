@@ -63,7 +63,6 @@ export const readNotification = Effect.fn("NotificationRead.readNotification")(
                     model,
                     output: Output.object({ schema: modelOutputSchema }),
                     prompt: buildPrompt(text, language),
-                    reasoning: "low",
                 }),
         });
         const result: ReadResult = { read: cleanRead(output), status: "ok" };

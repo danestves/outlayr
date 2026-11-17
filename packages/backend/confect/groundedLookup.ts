@@ -1,4 +1,5 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import { generateText, isStepCount } from "ai";
 import type { LanguageModel, ToolSet } from "ai";
@@ -22,10 +23,11 @@ import {
 } from "./enrichment";
 import { traced } from "./lib/aiTracing";
 import { categoryChoiceLines, sanitizeCategoryName } from "./lib/categoryChoice";
-import { anthropicApiKey, claudeGroundedModelId } from "./lib/config";
+import { anthropicApiKey } from "./lib/config";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { CANONICAL_CATEGORIES, KEY_PATTERN, shouldPublish } from "./lib/merchantTrust";
 import type { KnowledgeCandidate } from "./lib/merchantTrust";
+import { routedModelId } from "./lib/modelRoute";
 import { CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { budgetConfig, estimateMicros, measureMicros, WORST_CASE_SEARCH_CALLS } from "./lib/spend";
 
@@ -248,8 +250,9 @@ export const groundedAnswer: (
             return null;
         }
         const anthropic = createAnthropic({ apiKey: Redacted.value(apiKey.value) });
-        modelId = yield* claudeGroundedModelId;
-        const grounding = traced(anthropic(modelId), "grounded_lookup", { distinctId: args.distinctId });
+        const groundedRoute = route({ feature: "grounded_lookup" });
+        modelId = yield* routedModelId(groundedRoute);
+        const grounding = traced(anthropic(modelId), groundedRoute, { distinctId: args.distinctId });
         deps = {
             grounding,
             groundingTools: { web_search: anthropic.tools.webSearch_20250305({ maxUses: WORST_CASE_SEARCH_CALLS }) },
