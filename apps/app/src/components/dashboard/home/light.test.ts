@@ -9,8 +9,9 @@ import { describe, expect, it } from "vite-plus/test";
 import type { LedgerBooks } from "@/lib/ledger-books";
 
 import { categoryBudgets, kpis } from "../../../lib/dashboard-series";
-import { prepareLedger } from "../../../lib/dashboard-series-ledger";
+import { prepareLedger, rowsBetween, total } from "../../../lib/dashboard-series-ledger";
 import { periodOf } from "../../../lib/dashboard-series-period";
+import { periodKeysOf } from "../shell/period-keys";
 import { accountBalances, budgetRows, everyDay, homeCovered, sparks } from "./model";
 
 const NOW = Date.parse("2026-10-10T15:00:00Z");
@@ -180,10 +181,15 @@ describe("Home on the rows since thirteen months back", () => {
         const { opening, recent } = opened(all);
         const light = prepareLedger(recent, NOW, opening);
 
+        const whole = prepareLedger(all, NOW);
+        const listed = periodKeysOf(light, october.key).map((key) => periodOf(key, 1));
+        const spent = (ledger: typeof light) =>
+            listed.map(({ from, to }) => total(ledger, rowsBetween(ledger, SCOPE, from, to, false)));
+
         expect(homeCovered(light, october)).toBe(true);
-        expect(home(light, ledgerGlance(recent, NOW, opening))).toStrictEqual(
-            home(prepareLedger(all, NOW), ledgerGlance(all, NOW))
-        );
+        expect(home(light, ledgerGlance(recent, NOW, opening))).toStrictEqual(home(whole, ledgerGlance(all, NOW)));
+        expect(listed.length).toBeGreaterThan(12);
+        expect(spent(light)).toStrictEqual(spent(whole));
     });
 
     it("waits for the whole ledger when a figure reaches further back", () => {

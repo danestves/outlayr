@@ -14,7 +14,7 @@ import {
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { ConvexError } from "convex/values";
 import { Toast, useToast } from "panelui-web/toast";
-import { Suspense, lazy, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
@@ -196,7 +196,7 @@ function useTurnover(nextChangeAt: number, advance: (asOf: number) => void) {
     }, [advance, nextChangeAt]);
 }
 
-function useLiveLedger(userId: string | undefined, onLanded: () => void) {
+function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" | Error) => void) {
     const { dbClient, queryClient } = Route.useRouteContext();
     const router = useRouter();
     // oxlint-disable-next-line outlayr/react-effect-budget -- the Convex connection, other tabs and the keyboard are external systems.
@@ -206,13 +206,15 @@ function useLiveLedger(userId: string | undefined, onLanded: () => void) {
         warmAccountState(queryClient);
         const landing = preloadLedger(dbClient).then(async () => {
             await ledgerSync(dbClient).landed();
-            onLanded();
+            onLanded("landed");
         });
         landing.catch(async (error) => {
             // Only a refusal reloads: a server that stays busy past the retries leaves the rendered rows on screen.
             if (error instanceof ConvexError) {
                 await router.invalidate();
+                return;
             }
+            onLanded(error instanceof Error ? error : new Error("The ledger did not land", { cause: error }));
         });
         const stops = [
             onSessionChange(() => forgetLedger().finally(() => window.location.reload())),
@@ -232,18 +234,18 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
     const search = Route.useSearch();
     const navigate = useNavigate();
     const [asOf, setAsOf] = useState(loaded.asOf);
-    const [landed, setLanded] = useState(false);
-    const opening = landed ? null : loaded.opening;
+    const [landing, setLanding] = useState<"landed" | Error | null>(null);
+    const opening = landing === "landed" ? null : loaded.opening;
     const overview = useMemo(() => ledgerGlance(books, asOf, opening), [books, asOf, opening]);
     useTurnover(overview.nextChangeAt, setAsOf);
     const ledger = useMemo(() => prepareLedger(books, asOf, opening), [books, asOf, opening]);
-    useLiveLedger(
-        loaded.userId,
-        useCallback(() => setLanded(true), [])
-    );
+    useLiveLedger(loaded.userId, setLanding);
     const filters = useFilters(search, ledger);
     const home = useLocation({ select: (location) => location.pathname === "/" });
     const waiting = opening !== null && !(home && homeCovered(ledger, filters.period));
+    if (waiting && landing instanceof Error) {
+        throw landing;
+    }
     const dashboard = useMemo(
         () => ({
             filters,

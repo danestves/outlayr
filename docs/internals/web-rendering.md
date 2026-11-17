@@ -19,7 +19,8 @@ A load of `/` with no search params does not pull the whole ledger. `pullHome` a
 - Until then only Home may render, and only for a period the rows cover (`homeCovered`). Any other route, or an older period, shows its pending screen for that moment.
 - The server uses the whole pull instead when `pullRecent` fails or answers `null` (sums not built, which also starts `ledgerCells.build` for the next load), and when Home could not open on the rows: fewer than six entries in the thirteen months, or a budget that carries over, whose carry reads every window since it was made.
 - A new figure on Home that reads further back than thirteen months must be added to `homeCovered`, or it paints wrong until the history lands.
-- The period picker lists only the months the rows reach until the history lands.
+- Until the history lands the period picker lists only the periods that start on or after the cutoff (`periodKeysOf`). An older month could hold a repeating entry and nothing else, and its total would be wrong.
+- If the sync gives up before the history lands, Home stays as painted and any other route shows the not synced screen, whose retry reloads the page into the whole pull.
 
 ## Rules for new work
 
