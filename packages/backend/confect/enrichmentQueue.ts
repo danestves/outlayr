@@ -126,7 +126,7 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
         }
     }
     const apiKey = yield* anthropicApiKey;
-    const request = { budget: yield* budgetState(ctx), feature: "background_suggest", name: row.name } as const;
+    const request = { budget: yield* budgetState(ctx), feature: "background_suggest" } as const;
     const suggest = Effect.fn("EnrichmentQueue.suggest")(function* suggest(chosen: Route) {
         const modelId = yield* routedModelId(chosen);
         const model =
@@ -148,12 +148,11 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
         });
         return { answer, modelId };
     });
-    const first = route(request);
-    const firstTry = yield* suggest(first);
+    const firstTry = yield* suggest(route(request));
     if (firstTry === null) {
         return null;
     }
-    const second = escalation(request, first, firstTry.answer);
+    const second = escalation(request, firstTry.answer);
     const retry =
         second === null
             ? null

@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 
 import { escalation, route } from "../src/route.ts";
-import type { Route } from "../src/route.ts";
 
 interface Row {
     brandOk?: boolean | null;
@@ -39,15 +38,13 @@ type Policy = (name: string, haiku: Row, sonnet: Row) => { answer: Row; calls: R
 const policies: Record<string, Policy> = {
     "all-haiku": (_name, haiku) => ({ answer: haiku, calls: [haiku], reason: "haiku" }),
     "all-sonnet": (_name, _haiku, sonnet) => ({ answer: sonnet, calls: [sonnet], reason: "sonnet" }),
-    routed: (name, haiku, sonnet) => {
-        const request = { budget: "open", feature: "background_suggest", name } as const;
-        const first: Route = route(request);
-        if (first.model === "standard") {
-            return { answer: sonnet, calls: [sonnet], reason: first.reason };
-        }
-        const second = escalation(request, first, { isNewCategory: haiku.output?.isNew ?? false });
+    routed: (_name, haiku, sonnet) => {
+        const second = escalation(
+            { budget: "open", feature: "background_suggest" },
+            { isNewCategory: haiku.output?.isNew ?? false }
+        );
         return second === null
-            ? { answer: haiku, calls: [haiku], reason: first.reason }
+            ? { answer: haiku, calls: [haiku], reason: route({ feature: "background_suggest" }).reason }
             : { answer: sonnet, calls: [haiku, sonnet], reason: second.reason };
     },
 };
