@@ -12582,6 +12582,832 @@ const answers = {
                     es: "Un control de suscripciones que te avisa antes de cada cobro",
                 }),
             },
+            "how-to-cancel-a-subscription": {
+                facts: [
+                    {
+                        label: t({ en: "Where", es: "Dónde" }),
+                        source: "https://support.apple.com/en-us/118428",
+                        text: t({
+                            en: "With whoever bills you: Apple, Google Play, or the service itself",
+                            es: "Con quien te cobra: Apple, Google Play o el propio servicio",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Deleting the app", es: "Borrar la app" }),
+                        source: "https://support.apple.com/en-us/101550",
+                        text: t({
+                            en: "Does not cancel the subscription",
+                            es: "No cancela la suscripción",
+                        }),
+                    },
+                    {
+                        label: t({ en: "After you cancel", es: "Después de cancelar" }),
+                        source: "https://support.google.com/googleplay/answer/7018481",
+                        text: t({
+                            en: "Google Play keeps it active until the end of the time you already paid for",
+                            es: "Google Play la mantiene activa hasta el final del tiempo que ya pagaste",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Free trials", es: "Pruebas gratis" }),
+                        source: "https://support.apple.com/en-us/118428",
+                        text: t({
+                            en: "Apple says to cancel at least 24 hours before the trial ends",
+                            es: "Apple pide cancelar al menos 24 horas antes de que termine la prueba",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "No. Deleting an app does not cancel its subscription on iPhone, iPad, Mac, or Android. Apple and Google both say so. Cancel it in Subscriptions, or on the service's website if you pay it there.",
+                            es: "No. Borrar una app no cancela su suscripción en iPhone, iPad, Mac ni Android. Apple y Google lo dicen así. Cancélala en Suscripciones, o en la web del servicio si pagas ahí.",
+                        }),
+                        question: t({
+                            en: "Does deleting the app cancel the subscription?",
+                            es: "¿Borrar la app cancela la suscripción?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Look at who bills you. A receipt from Apple or a charge from apple.com/bill means Apple. A charge that starts with GOOGLE* means Google; if it's also in your Google Play order history, it's Google Play. If not, check your other Google accounts first; if the receipt names another Google service, such as YouTube, cancel it there. Anything else is most likely billed by the service itself, so cancel on its website.",
+                            es: "Fíjate en quién te cobra. Un recibo de Apple o un cobro de apple.com/bill es Apple. Un cobro que empieza con GOOGLE* es de Google; si también aparece en tu historial de pedidos de Google Play, es Google Play. Si no, revisa primero tus otras cuentas de Google; si el recibo nombra otro servicio de Google, como YouTube, cancélalo ahí. Cualquier otro muy probablemente lo cobra el servicio, así que cancela en su web.",
+                        }),
+                        question: t({
+                            en: "How do I know where I'm paying for a subscription?",
+                            es: "¿Cómo sé dónde estoy pagando una suscripción?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "On Apple, if there is no Cancel button or you see an expiration message in red, the subscription is already canceled. If it is not listed at all, it is billed by another account, a family member, or another company.",
+                            es: "En Apple, si no hay botón de Cancelar o ves un mensaje de vencimiento en rojo, la suscripción ya está cancelada. Si no aparece en la lista, la cobra otra cuenta, un familiar u otra empresa.",
+                        }),
+                        question: t({
+                            en: "Why can't I find the Cancel button?",
+                            es: "¿Por qué no encuentro el botón de Cancelar?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Usually no. Canceling stops the renewal, and on Google Play you keep access until the end of the period you paid for. If you bought it with a Google Play payment plan, you still owe the remaining payments on that plan. Refunds depend on who billed you and their policy.",
+                            es: "Por lo general no. Cancelar detiene la renovación, y en Google Play conservas el acceso hasta el final del período que pagaste. Si la compraste con un plan de pagos de Google Play, igual debes los pagos que quedan de ese plan. Los reembolsos dependen de quién te cobró y de su política.",
+                        }),
+                        question: t({
+                            en: "Do I get my money back when I cancel?",
+                            es: "¿Me devuelven el dinero si cancelo?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "No. Outlayr does not cancel subscriptions. It shows what each one costs and when it charges next, and can remind you before the charge so you cancel in time.",
+                            es: "No. Outlayr no cancela suscripciones. Te muestra cuánto cuesta cada una y cuándo vuelve a cobrar, y puede avisarte antes del cobro para que la canceles a tiempo.",
+                        }),
+                        question: t({
+                            en: "Can Outlayr cancel a subscription for me?",
+                            es: "¿Outlayr puede cancelar una suscripción por mí?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "Cancel it with whoever bills you: in Subscriptions in your Apple settings for App Store charges, in Subscriptions in Google Play for Google Play charges, or in your account settings on the service's website if you pay it there.",
+                    es: "Cancélala con quien te cobra: en Suscripciones dentro de la configuración de Apple si te cobra el App Store, en Suscripciones de Google Play si te cobra Google Play, o en la configuración de tu cuenta en la web del servicio si pagas ahí.",
+                }),
+                meta: {
+                    description: t({
+                        en: "How to cancel a subscription on iPhone, iPad, Mac, Android, or the web, step by step from Apple's and Google's help pages, and how to tell who bills you.",
+                        es: "Cómo cancelar una suscripción en iPhone, iPad, Mac, Android o la web, paso a paso según la ayuda de Apple y Google, y cómo saber quién te cobra.",
+                    }),
+                    title: t({
+                        en: "How to Cancel a Subscription on iPhone, Android, or the Web",
+                        es: "Cómo cancelar una suscripción en iPhone, Android o la web",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "1. Open Settings and tap your name.",
+                                es: "1. Abre Configuración (o Ajustes) y toca tu nombre.",
+                            }),
+                            t({ en: "2. Tap Subscriptions.", es: "2. Toca Suscripciones." }),
+                            t({ en: "3. Tap the subscription.", es: "3. Toca la suscripción." }),
+                            t({
+                                en: "4. Tap Cancel Subscription. You may need to scroll down to find it.",
+                                es: "4. Toca Cancelar suscripción. Quizás tengas que bajar para encontrarlo.",
+                            }),
+                        ],
+                        id: "iphone",
+                        title: t({ en: "On iPhone or iPad", es: "En iPhone o iPad" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "1. Open the Google Play Store app, tap your profile picture, then Payments & subscriptions, then Subscriptions.",
+                                es: "1. Abre la app de Google Play Store, toca tu foto de perfil, luego Pagos y suscripciones y luego Suscripciones.",
+                            }),
+                            t({
+                                en: "2. Tap the subscription you want to cancel.",
+                                es: "2. Toca la suscripción que quieres cancelar.",
+                            }),
+                            t({
+                                en: "3. Tap Cancel subscription and follow the instructions.",
+                                es: "3. Toca Cancelar suscripción y sigue las instrucciones.",
+                            }),
+                        ],
+                        id: "android",
+                        title: t({ en: "On Android", es: "En Android" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "1. Sign in on the service's website, the one that charges your card.",
+                                es: "1. Inicia sesión en la web del servicio, la que le cobra a tu tarjeta.",
+                            }),
+                            t({
+                                en: "2. Open your account settings and look for Billing, Plan, Subscription, or Membership.",
+                                es: "2. Abre la configuración de tu cuenta y busca Facturación, Plan, Suscripción o Membresía.",
+                            }),
+                            t({
+                                en: "3. Choose cancel and confirm until the page shows an end date. Keep the confirmation email.",
+                                es: "3. Elige cancelar y confirma hasta que la página muestre una fecha de fin. Guarda el correo de confirmación.",
+                            }),
+                        ],
+                        id: "web",
+                        title: t({ en: "On the service's website", es: "En la web del servicio" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "If you don't see the option, it's billed elsewhere. Apple suggests searching your email for a receipt from Apple and checking which Apple Account it names: a family member's subscription can only be canceled by them. Google says a missing subscription may be on another Google Account. With no receipt from either, the service bills you directly.",
+                                es: "Si no ves la opción, te la cobran en otro lado. Apple sugiere buscar en tu correo un recibo de Apple y ver qué cuenta de Apple aparece: la suscripción de un familiar solo la puede cancelar esa persona. Google dice que una suscripción que no aparece puede estar en otra cuenta de Google. Si no hay recibo de ninguno, te cobra el servicio directamente.",
+                            }),
+                        ],
+                        id: "elsewhere",
+                        title: t({ en: "If you don't see the option", es: "Si no ves la opción" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Apple charges show as apple.com/bill, and can be for apps, subscriptions, music, movies, and more. Sign in at reportaproblem.apple.com to see what each one was for.",
+                                es: "Los cobros de Apple aparecen como apple.com/bill, y pueden ser de apps, suscripciones, música, películas y más. Inicia sesión en reportaproblem.apple.com para ver de qué es cada uno.",
+                            }),
+                            t({
+                                en: "Google Play charges show as GOOGLE* followed by the app's name, its developer's name, or the kind of content, such as GOOGLE*Books. Google says a charge in any other format did not come from Google Play.",
+                                es: "Los cobros de Google Play aparecen como GOOGLE* seguido del nombre de la app, del desarrollador o del tipo de contenido, como GOOGLE*Books. Google dice que un cobro con otro formato no vino de Google Play.",
+                            }),
+                        ],
+                        id: "statement",
+                        sources: [
+                            "https://support.apple.com/en-us/120164",
+                            "https://support.google.com/googleplay/answer/2851610",
+                        ],
+                        title: t({
+                            en: "How the charge shows on your statement",
+                            es: "Cómo aparece el cobro en tu estado de cuenta",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Log the subscription in Outlayr and turn on a reminder before the next charge, on the day or 1, 2, 3, or 7 days before. No bank link needed, and Outlayr does not cancel anything for you.",
+                                es: "Registra la suscripción en Outlayr y activa un aviso antes del siguiente cobro, el mismo día o 1, 2, 3 o 7 días antes. No hace falta conectar el banco, y Outlayr no cancela nada por ti.",
+                            }),
+                        ],
+                        id: "outlayr",
+                        title: t({
+                            en: "Get a reminder before the next charge",
+                            es: "Recibe un aviso antes del siguiente cobro",
+                        }),
+                    },
+                ],
+                related: [
+                    "/guides/subscription-tracker",
+                    "/tools/subscription-cost-calculator",
+                    "/guides/cancel-app-store-subscription",
+                ] satisfies PageRef[],
+                title: t({
+                    en: "How do I cancel a subscription?",
+                    es: "¿Cómo cancelo una suscripción?",
+                }),
+            },
+            "cancel-google-play-subscription": {
+                facts: [
+                    {
+                        label: t({ en: "Where", es: "Dónde" }),
+                        source: "https://support.google.com/googleplay/answer/7018481",
+                        text: t({
+                            en: "Subscriptions in the Google Play app, or play.google.com/store/account/subscriptions",
+                            es: "Suscripciones en la app de Google Play, o play.google.com/store/account/subscriptions",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Deleting the app", es: "Borrar la app" }),
+                        source: "https://support.google.com/googleplay/answer/7018481",
+                        text: t({
+                            en: "Uninstalling the app does not cancel the subscription",
+                            es: "Desinstalar la app no cancela la suscripción",
+                        }),
+                    },
+                    {
+                        label: t({ en: "After you cancel", es: "Después de cancelar" }),
+                        source: "https://support.google.com/googleplay/answer/7018481",
+                        text: t({
+                            en: "Canceling stops the renewal, and it stays active until the end of the time you already paid for. On a payment plan you still owe the remaining payments",
+                            es: "Cancelar detiene la renovación, y sigue activa hasta el final del tiempo que ya pagaste. En un plan de pagos igual debes los pagos que quedan",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Not listed", es: "No aparece" }),
+                        source: "https://support.google.com/googleplay/answer/7018481",
+                        text: t({
+                            en: "It may be on another Google Account. Switch accounts and check again",
+                            es: "Puede estar en otra cuenta de Google. Cambia de cuenta y vuelve a revisar",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "No. Google says uninstalling the app does not cancel your subscription. Cancel it in Subscriptions in Google Play.",
+                            es: "No. Google dice que desinstalar la app no cancela tu suscripción. Cancélala en Suscripciones de Google Play.",
+                        }),
+                        question: t({
+                            en: "Does uninstalling the app cancel a Google Play subscription?",
+                            es: "¿Desinstalar la app cancela una suscripción de Google Play?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Until the end of the period you paid for. Google's example: a yearly plan bought on January 1 and canceled on July 1 stays active until December 31, and the next yearly charge does not happen.",
+                            es: "Hasta el final del período que pagaste. El ejemplo de Google: un plan anual comprado el 1 de enero y cancelado el 1 de julio sigue activo hasta el 31 de diciembre, y no se hace el siguiente cobro anual.",
+                        }),
+                        question: t({
+                            en: "How long do I keep access after I cancel?",
+                            es: "¿Hasta cuándo tengo acceso después de cancelar?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "It is probably on another Google Account, so sign in to the one that has your subscriptions. If it is not on any of them, the app bills you some other way, such as through its own website.",
+                            es: "Seguramente está en otra cuenta de Google, así que entra con la que tiene tus suscripciones. Si no está en ninguna, la app te cobra por otra vía, como su propia web.",
+                        }),
+                        question: t({
+                            en: "Why don't I see my subscription in Google Play?",
+                            es: "¿Por qué no veo mi suscripción en Google Play?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Some apps let you pause payments instead, from one week to three months, starting at the end of the current billing period. Open the subscription, tap Manage, then Pause payments.",
+                            es: "Algunas apps te dejan pausar los pagos, de una semana a tres meses, a partir del final del período actual. Abre la suscripción, toca Administrar y luego Pausar pagos.",
+                        }),
+                        question: t({
+                            en: "Can I pause a Google Play subscription instead?",
+                            es: "¿Puedo pausar una suscripción de Google Play en vez de cancelarla?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "As GOOGLE* followed by the app's name, its developer's name, or the kind of content, such as GOOGLE*Books.",
+                            es: "Como GOOGLE* seguido del nombre de la app, del desarrollador o del tipo de contenido, como GOOGLE*Books.",
+                        }),
+                        question: t({
+                            en: "How does a Google Play subscription show on my statement?",
+                            es: "¿Cómo aparece una suscripción de Google Play en mi estado de cuenta?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "Open Subscriptions in the Google Play app, tap the subscription, and tap Cancel subscription. On a computer, go to play.google.com/store/account/subscriptions, click Manage, then Cancel subscription.",
+                    es: "Abre Suscripciones en la app de Google Play, toca la suscripción y toca Cancelar suscripción. En una computadora, entra a play.google.com/store/account/subscriptions, haz clic en Administrar y luego en Cancelar suscripción.",
+                }),
+                meta: {
+                    description: t({
+                        en: "How to cancel a Google Play subscription on an Android phone, tablet, or computer, step by step from Google's help page, plus what happens after you cancel.",
+                        es: "Cómo cancelar una suscripción de Google Play en un celular, tablet o computadora, paso a paso según la ayuda de Google, y qué pasa después de cancelar.",
+                    }),
+                    title: t({
+                        en: "How to Cancel a Google Play Subscription, Step by Step",
+                        es: "Cómo cancelar una suscripción de Google Play, paso a paso",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "1. Open the Google Play Store app and sign in to the Google Account that has the subscription.",
+                                es: "1. Abre la app de Google Play Store con la cuenta de Google que tiene la suscripción.",
+                            }),
+                            t({
+                                en: "2. Tap your profile picture, then Payments & subscriptions, then Subscriptions.",
+                                es: "2. Toca tu foto de perfil, luego Pagos y suscripciones y luego Suscripciones.",
+                            }),
+                            t({
+                                en: "3. Tap the subscription you want to cancel.",
+                                es: "3. Toca la suscripción que quieres cancelar.",
+                            }),
+                            t({
+                                en: "4. Tap Cancel subscription and follow the instructions.",
+                                es: "4. Toca Cancelar suscripción y sigue las instrucciones.",
+                            }),
+                        ],
+                        id: "android",
+                        title: t({ en: "On an Android phone or tablet", es: "En un celular o tablet Android" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "1. Go to play.google.com/store/account/subscriptions.",
+                                es: "1. Entra a play.google.com/store/account/subscriptions.",
+                            }),
+                            t({
+                                en: "2. Next to the subscription you want to cancel, click Manage.",
+                                es: "2. Junto a la suscripción que quieres cancelar, haz clic en Administrar.",
+                            }),
+                            t({ en: "3. Click Cancel subscription.", es: "3. Haz clic en Cancelar suscripción." }),
+                            t({
+                                en: "4. Pick a reason in the pop-up and click Continue.",
+                                es: "4. Elige un motivo en la ventana y haz clic en Continuar.",
+                            }),
+                        ],
+                        id: "computer",
+                        title: t({ en: "On a computer", es: "En una computadora" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "If you don't see the option, it's billed elsewhere. Check every Google Account you use first. If it is in none of them, you pay the app some other way, often on its own website, or through Apple if you also use an iPhone.",
+                                es: "Si no ves la opción, te la cobran en otro lado. Revisa primero todas tus cuentas de Google. Si no está en ninguna, le pagas a la app por otra vía, muchas veces en su propia web, o por Apple si también usas un iPhone.",
+                            }),
+                        ],
+                        id: "elsewhere",
+                        title: t({ en: "If you don't see the option", es: "Si no ves la opción" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Google Play charges show as GOOGLE* followed by the app's name, its developer's name, or the kind of content, such as GOOGLE*Books. Google says a charge in any other format did not come from Google Play.",
+                                es: "Los cobros de Google Play aparecen como GOOGLE* seguido del nombre de la app, del desarrollador o del tipo de contenido, como GOOGLE*Books. Google dice que un cobro con otro formato no vino de Google Play.",
+                            }),
+                        ],
+                        id: "statement",
+                        sources: ["https://support.google.com/googleplay/answer/2851610"],
+                        title: t({
+                            en: "How the charge shows on your statement",
+                            es: "Cómo aparece el cobro en tu estado de cuenta",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Log the subscription in Outlayr and turn on a reminder before the next charge, on the day or 1, 2, 3, or 7 days before. No bank link needed, and Outlayr does not cancel anything for you.",
+                                es: "Registra la suscripción en Outlayr y activa un aviso antes del siguiente cobro, el mismo día o 1, 2, 3 o 7 días antes. No hace falta conectar el banco, y Outlayr no cancela nada por ti.",
+                            }),
+                        ],
+                        id: "outlayr",
+                        title: t({
+                            en: "Get a reminder before the next charge",
+                            es: "Recibe un aviso antes del siguiente cobro",
+                        }),
+                    },
+                ],
+                related: [
+                    "/guides/subscription-tracker",
+                    "/tools/subscription-cost-calculator",
+                    "/guides/how-to-cancel-a-subscription",
+                ] satisfies PageRef[],
+                title: t({
+                    en: "How do I cancel a Google Play subscription?",
+                    es: "¿Cómo cancelo una suscripción de Google Play?",
+                }),
+            },
+            "cancel-app-store-subscription": {
+                facts: [
+                    {
+                        label: t({ en: "Where", es: "Dónde" }),
+                        source: "https://support.apple.com/en-us/118428",
+                        text: t({
+                            en: "Settings, your name, Subscriptions on iPhone and iPad. App Store, your name, Subscriptions on Mac",
+                            es: "Configuración, tu nombre, Suscripciones en iPhone y iPad. App Store, tu nombre, Suscripciones en Mac",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Deleting the app", es: "Borrar la app" }),
+                        source: "https://support.apple.com/en-us/101550",
+                        text: t({
+                            en: "Does not cancel its in-app subscriptions",
+                            es: "No cancela sus suscripciones dentro de la app",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Free trials", es: "Pruebas gratis" }),
+                        source: "https://support.apple.com/en-us/118428",
+                        text: t({
+                            en: "Cancel at least 24 hours before the trial ends",
+                            es: "Cancela al menos 24 horas antes de que termine la prueba",
+                        }),
+                    },
+                    {
+                        label: t({ en: "No Cancel button", es: "Sin botón de Cancelar" }),
+                        source: "https://support.apple.com/en-us/118428",
+                        text: t({
+                            en: "Or an expiration message in red: it is already canceled",
+                            es: "O un mensaje de vencimiento en rojo: ya está cancelada",
+                        }),
+                    },
+                    {
+                        label: t({ en: "On your statement", es: "En tu estado de cuenta" }),
+                        source: "https://support.apple.com/en-us/120164",
+                        text: t({ en: "apple.com/bill", es: "apple.com/bill" }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "No. Apple says deleting an app does not cancel its in-app subscriptions. Cancel it in Subscriptions first.",
+                            es: "No. Apple dice que borrar una app no cancela sus suscripciones dentro de la app. Cancélala primero en Suscripciones.",
+                        }),
+                        question: t({
+                            en: "Does deleting an app cancel its App Store subscription?",
+                            es: "¿Borrar una app cancela su suscripción del App Store?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Then it is already canceled. Apple says that if there is no Cancel button, or you see an expiration message in red, the subscription has been canceled.",
+                            es: "Entonces ya está cancelada. Apple dice que si no hay botón de Cancelar, o ves un mensaje de vencimiento en rojo, la suscripción ya se canceló.",
+                        }),
+                        question: t({
+                            en: "What if there is no Cancel Subscription button?",
+                            es: "¿Y si no aparece el botón de Cancelar suscripción?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Search your email for a receipt from Apple and check which Apple Account it names. If it is a family member's, only they can cancel it. If it is another of your accounts, sign in to that one. With no Apple receipt, another company bills you.",
+                            es: "Busca en tu correo un recibo de Apple y fíjate qué cuenta de Apple aparece. Si es de un familiar, solo esa persona la puede cancelar. Si es otra de tus cuentas, entra con esa. Si no hay recibo de Apple, te cobra otra empresa.",
+                        }),
+                        question: t({
+                            en: "Why don't I see the subscription in my list?",
+                            es: "¿Por qué no veo la suscripción en mi lista?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Yes. Go to account.apple.com on the web, sign in with your Apple Account, and follow the steps on screen. Apple points Android users there too.",
+                            es: "Sí. Entra a account.apple.com en la web, inicia sesión con tu cuenta de Apple y sigue los pasos en pantalla. Apple también manda ahí a quien usa Android.",
+                        }),
+                        question: t({
+                            en: "Can I cancel an Apple subscription without an iPhone?",
+                            es: "¿Puedo cancelar una suscripción de Apple sin un iPhone?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "As apple.com/bill. It can be for apps, subscriptions, music, movies, and more. Sign in at reportaproblem.apple.com to see what each charge was for.",
+                            es: "Como apple.com/bill. Puede ser de apps, suscripciones, música, películas y más. Inicia sesión en reportaproblem.apple.com para ver de qué es cada cobro.",
+                        }),
+                        question: t({
+                            en: "How does an App Store subscription show on my statement?",
+                            es: "¿Cómo aparece una suscripción del App Store en mi estado de cuenta?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "On iPhone or iPad, open Settings, tap your name, tap Subscriptions, pick the subscription, and tap Cancel Subscription. On a Mac, do the same from your name in the App Store.",
+                    es: "En iPhone o iPad, abre Configuración, toca tu nombre, toca Suscripciones, elige la suscripción y toca Cancelar suscripción. En una Mac, haz lo mismo desde tu nombre en el App Store.",
+                }),
+                meta: {
+                    description: t({
+                        en: "How to cancel an App Store subscription on iPhone, iPad, Mac, a Windows PC, or the web, step by step from Apple's help page, and how it shows on your statement.",
+                        es: "Cómo cancelar una suscripción del App Store en iPhone, iPad, Mac, una PC con Windows o la web, paso a paso según la ayuda de Apple, y cómo aparece en tu estado de cuenta.",
+                    }),
+                    title: t({
+                        en: "How to Cancel an App Store Subscription on iPhone, iPad, or Mac",
+                        es: "Cómo cancelar una suscripción del App Store en iPhone, iPad o Mac",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({
+                                en: "1. Open Settings and tap your name.",
+                                es: "1. Abre Configuración (o Ajustes) y toca tu nombre.",
+                            }),
+                            t({ en: "2. Tap Subscriptions.", es: "2. Toca Suscripciones." }),
+                            t({ en: "3. Tap the subscription.", es: "3. Toca la suscripción." }),
+                            t({
+                                en: "4. Tap Cancel Subscription. You may need to scroll down to find it. The same steps work on Apple Vision Pro.",
+                                es: "4. Toca Cancelar suscripción. Quizás tengas que bajar para encontrarlo. Los mismos pasos sirven en Apple Vision Pro.",
+                            }),
+                        ],
+                        id: "iphone",
+                        title: t({ en: "On iPhone or iPad", es: "En iPhone o iPad" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "1. In the App Store, click your name at the bottom of the sidebar.",
+                                es: "1. En el App Store, haz clic en tu nombre en la parte de abajo de la barra lateral.",
+                            }),
+                            t({
+                                en: "2. On the page that appears, click your name again.",
+                                es: "2. En la página que aparece, vuelve a hacer clic en tu nombre.",
+                            }),
+                            t({ en: "3. Click Subscriptions.", es: "3. Haz clic en Suscripciones." }),
+                            t({
+                                en: "4. Click the subscription, then Cancel Subscription.",
+                                es: "4. Haz clic en la suscripción y luego en Cancelar suscripción.",
+                            }),
+                        ],
+                        id: "mac",
+                        title: t({ en: "On a Mac", es: "En una Mac" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "1. Open the Apple Music app or the Apple TV app.",
+                                es: "1. Abre la app Apple Music o la app Apple TV.",
+                            }),
+                            t({
+                                en: "2. Click your name at the bottom of the sidebar, then View My Account.",
+                                es: "2. Haz clic en tu nombre en la parte de abajo de la barra lateral y luego en Ver mi cuenta.",
+                            }),
+                            t({
+                                en: "3. In the Settings section, next to Subscriptions, click Manage.",
+                                es: "3. En la sección Configuración, junto a Suscripciones, haz clic en Administrar.",
+                            }),
+                            t({
+                                en: "4. Next to the subscription, click Edit, then Cancel Subscription.",
+                                es: "4. Junto a la suscripción, haz clic en Editar y luego en Cancelar suscripción.",
+                            }),
+                        ],
+                        id: "windows",
+                        title: t({ en: "On a Windows PC", es: "En una PC con Windows" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "1. Go to account.apple.com and sign in with your Apple Account.",
+                                es: "1. Entra a account.apple.com e inicia sesión con tu cuenta de Apple.",
+                            }),
+                            t({
+                                en: "2. Follow the steps on screen to cancel. This is also the way from an Android phone.",
+                                es: "2. Sigue los pasos en pantalla para cancelar. Este también es el camino desde un celular Android.",
+                            }),
+                        ],
+                        id: "web",
+                        title: t({ en: "On the web or Android", es: "En la web o Android" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "If you don't see the option, it's billed elsewhere. Search your email for a receipt from Apple and check which Apple Account it names: a family member's subscription can only be canceled by them, and another of your accounts needs you to sign in to it. With no Apple receipt, another company bills you, such as Google Play or the service's own website.",
+                                es: "Si no ves la opción, te la cobran en otro lado. Busca en tu correo un recibo de Apple y fíjate qué cuenta de Apple aparece: la suscripción de un familiar solo la puede cancelar esa persona, y si es otra de tus cuentas tienes que entrar con ella. Si no hay recibo de Apple, te cobra otra empresa, como Google Play o la web del propio servicio.",
+                            }),
+                        ],
+                        id: "elsewhere",
+                        title: t({ en: "If you don't see the option", es: "Si no ves la opción" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Apple charges show as apple.com/bill, and can be for apps, subscriptions, music, movies, and more. Sign in at reportaproblem.apple.com to see what each one was for.",
+                                es: "Los cobros de Apple aparecen como apple.com/bill, y pueden ser de apps, suscripciones, música, películas y más. Inicia sesión en reportaproblem.apple.com para ver de qué es cada uno.",
+                            }),
+                        ],
+                        id: "statement",
+                        sources: ["https://support.apple.com/en-us/120164"],
+                        title: t({
+                            en: "How the charge shows on your statement",
+                            es: "Cómo aparece el cobro en tu estado de cuenta",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Log the subscription in Outlayr and turn on a reminder before the next charge, on the day or 1, 2, 3, or 7 days before. No bank link needed, and Outlayr does not cancel anything for you.",
+                                es: "Registra la suscripción en Outlayr y activa un aviso antes del siguiente cobro, el mismo día o 1, 2, 3 o 7 días antes. No hace falta conectar el banco, y Outlayr no cancela nada por ti.",
+                            }),
+                        ],
+                        id: "outlayr",
+                        title: t({
+                            en: "Get a reminder before the next charge",
+                            es: "Recibe un aviso antes del siguiente cobro",
+                        }),
+                    },
+                ],
+                related: [
+                    "/guides/subscription-tracker",
+                    "/tools/subscription-cost-calculator",
+                    "/guides/how-to-cancel-a-subscription",
+                ] satisfies PageRef[],
+                title: t({
+                    en: "How do I cancel an App Store subscription on iPhone, iPad, or Mac?",
+                    es: "¿Cómo cancelo una suscripción del App Store en iPhone, iPad o Mac?",
+                }),
+            },
+            "cancel-chatgpt-subscription": {
+                facts: [
+                    {
+                        label: t({ en: "Where", es: "Dónde" }),
+                        source: "https://help.openai.com/en/articles/7232927-canceling-your-chatgpt-subscription",
+                        text: t({
+                            en: "Where you subscribed: chatgpt.com, the App Store, or Google Play",
+                            es: "Donde te suscribiste: chatgpt.com, el App Store o Google Play",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Deleting the app", es: "Borrar la app" }),
+                        source: "https://help.openai.com/en/articles/7232927-canceling-your-chatgpt-subscription",
+                        text: t({
+                            en: "Uninstalling does not cancel it. Deleting your ChatGPT account cancels a plan billed by OpenAI, but not one billed by the App Store or Google Play",
+                            es: "Desinstalarla no la cancela. Borrar tu cuenta de ChatGPT cancela un plan que cobra OpenAI, pero no uno que cobra el App Store o Google Play",
+                        }),
+                    },
+                    {
+                        label: t({ en: "When", es: "Cuándo" }),
+                        source: "https://help.openai.com/en/articles/7232927-canceling-your-chatgpt-subscription",
+                        text: t({
+                            en: "At least 24 hours before your next billing date",
+                            es: "Al menos 24 horas antes de tu próxima fecha de cobro",
+                        }),
+                    },
+                    {
+                        label: t({ en: "After you cancel", es: "Después de cancelar" }),
+                        source: "https://help.openai.com/en/articles/7232927-canceling-your-chatgpt-subscription",
+                        text: t({
+                            en: "Paid features stay on until the end of the current billing period",
+                            es: "Las funciones de pago siguen activas hasta el final del período actual",
+                        }),
+                    },
+                ],
+                faq: [
+                    {
+                        answer: t({
+                            en: "No. OpenAI says uninstalling the ChatGPT app does not cancel your subscription. Deleting your ChatGPT account cancels a plan billed by OpenAI on chatgpt.com, but OpenAI says to cancel an App Store or Google Play subscription in the store first. To stop future charges, cancel where you subscribed.",
+                            es: "No. OpenAI dice que desinstalar la app de ChatGPT no cancela tu suscripción. Borrar tu cuenta de ChatGPT cancela un plan que cobra OpenAI en chatgpt.com, pero OpenAI pide cancelar primero en la tienda una suscripción del App Store o de Google Play. Para dejar de pagar, cancélala donde te suscribiste.",
+                        }),
+                        question: t({
+                            en: "Does deleting the ChatGPT app cancel my subscription?",
+                            es: "¿Borrar la app de ChatGPT cancela mi suscripción?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Check your purchase receipt to see who billed you. If it was Apple or Google Play, cancel it in Subscriptions in your Apple settings or in Google Play. If you paid on chatgpt.com, sign in to the same ChatGPT account in another browser and open Billing again.",
+                            es: "Revisa tu recibo de compra para ver quién te cobró. Si fue Apple o Google Play, cancélala en Suscripciones dentro de la configuración de Apple o en Google Play. Si pagaste en chatgpt.com, entra con la misma cuenta de ChatGPT en otro navegador y vuelve a abrir Facturación.",
+                        }),
+                        question: t({
+                            en: "Why don't I see Cancel plan in ChatGPT's settings?",
+                            es: "¿Por qué no veo Cancelar plan en la configuración de ChatGPT?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "Until the end of the current billing period. Canceling stops the next renewal but does not refund past charges.",
+                            es: "Hasta el final del período actual. Cancelar detiene la siguiente renovación pero no reembolsa cobros anteriores.",
+                        }),
+                        question: t({
+                            en: "Do I keep ChatGPT Plus after I cancel?",
+                            es: "¿Sigo teniendo ChatGPT Plus después de cancelar?",
+                        }),
+                    },
+                    {
+                        answer: t({
+                            en: "At least 24 hours before your next billing date, so the next period is not charged.",
+                            es: "Al menos 24 horas antes de tu próxima fecha de cobro, para que no te cobren el siguiente período.",
+                        }),
+                        question: t({
+                            en: "When should I cancel to avoid the next charge?",
+                            es: "¿Cuándo debo cancelar para evitar el siguiente cobro?",
+                        }),
+                    },
+                ],
+                lead: t({
+                    en: "Cancel it where you subscribed: on chatgpt.com under Settings, Billing, Cancel plan; in Subscriptions in your Apple settings if you paid in the iPhone app; or in Google Play if you paid in the Android app.",
+                    es: "Cancélala donde te suscribiste: en chatgpt.com en Configuración, Facturación, Cancelar plan; en Suscripciones dentro de la configuración de Apple si pagaste en la app de iPhone; o en Google Play si pagaste en la app de Android.",
+                }),
+                meta: {
+                    description: t({
+                        en: "How to cancel ChatGPT Plus or another paid ChatGPT plan on the web, iPhone, or Android, based on OpenAI's, Apple's, and Google's help pages.",
+                        es: "Cómo cancelar ChatGPT Plus u otro plan de pago de ChatGPT en la web, iPhone o Android, según la ayuda de OpenAI, Apple y Google.",
+                    }),
+                    title: t({
+                        en: "How to Cancel Your ChatGPT Subscription on Web, iPhone, or Android",
+                        es: "Cómo cancelar tu suscripción de ChatGPT en la web, iPhone o Android",
+                    }),
+                },
+                more: [
+                    {
+                        body: [
+                            t({ en: "1. Sign in at chatgpt.com.", es: "1. Inicia sesión en chatgpt.com." }),
+                            t({
+                                en: "2. Select your profile icon, then Settings.",
+                                es: "2. Selecciona tu ícono de perfil y luego Configuración (Settings).",
+                            }),
+                            t({ en: "3. Select Billing.", es: "3. Selecciona Facturación (Billing)." }),
+                            t({
+                                en: "4. Under Cancel plan, select Cancel.",
+                                es: "4. En Cancelar plan (Cancel plan), selecciona Cancelar.",
+                            }),
+                            t({
+                                en: "5. Check your billing status to make sure the plan no longer renews.",
+                                es: "5. Revisa el estado de tu facturación para confirmar que el plan ya no se renueva.",
+                            }),
+                        ],
+                        id: "web",
+                        title: t({ en: "On the web", es: "En la web" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "1. Open Settings on your iPhone or iPad and tap your name.",
+                                es: "1. Abre Configuración (o Ajustes) en tu iPhone o iPad y toca tu nombre.",
+                            }),
+                            t({
+                                en: "2. Tap Subscriptions, then ChatGPT.",
+                                es: "2. Toca Suscripciones y luego ChatGPT.",
+                            }),
+                            t({
+                                en: "3. Tap Cancel Subscription and confirm. If you see an expiration date instead, it is already canceled.",
+                                es: "3. Toca Cancelar suscripción y confirma. Si en su lugar ves una fecha de vencimiento, ya está cancelada.",
+                            }),
+                        ],
+                        id: "iphone",
+                        title: t({ en: "On iPhone or iPad", es: "En iPhone o iPad" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "1. Open the Google Play Store app, tap your profile picture, then Payments & subscriptions, then Subscriptions.",
+                                es: "1. Abre la app de Google Play Store, toca tu foto de perfil, luego Pagos y suscripciones y luego Suscripciones.",
+                            }),
+                            t({ en: "2. Tap ChatGPT.", es: "2. Toca ChatGPT." }),
+                            t({
+                                en: "3. Tap Cancel subscription and follow the instructions to confirm. On a computer, go to play.google.com/store/account/subscriptions, click Manage next to ChatGPT, then Cancel subscription, pick a reason if asked, and click Continue.",
+                                es: "3. Toca Cancelar suscripción y sigue las instrucciones para confirmar. En una computadora, entra a play.google.com/store/account/subscriptions, haz clic en Administrar junto a ChatGPT, luego en Cancelar suscripción, elige un motivo si te lo pide y haz clic en Continuar.",
+                            }),
+                            t({
+                                en: "4. Check that ChatGPT no longer shows as renewing in Subscriptions.",
+                                es: "4. Revisa que ChatGPT ya no aparezca con renovación en Suscripciones.",
+                            }),
+                        ],
+                        id: "android",
+                        title: t({ en: "On Android", es: "En Android" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "If you don't see the option, check your purchase receipt for who billed you: OpenAI, Apple, or Google Play. A subscription bought on chatgpt.com doesn't show in Apple or Google Play subscriptions. If you paid on chatgpt.com and Billing shows no options, sign in to the same ChatGPT account in another browser and try again. A ChatGPT Business plan is canceled in the workspace's billing settings.",
+                                es: "Si no ves la opción, revisa tu recibo de compra para ver quién te cobró: OpenAI, Apple o Google Play. Una suscripción comprada en chatgpt.com no aparece en las suscripciones de Apple ni de Google Play. Si pagaste en chatgpt.com y Facturación no muestra opciones, entra con la misma cuenta de ChatGPT en otro navegador y vuelve a intentarlo. Un plan ChatGPT Business se cancela en la configuración de facturación del espacio de trabajo.",
+                            }),
+                        ],
+                        id: "elsewhere",
+                        title: t({ en: "If you don't see the option", es: "Si no ves la opción" }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Through the App Store it shows as apple.com/bill. Through Google Play it shows as GOOGLE* followed by the app's name or its developer's name. OpenAI's help pages don't say how a chatgpt.com charge is labeled.",
+                                es: "Por el App Store aparece como apple.com/bill. Por Google Play aparece como GOOGLE* seguido del nombre de la app o del desarrollador. La ayuda de OpenAI no dice cómo aparece un cobro de chatgpt.com.",
+                            }),
+                        ],
+                        id: "statement",
+                        sources: [
+                            "https://support.apple.com/en-us/120164",
+                            "https://support.google.com/googleplay/answer/2851610",
+                        ],
+                        title: t({
+                            en: "How the charge shows on your statement",
+                            es: "Cómo aparece el cobro en tu estado de cuenta",
+                        }),
+                    },
+                    {
+                        body: [
+                            t({
+                                en: "Log the subscription in Outlayr and turn on a reminder before the next charge, on the day or 1, 2, 3, or 7 days before. No bank link needed, and Outlayr does not cancel anything for you.",
+                                es: "Registra la suscripción en Outlayr y activa un aviso antes del siguiente cobro, el mismo día o 1, 2, 3 o 7 días antes. No hace falta conectar el banco, y Outlayr no cancela nada por ti.",
+                            }),
+                        ],
+                        id: "outlayr",
+                        title: t({
+                            en: "Get a reminder before the next charge",
+                            es: "Recibe un aviso antes del siguiente cobro",
+                        }),
+                    },
+                ],
+                related: [
+                    "/guides/subscription-tracker",
+                    "/tools/subscription-cost-calculator",
+                    "/guides/how-to-cancel-a-subscription",
+                ] satisfies PageRef[],
+                title: t({
+                    en: "How do I cancel my ChatGPT subscription?",
+                    es: "¿Cómo cancelo mi suscripción de ChatGPT?",
+                }),
+            },
             "expense-tracker-template": {
                 downloads: [
                     {

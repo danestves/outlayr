@@ -53,6 +53,10 @@ const PLATES = {
     "multi-currency-expense-tracker": "06",
     "receipt-scanner": "scan",
     "subscription-tracker": "10",
+    "how-to-cancel-a-subscription": null,
+    "cancel-google-play-subscription": null,
+    "cancel-app-store-subscription": null,
+    "cancel-chatgpt-subscription": null,
     "track-money-sent-home": null,
     "voice-expense-tracker": "say",
     "ynab-alternatives": null,
@@ -249,7 +253,18 @@ function Guide() {
     }
     for (const section of "more" in guide ? guide.more : []) {
         sections.push({
-            body: <Prose paragraphs={section.body} />,
+            body: (
+                <>
+                    <Prose paragraphs={section.body} />
+                    {"sources" in section ? (
+                        <p className="mt-4">
+                            {section.sources.map((source) => (
+                                <Source href={source.value} key={source.value} />
+                            ))}
+                        </p>
+                    ) : null}
+                </>
+            ),
             id: section.id.value,
             title: section.title,
         });
