@@ -7,6 +7,22 @@ export function safeRedirect(target: string | undefined): string {
     return target?.startsWith("/") && !target.startsWith("//") && !target.startsWith("/\\") ? target : "/";
 }
 
+const SECURE_VISITOR = /"scheme":"https"/u;
+
+// TLS ends at the proxy, so request.url says http; the auth handler forwards that origin and the backend,
+// trusting only https://app.tryoutlayr.com, falls back to its own host for the OAuth callback and cookies.
+export async function asServed(request: Request): Promise<Request> {
+    const url = new URL(request.url);
+    const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+    const secure = SECURE_VISITOR.test(request.headers.get("cf-visitor") ?? "") || forwardedProto === "https";
+    if (!secure || url.protocol === "https:") {
+        return request;
+    }
+    url.protocol = "https:";
+    const body = request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer();
+    return new Request(url, { body, headers: request.headers, method: request.method });
+}
+
 // The backend's crossDomain plugin adds `ott` for cross-origin clients; this proxy already forwards the session
 // cookie, and redeeming the token on the page would sign in a second time.
 export function withoutOneTimeToken(response: Response): Response {

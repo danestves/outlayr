@@ -1,7 +1,7 @@
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
-import { AuthFailure, authRequest, failureKey, safeRedirect, withoutOneTimeToken } from "./account";
+import { AuthFailure, asServed, authRequest, failureKey, safeRedirect, withoutOneTimeToken } from "./account";
 
 describe("safeRedirect", () => {
     it("keeps a path on this site, query included", () => {
@@ -25,6 +25,24 @@ describe("withoutOneTimeToken", () => {
         expect(response.status).toBe(302);
         expect(response.headers.get("location")).toBe("https://app.tryoutlayr.com/?x=1");
         expect(response.headers.getSetCookie()).toEqual(["session=1; Path=/", "data=2; Path=/"]);
+    });
+});
+
+describe("asServed", () => {
+    it("names the https origin the visitor used behind the TLS proxy, body intact", async () => {
+        const request = new Request("http://app.tryoutlayr.com/api/auth/sign-in/social?x=1", {
+            body: '{"provider":"google"}',
+            headers: { "cf-visitor": '{"scheme":"https"}' },
+            method: "POST",
+        });
+        const served = await asServed(request);
+        expect(served.url).toBe("https://app.tryoutlayr.com/api/auth/sign-in/social?x=1");
+        expect(await served.text()).toBe('{"provider":"google"}');
+    });
+
+    it("leaves a plain http request alone", async () => {
+        const request = new Request("http://localhost:3000/api/auth/callback/google");
+        expect(await asServed(request)).toBe(request);
     });
 });
 
