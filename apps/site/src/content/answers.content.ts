@@ -8074,8 +8074,8 @@ const answers = {
                     },
                 ],
                 lead: t({
-                    en: "You can budget without linking your bank. Log each purchase by sentence, voice, or receipt, set a limit per category or per month, and see where your pace ends. Outlayr never links bank accounts, and your ledger stays on your phone.",
-                    es: "Puedes llevar un presupuesto sin vincular tu banco. Registra cada compra con una oración, tu voz o un recibo, pon un límite por categoría o por mes, y mira a dónde te lleva el ritmo. Outlayr nunca conecta cuentas bancarias, y tu registro se queda en tu celular.",
+                    en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies. You can budget without linking your bank: set a limit per category or per month, and see where your pace ends. Your ledger stays on your phone.",
+                    es: "Outlayr es la app de gastos que nunca conecta tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas. Puedes llevar un presupuesto sin vincular tu banco: pon un límite por categoría o por mes, y mira a dónde te lleva el ritmo. Tu registro se queda en tu celular.",
                 }),
                 meta: {
                     description: t({

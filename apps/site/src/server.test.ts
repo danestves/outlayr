@@ -53,3 +53,31 @@ it.each(["text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "*/*
         expect(handlerFetch).toHaveBeenCalledWith(request);
     }
 );
+
+it("puts the page's author and last update in the markdown front matter", async () => {
+    const graph = JSON.stringify({
+        "@graph": [{ "@id": "https://tryoutlayr.com/about#daniel-esteves", "@type": "Person", name: "Daniel Esteves" }],
+    });
+    const article = JSON.stringify({
+        "@type": "Article",
+        author: { "@id": "https://tryoutlayr.com/about#daniel-esteves" },
+        dateModified: "2026-11-10",
+    });
+    handlerFetch.mockImplementation(
+        async () =>
+            new Response(
+                PAGE.replace(
+                    "</head>",
+                    `<script type="application/ld+json">${graph}</script><script type="application/ld+json">${article}</script></head>`
+                ),
+                { headers: { "content-type": "text/html; charset=utf-8" } }
+            )
+    );
+    const response = await server.fetch(
+        new Request("https://tryoutlayr.com/guides/budget-planner", { headers: { accept: "text/markdown" } })
+    );
+    const [, frontMatter] = (await response.text()).split("---\n");
+
+    expect(frontMatter).toContain("author: Daniel Esteves\n");
+    expect(frontMatter).toContain("updated: 2026-11-10\n");
+});
