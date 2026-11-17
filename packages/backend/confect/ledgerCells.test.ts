@@ -1,6 +1,8 @@
 /// <reference types="vite/client" />
 
 import { compareLedgerCells, LEDGER_CELLS_VERSION, ledgerCellsOf } from "@outlayr/money/ledger-cells";
+import { accountBalances, rateTableOf } from "@outlayr/money/ledger-view";
+import { fixedOffset } from "@outlayr/money/ledger-zone";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import type { TestConvex } from "convex-test";
@@ -38,6 +40,42 @@ const LOCAL_IDS = [
     "move-1",
 ];
 
+const MANY_IDS = [
+    ...Array.from({ length: 40 }, (_, index) => `entry-${index}`),
+    ...Array.from({ length: 10 }, (_, index) => `transfer-${index}`),
+    ...Array.from({ length: 5 }, (_, index) => `payment-${index}`),
+    ...Array.from({ length: 5 }, (_, index) => `move-${index}`),
+];
+
+const holder = (localId: string, currency: string): PushRow => ({
+    deletedAt: null,
+    fields: {
+        currency,
+        customColor: null,
+        dateCreated: FIRST_DAY,
+        emoji: null,
+        icon: null,
+        imageColor: null,
+        imageKey: null,
+        initialBalance: 100,
+        initialBalanceDate: FIRST_DAY,
+        initialBalanceUsd: null,
+        name: localId,
+        sortOrder: 0,
+    },
+    localId,
+    table: "accounts",
+    updatedAt: 1,
+});
+
+const order = (localId: string, accountId: string): PushRow => ({
+    deletedAt: null,
+    fields: { accountId, dateCreated: FIRST_DAY, transactionId: "entry-0" },
+    localId,
+    table: "installmentPlans",
+    updatedAt: 1,
+});
+
 function seededRandom(seed: number) {
     let state = seed;
     return () => {
@@ -46,7 +84,7 @@ function seededRandom(seed: number) {
     };
 }
 
-function ledgerWriter(seed: number) {
+function ledgerWriter(seed: number, ids: readonly string[] = LOCAL_IDS) {
     const random = seededRandom(seed);
     const pick = <T>(values: readonly T[]) => values[Math.floor(random() * values.length)] as T;
     const deleted = new Set<string>();
@@ -121,7 +159,7 @@ function ledgerWriter(seed: number) {
 
     return (count: number): PushRow[] =>
         Array.from({ length: count }, () => {
-            const localId = pick(LOCAL_IDS);
+            const localId = pick(ids);
             clock += 1;
             const remove = random() < 0.2;
             const restoredAt = !remove && deleted.delete(localId) ? clock : undefined;
@@ -230,5 +268,74 @@ describe("ledger cells", () => {
                 .unique()
         );
         expect(state?.cells).toStrictEqual({ building: false, run: 1, version: LEDGER_CELLS_VERSION });
+    });
+
+    it("hand a page the rows since a day, the schedules before it, and the balance of the rest", async () => {
+        const t = harness();
+        const owner = await seedProUser(t);
+        const asOwner = authenticatedAs(t, owner);
+        const written = ledgerWriter(13, MANY_IDS)(300);
+        const entry = written.find((row) => row.table === "transactions");
+        const rent: PushRow[] = entry
+            ? [
+                  {
+                      ...entry,
+                      deletedAt: null,
+                      fields: { ...entry.fields, accountId: "bank", date: FIRST_DAY, recurringType: 1 },
+                      localId: "rent",
+                      restoredAt: undefined,
+                  },
+              ]
+            : [];
+        await push(t, owner, [
+            holder("cash", "USD"),
+            holder("bank", "VES"),
+            order("plan-1", "cash"),
+            order("plan-2", "bank"),
+            ...written,
+            ...rent,
+        ]);
+        const since = FIRST_DAY + 30 * DAY_MS;
+        const asked = { since: since + DAY_MS / 3, tables: ["accounts", "installmentPlans"] as const };
+
+        await expect(asOwner.query(api.sync.pullRecent, { ...asked, tables: [...asked.tables] })).resolves.toBeNull();
+        await asOwner.mutation(api.ledgerCells.build, {});
+        await settle(t);
+        await asOwner.mutation(api.ledgerCells.build, {});
+        await settle(t);
+        const page = await asOwner.query(api.sync.pullRecent, { ...asked, tables: [...asked.tables] });
+
+        const all = await t.run(async (ctx) => ({
+            accounts: await ctx.db.query("accounts").collect(),
+            installmentPlans: await ctx.db.query("installmentPlans").collect(),
+            outsideMoves: await ctx.db.query("outsideMoves").collect(),
+            outsidePayments: await ctx.db.query("outsidePayments").collect(),
+            state: await ctx.db.query("syncState").collect(),
+            transactions: await ctx.db.query("transactions").collect(),
+            transfers: await ctx.db.query("transfers").collect(),
+        }));
+        const sent = new Set(page?.rows.map((row) => `${row.table}:${row.localId}`));
+        const kept = <Row extends { localId: string }>(table: string, rows: Row[]) =>
+            rows.filter((row) => sent.has(`${table}:${row.localId}`));
+        const recent = {
+            ...all,
+            outsideMoves: kept("outsideMoves", all.outsideMoves),
+            outsidePayments: kept("outsidePayments", all.outsidePayments),
+            transactions: kept("transactions", all.transactions),
+            transfers: kept("transfers", all.transfers),
+        };
+        const early = [...recent.outsideMoves, ...recent.outsidePayments, ...recent.transactions, ...recent.transfers]
+            .filter((row) => row.date < since)
+            .map((row) => row.localId);
+        const clock = { now: FIRST_DAY + DAYS * DAY_MS, offsetAt: fixedOffset(0) };
+        const rates = rateTableOf([]);
+
+        expect(all.state.map((state) => state.cells?.run)).toStrictEqual([1]);
+        expect(page?.since).toBe(since);
+        expect(early).toStrictEqual(["rent"]);
+        expect(recent.transactions.length).toBeLessThan(all.transactions.length);
+        expect(
+            accountBalances(recent, "USD", rates, clock, { cells: page?.opening ?? [], cutoff: since })
+        ).toStrictEqual(accountBalances(all, "USD", rates, clock));
     });
 });

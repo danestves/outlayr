@@ -1,5 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { Document } from "@confect/server";
+import { utcDayStart } from "@outlayr/money/ledger-zone";
+import { RECURRING_TYPE } from "@outlayr/money/recurrence";
 import { ConvexError } from "convex/values";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -10,7 +12,7 @@ import databaseSchema from "./_generated/schema";
 import { DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx } from "./_generated/services";
 import { optionalUserId, requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
-import { MONEY_TABLES, scheduleCellRefresh } from "./lib/ledgerCells";
+import { liveRows, MONEY_TABLES, openingBefore, scheduleCellRefresh } from "./lib/ledgerCells";
 import type { MoneyTable } from "./lib/ledgerCells";
 import { refuseWhileDeleting, seqCounter } from "./lib/syncGuards";
 import { incomingWins, SYNCED_TABLES } from "./lib/syncTables";
@@ -291,6 +293,67 @@ const pullSince = FunctionImpl.make(
     )
 );
 
+const pullRecent = FunctionImpl.make(
+    databaseSchema,
+    spec,
+    "pullRecent",
+    Effect.fn("Sync.pullRecent")(
+        function* pullRecent(args) {
+            const ctx = yield* QueryCtx;
+            const reader = yield* DatabaseReader;
+            const userId = yield* requireUserId(ctx);
+            yield* requirePro(ctx, userId);
+            const since = utcDayStart(args.since);
+            const opening = yield* openingBefore(userId, since);
+            if (opening === null) {
+                return null;
+            }
+            const recent = yield* liveRows(userId, since, Number.POSITIVE_INFINITY);
+            const [whole, outsideMoves, outsidePayments, transactions, transfers, recurring] = yield* Effect.all(
+                [
+                    Effect.all(
+                        args.tables
+                            .filter((table) => !moneyTables.has(table))
+                            .map((table) =>
+                                reader
+                                    .table(table)
+                                    .index("by_user_and_seq", (q) => q.eq("userId", userId))
+                                    .collect()
+                                    .pipe(Effect.map((docs) => docs.map((doc) => toWire(table, doc))))
+                            ),
+                        { concurrency: "unbounded" }
+                    ),
+                    recent.outsideMoves.collect(),
+                    recent.outsidePayments.collect(),
+                    recent.transactions.collect(),
+                    recent.transfers.collect(),
+                    reader
+                        .table("transactions")
+                        .index("by_user_and_deletedAt_and_recurringType", (q) =>
+                            q.eq("userId", userId).eq("deletedAt", null).gt("recurringType", RECURRING_TYPE.none)
+                        )
+                        .collect(),
+                ],
+                { concurrency: "unbounded" }
+            );
+            const entries = new Map([...recurring, ...transactions].map((doc) => [doc._id, doc]));
+            return {
+                opening,
+                rows: [
+                    ...whole.flat(),
+                    ...outsideMoves.map((doc) => toWire("outsideMoves", doc)),
+                    ...outsidePayments.map((doc) => toWire("outsidePayments", doc)),
+                    ...[...entries.values()].map((doc) => toWire("transactions", doc)),
+                    ...transfers.map((doc) => toWire("transfers", doc)),
+                ].sort((a, b) => a.seq - b.seq),
+                since,
+            };
+        },
+        Effect.catchTags({ ProRequired: dieAsConvexError, Unauthenticated: dieAsConvexError }),
+        Effect.orDie
+    )
+);
+
 const currentSeq = FunctionImpl.make(
     databaseSchema,
     spec,
@@ -313,6 +376,7 @@ const currentSeq = FunctionImpl.make(
 export default GroupImpl.make(databaseSchema, spec).pipe(
     Layer.provide(push),
     Layer.provide(pullSince),
+    Layer.provide(pullRecent),
     Layer.provide(currentSeq),
     GroupImpl.finalize
 );

@@ -118,3 +118,52 @@ export function ledgerCellsOf(rows: LedgerCellRows): LedgerCell[] {
         .flatMap(({ leg, ref, rows: group }) => toCells(group.sort(bySeq)).map((cell) => ({ ...cell, leg, ref })))
         .sort(compareLedgerCells);
 }
+
+export type OpeningCell = CurrencyCell & { accountId: string };
+
+const OUTSIDE_LEGS: ReadonlySet<LedgerCellLeg> = new Set(["outsideMove", "outsidePayment"]);
+
+export function openingCells(
+    cells: readonly LedgerCell[],
+    accounts: readonly { currency: string; deletedAt: number | null; localId: string }[],
+    plans: readonly { accountId: string; deletedAt: number | null; localId: string }[]
+): OpeningCell[] {
+    const currencyOf = new Map(
+        accounts.filter((row) => row.deletedAt === null).map((row) => [row.localId, row.currency])
+    );
+    const planAccount = new Map(
+        plans.filter((row) => row.deletedAt === null).map((row) => [row.localId, row.accountId])
+    );
+    const folded = new Map<string, OpeningCell>();
+    for (const { leg, ref, ...cell } of cells) {
+        const accountId = leg === "outsidePayment" ? planAccount.get(ref) : ref;
+        const currency = accountId === undefined ? undefined : currencyOf.get(accountId);
+        if (accountId === undefined || currency === undefined) {
+            continue;
+        }
+        const currencyCode = OUTSIDE_LEGS.has(leg) ? currency : cell.currencyCode;
+        const dateKey = currencyCode === currency || currency === "USD" ? "" : cell.dateKey;
+        const key = `${accountId}|${dateKey === "" ? "" : leg}|${currencyCode}|${dateKey}|${cell.income}`;
+        const sum = folded.get(key);
+        if (sum) {
+            sum.amount += cell.amount;
+            sum.amountUsd += cell.amountUsd;
+            sum.count += cell.count;
+            sum.unconvertedAmount += cell.unconvertedAmount;
+            sum.unconvertedCount += cell.unconvertedCount;
+        } else {
+            folded.set(key, {
+                accountId,
+                amount: cell.amount,
+                amountUsd: cell.amountUsd,
+                count: cell.count,
+                currencyCode,
+                dateKey,
+                income: cell.income,
+                unconvertedAmount: cell.unconvertedAmount,
+                unconvertedCount: cell.unconvertedCount,
+            });
+        }
+    }
+    return [...folded.values()];
+}

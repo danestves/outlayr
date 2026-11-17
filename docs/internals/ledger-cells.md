@@ -2,7 +2,7 @@
 
 A balance is a sum over every money row an account ever had. The phone sums in SQLite and is fast. The web has no local copy, so a page that shows one balance had to pull the whole ledger first. `ledgerCells` is the server's sum, kept so a page can read balances from a document a month.
 
-Nothing reads the cells yet. They are built per user on request, and until a ledger is built the code below does nothing for it.
+They are built per user on request, and until a ledger is built the code below does nothing for it. `ledgerCells.build` is that request: a signed-in Pro user's client calls it, and it starts a rebuild only when the cells are absent or from an older version.
 
 ## What a cell is
 
@@ -40,6 +40,23 @@ The refresh runs in a scheduled mutation after the write, not inside it. The cel
 `ledgerCells.rebuild` with `step: null` drops the user's cells, sets `building`, and walks the ledger one month a step, each step scheduling the next, so any ledger fits a mutation's read limits. Writes that land during the walk refresh their own days, and the walk overwrites those months from the rows when it reaches them. `run` counts rebuilds: a step whose run is no longer the current one stops, so starting over a stuck rebuild is safe.
 
 Bump `LEDGER_CELLS_VERSION` when a cell changes shape or meaning.
+
+## Reading them: the opening
+
+`sync.pullRecent({ since, tables })` gives a page the rows it draws and one figure for everything older. It floors `since` to a UTC day and returns:
+
+- `rows`: the asked tables in full, plus the live money rows dated on or after `since`, plus every live repeating transaction whatever its date, because upcoming charges are worked out from the schedule.
+- `opening`: the cells before `since`, folded by `openingCells` into as few rows per account as the balance math allows.
+- `null` when the cells are absent, stale or building. The caller then pulls the whole ledger and calls `ledgerCells.build`.
+
+`accountBalances` and `ledgerGlance` take `{ cells, cutoff }` as their last argument, skip rows dated before the cutoff, and count the opening instead.
+
+The fold has one rule. A cell in the account's own currency, or any cell of a USD account, is read as stored, so those collapse to one row per currency and direction. A foreign cell in a non-USD account is converted at its day's rate and rounded, so it keeps its day and leg: merging two of them changes the cents.
+
+Two limits a reader must accept:
+
+- The own-currency balance of a non-USD account with foreign entries can read a few cents off where the owner's day is not the UTC day. The full ledger groups those by local day and the cells by UTC day. Every main-currency figure matches exactly (`packages/money/src/ledger-cells.test.ts`).
+- The opening is as fresh as the cells, which trail a write by one scheduled mutation.
 
 ## Why not the Convex aggregate component
 
