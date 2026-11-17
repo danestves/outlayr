@@ -5,10 +5,22 @@ The web app (`apps/app`, at app.tryoutlayr.com) sends a finished page on every l
 ## How a load works
 
 1. `_account` asks for the token in `beforeLoad`. A live `convex_jwt` cookie (`jwtCache`) is the session; with only the session cookie the server mints a token; with neither (`signedOutOf`) it skips the round trip and sends a real 307 to `/login`. The token is set on the request's `ConvexHttpClient` (`serverHttpClient`), which server queries use.
-2. On the server, the `_app` loader runs `serverLedger(token)` (`lib/ledger-server.ts`): it pulls every table from cursor 0 (`sync.pullSince`), and reads the exchange rates and the better-auth profile. The rows go into the request's `DbClient` with `hydrate`, the profile into the query cache.
+2. On the server, the `_app` loader runs `serverLedger(token)` (`lib/ledger-server.ts`): except on Home (below), it pulls every table from cursor 0 (`sync.pullSince`), and reads the exchange rates and the better-auth profile. The rows go into the request's `DbClient` with `hydrate`, the profile into the query cache.
 3. `routerWithDbClient` dehydrates the collections with their cursor (`exportSyncMeta`) into the HTML, and `setupRouterSsrQueryIntegration` does the same for the query cache. Server live queries render the real screen from those rows.
 4. In the browser, `DbClient.hydrate` fills the same collections before React hydrates, and `importSyncMeta` hands the sync the server's cursor. The sync (`lib/ledger-sync.ts`) then subscribes from that cursor, so it downloads only rows written after the page was rendered.
 5. A client navigation into `_app` (after sign-in) runs the loader in the browser: `preloadLedger` pulls from cursor 0 under the pending skeleton.
+
+## Home opens on thirteen months
+
+A load of `/` with no search params does not pull the whole ledger. `pullHome` asks `sync.pullRecent` for every table except the tag links, the money rows of the last thirteen months, the repeating entries, and an opening balance per account for everything older (`docs/internals/ledger-cells.md`). Thirteen months is what Home draws: twelve periods of sparks behind the current one.
+
+- The loader returns that opening beside the rows. `prepareLedger` and `ledgerGlance` take it, skip money rows dated before its cutoff and count the opening instead, so Home's figures are the whole ledger's (`home/light.test.ts`).
+- The rows are seeded at cursor 0, so the browser's sync downloads the whole ledger behind the painted page. When its last page is in the tables (`ledgerSync(db).landed()`), `LiveDashboard` drops the opening and every screen reads the rows.
+- Until then only Home may render, and only for a period the rows cover (`homeCovered`). Any other route, or an older period, shows its pending screen for that moment.
+- The server uses the whole pull instead when `pullRecent` fails or answers `null` (sums not built, which also starts `ledgerCells.build` for the next load), and when Home could not open on the rows: fewer than six entries in the thirteen months, or a budget that carries over, whose carry reads every window since it was made.
+- A new figure on Home that reads further back than thirteen months must be added to `homeCovered`, or it paints wrong until the history lands.
+- Until the history lands the period picker lists only the periods that start on or after the cutoff (`periodKeysOf`). An older month could hold a repeating entry and nothing else, and its total would be wrong.
+- If the sync gives up before the history lands, Home stays as painted and any other route shows the not synced screen, whose retry reloads the page into the whole pull.
 
 ## Rules for new work
 

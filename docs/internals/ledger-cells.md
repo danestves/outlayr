@@ -43,7 +43,7 @@ Bump `LEDGER_CELLS_VERSION` when a cell changes shape or meaning.
 
 ## Reading them: the opening
 
-`sync.pullRecent({ since, tables })` gives a page the rows it draws and one figure for everything older. It floors `since` to a UTC day and returns:
+`sync.pullRecent({ since, tables })` gives a page the rows it draws (the web Home is its first caller, see `web-rendering.md`) and one figure for everything older. It floors `since` to a UTC day and returns:
 
 - `rows`: the asked tables in full, plus the live money rows dated on or after `since`, plus every live repeating transaction whatever its date, because upcoming charges are worked out from the schedule.
 - `opening`: the cells before `since`, folded by `openingCells` into as few rows per account as the balance math allows.

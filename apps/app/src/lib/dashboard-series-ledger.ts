@@ -1,6 +1,7 @@
 import type { ExpenseContribution } from "@outlayr/money/budget-spent";
 import { decimalsFor } from "@outlayr/money/currency";
 import { rateTableOf, settingsOf, zoneOf, bySeq } from "@outlayr/money/ledger-view";
+import type { LedgerOpening } from "@outlayr/money/ledger-view";
 import { DAY_MS, fromWall, isoDay, wall, wallMidnight } from "@outlayr/money/ledger-zone";
 import { roundMoney } from "@outlayr/money/round";
 import { valueDatedRowsIn } from "@outlayr/money/valuation";
@@ -64,6 +65,7 @@ export interface Ledger {
     firstWeekday: number;
     now: number;
     offsetAt: (instant: number) => number;
+    opening: LedgerOpening | null;
     rates: ReturnType<typeof rateTableOf>;
     rows: readonly LedgerRow[];
     today: string;
@@ -82,7 +84,7 @@ export const startOfDay = (ledger: Pick<Ledger, "offsetAt">, day: string) =>
 export const endOfDay = (ledger: Pick<Ledger, "offsetAt">, day: string) =>
     fromWall(wallMidnight(day) + DAY_MS, ledger.offsetAt) - 1;
 
-export function prepareLedger(books: LedgerBooks, now: number): Ledger {
+export function prepareLedger(books: LedgerBooks, now: number, opening: LedgerOpening | null = null): Ledger {
     const settings = settingsOf(books.appMeta);
     const { currency } = settings;
     const offsetAt = zoneOf(settings.timeZone, books.transactions, now);
@@ -203,6 +205,7 @@ export function prepareLedger(books: LedgerBooks, now: number): Ledger {
         firstWeekday: settings.firstWeekday,
         now,
         offsetAt,
+        opening,
         rates,
         rows,
         today: isoDay(now, offsetAt(now)),

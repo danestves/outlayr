@@ -1,5 +1,6 @@
 import { api } from "@outlayr/backend/convex/_generated/api";
 import { ledgerGlance } from "@outlayr/money/ledger-view";
+import type { LedgerOpening } from "@outlayr/money/ledger-view";
 import { useQuery } from "@tanstack/react-query";
 import {
     Navigate,
@@ -19,6 +20,7 @@ import { useIntlayer, useLocale } from "react-intlayer";
 
 import { Muted, SOLID_PILL, Screen } from "@/components/account/parts";
 import { AccountFlowsProvider } from "@/components/dashboard/accounts/flows";
+import { homeCovered } from "@/components/dashboard/home/model";
 import { DashboardPending } from "@/components/dashboard/pending";
 import { DashboardContext, useFilters } from "@/components/dashboard/shell/dashboard";
 import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filters";
@@ -30,7 +32,7 @@ import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { watchKeyboardInset } from "@/lib/keyboard-inset";
 import type { LedgerBooks } from "@/lib/ledger-books";
 import { ledgerCommitter } from "@/lib/ledger-committer";
-import { preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
+import { ledgerSync, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
 import { serverLedger } from "@/lib/ledger-server";
 import { onboardingDue, readProgress, subscribeProgress } from "@/lib/onboarding";
 import { currentToken, onSessionChange, userOf } from "@/lib/session";
@@ -55,20 +57,23 @@ export const Route = createFileRoute("/_account/_app")({
         }
         context.session.token = token;
         const userId = userOf(token);
+        let opening: LedgerOpening | null = null;
         try {
             if (import.meta.env.SSR) {
-                const seed = await serverLedger(token);
+                const home = location.pathname === "/" && location.searchStr === "";
+                const seed = await serverLedger(token, home ? { asOf } : null);
+                ({ opening } = seed);
                 context.dbClient.hydrate({ collections: seed.collections });
                 seedProfile(context.queryClient, seed.profile);
             }
             await preloadLedger(context.dbClient);
         } catch (error) {
             if (error instanceof Error && proRequired(error)) {
-                return { asOf, synced: false, userId };
+                return { asOf, opening: null, synced: false, userId };
             }
             throw error;
         }
-        return { asOf, synced: true, userId };
+        return { asOf, opening, synced: true, userId };
     },
     pendingComponent: Pending,
     pendingMinMs: 0,
@@ -191,7 +196,7 @@ function useTurnover(nextChangeAt: number, advance: (asOf: number) => void) {
     }, [advance, nextChangeAt]);
 }
 
-function useLiveLedger(userId: string | undefined) {
+function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" | Error) => void) {
     const { dbClient, queryClient } = Route.useRouteContext();
     const router = useRouter();
     // oxlint-disable-next-line outlayr/react-effect-budget -- the Convex connection, other tabs and the keyboard are external systems.
@@ -199,11 +204,17 @@ function useLiveLedger(userId: string | undefined) {
         dropOldCopy();
         ledgerCommitter(dbClient, userId).resume();
         warmAccountState(queryClient);
-        preloadLedger(dbClient).catch(async (error) => {
+        const landing = preloadLedger(dbClient).then(async () => {
+            await ledgerSync(dbClient).landed();
+            onLanded("landed");
+        });
+        landing.catch(async (error) => {
             // Only a refusal reloads: a server that stays busy past the retries leaves the rendered rows on screen.
             if (error instanceof ConvexError) {
                 await router.invalidate();
+                return;
             }
+            onLanded(error instanceof Error ? error : new Error("The ledger did not land", { cause: error }));
         });
         const stops = [
             onSessionChange(() => forgetLedger().finally(() => window.location.reload())),
@@ -215,7 +226,7 @@ function useLiveLedger(userId: string | undefined) {
                 stop?.();
             }
         };
-    }, [dbClient, queryClient, router, userId]);
+    }, [dbClient, onLanded, queryClient, router, userId]);
 }
 
 function LiveDashboard({ books, children }: { books: LedgerBooks; children: ReactNode }) {
@@ -223,11 +234,18 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
     const search = Route.useSearch();
     const navigate = useNavigate();
     const [asOf, setAsOf] = useState(loaded.asOf);
-    const overview = useMemo(() => ledgerGlance(books, asOf), [books, asOf]);
+    const [landing, setLanding] = useState<"landed" | Error | null>(null);
+    const opening = landing === "landed" ? null : loaded.opening;
+    const overview = useMemo(() => ledgerGlance(books, asOf, opening), [books, asOf, opening]);
     useTurnover(overview.nextChangeAt, setAsOf);
-    const ledger = useMemo(() => prepareLedger(books, asOf), [books, asOf]);
-    useLiveLedger(loaded.userId);
+    const ledger = useMemo(() => prepareLedger(books, asOf, opening), [books, asOf, opening]);
+    useLiveLedger(loaded.userId, setLanding);
     const filters = useFilters(search, ledger);
+    const home = useLocation({ select: (location) => location.pathname === "/" });
+    const waiting = opening !== null && !(home && homeCovered(ledger, filters.period));
+    if (waiting && landing instanceof Error) {
+        throw landing;
+    }
     const dashboard = useMemo(
         () => ({
             filters,
@@ -240,7 +258,7 @@ function LiveDashboard({ books, children }: { books: LedgerBooks; children: Reac
     );
     return (
         <DashboardContext value={dashboard}>
-            <AccountFlowsProvider>{children}</AccountFlowsProvider>
+            <AccountFlowsProvider>{waiting ? <DashboardPending /> : children}</AccountFlowsProvider>
         </DashboardContext>
     );
 }

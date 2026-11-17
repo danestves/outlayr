@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
-import { periodKeyOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
+import { startOfDay } from "@/lib/dashboard-series-ledger";
+import { periodKeyOf, periodOf, shiftPeriodKey } from "@/lib/dashboard-series-period";
 
 import type { Dashboard } from "./dashboard";
 
@@ -12,13 +13,16 @@ const monthsBetween = (from: string, to: string) => {
     return (toYear - fromYear) * 12 + toMonth - fromMonth;
 };
 
+export function periodKeysOf(ledger: Dashboard["ledger"], currentKey: string) {
+    const earliest = ledger.rows.reduce((first, row) => (row.day < first ? row.day : first), ledger.today);
+    const count = Math.min(monthsBetween(periodKeyOf(earliest, ledger.firstDayOfMonth), currentKey) + 1, MONTHS_LISTED);
+    const keys = Array.from({ length: count }, (_, index) => shiftPeriodKey(currentKey, -index));
+    const { opening } = ledger;
+    return opening === null
+        ? keys
+        : keys.filter((key) => startOfDay(ledger, periodOf(key, ledger.firstDayOfMonth).from) >= opening.cutoff);
+}
+
 export function usePeriodKeys({ filters, ledger }: Pick<Dashboard, "filters" | "ledger">) {
-    return useMemo(() => {
-        const earliest = ledger.rows.reduce((first, row) => (row.day < first ? row.day : first), ledger.today);
-        const count = Math.min(
-            monthsBetween(periodKeyOf(earliest, ledger.firstDayOfMonth), filters.currentKey) + 1,
-            MONTHS_LISTED
-        );
-        return Array.from({ length: count }, (_, index) => shiftPeriodKey(filters.currentKey, -index));
-    }, [filters.currentKey, ledger.firstDayOfMonth, ledger.rows, ledger.today]);
+    return useMemo(() => periodKeysOf(ledger, filters.currentKey), [filters.currentKey, ledger]);
 }
