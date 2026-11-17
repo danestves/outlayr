@@ -173,8 +173,8 @@ const help = {
                     {
                         body: [
                             t({
-                                en: "Rates update every hour. A purchase from last Tuesday converts at last Tuesday's rate, so old totals don't move when the rate changes today.",
-                                es: "Las tasas se actualizan cada hora. Una compra del martes pasado se convierte con la tasa del martes pasado, así que los totales viejos no cambian cuando la tasa cambia hoy.",
+                                en: "Most rates update every hour; the BCV bolívar rate every two hours and the Binance rate every 30 minutes. A purchase from last Tuesday converts at last Tuesday's rate, so old totals don't move when the rate changes today.",
+                                es: "La mayoría de las tasas se actualizan cada hora; la del BCV cada dos horas y la de Binance cada 30 minutos. Una compra del martes pasado se convierte con la tasa del martes pasado, así que los totales viejos no cambian cuando la tasa cambia hoy.",
                             }),
                             t(LABEL),
                         ],
