@@ -8995,8 +8995,24 @@ const answers = {
                         label: t({ en: "Bank linking", es: "Conexión al banco" }),
                         source: "https://www.rocketmoney.com/security",
                         text: t({
-                            en: "Through Plaid, which receives your bank login. Rocket Money says it never sees those credentials",
-                            es: "A través de Plaid, que recibe los datos de acceso a tu banco. Rocket Money dice que nunca ve esas credenciales",
+                            en: "Through Plaid, which handles the connection. For most banks you sign in on the bank's own screen, and Rocket Money gets a token, not your password",
+                            es: "A través de Plaid, que se encarga de la conexión. Con la mayoría de los bancos inicias sesión en la pantalla del propio banco, y Rocket Money recibe un token, no tu contraseña",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Better Business Bureau", es: "Better Business Bureau" }),
+                        source: "https://www.bbb.org/us/md/silver-spring/profile/billing-services/rocket-money-inc-0241-236043013",
+                        text: t({
+                            en: "A+ rating, accredited since 2020, 204 complaints in the last three years, checked November 17, 2026",
+                            es: "Calificación A+, acreditada desde 2020, 204 quejas en los últimos tres años, revisado el 17 de noviembre de 2026",
+                        }),
+                    },
+                    {
+                        label: t({ en: "Trustpilot", es: "Trustpilot" }),
+                        source: "https://www.trustpilot.com/review/rocketmoney.com",
+                        text: t({
+                            en: "4.0 from 4,241 reviews, checked November 17, 2026",
+                            es: "4.0 con 4,241 reseñas, revisado el 17 de noviembre de 2026",
                         }),
                     },
                 ],
@@ -9023,8 +9039,8 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes, it is a real company and a real app. On November 17, 2026, its Better Business Bureau profile showed an A+ rating, accredited since 2020, with 204 complaints in the last three years and customer reviews averaging 1.36 out of 5. On Trustpilot it had 4.0 from 4,241 reviews. Recent complaints are mostly about charges people did not expect and fees asked up front for bill negotiation.",
-                            es: "Sí, es una empresa real y una app real. El 17 de noviembre de 2026, su perfil en el Better Business Bureau mostraba una calificación A+, acreditada desde 2020, con 204 quejas en los últimos tres años y reseñas de clientes con un promedio de 1.36 de 5. En Trustpilot tenía 4.0 con 4,241 reseñas. Las quejas recientes son sobre todo por cobros que la gente no esperaba y comisiones pedidas por adelantado para negociar facturas.",
+                            en: "Yes, it is a real company and a real app. On November 17, 2026, its Better Business Bureau profile showed an A+ rating, accredited since 2020, with 204 complaints in the last three years. On Trustpilot it had 4.0 from 4,241 reviews. The negative reviews we read on both sites mention a negotiation fee charged before the savings could be checked and trouble cancelling.",
+                            es: "Sí, es una empresa real y una app real. El 17 de noviembre de 2026, su perfil en el Better Business Bureau mostraba una calificación A+, acreditada desde 2020, con 204 quejas en los últimos tres años. En Trustpilot tenía 4.0 con 4,241 reseñas. Las reseñas negativas que leímos en ambos sitios mencionan una comisión de negociación cobrada antes de poder comprobar el ahorro y problemas para cancelar.",
                         }),
                         question: t({ en: "Is Rocket Money legit?", es: "¿Rocket Money es confiable?" }),
                     },
@@ -9114,8 +9130,8 @@ const answers = {
                                 es: "El precio es la parte que más se malinterpreta. Premium cuesta lo que quieras pagar en una escala, normalmente entre US$7 y US$14 al mes, y Rocket Money dice que el rango puede cambiar. Eliges el monto al registrarte, los primeros 7 días son gratis y luego se cobra ese monto. Puedes cambiarlo después en Settings, en Membership.",
                             }),
                             t({
-                                en: "Most complaints on the Better Business Bureau and Trustpilot are about charges people did not expect, being asked for a negotiation fee before they could check the savings, and trouble closing an account. It is a fair app if you read the plan before you start the trial.",
-                                es: "La mayoría de las quejas en el Better Business Bureau y en Trustpilot son por cobros que la gente no esperaba, por pedir la comisión de negociación antes de poder comprobar el ahorro y por problemas para cerrar la cuenta. Es una app correcta si lees el plan antes de empezar la prueba.",
+                                en: "The negative reviews we read on the Better Business Bureau and Trustpilot mention charges people did not expect, being asked for a negotiation fee before they could check the savings, and trouble cancelling or closing an account. It is a fair app if you read the plan before you start the trial.",
+                                es: "Las reseñas negativas que leímos en el Better Business Bureau y en Trustpilot mencionan cobros que la gente no esperaba, la comisión de negociación pedida antes de poder comprobar el ahorro y problemas para cancelar o cerrar la cuenta. Es una app correcta si lees el plan antes de empezar la prueba.",
                             }),
                         ],
                         id: "cost",
@@ -9128,8 +9144,8 @@ const answers = {
                                 es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
                             }),
                             t({
-                                en: "Rocket Money does the work for you if you are in the United States and willing to link your banks: entries arrive on their own, and its team cancels and negotiates. Outlayr asks you to log each entry, in exchange for no bank connection, any country, and any currency. The full comparison, with how to move your data, is on the Rocket Money alternative page.",
-                                es: "Rocket Money hace el trabajo por ti si estás en Estados Unidos y estás dispuesto a conectar tus bancos: los movimientos llegan solos, y su equipo cancela y negocia. Outlayr te pide registrar cada gasto, a cambio de no conectar ningún banco, cualquier país y cualquier moneda. La comparación completa, con cómo pasar tus datos, está en la página de alternativa a Rocket Money.",
+                                en: "Rocket Money does the work for you if you are in the United States and willing to link your banks: entries arrive on their own, and its team cancels and negotiates. Outlayr never links a bank: it logs Apple Pay taps on iPhone and purchase notifications on Android on its own, 30 a month on the free plan and unlimited with Pro, and you log the rest, in any country and any currency. The full comparison, with how to move your data, is on the Rocket Money alternative page.",
+                                es: "Rocket Money hace el trabajo por ti si estás en Estados Unidos y estás dispuesto a conectar tus bancos: los movimientos llegan solos, y su equipo cancela y negocia. Outlayr nunca se conecta a un banco: registra por su cuenta los pagos con Apple Pay en iPhone y las notificaciones de compra en Android, 30 al mes en el plan gratis y sin límite con Pro, y el resto lo registras tú, en cualquier país y cualquier moneda. La comparación completa, con cómo pasar tus datos, está en la página de alternativa a Rocket Money.",
                             }),
                         ],
                         id: "outlayr",
