@@ -1,3 +1,8 @@
+:is(.hz-page, .hz-edge) {
+    --hz-night: #1d1b12;
+    --hz-paper: #f1f0ea;
+}
+
 .hz-page {
     --s: 1;
     --u: clamp(0.62px, min(calc(100vw / 1440), calc(100svh / 900)), 1.16px);
@@ -68,8 +73,6 @@
     --hz-ember-deep: oklch(54.3% 0.18 33.1);
     --hz-ember-hot: oklch(76% 0.13 52);
     --hz-shade: oklch(11% 0.01 85);
-    --hz-night: #1d1b12;
-    --hz-paper: #f1f0ea;
     --hz-card: #fffefb;
     --hz-hold-screen: var(--hz-night);
     --hz-hold-sheet: #15140d;
@@ -1863,17 +1866,35 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 
 @supports (-webkit-touch-callout: none) {
     .hz-edge {
-        position: fixed;
-        inset: 0 0 auto;
-        z-index: 49;
         display: block;
-        height: max(env(safe-area-inset-top, 0px), 1px);
+    }
+
+    .hz-edge > * {
+        position: fixed;
+        right: 0;
+        left: 0;
+        z-index: 50;
+        height: 8px;
         background-color: var(--hz-paper);
         pointer-events: none;
     }
 
-    .hz-edge[data-ground="night"] {
+    .hz-edge[data-edge="top"] > * {
+        top: 0;
+    }
+
+    .hz-edge[data-edge="bottom"] > * {
+        bottom: 0;
+        z-index: 41;
+    }
+
+    .hz-edge > :last-child {
         background-color: var(--hz-night);
+    }
+
+    .hz-edge:not([data-ground="night"]) > :last-child,
+    .hz-edge[data-ground="night"] > :first-child {
+        display: none;
     }
 }
 

@@ -54,8 +54,12 @@ function navLine(nav: HTMLElement) {
     return top + height / 2;
 }
 
-function edge(strip: HTMLDivElement | null) {
-    return strip ? watchGround(strip, () => 0) : undefined;
+function topEdge(strips: HTMLDivElement | null) {
+    return strips ? watchGround(strips, () => 0) : undefined;
+}
+
+function bottomEdge(strips: HTMLDivElement | null) {
+    return strips ? watchGround(strips, () => innerHeight - 1) : undefined;
 }
 
 function home(main: HTMLElement | null) {
@@ -78,17 +82,26 @@ function home(main: HTMLElement | null) {
 
 function HomePage() {
     return (
-        <main className="hz-page" data-sky="day" id="main" ref={home}>
-            <Dawn />
-            <div className="hz-sheet">
-                <Capture />
-                <Away />
+        <>
+            <main className="hz-page" data-sky="day" id="main" ref={home}>
+                <Dawn />
+                <div className="hz-sheet">
+                    <Capture />
+                    <Away />
+                </div>
+                <Sunset />
+                <Night />
+                <Sunrise />
+                <InstallBar />
+                <div aria-hidden="true" className="hz-edge" data-edge="bottom" ref={bottomEdge}>
+                    <div />
+                    <div />
+                </div>
+            </main>
+            <div aria-hidden="true" className="hz-edge" data-edge="top" ref={topEdge}>
+                <div />
+                <div />
             </div>
-            <Sunset />
-            <Night />
-            <Sunrise />
-            <InstallBar />
-            <div aria-hidden="true" className="hz-edge" ref={edge} />
-        </main>
+        </>
     );
 }
