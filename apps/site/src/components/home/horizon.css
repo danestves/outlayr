@@ -303,6 +303,24 @@
     position: relative;
     padding-top: var(--section-y);
     scroll-margin-top: 24px;
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 720px;
+}
+
+.hz-section[aria-labelledby="also-title"] {
+    contain-intrinsic-block-size: auto 1000px;
+}
+
+#faq {
+    contain-intrinsic-block-size: auto 1200px;
+}
+
+#pricing {
+    contain-intrinsic-block-size: auto 1500px;
+}
+
+.hz-page [data-app-canvas] {
+    content-visibility: auto;
 }
 
 .hz-head {
@@ -760,7 +778,7 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 }
 
 .hz-capture-film:not([data-on]) {
-    visibility: hidden;
+    display: none;
 }
 
 .hz-section:is([data-paused], [data-away]) .hz-capture :is([data-take], [data-take] *) {
