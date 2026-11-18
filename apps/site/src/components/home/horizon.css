@@ -1896,6 +1896,10 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
     .hz-edge[data-ground="night"] > :first-child {
         display: none;
     }
+
+    .hz-install:not([data-up]) ~ .hz-edge[data-edge="bottom"] {
+        display: none;
+    }
 }
 
 .hz-install[data-up] {
