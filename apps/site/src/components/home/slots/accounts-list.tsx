@@ -1,10 +1,10 @@
-import { useLocale } from "react-intlayer";
-
-import { AccountsListFragment } from "@/components/app-ui/accounts";
-
+import { Replica } from "../replica";
 import type { SlotProps } from "./placeholder";
 
 export function AccountsList({ theme = "dark" }: SlotProps) {
-    const { locale } = useLocale();
-    return <AccountsListFragment fit locale={locale} theme={theme} />;
+    return (
+        <Replica>
+            {({ AccountsListFragment }, locale) => <AccountsListFragment fit locale={locale} theme={theme} />}
+        </Replica>
+    );
 }
