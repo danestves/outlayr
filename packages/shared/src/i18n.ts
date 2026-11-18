@@ -6,11 +6,11 @@ import { SITE_URL } from "./urls";
 export type Locale = DeclaredLocales;
 
 export const LANGUAGES = {
-    en: { date: "en-GB", hreflang: "en", image: "/og.png", lang: "en", name: "English", og: "en_US" },
-    de: { date: "de-DE", hreflang: "de", image: "/og.png", lang: "de", name: "Deutsch", og: "de_DE" },
-    es: { date: "es-419", hreflang: "es", image: "/og-es.png", lang: "es-419", name: "Español", og: "es_LA" },
-    pt: { date: "pt-BR", hreflang: "pt", image: "/og.png", lang: "pt-BR", name: "Português", og: "pt_BR" },
-    fr: { date: "fr-FR", hreflang: "fr", image: "/og.png", lang: "fr", name: "Français", og: "fr_FR" },
+    en: { date: "en-GB", hreflang: "en", image: "/og/en.png", lang: "en", name: "English", og: "en_US" },
+    de: { date: "de-DE", hreflang: "de", image: "/og/de.png", lang: "de", name: "Deutsch", og: "de_DE" },
+    es: { date: "es-419", hreflang: "es", image: "/og/es.png", lang: "es-419", name: "Español", og: "es_LA" },
+    pt: { date: "pt-BR", hreflang: "pt", image: "/og/pt.png", lang: "pt-BR", name: "Português", og: "pt_BR" },
+    fr: { date: "fr-FR", hreflang: "fr", image: "/og/fr.png", lang: "fr", name: "Français", og: "fr_FR" },
 } as const satisfies Record<
     Locale,
     { date: string; hreflang: string; image: string; lang: string; name: string; og: string }

@@ -6,7 +6,7 @@ Outlayr is an open source mobile expense tracker, budget app, and subscription t
 
 [tryoutlayr.com](https://tryoutlayr.com)
 
-![Outlayr: track every expense in one sentence](./apps/site/public/og.png)
+![Outlayr: track every expense in one sentence](./apps/site/public/og/en.png)
 
 ## Features
 
