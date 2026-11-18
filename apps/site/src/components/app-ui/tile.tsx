@@ -61,7 +61,7 @@ export function CategoryIconTile({
                     src={`/media/logos/${logo}${theme === "dark" ? "-dark" : ""}.webp`}
                     style={{ height: drawn, left: inset, position: "absolute", top: inset, width: drawn }}
                 />
-                <span
+                <div
                     style={{
                         border: `${future ? 2 : 1}px solid ${withAlpha(color, future ? 0.73 : 0.2)}`,
                         borderRadius: corner,

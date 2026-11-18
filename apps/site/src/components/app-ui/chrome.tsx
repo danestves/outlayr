@@ -22,9 +22,7 @@ type CustomStyle = CSSProperties & Record<`--${string}`, string>;
 
 export function SymbolMask({ color, size, src }: { color: string; size: number; src: string }) {
     const mask = `url("${src}") center / contain no-repeat`;
-    return (
-        <span style={{ backgroundColor: color, display: "block", height: size, mask, WebkitMask: mask, width: size }} />
-    );
+    return <div style={{ backgroundColor: color, height: size, mask, WebkitMask: mask, width: size }} />;
 }
 
 function SystemText({

@@ -38,7 +38,7 @@ import type { AppKey } from "./strings";
 import { CategoryIconTile } from "./tile";
 
 const GUTTER = 20;
-const CONTENT_TOP = 116.33;
+const CONTENT_TOP = 116;
 const LIST_BOTTOM = 100;
 const SPARK = { height: 42, offset: 23, width: 96 } as const;
 const HERO = { advance: 0.62, floor: 24, size: 44 } as const;
@@ -217,11 +217,13 @@ function ShelfCard({ chips, figure, figureClass = "text-foreground", more = 0, t
                 </span>
                 <HugeiconsIcon className="text-muted" icon={ArrowRight01Icon} size={14} strokeWidth={2} />
             </div>
-            <span
-                className={`font-sans-semibold text-headline mt-0.5 truncate leading-[22px] tabular-nums ${figureClass}`}
-            >
-                {figure}
-            </span>
+            <div className="mt-0.5">
+                <span
+                    className={`font-sans-semibold text-headline truncate leading-[22px] tabular-nums ${figureClass}`}
+                >
+                    {figure}
+                </span>
+            </div>
             <div className="min-h-5 flex-row items-center justify-between gap-1.5">
                 <span className="font-sans-medium text-label text-muted shrink truncate">{unit}</span>
                 {chips && chips.length > 0 ? (
