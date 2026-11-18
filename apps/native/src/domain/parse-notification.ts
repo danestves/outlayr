@@ -338,7 +338,7 @@ export function mergeNotificationRead(
     }
     return {
         amount,
-        ...(shownAmount(text, read.currency, amount) ?? { amountText: sameAmountText(parsed, amount) }),
+        ...(shownAmount(text, parsed, read.currency, amount) ?? { amountText: sameAmountText(parsed, amount) }),
         income: read.kind === "income",
         merchant: cleanMerchant(read.merchant) ?? parsed?.merchant ?? null,
     };
@@ -352,13 +352,15 @@ function sameAmountText(parsed: { amount: number; amountText: string } | null, a
 
 function shownAmount(
     text: string,
+    parsed: ParsedNotification | null,
     code: string | null,
     amount: number
 ): Pick<ParsedNotification, "amountText" | "currencyHint"> | null {
     if (code === null) {
         return null;
     }
-    const figures = (text.match(EVERY_MONEY) ?? []).filter((token) => {
+    const shown = parsed?.amount === amount ? [parsed.amountText] : (text.match(EVERY_MONEY) ?? []);
+    const figures = shown.filter((token) => {
         const value = amountOf(token);
         return value !== null && Math.abs(value - amount) < SAME_AMOUNT;
     });

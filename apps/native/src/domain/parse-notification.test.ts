@@ -463,12 +463,19 @@ describe("mergeNotificationRead", () => {
                 kind: "purchase",
                 merchant: "OXXO",
             })
-        ).toMatchObject({ amount: 250, amountText: "$250.00" });
+        ).toMatchObject({ amount: 250, amountText: "$250.00", currencyHint: "USD" });
     });
 
     it.each([
         ["a code the shown symbol cannot mean", "Compraste $ 120 en OXXO", 120, "EUR", "$ 120"],
         ["the code of the other figure in the push", "Pagaste ¥120 (≈ $16.50) en Taobao", 16.5, "JPY", "16.5"],
+        [
+            "the code of an equal figure that is not the charge",
+            "Paid $120 at Uber. Available balance: ¥120",
+            120,
+            "CNY",
+            "$120",
+        ],
     ])("keeps no currency hint for %s", (_case, text, amount, currency, amountText) => {
         const merged = mergeNotificationRead(text, parseNotification(text), {
             amount,
