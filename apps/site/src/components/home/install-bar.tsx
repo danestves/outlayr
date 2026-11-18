@@ -6,7 +6,7 @@ import { watchGround } from "@/lib/ground";
 
 const GROUND_LINE = 40;
 
-function track(bar: HTMLDivElement | null) {
+function track(bar: HTMLElement | null) {
     const hero = document.querySelector(".hz-actions");
     const close = document.querySelector(".hz-close-actions");
     if (!bar || !hero || !close) {
@@ -37,7 +37,7 @@ function track(bar: HTMLDivElement | null) {
 export function InstallBar() {
     const { getApp } = useIntlayer("site");
     return (
-        <div className="hz-install" ref={track}>
+        <aside className="hz-install" ref={track}>
             <span aria-hidden="true" className="hz-install-icon">
                 <LogoMark className="size-6" />
             </span>
@@ -47,6 +47,6 @@ export function InstallBar() {
             <GetAppButton className="hz-pill" placement="install">
                 {getApp.title}
             </GetAppButton>
-        </div>
+        </aside>
     );
 }
