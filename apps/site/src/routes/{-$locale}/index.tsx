@@ -15,7 +15,7 @@ import { Sunrise } from "@/components/home/sunrise";
 import { Sunset } from "@/components/home/sunset";
 import { watchGround } from "@/lib/ground";
 import { scanMotion } from "@/lib/motion";
-import { getWeekProof } from "@/lib/open-stats";
+import { getHomeStats } from "@/lib/open-stats";
 import { faqPage, ldJson, pageMeta } from "@/lib/seo";
 
 const AGENT_LINKS = [
@@ -30,7 +30,7 @@ const HERO_GROUND = "#f1f0ea";
 export const Route = createFileRoute("/{-$locale}/")({
     beforeLoad: () => loadReplicas(),
     component: HomePage,
-    loader: () => getWeekProof(),
+    loader: () => getHomeStats(),
     headers: () => ({ Link: AGENT_LINKS }),
     head: ({ params }) => {
         const locale = localeFromParam(params.locale);

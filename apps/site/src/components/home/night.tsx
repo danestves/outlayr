@@ -18,6 +18,7 @@ import type { SlotProps } from "./slots/placeholder";
 import { UpcomingList } from "./slots/upcoming-list";
 import { UpcomingRow } from "./slots/upcoming-row";
 import { UpcomingTotal } from "./slots/upcoming-total";
+import { Source } from "./source";
 
 interface Box {
     x: number;
@@ -197,6 +198,7 @@ export function Night() {
                     <Feature art={art} key={art.id} />
                 ))}
             </div>
+            <Source />
             <Also />
             <Plans />
             <Faq />
