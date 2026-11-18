@@ -126,7 +126,7 @@ export function Dawn() {
                     <Headline />
                     <p className="hz-lead">{copy.lead}</p>
                     <div className="hz-actions">
-                        <StoreBadges placement="hero" />
+                        <StoreBadges lead="app-store" placement="hero" />
                         <span aria-hidden="true" className="hz-rule" />
                         <QrButton placement="hero" />
                     </div>

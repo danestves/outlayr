@@ -46,7 +46,7 @@ export function Sunrise() {
                     {close.line}
                 </p>
                 <div className="hz-close-actions hz-r" style={{ "--i": "2" }}>
-                    <StoreBadges placement="closing" size="lg" />
+                    <StoreBadges lead="app-store" placement="closing" size="lg" />
                     <span aria-hidden="true" className="hz-rule" />
                     <QrButton placement="close" />
                 </div>
