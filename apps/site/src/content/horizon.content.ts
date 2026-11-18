@@ -64,11 +64,11 @@ const horizon = {
         away: {
             lead: t({ en: "Without", de: "Ohne", es: "Sin", pt: "Sem", fr: "Sans" }),
             line: t({
-                en: "Four widgets on iPhone and six on Android.",
-                de: "Vier Widgets auf dem iPhone und sechs auf Android.",
-                es: "Cuatro widgets en iPhone y seis en Android.",
-                pt: "Quatro widgets no iPhone e seis no Android.",
-                fr: "Quatre widgets sur iPhone et six sur Android.",
+                en: "Four widgets on iPhone, six on Android, and an Apple Watch app.",
+                de: "Vier Widgets auf dem iPhone, sechs auf Android und eine App für die Apple Watch.",
+                es: "Cuatro widgets en iPhone, seis en Android y una app para Apple Watch.",
+                pt: "Quatro widgets no iPhone, seis no Android e um app para Apple Watch.",
+                fr: "Quatre widgets sur iPhone, six sur Android et une app Apple Watch.",
             }),
             rest: t({
                 en: "opening the app.",
@@ -104,10 +104,10 @@ const horizon = {
         dusk: {
             lead: t({
                 en: "Where the week",
-                de: "Wohin die Woche",
+                de: "Wohin dein Geld",
                 es: "A dónde se fue",
-                pt: "Para onde a semana",
-                fr: "Où la semaine",
+                pt: "Para onde foi",
+                fr: "Où est passé",
             }),
             line: t({
                 en: "Spending by day and by category, and what moved since last week.",
@@ -118,10 +118,10 @@ const horizon = {
             }),
             rest: t({
                 en: "actually went.",
-                de: "wirklich ging.",
+                de: "diese Woche ging.",
                 es: "la semana.",
-                pt: "realmente foi.",
-                fr: "est vraiment passée.",
+                pt: "o dinheiro da semana.",
+                fr: "l'argent de la semaine.",
             }),
         },
         faq: {
@@ -141,17 +141,17 @@ const horizon = {
                     en: "Spot the overspend",
                     de: "Erkenne zu hohe Ausgaben",
                     es: "Detecta el gasto de más",
-                    pt: "Perceba o gasto a mais",
+                    pt: "Perceba o excesso",
                     fr: "Repérez le dépassement",
                 }),
                 line: t({
-                    en: "The chart shows where this pace ends, not just what’s left.",
+                    en: "The chart shows where this pace ends, not just what's left.",
                     de: "Das Diagramm zeigt, wo dieses Tempo endet, nicht nur, was übrig ist.",
                     es: "El gráfico muestra a dónde te lleva este ritmo, no solo lo que queda.",
                     pt: "O gráfico mostra onde esse ritmo vai parar, não só o que sobra.",
                     fr: "Le graphique montre où ce rythme vous mène, pas seulement ce qui reste.",
                 }),
-                rest: t({ en: "early", de: "früh", es: "a tiempo", pt: "cedo", fr: "à temps" }),
+                rest: t({ en: "early.", de: "früh.", es: "a tiempo.", pt: "a tempo.", fr: "à temps." }),
             },
             upcoming: {
                 art: t({
@@ -171,7 +171,7 @@ const horizon = {
                 line: t({
                     en: "Rent, bills, and streaming log themselves on their day.",
                     de: "Miete, Rechnungen und Streaming werden an ihrem Tag von selbst erfasst.",
-                    es: "La renta, las cuentas y el streaming se registran solos en su día.",
+                    es: "El alquiler, las cuentas y el streaming se registran solos en su día.",
                     pt: "Aluguel, contas e streaming se lançam sozinhos no dia certo.",
                     fr: "Le loyer, les factures et le streaming s'enregistrent tout seuls le jour venu.",
                 }),
@@ -216,7 +216,7 @@ const horizon = {
         },
         hero: {
             lead: t({
-                en: "Write it the way you’d say it. Outlayr sorts out the rest.",
+                en: "Write it the way you'd say it. Outlayr sorts out the rest.",
                 de: "Schreib es so, wie du es sagen würdest. Outlayr erledigt den Rest.",
                 es: "Escríbelo como lo dirías. Outlayr se encarga del resto.",
                 pt: "Escreva do jeito que você falaria. O Outlayr cuida do resto.",
@@ -230,18 +230,18 @@ const horizon = {
                 fr: "une phrase",
             }),
             proofLink: t({
-                en: "{{entries}} entries logged this week",
-                de: "{{entries}} Einträge diese Woche erfasst",
-                es: "{{entries}} registros esta semana",
-                pt: "{{entries}} lançamentos nesta semana",
-                fr: "{{entries}} opérations saisies cette semaine",
+                en: "{{entries}} entries logged in the last 7 days",
+                de: "{{entries}} Einträge in den letzten 7 Tagen",
+                es: "{{entries}} registros en los últimos 7 días",
+                pt: "{{entries}} lançamentos nos últimos 7 dias",
+                fr: "{{entries}} opérations saisies ces 7 derniers jours",
             }),
             proofRest: t({
-                en: "by {{people}} people in {{countries}} countries",
-                de: "von {{people}} Personen in {{countries}} Ländern",
-                es: "de {{people}} personas en {{countries}} países",
-                pt: "de {{people}} pessoas em {{countries}} países",
-                fr: "par {{people}} personnes dans {{countries}} pays",
+                en: "{{people}} people in {{countries}} countries opened Outlayr",
+                de: "{{people}} Personen in {{countries}} Ländern haben Outlayr geöffnet",
+                es: "{{people}} personas en {{countries}} países abrieron Outlayr",
+                pt: "{{people}} pessoas em {{countries}} países abriram o Outlayr",
+                fr: "{{people}} personnes dans {{countries}} pays ont ouvert Outlayr",
             }),
         },
         how: {
@@ -268,10 +268,10 @@ const horizon = {
             }),
             lead: t({
                 en: "Type it, say it,",
-                de: "Tipp es, sag es,",
-                es: "Escríbelo, dilo,",
+                de: "Tipp es, sag es",
+                es: "Escríbelo, dilo",
                 pt: "Digite, fale",
-                fr: "Tapez-la, dites-la,",
+                fr: "Tapez-la, dites-la",
             }),
             rest: t({
                 en: "or snap it.",
@@ -289,17 +289,17 @@ const horizon = {
                         pt: "Uma frase, como starbucks 4,50.",
                         fr: "Une phrase, comme columbus café 4,50.",
                     }),
-                    name: t({ en: "Type it", de: "Tipp es", es: "Escríbelo", pt: "Digite", fr: "Tapez-la" }),
+                    name: t({ en: "Type it", de: "Tipp es", es: "Escríbelo", pt: "Digite", fr: "Texte" }),
                 },
                 say: {
                     line: t({
                         en: "Speak an entry instead of typing it.",
                         de: "Sprich einen Eintrag, statt ihn zu tippen.",
                         es: "Dicta un registro en vez de escribirlo.",
-                        pt: "Fale um lançamento em vez de digitar.",
+                        pt: "Dite um lançamento em vez de digitar.",
                         fr: "Dictez une opération au lieu de la taper.",
                     }),
-                    name: t({ en: "Say it", de: "Sag es", es: "Dilo", pt: "Fale", fr: "Dites-la" }),
+                    name: t({ en: "Say it", de: "Sag es", es: "Dilo", pt: "Fale", fr: "Voix" }),
                 },
                 snap: {
                     line: t({
@@ -312,9 +312,9 @@ const horizon = {
                     name: t({
                         en: "Snap it",
                         de: "Fotografier es",
-                        es: "Tómale foto",
+                        es: "Tómale una foto",
                         pt: "Fotografe",
-                        fr: "Photographiez-la",
+                        fr: "Photo",
                     }),
                 },
             },
@@ -334,11 +334,11 @@ const horizon = {
             },
             free: t({ en: "Free", de: "Kostenlos", es: "Gratis", pt: "Grátis", fr: "Gratuit" }),
             freeUnit: t({
-                en: "Free, with no ads",
-                de: "Kostenlos, ohne Werbung",
-                es: "Gratis y sin anuncios",
-                pt: "Grátis e sem anúncios",
-                fr: "Gratuit et sans publicité",
+                en: "No ads, no card",
+                de: "Ohne Werbung, ohne Karte",
+                es: "Sin anuncios ni tarjeta",
+                pt: "Sem anúncios nem cartão",
+                fr: "Sans publicité ni carte",
             }),
             lead: t({
                 en: "The tracker is free.",
@@ -350,7 +350,7 @@ const horizon = {
             onceUnit: t({ en: "once", de: "einmalig", es: "una sola vez", pt: "uma única vez", fr: "une seule fois" }),
             rest: t({
                 en: "Pro lifts the limits and adds sync.",
-                de: "Pro hebt die Grenzen an und bringt die Synchronisierung dazu.",
+                de: "Pro hebt die Limits auf und fügt die Synchronisierung hinzu.",
                 es: "Pro quita los límites y agrega la sincronización.",
                 pt: "O Pro tira os limites e adiciona a sincronização.",
                 fr: "Pro lève les limites et ajoute la synchronisation.",

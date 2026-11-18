@@ -411,7 +411,7 @@ const site = {
                 fr: "Gratuit pour commencer",
             }),
             line: t({
-                en: "Scan with your phone’s camera to open the right store.",
+                en: "Scan with your phone's camera to open the right store.",
                 de: "Scanne mit der Kamera deines Handys, um den richtigen Store zu öffnen.",
                 es: "Escanea con la cámara de tu celular para abrir la tienda correcta.",
                 pt: "Escaneie com a câmera do celular para abrir a loja certa.",

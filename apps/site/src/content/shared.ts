@@ -73,11 +73,11 @@ export const EXPORT_EXTRA = {
 export const OFFLINE_EXTRA = {
     label: t({ en: "Offline", de: "Offline", es: "Sin conexión", pt: "Sem conexão", fr: "Hors ligne" }),
     text: t({
-        en: "Entries save on the phone first, so logging works with no signal.",
-        de: "Einträge werden zuerst auf dem Handy gespeichert, deshalb klappt das Erfassen auch ohne Netz.",
-        es: "Los registros se guardan primero en el celular, así que puedes registrar sin señal.",
-        pt: "Os lançamentos são salvos primeiro no celular, então dá para registrar sem sinal.",
-        fr: "Les opérations s'enregistrent d'abord sur le téléphone : la saisie fonctionne même sans réseau.",
+        en: "Entries save on the phone first, so typing an entry works with no signal.",
+        de: "Einträge werden zuerst auf dem Handy gespeichert, also klappt Tippen auch ohne Empfang.",
+        es: "Los registros se guardan primero en el celular, así que puedes escribir un registro sin señal.",
+        pt: "Os lançamentos ficam primeiro no celular, então digitar funciona sem sinal.",
+        fr: "Les opérations sont d'abord enregistrées sur le téléphone, donc la saisie au clavier marche sans réseau.",
     }),
 };
 

@@ -1,8 +1,6 @@
 import { insert, t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
-import { PRODUCT_DEFINITION } from "./shared";
-
 const story = {
     content: {
         faqLead: t({
@@ -19,9 +17,6 @@ const story = {
             pt: "Escreva para o suporte",
             fr: "Écrivez au support",
         }),
-        hero: {
-            definition: PRODUCT_DEFINITION,
-        },
         pause: t({
             en: "Pause the film",
             de: "Video pausieren",

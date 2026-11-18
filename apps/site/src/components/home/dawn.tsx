@@ -102,8 +102,8 @@ function Proof() {
     const format = new Intl.NumberFormat(LANGUAGES[locale].lang);
     return (
         <p className="hz-proof" data-live>
-            <LocalizedLink to="/open">{fill(hero.proofLink.value, proof, format)}</LocalizedLink>{" "}
-            {fill(hero.proofRest.value, proof, format)}
+            <LocalizedLink to="/open">{fill(hero.proofLink.value, proof, format)}</LocalizedLink>.{" "}
+            {fill(hero.proofRest.value, proof, format)}.
         </p>
     );
 }

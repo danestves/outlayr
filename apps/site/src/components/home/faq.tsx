@@ -7,7 +7,7 @@ const STAGGER_CAP = 5;
 export function Faq() {
     const { faq } = useIntlayer("home");
     const { faq: copy } = useIntlayer("horizon");
-    const { faqLead, faqSupport, hero } = useIntlayer("story");
+    const { faqLead, faqSupport } = useIntlayer("story");
     return (
         <section aria-labelledby="faq-title" className="hz-section" id="faq">
             <div className="hz-container hz-faq">
@@ -16,9 +16,6 @@ export function Faq() {
                         <span className="hz-lead-in">{copy.lead}</span> {copy.rest}
                     </h2>
                     <p className="hz-definition hz-r" style={{ "--i": "1" }}>
-                        {hero.definition}
-                    </p>
-                    <p className="hz-definition hz-r" style={{ "--i": "2" }}>
                         {faqLead} <LocalizedLink to="/support">{faqSupport}</LocalizedLink>
                     </p>
                 </div>
