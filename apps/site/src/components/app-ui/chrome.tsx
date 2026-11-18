@@ -49,7 +49,8 @@ export function SystemText({
     return <span style={text}>{children}</span>;
 }
 
-const GLASS_EDGE = "0 0 0 0.67px var(--glass-edge), 0 2px 8px var(--glass-shadow), inset 0 0 0 0.67px var(--glass-rim)";
+export const GLASS_EDGE =
+    "0 0 0 0.67px var(--glass-edge), 0 2px 8px var(--glass-shadow), inset 0 0 0 0.67px var(--glass-rim)";
 
 export function GlassCircle({
     children,

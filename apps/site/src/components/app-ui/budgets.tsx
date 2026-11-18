@@ -124,7 +124,7 @@ export function BalancesViewToggle({ view }: { view: BalancesView }) {
     );
 }
 
-function MonoLabel({ children, className = "text-muted" }: { children: ReactNode; className?: string }) {
+export function MonoLabel({ children, className = "text-muted" }: { children: ReactNode; className?: string }) {
     return (
         <span className={`text-eyebrow tracking-eyebrow font-mono whitespace-nowrap uppercase ${className}`}>
             {children}

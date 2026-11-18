@@ -72,10 +72,11 @@ const MONTH_SHORT = [
 
 export const monthLongTitle = (date: Date, t: AppT) => t(MONTH_LONG[date.getMonth()] ?? "dates.monthLong.0");
 
-export function dayMonth(date: Date, locale: Locale, t: AppT): string {
-    const day = locale === "de" ? `${date.getDate()}.` : String(date.getDate());
-    return `${day} ${t(MONTH_SHORT[date.getMonth()] ?? "dates.month.0")}`;
-}
+export const dayOfMonth = (date: Date, locale: Locale) =>
+    locale === "de" ? `${date.getDate()}.` : String(date.getDate());
+
+export const dayMonth = (date: Date, locale: Locale, t: AppT) =>
+    `${dayOfMonth(date, locale)} ${t(MONTH_SHORT[date.getMonth()] ?? "dates.month.0")}`;
 
 function roundsToNothing(amount: number, code: string): boolean {
     const magnitude = Math.abs(amount);
