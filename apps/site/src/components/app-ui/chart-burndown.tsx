@@ -1,5 +1,3 @@
-import { useId } from "react";
-
 import { hatchPathD } from "../../../../native/src/lib/chart-paths";
 import { CHART_DASH, CHART_SCRUB, dashArray } from "../../../../native/src/theme/chart";
 import type { Burndown, BurndownPoint } from "./budgets-burndown";
@@ -77,6 +75,14 @@ function deficitPathD(burndown: Burndown, plot: Plot, last: BurndownPoint, cross
     return `M ${crossX} ${plot.zeroY} L ${crossX} ${plot.y(last.balance)} L ${plot.x(last.day)} ${plot.y(last.balance)} ${tail} Z`;
 }
 
+function clipId(geometry: string) {
+    let hash = 5381;
+    for (const char of geometry) {
+        hash = (hash * 33 + (char.codePointAt(0) ?? 0)) % 2_147_483_647;
+    }
+    return `app-burndown-${hash.toString(36)}-`;
+}
+
 interface BurndownChartProps {
     burndown: Burndown;
     height: number;
@@ -86,13 +92,13 @@ interface BurndownChartProps {
 }
 
 export function BurndownChart({ burndown, height, limit, thumbnail = false, width }: BurndownChartProps) {
-    const id = useId();
     const plot = makePlot(burndown, limit, width, height, thumbnail ? THUMB_PAD : PAD);
     const last = burndown.points.at(-1);
     const actual = actualPathD(burndown, limit, plot);
     const projected = burndown.projectedBalance;
     const runwayX = burndown.runwayDay == null ? null : plot.x(burndown.runwayDay);
     const deficit = runwayX != null && last ? deficitPathD(burndown, plot, last, runwayX) : null;
+    const id = clipId(`${width} ${height} ${plot.zeroY} ${deficit ?? ""}`);
     const clip = { above: `${id}above`, below: `${id}below`, deficit: `${id}deficit` };
     return (
         <svg height={height} viewBox={`0 0 ${width} ${height}`} width={width}>

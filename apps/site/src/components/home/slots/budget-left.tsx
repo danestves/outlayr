@@ -1,10 +1,10 @@
-import { useLocale } from "react-intlayer";
-
-import { BudgetLeftFragment } from "@/components/app-ui/budgets";
-
+import { Replica } from "../replica";
 import type { SlotProps } from "./placeholder";
 
 export function BudgetLeft({ theme = "dark" }: SlotProps) {
-    const { locale } = useLocale();
-    return <BudgetLeftFragment fit locale={locale} theme={theme} />;
+    return (
+        <Replica>
+            {({ BudgetLeftFragment }, locale) => <BudgetLeftFragment fit locale={locale} theme={theme} />}
+        </Replica>
+    );
 }

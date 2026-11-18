@@ -1,15 +1,11 @@
-import { useLocale } from "react-intlayer";
-
-import { InsightsScreen } from "@/components/app-ui/insights";
-
+import { Replica } from "../replica";
 import { PhoneFit } from "./phone-fit";
 import type { SlotProps } from "./placeholder";
 
 export function InsightsPhone({ theme = "dark" }: SlotProps) {
-    const { locale } = useLocale();
     return (
         <PhoneFit dark={theme === "dark"}>
-            <InsightsScreen locale={locale} theme={theme} />
+            <Replica>{({ InsightsScreen }, locale) => <InsightsScreen locale={locale} theme={theme} />}</Replica>
         </PhoneFit>
     );
 }
