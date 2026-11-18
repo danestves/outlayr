@@ -30,7 +30,7 @@ export function Sunset() {
                 <h2 className="hz-dusk-title hz-r" id="dusk-title">
                     <span className="hz-lead-in">{dusk.lead}</span> {dusk.rest}
                 </h2>
-                <p className="hz-dusk-line hz-r" style={{ "--i": 1 }}>
+                <p className="hz-dusk-line hz-r" style={{ "--i": "1" }}>
                     {dusk.line}
                 </p>
             </div>

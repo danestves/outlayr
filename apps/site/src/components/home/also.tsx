@@ -16,7 +16,7 @@ export function Also() {
                     <span className="hz-lead-in">{also.lead}</span> {also.rest}
                 </h2>
                 <div className="hz-also-grid">
-                    <div className="hz-look hz-r" style={{ "--i": 1 }}>
+                    <div className="hz-look hz-r" style={{ "--i": "1" }}>
                         <div aria-hidden="true" className="hz-look-row">
                             <div className="hz-look-night">
                                 <AppearanceRow theme="dark" />
@@ -41,7 +41,7 @@ export function Also() {
                             </div>
                         </div>
                     </div>
-                    <dl className="hz-facts hz-r" style={{ "--i": 2 }}>
+                    <dl className="hz-facts hz-r" style={{ "--i": "2" }}>
                         {also.facts.map((fact) => (
                             <div className="hz-fact" key={fact.label.value}>
                                 <dt>{fact.label}</dt>

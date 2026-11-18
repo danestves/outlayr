@@ -39,7 +39,7 @@ export function Capture() {
                         aria-label={how.label.value}
                         className="hz-ways hz-r"
                         role="tablist"
-                        style={{ "--i": 1, "--k": current }}
+                        style={{ "--i": "1", "--k": `${current}` }}
                     >
                         <span aria-hidden="true" className="hz-ways-thumb" />
                         {WAYS.map((id, index) => (
@@ -68,7 +68,7 @@ export function Capture() {
                         className="hz-capture-stage hz-r"
                         id="how-stage"
                         role="tabpanel"
-                        style={{ "--i": 2 }}
+                        style={{ "--i": "2" }}
                     >
                         <CaptureFilm way={way} />
                     </div>

@@ -75,7 +75,7 @@ export function CategoryTiles() {
                         data-wide={tile.phone ? undefined : ""}
                         key={tile.category}
                         style={{
-                            "--i": tile.i,
+                            "--i": `${tile.i}`,
                             "--r": `${tile.r}deg`,
                             "--w": `${tile.w}px`,
                             "--wm": tile.phone && `${tile.phone.w}px`,
@@ -83,7 +83,7 @@ export function CategoryTiles() {
                             "--xm": tile.phone && `${tile.phone.x}%`,
                             "--y": `${tile.y}%`,
                             "--ym": tile.phone && `${tile.phone.y}%`,
-                            "--z": tile.z,
+                            "--z": `${tile.z}`,
                         }}
                     >
                         <span className="hz-tile-face" style={{ "--glyph": glyph, "--wash": wash }}>

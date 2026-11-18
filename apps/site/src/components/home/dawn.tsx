@@ -31,7 +31,7 @@ function words(text: string, from: number, prefix: string): Word[] {
 
 function Rise({ word }: { word: Word }) {
     return (
-        <span className="hz-w" style={{ "--i": word.index }}>
+        <span className="hz-w" style={{ "--i": `${word.index}` }}>
             <span>{word.text}</span>
         </span>
     );
@@ -110,7 +110,7 @@ function Proof() {
 
 function Layer({ children, depth, name }: { children: ReactNode; depth: number; name: string }) {
     return (
-        <div className={`hz-layer hz-layer-${name}`} data-depth="" style={{ "--depth": depth }}>
+        <div className={`hz-layer hz-layer-${name}`} data-depth="" style={{ "--depth": `${depth}` }}>
             <div className="hz-rise">{children}</div>
         </div>
     );
@@ -133,7 +133,7 @@ export function Dawn() {
                     <Proof />
                 </div>
                 <div className="hz-stage" ref={sway}>
-                    <div aria-hidden="true" className="hz-layer hz-layer-sun" data-depth="" style={{ "--depth": 5 }}>
+                    <div aria-hidden="true" className="hz-layer hz-layer-sun" data-depth="" style={{ "--depth": "5" }}>
                         <div className="hz-drift">
                             <div className="hz-rise">
                                 <div className="hz-sun">

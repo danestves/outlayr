@@ -15,10 +15,10 @@ export function Faq() {
                     <h2 className="hz-head hz-r" id="faq-title">
                         <span className="hz-lead-in">{copy.lead}</span> {copy.rest}
                     </h2>
-                    <p className="hz-definition hz-r" style={{ "--i": 1 }}>
+                    <p className="hz-definition hz-r" style={{ "--i": "1" }}>
                         {hero.definition}
                     </p>
-                    <p className="hz-definition hz-r" style={{ "--i": 2 }}>
+                    <p className="hz-definition hz-r" style={{ "--i": "2" }}>
                         {faqLead} <LocalizedLink to="/support">{faqSupport}</LocalizedLink>
                     </p>
                 </div>
@@ -28,7 +28,7 @@ export function Faq() {
                             className="hz-qa hz-r"
                             key={item.question.value}
                             name="faq"
-                            style={{ "--i": Math.min(index, STAGGER_CAP) }}
+                            style={{ "--i": `${Math.min(index, STAGGER_CAP)}` }}
                         >
                             <summary>
                                 {item.question}

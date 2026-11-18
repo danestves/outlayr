@@ -39,7 +39,7 @@ export function Plans() {
                         aria-label={copy.cadence.label.value}
                         className="hz-cadence hz-r"
                         role="radiogroup"
-                        style={{ "--i": 1 }}
+                        style={{ "--i": "1" }}
                     >
                         <span aria-hidden="true" className="hz-cadence-thumb" />
                         {CADENCES.map((cadence) => (
@@ -76,7 +76,12 @@ export function Plans() {
                             {getApp.title}
                         </GetAppButton>
                     </article>
-                    <article aria-labelledby="pro-title" className="hz-plan hz-r" data-plan="pro" style={{ "--i": 1 }}>
+                    <article
+                        aria-labelledby="pro-title"
+                        className="hz-plan hz-r"
+                        data-plan="pro"
+                        style={{ "--i": "1" }}
+                    >
                         <h3 className="hz-plan-name" id="pro-title">
                             Pro
                         </h3>

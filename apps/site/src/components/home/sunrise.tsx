@@ -33,10 +33,10 @@ export function Sunrise() {
                 <h2 className="hz-close-title hz-r" id="close-title">
                     <span className="hz-lead-in">{close.lead}</span> {close.rest}
                 </h2>
-                <p className="hz-close-line hz-r" style={{ "--i": 1 }}>
+                <p className="hz-close-line hz-r" style={{ "--i": "1" }}>
                     {close.line}
                 </p>
-                <div className="hz-close-actions hz-r" style={{ "--i": 2 }}>
+                <div className="hz-close-actions hz-r" style={{ "--i": "2" }}>
                     <StoreBadges placement="closing" size="lg" />
                     <span aria-hidden="true" className="hz-rule" />
                     <QrButton placement="close" />

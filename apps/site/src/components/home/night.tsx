@@ -147,7 +147,7 @@ function Feature({ art }: { art: Art }) {
                 <h3 className="hz-head hz-r" id={`${art.id}-title`}>
                     <span className="hz-lead-in">{feat.lead}</span> {feat.rest}
                 </h3>
-                <p className="hz-line hz-r" style={{ "--i": 1 }}>
+                <p className="hz-line hz-r" style={{ "--i": "1" }}>
                     {feat.line}
                 </p>
                 <p className="sr-only">{feat.art}</p>
@@ -157,26 +157,26 @@ function Feature({ art }: { art: Art }) {
                 className="hz-feat-art"
                 data-reveal="group"
                 ref={sway}
-                style={{ "--art-hm": art.height }}
+                style={{ "--art-hm": `${art.height}` }}
             >
                 {art.pieces.map(({ Slot, at, corner, hold, i, phone, z }) => (
                     <div
                         className="hz-piece"
                         key={i}
                         style={{
-                            "--w": at.w,
-                            "--wm": phone.w,
-                            "--x": at.x,
-                            "--xm": phone.x,
-                            "--y": at.y,
-                            "--ym": phone.y,
-                            "--z": z,
+                            "--w": `${at.w}`,
+                            "--wm": `${phone.w}`,
+                            "--x": `${at.x}`,
+                            "--xm": `${phone.x}`,
+                            "--y": `${at.y}`,
+                            "--ym": `${phone.y}`,
+                            "--z": `${z}`,
                         }}
                     >
                         <div
                             className="hz-hold hz-r"
                             data-corner={corner}
-                            style={{ "--g": `var(--hz-hold-${hold})`, "--i": i }}
+                            style={{ "--g": `var(--hz-hold-${hold})`, "--i": `${i}` }}
                         >
                             <Slot />
                         </div>
