@@ -1,6 +1,10 @@
-import { SlotPlaceholder } from "./placeholder";
+import { useLocale } from "react-intlayer";
+
+import { BudgetsScreen } from "@/components/app-ui/budgets";
+
 import type { SlotProps } from "./placeholder";
 
-export function BudgetScreen({ label, theme = "dark" }: SlotProps) {
-    return <SlotPlaceholder label={label} name="budget-screen" ratio="440 / 956" theme={theme} />;
+export function BudgetScreen({ theme = "dark" }: SlotProps) {
+    const { locale } = useLocale();
+    return <BudgetsScreen fit locale={locale} theme={theme} />;
 }

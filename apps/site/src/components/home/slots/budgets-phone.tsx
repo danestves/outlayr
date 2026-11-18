@@ -1,11 +1,15 @@
+import { useLocale } from "react-intlayer";
+
+import { BudgetsScreen } from "@/components/app-ui/budgets";
+
 import { PhoneFit } from "./phone-fit";
-import { SlotPlaceholder } from "./placeholder";
 import type { SlotProps } from "./placeholder";
 
-export function BudgetsPhone({ label, theme = "dark" }: SlotProps) {
+export function BudgetsPhone({ theme = "dark" }: SlotProps) {
+    const { locale } = useLocale();
     return (
         <PhoneFit dark={theme === "dark"}>
-            <SlotPlaceholder fill label={label} name="budgets-phone" theme={theme} />
+            <BudgetsScreen locale={locale} theme={theme} />
         </PhoneFit>
     );
 }

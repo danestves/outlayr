@@ -1,6 +1,10 @@
-import { SlotPlaceholder } from "./placeholder";
+import { useLocale } from "react-intlayer";
+
+import { PaceChartFragment } from "@/components/app-ui/budgets";
+
 import type { SlotProps } from "./placeholder";
 
-export function PaceChart({ label, theme = "dark" }: SlotProps) {
-    return <SlotPlaceholder label={label} name="pace-chart" ratio="440 / 179" theme={theme} />;
+export function PaceChart({ theme = "dark" }: SlotProps) {
+    const { locale } = useLocale();
+    return <PaceChartFragment fit locale={locale} theme={theme} />;
 }

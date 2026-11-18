@@ -1,6 +1,10 @@
-import { SlotPlaceholder } from "./placeholder";
+import { useLocale } from "react-intlayer";
+
+import { BudgetLeftFragment } from "@/components/app-ui/budgets";
+
 import type { SlotProps } from "./placeholder";
 
-export function BudgetLeft({ label, theme = "dark" }: SlotProps) {
-    return <SlotPlaceholder label={label} name="budget-left" ratio="440 / 100" theme={theme} />;
+export function BudgetLeft({ theme = "dark" }: SlotProps) {
+    const { locale } = useLocale();
+    return <BudgetLeftFragment fit locale={locale} theme={theme} />;
 }
