@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 
 import { useReplica } from "./canvas";
 import { formatDayTitle, formatTime } from "./dates";
-import { categoryStyle } from "./ledger";
+import { categoryStyle, imageColor } from "./ledger";
 import type { DaySection, DemoRow } from "./ledger";
 import { currencyFor, formatAmount, formatDayTotal } from "./money";
 import { CategoryIconTile } from "./tile";
@@ -16,7 +16,13 @@ export function TransactionRow({ row }: { row: DemoRow }) {
     return (
         <div className="bg-background flex-row items-center gap-3 py-1.5">
             <div>
-                <CategoryIconTile color={identity.color} icon={identity.icon} radius={10} size={32} />
+                <CategoryIconTile
+                    color={imageColor(row.logo) ?? identity.color}
+                    icon={identity.icon}
+                    logo={row.logo}
+                    radius={10}
+                    size={32}
+                />
                 {row.recurringType > 0 ? (
                     <div
                         className="bg-surface-secondary text-foreground absolute rounded-md"

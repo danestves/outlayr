@@ -15,13 +15,14 @@ import {
     categoryStyle,
     DEMO_NOW,
     daySections,
+    imageColor,
     sparkline,
     upcoming,
     weekAhead,
     weekFigures,
     youOwe,
 } from "./ledger";
-import type { LogoName } from "./ledger";
+import type { LogoDomain } from "./ledger";
 import { DayList } from "./list";
 import {
     amountHeroLength,
@@ -196,7 +197,7 @@ interface Chip {
     future?: boolean;
     icon: string | null;
     id: string;
-    logo?: LogoName | null;
+    logo?: LogoDomain | null;
 }
 
 interface ShelfCardProps {
@@ -267,7 +268,7 @@ function LogShelf({ now }: { now: Date }) {
         >
             <ShelfCard
                 chips={overview.rows.slice(0, SHELF.chips).map((account) => ({
-                    color: account.color,
+                    color: imageColor(account.logo) ?? account.color,
                     icon: account.icon,
                     id: account.id,
                     logo: account.logo,
@@ -278,7 +279,16 @@ function LogShelf({ now }: { now: Date }) {
                 unit={t("log.shelf.accounts", { count: overview.count })}
             />
             <ShelfCard
-                chips={next.map(({ row }) => ({ ...categoryStyle(row.category), future: true, id: row.id }))}
+                chips={next.map(({ row }) => {
+                    const identity = categoryStyle(row.category);
+                    return {
+                        color: imageColor(row.logo) ?? identity.color,
+                        future: true,
+                        icon: identity.icon,
+                        id: row.id,
+                        logo: row.logo,
+                    };
+                })}
                 figure={due === 0 ? formatAmount(0, code, locale) : formatSignedAmount(due, code, locale)}
                 figureClass="text-muted"
                 title={t("log.upcoming.heading")}

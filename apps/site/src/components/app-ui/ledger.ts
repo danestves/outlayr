@@ -6,6 +6,7 @@ import { roundMoney } from "@outlayr/money/round";
 
 import type { LogFigures, LogMeasure } from "../../../../native/src/domain/log-measure";
 import { chargesInWeekAhead } from "../../../../native/src/domain/upcoming";
+import LOGO_COLORS from "./logos.json";
 
 export const DEMO_NOW = new Date(2026, 8, 12, 10, 30);
 export const DEMO_CURRENCY = "USD";
@@ -13,7 +14,11 @@ const VES_PER_USD = 807.3862;
 const SUNDAY = 1;
 
 type CategoryName = CanonicalCategoryName<"expense"> | CanonicalCategoryName<"income">;
-export type LogoName = "ally" | "amex" | "applecard" | "banesco" | "chase" | "paypal" | "zinli";
+export type LogoDomain = keyof typeof LOGO_COLORS;
+
+export function imageColor(logo: LogoDomain | null): string | null {
+    return logo === null ? null : LOGO_COLORS[logo];
+}
 
 export interface DemoAccount {
     balance: number;
@@ -22,7 +27,7 @@ export interface DemoAccount {
     icon: string;
     id: string;
     kind: "asset" | "liability";
-    logo: LogoName | null;
+    logo: LogoDomain | null;
     name: string;
 }
 
@@ -34,7 +39,7 @@ export const ACCOUNTS = [
         icon: "Bank",
         id: "acc-chase",
         kind: "asset",
-        logo: "chase",
+        logo: "chase.com",
         name: "Chase",
     },
     {
@@ -44,7 +49,7 @@ export const ACCOUNTS = [
         icon: "PiggyBank",
         id: "acc-savings",
         kind: "asset",
-        logo: "ally",
+        logo: "ally.com",
         name: "Ally Savings",
     },
     {
@@ -54,7 +59,7 @@ export const ACCOUNTS = [
         icon: "Bank",
         id: "acc-zinli",
         kind: "asset",
-        logo: "zinli",
+        logo: "zinli.com",
         name: "Zinli",
     },
     {
@@ -64,7 +69,7 @@ export const ACCOUNTS = [
         icon: "Bank",
         id: "acc-banesco",
         kind: "asset",
-        logo: "banesco",
+        logo: "banesco.com",
         name: "Banesco",
     },
     {
@@ -74,7 +79,7 @@ export const ACCOUNTS = [
         icon: "Wallet02",
         id: "acc-paypal",
         kind: "asset",
-        logo: "paypal",
+        logo: "paypal.com",
         name: "PayPal",
     },
     {
@@ -84,7 +89,7 @@ export const ACCOUNTS = [
         icon: "CreditCard",
         id: "acc-apple",
         kind: "liability",
-        logo: "applecard",
+        logo: "apple.com",
         name: "Apple Card",
     },
     {
@@ -94,7 +99,7 @@ export const ACCOUNTS = [
         icon: "CreditCard",
         id: "acc-amex",
         kind: "liability",
-        logo: "amex",
+        logo: "americanexpress.com",
         name: "Amex Gold",
     },
     {
@@ -188,6 +193,31 @@ const SUBSCRIPTIONS: readonly { month: number; row: Seed; year: number }[] = [
     },
 ];
 
+const MERCHANT_LOGOS = new Map<string, LogoDomain>([
+    ["Amazon", "amazon.com"],
+    ["Amazon Prime", "amazon.com"],
+    ["ChatGPT", "chatgpt.com"],
+    ["Con Edison", "coned.com"],
+    ["Costco", "costco.com"],
+    ["DoorDash", "doordash.com"],
+    ["Figma", "figma.com"],
+    ["GitHub", "github.com"],
+    ["IKEA", "ikea.com"],
+    ["Lyft", "lyft.com"],
+    ["Netflix", "netflix.com"],
+    ["Nike", "nike.com"],
+    ["Planet Fitness", "planetfitness.com"],
+    ["Shell", "shell.com"],
+    ["Spotify", "spotify.com"],
+    ["Target", "target.com"],
+    ["Trader Joe's", "traderjoes.com"],
+    ["Uber", "uber.com"],
+    ["Uber Eats", "ubereats.com"],
+    ["Verizon", "verizon.com"],
+    ["Whole Foods Market", "wholefoodsmarket.com"],
+    ["iCloud", "icloud.com"],
+]);
+
 const SCHEDULE_LEADS = new Map<string, number | null>([
     ["Amazon Prime", null],
     ["ChatGPT", null],
@@ -208,6 +238,7 @@ export interface DemoRow {
     date: Date;
     id: string;
     income: boolean;
+    logo: LogoDomain | null;
     note: string;
     recurringAnchorDay: number | null;
     recurringCoefficient: number;
@@ -236,6 +267,7 @@ function buildRows(): DemoRow[] {
             date: new Date(year, month - 1, row.d, row.h, 0),
             id: `row-${index}`,
             income: row.inc === true,
+            logo: MERCHANT_LOGOS.get(row.note) ?? null,
             note: row.note,
             recurringAnchorDay: carrier ? row.d : null,
             recurringCoefficient: 1,

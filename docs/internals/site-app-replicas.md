@@ -1,6 +1,6 @@
 # Site app replicas
 
-The marketing site (`apps/site`) draws app screens as DOM, not screenshots. The kit is `apps/site/src/components/app-ui/`, apart from the older `app-ui.tsx`, which keeps its own styles. A replica is a port of an `apps/native` component. It uses the same class names, spacing and copy as the native component, plus any constant measured from the native source or from a simulator capture. When the two disagree, the native source wins; a measurement fills in only what the source leaves to iOS, such as bars, glass and the status bar.
+The marketing site (`apps/site`) draws app screens as DOM, not screenshots. The kit is `apps/site/src/components/app-ui/`. A replica is a port of an `apps/native` component. It uses the same class names, spacing and copy as the native component, plus any constant measured from the native source or from a simulator capture. When the two disagree, the native source wins; a measurement fills in only what the source leaves to iOS, such as bars, glass and the status bar.
 
 ## Where things come from
 
@@ -8,6 +8,7 @@ The marketing site (`apps/site`) draws app screens as DOM, not screenshots. The 
 - **Tokens.** `app-tokens.mjs` reads the theme from `apps/native/global.css` into Tailwind, scoped to `[data-app-replica]`. `theme="light" | "dark"` sets `data-app-theme`, independent of the site. Values iOS draws itself, such as glass, tab bar, badge and sheet backdrop, are variables in `app-theme.css`.
 - **Fonts.** On Apple devices `ui-rounded` and `SF Pro` are the real faces. Elsewhere, Nunito (`App Rounded`) and Geist (`App Sans`) stand in. They are self-hosted from `@fontsource-variable`, with `size-adjust` and ascent overrides so their metrics match SF per weight. Geist Mono takes the native font's own line metrics.
 - **Icons.** Hugeicons, imported by path. Category tiles use `@hugeicons-pro/core-solid-rounded`, as native does. Native stroke-rounded pro icons map to the free set's icons of the same name. Tab bar and toolbar symbols are the native SVGs in `apps/native/assets`, drawn as CSS masks.
+- **Logos.** `public/media/logos/<domain>.webp` is the tile the app would store for that merchant or account: the image from the logo Worker, plated by the app's own `logoPlate`. `logos.json` holds each tile's glow color, which the app saves as `imageColor`. `node apps/screenshots/scripts/bake-site-logos.mjs [domain ...]` rebuilds every tile and adds the domains given. A merchant outside `MERCHANT_LOGOS` in `ledger.ts` draws its category tile, as in the app. The simulator references show larger marks on white, because the screenshot seed flattens a logo instead of plating it.
 - **Strings.** The `native` block of `apps/site/src/content/app-ui.content.ts` copies native keys and their translations; `useReplica().t(key)` reads it. `strings.test.ts` fails when one of them drifts from `apps/native/src/content`.
 - **Data.** `ledger.ts` is the screenshot seed (`apps/screenshots/scripts/seed-sim-ledger.mjs`, region `us`), typed, with `DEMO_NOW` on 12 Sep 2026. Figures come from `@outlayr/money` and the native domain functions themselves. `ledger.test.ts` checks the money math.
 
@@ -28,13 +29,12 @@ In `apps/site`, run `vp dev --config replicas.config.ts`. The index at `http://l
 
 ## Fidelity check
 
-The tool and the simulator references live on talos, outside the repo: `~/scratch/outlayr-site-proposals/source/tools/fidelity/` and `refs/iphone/<id>-<theme>.png` (1206 × 2622). With the viewer running, `node fidelity.mjs log dark en` renders the replica in Chrome at 3x (`CHROME_PATH`, default `~/.agent-browser/chromium/chrome`). It writes `out/<id>-<theme>-side.png` and `-diff.png`, prints the share of mismatched pixels, and gives the worst offset in points for each band of text, tiles, dividers and bars. The target is every band within 1 pt. A new screen needs its bands in `fidelity.mjs`.
+The tool and the simulator references live on talos, outside the repo: `~/scratch/outlayr-site-proposals/source/tools/fidelity/` and `refs/iphone/<id>-<theme>.png` (1206 × 2622). With the viewer running, `node fidelity.mjs log dark en` renders the replica in Chrome at 3x (`CHROME_PATH`, default `~/.agent-browser/chromium/chrome`). It writes `out/<id>-<theme>-side.png` and `-diff.png`, prints the share of mismatched pixels, and gives the worst offset in points for each band of text, tiles, dividers and bars. The target is every band within 1 pt. A new screen needs its bands in `bands/<screen>.mjs`.
 
 Known gaps:
 
 - Yoga rounds a node against its parent, so a 1 pt hairline can paint 0.67 pt and shift the rows below by a third of a point.
 - Glass is a flat fill with a rim.
-- Merchants without a file in `public/media/logos` get the no-logo tile.
 - Safari on macOS uses macOS metrics for `ui-rounded`, which the rise rule does not model.
 
 ## When a native screen changes

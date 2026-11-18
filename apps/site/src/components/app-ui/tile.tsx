@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { glyphShade, TILE_WASH_OPACITY, withAlpha } from "../../../../native/src/theme/shade";
 import { useReplica } from "./canvas";
 import { solidCategoryIcon } from "./icons";
-import type { LogoName } from "./ledger";
+import type { LogoDomain } from "./ledger";
 
 const GLYPH_RAMP = new Map<number, number>([
     [28, 15],
@@ -11,8 +11,6 @@ const GLYPH_RAMP = new Map<number, number>([
     [36, 20],
     [90, 42],
 ]);
-
-const LOGO_ZOOM = 1.5;
 
 function tileRadius(size: number): number {
     if (size >= 72) {
@@ -28,7 +26,7 @@ export interface CategoryIconTileProps {
     color: string;
     future?: boolean;
     icon: string | null;
-    logo?: LogoName | null;
+    logo?: LogoDomain | null;
     radius?: number;
     size?: number;
 }
@@ -44,8 +42,6 @@ export function CategoryIconTile({
     const { theme } = useReplica();
     const corner = radius ?? tileRadius(size);
     if (logo) {
-        const drawn = size * LOGO_ZOOM;
-        const inset = (size - drawn) / 2;
         return (
             <div
                 style={{
@@ -58,8 +54,9 @@ export function CategoryIconTile({
             >
                 <img
                     alt=""
-                    src={`/media/logos/${logo}${theme === "dark" ? "-dark" : ""}.webp`}
-                    style={{ height: drawn, left: inset, position: "absolute", top: inset, width: drawn }}
+                    loading="lazy"
+                    src={`/media/logos/${logo}.webp`}
+                    style={{ height: size, left: 0, objectFit: "cover", position: "absolute", top: 0, width: size }}
                 />
                 <div
                     style={{
