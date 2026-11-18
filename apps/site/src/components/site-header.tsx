@@ -4,6 +4,7 @@ import { lazy, Suspense, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useScrollSpy } from "@/lib/scroll-spy";
+import { SOURCE_URL } from "@/lib/site";
 
 import { GetAppButton, GetAppDialog } from "./get-app";
 import { Icon } from "./icon";
@@ -99,6 +100,13 @@ export function SiteHeader() {
                         ))}
                     </ul>
                     <div className="flex items-center gap-1 justify-self-end">
+                        <a
+                            aria-label={nav.github.value}
+                            className="fluid hover:bg-foreground/5 hidden size-10 place-items-center rounded-full active:scale-[0.96] lg:grid"
+                            href={SOURCE_URL}
+                        >
+                            <Icon className="text-xl" name="github-logo" />
+                        </a>
                         <GetAppButton
                             className="bg-foreground text-background hover:not-disabled:bg-foreground/90 h-10 px-5 text-[0.9375rem]"
                             placement="nav"

@@ -3,8 +3,10 @@ import { useLoaderData } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
+import { Icon } from "@/components/icon";
 import { LocalizedLink } from "@/components/localized-link";
 import { StoreBadges } from "@/components/store-badges";
+import { LICENSE, SOURCE_URL } from "@/lib/site";
 import { sway } from "@/lib/sway";
 
 import { QrButton } from "./qr-button";
@@ -93,7 +95,7 @@ function fill(template: string, proof: WeekProof, format: Intl.NumberFormat) {
 }
 
 function Proof() {
-    const proof = useLoaderData({ from: "/{-$locale}/" });
+    const proof = useLoaderData({ from: "/{-$locale}/" })?.week;
     const { hero } = useIntlayer("horizon");
     const { locale } = useLocale();
     if (!proof) {
@@ -122,6 +124,11 @@ export function Dawn() {
         <div className="hz-dawn">
             <section aria-labelledby="hero-title" className="hz-hero" id="top">
                 <div className="hz-intro">
+                    <a className="hz-source-line" href={SOURCE_URL}>
+                        <Icon name="github-logo" />
+                        <span>{copy.source}</span>
+                        <span className="hz-source-license">{LICENSE}</span>
+                    </a>
                     <Headline />
                     <p className="hz-lead">{copy.lead}</p>
                     <div className="hz-actions">
