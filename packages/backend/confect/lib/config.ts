@@ -16,6 +16,25 @@ const DEFAULT_MCP_CONSENT_URL = "https://tryoutlayr.com/connect";
 export const anthropicApiKey = secret("ANTHROPIC_API_KEY");
 export const elevenLabsApiKey = secret("ELEVENLABS_API_KEY");
 
+export const AiProvider = Schema.Literals(["anthropic", "google", "openai", "openai-compatible"]);
+export const SttProvider = Schema.Literals(["elevenlabs", "openai", "openai-compatible"]);
+
+// The generic vars win; the vendor vars stay as the fallback so existing deployments keep working.
+export const aiProvider = Config.schema(AiProvider, "AI_PROVIDER").pipe(Config.withDefault("anthropic" as const));
+export const aiApiKey = Config.Redacted("AI_API_KEY").pipe(
+    Config.orElse(() => Config.Redacted("ANTHROPIC_API_KEY")),
+    Config.option
+);
+export const aiBaseUrl = text("AI_BASE_URL");
+
+export const sttProvider = Config.schema(SttProvider, "STT_PROVIDER").pipe(Config.withDefault("elevenlabs" as const));
+export const sttApiKey = Config.Redacted("STT_API_KEY").pipe(
+    Config.orElse(() => Config.Redacted("ELEVENLABS_API_KEY")),
+    Config.option
+);
+export const sttBaseUrl = text("STT_BASE_URL");
+export const sttModelId = text("STT_MODEL_ID");
+
 export const claudeModelId = Config.String("CLAUDE_MODEL_ID").pipe(Config.withDefault(CLAUDE_MODEL_ID));
 export const claudeFastModelId = Config.String("CLAUDE_FAST_MODEL_ID").pipe(Config.withDefault(CLAUDE_FAST_MODEL_ID));
 export const claudeGroundedModelId = Config.String("CLAUDE_GROUNDED_MODEL_ID").pipe(

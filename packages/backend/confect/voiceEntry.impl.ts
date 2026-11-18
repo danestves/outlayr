@@ -1,4 +1,3 @@
-import { createElevenLabs } from "@ai-sdk/elevenlabs";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { createThread, getThreadMetadata, saveMessage } from "@convex-dev/agent";
 import { route } from "@outlayr/model-router/route";
@@ -11,7 +10,6 @@ import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpIncomingMessage from "effect/http/HttpIncomingMessage";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import { components } from "../convex/_generated/api";
@@ -26,14 +24,13 @@ import {
     Scheduler,
 } from "./_generated/services";
 import { openAiGate, refuse } from "./lib/aiGate";
+import { sttCredentials, transcriptionModel } from "./lib/aiProvider";
 import { liveIdentity } from "./lib/auth";
 import { admitCapture, withinCaptureAllowance } from "./lib/captures";
-import { elevenLabsApiKey } from "./lib/config";
 import { outboundHttp } from "./lib/http";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";
 import { modelCallError } from "./lib/modelCall";
-import { ELEVENLABS_TRANSCRIPTION_MODEL_ID } from "./lib/models";
 import { isPro } from "./revenuecat";
 import {
     buildPrompt,
@@ -70,9 +67,12 @@ const clearStreamCredits = Effect.fn("VoiceEntry.clearStreamCredits")(function* 
     }
 });
 
-const requestScribeToken = Effect.fn("VoiceEntry.requestScribeToken")(function* requestScribeToken(apiKey: string) {
+const requestScribeToken = Effect.fn("VoiceEntry.requestScribeToken")(function* requestScribeToken(
+    apiKey: string,
+    tokenUrl: string
+) {
     const response = yield* HttpClient.execute(
-        HttpClientRequest.post(SCRIBE_TOKEN_URL).pipe(HttpClientRequest.setHeader("xi-api-key", apiKey))
+        HttpClientRequest.post(tokenUrl).pipe(HttpClientRequest.setHeader("xi-api-key", apiKey))
     );
     if (response.status < 200 || response.status >= 300) {
         return yield* modelCallError(new Error(`ElevenLabs token request failed with ${response.status}`));
@@ -246,12 +246,12 @@ const speak = FunctionImpl.make(
         function* speak(args) {
             const ctx = yield* ActionCtx;
             const {
-                admitted: { transcriptionKey, userId },
+                admitted: { stt, userId },
                 model,
             } = yield* openAiGate(ctx, {
                 admit: Effect.fn("VoiceEntry.speakRungs")(function* speakRungs(caller: UserIdentity) {
-                    const key = yield* elevenLabsApiKey;
-                    if (Option.isNone(key)) {
+                    const credentials = yield* sttCredentials;
+                    if (Option.isNone(credentials)) {
                         return yield* refuse("notConfigured");
                     }
                     if (!isVoiceEntryInput(args)) {
@@ -266,20 +266,14 @@ const speak = FunctionImpl.make(
                         admit: runMutation(refs.internal.voiceEntry.admit),
                         burst: "voiceEntry",
                     });
-                    return { transcriptionKey: key.value, userId: owner };
+                    return { stt: credentials.value, userId: owner };
                 }),
                 args,
                 route: route({ feature: "voice_entry" }),
                 sessionId: args.threadId,
             });
 
-            const heard = yield* transcribeClip(
-                createElevenLabs({ apiKey: Redacted.value(transcriptionKey) }).transcription(
-                    ELEVENLABS_TRANSCRIPTION_MODEL_ID
-                ),
-                args.audio,
-                args.language
-            );
+            const heard = yield* transcribeClip(transcriptionModel(stt), args.audio, args.language);
             if ("error" in heard) {
                 return failure(heard.error === "empty" ? "unclear" : "providerError");
             }
@@ -349,11 +343,12 @@ const openStream = FunctionImpl.make(
         function* openStream(args) {
             const ctx = yield* ActionCtx;
             const {
-                admitted: { scribeKey },
+                admitted: { scribe },
             } = yield* openAiGate(ctx, {
                 admit: Effect.fn("VoiceEntry.openStreamRungs")(function* openStreamRungs(caller: UserIdentity) {
-                    const key = yield* elevenLabsApiKey;
-                    if (Option.isNone(key)) {
+                    const credentials = yield* sttCredentials;
+                    // Realtime Scribe tokens are ElevenLabs-only; clip transcription still works on other providers.
+                    if (Option.isNone(credentials) || credentials.value.provider !== "elevenlabs") {
                         return yield* refuse("notConfigured");
                     }
                     const owner = yield* ownsThread(ctx, args.threadId);
@@ -365,7 +360,7 @@ const openStream = FunctionImpl.make(
                         admit: runMutation(refs.internal.voiceEntry.admit),
                         burst: "voiceEntry",
                     });
-                    return { scribeKey: key.value };
+                    return { scribe: credentials.value };
                 }),
                 args,
                 route: route({ feature: "voice_entry" }),
@@ -374,7 +369,11 @@ const openStream = FunctionImpl.make(
             const { runMutation } = yield* MutationRunner;
             // The capture is already counted, so the credit is granted before the token fetch can fail.
             yield* runMutation(refs.internal.voiceEntry.grantStream, { threadId: args.threadId });
-            return yield* requestScribeToken(Redacted.value(scribeKey)).pipe(
+            const tokenUrl =
+                scribe.baseUrl === undefined
+                    ? SCRIBE_TOKEN_URL
+                    : `${scribe.baseUrl}/v1/single-use-token/realtime_scribe`;
+            return yield* requestScribeToken(scribe.apiKey, tokenUrl).pipe(
                 Effect.map((token) => ({ status: "ok" as const, token })),
                 Effect.catchTags({
                     HttpClientError: () => Effect.succeed({ status: "providerError" as const, token: null }),

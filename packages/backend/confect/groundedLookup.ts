@@ -1,4 +1,3 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import { generateText, isStepCount } from "ai";
@@ -6,7 +5,6 @@ import type { LanguageModel, ToolSet } from "ai";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import { internal } from "../convex/_generated/api";
@@ -21,9 +19,9 @@ import {
     sanitizeMerchantName,
     sanitizeTags,
 } from "./enrichment";
+import { aiCredentials, groundingTools, languageModel } from "./lib/aiProvider";
 import { traced } from "./lib/aiTracing";
 import { categoryChoiceLines, sanitizeCategoryName } from "./lib/categoryChoice";
-import { anthropicApiKey } from "./lib/config";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { CANONICAL_CATEGORIES, KEY_PATTERN, shouldPublish } from "./lib/merchantTrust";
 import type { KnowledgeCandidate } from "./lib/merchantTrust";
@@ -245,17 +243,18 @@ export const groundedAnswer: (
     let deps = overrideDeps;
     let modelId: string = CLAUDE_FAST_MODEL_ID;
     if (!deps) {
-        const apiKey = yield* anthropicApiKey;
-        if (Option.isNone(apiKey)) {
+        const credentials = yield* aiCredentials;
+        if (Option.isNone(credentials)) {
             return null;
         }
-        const anthropic = createAnthropic({ apiKey: Redacted.value(apiKey.value) });
         const groundedRoute = route({ feature: "grounded_lookup" });
         modelId = yield* routedModelId(groundedRoute);
-        const grounding = traced(anthropic(modelId), groundedRoute, { distinctId: args.distinctId });
+        const grounding = traced(languageModel(credentials.value, modelId), groundedRoute, {
+            distinctId: args.distinctId,
+        });
         deps = {
             grounding,
-            groundingTools: { web_search: anthropic.tools.webSearch_20250305({ maxUses: WORST_CASE_SEARCH_CALLS }) },
+            groundingTools: groundingTools(credentials.value, WORST_CASE_SEARCH_CALLS),
         };
     }
 

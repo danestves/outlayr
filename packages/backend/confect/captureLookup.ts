@@ -1,11 +1,9 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import type { LanguageModel } from "ai";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import { internal } from "../convex/_generated/api";
@@ -14,8 +12,8 @@ import type { EnrichmentJobsDoc } from "./_generated/docs";
 import { CaptureRequest } from "./captureLookup.spec";
 import { applyToTree, runSuggest } from "./enrichment";
 import { share } from "./enrichmentQueue";
+import { aiCredentials, languageModel } from "./lib/aiProvider";
 import { traced } from "./lib/aiTracing";
-import { anthropicApiKey } from "./lib/config";
 import type { EnrichmentResult } from "./lib/enrichmentResult";
 import { routedModelId } from "./lib/modelRoute";
 import { sha256Hex } from "./lib/sha256Hex";
@@ -34,18 +32,14 @@ export interface QuickAnswer {
 }
 
 const fastModel = Effect.fn("CaptureLookup.fastModel")(function* fastModel(row: EnrichmentJobsDoc) {
-    const apiKey = yield* anthropicApiKey;
-    if (Option.isNone(apiKey)) {
+    const credentials = yield* aiCredentials;
+    if (Option.isNone(credentials)) {
         return null;
     }
     const distinctId = row.shareAnalytics === true ? row.userId : undefined;
-    return traced(
-        createAnthropic({ apiKey: Redacted.value(apiKey.value) })(yield* routedModelId(CAPTURE_ROUTE)),
-        CAPTURE_ROUTE,
-        {
-            distinctId,
-        }
-    );
+    return traced(languageModel(credentials.value, yield* routedModelId(CAPTURE_ROUTE)), CAPTURE_ROUTE, {
+        distinctId,
+    });
 });
 
 // The cache and the fast model only; a grounded job's fast answer is not final, so its web search still runs queued.

@@ -1,4 +1,3 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { vOnCompleteValidator, Workpool } from "@convex-dev/workpool";
 import { escalation, route } from "@outlayr/model-router/route";
 import type { Route } from "@outlayr/model-router/route";
@@ -7,7 +6,6 @@ import { v } from "convex/values";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 
 import { components, internal } from "../convex/_generated/api";
 import { internalAction, internalMutation } from "../convex/_generated/server";
@@ -17,8 +15,8 @@ import type { Id } from "./_generated/id";
 import { applyToTree, BACKGROUND_REQUEST_TIMEOUT_MS, rateLimiter, runSuggest } from "./enrichment";
 import { groundedAnswer } from "./groundedLookup";
 import type { GroundedCallDeps } from "./groundedLookup";
+import { aiCredentials, languageModel } from "./lib/aiProvider";
 import { traced } from "./lib/aiTracing";
-import { anthropicApiKey } from "./lib/config";
 import type { EnrichmentResult } from "./lib/enrichmentResult";
 import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
 import { routedModelId } from "./lib/modelRoute";
@@ -125,14 +123,14 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
             );
         }
     }
-    const apiKey = yield* anthropicApiKey;
+    const credentials = yield* aiCredentials;
     const request = { budget: yield* budgetState(ctx), feature: "background_suggest" } as const;
     const suggest = Effect.fn("EnrichmentQueue.suggest")(function* suggest(chosen: Route) {
         const modelId = yield* routedModelId(chosen);
         const model =
             deps.fast ??
-            (Option.isSome(apiKey)
-                ? traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), chosen, { distinctId })
+            (Option.isSome(credentials)
+                ? traced(languageModel(credentials.value, modelId), chosen, { distinctId })
                 : null);
         if (model === null) {
             return null;

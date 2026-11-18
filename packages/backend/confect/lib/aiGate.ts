@@ -1,17 +1,15 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import type { Route } from "@outlayr/model-router/route";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import type { UserIdentity } from "convex/server";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import type { ActionCtx, MutationCtx, QueryCtx } from "../../convex/_generated/server";
 import { isPro } from "../revenuecat";
+import { aiCredentials, languageModel } from "./aiProvider";
 import { traced } from "./aiTracing";
 import { liveIdentity } from "./auth";
-import { anthropicApiKey } from "./config";
 import { routedModelId } from "./modelRoute";
 
 export const AiRefusal = Schema.Literals([
@@ -52,8 +50,8 @@ export const openAiGateFor = Effect.fn("AiGate.openFor")(function* openAiGateFor
     caller: UserIdentity,
     request: AiRequest<Admitted, E, R>
 ) {
-    const apiKey = yield* anthropicApiKey;
-    if (Option.isNone(apiKey) || !hasAiConsent(request.args)) {
+    const credentials = yield* aiCredentials;
+    if (Option.isNone(credentials) || !hasAiConsent(request.args)) {
         return yield* refuse("notConfigured");
     }
     const admitted = yield* request.admit(caller);
@@ -63,7 +61,7 @@ export const openAiGateFor = Effect.fn("AiGate.openFor")(function* openAiGateFor
         admitted,
         caller,
         distinctId,
-        model: traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), request.route, {
+        model: traced(languageModel(credentials.value, modelId), request.route, {
             distinctId,
             sessionId: request.sessionId,
         }),
