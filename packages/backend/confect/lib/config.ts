@@ -62,6 +62,12 @@ export const appleConfig = appleCredentials.pipe(
     )
 );
 
+export const apnsConfig = Config.all({
+    keyId: text("APNS_KEY_ID"),
+    privateKey: secret("APNS_PRIVATE_KEY"),
+    teamId: text("APNS_TEAM_ID"),
+}).pipe(Config.map(Option.all));
+
 const googleCredentials = Config.all({
     clientIdIos: text("GOOGLE_CLIENT_ID_IOS"),
     clientIdWeb: text("GOOGLE_CLIENT_ID_WEB"),

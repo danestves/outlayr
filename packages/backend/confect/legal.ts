@@ -13,6 +13,8 @@ export const PolicyNotice = Schema.Struct({
 
 export type PolicyNotice = typeof PolicyNotice.Type;
 
+export const CAPTURE_PUSH_EFFECTIVE_AT_MS = Date.UTC(2027, 0, 1);
+
 export const POLICY_NOTICES: readonly PolicyNotice[] = [
     {
         changes: {
@@ -669,6 +671,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "You can choose up to 5 screenshots at once, and each order on them becomes its own plan. Along with them we send the names of your cards and loans, so each plan goes into the right one, and Claude also reads each order's name.",
                     label: "Installment plan import",
                 },
+                {
+                    detail: "With Smart fill on, a merchant Outlayr doesn't recognize is sent the moment you pay. If the answer takes a few seconds, it reaches your iPhone through Apple's push service, encrypted so Apple can't read it, and we keep your iPhone's push address until you turn Smart fill off, sign out, or delete your account.",
+                    label: "Apple Pay purchases",
+                },
             ],
             de: [
                 {
@@ -726,6 +732,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Du kannst bis zu 5 Screenshots auf einmal wählen, und jede Bestellung darauf wird ein eigener Plan. Dazu senden wir die Namen deiner Karten und Kredite, damit jeder Plan im richtigen landet, und Claude liest auch den Namen jeder Bestellung.",
                     label: "Import von Ratenplänen",
+                },
+                {
+                    detail: "Bei eingeschaltetem „Intelligentes Ausfüllen“ wird ein Händler, den Outlayr nicht kennt, sofort beim Bezahlen gesendet. Dauert die Antwort ein paar Sekunden, kommt sie über Apples Push-Dienst auf dein iPhone, verschlüsselt, sodass Apple sie nicht lesen kann, und wir speichern die Push-Adresse deines iPhones, bis du „Intelligentes Ausfüllen“ ausschaltest, dich abmeldest oder dein Konto löschst.",
+                    label: "Apple-Pay-Käufe",
                 },
             ],
             es: [
@@ -785,6 +795,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Puedes elegir hasta 5 capturas a la vez, y cada compra que aparece en ellas se vuelve su propio plan. Junto con ellas enviamos los nombres de tus tarjetas y préstamos, para que cada plan quede en la correcta, y Claude también lee el nombre de cada compra.",
                     label: "Importación de planes de cuotas",
                 },
+                {
+                    detail: "Con Autocompletado activado, un comercio que Outlayr no reconoce se envía en el momento en que pagas. Si la respuesta tarda unos segundos, llega a tu iPhone por el servicio push de Apple, cifrada para que Apple no pueda leerla, y guardamos la dirección push de tu iPhone hasta que desactives Autocompletado, cierres sesión o borres tu cuenta.",
+                    label: "Compras con Apple Pay",
+                },
             ],
             fr: [
                 {
@@ -842,6 +856,10 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                 {
                     detail: "Vous pouvez choisir jusqu'à 5 captures d'écran à la fois, et chaque commande qui y figure devient son propre échéancier. Nous envoyons avec elles les noms de vos cartes et prêts, pour que chaque échéancier aille dans le bon, et Claude lit aussi le nom de chaque commande.",
                     label: "Import d'échéanciers",
+                },
+                {
+                    detail: "Avec le Remplissage intelligent activé, un commerçant qu'Outlayr ne reconnaît pas est envoyé au moment où vous payez. Si la réponse prend quelques secondes, elle arrive sur votre iPhone via le service push d'Apple, chiffrée pour qu'Apple ne puisse pas la lire, et nous gardons l'adresse push de votre iPhone jusqu'à ce que vous désactiviez le Remplissage intelligent, vous déconnectiez ou supprimiez votre compte.",
+                    label: "Achats Apple Pay",
                 },
             ],
             pt: [
@@ -901,11 +919,15 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
                     detail: "Você pode escolher até 5 capturas de tela de uma vez, e cada pedido nelas vira um parcelamento próprio. Junto com elas enviamos os nomes dos seus cartões e empréstimos, para que cada parcelamento vá para o certo, e o Claude também lê o nome de cada pedido.",
                     label: "Importação de parcelamentos",
                 },
+                {
+                    detail: "Com o Preenchimento inteligente ativado, um estabelecimento que o Outlayr não reconhece é enviado no momento em que você paga. Se a resposta levar alguns segundos, ela chega ao seu iPhone pelo serviço push da Apple, criptografada para que a Apple não consiga ler, e guardamos o endereço push do seu iPhone até você desativar o Preenchimento inteligente, sair da conta ou excluir sua conta.",
+                    label: "Compras com Apple Pay",
+                },
             ],
         },
         document: "privacy",
-        effectiveAtMs: Date.UTC(2027, 0, 1),
-        postedAtMs: Date.UTC(2026, 10, 16),
+        effectiveAtMs: CAPTURE_PUSH_EFFECTIVE_AT_MS,
+        postedAtMs: Date.UTC(2026, 10, 18),
     },
     {
         changes: {

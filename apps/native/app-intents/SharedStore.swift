@@ -87,18 +87,37 @@ enum SharedStore {
         purchase key: String,
         repeatsOnSettle: Bool = false
     ) async {
-        let center = UNUserNotificationCenter.current()
-        guard await center.notificationSettings().authorizationStatus == .authorized,
+        guard await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .authorized,
               await PushLedger.shared.claim(key, repeatsOnSettle: repeatsOnSettle) else { return }
+        await post(title: title, body: body, userInfo: userInfo, identifier: UUID().uuidString, purchase: key)
+    }
+
+    static func claimPurchase(_ key: String) async -> Bool {
+        await PushLedger.shared.claim(key, repeatsOnSettle: false)
+    }
+
+    static func releasePurchase(_ key: String) async {
+        await PushLedger.shared.release(key)
+    }
+
+    static func post(
+        title: String,
+        body: String,
+        userInfo: [AnyHashable: Any],
+        identifier: String,
+        purchase key: String
+    ) async {
+        let center = UNUserNotificationCenter.current()
+        guard await center.notificationSettings().authorizationStatus == .authorized else { return }
+        // A capture push that landed first already shows the answer under this identifier.
+        if await center.deliveredNotifications().contains(where: { $0.request.identifier == identifier }) { return }
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
         content.userInfo = userInfo
         content.threadIdentifier = "automation"
         do {
-            try await center.add(
-                UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-            )
+            try await center.add(UNNotificationRequest(identifier: identifier, content: content, trigger: nil))
         } catch {
             await PushLedger.shared.release(key)
         }

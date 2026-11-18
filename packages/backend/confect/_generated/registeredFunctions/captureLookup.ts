@@ -11,4 +11,8 @@ export default {
 ["revoke"]: RegisteredConvexFunction.register({ ...definitions["revoke"], handler: forward(definitions["revoke"].handler) }),
 ["open"]: RegisteredConvexFunction.register({ ...definitions["open"], handler: forward(definitions["open"].handler) }),
 ["settle"]: RegisteredConvexFunction.register({ ...definitions["settle"], handler: forward(definitions["settle"].handler) }),
+["setPush"]: RegisteredConvexFunction.register({ ...definitions["setPush"], handler: forward(definitions["setPush"].handler) }),
+["pushTarget"]: RegisteredConvexFunction.register({ ...definitions["pushTarget"], handler: forward(definitions["pushTarget"].handler) }),
+["dropPush"]: RegisteredConvexFunction.register({ ...definitions["dropPush"], handler: forward(definitions["dropPush"].handler) }),
+["push"]: RegisteredConvexFunction.register({ ...definitions["push"], handler: forward(definitions["push"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../captureLookup.spec")["default"]>;

@@ -7,12 +7,14 @@ import { MockLanguageModelV3 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import * as Effect from "effect/Effect";
-import { describe, expect, it } from "vite-plus/test";
+import { exportPKCS8, generateKeyPair } from "jose";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { api } from "../convex/_generated/api";
+import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { captureEnrich } from "./captureLookup";
 import { rateLimiter } from "./enrichment";
+import { CAPTURE_PUSH_EFFECTIVE_AT_MS } from "./legal";
 import { purgeUserBatch } from "./lib/account";
 import { runEdge } from "./lib/runEdge";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
@@ -189,5 +191,132 @@ describe("capture lookup", () => {
         await expect(t.mutation(api.captureLookup.register, { deviceId: "phone", key: KEY })).rejects.toThrow(
             "Unauthenticated"
         );
+    });
+});
+
+const PHONE_TOKEN = "a".repeat(64);
+const DAY_MS = 24 * 60 * 60 * 1000;
+const ANSWER = {
+    categoryName: "Groceries",
+    domain: "care4bag.gr",
+    emoji: null,
+    isNewCategory: false,
+    merchantName: "Care4Bag",
+    parentCategoryName: null,
+    tags: [],
+};
+
+async function pushReady(t: TestClient, deviceId = "phone", token = PHONE_TOKEN) {
+    const user = await seedAuthUser(t);
+    const device = authenticatedAs(t, user);
+    await device.mutation(api.captureLookup.register, { deviceId, key: `${deviceId}-${KEY}` });
+    const stored = await device.mutation(api.captureLookup.setPush, {
+        deviceId,
+        environment: "development",
+        secret: "5".repeat(64),
+        token,
+    });
+    return { stored, user };
+}
+
+async function finishJob(t: TestClient, userId: string, deviceId: string | undefined) {
+    const jobId = await t.run((ctx) =>
+        ctx.db.insert("enrichmentJobs", {
+            categoryTree: CAPTURE.categoryTree,
+            deviceId,
+            grounded: true,
+            income: false,
+            localId: CAPTURE.captureId,
+            name: CAPTURE.name,
+            status: "queued",
+            userId,
+        })
+    );
+    await t.mutation(internal.enrichmentQueue.finish, { jobId, result: ANSWER });
+    await t.finishAllScheduledFunctions(vi.runAllTimers);
+}
+
+describe("capture push", () => {
+    afterEach(() => {
+        vi.useRealTimers();
+        vi.unstubAllEnvs();
+        vi.unstubAllGlobals();
+    });
+
+    async function live(now = CAPTURE_PUSH_EFFECTIVE_AT_MS) {
+        vi.useFakeTimers({ now });
+        const { privateKey } = await generateKeyPair("ES256", { extractable: true });
+        vi.stubEnv("APNS_KEY_ID", "KEY1234567");
+        vi.stubEnv("APNS_PRIVATE_KEY", await exportPKCS8(privateKey));
+        vi.stubEnv("APNS_TEAM_ID", "8ZB3YXDU7V");
+        const sent = vi.fn<typeof fetch>(async () => new Response(null, { status: 200 }));
+        vi.stubGlobal("fetch", sent);
+        return sent;
+    }
+
+    it("tells only the phone that captured the purchase, sealed so Apple can't read it", async () => {
+        const sent = await live();
+        const t = setup();
+        const { user } = await pushReady(t);
+        const tablet = authenticatedAs(t, user);
+        await tablet.mutation(api.captureLookup.register, { deviceId: "tablet", key: `tablet-${KEY}` });
+        await tablet.mutation(api.captureLookup.setPush, {
+            deviceId: "tablet",
+            environment: "development",
+            secret: "6".repeat(64),
+            token: "b".repeat(64),
+        });
+
+        await finishJob(t, user.userId, "phone");
+
+        expect(sent).toHaveBeenCalledOnce();
+        const [url, init] = sent.mock.calls[0] ?? [];
+        expect(url).toBe(`https://api.sandbox.push.apple.com/3/device/${PHONE_TOKEN}`);
+        expect(init?.headers).toMatchObject({ "apns-collapse-id": CAPTURE.captureId });
+        expect(String(init?.body)).not.toMatch(/Care4Bag|Groceries|CARE4BAG/u);
+    });
+
+    it("never pushes an in-app lookup, which no single phone is waiting on", async () => {
+        const sent = await live();
+        const t = setup();
+        const { user } = await pushReady(t);
+
+        await finishJob(t, user.userId, undefined);
+
+        expect(sent).not.toHaveBeenCalled();
+    });
+
+    it("sends nothing to a phone that signed out or an account that was deleted", async () => {
+        const sent = await live();
+        const t = setup();
+        const signedOut = await pushReady(t);
+        const deleted = await pushReady(t, "other", "c".repeat(64));
+        await authenticatedAs(t, signedOut.user).mutation(api.captureLookup.revoke, { deviceId: "phone" });
+        let done = false;
+        while (!done) {
+            ({ done } = await t.run((ctx) => runEdge(purgeUserBatch(ctx, deleted.user.userId))));
+        }
+
+        await finishJob(t, signedOut.user.userId, "phone");
+        await t.action(internal.captureLookup.push, {
+            captureId: CAPTURE.captureId,
+            deviceId: "other",
+            name: CAPTURE.name,
+            result: ANSWER,
+            userId: deleted.user.userId,
+        });
+
+        expect(sent).not.toHaveBeenCalled();
+    });
+
+    it("stores no push token before the privacy notice announcing it takes effect", async () => {
+        await live(CAPTURE_PUSH_EFFECTIVE_AT_MS - DAY_MS);
+        const t = setup();
+
+        const { stored } = await pushReady(t);
+
+        expect(stored).toBeFalsy();
+        const keys = await t.run((ctx) => ctx.db.query("captureKeys").collect());
+        expect(keys.map((row) => row.push)).toStrictEqual([undefined]);
     });
 });

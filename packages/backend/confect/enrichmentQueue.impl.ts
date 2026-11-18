@@ -1,9 +1,11 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
+import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx } from "./_generated/services";
+import { DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx, Scheduler } from "./_generated/services";
 import { MAX_ACK_IDS, MAX_RESULTS, settled, work } from "./enrichmentQueue";
 import spec from "./enrichmentQueue.spec";
 import { optionalUserId, requireUserId } from "./lib/auth";
@@ -60,6 +62,17 @@ const finish = FunctionImpl.make(
         yield* writer
             .table("enrichmentJobs")
             .patch(args.jobId, args.result === null ? { status: "failed" } : { result: args.result, status: "done" });
+        const named = args.result !== null && (args.result.merchantName ?? args.result.categoryName) !== null;
+        if (named && row.deviceId !== undefined) {
+            yield* (yield* Scheduler).runAfter(Duration.zero, refs.internal.captureLookup.push, {
+                captureId: row.localId,
+                deviceId: row.deviceId,
+                locale: row.locale,
+                name: row.name,
+                result: args.result,
+                userId: row.userId,
+            });
+        }
         return null;
     }, Effect.orDie)
 );

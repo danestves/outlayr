@@ -1,6 +1,11 @@
+import { CAPTURE_PUSH_EFFECTIVE_AT_MS } from "@outlayr/backend/confect/legal";
 import { api } from "@outlayr/backend/convex/_generated/api";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import { getIosPushNotificationServiceEnvironmentAsync } from "expo-application";
 import { getRandomBytesAsync } from "expo-crypto";
+import { Platform } from "react-native";
 
 import { Meta } from "@/data/app-meta-core";
 import { categoryTree } from "@/data/enrichment-queue-core";
@@ -19,7 +24,14 @@ const CAPTURE_SNAPSHOT_KEY = "captureLookup";
 // Its own label rather than the sync device id, which the privacy policy ties to ordering synced edits.
 const CAPTURE_DEVICE_KEY = "captureDevice";
 
+const CAPTURE_PUSH_SECRET_KEY = "capturePushSecret";
+
+const CAPTURE_PUSH_KEY = "capturePush";
+
 const KEY_BYTES = 32;
+
+// APNs registration never settles on a phone that can't reach Apple.
+const TOKEN_WAIT = Duration.seconds(10);
 
 const hex = (bytes: Uint8Array) => Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 
@@ -38,15 +50,56 @@ function labelIn(store: Store): string {
     return minted;
 }
 
+const forgetPush = (store: Store) => {
+    store.remove(CAPTURE_PUSH_KEY);
+    store.remove(CAPTURE_PUSH_SECRET_KEY);
+};
+
 const clearLocal = (store: Store) => {
     store.remove(CAPTURE_SNAPSHOT_KEY);
+    forgetPush(store);
     store.setCaptureKey(null);
 };
 
+const randomHex = Effect.fn("CaptureLookup.randomHex")(function* randomHex() {
+    return hex(yield* Effect.tryPromise(() => getRandomBytesAsync(KEY_BYTES)));
+});
+
 const mintKey = Effect.fn("CaptureLookup.mintKey")(function* mintKey(store: Store) {
-    const key = hex(yield* Effect.tryPromise(() => getRandomBytesAsync(KEY_BYTES)));
+    const key = yield* randomHex();
     yield* cloudMutation(api.captureLookup.register, { deviceId: labelIn(store), key });
+    forgetPush(store);
     return store.setCaptureKey(key);
+});
+
+let pushRefused = false;
+
+const registerPush = Effect.fn("CaptureLookup.registerPush")(function* registerPush(store: Store) {
+    if (Platform.OS !== "ios" || pushRefused || (yield* Clock.currentTimeMillis) < CAPTURE_PUSH_EFFECTIVE_AT_MS) {
+        return;
+    }
+    // On demand: importing expo-notifications starts its token side effects in every suite that reaches this file.
+    const notifications = yield* Effect.tryPromise(() => import("expo-notifications"));
+    if (!(yield* Effect.tryPromise(() => notifications.getPermissionsAsync())).granted) {
+        return;
+    }
+    const { data: token } = yield* Effect.tryPromise(() => notifications.getDevicePushTokenAsync()).pipe(
+        Effect.timeout(TOKEN_WAIT)
+    );
+    const environment =
+        (yield* Effect.tryPromise(() => getIosPushNotificationServiceEnvironmentAsync())) ??
+        (__DEV__ ? "development" : "production");
+    const address = `${environment}:${token}`;
+    if (store.get(CAPTURE_PUSH_KEY) === address) {
+        return;
+    }
+    const secret = store.get(CAPTURE_PUSH_SECRET_KEY) ?? (yield* randomHex());
+    store.set(CAPTURE_PUSH_SECRET_KEY, secret);
+    if (yield* cloudMutation(api.captureLookup.setPush, { deviceId: labelIn(store), environment, secret, token })) {
+        store.set(CAPTURE_PUSH_KEY, address);
+    } else {
+        pushRefused = true;
+    }
 });
 
 /**
@@ -60,6 +113,12 @@ export const syncCaptureLookup = Effect.fn("CaptureLookup.sync")(
             return;
         }
         if (!isCloudAuthenticated() || !CONVEX_SITE_URL || !(yield* readRemoteEnrichment(db))) {
+            if (isCloudAuthenticated() && sharedStore.captureKeyStatus() === "present") {
+                // The secret goes first so a push on its way can't be opened; the key stays until the revoke lands.
+                sharedStore.remove(CAPTURE_SNAPSHOT_KEY);
+                forgetPush(sharedStore);
+                yield* cloudMutation(api.captureLookup.revoke, { deviceId: labelIn(sharedStore) });
+            }
             clearLocal(sharedStore);
             return;
         }
@@ -78,6 +137,9 @@ export const syncCaptureLookup = Effect.fn("CaptureLookup.sync")(
             url: `${CONVEX_SITE_URL}/capture/enrich`,
         };
         sharedStore.set(CAPTURE_SNAPSHOT_KEY, JSON.stringify(snapshot));
+        yield* registerPush(sharedStore).pipe(
+            Effect.catchCause((cause) => Effect.logWarning("[outlayr] capture push not registered", cause))
+        );
     },
     Effect.catchCause((cause) => Effect.logWarning("[outlayr] capture lookup not synced", cause))
 );
