@@ -559,7 +559,7 @@ const dashboardDebts = {
                 fr: "Fin du mois",
                 pt: "Fim do mês",
             }),
-            illPay: t({ en: "I'll pay", de: "Ich zahle", es: "Pagaré", fr: "Je paierai", pt: "Vou pagar" }),
+            illPay: t({ en: "I'll pay", de: "Ich zahle", es: "Voy a pagar", fr: "Je paierai", pt: "Vou pagar" }),
             noDate: t({ en: "No date", de: "Kein Datum", es: "Sin fecha", fr: "Sans date", pt: "Sem data" }),
             saved: insert(
                 t({
@@ -773,7 +773,7 @@ const dashboardDebts = {
                 t({
                     en: "I'll pay {{date}}",
                     de: "Ich zahle am {{date}}",
-                    es: "Pagaré el {{date}}",
+                    es: "Voy a pagar el {{date}}",
                     fr: "Je paierai le {{date}}",
                     pt: "Vou pagar em {{date}}",
                 })

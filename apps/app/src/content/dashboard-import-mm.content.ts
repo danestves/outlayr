@@ -129,7 +129,7 @@ const dashboardImportMm = {
             ),
             summary: text("{n} accounts", "{n} Konten", "{n} cuentas", "{n} comptes", "{n} contas"),
             summaryOff: text("{n} off", "{n} weichen ab", "{n} con diferencia", "{n} avec écart", "{n} com diferença"),
-            title: text("Balances", "Kontostände", "Saldos", "Soldes", "Saldos"),
+            title: text("Balances", "Kontostände", "Saldos", "Soldes des comptes", "Saldos"),
         },
         bar: {
             back: text("Back", "Zurück", "Atrás", "Retour", "Voltar"),

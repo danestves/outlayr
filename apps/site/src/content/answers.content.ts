@@ -14,7 +14,7 @@ import {
 const OUTLAYR_LEAD = {
     en: "Outlayr is an open source expense tracker you fill in by sentence, voice, or receipt, free to start.",
     de: "Outlayr ist ein Open-Source-Ausgaben-Tracker, den du per Satz, Sprache oder Beleg füllst, zum Start kostenlos.",
-    es: "Outlayr es una app de código abierto para controlar tus gastos que llenas con una oración, con tu voz o con un recibo, gratis para empezar.",
+    es: "Outlayr es una app de código abierto para controlar tus gastos que llenas con una frase, con tu voz o con un recibo, gratis para empezar.",
     pt: "O Outlayr é um app de código aberto para controlar gastos que você preenche por frase, voz ou recibo, grátis para começar.",
     fr: "Outlayr est une application open source de suivi des dépenses que vous remplissez par une phrase, à la voix ou avec un reçu, gratuite pour commencer.",
 } as const;
@@ -132,7 +132,7 @@ const OUTLAYR = {
     entries: t({
         en: "One sentence, voice, receipt scan, CSV import",
         de: "Ein Satz, Sprache, Belegscan, CSV-Import",
-        es: "Una oración, voz, escaneo de recibos, importación de CSV",
+        es: "Una frase, voz, escaneo de recibos, importación de CSV",
         pt: "Uma frase, voz, escaneamento de recibo, importação de CSV",
         fr: "Une phrase, la voix, le scan de reçus, l'import CSV",
     }),
@@ -897,7 +897,7 @@ const BEST_OF = {
     monthly: t({ en: "Monthly", es: "Al mes" }),
     outlayr: t({
         en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-        es: "Outlayr es la app de gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+        es: "Outlayr es la app de gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
     }),
     outlayrBank: t({ en: "No, it never links one", es: "No, nunca se conecta a uno" }),
     yearly: t({ en: "Yearly", es: "Al año" }),
@@ -911,7 +911,7 @@ const answers = {
                     outlayr: t({
                         en: "Starting free outside the US, logging by sentence, voice, or receipt",
                         de: "Kostenlos starten außerhalb der USA, per Satz, Sprache oder Beleg erfassen",
-                        es: "Empezar gratis fuera de EE. UU. y registrar con una oración, tu voz o un recibo",
+                        es: "Empezar gratis fuera de EE. UU. y registrar con una frase, tu voz o un recibo",
                         pt: "Começar grátis fora dos EUA, registrando por frase, voz ou recibo",
                         fr: "Démarrer gratuitement hors des États-Unis, en saisissant par une phrase, la voix ou un reçu",
                     }),
@@ -1345,7 +1345,7 @@ const answers = {
                         answer: t({
                             en: "It is if you live outside Spain, pay in cash as well as by card, or want to log a purchase by saying it or scanning the receipt. Fintonic fits better if you bank in Spain and want your accounts to sync on their own, a financial score, or help getting a loan.",
                             de: "Ja, wenn du außerhalb von Spanien lebst, bar und mit Karte zahlst oder einen Einkauf per Sprache oder Belegscan erfassen willst. Fintonic passt besser, wenn du bei einer spanischen Bank bist und willst, dass deine Konten sich von selbst synchronisieren, oder einen Finanz-Score oder Hilfe bei einem Kredit suchst.",
-                            es: "Sí, si vives fuera de España, también pagas en efectivo o prefieres registrar tus gastos sin conectar tu banco, con una oración, tu voz o un recibo. Fintonic te conviene más si tu banco está en su lista y quieres que los movimientos lleguen solos, o si buscas una nota financiera y ayuda para conseguir un préstamo. Outlayr no se conecta a tu banco, no calcula una nota financiera ni ofrece préstamos. Lo más cercano es registrar compras desde Apple Pay en iPhone o desde las notificaciones de tus apps en Android.",
+                            es: "Sí, si vives fuera de España, también pagas en efectivo o prefieres registrar tus gastos sin conectar tu banco, con una frase, tu voz o un recibo. Fintonic te conviene más si tu banco está en su lista y quieres que los movimientos lleguen solos, o si buscas una nota financiera y ayuda para conseguir un préstamo. Outlayr no se conecta a tu banco, no calcula una nota financiera ni ofrece préstamos. Lo más cercano es registrar compras desde Apple Pay en iPhone o desde las notificaciones de tus apps en Android.",
                             pt: "Sim, se você mora fora da Espanha, paga em dinheiro além do cartão ou quer registrar uma compra falando ou escaneando o recibo. O Fintonic combina mais se você tem banco na Espanha e quer contas sincronizando sozinhas, uma pontuação financeira ou ajuda para conseguir um empréstimo.",
                             fr: "Oui, si vous vivez hors d'Espagne, si vous payez en espèces autant que par carte ou si vous voulez enregistrer un achat en le dictant ou en scannant le reçu. Fintonic convient mieux si vous avez votre banque en Espagne et voulez que vos comptes se synchronisent tout seuls, un score financier ou de l'aide pour obtenir un prêt.",
                         }),
@@ -1377,7 +1377,7 @@ const answers = {
                         answer: t({
                             en: "Yes. Type one sentence, say it, or scan the receipt, and file it under a cash account. Fintonic's help center says it shows only movements that went through a bank account.",
                             de: "Ja. Tippe einen Satz, sag ihn oder scanne den Beleg und ordne ihn einem Bargeldkonto zu. Laut Hilfecenter von Fintonic zeigt die App nur Bewegungen, die über ein Bankkonto liefen.",
-                            es: "Sí. Escribe una oración, díctala o escanea el recibo, y regístrala en una cuenta de efectivo. El centro de ayuda de Fintonic dice que no puedes añadir gastos en efectivo que no pasaron por el banco.",
+                            es: "Sí. Escribe una frase, díctala o escanea el recibo, y regístrala en una cuenta de efectivo. El centro de ayuda de Fintonic dice que no puedes añadir gastos en efectivo que no pasaron por el banco.",
                             pt: "Sim. Digite uma frase, fale ou escaneie o recibo e registre em uma conta de dinheiro. A central de ajuda do Fintonic diz que ele mostra só movimentações que passaram por uma conta bancária.",
                             fr: "Oui. Tapez une phrase, dictez-la ou scannez le reçu, et classez-la dans un compte espèces. Le centre d'aide de Fintonic indique qu'il n'affiche que les mouvements passés par un compte bancaire.",
                         }),
@@ -1436,7 +1436,7 @@ const answers = {
                 lead: t({
                     en: `${OUTLAYR_LEAD.en} ${RIVALS.fintonic.en}`,
                     de: `${OUTLAYR_LEAD.de} ${RIVALS.fintonic.de}`,
-                    es: `¿Buscas una alternativa a Fintonic? Outlayr es una app de código abierto para controlar tus gastos sin conectar tu banco: los registras con una oración, con tu voz o con un recibo, también en efectivo y fuera de España, gratis para empezar. ${RIVALS.fintonic.es} Si quieres que tus movimientos lleguen solos, te conviene más Fintonic.`,
+                    es: `¿Buscas una alternativa a Fintonic? Outlayr es una app de código abierto para controlar tus gastos sin conectar tu banco: los registras con una frase, con tu voz o con un recibo, también en efectivo y fuera de España, gratis para empezar. ${RIVALS.fintonic.es} Si quieres que tus movimientos lleguen solos, te conviene más Fintonic.`,
                     pt: `${OUTLAYR_LEAD.pt} ${RIVALS.fintonic.pt}`,
                     fr: `${OUTLAYR_LEAD.fr} ${RIVALS.fintonic.fr}`,
                 }),
@@ -1483,7 +1483,7 @@ const answers = {
                         text: t({
                             en: "Import it in Settings, under Import data, as a CSV file, and check the columns Outlayr picked before you import. Or start fresh: type a purchase as one sentence, say it, or scan the receipt.",
                             de: "Importiere sie in den Einstellungen unter „Daten importieren“ als CSV-Datei und prüfe vor dem Import die Spalten, die Outlayr zugeordnet hat. Oder fang neu an: Tippe einen Einkauf als einen Satz, sag ihn oder scanne den Beleg.",
-                            es: "En la sección Datos de la configuración de Outlayr, toca Importar y elige el CSV. Revisa las columnas que eligió Outlayr: necesita la fecha, el monto y una categoría o descripción. Pasan tus movimientos pasados, no la conexión con el banco. O empieza de cero: escribe una compra en una oración, díctala o escanea el recibo.",
+                            es: "En la sección Datos de la configuración de Outlayr, toca Importar y elige el CSV. Revisa las columnas que eligió Outlayr: necesita la fecha, el monto y una categoría o descripción. Pasan tus movimientos pasados, no la conexión con el banco. O empieza de cero: escribe una compra en una frase, díctala o escanea el recibo.",
                             pt: "Importe em Ajustes, em Importar dados, como arquivo CSV, e confira as colunas que o Outlayr escolheu antes de importar. Ou comece do zero: digite uma compra em uma frase, fale ou escaneie o recibo.",
                             fr: "Importez-le dans Réglages, sous Importer des données, en fichier CSV, et vérifiez les colonnes choisies par Outlayr avant d'importer. Ou repartez de zéro : tapez un achat en une phrase, dictez-le ou scannez le reçu.",
                         }),
@@ -1748,7 +1748,7 @@ const answers = {
                             de: "Konten und Umschlagbeträge. Setze deine Limits in „Kontostände“ unter Kategorien neu und schalte „Rest übertragen“ ein, um zu behalten, was du nicht ausgibst.",
                             es: "Las cuentas y los montos de los sobres. Vuelve a poner tus límites en Saldos, en Categorías, y activa Acumular lo que sobre para conservar lo que no gastes.",
                             pt: "Contas e valores dos envelopes. Defina seus limites de novo em Saldos, em Categorias, e ative a opção de levar o saldo adiante para guardar o que você não gastar.",
-                            fr: "Les comptes et les montants des enveloppes. Fixez à nouveau vos limites dans Soldes, sous Catégories, et activez le report pour garder ce que vous ne dépensez pas.",
+                            fr: "Les comptes et les montants des enveloppes. Fixez à nouveau vos limites dans Solde, sous Catégories, et activez le report pour garder ce que vous ne dépensez pas.",
                         }),
                     },
                 ],
@@ -2082,7 +2082,7 @@ const answers = {
                 faq: [
                     {
                         answer: t({
-                            en: "It is if you want each purchase converted at the rate from its day, recurring entries and reminders on the free plan, or would rather say or scan a purchase than fill in a form. Monefy fits better if you want to log in two taps or sync through your own Google Drive or Dropbox.",
+                            en: "It is if you want each purchase converted at the rate from its day, recurring entries and reminders on the free plan, or would rather say or scan a purchase than fill in a form. Monefy fits better if you want to log a purchase in two taps or sync through your own Google Drive or Dropbox.",
                             de: "Ja, wenn du jeden Einkauf zum Kurs seines Tages umrechnen lassen willst, wiederkehrende Einträge und Erinnerungen im Gratis-Plan möchtest oder einen Einkauf lieber sagst oder scannst, statt ein Formular auszufüllen. Monefy passt besser, wenn du in zwei Taps erfassen oder über dein eigenes Google Drive oder Dropbox synchronisieren willst.",
                             es: "Sí, si quieres cada compra convertida con la tasa de su día, registros recurrentes y avisos en el plan gratis, o prefieres dictar o escanear una compra en vez de llenar un formulario. Monefy te conviene más si quieres registrar en dos toques o sincronizar con tu propio Google Drive o Dropbox.",
                             pt: "Sim, se você quer cada compra convertida pela cotação do dia dela, lançamentos recorrentes e lembretes no Plano grátis ou prefere falar ou escanear uma compra a preencher um formulário. O Monefy combina mais se você quer registrar em dois toques ou sincronizar pelo seu próprio Google Drive ou Dropbox.",
@@ -2537,7 +2537,7 @@ const answers = {
                         rival: t({
                             en: "By hand, a typed sentence, receipt scan, Apple Pay through Shortcuts on iPhone, and bank linking. Free accounts get 10 AI uses",
                             de: "Von Hand, per getipptem Satz, Belegscan, Apple Pay über Kurzbefehle auf dem iPhone und Bankverknüpfung. Gratis-Konten bekommen 10 KI-Nutzungen",
-                            es: "A mano, una oración escrita, escaneo de recibos, Apple Pay con Atajos en iPhone y conexión al banco. Las cuentas gratis tienen 10 usos de IA",
+                            es: "A mano, una frase escrita, escaneo de recibos, Apple Pay con Atajos en iPhone y conexión al banco. Las cuentas gratis tienen 10 usos de IA",
                             pt: "À mão, frase digitada, escaneamento de recibo, Apple Pay pelo app Atalhos no iPhone e vinculação bancária. Contas grátis têm 10 usos de IA",
                             fr: "À la main, une phrase tapée, scan de reçu, Apple Pay par Raccourcis sur iPhone, et liaison bancaire. Les comptes gratuits ont 10 utilisations de l'IA",
                         }),
@@ -2671,7 +2671,7 @@ const answers = {
                     description: t({
                         en: "PocketGuard is a paid budget app that syncs linked bank accounts. Outlayr is an open source alternative you fill in by sentence, voice, or receipt.",
                         de: "PocketGuard ist eine kostenpflichtige Budget-App, die verknüpfte Bankkonten synchronisiert. Outlayr ist eine Open-Source-Alternative, die du per Satz, Sprache oder Beleg füllst.",
-                        es: "PocketGuard es una app de presupuesto de pago que sincroniza tus cuentas. Outlayr es una alternativa de código abierto que llenas con una oración, voz o recibo.",
+                        es: "PocketGuard es una app de presupuesto de pago que sincroniza tus cuentas. Outlayr es una alternativa de código abierto que llenas con una frase, voz o recibo.",
                         pt: "O PocketGuard é um app de orçamento pago que sincroniza contas bancárias vinculadas. O Outlayr é uma alternativa de código aberto que você preenche por frase, voz ou recibo.",
                         fr: "PocketGuard est une application de budget payante qui synchronise les comptes bancaires liés. Outlayr est une alternative open source que vous remplissez par une phrase, à la voix ou avec un reçu.",
                     }),
@@ -3647,7 +3647,7 @@ const answers = {
                         label: t({ en: "Type it", es: "Escríbela" }),
                         text: t({
                             en: "Tap each underlined word of the sentence. It works with no signal and no account",
-                            es: "Toca cada palabra subrayada de la oración. Funciona sin señal y sin cuenta",
+                            es: "Toca cada palabra subrayada de la frase. Funciona sin señal y sin cuenta",
                         }),
                     },
                     {
@@ -3676,7 +3676,7 @@ const answers = {
                     {
                         answer: t({
                             en: "For voice and receipts, yes. AI reads what you say or the receipt you photograph and fills in the entry for you to check. Typing is a sentence you fill in by tapping. Once you allow AI features, Outlayr can also suggest a category for a merchant it does not know, sending the merchant name but never the amount, the date, or the account.",
-                            es: "Para la voz y los recibos, sí. La IA lee lo que dictas o el recibo que fotografías y llena el registro para que lo revises. Escribir es llenar una oración tocando cada palabra. Cuando permites las funciones de IA, Outlayr también puede sugerir una categoría para un comercio que no conoce, enviando el nombre del comercio pero nunca el monto, la fecha ni la cuenta.",
+                            es: "Para la voz y los recibos, sí. La IA lee lo que dictas o el recibo que fotografías y llena el registro para que lo revises. Escribir es llenar una frase tocando cada palabra. Cuando permites las funciones de IA, Outlayr también puede sugerir una categoría para un comercio que no conoce, enviando el nombre del comercio pero nunca el monto, la fecha ni la cuenta.",
                         }),
                         question: t({
                             en: "Is Outlayr an AI expense tracker?",
@@ -3686,7 +3686,7 @@ const answers = {
                     {
                         answer: t({
                             en: "No. The typed sentence is a form: you tap each word to fill it in. To log a purchase in your own words, say it, and voice entry fills in the same sentence from what it hears.",
-                            es: "No. La oración que escribes es un formulario: tocas cada palabra para llenarla. Para registrar una compra con tus palabras, díctala, y el registro por voz llena la misma oración con lo que escucha.",
+                            es: "No. La frase que escribes es un formulario: tocas cada palabra para llenarla. Para registrar una compra con tus palabras, díctala, y el registro por voz llena la misma frase con lo que escucha.",
                         }),
                         question: t({
                             en: "Can I type a purchase in my own words?",
@@ -3720,7 +3720,7 @@ const answers = {
                 ],
                 lead: t({
                     en: "An AI expense tracker turns a purchase you describe in your own words into a saved entry. In Outlayr, AI reads the sentence you say, the receipt you photograph, and the bank notifications it logs, then fills in the amount, merchant, category, account, date, and currency. Typing fills the same sentence with taps, on your phone, with no signal needed.",
-                    es: "Una app de gastos con IA convierte una compra que describes con tus palabras en un registro guardado. En Outlayr, la IA lee la oración que dictas, el recibo que fotografías y las notificaciones del banco que registra, y llena el monto, el comercio, la categoría, la cuenta, la fecha y la moneda. Al escribir, llenas la misma oración con toques en tu celular, sin necesidad de señal.",
+                    es: "Una app de gastos con IA convierte una compra que describes con tus palabras en un registro guardado. En Outlayr, la IA lee la frase que dictas, el recibo que fotografías y las notificaciones del banco que registra, y llena el monto, el comercio, la categoría, la cuenta, la fecha y la moneda. Al escribir, llenas la misma frase con toques en tu celular, sin necesidad de señal.",
                 }),
                 meta: {
                     description: t({
@@ -3790,7 +3790,7 @@ const answers = {
                 ],
                 plateAlt: t({
                     en: "Outlayr voice entry: a spoken sentence becomes $12.50 at Blue Bottle under Coffee, and a spoken correction moves it to yesterday.",
-                    es: "Registro por voz de Outlayr: una oración dictada se convierte en $12.50 en Juan Valdez en Café, y una corrección dicha lo pasa a ayer.",
+                    es: "Registro por voz de Outlayr: una frase dictada se convierte en $12.50 en Juan Valdez en Café, y una corrección dicha lo pasa a ayer.",
                 }),
                 related: [
                     "/guides/voice-expense-tracker",
@@ -3808,9 +3808,9 @@ const answers = {
                     {
                         text: t({
                             en: "To type it, tap each underlined word of the sentence, like Spent $12.50 at Blue Bottle for Coffee from Apple Card today. To say it, describe the purchase the way you would tell a friend.",
-                            es: "Para escribirla, toca cada palabra subrayada de la oración, como Gasté $12.50 en Blue Bottle para Café con Apple Card hoy. Para dictarla, describe la compra como se la contarías a un amigo.",
+                            es: "Para escribirla, toca cada palabra subrayada de la frase, como Gasté $12.50 en Blue Bottle para Café con Apple Card hoy. Para dictarla, describe la compra como se la contarías a un amigo.",
                         }),
-                        title: t({ en: "Fill in the sentence", es: "Llena la oración" }),
+                        title: t({ en: "Fill in the sentence", es: "Llena la frase" }),
                     },
                     {
                         text: t({
@@ -3916,7 +3916,7 @@ const answers = {
                                     en: "“every month”, “weekly”, “a subscription”",
                                     es: "“cada mes”, “cada semana”, “una suscripción”",
                                 }),
-                                t({ en: "Tap repeat under the sentence", es: "Toca repetir debajo de la oración" }),
+                                t({ en: "Tap repeat under the sentence", es: "Toca repetir debajo de la frase" }),
                             ],
                             label: t({ en: "Repeats", es: "Se repite" }),
                         },
@@ -3942,7 +3942,7 @@ const answers = {
                 ],
                 title: t({
                     en: "Log an expense by typing or saying one sentence",
-                    es: "Registra un gasto escribiendo o dictando una oración",
+                    es: "Registra un gasto escribiendo o dictando una frase",
                 }),
             },
             "apple-pay-expense-tracker": {
@@ -4524,7 +4524,7 @@ const answers = {
                         label: "Outlayr",
                         text: t({
                             en: "Best if you want to budget in CAD without a bank login, logging a purchase in one sentence",
-                            es: "Ideal si quieres presupuestar en CAD sin iniciar sesión en tu banco, registrando una compra en una oración",
+                            es: "Ideal si quieres presupuestar en CAD sin iniciar sesión en tu banco, registrando una compra en una frase",
                             fr: "Idéal si vous voulez faire votre budget en CAD sans connexion bancaire, en notant un achat en une phrase",
                         }),
                     },
@@ -5074,7 +5074,7 @@ const answers = {
                         label: "Outlayr",
                         text: t({
                             en: "Best if you want to log by sentence, voice, or receipt, with each purchase at the rate from its day",
-                            es: "Ideal si quieres registrar con una oración, tu voz o un recibo, con cada compra a la tasa de su día",
+                            es: "Ideal si quieres registrar con una frase, tu voz o un recibo, con cada compra a la tasa de su día",
                         }),
                     },
                     {
@@ -5103,7 +5103,7 @@ const answers = {
                     {
                         answer: t({
                             en: "It depends on how you want to log. Monefy logs a purchase in two taps. Money Manager keeps double-entry accounts, up to 10 on its free iPhone version. Spendee and Wallet by BudgetBakers start free and sync bank accounts in Premium. Outlayr logs by sentence, voice, or receipt on its free plan. YNAB is paid after a 34-day trial.",
-                            es: "Depende de cómo quieras registrar. Monefy registra una compra en dos toques. Money Manager lleva contabilidad de doble entrada, con hasta 10 cuentas en su versión gratis para iPhone. Spendee y Wallet by BudgetBakers empiezan gratis y sincronizan cuentas de banco en Premium. Outlayr registra con una oración, tu voz o un recibo en su plan gratis. YNAB es de pago después de una prueba de 34 días.",
+                            es: "Depende de cómo quieras registrar. Monefy registra una compra en dos toques. Money Manager lleva contabilidad de doble entrada, con hasta 10 cuentas en su versión gratis para iPhone. Spendee y Wallet by BudgetBakers empiezan gratis y sincronizan cuentas de banco en Premium. Outlayr registra con una frase, tu voz o un recibo en su plan gratis. YNAB es de pago después de una prueba de 34 días.",
                         }),
                         question: t({
                             en: "What is the best free expense tracker app?",
@@ -5187,7 +5187,7 @@ const answers = {
                     }),
                     t({
                         en: "Pick by how you want to log: Monefy in two taps, Money Manager with double-entry accounts, Spendee or Wallet with bank sync in Premium, Outlayr by sentence, voice, or receipt.",
-                        es: "Elige según cómo quieres registrar: Monefy en dos toques, Money Manager con cuentas de partida doble, Spendee o Wallet con sincronización bancaria en Premium, Outlayr con una oración, tu voz o un recibo.",
+                        es: "Elige según cómo quieres registrar: Monefy en dos toques, Money Manager con cuentas de partida doble, Spendee o Wallet con sincronización bancaria en Premium, Outlayr con una frase, tu voz o un recibo.",
                     }),
                 ],
                 title: t({
@@ -5590,7 +5590,7 @@ const answers = {
                     {
                         label: "Monefy",
                         text: t({
-                            en: "Best if you want to log in two taps and type the exchange rate yourself",
+                            en: "Best if you want to log a purchase in two taps and type the exchange rate yourself",
                             es: "Ideal si quieres registrar en dos toques y escribir tú la tasa de cambio",
                         }),
                     },
@@ -5605,7 +5605,7 @@ const answers = {
                         label: "Outlayr",
                         text: t({
                             en: "Best if you spend in pesos and dollars at the rate of each day, split purchases into cuotas, or want to log by sentence, voice, or receipt",
-                            es: "Ideal si gastas en pesos y en dólares con la tasa de cada día, divides compras en cuotas o quieres registrar con una oración, tu voz o un recibo",
+                            es: "Ideal si gastas en pesos y en dólares con la tasa de cada día, divides compras en cuotas o quieres registrar con una frase, tu voz o un recibo",
                         }),
                     },
                     {
@@ -5627,7 +5627,7 @@ const answers = {
                     {
                         answer: t({
                             en: "It depends on how you spend. Finy logs by voice, photo, or chat and splits cuotas on its own. Mobills keeps credit cards with their limit and amount due. Monefy logs a purchase in two taps. Money Manager shows the payment amount and the balance left on a card. Spendee keeps a wallet per currency. Wallet by BudgetBakers converts at real-time rates. Outlayr logs by sentence, voice, or receipt and splits purchases into cuotas. All seven are free to start, and all of them are listed in the App Store for Argentina and Mexico with a description in Spanish.",
-                            es: "Depende de cómo gastes. Finy registra con tu voz, una foto o el chat, y divide las cuotas solo. Mobills lleva tus tarjetas de crédito con su límite y el monto a pagar. Monefy registra una compra en dos toques. Money Manager muestra el monto del pago y el saldo restante de una tarjeta. Spendee tiene una billetera por moneda. Wallet by BudgetBakers convierte con tasas en tiempo real. Outlayr registra con una oración, tu voz o un recibo, y divide las compras en cuotas. Las siete son gratis para empezar, y todas aparecen en el App Store de Argentina y de México con su descripción en español.",
+                            es: "Depende de cómo gastes. Finy registra con tu voz, una foto o el chat, y divide las cuotas solo. Mobills lleva tus tarjetas de crédito con su límite y el monto a pagar. Monefy registra una compra en dos toques. Money Manager muestra el monto del pago y el saldo restante de una tarjeta. Spendee tiene una billetera por moneda. Wallet by BudgetBakers convierte con tasas en tiempo real. Outlayr registra con una frase, tu voz o un recibo, y divide las compras en cuotas. Las siete son gratis para empezar, y todas aparecen en el App Store de Argentina y de México con su descripción en español.",
                         }),
                         question: t({
                             en: "What is the best expense tracker app in Argentina or Mexico?",
@@ -5723,7 +5723,7 @@ const answers = {
                     }),
                     t({
                         en: "Pick by how you spend: Mobills for credit card limits, Monefy for two taps, Spendee for a wallet per currency, Outlayr to log by sentence, voice, or receipt.",
-                        es: "Elige según cómo gastas: Mobills para los límites de tus tarjetas, Monefy para dos toques, Spendee para una billetera por moneda y Outlayr para registrar con una oración, tu voz o un recibo.",
+                        es: "Elige según cómo gastas: Mobills para los límites de tus tarjetas, Monefy para dos toques, Spendee para una billetera por moneda y Outlayr para registrar con una frase, tu voz o un recibo.",
                     }),
                 ],
                 title: t({
@@ -6092,7 +6092,7 @@ const answers = {
                                 text: t({
                                     en: "One sentence, voice, receipt scan, CSV import",
                                     de: "Ein Satz, Sprache, Belegscan, CSV-Import",
-                                    es: "Una oración, voz, escaneo de recibos, importación de CSV",
+                                    es: "Una frase, voz, escaneo de recibos, importación de CSV",
                                     pt: "Uma frase, voz, escaneamento de recibos, importação de CSV",
                                 }),
                             },
@@ -6160,7 +6160,7 @@ const answers = {
                         slug: "outlayr",
                         summary: t({
                             en: "Outlayr is an open source expense tracker you fill in by sentence, voice, or receipt, free to start.",
-                            es: "Outlayr es una app de código abierto para controlar tus gastos que llenas con una oración, con tu voz o con un recibo, gratis para empezar.",
+                            es: "Outlayr es una app de código abierto para controlar tus gastos que llenas con una frase, con tu voz o con un recibo, gratis para empezar.",
                             pt: "O Outlayr é um app de código aberto para controlar seus gastos, que você preenche com uma frase, com a voz ou com um recibo, grátis para começar.",
                         }),
                     },
@@ -6262,7 +6262,7 @@ const answers = {
                     {
                         label: "Monefy",
                         text: t({
-                            en: "Best if you want to log in two taps, free, without connecting anything",
+                            en: "Best if you want to log a purchase in two taps, free, without connecting anything",
                             es: "Ideal si quieres registrar en dos toques, gratis, sin conectar nada",
                             pt: "Ideal se você quer lançar em dois toques, de graça, sem conectar nada",
                         }),
@@ -6279,7 +6279,7 @@ const answers = {
                         label: "Outlayr",
                         text: t({
                             en: "Best if you would rather log by sentence, voice, or receipt than connect a bank, or spend in reais and other currencies",
-                            es: "Ideal si prefieres registrar con una oración, tu voz o un recibo antes que conectar un banco, o gastas en reales y otras monedas",
+                            es: "Ideal si prefieres registrar con una frase, tu voz o un recibo antes que conectar un banco, o gastas en reales y otras monedas",
                             pt: "Ideal se você prefere lançar com uma frase, a voz ou um recibo em vez de conectar o banco, ou gasta em reais e outras moedas",
                         }),
                     },
@@ -6296,7 +6296,7 @@ const answers = {
                     {
                         answer: t({
                             en: "It depends on how you want entries to get in. Organizze, Minhas Economias, Meu Dinheiro, and Mobills connect to Brazilian banks through Open Finance or their own integrations, Organizze and Mobills only on a paid plan. Monefy and Outlayr do not connect to a bank: Monefy logs a purchase in two taps, and Outlayr logs it by sentence, voice, or receipt. Wallet by BudgetBakers has a free tier by hand and bank sync in Premium. All of them are in Portuguese.",
-                            es: "Depende de cómo quieras que entren los registros. Organizze, Minhas Economias, Meu Dinheiro y Mobills se conectan a bancos de Brasil por Open Finance o integraciones propias, Organizze y Mobills solo en un plan de pago. Monefy y Outlayr no se conectan a un banco: Monefy registra una compra en dos toques, y Outlayr con una oración, tu voz o un recibo. Wallet by BudgetBakers tiene un plan gratis a mano y sincronización bancaria en Premium. Todas están en portugués.",
+                            es: "Depende de cómo quieras que entren los registros. Organizze, Minhas Economias, Meu Dinheiro y Mobills se conectan a bancos de Brasil por Open Finance o integraciones propias, Organizze y Mobills solo en un plan de pago. Monefy y Outlayr no se conectan a un banco: Monefy registra una compra en dos toques, y Outlayr con una frase, tu voz o un recibo. Wallet by BudgetBakers tiene un plan gratis a mano y sincronización bancaria en Premium. Todas están en portugués.",
                             pt: "Depende de como você quer que os lançamentos entrem. Organizze, Minhas Economias, Meu Dinheiro e Mobills se conectam a bancos brasileiros pelo Open Finance ou por integrações próprias, Organizze e Mobills só em um plano pago. Monefy e Outlayr não se conectam ao banco: o Monefy registra uma compra em dois toques, e o Outlayr com uma frase, a voz ou um recibo. O Wallet by BudgetBakers tem um plano grátis à mão e sincronização bancária no Premium. Todos estão em português.",
                         }),
                         question: t({
@@ -6430,7 +6430,7 @@ const answers = {
                     }),
                     t({
                         en: "Pick by how entries get in: Organizze, Minhas Economias, Meu Dinheiro, or Mobills from your bank, Monefy in two taps, Outlayr by sentence, voice, or receipt.",
-                        es: "Elige según cómo entran los registros: Organizze, Minhas Economias, Meu Dinheiro o Mobills desde tu banco, Monefy en dos toques y Outlayr con una oración, tu voz o un recibo.",
+                        es: "Elige según cómo entran los registros: Organizze, Minhas Economias, Meu Dinheiro o Mobills desde tu banco, Monefy en dos toques y Outlayr con una frase, tu voz o un recibo.",
                         pt: "Escolha pelo jeito como os lançamentos entram: Organizze, Minhas Economias, Meu Dinheiro ou Mobills pelo seu banco, Monefy em dois toques e Outlayr por frase, voz ou recibo.",
                     }),
                 ],
@@ -6712,7 +6712,7 @@ const answers = {
                                 text: t({
                                     en: "One sentence, voice, receipt scan, CSV import",
                                     de: "Ein Satz, Sprache, Belegscan, CSV-Import",
-                                    es: "Una oración, voz, escaneo de recibos, importación de CSV",
+                                    es: "Una frase, voz, escaneo de recibos, importación de CSV",
                                     pt: "Uma frase, voz, escaneamento de recibo, importação de CSV",
                                     fr: "Une phrase, la voix, le scan de tickets, l'import CSV",
                                 }),
@@ -6784,7 +6784,7 @@ const answers = {
                         slug: "outlayr",
                         summary: t({
                             en: "Outlayr is an open source expense tracker you fill in by sentence, voice, or receipt, free to start.",
-                            es: "Outlayr es una app de código abierto para controlar tus gastos que llenas con una oración, con tu voz o con un recibo, gratis para empezar.",
+                            es: "Outlayr es una app de código abierto para controlar tus gastos que llenas con una frase, con tu voz o con un recibo, gratis para empezar.",
                             fr: "Outlayr est une app open source de suivi des dépenses que vous remplissez par une phrase, à la voix ou avec un ticket, gratuite pour commencer.",
                         }),
                     },
@@ -6960,7 +6960,7 @@ const answers = {
                     {
                         label: "Monefy",
                         text: t({
-                            en: "Best if you want to log in two taps, free, without connecting anything",
+                            en: "Best if you want to log a purchase in two taps, free, without connecting anything",
                             es: "Ideal si quieres registrar en dos toques, gratis, sin conectar nada",
                             fr: "Idéal si vous voulez saisir en deux touches, gratuitement, sans rien connecter",
                         }),
@@ -6969,7 +6969,7 @@ const answers = {
                         label: "Outlayr",
                         text: t({
                             en: "Best if you would rather log by sentence, voice, or receipt than connect a bank, wherever you live, or spend in more than one currency",
-                            es: "Ideal si prefieres registrar con una oración, tu voz o un recibo antes que conectar un banco, vivas donde vivas, o gastas en más de una moneda",
+                            es: "Ideal si prefieres registrar con una frase, tu voz o un recibo antes que conectar un banco, vivas donde vivas, o gastas en más de una moneda",
                             fr: "Idéal si vous préférez saisir par une phrase, à la voix ou avec un ticket plutôt que connecter une banque, où que vous viviez, ou si vous dépensez dans plusieurs devises",
                         }),
                     },
@@ -6994,7 +6994,7 @@ const answers = {
                     {
                         answer: t({
                             en: "It depends on where your bank is and how you want entries to get in. In France, Bankin' and Linxo sync your bank accounts and sort the spending, both free with paid options. Finary suits net worth more than budgets. Monefy and Outlayr do not connect to a bank: Monefy logs a purchase in two taps, and Outlayr logs it by sentence, voice, or receipt. Wallet by BudgetBakers has a free tier by hand. YNAB is a paid method in English.",
-                            es: "Depende de dónde esté tu banco y de cómo quieras que entren los registros. En Francia, Bankin' y Linxo sincronizan tus cuentas y clasifican el gasto, las dos gratis con opciones de pago. Finary sirve más para el patrimonio que para el presupuesto. Monefy y Outlayr no se conectan a un banco: Monefy registra una compra en dos toques, y Outlayr con una oración, tu voz o un recibo. Wallet by BudgetBakers tiene un plan gratis a mano. YNAB es un método de pago en inglés.",
+                            es: "Depende de dónde esté tu banco y de cómo quieras que entren los registros. En Francia, Bankin' y Linxo sincronizan tus cuentas y clasifican el gasto, las dos gratis con opciones de pago. Finary sirve más para el patrimonio que para el presupuesto. Monefy y Outlayr no se conectan a un banco: Monefy registra una compra en dos toques, y Outlayr con una frase, tu voz o un recibo. Wallet by BudgetBakers tiene un plan gratis a mano. YNAB es un método de pago en inglés.",
                             fr: "Tout dépend de l'endroit où se trouve votre banque et de la façon dont vous voulez saisir. En France, Bankin' et Linxo synchronisent vos comptes et classent vos dépenses, tous deux gratuits avec des options payantes. Finary convient mieux au patrimoine qu'au budget. Monefy et Outlayr ne se connectent pas à une banque : Monefy enregistre un achat en deux touches, Outlayr par une phrase, à la voix ou avec un ticket. Wallet by BudgetBakers a une offre gratuite à la main. YNAB est une méthode payante en anglais.",
                         }),
                         question: t({
@@ -7125,7 +7125,7 @@ const answers = {
                     }),
                     t({
                         en: "Pick by where your bank is: Bankin' or Linxo for French banks, Finary for net worth, Monefy for two taps, and Outlayr, which connects to no bank, for a sentence, your voice, or a receipt.",
-                        es: "Elige según dónde está tu banco: Bankin' o Linxo para bancos franceses, Finary para tu patrimonio, Monefy para dos toques y Outlayr, que no se conecta a ningún banco, para una oración, tu voz o un recibo.",
+                        es: "Elige según dónde está tu banco: Bankin' o Linxo para bancos franceses, Finary para tu patrimonio, Monefy para dos toques y Outlayr, que no se conecta a ningún banco, para una frase, tu voz o un recibo.",
                         fr: "Choisissez selon votre banque : Bankin' ou Linxo pour les banques françaises, Finary pour le patrimoine, Monefy pour deux touches, et Outlayr, qui ne se connecte à aucune banque, pour une phrase, la voix ou un reçu.",
                     }),
                 ],
@@ -7549,7 +7549,7 @@ const answers = {
                         label: "Outlayr",
                         text: t({
                             en: "Best if you want to log by sentence, voice, or receipt, with each purchase at the rate from its day",
-                            es: "Ideal si quieres registrar con una oración, tu voz o un recibo, con cada compra a la tasa de su día",
+                            es: "Ideal si quieres registrar con una frase, tu voz o un recibo, con cada compra a la tasa de su día",
                         }),
                     },
                 ],
@@ -7557,7 +7557,7 @@ const answers = {
                     {
                         answer: t({
                             en: "It depends on where you want it to run. Flow is a phone app that works offline. Actual Budget runs on Windows, macOS, Linux, and the web, with envelope budgeting. Firefly III runs on your own server. Outlayr logs by sentence, voice, or receipt on iPhone and Android. All four publish the code of their current version and are free to start. Cashew is free too, but the code of its current app is no longer public.",
-                            es: "Depende de dónde quieras usarla. Flow es una app para el celular que funciona sin conexión. Actual Budget funciona en Windows, macOS, Linux y la web, con presupuesto por sobres. Firefly III funciona en tu propio servidor. Outlayr registra con una oración, tu voz o un recibo en iPhone y Android. Las cuatro publican el código de su versión actual y son gratis para empezar. Cashew también es gratis, pero el código de su app actual ya no es público.",
+                            es: "Depende de dónde quieras usarla. Flow es una app para el celular que funciona sin conexión. Actual Budget funciona en Windows, macOS, Linux y la web, con presupuesto por sobres. Firefly III funciona en tu propio servidor. Outlayr registra con una frase, tu voz o un recibo en iPhone y Android. Las cuatro publican el código de su versión actual y son gratis para empezar. Cashew también es gratis, pero el código de su app actual ya no es público.",
                         }),
                         question: t({
                             en: "What is the best open source expense tracker?",
@@ -7635,7 +7635,7 @@ const answers = {
                     }),
                     t({
                         en: "Pick by where it runs: Flow offline on the phone, Actual Budget on a computer and the web, Firefly III on your own server, Outlayr on your phone by sentence, voice, or receipt.",
-                        es: "Elige según dónde funciona: Flow sin conexión en el celular, Actual Budget en la computadora y la web, Firefly III en tu propio servidor y Outlayr en tu celular con una oración, tu voz o un recibo.",
+                        es: "Elige según dónde funciona: Flow sin conexión en el celular, Actual Budget en la computadora y la web, Firefly III en tu propio servidor y Outlayr en tu celular con una frase, tu voz o un recibo.",
                     }),
                 ],
                 title: t({
@@ -8256,7 +8256,7 @@ const answers = {
                             {
                                 label: LABELS.currencies,
                                 text: t({
-                                    en: "165, and you can log in any of them on the free plan",
+                                    en: "165, and you can log expenses in any of them on the free plan",
                                     es: "165, y puedes registrar en cualquiera de ellas con el plan gratis",
                                 }),
                             },
@@ -8675,7 +8675,7 @@ const answers = {
                     },
                     {
                         answer: t({
-                            en: "Yes. Outlayr lets you log in any of its 165 currencies on the free plan, with accounts in 2 currencies. Monefy's core app is free with 150+ currencies, but you type each rate. Toshl Finance and PocketSmith are free for 2 accounts, Spendee for one wallet, and Wallet for manual tracking. Lunch Money has a 30-day trial and no free plan.",
+                            en: "Yes. Outlayr lets you log expenses in any of its 165 currencies on the free plan, with accounts in 2 currencies. Monefy's core app is free with 150+ currencies, but you type each rate. Toshl Finance and PocketSmith are free for 2 accounts, Spendee for one wallet, and Wallet for manual tracking. Lunch Money has a 30-day trial and no free plan.",
                             es: "Sí. Outlayr te deja registrar en cualquiera de sus 165 monedas con el plan gratis, con cuentas en 2 monedas. La app básica de Monefy es gratis con más de 150 monedas, pero escribes tú cada tasa. Toshl Finance y PocketSmith son gratis para 2 cuentas, Spendee para una billetera y Wallet para registrar a mano. Lunch Money tiene una prueba de 30 días y no tiene plan gratis.",
                         }),
                         question: t({
@@ -9516,7 +9516,7 @@ const answers = {
                             }),
                             t({
                                 en: "Budgets update as you log, whether you type a sentence, say it, scan a receipt, or import a CSV, and subscriptions count on the day they charge. Transfers between your own accounts never count as spending. Changing a limit applies to the current period, and past periods stay as they were.",
-                                es: "Los presupuestos se actualizan mientras registras, ya sea que escribas una oración, la dictes, escanees un recibo o importes un CSV, y las suscripciones cuentan el día que te cobran. Las transferencias entre tus propias cuentas nunca cuentan como gasto. Cambiar un límite aplica al período actual, y los períodos anteriores quedan como estaban.",
+                                es: "Los presupuestos se actualizan mientras registras, ya sea que escribas una frase, la dictes, escanees un recibo o importes un CSV, y las suscripciones cuentan el día que te cobran. Las transferencias entre tus propias cuentas nunca cuentan como gasto. Cambiar un límite aplica al período actual, y los períodos anteriores quedan como estaban.",
                             }),
                         ],
                         id: "kinds",
@@ -9758,7 +9758,7 @@ const answers = {
                         body: [
                             t({
                                 en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
                             }),
                             t({
                                 en: "1. Open Settings, then Categories. The ten above are already there. Tap one of the 13 under Suggested to add it, or add your own with a name and an icon or emoji.",
@@ -10064,7 +10064,7 @@ const answers = {
                         body: [
                             t({
                                 en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
                             }),
                             t({
                                 en: "1. Work out your three amounts with the 50/30/20 calculator.",
@@ -10324,7 +10324,7 @@ const answers = {
                         body: [
                             t({
                                 en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
+                                es: "Outlayr es la app para controlar tus gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas.",
                             }),
                             t({
                                 en: "Rocket Money does the work for you if you are in the United States and willing to link your banks: entries arrive on their own, and its team cancels and negotiates. Outlayr never links a bank: it logs Apple Pay taps on iPhone and purchase notifications on Android on its own, 30 a month on the free plan and unlimited with Pro, and you log the rest, in any country and any currency. The full comparison, with how to move your data, is on the Rocket Money alternative page.",
@@ -10389,7 +10389,7 @@ const answers = {
                                 }),
                                 t({
                                     en: "Sentence, voice, receipt, Apple Pay, or CSV import",
-                                    es: "Oración, voz, recibo, Apple Pay o importación de CSV",
+                                    es: "Frase, voz, recibo, Apple Pay o importación de CSV",
                                 }),
                             ],
                             label: t({ en: "How entries get in", es: "Cómo entran los registros" }),
@@ -10472,7 +10472,7 @@ const answers = {
                         label: t({ en: "How entries get in", es: "Cómo entran los registros" }),
                         text: t({
                             en: "One sentence, voice, receipt scan, or CSV import",
-                            es: "Una oración, voz, escaneo de recibos o importación de CSV",
+                            es: "Una frase, voz, escaneo de recibos o importación de CSV",
                         }),
                     },
                     {
@@ -10538,7 +10538,7 @@ const answers = {
                     {
                         answer: t({
                             en: "It takes one sentence, your voice, or a photo of the receipt, and the amount, merchant, category, account, date, and currency are filled in for you. Typing works with no signal. Voice entry and receipt scanning need a connection.",
-                            es: "Basta una oración, tu voz o una foto del recibo, y el monto, el comercio, la categoría, la cuenta, la fecha y la moneda se llenan solos. Escribir funciona sin señal. La voz y el escaneo de recibos necesitan conexión.",
+                            es: "Basta una frase, tu voz o una foto del recibo, y el monto, el comercio, la categoría, la cuenta, la fecha y la moneda se llenan solos. Escribir funciona sin señal. La voz y el escaneo de recibos necesitan conexión.",
                         }),
                         question: t({
                             en: "Isn't logging every expense by hand slow?",
@@ -10578,12 +10578,12 @@ const answers = {
                 ],
                 lead: t({
                     en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies. You can budget without linking your bank: set a limit per category or per month, and see where your pace ends. Your ledger stays on your phone.",
-                    es: "Outlayr es la app de gastos que nunca conecta tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas. Puedes llevar un presupuesto sin vincular tu banco: pon un límite por categoría o por mes, y mira a dónde te lleva el ritmo. Tu registro se queda en tu celular.",
+                    es: "Outlayr es la app de gastos que nunca conecta tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas. Puedes llevar un presupuesto sin vincular tu banco: pon un límite por categoría o por mes, y mira a dónde te lleva el ritmo. Tu registro se queda en tu celular.",
                 }),
                 meta: {
                     description: t({
                         en: "Budget and track expenses without linking your bank. Log by sentence, voice, or receipt, set limits, and keep your ledger on your phone. Outlayr is free to start and open source.",
-                        es: "Lleva tu presupuesto y tus gastos sin vincular tu banco. Registra con una oración, tu voz o un recibo, pon límites y guarda tu registro en tu celular. Outlayr es gratis para empezar y de código abierto.",
+                        es: "Lleva tu presupuesto y tus gastos sin vincular tu banco. Registra con una frase, tu voz o un recibo, pon límites y guarda tu registro en tu celular. Outlayr es gratis para empezar y de código abierto.",
                     }),
                     title: t({
                         en: "Budget App Without Linking Your Bank · Outlayr",
@@ -10599,7 +10599,7 @@ const answers = {
                             }),
                             t({
                                 en: "The cost is that each purchase starts with you. Outlayr keeps that short: one sentence, one phrase said out loud, or a photo of the receipt.",
-                                es: "El costo es que cada compra empieza contigo. Outlayr lo mantiene corto: una oración, una frase dicha en voz alta o una foto del recibo.",
+                                es: "El costo es que cada compra empieza contigo. Outlayr lo mantiene corto: una frase, una frase dicha en voz alta o una foto del recibo.",
                             }),
                         ],
                         id: "linking",
@@ -10648,7 +10648,7 @@ const answers = {
                             }),
                             t({
                                 en: "Pick by how you want to enter purchases. Envelopes suit Goodbudget, two taps suit Monefy, and a sentence, your voice, or a receipt suit Outlayr.",
-                                es: "Elige según cómo quieras anotar las compras. Los sobres van con Goodbudget, los dos toques con Monefy, y una oración, tu voz o un recibo con Outlayr.",
+                                es: "Elige según cómo quieras anotar las compras. Los sobres van con Goodbudget, los dos toques con Monefy, y una frase, tu voz o un recibo con Outlayr.",
                             }),
                         ],
                         id: "alternatives",
@@ -10671,7 +10671,7 @@ const answers = {
                     {
                         text: t({
                             en: "Type a sentence, say it, or scan the receipt, right after you pay.",
-                            es: "Escribe una oración, dila o escanea el recibo, apenas pagues.",
+                            es: "Escribe una frase, dila o escanea el recibo, apenas pagues.",
                         }),
                         title: t({ en: "Log each purchase", es: "Registra cada compra" }),
                     },
@@ -10686,7 +10686,7 @@ const answers = {
                 takeaways: [
                     t({
                         en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay on iPhone, in any of 165 currencies.",
-                        es: "Outlayr es la app para controlar gastos que nunca se conecta a tu banco: registra con una oración, tu voz, un recibo o Apple Pay en iPhone, en cualquiera de 165 monedas.",
+                        es: "Outlayr es la app para controlar gastos que nunca se conecta a tu banco: registra con una frase, tu voz, un recibo o Apple Pay en iPhone, en cualquiera de 165 monedas.",
                     }),
                     t({
                         en: "Without an account, your entries, amounts, and notes never leave your phone.",
@@ -10698,7 +10698,7 @@ const answers = {
                     }),
                     t({
                         en: "Pick by how you enter purchases: Goodbudget for envelopes, Monefy for two taps, Outlayr for a sentence, your voice, or a receipt.",
-                        es: "Elige según cómo anotas las compras: Goodbudget para sobres, Monefy para dos toques y Outlayr para una oración, tu voz o un recibo.",
+                        es: "Elige según cómo anotas las compras: Goodbudget para sobres, Monefy para dos toques y Outlayr para una frase, tu voz o un recibo.",
                     }),
                 ],
                 title: t({
@@ -10755,7 +10755,7 @@ const answers = {
                     {
                         answer: t({
                             en: "Outlayr is an open source app for iPhone and Android that logs each purchase in the currency you paid, dollars or bolívares, and adds everything up in your main currency. You fill it in with a sentence, your voice, or a receipt, and it is free to start.",
-                            es: "Outlayr es una app de código abierto para iPhone y Android que registra cada compra en la moneda en que pagaste, dólares o bolívares, y suma todo en tu moneda principal. La llenas con una oración, con tu voz o con un recibo, y es gratis para empezar.",
+                            es: "Outlayr es una app de código abierto para iPhone y Android que registra cada compra en la moneda en que pagaste, dólares o bolívares, y suma todo en tu moneda principal. La llenas con una frase, con tu voz o con un recibo, y es gratis para empezar.",
                         }),
                         question: t({
                             en: "Which app tracks expenses in dollars and bolívares?",
@@ -10910,9 +10910,12 @@ const answers = {
                     {
                         text: t({
                             en: "Tap the currency in the sentence and pick dollars, bolívares, or the one on the receipt.",
-                            es: "Toca la moneda en la oración y elige dólares, bolívares o la del recibo.",
+                            es: "Toca la moneda en la frase y elige dólares, bolívares o la del recibo.",
                         }),
-                        title: t({ en: "Log in the currency you paid", es: "Registra en la moneda en que pagaste" }),
+                        title: t({
+                            en: "Log each purchase in the currency you paid",
+                            es: "Registra en la moneda en que pagaste",
+                        }),
                     },
                     {
                         text: t({
@@ -11372,7 +11375,7 @@ const answers = {
                         body: [
                             t({
                                 en: "Outlayr, the app we make, logs an expense when you type a sentence, say it, or scan the receipt, in 165 currencies at the rate of the day. It is free to start on iPhone and Android. If you already keep a spreadsheet, you can import it as a CSV.",
-                                es: "Outlayr, la app que hacemos nosotros, registra un gasto cuando escribes una oración, la dictas o escaneas el recibo, en 165 monedas con la tasa del día. Es gratis para empezar en iPhone y Android. Si ya llevas una hoja de cálculo, puedes importarla como CSV.",
+                                es: "Outlayr, la app que hacemos nosotros, registra un gasto cuando escribes una frase, la dictas o escaneas el recibo, en 165 monedas con la tasa del día. Es gratis para empezar en iPhone y Android. Si ya llevas una hoja de cálculo, puedes importarla como CSV.",
                             }),
                         ],
                         id: "app",
@@ -11448,7 +11451,7 @@ const answers = {
                         {
                             cells: [
                                 t({
-                                    en: "You want to log in seconds from your phone and have it add up for you",
+                                    en: "You want to log a purchase in seconds from your phone and have it add up for you",
                                     es: "Quieres anotar en segundos desde el celular y que sume sola",
                                 }),
                                 t({
@@ -11580,7 +11583,7 @@ const answers = {
                         label: "Outlayr",
                         text: t({
                             en: "Best if you want to keep your Mint history from its CSV and log new purchases by sentence, voice, or receipt",
-                            es: "Ideal si quieres conservar tu historial de Mint desde su CSV y registrar compras nuevas con una oración, tu voz o un recibo",
+                            es: "Ideal si quieres conservar tu historial de Mint desde su CSV y registrar compras nuevas con una frase, tu voz o un recibo",
                         }),
                     },
                     {
@@ -11616,7 +11619,7 @@ const answers = {
                     {
                         answer: t({
                             en: "It depends on what you used Mint for. For linked accounts that sync on their own, Monarch works in the US and Canada, and Copilot and Rocket Money in the US. For a budget you run yourself, EveryDollar is zero-based, Goodbudget uses envelopes, and YNAB asks you to decide what money is for before you spend it. Outlayr imports your Mint CSV and logs new purchases by sentence, voice, or receipt.",
-                            es: "Depende de para qué usabas Mint. Para cuentas vinculadas que se sincronizan solas, Monarch funciona en EE. UU. y Canadá, y Copilot y Rocket Money en EE. UU. Para un presupuesto que llevas tú, EveryDollar es de base cero, Goodbudget usa sobres y YNAB te pide decidir para qué es tu dinero antes de gastarlo. Outlayr importa tu CSV de Mint y registra compras nuevas con una oración, tu voz o un recibo.",
+                            es: "Depende de para qué usabas Mint. Para cuentas vinculadas que se sincronizan solas, Monarch funciona en EE. UU. y Canadá, y Copilot y Rocket Money en EE. UU. Para un presupuesto que llevas tú, EveryDollar es de base cero, Goodbudget usa sobres y YNAB te pide decidir para qué es tu dinero antes de gastarlo. Outlayr importa tu CSV de Mint y registra compras nuevas con una frase, tu voz o un recibo.",
                         }),
                         question: t({
                             en: "What is the best Mint alternative?",
@@ -11736,7 +11739,7 @@ const answers = {
                     }),
                     t({
                         en: "Pick by what you used Mint for: Monarch, Copilot, or Rocket Money for linked accounts, EveryDollar, Goodbudget, or YNAB for a budget you run, Outlayr to keep your Mint CSV and log by sentence, voice, or receipt.",
-                        es: "Elige según para qué usabas Mint: Monarch, Copilot o Rocket Money para cuentas vinculadas; EveryDollar, Goodbudget o YNAB para un presupuesto que llevas tú; Outlayr para conservar tu CSV de Mint y registrar con una oración, tu voz o un recibo.",
+                        es: "Elige según para qué usabas Mint: Monarch, Copilot o Rocket Money para cuentas vinculadas; EveryDollar, Goodbudget o YNAB para un presupuesto que llevas tú; Outlayr para conservar tu CSV de Mint y registrar con una frase, tu voz o un recibo.",
                     }),
                 ],
                 title: t({
@@ -11784,7 +11787,7 @@ const answers = {
                     {
                         label: t({ en: "Free plan", es: "Plan gratis" }),
                         text: t({
-                            en: "Log in any currency. Accounts in 2 currencies, more with Pro",
+                            en: "Log expenses in any currency. Accounts in 2 currencies, more with Pro",
                             es: "Registra en cualquier moneda. Cuentas en 2 monedas, más con Pro",
                         }),
                     },
@@ -11877,11 +11880,11 @@ const answers = {
                         body: [
                             t({
                                 en: "When you log a purchase in another currency, the sentence also shows what it comes to in dollars and which rate did it, like $21.70 at the official rate. That is the rate from the day of the purchase, and it stays with the entry, so what you already logged doesn't move when the market does.",
-                                es: "Cuando registras una compra en otra moneda, la oración también muestra cuánto es en dólares y con qué tasa, por ejemplo US$21.70 a la tasa oficial. Es la tasa del día de la compra, y se queda con el registro, así que lo que ya registraste no cambia cuando se mueve el mercado.",
+                                es: "Cuando registras una compra en otra moneda, la frase también muestra cuánto es en dólares y con qué tasa, por ejemplo US$21.70 a la tasa oficial. Es la tasa del día de la compra, y se queda con el registro, así que lo que ya registraste no cambia cuando se mueve el mercado.",
                             }),
                             t({
                                 en: "To use another rate, tap the rate in the sentence and pick one, or choose My rate and type the rate you actually got. Outlayr shows the last rate you typed so you can reuse it. You can also tap the dollar amount and type what you paid in dollars, and Outlayr works out the rate from the two amounts.",
-                                es: "Para usar otra tasa, toca la tasa en la oración y elige otra, o elige Mi tasa y escribe la que te dieron. Outlayr te muestra la última tasa que escribiste para que la uses de nuevo. También puedes tocar el monto en dólares y escribir lo que pagaste en dólares, y Outlayr calcula la tasa a partir de los dos montos.",
+                                es: "Para usar otra tasa, toca la tasa en la frase y elige otra, o elige Mi tasa y escribe la que te dieron. Outlayr te muestra la última tasa que escribiste para que la uses de nuevo. También puedes tocar el monto en dólares y escribir lo que pagaste en dólares, y Outlayr calcula la tasa a partir de los dos montos.",
                             }),
                         ],
                         id: "your-rate",
@@ -11939,9 +11942,12 @@ const answers = {
                     {
                         text: t({
                             en: "Tap the currency in the sentence and pick the one on the receipt.",
-                            es: "Toca la moneda en la oración y elige la del recibo.",
+                            es: "Toca la moneda en la frase y elige la del recibo.",
                         }),
-                        title: t({ en: "Log in the currency you paid", es: "Registra en la moneda en que pagaste" }),
+                        title: t({
+                            en: "Log each purchase in the currency you paid",
+                            es: "Registra en la moneda en que pagaste",
+                        }),
                     },
                     {
                         text: t({
@@ -12014,7 +12020,7 @@ const answers = {
                     {
                         label: t({ en: "Free plan", es: "Plan gratis" }),
                         text: t({
-                            en: "Log in any currency. Accounts in 2 currencies, more with Pro",
+                            en: "Log expenses in any currency. Accounts in 2 currencies, more with Pro",
                             es: "Registra en cualquier moneda. Cuentas en 2 monedas, más con Pro",
                         }),
                     },
@@ -12097,7 +12103,7 @@ const answers = {
                         body: [
                             t({
                                 en: "If the money goes to an account of yours that you also track in Outlayr, like a bolívar or peso account, log it as a transfer. The sentence reads like Move $300 from your dollar account to your bolívar account today. Pick the rate source or type your own, and Outlayr shows what arrives in the other currency.",
-                                es: "Si el dinero va a una cuenta tuya que también llevas en Outlayr, como una cuenta en bolívares o en pesos, regístralo como transferencia. La oración dice algo como Mueve US$300 de tu cuenta en dólares a tu cuenta en bolívares hoy. Elige la fuente de la tasa o escribe la tuya, y Outlayr te muestra cuánto llega en la otra moneda.",
+                                es: "Si el dinero va a una cuenta tuya que también llevas en Outlayr, como una cuenta en bolívares o en pesos, regístralo como transferencia. La frase dice algo como Mueve US$300 de tu cuenta en dólares a tu cuenta en bolívares hoy. Elige la fuente de la tasa o escribe la tuya, y Outlayr te muestra cuánto llega en la otra moneda.",
                             }),
                             t({
                                 en: "If a fee was charged, add it on the side that paid it, included in the amount or on top. The fee counts as spending. The transfer itself doesn't, so it doesn't count against a budget.",
@@ -12336,7 +12342,7 @@ const answers = {
                             }),
                             t({
                                 en: "Typing works with no signal, so when you're offline you can type the purchase as one sentence and scan the next receipt later.",
-                                es: "Escribir funciona sin señal, así que cuando estés sin conexión puedes escribir la compra en una oración y escanear el siguiente recibo después.",
+                                es: "Escribir funciona sin señal, así que cuando estés sin conexión puedes escribir la compra en una frase y escanear el siguiente recibo después.",
                             }),
                         ],
                         id: "needs",
@@ -13596,7 +13602,7 @@ const answers = {
                             de: "Nein. Nur die Zeilen auf Buchungen kommen herein. Lege deine Budgets in Outlayr neu an, unter Kontostände, bei Kategorien, wo die App auch zeigt, wo dein Tempo endet.",
                             es: "No. Solo entran las filas de Movimientos. Vuelve a poner tus presupuestos en Outlayr, en Saldos, en Categorías, donde además te muestra a dónde te lleva tu ritmo.",
                             pt: "Não. Só entram as linhas de Lançamentos. Defina seus orçamentos de novo no Outlayr, em Saldos, em Categorias, onde ele também mostra aonde seu ritmo leva.",
-                            fr: "Non. Seules les lignes d'Opérations sont importées. Recréez vos budgets dans Outlayr, dans Soldes, sous Catégories, où l'app montre aussi où mène votre rythme.",
+                            fr: "Non. Seules les lignes d'Opérations sont importées. Recréez vos budgets dans Outlayr, dans Solde, sous Catégories, où l'app montre aussi où mène votre rythme.",
                         }),
                         question: t({
                             en: "Do my budgets import too?",
@@ -13764,7 +13770,7 @@ const answers = {
                             cells: [t({ en: "0.00", de: "45,00", es: "0.00", pt: "0,00", fr: "45,00" })],
                             label: t({
                                 en: "Transport",
-                                de: "Verkehr",
+                                de: "Mobilität",
                                 es: "Transporte",
                                 pt: "Transporte",
                                 fr: "Transports",
@@ -13853,7 +13859,7 @@ const answers = {
                     {
                         answer: t({
                             en: "Yes. Say a purchase in one sentence and Outlayr fills in the entry for you to check and save. If something is off, say what changed, like that it was yesterday.",
-                            es: "Sí. Dicta una compra en una oración y Outlayr llena el registro para que lo revises y lo guardes. Si algo no está bien, di lo que cambió, por ejemplo que fue ayer.",
+                            es: "Sí. Dicta una compra en una frase y Outlayr llena el registro para que lo revises y lo guardes. Si algo no está bien, di lo que cambió, por ejemplo que fue ayer.",
                         }),
                         question: t({
                             en: "Can I log expenses by voice in Outlayr?",
@@ -13890,12 +13896,12 @@ const answers = {
                 ],
                 lead: t({
                     en: "Say a purchase in one sentence and Outlayr fills in the amount, the merchant, the category, the date, and the account you name. Check it, fix anything by saying it again, and save.",
-                    es: "Dicta una compra en una oración y Outlayr llena el monto, el comercio, la categoría, la fecha y la cuenta que nombres. Revísala, corrige lo que haga falta diciéndolo de nuevo y guárdala.",
+                    es: "Dicta una compra en una frase y Outlayr llena el monto, el comercio, la categoría, la fecha y la cuenta que nombres. Revísala, corrige lo que haga falta diciéndolo de nuevo y guárdala.",
                 }),
                 meta: {
                     description: t({
                         en: "Say a purchase in one sentence and Outlayr fills in the amount, merchant, category, date, and account. Fix anything by saying it again, then save.",
-                        es: "Dicta una compra en una oración y Outlayr llena el monto, el comercio, la categoría, la fecha y la cuenta. Corrige lo que haga falta diciéndolo de nuevo.",
+                        es: "Dicta una compra en una frase y Outlayr llena el monto, el comercio, la categoría, la fecha y la cuenta. Corrige lo que haga falta diciéndolo de nuevo.",
                     }),
                     title: t({
                         en: "Voice Expense Tracker: Say What You Spent · Outlayr",
@@ -13904,7 +13910,7 @@ const answers = {
                 },
                 plateAlt: t({
                     en: "Outlayr voice entry: a spoken sentence becomes $12.50 at Blue Bottle under Coffee, and a spoken correction moves it to yesterday.",
-                    es: "Registro por voz de Outlayr: una oración dictada se convierte en $12.50 en Juan Valdez en Café, y una corrección dicha lo pasa a ayer.",
+                    es: "Registro por voz de Outlayr: una frase dictada se convierte en $12.50 en Juan Valdez en Café, y una corrección dicha lo pasa a ayer.",
                 }),
                 related: [
                     "/guides/receipt-scanner",
@@ -13937,7 +13943,7 @@ const answers = {
                 takeaways: [
                     t({
                         en: "Say a purchase in one sentence and Outlayr fills in the amount, the merchant, the category, the date, and the account you name.",
-                        es: "Di una compra en una oración y Outlayr llena el monto, el comercio, la categoría, la fecha y la cuenta que nombres.",
+                        es: "Di una compra en una frase y Outlayr llena el monto, el comercio, la categoría, la fecha y la cuenta que nombres.",
                     }),
                     t({
                         en: "Speak in English, Spanish, Portuguese, French, or German, whatever language the app is set to.",
@@ -14051,7 +14057,7 @@ const answers = {
                         label: "Outlayr",
                         text: t({
                             en: "Best if you spend in more than one currency and want to start free, logging by sentence, voice, or receipt",
-                            es: "Ideal si gastas en más de una moneda y quieres empezar gratis, registrando con una oración, tu voz o un recibo",
+                            es: "Ideal si gastas en más de una moneda y quieres empezar gratis, registrando con una frase, tu voz o un recibo",
                         }),
                     },
                     {
@@ -14066,7 +14072,7 @@ const answers = {
                     {
                         answer: t({
                             en: "It depends on what you want to keep. Actual Budget keeps envelope budgeting, free, and imports YNAB plans. EveryDollar keeps a zero-based monthly budget in the US. Goodbudget keeps envelopes on the web and both phones. Monarch and Copilot sync linked accounts in the US, and Monarch also in Canada. PocketGuard syncs linked accounts in the US and Canada and can be bought once. Outlayr starts free and logs by sentence, voice, or receipt in 165 currencies.",
-                            es: "Depende de lo que quieras conservar. Actual Budget conserva el presupuesto por sobres, gratis, e importa planes de YNAB. EveryDollar conserva un presupuesto mensual de base cero en EE. UU. Goodbudget conserva los sobres en la web y en los dos celulares. Monarch y Copilot sincronizan cuentas vinculadas en EE. UU., y Monarch también en Canadá. PocketGuard sincroniza cuentas vinculadas en EE. UU. y Canadá y se puede comprar en un solo pago. Outlayr empieza gratis y registra con una oración, tu voz o un recibo en 165 monedas.",
+                            es: "Depende de lo que quieras conservar. Actual Budget conserva el presupuesto por sobres, gratis, e importa planes de YNAB. EveryDollar conserva un presupuesto mensual de base cero en EE. UU. Goodbudget conserva los sobres en la web y en los dos celulares. Monarch y Copilot sincronizan cuentas vinculadas en EE. UU., y Monarch también en Canadá. PocketGuard sincroniza cuentas vinculadas en EE. UU. y Canadá y se puede comprar en un solo pago. Outlayr empieza gratis y registra con una frase, tu voz o un recibo en 165 monedas.",
                         }),
                         question: t({
                             en: "What is the best YNAB alternative?",
@@ -14336,7 +14342,7 @@ const answers = {
                 title: t({
                     en: "Track every expense in one sentence",
                     de: "Erfasse jede Ausgabe in einem Satz",
-                    es: "Registra cada gasto en una oración",
+                    es: "Registra cada gasto en una frase",
                     pt: "Registre cada gasto em uma frase",
                     fr: "Notez chaque dépense en une phrase",
                 }),

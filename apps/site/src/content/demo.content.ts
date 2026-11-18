@@ -135,7 +135,7 @@ const demo = {
         lead: t({
             en: "That sentence is the whole form. Tap an underlined word to change it.",
             de: "Dieser Satz ist das ganze Formular. Tippe auf ein unterstrichenes Wort, um es zu ändern.",
-            es: "Esa oración es todo el formulario. Toca una palabra subrayada para cambiarla.",
+            es: "Esa frase es todo el formulario. Toca una palabra subrayada para cambiarla.",
             pt: "Essa frase é o formulário inteiro. Toque numa palavra sublinhada para mudá-la.",
             fr: "Cette phrase est tout le formulaire. Touchez un mot souligné pour le modifier.",
         }),
@@ -201,7 +201,7 @@ const demo = {
                 fr: "Abonnements",
             }),
             Tips: t({ en: "Tips", de: "Trinkgeld", es: "Propinas", pt: "Gorjetas", fr: "Pourboires" }),
-            Transport: t({ en: "Transport", de: "Verkehr", es: "Transporte", pt: "Transporte", fr: "Transports" }),
+            Transport: t({ en: "Transport", de: "Mobilität", es: "Transporte", pt: "Transporte", fr: "Transports" }),
             today: t({ en: "today", de: "heute", es: "hoy", pt: "hoje", fr: "aujourd'hui" }),
             yesterday: t({ en: "yesterday", de: "gestern", es: "ayer", pt: "ontem", fr: "hier" }),
         },

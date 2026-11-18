@@ -184,7 +184,7 @@ const appUi = {
                 pt: "PRÓXIMOS",
                 fr: "À VENIR",
             }),
-            "nav.tab.balances": t({ en: "Balances", de: "Kontostände", es: "Saldos", pt: "Saldos", fr: "Soldes" }),
+            "nav.tab.balances": t({ en: "Balances", de: "Kontostände", es: "Saldos", pt: "Saldos", fr: "Solde" }),
             "nav.tab.insights": t({
                 en: "Insights",
                 de: "Auswertungen",

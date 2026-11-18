@@ -62,7 +62,7 @@ const content = {
         }),
         taxes: t({ en: "Taxes", de: "Steuern", es: "Impuestos", fr: "Impôts", pt: "Impostos" }),
         tips: t({ en: "Tips", de: "Trinkgeld", es: "Propinas", fr: "Pourboires", pt: "Gorjetas" }),
-        transport: t({ en: "Transport", de: "Verkehr", es: "Transporte", fr: "Transports", pt: "Transporte" }),
+        transport: t({ en: "Transport", de: "Mobilität", es: "Transporte", fr: "Transports", pt: "Transporte" }),
         travel: t({ en: "Travel", de: "Reisen", es: "Viajes", fr: "Voyages", pt: "Viagens" }),
         utilities: t({ en: "Utilities", de: "Nebenkosten", es: "Servicios", fr: "Charges", pt: "Contas da casa" }),
     },

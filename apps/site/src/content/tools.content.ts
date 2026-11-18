@@ -208,7 +208,7 @@ const tools = {
                         }),
                         text: t({
                             en: "Rent, groceries, utilities, transport, insurance, minimum debt payments",
-                            de: "Miete, Lebensmittel, Nebenkosten, Verkehr, Versicherungen, Mindestraten für Schulden",
+                            de: "Miete, Lebensmittel, Nebenkosten, Mobilität, Versicherungen, Mindestraten für Schulden",
                             es: "Renta, súper, servicios, transporte, seguros, pagos mínimos de deudas",
                             pt: "Aluguel, mercado, contas da casa, transporte, seguros, pagamentos mínimos de dívidas",
                             fr: "Loyer, courses, factures, transports, assurances, remboursements minimums de dettes",

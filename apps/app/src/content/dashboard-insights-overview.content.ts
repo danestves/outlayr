@@ -178,7 +178,7 @@ const dashboardInsightsOverview = {
                 rent: t({ en: "Rent", de: "Miete", es: "Alquiler" }),
                 shopping: t({ en: "Shopping", de: "Shopping", es: "Compras" }),
                 subscriptions: t({ en: "Subscriptions", de: "Abos", es: "Suscripciones" }),
-                transport: t({ en: "Transport", de: "Verkehr", es: "Transporte" }),
+                transport: t({ en: "Transport", de: "Mobilität", es: "Transporte" }),
             },
             cta: t({ en: "Log your first expense", de: "Erfasse deine erste Ausgabe", es: "Registra tu primer gasto" }),
             gaveBack: insert(

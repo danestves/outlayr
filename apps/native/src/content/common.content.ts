@@ -414,7 +414,7 @@ const common = {
             en: "Balances",
             de: "Kontostände",
             es: "Saldos",
-            fr: "Soldes",
+            fr: "Solde",
             pt: "Saldos",
         }),
         "nav.tab.insights": t({

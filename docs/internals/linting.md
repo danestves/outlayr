@@ -195,6 +195,7 @@ oxlint's compiler rules are a port and do not see every bailout: `try`/`finally`
 | `require-suppression-reason` | Every file: an `oxlint-disable`, `eslint-disable`, `@ts-expect-error`, `@ts-ignore` or `@effect-diagnostics` directive ends with `-- reason` or sits under a comment that gives one. |
 | `react-effect-budget` | `apps/native/src`, `apps/site/src`, `packages/*/src`, tests skipped: a file holds at most as many `useEffect`, `useLayoutEffect` and `useInsertionEffect` calls as `scripts/effect-budget.json` gives it, and a file without an entry gets none. See "React effect budget". |
 | `no-em-dash-copy` | The same paths: no em dash in a string, template or JSX text. Comments are `no-slop-comments`' job. A "no value" placeholder is an en dash. |
+| `no-misread-copy` | The same paths: a translation under a locale key (`es`, `"es-ES"`) avoids words its readers take for something else, such as `oración` (also "prayer"). Add a word to `MISREAD_WORDS` in `plugin.mjs` with the reading and the word to use. |
 | `no-test-in-loop` | Test files: no `it` or `describe` declared inside a `for` loop; write `it.each(cases)(name, fn)`. A loop inside a test body is fine. |
 | `no-polling-loop-in-tests` | Test files: no `while` or `for` loop that spins on `setTimeout`, `setImmediate`, `Promise.resolve()` or `Effect.sleep` until a predicate holds. Await the event, or use `expect.poll`. A fixed-count flush (`i < 3`) is not polling. |
 

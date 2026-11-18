@@ -39,7 +39,7 @@ const brand = {
                     claim: t({
                         en: "Log a purchase by typing one sentence, saying it, or scanning the receipt",
                         de: "Einen Einkauf erfasst du, indem du einen Satz tippst, ihn sprichst oder den Beleg scannst",
-                        es: "Registras una compra escribiendo una oración, diciéndola o escaneando el recibo",
+                        es: "Registras una compra escribiendo una frase, diciéndola o escaneando el recibo",
                         pt: "Você registra uma compra digitando uma frase, falando ou escaneando o recibo",
                         fr: "Vous enregistrez un achat en saisissant une phrase, en la dictant ou en scannant le ticket",
                     }),
@@ -316,7 +316,7 @@ const brand = {
                 en: "Keep the mark flat and whole, in ink, white, or vermilion. Write the name Outlayr, capital O, one word.",
                 de: "Verwende das Zeichen flach und vollständig, in Tinte, Weiß oder Zinnober. Schreib den Namen Outlayr mit großem O und in einem Wort.",
                 es: "Usa el símbolo plano y completo, en tinta, blanco o bermellón. Escribe el nombre Outlayr, con O mayúscula y en una sola palabra.",
-                pt: "Use o símbolo chapado e inteiro, em tinta, branco ou vermelhão. Escreva o nome Outlayr, com O maiúsculo e em uma palavra só.",
+                pt: "Use o símbolo inteiro, em cor única, em tinta, branco ou vermelhão. Escreva o nome Outlayr, com O maiúsculo e em uma palavra só.",
                 fr: "Gardez le symbole à plat et entier, en encre, en blanc ou en vermillon. Écrivez le nom Outlayr, avec un O majuscule, en un seul mot.",
             }),
             screens: t({
@@ -390,7 +390,7 @@ const brand = {
                     say: t({
                         en: "I log a purchase in one sentence.",
                         de: "Ich erfasse einen Einkauf in einem Satz.",
-                        es: "Registro una compra en una sola oración.",
+                        es: "Registro una compra en una sola frase.",
                         pt: "Eu registro uma compra em uma frase.",
                         fr: "J'enregistre un achat en une phrase.",
                     }),

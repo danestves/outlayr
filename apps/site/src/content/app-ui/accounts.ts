@@ -17,7 +17,7 @@ export const accountsCopy = {
     }),
     "accounts.totals.have": t({ en: "Have", de: "Du hast", es: "Tienes", pt: "Você tem", fr: "Vous avez" }),
     "accounts.totals.owe": t({ en: "Owe", de: "Du schuldest", es: "Debes", pt: "Você deve", fr: "Vous devez" }),
-    "balances.title": t({ en: "Balances", de: "Kontostände", es: "Saldos", pt: "Saldos", fr: "Soldes" }),
+    "balances.title": t({ en: "Balances", de: "Kontostände", es: "Saldos", pt: "Saldos", fr: "Solde" }),
     "balances.view.accounts": t({ en: "Accounts", de: "Konten", es: "Cuentas", pt: "Contas", fr: "Comptes" }),
     "balances.view.categories": t({
         en: "Categories",
@@ -85,7 +85,7 @@ export const accountsLabels = {
         de: "Die Kontostände in Outlayr, Ansicht Konten. Du hast {have} und schuldest {owe}. Konten: {accounts}. Schulden: {debts}.",
         es: "La pantalla Saldos de Outlayr, vista Cuentas. Tienes {have} y debes {owe}. Cuentas: {accounts}. Deudas: {debts}.",
         pt: "A tela Saldos do Outlayr, visão Contas. Você tem {have} e deve {owe}. Contas: {accounts}. Dívidas: {debts}.",
-        fr: "L'écran Soldes d'Outlayr, vue Comptes. Vous avez {have} et devez {owe}. Comptes : {accounts}. Dettes : {debts}.",
+        fr: "L'écran Solde d'Outlayr, vue Comptes. Vous avez {have} et devez {owe}. Comptes : {accounts}. Dettes : {debts}.",
     }),
     cardRow: t({
         en: "{name} in Outlayr's debts, owing {amount}.",

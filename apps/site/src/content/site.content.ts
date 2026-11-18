@@ -304,9 +304,9 @@ const site = {
             product: t({ en: "Product", de: "Produkt", es: "Producto", pt: "Produto", fr: "Produit" }),
             resources: t({ en: "Resources", de: "Ressourcen", es: "Recursos", pt: "Recursos", fr: "Ressources" }),
             tagline: t({
-                en: "The expense tracker you log in one sentence.",
+                en: "The expense tracker you fill in with one sentence.",
                 de: "Der Ausgaben-Tracker, den du in einem Satz füllst.",
-                es: "La app de gastos que llenas con una sola oración.",
+                es: "La app de gastos que llenas con una sola frase.",
                 pt: "O app de gastos que você preenche com uma frase só.",
                 fr: "L'app de dépenses qu'on remplit en une seule phrase.",
             }),

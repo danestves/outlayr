@@ -304,7 +304,7 @@ const QUICK_ACTIONS = [
         href: "outlayr://budgets",
         id: "budgets",
         iosIcon: "symbol:chart.pie.fill",
-        title: { en: "Balances", de: "Kontostände", es: "Saldos", fr: "Soldes", pt: "Saldos", "pt-PT": "Saldos" },
+        title: { en: "Balances", de: "Kontostände", es: "Saldos", fr: "Solde", pt: "Saldos", "pt-PT": "Saldos" },
     },
 ] as const satisfies readonly QuickAction[];
 

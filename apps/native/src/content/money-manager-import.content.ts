@@ -537,7 +537,7 @@ const moneyManagerImport = {
             en: "Balances",
             de: "Kontostände",
             es: "Saldos",
-            fr: "Soldes",
+            fr: "Soldes des comptes",
             pt: "Saldos",
         }),
         "mmImport.nav.bringDataIn": t({
