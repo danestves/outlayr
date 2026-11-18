@@ -5,6 +5,7 @@ import { LogoMark } from "@/components/logo-mark";
 import { watchGround } from "@/lib/ground";
 
 const GROUND_LINE = 40;
+const CLOSE_REACH = 100_000;
 
 function track(bar: HTMLElement | null) {
     const hero = document.querySelector(".hz-actions");
@@ -14,22 +15,31 @@ function track(bar: HTMLElement | null) {
     }
     let past = false;
     let closing = false;
-    const observer = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-            const above = entry.boundingClientRect.top < 0;
-            if (entry.target === hero) {
-                past = !entry.isIntersecting && above;
-            } else {
-                closing = entry.isIntersecting || above;
-            }
-        }
+    const paint = () => {
+        bar.toggleAttribute("data-past", past);
         bar.toggleAttribute("data-up", past && !closing);
+    };
+    const heroWatch = new IntersectionObserver(([entry]) => {
+        if (entry) {
+            past = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+            paint();
+        }
     });
-    observer.observe(hero);
-    observer.observe(close);
+    const closeWatch = new IntersectionObserver(
+        ([entry]) => {
+            if (entry) {
+                closing = entry.isIntersecting;
+                paint();
+            }
+        },
+        { rootMargin: `${CLOSE_REACH}px 0px 0px 0px` }
+    );
+    heroWatch.observe(hero);
+    closeWatch.observe(close);
     const ground = watchGround(bar, () => innerHeight - GROUND_LINE);
     return () => {
-        observer.disconnect();
+        heroWatch.disconnect();
+        closeWatch.disconnect();
         ground();
     };
 }

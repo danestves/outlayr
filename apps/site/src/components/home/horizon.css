@@ -1901,7 +1901,7 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
         display: none;
     }
 
-    .hz-install:not([data-up]) ~ .hz-edge[data-edge="bottom"] {
+    .hz-install:not([data-past]) ~ .hz-edge[data-edge="bottom"] {
         display: none;
     }
 }
