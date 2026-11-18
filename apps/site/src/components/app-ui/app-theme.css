@@ -312,7 +312,7 @@
         transform-origin: 0 0;
     }
 
-    .ss-phone__content > [data-app-canvas] {
+    .ss-phone__content [data-app-canvas] {
         --app-scale: 1;
         position: absolute;
         inset: 0;

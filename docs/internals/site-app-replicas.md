@@ -22,6 +22,21 @@ React Native on iOS rounds every text box up to a device pixel (a third of a poi
 2. Copy each native key it shows into the `native` block. The drift test confirms the copy matches.
 3. Export `<Name>Screen` with a localized label, as in `log.tsx`. For a part of a screen, wrap it in `AppFragment` with its own width, height and label. Either way, take `CanvasProps` and pass them on, so every replica accepts `fit`, `scale` and `className`.
 4. To open it alone, export it from a `<family>.viewer.tsx` beside it, in a `screens` map as `log.viewer.tsx` does. The key is its name in the viewer url, and a state of a screen gets its own key. The site never imports these files.
+5. To show it on the home page, export it from `apps/site/src/components/home/replicas.ts` and render it through `Replica`. See "On a page".
+
+## On a page
+
+A replica is static, so a page sends its HTML and none of its code. `apps/site/src/components/home/replica.tsx` does this for the home page.
+
+- `replicas.ts` exports the replicas the page shows. Nothing imports it but one dynamic `import()`, so they build into a chunk of their own.
+- The home route awaits `loadReplicas()` in `beforeLoad`. On the server that always loads the chunk, and every replica renders into the HTML.
+- In the browser, `Replica` renders an empty `dangerouslySetInnerHTML` with `suppressHydrationWarning` until the chunk is loaded. On hydration, that keeps the server's markup as it is, so the chunk is never fetched.
+- `loadReplicas()` does nothing while kept replicas are on screen. A link to a section of the same page then costs nothing. A visitor who arrives from another page gets the chunk first, on hover, and the replicas render in the browser.
+- A `Replica` that mounts with no server markup to keep loads the chunk itself. That covers a remount after an error, a fast refresh, or a change of locale without a document load.
+
+A slot renders `<Replica>{({ LogScreen }, locale) => <LogScreen locale={locale} theme={theme} />}</Replica>`. Kept markup never renders again, so whatever else a slot passes must stay the same while the page is mounted. `replica.tsx` imports `app-theme.css`, because the stylesheet must load even when the chunk does not.
+
+The dev server works the same way, so an edit to a replica shows on the home page only after a reload. Use the viewer while porting.
 
 ## Opening a replica alone
 

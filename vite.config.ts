@@ -221,6 +221,12 @@ export default defineConfig({
                 },
             },
             {
+                files: ["apps/site/src/components/home/replica.tsx"],
+                rules: {
+                    "react/no-danger": "off",
+                },
+            },
+            {
                 files: ["apps/site/src/components/home/films/**"],
                 rules: {
                     "tailwindcss/no-unknown-classes": "off",

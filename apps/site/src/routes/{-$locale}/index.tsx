@@ -8,6 +8,7 @@ import { Capture } from "@/components/home/capture";
 import { Dawn } from "@/components/home/dawn";
 import { InstallBar } from "@/components/home/install-bar";
 import { Night } from "@/components/home/night";
+import { loadReplicas } from "@/components/home/replica";
 import { Sunrise } from "@/components/home/sunrise";
 import { Sunset } from "@/components/home/sunset";
 import { watchGround } from "@/lib/ground";
@@ -23,6 +24,7 @@ const AGENT_LINKS = [
 ].join(", ");
 
 export const Route = createFileRoute("/{-$locale}/")({
+    beforeLoad: () => loadReplicas(),
     component: HomePage,
     loader: () => getWeekProof(),
     headers: () => ({ Link: AGENT_LINKS }),
