@@ -1,11 +1,11 @@
-import Airplane01Icon from "@hugeicons/core-free-icons/Airplane01Icon";
-import Bus01Icon from "@hugeicons/core-free-icons/Bus01Icon";
-import Coffee02Icon from "@hugeicons/core-free-icons/Coffee02Icon";
-import Dumbbell01Icon from "@hugeicons/core-free-icons/Dumbbell01Icon";
-import RepeatIcon from "@hugeicons/core-free-icons/RepeatIcon";
-import Restaurant01Icon from "@hugeicons/core-free-icons/Restaurant01Icon";
-import ShoppingBag01Icon from "@hugeicons/core-free-icons/ShoppingBag01Icon";
-import ShoppingCart01Icon from "@hugeicons/core-free-icons/ShoppingCart01Icon";
+import Airplane01Icon from "@hugeicons-pro/core-solid-rounded/Airplane01Icon";
+import Bus01Icon from "@hugeicons-pro/core-solid-rounded/Bus01Icon";
+import Coffee02Icon from "@hugeicons-pro/core-solid-rounded/Coffee02Icon";
+import Dumbbell01Icon from "@hugeicons-pro/core-solid-rounded/Dumbbell01Icon";
+import RepeatIcon from "@hugeicons-pro/core-solid-rounded/RepeatIcon";
+import Restaurant01Icon from "@hugeicons-pro/core-solid-rounded/Restaurant01Icon";
+import ShoppingBag01Icon from "@hugeicons-pro/core-solid-rounded/ShoppingBag01Icon";
+import ShoppingCart01Icon from "@hugeicons-pro/core-solid-rounded/ShoppingCart01Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { HugeiconsIconProps } from "@hugeicons/react";
 import { SUGGESTED_CATEGORY_PRESETS } from "@outlayr/money/category-rules";
@@ -58,8 +58,6 @@ const TILES: readonly Tile[] = [
 
 const COLORS = new Map(SUGGESTED_CATEGORY_PRESETS.expense.map(({ color, name }) => [name, color]));
 
-const BOLD_FROM = 72;
-
 export function CategoryTiles() {
     return (
         <div aria-hidden="true" className="hz-tiles" data-reveal="group">
@@ -87,7 +85,7 @@ export function CategoryTiles() {
                         }}
                     >
                         <span className="hz-tile-face" style={{ "--glyph": glyph, "--wash": wash }}>
-                            <HugeiconsIcon icon={tile.icon} strokeWidth={tile.w >= BOLD_FROM ? 2 : 1.9} />
+                            <HugeiconsIcon icon={tile.icon} />
                         </span>
                     </span>
                 );
