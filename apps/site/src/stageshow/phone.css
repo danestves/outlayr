@@ -110,12 +110,12 @@
      kit does (Status bar, iPhone, in points): the time centered in the first
      138.5, its 22pt line from y 21.5; signal, wifi and battery from x 285.25,
      8 apart, their tops at 26.33, 25.33 and 25.67 */
-  .ss-phone:not([data-frame="android"], [data-frame="soft"]) .ss-phone__status {
+  .ss-phone__status[data-ios] {
     height: 62px;
     padding: 0;
   }
 
-  .ss-phone:not([data-frame="android"], [data-frame="soft"]) .ss-phone__time {
+  .ss-phone__status[data-ios] .ss-phone__time {
     position: absolute;
     top: 21.5px;
     left: 0;
@@ -124,7 +124,7 @@
     text-align: center;
   }
 
-  .ss-phone:not([data-frame="android"], [data-frame="soft"]) .ss-phone__glyphs {
+  .ss-phone__status[data-ios] .ss-phone__glyphs {
     position: absolute;
     top: 25.33px;
     left: 285.25px;
@@ -132,11 +132,11 @@
     gap: 8px;
   }
 
-  .ss-phone:not([data-frame="android"], [data-frame="soft"]) .ss-phone__signal {
+  .ss-phone__status[data-ios] .ss-phone__signal {
     margin-top: 1px;
   }
 
-  .ss-phone:not([data-frame="android"], [data-frame="soft"]) .ss-phone__battery {
+  .ss-phone__status[data-ios] .ss-phone__battery {
     margin-top: 0.33px;
   }
 

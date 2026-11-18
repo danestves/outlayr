@@ -1,11 +1,11 @@
 import { useLocation } from "@tanstack/react-router";
 import { getPathWithoutLocale } from "intlayer";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useScrollSpy } from "@/lib/scroll-spy";
-import { SOURCE_URL } from "@/lib/site";
 
+import { GetAppButton, GetAppDialog } from "./get-app";
 import { Icon } from "./icon";
 import { LocalizedLink } from "./localized-link";
 import { LogoMark } from "./logo-mark";
@@ -16,6 +16,11 @@ type Section = (typeof SECTIONS)[number];
 
 const PILL =
     "fluid block rounded-full px-3 py-2 text-sm whitespace-nowrap text-muted hover:text-foreground aria-[current=page]:bg-foreground/5 aria-[current=page]:text-foreground data-[current]:bg-foreground/5 data-[current]:text-foreground";
+
+const SiteMenu = lazy(async () => {
+    const module = await import("./site-menu");
+    return { default: module.SiteMenu };
+});
 
 const WATCHED = ["top", ...SECTIONS];
 
@@ -31,31 +36,9 @@ function useCurrentSection(enabled: boolean) {
     return enabled ? current : null;
 }
 
-export function SiteHeader() {
-    const { footer, home, nav } = useIntlayer("site");
-    const [open, setOpen] = useState(false);
-    const path = getPathWithoutLocale(useLocation({ select: (location) => location.pathname }));
-    const current = useCurrentSection(path === "/");
-
-    // oxlint-disable-next-line outlayr/react-effect-budget -- locks body scroll and listens for Escape on window while the menu is open
-    useEffect(() => {
-        if (!open) {
-            return;
-        }
-        document.body.style.overflow = "hidden";
-        const onKey = (event: KeyboardEvent) => {
-            if (event.key === "Escape") {
-                setOpen(false);
-            }
-        };
-        addEventListener("keydown", onKey);
-        return () => {
-            document.body.style.overflow = "";
-            removeEventListener("keydown", onKey);
-        };
-    }, [open]);
-
-    const links = [
+function useNavLinks() {
+    const { footer, nav } = useIntlayer("site");
+    return [
         { hash: "how", label: nav.how, to: "/" },
         { hash: "features", label: nav.features, to: "/" },
         { hash: "pricing", label: nav.pricing, to: "/" },
@@ -63,6 +46,19 @@ export function SiteHeader() {
         { label: footer.blog, to: "/blog" },
         { label: footer.support, to: "/support" },
     ] as const;
+}
+
+export type NavLinks = ReturnType<typeof useNavLinks>;
+
+export function SiteHeader() {
+    const { getApp, home, nav } = useIntlayer("site");
+    const [menu, setMenu] = useState(false);
+    const [open, setOpen] = useState(false);
+    const path = getPathWithoutLocale(useLocation({ select: (location) => location.pathname }));
+    const isHome = path === "/";
+    const current = useCurrentSection(isHome);
+    const links = useNavLinks();
+    const warmMenu = () => setMenu(true);
 
     return (
         <>
@@ -72,21 +68,22 @@ export function SiteHeader() {
             >
                 {nav.skip}
             </a>
-            <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-6 print:hidden">
+            <header className="pointer-events-none fixed inset-x-0 top-0 z-50 px-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] print:hidden">
                 <nav
                     aria-label={nav.label.value}
-                    className="glass pointer-events-auto flex w-max items-center gap-1 rounded-full p-2 pl-4"
+                    className="site-nav glass text-foreground pointer-events-auto relative mx-auto grid h-14 max-w-[1120px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-full pr-2 pl-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]"
+                    data-ground={isHome ? "day" : undefined}
+                    data-site-nav
                 >
                     <LocalizedLink
                         aria-label={home.value}
-                        className="flex items-center gap-2 pr-2 text-base font-semibold tracking-tight"
-                        onClick={() => setOpen(false)}
+                        className="fluid flex items-center gap-2 justify-self-start rounded-xl text-[1.1875rem] font-semibold tracking-[-0.035em] hover:opacity-80"
                         to="/"
                     >
-                        <LogoMark className="size-6" />
+                        <LogoMark className="size-7" />
                         Outlayr
                     </LocalizedLink>
-                    <ul className="hidden items-center gap-1 md:flex">
+                    <ul className="hidden items-center gap-0.5 lg:flex">
                         {links.map((link) => (
                             <li key={link.label.value}>
                                 <LocalizedLink
@@ -101,55 +98,38 @@ export function SiteHeader() {
                             </li>
                         ))}
                     </ul>
-                    <a
-                        aria-label={nav.github.value}
-                        className="fluid text-muted hover:text-foreground hover:bg-foreground/5 flex size-11 items-center justify-center rounded-full active:scale-[0.98]"
-                        href={SOURCE_URL}
-                    >
-                        <Icon className="text-xl" name="github-logo" />
-                    </a>
-                    <button
-                        aria-controls="site-menu"
-                        aria-expanded={open}
-                        aria-label={open ? nav.close.value : nav.open.value}
-                        className="fluid hover:bg-foreground/5 relative size-11 rounded-full active:scale-[0.98] md:hidden"
-                        onClick={() => setOpen(!open)}
-                        type="button"
-                    >
-                        <span
-                            className={`fluid absolute top-1/2 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-current ${open ? "rotate-45" : "-translate-y-1"}`}
-                        />
-                        <span
-                            className={`fluid absolute top-1/2 left-1/2 h-0.5 w-4 -translate-x-1/2 rounded-full bg-current ${open ? "-rotate-45" : "translate-y-1"}`}
-                        />
-                    </button>
+                    <div className="flex items-center gap-1 justify-self-end">
+                        <GetAppButton
+                            className="bg-foreground text-background hover:not-disabled:bg-foreground/90 h-10 px-5 text-[0.9375rem]"
+                            placement="nav"
+                        >
+                            {getApp.title}
+                        </GetAppButton>
+                        <button
+                            aria-expanded={open}
+                            aria-haspopup="dialog"
+                            aria-label={nav.open.value}
+                            className="fluid hover:bg-foreground/5 grid size-10 place-items-center rounded-full active:scale-[0.96] lg:hidden"
+                            onClick={() => {
+                                setMenu(true);
+                                setOpen(true);
+                            }}
+                            onFocus={warmMenu}
+                            onPointerDown={warmMenu}
+                            onPointerEnter={warmMenu}
+                            type="button"
+                        >
+                            <Icon className="text-xl" name="menu" />
+                        </button>
+                        {menu ? (
+                            <Suspense fallback={null}>
+                                <SiteMenu links={links} onOpenChange={setOpen} open={open} />
+                            </Suspense>
+                        ) : null}
+                    </div>
                 </nav>
             </header>
-            <div
-                aria-hidden={!open}
-                className={`fluid bg-background/80 fixed inset-0 z-40 flex flex-col justify-center px-6 backdrop-blur-3xl md:hidden ${open ? "visible opacity-100" : "invisible opacity-0"}`}
-                id="site-menu"
-                inert={!open}
-            >
-                <ul className="flex flex-col gap-4">
-                    {links.map((link, index) => (
-                        <li
-                            className={`fluid ${open ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"}`}
-                            key={link.label.value}
-                            style={{ transitionDelay: open ? `${100 + index * 50}ms` : "0ms" }}
-                        >
-                            <LocalizedLink
-                                className="text-4xl font-semibold tracking-tight"
-                                hash={"hash" in link ? link.hash : undefined}
-                                onClick={() => setOpen(false)}
-                                to={link.to}
-                            >
-                                {link.label}
-                            </LocalizedLink>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            <GetAppDialog />
         </>
     );
 }

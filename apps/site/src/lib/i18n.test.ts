@@ -6,12 +6,8 @@ import answers from "../content/answers.content";
 import appUi from "../content/app-ui.content";
 import brand from "../content/brand.content";
 import demo from "../content/demo.content";
-import filmCapture from "../content/film-capture.content";
-import filmChaos from "../content/film-chaos.content";
-import filmLog from "../content/film-log.content";
-import filmMonth from "../content/film-month.content";
-import filmSorted from "../content/film-sorted.content";
 import home from "../content/home.content";
+import horizon from "../content/horizon.content";
 import open from "../content/open.content";
 import pricing from "../content/pricing.content";
 import site from "../content/site.content";
@@ -24,20 +20,7 @@ const TOOL = [...SHELL, tools.content.labels, answers.content.labels];
 
 // What each gated page renders, so a string missing its locale cannot fall back to English there.
 const PAGE_CONTENT: Record<string, readonly unknown[]> = {
-    "/": [
-        ...SHELL,
-        home.content,
-        story.content,
-        demo.content,
-        appUi.content,
-        filmCapture.content,
-        filmChaos.content,
-        filmLog.content,
-        filmMonth.content,
-        filmSorted.content,
-        about.content.allGuides,
-        pricing.content.more,
-    ],
+    "/": [...SHELL, home.content, horizon.content, story.content, demo.content, appUi.content, pricing.content.more],
     "/pricing": [
         ...SHELL,
         pricing.content,

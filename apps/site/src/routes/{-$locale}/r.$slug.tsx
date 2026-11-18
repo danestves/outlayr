@@ -15,17 +15,10 @@ export const Route = createFileRoute("/{-$locale}/r/$slug")({
         if (shared === null) {
             throw notFound();
         }
-        return shared;
-    },
-    head: ({ loaderData, params }) => {
-        if (!loaderData) {
-            return { meta: [NO_INDEX] };
-        }
         const { meta } = getIntlayer("shared-report", localeFromParam(params.locale));
-        return {
-            meta: [...pageMeta(meta.title({ name: loaderData.report.name }), meta.description), NO_INDEX],
-        };
+        return { ...shared, meta: [...pageMeta(meta.title({ name: shared.report.name }), meta.description), NO_INDEX] };
     },
+    head: ({ loaderData }) => ({ meta: loaderData?.meta ?? [NO_INDEX] }),
     notFoundComponent: SharedReportOff,
 });
 

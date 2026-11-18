@@ -36,3 +36,12 @@ index 81412e46db89e1416c5c5ba77d0e5b29c68b9de9..43036d0c802600402c7b107d6aa890b6
    "borderImageOutset",
    "borderImageSlice",
    "borderImageWidth",
+@@ -138,7 +140,7 @@ function styleToString(style) {
+     if (v == null || v === false)
+       continue;
+     const kebab = key.startsWith("--") ? key : key.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
+-    const value = typeof v === "number" && !UNITLESS_STYLE.has(key) && v !== 0 ? v + "px" : v;
++    const value = typeof v === "number" && !key.startsWith("--") && !UNITLESS_STYLE.has(key) && v !== 0 ? v + "px" : v;
+     out += `${kebab}:${value};`;
+   }
+   return out;

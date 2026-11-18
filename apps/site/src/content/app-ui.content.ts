@@ -1,6 +1,12 @@
 import { t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
+import { accountsCopy, accountsLabels } from "./app-ui/accounts";
+import { captureCopy, captureLabels } from "./app-ui/capture";
+import { entryCopy, entryLabels } from "./app-ui/entry";
+import { glanceCopy, glanceLabels } from "./app-ui/glance";
+import { insightsCopy, insightsLabels } from "./app-ui/insights";
+
 const appUi = {
     content: {
         accounts: {
@@ -13,33 +19,6 @@ const appUi = {
                 fr: "Huit comptes : Chase, Ally Savings, Zinli, PayPal, Apple Card, Amex Gold, et des espèces en dollars, Banesco en bolivars.",
             }),
             transfer: t({ en: "Transfer", de: "Umbuchung", es: "Transferencia", pt: "Transferência", fr: "Virement" }),
-        },
-        budget: {
-            aDay: t({ en: "A day", de: "Pro Tag", es: "Al día", pt: "Por dia", fr: "Par jour" }),
-            daysLeft: t({ en: "18d left", de: "noch 18 T.", es: "quedan 18d", pt: "faltam 18d", fr: "encore 18 j" }),
-            label: t({
-                en: "Budgets: $1,018.59 left this month of a $3,900 limit, $2,881 spent, $57 a day. On this pace the month ends $319 short.",
-                de: "Budgets: 1.018,59 $ übrig diesen Monat bei einem Limit von 3.900 $, 2.881 $ ausgegeben, 57 $ pro Tag. In diesem Tempo fehlen am Monatsende 319 $.",
-                es: "Presupuestos: quedan $1,018.59 este mes de un límite de $3,900, $2,881 gastados, $57 al día. A este ritmo, el mes termina $319 por debajo.",
-                pt: "Orçamentos: $ 1.018,59 disponíveis este mês de um limite de $ 3.900, $ 2.881 gastos, $ 57 por dia. Nesse ritmo, o mês fecha $ 319 no vermelho.",
-                fr: "Budgets : 1 018,59 $ restants ce mois-ci sur une limite de 3 900 $, 2 881 $ dépensés, 57 $ par jour. À ce rythme, le mois se termine avec 319 $ de déficit.",
-            }),
-            left: t({
-                en: "left this month",
-                de: "übrig diesen Monat",
-                es: "disponible este mes",
-                pt: "disponível este mês",
-                fr: "restant ce mois-ci",
-            }),
-            limit: t({ en: "Limit", de: "Limit", es: "Límite", pt: "Limite", fr: "Limite" }),
-            scope: t({
-                en: "Everything · This month",
-                de: "Alles · Diesen Monat",
-                es: "Todo · Este mes",
-                pt: "Tudo · Este mês",
-                fr: "Tout · Ce mois-ci",
-            }),
-            spent: t({ en: "Spent", de: "Ausgegeben", es: "Gastado", pt: "Gasto", fr: "Dépensé" }),
         },
         days: [
             t({ en: "S", de: "S", es: "D", pt: "D", fr: "D" }),
@@ -94,10 +73,133 @@ const appUi = {
             rent: t({ en: "Rent", de: "Miete", es: "Renta", pt: "Aluguel", fr: "Loyer" }),
             fresh: t({ en: "new", de: "neu", es: "nuevo", pt: "novo", fr: "nouveau" }),
         },
+        labels: {
+            ...accountsLabels,
+            ...captureLabels,
+            ...entryLabels,
+            ...glanceLabels,
+            ...insightsLabels,
+        },
+        log: {
+            label: t({
+                en: "Outlayr's Log screen. This week: {net} net, {in} in, {out} out. Below, each day's expenses with the day's total.",
+                de: "Der Verlauf in Outlayr. Diese Woche: {net} netto, {in} Eingang, {out} Ausgang. Darunter die Ausgaben jedes Tages mit der Tagessumme.",
+                es: "La pantalla Registro de Outlayr. Esta semana: {net} neto, {in} de entrada, {out} de salida. Debajo, los gastos de cada día con su total.",
+                pt: "A tela Lançamentos do Outlayr. Esta semana: {net} líquido, {in} de entrada, {out} de saída. Abaixo, os gastos de cada dia com o total.",
+                fr: "L'écran Journal d'Outlayr. Cette semaine : {net} net, {in} d'entrées, {out} de sorties. En dessous, les dépenses de chaque jour avec leur total.",
+            }),
+        },
         months: {
             nov: t({ en: "Nov", de: "Nov.", es: "nov", pt: "nov", fr: "nov." }),
             oct: t({ en: "Oct", de: "Okt.", es: "oct", pt: "out", fr: "oct." }),
             sep: t({ en: "Sep", de: "Sept.", es: "sep", pt: "set", fr: "sept." }),
+        },
+        native: {
+            ...accountsCopy,
+            ...captureCopy,
+            ...entryCopy,
+            ...glanceCopy,
+            ...insightsCopy,
+            "accounts.overview.heading": t({
+                en: "Accounts",
+                de: "Konten",
+                es: "Cuentas",
+                pt: "Contas",
+                fr: "Comptes",
+            }),
+            "common.today": t({ en: "Today", de: "Heute", es: "Hoy", pt: "Hoje", fr: "Aujourd'hui" }),
+            "common.yesterday": t({ en: "Yesterday", de: "Gestern", es: "Ayer", pt: "Ontem", fr: "Hier" }),
+            "dates.meridiem.am": t({ en: "AM", de: "AM", es: "a. m.", pt: "AM", fr: "AM" }),
+            "dates.meridiem.pm": t({ en: "PM", de: "PM", es: "p. m.", pt: "PM", fr: "PM" }),
+            "dates.month.0": t({ en: "Jan", de: "Jan.", es: "ene", pt: "jan", fr: "janv." }),
+            "dates.month.1": t({ en: "Feb", de: "Feb.", es: "feb", pt: "fev", fr: "févr." }),
+            "dates.month.2": t({ en: "Mar", de: "März", es: "mar", pt: "mar", fr: "mars" }),
+            "dates.month.3": t({ en: "Apr", de: "Apr.", es: "abr", pt: "abr", fr: "avr." }),
+            "dates.month.4": t({ en: "May", de: "Mai", es: "may", pt: "mai", fr: "mai" }),
+            "dates.month.5": t({ en: "Jun", de: "Juni", es: "jun", pt: "jun", fr: "juin" }),
+            "dates.month.6": t({ en: "Jul", de: "Juli", es: "jul", pt: "jul", fr: "juil." }),
+            "dates.month.7": t({ en: "Aug", de: "Aug.", es: "ago", pt: "ago", fr: "août" }),
+            "dates.month.8": t({ en: "Sep", de: "Sept.", es: "sep", pt: "set", fr: "sept." }),
+            "dates.month.9": t({ en: "Oct", de: "Okt.", es: "oct", pt: "out", fr: "oct." }),
+            "dates.month.10": t({ en: "Nov", de: "Nov.", es: "nov", pt: "nov", fr: "nov." }),
+            "dates.month.11": t({ en: "Dec", de: "Dez.", es: "dic", pt: "dez", fr: "déc." }),
+            "dates.weekday.0": t({ en: "Sun", de: "So.", es: "dom", pt: "dom", fr: "dim." }),
+            "dates.weekday.1": t({ en: "Mon", de: "Mo.", es: "lun", pt: "seg", fr: "lun." }),
+            "dates.weekday.2": t({ en: "Tue", de: "Di.", es: "mar", pt: "ter", fr: "mar." }),
+            "dates.weekday.3": t({ en: "Wed", de: "Mi.", es: "mié", pt: "qua", fr: "mer." }),
+            "dates.weekday.4": t({ en: "Thu", de: "Do.", es: "jue", pt: "qui", fr: "jeu." }),
+            "dates.weekday.5": t({ en: "Fri", de: "Fr.", es: "vie", pt: "sex", fr: "ven." }),
+            "dates.weekday.6": t({ en: "Sat", de: "Sa.", es: "sáb", pt: "sáb", fr: "sam." }),
+            "debts.title": t({ en: "Debts", de: "Schulden", es: "Deudas", pt: "Dívidas", fr: "Dettes" }),
+            "log.head.period.week": t({
+                en: "This week",
+                de: "Diese Woche",
+                es: "Esta semana",
+                pt: "Esta semana",
+                fr: "Cette semaine",
+            }),
+            "log.head.vs.week": t({
+                en: "vs last week",
+                de: "ggü. Vorwoche",
+                es: "vs. la semana pasada",
+                pt: "vs. a semana passada",
+                fr: "vs la semaine dernière",
+            }),
+            "log.measure.in": t({ en: "In", de: "Eingang", es: "Entró", pt: "Entrou", fr: "Entrées" }),
+            "log.measure.net": t({ en: "Net", de: "Netto", es: "Neto", pt: "Líquido", fr: "Net" }),
+            "log.measure.out": t({ en: "Out", de: "Ausgang", es: "Salió", pt: "Saiu", fr: "Sorties" }),
+            "log.shelf.accounts_one": t({
+                en: "1 account",
+                de: "1 Konto",
+                es: "1 cuenta",
+                pt: "1 conta",
+                fr: "1 compte",
+            }),
+            "log.shelf.accounts_other": t({
+                en: "{count} accounts",
+                de: "{count} Konten",
+                es: "{count} cuentas",
+                pt: "{count} contas",
+                fr: "{count} comptes",
+            }),
+            "log.shelf.weekAhead": t({
+                en: "Next 7 days",
+                de: "Nächste 7 Tage",
+                es: "Próximos 7 días",
+                pt: "Próximos 7 dias",
+                fr: "7 prochains jours",
+            }),
+            "log.shelf.youOwe": t({
+                en: "You owe",
+                de: "Du schuldest",
+                es: "Debes",
+                pt: "Você deve",
+                fr: "Vous devez",
+            }),
+            "log.title": t({ en: "Log", de: "Verlauf", es: "Registro", pt: "Lançamentos", fr: "Journal" }),
+            "log.upcoming.heading": t({
+                en: "UPCOMING",
+                de: "ANSTEHEND",
+                es: "PRÓXIMOS",
+                pt: "PRÓXIMOS",
+                fr: "À VENIR",
+            }),
+            "nav.tab.balances": t({ en: "Balances", de: "Kontostände", es: "Saldos", pt: "Saldos", fr: "Soldes" }),
+            "nav.tab.insights": t({
+                en: "Insights",
+                de: "Auswertungen",
+                es: "Estadísticas",
+                pt: "Estatísticas",
+                fr: "Statistiques",
+            }),
+            "nav.tab.log": t({ en: "Log", de: "Verlauf", es: "Registro", pt: "Lançamentos", fr: "Journal" }),
+            "nav.tab.settings": t({
+                en: "Settings",
+                de: "Einstellungen",
+                es: "Configuración",
+                pt: "Ajustes",
+                fr: "Réglages",
+            }),
         },
         upcoming: {
             label: t({

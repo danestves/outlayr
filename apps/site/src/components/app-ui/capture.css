@@ -1,0 +1,80 @@
+[data-cue="swap"],
+[data-flash] {
+    opacity: 0;
+}
+
+[data-flash] {
+    background: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    [data-take] [data-film] {
+        animation: capture-clock var(--film) linear both;
+    }
+
+    [data-take] [data-cue] {
+        animation: capture-in var(--fade, 0.22s) ease-out var(--in) both;
+    }
+
+    [data-take] [data-cue="swap"] {
+        animation:
+            capture-in var(--fade, 0.22s) ease-out var(--in) both,
+            capture-out var(--fade-out, 0.16s) ease-in var(--out) forwards;
+    }
+
+    [data-take] [data-flash] {
+        animation: capture-flash 0.28s ease-out var(--in) both;
+    }
+
+    [data-take] [data-sweep] {
+        animation: capture-sweep 1.5s cubic-bezier(0.37, 0, 0.63, 1) var(--in) 2.34 alternate both;
+    }
+}
+
+@keyframes capture-clock {
+    from,
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes capture-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes capture-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes capture-flash {
+    0%,
+    100% {
+        opacity: 0;
+    }
+
+    30% {
+        opacity: 1;
+    }
+}
+
+@keyframes capture-sweep {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(var(--travel));
+    }
+}

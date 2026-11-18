@@ -1,0 +1,366 @@
+@reference "../../../../native/global.css";
+@custom-variant ios (&);
+@custom-variant android (@media not all);
+@custom-variant dark (&:where([data-app-theme="dark"], [data-app-theme="dark"] *));
+@plugin "./app-tokens.mjs";
+@source not "../../../../native/node_modules/panelui-native/src";
+
+@layer theme, base, components, utilities;
+
+@font-face {
+    font-family: "App Rounded";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2") format("woff2-variations");
+    unicode-range:
+        U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+        U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    size-adjust: 93.95%;
+    ascent-override: 101.35%;
+    descent-override: 25.67%;
+    line-gap-override: 0%;
+}
+
+@font-face {
+    font-family: "App Rounded";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2") format("woff2-variations");
+    unicode-range:
+        U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+        U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    size-adjust: 95.98%;
+    ascent-override: 99.2%;
+    descent-override: 25.13%;
+    line-gap-override: 0%;
+}
+
+@font-face {
+    font-family: "App Rounded";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2") format("woff2-variations");
+    unicode-range:
+        U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+        U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    size-adjust: 97.97%;
+    ascent-override: 97.19%;
+    descent-override: 24.62%;
+    line-gap-override: 0%;
+}
+
+@font-face {
+    font-family: "App Rounded";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2") format("woff2-variations");
+    unicode-range:
+        U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+        U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+    size-adjust: 99.07%;
+    ascent-override: 96.11%;
+    descent-override: 24.35%;
+    line-gap-override: 0%;
+}
+
+@font-face {
+    font-family: "App Sans";
+    font-style: normal;
+    font-weight: 1 449;
+    font-display: swap;
+    src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2-variations");
+    size-adjust: 93.47%;
+    ascent-override: 101.87%;
+    descent-override: 25.81%;
+    line-gap-override: 0%;
+}
+
+@font-face {
+    font-family: "App Sans";
+    font-style: normal;
+    font-weight: 450 549;
+    font-display: swap;
+    src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2-variations");
+    size-adjust: 93.77%;
+    ascent-override: 101.54%;
+    descent-override: 25.72%;
+    line-gap-override: 0%;
+}
+
+@font-face {
+    font-family: "App Sans";
+    font-style: normal;
+    font-weight: 550 649;
+    font-display: swap;
+    src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2-variations");
+    size-adjust: 94.03%;
+    ascent-override: 101.26%;
+    descent-override: 25.65%;
+    line-gap-override: 0%;
+}
+
+@font-face {
+    font-family: "App Sans";
+    font-style: normal;
+    font-weight: 650 1000;
+    font-display: swap;
+    src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2-variations");
+    size-adjust: 94.34%;
+    ascent-override: 100.93%;
+    descent-override: 25.57%;
+    line-gap-override: 0%;
+}
+
+@font-face {
+    font-family: "App Mono";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2") format("woff2-variations");
+    ascent-override: 100.5%;
+    descent-override: 29.5%;
+    line-gap-override: 0%;
+}
+
+@font-face {
+    font-family: "App Serif";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2") format("woff2");
+    ascent-override: 99%;
+    descent-override: 31%;
+    line-gap-override: 0%;
+}
+
+@font-face {
+    font-family: "App System Mono";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url("@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2") format("woff2-variations");
+    size-adjust: 103.03%;
+    ascent-override: 92.42%;
+    descent-override: 23.41%;
+    line-gap-override: 0%;
+}
+
+@layer base {
+    [data-app-replica] {
+        --spacing: 4px;
+        --font-sans: ui-rounded, "App Rounded", sans-serif;
+        --font-sans-medium: var(--font-sans);
+        --font-sans-semibold: var(--font-sans);
+        --font-sans-bold: var(--font-sans);
+        --font-mono: "App Mono", monospace;
+        --font-mono-medium: var(--font-mono);
+        --font-system-mono: ui-monospace, "SF Mono", "App System Mono", monospace;
+        --font-system: "SF Pro", -apple-system, "App Sans", sans-serif;
+        --app-ascent: 0.95215;
+        --app-descent: 0.24121;
+        position: absolute;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        width: var(--app-w);
+        height: var(--app-h);
+        color: #000;
+        font-family: var(--font-sans);
+        font-size: 14px;
+        font-weight: 400;
+        letter-spacing: 0;
+        line-height: normal;
+        text-align: start;
+        text-transform: none;
+        zoom: 3;
+        transform: scale(calc(var(--app-scale, 1) / 3));
+        transform-origin: 0 0;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        user-select: none;
+        pointer-events: none;
+    }
+
+    [data-app-replica] *,
+    [data-app-replica] ::before,
+    [data-app-replica] ::after {
+        box-sizing: border-box;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0 solid;
+    }
+
+    [data-app-replica] div {
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        align-items: stretch;
+        position: relative;
+    }
+
+    [data-app-replica] span {
+        display: inline;
+    }
+
+    [data-app-replica] div:not([data-app-status] *) > span {
+        --app-asc: round(calc(var(--app-ascent) * 1em), calc(1px / 3));
+        --app-desc: round(calc(var(--app-descent) * 1em), calc(1px / 3));
+        --app-rise: calc(
+            (1lh + (var(--app-ascent) - var(--app-descent)) * 1em) / 2 - var(--app-asc) -
+                round(down, (1lh - var(--app-asc) - var(--app-desc)) / 2, calc(1px / 3))
+        );
+        margin-top: var(--app-rise);
+        margin-bottom: calc(-1 * var(--app-rise));
+        padding-bottom: calc(1px / 3);
+    }
+
+    [data-app-replica] svg {
+        display: block;
+        flex-shrink: 0;
+    }
+
+    [data-app-replica] img {
+        display: block;
+        max-width: none;
+    }
+
+    [data-app-replica] .text-micro {
+        --app-trak: 0.05664em;
+    }
+
+    [data-app-replica] .text-eyebrow {
+        --app-trak: 0.05078em;
+    }
+
+    [data-app-replica] .text-label {
+        --app-trak: 0.04492em;
+    }
+
+    [data-app-replica] .text-footnote {
+        --app-trak: 0.03906em;
+    }
+
+    [data-app-replica] .text-caption {
+        --app-trak: 0.03418em;
+    }
+
+    [data-app-replica] .text-subtitle {
+        --app-trak: 0.0293em;
+    }
+
+    [data-app-replica] .text-body {
+        --app-trak: 0.02539em;
+    }
+
+    [data-app-replica] .text-callout {
+        --app-trak: 0.02197em;
+    }
+
+    [data-app-replica] .text-headline {
+        --app-trak: 0.02067em;
+    }
+
+    [data-app-replica] .text-title {
+        --app-trak: 0.01807em;
+    }
+
+    [data-app-replica] .text-hero {
+        --app-trak: 0.00963em;
+    }
+
+    [data-app-replica] .font-mono {
+        --app-trak: 0em;
+        --app-ascent: 1.005;
+        --app-descent: 0.295;
+    }
+
+    @supports not (font: -apple-system-body) {
+        [data-app-replica] * {
+            letter-spacing: var(--app-trak, 0em);
+        }
+    }
+
+    [data-app-replica] [data-app-kern] {
+        letter-spacing: var(--app-kern);
+    }
+
+    @supports not (font: -apple-system-body) {
+        [data-app-replica] [data-app-kern] {
+            letter-spacing: calc(var(--app-trak, 0em) + var(--app-kern));
+        }
+    }
+
+    [data-app-replica] {
+        --glass-fill: #f8f6f1;
+        --glass-rim: rgba(255, 255, 255, 0.95);
+        --glass-edge: rgba(23, 21, 15, 0.16);
+        --glass-shadow: rgba(23, 21, 15, 0.08);
+        --glass-ink: #0d0c0b;
+        --tab-pill: #e2dfd8;
+        --tab-ink: #17150f;
+        --tab-selected: #b52d11;
+        --badge: #ff383c;
+        --title-ink: #000;
+        --sheet-backdrop: #c2c0bb;
+    }
+
+    [data-app-replica][data-app-theme="dark"] {
+        --glass-fill: #393630;
+        --glass-rim: rgba(255, 255, 255, 0.2);
+        --glass-edge: rgba(0, 0, 0, 0.7);
+        --glass-shadow: rgba(0, 0, 0, 0.3);
+        --glass-ink: #fffffd;
+        --tab-pill: #25221a;
+        --tab-ink: #f2efe8;
+        --tab-selected: #ff7a54;
+        --badge: #ff4245;
+        --title-ink: #fff;
+        --sheet-backdrop: #0c0b08;
+    }
+}
+
+@layer components {
+    [data-app-canvas] {
+        position: relative;
+        display: block;
+        flex: none;
+        overflow: hidden;
+        width: calc(var(--app-w) * var(--app-scale, 1));
+        height: calc(var(--app-h) * var(--app-scale, 1));
+    }
+
+    [data-app-fit] {
+        container-type: inline-size;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    [data-app-fit] > [data-app-canvas] {
+        --app-scale: 1;
+        scale: tan(atan2(100cqw, var(--app-w)));
+        transform-origin: 0 0;
+    }
+
+    .ss-phone__content [data-app-canvas] {
+        --app-scale: 1;
+        position: absolute;
+        inset: 0;
+        width: auto;
+        height: auto;
+    }
+
+    .ss-phone [data-app-status] {
+        display: none;
+    }
+}
+
+@layer utilities {
+    [data-app-replica] {
+        @tailwind utilities source("./");
+    }
+}

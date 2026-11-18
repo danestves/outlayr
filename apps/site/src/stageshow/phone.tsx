@@ -206,16 +206,7 @@ export function Phone({ width, frame: asked = 'pro', time = '9:41', island, stat
             className="ss-phone__screen"
             style={{ width: SCREEN.w, height: SCREEN.h, transform: `scale(${s})`, ['--ss-screen-r' as string]: `${SCREEN.r}px`, ...(wallpaper ? ({ background: wallpaper } as CSSProperties) : null) }}
           >
-            {showStatus && (
-              <div className="ss-phone__status">
-                <span className="ss-phone__time">{fidelity === 'minimal' ? <span className="ss-phone__time-bar" /> : time}</span>
-                <span className="ss-phone__glyphs">
-                  <Signal />
-                  <Wifi />
-                  <Battery />
-                </span>
-              </div>
-            )}
+            {showStatus && <StatusBar time={time} ios={ios} minimal={fidelity === 'minimal'} />}
             {showIsland && <span className="ss-phone__island" />}
             <div className="ss-phone__content" data-status={showStatus || undefined}>
               {children}
@@ -331,6 +322,25 @@ export function Notification({ icon, title, body, time = 'now', banner, classNam
 
 // The status bar glyphs, taken from Apple's iOS 27 UI kit for Figma
 // (Status bar, iPhone): exact paths and sizes in points
+
+export interface StatusBarProps {
+  time?: string
+  ios?: boolean
+  minimal?: boolean
+}
+
+export function StatusBar({ time = '9:41', ios = true, minimal = false }: StatusBarProps) {
+  return (
+    <div className="ss-phone__status" data-ios={ios || undefined}>
+      <span className="ss-phone__time">{minimal ? <span className="ss-phone__time-bar" /> : time}</span>
+      <span className="ss-phone__glyphs">
+        <Signal />
+        <Wifi />
+        <Battery />
+      </span>
+    </div>
+  )
+}
 
 function Signal() {
   // Four bars 3.33 wide on a 5.67 pitch, fully rounded, 6.33 to 13.67 tall

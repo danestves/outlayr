@@ -23,6 +23,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [App meta registry](./internals/app-meta.md)
 - [Web rules](./internals/web-rules.md)
 - [Web recurring](./internals/web-recurring.md)
+- [Site app replicas](./internals/site-app-replicas.md)
 
 ### Runbooks
 

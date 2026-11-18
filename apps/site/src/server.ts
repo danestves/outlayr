@@ -24,6 +24,7 @@ const HIDDEN = [
     "[data-fields]",
     "[data-kicker]",
     ".dark-only",
+    ".ss-phone__status",
 ];
 
 const LAYOUT = /(?:^|\s)(?:[a-z0-9]+:)*(?:inline-)?(?:flex|grid)(?=\s|$)/u;

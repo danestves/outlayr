@@ -22,3 +22,5 @@ vp dlx wrangler@4.152.0 r2 object put outlayr-files/merchants/<domain> --file lo
 ```
 
 To remove a logo at a brand's request, delete the object the same way with `r2 object delete`, and purge the url. A removed domain can be looked up again, so store a replacement if it must not come back.
+
+The marketing site keeps its own copy of the logos its app replicas show. To remove one there, delete `apps/site/public/media/logos/<domain>.webp` and the domain's line in `apps/site/src/components/app-ui/logos.json`, fix what the type check then flags, deploy the site, and purge the file's url.

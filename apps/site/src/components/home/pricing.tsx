@@ -7,7 +7,8 @@ import { LocalizedLink } from "@/components/localized-link";
 import { CONTAINER } from "@/lib/layout";
 import { proPrices } from "@/lib/pro-prices";
 
-import { HEADING, LABEL } from "./problem";
+const LABEL = "text-muted font-mono text-xs";
+const HEADING = "text-4xl font-semibold tracking-tight md:text-5xl";
 
 export function Pricing({ standalone = false }: { standalone?: boolean }) {
     const { limits, plansCopy, proOnly } = useIntlayer("home");
@@ -16,7 +17,6 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
     const { locale } = useLocale();
     const { lang } = LANGUAGES[locale];
     const visitorCountry = useLoaderData({ from: "__root__" });
-    // /pricing states US prices in its copy, so its cards must not localize
     const prices = proPrices(standalone ? null : visitorCountry, locale);
     return (
         <section className={`${CONTAINER} scroll-mt-24 py-24`} id="pricing">

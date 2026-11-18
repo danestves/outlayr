@@ -2,7 +2,14 @@ import { FREE_CAPTURES, PRO_CAPTURES } from "@outlayr/money/capture-allowance";
 import { t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
-import { ACCOUNTS_SCREEN_ALT, BUDGETS_SCREEN_ALT, OPEN_SOURCE_ANSWER, OPEN_SOURCE_QUESTION } from "./shared";
+import {
+    APPEARANCE_EXTRA,
+    EXPORT_EXTRA,
+    OFFLINE_EXTRA,
+    OPEN_SOURCE_ANSWER,
+    OPEN_SOURCE_QUESTION,
+    SPLIT_EXTRA,
+} from "./shared";
 
 const home = {
     content: {
@@ -17,16 +24,7 @@ const home = {
                     fr: "Épargnez pour une date et voyez combien il vous faut chaque mois.",
                 }),
             },
-            {
-                label: t({ en: "Split", de: "Aufteilen", es: "Dividir", pt: "Dividir", fr: "Répartir" }),
-                text: t({
-                    en: "Divide one purchase across several categories.",
-                    de: "Teile einen Einkauf auf mehrere Kategorien auf.",
-                    es: "Reparte una compra entre varias categorías.",
-                    pt: "Divida uma compra entre várias categorias.",
-                    fr: "Répartissez un achat entre plusieurs catégories.",
-                }),
-            },
+            SPLIT_EXTRA,
             {
                 label: t({ en: "Currencies", de: "Währungen", es: "Monedas", pt: "Moedas", fr: "Devises" }),
                 text: t({
@@ -67,26 +65,8 @@ const home = {
                     fr: "Retrouvez n'importe quelle opération par note, catégorie ou montant. Sur iPhone, les opérations apparaissent aussi dans Spotlight.",
                 }),
             },
-            {
-                label: t({ en: "Offline", de: "Offline", es: "Sin conexión", pt: "Sem conexão", fr: "Hors ligne" }),
-                text: t({
-                    en: "Entries save on the phone first, so logging works with no signal.",
-                    de: "Einträge werden zuerst auf dem Handy gespeichert, deshalb klappt das Erfassen auch ohne Netz.",
-                    es: "Los registros se guardan primero en el celular, así que puedes registrar sin señal.",
-                    pt: "Os lançamentos são salvos primeiro no celular, então dá para registrar sem sinal.",
-                    fr: "Les opérations s'enregistrent d'abord sur le téléphone : la saisie fonctionne même sans réseau.",
-                }),
-            },
-            {
-                label: t({ en: "Export", de: "Export", es: "Exportar", pt: "Exportar", fr: "Exporter" }),
-                text: t({
-                    en: "A CSV, or a full archive you can restore from.",
-                    de: "Eine CSV-Datei oder ein vollständiges Archiv, aus dem du wiederherstellen kannst.",
-                    es: "Un CSV o un archivo completo desde el que puedes restaurar.",
-                    pt: "Um CSV ou um arquivo completo que você pode restaurar depois.",
-                    fr: "Un CSV, ou une archive complète à partir de laquelle restaurer.",
-                }),
-            },
+            OFFLINE_EXTRA,
+            EXPORT_EXTRA,
             {
                 label: t({ en: "Lock", de: "Sperre", es: "Bloqueo", pt: "Bloqueio", fr: "Verrouillage" }),
                 text: t({
@@ -97,24 +77,8 @@ const home = {
                     fr: "Face ID ou Touch ID pour ouvrir l'app sur iPhone, ou votre empreinte ou votre visage sur Android. Le sélecteur d'apps de l'iPhone n'affiche jamais votre journal.",
                 }),
             },
-            {
-                label: t({ en: "Appearance", de: "Darstellung", es: "Apariencia", pt: "Aparência", fr: "Apparence" }),
-                text: t({
-                    en: "Light and dark, five accent colors, five app icons.",
-                    de: "Hell und dunkel, fünf Akzentfarben, fünf App-Symbole.",
-                    es: "Claro y oscuro, cinco colores de acento y cinco íconos de la app.",
-                    pt: "Claro e escuro, cinco cores de destaque e cinco ícones do app.",
-                    fr: "Clair et sombre, cinq couleurs d'accent et cinq icônes d'app.",
-                }),
-            },
+            APPEARANCE_EXTRA,
         ],
-        extrasTitle: t({
-            en: "Also in the app",
-            de: "Außerdem in der App",
-            es: "También en la app",
-            pt: "Também no app",
-            fr: "Aussi dans l'app",
-        }),
         faq: [
             {
                 answer: t({
@@ -294,13 +258,6 @@ const home = {
             },
             { answer: OPEN_SOURCE_ANSWER, question: OPEN_SOURCE_QUESTION },
         ],
-        faqTitle: t({
-            en: "Questions, answered",
-            de: "Fragen und Antworten",
-            es: "Preguntas y respuestas",
-            pt: "Perguntas e respostas",
-            fr: "Questions et réponses",
-        }),
         hero: {
             title: t({
                 en: "Track every expense in one sentence",
@@ -308,27 +265,6 @@ const home = {
                 es: "Registra cada gasto en una oración",
                 pt: "Registre cada gasto em uma frase",
                 fr: "Notez chaque dépense en une phrase",
-            }),
-            tryLabel: t({
-                en: "Try it live",
-                de: "Probier es live aus",
-                es: "Pruébalo en vivo",
-                pt: "Teste ao vivo",
-                fr: "Essayez en direct",
-            }),
-            tryPlaceholder: t({
-                en: "blue bottle 4.50",
-                de: "balzac coffee 4,50",
-                es: "juan valdez 4,50",
-                pt: "starbucks 4,50",
-                fr: "columbus café 4,50",
-            }),
-            videoLabel: t({
-                en: "Logging a $42.00 grocery purchase at Costco in Outlayr, from the add menu to the Log.",
-                de: "Erfassen eines Lebensmitteleinkaufs über 42,00 $ bei Costco in Outlayr, vom Hinzufügen-Menü bis zum Verlauf.",
-                es: "Cómo se registra en Outlayr una compra de súper de $42.00 en Costco, desde el menú para agregar hasta el Registro.",
-                pt: "Registrando no Outlayr uma compra de mercado de $ 42,00 no Costco, do menu de adicionar até os Lançamentos.",
-                fr: "Enregistrement dans Outlayr d'un achat de courses de 42,00 $ chez Costco, du menu d'ajout jusqu'au Journal.",
             }),
         },
         limits: [
@@ -450,88 +386,6 @@ const home = {
                 pt: "Busca de estabelecimentos na web",
                 fr: "Recherche web des commerçants",
             }),
-        ],
-        tour: [
-            {
-                alt: BUDGETS_SCREEN_ALT,
-                body: t({
-                    en: "Set a limit per category or one for the whole month, and carry over what you didn’t spend. The chart shows where this pace ends, not just what’s left.",
-                    de: "Setze ein Limit pro Kategorie oder eins für den ganzen Monat und übertrage, was du nicht ausgegeben hast. Das Diagramm zeigt, wo dieses Tempo endet, nicht nur, was übrig ist.",
-                    es: "Pon un límite por categoría o uno para todo el mes, y acumula lo que no gastaste. El gráfico muestra a dónde te lleva este ritmo, no solo lo que queda.",
-                    pt: "Defina um limite por categoria ou um para o mês inteiro, e leve para o mês seguinte o que você não gastou. O gráfico mostra onde esse ritmo vai parar, não só o que sobra.",
-                    fr: "Fixez une limite par catégorie ou une seule pour tout le mois, et reportez ce que vous n'avez pas dépensé. Le graphique montre où mène ce rythme, pas seulement ce qui reste.",
-                }),
-                title: t({
-                    en: "Spot the overspend early",
-                    de: "Überziehungen früh erkennen",
-                    es: "Descubre a tiempo si te vas a pasar",
-                    pt: "Perceba a tempo se vai estourar",
-                    fr: "Repérez les dépassements à temps",
-                }),
-            },
-            {
-                alt: t({
-                    en: "Outlayr Insights for 6 to 12 September: $597.95 spent, 74% less than the week before, a bar for each day, and the categories that moved most.",
-                    de: "Outlayr Auswertungen für den 6. bis 12. September: 597,95 $ ausgegeben, 74 % weniger als in der Woche davor, ein Balken für jeden Tag und die Kategorien, die sich am meisten bewegt haben.",
-                    es: "Estadísticas de Outlayr del 6 al 12 de septiembre: $597.95 gastados, 74% menos que la semana anterior, una barra por día y las categorías que más cambiaron.",
-                    pt: "Estatísticas do Outlayr de 6 a 12 de setembro: $ 597,95 gastos, 74% a menos que na semana anterior, uma barra para cada dia e as categorias que mais mudaram.",
-                    fr: "Statistiques d'Outlayr du 6 au 12 septembre : 597,95 $ dépensés, 74 % de moins que la semaine précédente, une barre par jour et les catégories qui ont le plus bougé.",
-                }),
-                body: t({
-                    en: "Spending by day and by category, income against spending, and net worth over time. Start the month on payday and every chart follows.",
-                    de: "Ausgaben nach Tag und Kategorie, Einnahmen gegen Ausgaben und Vermögen im Zeitverlauf. Lass den Monat am Zahltag beginnen, und jedes Diagramm zieht mit.",
-                    es: "Gastos por día y por categoría, ingresos frente a gastos y tu patrimonio a lo largo del tiempo. Empieza el mes el día de pago y todos los gráficos se ajustan.",
-                    pt: "Gastos por dia e por categoria, receitas contra gastos e seu patrimônio ao longo do tempo. Comece o mês no dia do pagamento e todos os gráficos acompanham.",
-                    fr: "Dépenses par jour et par catégorie, revenus face aux dépenses, et patrimoine dans le temps. Commencez le mois le jour de la paie et tous les graphiques suivent.",
-                }),
-                title: t({
-                    en: "See what moved since last week",
-                    de: "Sieh, was sich seit letzter Woche bewegt hat",
-                    es: "Mira qué cambió desde la semana pasada",
-                    pt: "Veja o que mudou desde a semana passada",
-                    fr: "Voyez ce qui a bougé depuis la semaine dernière",
-                }),
-            },
-            {
-                alt: ACCOUNTS_SCREEN_ALT,
-                body: t({
-                    en: "Cash, cards, savings, and debts side by side. A transfer moves money between them without counting as spending.",
-                    de: "Bargeld, Karten, Erspartes und Schulden nebeneinander. Eine Umbuchung verschiebt Geld zwischen ihnen, ohne als Ausgabe zu zählen.",
-                    es: "Efectivo, tarjetas, ahorros y deudas, todo junto. Una transferencia mueve dinero entre tus cuentas sin contar como gasto.",
-                    pt: "Dinheiro, cartões, poupança e dívidas lado a lado. Uma transferência move dinheiro entre suas contas sem contar como gasto.",
-                    fr: "Espèces, cartes, épargne et dettes côte à côte. Un virement déplace de l'argent entre vos comptes sans compter comme une dépense.",
-                }),
-                title: t({
-                    en: "Every account, every currency",
-                    de: "Jedes Konto, jede Währung",
-                    es: "Cada cuenta, cada moneda",
-                    pt: "Cada conta, cada moeda",
-                    fr: "Chaque compte, chaque devise",
-                }),
-            },
-            {
-                alt: t({
-                    en: "Outlayr Upcoming entries: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, rent, Netflix, and Planet Fitness, each with its next charge date, and $2,036.54 a month in total.",
-                    de: "Outlayr Demnächst: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, Miete, Netflix und Planet Fitness, jeweils mit dem Datum der nächsten Abbuchung, und insgesamt 2.036,54 $ im Monat.",
-                    es: "Próximos registros en Outlayr: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, la renta, Netflix y Planet Fitness, cada uno con la fecha de su próximo cobro, y $2,036.54 al mes en total.",
-                    pt: "Próximos lançamentos no Outlayr: Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, aluguel, Netflix e Planet Fitness, cada um com a data da próxima cobrança, e $ 2.036,54 por mês no total.",
-                    fr: "Opérations à venir dans Outlayr : Amazon Prime, ChatGPT, iCloud, Verizon, Spotify, loyer, Netflix et Planet Fitness, chacune avec la date de son prochain prélèvement, et 2 036,54 $ par mois au total.",
-                }),
-                body: t({
-                    en: "Rent, bills, and streaming log themselves on their day. Upcoming lists the next charges and what they add up to each month, and each one can remind you before it charges.",
-                    de: "Miete, Rechnungen und Streaming werden an ihrem Tag von selbst erfasst. „Demnächst“ listet die nächsten Abbuchungen und was sie im Monat zusammen ausmachen, und jede kann dich vor der Abbuchung erinnern.",
-                    es: "La renta, los servicios y el streaming se registran solos en su día. Próximos muestra los siguientes cobros y cuánto suman al mes, y cada uno puede avisarte antes de cobrarte.",
-                    pt: "Aluguel, contas e streaming são lançados sozinhos no dia certo. Próximos mostra as próximas cobranças e quanto elas somam por mês, e cada uma pode te avisar antes de cobrar.",
-                    fr: "Loyer, factures et streaming s'enregistrent tout seuls le jour venu. À venir liste les prochains prélèvements et leur total par mois, et chacun peut vous prévenir avant d'être prélevé.",
-                }),
-                title: t({
-                    en: "What your subscriptions cost a month",
-                    de: "Was deine Abos im Monat kosten",
-                    es: "Lo que te cuestan tus suscripciones al mes",
-                    pt: "Quanto suas assinaturas custam por mês",
-                    fr: "Ce que vos abonnements coûtent par mois",
-                }),
-            },
         ],
     },
     key: "home",

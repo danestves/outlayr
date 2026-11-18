@@ -1,4 +1,5 @@
 const COUNT_MS = 1200;
+const REVEAL_FALLBACK_MS = 3000;
 
 function write(element: Element, value: string) {
     const text = element.firstChild;
@@ -22,9 +23,17 @@ function countUp(element: HTMLElement) {
     requestAnimationFrame(tick);
 }
 
+function within(root: ParentNode, selector: string) {
+    const found = [...root.querySelectorAll(selector)];
+    return root instanceof Element && root.matches(selector) ? [root, ...found] : found;
+}
+
 let scanner: (() => void) | null = null;
 
 export function startMotion() {
+    if (performance.now() < REVEAL_FALLBACK_MS) {
+        document.documentElement.dataset.motion = "";
+    }
     const reveals = new IntersectionObserver((entries) => {
         for (const entry of entries) {
             if (entry.isIntersecting) {
@@ -58,8 +67,8 @@ export function startMotion() {
         },
         { threshold: 0.35 }
     );
-    const scan = () => {
-        for (const element of document.querySelectorAll("[data-live]:not(.is-live)")) {
+    const scan = (root: ParentNode) => {
+        for (const element of within(root, "[data-live]:not(.is-live)")) {
             lives.observe(element);
             if (!reduced) {
                 for (const count of element.querySelectorAll<HTMLElement>("[data-count]:not([data-counted])")) {
@@ -68,16 +77,24 @@ export function startMotion() {
                 }
             }
         }
-        for (const element of document.querySelectorAll("[data-reveal]:not(.is-in)")) {
+        for (const element of within(root, "[data-reveal]:not(.is-in)")) {
             reveals.observe(element);
         }
-        for (const element of document.querySelectorAll("[data-word]")) {
+        for (const element of within(root, "[data-word]")) {
             words.observe(element);
         }
     };
-    const mutations = new MutationObserver(scan);
+    const mutations = new MutationObserver((records) => {
+        for (const record of records) {
+            for (const node of record.addedNodes) {
+                if (node instanceof Element) {
+                    scan(node);
+                }
+            }
+        }
+    });
     scanner = () => {
-        scan();
+        scan(document);
         mutations.observe(document.body, { childList: true, subtree: true });
     };
     return () => {
