@@ -3,7 +3,7 @@ import { CURRENCY_META, PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { parseCsvAmount } from "@outlayr/money/csv-read";
 import { decimalsFor } from "@outlayr/money/currency";
 
-import { detectCurrency, SYMBOL_ALIASES } from "./detect-currency";
+import { detectCurrency, LOCAL_SYMBOLS, SYMBOL_ALIASES } from "./detect-currency";
 
 export interface ParsedNotification {
     amount: number;
@@ -17,7 +17,11 @@ function escape(text: string): string {
 }
 
 const SYMBOLS = [
-    ...new Set([...Object.values(CURRENCY_META).map((meta) => meta.symbol), ...Object.keys(SYMBOL_ALIASES)]),
+    ...new Set([
+        ...Object.values(CURRENCY_META).map((meta) => meta.symbol),
+        ...Object.keys(SYMBOL_ALIASES),
+        ...LOCAL_SYMBOLS,
+    ]),
 ];
 
 // A capital letter is also a currency (L, P, Q, K, R) and KM is Bosnia's mark, but a sender code or a distance has the
