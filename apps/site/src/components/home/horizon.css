@@ -2548,3 +2548,19 @@
         --sun-hero-drift: -220px;
     }
 }
+
+@media (prefers-reduced-motion: reduce) {
+    .hz-page
+        :is(
+            .hz-pill,
+            .hz-qr,
+            .hz-way-bar,
+            .hz-ways-thumb,
+            .hz-look-thumb,
+            .hz-cadence-thumb,
+            .hz-roll > *,
+            .hz-qa-icon
+        ) {
+        transition: none;
+    }
+}

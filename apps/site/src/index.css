@@ -1093,6 +1093,7 @@ html:has(.app-shell) {
             rgb(255 254 251 / 0) 80%
         ),
         var(--color-raised);
+    border-color: var(--color-border);
     color: var(--color-foreground);
 }
 
@@ -1179,6 +1180,7 @@ html:has(.app-shell) {
 .site-menu {
     padding: 16px 16px 20px;
     border-radius: 28px;
+    border-color: var(--color-border);
     background: var(--color-background);
     color: var(--color-foreground);
 }
