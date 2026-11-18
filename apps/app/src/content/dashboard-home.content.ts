@@ -7,7 +7,7 @@ const dashboardHome = {
             aDay: insert(t({ en: "{{amount}} a day", de: "{{amount}} am Tag", es: "{{amount}} al día" })),
             biggest: t({ en: "Biggest", de: "Größter", es: "El mayor" }),
             biggestAfter: t({ en: "Biggest after", de: "Größter nach", es: "El mayor después" }),
-            entries: t({ en: "Entries", de: "Einträge", es: "Entradas" }),
+            entries: t({ en: "Entries", de: "Einträge", es: "Registros" }),
             emptyLine: t({
                 en: "Days fill in as you log entries.",
                 de: "Die Tage füllen sich, wenn du Einträge erfasst.",

@@ -57,7 +57,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.eveningDetail": t({
             en: "A nudge at {time}, once the day is mostly done.",
-            de: "Ein Anstoß um {time}, wenn der Tag fast vorbei ist.",
+            de: "Eine Erinnerung um {time}, wenn der Tag fast vorbei ist.",
             es: "Un aviso a las {time}, cuando el día ya casi termina.",
             fr: "Un petit rappel à {time}, quand la journée est presque finie.",
             pt: "Um lembrete às {time}, quando o dia já está quase no fim.",
@@ -105,7 +105,7 @@ const settingsNotifications = {
         }),
         "settings.notifications.morningDetail": t({
             en: "A nudge at {time}, before the day has spent anything.",
-            de: "Ein Anstoß um {time}, bevor am Tag etwas ausgegeben wurde.",
+            de: "Eine Erinnerung um {time}, bevor am Tag etwas ausgegeben wurde.",
             es: "Un aviso a las {time}, antes de que hayas gastado algo.",
             fr: "Un petit rappel à {time}, avant toute dépense de la journée.",
             pt: "Um lembrete às {time}, antes de você gastar qualquer coisa no dia.",

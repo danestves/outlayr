@@ -56,7 +56,7 @@ const about = {
                 text: t({
                     en: "Type a purchase as one sentence, say it, scan the receipt, or import a CSV. On iPhone, a Shortcuts automation can log each Apple Pay purchase.",
                     de: "Tipp einen Einkauf als einen Satz, sprich ihn ein, scanne den Beleg oder importiere eine CSV. Auf dem iPhone kann eine Kurzbefehle-Automation jeden Apple-Pay-Einkauf erfassen.",
-                    es: "Escribe una compra en una oración, díctala, escanea el recibo o importa un CSV. En iPhone, una automatización de Atajos puede registrar cada compra con Apple Pay.",
+                    es: "Escribe una compra en una frase, díctala, escanea el recibo o importa un CSV. En iPhone, una automatización de Atajos puede registrar cada compra con Apple Pay.",
                     pt: "Digite uma compra em uma frase, dite, escaneie o recibo ou importe um CSV. No iPhone, uma automação do app Atalhos pode registrar cada compra com Apple Pay.",
                     fr: "Saisissez un achat en une phrase, dictez-le, scannez le ticket ou importez un CSV. Sur iPhone, une automatisation Raccourcis peut enregistrer chaque achat payé avec Apple Pay.",
                 }),
@@ -263,7 +263,7 @@ const about = {
                 t({
                     en: "Most trackers ask you to sort those layers by hand, one form field at a time, and by the third coffee the form wins. Outlayr starts from the sentence you would say anyway. Type a purchase, say it, or scan the receipt, and it lands in the right account, budget, and month.",
                     de: "Die meisten Tracker wollen, dass du diese Schichten von Hand sortierst, ein Formularfeld nach dem anderen, und beim dritten Kaffee gewinnt das Formular. Outlayr geht von dem Satz aus, den du ohnehin sagen würdest. Tipp einen Einkauf, sprich ihn ein oder scanne den Beleg, und er landet im richtigen Konto, im richtigen Budget und im richtigen Monat.",
-                    es: "La mayoría de las apps te piden ordenar esas capas a mano, un campo a la vez, y para el tercer café gana el formulario. Outlayr parte de la oración que dirías de todos modos. Escribe una compra, díctala o escanea el recibo, y queda en la cuenta, el presupuesto y el mes correctos.",
+                    es: "La mayoría de las apps te piden ordenar esas capas a mano, un campo a la vez, y para el tercer café gana el formulario. Outlayr parte de la frase que dirías de todos modos. Escribe una compra, díctala o escanea el recibo, y queda en la cuenta, el presupuesto y el mes correctos.",
                     pt: "A maioria dos apps pede que você organize essas camadas na mão, um campo por vez, e no terceiro café o formulário ganha. O Outlayr parte da frase que você diria de qualquer jeito. Digite uma compra, dite ou escaneie o recibo, e ela cai na conta, no orçamento e no mês certos.",
                     fr: "La plupart des apps vous demandent de trier ces couches à la main, un champ à la fois, et au troisième café, c'est le formulaire qui gagne. Outlayr part de la phrase que vous diriez de toute façon. Saisissez un achat, dictez-le ou scannez le ticket, et il atterrit dans le bon compte, le bon budget et le bon mois.",
                 }),

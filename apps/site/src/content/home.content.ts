@@ -28,7 +28,7 @@ const home = {
             {
                 label: t({ en: "Currencies", de: "Währungen", es: "Monedas", pt: "Moedas", fr: "Devises" }),
                 text: t({
-                    en: "Log in any of 165 currencies and read totals in yours, at the rate from the day it happened.",
+                    en: "Log expenses in any of 165 currencies and read totals in yours, at the rate from the day it happened.",
                     de: "Erfasse in einer von 165 Währungen und sieh die Summen in deiner, zum Kurs des Tages, an dem es passiert ist.",
                     es: "Registra en cualquiera de 165 monedas y mira los totales en la tuya, con la tasa del día en que ocurrió.",
                     pt: "Registre em qualquer uma de 165 moedas e veja os totais na sua, com a cotação do dia em que aconteceu.",
@@ -68,7 +68,7 @@ const home = {
             OFFLINE_EXTRA,
             EXPORT_EXTRA,
             {
-                label: t({ en: "Lock", de: "Sperre", es: "Bloqueo", pt: "Bloqueio", fr: "Verrouillage" }),
+                label: t({ en: "Lock", de: "App-Sperre", es: "Bloqueo", pt: "Bloqueio", fr: "Verrouillage" }),
                 text: t({
                     en: "Face ID or Touch ID to open on iPhone, or your fingerprint or face on Android. The iPhone app switcher never shows your ledger.",
                     de: "Face ID oder Touch ID zum Öffnen auf dem iPhone, oder Fingerabdruck oder Gesicht auf Android. Der App-Umschalter des iPhone zeigt dein Haushaltsbuch nie.",
@@ -84,7 +84,7 @@ const home = {
                 answer: t({
                     en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies. It is an open source budget app and subscription tracker for iPhone and Android, made by danestves LLC. Budgets, savings goals, subscriptions, and insights update as you log, in English, Spanish, Portuguese, French, or German.",
                     de: "Outlayr ist der Ausgaben-Tracker, der nie dein Bankkonto verknüpft: Erfasse per Satz, Sprache, Beleg oder Apple Pay, in jeder von 165 Währungen. Outlayr ist eine Open-Source-Budget-App und ein Abo-Tracker für iPhone und Android, gemacht von danestves LLC. Budgets, Sparziele, Abos und Auswertungen aktualisieren sich beim Erfassen, auf Englisch, Spanisch, Portugiesisch, Französisch oder Deutsch.",
-                    es: "Outlayr es la app de gastos que nunca conecta tu banco: registra con una oración, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas. Es una app de código abierto para tu presupuesto y tus suscripciones, para iPhone y Android, hecha por danestves LLC. Los presupuestos, las metas de ahorro, las suscripciones y las estadísticas se actualizan a medida que registras, en inglés, español, portugués, francés o alemán.",
+                    es: "Outlayr es la app de gastos que nunca conecta tu banco: registra con una frase, tu voz, un recibo o Apple Pay, en cualquiera de 165 monedas. Es una app de código abierto para tu presupuesto y tus suscripciones, para iPhone y Android, hecha por danestves LLC. Los presupuestos, las metas de ahorro, las suscripciones y las estadísticas se actualizan a medida que registras, en inglés, español, portugués, francés o alemán.",
                     pt: "O Outlayr é o app de controle de gastos que nunca conecta seu banco: registre por frase, voz, recibo ou Apple Pay, em qualquer uma de 165 moedas. É um app de código aberto para seu orçamento e suas assinaturas, para iPhone e Android, feito pela danestves LLC. Orçamentos, metas de economia, assinaturas e estatísticas se atualizam conforme você registra, em inglês, espanhol, português, francês ou alemão.",
                     fr: "Outlayr est l'app de suivi des dépenses qui ne connecte jamais votre banque : saisissez par une phrase, la voix, un ticket ou Apple Pay, dans l'une des 165 devises. C'est une app open source pour votre budget et vos abonnements, sur iPhone et Android, créée par danestves LLC. Les budgets, les objectifs d'épargne, les abonnements et les statistiques se mettent à jour au fil de vos saisies, en anglais, espagnol, portugais, français ou allemand.",
                 }),
@@ -100,7 +100,7 @@ const home = {
                 answer: t({
                     en: "No. Outlayr never links your bank or asks for a bank login. You log by sentence, voice, receipt or Apple Pay, or import a CSV.",
                     de: "Nein. Outlayr verknüpft nie dein Bankkonto und fragt nie nach deinem Bank-Login. Du erfasst per Satz, Sprache, Beleg oder Apple Pay oder importierst eine CSV-Datei.",
-                    es: "No. Outlayr nunca conecta tu banco ni te pide tu usuario del banco. Registras con una oración, tu voz, un recibo o Apple Pay, o importas un CSV.",
+                    es: "No. Outlayr nunca conecta tu banco ni te pide tu usuario del banco. Registras con una frase, tu voz, un recibo o Apple Pay, o importas un CSV.",
                     pt: "Não. O Outlayr nunca conecta seu banco nem pede o login do banco. Você registra por frase, voz, recibo ou Apple Pay, ou importa um CSV.",
                     fr: "Non. Outlayr ne connecte jamais votre banque et ne demande jamais vos identifiants bancaires. Vous saisissez par une phrase, la voix, un ticket ou Apple Pay, ou vous importez un CSV.",
                 }),
@@ -262,7 +262,7 @@ const home = {
             title: t({
                 en: "Track every expense in one sentence",
                 de: "Erfasse jede Ausgabe in einem Satz",
-                es: "Registra cada gasto en una oración",
+                es: "Registra cada gasto en una frase",
                 pt: "Registre cada gasto em uma frase",
                 fr: "Notez chaque dépense en une phrase",
             }),
@@ -322,7 +322,7 @@ const home = {
             description: t({
                 en: "Outlayr is a mobile expense tracker and budget app. Log a purchase in one sentence, by voice, or from a receipt, and track every subscription. Free to start.",
                 de: "Outlayr ist ein Ausgaben-Tracker und eine Budget-App. Erfasse einen Einkauf per Satz, Stimme oder Beleg und behalte jedes Abo im Blick. Kostenlos zum Start.",
-                es: "Outlayr es una app para controlar tus gastos y tu presupuesto. Registra una compra en una oración, con tu voz o con un recibo, y controla tus suscripciones.",
+                es: "Outlayr es una app para controlar tus gastos y tu presupuesto. Registra una compra en una frase, con tu voz o con un recibo, y controla tus suscripciones.",
                 pt: "Aplicativo de finanças para controle de gastos e orçamento: registre uma compra em uma frase, por voz ou com um recibo, e acompanhe suas assinaturas.",
                 fr: "Appli budget gratuite pour suivre vos dépenses : notez un achat en une phrase, à la voix ou depuis un ticket, et suivez chaque abonnement.",
             }),

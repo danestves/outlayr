@@ -372,6 +372,7 @@ export default defineConfig({
                 excludeFiles: TEST_FILES,
                 rules: {
                     "outlayr/no-em-dash-copy": "error",
+                    "outlayr/no-misread-copy": "error",
                     "outlayr/react-effect-budget": "error",
                 },
             },

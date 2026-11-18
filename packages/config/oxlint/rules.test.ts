@@ -84,6 +84,22 @@ describe("no-em-dash-copy", () => {
     });
 });
 
+describe("no-misread-copy", () => {
+    const misread = (source: string) => lint("no-misread-copy", "apps/site/src/content/example.content.ts", source);
+
+    it.each([
+        ["a language key", 't({ en: "in a sentence", es: "en una oración" });'],
+        ["a regional key", 't({ "es-ES": "Oraciones cortas" });'],
+        ["a template literal", "t({ es: `con una oración` });"],
+    ])("reports the word under %s", (_, source) => {
+        expect(messages(misread(source))).toStrictEqual([expect.stringContaining("Write “frase”")]);
+    });
+
+    it("leaves other languages and longer words alone", () => {
+        expect(misread('t({ en: "oración", pt: "oración", es: "una oracionista" });')).toStrictEqual([]);
+    });
+});
+
 describe("no-test-in-loop", () => {
     const loop = (source: string, filename = "apps/native/src/Example.test.ts") =>
         lint("no-test-in-loop", filename, source);

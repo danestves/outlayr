@@ -83,7 +83,7 @@ const dashboardNotifications = {
         morningHint: insert(
             t({
                 en: "A nudge at {{time}}, before the day has spent anything.",
-                de: "Ein Anstoß um {{time}}, bevor am Tag etwas ausgegeben wurde.",
+                de: "Eine Erinnerung um {{time}}, bevor am Tag etwas ausgegeben wurde.",
                 es: "Un aviso a las {{time}}, antes de que el día gaste algo.",
                 fr: "Un rappel à {{time}}, avant les dépenses du jour.",
                 pt: "Um aviso às {{time}}, antes de o dia gastar algo.",
@@ -93,7 +93,7 @@ const dashboardNotifications = {
         eveningHint: insert(
             t({
                 en: "A nudge at {{time}}, once the day is mostly done.",
-                de: "Ein Anstoß um {{time}}, wenn der Tag fast vorbei ist.",
+                de: "Eine Erinnerung um {{time}}, wenn der Tag fast vorbei ist.",
                 es: "Un aviso a las {{time}}, cuando el día casi termina.",
                 fr: "Un rappel à {{time}}, quand la journée touche à sa fin.",
                 pt: "Um aviso às {{time}}, quando o dia está quase no fim.",

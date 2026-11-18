@@ -333,7 +333,7 @@ const onboarding = {
         }),
         "onboarding.rhythm.body": t({
             en: "One quiet nudge each evening. iOS isn't asked for permission until your first entry is saved.",
-            de: "Jeden Abend ein leiser Anstoß. iOS wird erst um Erlaubnis gefragt, wenn dein erster Eintrag gespeichert ist.",
+            de: "Jeden Abend eine leise Erinnerung. iOS wird erst um Erlaubnis gefragt, wenn dein erster Eintrag gespeichert ist.",
             es: "Un aviso discreto cada noche. iOS no te pide permiso hasta que guardes tu primera entrada.",
             fr: "Un rappel discret chaque soir. iOS ne demandera l'autorisation qu'après l'enregistrement de votre première opération.",
             pt: "Um lembrete discreto toda noite. O iOS só pede permissão depois que você salvar seu primeiro lançamento.",
@@ -342,7 +342,7 @@ const onboarding = {
         }),
         "onboarding.rhythm.body.android": t({
             en: "One quiet nudge each evening. Android won't ask for permission until your first entry is saved.",
-            de: "Jeden Abend ein leiser Anstoß. Android fragt erst um Erlaubnis, wenn dein erster Eintrag gespeichert ist.",
+            de: "Jeden Abend eine leise Erinnerung. Android fragt erst um Erlaubnis, wenn dein erster Eintrag gespeichert ist.",
             es: "Un aviso discreto cada noche. Android no te pide permiso hasta que guardes tu primera entrada.",
             fr: "Un rappel discret chaque soir. Android ne demandera l'autorisation qu'après l'enregistrement de votre première opération.",
             pt: "Um lembrete discreto toda noite. O Android só pede permissão depois que você salvar seu primeiro lançamento.",

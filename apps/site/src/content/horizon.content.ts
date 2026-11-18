@@ -100,7 +100,7 @@ const horizon = {
         },
         close: {
             lead: t({
-                en: "Log it in",
+                en: "Log it with",
                 de: "Erfasse es in",
                 es: "Regístralo en",
                 pt: "Registre em",
@@ -116,7 +116,7 @@ const horizon = {
             rest: t({
                 en: "one sentence.",
                 de: "einem Satz.",
-                es: "una oración.",
+                es: "una frase.",
                 pt: "uma frase.",
                 fr: "une phrase.",
             }),
@@ -191,7 +191,7 @@ const horizon = {
                 line: t({
                     en: "Rent, bills, and streaming log themselves on their day.",
                     de: "Miete, Rechnungen und Streaming werden an ihrem Tag von selbst erfasst.",
-                    es: "El alquiler, las cuentas y el streaming se registran solos en su día.",
+                    es: "El alquiler, los servicios y el streaming se registran solos en su día.",
                     pt: "Aluguel, contas e streaming se lançam sozinhos no dia certo.",
                     fr: "Le loyer, les factures et le streaming s'enregistrent tout seuls le jour venu.",
                 }),
@@ -245,7 +245,7 @@ const horizon = {
             mark: t({
                 en: "one sentence",
                 de: "einem Satz",
-                es: "una oración",
+                es: "una frase",
                 pt: "uma frase",
                 fr: "une phrase",
             }),
@@ -305,7 +305,7 @@ const horizon = {
                     line: t({
                         en: "One sentence, like blue bottle 4.50.",
                         de: "Ein Satz, wie balzac coffee 4,50.",
-                        es: "Una oración, como juan valdez 4,50.",
+                        es: "Una frase, como juan valdez 4,50.",
                         pt: "Uma frase, como starbucks 4,50.",
                         fr: "Une phrase, comme columbus café 4,50.",
                     }),

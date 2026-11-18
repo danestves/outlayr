@@ -5,7 +5,7 @@ import type { PageRef } from "@/lib/site";
 
 const LABEL = {
     en: "Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-    es: "Outlayr es la app de gastos que nunca se conecta a tu banco: registras con una oración, con tu voz, con un recibo o con Apple Pay, en cualquiera de 165 monedas.",
+    es: "Outlayr es la app de gastos que nunca se conecta a tu banco: registras con una frase, con tu voz, con un recibo o con Apple Pay, en cualquiera de 165 monedas.",
 } as const;
 
 const ON_IPHONE = t({ en: "On iPhone", es: "En iPhone" });
@@ -227,7 +227,7 @@ const help = {
                 ],
                 lead: t({
                     en: "No. Outlayr never links your bank and never asks for bank logins; you log purchases yourself or import a file. Outlayr is the expense tracker that never links your bank: log by sentence, voice, receipt or Apple Pay, in any of 165 currencies.",
-                    es: "No. Outlayr nunca se conecta a tu banco ni te pide las claves del banco; registras tus compras tú mismo o importas un archivo. Outlayr es la app de gastos que nunca se conecta a tu banco: registras con una oración, con tu voz, con un recibo o con Apple Pay, en cualquiera de 165 monedas.",
+                    es: "No. Outlayr nunca se conecta a tu banco ni te pide las claves del banco; registras tus compras tú mismo o importas un archivo. Outlayr es la app de gastos que nunca se conecta a tu banco: registras con una frase, con tu voz, con un recibo o con Apple Pay, en cualquiera de 165 monedas.",
                 }),
                 meta: {
                     description: t({
@@ -250,7 +250,7 @@ const help = {
                         items: [
                             t({
                                 en: "Tap + to log a purchase: fill in the sentence, speak it, or scan the receipt.",
-                                es: "Toca + para registrar una compra: llena la oración, díctala o escanea el recibo.",
+                                es: "Toca + para registrar una compra: llena la frase, díctala o escanea el recibo.",
                             }),
                             t({
                                 en: "On iPhone, turn on Apple Pay logging in Settings › Integrations › Apple Pay.",
@@ -440,7 +440,7 @@ const help = {
                         items: [
                             t({
                                 en: "Tap + and fill in the subscription as an expense, then tap repeat in the sentence and pick how often it charges: daily, weekly, monthly or yearly.",
-                                es: "Toca + y llena la suscripción como un gasto, luego toca repetir en la oración y elige cada cuánto cobra: diario, semanal, mensual o anual.",
+                                es: "Toca + y llena la suscripción como un gasto, luego toca repetir en la frase y elige cada cuánto cobra: diario, semanal, mensual o anual.",
                             }),
                             t({
                                 en: "Under Remind Me, pick on the day, 1, 2 or 3 days before, or 1 week before.",

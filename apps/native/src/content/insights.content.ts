@@ -806,7 +806,7 @@ const insights = {
         }),
         "insights.sample.transport": t({
             en: "Transport",
-            de: "Verkehr",
+            de: "Mobilität",
             es: "Transporte",
             fr: "Transports",
             pt: "Transporte",

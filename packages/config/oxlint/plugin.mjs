@@ -373,6 +373,74 @@ const noSlopComments = {
     },
 };
 
+const MISREAD_WORDS = {
+    de: [
+        { reads: "a kick-off or offence", use: "Erinnerung", words: ["Anstoß"] },
+        { reads: "intercourse", use: "Mobilität", words: ["Verkehr"] },
+    ],
+    es: [{ reads: "a prayer", use: "frase", words: ["oración", "oraciones"] }],
+    pt: [{ reads: "stoned in Brazil", use: "em cor única", words: ["chapado", "chapada"] }],
+};
+
+const MISREAD_PATTERNS = Object.fromEntries(
+    Object.entries(MISREAD_WORDS).map(([language, entries]) => [
+        language,
+        entries.map(({ reads, use, words }) => ({
+            pattern: new RegExp(`(?<!\\p{L})(?:${words.join("|")})(?!\\p{L})`, "iu"),
+            reads,
+            use,
+        })),
+    ])
+);
+
+const propertyName = (key) => {
+    if (key.type === "Identifier") {
+        return key.name;
+    }
+    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- an ESTree Literal key is a string or number by node shape
+    return key.type === "Literal" && typeof key.value === "string" ? key.value : undefined;
+};
+
+const copyText = (value) => {
+    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- an ESTree Literal is the boundary: its value is a string, number, boolean, null or regex by node shape
+    if (value.type === "Literal" && typeof value.value === "string") {
+        return value.value;
+    }
+    return value.type === "TemplateLiteral" ? value.quasis.map((quasi) => quasi.value.cooked).join(" ") : undefined;
+};
+
+const noMisreadCopy = {
+    create(context) {
+        return {
+            Property(node) {
+                const name = propertyName(node.key);
+                const patterns = name === undefined ? undefined : MISREAD_PATTERNS[name.split("-")[0]];
+                const text = patterns && copyText(node.value);
+                if (!text) {
+                    return;
+                }
+                for (const { pattern, reads, use } of patterns) {
+                    const match = pattern.exec(text);
+                    if (match) {
+                        context.report({
+                            data: { reads, use, word: match[0] },
+                            messageId: "misread",
+                            node: node.value,
+                        });
+                    }
+                }
+            },
+        };
+    },
+    meta: {
+        docs: { description: "Translations avoid words that native speakers read as something else." },
+        messages: {
+            misread: "“{{word}}” also reads as {{reads}}. Write “{{use}}”.",
+        },
+        type: "problem",
+    },
+};
+
 export default {
     meta: { name: "outlayr" },
     rules: {
@@ -385,6 +453,7 @@ export default {
         "no-inline-schema-compile": noInlineSchemaCompile,
         "no-low-value-comments": noLowValueComments,
         "no-manual-memo": noManualMemo,
+        "no-misread-copy": noMisreadCopy,
         "no-polling-loop-in-tests": noPollingLoopInTests,
         "no-sheet-repaint": noSheetRepaint,
         "no-slop-comments": noSlopComments,

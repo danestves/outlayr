@@ -77,7 +77,7 @@ const domain = {
             de: "Eine flache graue Fläche mit dem Zeichen in Tinte. Ruhig und neutral.",
             es: "Un campo gris plano con la marca en tinta. Discreto y neutral.",
             fr: "Un aplat gris avec le logo à l'encre. Sobre et neutre.",
-            pt: "Um fundo cinza liso com a marca em tinta. Discreto e neutro.",
+            pt: "Um fundo cinza uniforme com a marca em tinta. Discreto e neutro.",
             "pt-PT": "Um fundo cinzento liso com a marca em tinta. Discreto e neutro.",
         }),
         "appIcon.mono.label": t({
