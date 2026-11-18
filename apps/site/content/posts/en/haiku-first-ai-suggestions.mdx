@@ -23,7 +23,7 @@ After [#578](https://github.com/danestves/outlayr/pull/578) moved the category s
 
 [#622](https://github.com/danestves/outlayr/pull/622) was the quick fix: typing suggestions go back to Haiku. I ran the real suggest path on 85 merchant names across US, VE and MX ledgers. Sonnet got 182 of 194 categories right and Haiku got 181, with no wrong logo domains on either. Haiku answered in about half the time.
 
-That left the background enrichment queue, which still ran every job on Sonnet. A Sonnet job costs about 15 times what a Haiku job does. [#623](https://github.com/danestves/outlayr/pull/623) fixes that.
+That left the background enrichment queue, which still ran every suggestion call on Sonnet. A Sonnet job costs about 15 times what a Haiku job does. [#623](https://github.com/danestves/outlayr/pull/623) fixes that.
 
 ## No single place decided the model
 
@@ -41,7 +41,7 @@ Every backend call site now takes a route: suggest, background suggest, grounded
 
 ## Haiku first, Sonnet on a new category
 
-For the background queue, a job runs on Haiku. If Haiku proposes a category you don't have yet, the job retries once on Sonnet. If that retry fails, the job keeps Haiku's answer.
+For the background queue, the suggestion call runs on Haiku. If Haiku proposes a category you don't have yet, the job retries once on Sonnet. If that retry fails, the job keeps Haiku's answer.
 
 ```ts
 export function escalation(request: RouteRequest, answer: { readonly isNewCategory: boolean }): Route | null {
@@ -54,7 +54,7 @@ export function escalation(request: RouteRequest, answer: { readonly isNewCatego
 
 A new category is the case I trust Haiku least on, because it is inventing a name instead of picking one from the ledger.
 
-There is also a budget guard. While `groundedBudgetMicros` has no headroom, a background job never reaches Sonnet, so `GROUNDED_BUDGET_MICROS=0` is now a kill switch for Sonnet spend too. The rate limiter throws, rather than refusing, when one charge is bigger than a shard's capacity. The queue checks that first, because otherwise a zero budget would crash every job.
+There is also a budget guard. The queue reads `groundedBudgetMicros` before the Haiku call, and if it shows no headroom then, the job never reaches Sonnet. That makes `GROUNDED_BUDGET_MICROS=0` a kill switch for Sonnet spend too. The read reserves nothing, so a job that started with headroom can still retry on Sonnet after another job used it up. The rate limiter throws, rather than refusing, when one charge is bigger than a shard's capacity. The queue checks that first, because otherwise a zero budget would crash every job.
 
 ## What the eval said
 
@@ -97,6 +97,6 @@ I checked it on the iOS simulator: one chip tap saved once, with the category an
 
 ## What is not done
 
-Both changes went out with the backend deploy on 18 November. The 72% is still an eval number. The bill will say whether real traffic agrees.
+The model changes in both PRs went out with the backend deploy on 18 November. The chip fix lives in the app, so it reaches phones with the next app update. The 72% is still an eval number. The bill will say whether real traffic agrees.
 
 Neither PR changes the provider or the data sent. It is still Anthropic's Claude, and the trace events only gain route metadata.

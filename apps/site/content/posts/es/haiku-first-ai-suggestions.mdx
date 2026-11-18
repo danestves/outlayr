@@ -23,7 +23,7 @@ Después de que [#578](https://github.com/danestves/outlayr/pull/578) pasó a So
 
 [#622](https://github.com/danestves/outlayr/pull/622) fue el arreglo rápido: las sugerencias al escribir vuelven a Haiku. Corrí el flujo real de sugerencias con 85 nombres de comercios de libros de EE. UU., VE y MX. Sonnet acertó 182 de 194 categorías y Haiku 181, sin dominios de logo equivocados en ninguno. Haiku respondió en la mitad del tiempo, aproximadamente.
 
-Quedaba la cola de enriquecimiento en segundo plano, que seguía corriendo cada trabajo en Sonnet. Un trabajo en Sonnet cuesta unas 15 veces lo que uno en Haiku. [#623](https://github.com/danestves/outlayr/pull/623) arregla eso.
+Quedaba la cola de enriquecimiento en segundo plano, que seguía haciendo cada llamada de sugerencia en Sonnet. Un trabajo en Sonnet cuesta unas 15 veces lo que uno en Haiku. [#623](https://github.com/danestves/outlayr/pull/623) arregla eso.
 
 ## Ningún lugar decidía el modelo
 
@@ -41,7 +41,7 @@ Ahora cada llamada del backend recibe una ruta: sugerencias, sugerencias en segu
 
 ## Haiku primero, Sonnet si hay categoría nueva
 
-En la cola de segundo plano, un trabajo corre en Haiku. Si Haiku propone una categoría que todavía no tienes, el trabajo se reintenta una vez en Sonnet. Si ese reintento falla, el trabajo se queda con la respuesta de Haiku.
+En la cola de segundo plano, la llamada de sugerencia corre en Haiku. Si Haiku propone una categoría que todavía no tienes, el trabajo se reintenta una vez en Sonnet. Si ese reintento falla, el trabajo se queda con la respuesta de Haiku.
 
 ```ts
 export function escalation(request: RouteRequest, answer: { readonly isNewCategory: boolean }): Route | null {
@@ -54,7 +54,7 @@ export function escalation(request: RouteRequest, answer: { readonly isNewCatego
 
 Una categoría nueva es el caso donde menos confío en Haiku, porque está inventando un nombre en vez de escoger uno del libro.
 
-También hay una guarda de presupuesto. Mientras `groundedBudgetMicros` no tenga margen, un trabajo en segundo plano nunca llega a Sonnet, así que `GROUNDED_BUDGET_MICROS=0` ahora también corta el gasto en Sonnet. El rate limiter lanza un error, en vez de rechazar, cuando un solo cobro es más grande que la capacidad de un shard. La cola revisa eso primero, porque si no, un presupuesto en cero haría fallar todos los trabajos.
+También hay una guarda de presupuesto. La cola lee `groundedBudgetMicros` antes de la llamada a Haiku, y si en ese momento no hay margen, el trabajo nunca llega a Sonnet. Eso hace que `GROUNDED_BUDGET_MICROS=0` también corte el gasto en Sonnet. La lectura no reserva nada, así que un trabajo que empezó con margen todavía puede reintentar en Sonnet si otro trabajo lo gastó mientras tanto. El rate limiter lanza un error, en vez de rechazar, cuando un solo cobro es más grande que la capacidad de un shard. La cola revisa eso primero, porque si no, un presupuesto en cero haría fallar todos los trabajos.
 
 ## Qué dijo la evaluación
 
@@ -97,6 +97,6 @@ Lo probé en el simulador de iOS: un toque en el chip guardó una sola vez, con 
 
 ## Lo que falta
 
-Los dos cambios salieron con el despliegue del backend del 18 de noviembre. El 72% sigue siendo un número de la evaluación. La factura dirá si el tráfico real coincide.
+Los cambios de modelo de los dos PR salieron con el despliegue del backend del 18 de noviembre. El arreglo del chip está en la app, así que llega a los celulares con la próxima actualización. El 72% sigue siendo un número de la evaluación. La factura dirá si el tráfico real coincide.
 
 Ninguno de los dos PR cambia el proveedor ni los datos que se envían. Sigue siendo Claude de Anthropic, y los eventos de traza solo ganan metadatos de la ruta.

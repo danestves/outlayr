@@ -51,13 +51,13 @@ A related miss turned up on the notification side. A Colombian user's automation
 
 ## What leaves the phone
 
-For a text, the sender stays on the phone and only the body is read. The queued line for a text holds only the body. When Smart fill is on, the body can be sent to be read by the model, as with any notification, but without the sender's name or number. Before this, a text app sent its title too, so a text now sends less than it did.
+When Smart fill is on, a text's body can be sent to be read by the model, as with any notification, but the request never includes the sender field. The body goes as written, so a name or number inside the message goes with it. The sender stays with the text in the phone's queue, and a text with no merchant can be filed under its sender, the way a notification is filed under its app. When it is, that name syncs with the entry if sync is on. Before this, a text app sent its title too, so a text now sends less than it did.
 
 On the phone Outlayr keeps the latest matching text from each sender, with the sender, so it can list them under Log from. It keeps up to 20 apps and senders in all.
 
 ## The privacy policy
 
-The policy had to change, and it ships with this. It now describes the per-sender switches, the latest text kept per sender on the phone, and a text sent without its sender, in English, Spanish, French and Portuguese. The section on [reading bank notifications](/privacy#reading-bank-notifications) says a text on Android goes without the sender's name or number.
+The policy had to change. #514 added the new wording, and [#628](https://github.com/danestves/outlayr/pull/628) made it effective on 19 November 2026. It describes the per-sender switches, the latest text kept per sender on the phone, and a text sent without its sender, in English, Spanish, French and Portuguese. The section on [reading bank notifications](/privacy#reading-bank-notifications) says a text on Android goes without the sender's name or number.
 
 I did not add a new consent. A text app could already be turned on as a whole, and a text now sends less than before.
 

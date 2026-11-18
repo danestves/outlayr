@@ -51,13 +51,13 @@ Algo parecido apareció del lado de las notificaciones. La automatización de un
 
 ## Qué sale del teléfono
 
-De un mensaje, el remitente se queda en el teléfono y solo se lee el cuerpo. La línea en cola de un mensaje guarda solo el cuerpo. Con Autocompletado activado, el cuerpo se puede enviar para que lo lea el modelo, igual que cualquier notificación, pero sin el nombre ni el número del remitente. Antes, una app de mensajes enviaba también el título, así que ahora un mensaje envía menos que antes.
+Con Autocompletado activado, el cuerpo de un mensaje se puede enviar para que lo lea el modelo, igual que cualquier notificación, pero la solicitud nunca incluye el campo del remitente. El cuerpo va tal como está escrito, así que un nombre o un número dentro del mensaje va con él. El remitente se queda con el mensaje en la cola del teléfono, y un mensaje sin comercio se puede registrar a nombre de su remitente, igual que una notificación se registra a nombre de su app. Cuando pasa, ese nombre se sincroniza con la entrada si la sincronización está activada. Antes, una app de mensajes enviaba también el título, así que ahora un mensaje envía menos que antes.
 
 En el teléfono, Outlayr guarda el último mensaje que coincide de cada remitente, con el remitente, para poder listarlos en Registrar desde. Guarda hasta 20 apps y remitentes en total.
 
 ## La política de privacidad
 
-La política tenía que cambiar, y sale junto con esto. Ahora describe los interruptores por remitente, el último mensaje guardado por remitente en el teléfono y un mensaje enviado sin su remitente, en inglés, español, francés y portugués. La sección sobre [leer notificaciones del banco](/privacy#leer-notificaciones-del-banco) dice que un mensaje en Android se envía sin el nombre ni el número del remitente.
+La política tenía que cambiar. #514 agregó el texto nuevo, y [#628](https://github.com/danestves/outlayr/pull/628) lo puso en vigor el 19 de noviembre de 2026. Describe los interruptores por remitente, el último mensaje guardado por remitente en el teléfono y un mensaje enviado sin su remitente, en inglés, español, francés y portugués. La sección sobre [leer notificaciones del banco](/privacy#leer-notificaciones-del-banco) dice que un mensaje en Android se envía sin el nombre ni el número del remitente.
 
 No agregué un consentimiento nuevo. Una app de mensajes ya se podía activar completa, y ahora un mensaje envía menos que antes.
 

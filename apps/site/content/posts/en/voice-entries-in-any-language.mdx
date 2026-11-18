@@ -1,5 +1,5 @@
 ---
-title: Voice entries that fill in while you speak, in any language
+title: Voice entries that fill in while you speak, in any app language
 description: How voice entries went from record, wait and read to a sentence that fills in live, what each service receives, how it understands any app language, and what it costs per hour.
 lead: Voice entry made you talk, stop and wait for an upload before anything showed up. Now the sentence fills in as you speak, and it no longer depends on the app's language.
 date: 2026-11-17
@@ -14,7 +14,7 @@ shipped:
       title: Show Ori listening and thinking on the voice screen
       date: 2026-11-13
     - pr: 601
-      title: Understand voice entries in any language, whatever the app is set to
+      title: Understand voice entries in any of the app's languages, whatever it is set to
       date: 2026-11-17
 ---
 
@@ -26,7 +26,7 @@ Voice entry used to feel like a voicemail. You talked, stopped, and then waited 
 
 As words arrive, a local parser fills the sentence from the partial transcript: amount, currency, account, category, date, transfer and repeat. Words it only guessed are underlined with dashes.
 
-When you stop, `speakText` sends only the text to Claude. Claude either confirms the words (solid underline) or corrects them, and a corrected value shows with the old one struck through. Say "No, fueron 25" after "Gasté $20,00" and you see $20,00 crossed out next to $25,00.
+When you stop, `speakText` sends the transcript to Claude, never the audio. Claude either confirms the words (solid underline) or corrects them, and a corrected value shows with the old one struck through. Say "No, fueron 25" after "Gasté $20,00" and you see $20,00 crossed out next to $25,00.
 
 The backend hands out a single-use Scribe token through `openStream`. It counts as one capture, with the same gates as before, and `speakText` spends the credit that token left.
 
@@ -42,7 +42,7 @@ Nobody saw it, because they had already left. But it was noise that would grow w
 
 [#524](https://github.com/danestves/outlayr/pull/524) makes `endThread` stop deleting right away. It schedules the existing `expireThread` sweep 25 seconds out: 10 for transcribing, 10 for parsing and 5 for the agent to finish. If a turn lands after the screen closed, the sweep moves out past it, then deletes the thread and its stream credits.
 
-The test saves a turn 15 seconds after `endThread`, checks the thread survives the sweep and is deleted afterwards. It fails on the old code. Threads are still deleted when the screen closes, now up to about 25 seconds later.
+The test saves a turn 15 seconds after `endThread`, checks the thread survives the sweep and is deleted afterwards. It fails on the old code. Threads are still deleted when the screen closes, now about 25 seconds later, or later still if a turn was still landing.
 
 ## Ori on the voice screen
 
@@ -57,7 +57,7 @@ She is drawn from a pre-rendered sprite atlas (Blender renders, about 720 KB for
 
 I checked it on the iOS simulator in light and dark through a temporary harness with a fake mic level. I did not check a real recording or Android.
 
-## Any language, whatever the app is set to
+## Any of the app's languages, whatever it is set to
 
 Someone with the app in English tried to speak an entry in Spanish, and nothing came out. Voice entry pinned the transcription to the app's language, and the live preview read the words with that language's cue list.
 
@@ -81,6 +81,6 @@ The relay forwards repeated `secondary_languages` and `keyterms`, and it was dep
 
 Keyterms add $0.08 per hour of audio on top of $0.22 per hour.
 
-ElevenLabs still receives only the audio and your language. The secondary languages and the keyterms are the same fixed lists for everyone, so no policy notice was needed for #601.
+From you, ElevenLabs still receives only the audio and your language. The rest of the request is configuration: the app's other languages as secondary languages, and one fixed list of keyterms, the same for everyone. So no policy notice was needed for #601.
 
 I tested #601 by streaming generated Spanish and English money sentences, clean and with noise, more than 80 runs, to ElevenLabs directly and through the deployed relay. The session echoes the 4 secondary languages and 11 keyterms, and transcripts across languages keep their amounts and currencies. I did not test it with a real voice.

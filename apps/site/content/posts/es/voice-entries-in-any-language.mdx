@@ -1,5 +1,5 @@
 ---
-title: Entradas por voz que se llenan mientras hablas, en cualquier idioma
+title: Entradas por voz que se llenan mientras hablas, en cualquier idioma de la app
 description: Cómo las entradas por voz pasaron de grabar, esperar y leer a una frase que se llena en vivo, qué recibe cada servicio, cómo entiende cualquier idioma de la app y cuánto cuesta por hora.
 lead: La entrada por voz te hacía hablar, parar y esperar una subida antes de que apareciera algo. Ahora la frase se llena mientras hablas, y ya no depende del idioma de la app.
 date: 2026-11-17
@@ -14,7 +14,7 @@ shipped:
       title: Mostrar a Ori escuchando y pensando en la pantalla de voz
       date: 2026-11-13
     - pr: 601
-      title: Entender las entradas por voz en cualquier idioma, sin importar el de la app
+      title: Entender las entradas por voz en cualquier idioma de la app, sin importar en cuál esté
       date: 2026-11-17
 ---
 
@@ -26,7 +26,7 @@ La entrada por voz se sentía como un mensaje de voz. Hablabas, parabas y espera
 
 A medida que llegan las palabras, un parser local llena la frase con la transcripción parcial: monto, moneda, cuenta, categoría, fecha, transferencia y repetición. Las palabras que solo adivinó van subrayadas con guiones.
 
-Cuando paras, `speakText` le envía solo el texto a Claude. Claude confirma las palabras (subrayado sólido) o las corrige, y un valor corregido se ve con el anterior tachado. Si dices "No, fueron 25" después de "Gasté $20,00", ves $20,00 tachado junto a $25,00.
+Cuando paras, `speakText` le envía la transcripción a Claude, nunca el audio. Claude confirma las palabras (subrayado sólido) o las corrige, y un valor corregido se ve con el anterior tachado. Si dices "No, fueron 25" después de "Gasté $20,00", ves $20,00 tachado junto a $25,00.
 
 El backend entrega un token de Scribe de un solo uso con `openStream`. Cuenta como una captura, con las mismas validaciones de antes, y `speakText` gasta el crédito que dejó ese token.
 
@@ -42,7 +42,7 @@ Nadie lo veía, porque ya se habían ido. Pero era ruido que crecería con el us
 
 [#524](https://github.com/danestves/outlayr/pull/524) hace que `endThread` ya no borre de inmediato. Programa el barrido `expireThread` que ya existía para 25 segundos después: 10 para transcribir, 10 para analizar y 5 para que el agente termine. Si un turno llega después de cerrar la pantalla, el barrido se corre más allá, y luego borra el hilo y sus créditos de stream.
 
-La prueba guarda un turno 15 segundos después de `endThread`, comprueba que el hilo sobrevive al barrido y que se borra después. Falla con el código anterior. Los hilos se siguen borrando al cerrar la pantalla, ahora hasta unos 25 segundos más tarde.
+La prueba guarda un turno 15 segundos después de `endThread`, comprueba que el hilo sobrevive al barrido y que se borra después. Falla con el código anterior. Los hilos se siguen borrando al cerrar la pantalla, ahora unos 25 segundos más tarde, o más si todavía estaba llegando un turno.
 
 ## Ori en la pantalla de voz
 
@@ -57,7 +57,7 @@ Se dibuja desde un atlas de sprites prerenderizado (renders de Blender, unos 720
 
 La revisé en el simulador de iOS en claro y oscuro con un arnés temporal y un nivel de micrófono falso. No revisé una grabación real ni Android.
 
-## Cualquier idioma, sin importar el de la app
+## Cualquier idioma de la app, sin importar en cuál esté
 
 Alguien con la app en inglés intentó dictar una entrada en español y no salió nada. La entrada por voz fijaba la transcripción al idioma de la app, y la vista previa en vivo leía las palabras con la lista de pistas de ese idioma.
 
@@ -81,6 +81,6 @@ El relay reenvía `secondary_languages` y `keyterms` repetidos, y se desplegó a
 
 Los keyterms suman $0,08 por hora de audio, encima de los $0,22 por hora.
 
-ElevenLabs sigue recibiendo solo el audio y tu idioma. Los idiomas secundarios y los keyterms son las mismas listas fijas para todos, así que #601 no necesitó aviso de política.
+De ti, ElevenLabs sigue recibiendo solo el audio y tu idioma. El resto de la solicitud es configuración: los otros idiomas de la app como idiomas secundarios, y una lista fija de keyterms, igual para todos. Así que #601 no necesitó aviso de política.
 
 Probé #601 enviando frases de dinero generadas en español e inglés, limpias y con ruido, más de 80 corridas, a ElevenLabs directo y a través del relay desplegado. La sesión devuelve los 4 idiomas secundarios y los 11 keyterms, y las transcripciones entre idiomas conservan sus montos y monedas. No lo probé con una voz real.

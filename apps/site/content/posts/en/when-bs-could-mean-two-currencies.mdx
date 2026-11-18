@@ -2,21 +2,20 @@
 title: When "Bs" could mean two currencies
 description: How Outlayr decides which currency a bank notification means when its symbol is shared, which signals it ranks, and what it still leaves to you.
 lead: '"Bs 500" can be bolívares or bolivianos, and a bare "$" can be a dozen currencies. Outlayr used to file those in the ledger currency. Now it asks the app that posted the notification first.'
-date: 2026-11-17
-published: 2026-11-18
+date: 2026-11-18
 shipped:
     - pr: 630
       title: Resolve shared currency symbols by the posting app and the device region
-      date: 2026-11-17
+      date: 2026-11-18
     - pr: 631
       title: Match a card's account by the posting app's currency
-      date: 2026-11-17
+      date: 2026-11-18
     - pr: 632
       title: Keep the AI read's currency for a shared symbol, after the posting app and the device
-      date: 2026-11-17
+      date: 2026-11-18
     - pr: 633
       title: Attach a waiting card charge only to an account in its own currency
-      date: 2026-11-17
+      date: 2026-11-18
     - pr: 56
       title: Log Venezuelan Bs. alerts in VES, not BOB
       date: 2026-10-23
@@ -31,7 +30,7 @@ Autolog only trusted a currency symbol that names exactly one currency. Everythi
 - "Bs 500" from a Venezuelan bank could be VES or BOB. It was filed in the ledger currency, which is USD for many people.
 - A bare "$" from a Mexican bank never became MXN.
 - "¥" from Alipay always read as yen.
-- Marks the catalog doesn't carry, like `S/.`, `RD$` and `元`, weren't read as money at all, so those notifications logged nothing.
+- Marks the catalog doesn't carry, like `S/.` and `元`, weren't read as money at all, so those notifications logged nothing. `RD$` was only read as its bare `$`.
 
 An earlier bug was the same family. [#56](https://github.com/danestves/outlayr/pull/56) fixed "Bs." from Banesco or Mercantil being logged as BOB. `detectCurrency` strips digits, dots and spaces before it looks the symbol up, so "Bs." became "Bs", which the catalog only knew as BOB. Keying the symbol map the same way made "Bs" shared by BOB and VES, so it was declined like "$" and the matched account decided. That fixed the Bs case when an account existed, and left everything else on the list above.
 
@@ -46,15 +45,15 @@ An earlier bug was the same family. [#56](https://github.com/danestves/outlayr/p
 
 `detectCurrency` now takes an optional list of preferred currencies. With one, it picks the first preferred currency the symbol can mean, then the catalog's only owner. Without one, a shared symbol stays null, so the checks that need a unique answer, like amount parsing, behave as before. With nothing pointing elsewhere, "¥" still reads JPY.
 
-I also added the marks banks print at home: bare `$` for CAD, MXN, AUD, NZD, HKD, TWD and XCD, `¥` and `元` for CNY, `円`, `S/` and `S/.`, `RD$`, `B/.`, `$U`, `Gs`, `Rs` for INR, `C$`, `AU$` and `S$`. They feed the money regex that the Android listener and the iOS intent compile, so this shipped over the air.
+I also added the marks banks print at home: bare `$` for CAD, MXN, AUD, NZD, HKD, TWD and XCD, `¥` and `元` for CNY, `円`, `S/` and `S/.`, `RD$`, `B/.`, `$U`, `Gs`, `Rs` for INR, `C$`, `AU$` and `S$`. They feed the money regex that the Android listener and the iOS intent compile, so it can ship over the air, with no new build.
 
 ## Matching the card is stricter
 
 Filing a charge and choosing the account are different decisions. A wrong account is worse than an unattached one: it skews a balance quietly, and a waiting charge gets attached later with no review. An unattached charge shows up, and you can fix it.
 
-So [#631](https://github.com/danestves/outlayr/pull/631) lets card matching use only the posting app as a hint. Take two accounts, "Banorte MXN" and "Banorte USD". A bare "$" from Banorte used to pick neither, the card asked again, and the charge never went on the card's waiting list. Now a pinned currency wins, then the app's home currency, then the catalog's sole owner. `$350.00` from Banorte picks Banorte MXN, and with no matching account the card waits.
+So [#631](https://github.com/danestves/outlayr/pull/631) lets card matching use only the posting app as a hint. Take two accounts, "Banorte MXN" and "Banorte USD". A bare "$" from Banorte used to pick neither, the card asked again, and the charge never went on the card's waiting list. Now a pinned currency wins, then the app's home currency, then the catalog's sole owner. `$350.00` from Banorte picks Banorte MXN. With no matching account, the card asks for one and the charge waits for it. A ledger with no accounts skips that step.
 
-The device is left out on purpose. The locale says how the phone is set up, not what the bank printed. A phone set to en-US in Mexico gets this wrong, and so does a traveler. So a device-only "$" still files in the device's currency, but it picks no account and queues nothing.
+The device is left out on purpose. The locale says how the phone is set up, not what the bank printed. A phone set to en-US in Mexico gets this wrong, and so does a traveler. So a device-only "$" still files in the device's currency, but the device can't choose between accounts. A plain name match or a pick you made can still attach the charge.
 
 ## Waiting charges stay in their currency
 
@@ -78,7 +77,7 @@ The last rule was a choice. The model never sees the posting app, since that is 
 
 ## What is still ambiguous
 
-- With no known app and no device hint, a bare "$" still falls back to the matched account, then the ledger.
+- With no known app, no device hint and no usable AI hint, a bare "$" still falls back to the matched account, then the ledger.
 - A global app like PayPal has no home currency, so it falls through to the device.
 - In Settings, the card can still show the name-matched account (Banorte USD) while the MXN charge waits, and tapping the shown account again doesn't count as a pick. The charge stays visible as unattached and you can assign it on the transaction itself.
 - The backend prompt still asks the model for null on a shared symbol. It ignores that for "Bs", and the client now copes either way.
