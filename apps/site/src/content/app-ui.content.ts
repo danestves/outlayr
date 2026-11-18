@@ -1,11 +1,11 @@
 import { t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
-import { accountsCopy } from "./app-ui/accounts";
-import { captureCopy } from "./app-ui/capture";
-import { entryCopy } from "./app-ui/entry";
-import { glanceCopy } from "./app-ui/glance";
-import { insightsCopy } from "./app-ui/insights";
+import { accountsCopy, accountsLabels } from "./app-ui/accounts";
+import { captureCopy, captureLabels } from "./app-ui/capture";
+import { entryCopy, entryLabels } from "./app-ui/entry";
+import { glanceCopy, glanceLabels } from "./app-ui/glance";
+import { insightsCopy, insightsLabels } from "./app-ui/insights";
 
 const appUi = {
     content: {
@@ -99,6 +99,13 @@ const appUi = {
             groceries: t({ en: "Groceries", de: "Lebensmittel", es: "Súper", pt: "Mercado", fr: "Courses" }),
             rent: t({ en: "Rent", de: "Miete", es: "Renta", pt: "Aluguel", fr: "Loyer" }),
             fresh: t({ en: "new", de: "neu", es: "nuevo", pt: "novo", fr: "nouveau" }),
+        },
+        labels: {
+            ...accountsLabels,
+            ...captureLabels,
+            ...entryLabels,
+            ...glanceLabels,
+            ...insightsLabels,
         },
         log: {
             label: t({
