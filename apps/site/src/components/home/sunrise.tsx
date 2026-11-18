@@ -6,7 +6,7 @@ import { GET_APP_ID } from "@/lib/download";
 import { playScene } from "@/lib/scene";
 import { sway } from "@/lib/sway";
 
-import { CategoryTiles } from "./category-tiles";
+import { LogoTiles } from "./logo-tiles";
 import { QrButton } from "./qr-button";
 
 function stage(section: HTMLElement | null) {
@@ -39,7 +39,7 @@ export function Sunrise() {
                     </div>
                 </div>
             </div>
-            <CategoryTiles />
+            <LogoTiles />
             <div className="hz-close-body" data-reveal="group">
                 <h2 className="hz-close-title hz-r" id="close-title">
                     <span className="hz-lead-in">{close.lead}</span> {close.rest}
