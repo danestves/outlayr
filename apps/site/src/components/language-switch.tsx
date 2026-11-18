@@ -9,11 +9,14 @@ export function LanguageSwitch() {
     const path = getPathWithoutLocale(useLocation({ select: (location) => location.pathname }));
 
     return (
-        <nav aria-label={footer.language.value} className="border-border flex rounded-full border p-1">
+        <nav
+            aria-label={footer.language.value}
+            className="border-border flex max-w-full [scrollbar-width:none] overflow-x-auto overscroll-x-contain rounded-full border p-1"
+        >
             {publishedLocales("/").map((option) => (
                 <a
                     aria-current={option === locale ? "page" : undefined}
-                    className="fluid text-muted hover:text-foreground aria-[current=page]:bg-foreground/5 aria-[current=page]:text-foreground rounded-full px-3 py-1 text-sm"
+                    className="fluid text-muted hover:text-foreground aria-[current=page]:bg-foreground/5 aria-[current=page]:text-foreground shrink-0 rounded-full px-3 py-1 text-sm whitespace-nowrap"
                     href={getLocalizedUrl(isPublished(path, option) ? path : "/", option)}
                     hrefLang={LANGUAGES[option].hreflang}
                     key={option}
