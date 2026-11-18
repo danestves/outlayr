@@ -105,11 +105,13 @@ function netflix(overrides: Partial<SubscriptionRow> = {}): SubscriptionRow {
 const CHASE = { currency: "MXN", id: "acc-chase", name: "Chase Sapphire" };
 const N26 = { currency: "EUR", id: "acc-n26", name: "N26" };
 const PLATA = { currency: "MXN", id: "acc-plata", name: "Plata Card" };
-const RAKUTEN = ["JPY", "USD"].map((currency) => ({
-    currency,
-    id: `acc-rakuten-${currency.toLowerCase()}`,
-    name: `Rakuten ${currency}`,
-}));
+const inEachCurrency = (bank: string, currencies: readonly string[]) =>
+    currencies.map((currency) => ({
+        currency,
+        id: `acc-${bank.toLowerCase().replaceAll(" ", "-")}-${currency.toLowerCase()}`,
+        name: `${bank} ${currency}`,
+    }));
+const RAKUTEN = inEachCurrency("Rakuten", ["JPY", "USD"]);
 
 describe("a purchase the ledger already holds", () => {
     const authorized = facts({ filed: [row("tx-auth")], ledger: [filedAs("auth", "tx-auth")] });
@@ -356,11 +358,22 @@ describe("the account and currency a card's charge is filed in", () => {
     });
 
     it.each([
-        ["waits on its card when the charge names its currency", "USD", [CHASE, N26], true],
-        ["does not wait when the currency was a guess", null, [CHASE, N26], false],
-        ["does not wait while the ledger has no accounts", "USD", [], false],
-    ])("%s", (_case, currency, banks, waits) => {
-        const filed = accountOf(walletWrite("a", { card: "Binance Card", currency }), { banks });
+        ["picks the account in the posting bank's currency", "Banorte", null, "acc-banorte-mxn"],
+        ["leaves the account to the user when only the device names the currency", "Mi Banco", "MXN", null],
+    ])("%s", (_case, card, deviceCurrency, accountId) => {
+        const banks = [...inEachCurrency("Banorte", ["MXN", "USD"]), ...inEachCurrency("Mi Banco", ["MXN", "USD"])];
+        const filed = accountOf(walletWrite("a", { amountText: "$350.00", card }), { banks, deviceCurrency });
+
+        expect(filed).toMatchObject({ accountId, currency: "MXN" });
+    });
+
+    it.each([
+        ["waits on its card when the charge names its currency", "Binance Card", "USD", null, [CHASE, N26], true],
+        ["waits on its card when the posting bank names the currency", "Banorte", null, null, [CHASE, N26], true],
+        ["does not wait when only the device names the currency", "Binance Card", null, "MXN", [CHASE, N26], false],
+        ["does not wait while the ledger has no accounts", "Binance Card", "USD", null, [], false],
+    ])("%s", (_case, card, currency, deviceCurrency, banks, waits) => {
+        const filed = accountOf(walletWrite("a", { card, currency }), { banks, deviceCurrency });
 
         expect(filed.waits).toBe(waits);
     });
