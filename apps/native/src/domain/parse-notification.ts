@@ -8,6 +8,7 @@ import { detectCurrency, LOCAL_SYMBOLS, SYMBOL_ALIASES } from "./detect-currency
 export interface ParsedNotification {
     amount: number;
     amountText: string;
+    currencyHint?: string;
     income: boolean;
     merchant: string | null;
 }
@@ -178,6 +179,10 @@ function chargeMoney(text: string): RegExpExecArray | null {
     return null;
 }
 
+function chargeFigures(text: string): string[] {
+    return [...text.matchAll(EVERY_MONEY)].filter((match) => !notACharge(text, match)).map(([figure]) => figure);
+}
+
 /** The gate the AI read is behind, so a promo never leaves the device and never lends its amount to a purchase. */
 export function hasChargeAmount(text: string): boolean {
     return chargeMoney(text) !== null;
@@ -337,7 +342,7 @@ export function mergeNotificationRead(
     }
     return {
         amount,
-        amountText: readCurrency(text, read.currency, amount) ?? sameAmountText(parsed, amount),
+        ...(shownAmount(text, parsed, read.currency, amount) ?? { amountText: sameAmountText(parsed, amount) }),
         income: read.kind === "income",
         merchant: cleanMerchant(read.merchant) ?? parsed?.merchant ?? null,
     };
@@ -360,6 +365,27 @@ function readCurrency(text: string, code: string | null, amount: number): string
         return value !== null && Math.abs(value - amount) < SAME_AMOUNT && detectCurrency(token) === code;
     });
     return shown ? `${code} ${amount}` : null;
+}
+
+function shownAmount(
+    text: string,
+    parsed: ParsedNotification | null,
+    code: string | null,
+    amount: number
+): Pick<ParsedNotification, "amountText" | "currencyHint"> | null {
+    if (code === null) {
+        return null;
+    }
+    const shown = parsed?.amount === amount ? [parsed.amountText] : chargeFigures(text);
+    const figures = shown.filter((token) => {
+        const value = amountOf(token);
+        return value !== null && Math.abs(value - amount) < SAME_AMOUNT;
+    });
+    if (figures.some((token) => detectCurrency(token) === code)) {
+        return { amountText: `${code} ${amount}` };
+    }
+    const shared = figures.find((token) => detectCurrency(token, [code]) === code);
+    return shared ? { amountText: shared.trim(), currencyHint: code } : null;
 }
 
 export function cleanMerchant(raw: string | null): string | null {

@@ -373,6 +373,45 @@ describe("the account and currency a card's charge is filed in", () => {
     });
 
     it.each([
+        ["keeps the AI read's yuan over the yen default", "Mi Banco", "Pagaste ¥250.00 en Taobao", "USD", "CNY", "CNY"],
+        ["ranks the posting bank over the AI read", "Chase", "You spent $120.00 at Starbucks", "MXN", "MXN", "USD"],
+        ["ranks the device over the AI read", "Mi Banco", "Compraste $120.00 en OXXO", "MXN", "USD", "MXN"],
+    ])("%s", (_case, card, text, deviceCurrency, aiCurrency, currency) => {
+        const queued = walletWrite("a", { amount: 0, amountText: null, card, note: "", text });
+        const reads = new Map([
+            ["a", { amount: null, currency: aiCurrency, debt: null, kind: "purchase" as const, merchant: null }],
+        ]);
+        const write = readNotification(queued, reads);
+        if (!write) {
+            throw new Error(`The push "${text}" names no amount`);
+        }
+
+        expect(accountOf(write, { deviceCurrency })).toMatchObject({ currency });
+    });
+
+    it("leaves the account to the user when only the AI read names the currency", () => {
+        const queued = walletWrite("a", {
+            amount: 0,
+            amountText: null,
+            card: "Mi Banco",
+            note: "",
+            text: "Compraste $350.00",
+        });
+        const reads = new Map([
+            ["a", { amount: null, currency: "MXN", debt: null, kind: "purchase" as const, merchant: null }],
+        ]);
+        const write = readNotification(queued, reads);
+        if (!write) {
+            throw new Error("The push names no amount");
+        }
+
+        expect(accountOf(write, { banks: inEachCurrency("Mi Banco", ["MXN", "USD"]) })).toMatchObject({
+            accountId: null,
+            currency: "MXN",
+        });
+    });
+
+    it.each([
         ["waits on its card when the charge names its currency", "Binance Card", "USD", null, [CHASE, N26], true],
         ["waits on its card when the posting bank names the currency", "Banorte", null, null, [CHASE, N26], true],
         ["does not wait when only the device names the currency", "Binance Card", null, "MXN", [CHASE, N26], false],

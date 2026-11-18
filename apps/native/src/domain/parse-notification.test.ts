@@ -453,7 +453,7 @@ describe("mergeNotificationRead", () => {
         ).toMatchObject({ amount: 100, amountText: "EUR 100.00" });
     });
 
-    it("leaves a bare $ for the card's account to settle, whatever currency the AI guessed", () => {
+    it("leaves a bare $ for the posting app and the device to settle before the AI's guess", () => {
         const text = "Compra aprobada\nCompraste $250.00 en OXXO";
         expect(
             mergeNotificationRead(text, parseNotification(text), {
@@ -463,7 +463,37 @@ describe("mergeNotificationRead", () => {
                 kind: "purchase",
                 merchant: "OXXO",
             })
-        ).toMatchObject({ amount: 250, amountText: "$250.00" });
+        ).toMatchObject({ amount: 250, amountText: "$250.00", currencyHint: "USD" });
+    });
+
+    it.each([
+        ["a code the shown symbol cannot mean", "Compraste $ 120 en OXXO", 120, "EUR", "$ 120"],
+        ["the code of the other figure in the push", "Pagaste ¥120 (≈ $16.50) en Taobao", 16.5, "JPY", "16.5"],
+        [
+            "the code of an equal figure that is not the charge",
+            "Paid $120 at Uber. Available balance: ¥120",
+            120,
+            "CNY",
+            "$120",
+        ],
+        [
+            "the code of a balance the AI's amount matches",
+            "Paid $80 at Uber. Available balance: ¥120",
+            120,
+            "CNY",
+            "120",
+        ],
+    ])("keeps no currency hint for %s", (_case, text, amount, currency, amountText) => {
+        const merged = mergeNotificationRead(text, parseNotification(text), {
+            amount,
+            currency,
+            debt: null,
+            kind: "purchase",
+            merchant: null,
+        });
+
+        expect(merged).toMatchObject({ amount, amountText });
+        expect(merged).not.toHaveProperty("currencyHint");
     });
 });
 
