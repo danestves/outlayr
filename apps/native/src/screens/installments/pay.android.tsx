@@ -1,3 +1,4 @@
+import Delete02Icon from "@hugeicons-pro/core-stroke-rounded/Delete02Icon";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -8,7 +9,7 @@ import { InlineFailure } from "@/components/form/inline-failure";
 import { ChoiceRow } from "@/components/list/list-row";
 import { OutlinedDateField } from "@/components/material/outlined-date-field";
 import { OutlinedSelectField } from "@/components/material/outlined-field";
-import { SheetHeader } from "@/components/sheet-header";
+import { SheetHeader, SheetHeaderIconButton } from "@/components/sheet-header";
 import { Text } from "@/components/text";
 import { useNow } from "@/data/use-now";
 import { useTranslation } from "@/i18n/context";
@@ -26,8 +27,8 @@ function fieldValue(value: string) {
 }
 
 /** Not pinned to the foot: a sheet is as tall as its largest detent, so it would rest off screen. */
-export function PayInstallment({ all, planId }: { all: boolean; planId: string }) {
-    const props = usePayEntry(planId, all);
+export function PayInstallment({ all, fromPush, planId }: { all: boolean; fromPush?: string; planId: string }) {
+    const props = usePayEntry(planId, all, fromPush);
     return props === null ? null : <PayForm {...props} />;
 }
 
@@ -45,6 +46,7 @@ function PayForm(props: PayFormProps) {
         confirm,
         converted,
         date,
+        discard,
         failure,
         forLabel,
         from,
@@ -67,7 +69,16 @@ function PayForm(props: PayFormProps) {
             <SheetHeader
                 onClose={pickingFrom ? () => setPickingFrom(false) : undefined}
                 title={pickingFrom ? t("installments.from") : payTitle}
-            />
+            >
+                {discard === null || pickingFrom ? null : (
+                    <SheetHeaderIconButton
+                        accessibilityLabel={t("debts.pushed.discard")}
+                        destructive
+                        icon={Delete02Icon}
+                        onPress={discard}
+                    />
+                )}
+            </SheetHeader>
             <ScrollView
                 className="flex-1"
                 contentContainerStyle={{ paddingBottom: insets.bottom + 16, paddingHorizontal: 16 }}

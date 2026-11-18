@@ -108,7 +108,7 @@ export const replaceLocalFromAccount = Effect.fn("AdoptionEngine.replaceLocalFro
                     }
                     yield* setSyncCursor(db, 0);
                     // The write below covers the whole log under the merge that knows `restoredAt`.
-                    yield* Meta.remove(db, ["syncRestoresReread", "autologWaiting"]);
+                    yield* Meta.remove(db, ["syncRestoresReread", "autologWaiting", "notificationDebts"]);
                     if (rows.length > 0) {
                         yield* writePulledRows(db, { cursor, rows }, now, false);
                     }

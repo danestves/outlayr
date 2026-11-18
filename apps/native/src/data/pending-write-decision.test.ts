@@ -6,8 +6,13 @@ import type { AutologUsage, PendingWriteLedgerEntry } from "@/domain/meta-values
 import { FREE_AUTOLOG_PER_MONTH } from "@/domain/pro-limits";
 import type { PendingWrite } from "@/lib/queue-file";
 
-import { decidePendingWrite, readNotification, WALLET_DEDUPE_WINDOW_MS } from "./pending-write-decision";
-import type { FiledRow, PendingWriteFacts, SubscriptionRow } from "./pending-write-decision";
+import {
+    decidePendingWrite,
+    matchInstallmentPlan,
+    readNotification,
+    WALLET_DEDUPE_WINDOW_MS,
+} from "./pending-write-decision";
+import type { OpenPlan, FiledRow, PendingWriteFacts, SubscriptionRow } from "./pending-write-decision";
 
 const NOW = new Date("2026-03-04T09:00:00Z").getTime();
 const HOUR = 60 * 60 * 1000;
@@ -428,5 +433,51 @@ describe("the name and category a pending write is filed under", () => {
         const none = facts({ category: { fallback: null, known: null, lookups: false } });
 
         expect(decidePendingWrite(walletWrite("a"), none)).toStrictEqual({ kind: "drop" });
+    });
+});
+
+describe("matchInstallmentPlan", () => {
+    const draft = {
+        amount: 15,
+        amountText: "$15,00",
+        counterparty: "Cashea",
+        currency: "USD",
+        date: 0,
+        id: "push",
+        installment: { number: 2, of: 6 },
+        planId: null,
+        source: null,
+        text: "Cashea\nPagaste la cuota 2 de 6 por $15,00",
+        verb: "paidBack",
+    } as const;
+    const plan = (id: string, note: string, overrides: Partial<OpenPlan> = {}): OpenPlan => ({
+        currency: "USD",
+        id,
+        installmentsTotal: 6,
+        note,
+        rows: [
+            { owed: 15, remaining: 0, sequence: 1, status: "paid" },
+            { owed: 15, remaining: 15, sequence: 2, status: "unpaid" },
+        ],
+        ...overrides,
+    });
+
+    it("pays the plan that still owes that cuota at that price", () => {
+        expect(matchInstallmentPlan([plan("tv", "TV"), plan("eur", "TV", { currency: "EUR" })], draft)).toBe("tv");
+        expect(matchInstallmentPlan([plan("tv", "TV", { installmentsTotal: 12 })], draft)).toBeNull();
+        expect(matchInstallmentPlan([plan("tv", "TV")], { ...draft, amount: 20 })).toBeNull();
+        expect(matchInstallmentPlan([plan("tv", "TV")], { ...draft, installment: { number: 1, of: 6 } })).toBeNull();
+        const behind = plan("tv", "TV", {
+            rows: [
+                { owed: 15, remaining: 15, sequence: 1, status: "unpaid" },
+                { owed: 15, remaining: 15, sequence: 2, status: "unpaid" },
+            ],
+        });
+        expect(matchInstallmentPlan([behind], draft)).toBeNull();
+    });
+
+    it("picks between two fitting plans only by the person's name in the order", () => {
+        expect(matchInstallmentPlan([plan("tv", "TV at Cashea"), plan("bike", "Bike")], draft)).toBe("tv");
+        expect(matchInstallmentPlan([plan("tv", "TV"), plan("bike", "Bike")], draft)).toBeNull();
     });
 });

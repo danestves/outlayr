@@ -1,4 +1,5 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 export const readArgs = {
@@ -8,11 +9,24 @@ export const readArgs = {
     text: Schema.String,
 };
 
-export const NotificationKind = Schema.Literals(["purchase", "income", "declined", "other"]);
+export const NotificationKind = Schema.Literals(["purchase", "income", "declined", "debt", "other"]);
+
+export const DebtVerb = Schema.Literals(["borrowed", "gotPaidBack", "lent", "paidBack"]);
+
+export type DebtVerb = typeof DebtVerb.Type;
+
+export const DebtInstallment = Schema.Struct({ number: Schema.Int, of: Schema.NullOr(Schema.Int) });
+
+export type DebtInstallment = typeof DebtInstallment.Type;
+
+export const DebtRead = Schema.Struct({ installment: Schema.NullOr(DebtInstallment), verb: DebtVerb });
+
+export type DebtRead = typeof DebtRead.Type;
 
 export const NotificationRead = Schema.Struct({
     amount: Schema.NullOr(Schema.Finite),
     currency: Schema.NullOr(Schema.String),
+    debt: Schema.NullOr(DebtRead).pipe(Schema.withDecodingDefault(Effect.succeed(null))),
     kind: NotificationKind,
     merchant: Schema.NullOr(Schema.String),
 });

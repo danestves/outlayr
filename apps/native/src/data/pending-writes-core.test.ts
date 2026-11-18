@@ -161,6 +161,44 @@ describe("applyPendingWrites", () => {
         expect(row).toStrictEqual({ accountId: "acc-chase", amount: 12.4, currency: "USD", note: "STARBUCKS" });
     });
 
+    it("drafts a debt from a push instead of filing it, once, and keeps a dismissed draft dismissed", async () => {
+        const job = walletWrite("iou", {
+            amount: 0,
+            amountText: null,
+            card: "Pago Móvil",
+            dedupeKey: "notification:expense:juan",
+            note: "",
+            text: "Juan Pérez: me debes $30 de la pizza",
+        });
+
+        const first = await Effect.runPromise(applyPendingWrites(db, [job], NOW));
+        await Effect.runPromise(applyPendingWrites(db, [job], NOW));
+        const drafts = await Effect.runPromise(Meta.get(db, "notificationDebts"));
+        await Effect.runPromise(Meta.set(db, "notificationDebts", []));
+        await Effect.runPromise(applyPendingWrites(db, [job], NOW));
+        const copy = { ...job, id: "iou-copy", text: "Juan Pérez: $30 de la pizza" };
+        await Effect.runPromise(applyPendingWrites(db, [copy], NOW));
+
+        expect(first).toStrictEqual({ applied: 0, autologged: 0 });
+        await expect(db.select().from(transactions)).resolves.toStrictEqual([]);
+        expect(drafts).toStrictEqual([
+            {
+                amount: 30,
+                amountText: "$30",
+                counterparty: "Juan Pérez",
+                currency: null,
+                date: NOW.getTime(),
+                id: "iou",
+                installment: null,
+                planId: null,
+                source: "Pago Móvil",
+                text: "Juan Pérez: me debes $30 de la pizza",
+                verb: "borrowed",
+            },
+        ]);
+        await expect(Effect.runPromise(Meta.get(db, "notificationDebts"))).resolves.toStrictEqual([]);
+    });
+
     it("registers no logo candidate for a push filed under a placeholder name", async () => {
         const push = walletWrite("bare", {
             amount: 0,
@@ -711,8 +749,20 @@ describe("drainPendingWrites", () => {
         const reader = () =>
             Effect.succeed(
                 new Map([
-                    ["site", { amount: 22.99, currency: "USD", kind: "purchase" as const, merchant: "SiteGround" }],
-                    ["held", { amount: 40, currency: "USD", kind: "declined" as const, merchant: "Hotel Sol" }],
+                    [
+                        "site",
+                        {
+                            amount: 22.99,
+                            currency: "USD",
+                            debt: null,
+                            kind: "purchase" as const,
+                            merchant: "SiteGround",
+                        },
+                    ],
+                    [
+                        "held",
+                        { amount: 40, currency: "USD", debt: null, kind: "declined" as const, merchant: "Hotel Sol" },
+                    ],
                 ])
             );
 

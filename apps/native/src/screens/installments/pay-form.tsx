@@ -14,8 +14,10 @@ import type { Account } from "@/data/accounts-core";
 import { getLastUsedAccount } from "@/data/accounts-core";
 import { usePaymentRate } from "@/data/installment-reads";
 import type { PlanWithStanding } from "@/data/installments-core";
+import { findNotificationDebt } from "@/data/notification-debts";
 import { useNow } from "@/data/use-now";
 import { paymentSource, paymentSources } from "@/domain/installment-payment";
+import type { NotificationDebt } from "@/domain/meta-values";
 import { formatAmount, minorUnitsFor } from "@/domain/money";
 import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { orderName } from "@/domain/order-name";
@@ -26,6 +28,7 @@ import type { TranslateFn } from "@/i18n/context";
 import type { Language } from "@/i18n/languages";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
+import { dropNotificationDebtCommand } from "@/state/debt-flow-commands";
 import { recordInstallmentPaymentCommand } from "@/state/planning-commands";
 import { rearmInstallmentReminders } from "@/state/surfaces-commands";
 import { useAtomAction } from "@/state/use-atom-action";
@@ -38,11 +41,13 @@ export interface PayFormProps {
     amount: number;
     entry: PlanWithStanding;
     forNext: boolean;
+    pushed: NotificationDebt | null;
     sources: readonly Account[];
 }
 
-export function usePayEntry(planId: string, all: boolean): PayFormProps | null {
+export function usePayEntry(planId: string, all: boolean, fromPush: string | undefined): PayFormProps | null {
     const db = useDatabase();
+    const [pushed] = useState(() => (fromPush === undefined ? null : findNotificationDebt(db, fromPush)));
     const { entry } = useInstallmentEntry(planId);
     const accounts = useAccounts(db);
     const sources = paymentSources(useBankAccounts(db), entry?.plan.accountId);
@@ -53,14 +58,15 @@ export function usePayEntry(planId: string, all: boolean): PayFormProps | null {
     }
     return {
         account: accounts.find((account) => account.id === entry.plan.accountId) ?? null,
-        amount: all ? entry.standing.remaining : owed.remaining,
+        amount: pushed?.amount ?? (all ? entry.standing.remaining : owed.remaining),
         entry,
         forNext: !all,
+        pushed,
         sources,
     };
 }
 
-export function usePayForm({ account, amount: owed, entry, forNext, sources }: PayFormProps) {
+export function usePayForm({ account, amount: owed, entry, forNext, pushed, sources }: PayFormProps) {
     const db = useDatabase();
     const router = useRouter();
     const t = useTranslation();
@@ -71,7 +77,7 @@ export function usePayForm({ account, amount: owed, entry, forNext, sources }: P
     const minorUnits = minorUnitsFor(plan.currency);
     const padRef = useRef<BottomSheetModal>(null);
     const [padText, setPadText] = useState(() => numberToNumpad(owed, minorUnits));
-    const [date, setDate] = useState(() => new Date());
+    const [date, setDate] = useState(() => (pushed ? new Date(pushed.date) : new Date()));
     const [pickingDate, setPickingDate] = useState(false);
     const [pickingFrom, setPickingFrom] = useState(false);
     // Null is None: paid outside Outlayr.
@@ -126,13 +132,27 @@ export function usePayForm({ account, amount: owed, entry, forNext, sources }: P
         SILENT
     );
 
+    const dropDraft = useAtomAction(
+        dropNotificationDebtCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to discard the notification draft", Cause.squash(cause));
+                haptics("error");
+                setFailure(t("installments.failedBody"));
+                setBusy(false);
+            },
+            onSuccess: () => router.back(),
+        },
+        SILENT
+    );
+
     const confirm = () => {
         if (busy || !canPay) {
             return;
         }
         setBusy(true);
         setFailure(null);
-        recordPayment({ db, payment: { amount, date, planId: plan.id, source } });
+        recordPayment({ db, fromPush: pushed?.id, payment: { amount, date, planId: plan.id, source } });
     };
 
     return {
@@ -143,6 +163,16 @@ export function usePayForm({ account, amount: owed, entry, forNext, sources }: P
         confirm,
         converted,
         date,
+        discard: pushed
+            ? () => {
+                  if (busy) {
+                      return;
+                  }
+                  setBusy(true);
+                  setFailure(null);
+                  dropDraft({ db, id: pushed.id });
+              }
+            : null,
         failure,
         forLabel,
         from,

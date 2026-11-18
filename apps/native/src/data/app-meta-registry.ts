@@ -17,6 +17,7 @@ import {
     NotificationText,
     NumberText,
     PendingWrite,
+    NotificationDebt,
     PendingWriteLedgerEntry,
     RepricedSubscription,
     StampedIds,
@@ -111,6 +112,7 @@ const BOOKKEEPING = defineMeta({
     csvImport: { default: null, schema: Schema.fromJsonString(FileImportRecord), scope: "device" },
     // `bootstrap` seeds `currency` unconditionally, so only this tells a chosen code from the default.
     currencyChosen: { default: false, schema: BoolText, scope: "synced" },
+    notificationDebts: { elements: NotificationDebt, scope: "device" },
     enrichmentOutbox: { elements: Schema.String, scope: "device" },
     favouriteCurrencies: { default: [], schema: FavouriteCurrenciesText, scope: "device" },
     firstLaunch: { default: false, schema: BoolText, scope: "device" },

@@ -1,3 +1,4 @@
+import { Stack } from "expo-router";
 import { Pressable, ScrollView, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,19 +12,21 @@ import { MonoLabel } from "@/components/mono-label";
 import { ScreenHeader } from "@/components/screen-header";
 import { revealEntering } from "@/components/sentence/sentence-motion";
 import { Text } from "@/components/text";
+import { toolbarIcon } from "@/components/toolbar-icons";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import { useNow } from "@/data/use-now";
 import { formatTargetDate, formatTime } from "@/domain/dates";
 import { useLanguage, useTranslation } from "@/i18n/context";
 import { CompactDatePicker } from "@/screens/budgets/components/compact-date-picker";
 import { EditorRow } from "@/screens/budgets/components/editor-row";
+import { useColors } from "@/theme/use-colors";
 
 import { SourceChoice, SourceTile, usePayEntry, usePayForm } from "./pay-form";
 import type { PayFormProps } from "./pay-form";
 
 /** Installments never post themselves. */
-export function PayInstallment({ all, planId }: { all: boolean; planId: string }) {
-    const props = usePayEntry(planId, all);
+export function PayInstallment({ all, fromPush, planId }: { all: boolean; fromPush?: string; planId: string }) {
+    const props = usePayEntry(planId, all, fromPush);
     return props === null ? null : <PayForm {...props} />;
 }
 
@@ -31,6 +34,7 @@ function PayForm(props: PayFormProps) {
     const nowMs = useNow();
     const { account, sources } = props;
     const t = useTranslation();
+    const colors = useColors();
     const insets = useSafeAreaInsets();
     const { language } = useLanguage();
     const { use24Hour } = useDisplaySettings().state;
@@ -42,6 +46,7 @@ function PayForm(props: PayFormProps) {
         confirm,
         converted,
         date,
+        discard,
         failure,
         forLabel,
         from,
@@ -62,6 +67,17 @@ function PayForm(props: PayFormProps) {
     return (
         <View className="bg-background flex-1" collapsable={false}>
             <ScreenHeader title={account ? t("installments.pay.to", { account: account.name }) : undefined} />
+            {discard === null ? null : (
+                <Stack.Toolbar placement="right">
+                    <Stack.Toolbar.Button
+                        accessibilityLabel={t("debts.pushed.discard")}
+                        onPress={discard}
+                        tintColor={colors.danger}
+                    >
+                        <Stack.Toolbar.Icon {...toolbarIcon("delete")} />
+                    </Stack.Toolbar.Button>
+                </Stack.Toolbar>
+            )}
             {/* react-native-screens resizes a ScrollView on a formSheet's first-child chain to the whole sheet. */}
             <View collapsable={false} />
             <View className="flex-1">

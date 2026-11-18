@@ -1,3 +1,4 @@
+import { DebtInstallment, DebtVerb } from "@outlayr/backend/confect/notificationRead.spec";
 import { parseFavourites, serialiseFavourites } from "@outlayr/money/favourite-currencies";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -91,6 +92,22 @@ export const PendingWrite = Schema.Struct({
     note: Schema.String,
     text: Schema.optional(Schema.NullOr(Schema.String)),
 });
+
+export const NotificationDebt = Schema.Struct({
+    amount: Schema.Finite,
+    amountText: Schema.String,
+    counterparty: Schema.NullOr(Schema.String),
+    currency: Schema.NullOr(Schema.String),
+    date: Schema.Finite,
+    id: Schema.String,
+    installment: Schema.NullOr(DebtInstallment),
+    planId: Schema.NullOr(Schema.String),
+    source: Schema.NullOr(Schema.String),
+    text: Schema.String,
+    verb: DebtVerb,
+});
+
+export type NotificationDebt = typeof NotificationDebt.Type;
 
 export const RepricedSubscription = Schema.Struct({
     currency: Schema.String,

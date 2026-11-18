@@ -16,6 +16,7 @@ import {
 } from "@/data/debts-core";
 import { installmentsRepo } from "@/data/installments-core";
 import type { InstallmentFeeInput, InstallmentPaymentInput } from "@/data/installments-core";
+import { dropNotificationDebt } from "@/data/notification-debts";
 import { livePayoffPlanCount, setPayoffPlan } from "@/data/payoff-plans";
 import { savingsGoalsRepo } from "@/data/savings-goals-core";
 import type { SavingsGoalPatch } from "@/data/savings-goals-core";
@@ -25,6 +26,7 @@ import type { DebtRate } from "@/domain/debt-rate";
 import type { DebtVerb } from "@/domain/debts";
 import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
+import { warnAndContinue } from "@/lib/warn-and-continue";
 
 import { createRuntimeCommand } from "./atom-command";
 
@@ -177,8 +179,16 @@ export const removeInstallmentFeeCommand = planningCommand(
 
 export const recordInstallmentPaymentCommand = planningCommand(
     "record-installment-payment",
-    (input: { db: Database; payment: InstallmentPaymentInput }) =>
-        installmentsRepo.recordPayment(input.db, input.payment)
+    (input: { db: Database; fromPush?: string; payment: InstallmentPaymentInput }) =>
+        installmentsRepo
+            .recordPayment(input.db, input.payment)
+            .pipe(
+                Effect.tap(() =>
+                    dropNotificationDebt(input.db, input.fromPush).pipe(
+                        warnAndContinue("[outlayr] debt draft not dropped")
+                    )
+                )
+            )
 );
 
 export const updateInstallmentCommand = planningCommand(

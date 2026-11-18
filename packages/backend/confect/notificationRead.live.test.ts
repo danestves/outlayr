@@ -25,7 +25,13 @@ describe.skipIf(!enabled)("notificationRead against the live model", () => {
         );
 
         expect(result).toStrictEqual({
-            read: { amount: 22.99, currency: "USD", kind: "purchase", merchant: expect.stringMatching(/siteground/i) },
+            read: {
+                amount: 22.99,
+                currency: "USD",
+                debt: null,
+                kind: "purchase",
+                merchant: expect.stringMatching(/siteground/i),
+            },
             status: "ok",
         });
     });
@@ -50,5 +56,25 @@ describe.skipIf(!enabled)("notificationRead against the live model", () => {
         const result = await read("Statement ready\nYour statement balance is $512.30. Payment due Nov 20.", "en-US");
 
         expect(result.read?.kind).toBe("other");
+    });
+
+    it("reads who owes whom from the person's own words", async () => {
+        const owed = await read("Pago Móvil\nJuan Pérez: me debes $30 de la pizza", "es-VE");
+        const owing = await read("Splitwise\nMaría López: te debo Bs. 500,00 del mercado", "es-VE");
+
+        expect(owed.read).toMatchObject({ amount: 30, debt: { verb: "borrowed" }, kind: "debt" });
+        expect(owing.read).toMatchObject({ amount: 500, debt: { verb: "lent" }, kind: "debt" });
+    });
+
+    it("reads a paid cuota with its progress, but leaves a purchase split at checkout a purchase", async () => {
+        const cuota = await read("Cashea\nPagaste la cuota 2 de 6 por $15,00", "es-VE");
+        const split = await read("Compra aprobada por $90,00 en 3 cuotas sin interés en Falabella", "es-CL");
+
+        expect(cuota.read).toMatchObject({
+            amount: 15,
+            debt: { installment: { number: 2, of: 6 }, verb: "paidBack" },
+            kind: "debt",
+        });
+        expect(split.read?.kind).toBe("purchase");
     });
 });

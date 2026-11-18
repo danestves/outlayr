@@ -32,7 +32,7 @@ Every kind of data Outlayr handles, in one place. The sections below explain eac
 | Data | When | Where it goes | Kept |
 | --- | --- | --- | --- |
 | Your ledger and its photos | Always | Your device | Until you erase it |
-| Notification titles and text | Logging from notifications | Your device | On Android, the latest per app, or per sender for text messages, for up to 20 in all. The last 5 read, and any waiting past the free monthly auto-log limit |
+| Notification titles and text | Logging from notifications | Your device | On Android, the latest per app, or per sender for text messages, for up to 20 in all. The last 5 read, any waiting past the free monthly auto-log limit, and any read as a debt until you save or dismiss it |
 | Synced ledger, deleted entries, photos | Sync on (Pro) | Our servers | Until account deletion |
 | Email, name, provider ID, password hash | Sign-in | Our servers | Until account deletion |
 | Email address, 6-digit code | Email sign-in | Our servers, Cloudflare | Code: 10 minutes. Email: Cloudflare’s policy |
@@ -162,9 +162,9 @@ On once you allow sending data to AI providers. Turn it off in **Settings › Sm
 
 ### Reading bank notifications
 
-When Outlayr logs a purchase from a notification, through the Shortcuts automation on iPhone or notification access on Android, the app sends our server the notification’s title and text exactly as the app that posted it wrote them, and your language. For a text message on Android, it sends the text without the sender’s name or number. Anthropic’s Claude model reads whether it reports a purchase, money you received, a declined charge, or something else, and the amount, currency, and merchant. The text carries whatever that app put in it, such as the amount, a date, or the last digits of a card. The app’s name, the card and account names you set in Outlayr, and your other entries are not sent.
+When Outlayr logs a purchase from a notification, through the Shortcuts automation on iPhone or notification access on Android, the app sends our server the notification’s title and text exactly as the app that posted it wrote them, and your language. For a text message on Android, it sends the text without the sender’s name or number. Anthropic’s Claude model reads whether it reports a purchase, money you received, a declined charge, a debt or an installment payment, or something else, and the amount, currency, and merchant or person. The text carries whatever that app put in it, such as the amount, a date, or the last digits of a card. The app’s name, the card and account names you set in Outlayr, and your other entries are not sent.
 
-Only notifications that show an amount are sent: login codes, promotions, and repeats of a notification Outlayr already logged stay on your phone. We don’t store the text. The answer goes straight back to your phone, which adds the entry: a declined charge isn’t logged, and anything else is logged, using the phone’s own reading wherever the model gave no answer or called it something other than a purchase or income. If Smart fill is off, you’re offline, or the answer takes longer than 8 seconds, the phone reads the notification on its own.
+Only notifications that show an amount are sent: login codes, promotions, and repeats of a notification Outlayr already logged stay on your phone. We don’t store the text. The answer goes straight back to your phone, which adds the entry: a declined charge isn’t logged, a debt waits under **Balances › From notifications** until you save or dismiss it, and anything else is logged, using the phone’s own reading wherever the model gave no answer or called it something other than a purchase or income. If Smart fill is off, you’re offline, or the answer takes longer than 8 seconds, the phone reads the notification on its own.
 
 On once you allow sending data to AI providers. Turn it off in **Settings › Smart fill**.
 

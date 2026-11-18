@@ -94,7 +94,7 @@ test("reads a purchase whose key a login code or a much earlier copy already use
     expect(sent).toHaveBeenCalledTimes(2);
 });
 
-test("hands back the read the server answered for each push", async () => {
+test("hands back the read the server answered for each push, even from a deployment that predates debts", async () => {
     const db = migratedDatabase();
     await Effect.runPromise(Meta.set(db, "aiConsentV2", true));
     await Effect.runPromise(Meta.set(db, "aiEnrichment", true));
@@ -105,5 +105,5 @@ test("hands back the read the server answered for each push", async () => {
         readNotifications(db, [push("site", "Your SiteGround transaction in the amount of USD 22.99 was approved")])
     );
 
-    expect(reads.get("site")).toStrictEqual(read);
+    expect(reads.get("site")).toStrictEqual({ ...read, debt: null });
 });
