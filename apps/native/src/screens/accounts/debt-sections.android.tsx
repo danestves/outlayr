@@ -25,6 +25,8 @@ import { TILE_WASH_OPACITY, withAlpha } from "@/theme/shade";
 import { useColors } from "@/theme/use-colors";
 import { useMaterialColors } from "@/theme/use-material-colors";
 
+import { PushedDebts } from "./pushed-debts";
+
 type DebtListRow = DebtsScreenOverview["youOwe"][number];
 
 interface SectionsProps {
@@ -106,6 +108,7 @@ export function DebtSections({ currency, debts }: SectionsProps) {
 
     return (
         <>
+            <PushedDebts currency={currency} />
             {header(t("debts.title"))}
             {debts.youOwe.filter((item) => item.kind === "liability").map(row)}
             <AddDebtRow />

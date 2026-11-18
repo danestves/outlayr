@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vite-plus/test";
 
 import { detectCurrency } from "./detect-currency";
-import { hasChargeAmount, mergeNotificationRead, NOTIFICATION_PATTERNS, parseNotification } from "./parse-notification";
+import {
+    hasChargeAmount,
+    mergeDebtRead,
+    mergeNotificationRead,
+    NOTIFICATION_PATTERNS,
+    parseDebt,
+    parseNotification,
+} from "./parse-notification";
 
 describe("parseNotification", () => {
     it("reads Wallet's own notification: card, then merchant with its place, then the amount", () => {
@@ -377,6 +384,7 @@ describe("mergeNotificationRead", () => {
             mergeNotificationRead(TEXT, parsed, {
                 amount: 22.99,
                 currency: "USD",
+                debt: null,
                 kind: "declined",
                 merchant: "SiteGround",
             })
@@ -385,7 +393,13 @@ describe("mergeNotificationRead", () => {
 
     it("still logs what the parser read when the AI calls it something other than a purchase", () => {
         expect(
-            mergeNotificationRead(TEXT, parsed, { amount: null, currency: null, kind: "other", merchant: null })
+            mergeNotificationRead(TEXT, parsed, {
+                amount: null,
+                currency: null,
+                debt: null,
+                kind: "other",
+                merchant: null,
+            })
         ).toBe(parsed);
     });
 
@@ -394,6 +408,7 @@ describe("mergeNotificationRead", () => {
             mergeNotificationRead(TEXT, parsed, {
                 amount: null,
                 currency: null,
+                debt: null,
                 kind: "purchase",
                 merchant: "SiteGround",
             })
@@ -405,6 +420,7 @@ describe("mergeNotificationRead", () => {
             mergeNotificationRead("Juan te envió 1500 ARS", null, {
                 amount: 1500,
                 currency: "ARS",
+                debt: null,
                 kind: "income",
                 merchant: "Juan",
             })
@@ -417,6 +433,7 @@ describe("mergeNotificationRead", () => {
             mergeNotificationRead(text, parseNotification(text), {
                 amount: 108.4,
                 currency: null,
+                debt: null,
                 kind: "purchase",
                 merchant: null,
             })
@@ -429,6 +446,7 @@ describe("mergeNotificationRead", () => {
             mergeNotificationRead(text, parseNotification(text), {
                 amount: 100,
                 currency: "USD",
+                debt: null,
                 kind: "purchase",
                 merchant: null,
             })
@@ -441,9 +459,87 @@ describe("mergeNotificationRead", () => {
             mergeNotificationRead(text, parseNotification(text), {
                 amount: 250,
                 currency: "USD",
+                debt: null,
                 kind: "purchase",
                 merchant: "OXXO",
             })
         ).toMatchObject({ amount: 250, amountText: "$250.00" });
+    });
+});
+
+describe("parseDebt", () => {
+    it("reads who owes whom from the person's own words", () => {
+        expect(parseDebt("Juan Pérez: me debes $30 de la pizza")).toStrictEqual({
+            amount: 30,
+            amountText: "$30",
+            counterparty: "Juan Pérez",
+            installment: null,
+            verb: "borrowed",
+        });
+        expect(parseDebt("Te debo 50")).toMatchObject({ amount: 50, amountText: "50", verb: "lent" });
+        expect(parseDebt("Ana\nMe prestaste 100 USD ayer")).toMatchObject({ amount: 100, verb: "lent" });
+        expect(parseDebt("I lent you $25.50 for the cab")).toMatchObject({ amount: 25.5, verb: "borrowed" });
+        expect(parseDebt("You owe me €12,40")).toMatchObject({ amount: 12.4, verb: "borrowed" });
+    });
+
+    it("reads a loan the push announces as borrowed, and a payment toward it as paid back", () => {
+        expect(parseDebt("Tu préstamo por Bs. 5.000,00 fue acreditado")).toMatchObject({
+            amount: 5000,
+            verb: "borrowed",
+        });
+        expect(parseDebt("Loan payment of $120.00 received. Thank you!")).toMatchObject({ verb: "gotPaidBack" });
+        expect(parseDebt("Pagaste $120,00 de tu préstamo")).toMatchObject({ amount: 120, verb: "paidBack" });
+    });
+
+    it("reads a cuota's number and count beside its amount", () => {
+        expect(parseDebt("Cashea\nPagaste la cuota 2 de 6 por $15,00")).toStrictEqual({
+            amount: 15,
+            amountText: "$15,00",
+            counterparty: null,
+            installment: { number: 2, of: 6 },
+            verb: "paidBack",
+        });
+        expect(parseDebt("Pagaste la cuota 2 de $15")).toMatchObject({ installment: { number: 2, of: null } });
+        expect(parseDebt("Installment 3/12 paid: USD 40.00")).toMatchObject({ installment: { number: 3, of: 12 } });
+        expect(parseDebt("Cuota 2 de 15,00 pagada")).toBeNull();
+    });
+
+    it("leaves purchases, a purchase split into cuotas, and declines alone", () => {
+        for (const text of [
+            "Purchase alert\nYou made a $12.40 purchase at STARBUCKS with your card ending in 4321.",
+            "Compra aprobada por $90,00 en 3 cuotas sin interés en Falabella",
+            "Te debo la pizza",
+            "Pago de préstamo por $50,00 rechazado",
+        ]) {
+            expect(parseDebt(text)).toBeNull();
+        }
+    });
+});
+
+describe("mergeDebtRead", () => {
+    const TEXT = "Juan: me debes $30";
+    const parsed = parseDebt(TEXT);
+    const read = { amount: null, currency: null, debt: null, merchant: null } as const;
+
+    it("keeps the parser's debt when the model calls it a purchase", () => {
+        expect(mergeDebtRead(TEXT, parsed, { ...read, amount: 30, kind: "purchase" })).toBe(parsed);
+    });
+
+    it("drafts a debt only the model saw, and drops it on a decline", () => {
+        const model = {
+            ...read,
+            amount: 30,
+            debt: { installment: null, verb: "lent" },
+            kind: "debt",
+            merchant: "Juan",
+        } as const;
+        expect(mergeDebtRead("Juan: quedamos en que pagas tú los $30", null, model)).toStrictEqual({
+            amount: 30,
+            amountText: "30",
+            counterparty: "Juan",
+            installment: null,
+            verb: "lent",
+        });
+        expect(mergeDebtRead(TEXT, parsed, { ...read, kind: "declined" })).toBeNull();
     });
 });

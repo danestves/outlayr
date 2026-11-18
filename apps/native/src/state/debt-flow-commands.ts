@@ -1,5 +1,6 @@
 import * as Effect from "effect/Effect";
 
+import { dropNotificationDebt } from "@/data/notification-debts";
 import type { Database } from "@/db/client";
 import { appRuntime } from "@/lib/runtime";
 
@@ -21,9 +22,11 @@ const planAfter = Effect.fn("DebtFlow.planAfter")(function* planAfter(
 const saveDebt = Effect.fn("DebtFlow.saveDebt")(function* saveDebt(input: {
     db: Database;
     debt: DebtDraft;
+    fromPush?: string;
     payBackBy: Date | null;
 }) {
     const personId = yield* writeDebt(input.db, input.debt);
+    yield* dropNotificationDebt(input.db, input.fromPush);
     return yield* planAfter(input.db, personId, input.payBackBy);
 });
 
@@ -44,4 +47,9 @@ export const saveDebtCommand = createRuntimeCommand(appRuntime, {
 export const saveOweCommand = createRuntimeCommand(appRuntime, {
     execute: saveOwe,
     label: "debt-flow:save-owe",
+});
+
+export const dropNotificationDebtCommand = createRuntimeCommand(appRuntime, {
+    execute: (input: { db: Database; id: string }) => dropNotificationDebt(input.db, input.id),
+    label: "debt-flow:drop-notification-debt",
 });

@@ -55,6 +55,23 @@ const STORED_TODAY = {
     csvImport: FILE_IMPORT,
     currency: ["EUR"],
     currencyChosen: ["true"],
+    notificationDebts: [
+        JSON.stringify([
+            {
+                amount: 15,
+                amountText: "$15,00",
+                counterparty: "Cashea",
+                currency: null,
+                date: 1_762_650_000_000,
+                id: "push-1",
+                installment: { number: 2, of: 6 },
+                planId: "plan-1",
+                source: "Cashea",
+                text: "Cashea\nPagaste la cuota 2 de 6 por $15,00",
+                verb: "paidBack",
+            },
+        ]),
+    ],
     enrichmentOutbox: [JSON.stringify(["tx-1", "tx-2"]), "[]"],
     favouriteCurrencies: ["EUR,GBP", ""],
     firstDayOfMonth: ["15"],

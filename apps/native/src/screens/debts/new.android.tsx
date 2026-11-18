@@ -1,6 +1,7 @@
 import { SegmentedButton, SingleChoiceSegmentedButtonRow, Text as ComposeText } from "@expo/ui/jetpack-compose";
 import { fillMaxWidth } from "@expo/ui/jetpack-compose/modifiers";
 import Cancel01Icon from "@hugeicons-pro/core-stroke-rounded/Cancel01Icon";
+import Delete02Icon from "@hugeicons-pro/core-stroke-rounded/Delete02Icon";
 import { HugeiconsIcon } from "@hugeicons/react-native";
 import { Stack } from "expo-router";
 import { Pressable, ScrollView, View } from "react-native";
@@ -12,7 +13,7 @@ import { InlineFailure } from "@/components/form/inline-failure";
 import { MaterialHost } from "@/components/material-host";
 import { OutlinedDateField } from "@/components/material/outlined-date-field";
 import { OutlinedSelectField, OutlinedTextField } from "@/components/material/outlined-field";
-import { SheetHeaderTextButton } from "@/components/sheet-header";
+import { SheetHeaderIconButton, SheetHeaderTextButton } from "@/components/sheet-header";
 import { Text } from "@/components/text";
 import { useDisplaySettings } from "@/contexts/display-settings-context";
 import type { Account } from "@/data/accounts-core";
@@ -70,9 +71,26 @@ function TheirSideField({ amount, caption, ground, label, onPress }: TheirSideFi
     );
 }
 
-function SaveAction({ disabled, label, onPress }: { disabled: boolean; label: string; onPress: () => void }) {
+interface SaveActionProps {
+    disabled: boolean;
+    discard: { label: string; onPress: () => void } | null;
+    label: string;
+    onPress: () => void;
+}
+
+function SaveAction({ disabled, discard, label, onPress }: SaveActionProps) {
     return (
         <Stack.Toolbar placement="right">
+            {discard === null ? null : (
+                <Stack.Toolbar.View>
+                    <SheetHeaderIconButton
+                        accessibilityLabel={discard.label}
+                        destructive
+                        icon={Delete02Icon}
+                        onPress={discard.onPress}
+                    />
+                </Stack.Toolbar.View>
+            )}
             <Stack.Toolbar.View>
                 <SheetHeaderTextButton disabled={disabled} label={label} onPress={onPress} />
             </Stack.Toolbar.View>
@@ -92,7 +110,12 @@ export function NewDebt(props: NewDebtProps) {
 
     return (
         <View className="bg-m3-surface flex-1">
-            <SaveAction disabled={!form.canSave} label={t("common.save")} onPress={form.onSave} />
+            <SaveAction
+                disabled={!form.canSave}
+                discard={form.discard === null ? null : { label: t("debts.pushed.discard"), onPress: form.discard }}
+                label={t("common.save")}
+                onPress={form.onSave}
+            />
 
             <ScrollView
                 contentContainerStyle={{ paddingBottom: insets.bottom + 24 + keyboardHeight }}

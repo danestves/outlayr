@@ -10,7 +10,7 @@ import type { Database } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { autologExpenseCount, countsAsAutolog } from "@/domain/autolog-cap";
-import type { AutologAccess, PendingWriteLedgerEntry as LedgerEntry } from "@/domain/meta-values";
+import type { AutologAccess, NotificationDebt, PendingWriteLedgerEntry as LedgerEntry } from "@/domain/meta-values";
 import { firstLocale } from "@/i18n/device-language";
 import type { NotificationReader, NotificationReads } from "@/lib/notification-read";
 import type { ClaimedWrites, PendingWrite } from "@/lib/queue-file";
@@ -28,10 +28,13 @@ import {
 import type { SpendDb } from "./budget-spent";
 import { queueEnrichment } from "./enrichment-queue-core";
 import { captureEntrySaved, usualCardFee } from "./entry-filed-core";
+import { readPlans } from "./installments-core";
 import {
     alreadyApplied,
     AMOUNT_EPSILON,
     decidePendingWrite,
+    matchInstallmentPlan,
+    readDebt,
     readNotification,
     settleWindow,
     WALLET_DEDUPE_WINDOW_MS,
@@ -374,6 +377,47 @@ const fileDecision = Effect.fn("PendingWrites.fileDecision")(function* fileDecis
     );
 });
 
+const openPlans = (db: Database, now: Date) =>
+    readPlans(db, now).map(({ plan, purchase, standing }) => ({
+        currency: plan.currency,
+        id: plan.id,
+        installmentsTotal: standing.installmentsTotal,
+        note: purchase?.note ?? "",
+        rows: standing.rows.map(({ owed, remaining, row, status }) => ({
+            owed,
+            remaining,
+            sequence: row.sequence,
+            status,
+        })),
+    }));
+
+const draftDebt = Effect.fn("PendingWrites.draftDebt")(function* draftDebt(
+    db: Database,
+    write: PendingWrite,
+    found: NotificationDebt,
+    ledger: LedgerEntry[],
+    now: Date
+) {
+    if (alreadyApplied(ledger, write)) {
+        return ledger;
+    }
+    const at = now.getTime();
+    const plans = found.installment === null ? [] : yield* attemptSync("read", () => openPlans(db, now));
+    const draft = { ...found, planId: matchInstallmentPlan(plans, found) };
+    return yield* transaction(
+        db,
+        Effect.gen(function* file() {
+            const drafts = yield* Meta.get(db, "notificationDebts");
+            yield* Meta.set(db, "notificationDebts", [...drafts.filter((kept) => kept.id !== draft.id), draft]);
+            const key = write.dedupeKey?.trim() || null;
+            const next = remember(ledger, { at, date: write.date, id: write.id, key, txId: draft.id }, at);
+            yield* Meta.set(db, "pendingWriteLedger", next);
+            return next;
+        }),
+        (cause) => new PendingWritesError({ cause, operation: "write" })
+    );
+});
+
 // Each pending write is recorded against its row in the same SQLite transaction as the insert, which collapses the
 // queue's at-least-once delivery to exactly once.
 export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(function* applyPendingWrites(
@@ -397,6 +441,16 @@ export const applyPendingWrites = Effect.fn("PendingWrites.applyPendingWrites")(
     // Exactly-once depends on this pending write seeing the ledger row the previous one's SQLite transaction
     // committed, so they must land one at a time.
     for (const queued of jobs) {
+        const debt = readDebt(queued, reads);
+        if (debt) {
+            yield* rememberNotification(
+                db,
+                { amountText: debt.amountText, at: queued.date, text: debt.text },
+                WALLET_DEDUPE_WINDOW_MS
+            );
+            ledger = yield* draftDebt(db, queued, debt, ledger, now);
+            continue;
+        }
         const write = readNotification(queued, reads);
         if (queued.text) {
             yield* rememberNotification(

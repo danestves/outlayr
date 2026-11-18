@@ -1,4 +1,4 @@
-import type { NotificationRead } from "@outlayr/backend/confect/notificationRead.spec";
+import type { DebtInstallment, DebtVerb, NotificationRead } from "@outlayr/backend/confect/notificationRead.spec";
 import { CURRENCY_META, PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { parseCsvAmount } from "@outlayr/money/csv-read";
 import { decimalsFor } from "@outlayr/money/currency";
@@ -10,6 +10,14 @@ export interface ParsedNotification {
     amountText: string;
     income: boolean;
     merchant: string | null;
+}
+
+export interface ParsedDebt {
+    amount: number;
+    amountText: string;
+    counterparty: string | null;
+    installment: DebtInstallment | null;
+    verb: DebtVerb;
 }
 
 function escape(text: string): string {
@@ -97,6 +105,24 @@ const CHARGE_WORDS = new RegExp(
     "iu"
 );
 const NAME_START = new RegExp(String.raw`^[\p{Lu}\d]`, "u");
+
+const USER_OWES = new RegExp(String.raw`\b(?:me\s+debes|you\s+owe\s+me|te\s+prest[eé]|i\s+lent\s+you)(?!\p{L})`, "iu");
+const USER_IS_OWED = new RegExp(
+    String.raw`\b(?:te\s+debo|i\s+owe\s+you|me\s+prestaste|you\s+lent\s+me)(?!\p{L})`,
+    "iu"
+);
+const LOAN = new RegExp(String.raw`\b(?:pr[eé]stamo|loan|me\s+prest[oó])(?!\p{L})`, "iu");
+const REPAYMENT = new RegExp(String.raw`\b(?:pag(?:o|aste|ó|amos)|abon(?:o|aste)|payment|paid|repaid)(?!\p{L})`, "iu");
+const INSTALLMENT = new RegExp(
+    String.raw`\b(?:cuota|installment)\s+(?:n(?:ro|o|°|º)?\.?\s*)?(\d{1,3})(?:\s*(?:\/|de|of)\s*(\d{1,3})(?![\d.,]))?(?!\d)`,
+    "iu"
+);
+const BARE_AMOUNT = new RegExp(String.raw`^[^\S\n]+(\d+(?:[.,]\d+)*)(?![\d.,]*\s*%)`, "u");
+const NAMED_LINE = new RegExp(String.raw`^\s*(\p{Lu}[\p{L}'.-]*(?:\s+\p{Lu}[\p{L}'.-]*){0,3})\s*:`, "u");
+const NAMED_AFTER = new RegExp(
+    String.raw`\b(?:a|de|from|to|con|with)\s+(\p{Lu}\p{Ll}+(?:\s+\p{Lu}\p{Ll}+){0,2})(?![\p{L}.])`,
+    "u"
+);
 
 const POS_PREFIX = new RegExp(
     String.raw`^(?:sumup|sq|sqc|tst|pp|paypal|zettle|izettle|stripe|amzn(?: mktp)?)\s*\*\s*`,
@@ -196,6 +222,85 @@ function payee(named: string, tail: string): string | null {
     return CARD_REFERENCE.test(named) ? (PARENTHESIZED.exec(tail)?.[1] ?? null) : named;
 }
 
+function debtVerb(text: string, installment: DebtInstallment | null): DebtVerb | null {
+    if (USER_OWES.test(text)) {
+        return "borrowed";
+    }
+    if (USER_IS_OWED.test(text)) {
+        return "lent";
+    }
+    const loan = LOAN.test(text);
+    if (installment !== null || (loan && REPAYMENT.test(text))) {
+        return INCOMING.test(text) ? "gotPaidBack" : "paidBack";
+    }
+    return loan ? "borrowed" : null;
+}
+
+function debtAmount(text: string, installment: DebtInstallment | null): { amount: number; amountText: string } | null {
+    const money = chargeMoney(text);
+    if (money) {
+        const amount = amountOf(money[0].trim());
+        return amount !== null && amount > 0 ? { amount, amountText: money[0].trim() } : null;
+    }
+    const phrase = installment === null ? (USER_OWES.exec(text) ?? USER_IS_OWED.exec(text) ?? LOAN.exec(text)) : null;
+    const bare = phrase ? BARE_AMOUNT.exec(text.slice(phrase.index + phrase[0].length))?.[1] : undefined;
+    const amount = bare === undefined ? null : amountOf(bare);
+    return bare !== undefined && amount !== null && amount > 0 ? { amount, amountText: bare } : null;
+}
+
+function counterpartyOf(text: string): string | null {
+    for (const line of text.split("\n")) {
+        const named = NAMED_LINE.exec(line)?.[1];
+        if (named && detectCurrency(named) === null) {
+            return named;
+        }
+    }
+    const income = INCOMING.test(text);
+    const sender = income ? (SENT_BY.exec(text)?.[1] ?? RECEIVED_FROM.exec(text)?.[1]) : undefined;
+    const after = NAMED_AFTER.exec(text)?.[1];
+    return cleanMerchant(sender ?? (after && detectCurrency(after) === null ? after : null));
+}
+
+export function parseDebt(text: string): ParsedDebt | null {
+    if (DECLINED.test(text)) {
+        return null;
+    }
+    const counted = INSTALLMENT.exec(text);
+    const number = counted ? Number(counted[1]) : 0;
+    const of = counted?.[2] === undefined ? null : Number(counted[2]);
+    const installment = number > 0 ? { number, of: of !== null && of >= number ? of : null } : null;
+    const verb = debtVerb(text, installment);
+    const money = verb === null ? null : debtAmount(text, installment);
+    if (verb === null || money === null) {
+        return null;
+    }
+    return { ...money, counterparty: counterpartyOf(text), installment, verb };
+}
+
+export function mergeDebtRead(
+    text: string,
+    parsed: ParsedDebt | null,
+    read: NotificationRead | null
+): ParsedDebt | null {
+    if (read?.kind === "declined") {
+        return null;
+    }
+    if (read?.kind !== "debt" || read.debt === null) {
+        return parsed;
+    }
+    const amount = read.amount ?? parsed?.amount;
+    if (amount === undefined) {
+        return null;
+    }
+    return {
+        amount,
+        amountText: readCurrency(text, read.currency, amount) ?? sameAmountText(parsed, amount),
+        counterparty: cleanMerchant(read.merchant) ?? parsed?.counterparty ?? null,
+        installment: read.debt.installment ?? parsed?.installment ?? null,
+        verb: read.debt.verb,
+    };
+}
+
 // The AI read wins where it answered and the on-device parse fills what it left null; only a decline drops the push.
 export function mergeNotificationRead(
     text: string,
@@ -205,7 +310,7 @@ export function mergeNotificationRead(
     if (read === null) {
         return parsed;
     }
-    if (read.kind === "declined") {
+    if (read.kind === "declined" || read.kind === "debt") {
         return null;
     }
     // A missing purchase is worse than a statement logged by mistake, so "other" only defers to the parser.
@@ -226,7 +331,7 @@ export function mergeNotificationRead(
 
 // The parser's currency describes its own amount; when the AI read a different one (a push with two amounts), the
 // card's account settles the currency instead.
-function sameAmountText(parsed: ParsedNotification | null, amount: number): string {
+function sameAmountText(parsed: { amount: number; amountText: string } | null, amount: number): string {
     return parsed !== null && parsed.amount === amount ? parsed.amountText : String(amount);
 }
 

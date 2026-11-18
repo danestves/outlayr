@@ -52,7 +52,7 @@ describe("readNotification", () => {
         );
 
         await expect(runEdge(readNotification(model, SITEGROUND, "en-US"))).resolves.toStrictEqual({
-            read: { amount: null, currency: null, kind: "purchase", merchant: null },
+            read: { amount: null, currency: null, debt: null, kind: "purchase", merchant: null },
             status: "ok",
         });
     });
@@ -63,8 +63,30 @@ describe("readNotification", () => {
         );
 
         await expect(runEdge(readNotification(model, SITEGROUND, undefined))).resolves.toStrictEqual({
-            read: { amount: 22.99, currency: "USD", kind: "purchase", merchant: "SiteGround" },
+            read: { amount: 22.99, currency: "USD", debt: null, kind: "purchase", merchant: "SiteGround" },
             status: "ok",
+        });
+    });
+
+    it("keeps a debt only with its verb, and drops an installment count that cannot be", async () => {
+        const cuota = mockModel(
+            JSON.stringify({
+                amount: 15,
+                currency: null,
+                debt: { installment: { number: 2, of: 1 }, verb: "paidBack" },
+                kind: "debt",
+                merchant: null,
+            })
+        );
+        const bare = mockModel(
+            JSON.stringify({ amount: 30, currency: null, debt: null, kind: "debt", merchant: null })
+        );
+
+        await expect(runEdge(readNotification(cuota, "Pagaste la cuota 2 de $15", "es-VE"))).resolves.toMatchObject({
+            read: { debt: { installment: { number: 2, of: null }, verb: "paidBack" }, kind: "debt" },
+        });
+        await expect(runEdge(readNotification(bare, "Me debes $30", "es-VE"))).resolves.toMatchObject({
+            read: { debt: null, kind: "other" },
         });
     });
 

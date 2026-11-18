@@ -8,10 +8,17 @@ import { matchCardAccount } from "@/domain/match-card-account";
 import type {
     AutologAccess,
     AutologUsage,
+    NotificationDebt,
     PendingWriteLedgerEntry as LedgerEntry,
     WalletCard,
 } from "@/domain/meta-values";
-import { cleanMerchant, mergeNotificationRead, parseNotification } from "@/domain/parse-notification";
+import {
+    cleanMerchant,
+    mergeDebtRead,
+    mergeNotificationRead,
+    parseDebt,
+    parseNotification,
+} from "@/domain/parse-notification";
 import { translateNow } from "@/i18n/runtime";
 import type { NotificationReads } from "@/lib/notification-read";
 import { autologSourceOf } from "@/lib/queue-file";
@@ -150,6 +157,59 @@ export function readNotification(queued: PendingWrite, reads: NotificationReads 
         income: queued.income || parsed.income,
         note: parsed.merchant ?? "",
     };
+}
+
+export function readDebt(queued: PendingWrite, reads: NotificationReads | undefined): NotificationDebt | null {
+    if (!queued.text) {
+        return null;
+    }
+    const debt = mergeDebtRead(queued.text, parseDebt(queued.text), reads?.get(queued.id) ?? null);
+    if (!debt) {
+        return null;
+    }
+    return {
+        amount: debt.amount,
+        amountText: debt.amountText,
+        counterparty: debt.counterparty,
+        currency: queued.currency?.trim().toUpperCase() || detectCurrency(debt.amountText),
+        date: queued.date,
+        id: queued.id,
+        installment: debt.installment,
+        planId: null,
+        source: queued.card?.trim() || null,
+        text: queued.text,
+        verb: debt.verb,
+    };
+}
+
+export interface OpenPlan {
+    currency: string;
+    id: string;
+    installmentsTotal: number;
+    note: string;
+    rows: readonly { owed: number; remaining: number; sequence: number; status: "paid" | "partial" | "unpaid" }[];
+}
+
+export function matchInstallmentPlan(plans: readonly OpenPlan[], draft: NotificationDebt): string | null {
+    const { installment } = draft;
+    if (installment === null || draft.verb !== "paidBack") {
+        return null;
+    }
+    const due = plans.filter(
+        (plan) =>
+            (draft.currency === null || plan.currency === draft.currency) &&
+            (installment.of === null || plan.installmentsTotal === installment.of) &&
+            plan.rows.some(
+                (row) =>
+                    row.sequence === installment.number &&
+                    row.status !== "paid" &&
+                    (Math.abs(row.owed - draft.amount) <= AMOUNT_EPSILON ||
+                        Math.abs(row.remaining - draft.amount) <= AMOUNT_EPSILON)
+            )
+    );
+    const person = draft.counterparty?.trim().toLowerCase();
+    const named = due.length > 1 && person ? due.filter((plan) => plan.note.toLowerCase().includes(person)) : due;
+    return named.length === 1 ? (named[0]?.id ?? null) : null;
 }
 
 const dateOf = (entry: LedgerEntry) => entry.date ?? entry.at;

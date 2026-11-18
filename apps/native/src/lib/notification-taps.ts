@@ -4,12 +4,14 @@ import * as Schema from "effect/Schema";
 import type { Href } from "expo-router";
 
 import { readPlans } from "@/data/installments-core";
+import { findNotificationDebt } from "@/data/notification-debts";
 import { drainDevicePendingWrites } from "@/data/pending-writes";
 import { pendingWriteTxId } from "@/data/pending-writes-core";
 import { backfillRecurring } from "@/data/recurrence-backfill";
 import { getTransactionById } from "@/data/transactions-core";
 import { cardAccount, cardStillAsks, fileWaitingPurchases } from "@/data/wallet-state-core";
 import type { Database } from "@/db/client";
+import type { NotificationDebt } from "@/domain/meta-values";
 import { paywallHref } from "@/domain/paywall-trigger";
 
 import { warnAndContinue } from "./warn-and-continue";
@@ -104,11 +106,21 @@ const settleWalletWrites = (db: Database, walletWrite: string) =>
         Effect.andThen(pendingWriteTxId(db, walletWrite))
     );
 
+export function pushedDebtHref(debt: NotificationDebt): Href {
+    return debt.planId === null
+        ? { params: { fromPush: debt.id }, pathname: "/debts/new" }
+        : { params: { fromPush: debt.id, planId: debt.planId }, pathname: "/installments/pay" };
+}
+
 export const resolveWalletPushTap = Effect.fn("NotificationTaps.resolveWalletPush")(function* resolveWalletPushTap(
     db: Database,
     tap: WalletPushTap
 ) {
     const txId = (yield* settleWalletWrites(db, tap.walletWrite)) ?? (yield* settleWalletWrites(db, tap.walletWrite));
+    if (txId === tap.walletWrite) {
+        const pushed = findNotificationDebt(db, txId);
+        return pushed === null ? null : pushedDebtHref(pushed);
+    }
     const { card, pickCard } = tap;
     const unattached = txId !== null && getTransactionById(db, txId)?.accountId == null;
     const asks = pickCard === true && unattached && (card === undefined || (yield* cardStillAsks(db, card)));

@@ -22,8 +22,9 @@ import { debtTheirSide, newPersonCurrency } from "@/domain/debt-rate";
 import type { DebtRate } from "@/domain/debt-rate";
 import type { DebtVerb } from "@/domain/debts";
 import { addLocalMonths } from "@/domain/local-day";
+import type { NotificationDebt } from "@/domain/meta-values";
 import { formatFixed, minorUnitsFor, roundToMinorUnits } from "@/domain/money";
-import { numpadToNumber } from "@/domain/numpad";
+import { numberToNumpad, numpadToNumber } from "@/domain/numpad";
 import { formatRateFigure, pairQuotedInverse, pairUnitSymbols, quotePairRate } from "@/domain/transaction-entry-rate";
 import { quotedByBcv } from "@/domain/transaction-form-labels";
 import { marketRateFor } from "@/domain/transfer-rate-options";
@@ -34,7 +35,7 @@ import type { Language } from "@/i18n/languages";
 import { notifyFailure } from "@/lib/notify";
 import { useHaptics } from "@/lib/use-haptics";
 import { SILENT } from "@/state/atom-command";
-import { saveDebtCommand } from "@/state/debt-flow-commands";
+import { dropNotificationDebtCommand, saveDebtCommand } from "@/state/debt-flow-commands";
 import type { DebtDraft } from "@/state/planning-commands";
 import { rearmInstallmentReminders } from "@/state/surfaces-commands";
 import { useAtomAction } from "@/state/use-atom-action";
@@ -129,10 +130,11 @@ export interface NewDebtProps {
     onDirtyChange: (dirty: boolean) => void;
     onDone: () => void;
     personId?: string;
+    pushed?: NotificationDebt | null;
     verb?: DebtVerb;
 }
 
-export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialVerb }: NewDebtProps) {
+export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: initialVerb }: NewDebtProps) {
     const db = useDatabase();
     const openPaywall = useOpenPaywall();
     const t = useTranslation();
@@ -145,23 +147,27 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
     const payoffGate = usePayoffPlanGate();
     const nowMs = useNow();
 
-    const [name, setNameState] = useState("");
+    const [name, setNameState] = useState(pushed?.counterparty ?? "");
     const { lockedPerson, person, suggestions } = resolvePerson(people, personId, name);
 
-    const [verb, setVerb] = useState<DebtVerb>(initialVerb ?? "borrowed");
+    const [verb, setVerb] = useState<DebtVerb>(pushed?.verb ?? initialVerb ?? "borrowed");
     const [soldOnCredit, setSoldOnCredit] = useState(false);
     const [category, setCategory] = useState<Category | null>(null);
-    const [accountId, setAccountId] = useState<string | null>(() => getLastUsedAccount(db)?.id ?? banks[0]?.id ?? null);
+    const [accountId, setAccountId] = useState<string | null>(() =>
+        pushed ? null : (getLastUsedAccount(db)?.id ?? banks[0]?.id ?? null)
+    );
     const account = banks.find((row) => row.id === accountId) ?? null;
-    const [pickedCurrency, setPickedCurrency] = useState<string | null>(null);
-    const [amountText, setAmountTextState] = useState("");
+    const [pickedCurrency, setPickedCurrency] = useState<string | null>(pushed?.currency ?? null);
+    const [amountText, setAmountTextState] = useState(() =>
+        pushed ? numberToNumpad(pushed.amount, minorUnitsFor(pushed.currency ?? globalCurrency)) : ""
+    );
     const [theirText, setTheirText] = useState("");
     const setNewCurrency = (code: string) => {
         setPickedCurrency(code);
         setTheirText("");
     };
-    const [date, setDate] = useState(() => new Date());
-    const [note, setNoteState] = useState("");
+    const [date, setDate] = useState(() => (pushed ? new Date(pushed.date) : new Date()));
+    const [note, setNoteState] = useState(pushed?.text ?? "");
     const [payBackBy, setPayBackByState] = useState<Date | null>(null);
     const edits = { amountText, name, note, payBackBy };
     const edit = (change: Partial<typeof edits>) => {
@@ -242,6 +248,18 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
         SILENT
     );
 
+    const dropDraft = useAtomAction(
+        dropNotificationDebtCommand,
+        {
+            onFailure: (cause) => {
+                console.error("Failed to discard the notification draft", Cause.squash(cause));
+                haptics("error");
+            },
+            onSuccess: onDone,
+        },
+        SILENT
+    );
+
     const save = () => {
         if (person === null && peopleCapped) {
             openPaywall("people");
@@ -262,7 +280,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
             theirAmount: draft.theirAmount,
             verb: choice.verb,
         };
-        saveDebt({ db, debt, payBackBy });
+        saveDebt({ db, debt, fromPush: pushed?.id, payBackBy });
     };
     const handlers = useRef({ save });
     // oxlint-disable-next-line outlayr/react-effect-budget -- keeps the latest save behind the stable press handler the native header button registers once
@@ -290,6 +308,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, verb: initialV
         choices,
         currencySheet,
         date,
+        discard: pushed ? () => dropDraft({ db, id: pushed.id }) : null,
         failure,
         lockedPerson,
         name,

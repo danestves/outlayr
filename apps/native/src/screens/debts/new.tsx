@@ -74,8 +74,8 @@ export function NewDebt(props: NewDebtProps) {
     const headerHeight = use(HeaderHeightContext) ?? 0;
     const form = useNewDebtForm(props);
     const { choice, currency, soldOnCredit, theirCurrency } = form;
-    const nameState = useNativeState("");
-    const noteState = useNativeState("");
+    const nameState = useNativeState(form.name);
+    const noteState = useNativeState(form.note);
     const dateLocale = useDatePickerLocale();
 
     const hairline = [overlay({ color: withAlpha(colors.foreground, 0.08) })];
@@ -83,6 +83,15 @@ export function NewDebt(props: NewDebtProps) {
     return (
         <View style={{ backgroundColor: colors.groupedBackground, flex: 1 }}>
             <Stack.Toolbar placement="right">
+                {form.discard === null ? null : (
+                    <Stack.Toolbar.Button
+                        accessibilityLabel={t("debts.pushed.discard")}
+                        onPress={form.discard}
+                        tintColor={colors.danger}
+                    >
+                        <Stack.Toolbar.Icon {...toolbarIcon("delete")} />
+                    </Stack.Toolbar.Button>
+                )}
                 <Stack.Toolbar.Button
                     accessibilityLabel={t("common.save")}
                     disabled={!form.canSave}

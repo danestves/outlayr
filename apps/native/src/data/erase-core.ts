@@ -90,7 +90,7 @@ export const eraseLedger = Effect.fn("Erase.eraseLedger")(function* eraseLedger(
             yield* query(scope, () =>
                 db.update(accounts).set({ checkedAt: null, updatedAt: now }).where(isNotNull(accounts.checkedAt))
             );
-            yield* Meta.remove(db, ["autologWaiting"]);
+            yield* Meta.remove(db, ["autologWaiting", "notificationDebts"]);
 
             if (scope !== "everything") {
                 return;

@@ -16,6 +16,7 @@ import {
 } from "@/data/debts-core";
 import { installmentsRepo } from "@/data/installments-core";
 import type { InstallmentFeeInput, InstallmentPaymentInput } from "@/data/installments-core";
+import { dropNotificationDebt } from "@/data/notification-debts";
 import { livePayoffPlanCount, setPayoffPlan } from "@/data/payoff-plans";
 import { savingsGoalsRepo } from "@/data/savings-goals-core";
 import type { SavingsGoalPatch } from "@/data/savings-goals-core";
@@ -177,8 +178,10 @@ export const removeInstallmentFeeCommand = planningCommand(
 
 export const recordInstallmentPaymentCommand = planningCommand(
     "record-installment-payment",
-    (input: { db: Database; payment: InstallmentPaymentInput }) =>
-        installmentsRepo.recordPayment(input.db, input.payment)
+    (input: { db: Database; fromPush?: string; payment: InstallmentPaymentInput }) =>
+        installmentsRepo
+            .recordPayment(input.db, input.payment)
+            .pipe(Effect.tap(() => dropNotificationDebt(input.db, input.fromPush)))
 );
 
 export const updateInstallmentCommand = planningCommand(
