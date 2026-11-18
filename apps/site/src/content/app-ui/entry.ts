@@ -62,6 +62,13 @@ export const entryCopy = {
         fr: "Charges",
     }),
     "common.next": t({ en: "Next", de: "Weiter", es: "Siguiente", pt: "Próximo", fr: "Suivant" }),
+    "log.add.installmentsAny": t({
+        en: "From any app that sells in installments",
+        de: "Aus jeder App, die auf Raten verkauft",
+        es: "Desde cualquier app que venda en cuotas",
+        pt: "De qualquer app que venda parcelado",
+        fr: "Depuis toute app qui vend en plusieurs fois",
+    }),
     "log.add.installmentsApps": t({
         en: "{apps} and more",
         de: "{apps} und mehr",
