@@ -22,6 +22,16 @@ const horizon = {
                     }),
                 },
                 {
+                    label: t({ en: "Bank", de: "Bank", es: "Banco", pt: "Banco", fr: "Banque" }),
+                    text: t({
+                        en: "Outlayr never links your bank or asks for a bank login.",
+                        de: "Outlayr verknüpft nie dein Bankkonto und fragt nie nach deinem Bank-Login.",
+                        es: "Outlayr nunca conecta tu banco ni te pide tu usuario del banco.",
+                        pt: "O Outlayr nunca conecta seu banco nem pede o login do banco.",
+                        fr: "Outlayr ne connecte jamais votre banque et ne demande jamais vos identifiants bancaires.",
+                    }),
+                },
+                {
                     label: t({ en: "Languages", de: "Sprachen", es: "Idiomas", pt: "Idiomas", fr: "Langues" }),
                     text: t({
                         en: "English, Spanish, Portuguese, French, and German.",
@@ -29,6 +39,16 @@ const horizon = {
                         es: "Inglés, español, portugués, francés y alemán.",
                         pt: "Inglês, espanhol, português, francês e alemão.",
                         fr: "Anglais, espagnol, portugais, français et allemand.",
+                    }),
+                },
+                {
+                    label: t({ en: "Currencies", de: "Währungen", es: "Monedas", pt: "Moedas", fr: "Devises" }),
+                    text: t({
+                        en: "165 currencies. Totals convert to your main currency at the rate from the day of each purchase.",
+                        de: "165 Währungen. Summen werden zum Kurs vom Tag jedes Einkaufs in deine Hauptwährung umgerechnet.",
+                        es: "165 monedas. Los totales se convierten a tu moneda principal con la tasa del día de cada compra.",
+                        pt: "165 moedas. Os totais são convertidos para sua moeda principal pela cotação do dia de cada compra.",
+                        fr: "165 devises. Les totaux sont convertis dans votre devise principale au taux du jour de chaque achat.",
                     }),
                 },
             ],
