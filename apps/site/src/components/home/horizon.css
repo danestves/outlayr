@@ -1892,17 +1892,27 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
         z-index: 41;
     }
 
-    .hz-edge > :last-child {
+    .hz-edge > :nth-child(2) {
         background-color: var(--hz-night);
     }
 
-    .hz-edge:not([data-ground="night"]) > :last-child,
+    .hz-edge > :nth-child(3) {
+        display: none;
+        background-color: var(--hz-sun-mid);
+    }
+
+    .hz-edge:not([data-ground="night"]) > :nth-child(2),
     .hz-edge[data-ground="night"] > :first-child {
         display: none;
     }
 
-    .hz-install:not([data-past]) ~ .hz-edge[data-edge="bottom"] {
+    .hz-install:not([data-tint]) ~ .hz-edge[data-edge="bottom"],
+    .hz-install:not([data-past]) ~ .hz-edge[data-edge="bottom"] > * {
         display: none;
+    }
+
+    .hz-install:not([data-past]) ~ .hz-edge[data-edge="bottom"] > :nth-child(3) {
+        display: block;
     }
 }
 

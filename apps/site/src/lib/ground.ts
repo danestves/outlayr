@@ -1,42 +1,29 @@
-const RESIZE_MS = 150;
-
 export function watchGround(target: HTMLElement, lineAt: () => number) {
-    const night = new Set<Element>();
-    let observer: IntersectionObserver | null = null;
-    let timer = 0;
-    const build = () => {
-        observer?.disconnect();
-        night.clear();
-        const line = Math.round(lineAt());
-        observer = new IntersectionObserver(
-            (entries) => {
-                for (const entry of entries) {
-                    if (entry.isIntersecting) {
-                        night.add(entry.target);
-                    } else {
-                        night.delete(entry.target);
-                    }
-                }
-                target.dataset.ground = night.size > 0 ? "night" : "day";
-            },
-            { rootMargin: `${-line}px 0px ${line + 1 - innerHeight}px 0px` }
-        );
-        for (const ground of document.querySelectorAll("[data-night-ground]")) {
-            observer.observe(ground);
+    const grounds = [...document.querySelectorAll("[data-night-ground]")];
+    let frame = 0;
+    const paint = () => {
+        frame = 0;
+        const line = lineAt();
+        const night = grounds.some((ground) => {
+            const { bottom, top } = ground.getBoundingClientRect();
+            return top <= line && bottom > line;
+        });
+        const next = night ? "night" : "day";
+        if (target.dataset.ground !== next) {
+            target.dataset.ground = next;
         }
     };
-    const resize = () => {
-        clearTimeout(timer);
-        timer = window.setTimeout(build, RESIZE_MS);
+    const schedule = () => {
+        frame ||= requestAnimationFrame(paint);
     };
     target.dataset.ground = "day";
-    const frame = requestAnimationFrame(build);
-    addEventListener("resize", resize, { passive: true });
+    schedule();
+    addEventListener("scroll", schedule, { passive: true });
+    addEventListener("resize", schedule, { passive: true });
     return () => {
         cancelAnimationFrame(frame);
-        clearTimeout(timer);
-        removeEventListener("resize", resize);
-        observer?.disconnect();
+        removeEventListener("scroll", schedule);
+        removeEventListener("resize", schedule);
         delete target.dataset.ground;
     };
 }
