@@ -275,6 +275,20 @@ const horizon = {
             }),
         },
         how: {
+            pause: t({
+                en: "Pause",
+                de: "Pausieren",
+                es: "Pausar",
+                pt: "Pausar",
+                fr: "Mettre en pause",
+            }),
+            play: t({
+                en: "Play",
+                de: "Abspielen",
+                es: "Reproducir",
+                pt: "Reproduzir",
+                fr: "Lire",
+            }),
             label: t({
                 en: "Ways to log",
                 de: "Wege zum Erfassen",

@@ -711,6 +711,22 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
     transform: scaleX(1);
 }
 
+@media (prefers-reduced-motion: no-preference) {
+    .hz-way[aria-selected="true"] .hz-way-bar[data-take] {
+        animation: hz-way-fill var(--film) linear both;
+    }
+}
+
+@keyframes hz-way-fill {
+    from {
+        transform: scaleX(0);
+    }
+
+    to {
+        transform: scaleX(1);
+    }
+}
+
 .hz-play {
     justify-self: end;
     width: 100%;
@@ -718,12 +734,52 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 }
 
 .hz-capture-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
     width: 100%;
     max-width: 616px;
     aspect-ratio: 1;
     overflow: clip;
     border-radius: 32px;
     background: #e4e2dc;
+}
+
+.hz-capture-phone {
+    width: calc(90% * 428 / 900);
+}
+
+.hz-capture-film {
+    display: contents;
+}
+
+.hz-capture-film:not([data-on]) {
+    visibility: hidden;
+}
+
+.hz-section:is([data-paused], [data-away]) .hz-capture :is([data-take], [data-take] *) {
+    animation-play-state: paused;
+}
+
+.hz-capture-pause {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    background: var(--hz-card);
+    box-shadow: var(--hz-shadow-tab);
+    color: var(--color-foreground);
+    fill: currentColor;
+    cursor: pointer;
+}
+
+.hz-capture-pause:focus-visible {
+    outline: 2px solid var(--color-tint);
+    outline-offset: 2px;
 }
 
 .hz-caption {

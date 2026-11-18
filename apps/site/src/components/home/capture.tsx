@@ -1,35 +1,101 @@
-import type { KeyboardEvent } from "react";
+import type { AnimationEvent, KeyboardEvent, MouseEvent } from "react";
 import { useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { CaptureFilm } from "./slots/capture-film";
-import type { CaptureWay } from "./slots/capture-film";
+import { CAPTURE_WAYS, FILM_SECONDS } from "@/components/app-ui/capture-timing";
 
-const WAYS = ["type", "say", "snap"] as const satisfies readonly CaptureWay[];
+import { CaptureFilm, playWay } from "./slots/capture-film";
 
 const STEP = { ArrowDown: 1, ArrowLeft: -1, ArrowRight: 1, ArrowUp: -1 } as const;
+const IN_VIEW = 0.35;
 
 function isStep(key: string): key is keyof typeof STEP {
     return Object.hasOwn(STEP, key);
 }
 
+function nextWay(current: number, auto: boolean): number | null {
+    const next = current + 1;
+    return auto && next < CAPTURE_WAYS.length ? next : null;
+}
+
+function watch(section: HTMLElement | null) {
+    const stage = section?.querySelector(".hz-capture-stage");
+    if (!section || !stage) {
+        return;
+    }
+    let away = true;
+    const sync = () => section.toggleAttribute("data-away", away || document.hidden);
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+            away = !entry?.isIntersecting;
+            const way = section.querySelector<HTMLElement>('[aria-selected="true"] [data-way]')?.dataset.way;
+            if (!away && way && !section.querySelector("[data-take]")) {
+                playWay(section, way);
+            }
+            sync();
+        },
+        { threshold: IN_VIEW }
+    );
+    observer.observe(stage);
+    document.addEventListener("visibilitychange", sync);
+    sync();
+    return () => {
+        observer.disconnect();
+        document.removeEventListener("visibilitychange", sync);
+    };
+}
+
 export function Capture() {
     const { how } = useIntlayer("horizon");
     const [current, setCurrent] = useState(0);
-    const way = WAYS[current] ?? "type";
+    const [auto, setAuto] = useState(true);
+    const [paused, setPaused] = useState(false);
+    const way = CAPTURE_WAYS[current] ?? "type";
+
+    const select = (target: HTMLElement, index: number) => {
+        const section = target.closest("section");
+        setCurrent(index);
+        if (section) {
+            playWay(section, CAPTURE_WAYS[index] ?? "type");
+        }
+    };
+
+    const pick = (event: MouseEvent<HTMLButtonElement>, index: number) => {
+        setAuto(false);
+        select(event.currentTarget, index);
+    };
 
     const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
         if (!isStep(event.key)) {
             return;
         }
         event.preventDefault();
-        const next = (current + STEP[event.key] + WAYS.length) % WAYS.length;
-        setCurrent(next);
-        document.querySelector<HTMLButtonElement>(`#way-${WAYS[next]}`)?.focus();
+        const next = (current + STEP[event.key] + CAPTURE_WAYS.length) % CAPTURE_WAYS.length;
+        setAuto(false);
+        select(event.currentTarget, next);
+        document.querySelector<HTMLButtonElement>(`#way-${CAPTURE_WAYS[next]}`)?.focus();
+    };
+
+    const onAnimationEnd = (event: AnimationEvent<HTMLDivElement>) => {
+        if (event.animationName !== "capture-clock") {
+            return;
+        }
+        const next = nextWay(current, auto);
+        if (next === null) {
+            setAuto(false);
+            return;
+        }
+        select(event.currentTarget, next);
     };
 
     return (
-        <section aria-labelledby="how-title" className="hz-section" id="how">
+        <section
+            aria-labelledby="how-title"
+            className="hz-section"
+            data-paused={paused || undefined}
+            id="how"
+            ref={watch}
+        >
             <div className="hz-container hz-split hz-capture">
                 <div data-reveal="group">
                     <h2 className="hz-head hz-r" id="how-title">
@@ -42,14 +108,14 @@ export function Capture() {
                         style={{ "--i": "1", "--k": `${current}` }}
                     >
                         <li aria-hidden="true" className="hz-ways-thumb" />
-                        {WAYS.map((id, index) => (
+                        {CAPTURE_WAYS.map((id, index) => (
                             <li className="contents" key={id} role="presentation">
                                 <button
                                     aria-controls="how-stage"
                                     aria-selected={index === current}
                                     className="hz-way"
                                     id={`way-${id}`}
-                                    onClick={() => setCurrent(index)}
+                                    onClick={(event) => pick(event, index)}
                                     onKeyDown={onKeyDown}
                                     role="tab"
                                     tabIndex={index === current ? 0 : -1}
@@ -60,7 +126,12 @@ export function Capture() {
                                         <span className="sr-only">: </span>
                                         {how.ways[id].line}
                                     </span>
-                                    <span aria-hidden="true" className="hz-way-bar" />
+                                    <span
+                                        aria-hidden="true"
+                                        className="hz-way-bar"
+                                        data-way={id}
+                                        style={{ "--film": `${FILM_SECONDS[id]}s` }}
+                                    />
                                 </button>
                             </li>
                         ))}
@@ -71,10 +142,25 @@ export function Capture() {
                         aria-labelledby={`way-${way}`}
                         className="hz-capture-stage hz-r"
                         id="how-stage"
+                        onAnimationEnd={onAnimationEnd}
                         role="tabpanel"
                         style={{ "--i": "2" }}
                     >
                         <CaptureFilm way={way} />
+                        <button
+                            aria-label={paused ? how.play.value : how.pause.value}
+                            className="hz-capture-pause"
+                            onClick={() => setPaused(!paused)}
+                            type="button"
+                        >
+                            <svg aria-hidden="true" height="14" viewBox="0 0 14 14" width="14">
+                                {paused ? (
+                                    <path d="M3.5 2.2v9.6a.6.6 0 0 0 .9.5l8-4.8a.6.6 0 0 0 0-1L4.4 1.7a.6.6 0 0 0-.9.5Z" />
+                                ) : (
+                                    <path d="M3 2h2.6v10H3zM8.4 2H11v10H8.4z" />
+                                )}
+                            </svg>
+                        </button>
                     </div>
                     <p aria-hidden="true" className="hz-caption">
                         {how.ways[way].line}
