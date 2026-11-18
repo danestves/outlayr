@@ -523,7 +523,7 @@ export function scanFigures(locale: CanvasProps["locale"]) {
     };
 }
 
-function scanLabel(step: ScanStep, locale: CanvasProps["locale"]) {
+export function scanLabel(step: ScanStep, locale: CanvasProps["locale"]) {
     const { labels } = getIntlayer("appUi", locale);
     const figures = scanFigures(locale);
     if (step === "intro") {

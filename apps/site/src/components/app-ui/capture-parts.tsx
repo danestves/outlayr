@@ -15,13 +15,16 @@ const CLOSE = { icon: 18, left: 342, size: 44, top: 78 } as const;
 
 export type FrameStyle = CSSProperties & Record<`--${string}`, string>;
 
-export function frameTimes(enter: number, leave?: number, fade?: number): FrameStyle {
+export function frameTimes(enter: number, leave?: number, fade?: number, fadeOut?: number): FrameStyle {
     const style: FrameStyle = { "--in": `${enter}s` };
     if (leave !== undefined) {
         style["--out"] = `${leave}s`;
     }
     if (fade !== undefined) {
         style["--fade"] = `${fade}s`;
+    }
+    if (fadeOut !== undefined) {
+        style["--fade-out"] = `${fadeOut}s`;
     }
     return style;
 }
@@ -30,7 +33,7 @@ export function frameAttrs(style?: FrameStyle) {
     if (style === undefined) {
         return {};
     }
-    return { "data-frame": style["--out"] === undefined ? "hold" : "swap" };
+    return { "data-cue": style["--out"] === undefined ? "hold" : "swap" };
 }
 
 export function ModalBackdrop() {
@@ -64,7 +67,11 @@ export function ModalBody({
     style?: FrameStyle;
 }) {
     return (
-        <div className={`absolute inset-x-0 bottom-0 ${className}`} style={{ top: SHEET.top + MODAL.close, ...style }}>
+        <div
+            className={`absolute inset-x-0 bottom-0 ${className}`}
+            {...frameAttrs(style)}
+            style={{ top: SHEET.top + MODAL.close, ...style }}
+        >
             {children}
         </div>
     );
@@ -164,6 +171,7 @@ export function OriSprite({
                 <img
                     alt=""
                     className={className}
+                    {...frameAttrs(style)}
                     decoding="async"
                     height={ORI.size * ORI.rows}
                     loading="lazy"

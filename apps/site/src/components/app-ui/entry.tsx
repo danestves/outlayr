@@ -69,19 +69,19 @@ function Curtain({ state }: { state: EntryState }) {
     );
 }
 
-function sheetLabel(state: EntryState, now: Date, locale: Locale) {
+export function sheetLabel(state: EntryState, now: Date, locale: Locale) {
     return interpolate(getIntlayer("appUi", locale).labels.entrySheet, {
         sentence: sentenceText(state, now, locale, appTranslator(locale)),
     });
 }
 
-function NewEntrySheet({ now, state }: { now: Date; state: EntryState }) {
+export function NewEntrySheet({ backdrop = true, now, state }: { backdrop?: boolean; now: Date; state: EntryState }) {
     const { t } = useReplica();
     const glass = useCurtainGlass(state);
     const keyboard = state.surface === "keyboard";
     return (
         <>
-            <Sheet bottomRadius={DISPLAY_CORNER} glass={glass} title={t("transaction.new.title")}>
+            <Sheet backdrop={backdrop} bottomRadius={DISPLAY_CORNER} glass={glass} title={t("transaction.new.title")}>
                 <Curtain state={state} />
                 <div className="absolute inset-x-0 px-5 pt-8" style={{ top: CONTENT_TOP - SHEET.top }}>
                     <EntrySentence now={now} state={state} />

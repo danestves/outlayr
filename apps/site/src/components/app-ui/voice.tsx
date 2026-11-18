@@ -15,6 +15,7 @@ import {
     ORI_SETTLED,
     ORI_SIZE,
     OriSprite,
+    frameAttrs,
 } from "./capture-parts";
 import type { FrameStyle } from "./capture-parts";
 import { formatDayTitle } from "./dates";
@@ -201,7 +202,7 @@ export function draftText(draft: VoiceDraft, t: AppT): string {
 
 export function StatusLine({ children, style }: { children: string; style?: FrameStyle }) {
     return (
-        <div data-frame={style ? "" : undefined} style={style}>
+        <div {...frameAttrs(style)} style={style}>
             <span className="font-sans-medium text-muted text-center text-lg">{children}</span>
         </div>
     );
@@ -211,7 +212,7 @@ export function Hint({ style }: { style?: FrameStyle }) {
     const { t } = useReplica();
     const example = interpolate(t("voice.hint.example"), HINT_EXAMPLE);
     return (
-        <div data-frame={style ? "" : undefined} style={style}>
+        <div {...frameAttrs(style)} style={style}>
             <span className="text-grammar text-caption font-sans">{interpolate(t("voice.hint"), { example })}</span>
         </div>
     );
@@ -236,7 +237,7 @@ export function LiveCaption({
 }) {
     const { head, last } = captionText(take, words);
     return (
-        <div data-frame={style ? "" : undefined} style={style}>
+        <div {...frameAttrs(style)} style={style}>
             <span className="text-muted font-sans-medium text-lg" style={LARGE}>
                 {head}
                 <span className="text-foreground font-sans-semibold">{last}</span>
@@ -248,7 +249,7 @@ export function LiveCaption({
 
 export function HeardSentence({ style, take }: { style?: FrameStyle; take: Take }) {
     return (
-        <div className="px-4" data-frame={style ? "" : undefined} style={style}>
+        <div className="px-4" {...frameAttrs(style)} style={style}>
             <span className="text-subtle text-callout text-center font-sans">
                 “
                 {take.segments.map((segment, index) =>
@@ -272,7 +273,7 @@ export function HeardSentence({ style, take }: { style?: FrameStyle; take: Take 
 export function VoiceButtons({ style }: { style?: FrameStyle }) {
     const { t } = useReplica();
     return (
-        <div data-frame={style ? "" : undefined} style={style}>
+        <div {...frameAttrs(style)} style={style}>
             <ButtonPair
                 primary={<CaptureButton variant="primary">{t("voice.action.save")}</CaptureButton>}
                 secondary={<CaptureButton variant="secondary">{t("voice.action.edit")}</CaptureButton>}
@@ -284,7 +285,7 @@ export function VoiceButtons({ style }: { style?: FrameStyle }) {
 
 export function VoiceContent({ children, style }: { children: ReactNode; style?: FrameStyle }) {
     return (
-        <div className="absolute inset-x-0 top-0 gap-5 px-6 pt-6" data-frame={style ? "" : undefined} style={style}>
+        <div className="absolute inset-x-0 top-0 gap-5 px-6 pt-6" {...frameAttrs(style)} style={style}>
             {children}
         </div>
     );
@@ -317,7 +318,7 @@ function statusKey(phase: VoicePhase) {
     return phase === "ready" || phase === "listening" ? "voice.state.listening" : "voice.state.thinking";
 }
 
-function voiceLabel(phase: VoicePhase, locale: Locale) {
+export function voiceLabel(phase: VoicePhase, locale: Locale) {
     const t = appTranslator(locale);
     const { labels } = getIntlayer("appUi", locale);
     const { fix, take } = voiceTake(locale);

@@ -1,4 +1,7 @@
+import type { ReactNode } from "react";
+
 import type { CanvasProps } from "./canvas";
+import { SayFilm, SnapFilm, TypeFilm } from "./capture";
 import { ScanScreen } from "./scan";
 import type { ScanStep } from "./scan";
 import { VoiceScreen } from "./voice";
@@ -14,7 +17,42 @@ const scan = (step: ScanStep) =>
         return <ScanScreen {...canvas} step={step} />;
     };
 
+function Take({ children }: { children: ReactNode }) {
+    return (
+        <div className="contents" data-take="play">
+            {children}
+        </div>
+    );
+}
+
+function SayTake(canvas: CanvasProps) {
+    return (
+        <Take>
+            <SayFilm {...canvas} />
+        </Take>
+    );
+}
+
+function SnapTake(canvas: CanvasProps) {
+    return (
+        <Take>
+            <SnapFilm {...canvas} />
+        </Take>
+    );
+}
+
+function TypeTake(canvas: CanvasProps) {
+    return (
+        <Take>
+            <TypeFilm {...canvas} />
+        </Take>
+    );
+}
+
 export const screens = {
+    "film-say": SayTake,
+    "film-snap": SnapTake,
+    "film-type": TypeTake,
     "scan-intro": scan("intro"),
     "scan-reading": scan("reading"),
     "scan-review": scan("review"),
