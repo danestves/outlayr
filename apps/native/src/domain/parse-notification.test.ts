@@ -516,6 +516,7 @@ describe("parseDebt", () => {
             "Compra aprobada por $90,00 en 3 cuotas sin interés en Falabella",
             "Compra aprobada por $90,00 en Falabella, cuota 1 de 3",
             "Compra pagada por $90,00 en Falabella, cuota 1 de 3",
+            "Purchase payment of $90.00 at Falabella, installment 1 of 3",
             "Solicita tu préstamo por $5.000 en minutos",
             "Te debo la pizza",
             "Pago de préstamo por $50,00 rechazado",
