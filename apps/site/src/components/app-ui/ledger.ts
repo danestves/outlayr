@@ -372,7 +372,8 @@ export function sparkline(now: Date, measure: LogMeasure): number[] {
     });
 }
 
-const toUsd = (account: DemoAccount) => (account.currency === "VES" ? account.balance / VES_PER_USD : account.balance);
+export const toUsd = (account: DemoAccount) =>
+    account.currency === "VES" ? account.balance / VES_PER_USD : account.balance;
 
 export interface AccountsOverview {
     count: number;
