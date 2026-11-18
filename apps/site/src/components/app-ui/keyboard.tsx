@@ -17,25 +17,33 @@ const LETTER_ROWS = [
 ] as const;
 const BOTTOM_ROWS = { controls: 760, letters: 706 } as const;
 const BASELINE = 28;
-const LETTER_SIZE = { lower: 24, upper: 22 } as const;
+const LETTER = {
+    lower: { size: 24, width: "normal" },
+    upper: { size: 22, width: "'wdth' 88" },
+} as const;
+const NUMBERS = { baseline: 27, size: 18 } as const;
+const RETURN_GLYPH_TOP = 12;
+const RIM = { fade: 1.33, fill: 3.67, start: 0.33 } as const;
 const DIVIDERS = [133, 267] as const;
 
 const PALETTE = {
     dark: {
         divider: "#323133",
-        edge: "rgba(0, 0, 0, 0.45)",
+        edge: "#141311",
+        fade: "#272624",
         fill: "#222120",
         ink: "#ffffff",
         key: "#464544",
-        rim: "rgba(255, 255, 255, 0.16)",
+        rim: "#41403e",
     },
     light: {
         divider: "#d1d2d6",
-        edge: "rgba(0, 0, 0, 0.12)",
+        edge: "#d2d1ce",
+        fade: "#e3e4e8",
         fill: "#e0e1e5",
         ink: "#000000",
         key: "#ffffff",
-        rim: "rgba(255, 255, 255, 0.7)",
+        rim: "#f1f1f5",
     },
 } as const satisfies Record<AppTheme, Record<string, string>>;
 
@@ -62,10 +70,20 @@ function Key({
     );
 }
 
-function Label({ children, size }: { children: string; size: number }) {
+function Label({
+    baseline = BASELINE,
+    children,
+    size,
+    width = "normal",
+}: {
+    baseline?: number;
+    children: string;
+    size: number;
+    width?: string;
+}) {
     return (
-        <div className="absolute inset-x-0 items-center" style={{ top: BASELINE - fontAscent(size) }}>
-            <SystemText size={size} weight={400}>
+        <div className="absolute inset-x-0 items-center" style={{ top: baseline - fontAscent(size) }}>
+            <SystemText size={size} style={{ fontVariationSettings: width }} weight={400}>
                 {children}
             </SystemText>
         </div>
@@ -101,26 +119,30 @@ function Chevron({ ink }: { ink: string }) {
 
 function Smile({ fill, ink }: { fill: string; ink: string }) {
     return (
-        <svg height={26.67} viewBox="0 0 26.67 26.67" width={26.67}>
-            <circle cx={13.33} cy={13.33} fill={ink} r={13.33} />
-            <ellipse cx={9.2} cy={10.4} fill={fill} rx={1.9} ry={2.6} />
-            <ellipse cx={17.47} cy={10.4} fill={fill} rx={1.9} ry={2.6} />
-            <path d="M6.8 15.4C7.6 18.9 10.2 21.1 13.33 21.1C16.47 21.1 19.07 18.9 19.87 15.4Z" fill={fill} />
+        <svg fill="none" height={26.67} viewBox="0 0 26.67 26.67" width={26.67}>
+            <circle cx={13.33} cy={13.17} r={12.5} stroke={ink} strokeWidth={1.6} />
+            <ellipse cx={9.33} cy={10} fill={ink} rx={1} ry={1.45} />
+            <ellipse cx={17.33} cy={10} fill={ink} rx={1} ry={1.45} />
+            <path
+                d="M5 14.5Q13.33 16.3 21.67 14.5C21.67 19.2 17.9 22.4 13.33 22.4C8.77 22.4 5 19.2 5 14.5Z"
+                fill={ink}
+            />
+            <path d="M6.4 15.8Q13.33 17.6 20.27 15.8L19.9 17.5Q13.33 18.6 6.77 17.5Z" fill={fill} />
         </svg>
     );
 }
 
 function Mic({ ink }: { ink: string }) {
     return (
-        <svg fill="none" height={28} viewBox="0 0 18.67 28" width={18.67}>
-            <rect height={17} rx={4.85} stroke={ink} strokeWidth={1.7} width={9.7} x={4.49} y={0.85} />
+        <svg fill="none" height={28.33} viewBox="0 0 18.67 28.33" width={18.67}>
+            <rect height={16.6} rx={3.63} stroke={ink} strokeWidth={1.4} width={7.27} x={5.7} y={1.03} />
             <path
-                d="M0.85 12.6C0.85 18 4.6 21.8 9.33 21.8C14.07 21.8 17.82 18 17.82 12.6"
+                d="M0.93 11.2V15.4C0.93 19.6 4.7 22.2 9.33 22.2C13.96 22.2 17.73 19.6 17.73 15.4V11.2"
                 stroke={ink}
                 strokeLinecap="round"
-                strokeWidth={1.7}
+                strokeWidth={1.4}
             />
-            <path d="M9.33 21.8V27.15" stroke={ink} strokeLinecap="round" strokeWidth={1.7} />
+            <path d="M9.33 22.2V27.4M3.4 27.4H15.27" stroke={ink} strokeLinecap="round" strokeWidth={1.5} />
         </svg>
     );
 }
@@ -128,14 +150,14 @@ function Mic({ ink }: { ink: string }) {
 export function Keyboard({ upper }: { upper: boolean }) {
     const { theme } = useReplica();
     const palette = PALETTE[theme];
-    const size = upper ? LETTER_SIZE.upper : LETTER_SIZE.lower;
+    const letter = upper ? LETTER.upper : LETTER.lower;
     return (
         <div
             className="absolute inset-x-0 bottom-0"
             style={{
-                background: palette.fill,
+                background: `linear-gradient(${palette.rim} ${RIM.start}px, ${palette.fade} ${RIM.fade}px, ${palette.fill} ${RIM.fill}px) ${palette.fill}`,
                 borderRadius: `27px 27px ${DISPLAY_CORNER}px ${DISPLAY_CORNER}px`,
-                boxShadow: `0 0 0 0.33px ${palette.edge}, inset 0 0.67px 0 ${palette.rim}`,
+                boxShadow: `inset 0 0 0 ${RIM.start}px ${palette.edge}`,
                 color: palette.ink,
                 top: KEYBOARD_TOP,
             }}
@@ -148,9 +170,11 @@ export function Keyboard({ upper }: { upper: boolean }) {
                 />
             ))}
             {LETTER_ROWS.map((row) =>
-                [...row.keys].map((letter, column) => (
-                    <Key color={palette.key} key={letter} left={row.left + column * PITCH} top={row.top - KEYBOARD_TOP}>
-                        <Label size={size}>{upper ? letter.toUpperCase() : letter}</Label>
+                [...row.keys].map((key, column) => (
+                    <Key color={palette.key} key={key} left={row.left + column * PITCH} top={row.top - KEYBOARD_TOP}>
+                        <Label size={letter.size} width={letter.width}>
+                            {upper ? key.toUpperCase() : key}
+                        </Label>
                     </Key>
                 ))
             )}
@@ -161,16 +185,20 @@ export function Keyboard({ upper }: { upper: boolean }) {
                 <DeleteLeft color={palette.ink} width={20.33} />
             </Key>
             <Key color={palette.key} left={7.33} top={BOTTOM_ROWS.controls - KEYBOARD_TOP} width={91.33}>
-                <Label size={18}>123</Label>
+                <Label baseline={NUMBERS.baseline} size={NUMBERS.size}>
+                    123
+                </Label>
             </Key>
             <Key color={palette.key} left={106} top={BOTTOM_ROWS.controls - KEYBOARD_TOP} width={190} />
             <Key color={palette.key} left={303.33} top={BOTTOM_ROWS.controls - KEYBOARD_TOP} width={91.67}>
-                <Chevron ink={palette.ink} />
+                <div className="absolute inset-x-0 items-center" style={{ top: RETURN_GLYPH_TOP }}>
+                    <Chevron ink={palette.ink} />
+                </div>
             </Key>
             <div className="absolute" style={{ left: 29, top: 820.67 - KEYBOARD_TOP }}>
                 <Smile fill={palette.fill} ink={palette.ink} />
             </div>
-            <div className="absolute" style={{ left: 350, top: 819 - KEYBOARD_TOP }}>
+            <div className="absolute" style={{ left: 350, top: 818.67 - KEYBOARD_TOP }}>
                 <Mic ink={palette.ink} />
             </div>
         </div>

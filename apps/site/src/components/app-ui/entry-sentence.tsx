@@ -30,6 +30,10 @@ const TEXT_SIZE = 26;
 const NATIVE_TIGHT = "-0.3px";
 const CHIP_TEXT = 15;
 const MEASURE_SLACK = 1 / 6;
+const CARET = { inset: 2, overhang: 1, width: 2 } as const;
+const CHIP_RADIUS = 17;
+const NATIVE_DASH = "3 3";
+const HAIRLINE_INSET = -0.5;
 const RULE_BOTTOM = 7;
 const TILE = 20;
 const SWAP_GLYPH = 13;
@@ -161,11 +165,11 @@ function Input({ placeholder, value }: { placeholder: string; value: string }) {
                     className="bg-tint absolute rounded-full"
                     data-entry-caret=""
                     style={{
-                        bottom: 5,
+                        bottom: CARET.inset,
                         left: value === "" ? 0 : undefined,
-                        right: value === "" ? undefined : 0,
-                        top: 6,
-                        width: 2,
+                        right: value === "" ? undefined : CARET.overhang,
+                        top: CARET.inset,
+                        width: CARET.width,
                     }}
                 />
             </div>
@@ -370,16 +374,41 @@ function factChips(state: EntryState, t: AppT): FactChip[] {
     ];
 }
 
+function DashedOutline() {
+    return (
+        <svg
+            className="absolute"
+            fill="none"
+            overflow="visible"
+            style={{
+                height: `calc(100% + ${-2 * HAIRLINE_INSET}px)`,
+                left: HAIRLINE_INSET,
+                top: HAIRLINE_INSET,
+                width: `calc(100% + ${-2 * HAIRLINE_INSET}px)`,
+            }}
+        >
+            <rect
+                height="100%"
+                rx={CHIP_RADIUS + HAIRLINE_INSET}
+                stroke="var(--separator)"
+                strokeDasharray={NATIVE_DASH}
+                width="100%"
+            />
+        </svg>
+    );
+}
+
 export function FactChips({ state }: { state: EntryState }) {
     const { t } = useReplica();
     return (
         <div className="mt-7 flex-row flex-wrap gap-2">
             {factChips(state, t).map((chip) => (
                 <div
-                    className={`min-h-[34px] flex-row items-center gap-[7px] self-start rounded-full border px-3.5 ${chip.closable ? "pe-1" : ""} ${chip.active ? "border-tint bg-tint" : "border-separator"} ${chip.disabled ? "opacity-40" : ""}`}
+                    className={`min-h-[34px] flex-row items-center gap-[7px] self-start rounded-full border px-3.5 ${chip.closable ? "pe-1" : ""} ${chip.active ? "border-tint bg-tint" : ""} ${chip.disabled ? "opacity-40" : ""}`}
                     key={chip.key}
-                    style={chip.active ? undefined : { borderStyle: "dashed" }}
+                    style={chip.active ? undefined : { borderColor: "transparent" }}
                 >
+                    {chip.active ? null : <DashedOutline />}
                     <HugeiconsIcon
                         color={chip.active ? "#ffffff" : "var(--muted)"}
                         icon={chip.glyph}
