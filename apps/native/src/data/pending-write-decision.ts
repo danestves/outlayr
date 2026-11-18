@@ -1,3 +1,4 @@
+import { institutionCurrency } from "@outlayr/money/institution-map";
 import { merchantKey } from "@outlayr/money/merchant-key";
 import { anchorDayOf, nextDate, RECURRING_TYPE } from "@outlayr/money/recurrence";
 
@@ -76,6 +77,8 @@ export interface PendingWriteFacts {
     /** Capture ids the server already answered or queued, so the row waits for that answer instead of asking. */
     captured?: ReadonlySet<string>;
     category: { fallback: string | null; known: string | null; lookups: boolean };
+    /** The device locale's currency, for a symbol the posting app does not settle. */
+    deviceCurrency: string | null;
     filed: readonly FiledRow[];
     ledger: readonly LedgerEntry[];
     ledgerCurrency: string;
@@ -202,7 +205,7 @@ function cardAccount(write: PendingWrite, facts: PendingWriteFacts) {
         return { account: null, asks: false };
     }
     const status = cardStatus(card, facts.cards, facts.banks);
-    const charged = write.currency?.trim().toUpperCase() || detectCurrency(write.amountText);
+    const charged = printedCurrency(write, facts.deviceCurrency);
     const same = charged ? facts.banks.filter((row) => row.currency === charged) : [];
     const account =
         status.account ?? (status.asks ? same.find((row) => row.id === matchCardAccount(card, same)) : undefined);
@@ -212,13 +215,14 @@ function cardAccount(write: PendingWrite, facts: PendingWriteFacts) {
     };
 }
 
-// "$" is on 22 currencies, so an ambiguous symbol defers to the card's account currency before staying null.
-function writeCurrency(write: PendingWrite, account: MatchedAccount | null): string | null {
+// A symbol several currencies print ("$", "Bs") is the posting app's home currency when it can be, then the device's.
+export function printedCurrency(write: PendingWrite, device: string | null): string | null {
     const pinned = write.currency?.trim().toUpperCase();
     if (pinned) {
         return pinned;
     }
-    return detectCurrency(write.amountText) ?? account?.currency ?? null;
+    const app = write.card ? institutionCurrency(write.card) : null;
+    return detectCurrency(write.amountText, [app, device]);
 }
 
 function merchantOf(note: string): string {
@@ -318,7 +322,7 @@ export function decidePendingWrite(write: PendingWrite, facts: PendingWriteFacts
         return { kind: "drop" };
     }
     const { account, asks } = cardAccount(write, facts);
-    const currency = writeCurrency(write, account);
+    const currency = printedCurrency(write, facts.deviceCurrency) ?? account?.currency ?? null;
     const code = currency ?? facts.ledgerCurrency;
     const automated = fromAutomation(write);
     const card = write.card?.trim();

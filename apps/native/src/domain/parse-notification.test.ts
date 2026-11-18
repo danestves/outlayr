@@ -120,6 +120,18 @@ describe("parseNotification", () => {
         expect(detectCurrency("5,50 USDt")).toBe("USD");
     });
 
+    it("reads a home mark the catalog does not carry as money", () => {
+        expect(parseNotification("Consumo de S/. 45.90 en Tambo")).toMatchObject({
+            amount: 45.9,
+            amountText: "S/. 45.90",
+        });
+        expect(parseNotification("Compra por RD$ 1,250.00 en La Sirena")).toMatchObject({
+            amount: 1250,
+            amountText: "RD$ 1,250.00",
+        });
+        expect(parseNotification("您在星巴克消费 38.00元")).toMatchObject({ amount: 38, amountText: "38.00元" });
+    });
+
     it("takes the amount when the unit trails the number", () => {
         expect(parseNotification("Pago de 12,50 € en Mercadona")).toMatchObject({
             amount: 12.5,

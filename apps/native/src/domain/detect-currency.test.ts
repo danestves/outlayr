@@ -28,6 +28,27 @@ describe("detectCurrency", () => {
         expect(detectCurrency("kr 99")).toBeNull();
     });
 
+    it("reads the mark a currency prints at home, not only the catalog's international one", () => {
+        expect(detectCurrency("S/. 25.00")).toBe("PEN");
+        expect(detectCurrency("S/ 25.00")).toBe("PEN");
+        expect(detectCurrency("RD$ 1,250.00")).toBe("DOP");
+        expect(detectCurrency("1.240元")).toBe("CNY");
+        expect(detectCurrency("1,240円")).toBe("JPY");
+    });
+
+    it("settles a shared symbol by the first preferred currency it can mean", () => {
+        expect(detectCurrency("Bs 500", ["USD", "VES"])).toBe("VES");
+        expect(detectCurrency("Bs. 500", [null, "BOB"])).toBe("BOB");
+        expect(detectCurrency("$12.40", ["EUR", "MXN", "USD"])).toBe("MXN");
+        expect(detectCurrency("¥1,240", ["CNY"])).toBe("CNY");
+        expect(detectCurrency("Rs. 250", ["INR"])).toBe("INR");
+    });
+
+    it("keeps a symbol's sole catalog owner when no preference can be meant", () => {
+        expect(detectCurrency("¥1,240", ["EUR"])).toBe("JPY");
+        expect(detectCurrency("$12.40", ["EUR"])).toBeNull();
+    });
+
     it("declines when there is nothing to go on", () => {
         expect(detectCurrency("12.40")).toBeNull();
         expect(detectCurrency("")).toBeNull();

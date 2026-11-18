@@ -59,6 +59,7 @@ function facts(overrides: Partial<PendingWriteFacts> = {}): PendingWriteFacts {
         banks: [],
         cards: [],
         category: { fallback: "cat-expense", known: null, lookups: true },
+        deviceCurrency: null,
         filed: [],
         ledger: [],
         ledgerCurrency: "USD",
@@ -103,6 +104,7 @@ function netflix(overrides: Partial<SubscriptionRow> = {}): SubscriptionRow {
 
 const CHASE = { currency: "MXN", id: "acc-chase", name: "Chase Sapphire" };
 const N26 = { currency: "EUR", id: "acc-n26", name: "N26" };
+const PLATA = { currency: "MXN", id: "acc-plata", name: "Plata Card" };
 
 describe("a purchase the ledger already holds", () => {
     const authorized = facts({ filed: [row("tx-auth")], ledger: [filedAs("auth", "tx-auth")] });
@@ -325,13 +327,23 @@ describe("the account and currency a card's charge is filed in", () => {
     });
 
     it.each([
-        ["takes the account's currency for an ambiguous symbol", "$6.40", "Chase Sapphire Reserve", "acc-chase", "MXN"],
+        ["takes the account's currency when nothing settles the symbol", "$6.40", "Plata Card", "acc-plata", "MXN"],
+        ["takes the posting bank's currency over the account's", "$6.40", "Chase Sapphire Reserve", "acc-chase", "USD"],
         ["keeps the amount's own currency over the account's", "12,40 zł", "N26", "acc-n26", "PLN"],
         ["leaves a card that matches no account unattached", "$6.40", "Apple Card", null, null],
     ])("%s", (_case, amountText, card, accountId, currency) => {
-        const filed = accountOf(walletWrite("a", { amountText, card }), { banks: [CHASE, N26] });
+        const filed = accountOf(walletWrite("a", { amountText, card }), { banks: [CHASE, N26, PLATA] });
 
         expect(filed).toMatchObject({ accountId, currency });
+    });
+
+    it.each([
+        ["the posting bank's home currency", "Banesco", "Bs 500,00", null, "VES"],
+        ["the device's currency when the app says nothing", "Mi Banco", "$120.00", "MXN", "MXN"],
+        ["the posting bank over the device", "Chase", "$120.00", "MXN", "USD"],
+        ["the ledger's fallback when neither can be meant", "Banesco", "$120.00", "EUR", null],
+    ])("reads a shared symbol by %s", (_case, card, amountText, deviceCurrency, currency) => {
+        expect(accountOf(walletWrite("a", { amountText, card }), { deviceCurrency })).toMatchObject({ currency });
     });
 
     it.each([

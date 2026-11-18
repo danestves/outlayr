@@ -158,7 +158,7 @@ describe("applyPendingWrites", () => {
                 note: transactions.note,
             })
             .from(transactions);
-        expect(row).toStrictEqual({ accountId: "acc-chase", amount: 12.4, currency: "MXN", note: "STARBUCKS" });
+        expect(row).toStrictEqual({ accountId: "acc-chase", amount: 12.4, currency: "USD", note: "STARBUCKS" });
     });
 
     it("registers no logo candidate for a push filed under a placeholder name", async () => {

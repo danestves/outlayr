@@ -6,7 +6,7 @@ import { subscribeAppState } from "@/lib/app-state";
 import { resolveLanguage } from "./languages";
 import type { Language } from "./languages";
 
-/** Display catalog only: currency stays a stated onboarding choice (§1.7), never derived from the locale. */
+/** The ledger currency stays a stated onboarding choice (§1.7), never derived from the locale. */
 export function firstLocale() {
     try {
         return getLocales()[0] ?? null;

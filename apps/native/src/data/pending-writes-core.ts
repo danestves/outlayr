@@ -11,6 +11,7 @@ import { categories, transactions } from "@/db/schema";
 import { transaction } from "@/db/transaction";
 import { autologExpenseCount, countsAsAutolog } from "@/domain/autolog-cap";
 import type { AutologAccess, PendingWriteLedgerEntry as LedgerEntry } from "@/domain/meta-values";
+import { firstLocale } from "@/i18n/device-language";
 import type { NotificationReader, NotificationReads } from "@/lib/notification-read";
 import type { ClaimedWrites, PendingWrite } from "@/lib/queue-file";
 
@@ -211,6 +212,7 @@ const gatherFacts = Effect.fn("PendingWrites.gatherFacts")(function* gatherFacts
             known: yield* knownCategory(db, write),
             lookups: yield* readRemoteEnrichment(db),
         },
+        deviceCurrency: firstLocale()?.currencyCode ?? null,
         filed: yield* filedRows(db, batch.ledger),
         ledgerCurrency: yield* Meta.get(db, "currency"),
         subscriptions: yield* openSubscriptions(db, write),
