@@ -588,15 +588,15 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 
 .hz-layer-entry {
     z-index: 4;
-    top: 17em;
+    top: 14em;
     left: -3em;
     width: 45em;
 }
 
 .hz-layer-day {
     z-index: 1;
-    top: 14.5em;
-    left: 73em;
+    top: 15em;
+    left: 77em;
     width: 36em;
 }
 
@@ -1734,6 +1734,7 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 
 .hz-phone-fit {
     container-type: inline-size;
+    min-height: 0;
     aspect-ratio: 428 / 900;
 }
 
