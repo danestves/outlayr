@@ -14,6 +14,7 @@ export const SCREEN = { height: 874, width: 402 } as const;
 
 interface Replica {
     locale: Locale;
+    slot: string;
     t: AppT;
     theme: AppTheme;
 }
@@ -38,6 +39,7 @@ export interface AppFragmentProps {
     label: string;
     locale: Locale;
     scale?: number;
+    slot?: string;
     theme: AppTheme;
     width: number;
 }
@@ -50,10 +52,11 @@ export function AppFragment({
     label,
     locale,
     scale,
+    slot = "",
     theme,
     width,
 }: AppFragmentProps) {
-    const replica = useMemo(() => ({ locale, t: appTranslator(locale), theme }), [locale, theme]);
+    const replica = useMemo(() => ({ locale, slot, t: appTranslator(locale), theme }), [locale, slot, theme]);
     const style: CanvasStyle = { "--app-h": `${height}px`, "--app-w": `${width}px` };
     if (scale !== undefined && !fit) {
         style["--app-scale"] = scale;

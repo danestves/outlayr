@@ -213,6 +213,7 @@ function PaceChartBlock({ main }: { main: MainBudget }) {
                 burndown={main.burndown}
                 height={CHART_HEIGHT}
                 limit={main.amount}
+                name="pace"
                 width={CONTENT_WIDTH + BLEED * 2}
             />
         </div>
@@ -329,6 +330,7 @@ function BudgetRow({ budget, now }: { budget: CategoryBudget; now: Date }) {
                     burndown={budget.burndown}
                     height={SPARK_HEIGHT}
                     limit={budget.amount}
+                    name={budget.name}
                     thumbnail
                     width={CONTENT_WIDTH}
                 />

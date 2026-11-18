@@ -1,6 +1,7 @@
 import { hatchPathD } from "../../../../native/src/lib/chart-paths";
 import { CHART_DASH, CHART_SCRUB, dashArray } from "../../../../native/src/theme/chart";
 import type { Burndown, BurndownPoint } from "./budgets-burndown";
+import { useReplica } from "./canvas";
 
 const PAD = { bottom: 10, left: 4, right: 4, top: 10 } as const;
 const THUMB_PAD = { bottom: 4, left: 4, right: 4, top: 4 } as const;
@@ -87,18 +88,20 @@ interface BurndownChartProps {
     burndown: Burndown;
     height: number;
     limit: number;
+    name: string;
     thumbnail?: boolean;
     width: number;
 }
 
-export function BurndownChart({ burndown, height, limit, thumbnail = false, width }: BurndownChartProps) {
+export function BurndownChart({ burndown, height, limit, name, thumbnail = false, width }: BurndownChartProps) {
+    const { slot, theme } = useReplica();
     const plot = makePlot(burndown, limit, width, height, thumbnail ? THUMB_PAD : PAD);
     const last = burndown.points.at(-1);
     const actual = actualPathD(burndown, limit, plot);
     const projected = burndown.projectedBalance;
     const runwayX = burndown.runwayDay == null ? null : plot.x(burndown.runwayDay);
     const deficit = runwayX != null && last ? deficitPathD(burndown, plot, last, runwayX) : null;
-    const id = clipId(`${width} ${height} ${plot.zeroY} ${deficit ?? ""}`);
+    const id = clipId(`${slot} ${theme} ${name} ${width} ${height} ${plot.zeroY} ${deficit ?? ""}`);
     const clip = { above: `${id}above`, below: `${id}below`, deficit: `${id}deficit` };
     return (
         <svg height={height} viewBox={`0 0 ${width} ${height}`} width={width}>
