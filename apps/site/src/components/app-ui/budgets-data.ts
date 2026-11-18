@@ -14,6 +14,7 @@ import { compareBudgetSeverity } from "../../../../native/src/domain/budget-seve
 import { daysBetween } from "../../../../native/src/domain/local-day";
 import { buildBurndown } from "./budgets-burndown";
 import type { Burndown } from "./budgets-burndown";
+import { dayMonth } from "./dates";
 import { DEMO_CURRENCY, ROWS } from "./ledger";
 import type { DemoRow } from "./ledger";
 import { amountParts, formatAmount, symbolPrefix } from "./money";
@@ -39,44 +40,6 @@ const isLabelled = (name: string): name is LabelledCategory => name in CATEGORY_
 export function categoryLabel(name: string, t: AppT): string {
     return isLabelled(name) ? t(CATEGORY_LABEL[name]) : name;
 }
-
-const MONTH_LONG = [
-    "dates.monthLong.0",
-    "dates.monthLong.1",
-    "dates.monthLong.2",
-    "dates.monthLong.3",
-    "dates.monthLong.4",
-    "dates.monthLong.5",
-    "dates.monthLong.6",
-    "dates.monthLong.7",
-    "dates.monthLong.8",
-    "dates.monthLong.9",
-    "dates.monthLong.10",
-    "dates.monthLong.11",
-] as const satisfies readonly AppKey[];
-
-const MONTH_SHORT = [
-    "dates.month.0",
-    "dates.month.1",
-    "dates.month.2",
-    "dates.month.3",
-    "dates.month.4",
-    "dates.month.5",
-    "dates.month.6",
-    "dates.month.7",
-    "dates.month.8",
-    "dates.month.9",
-    "dates.month.10",
-    "dates.month.11",
-] as const satisfies readonly AppKey[];
-
-export const monthLongTitle = (date: Date, t: AppT) => t(MONTH_LONG[date.getMonth()] ?? "dates.monthLong.0");
-
-export const dayOfMonth = (date: Date, locale: Locale) =>
-    locale === "de" ? `${date.getDate()}.` : String(date.getDate());
-
-export const dayMonth = (date: Date, locale: Locale, t: AppT) =>
-    `${dayOfMonth(date, locale)} ${t(MONTH_SHORT[date.getMonth()] ?? "dates.month.0")}`;
 
 function roundsToNothing(amount: number, code: string): boolean {
     const magnitude = Math.abs(amount);

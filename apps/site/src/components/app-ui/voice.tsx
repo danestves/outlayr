@@ -26,7 +26,7 @@ import { currencyFor, formatAmount } from "./money";
 import { appTranslator, interpolate } from "./strings";
 import type { AppT } from "./strings";
 import { roundedTrak } from "./type";
-import { heardBy, parseTake } from "./voice-take";
+import { heardBy, isField, parseTake } from "./voice-take";
 import type { Take, TakeField } from "./voice-take";
 
 export type VoicePhase = "starting" | "ready" | "listening" | "sending" | "thinking" | "result" | "corrected";
@@ -100,8 +100,6 @@ function Part({ part }: { part: VoicePart }) {
         </div>
     );
 }
-
-const isField = (name: string): name is TakeField => name in BLANK_KEYS;
 
 const BLANK_KEYS = {
     account: "transaction.sentence.blank.account",

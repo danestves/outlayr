@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import type { CanvasProps } from "./canvas";
 import { useReplica } from "./canvas";
+import { dayMonth } from "./dates";
 import { DEMO_NOW } from "./ledger";
 import type { DemoRow } from "./ledger";
 import { appTranslator, interpolate } from "./strings";
@@ -30,7 +31,7 @@ import {
 } from "./watch-parts";
 import { DEMO_ENTRY, entryDisplay, entryUnits, formatUnits, recentCategories, watchSnapshot } from "./watch-snapshot";
 import type { AmountEntry, WatchCategory, WatchEntry, WatchMoney, WatchSnapshot } from "./watch-snapshot";
-import { dayMonth } from "./widget-props";
+import { clamp01 } from "./widget-props";
 
 const SCROLL_PAD = 6;
 const SCROLL_WIDTH = WATCH_SIZE.width - 2 * (SAFE_INSET + SCROLL_PAD);
@@ -105,8 +106,6 @@ function EntryRow({ entry }: { entry: WatchEntry }) {
         </div>
     );
 }
-
-const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1);
 
 function PaceBar({ elapsed, over, spent }: { elapsed: number; over: boolean; spent: number }) {
     return (

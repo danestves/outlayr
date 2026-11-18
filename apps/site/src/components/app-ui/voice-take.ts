@@ -1,4 +1,6 @@
-export type TakeField = "account" | "amount" | "category" | "merchant" | "when";
+const TAKE_FIELDS = ["account", "amount", "category", "merchant", "when"] as const;
+
+export type TakeField = (typeof TAKE_FIELDS)[number];
 
 export interface TakeSegment {
     readonly field: TakeField | null;
@@ -15,8 +17,7 @@ export interface Take {
 const MARK = /\{(account|amount|category|merchant|when)\|([^}]+)\}/g;
 const SPACE = /\s+/;
 
-const isField = (name: string | undefined): name is TakeField =>
-    name === "account" || name === "amount" || name === "category" || name === "merchant" || name === "when";
+export const isField = (name: string | undefined): name is TakeField => TAKE_FIELDS.some((field) => field === name);
 
 export function parseTake(template: string): Take {
     const segments: TakeSegment[] = [];

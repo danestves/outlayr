@@ -17,13 +17,11 @@ import {
     categoryLabel,
     contributions,
     daysLeftInWindow,
-    dayMonth,
     formatMoney,
     formatWhole,
     heroVerdict,
     leftPerDay,
     mainBudget,
-    monthLongTitle,
     timeLeftLabel,
 } from "./budgets-data";
 import type { CategoryBudget, MainBudget } from "./budgets-data";
@@ -31,6 +29,7 @@ import { AppFragment, AppScreen, SCREEN, useReplica } from "./canvas";
 import type { AppTheme, CanvasProps } from "./canvas";
 import { BurndownChart } from "./chart-burndown";
 import { GlassCircle, SymbolMask, SystemText, TabBar } from "./chrome";
+import { dayMonth, monthLongTitle } from "./dates";
 import { DEMO_NOW } from "./ledger";
 import { amountParts, currencyFor, formatAmount } from "./money";
 import { appTranslator, interpolate } from "./strings";

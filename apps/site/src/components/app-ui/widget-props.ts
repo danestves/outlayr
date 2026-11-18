@@ -5,7 +5,7 @@ import type { Locale } from "@outlayr/shared/i18n";
 import { DEEP_LINKS } from "../../../../native/src/lib/deep-links";
 import { WIDGET_PALETTE } from "../../../../native/src/widgets/palette";
 import type { WidgetPalette } from "../../../../native/src/widgets/palette";
-import { formatDayTitle } from "./dates";
+import { dayMonth, dayOfMonth, formatDayTitle, MONTHS, SUNDAY, WEEKDAY_INITIALS } from "./dates";
 import { budgetPace, categoryStyle, imageColor, ROWS } from "./ledger";
 import type { DemoRow } from "./ledger";
 import { amountParts, currencyFor, formatAmount, formatFixed, symbolPrefix } from "./money";
@@ -81,33 +81,6 @@ export interface LogWidgetProps {
 
 const LEDGER_LIMIT = 8;
 const SLICE_LIMIT = 4;
-const SUNDAY = 1;
-
-const MONTH_KEYS = [
-    "dates.month.0",
-    "dates.month.1",
-    "dates.month.2",
-    "dates.month.3",
-    "dates.month.4",
-    "dates.month.5",
-    "dates.month.6",
-    "dates.month.7",
-    "dates.month.8",
-    "dates.month.9",
-    "dates.month.10",
-    "dates.month.11",
-] as const satisfies readonly AppKey[];
-
-const WEEKDAY_INITIALS = [
-    "dates.weekdayInitial.0",
-    "dates.weekdayInitial.1",
-    "dates.weekdayInitial.2",
-    "dates.weekdayInitial.3",
-    "dates.weekdayInitial.4",
-    "dates.weekdayInitial.5",
-    "dates.weekdayInitial.6",
-] as const satisfies readonly AppKey[];
-
 const PERIOD_EYEBROW = {
     month: "insights.quiet.thisMonth",
     week: "insights.quiet.thisWeek",
@@ -137,17 +110,12 @@ const PRESET_LABELS = {
 
 const hasPresetLabel = (name: DemoRow["category"]): name is keyof typeof PRESET_LABELS => name in PRESET_LABELS;
 
-const dayOfMonth = (date: Date, locale: Locale) => (locale === "de" ? `${date.getDate()}.` : String(date.getDate()));
-
-const monthAbbrevTitle = (date: Date, t: AppT) => t(MONTH_KEYS[date.getMonth()] ?? "dates.month.0");
+const monthAbbrevTitle = (date: Date, t: AppT) => t(MONTHS[date.getMonth()] ?? "dates.month.0");
 
 export const formatUpcomingDate = (date: Date, locale: Locale, t: AppT) =>
     `${dayOfMonth(date, locale)} ${monthAbbrevTitle(date, t).toUpperCase()}`;
 
-export const dayMonth = (date: Date, locale: Locale, t: AppT) =>
-    `${dayOfMonth(date, locale)} ${monthAbbrevTitle(date, t)}`;
-
-const clamp01 = (value: number) => (!Number.isFinite(value) || value < 0 ? 0 : Math.min(1, value));
+export const clamp01 = (value: number) => (!Number.isFinite(value) || value < 0 ? 0 : Math.min(1, value));
 
 function wholeAmount(amount: number, code: string, locale: Locale): string {
     const rounded = roundMoney(Math.abs(amount), 0);

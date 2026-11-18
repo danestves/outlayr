@@ -11,6 +11,7 @@ import { groupByMonth } from "../../../../native/src/domain/upcoming";
 import { AppFragment, AppScreen, SCREEN, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { GlassCircle, SystemText } from "./chrome";
+import { dayOfMonth, MONTHS, MONTHS_LONG, WEEKDAYS, WEEKDAYS_LONG } from "./dates";
 import { categoryStyle, DEMO_CURRENCY, DEMO_NOW, imageColor, upcoming } from "./ledger";
 import type { UpcomingCharge } from "./ledger";
 import { currencyFor, formatAmount, formatDayTotal } from "./money";
@@ -33,56 +34,6 @@ const TOTAL_HEIGHT = 2 * TOTAL_PAD + 22 + 1 / 3;
 const LIST_PAD = { bottom: 8, top: 6 } as const;
 const FEATURED_MONTH = 9;
 
-const WEEKDAYS = [
-    "dates.weekday.0",
-    "dates.weekday.1",
-    "dates.weekday.2",
-    "dates.weekday.3",
-    "dates.weekday.4",
-    "dates.weekday.5",
-    "dates.weekday.6",
-] as const satisfies readonly AppKey[];
-
-const WEEKDAYS_LONG = [
-    "dates.weekdayLong.0",
-    "dates.weekdayLong.1",
-    "dates.weekdayLong.2",
-    "dates.weekdayLong.3",
-    "dates.weekdayLong.4",
-    "dates.weekdayLong.5",
-    "dates.weekdayLong.6",
-] as const satisfies readonly AppKey[];
-
-const MONTHS = [
-    "dates.month.0",
-    "dates.month.1",
-    "dates.month.2",
-    "dates.month.3",
-    "dates.month.4",
-    "dates.month.5",
-    "dates.month.6",
-    "dates.month.7",
-    "dates.month.8",
-    "dates.month.9",
-    "dates.month.10",
-    "dates.month.11",
-] as const satisfies readonly AppKey[];
-
-const MONTHS_LONG = [
-    "dates.monthLong.0",
-    "dates.monthLong.1",
-    "dates.monthLong.2",
-    "dates.monthLong.3",
-    "dates.monthLong.4",
-    "dates.monthLong.5",
-    "dates.monthLong.6",
-    "dates.monthLong.7",
-    "dates.monthLong.8",
-    "dates.monthLong.9",
-    "dates.monthLong.10",
-    "dates.monthLong.11",
-] as const satisfies readonly AppKey[];
-
 const weekdayKey = (date: Date) => WEEKDAYS[date.getDay()] ?? WEEKDAYS[0];
 const weekdayLongKey = (date: Date) => WEEKDAYS_LONG[date.getDay()] ?? WEEKDAYS_LONG[0];
 const monthKey = (date: Date) => MONTHS[date.getMonth()] ?? MONTHS[0];
@@ -92,8 +43,6 @@ const CADENCE = new Map<number, AppKey>([
     [RECURRING_TYPE.monthly, "transaction.cadence.monthly"],
     [RECURRING_TYPE.yearly, "transaction.cadence.yearly"],
 ]);
-
-const dayOfMonth = (date: Date, locale: Locale) => (locale === "de" ? `${date.getDate()}.` : String(date.getDate()));
 
 function chargeDate(date: Date, now: Date, locale: Locale, t: AppT): string {
     const base = `${t(weekdayKey(date))}, ${dayOfMonth(date, locale)} ${t(monthKey(date))}`;

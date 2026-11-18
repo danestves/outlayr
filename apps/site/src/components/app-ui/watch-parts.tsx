@@ -4,7 +4,7 @@ import { AppFragment, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { SystemText } from "./chrome";
 import { formatClock } from "./dates";
-import { fontAscent } from "./type";
+import { fontAscent, monoWidth } from "./type";
 
 export const WATCH_SIZE = { height: 248, width: 208 } as const;
 
@@ -51,9 +51,7 @@ export const cssColor = (value: string) => {
 
 const monoLine = (size: number) => `${size * MONO_LINE}px`;
 
-const monoWidth = (text: string, size: number, tracking = 0) => [...text].length * (MONO_ADVANCE * size + tracking);
-
-export const kickerWidth = (text: string) => monoWidth(text.toUpperCase(), KICKER_SIZE, KICKER_TRACKING);
+export const kickerWidth = (text: string) => monoWidth(text.toUpperCase(), KICKER_SIZE, MONO_ADVANCE, KICKER_TRACKING);
 
 interface MonoProps {
     children: ReactNode;
@@ -91,9 +89,9 @@ interface MonoFitProps {
 }
 
 export function MonoFit({ available, color, ghost = "", medium = false, minScale, size, text }: MonoFitProps) {
-    const natural = monoWidth(`${text}${ghost}`, size);
+    const natural = monoWidth(`${text}${ghost}`, size, MONO_ADVANCE);
     const fitted = Math.max(Math.min(size, (size * available) / natural), size * minScale);
-    const truncates = monoWidth(`${text}${ghost}`, fitted) > available;
+    const truncates = monoWidth(`${text}${ghost}`, fitted, MONO_ADVANCE) > available;
     const style: CSSProperties = {
         color,
         flexShrink: truncates ? 1 : 0,

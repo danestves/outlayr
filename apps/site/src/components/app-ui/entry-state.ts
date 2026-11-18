@@ -6,7 +6,7 @@ import { merchantKey } from "@outlayr/money/merchant-key";
 import type { Locale } from "@outlayr/shared/i18n";
 
 import { pickerOrder } from "../../../../native/src/domain/account-order";
-import { formatSentenceDate } from "./dates";
+import { dayMonth } from "./dates";
 import { ACCOUNTS, DEMO_NOW, ROWS } from "./ledger";
 import type { DemoAccount, DemoRow, LogoDomain } from "./ledger";
 import type { AppKey, AppT } from "./strings";
@@ -162,7 +162,7 @@ export function whenLabel(state: EntryState, now: Date, locale: Locale, t: AppT)
     if (target === addDays(startOfDay(now), -1).getTime()) {
         return t("transaction.sentence.when.yesterday");
     }
-    return t("transaction.sentence.when.on", { date: formatSentenceDate(date, locale, t) });
+    return t("transaction.sentence.when.on", { date: dayMonth(date, locale, t) });
 }
 
 export function stageStep(state: EntryState): EntrySlot {

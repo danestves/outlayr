@@ -73,6 +73,9 @@ export const textLineHeight = (size: number) => size * LINE_EM;
 
 export const fontAscent = (size: number) => size * ASCENT_EM;
 
+export const monoWidth = (text: string, size: number, advance: number, tracking = 0) =>
+    [...text].length * (advance * size + tracking);
+
 export const measuredLength = (length: number) =>
     Math.ceil((length + MEASURE_EPSILON) * PIXELS_PER_POINT) / PIXELS_PER_POINT;
 

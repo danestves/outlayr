@@ -6,12 +6,12 @@ import { roundMoney } from "@outlayr/money/round";
 
 import type { LogFigures, LogMeasure } from "../../../../native/src/domain/log-measure";
 import { chargesInWeekAhead } from "../../../../native/src/domain/upcoming";
+import { SUNDAY } from "./dates";
 import LOGO_COLORS from "./logos.json";
 
 export const DEMO_NOW = new Date(2026, 8, 12, 10, 30);
 export const DEMO_CURRENCY = "USD";
 const VES_PER_USD = 807.3862;
-const SUNDAY = 1;
 
 type CategoryName = CanonicalCategoryName<"expense"> | CanonicalCategoryName<"income">;
 export type LogoDomain = keyof typeof LOGO_COLORS;

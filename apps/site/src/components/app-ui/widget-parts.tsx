@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from "react";
 import type { WidgetPalette } from "../../../../native/src/widgets/palette";
 import { useReplica } from "./canvas";
 import type { AppTheme } from "./canvas";
-import { roundedTrak, textLineHeight } from "./type";
+import { monoWidth, roundedTrak, textLineHeight } from "./type";
 
 type TextStyle = CSSProperties & Record<`--app-${string}`, string>;
 
@@ -102,8 +102,6 @@ const ROUNDED_SEMIBOLD = new Map([
     ["-", 0.438],
     ["+", 0.633],
 ]);
-
-const monoWidth = (text: string, size: number) => [...text].length * SF_MONO_ADVANCE * size;
 
 function roundedWidth(text: string, size: number): number {
     const glyphs = [...text];
@@ -217,7 +215,7 @@ export function HeroLine({ available, caption, color, palette, size, value }: He
     return (
         <div style={{ alignItems: "baseline", flexDirection: "row", gap: 5 }}>
             <Fitted
-                available={available - 5 - monoWidth(caption, 10)}
+                available={available - 5 - monoWidth(caption, 10, SF_MONO_ADVANCE)}
                 color={color}
                 minScale={0.5}
                 size={size}

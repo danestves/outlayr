@@ -9,12 +9,13 @@ import { getIntlayer } from "intlayer";
 import type { CSSProperties } from "react";
 
 import { MonoLabel } from "./budgets";
-import { dayMonth, dayOfMonth, formatWhole } from "./budgets-data";
+import { formatWhole } from "./budgets-data";
 import { AppScreen, SCREEN, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { PaceLineChart } from "./chart-pace";
 import type { PaceTick } from "./chart-pace";
 import { GLASS_EDGE, SystemText, TabBar } from "./chrome";
+import { dayMonth, dayOfMonth, WEEKDAY_INITIALS } from "./dates";
 import { subscriptions, weekAnswers } from "./insights-data";
 import type { Subscriptions, WeekAnswers } from "./insights-data";
 import { DEMO_NOW } from "./ledger";
@@ -35,16 +36,6 @@ const STEP_DISABLED = 0.4;
 const CARD_SHADOW = "0 1px 4px rgba(23, 21, 15, 0.08)";
 const SUBSCRIPTION_ROWS = 4;
 const HEADLINE_TRAK: CustomStyle = { "--app-trak": roundedTrak(26) };
-
-const WEEKDAY_INITIAL = [
-    "dates.weekdayInitial.0",
-    "dates.weekdayInitial.1",
-    "dates.weekdayInitial.2",
-    "dates.weekdayInitial.3",
-    "dates.weekdayInitial.4",
-    "dates.weekdayInitial.5",
-    "dates.weekdayInitial.6",
-] as const satisfies readonly AppKey[];
 
 const HEADLINE_KEYS = {
     asUsual: "insights.answers.asUsual",
@@ -87,7 +78,7 @@ function subSentence({ forecast, usualByNow }: WeekAnswers, money: Money, t: App
 function paceTicks({ progress }: WeekAnswers, t: AppT): PaceTick[] {
     return Array.from({ length: progress.days }, (_, day) => ({
         day,
-        label: t(WEEKDAY_INITIAL[addDays(progress.window.start, day).getDay()] ?? "dates.weekdayInitial.0"),
+        label: t(WEEKDAY_INITIALS[addDays(progress.window.start, day).getDay()] ?? "dates.weekdayInitial.0"),
     }));
 }
 

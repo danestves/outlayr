@@ -7,9 +7,9 @@ import { monthlySubscriptionCost } from "@outlayr/money/subscription-cost";
 
 import { daysBetween } from "../../../../native/src/domain/local-day";
 import { contributions } from "./budgets-data";
+import { SUNDAY } from "./dates";
 import { DEMO_CURRENCY, ROWS } from "./ledger";
 
-const SUNDAY = 1;
 const PRIOR_PERIODS = 6;
 const MIN_PRIOR_PERIODS = 3;
 const USUAL_BAND = 0.1;

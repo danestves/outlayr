@@ -5,7 +5,9 @@ import type { AppKey, AppT } from "./strings";
 
 const TWELVE_HOUR = { de: false, en: true, es: true, fr: false, pt: false } as const satisfies Record<Locale, boolean>;
 
-const WEEKDAYS = [
+export const SUNDAY = 1;
+
+export const WEEKDAYS = [
     "dates.weekday.0",
     "dates.weekday.1",
     "dates.weekday.2",
@@ -15,7 +17,27 @@ const WEEKDAYS = [
     "dates.weekday.6",
 ] as const satisfies readonly AppKey[];
 
-const MONTHS = [
+export const WEEKDAYS_LONG = [
+    "dates.weekdayLong.0",
+    "dates.weekdayLong.1",
+    "dates.weekdayLong.2",
+    "dates.weekdayLong.3",
+    "dates.weekdayLong.4",
+    "dates.weekdayLong.5",
+    "dates.weekdayLong.6",
+] as const satisfies readonly AppKey[];
+
+export const WEEKDAY_INITIALS = [
+    "dates.weekdayInitial.0",
+    "dates.weekdayInitial.1",
+    "dates.weekdayInitial.2",
+    "dates.weekdayInitial.3",
+    "dates.weekdayInitial.4",
+    "dates.weekdayInitial.5",
+    "dates.weekdayInitial.6",
+] as const satisfies readonly AppKey[];
+
+export const MONTHS = [
     "dates.month.0",
     "dates.month.1",
     "dates.month.2",
@@ -30,7 +52,28 @@ const MONTHS = [
     "dates.month.11",
 ] as const satisfies readonly AppKey[];
 
-const dayOfMonth = (date: Date, locale: Locale) => (locale === "de" ? `${date.getDate()}.` : String(date.getDate()));
+export const MONTHS_LONG = [
+    "dates.monthLong.0",
+    "dates.monthLong.1",
+    "dates.monthLong.2",
+    "dates.monthLong.3",
+    "dates.monthLong.4",
+    "dates.monthLong.5",
+    "dates.monthLong.6",
+    "dates.monthLong.7",
+    "dates.monthLong.8",
+    "dates.monthLong.9",
+    "dates.monthLong.10",
+    "dates.monthLong.11",
+] as const satisfies readonly AppKey[];
+
+export const dayOfMonth = (date: Date, locale: Locale) =>
+    locale === "de" ? `${date.getDate()}.` : String(date.getDate());
+
+export const dayMonth = (date: Date, locale: Locale, t: AppT) =>
+    `${dayOfMonth(date, locale)} ${t(MONTHS[date.getMonth()] ?? "dates.month.0")}`;
+
+export const monthLongTitle = (date: Date, t: AppT) => t(MONTHS_LONG[date.getMonth()] ?? "dates.monthLong.0");
 
 export function formatDayTitle(day: Date, now: Date, locale: Locale, t: AppT): string {
     const target = startOfDay(day).getTime();
@@ -42,10 +85,6 @@ export function formatDayTitle(day: Date, now: Date, locale: Locale, t: AppT): s
     }
     const base = `${t(WEEKDAYS[day.getDay()] ?? "dates.weekday.0")}, ${dayOfMonth(day, locale)} ${t(MONTHS[day.getMonth()] ?? "dates.month.0")}`;
     return day.getFullYear() < now.getFullYear() ? `${base} '${String(day.getFullYear()).slice(-2)}` : base;
-}
-
-export function formatSentenceDate(date: Date, locale: Locale, t: AppT): string {
-    return `${dayOfMonth(date, locale)} ${t(MONTHS[date.getMonth()] ?? "dates.month.0")}`;
 }
 
 export function formatTime(date: Date, locale: Locale, t: AppT): string {
