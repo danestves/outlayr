@@ -69,8 +69,13 @@ function Curtain({ state }: { state: EntryState }) {
     );
 }
 
-export function sheetLabel(state: EntryState, now: Date, locale: Locale) {
-    return interpolate(getIntlayer("appUi", locale).labels.entrySheet, {
+export function sheetLabel(
+    state: EntryState,
+    now: Date,
+    locale: Locale,
+    label: "entrySheet" | "typeFilm" = "entrySheet"
+) {
+    return interpolate(getIntlayer("appUi", locale).labels[label], {
         sentence: sentenceText(state, now, locale, appTranslator(locale)),
     });
 }

@@ -134,7 +134,7 @@ function KeyPress({ press }: { press: Press }) {
 
 export function TypeFilm(canvas: CanvasProps) {
     return (
-        <AppScreen {...canvas} label={sheetLabel(FILLED, DEMO_NOW, canvas.locale)}>
+        <AppScreen {...canvas} label={sheetLabel(FILLED, DEMO_NOW, canvas.locale, "typeFilm")}>
             <Film way="type">
                 <NewEntrySheet now={DEMO_NOW} state={EMPTY} />
                 {TYPE_BEATS.map((beat) => {

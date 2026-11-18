@@ -1809,31 +1809,6 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
     height: 52%;
 }
 
-.hz-slot {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 100%;
-    aspect-ratio: var(--ratio);
-    overflow: clip;
-    border-radius: var(--radius, 0);
-    background: #e4e2dc;
-    color: #6b6557;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0;
-}
-
-.hz-slot[data-tone="dark"] {
-    background: #29231a;
-    color: #a8a093;
-}
-
-.hz-slot[data-fill] {
-    height: 100%;
-    aspect-ratio: auto;
-}
-
 .hz-phone-fit {
     container-type: inline-size;
     min-height: 0;
@@ -1976,10 +1951,6 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 }
 
 @media (max-width: 63.99rem) {
-    .hz-slot {
-        aspect-ratio: var(--ratio-m, var(--ratio));
-    }
-
     .hz-page {
         --s: 1;
     }

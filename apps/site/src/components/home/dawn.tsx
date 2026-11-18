@@ -117,7 +117,6 @@ function Layer({ children, depth, name }: { children: ReactNode; depth: number; 
 }
 
 export function Dawn() {
-    const { hero } = useIntlayer("home");
     const { hero: copy } = useIntlayer("horizon");
     return (
         <div className="hz-dawn">
@@ -144,10 +143,10 @@ export function Dawn() {
                     </div>
                     <div className="hz-stage-inner">
                         <Layer depth={12} name="day">
-                            <TodayCard label={copy.today.value} />
+                            <TodayCard />
                         </Layer>
                         <Layer depth={8} name="phone">
-                            <HeroPhone label={hero.videoLabel.value} />
+                            <HeroPhone />
                         </Layer>
                         <Layer depth={22} name="widget">
                             <div className="hz-tilt">
@@ -155,7 +154,7 @@ export function Dawn() {
                             </div>
                         </Layer>
                         <Layer depth={16} name="entry">
-                            <NewEntryCard label={hero.tryLabel.value} />
+                            <NewEntryCard />
                         </Layer>
                     </div>
                 </div>

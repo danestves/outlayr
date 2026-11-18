@@ -331,7 +331,12 @@ export function voiceLabel(phase: VoicePhase, locale: Locale) {
             ? resolvedDraft(locale, t, phase === "corrected")
             : liveDraft(take, words, locale, t);
     const heard = phase === "corrected" ? fix.heard : take.words.slice(0, words).join(" ");
-    return interpolate(labels.voiceHeard, { heard, sentence: draft ? draftText(draft, t) : "" });
+    if (!draft) {
+        return interpolate(labels.voiceHeard, { heard, sentence: "" });
+    }
+    const said = phase === "corrected" ? "transaction.sentence.when.yesterday" : "transaction.sentence.when.today";
+    const when = { ...draft.when, text: t(said) };
+    return interpolate(labels.voiceHeard, { heard, sentence: `${draftText({ ...draft, when }, t)}.` });
 }
 
 const STILL_CELL: Record<VoicePhase, number> = {

@@ -52,13 +52,13 @@ export function Sunset() {
                     <div className="hz-fan">
                         <div className="hz-fan-rig">
                             <FanPhone side="left">
-                                <LogPhone label={dusk.phones.log.value} />
+                                <LogPhone />
                             </FanPhone>
                             <FanPhone side="right">
-                                <BudgetsPhone label={dusk.phones.budgets.value} />
+                                <BudgetsPhone />
                             </FanPhone>
                             <FanPhone>
-                                <InsightsPhone label={dusk.phones.insights.value} />
+                                <InsightsPhone />
                             </FanPhone>
                         </div>
                     </div>

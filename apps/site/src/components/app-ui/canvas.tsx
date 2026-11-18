@@ -11,6 +11,7 @@ import type { AppT } from "./strings";
 export type AppTheme = "light" | "dark";
 
 export const SCREEN = { height: 874, width: 402 } as const;
+const DOUBLE_PERIOD = /(?<!\.)\.\.(?!\.)/gu;
 
 interface Replica {
     locale: Locale;
@@ -58,11 +59,12 @@ export function AppFragment({
 }: AppFragmentProps) {
     const replica = useMemo(() => ({ locale, slot, t: appTranslator(locale), theme }), [locale, slot, theme]);
     const style: CanvasStyle = { "--app-h": `${height}px`, "--app-w": `${width}px` };
+    const sentence = label.replaceAll(DOUBLE_PERIOD, ".");
     if (scale !== undefined && !fit) {
         style["--app-scale"] = scale;
     }
     const canvas = (
-        <div aria-label={label} className={fit ? undefined : className} data-app-canvas="" role="img" style={style}>
+        <div aria-label={sentence} className={fit ? undefined : className} data-app-canvas="" role="img" style={style}>
             <div aria-hidden data-app-replica="" data-app-theme={theme} inert>
                 <ReplicaContext value={replica}>{children}</ReplicaContext>
             </div>

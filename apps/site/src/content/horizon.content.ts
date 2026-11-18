@@ -116,29 +116,6 @@ const horizon = {
                 pt: "Gastos por dia e por categoria, e o que mudou desde a semana passada.",
                 fr: "Les dépenses par jour et par catégorie, et ce qui a bougé depuis la semaine dernière.",
             }),
-            phones: {
-                budgets: t({
-                    en: "Budgets in dark mode, with the pace for each category this period",
-                    de: "Budgets im dunklen Modus, mit dem Tempo jeder Kategorie in diesem Zeitraum",
-                    es: "Presupuestos en modo oscuro, con el ritmo de cada categoría en este periodo",
-                    pt: "Orçamentos no modo escuro, com o ritmo de cada categoria neste período",
-                    fr: "Les Budgets en mode sombre, avec le rythme de chaque catégorie sur la période",
-                }),
-                insights: t({
-                    en: "Insights in dark mode, with the week's spending as bars by day",
-                    de: "Auswertungen im dunklen Modus, mit den Ausgaben der Woche als Balken pro Tag",
-                    es: "Estadísticas en modo oscuro, con los gastos de la semana en barras por día",
-                    pt: "Estatísticas no modo escuro, com os gastos da semana em barras por dia",
-                    fr: "Statistiques en mode sombre, avec les dépenses de la semaine en barres par jour",
-                }),
-                log: t({
-                    en: "The Log in dark mode, with this week's entries and their categories",
-                    de: "Der Verlauf im dunklen Modus, mit den Einträgen dieser Woche und ihren Kategorien",
-                    es: "El Registro en modo oscuro, con los registros de esta semana y sus categorías",
-                    pt: "Os Lançamentos no modo escuro, com os lançamentos desta semana e suas categorias",
-                    fr: "Le Journal en mode sombre, avec les opérations de la semaine et leurs catégories",
-                }),
-            },
             rest: t({
                 en: "actually went.",
                 de: "wirklich ging.",
@@ -154,11 +131,11 @@ const horizon = {
         feats: {
             pace: {
                 art: t({
-                    en: "The Budgets screen in Outlayr: what is left this month, the pace chart, and a verdict for the period",
-                    de: "Der Budgets-Bildschirm in Outlayr: was diesen Monat übrig ist, das Tempo-Diagramm und eine Einschätzung für den Zeitraum",
-                    es: "La pantalla de Presupuestos en Outlayr: lo que queda este mes, el gráfico de ritmo y un veredicto para el periodo",
-                    pt: "A tela de Orçamentos no Outlayr: o que sobra neste mês, o gráfico de ritmo e um veredito para o período",
-                    fr: "L'écran Budgets d'Outlayr : ce qui reste ce mois-ci, le graphique de rythme et un verdict pour la période",
+                    en: "The Budgets screen in Outlayr: what is left this month, the pace chart, and a verdict for the period.",
+                    de: "Der Budgets-Bildschirm in Outlayr: was diesen Monat übrig ist, das Tempo-Diagramm und eine Einschätzung für den Zeitraum.",
+                    es: "La pantalla de Presupuestos en Outlayr: lo que queda este mes, el gráfico de ritmo y un veredicto para el periodo.",
+                    pt: "A tela de Orçamentos no Outlayr: o que sobra neste mês, o gráfico de ritmo e um veredito para o período.",
+                    fr: "L'écran Budgets d'Outlayr : ce qui reste ce mois-ci, le graphique de rythme et un verdict pour la période.",
                 }),
                 lead: t({
                     en: "Spot the overspend",
@@ -178,11 +155,11 @@ const horizon = {
             },
             upcoming: {
                 art: t({
-                    en: "Upcoming entries in Outlayr, each with its date and amount, under the total coming up",
-                    de: "Anstehende Einträge in Outlayr, jeder mit Datum und Betrag, unter der anstehenden Summe",
-                    es: "Registros próximos en Outlayr, cada uno con su fecha y su monto, bajo el total que viene",
-                    pt: "Próximos lançamentos no Outlayr, cada um com data e valor, abaixo do total que vem por aí",
-                    fr: "Les opérations à venir dans Outlayr, chacune avec sa date et son montant, sous le total à venir",
+                    en: "Upcoming entries in Outlayr, each with its date and amount, under the total coming up.",
+                    de: "Anstehende Einträge in Outlayr, jeder mit Datum und Betrag, unter der anstehenden Summe.",
+                    es: "Registros próximos en Outlayr, cada uno con su fecha y su monto, bajo el total que viene.",
+                    pt: "Próximos lançamentos no Outlayr, cada um com data e valor, abaixo do total que vem por aí.",
+                    fr: "Les opérations à venir dans Outlayr, chacune avec sa date et son montant, sous le total à venir.",
                 }),
                 lead: t({
                     en: "A reminder",
@@ -208,11 +185,11 @@ const horizon = {
             },
             accounts: {
                 art: t({
-                    en: "Accounts in Outlayr: cash, cards, and savings in more than one currency, side by side",
-                    de: "Konten in Outlayr: Bargeld, Karten und Ersparnisse in mehr als einer Währung, nebeneinander",
-                    es: "Cuentas en Outlayr: efectivo, tarjetas y ahorros en más de una moneda, lado a lado",
-                    pt: "Contas no Outlayr: dinheiro, cartões e poupança em mais de uma moeda, lado a lado",
-                    fr: "Les comptes dans Outlayr : espèces, cartes et épargne dans plusieurs devises, côte à côte",
+                    en: "Accounts in Outlayr: cash, cards, and savings in more than one currency, side by side.",
+                    de: "Konten in Outlayr: Bargeld, Karten und Ersparnisse in mehr als einer Währung, nebeneinander.",
+                    es: "Cuentas en Outlayr: efectivo, tarjetas y ahorros en más de una moneda, lado a lado.",
+                    pt: "Contas no Outlayr: dinheiro, cartões e poupança em mais de uma moeda, lado a lado.",
+                    fr: "Les comptes dans Outlayr : espèces, cartes et épargne dans plusieurs devises, côte à côte.",
                 }),
                 lead: t({
                     en: "Every account.",
@@ -258,13 +235,6 @@ const horizon = {
                 es: "{{entries}} registros esta semana",
                 pt: "{{entries}} lançamentos nesta semana",
                 fr: "{{entries}} opérations saisies cette semaine",
-            }),
-            today: t({
-                en: "Today's entries",
-                de: "Einträge von heute",
-                es: "Registros de hoy",
-                pt: "Lançamentos de hoje",
-                fr: "Opérations du jour",
             }),
             proofRest: t({
                 en: "by {{people}} people in {{countries}} countries",

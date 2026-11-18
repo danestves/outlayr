@@ -379,11 +379,11 @@ export const insightsLabels = {
         fr: "Le budget du mois en graphique : depuis une limite de {limit}, le solde descend à {left} au {date}. La ligne pointillée du rythme finit le mois {short} sous zéro.",
     }),
     budgetsScreen: t({
-        en: "Outlayr's Balances screen for {month}: {left} left this month of a {limit} limit, {spent} spent, {perDay} a day with {days} days to go. On this pace the month ends {short} short. Below, each category with a limit.",
-        de: "Die Kontostände in Outlayr für {month}: {left} übrig diesen Monat bei einem Limit von {limit}, {spent} ausgegeben, {perDay} pro Tag bei noch {days} Tagen. In diesem Tempo fehlen am Monatsende {short}. Darunter jede Kategorie mit Limit.",
-        es: "La pantalla Saldos de Outlayr para {month}: quedan {left} este mes de un límite de {limit}, {spent} gastados, {perDay} al día con {days} días por delante. A este ritmo te van a faltar {short} al final del mes. Debajo, cada categoría con límite.",
-        pt: "A tela Saldos do Outlayr em {month}: {left} disponíveis este mês de um limite de {limit}, {spent} gastos, {perDay} por dia com {days} dias pela frente. Nesse ritmo vão faltar {short} no fim do mês. Abaixo, cada categoria com limite.",
-        fr: "L'écran Soldes d'Outlayr pour {month} : {left} restants ce mois-ci sur une limite de {limit}, {spent} dépensés, {perDay} par jour pour les {days} jours restants. À ce rythme, il manquera {short} en fin de mois. En dessous, chaque catégorie avec une limite.",
+        en: "Outlayr's Budgets screen for {month}: {left} left this month of a {limit} limit, {spent} spent, {perDay} a day with {days} days to go. On this pace the month ends {short} short. Below, each category with a limit.",
+        de: "Der Budgets-Bildschirm in Outlayr für {month}: {left} übrig diesen Monat bei einem Limit von {limit}, {spent} ausgegeben, {perDay} pro Tag bei noch {days} Tagen. In diesem Tempo fehlen am Monatsende {short}. Darunter jede Kategorie mit Limit.",
+        es: "La pantalla de Presupuestos de Outlayr para {month}: quedan {left} este mes de un límite de {limit}, {spent} gastados, {perDay} al día con {days} días por delante. A este ritmo te van a faltar {short} al final del mes. Debajo, cada categoría con límite.",
+        pt: "A tela de Orçamentos do Outlayr em {month}: {left} disponíveis este mês de um limite de {limit}, {spent} gastos, {perDay} por dia com {days} dias pela frente. Nesse ritmo vão faltar {short} no fim do mês. Abaixo, cada categoria com limite.",
+        fr: "L'écran Budgets d'Outlayr pour {month} : {left} restants ce mois-ci sur une limite de {limit}, {spent} dépensés, {perDay} par jour pour les {days} jours restants. À ce rythme, il manquera {short} en fin de mois. En dessous, chaque catégorie avec une limite.",
     }),
     insightsScreen: t({
         en: "Outlayr's Insights screen for {window}: {spent} spent so far. {answer} A line chart climbs through the week to today. Below: {subscriptions}.",

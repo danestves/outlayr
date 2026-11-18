@@ -266,20 +266,6 @@ const home = {
                 pt: "Registre cada gasto em uma frase",
                 fr: "Notez chaque dépense en une phrase",
             }),
-            tryLabel: t({
-                en: "Try it live",
-                de: "Probier es live aus",
-                es: "Pruébalo en vivo",
-                pt: "Teste ao vivo",
-                fr: "Essayez en direct",
-            }),
-            videoLabel: t({
-                en: "Logging a $42.00 grocery purchase at Costco in Outlayr, from the add menu to the Log.",
-                de: "Erfassen eines Lebensmitteleinkaufs über 42,00 $ bei Costco in Outlayr, vom Hinzufügen-Menü bis zum Verlauf.",
-                es: "Cómo se registra en Outlayr una compra de súper de $42.00 en Costco, desde el menú para agregar hasta el Registro.",
-                pt: "Registrando no Outlayr uma compra de mercado de $ 42,00 no Costco, do menu de adicionar até os Lançamentos.",
-                fr: "Enregistrement dans Outlayr d'un achat de courses de 42,00 $ chez Costco, du menu d'ajout jusqu'au Journal.",
-            }),
         },
         limits: [
             {
