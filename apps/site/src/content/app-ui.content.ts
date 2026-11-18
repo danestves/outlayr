@@ -20,33 +20,6 @@ const appUi = {
             }),
             transfer: t({ en: "Transfer", de: "Umbuchung", es: "Transferencia", pt: "Transferência", fr: "Virement" }),
         },
-        budget: {
-            aDay: t({ en: "A day", de: "Pro Tag", es: "Al día", pt: "Por dia", fr: "Par jour" }),
-            daysLeft: t({ en: "18d left", de: "noch 18 T.", es: "quedan 18d", pt: "faltam 18d", fr: "encore 18 j" }),
-            label: t({
-                en: "Budgets: $1,018.59 left this month of a $3,900 limit, $2,881 spent, $57 a day. On this pace the month ends $319 short.",
-                de: "Budgets: 1.018,59 $ übrig diesen Monat bei einem Limit von 3.900 $, 2.881 $ ausgegeben, 57 $ pro Tag. In diesem Tempo fehlen am Monatsende 319 $.",
-                es: "Presupuestos: quedan $1,018.59 este mes de un límite de $3,900, $2,881 gastados, $57 al día. A este ritmo, el mes termina $319 por debajo.",
-                pt: "Orçamentos: $ 1.018,59 disponíveis este mês de um limite de $ 3.900, $ 2.881 gastos, $ 57 por dia. Nesse ritmo, o mês fecha $ 319 no vermelho.",
-                fr: "Budgets : 1 018,59 $ restants ce mois-ci sur une limite de 3 900 $, 2 881 $ dépensés, 57 $ par jour. À ce rythme, le mois se termine avec 319 $ de déficit.",
-            }),
-            left: t({
-                en: "left this month",
-                de: "übrig diesen Monat",
-                es: "disponible este mes",
-                pt: "disponível este mês",
-                fr: "restant ce mois-ci",
-            }),
-            limit: t({ en: "Limit", de: "Limit", es: "Límite", pt: "Limite", fr: "Limite" }),
-            scope: t({
-                en: "Everything · This month",
-                de: "Alles · Diesen Monat",
-                es: "Todo · Este mes",
-                pt: "Tudo · Este mês",
-                fr: "Tout · Ce mois-ci",
-            }),
-            spent: t({ en: "Spent", de: "Ausgegeben", es: "Gastado", pt: "Gasto", fr: "Dépensé" }),
-        },
         days: [
             t({ en: "S", de: "S", es: "D", pt: "D", fr: "D" }),
             t({ en: "M", de: "M", es: "L", pt: "S", fr: "L" }),
