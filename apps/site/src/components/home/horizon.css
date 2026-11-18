@@ -3,6 +3,26 @@
     --hz-paper: #f1f0ea;
 }
 
+html:has(.hz-page) {
+    background-color: #f1f0ea;
+}
+
+@supports (animation-timeline: scroll()) {
+    html:has(.hz-page) {
+        animation-name: hz-overscroll;
+        animation-duration: auto;
+        animation-timing-function: steps(2, jump-none);
+        animation-fill-mode: both;
+        animation-timeline: scroll(root);
+    }
+}
+
+@keyframes hz-overscroll {
+    to {
+        background-color: #6f1c0b;
+    }
+}
+
 .hz-page {
     --s: 1;
     --u: clamp(0.62px, min(calc(100vw / 1440), calc(100svh / 900)), 1.16px);
