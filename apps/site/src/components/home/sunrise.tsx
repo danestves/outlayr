@@ -1,6 +1,7 @@
 import { useIntlayer } from "react-intlayer";
 
 import { StoreBadges } from "@/components/store-badges";
+import { GET_APP_ID } from "@/lib/download";
 import { playScene } from "@/lib/scene";
 import { sway } from "@/lib/sway";
 
@@ -19,7 +20,14 @@ function stage(section: HTMLElement | null) {
 export function Sunrise() {
     const { close } = useIntlayer("horizon");
     return (
-        <section aria-labelledby="close-title" className="hz-close" data-night-ground="" data-sky="night" ref={stage}>
+        <section
+            aria-labelledby="close-title"
+            className="hz-close"
+            data-night-ground=""
+            data-sky="night"
+            id={GET_APP_ID}
+            ref={stage}
+        >
             <div aria-hidden="true" className="hz-close-sky">
                 <div className="hz-close-dawn" />
                 <div className="hz-close-edge" />

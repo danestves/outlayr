@@ -51,6 +51,7 @@ export function SiteMenu({
                 </ul>
                 <GetAppButton
                     className="bg-foreground text-background hover:not-disabled:bg-foreground/90 mt-6 h-13 w-full text-[1.0625rem]"
+                    onDialog={() => onOpenChange(false)}
                     placement="menu"
                 >
                     {getApp.title}

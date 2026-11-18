@@ -3,14 +3,14 @@ import { Button } from "panelui-web/button";
 import type { MouseEvent, ReactNode } from "react";
 import { lazy, Suspense, useSyncExternalStore } from "react";
 
+import { opensStore } from "@/lib/download";
+
 const GetAppPanel = lazy(async () => {
     const module = await import("./get-app-panel");
     return { default: module.GetAppPanel };
 });
 
 export const DOWNLOAD_HREF = "/download?utm_source=site&utm_medium=cta";
-
-const WIDE = "(min-width: 64rem) and (hover: hover) and (pointer: fine)";
 
 let mounted = false;
 let open = false;
@@ -35,8 +35,8 @@ export function warmGetApp() {
     }
 }
 
-function warmIfWide() {
-    if (matchMedia(WIDE).matches) {
+function warmUnlessStore() {
+    if (!opensStore(navigator.userAgent)) {
         warmGetApp();
     }
 }
@@ -53,11 +53,12 @@ export function showGetApp(placement: string) {
     setOpen(true);
 }
 
-function onGetApp(event: MouseEvent<HTMLElement>, placement: string) {
+function onGetApp(event: MouseEvent<HTMLElement>, placement: string, onDialog?: () => void) {
     capture("get_app_clicked", { placement });
     const modified = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0;
-    if (!modified && matchMedia(WIDE).matches) {
+    if (!modified && !opensStore(navigator.userAgent)) {
         event.preventDefault();
+        onDialog?.();
         setOpen(true);
     }
 }
@@ -65,11 +66,13 @@ function onGetApp(event: MouseEvent<HTMLElement>, placement: string) {
 export function GetAppButton({
     children,
     className,
+    onDialog,
     placement,
     tone,
 }: {
     children: ReactNode;
     className?: string;
+    onDialog?: () => void;
     placement: string;
     tone?: "glass";
 }) {
@@ -79,9 +82,9 @@ export function GetAppButton({
             className={className ? `rounded-full ${className}` : "rounded-full"}
             data-tone={tone}
             nativeButton={false}
-            onClick={(event) => onGetApp(event, placement)}
-            onFocus={warmIfWide}
-            onPointerEnter={warmIfWide}
+            onClick={(event) => onGetApp(event, placement, onDialog)}
+            onFocus={warmUnlessStore}
+            onPointerEnter={warmUnlessStore}
             render={({ children: content, ...props }) => (
                 <a {...props} href={DOWNLOAD_HREF}>
                     {content}

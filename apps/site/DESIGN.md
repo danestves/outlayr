@@ -100,9 +100,10 @@ there too: `--pin-len` (sunset pin length, in viewports), `--sun-*`, `--afterglo
   never fills one. A change states what it compares to, on the line under its figure.
 - Nav: the floating glass island (`site-header.tsx`) with Get the app on every page, and a top
   sheet menu on phones. On the home page it switches between a day and a night skin.
-- Get the app (`GetAppButton`): on a wide screen with a fine pointer it opens a dialog with a QR code
-  drawn in code (`DownloadQr`, encodes `/download`) and the store badges; anywhere else it links to
-  `/download`, which picks the store from the device. It never names a store.
+- Get the app (`GetAppButton`): on iPhone and Android it links to `/download`, which picks the store;
+  everywhere else it opens a dialog with a QR code drawn in code (`DownloadQr`, encodes `/download`)
+  and the store badges. `/download` from any other device lands on the home page's `#get-app` with
+  its query kept. It never names a store.
 - Store CTAs: `StoreBadges`, the official Google Play and App Store badges, wherever a store is
   named. Never a custom button that names a store.
 - Icons: Hugeicons free set, imported by path from `@hugeicons/core-free-icons`, through `Icon` in

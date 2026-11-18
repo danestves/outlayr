@@ -479,6 +479,10 @@
     transition: transform 180ms var(--ease-out);
 }
 
+html:not(.js) :is(.hz-rule, .hz-qr) {
+    display: none;
+}
+
 .hz-qr:hover {
     transform: translateY(-1px);
 }

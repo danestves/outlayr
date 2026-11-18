@@ -3,6 +3,12 @@ import { APP_STORE_URL, PLAY_STORE_URL } from "@outlayr/shared/urls";
 const IOS = /\b(?:iPhone|iPad|iPod)\b/u;
 const ANDROID = /\bAndroid\b/u;
 
+export const GET_APP_ID = "get-app";
+
+export function opensStore(userAgent: string): boolean {
+    return IOS.test(userAgent) || ANDROID.test(userAgent);
+}
+
 export function downloadTarget(userAgent: string, search: URLSearchParams, home: string): string {
     if (IOS.test(userAgent)) {
         return APP_STORE_URL;
@@ -16,5 +22,5 @@ export function downloadTarget(userAgent: string, search: URLSearchParams, home:
         return url.toString();
     }
     const query = search.toString();
-    return query === "" ? home : `${home}?${query}`;
+    return `${home}${query === "" ? "" : `?${query}`}#${GET_APP_ID}`;
 }
