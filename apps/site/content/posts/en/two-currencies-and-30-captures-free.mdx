@@ -1,0 +1,62 @@
+---
+title: The free plan now holds two currencies and 30 captures
+description: Why bolívares and dollars no longer need Pro, why the free capture allowance went from 20 to 30, what changed in the Terms, and when each part takes effect.
+lead: The free plan ran out in the third week for anyone logging daily, and a second currency opened the paywall before the first entry. Both limits moved.
+date: 2026-11-12
+published: 2026-11-18
+figure:
+    from:
+        value: "20"
+        label: free captures per 30 days
+    to:
+        value: "30"
+        label: free captures per 30 days
+shipped:
+    - pr: 511
+      title: Let the free plan hold two currencies
+      date: 2026-11-11
+    - pr: 521
+      title: Raise the free capture allowance from 20 to 30 every 30 days
+      date: 2026-11-12
+    - pr: 596
+      title: Show the real 30 free captures on the home plan table
+      date: 2026-11-16
+---
+
+Two limits on the free plan changed: how many currencies it holds, and how many captures it gives you every 30 days.
+
+## Two currencies
+
+People in Venezuela keep money in bolívares and in dollars. The free plan allowed accounts in one currency, so the second account, the one almost every Venezuelan user needs, opened the paywall before they had logged anything.
+
+[#511](https://github.com/danestves/outlayr/pull/511) raises the number of free currencies from 1 to 2. The paywall, the account caps and the Money Manager import checks all read that one constant. A free user can now also record a transfer between the two currencies.
+
+Accounts, budgets, people, installment apps and auto-log keep their caps.
+
+The paywall note had to change too. It said "Pro converts your totals at the day's rate", which stops being true once the free plan totals two currencies. It now reads "Free keeps 2. Pro totals every currency at the day's rate." in every app language.
+
+I checked it on an Android emulator with a fresh install and no Pro. A bolívar account saved next to a dollar one with no paywall, and picking euros for a third opened the paywall with the new note, in English and Spanish. I did not check it on an iPhone, and I did not check the French and Portuguese notes on a device.
+
+## 30 captures
+
+The free plan gave 20 captures every 30 days. For anyone logging daily by voice or receipt, that ran out in the third week.
+
+[#521](https://github.com/danestves/outlayr/pull/521) raises it to 30. Pro stays at 500. Counting does not change: every clip is one capture, corrections included, because each one is a call to an AI provider.
+
+The numbers now live in one shared module that the backend limiter, the native paywall and the plan screens all read, so they can't drift apart again.
+
+One thing is not instant. If you are partway through a 30-day window, you keep the rest of the old 20 until that window resets, which is at most 30 days. Then you get 30. The limiter only adds to your allowance at window boundaries, and topping up existing buckets would mean writing into the rate limiter's production data, so I left them alone.
+
+## What changed in the Terms and copy
+
+The [Terms](/terms) plan table now says 2 account currencies and 30 voice entries and receipt scans per 30 days, in English, Spanish, French and Portuguese. The home page, the about page, the answers pages, `llms.txt` and `pricing.md` say the same.
+
+The privacy policy, the store listings and the emails don't state either number, so they didn't change.
+
+I got one wrong. The plan table on the home page still said 20 after #521, and someone spotted it on X. [#596](https://github.com/danestves/outlayr/pull/596) fixes it, and the row now reads the same constants the app enforces, so it follows the next change on its own. The [pricing](/pricing) page has the current numbers.
+
+## When it takes effect
+
+Both changes reached phones in the 14 November app update, so the app already holds two currencies and counts to 30.
+
+The Terms caught up later. #511 and #521 added their rows to the Terms dated 1 January 2027, and [#628](https://github.com/danestves/outlayr/pull/628) brought that whole update forward to 19 November 2026. From that day, the Terms say 2 currencies and 30 captures, the same as the app.

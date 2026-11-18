@@ -1,0 +1,84 @@
+---
+title: Cuando "Bs" podía ser dos monedas
+description: Cómo decide Outlayr qué moneda es la de una notificación del banco cuando su símbolo es compartido, qué señales ordena y qué deja en tus manos.
+lead: '"Bs 500" pueden ser bolívares o bolivianos, y un "$" suelto puede ser una docena de monedas. Outlayr los registraba en la moneda del libro. Ahora le pregunta primero a la app que publicó la notificación.'
+date: 2026-11-18
+shipped:
+    - pr: 630
+      title: Resolver los símbolos de moneda compartidos según la app que publica y la región del dispositivo
+      date: 2026-11-18
+    - pr: 631
+      title: Emparejar la cuenta de una tarjeta según la moneda de la app que publica
+      date: 2026-11-18
+    - pr: 632
+      title: Conservar la moneda de la lectura con IA en un símbolo compartido, después de la app y el dispositivo
+      date: 2026-11-18
+    - pr: 633
+      title: Asignar un cargo de tarjeta en espera solo a una cuenta de su propia moneda
+      date: 2026-11-18
+    - pr: 56
+      title: Registrar en VES las alertas venezolanas con Bs., no en BOB
+      date: 2026-10-23
+---
+
+Esto es la continuación de [Leer las notificaciones del banco con IA, y decirlo](/blog/reading-bank-notifications-with-ai). Ese post dejó algo pendiente: un `$` suelto vuelve del modelo sin moneda, y la cuenta de la tarjeta lo resuelve. Eso funciona hasta que el símbolo es compartido y la cuenta no ayuda.
+
+## Qué estaba mal
+
+El autolog solo confiaba en un símbolo que nombra una única moneda. Todo lo demás caía en la cuenta emparejada y después en la moneda del libro.
+
+- "Bs 500" de un banco venezolano podía ser VES o BOB. Se registraba en la moneda del libro, que para mucha gente es USD.
+- Un "$" suelto de un banco mexicano nunca se volvía MXN.
+- El "¥" de Alipay siempre se leía como yen.
+- Las marcas que el catálogo no trae, como `S/.` y `元`, ni se leían como dinero, así que esas notificaciones no registraban nada. De `RD$` solo se leía el `$` suelto.
+
+Un error anterior era de la misma familia. [#56](https://github.com/danestves/outlayr/pull/56) arregló que "Bs." de Banesco o Mercantil se registrara como BOB. `detectCurrency` quita dígitos, puntos y espacios antes de buscar el símbolo, así que "Bs." se volvía "Bs", que el catálogo solo conocía como BOB. Al indexar el mapa de símbolos de la misma forma, "Bs" pasó a ser compartido por BOB y VES, se descartaba igual que "$" y decidía la cuenta emparejada. Eso arregló el caso de Bs cuando hay una cuenta, y dejó todo lo de la lista anterior.
+
+## El orden de las señales
+
+[#630](https://github.com/danestves/outlayr/pull/630) ordena un símbolo compartido así:
+
+1. La app que publicó la notificación. Las instituciones del paquete de dinero tienen una moneda de origen: los bancos venezolanos son VES, Cashea, Krece, Lysto, Chollo y Zinli son USD, Alipay y WeChat Pay (incluidos 支付宝 y 微信) son CNY. Las globales como PayPal, Wise y HSBC no tienen.
+2. La moneda de la región del dispositivo.
+3. La cuenta emparejada.
+4. La moneda del libro, como antes.
+
+`detectCurrency` ahora recibe una lista opcional de monedas preferidas. Con ella, elige la primera moneda preferida que el símbolo pueda significar y luego la única dueña en el catálogo. Sin ella, un símbolo compartido sigue siendo null, así que las verificaciones que necesitan una respuesta única, como leer el monto, se comportan igual que antes. Si nada apunta a otra, "¥" sigue leyéndose JPY.
+
+También agregué las marcas que los bancos imprimen en su país: `$` suelto para CAD, MXN, AUD, NZD, HKD, TWD y XCD, `¥` y `元` para CNY, `円`, `S/` y `S/.`, `RD$`, `B/.`, `$U`, `Gs`, `Rs` para INR, `C$`, `AU$` y `S$`. Alimentan la regex de dinero que compilan el listener de Android y el intent de iOS, así que puede salir por OTA, sin una build nueva.
+
+## Emparejar la tarjeta es más estricto
+
+Registrar un cargo y elegir la cuenta son decisiones distintas. Una cuenta equivocada es peor que una sin asignar: descuadra un saldo en silencio, y un cargo en espera se asigna después sin revisión. Un cargo sin asignar se ve, y lo puedes corregir.
+
+Por eso [#631](https://github.com/danestves/outlayr/pull/631) deja que el emparejamiento de tarjeta use solo a la app que publica como pista. Imagina dos cuentas, "Banorte MXN" y "Banorte USD". Un "$" suelto de Banorte no elegía ninguna, la tarjeta volvía a preguntar y el cargo nunca entraba en la lista de espera. Ahora gana la moneda fijada, luego la moneda de origen de la app y luego la única dueña del catálogo. `$350.00` de Banorte elige Banorte MXN. Si no hay cuenta que coincida, la tarjeta pide una y el cargo la espera. Un libro sin cuentas se salta ese paso.
+
+El dispositivo queda fuera a propósito. La región dice cómo está configurado el teléfono, no lo que imprimió el banco. Un teléfono en en-US dentro de México se equivoca, y un viajero también. Así que un "$" que solo apoya el dispositivo se sigue registrando en la moneda del dispositivo, pero el dispositivo no decide entre cuentas. Una coincidencia por nombre o una cuenta que elegiste igual pueden recibir el cargo.
+
+## Los cargos en espera se quedan en su moneda
+
+Un cargo de tarjeta que coincidía con varias cuentas por nombre espera a la tarjeta. Cuando se asignaba después, iba a lo que el nombre coincidiera en ese momento, sin revisar la moneda. [#633](https://github.com/danestves/outlayr/pull/633) trae el ejemplo: un cargo de Banorte en MXN espera porque "Banorte USD" y "Banorte CAD" coinciden. Si archivas CAD, el cargo en MXN terminaba en Banorte USD sin ninguna revisión.
+
+Ahora, salvo que hayas elegido una cuenta para la tarjeta, un cargo en espera se empareja por nombre solo entre cuentas de su propia moneda. Si ninguna encaja, se queda en la lista de espera.
+
+Una selección que haces en Ajustes sigue asignando entre monedas. Es tu decisión, no una suposición, y cargar una cuenta de tarjeta en otra moneda es normal: un viaje, o una tarjeta USD en México.
+
+## La moneda del modelo va de última
+
+A veces el modelo sí lee una moneda. De "¥120" puede devolver "CNY", y el código anterior la botaba siempre que el símbolo fuera compartido. Sin una app ni un dispositivo chino de por medio, el cargo se registraba como yen.
+
+[#632](https://github.com/danestves/outlayr/pull/632) conserva el código como pista, con estas reglas:
+
+- Solo cuenta si el símbolo de verdad puede significar ese código. EUR para "$ 120" se rechaza.
+- Solo cuenta para la cifra que muestra el monto de la IA, no para otro número del texto, como un saldo o una promoción.
+- Va después de la app que publica y del dispositivo, nunca antes.
+
+La última regla fue una decisión. El modelo nunca ve la app que publica, porque va en un campo `card` aparte y no en el texto. Si su código pudiera fijar la moneda, un cargo de Chase "$120.00" en un teléfono configurado en México se registraría como MXN, y eso deshace la regla de que el banco que publica le gana al dispositivo. La pista solo reemplaza el valor por defecto del símbolo (¥ como JPY) y los respaldos de cuenta y libro. El emparejamiento de tarjeta la ignora, igual que al dispositivo, así que una suposición del modelo no puede elegir tu cuenta.
+
+## Qué sigue ambiguo
+
+- Sin app conocida, ni pista del dispositivo, ni una pista útil de la IA, un "$" suelto sigue cayendo en la cuenta emparejada y luego en el libro.
+- Una app global como PayPal no tiene moneda de origen, así que pasa al dispositivo.
+- En Ajustes, la tarjeta todavía puede mostrar la cuenta emparejada por nombre (Banorte USD) mientras el cargo en MXN espera, y tocar de nuevo la cuenta que se muestra no cuenta como selección. El cargo se sigue viendo sin asignar y puedes asignarlo en la propia transacción.
+- El prompt del backend todavía le pide al modelo null en un símbolo compartido. Con "Bs" lo ignora, y ahora el cliente funciona en ambos casos.
+- Los borradores de deuda mantienen la verificación anterior de solo único, porque no tienen un orden de app o dispositivo en el que una pista pueda ir detrás.

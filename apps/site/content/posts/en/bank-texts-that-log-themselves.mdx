@@ -1,0 +1,66 @@
+---
+title: Bank texts that log themselves
+description: How Outlayr logs the text messages Venezuelan banks send after a Pago Móvil, why the switch is per sender, what the parser skips, and what the privacy policy now says.
+lead: In Venezuela the bank confirms a Pago Móvil by text message. A text app was all or nothing, so now each sender gets its own switch.
+date: 2026-11-12
+shipped:
+    - pr: 514
+      title: Log bank text messages by themselves, with a switch per sender
+      date: 2026-11-12
+    - pr: 515
+      title: Log a text that says you were sent money as income
+      date: 2026-11-12
+    - pr: 522
+      title: Read peso amounts and USDt in bank pushes, and skip exchange-rate quotes
+      date: 2026-11-12
+---
+
+In Venezuela most payments go through Pago Móvil, and the bank confirms each one by text message. Outlayr could already log from notifications, but a text app was all or nothing. Turning it on logged every text that named an amount, and nothing told people their bank's texts could do the work.
+
+[#514](https://github.com/danestves/outlayr/pull/514) changes that.
+
+## Where it works
+
+On Android. Outlayr reads a text from the notification your text app posts: the title is the sender, the body is the message. iPhone keeps the step it has today, because its bank shortcut has no switch per sender, so the bank text step stays off there.
+
+On Android, people whose region is Venezuela or whose currency is the bolívar get a new onboarding step. It shows one bank text and the Log entry it becomes.
+
+## A switch per sender
+
+The text app is now one Messages row under Log from. It opens a switch for each sender, and the defaults decide most of it:
+
+```kotlin
+private val SHORT_CODE = Regex("\\d{3,6}")
+
+private fun onByDefault(from: String): Boolean = SHORT_CODE.matches(from)
+```
+
+Short codes, the kind banks send from, start on. Names and phone numbers start off. That matters because a personal text can name an amount too, and it should not be logged unless you say so. Anything you set by hand wins over the default.
+
+I tried it on a Pixel 9 emulator (Android 16). Texts from short codes 2662 and 2661 logged as income and as an expense. A text from a phone number was not logged until I turned its switch on, and stopped again when I turned it off. A short code I turned off stopped logging.
+
+## What the parser skips
+
+On both platforms the parser now reads the amounts and wording Venezuelan banks use. It skips failed payments and balance replies, and it names the person who sent a payment. In the emulator, a balance reply and a failed payment were not logged.
+
+After the first pass I found a text that said "te transferí Bs. 275,50", from a sender I had switched on by hand. It was logged as an expense, and it is money received. [#515](https://github.com/danestves/outlayr/pull/515) teaches the parser "te transferí", "te pagué", "te envié", "te mandé", "te deposité", "te pasé" and "te hice", with or without the accent, as money received. "Epa, te transferi Bs. 276,50 de la cena de anoche." now logs as income.
+
+#515 also fixes two small things I saw on the device. The confirmation for a bank text with no merchant had an empty second line once the app knew the sender, so it now names the source. And the onboarding sample jumped about 80 px when the step was turned on, because "Not now" and the footnote disappeared. They now hide but keep their space.
+
+A related miss turned up on the notification side. A Colombian user's automation logged a marketing push, "la tasa de compra está en $3.328", as a $3.328 expense. [#522](https://github.com/danestves/outlayr/pull/522) stops reading an amount right after an exchange-rate phrase as a charge. It also reads "$25.000" as 25000 instead of 25 (and "$1.250.000", which did not parse at all), and reads "USDt" as USD.
+
+## What leaves the phone
+
+When Smart fill is on, a text's body can be sent to be read by the model, as with any notification, but the request never includes the sender field. The body goes as written, so a name or number inside the message goes with it. The sender stays with the text in the phone's queue, and a text with no merchant can be filed under its sender, the way a notification is filed under its app. When it is, that name syncs with the entry if sync is on. Before this, a text app sent its title too, so a text now sends less than it did.
+
+On the phone Outlayr keeps the latest matching text from each sender, with the sender, so it can list them under Log from. It keeps up to 20 apps and senders in all.
+
+## The privacy policy
+
+The policy had to change. #514 added the new wording, and [#628](https://github.com/danestves/outlayr/pull/628) made it effective on 19 November 2026. It describes the per-sender switches, the latest text kept per sender on the phone, and a text sent without its sender, in English, Spanish, French and Portuguese. The section on [reading bank notifications](/privacy#reading-bank-notifications) says a text on Android goes without the sender's name or number.
+
+I did not add a new consent. A text app could already be turned on as a whole, and a text now sends less than before.
+
+## What is not done
+
+I did not verify a real switch of the default text app. The emulator would not release the SMS role, and a simulated second text app stayed filtered by sender. I only tried Google Messages, and I did not check the French and Portuguese strings on a device.

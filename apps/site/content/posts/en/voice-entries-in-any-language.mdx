@@ -1,0 +1,86 @@
+---
+title: Voice entries that fill in while you speak, in any app language
+description: How voice entries went from record, wait and read to a sentence that fills in live, what each service receives, how it understands any app language, and what it costs per hour.
+lead: Voice entry made you talk, stop and wait for an upload before anything showed up. Now the sentence fills in as you speak, and it no longer depends on the app's language.
+date: 2026-11-17
+shipped:
+    - pr: 519
+      title: Fill in voice entries while you speak
+      date: 2026-11-12
+    - pr: 524
+      title: Stop errors when the voice screen closes mid-turn
+      date: 2026-11-12
+    - pr: 525
+      title: Show Ori listening and thinking on the voice screen
+      date: 2026-11-13
+    - pr: 601
+      title: Understand voice entries in any of the app's languages, whatever it is set to
+      date: 2026-11-17
+---
+
+Voice entry used to feel like a voicemail. You talked, stopped, and then waited for the clip to upload, get transcribed and get read by Claude before anything showed up.
+
+## Filling in while you speak
+
+[#519](https://github.com/danestves/outlayr/pull/519) streams the audio instead. The app sends it to ElevenLabs Scribe Realtime through a new Cloudflare worker (`apps/voice-relay`, at voice.tryoutlayr.com), so ElevenLabs only ever sees our servers, as the privacy policy says.
+
+As words arrive, a local parser fills the sentence from the partial transcript: amount, currency, account, category, date, transfer and repeat. Words it only guessed are underlined with dashes.
+
+When you stop, `speakText` sends the transcript to Claude, never the audio. Claude either confirms the words (solid underline) or corrects them, and a corrected value shows with the old one struck through. Say "No, fueron 25" after "Gasté $20,00" and you see $20,00 crossed out next to $25,00.
+
+The backend hands out a single-use Scribe token through `openStream`. It counts as one capture, with the same gates as before, and `speakText` spends the credit that token left.
+
+I tested it on an iOS simulator, feeding Spanish speech clips into the recorder's audio callback. The stream, the relay and ElevenLabs were real. Only the microphone was bypassed. Through the relay, the committed text arrives about 120 ms after the last audio chunk.
+
+What I did not verify: a real microphone, Android, and a close and reopen faster than about 5 seconds, which I could only review in code. Realtime spend is also not tracked per token yet. A capture is counted when the stream opens, like before, but the Scribe seconds are not.
+
+## Closing the screen mid-turn
+
+A few hours after #519 shipped, PostHog showed a pair of errors, "Message not found" and "Stream not found". Closing the voice screen while a turn was still parsing deleted the agent thread underneath it. When the parse's 10 second abort fired, `@convex-dev/agent` tried to finalize a message and abort a stream that were already gone.
+
+Nobody saw it, because they had already left. But it was noise that would grow with voice traffic.
+
+[#524](https://github.com/danestves/outlayr/pull/524) makes `endThread` stop deleting right away. It schedules the existing `expireThread` sweep 25 seconds out: 10 for transcribing, 10 for parsing and 5 for the agent to finish. If a turn lands after the screen closed, the sweep moves out past it, then deletes the thread and its stream credits.
+
+The test saves a turn 15 seconds after `endThread`, checks the thread survives the sweep and is deleted afterwards. It fails on the old code. Threads are still deleted when the screen closes, now about 25 seconds later, or later still if a turn was still landing.
+
+## Ori on the voice screen
+
+The finish button was an abstract orb. [#525](https://github.com/danestves/outlayr/pull/525) replaces it with Ori, the mascot, who acts out each state:
+
+- **Listening:** she stands at a desk mic and leans toward it with your voice level.
+- **Thinking:** the mic goes and a dim bulb flickers above her head.
+- **Settled:** the bulb lights, she hops once and shrinks from 150 to 84 pt above the sentence she heard.
+- **Failed:** a worried face and a dead bulb with a wisp of smoke.
+
+She is drawn from a pre-rendered sprite atlas (Blender renders, about 720 KB for both themes) with Skia. A UI-thread frame callback picks the cell, so the 60 Hz mic level never re-renders React, and the canvas only repaints when the cell changes. With Reduced Motion on, each state is one still frame. There is no new dependency, so it shipped over the air.
+
+I checked it on the iOS simulator in light and dark through a temporary harness with a fake mic level. I did not check a real recording or Android.
+
+## Any of the app's languages, whatever it is set to
+
+Someone with the app in English tried to speak an entry in Spanish, and nothing came out. Voice entry pinned the transcription to the app's language, and the live preview read the words with that language's cue list.
+
+[#601](https://github.com/danestves/outlayr/pull/601) moves realtime transcription to Scribe v3 Live. The app language stays the main `language_code`, and the other app languages go as `secondary_languages`, so detection follows the speaker:
+
+```ts
+for (const other of SCRIBE_LANGUAGES) {
+    if (other !== language) {
+        query.append("secondary_languages", other);
+    }
+}
+```
+
+The preview now picks the cue list that matches the most words in what you said, and falls back to the app language on a tie.
+
+There was a catch. With the app in Spanish, v3 sometimes dropped "dollars" from English speech, and the amount would have been saved in the ledger's currency. So a fixed list of currency words goes along as `keyterms`: dollars, dólares, bucks, euros, pounds, Pfund, reais, reales, bolívares, bolivars and pesos.
+
+The relay forwards repeated `secondary_languages` and `keyterms`, and it was deployed before the app change. An older app sends neither and works as before.
+
+## Cost and privacy
+
+Keyterms add $0.08 per hour of audio on top of $0.22 per hour.
+
+From you, ElevenLabs still receives only the audio and your language. The rest of the request is configuration: the app's other languages as secondary languages, and one fixed list of keyterms, the same for everyone. So no policy notice was needed for #601.
+
+I tested #601 by streaming generated Spanish and English money sentences, clean and with noise, more than 80 runs, to ElevenLabs directly and through the deployed relay. The session echoes the 4 secondary languages and 11 keyterms, and transcripts across languages keep their amounts and currencies. I did not test it with a real voice.

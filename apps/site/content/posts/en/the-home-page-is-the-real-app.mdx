@@ -1,0 +1,95 @@
+---
+title: The home page is the real app, drawn as code
+description: Why the home page has no screenshots, how app screens are ported from the native source, and the Safari, Android and overscroll bugs that came after launch.
+lead: The home page described the app more than it showed it, and its screenshots were out of date. So every screen on it is now code, and the first day of bug reports taught me what that costs.
+date: 2026-11-18
+published: 2026-11-18
+figure:
+    from:
+        value: 872 kB
+        label: transfer, old home page
+    to:
+        value: 519 kB
+        label: transfer, new home page
+shipped:
+    - pr: 634
+      title: Rebuild the home page around the real app, drawn as code
+      date: 2026-11-18
+    - pr: 637
+      title: Keep Safari's bar tint in step on toolbar moves and jumps to the top
+      date: 2026-11-18
+    - pr: 638
+      title: Give every language its own link preview, drawn from the dusk scene
+      date: 2026-11-18
+    - pr: 639
+      title: Show the page's own colors when the home page overscrolls
+      date: 2026-11-18
+    - pr: 641
+      title: Stop the sunset scene flickering on Android Chrome
+      date: 2026-11-18
+    - pr: 643
+      title: Stop the home page crashing Safari on iPhone mid-scroll
+      date: 2026-11-18
+    - pr: 644
+      title: Say Outlayr is open source on the home page
+      date: 2026-11-18
+---
+
+The old home page wasn't turning visitors into downloads. It described the app more than it showed it, and the screenshots on it were out of date. [#634](https://github.com/danestves/outlayr/pull/634) replaces it.
+
+## Why not screenshots
+
+A screenshot is stale the day after it is taken, and it is one language, one theme and one size. This site ships in five languages and two themes. Every UI change in the app would mean retaking images.
+
+So every piece of app UI on the page is code: a 1:1 port of the native screens. The new entry sheet, Log, Budgets, Insights, Upcoming, Accounts, the widgets, the watch, and the type, say and snap capture films. No screenshots, no video.
+
+## How a replica works
+
+A replica uses the same class names, spacing and copy as the native component. The kit lives in `apps/site/src/components/app-ui/`.
+
+- **Tokens** are read from the native `global.css` and scoped to `[data-app-replica]`, so a replica has its own light or dark theme, independent of the site.
+- **Strings** are copied from `apps/native/src/content`, and a test fails when one drifts from the source.
+- **Data** is the same seed the screenshot pipeline uses, and the money math comes from the app's own `@outlayr/money`.
+- **Text** sits on the iOS grid. React Native on iOS rounds text boxes to a third of a point, and Chrome rounds to whole pixels, so baselines drifted by up to a point. Replicas now render at `zoom: 3` and scale back by a third, so Chrome's rounding lands where the device's does.
+
+When the native source and a measurement disagree, the source wins. A measurement only fills in what iOS decides on its own, such as bars and glass.
+
+## No replica JavaScript on a landing
+
+A replica is static markup, so there is nothing to run. The server renders it, and the client keeps that markup without rendering it again:
+
+```tsx
+const SERVER_HTML = { __html: "" };
+```
+
+On hydration, an empty `dangerouslySetInnerHTML` with `suppressHydrationWarning` leaves the server's markup alone. The `replicas-*.js` chunk is never fetched on a landing. Only a visitor who arrives from another page, or changes language, loads it.
+
+On a throttled phone, first paint went from about 2.3 s to 1.4 s, and transfer from 872 kB to 519 kB.
+
+## Films that play once
+
+The capture films are finite CSS keyframe films. They play once round the three ways to log an expense, then stop. They have tab keys, a pause button, and a final frame for reduced motion.
+
+## What broke after launch
+
+**Safari on iPhone crashed.** A visitor sent a video: scrolling reloaded the page and jumped to the top, with Safari's "A problem repeatedly occurred" screen. iOS was killing the tab for memory as the capture section scrolled in.
+
+The cause was my own `zoom: 3` trick. WebKit rasterizes a composited layer at its layout size times the device scale and ignores scales on ancestors. So every opacity-animated sheet in a film was 1206 × 2622 CSS px, rasterized to 3618 × 7866 device pixels on a 3x iPhone, about 110 MB per layer, and the type film stacks eight of them.
+
+[#643](https://github.com/danestves/outlayr/pull/643) makes the films fade, flash and sweep through registered custom properties (`--cue`, `--sweep`), which never composite. In WebKit at 393 px and 3x, the section's footprint went from 935 MB to 412 MB. I didn't test it on a physical iPhone.
+
+**Android Chrome flickered.** A user reported stale peach blocks flashing over the sky in the sunset scene, then the sky and sun going black for about a second. The sky sat inside an element with a mask that does nothing once the scene pins, but still forced the whole animating sky through an offscreen pass, which Android Chrome drops under GPU pressure. [#641](https://github.com/danestves/outlayr/pull/641) turns the mask off wherever its fade is zero, and crops the horizon glow from 2000 × 1800 to the 684 unit band that paints. Desktop screenshots stayed nearly identical. I couldn't reproduce the flicker itself: headless Chromium renders in software and never drops tiles.
+
+**Safari's bars lagged.** iOS Safari 26 ignores `theme-color` and tints its bars from fixed elements at the screen edges. #634 swaps a day strip and a night strip at each edge. Two gaps remained, and [#637](https://github.com/danestves/outlayr/pull/637) closes them. When Safari's toolbar expanded at night, my observer built its margin from a stale `innerHeight`, so both bars flipped to the day color for about 0.9 s. And on a jump to the top, Safari paints its own near white bar for about 0.43 s whenever the bottom strip disappears mid scroll. So the strip now stays until scrolling settles.
+
+**Overscroll showed the wrong color.** Rubber banding past the top or bottom showed the site theme's background. [#639](https://github.com/danestves/outlayr/pull/639) gives the home page's `<html>` paper at the top and the footer's last red past halfway, through a scroll-driven animation with a single step.
+
+## Link previews and open source
+
+[#638](https://github.com/danestves/outlayr/pull/638) draws a link preview for every language from the dusk scene, using the same replicas, so each card shows its own copy and currency. Each is 1200 × 630 and under 260 KB. [#644](https://github.com/danestves/outlayr/pull/644) adds the line the page was missing: Outlayr is open source under GPL-3.0, with a section that shows the real `posthog-consent.ts` read at build time, so it can't drift from the app.
+
+## The tradeoff
+
+Drawing the app as code costs more than dropping in images. The kit has to track the native source, and a layout trick can break a browser I didn't test, as Safari showed me. A written guide, `docs/internals/site-app-replicas.md`, now records the Safari trap for future motion.
+
+What I get is a home page that is accurate in every language and theme, and a drift test that tells me when it stops being accurate.

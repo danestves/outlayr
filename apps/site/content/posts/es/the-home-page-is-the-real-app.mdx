@@ -1,0 +1,95 @@
+---
+title: La página de inicio es la app de verdad, dibujada como código
+description: Por qué la página de inicio no tiene capturas, cómo se portan las pantallas desde el código nativo y los fallos de Safari, Android y overscroll que llegaron después.
+lead: La página de inicio describía la app más de lo que la mostraba, y sus capturas estaban desactualizadas. Ahora cada pantalla es código, y el primer día de reportes me enseñó lo que cuesta.
+date: 2026-11-18
+published: 2026-11-18
+figure:
+    from:
+        value: 872 kB
+        label: transferencia, página anterior
+    to:
+        value: 519 kB
+        label: transferencia, página nueva
+shipped:
+    - pr: 634
+      title: Rehacer la página de inicio en torno a la app real, dibujada como código
+      date: 2026-11-18
+    - pr: 637
+      title: Mantener el tinte de las barras de Safari al día al mover la barra y al saltar al inicio
+      date: 2026-11-18
+    - pr: 638
+      title: Dar a cada idioma su propia vista previa de enlace, dibujada desde la escena del atardecer
+      date: 2026-11-18
+    - pr: 639
+      title: Mostrar los colores de la página al hacer overscroll en el inicio
+      date: 2026-11-18
+    - pr: 641
+      title: Evitar el parpadeo de la escena del atardecer en Chrome para Android
+      date: 2026-11-18
+    - pr: 643
+      title: Evitar que la página de inicio cierre Safari en iPhone al hacer scroll
+      date: 2026-11-18
+    - pr: 644
+      title: Decir en la página de inicio que Outlayr es de código abierto
+      date: 2026-11-18
+---
+
+La página de inicio anterior no convertía visitas en descargas. Describía la app más de lo que la mostraba, y sus capturas estaban desactualizadas. [#634](https://github.com/danestves/outlayr/pull/634) la reemplaza.
+
+## Por qué no capturas
+
+Una captura se desactualiza al día siguiente, y es un solo idioma, un solo tema y un solo tamaño. Este sitio sale en cinco idiomas y dos temas. Cada cambio de interfaz en la app obligaría a rehacer imágenes.
+
+Así que cada pieza de interfaz de la app en la página es código: un port 1:1 de las pantallas nativas. La hoja de nueva entrada, Registro, Presupuestos, Análisis, Próximos, Cuentas, los widgets, el reloj, y las películas de captura de escribir, decir y fotografiar. Sin capturas, sin video.
+
+## Cómo funciona una réplica
+
+Una réplica usa los mismos nombres de clase, espaciados y textos que el componente nativo. El kit vive en `apps/site/src/components/app-ui/`.
+
+- **Los tokens** se leen del `global.css` nativo y se limitan a `[data-app-replica]`, así que una réplica tiene su propio tema claro u oscuro, independiente del sitio.
+- **Los textos** se copian de `apps/native/src/content`, y una prueba falla cuando alguno se aparta del original.
+- **Los datos** son la misma semilla que usa el flujo de capturas, y las cuentas del dinero salen de `@outlayr/money`, el de la propia app.
+- **El texto** cae sobre la cuadrícula de iOS. React Native en iOS redondea las cajas de texto a un tercio de punto, y Chrome redondea a píxeles enteros, así que las líneas base se corrían hasta un punto. Ahora las réplicas se renderizan con `zoom: 3` y se reducen a un tercio, para que el redondeo de Chrome caiga donde cae el del dispositivo.
+
+Cuando el código nativo y una medición no coinciden, gana el código. Una medición solo rellena lo que iOS decide por su cuenta, como las barras y el vidrio.
+
+## Nada de JavaScript de réplicas en una landing
+
+Una réplica es marcado estático, así que no hay nada que ejecutar. El servidor la renderiza y el cliente conserva ese marcado sin volver a renderizarlo:
+
+```tsx
+const SERVER_HTML = { __html: "" };
+```
+
+Al hidratar, un `dangerouslySetInnerHTML` vacío con `suppressHydrationWarning` deja intacto el marcado del servidor. El chunk `replicas-*.js` nunca se pide en una landing. Solo lo carga quien llega desde otra página o cambia de idioma.
+
+En un teléfono con la red limitada, el primer pintado pasó de unos 2,3 s a 1,4 s, y la transferencia de 872 kB a 519 kB.
+
+## Películas que se reproducen una vez
+
+Las películas de captura son películas finitas de keyframes CSS. Se reproducen una vez por las tres formas de registrar un gasto y se detienen. Tienen teclas de pestaña, un botón de pausa y un último cuadro para quien reduce el movimiento.
+
+## Lo que falló después del lanzamiento
+
+**Safari en iPhone se cerraba.** Un visitante mandó un video: al hacer scroll la página se recargaba y volvía al inicio, con la pantalla "Se produjo un problema repetidamente" de Safari. iOS cerraba la pestaña por memoria cuando entraba la sección de captura.
+
+La causa era mi propio truco de `zoom: 3`. WebKit rasteriza una capa compuesta a su tamaño de layout por la escala del dispositivo e ignora las escalas de los ancestros. Así que cada lámina animada con opacidad en una película medía 1206 × 2622 px de CSS, rasterizada a 3618 × 7866 píxeles del dispositivo en un iPhone 3x, unos 110 MB por capa, y la película de escribir apila ocho.
+
+[#643](https://github.com/danestves/outlayr/pull/643) hace que las películas aparezcan, destellen y barran con propiedades personalizadas registradas (`--cue`, `--sweep`), que nunca se componen. En WebKit a 393 px y 3x, el consumo de la sección bajó de 935 MB a 412 MB. No lo probé en un iPhone físico.
+
+**Chrome en Android parpadeaba.** Un usuario reportó bloques color durazno que destellaban sobre el cielo en la escena del atardecer, y luego el cielo y el sol se ponían negros por cerca de un segundo. El cielo estaba dentro de un elemento con una máscara que no hace nada cuando la escena se fija, pero igual obligaba a todo el cielo animado a pasar por un render fuera de pantalla, que Chrome en Android descarta cuando la GPU se satura. [#641](https://github.com/danestves/outlayr/pull/641) apaga la máscara donde su degradado es cero, y recorta el brillo del horizonte de 2000 × 1800 a la franja de 684 unidades que sí se pinta. Las capturas de escritorio quedaron casi idénticas. No pude reproducir el parpadeo: Chromium sin pantalla renderiza por software y nunca pierde teselas.
+
+**Las barras de Safari iban atrasadas.** Safari 26 en iOS ignora `theme-color` y tiñe sus barras a partir de elementos fijos en los bordes de la pantalla. #634 alterna una franja de día y una de noche en cada borde. Quedaron dos huecos, y [#637](https://github.com/danestves/outlayr/pull/637) los cierra. Cuando la barra de Safari se expandía de noche, mi observador armaba su margen con un `innerHeight` viejo, y las dos barras pasaban al color de día por cerca de 0,9 s. Y al saltar al inicio, Safari pinta su propia barra casi blanca por unos 0,43 s cada vez que la franja inferior desaparece en pleno scroll. Ahora la franja se queda hasta que el scroll se asienta.
+
+**El overscroll mostraba el color equivocado.** Al estirar más allá del tope o del final se veía el fondo del tema del sitio. [#639](https://github.com/danestves/outlayr/pull/639) le da al `<html>` de la página de inicio el color papel arriba y el último rojo del pie pasada la mitad, con una animación ligada al scroll de un solo paso.
+
+## Vistas previas y código abierto
+
+[#638](https://github.com/danestves/outlayr/pull/638) dibuja una vista previa de enlace para cada idioma desde la escena del anochecer, con las mismas réplicas, así que cada tarjeta muestra su propio texto y moneda. Cada una mide 1200 × 630 y pesa menos de 260 KB. [#644](https://github.com/danestves/outlayr/pull/644) agrega la línea que le faltaba a la página: Outlayr es de código abierto bajo GPL-3.0, con una sección que muestra el `posthog-consent.ts` real, leído al compilar, para que no se aparte de la app.
+
+## El costo
+
+Dibujar la app como código cuesta más que poner imágenes. El kit tiene que seguir al código nativo, y un truco de layout puede romper un navegador que no probé, como me demostró Safari. Ahora una guía, `docs/internals/site-app-replicas.md`, deja anotada la trampa de Safari para cualquier movimiento futuro.
+
+Lo que gano es una página de inicio fiel en cada idioma y tema, y una prueba que me avisa cuando deje de serlo.
