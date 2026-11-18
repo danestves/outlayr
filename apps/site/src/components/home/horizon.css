@@ -743,7 +743,7 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 
 .hz-piece-month {
     top: 56px;
-    right: -28px;
+    right: 12px;
     width: 378px;
 }
 
@@ -753,7 +753,7 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 
 .hz-piece-watch {
     top: 112px;
-    left: 44px;
+    left: 32px;
     width: 222px;
 }
 
@@ -2158,19 +2158,19 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
     .hz-piece-left {
         display: block;
         top: 236px;
-        right: 18px;
+        right: 4%;
         width: 146px;
     }
 
     .hz-piece-watch {
         top: 44px;
-        left: 4%;
-        width: 190px;
+        left: 2%;
+        width: min(190px, 50%);
     }
 
     .hz-piece-today {
         top: 70px;
-        right: 34px;
+        right: 4%;
         width: 146px;
     }
 
