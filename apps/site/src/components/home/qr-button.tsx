@@ -9,6 +9,7 @@ export function QrButton({ placement }: { placement: string }) {
         <button
             aria-haspopup="dialog"
             className="hz-qr"
+            data-fields
             onClick={() => showGetApp(placement)}
             onFocus={warmGetApp}
             onPointerEnter={warmGetApp}
