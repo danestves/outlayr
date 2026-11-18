@@ -290,7 +290,7 @@ export function daySections(now: Date, days: number): DaySection[] {
         .toSorted(([a], [b]) => b - a)
         .map(([key, rows]) => ({
             day: new Date(key),
-            rows: rows.toSorted((a, b) => b.date.getTime() - a.date.getTime()),
+            rows: rows.toReversed().toSorted((a, b) => b.date.getTime() - a.date.getTime()),
             total: cents(rows.reduce((sum, row) => sum + signed(row), 0)),
         }));
 }
