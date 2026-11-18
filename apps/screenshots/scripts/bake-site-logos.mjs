@@ -1,10 +1,11 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { registerHooks } from "node:module";
 import { fileURLToPath } from "node:url";
 
 import sharp from "sharp";
 
 const NATIVE_SRC = new URL("../../native/src/", import.meta.url);
+const COUNTRY_LOGOS = new URL("../../site/src/components/home/country-logos.ts", import.meta.url);
 const COLORS_FILE = new URL("../../site/src/components/app-ui/logos.json", import.meta.url);
 const TILES_DIR = new URL("../../site/public/media/logos/", import.meta.url);
 
@@ -27,6 +28,10 @@ registerHooks({
 const { logoPlate } = await import(new URL("domain/logo-plate.ts", NATIVE_SRC).href);
 
 async function fetchLogo(domain) {
+    const local = process.env.LOGO_SOURCE_DIR && `${process.env.LOGO_SOURCE_DIR}/${domain}`;
+    if (local && existsSync(local)) {
+        return readFileSync(local);
+    }
     const response = await fetch(`https://logos.tryoutlayr.com/merchants/${encodeURIComponent(domain)}`);
     if (!response.ok) {
         throw new Error(`The logo Worker answered ${response.status} for ${domain}`);
@@ -122,7 +127,7 @@ async function glowColor(stored) {
     return `#${hex.join("")}`.toUpperCase();
 }
 
-async function bake(domain) {
+async function bakeTile(domain) {
     const stored = await storedImage(await fetchLogo(domain));
     const { height, width } = await sharp(stored).metadata();
     const side = Math.min(TILE_SIDE, width, height);
@@ -130,12 +135,24 @@ async function bake(domain) {
         .resize({ fit: "cover", height: side, width: side })
         .webp({ quality: 90 })
         .toFile(fileURLToPath(new URL(`${domain}.webp`, TILES_DIR)));
-    return [domain, await glowColor(stored)];
+    return stored;
 }
 
-const baked = JSON.parse(readFileSync(COLORS_FILE, "utf-8"));
-const domains = [...new Set([...Object.keys(baked), ...process.argv.slice(2)])].toSorted();
+const bake = async (domain) => [domain, await glowColor(await bakeTile(domain))];
+
 mkdirSync(TILES_DIR, { recursive: true });
-const colors = Object.fromEntries(await Promise.all(domains.map(bake)));
-writeFileSync(COLORS_FILE, `${JSON.stringify(colors, null, 4)}\n`);
-process.stdout.write(`${domains.length} logos baked\n`);
+if (process.argv.includes("--tiles")) {
+    const { tileDomains } = await import(COUNTRY_LOGOS.href);
+    // Tiles are cached for a year under their name, so a baked one is never redrawn in place.
+    const domains = tileDomains().filter((domain) => !existsSync(new URL(`${domain}.webp`, TILES_DIR)));
+    for (const domain of domains) {
+        await bakeTile(domain);
+    }
+    process.stdout.write(`${domains.length} tiles baked\n`);
+} else {
+    const baked = JSON.parse(readFileSync(COLORS_FILE, "utf-8"));
+    const domains = [...new Set([...Object.keys(baked), ...process.argv.slice(2)])].toSorted();
+    const colors = Object.fromEntries(await Promise.all(domains.map(bake)));
+    writeFileSync(COLORS_FILE, `${JSON.stringify(colors, null, 4)}\n`);
+    process.stdout.write(`${domains.length} logos baked\n`);
+}

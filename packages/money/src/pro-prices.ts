@@ -170,6 +170,8 @@ const PRO_PRICES = {
     ZW: ["USD", 1.87, 11.7, 30.42],
 } satisfies Record<string, ProPriceRow>;
 
+export type PriceCountry = keyof typeof PRO_PRICES | "US";
+
 const BY_COUNTRY = new Map<string, ProPriceRow>(Object.entries(PRO_PRICES));
 
 export const PRO_PLANS = ["monthly", "annual", "lifetime"] as const;
