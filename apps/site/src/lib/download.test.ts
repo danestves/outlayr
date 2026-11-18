@@ -1,7 +1,7 @@
 import { APP_STORE_URL } from "@outlayr/shared/urls";
 import { expect, it } from "vite-plus/test";
 
-import { downloadTarget, opensStore } from "./download";
+import { downloadTarget, isIpadAsMac, opensStore } from "./download";
 
 const TIKTOK_IPHONE =
     "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 musical_ly_37.5.0 BytedanceWebview/d8a21c6";
@@ -35,4 +35,10 @@ it("keeps the header button on the link only where /download reaches a store", (
         const target = downloadTarget(userAgent, new URLSearchParams(), "/");
         expect(opensStore(userAgent)).toBe(!target.startsWith("/"));
     }
+});
+
+it("tells an iPad asking for the desktop site from a Mac", () => {
+    expect(isIpadAsMac(DESKTOP, 5)).toBe(true);
+    expect(isIpadAsMac(DESKTOP, 0)).toBe(false);
+    expect(isIpadAsMac(TIKTOK_ANDROID, 5)).toBe(false);
 });

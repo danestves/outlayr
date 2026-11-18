@@ -1,5 +1,6 @@
 import { useIntlayer } from "react-intlayer";
 
+import { openStoreOnIpad } from "@/components/get-app";
 import { StoreBadges } from "@/components/store-badges";
 import { GET_APP_ID } from "@/lib/download";
 import { playScene } from "@/lib/scene";
@@ -9,6 +10,7 @@ import { CategoryTiles } from "./category-tiles";
 import { QrButton } from "./qr-button";
 
 function stage(section: HTMLElement | null) {
+    openStoreOnIpad();
     const scene = playScene(section);
     const pointer = sway(section);
     return () => {

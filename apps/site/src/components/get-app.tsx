@@ -1,9 +1,10 @@
 import { capture } from "@outlayr/shared/analytics";
+import { APP_STORE_URL } from "@outlayr/shared/urls";
 import { Button } from "panelui-web/button";
 import type { MouseEvent, ReactNode } from "react";
 import { lazy, Suspense, useSyncExternalStore } from "react";
 
-import { opensStore } from "@/lib/download";
+import { GET_APP_ID, isIpadAsMac, opensStore } from "@/lib/download";
 
 const GetAppPanel = lazy(async () => {
     const module = await import("./get-app-panel");
@@ -35,8 +36,18 @@ export function warmGetApp() {
     }
 }
 
+function ipadAsMac() {
+    return isIpadAsMac(navigator.userAgent, navigator.maxTouchPoints);
+}
+
+export function openStoreOnIpad() {
+    if (location.hash === `#${GET_APP_ID}` && ipadAsMac()) {
+        location.replace(APP_STORE_URL);
+    }
+}
+
 function warmUnlessStore() {
-    if (!opensStore(navigator.userAgent)) {
+    if (!opensStore(navigator.userAgent) && !ipadAsMac()) {
         warmGetApp();
     }
 }
@@ -56,11 +67,16 @@ export function showGetApp(placement: string) {
 function onGetApp(event: MouseEvent<HTMLElement>, placement: string, onDialog?: () => void) {
     capture("get_app_clicked", { placement });
     const modified = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0;
-    if (!modified && !opensStore(navigator.userAgent)) {
-        event.preventDefault();
-        onDialog?.();
-        setOpen(true);
+    if (modified || opensStore(navigator.userAgent)) {
+        return;
     }
+    event.preventDefault();
+    if (ipadAsMac()) {
+        location.assign(APP_STORE_URL);
+        return;
+    }
+    onDialog?.();
+    setOpen(true);
 }
 
 export function GetAppButton({

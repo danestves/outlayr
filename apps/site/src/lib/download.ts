@@ -2,11 +2,16 @@ import { APP_STORE_URL, PLAY_STORE_URL } from "@outlayr/shared/urls";
 
 const IOS = /\b(?:iPhone|iPad|iPod)\b/u;
 const ANDROID = /\bAndroid\b/u;
+const MAC = /\bMacintosh\b/u;
 
 export const GET_APP_ID = "get-app";
 
 export function opensStore(userAgent: string): boolean {
     return IOS.test(userAgent) || ANDROID.test(userAgent);
+}
+
+export function isIpadAsMac(userAgent: string, touchPoints: number): boolean {
+    return MAC.test(userAgent) && touchPoints > 1;
 }
 
 export function downloadTarget(userAgent: string, search: URLSearchParams, home: string): string {
