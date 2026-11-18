@@ -83,6 +83,11 @@ const MONTHS_LONG = [
     "dates.monthLong.11",
 ] as const satisfies readonly AppKey[];
 
+const weekdayKey = (date: Date) => WEEKDAYS[date.getDay()] ?? WEEKDAYS[0];
+const weekdayLongKey = (date: Date) => WEEKDAYS_LONG[date.getDay()] ?? WEEKDAYS_LONG[0];
+const monthKey = (date: Date) => MONTHS[date.getMonth()] ?? MONTHS[0];
+const monthLongKey = (date: Date) => MONTHS_LONG[date.getMonth()] ?? MONTHS_LONG[0];
+
 const CADENCE = new Map<number, AppKey>([
     [RECURRING_TYPE.monthly, "transaction.cadence.monthly"],
     [RECURRING_TYPE.yearly, "transaction.cadence.yearly"],
@@ -91,7 +96,7 @@ const CADENCE = new Map<number, AppKey>([
 const dayOfMonth = (date: Date, locale: Locale) => (locale === "de" ? `${date.getDate()}.` : String(date.getDate()));
 
 function chargeDate(date: Date, now: Date, locale: Locale, t: AppT): string {
-    const base = `${t(WEEKDAYS[date.getDay()])}, ${dayOfMonth(date, locale)} ${t(MONTHS[date.getMonth()])}`;
+    const base = `${t(weekdayKey(date))}, ${dayOfMonth(date, locale)} ${t(monthKey(date))}`;
     return date.getFullYear() === now.getFullYear() ? base : `${base} ${date.getFullYear()}`;
 }
 
@@ -103,7 +108,7 @@ function dueDay(date: Date, now: Date, locale: Locale, t: AppT): string {
     if (days === 1) {
         return t("common.tomorrow");
     }
-    return days > 1 && days < 7 ? t(WEEKDAYS_LONG[date.getDay()]) : chargeDate(date, now, locale, t);
+    return days > 1 && days < 7 ? t(weekdayLongKey(date)) : chargeDate(date, now, locale, t);
 }
 
 function upcomingLabel({ landing, row }: UpcomingCharge, now: Date, locale: Locale, t: AppT): string {
@@ -114,8 +119,8 @@ function upcomingLabel({ landing, row }: UpcomingCharge, now: Date, locale: Loca
 
 const monthTitle = (month: Date, now: Date, t: AppT) =>
     month.getFullYear() === now.getFullYear()
-        ? t(MONTHS_LONG[month.getMonth()])
-        : `${t(MONTHS_LONG[month.getMonth()])} ${month.getFullYear()}`;
+        ? t(monthLongKey(month))
+        : `${t(monthLongKey(month))} ${month.getFullYear()}`;
 
 const chargeAmount = ({ row }: UpcomingCharge, locale: Locale) =>
     `${row.income ? "+" : "-"}${formatAmount(row.amount, currencyFor(locale), locale)}`;
@@ -310,7 +315,7 @@ export function UpcomingListFragment({ now = DEMO_NOW, ...canvas }: UpcomingProp
     const t = appTranslator(canvas.locale);
     const label = interpolate(labels(canvas.locale).upcomingList, {
         entries: rows.map((charge) => entryText(charge, now, canvas.locale, t)).join("; "),
-        month: t(MONTHS_LONG[month.getMonth()]),
+        month: t(monthLongKey(month)),
     });
     const height = LIST_PAD.top + MONTH_HEADER_HEIGHT + rows.length * ROW_HEIGHT + LIST_PAD.bottom;
     return (
