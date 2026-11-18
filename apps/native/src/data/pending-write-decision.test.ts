@@ -366,7 +366,7 @@ describe("the account and currency a card's charge is filed in", () => {
         ["picks the account in the posting bank's currency", "Banorte", null, "acc-banorte-mxn"],
         ["leaves the account to the user when only the device names the currency", "Mi Banco", "MXN", null],
     ])("%s", (_case, card, deviceCurrency, accountId) => {
-        const banks = [...inEachCurrency("Banorte", ["MXN", "USD"]), ...inEachCurrency("Mi Banco", ["MXN", "USD"])];
+        const banks = [PLATA, ...inEachCurrency(card, ["MXN", "USD"])];
         const filed = accountOf(walletWrite("a", { amountText: "$350.00", card }), { banks, deviceCurrency });
 
         expect(filed).toMatchObject({ accountId, currency: "MXN" });
