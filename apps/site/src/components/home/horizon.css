@@ -1299,8 +1299,26 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 }
 
 .hz-fact {
-    padding: 24px 28px 24px 0;
+    padding: 24px 28px;
     border-top: 1px solid var(--color-border);
+}
+
+.hz-fact:nth-child(-n + 2) {
+    padding-top: 0;
+    border-top: 0;
+}
+
+.hz-fact:nth-last-child(-n + 2) {
+    padding-bottom: 0;
+}
+
+.hz-fact:nth-child(odd) {
+    padding-left: 0;
+}
+
+.hz-fact:nth-child(even) {
+    padding-right: 0;
+    border-left: 1px solid var(--color-border);
 }
 
 .hz-fact dt {
@@ -2182,12 +2200,35 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
         border-radius: 24px;
     }
 
+    .hz-look {
+        min-height: 0;
+        padding: 16px;
+    }
+
+    .hz-look-row {
+        margin: 24px auto 0;
+    }
+
+    .hz-look-foot {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hz-look-switch {
+        grid-column: 1;
+        grid-row: auto;
+        justify-self: start;
+        margin-top: 12px;
+    }
+
     .hz-facts {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .hz-fact {
+    .hz-fact,
+    .hz-fact:nth-child(n) {
         padding: 20px 0;
+        border-top: 1px solid var(--color-border);
+        border-left: 0;
     }
 
     .hz-plan {
