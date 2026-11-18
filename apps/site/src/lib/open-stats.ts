@@ -40,6 +40,8 @@ export const getOpenStats = createServerFn({ method: "GET" }).handler(async () =
 
 const PROOF_TIMEOUT_MS = 1500;
 
+const MONTH_LENGTH = "yyyy-mm".length;
+
 export const getHomeStats = createServerFn({ method: "GET" }).handler(async () => {
     const url = ENV.VITE_CONVEX_URL;
     if (!url) {
@@ -52,8 +54,9 @@ export const getHomeStats = createServerFn({ method: "GET" }).handler(async () =
     try {
         const stats = await Promise.race([new ConvexHttpClient(url).query(latest, {}), timeout]);
         const week = stats?.posthog?.weeks.at(-1);
+        const thisMonth = new Date().toISOString().slice(0, MONTH_LENGTH);
         return {
-            mergedPrs: stats?.github?.months.at(-1)?.mergedPrs ?? null,
+            mergedPrs: stats?.github?.months.find(({ month }) => month === thisMonth)?.mergedPrs ?? null,
             week: week && week.entries > 1 && week.people > 1 && week.countries > 1 ? week : null,
         };
     } catch {
