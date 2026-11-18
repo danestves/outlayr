@@ -1,6 +1,12 @@
-import { SlotPlaceholder } from "./placeholder";
+import type { SmallWidgetKind } from "@/components/app-ui/widgets";
+
+import { Replica } from "../replica";
 import type { SlotProps } from "./placeholder";
 
-export function HeroWidget({ label, theme = "light" }: SlotProps) {
-    return <SlotPlaceholder label={label} name="hero-widget" radius="12%" ratio="1 / 1" theme={theme} />;
+export function HeroWidget({ theme = "light", widget = "insights" }: SlotProps & { widget?: SmallWidgetKind }) {
+    return (
+        <Replica>
+            {({ SmallWidget }, locale) => <SmallWidget fit kind={widget} locale={locale} theme={theme} />}
+        </Replica>
+    );
 }

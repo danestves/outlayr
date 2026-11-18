@@ -4,3 +4,4 @@ export { InsightsScreen } from "@/components/app-ui/insights";
 export { LogScreen } from "@/components/app-ui/log";
 export { NewEntryScreen, SentenceCard, TodayCard } from "@/components/app-ui/entry";
 export { UpcomingListFragment, UpcomingRowFragment, UpcomingTotalFragment } from "@/components/app-ui/upcoming";
+export { MediumWidget, SmallWidget } from "@/components/app-ui/widgets";

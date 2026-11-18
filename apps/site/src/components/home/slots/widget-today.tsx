@@ -1,6 +1,12 @@
-import { SlotPlaceholder } from "./placeholder";
+import type { SmallWidgetKind } from "@/components/app-ui/widgets";
+
+import { Replica } from "../replica";
 import type { SlotProps } from "./placeholder";
 
-export function TodayWidget({ label, theme = "light" }: SlotProps) {
-    return <SlotPlaceholder label={label} name="widget-today" radius="30px" ratio="1 / 1" theme={theme} />;
+export function TodayWidget({ theme = "light", widget = "log" }: SlotProps & { widget?: SmallWidgetKind }) {
+    return (
+        <Replica>
+            {({ SmallWidget }, locale) => <SmallWidget fit kind={widget} locale={locale} theme={theme} />}
+        </Replica>
+    );
 }
