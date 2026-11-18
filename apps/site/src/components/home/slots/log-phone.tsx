@@ -1,11 +1,15 @@
+import { useLocale } from "react-intlayer";
+
+import { LogScreen } from "@/components/app-ui/log";
+
 import { PhoneFit } from "./phone-fit";
-import { SlotPlaceholder } from "./placeholder";
 import type { SlotProps } from "./placeholder";
 
-export function LogPhone({ label, theme = "dark" }: SlotProps) {
+export function LogPhone({ theme = "dark" }: SlotProps) {
+    const { locale } = useLocale();
     return (
         <PhoneFit dark={theme === "dark"}>
-            <SlotPlaceholder fill label={label} name="log-phone" theme={theme} />
+            <LogScreen locale={locale} theme={theme} />
         </PhoneFit>
     );
 }
