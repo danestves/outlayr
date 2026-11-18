@@ -106,6 +106,9 @@ export function Capture() {
         if (next === null) {
             setAuto(false);
             setPlaying(false);
+            if (document.activeElement?.classList.contains("hz-capture-pause")) {
+                document.querySelector<HTMLButtonElement>(`#way-${way}`)?.focus();
+            }
             return;
         }
         select(event.currentTarget, next);
@@ -127,6 +130,7 @@ export function Capture() {
                     <ul
                         aria-label={how.label.value}
                         className="hz-ways hz-r"
+                        onFocus={() => setAuto(false)}
                         role="tablist"
                         style={{ "--i": "1", "--k": `${current}` }}
                     >
