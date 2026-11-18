@@ -181,7 +181,6 @@ export const readReceipt = Effect.fn("ReceiptScan.readReceipt")(
                     ],
                     model,
                     output: Output.object({ schema: modelOutputSchema }),
-                    reasoning: "low",
                     system: buildPrompt(context),
                 }),
         });

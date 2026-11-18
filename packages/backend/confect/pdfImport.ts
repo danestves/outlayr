@@ -20,8 +20,6 @@ const HEADER_CHARS = 800;
 const MAX_ROWS = 2000;
 const MAX_LABEL_LENGTH = 120;
 const CHUNK_CONCURRENCY = 4;
-// A chunk answers with up to a few hundred rows, far past the SDK's default output cap.
-const MAX_OUTPUT_TOKENS = 16_000;
 const CHUNK_TIMEOUT_MS = 90_000;
 
 const LINE_TOLERANCE = 2;
@@ -270,12 +268,10 @@ const extractChunk = Effect.fn("PdfImport.extractChunk")(function* extractChunk(
         try: () =>
             generateText({
                 abortSignal: AbortSignal.timeout(CHUNK_TIMEOUT_MS),
-                maxOutputTokens: MAX_OUTPUT_TOKENS,
                 maxRetries: 0,
                 model,
                 output: Output.object({ schema: modelOutputSchema }),
                 prompt: buildPrompt(chunk, header, context),
-                reasoning: "low",
             }),
     });
     return output.rows;

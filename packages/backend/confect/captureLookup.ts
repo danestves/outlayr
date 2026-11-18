@@ -1,4 +1,5 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
+import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import type { LanguageModel } from "ai";
 import * as Clock from "effect/Clock";
@@ -14,14 +15,16 @@ import { CaptureRequest } from "./captureLookup.spec";
 import { applyToTree, runSuggest } from "./enrichment";
 import { share } from "./enrichmentQueue";
 import { traced } from "./lib/aiTracing";
-import { anthropicApiKey, claudeModelId } from "./lib/config";
+import { anthropicApiKey } from "./lib/config";
 import type { EnrichmentResult } from "./lib/enrichmentResult";
+import { routedModelId } from "./lib/modelRoute";
 import { sha256Hex } from "./lib/sha256Hex";
 
 // Under the intent's 5s request timeout: a Wallet automation waits on this before its push goes out.
 export const CAPTURE_TIMEOUT_MS = 3000;
 const MAX_BODY_LENGTH = 32_000;
 const BEARER = /^Bearer\s+(\S+)$/;
+const CAPTURE_ROUTE = route({ feature: "category_suggest" });
 
 type CaptureCtx = Pick<ActionCtx, "runMutation" | "runQuery" | "runAction" | "meta">;
 
@@ -36,9 +39,13 @@ const fastModel = Effect.fn("CaptureLookup.fastModel")(function* fastModel(row: 
         return null;
     }
     const distinctId = row.shareAnalytics === true ? row.userId : undefined;
-    return traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(yield* claudeModelId), "capture_suggest", {
-        distinctId,
-    });
+    return traced(
+        createAnthropic({ apiKey: Redacted.value(apiKey.value) })(yield* routedModelId(CAPTURE_ROUTE)),
+        CAPTURE_ROUTE,
+        {
+            distinctId,
+        }
+    );
 });
 
 // The cache and the fast model only; a grounded job's fast answer is not final, so its web search still runs queued.
@@ -80,7 +87,7 @@ export const quickAnswer = Effect.fn("CaptureLookup.quickAnswer")(function* quic
         const partial: QuickAnswer = { answer, final: false };
         return partial;
     }
-    const shared = yield* share(ctx, row, answer, yield* claudeModelId);
+    const shared = yield* share(ctx, row, answer, yield* routedModelId(CAPTURE_ROUTE));
     const done: QuickAnswer = { answer: shared, final: true };
     return done;
 });

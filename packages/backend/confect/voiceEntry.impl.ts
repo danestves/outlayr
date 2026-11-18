@@ -1,6 +1,7 @@
 import { createElevenLabs } from "@ai-sdk/elevenlabs";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { createThread, getThreadMetadata, saveMessage } from "@convex-dev/agent";
+import { route } from "@outlayr/model-router/route";
 import type { UserIdentity } from "convex/server";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
@@ -27,7 +28,7 @@ import {
 import { openAiGate, refuse } from "./lib/aiGate";
 import { liveIdentity } from "./lib/auth";
 import { admitCapture, withinCaptureAllowance } from "./lib/captures";
-import { claudeModelId, elevenLabsApiKey } from "./lib/config";
+import { elevenLabsApiKey } from "./lib/config";
 import { outboundHttp } from "./lib/http";
 import type { LedgerContext } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";
@@ -114,7 +115,6 @@ const parseTurn = Effect.fn("VoiceEntry.parseTurn")(function* parseTurn(
                     abortSignal: AbortSignal.timeout(PARSE_TIMEOUT_MS),
                     maxRetries: 0,
                     promptMessageId: messageId,
-                    reasoning: "low",
                     system: buildPrompt(context),
                 },
                 {
@@ -269,8 +269,7 @@ const speak = FunctionImpl.make(
                     return { transcriptionKey: key.value, userId: owner };
                 }),
                 args,
-                feature: "voice_entry",
-                modelId: claudeModelId,
+                route: route({ feature: "voice_entry" }),
                 sessionId: args.threadId,
             });
 
@@ -369,8 +368,7 @@ const openStream = FunctionImpl.make(
                     return { scribeKey: key.value };
                 }),
                 args,
-                feature: "voice_entry",
-                modelId: claudeModelId,
+                route: route({ feature: "voice_entry" }),
                 sessionId: args.threadId,
             });
             const { runMutation } = yield* MutationRunner;
@@ -414,8 +412,7 @@ const speakText = FunctionImpl.make(
                     return { userId: owner };
                 }),
                 args,
-                feature: "voice_entry",
-                modelId: claudeModelId,
+                route: route({ feature: "voice_entry" }),
                 sessionId: args.threadId,
             });
             const text = args.transcript.trim();

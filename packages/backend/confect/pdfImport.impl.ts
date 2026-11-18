@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import type { LanguageModel } from "ai";
 import type { UserIdentity } from "convex/server";
@@ -15,7 +16,6 @@ import type { LabelSuggestion } from "./csvImport.spec";
 import { sanitizeRegionCode } from "./enrichment";
 import { openAiGate, proOnly, refuse, withinLimit } from "./lib/aiGate";
 import { liveIdentity } from "./lib/auth";
-import { claudeFastModelId } from "./lib/config";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst, perUserBurst } from "./lib/limits";
 import { failure, isIsoDay, rateLimiter, readStatement } from "./pdfImport";
@@ -191,8 +191,7 @@ const extract = FunctionImpl.make(
                     }
                 }),
                 args,
-                feature: "pdf_import",
-                modelId: claudeFastModelId,
+                route: route({ feature: "pdf_import" }),
             });
 
             return yield* Effect.gen(function* readAndClassify() {

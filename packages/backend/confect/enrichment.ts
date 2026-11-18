@@ -248,7 +248,6 @@ export const runSuggest = Effect.fn("Enrichment.runSuggest")(function* runSugges
                 model,
                 output: Output.object({ schema: modelOutputSchema }),
                 prompt: buildPrompt(args.name, args.income, args.locale, args.regionCode, args.currency, tree),
-                reasoning: "low",
             }),
     });
 

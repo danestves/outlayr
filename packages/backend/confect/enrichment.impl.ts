@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { route } from "@outlayr/model-router/route";
 import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import type { UserIdentity } from "convex/server";
@@ -32,7 +33,6 @@ import spec from "./enrichment.spec";
 import { isForbiddenLogoOrigin } from "./groundedLookup";
 import { openAiGateFor, withinLimit } from "./lib/aiGate";
 import { liveIdentity, optionalUserId } from "./lib/auth";
-import { claudeFastModelId } from "./lib/config";
 import { outboundHttp } from "./lib/http";
 import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
 import { isPro } from "./revenuecat";
@@ -69,8 +69,7 @@ const sharedCategory = Effect.fn("Enrichment.sharedCategory")(
         const { model } = yield* openAiGateFor(caller, {
             admit: () => withinLimit(() => rateLimiter.limit(ctx, "enrichmentGlobal")),
             args,
-            feature: "category_suggest",
-            modelId: claudeFastModelId,
+            route: route({ feature: "category_suggest" }),
         });
         const classified = yield* runSuggest(model, {
             categoryTree: CANONICAL_CATEGORY_NAMES[args.income ? "income" : "expense"].map((name) => ({
@@ -159,8 +158,7 @@ const suggest = FunctionImpl.make(
                     yield* withinLimit(() => rateLimiter.limit(ctx, "enrichmentGlobal"));
                 }),
                 args,
-                feature: "category_suggest",
-                modelId: claudeFastModelId,
+                route: route({ feature: "category_suggest" }),
             });
 
             const scheduleGrounded = args.groundedLookup

@@ -1,9 +1,11 @@
+import type { Route } from "@outlayr/model-router/route";
 import { APICallError, wrapLanguageModel } from "ai";
 import type { LanguageModel, LanguageModelMiddleware } from "ai";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 
 import { outboundHttp } from "./http";
+import { routeMiddleware } from "./modelRoute";
 import { capturePostHogEvent } from "./posthog";
 import { runEdge } from "./runEdge";
 
@@ -28,13 +30,14 @@ export type GenerationProperties = Record<string, string | number | boolean | nu
 
 export interface TraceScope {
     distinctId?: string;
+    route?: Pick<Route, "effort" | "model" | "reason">;
     sessionId?: string;
 }
 
 export function tracingMiddleware(
     feature: string,
     send: (distinctId: string, properties: GenerationProperties) => Promise<void>,
-    { distinctId, sessionId }: TraceScope = {}
+    { distinctId, route, sessionId }: TraceScope = {}
 ): LanguageModelMiddleware {
     const traceId = crypto.randomUUID();
     const record = (modelId: string, startedAt: number, generation: Generation) => {
@@ -60,6 +63,9 @@ export function tracingMiddleware(
                 toolCalls.filter((call) => call.providerExecuted === true && call.toolName === "web_search").length ||
                 undefined,
             $process_person_profile: distinctId !== undefined,
+            route_effort: route?.effort,
+            route_model: route?.model,
+            route_reason: route?.reason,
         });
     };
 
@@ -115,8 +121,11 @@ export function tracingMiddleware(
     };
 }
 
-export function traced(model: Exclude<LanguageModel, string>, feature: string, scope?: TraceScope) {
-    return wrapLanguageModel({ middleware: tracingMiddleware(feature, capture, scope), model });
+export function traced(model: Exclude<LanguageModel, string>, route: Route, scope?: Omit<TraceScope, "route">) {
+    return wrapLanguageModel({
+        middleware: [tracingMiddleware(route.feature, capture, { ...scope, route }), routeMiddleware(route)],
+        model,
+    });
 }
 
 export const captureGeneration = Effect.fn("AiTracing.capture")(function* captureGeneration(

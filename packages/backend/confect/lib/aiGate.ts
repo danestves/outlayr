@@ -1,7 +1,7 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
+import type { Route } from "@outlayr/model-router/route";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import type { UserIdentity } from "convex/server";
-import type * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -12,6 +12,7 @@ import { isPro } from "../revenuecat";
 import { traced } from "./aiTracing";
 import { liveIdentity } from "./auth";
 import { anthropicApiKey } from "./config";
+import { routedModelId } from "./modelRoute";
 
 export const AiRefusal = Schema.Literals([
     "unauthenticated",
@@ -43,8 +44,7 @@ export const hasAiConsent = (args: Pick<AiArgs, "aiConsent">) => args.aiConsent 
 export interface AiRequest<Admitted, E, R> {
     readonly admit: (caller: UserIdentity) => Effect.Effect<Admitted, E, R>;
     readonly args: AiArgs;
-    readonly feature: string;
-    readonly modelId: Config.Config<string>;
+    readonly route: Route;
     readonly sessionId?: string;
 }
 
@@ -57,13 +57,13 @@ export const openAiGateFor = Effect.fn("AiGate.openFor")(function* openAiGateFor
         return yield* refuse("notConfigured");
     }
     const admitted = yield* request.admit(caller);
-    const modelId = yield* request.modelId;
+    const modelId = yield* routedModelId(request.route);
     const distinctId = request.args.shareAnalytics === true ? caller.subject : undefined;
     return {
         admitted,
         caller,
         distinctId,
-        model: traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), request.feature, {
+        model: traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), request.route, {
             distinctId,
             sessionId: request.sessionId,
         }),

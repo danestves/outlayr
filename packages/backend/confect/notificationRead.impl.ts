@@ -1,4 +1,5 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import { route } from "@outlayr/model-router/route";
 import type { UserIdentity } from "convex/server";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -7,7 +8,6 @@ import databaseSchema from "./_generated/schema";
 import { ActionCtx } from "./_generated/services";
 import { sanitizeLocale } from "./enrichment";
 import { openAiGate, refuse, withinLimit } from "./lib/aiGate";
-import { claudeFastModelId } from "./lib/config";
 import { fixedBurst } from "./lib/limits";
 import { failure, MAX_TEXT_LENGTH, rateLimiter, readNotification } from "./notificationRead";
 import spec from "./notificationRead.spec";
@@ -35,8 +35,7 @@ const read = FunctionImpl.make(
                     yield* withinLimit(() => rateLimiter.limit(ctx, "notificationReadGlobal"));
                 }),
                 args,
-                feature: "notification_read",
-                modelId: claudeFastModelId,
+                route: route({ feature: "notification_read" }),
             });
             return yield* readNotification(model, text, sanitizeLocale(args.language));
         },
