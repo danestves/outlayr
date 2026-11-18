@@ -10,7 +10,7 @@ import type { NotificationText, RepricedSubscription, WalletCard } from "@/domai
 
 import { accountsRepo, getAccountById } from "./accounts-core";
 import { Meta } from "./app-meta-core";
-import { transactionsRepo } from "./transactions-core";
+import { getTransactionById, transactionsRepo } from "./transactions-core";
 
 class WalletStateError extends Schema.TaggedError<WalletStateError>()("WalletStateError", {
     cause: Schema.Defect(),
@@ -134,28 +134,51 @@ export const pickCardAccount = Effect.fn("WalletState.pickCardAccount")(function
     yield* fileWaitingPurchases(db);
 });
 
+type Bank = Effect.Success<ReturnType<typeof listBanks>>[number];
+
+const fileWaiting = Effect.fn("WalletState.fileWaiting")(function* fileWaiting(
+    db: Database,
+    card: WalletCard,
+    txId: string,
+    live: readonly Bank[]
+) {
+    let account = live.find((row) => row.id === card.accountId);
+    if (account === undefined) {
+        const charge = yield* Effect.try({
+            catch: (cause) => new WalletStateError({ cause, operation: "account" }),
+            try: () => getTransactionById(db, txId),
+        });
+        if (charge === null) {
+            return txId;
+        }
+        const same = live.filter((row) => row.currency === charge.currency);
+        account = same.find((row) => row.id === matchCardAccount(card.text, same));
+    }
+    if (account === undefined) {
+        return null;
+    }
+    const attached = yield* transactionsRepo.attachAccount(db, txId, account);
+    return attached ? txId : null;
+});
+
 export const fileWaitingPurchases = Effect.fn("WalletState.fileWaitingPurchases")(function* fileWaitingPurchases(
     db: Database
 ) {
     const cards = yield* Meta.get(db, "walletCards");
-    const waitingCards = cards.filter((card) => (card.waiting?.length ?? 0) > 0);
+    const waitingCards = cards.filter((card) => card.accountId !== null && (card.waiting?.length ?? 0) > 0);
     if (waitingCards.length === 0) {
         return;
     }
     const live = yield* listBanks(db);
-    const attempts = waitingCards.flatMap((card) => {
-        const { account } = cardStatus(card.text, cards, live);
-        return account
-            ? (card.waiting ?? []).map((txId) =>
-                  transactionsRepo.attachAccount(db, txId, account).pipe(
-                      Effect.map((attached) => (attached ? txId : null)),
-                      Effect.catchCause((cause) =>
-                          Cause.hasInterruptsOnly(cause) ? Effect.failCause(cause) : Effect.succeed(null)
-                      )
-                  )
-              )
-            : [];
-    });
+    const attempts = waitingCards.flatMap((card) =>
+        (card.waiting ?? []).map((txId) =>
+            fileWaiting(db, card, txId, live).pipe(
+                Effect.catchCause((cause) =>
+                    Cause.hasInterruptsOnly(cause) ? Effect.failCause(cause) : Effect.succeed(null)
+                )
+            )
+        )
+    );
     const settled = yield* Effect.all(attempts, { concurrency: "unbounded" });
     const done = new Set(settled.filter((txId) => txId !== null));
     if (done.size === 0) {

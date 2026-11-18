@@ -588,6 +588,30 @@ describe("applyPendingWrites", () => {
         expect(row?.accountId).toBe("acc-binance");
     });
 
+    it("keeps a waiting purchase off a name-matched account in another currency", async () => {
+        await seedAccounts(db);
+        await db.insert(accounts).values(
+            ["USD", "CAD"].map((currency) => ({
+                currency,
+                dateCreated: NOW,
+                id: `acc-banorte-${currency}`,
+                initialBalanceDate: NOW,
+                name: `Banorte ${currency}`,
+                updatedAt: NOW,
+            }))
+        );
+        await Effect.runPromise(
+            applyPendingWrites(db, [walletWrite("a", { card: "Banorte", currency: "MXN", dedupeKey: null })], NOW)
+        );
+        await db.update(accounts).set({ archivedAt: NOW }).where(eq(accounts.id, "acc-banorte-CAD"));
+        await Effect.runPromise(fileWaitingPurchases(db));
+
+        const [row] = await db.select({ accountId: transactions.accountId, id: transactions.id }).from(transactions);
+        expect(row?.accountId).toBeNull();
+        const cards = await Effect.runPromise(Meta.get(db, "walletCards"));
+        expect(cards.find((card) => card.text === "Banorte")?.waiting).toStrictEqual([row?.id]);
+    });
+
     it("leaves a waiting purchase that predates the account's opening balance", async () => {
         await seedAccounts(db);
         await Effect.runPromise(
