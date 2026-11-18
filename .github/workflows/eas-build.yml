@@ -15,6 +15,7 @@
 #   EAS_IOS_PROFILE_WIDGETS        ... for com.tryoutlayr.app.ExpoWidgetsTarget
 #   EAS_IOS_PROFILE_WATCH          ... for com.tryoutlayr.app.watchkitapp
 #   EAS_IOS_PROFILE_WATCH_WIDGET   ... for com.tryoutlayr.app.watchkitapp.widget
+#   EAS_IOS_PROFILE_NOTIFICATION   ... for com.tryoutlayr.app.NotificationService
 #   EAS_ANDROID_KEYSTORE           base64 upload keystore
 #   EAS_ANDROID_STORE_PASSWORD, EAS_ANDROID_KEY_ALIAS, EAS_ANDROID_KEY_PASSWORD
 name: EAS Build
@@ -184,9 +185,10 @@ jobs:
                   EAS_IOS_PROFILE_WIDGETS: ${{ secrets.EAS_IOS_PROFILE_WIDGETS }}
                   EAS_IOS_PROFILE_WATCH: ${{ secrets.EAS_IOS_PROFILE_WATCH }}
                   EAS_IOS_PROFILE_WATCH_WIDGET: ${{ secrets.EAS_IOS_PROFILE_WATCH_WIDGET }}
+                  EAS_IOS_PROFILE_NOTIFICATION: ${{ secrets.EAS_IOS_PROFILE_NOTIFICATION }}
               run: |
                   set -euo pipefail
-                  for NAME in EAS_IOS_DIST_P12 EAS_IOS_PROFILE EAS_IOS_PROFILE_WIDGETS EAS_IOS_PROFILE_WATCH EAS_IOS_PROFILE_WATCH_WIDGET; do
+                  for NAME in EAS_IOS_DIST_P12 EAS_IOS_PROFILE EAS_IOS_PROFILE_WIDGETS EAS_IOS_PROFILE_WATCH EAS_IOS_PROFILE_WATCH_WIDGET EAS_IOS_PROFILE_NOTIFICATION; do
                     if [ -z "${!NAME:-}" ]; then
                       echo "::error::The $NAME secret is not set."
                       exit 1
@@ -213,7 +215,7 @@ jobs:
                   PROFILES_DIR="$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
                   mkdir -p "$PROFILES_DIR"
                   : > "$RUNNER_TEMP/profiles.txt"
-                  for NAME in EAS_IOS_PROFILE EAS_IOS_PROFILE_WIDGETS EAS_IOS_PROFILE_WATCH EAS_IOS_PROFILE_WATCH_WIDGET; do
+                  for NAME in EAS_IOS_PROFILE EAS_IOS_PROFILE_WIDGETS EAS_IOS_PROFILE_WATCH EAS_IOS_PROFILE_WATCH_WIDGET EAS_IOS_PROFILE_NOTIFICATION; do
                     echo "${!NAME}" | base64 --decode > "$RUNNER_TEMP/profile.mobileprovision"
                     security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" > "$RUNNER_TEMP/profile.plist"
                     UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" "$RUNNER_TEMP/profile.plist")
