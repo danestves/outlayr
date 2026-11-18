@@ -121,6 +121,7 @@ const LOAN_TAKEN = new RegExp(
     "iu"
 );
 const PERSON_NAME = new RegExp(String.raw`^\p{Lu}`, "u");
+const PURCHASE = new RegExp(String.raw`\b(?:compra|purchase)(?!\p{L})`, "iu");
 const INSTALLMENT = new RegExp(
     String.raw`\b(?:cuota|installment)\s+(?:n(?:ro|o|°|º)?\.?\s*)?(\d{1,3})(?:\s*(?:\/|de|of)\s*(\d{1,3})(?![\d.,]))?(?!\d)`,
     "iu"
@@ -238,7 +239,7 @@ function debtVerb(text: string, installment: DebtInstallment | null): DebtVerb |
         return "lent";
     }
     const loan = LOAN.test(text);
-    if ((installment !== null || loan) && REPAYMENT.test(text)) {
+    if ((installment !== null || loan) && REPAYMENT.test(text) && !PURCHASE.test(text)) {
         return INCOMING.test(text) ? "gotPaidBack" : "paidBack";
     }
     return loan && installment === null && LOAN_TAKEN.test(text) ? "borrowed" : null;
@@ -256,7 +257,8 @@ function debtAmount(text: string, installment: DebtInstallment | null): { amount
     return bare !== undefined && amount !== null && amount > 0 ? { amount, amountText: bare } : null;
 }
 
-function counterpartyOf(text: string): string | null {
+function counterpartyOf(raw: string): string | null {
+    const text = raw.replace(INSTALLMENT, "");
     for (const line of text.split("\n")) {
         const named = NAMED_LINE.exec(line)?.[1];
         if (named && detectCurrency(named) === null) {

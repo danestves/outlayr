@@ -117,6 +117,12 @@ function rateCaption(t: TranslateFn, language: Language, from: string, to: strin
     return t(quotedByBcv(from, to) ? "debts.rate.bcv" : "debts.rate.official", { rate: figure });
 }
 
+const pushedVerbMissing = (pushed: NotificationDebt | null | undefined, choices: readonly { verb: DebtVerb }[]) =>
+    pushed != null && !choices.some((option) => option.verb === pushed.verb);
+
+const pushedAmountFits = (pushed: NotificationDebt | null | undefined, currency: string) =>
+    !pushed?.currency || pushed.currency === currency;
+
 function isDirty(edits: { amountText: string; name: string; note: string; payBackBy: Date | null }) {
     return edits.amountText !== "" || edits.name.trim() !== "" || edits.note.trim() !== "" || edits.payBackBy !== null;
 }
@@ -172,6 +178,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
     const [amountText, setAmountTextState] = useState(() =>
         pushed ? numberToNumpad(pushed.amount, minorUnitsFor(pushed.currency ?? globalCurrency)) : ""
     );
+    const [amountTyped, setAmountTyped] = useState(false);
     const [theirText, setTheirText] = useState("");
     const setNewCurrency = (code: string) => {
         setPickedCurrency(code);
@@ -190,6 +197,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
     };
     const setAmountText = (value: string) => {
         setAmountTextState(value);
+        setAmountTyped(true);
         edit({ amountText: value });
     };
     const setNote = (value: string) => {
@@ -217,17 +225,17 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
     const choices = debtChoices(person === null ? null : debtStanding(balance, person.currency));
     const incoming = !soldOnCredit && comesFromPerson(verb);
     const choice = choices.find((option) => comesFromPerson(option.verb) === incoming) ?? choices[0];
-    const verbUnset =
-        pushed != null && !verbPicked && !soldOnCredit && !choices.some((option) => option.verb === pushed.verb);
+    const verbUnset = !verbPicked && !soldOnCredit && pushedVerbMissing(pushed, choices);
 
     const funding = soldOnCredit ? null : account;
     const personCurrency =
         person?.currency ?? pickedCurrency ?? newPersonCurrency(funding?.currency ?? null, globalCurrency);
     const fundingCurrency = funding?.currency ?? personCurrency;
+    const amountShown = amountTyped || pushedAmountFits(pushed, fundingCurrency) ? amountText : "";
     const { official } = useTransferRates(db, [fundingCurrency, personCurrency], OFFICIAL);
     const market = official === undefined ? null : marketRateFor(fundingCurrency, personCurrency, date, official);
     const draft = readDraft({
-        amountText,
+        amountText: amountShown,
         category,
         funding,
         market,
@@ -315,7 +323,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
         accountLabel: t(incoming ? "debts.field.accountInto" : "debts.field.accountFrom"),
         accountValue: account?.name ?? t(person === null ? "debts.field.before" : "debts.field.outside"),
         amountSheet,
-        amountText,
+        amountText: amountShown,
         canSave: !busy && !verbUnset && draft.complete,
         category,
         categorySheet,
