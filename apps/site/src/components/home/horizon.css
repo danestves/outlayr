@@ -304,19 +304,19 @@
     padding-top: var(--section-y);
     scroll-margin-top: 24px;
     content-visibility: auto;
-    contain-intrinsic-block-size: auto 720px;
+    contain-intrinsic-block-size: auto 600px;
 }
 
 .hz-section[aria-labelledby="also-title"] {
-    contain-intrinsic-block-size: auto 1000px;
+    contain-intrinsic-block-size: auto 660px;
 }
 
 #faq {
-    contain-intrinsic-block-size: auto 1200px;
+    contain-intrinsic-block-size: auto 900px;
 }
 
 #pricing {
-    contain-intrinsic-block-size: auto 1500px;
+    contain-intrinsic-block-size: auto 1000px;
 }
 
 .hz-page [data-app-canvas] {
@@ -1951,6 +1951,18 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 }
 
 @media (max-width: 63.99rem) {
+    .hz-section[aria-labelledby="also-title"] {
+        contain-intrinsic-block-size: auto 990px;
+    }
+
+    #faq {
+        contain-intrinsic-block-size: auto 1060px;
+    }
+
+    #pricing {
+        contain-intrinsic-block-size: auto 1630px;
+    }
+
     .hz-page {
         --s: 1;
     }
@@ -2160,6 +2172,14 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
         --gutter: 16px;
         --section-gap: 72px;
         --section-gap-s: 56px;
+    }
+
+    .hz-section[aria-labelledby="also-title"] {
+        contain-intrinsic-block-size: auto 1430px;
+    }
+
+    #faq {
+        contain-intrinsic-block-size: auto 1130px;
     }
 
     .hz-ways {
