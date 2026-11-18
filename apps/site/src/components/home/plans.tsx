@@ -14,7 +14,7 @@ export function Plans() {
     const { pricing: copy } = useIntlayer("horizon");
     const { pricing } = useIntlayer("story");
     const { more } = useIntlayer("pricing");
-    const { getApp } = useIntlayer("site");
+    const { colon, getApp } = useIntlayer("site");
     const { locale } = useLocale();
     const visitorCountry = useLoaderData({ from: "__root__" });
     const prices = proPrices(visitorCountry, locale);
@@ -69,7 +69,7 @@ export function Plans() {
                                 <li key={limit.label.value}>
                                     <Icon name="check" />
                                     {limit.label}
-                                    <span className="sr-only">: </span>
+                                    <span className="sr-only">{colon}</span>
                                     <span className="hz-plan-value">{limit.free}</span>
                                 </li>
                             ))}
@@ -117,7 +117,7 @@ export function Plans() {
                                 <li key={limit.label.value}>
                                     <Icon name="check" />
                                     {limit.label}
-                                    <span className="sr-only">: </span>
+                                    <span className="sr-only">{colon}</span>
                                     <span className="hz-plan-value">{limit.pro}</span>
                                 </li>
                             ))}

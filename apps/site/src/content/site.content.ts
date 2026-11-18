@@ -263,6 +263,7 @@ const site = {
                 fr: "Disponible sur Google Play",
             }),
         },
+        colon: t({ en: ": ", de: ": ", es: ": ", pt: ": ", fr: "\u00A0: " }),
         consent: {
             allow: t({ en: "Allow", de: "Zulassen", es: "Permitir", pt: "Permitir", fr: "Autoriser" }),
             anchor: t({

@@ -2745,6 +2745,10 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .hz-capture-pause {
+        display: none;
+    }
+
     .hz-page
         :is(
             .hz-pill,

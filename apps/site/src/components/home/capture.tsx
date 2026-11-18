@@ -13,6 +13,16 @@ function isStep(key: string): key is keyof typeof STEP {
     return Object.hasOwn(STEP, key);
 }
 
+function keyedWay(key: string, current: number): number | null {
+    if (key === "Home") {
+        return 0;
+    }
+    if (key === "End") {
+        return CAPTURE_WAYS.length - 1;
+    }
+    return isStep(key) ? (current + STEP[key] + CAPTURE_WAYS.length) % CAPTURE_WAYS.length : null;
+}
+
 function nextWay(current: number, auto: boolean): number | null {
     const next = current + 1;
     return auto && next < CAPTURE_WAYS.length ? next : null;
@@ -55,14 +65,17 @@ function watch(section: HTMLElement | null) {
 
 export function Capture() {
     const { how } = useIntlayer("horizon");
+    const { colon } = useIntlayer("site");
     const [current, setCurrent] = useState(0);
     const [auto, setAuto] = useState(true);
     const [paused, setPaused] = useState(false);
+    const [playing, setPlaying] = useState(true);
     const way = CAPTURE_WAYS[current] ?? "type";
 
     const select = (target: HTMLElement, index: number) => {
         const section = target.closest("section");
         setCurrent(index);
+        setPlaying(true);
         if (section) {
             playWay(section, CAPTURE_WAYS[index] ?? "type");
         }
@@ -74,11 +87,11 @@ export function Capture() {
     };
 
     const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-        if (!isStep(event.key)) {
+        const next = keyedWay(event.key, current);
+        if (next === null) {
             return;
         }
         event.preventDefault();
-        const next = (current + STEP[event.key] + CAPTURE_WAYS.length) % CAPTURE_WAYS.length;
         setAuto(false);
         select(event.currentTarget, next);
         document.querySelector<HTMLButtonElement>(`#way-${CAPTURE_WAYS[next]}`)?.focus();
@@ -91,6 +104,7 @@ export function Capture() {
         const next = nextWay(current, auto);
         if (next === null) {
             setAuto(false);
+            setPlaying(false);
             return;
         }
         select(event.currentTarget, next);
@@ -131,7 +145,7 @@ export function Capture() {
                                 >
                                     <span className="hz-way-name">{how.ways[id].name}</span>
                                     <span className="hz-way-line">
-                                        <span className="sr-only">: </span>
+                                        <span className="sr-only">{colon}</span>
                                         {how.ways[id].line}
                                     </span>
                                     <span
@@ -155,20 +169,22 @@ export function Capture() {
                         style={{ "--i": "2" }}
                     >
                         <CaptureFilm way={way} />
-                        <button
-                            aria-label={paused ? how.play.value : how.pause.value}
-                            className="hz-capture-pause"
-                            onClick={() => setPaused(!paused)}
-                            type="button"
-                        >
-                            <svg aria-hidden="true" height="14" viewBox="0 0 14 14" width="14">
-                                {paused ? (
-                                    <path d="M3.5 2.2v9.6a.6.6 0 0 0 .9.5l8-4.8a.6.6 0 0 0 0-1L4.4 1.7a.6.6 0 0 0-.9.5Z" />
-                                ) : (
-                                    <path d="M3 2h2.6v10H3zM8.4 2H11v10H8.4z" />
-                                )}
-                            </svg>
-                        </button>
+                        {playing ? (
+                            <button
+                                aria-label={paused ? how.play.value : how.pause.value}
+                                className="hz-capture-pause"
+                                onClick={() => setPaused(!paused)}
+                                type="button"
+                            >
+                                <svg aria-hidden="true" height="14" viewBox="0 0 14 14" width="14">
+                                    {paused ? (
+                                        <path d="M3.5 2.2v9.6a.6.6 0 0 0 .9.5l8-4.8a.6.6 0 0 0 0-1L4.4 1.7a.6.6 0 0 0-.9.5Z" />
+                                    ) : (
+                                        <path d="M3 2h2.6v10H3zM8.4 2H11v10H8.4z" />
+                                    )}
+                                </svg>
+                            </button>
+                        ) : null}
                     </div>
                     <p aria-hidden="true" className="hz-caption">
                         {how.ways[way].line}
