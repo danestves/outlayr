@@ -428,6 +428,7 @@
     font-weight: 560;
     letter-spacing: var(--tracking-display);
     line-height: 0.96;
+    text-wrap: wrap;
 }
 
 .hz-w {
@@ -1854,8 +1855,13 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
     align-items: center;
     gap: 12px;
     padding: 8px;
+    border: 1px solid rgb(23 21 15 / 0.07);
     border-radius: 20px;
-    isolation: isolate;
+    background-color: var(--hz-card);
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.9),
+        0 1px 2px rgb(84 38 14 / 0.08),
+        0 16px 36px -16px rgb(70 18 6 / 0.36);
     color: var(--color-foreground);
     transform: translate3d(0, calc(100% + 40px), 0);
 }
@@ -1869,43 +1875,31 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
     --color-muted: oklch(70.9% 0.021 80.1);
     --hz-pill: oklch(95.1% 0.008 73.7);
     --hz-pill-ink: oklch(19.6% 0.012 91.8);
-}
-
-.hz-install::before,
-.hz-install::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    pointer-events: none;
-    transition: opacity 200ms var(--ease-out);
-}
-
-.hz-install::before {
-    border: 1px solid rgb(23 21 15 / 0.07);
-    background: var(--hz-card);
-    box-shadow:
-        inset 0 1px 0 rgb(255 255 255 / 0.9),
-        0 1px 2px rgb(84 38 14 / 0.08),
-        0 16px 36px -16px rgb(70 18 6 / 0.36);
-}
-
-.hz-install::after {
-    border: 1px solid color-mix(in oklab, oklch(95.1% 0.008 73.7) 11%, transparent);
-    background: #26251b;
+    border-color: color-mix(in oklab, oklch(95.1% 0.008 73.7) 11%, transparent);
+    background-color: #26251b;
     box-shadow:
         inset 0 1px 0 0 color-mix(in oklab, oklch(95.1% 0.008 73.7) 16%, transparent),
         0 8px 20px -10px color-mix(in oklab, var(--hz-shade) 80%, transparent);
-    opacity: 0;
 }
 
-.hz-install[data-ground="night"]::before {
-    opacity: 0;
+.hz-edge {
+    display: none;
 }
 
-.hz-install[data-ground="night"]::after {
-    opacity: 1;
+@supports (-webkit-touch-callout: none) {
+    .hz-edge {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 49;
+        display: block;
+        height: max(env(safe-area-inset-top, 0px), 1px);
+        background-color: var(--hz-paper);
+        pointer-events: none;
+    }
+
+    .hz-edge[data-ground="night"] {
+        background-color: var(--hz-night);
+    }
 }
 
 .hz-install[data-up] {
@@ -1982,10 +1976,6 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 }
 
 @media (max-width: 63.99rem) {
-    .hz-br {
-        display: none;
-    }
-
     .hz-slot {
         aspect-ratio: var(--ratio-m, var(--ratio));
     }
@@ -2640,13 +2630,20 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
     }
 
     .hz-install {
-        transition: transform 520ms var(--ease-out);
+        transition:
+            transform 520ms var(--ease-out),
+            background-color 200ms var(--ease-out),
+            border-color 200ms var(--ease-out),
+            box-shadow 200ms var(--ease-out);
     }
 
     .hz-install:not([data-up]) {
         transition:
             transform 520ms var(--ease-out),
-            visibility 0s 520ms;
+            visibility 0s 520ms,
+            background-color 200ms var(--ease-out),
+            border-color 200ms var(--ease-out),
+            box-shadow 200ms var(--ease-out);
     }
 
     @media (min-width: 64rem) and (hover: hover) and (pointer: fine) {
@@ -2674,8 +2671,8 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
         }
 
         .hz-page {
-            --sun-box: 100svh;
-            --sun-pin: calc(100svh * var(--pin-len));
+            --sun-box: min(100svh, 100dvh);
+            --sun-pin: calc(var(--sun-box) * var(--pin-len));
             --sky-fade: 0px;
         }
 
