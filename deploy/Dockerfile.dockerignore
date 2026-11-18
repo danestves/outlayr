@@ -1,0 +1,7 @@
+.git
+**/node_modules
+**/.output
+**/dist
+**/.turbo
+apps/native/ios
+apps/native/android

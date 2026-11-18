@@ -1,0 +1,78 @@
+name: outlayr
+
+# Self-hosted stack: Convex backend + admin dashboard + web app.
+# `deploy` is a one-shot that pushes the Convex functions after backend is
+# healthy; `app` waits for it so the API exists before the web dashboard does.
+# Runbook: docs/operations/self-hosting.md
+
+services:
+  backend:
+    image: ghcr.io/convex/convex-backend:latest
+    restart: unless-stopped
+    stop_signal: SIGINT
+    stop_grace_period: 10s
+    environment:
+      INSTANCE_NAME: ${INSTANCE_NAME:-outlayr}
+      INSTANCE_SECRET: ${INSTANCE_SECRET}
+      CONVEX_CLOUD_ORIGIN: ${CONVEX_CLOUD_ORIGIN:-http://localhost:3210}
+      CONVEX_SITE_ORIGIN: ${CONVEX_SITE_ORIGIN:-http://localhost:3211}
+      DISABLE_BEACON: "true"
+      DO_NOT_REQUIRE_SSL: "true"
+    ports:
+      - "${API_PORT:-3210}:3210"
+      - "${SITE_PORT:-3211}:3211"
+    volumes:
+      - convex-data:/convex/data
+    healthcheck:
+      test: curl -f http://localhost:3210/version
+      interval: 5s
+      start_period: 15s
+      retries: 12
+      timeout: 5s
+
+  dashboard:
+    image: ghcr.io/convex/convex-dashboard:latest
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_DEPLOYMENT_URL: ${CONVEX_CLOUD_ORIGIN:-http://localhost:3210}
+    ports:
+      - "${DASHBOARD_PORT:-6791}:6791"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  deploy:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: deploy
+    restart: "no"
+    environment:
+      CONVEX_SELF_HOSTED_URL: http://backend:3210
+      CONVEX_SELF_HOSTED_ADMIN_KEY: ${CONVEX_SELF_HOSTED_ADMIN_KEY}
+      SITE_URL: ${SITE_URL:-http://localhost:3080}
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  app:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: app
+      args:
+        VITE_CONVEX_URL: ${VITE_CONVEX_URL:-http://localhost:3210}
+        VITE_CONVEX_SITE_URL: ${VITE_CONVEX_SITE_URL:-http://localhost:3211}
+        CONVEX_INTERNAL_URL: http://backend:3210
+        VITE_PUBLIC_POSTHOG_PROJECT_TOKEN: ${VITE_PUBLIC_POSTHOG_PROJECT_TOKEN:-}
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3080}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+      deploy:
+        condition: service_completed_successfully
+
+volumes:
+  convex-data:
