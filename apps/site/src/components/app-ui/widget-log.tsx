@@ -3,6 +3,7 @@ import { getIntlayer } from "intlayer";
 import { AppFragment, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { DEMO_NOW } from "./ledger";
+import type { DemoRow } from "./ledger";
 import { interpolate } from "./strings";
 import {
     contentWidth,
@@ -69,12 +70,13 @@ export function logWidgetLabel(widget: LogWidgetProps, locale: CanvasProps["loca
 }
 
 interface LogWidgetFragmentProps extends CanvasProps {
+    extra?: readonly DemoRow[];
     now?: Date;
     widget?: LogWidgetProps;
 }
 
-export function LogWidget({ now = DEMO_NOW, widget, ...canvas }: LogWidgetFragmentProps) {
-    const props = widget ?? logWidgetProps(now, canvas.locale);
+export function LogWidget({ extra, now = DEMO_NOW, widget, ...canvas }: LogWidgetFragmentProps) {
+    const props = widget ?? logWidgetProps(now, canvas.locale, extra);
     return (
         <AppFragment {...canvas} {...WIDGET_SIZE.small} label={logWidgetLabel(props, canvas.locale)}>
             <LogWidgetView widget={props} />

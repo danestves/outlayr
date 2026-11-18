@@ -157,10 +157,11 @@ function wholeAmount(amount: number, code: string, locale: Locale): string {
     return `${symbolPrefix(amountParts(amount, code, locale).symbol)}${formatFixed(rounded, 0, locale)}`;
 }
 
-export const settled = (now: Date) => ROWS.filter((row) => row.date.getTime() <= now.getTime());
+export const settled = (now: Date, extra: readonly DemoRow[] = []) =>
+    [...ROWS, ...extra].filter((row) => row.date.getTime() <= now.getTime());
 
-function sumBetween(start: Date, now: Date, income: boolean): number {
-    return settled(now)
+function sumBetween(start: Date, now: Date, income: boolean, extra: readonly DemoRow[]): number {
+    return settled(now, extra)
         .filter((row) => row.income === income && row.date.getTime() >= start.getTime())
         .reduce((sum, row) => sum + row.amount, 0);
 }
@@ -211,14 +212,14 @@ interface WindowAggregate {
     spent: number;
 }
 
-function aggregate(period: InsightsPeriod, now: Date, t: AppT): WindowAggregate {
+function aggregate(period: InsightsPeriod, now: Date, t: AppT, extra: readonly DemoRow[]): WindowAggregate {
     const slots = buckets(period, now, t);
     const start = slots[0]?.start.getTime() ?? 0;
     const end = slots.at(-1)?.end.getTime() ?? start;
     const sums = new Map<DemoRow["category"], number>();
     let income = 0;
     let spent = 0;
-    for (const row of settled(now)) {
+    for (const row of settled(now, extra)) {
         const at = row.date.getTime();
         if (at < start || at >= end) {
             continue;
@@ -255,13 +256,13 @@ function windowLabel(period: InsightsPeriod, now: Date, locale: Locale, t: AppT)
 export const categoryName = (category: DemoRow["category"], t: AppT) =>
     hasPresetLabel(category) ? t(PRESET_LABELS[category]) : category;
 
-export function logWidgetProps(now: Date, locale: Locale): LogWidgetProps {
+export function logWidgetProps(now: Date, locale: Locale, extra: readonly DemoRow[] = []): LogWidgetProps {
     const today = startOfDay(now);
     return {
         chrome: WIDGET_PALETTE,
-        todayCount: settled(now).filter((row) => !row.income && row.date.getTime() >= today.getTime()).length,
+        todayCount: settled(now, extra).filter((row) => !row.income && row.date.getTime() >= today.getTime()).length,
         todayLabel: appTranslator(locale)("common.today").toUpperCase(),
-        todaySpent: formatAmount(sumBetween(today, now, false), currencyFor(locale), locale),
+        todaySpent: formatAmount(sumBetween(today, now, false, extra), currencyFor(locale), locale),
         url: DEEP_LINKS.newExpense,
     };
 }
@@ -297,7 +298,12 @@ export function overallBudgetView(now: Date, locale: Locale): BudgetViewProps {
 
 export type EntryColor = "stored" | "unset";
 
-export function ledgerWidgetProps(now: Date, locale: Locale, color: EntryColor = "stored"): LedgerWidgetProps {
+export function ledgerWidgetProps(
+    now: Date,
+    locale: Locale,
+    color: EntryColor = "stored",
+    extra: readonly DemoRow[] = []
+): LedgerWidgetProps {
     const t = appTranslator(locale);
     const code = currencyFor(locale);
     const money = (value: number) => formatAmount(value, code, locale);
@@ -310,11 +316,11 @@ export function ledgerWidgetProps(now: Date, locale: Locale, color: EntryColor =
         } satisfies Record<LedgerHeaderMeasure, LedgerHeaderProps>;
     };
     const window = (period: InsightsPeriod) => {
-        const totals = aggregate(period, now, t);
+        const totals = aggregate(period, now, t, extra);
         return measures(t(PERIOD_HEADER[period]).toUpperCase(), totals.income, totals.spent);
     };
     const today = startOfDay(now);
-    const entries = settled(now)
+    const entries = settled(now, extra)
         .toReversed()
         .toSorted((a, b) => b.date.getTime() - a.date.getTime())
         .slice(0, LEDGER_LIMIT)
@@ -334,8 +340,8 @@ export function ledgerWidgetProps(now: Date, locale: Locale, color: EntryColor =
             month: window("month"),
             today: measures(
                 t("common.today").toUpperCase(),
-                sumBetween(today, now, true),
-                sumBetween(today, now, false)
+                sumBetween(today, now, true, extra),
+                sumBetween(today, now, false, extra)
             ),
             week: window("week"),
             year: window("year"),
@@ -348,7 +354,7 @@ export function insightsView(period: InsightsPeriod, now: Date, locale: Locale):
     const t = appTranslator(locale);
     const code = currencyFor(locale);
     const money = (value: number) => formatAmount(value, code, locale);
-    const totals = aggregate(period, now, t);
+    const totals = aggregate(period, now, t, []);
     const net = totals.income - totals.spent;
     return {
         bars: totals.buckets.map((bucket) => ({ x: bucket.label, y: bucket.value })),

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import type { CanvasProps } from "./canvas";
 import { useReplica } from "./canvas";
 import { DEMO_NOW } from "./ledger";
+import type { DemoRow } from "./ledger";
 import { appTranslator, interpolate } from "./strings";
 import {
     BOTTOM_INSET,
@@ -47,6 +48,7 @@ const MARK_FRAME = 20;
 const STACK_GAP = 4;
 
 interface WatchProps extends CanvasProps {
+    extra?: readonly DemoRow[];
     now?: Date;
     snapshot?: WatchSnapshot;
 }
@@ -193,8 +195,8 @@ function TodayBody({ now, snapshot }: { now: Date; snapshot: WatchSnapshot }) {
     );
 }
 
-export function WatchToday({ now = DEMO_NOW, snapshot, ...canvas }: WatchProps) {
-    const data = snapshot ?? watchSnapshot(now, canvas.locale);
+export function WatchToday({ extra, now = DEMO_NOW, snapshot, ...canvas }: WatchProps) {
+    const data = snapshot ?? watchSnapshot(now, canvas.locale, extra);
     const label = interpolate(getIntlayer("appUi", canvas.locale).labels.watchToday, {
         caption: data.budget.remainingCaption.toLowerCase(),
         date: dayMonth(now, canvas.locale, appTranslator(canvas.locale)),
@@ -288,8 +290,8 @@ function AmountBody({ entry, money }: { entry: AmountEntry; money: WatchMoney })
     );
 }
 
-export function WatchAmount({ entry = DEMO_ENTRY, now = DEMO_NOW, snapshot, ...canvas }: EntryProps) {
-    const { money } = snapshot ?? watchSnapshot(now, canvas.locale);
+export function WatchAmount({ entry = DEMO_ENTRY, extra, now = DEMO_NOW, snapshot, ...canvas }: EntryProps) {
+    const { money } = snapshot ?? watchSnapshot(now, canvas.locale, extra);
     const label = interpolate(getIntlayer("appUi", canvas.locale).labels.watchAmount, {
         amount: formatUnits(money, entryUnits(entry, money)),
     });
@@ -352,8 +354,8 @@ function CategoryBody({ snapshot }: { snapshot: WatchSnapshot }) {
     );
 }
 
-export function WatchCategory({ entry = DEMO_ENTRY, now = DEMO_NOW, snapshot, ...canvas }: EntryProps) {
-    const data = snapshot ?? watchSnapshot(now, canvas.locale);
+export function WatchCategory({ entry = DEMO_ENTRY, extra, now = DEMO_NOW, snapshot, ...canvas }: EntryProps) {
+    const data = snapshot ?? watchSnapshot(now, canvas.locale, extra);
     const amount = formatUnits(data.money, entryUnits(entry, data.money));
     const label = interpolate(getIntlayer("appUi", canvas.locale).labels.watchCategory, {
         amount,
@@ -396,7 +398,7 @@ function WaitingBody() {
     );
 }
 
-export function WatchWaiting({ now = DEMO_NOW, ...canvas }: Omit<WatchProps, "snapshot">) {
+export function WatchWaiting({ now = DEMO_NOW, ...canvas }: Omit<WatchProps, "extra" | "snapshot">) {
     const label = interpolate(getIntlayer("appUi", canvas.locale).labels.watchWaiting, {
         message: getIntlayer("appUi", canvas.locale).labels.watch.waiting,
     });
@@ -417,7 +419,14 @@ const SCREENS = {
 
 export type WatchScreenKind = keyof typeof SCREENS;
 
-export function WatchScreen({ screen, ...canvas }: CanvasProps & { screen: WatchScreenKind }) {
+export function WatchScreen({
+    extra,
+    screen,
+    ...canvas
+}: CanvasProps & Pick<WatchProps, "extra"> & { screen: WatchScreenKind }) {
+    if (screen === "waiting") {
+        return <WatchWaiting {...canvas} />;
+    }
     const Screen = SCREENS[screen];
-    return <Screen {...canvas} />;
+    return <Screen {...canvas} extra={extra} />;
 }

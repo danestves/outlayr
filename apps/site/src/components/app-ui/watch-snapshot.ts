@@ -112,11 +112,11 @@ export function recentCategories(snapshot: WatchSnapshot): WatchCategory[] {
     return [...ids].flatMap((id) => expenses.get(id) ?? []).slice(0, RECENT_LIMIT);
 }
 
-export function watchSnapshot(now: Date, locale: Locale): WatchSnapshot {
+export function watchSnapshot(now: Date, locale: Locale, extra: readonly DemoRow[] = []): WatchSnapshot {
     const t = appTranslator(locale);
     const code = currencyFor(locale);
     const parts = amountParts(0, code, locale);
-    const used = new Map(settled(now).map((row) => [row.category, row.income]));
+    const used = new Map(settled(now, extra).map((row) => [row.category, row.income]));
     const categories = (["expense", "income"] as const).flatMap((kind) =>
         CANONICAL_CATEGORY_NAMES[kind]
             .filter((name) => used.get(name) === (kind === "income"))
@@ -128,7 +128,7 @@ export function watchSnapshot(now: Date, locale: Locale): WatchSnapshot {
                 name: categoryName(name, t),
             }))
     );
-    const entries = settled(now)
+    const entries = settled(now, extra)
         .toReversed()
         .toSorted((a, b) => b.date.getTime() - a.date.getTime())
         .slice(0, ENTRY_LIMIT)
@@ -144,7 +144,7 @@ export function watchSnapshot(now: Date, locale: Locale): WatchSnapshot {
             note: row.note,
             rootCategoryId: categoryId(row.category, row.income),
         }));
-    const log = logWidgetProps(now, locale);
+    const log = logWidgetProps(now, locale, extra);
     return {
         budget: overallBudgetView(now, locale),
         categories,

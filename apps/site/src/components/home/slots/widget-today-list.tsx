@@ -6,7 +6,9 @@ import type { SlotProps } from "./placeholder";
 export function TodayListWidget({ theme = "light", widget = "ledger" }: SlotProps & { widget?: MediumWidgetKind }) {
     return (
         <Replica>
-            {({ MediumWidget }, locale) => <MediumWidget fit kind={widget} locale={locale} theme={theme} />}
+            {({ MediumWidget, SAVED }, locale) => (
+                <MediumWidget extra={SAVED} fit kind={widget} locale={locale} theme={theme} />
+            )}
         </Replica>
     );
 }
