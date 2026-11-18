@@ -27,9 +27,38 @@ const PAGE = `<!doctype html>
 const ENTRY_SOURCE = `
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { AppScreen } from "/src/components/app-ui/canvas.tsx";
 import { LogScreen } from "/src/components/app-ui/log.tsx";
+import { Button, HomeIndicator, LinkRow, ScopeChip, SettingsSection, Sheet, ToggleRow } from "/src/components/app-ui/parts.tsx";
 
-const SCREENS = { log: LogScreen };
+const h = createElement;
+
+function PartsScreen(props) {
+    return h(
+        AppScreen,
+        { ...props, label: "Replica parts" },
+        h(
+            Sheet,
+            { title: "New" },
+            h(
+                "div",
+                { style: { padding: "80px 20px 0" } },
+                h("div", { className: "flex-row gap-2" }, h(ScopeChip, { menu: true, title: "This month" }), h(ScopeChip, { clearable: true, title: "Groceries" })),
+                h(
+                    SettingsSection,
+                    { title: "Money" },
+                    h(LinkRow, { title: "Currency", value: "USD" }),
+                    h(ToggleRow, { on: true, title: "Income tracking" }),
+                    h(ToggleRow, { on: false, title: "Show cents" })
+                )
+            ),
+            h("div", { style: { bottom: 34, left: 20, position: "absolute", right: 20 } }, h(Button, { className: "rounded-full", size: "lg" }, "Sign in"))
+        ),
+        h(HomeIndicator)
+    );
+}
+
+const SCREENS = { log: LogScreen, parts: PartsScreen };
 const LOCALES = ["en", "de", "es", "pt", "fr"];
 const THEMES = ["light", "dark"];
 

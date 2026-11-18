@@ -25,7 +25,7 @@ export function SymbolMask({ color, size, src }: { color: string; size: number; 
     return <div style={{ backgroundColor: color, height: size, mask, WebkitMask: mask, width: size }} />;
 }
 
-function SystemText({
+export function SystemText({
     children,
     size,
     style,
