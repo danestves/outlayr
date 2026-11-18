@@ -137,6 +137,18 @@
     line-gap-override: 0%;
 }
 
+@font-face {
+    font-family: "App System Mono";
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: block;
+    src: url("@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2") format("woff2-variations");
+    size-adjust: 103.03%;
+    ascent-override: 92.42%;
+    descent-override: 23.41%;
+    line-gap-override: 0%;
+}
+
 @layer base {
     [data-app-replica] {
         --spacing: 4px;
@@ -146,6 +158,7 @@
         --font-sans-bold: var(--font-sans);
         --font-mono: "App Mono", monospace;
         --font-mono-medium: var(--font-mono);
+        --font-system-mono: ui-monospace, "SF Mono", "App System Mono", monospace;
         --font-system: "SF Pro", -apple-system, "App Sans", sans-serif;
         --app-ascent: 0.95215;
         --app-descent: 0.24121;
