@@ -1,6 +1,12 @@
 import { t } from "intlayer";
 import type { Dictionary } from "intlayer";
 
+import { accountsCopy } from "./app-ui/accounts";
+import { captureCopy } from "./app-ui/capture";
+import { entryCopy } from "./app-ui/entry";
+import { glanceCopy } from "./app-ui/glance";
+import { insightsCopy } from "./app-ui/insights";
+
 const appUi = {
     content: {
         accounts: {
@@ -109,6 +115,11 @@ const appUi = {
             sep: t({ en: "Sep", de: "Sept.", es: "sep", pt: "set", fr: "sept." }),
         },
         native: {
+            ...accountsCopy,
+            ...captureCopy,
+            ...entryCopy,
+            ...glanceCopy,
+            ...insightsCopy,
             "accounts.overview.heading": t({
                 en: "Accounts",
                 de: "Konten",
