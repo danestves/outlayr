@@ -24,10 +24,18 @@ function watch(section: HTMLElement | null) {
         return;
     }
     let away = true;
+    let fetched = false;
     const sync = () => section.toggleAttribute("data-away", away || document.hidden);
     const observer = new IntersectionObserver(
         ([entry]) => {
             away = !entry?.isIntersecting;
+            if (!away && !fetched) {
+                fetched = true;
+                for (const image of section.querySelectorAll<HTMLImageElement>(".hz-capture-film img")) {
+                    const early = new Image();
+                    early.src = image.src;
+                }
+            }
             const way = section.querySelector<HTMLElement>('[aria-selected="true"] [data-way]')?.dataset.way;
             if (!away && way && !section.querySelector("[data-take]")) {
                 playWay(section, way);
