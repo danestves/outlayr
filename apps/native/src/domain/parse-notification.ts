@@ -350,6 +350,19 @@ function sameAmountText(parsed: { amount: number; amountText: string } | null, a
     return parsed !== null && parsed.amount === amount ? parsed.amountText : String(amount);
 }
 
+// The model's currency counts only when the figure it read shows that currency in the text: a bare "$" belongs to
+// 22 currencies and the card's account settles it, and a push with two amounts must not lend one's code to the other.
+function readCurrency(text: string, code: string | null, amount: number): string | null {
+    if (code === null) {
+        return null;
+    }
+    const shown = (text.match(EVERY_MONEY) ?? []).some((token) => {
+        const value = amountOf(token);
+        return value !== null && Math.abs(value - amount) < SAME_AMOUNT && detectCurrency(token) === code;
+    });
+    return shown ? `${code} ${amount}` : null;
+}
+
 function shownAmount(
     text: string,
     parsed: ParsedNotification | null,

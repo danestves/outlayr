@@ -480,6 +480,7 @@ describe("mergeNotificationRead", () => {
         const merged = mergeNotificationRead(text, parseNotification(text), {
             amount,
             currency,
+            debt: null,
             kind: "purchase",
             merchant: null,
         });

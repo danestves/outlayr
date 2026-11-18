@@ -379,7 +379,7 @@ describe("the account and currency a card's charge is filed in", () => {
     ])("%s", (_case, card, text, deviceCurrency, aiCurrency, currency) => {
         const queued = walletWrite("a", { amount: 0, amountText: null, card, note: "", text });
         const reads = new Map([
-            ["a", { amount: null, currency: aiCurrency, kind: "purchase" as const, merchant: null }],
+            ["a", { amount: null, currency: aiCurrency, debt: null, kind: "purchase" as const, merchant: null }],
         ]);
         const write = readNotification(queued, reads);
         if (!write) {
@@ -397,7 +397,9 @@ describe("the account and currency a card's charge is filed in", () => {
             note: "",
             text: "Compraste $350.00",
         });
-        const reads = new Map([["a", { amount: null, currency: "MXN", kind: "purchase" as const, merchant: null }]]);
+        const reads = new Map([
+            ["a", { amount: null, currency: "MXN", debt: null, kind: "purchase" as const, merchant: null }],
+        ]);
         const write = readNotification(queued, reads);
         if (!write) {
             throw new Error("The push names no amount");
