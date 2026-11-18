@@ -1,6 +1,11 @@
-import { SlotPlaceholder } from "./placeholder";
+import { useLocale } from "react-intlayer";
+
+import { AccountRowFragment } from "@/components/app-ui/accounts";
+import type { AccountId } from "@/components/app-ui/accounts";
+
 import type { SlotProps } from "./placeholder";
 
-export function AppearanceRow({ label, theme = "dark" }: SlotProps) {
-    return <SlotPlaceholder label={label} name="appearance" radius="14px" ratio="400 / 64.5" theme={theme} />;
+export function AppearanceRow({ account = "acc-banesco", theme = "dark" }: SlotProps & { account?: AccountId }) {
+    const { locale } = useLocale();
+    return <AccountRowFragment account={account} className="rounded-[14px]" fit locale={locale} theme={theme} />;
 }

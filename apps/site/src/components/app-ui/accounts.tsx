@@ -15,8 +15,8 @@ import type { AppKey } from "./strings";
 import { CategoryIconTile } from "./tile";
 import { fontAscent, roundedTrak, textLineHeight } from "./type";
 
-export type Account = (typeof ACCOUNTS)[number];
-type AccountId = Account["id"];
+type Account = (typeof ACCOUNTS)[number];
+export type AccountId = Account["id"];
 
 type CustomStyle = CSSProperties & Record<`--${string}`, string>;
 
@@ -56,9 +56,8 @@ const LAYOUT = {
     totals: 203,
 } as const;
 
-export const ACCOUNT_ROW_HEIGHT =
-    2 * ROW.padY + textLineHeight(TYPE.name) + STACK_GAP.name + textLineHeight(TYPE.detail);
-export const DEBT_ROW_HEIGHT = 2 * ROW.padY + Math.max(ROW.tile, textLineHeight(TYPE.name));
+const ACCOUNT_ROW_HEIGHT = 2 * ROW.padY + textLineHeight(TYPE.name) + STACK_GAP.name + textLineHeight(TYPE.detail);
+const DEBT_ROW_HEIGHT = 2 * ROW.padY + Math.max(ROW.tile, textLineHeight(TYPE.name));
 
 const accountById = (id: AccountId): Account => {
     const account = ACCOUNTS.find((candidate) => candidate.id === id);
@@ -379,7 +378,7 @@ function SectionHeaders() {
     );
 }
 
-export function accountsLabel(locale: Locale): string {
+function accountsLabel(locale: Locale): string {
     return interpolate(labels(locale).accountsScreen, {
         accounts: listed(assetRows(), (account) => balanceText(account, locale)),
         debts: listed(debtRows(), (account) => debtText(account, locale)),
