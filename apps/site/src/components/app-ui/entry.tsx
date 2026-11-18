@@ -33,7 +33,7 @@ const CURTAIN_STOPS = [
 ] as const;
 const GLASS_LIFT = { dark: "calc(r + 34) calc(g + 33) calc(b + 33)", light: "55%" } as const;
 const DONE = { icon: 22, left: 342, size: 44, top: 78 } as const;
-const SENTENCE_LINES = 4;
+const SENTENCE_LINES = 3;
 const SENTENCE_LINE = 38;
 const SENTENCE_PAD = 32;
 const TODAY = { bottom: 10, gutter: 20, header: 35, radius: 28, row: 48 } as const;

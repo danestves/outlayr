@@ -1,11 +1,15 @@
+import { useLocale } from "react-intlayer";
+
+import { NewEntryScreen } from "@/components/app-ui/entry";
+
 import { PhoneFit } from "./phone-fit";
-import { SlotPlaceholder } from "./placeholder";
 import type { SlotProps } from "./placeholder";
 
-export function HeroPhone({ label, theme = "light" }: SlotProps) {
+export function HeroPhone({ theme = "light" }: SlotProps) {
+    const { locale } = useLocale();
     return (
         <PhoneFit dark={theme === "dark"}>
-            <SlotPlaceholder fill label={label} name="hero-phone" theme={theme} />
+            <NewEntryScreen locale={locale} theme={theme} />
         </PhoneFit>
     );
 }
