@@ -502,12 +502,18 @@ describe("parseDebt", () => {
         expect(parseDebt("Pagaste la cuota 2 de $15")).toMatchObject({ installment: { number: 2, of: null } });
         expect(parseDebt("Installment 3/12 paid: USD 40.00")).toMatchObject({ installment: { number: 3, of: 12 } });
         expect(parseDebt("Cuota 2 de 15,00 pagada")).toBeNull();
+        expect(parseDebt("Recibiste el pago de la cuota 2 de 6 por $15 de Ana")).toMatchObject({
+            counterparty: "Ana",
+            verb: "gotPaidBack",
+        });
     });
 
     it("leaves purchases, a purchase split into cuotas, and declines alone", () => {
         for (const text of [
             "Purchase alert\nYou made a $12.40 purchase at STARBUCKS with your card ending in 4321.",
             "Compra aprobada por $90,00 en 3 cuotas sin interés en Falabella",
+            "Compra aprobada por $90,00 en Falabella, cuota 1 de 3",
+            "Solicita tu préstamo por $5.000 en minutos",
             "Te debo la pizza",
             "Pago de préstamo por $50,00 rechazado",
         ]) {

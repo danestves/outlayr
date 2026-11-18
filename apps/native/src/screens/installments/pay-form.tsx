@@ -138,6 +138,8 @@ export function usePayForm({ account, amount: owed, entry, forNext, pushed, sour
             onFailure: (cause) => {
                 console.error("Failed to discard the notification draft", Cause.squash(cause));
                 haptics("error");
+                setFailure(t("installments.failedBody"));
+                setBusy(false);
             },
             onSuccess: () => router.back(),
         },
@@ -161,7 +163,16 @@ export function usePayForm({ account, amount: owed, entry, forNext, pushed, sour
         confirm,
         converted,
         date,
-        discard: pushed ? () => dropDraft({ db, id: pushed.id }) : null,
+        discard: pushed
+            ? () => {
+                  if (busy) {
+                      return;
+                  }
+                  setBusy(true);
+                  setFailure(null);
+                  dropDraft({ db, id: pushed.id });
+              }
+            : null,
         failure,
         forLabel,
         from,

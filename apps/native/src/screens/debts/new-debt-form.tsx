@@ -150,10 +150,23 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
     const [name, setNameState] = useState(pushed?.counterparty ?? "");
     const { lockedPerson, person, suggestions } = resolvePerson(people, personId, name);
 
-    const [verb, setVerb] = useState<DebtVerb>(pushed?.verb ?? initialVerb ?? "borrowed");
+    const [verb, setVerbState] = useState<DebtVerb>(pushed?.verb ?? initialVerb ?? "borrowed");
+    const [verbPicked, setVerbPicked] = useState(false);
+    const setVerb = (value: DebtVerb) => {
+        setVerbState(value);
+        setVerbPicked(true);
+    };
     const [soldOnCredit, setSoldOnCredit] = useState(false);
     const [category, setCategory] = useState<Category | null>(null);
-    const [accountId, setAccountId] = useState<string | null>(() => getLastUsedAccount(db)?.id ?? banks[0]?.id ?? null);
+    const [accountId, setAccountId] = useState<string | null>(() => {
+        const usual = getLastUsedAccount(db)?.id ?? banks[0]?.id ?? null;
+        const code = pushed?.currency;
+        if (!code) {
+            return usual;
+        }
+        const same = banks.filter((row) => row.currency === code);
+        return same.find((row) => row.id === usual)?.id ?? same[0]?.id ?? null;
+    });
     const account = banks.find((row) => row.id === accountId) ?? null;
     const [pickedCurrency, setPickedCurrency] = useState<string | null>(pushed?.currency ?? null);
     const [amountText, setAmountTextState] = useState(() =>
@@ -165,7 +178,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
         setTheirText("");
     };
     const [date, setDate] = useState(() => (pushed ? new Date(pushed.date) : new Date()));
-    const [note, setNoteState] = useState(pushed?.text ?? "");
+    const [note, setNoteState] = useState("");
     const [payBackBy, setPayBackByState] = useState<Date | null>(null);
     const edits = { amountText, name, note, payBackBy };
     const edit = (change: Partial<typeof edits>) => {
@@ -204,6 +217,8 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
     const choices = debtChoices(person === null ? null : debtStanding(balance, person.currency));
     const incoming = !soldOnCredit && comesFromPerson(verb);
     const choice = choices.find((option) => comesFromPerson(option.verb) === incoming) ?? choices[0];
+    const verbUnset =
+        pushed != null && !verbPicked && !soldOnCredit && !choices.some((option) => option.verb === pushed.verb);
 
     const funding = soldOnCredit ? null : account;
     const personCurrency =
@@ -252,6 +267,8 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
             onFailure: (cause) => {
                 console.error("Failed to discard the notification draft", Cause.squash(cause));
                 haptics("error");
+                setFailure(t("installments.failedBody"));
+                setBusy(false);
             },
             onSuccess: onDone,
         },
@@ -299,14 +316,23 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
         accountValue: account?.name ?? t(person === null ? "debts.field.before" : "debts.field.outside"),
         amountSheet,
         amountText,
-        canSave: !busy && draft.complete,
+        canSave: !busy && !verbUnset && draft.complete,
         category,
         categorySheet,
         choice,
         choices,
         currencySheet,
         date,
-        discard: pushed ? () => dropDraft({ db, id: pushed.id }) : null,
+        discard: pushed
+            ? () => {
+                  if (busy) {
+                      return;
+                  }
+                  setBusy(true);
+                  setFailure(null);
+                  dropDraft({ db, id: pushed.id });
+              }
+            : null,
         failure,
         lockedPerson,
         name,
@@ -329,6 +355,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
         setSoldOnCredit,
         setTheirText,
         setVerb,
+        verbUnset,
         soldOnCredit,
         suggestions,
         theirSheet,

@@ -132,7 +132,7 @@ export function NewDebt(props: NewDebtProps) {
                                         form.setSoldOnCredit(false);
                                         form.setVerb(option.verb);
                                     }}
-                                    selected={!soldOnCredit && option.verb === choice.verb}
+                                    selected={!soldOnCredit && !form.verbUnset && option.verb === choice.verb}
                                 >
                                     <SegmentedButton.Label>
                                         <ComposeText maxLines={1} style={LABEL_FONT}>

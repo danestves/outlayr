@@ -195,18 +195,21 @@ export function matchInstallmentPlan(plans: readonly OpenPlan[], draft: Notifica
     if (installment === null || draft.verb !== "paidBack") {
         return null;
     }
-    const due = plans.filter(
-        (plan) =>
+    const due = plans.filter((plan) => {
+        const next = plan.rows
+            .filter((row) => row.status !== "paid")
+            .reduce<OpenPlan["rows"][number] | null>(
+                (first, row) => (first === null || row.sequence < first.sequence ? row : first),
+                null
+            );
+        return (
             (draft.currency === null || plan.currency === draft.currency) &&
             (installment.of === null || plan.installmentsTotal === installment.of) &&
-            plan.rows.some(
-                (row) =>
-                    row.sequence === installment.number &&
-                    row.status !== "paid" &&
-                    (Math.abs(row.owed - draft.amount) <= AMOUNT_EPSILON ||
-                        Math.abs(row.remaining - draft.amount) <= AMOUNT_EPSILON)
-            )
-    );
+            next?.sequence === installment.number &&
+            (Math.abs(next.owed - draft.amount) <= AMOUNT_EPSILON ||
+                Math.abs(next.remaining - draft.amount) <= AMOUNT_EPSILON)
+        );
+    });
     const person = draft.counterparty?.trim().toLowerCase();
     const named = due.length > 1 && person ? due.filter((plan) => plan.note.toLowerCase().includes(person)) : due;
     return named.length === 1 ? (named[0]?.id ?? null) : null;
@@ -256,7 +259,7 @@ function filedBefore(write: PendingWrite, facts: PendingWriteFacts): LedgerEntry
     if (!seen) {
         return settleRepeatOf(facts.ledger, write);
     }
-    return facts.filed.some((row) => row.id === seen.txId) ? seen : null;
+    return seen.txId === seen.id || facts.filed.some((row) => row.id === seen.txId) ? seen : null;
 }
 
 function cardAccount(write: PendingWrite, facts: PendingWriteFacts) {

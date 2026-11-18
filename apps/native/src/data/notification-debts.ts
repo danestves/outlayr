@@ -1,9 +1,10 @@
 import * as Effect from "effect/Effect";
 
 import type { Database } from "@/db/client";
+import { transaction } from "@/db/transaction";
 
 import { useMeta } from "./app-meta";
-import { Meta } from "./app-meta-core";
+import { AppMetaError, Meta } from "./app-meta-core";
 
 export const useNotificationDebts = (db: Database) => useMeta(db, "notificationDebts");
 
@@ -17,10 +18,16 @@ export const dropNotificationDebt = Effect.fn("NotificationDebts.drop")(function
     if (id === undefined) {
         return;
     }
-    const kept = yield* Meta.get(db, "notificationDebts");
-    yield* Meta.set(
+    yield* transaction(
         db,
-        "notificationDebts",
-        kept.filter((debt) => debt.id !== id)
+        Effect.gen(function* drop() {
+            const kept = yield* Meta.get(db, "notificationDebts");
+            yield* Meta.set(
+                db,
+                "notificationDebts",
+                kept.filter((debt) => debt.id !== id)
+            );
+        }),
+        (cause) => new AppMetaError({ cause, key: "notificationDebts", operation: "set" })
     );
 });

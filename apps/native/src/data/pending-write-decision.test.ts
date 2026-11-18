@@ -467,6 +467,13 @@ describe("matchInstallmentPlan", () => {
         expect(matchInstallmentPlan([plan("tv", "TV", { installmentsTotal: 12 })], draft)).toBeNull();
         expect(matchInstallmentPlan([plan("tv", "TV")], { ...draft, amount: 20 })).toBeNull();
         expect(matchInstallmentPlan([plan("tv", "TV")], { ...draft, installment: { number: 1, of: 6 } })).toBeNull();
+        const behind = plan("tv", "TV", {
+            rows: [
+                { owed: 15, remaining: 15, sequence: 1, status: "unpaid" },
+                { owed: 15, remaining: 15, sequence: 2, status: "unpaid" },
+            ],
+        });
+        expect(matchInstallmentPlan([behind], draft)).toBeNull();
     });
 
     it("picks between two fitting plans only by the person's name in the order", () => {

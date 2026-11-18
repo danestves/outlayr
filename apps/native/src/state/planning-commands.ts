@@ -26,6 +26,7 @@ import type { DebtRate } from "@/domain/debt-rate";
 import type { DebtVerb } from "@/domain/debts";
 import { posthog } from "@/lib/posthog";
 import { appRuntime } from "@/lib/runtime";
+import { warnAndContinue } from "@/lib/warn-and-continue";
 
 import { createRuntimeCommand } from "./atom-command";
 
@@ -181,7 +182,13 @@ export const recordInstallmentPaymentCommand = planningCommand(
     (input: { db: Database; fromPush?: string; payment: InstallmentPaymentInput }) =>
         installmentsRepo
             .recordPayment(input.db, input.payment)
-            .pipe(Effect.tap(() => dropNotificationDebt(input.db, input.fromPush)))
+            .pipe(
+                Effect.tap(() =>
+                    dropNotificationDebt(input.db, input.fromPush).pipe(
+                        warnAndContinue("[outlayr] debt draft not dropped")
+                    )
+                )
+            )
 );
 
 export const updateInstallmentCommand = planningCommand(

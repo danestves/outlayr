@@ -79,6 +79,12 @@ export function NewDebt(props: NewDebtProps) {
     const dateLocale = useDatePickerLocale();
 
     const hairline = [overlay({ color: withAlpha(colors.foreground, 0.08) })];
+    let segment: string = choice.verb;
+    if (soldOnCredit) {
+        segment = FIADO;
+    } else if (form.verbUnset) {
+        segment = "";
+    }
 
     return (
         <View style={{ backgroundColor: colors.groupedBackground, flex: 1 }}>
@@ -113,7 +119,7 @@ export function NewDebt(props: NewDebtProps) {
                                 form.setVerb(picked.verb);
                             }
                         }}
-                        selection={soldOnCredit ? FIADO : choice.verb}
+                        selection={segment}
                     >
                         {form.choices.map((option) => (
                             <SwiftText key={option.verb} modifiers={[tag(option.verb)]}>

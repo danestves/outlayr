@@ -112,7 +112,15 @@ const USER_IS_OWED = new RegExp(
     "iu"
 );
 const LOAN = new RegExp(String.raw`\b(?:pr[eé]stamo|loan|me\s+prest[oó])(?!\p{L})`, "iu");
-const REPAYMENT = new RegExp(String.raw`\b(?:pag(?:o|aste|ó|amos)|abon(?:o|aste)|payment|paid|repaid)(?!\p{L})`, "iu");
+const REPAYMENT = new RegExp(
+    String.raw`\b(?:pag(?:o|aste|ó|amos|ad[ao])|abon(?:o|aste)|payment|paid|repaid)(?!\p{L})`,
+    "iu"
+);
+const LOAN_TAKEN = new RegExp(
+    String.raw`\b(?:me\s+prest[oó]|acreditad[ao]|desembolsad[ao]|depositad[ao]|credited|disbursed|deposited)(?!\p{L})`,
+    "iu"
+);
+const PERSON_NAME = new RegExp(String.raw`^\p{Lu}`, "u");
 const INSTALLMENT = new RegExp(
     String.raw`\b(?:cuota|installment)\s+(?:n(?:ro|o|°|º)?\.?\s*)?(\d{1,3})(?:\s*(?:\/|de|of)\s*(\d{1,3})(?![\d.,]))?(?!\d)`,
     "iu"
@@ -230,10 +238,10 @@ function debtVerb(text: string, installment: DebtInstallment | null): DebtVerb |
         return "lent";
     }
     const loan = LOAN.test(text);
-    if (installment !== null || (loan && REPAYMENT.test(text))) {
+    if ((installment !== null || loan) && REPAYMENT.test(text)) {
         return INCOMING.test(text) ? "gotPaidBack" : "paidBack";
     }
-    return loan ? "borrowed" : null;
+    return loan && installment === null && LOAN_TAKEN.test(text) ? "borrowed" : null;
 }
 
 function debtAmount(text: string, installment: DebtInstallment | null): { amount: number; amountText: string } | null {
@@ -256,7 +264,8 @@ function counterpartyOf(text: string): string | null {
         }
     }
     const income = INCOMING.test(text);
-    const sender = income ? (SENT_BY.exec(text)?.[1] ?? RECEIVED_FROM.exec(text)?.[1]) : undefined;
+    const found = income ? (SENT_BY.exec(text)?.[1] ?? RECEIVED_FROM.exec(text)?.[1]) : undefined;
+    const sender = found && PERSON_NAME.test(found) ? found : undefined;
     const after = NAMED_AFTER.exec(text)?.[1];
     return cleanMerchant(sender ?? (after && detectCurrency(after) === null ? after : null));
 }

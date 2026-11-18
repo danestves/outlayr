@@ -176,6 +176,8 @@ describe("applyPendingWrites", () => {
         const drafts = await Effect.runPromise(Meta.get(db, "notificationDebts"));
         await Effect.runPromise(Meta.set(db, "notificationDebts", []));
         await Effect.runPromise(applyPendingWrites(db, [job], NOW));
+        const copy = { ...job, id: "iou-copy", text: "Juan Pérez: $30 de la pizza" };
+        await Effect.runPromise(applyPendingWrites(db, [copy], NOW));
 
         expect(first).toStrictEqual({ applied: 0, autologged: 0 });
         await expect(db.select().from(transactions)).resolves.toStrictEqual([]);

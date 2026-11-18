@@ -117,9 +117,9 @@ export const resolveWalletPushTap = Effect.fn("NotificationTaps.resolveWalletPus
     tap: WalletPushTap
 ) {
     const txId = (yield* settleWalletWrites(db, tap.walletWrite)) ?? (yield* settleWalletWrites(db, tap.walletWrite));
-    if (txId === tap.walletWrite) {
-        const pushed = findNotificationDebt(db, txId);
-        return pushed === null ? null : pushedDebtHref(pushed);
+    const pushed = findNotificationDebt(db, tap.walletWrite);
+    if (pushed !== null) {
+        return pushedDebtHref(pushed);
     }
     const { card, pickCard } = tap;
     const unattached = txId !== null && getTransactionById(db, txId)?.accountId == null;
