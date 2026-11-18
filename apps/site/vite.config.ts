@@ -18,8 +18,14 @@ const SECURITY_HEADERS = {
 const LOADER_SPLIT_ROUTES = new Set([
     "/{-$locale}/compare/",
     "/{-$locale}/compare/$slug",
+    "/{-$locale}/delete-account",
     "/{-$locale}/guides/",
     "/{-$locale}/guides/$slug",
+    "/{-$locale}/help/",
+    "/{-$locale}/help/$slug",
+    "/{-$locale}/privacy",
+    "/{-$locale}/r/$slug",
+    "/{-$locale}/terms",
     "/{-$locale}/tools/",
     "/{-$locale}/tools/$slug",
 ]);
