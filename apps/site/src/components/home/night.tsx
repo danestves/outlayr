@@ -5,6 +5,7 @@ import { sway } from "@/lib/sway";
 
 import { Also } from "./also";
 import { Faq } from "./faq";
+import { Guides } from "./guides";
 import { Plans } from "./plans";
 import { AccountBolivarRow } from "./slots/account-bolivar-row";
 import { AccountCardRow } from "./slots/account-card-row";
@@ -199,6 +200,7 @@ export function Night() {
             <Also />
             <Plans />
             <Faq />
+            <Guides />
         </div>
     );
 }

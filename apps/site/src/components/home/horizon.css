@@ -1567,6 +1567,33 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
     line-height: 1.6;
 }
 
+.hz-guide {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 24px 0;
+    font-size: 1.25rem;
+    font-weight: 520;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    transition: color 180ms var(--ease-out);
+}
+
+.hz-guide svg {
+    flex-shrink: 0;
+    color: var(--color-muted);
+    transition: transform 360ms var(--ease-out);
+}
+
+.hz-guide:hover {
+    color: var(--color-tint);
+}
+
+.hz-guide:hover svg {
+    transform: translateX(2px);
+}
+
 .hz-close {
     position: relative;
     isolation: isolate;
@@ -2587,7 +2614,9 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
             .hz-look-thumb,
             .hz-cadence-thumb,
             .hz-roll > *,
-            .hz-qa-icon
+            .hz-qa-icon,
+            .hz-guide,
+            .hz-guide svg
         ) {
         transition: none;
     }
