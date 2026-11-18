@@ -16,4 +16,10 @@ describe("proPrices", () => {
         expect(proPrices("ES", "es").monthly).toEqual({ fraction: ",99 €", whole: "5" });
         expect(proPrices("CO", "es").monthly).toEqual({ fraction: "", whole: "$ 9.650" });
     });
+
+    it("writes US prices in Spanish the way the FAQ does", () => {
+        const prices = proPrices(null, "es");
+        expect(`${prices.monthly.whole}${prices.monthly.fraction}`).toBe("US$7.99");
+        expect(prices.once).toBe("US$129.99");
+    });
 });
