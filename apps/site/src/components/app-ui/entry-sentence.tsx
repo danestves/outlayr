@@ -53,7 +53,7 @@ const KERNED: CustomStyle = {
 };
 const CHIP_TRAK: CustomStyle = { "--app-trak": roundedTrak(CHIP_TEXT) };
 
-function Words({ children, className }: { children: string; className: string }) {
+export function Words({ children, className }: { children: string; className: string }) {
     return (
         <span className={`${TEXT} ${className}`} data-app-kern="" style={KERNED}>
             {children}
@@ -66,7 +66,7 @@ interface SentenceAtom {
     readonly value: string;
 }
 
-function parseSentence(template: string): readonly (readonly SentenceAtom[])[] {
+export function parseSentence(template: string): readonly (readonly SentenceAtom[])[] {
     const clusters: SentenceAtom[][] = [];
     let current: SentenceAtom[] = [];
     const breakCluster = () => {
