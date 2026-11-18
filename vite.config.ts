@@ -215,6 +215,12 @@ export default defineConfig({
                 },
             },
             {
+                files: ["apps/site/src/components/app-ui/canvas.tsx"],
+                rules: {
+                    "jsx-a11y/prefer-tag-over-role": "off",
+                },
+            },
+            {
                 files: ["apps/site/src/components/home/films/**"],
                 rules: {
                     "tailwindcss/no-unknown-classes": "off",
@@ -440,6 +446,8 @@ export default defineConfig({
         settings: {
             tailwindcss: {
                 entryPoint: [
+                    { files: "apps/site/src/components/app-ui/app-ui.tsx", use: "apps/site/src/index.css" },
+                    { files: "apps/site/src/components/app-ui/**", use: "apps/native/global.css" },
                     { files: "apps/site/**", use: "apps/site/src/index.css" },
                     { files: "apps/app/**", use: "apps/app/src/index.css" },
                     { files: "packages/shared/**", use: "apps/site/src/index.css" },
