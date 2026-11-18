@@ -96,6 +96,7 @@ function HomePage() {
                 <div aria-hidden="true" className="hz-edge" data-edge="bottom" ref={bottomEdge}>
                     <div />
                     <div />
+                    <div />
                 </div>
             </main>
             <div aria-hidden="true" className="hz-edge" data-edge="top" ref={topEdge}>

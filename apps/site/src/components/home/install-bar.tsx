@@ -6,6 +6,7 @@ import { watchGround } from "@/lib/ground";
 
 const GROUND_LINE = 40;
 const CLOSE_REACH = 100_000;
+const SETTLE_MS = 150;
 
 function track(bar: HTMLElement | null) {
     const hero = document.querySelector(".hz-actions");
@@ -15,9 +16,25 @@ function track(bar: HTMLElement | null) {
     }
     let past = false;
     let closing = false;
+    let settle = 0;
+    const untint = () => {
+        clearTimeout(settle);
+        settle = window.setTimeout(() => bar.toggleAttribute("data-tint", past), SETTLE_MS);
+    };
     const paint = () => {
+        if (past) {
+            clearTimeout(settle);
+            bar.toggleAttribute("data-tint", true);
+        } else {
+            untint();
+        }
         bar.toggleAttribute("data-past", past);
         bar.toggleAttribute("data-up", past && !closing);
+    };
+    const scroll = () => {
+        if (!past && Object.hasOwn(bar.dataset, "tint")) {
+            untint();
+        }
     };
     const heroWatch = new IntersectionObserver(([entry]) => {
         if (entry) {
@@ -36,10 +53,13 @@ function track(bar: HTMLElement | null) {
     );
     heroWatch.observe(hero);
     closeWatch.observe(close);
+    addEventListener("scroll", scroll, { passive: true });
     const ground = watchGround(bar, () => innerHeight - GROUND_LINE);
     return () => {
         heroWatch.disconnect();
         closeWatch.disconnect();
+        clearTimeout(settle);
+        removeEventListener("scroll", scroll);
         ground();
     };
 }
