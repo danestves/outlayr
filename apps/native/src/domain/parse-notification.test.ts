@@ -545,11 +545,19 @@ describe("mergeDebtRead", () => {
         } as const;
         expect(mergeDebtRead("Juan: quedamos en que pagas tú los $30", null, model)).toStrictEqual({
             amount: 30,
-            amountText: "30",
+            amountText: "$30",
             counterparty: "Juan",
             installment: null,
             verb: "lent",
         });
         expect(mergeDebtRead(TEXT, parsed, { ...read, kind: "declined" })).toBeNull();
+    });
+
+    it("takes the amount from the text when the model reads a debt without one", () => {
+        const model = { ...read, debt: { installment: null, verb: "lent" }, kind: "debt" } as const;
+        expect(mergeDebtRead("Juan: aquí tienes los $30", null, model)).toMatchObject({
+            amount: 30,
+            amountText: "$30",
+        });
     });
 });

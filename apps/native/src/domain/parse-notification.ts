@@ -301,13 +301,14 @@ export function mergeDebtRead(
     if (read?.kind !== "debt" || read.debt === null) {
         return parsed;
     }
-    const amount = read.amount ?? parsed?.amount;
+    const local = parsed ?? debtAmount(text, read.debt.installment);
+    const amount = read.amount ?? local?.amount;
     if (amount === undefined) {
         return null;
     }
     return {
         amount,
-        amountText: readCurrency(text, read.currency, amount) ?? sameAmountText(parsed, amount),
+        amountText: readCurrency(text, read.currency, amount) ?? sameAmountText(local, amount),
         counterparty: cleanMerchant(read.merchant) ?? parsed?.counterparty ?? null,
         installment: read.debt.installment ?? parsed?.installment ?? null,
         verb: read.debt.verb,
