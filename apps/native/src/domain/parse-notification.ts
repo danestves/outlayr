@@ -179,6 +179,10 @@ function chargeMoney(text: string): RegExpExecArray | null {
     return null;
 }
 
+function chargeFigures(text: string): string[] {
+    return [...text.matchAll(EVERY_MONEY)].filter((match) => !notACharge(text, match)).map(([figure]) => figure);
+}
+
 /** The gate the AI read is behind, so a promo never leaves the device and never lends its amount to a purchase. */
 export function hasChargeAmount(text: string): boolean {
     return chargeMoney(text) !== null;
@@ -372,7 +376,7 @@ function shownAmount(
     if (code === null) {
         return null;
     }
-    const shown = parsed?.amount === amount ? [parsed.amountText] : (text.match(EVERY_MONEY) ?? []);
+    const shown = parsed?.amount === amount ? [parsed.amountText] : chargeFigures(text);
     const figures = shown.filter((token) => {
         const value = amountOf(token);
         return value !== null && Math.abs(value - amount) < SAME_AMOUNT;

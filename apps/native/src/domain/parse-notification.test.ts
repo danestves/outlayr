@@ -476,6 +476,13 @@ describe("mergeNotificationRead", () => {
             "CNY",
             "$120",
         ],
+        [
+            "the code of a balance the AI's amount matches",
+            "Paid $80 at Uber. Available balance: ¥120",
+            120,
+            "CNY",
+            "120",
+        ],
     ])("keeps no currency hint for %s", (_case, text, amount, currency, amountText) => {
         const merged = mergeNotificationRead(text, parseNotification(text), {
             amount,
