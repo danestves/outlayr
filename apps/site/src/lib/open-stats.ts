@@ -37,3 +37,25 @@ export const getOpenStats = createServerFn({ method: "GET" }).handler(async () =
         throw error;
     }
 });
+
+const PROOF_TIMEOUT_MS = 1500;
+
+export const getWeekProof = createServerFn({ method: "GET" }).handler(async () => {
+    const url = ENV.VITE_CONVEX_URL;
+    if (!url) {
+        return null;
+    }
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<null>((resolve) => {
+        timer = setTimeout(resolve, PROOF_TIMEOUT_MS, null);
+    });
+    try {
+        const stats = await Promise.race([new ConvexHttpClient(url).query(latest, {}), timeout]);
+        const week = stats?.posthog?.weeks.at(-1);
+        return week && week.entries > 1 && week.people > 1 && week.countries > 1 ? week : null;
+    } catch {
+        return null;
+    } finally {
+        clearTimeout(timer);
+    }
+});

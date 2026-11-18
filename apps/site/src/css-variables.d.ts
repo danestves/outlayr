@@ -2,6 +2,6 @@ import "react";
 
 declare module "react" {
     interface CSSProperties {
-        [variable: `--${string}`]: number | string;
+        [variable: `--${string}`]: number | string | undefined;
     }
 }

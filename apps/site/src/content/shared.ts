@@ -47,3 +47,47 @@ export const ACCOUNTS_SCREEN_ALT = t({
     pt: "Tela de Contas do Outlayr com oito contas, entre elas o Banesco em bolívares e um Apple Card com saldo negativo, acima de um botão Transferência.",
     fr: "Écran Comptes d'Outlayr listant huit comptes, dont Banesco en bolivars et une Apple Card au solde négatif, au-dessus d'un bouton Virement.",
 });
+
+export const APPEARANCE_EXTRA = {
+    label: t({ en: "Appearance", de: "Darstellung", es: "Apariencia", pt: "Aparência", fr: "Apparence" }),
+    text: t({
+        en: "Light and dark, five accent colors, five app icons.",
+        de: "Hell und dunkel, fünf Akzentfarben, fünf App-Symbole.",
+        es: "Claro y oscuro, cinco colores de acento y cinco íconos de la app.",
+        pt: "Claro e escuro, cinco cores de destaque e cinco ícones do app.",
+        fr: "Clair et sombre, cinq couleurs d'accent et cinq icônes d'app.",
+    }),
+};
+
+export const EXPORT_EXTRA = {
+    label: t({ en: "Export", de: "Export", es: "Exportar", pt: "Exportar", fr: "Exporter" }),
+    text: t({
+        en: "A CSV, or a full archive you can restore from.",
+        de: "Eine CSV-Datei oder ein vollständiges Archiv, aus dem du wiederherstellen kannst.",
+        es: "Un CSV o un archivo completo desde el que puedes restaurar.",
+        pt: "Um CSV ou um arquivo completo que você pode restaurar depois.",
+        fr: "Un CSV, ou une archive complète à partir de laquelle restaurer.",
+    }),
+};
+
+export const OFFLINE_EXTRA = {
+    label: t({ en: "Offline", de: "Offline", es: "Sin conexión", pt: "Sem conexão", fr: "Hors ligne" }),
+    text: t({
+        en: "Entries save on the phone first, so logging works with no signal.",
+        de: "Einträge werden zuerst auf dem Handy gespeichert, deshalb klappt das Erfassen auch ohne Netz.",
+        es: "Los registros se guardan primero en el celular, así que puedes registrar sin señal.",
+        pt: "Os lançamentos são salvos primeiro no celular, então dá para registrar sem sinal.",
+        fr: "Les opérations s'enregistrent d'abord sur le téléphone : la saisie fonctionne même sans réseau.",
+    }),
+};
+
+export const SPLIT_EXTRA = {
+    label: t({ en: "Split", de: "Aufteilen", es: "Dividir", pt: "Dividir", fr: "Répartir" }),
+    text: t({
+        en: "Divide one purchase across several categories.",
+        de: "Teile einen Einkauf auf mehrere Kategorien auf.",
+        es: "Reparte una compra entre varias categorías.",
+        pt: "Divida uma compra entre várias categorias.",
+        fr: "Répartissez un achat entre plusieurs catégories.",
+    }),
+};

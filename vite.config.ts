@@ -206,6 +206,15 @@ export default defineConfig({
                 },
             },
             {
+                files: ["apps/site/src/**"],
+                rules: {
+                    "tailwindcss/no-unknown-classes": [
+                        "error",
+                        { allowlist: ["ph-no-capture"], ignorePrefixes: ["hz-"] },
+                    ],
+                },
+            },
+            {
                 files: ["apps/site/src/components/home/films/**"],
                 rules: {
                     "tailwindcss/no-unknown-classes": "off",
@@ -218,7 +227,7 @@ export default defineConfig({
                 },
             },
             {
-                files: ["packages/money/src/uuid5.ts", "apps/native/src/domain/confetti.ts"],
+                files: ["packages/money/src/uuid5.ts", "apps/native/src/domain/confetti.ts", "apps/site/src/lib/qr.ts"],
                 rules: {
                     "no-bitwise": "off",
                 },
