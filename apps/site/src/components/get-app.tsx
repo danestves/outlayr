@@ -1,24 +1,43 @@
 import { capture } from "@outlayr/shared/analytics";
 import { Button } from "panelui-web/button";
-import { Dialog } from "panelui-web/dialog";
 import type { MouseEvent, ReactNode } from "react";
-import { useSyncExternalStore } from "react";
-import { useIntlayer } from "react-intlayer";
+import { lazy, Suspense, useSyncExternalStore } from "react";
 
-import { DownloadQr } from "./qr-code";
-import { StoreBadges } from "./store-badges";
+const GetAppPanel = lazy(async () => {
+    const module = await import("./get-app-panel");
+    return { default: module.GetAppPanel };
+});
 
 export const DOWNLOAD_HREF = "/download?utm_source=site&utm_medium=cta";
 
 const WIDE = "(min-width: 64rem) and (hover: hover) and (pointer: fine)";
 
+let mounted = false;
 let open = false;
 const listeners = new Set<() => void>();
 
-function setOpen(next: boolean) {
-    open = next;
+function emit() {
     for (const listener of listeners) {
         listener();
+    }
+}
+
+function setOpen(next: boolean) {
+    mounted = true;
+    open = next;
+    emit();
+}
+
+export function warmGetApp() {
+    if (!mounted) {
+        mounted = true;
+        emit();
+    }
+}
+
+function warmIfWide() {
+    if (matchMedia(WIDE).matches) {
+        warmGetApp();
     }
 }
 
@@ -61,6 +80,8 @@ export function GetAppButton({
             data-tone={tone}
             nativeButton={false}
             onClick={(event) => onGetApp(event, placement)}
+            onFocus={warmIfWide}
+            onPointerEnter={warmIfWide}
             render={({ children: content, ...props }) => (
                 <a {...props} href={DOWNLOAD_HREF}>
                     {content}
@@ -73,25 +94,22 @@ export function GetAppButton({
 }
 
 export function GetAppDialog() {
-    const { getApp } = useIntlayer("site");
+    const isMounted = useSyncExternalStore(
+        subscribe,
+        () => mounted,
+        () => false
+    );
     const isOpen = useSyncExternalStore(
         subscribe,
         () => open,
         () => false
     );
+    if (!isMounted) {
+        return null;
+    }
     return (
-        <Dialog onOpenChange={setOpen} open={isOpen}>
-            <Dialog.Content className="get-app max-w-[27.5rem] text-center" showClose={false} size="sm" variant="plain">
-                <Dialog.Close aria-label={getApp.close.value} className="get-app-close" icon />
-                <div className="get-app-qr">
-                    <DownloadQr label={getApp.qr.value} />
-                </div>
-                <Dialog.Title className="get-app-title">{getApp.title}</Dialog.Title>
-                <Dialog.Description className="get-app-line">{getApp.line}</Dialog.Description>
-                <div className="mt-6 flex justify-center">
-                    <StoreBadges placement="dialog" size="sm" />
-                </div>
-            </Dialog.Content>
-        </Dialog>
+        <Suspense fallback={null}>
+            <GetAppPanel onOpenChange={setOpen} open={isOpen} />
+        </Suspense>
     );
 }

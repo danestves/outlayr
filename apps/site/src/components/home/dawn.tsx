@@ -13,6 +13,8 @@ import { HeroWidget } from "./slots/hero-widget";
 import { NewEntryCard } from "./slots/new-entry";
 import { TodayCard } from "./slots/today-card";
 
+import "./horizon.css";
+
 const PLACEHOLDER = /(\{\{\w+\}\})/;
 
 const TOKEN = /^\{\{(\w+)\}\}$/;

@@ -6,8 +6,6 @@ import { getIntlayer } from "intlayer";
 import { Away } from "@/components/home/away";
 import { Capture } from "@/components/home/capture";
 import { Dawn } from "@/components/home/dawn";
-
-import "@/components/home/horizon.css";
 import { InstallBar } from "@/components/home/install-bar";
 import { Night } from "@/components/home/night";
 import { Sunrise } from "@/components/home/sunrise";

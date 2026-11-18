@@ -1,11 +1,9 @@
 import { useLocation } from "@tanstack/react-router";
 import { getPathWithoutLocale } from "intlayer";
-import { Sheet } from "panelui-web/sheet";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { useScrollSpy } from "@/lib/scroll-spy";
-import { SOURCE_URL } from "@/lib/site";
 
 import { GetAppButton, GetAppDialog } from "./get-app";
 import { Icon } from "./icon";
@@ -19,7 +17,10 @@ type Section = (typeof SECTIONS)[number];
 const PILL =
     "fluid block rounded-full px-3 py-2 text-sm whitespace-nowrap text-muted hover:text-foreground aria-[current=page]:bg-foreground/5 aria-[current=page]:text-foreground data-[current]:bg-foreground/5 data-[current]:text-foreground";
 
-const MENU_LINK = "fluid hover:bg-foreground/5 block rounded-2xl px-3 py-3 text-3xl font-semibold tracking-tight";
+const SiteMenu = lazy(async () => {
+    const module = await import("./site-menu");
+    return { default: module.SiteMenu };
+});
 
 const WATCHED = ["top", ...SECTIONS];
 
@@ -35,14 +36,9 @@ function useCurrentSection(enabled: boolean) {
     return enabled ? current : null;
 }
 
-export function SiteHeader() {
-    const { footer, getApp, home, nav } = useIntlayer("site");
-    const [open, setOpen] = useState(false);
-    const path = getPathWithoutLocale(useLocation({ select: (location) => location.pathname }));
-    const isHome = path === "/";
-    const current = useCurrentSection(isHome);
-
-    const links = [
+function useNavLinks() {
+    const { footer, nav } = useIntlayer("site");
+    return [
         { hash: "how", label: nav.how, to: "/" },
         { hash: "features", label: nav.features, to: "/" },
         { hash: "pricing", label: nav.pricing, to: "/" },
@@ -50,6 +46,19 @@ export function SiteHeader() {
         { label: footer.blog, to: "/blog" },
         { label: footer.support, to: "/support" },
     ] as const;
+}
+
+export type NavLinks = ReturnType<typeof useNavLinks>;
+
+export function SiteHeader() {
+    const { getApp, home, nav } = useIntlayer("site");
+    const [menu, setMenu] = useState(false);
+    const [open, setOpen] = useState(false);
+    const path = getPathWithoutLocale(useLocation({ select: (location) => location.pathname }));
+    const isHome = path === "/";
+    const current = useCurrentSection(isHome);
+    const links = useNavLinks();
+    const warmMenu = () => setMenu(true);
 
     return (
         <>
@@ -96,48 +105,27 @@ export function SiteHeader() {
                         >
                             {getApp.title}
                         </GetAppButton>
-                        <Sheet onOpenChange={setOpen} open={open} side="top">
-                            <Sheet.Trigger
-                                aria-label={nav.open.value}
-                                className="fluid hover:bg-foreground/5 grid size-10 place-items-center rounded-full active:scale-[0.96] lg:hidden"
-                            >
-                                <Icon className="text-xl" name="menu" />
-                            </Sheet.Trigger>
-                            <Sheet.Content className="site-menu" showClose={false} showGrabber={false}>
-                                <div className="flex items-center justify-between pl-3">
-                                    <Sheet.Title className="flex items-center gap-2 text-[1.1875rem] font-semibold tracking-[-0.035em]">
-                                        <LogoMark className="size-7" />
-                                        Outlayr
-                                    </Sheet.Title>
-                                    <Sheet.Close aria-label={nav.close.value} />
-                                </div>
-                                <ul className="mt-6 flex flex-col">
-                                    {links.map((link) => (
-                                        <li key={link.label.value}>
-                                            <LocalizedLink
-                                                className={MENU_LINK}
-                                                hash={"hash" in link ? link.hash : undefined}
-                                                onClick={() => setOpen(false)}
-                                                to={link.to}
-                                            >
-                                                {link.label}
-                                            </LocalizedLink>
-                                        </li>
-                                    ))}
-                                    <li>
-                                        <a className={MENU_LINK} href={SOURCE_URL}>
-                                            {nav.github}
-                                        </a>
-                                    </li>
-                                </ul>
-                                <GetAppButton
-                                    className="bg-foreground text-background hover:not-disabled:bg-foreground/90 mt-6 h-13 w-full text-[1.0625rem]"
-                                    placement="menu"
-                                >
-                                    {getApp.title}
-                                </GetAppButton>
-                            </Sheet.Content>
-                        </Sheet>
+                        <button
+                            aria-expanded={open}
+                            aria-haspopup="dialog"
+                            aria-label={nav.open.value}
+                            className="fluid hover:bg-foreground/5 grid size-10 place-items-center rounded-full active:scale-[0.96] lg:hidden"
+                            onClick={() => {
+                                setMenu(true);
+                                setOpen(true);
+                            }}
+                            onFocus={warmMenu}
+                            onPointerDown={warmMenu}
+                            onPointerEnter={warmMenu}
+                            type="button"
+                        >
+                            <Icon className="text-xl" name="menu" />
+                        </button>
+                        {menu ? (
+                            <Suspense fallback={null}>
+                                <SiteMenu links={links} onOpenChange={setOpen} open={open} />
+                            </Suspense>
+                        ) : null}
                     </div>
                 </nav>
             </header>
