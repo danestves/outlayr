@@ -1,0 +1,66 @@
+---
+title: Los mensajes de texto del banco se registran solos
+description: Cómo Outlayr registra los mensajes de texto que mandan los bancos venezolanos tras un Pago Móvil, por qué el interruptor es por remitente, qué ignora el parser y qué dice ahora la política de privacidad.
+lead: En Venezuela el banco confirma un Pago Móvil con un mensaje de texto. La app de mensajes era todo o nada, así que ahora cada remitente tiene su propio interruptor.
+date: 2026-11-12
+shipped:
+    - pr: 514
+      title: Registrar solos los mensajes de texto del banco, con un interruptor por remitente
+      date: 2026-11-12
+    - pr: 515
+      title: Registrar como ingreso un mensaje que dice que te enviaron dinero
+      date: 2026-11-12
+    - pr: 522
+      title: Leer montos en pesos y USDt en las notificaciones del banco, e ignorar cotizaciones de tasa de cambio
+      date: 2026-11-12
+---
+
+En Venezuela casi todos los pagos pasan por Pago Móvil, y el banco confirma cada uno con un mensaje de texto. Outlayr ya podía registrar desde las notificaciones, pero una app de mensajes era todo o nada. Al activarla se registraba cada mensaje que nombrara un monto, y nada le avisaba a la gente que los mensajes de su banco podían hacer el trabajo.
+
+[#514](https://github.com/danestves/outlayr/pull/514) cambia eso.
+
+## Dónde funciona
+
+En Android. Outlayr lee el mensaje a partir de la notificación que publica tu app de mensajes: el título es el remitente y el cuerpo es el mensaje. El iPhone se queda con el paso que ya tenía, porque su atajo del banco no tiene un interruptor por remitente, así que el paso de mensajes del banco no aparece allá.
+
+En Android, a quienes tienen la región en Venezuela o el bolívar como moneda les sale un paso nuevo en la bienvenida. Muestra un mensaje del banco y la entrada que se crea con él.
+
+## Un interruptor por remitente
+
+La app de mensajes ahora es una sola fila, Mensajes, debajo de Registrar desde. Abre un interruptor por cada remitente, y los valores de partida deciden casi todo:
+
+```kotlin
+private val SHORT_CODE = Regex("\\d{3,6}")
+
+private fun onByDefault(from: String): Boolean = SHORT_CODE.matches(from)
+```
+
+Los códigos cortos, desde donde mandan los bancos, empiezan activados. Los nombres y los números de teléfono empiezan apagados. Eso importa porque un mensaje personal también puede nombrar un monto, y no debería registrarse si tú no lo pides. Lo que tú cambies a mano le gana al valor de partida.
+
+Lo probé en un emulador de Pixel 9 (Android 16). Los mensajes de los códigos cortos 2662 y 2661 se registraron como ingreso y como gasto. Un mensaje de un número de teléfono no se registró hasta que activé su interruptor, y dejó de registrarse cuando lo apagué. Un código corto que apagué dejó de registrarse.
+
+## Qué ignora el parser
+
+En las dos plataformas el parser ahora lee los montos y las frases que usan los bancos venezolanos. Ignora los pagos fallidos y las respuestas de saldo, y nombra a la persona que te envió un pago. En el emulador, una respuesta de saldo y un pago fallido no se registraron.
+
+Después de la primera prueba encontré un mensaje que decía "te transferí Bs. 275,50", de un remitente que yo había activado a mano. Se registró como gasto, y es dinero recibido. [#515](https://github.com/danestves/outlayr/pull/515) le enseña al parser "te transferí", "te pagué", "te envié", "te mandé", "te deposité", "te pasé" y "te hice", con tilde o sin ella, como dinero recibido. "Epa, te transferi Bs. 276,50 de la cena de anoche." ahora se registra como ingreso.
+
+#515 también arregla dos detalles que vi en el dispositivo. La confirmación de un mensaje del banco sin comercio tenía la segunda línea vacía cuando la app ya conocía al remitente, y ahora nombra la fuente. Y el ejemplo de la bienvenida se corría unos 80 px al activar el paso, porque desaparecían "Ahora no" y la nota al pie. Ahora se ocultan pero conservan su espacio.
+
+Algo parecido apareció del lado de las notificaciones. La automatización de un usuario colombiano registró una notificación de marketing, "la tasa de compra está en $3.328", como un gasto de $3.328. [#522](https://github.com/danestves/outlayr/pull/522) deja de leer como cobro un monto que viene justo después de una frase de tasa de cambio. También lee "$25.000" como 25000 en vez de 25 (y "$1.250.000", que ni siquiera se leía), y lee "USDt" como USD.
+
+## Qué sale del teléfono
+
+De un mensaje, el remitente se queda en el teléfono y solo se lee el cuerpo. La línea en cola de un mensaje guarda solo el cuerpo. Con Autocompletado activado, el cuerpo se puede enviar para que lo lea el modelo, igual que cualquier notificación, pero sin el nombre ni el número del remitente. Antes, una app de mensajes enviaba también el título, así que ahora un mensaje envía menos que antes.
+
+En el teléfono, Outlayr guarda el último mensaje que coincide de cada remitente, con el remitente, para poder listarlos en Registrar desde. Guarda hasta 20 apps y remitentes en total.
+
+## La política de privacidad
+
+La política tenía que cambiar, y sale junto con esto. Ahora describe los interruptores por remitente, el último mensaje guardado por remitente en el teléfono y un mensaje enviado sin su remitente, en inglés, español, francés y portugués. La sección sobre [leer notificaciones del banco](/privacy#leer-notificaciones-del-banco) dice que un mensaje en Android se envía sin el nombre ni el número del remitente.
+
+No agregué un consentimiento nuevo. Una app de mensajes ya se podía activar completa, y ahora un mensaje envía menos que antes.
+
+## Lo que falta
+
+No verifiqué un cambio real de la app de mensajes predeterminada. El emulador no soltaba el rol de SMS, y una segunda app de mensajes simulada siguió filtrada por remitente. Solo probé Google Messages, y no revisé en un dispositivo las cadenas en francés y portugués.

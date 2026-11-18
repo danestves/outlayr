@@ -1,0 +1,102 @@
+---
+title: Haiku first, Sonnet only when it proposes a new category
+description: How moving background AI suggestions from Sonnet to Haiku-first routing cut their cost by 72% in an eval, and what the eval did not support.
+lead: After I moved category suggestions to Sonnet, AI spend roughly quintupled. Routing background jobs to Haiku first brought the cost per 1,000 jobs from $4.89 to $1.35, with accuracy a little higher.
+date: 2026-11-18
+figure:
+    from:
+        value: $4.89
+        label: per 1,000 background jobs, all Sonnet
+    to:
+        value: $1.35
+        label: per 1,000 background jobs, Haiku first
+shipped:
+    - pr: 623
+      title: Route background suggestions Haiku-first and cut their AI cost by 72%
+      date: 2026-11-18
+    - pr: 622
+      title: Suggest categories on Haiku again and let a name chip wait for its lookup
+      date: 2026-11-18
+---
+
+After [#578](https://github.com/danestves/outlayr/pull/578) moved the category suggestions you get while typing to Sonnet, AI spend roughly quintupled. Most of it was `category_suggest`.
+
+[#622](https://github.com/danestves/outlayr/pull/622) was the quick fix: typing suggestions go back to Haiku. I ran the real suggest path on 85 merchant names across US, VE and MX ledgers. Sonnet got 182 of 194 categories right and Haiku got 181, with no wrong logo domains on either. Haiku answered in about half the time.
+
+That left the background enrichment queue, which still ran every job on Sonnet. A Sonnet job costs about 15 times what a Haiku job does. [#623](https://github.com/danestves/outlayr/pull/623) fixes that.
+
+## No single place decided the model
+
+Every AI call picked its model by hand, through one of `claudeModelId`, `claudeFastModelId` or `claudeGroundedModelId`. Nothing decided Haiku or Sonnet in one place, and nothing recorded why.
+
+#623 adds a small package, `@outlayr/model-router`. It is a pure function from a request (a feature and a spend budget) to a route: model, effort, token cap, whether it is grounded, and the reason.
+
+```ts
+export function route({ feature }: RouteRequest): Route {
+    return { ...DEFAULTS[feature], feature, reason: "feature_default" };
+}
+```
+
+Every backend call site now takes a route: suggest, background suggest, grounded lookup, receipt, installments, voice, notification read, CSV and PDF. Model IDs still come from the existing configs. Foreground routes are the old baseline, unchanged. The `$ai_generation` events now carry `route_model`, `route_effort` and `route_reason`, so a bill can be traced back to a decision.
+
+## Haiku first, Sonnet on a new category
+
+For the background queue, a job runs on Haiku. If Haiku proposes a category you don't have yet, the job retries once on Sonnet. If that retry fails, the job keeps Haiku's answer.
+
+```ts
+export function escalation(request: RouteRequest, answer: { readonly isNewCategory: boolean }): Route | null {
+    if (request.feature !== "background_suggest" || request.budget === "exhausted" || !answer.isNewCategory) {
+        return null;
+    }
+    return { ...route(request), model: "standard", reason: "new_category" };
+}
+```
+
+A new category is the case I trust Haiku least on, because it is inventing a name instead of picking one from the ledger.
+
+There is also a budget guard. While `groundedBudgetMicros` has no headroom, a background job never reaches Sonnet, so `GROUNDED_BUDGET_MICROS=0` is now a kill switch for Sonnet spend too. The rate limiter throws, rather than refusing, when one charge is bigger than a shard's capacity. The queue checks that first, because otherwise a zero budget would crash every job.
+
+## What the eval said
+
+The eval is `modelRoute.live.test.ts`, opt-in with `RUN_LIVE_MODEL_TESTS=1`. This run was 1,064 calls and cost $1.60.
+
+| Background suggest policy | Category accuracy | Stable cases | Cost per 1k jobs |
+| ------------------------- | ----------------- | ------------ | ---------------- |
+| All Haiku                 | 91.9%             | 113/133      | $0.33            |
+| All Sonnet (before)       | 91.2%             | 122/133      | $4.89            |
+| Routed                    | 92.3%             | 120/133      | $1.35            |
+
+Routed costs 27.6% of all-Sonnet, which is the 72% cut. Accuracy is 92.3% against 91.2%, so it did not get worse.
+
+Two earlier runs, scored offline, agree: routed 93.4% against 92.6% for all-Sonnet, at 23.4% of the cost.
+
+By set, in the order all Haiku, all Sonnet, routed:
+
+- Everyday merchants: 100%, 99.1%, 100%.
+- Nested Spanish ledger: 84.5%, 87.5%, 86.3%.
+- P2P, processor codes, mixed language and VE brands: 85.2%, 81.9%, 85.2%.
+
+The "stable cases" column is the one where Sonnet wins: 122 against 120 for routed. I'm not claiming routed beats Sonnet everywhere. It is cheaper and no worse on category accuracy, and that is all the numbers say.
+
+## What the data did not support
+
+Several ideas looked reasonable and I left them out because the eval did not back them:
+
+- Sending transfer or P2P names straight to Sonnet. Haiku was as stable on them and gave fewer wrong domains.
+- Haiku at medium effort. It gained 1.4 points on category, but wrong domains, which means wrong logos, went from 0.7% to 2.6%.
+- Routing on name shape, user plan or receipt size. None of them predicted where Haiku does worse.
+- A token cap for suggest. The largest answer was 1,026 tokens.
+
+## The chip that saved too early
+
+#622 also fixes something unrelated to cost. Tapping a name chip on the new transaction screen saved the entry right away, with no category and no logo. Enrichment only ran if you opened the entry later and tapped the lookup button.
+
+The footer counted a name it could queue as answered, so the chip's press saved before the lookup ran. Now the chip's tap handler sets the name, runs the lookup without the debounce, waits up to 3 seconds for the logo, and then presses the footer, reading the form's values at that moment. A newer tap, a step change, or closing the form drops the pending press.
+
+I checked it on the iOS simulator: one chip tap saved once, with the category and logo, and a quick double tap added exactly one row. I reviewed the step change and close guards but did not exercise them on the simulator.
+
+## What is not done
+
+Both changes went out with the backend deploy on 18 November. The 72% is still an eval number. The bill will say whether real traffic agrees.
+
+Neither PR changes the provider or the data sent. It is still Anthropic's Claude, and the trace events only gain route metadata.

@@ -1,0 +1,62 @@
+---
+title: El plan gratis ahora aguanta dos monedas y 30 capturas
+description: Por qué los bolívares y los dólares ya no necesitan Pro, por qué el cupo gratis de capturas pasó de 20 a 30, qué cambió en los Términos y cuándo entra en vigor cada cosa.
+lead: El plan gratis se acababa en la tercera semana para quien registra a diario, y una segunda moneda abría el paywall antes del primer gasto. Se movieron los dos límites.
+date: 2026-11-12
+published: 2026-11-18
+figure:
+    from:
+        value: "20"
+        label: capturas gratis cada 30 días
+    to:
+        value: "30"
+        label: capturas gratis cada 30 días
+shipped:
+    - pr: 511
+      title: Que el plan gratis aguante dos monedas
+      date: 2026-11-11
+    - pr: 521
+      title: Subir el cupo gratis de capturas de 20 a 30 cada 30 días
+      date: 2026-11-12
+    - pr: 596
+      title: Mostrar las 30 capturas gratis reales en la tabla de planes del inicio
+      date: 2026-11-16
+---
+
+Cambiaron dos límites del plan gratis: cuántas monedas aguanta y cuántas capturas te da cada 30 días.
+
+## Dos monedas
+
+En Venezuela la gente guarda su dinero en bolívares y en dólares. El plan gratis permitía cuentas en una sola moneda, así que la segunda cuenta, la que casi todo usuario venezolano necesita, abría el paywall antes de que registraran nada.
+
+[#511](https://github.com/danestves/outlayr/pull/511) sube las monedas gratis de 1 a 2. El paywall, los topes de cuentas y las validaciones de la importación de Money Manager leen esa misma constante. Además, un usuario gratis ahora puede registrar una transferencia entre las dos monedas.
+
+Las cuentas, los presupuestos, las personas, las apps de cuotas y el auto-registro mantienen sus topes.
+
+La nota del paywall también tuvo que cambiar. Decía "Pro convierte tus totales a la tasa del día", algo que deja de ser cierto cuando el plan gratis suma dos monedas. Ahora dice "Gratis incluye 2. Pro suma todas las monedas a la tasa del día." en todos los idiomas de la app.
+
+Lo probé en un emulador de Android con una instalación nueva y sin Pro. Una cuenta en bolívares se guardó junto a una en dólares sin paywall, y al elegir euros para una tercera se abrió el paywall con la nota nueva, en inglés y en español. No lo probé en un iPhone, ni las notas en francés y portugués en un dispositivo.
+
+## 30 capturas
+
+El plan gratis daba 20 capturas cada 30 días. Para quien registra a diario con la voz o con recibos, se acababan en la tercera semana.
+
+[#521](https://github.com/danestves/outlayr/pull/521) lo sube a 30. Pro se queda en 500. El conteo no cambia: cada clip es una captura, las correcciones incluidas, porque cada una es una llamada a un proveedor de IA.
+
+Los números ahora viven en un solo módulo que leen el limitador del backend, el paywall de la app y las pantallas del plan, así que no se pueden volver a desfasar.
+
+Una cosa no es inmediata. Si estás a mitad de un período de 30 días, conservas lo que quede de las 20 anteriores hasta que ese período se reinicie, que es máximo en 30 días. Entonces recibes 30. El limitador solo suma al cupo en el límite de cada período, y rellenar los contadores existentes implicaba escribir en los datos de producción del limitador, así que los dejé quietos.
+
+## Qué cambió en los Términos y en los textos
+
+La tabla de planes de los [Términos](/terms) ahora dice 2 monedas de cuentas y 30 entradas por voz y escaneos de recibos cada 30 días, en inglés, español, francés y portugués. El inicio, la página "Acerca de", las páginas de respuestas, `llms.txt` y `pricing.md` dicen lo mismo.
+
+La política de privacidad, las fichas de las tiendas y los correos no mencionan ninguno de los dos números, así que no cambiaron.
+
+Me equivoqué en una. La tabla de planes del inicio seguía diciendo 20 después de #521, y alguien lo vio en X. [#596](https://github.com/danestves/outlayr/pull/596) lo arregla, y esa fila ahora lee las mismas constantes que aplica la app, así que seguirá el próximo cambio por sí sola. En [precios](/pricing) están los números vigentes.
+
+## Cuándo entra en vigor
+
+Los dos cambios llegaron a los celulares con la actualización de la app del 14 de noviembre, así que la app ya aguanta dos monedas y cuenta hasta 30.
+
+Los Términos se pusieron al día después. #511 y #521 sumaron sus filas a los Términos con fecha 1 de enero de 2027, y [#628](https://github.com/danestves/outlayr/pull/628) adelantó toda esa actualización al 19 de noviembre de 2026. Desde ese día, los Términos dicen 2 monedas y 30 capturas, igual que la app.

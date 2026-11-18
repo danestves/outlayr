@@ -1,0 +1,85 @@
+---
+title: When "Bs" could mean two currencies
+description: How Outlayr decides which currency a bank notification means when its symbol is shared, which signals it ranks, and what it still leaves to you.
+lead: '"Bs 500" can be bolívares or bolivianos, and a bare "$" can be a dozen currencies. Outlayr used to file those in the ledger currency. Now it asks the app that posted the notification first.'
+date: 2026-11-17
+published: 2026-11-18
+shipped:
+    - pr: 630
+      title: Resolve shared currency symbols by the posting app and the device region
+      date: 2026-11-17
+    - pr: 631
+      title: Match a card's account by the posting app's currency
+      date: 2026-11-17
+    - pr: 632
+      title: Keep the AI read's currency for a shared symbol, after the posting app and the device
+      date: 2026-11-17
+    - pr: 633
+      title: Attach a waiting card charge only to an account in its own currency
+      date: 2026-11-17
+    - pr: 56
+      title: Log Venezuelan Bs. alerts in VES, not BOB
+      date: 2026-10-23
+---
+
+This is a follow-up to [Reading bank notifications with AI, and saying so](/blog/reading-bank-notifications-with-ai). That post left one thing open: a bare `$` comes back from the model with no currency, and the card's account settles it. That works until the symbol is shared and the account doesn't help.
+
+## What was wrong
+
+Autolog only trusted a currency symbol that names exactly one currency. Everything else fell through to the matched account, then to the ledger currency.
+
+- "Bs 500" from a Venezuelan bank could be VES or BOB. It was filed in the ledger currency, which is USD for many people.
+- A bare "$" from a Mexican bank never became MXN.
+- "¥" from Alipay always read as yen.
+- Marks the catalog doesn't carry, like `S/.`, `RD$` and `元`, weren't read as money at all, so those notifications logged nothing.
+
+An earlier bug was the same family. [#56](https://github.com/danestves/outlayr/pull/56) fixed "Bs." from Banesco or Mercantil being logged as BOB. `detectCurrency` strips digits, dots and spaces before it looks the symbol up, so "Bs." became "Bs", which the catalog only knew as BOB. Keying the symbol map the same way made "Bs" shared by BOB and VES, so it was declined like "$" and the matched account decided. That fixed the Bs case when an account existed, and left everything else on the list above.
+
+## The order of signals
+
+[#630](https://github.com/danestves/outlayr/pull/630) ranks a shared symbol like this:
+
+1. The app that posted the notification. Institutions in the money package get a home currency: Venezuelan banks are VES, Cashea, Krece, Lysto, Chollo and Zinli are USD, Alipay and WeChat Pay (including 支付宝 and 微信) are CNY. Global ones like PayPal, Wise and HSBC have none.
+2. The currency of the device locale.
+3. The matched account.
+4. The ledger currency, as before.
+
+`detectCurrency` now takes an optional list of preferred currencies. With one, it picks the first preferred currency the symbol can mean, then the catalog's only owner. Without one, a shared symbol stays null, so the checks that need a unique answer, like amount parsing, behave as before. With nothing pointing elsewhere, "¥" still reads JPY.
+
+I also added the marks banks print at home: bare `$` for CAD, MXN, AUD, NZD, HKD, TWD and XCD, `¥` and `元` for CNY, `円`, `S/` and `S/.`, `RD$`, `B/.`, `$U`, `Gs`, `Rs` for INR, `C$`, `AU$` and `S$`. They feed the money regex that the Android listener and the iOS intent compile, so this shipped over the air.
+
+## Matching the card is stricter
+
+Filing a charge and choosing the account are different decisions. A wrong account is worse than an unattached one: it skews a balance quietly, and a waiting charge gets attached later with no review. An unattached charge shows up, and you can fix it.
+
+So [#631](https://github.com/danestves/outlayr/pull/631) lets card matching use only the posting app as a hint. Take two accounts, "Banorte MXN" and "Banorte USD". A bare "$" from Banorte used to pick neither, the card asked again, and the charge never went on the card's waiting list. Now a pinned currency wins, then the app's home currency, then the catalog's sole owner. `$350.00` from Banorte picks Banorte MXN, and with no matching account the card waits.
+
+The device is left out on purpose. The locale says how the phone is set up, not what the bank printed. A phone set to en-US in Mexico gets this wrong, and so does a traveler. So a device-only "$" still files in the device's currency, but it picks no account and queues nothing.
+
+## Waiting charges stay in their currency
+
+A card charge that matched several accounts by name waits on the card. When it was attached later, it went to whatever the name matched at that moment, with no currency check. [#633](https://github.com/danestves/outlayr/pull/633) has the example: a Banorte MXN charge waits because "Banorte USD" and "Banorte CAD" both match. Archive CAD, and the MXN charge ended up on Banorte USD without any review.
+
+Now, unless you picked an account for the card, a waiting charge is matched by name only among accounts in its own currency. If none fits, it stays on the waiting list.
+
+A pick you make in Settings still attaches across currencies. That is your choice, not a guess, and charging a card account in a foreign currency is normal: travel, or a USD card in Mexico.
+
+## The model's currency ranks last
+
+The model sometimes does read a currency. From "¥120" it may return "CNY", and the old code threw that away whenever the symbol was shared. With no Chinese app or device in the picture, the push filed as yen.
+
+[#632](https://github.com/danestves/outlayr/pull/632) keeps the code as a hint, with these rules:
+
+- It only counts if the symbol can actually mean that code. EUR for "$ 120" is rejected.
+- It only counts for the figure that shows the AI's amount, not another number in the text, such as a balance or a promo.
+- It ranks after the posting app and the device, never before.
+
+The last rule was a choice. The model never sees the posting app, since that is a separate `card` field and not part of the text. If its code could pin the currency, a Chase "$120.00" push on a phone set to Mexico would file as MXN, and that undoes the rule that the posting bank beats the device. The hint only replaces the symbol's default (¥ as JPY) and the account and ledger fallbacks. Card matching ignores it, like the device, so a guess from the model can't pick your account.
+
+## What is still ambiguous
+
+- With no known app and no device hint, a bare "$" still falls back to the matched account, then the ledger.
+- A global app like PayPal has no home currency, so it falls through to the device.
+- In Settings, the card can still show the name-matched account (Banorte USD) while the MXN charge waits, and tapping the shown account again doesn't count as a pick. The charge stays visible as unattached and you can assign it on the transaction itself.
+- The backend prompt still asks the model for null on a shared symbol. It ignores that for "Bs", and the client now copes either way.
+- Debt drafts keep the old unique-only check, since they have no app or device ranking for a hint to sit behind.
