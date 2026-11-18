@@ -994,14 +994,17 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 
 .hz-glow {
     position: absolute;
-    top: calc(var(--hz) - var(--u) * 900);
+    top: calc(var(--hz) - var(--u) * 216);
     left: 50%;
     width: calc(var(--u) * 2000);
-    height: calc(var(--u) * 1800);
+    height: calc(var(--u) * 684);
     margin-left: calc(var(--u) * -1000);
-    background: var(--glow-horizon);
-    -webkit-mask: linear-gradient(180deg, transparent 38%, #000 49%);
-    mask: linear-gradient(180deg, transparent 38%, #000 49%);
+    background-image: var(--glow-horizon);
+    background-position: 0 calc(var(--u) * -684);
+    background-size: 100% calc(var(--u) * 1800);
+    background-repeat: no-repeat;
+    -webkit-mask: linear-gradient(180deg, transparent 0, #000 calc(var(--u) * 198));
+    mask: linear-gradient(180deg, transparent 0, #000 calc(var(--u) * 198));
     pointer-events: none;
 }
 
@@ -2723,7 +2726,11 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
         .hz-page {
             --sun-box: min(100svh, 100dvh);
             --sun-pin: calc(var(--sun-box) * var(--pin-len));
-            --sky-fade: 0px;
+        }
+
+        .hz-sky {
+            -webkit-mask: none;
+            mask: none;
         }
 
         .hz-track {
