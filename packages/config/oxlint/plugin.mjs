@@ -413,7 +413,7 @@ const noMisreadCopy = {
     create(context) {
         return {
             Property(node) {
-                const name = propertyName(node.key);
+                const name = node.computed ? undefined : propertyName(node.key);
                 const patterns = name === undefined ? undefined : MISREAD_PATTERNS.get(name.split("-")[0]);
                 const text = patterns && copyText(node.value);
                 if (!text) {
