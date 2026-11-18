@@ -317,7 +317,9 @@
     color: var(--hz-lead);
 }
 
-.hz-head .hz-lead-in {
+.hz-head .hz-lead-in,
+.hz-dusk-title .hz-lead-in,
+.hz-close-title .hz-lead-in {
     display: block;
 }
 
@@ -1667,7 +1669,7 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 }
 
 .hz-close-line {
-    max-width: 40ch;
+    max-width: none;
     margin-top: 24px;
     color: var(--color-muted);
     font-size: 1.25rem;
@@ -1932,6 +1934,10 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
         margin-top: 24px;
     }
 
+    :is(.hz-actions, .hz-close-actions) img {
+        height: 44px;
+    }
+
     .hz-rule,
     .hz-qr {
         display: none;
@@ -2021,7 +2027,7 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
     .hz-dusk-line,
     .hz-close-line {
         max-width: 28ch;
-        margin-top: 20px;
+        margin-top: 16px;
         font-size: 1.0625rem;
     }
 
