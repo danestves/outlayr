@@ -1,6 +1,10 @@
-import { SlotPlaceholder } from "./placeholder";
+import { useLocale } from "react-intlayer";
+
+import { UpcomingTotalFragment } from "@/components/app-ui/upcoming";
+
 import type { SlotProps } from "./placeholder";
 
-export function UpcomingTotal({ label, theme = "dark" }: SlotProps) {
-    return <SlotPlaceholder label={label} name="upcoming-total" ratio="440 / 68" theme={theme} />;
+export function UpcomingTotal({ theme = "dark" }: SlotProps) {
+    const { locale } = useLocale();
+    return <UpcomingTotalFragment fit locale={locale} theme={theme} />;
 }
