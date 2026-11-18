@@ -227,12 +227,6 @@ export default defineConfig({
                 },
             },
             {
-                files: ["apps/site/src/components/home/films/**"],
-                rules: {
-                    "tailwindcss/no-unknown-classes": "off",
-                },
-            },
-            {
                 files: ["apps/native/src/widgets/**"],
                 rules: {
                     "unicorn/consistent-function-scoping": "off",

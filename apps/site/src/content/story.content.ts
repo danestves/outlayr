@@ -17,20 +17,6 @@ const story = {
             pt: "Escreva para o suporte",
             fr: "Écrivez au support",
         }),
-        pause: t({
-            en: "Pause the film",
-            de: "Video pausieren",
-            es: "Pausar el video",
-            pt: "Pausar o vídeo",
-            fr: "Mettre la vidéo en pause",
-        }),
-        play: t({
-            en: "Play the film",
-            de: "Video abspielen",
-            es: "Reproducir el video",
-            pt: "Reproduzir o vídeo",
-            fr: "Lire la vidéo",
-        }),
         pricing: {
             label: t({ en: "Pricing", de: "Preise", es: "Precios", pt: "Preços", fr: "Tarifs" }),
             lead: t({

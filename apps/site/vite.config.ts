@@ -45,7 +45,6 @@ const PUBLIC_FILE_RULES = {
     "/favicon-light.png": A_DAY,
     "/favicon.ico": A_DAY,
     "/favicon.svg": A_DAY,
-    "/films/logos/**": A_YEAR,
     "/llms.txt": AN_HOUR,
     "/og-es.png": A_DAY,
     "/og.png": A_DAY,
