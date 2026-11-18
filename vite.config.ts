@@ -446,7 +446,6 @@ export default defineConfig({
         settings: {
             tailwindcss: {
                 entryPoint: [
-                    { files: "apps/site/src/components/app-ui/app-ui.tsx", use: "apps/site/src/index.css" },
                     { files: "apps/site/src/components/app-ui/**", use: "apps/native/global.css" },
                     { files: "apps/site/**", use: "apps/site/src/index.css" },
                     { files: "apps/app/**", use: "apps/app/src/index.css" },

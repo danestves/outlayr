@@ -4,6 +4,7 @@
 @import "@fontsource-variable/nunito";
 @import "@outlayr/shared/tokens.css";
 @source "../../../packages/shared/src";
+@source not "./components/app-ui";
 @source "../node_modules/panelui-web/dist/components/button/index.js";
 @source "../node_modules/panelui-web/dist/components/table/index.js";
 @source "../node_modules/panelui-web/dist/components/dialog/index.js";

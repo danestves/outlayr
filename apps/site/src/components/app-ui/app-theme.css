@@ -3,7 +3,6 @@
 @custom-variant android (@media not all);
 @custom-variant dark (&:where([data-app-theme="dark"], [data-app-theme="dark"] *));
 @plugin "./app-tokens.mjs";
-@source not "./app-ui.tsx";
 @source not "../../../../native/node_modules/panelui-native/src";
 
 @layer theme, base, components, utilities;
