@@ -736,6 +736,7 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 .hz-capture-stage {
     position: relative;
     display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
     place-items: center;
     width: 100%;
     max-width: 616px;
@@ -747,6 +748,11 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 
 .hz-capture-phone {
     width: calc(90% * 428 / 900);
+    min-height: 0;
+}
+
+.hz-capture-phone > .hz-phone-fit {
+    min-height: 0;
 }
 
 .hz-capture-film {
