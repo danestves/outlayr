@@ -231,8 +231,9 @@ export function ScanSweep({ style }: { style?: FrameStyle }) {
             data-sweep=""
             style={{
                 height: band,
-                transform: `translateY(${travel * SWEEP.still}px)`,
+                transform: "translateY(calc(var(--sweep) * var(--travel)))",
                 ...style,
+                "--sweep": SWEEP.still,
                 "--travel": `${travel}px`,
             }}
         >
