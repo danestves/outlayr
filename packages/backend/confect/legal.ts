@@ -13,7 +13,9 @@ export const PolicyNotice = Schema.Struct({
 
 export type PolicyNotice = typeof PolicyNotice.Type;
 
-export const CAPTURE_PUSH_EFFECTIVE_AT_MS = Date.UTC(2027, 0, 1);
+export const NOVEMBER_NOTICE_AT_MS = Date.UTC(2026, 10, 19);
+
+export const CAPTURE_PUSH_EFFECTIVE_AT_MS = NOVEMBER_NOTICE_AT_MS;
 
 export const POLICY_NOTICES: readonly PolicyNotice[] = [
     {
@@ -926,7 +928,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
             ],
         },
         document: "privacy",
-        effectiveAtMs: CAPTURE_PUSH_EFFECTIVE_AT_MS,
+        effectiveAtMs: NOVEMBER_NOTICE_AT_MS,
         postedAtMs: Date.UTC(2026, 10, 18),
     },
     {
@@ -1023,7 +1025,7 @@ export const POLICY_NOTICES: readonly PolicyNotice[] = [
             ],
         },
         document: "terms",
-        effectiveAtMs: Date.UTC(2027, 0, 1),
+        effectiveAtMs: NOVEMBER_NOTICE_AT_MS,
         postedAtMs: Date.UTC(2026, 10, 16),
     },
 ];

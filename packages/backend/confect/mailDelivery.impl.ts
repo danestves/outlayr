@@ -139,13 +139,16 @@ const notifyPolicy = FunctionImpl.make(
                     })
                 ).pipe(
                     Effect.flatMap((message) => sendEmail(email, { ...message, replyTo: POLICY_REPLY_TO })),
-                    Effect.andThen(runMutation(refs.internal.mail.recordNotice, { keys: pending, language, userId })),
-                    Effect.as(true),
-                    Effect.catchTags({ EmailError: (error) => unsent(error).pipe(Effect.as(false)) })
+                    Effect.as(Option.some({ keys: pending, language, userId })),
+                    Effect.catchTags({ EmailError: (error) => unsent(error).pipe(Effect.as(Option.none())) })
                 )
             ),
             { concurrency: NOTICE_CONCURRENCY }
         ).pipe(Effect.provide(outboundHttp));
+        const deliveries = delivered.filter(Option.isSome).map(({ value }) => value);
+        if (deliveries.length > 0) {
+            yield* runMutation(refs.internal.mail.recordNotice, { deliveries });
+        }
 
         if (!page.isDone) {
             const scheduler = yield* Scheduler;
@@ -153,8 +156,7 @@ const notifyPolicy = FunctionImpl.make(
                 cursor: page.continueCursor,
             });
         }
-        const sent = delivered.filter(Boolean).length;
-        return { failed: delivered.length - sent, sent };
+        return { failed: delivered.length - deliveries.length, sent: deliveries.length };
     }, Effect.orDie)
 );
 

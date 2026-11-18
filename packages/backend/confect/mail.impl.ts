@@ -193,11 +193,13 @@ const recordNotice = FunctionImpl.make(
     databaseSchema,
     spec,
     "recordNotice",
-    Effect.fn("Mail.recordNotice")(function* recordNotice({ keys, language, userId }) {
-        const state = yield* stateOf(userId);
-        const added = keys.filter((key) => !state?.notices.includes(key));
-        if (added.length > 0) {
-            yield* saveState(userId, state, { language, notices: [...(state?.notices ?? []), ...added] });
+    Effect.fn("Mail.recordNotice")(function* recordNotice({ deliveries }) {
+        for (const { keys, language, userId } of deliveries) {
+            const state = yield* stateOf(userId);
+            const added = keys.filter((key) => !state?.notices.includes(key));
+            if (added.length > 0) {
+                yield* saveState(userId, state, { language, notices: [...(state?.notices ?? []), ...added] });
+            }
         }
         return null;
     }, Effect.orDie)

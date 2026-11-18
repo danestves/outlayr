@@ -169,9 +169,7 @@ describe("a policy notice", () => {
         );
         await t.mutation(internal.mail.rememberLanguage, { language: "es", userId: ana.userId });
         await t.mutation(internal.mail.recordNotice, {
-            keys: [`privacy:${DAY}`],
-            language: "en",
-            userId: cleo.userId,
+            deliveries: [{ keys: [`privacy:${DAY}`], language: "en", userId: cleo.userId }],
         });
         let benReachable = false;
         const sent = stubCloudflare((to) => to === ben.email && !benReachable);
