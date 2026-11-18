@@ -145,13 +145,13 @@ const INSTITUTIONS: readonly InstitutionEntry[] = [
     { domain: "splitit.com", id: "splitit", label: "Splitit", patterns: ["splitit", "split it"] },
 
     { domain: "paypal.com", id: "paypal", label: "PayPal", patterns: ["paypal"] },
-    { currency: "CNY", domain: "alipay.com", id: "alipay", label: "Alipay", patterns: ["alipay"] },
+    { currency: "CNY", domain: "alipay.com", id: "alipay", label: "Alipay", patterns: ["alipay", "支付宝"] },
     {
         currency: "CNY",
         domain: "wechat.com",
         id: "wechat-pay",
         label: "WeChat Pay",
-        patterns: ["wechat", "wechat pay", "weixin"],
+        patterns: ["wechat", "wechat pay", "weixin", "微信", "微信支付"],
     },
     { domain: "venmo.com", currency: "USD", id: "venmo", label: "Venmo", patterns: ["venmo"] },
     // "cash app", never bare "cash": plain cash is not a company.

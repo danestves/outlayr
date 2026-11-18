@@ -205,7 +205,8 @@ function cardAccount(write: PendingWrite, facts: PendingWriteFacts) {
         return { account: null, asks: false, charged: null };
     }
     const status = cardStatus(card, facts.cards, facts.banks);
-    const charged = write.currency?.trim().toUpperCase() || detectCurrency(write.amountText);
+    // No hints: a guess must not pick the account, but "¥" still matches a yen account as it always has.
+    const charged = write.currency?.trim().toUpperCase() || detectCurrency(write.amountText, []);
     const same = charged ? facts.banks.filter((row) => row.currency === charged) : [];
     const account =
         status.account ?? (status.asks ? same.find((row) => row.id === matchCardAccount(card, same)) : undefined);
