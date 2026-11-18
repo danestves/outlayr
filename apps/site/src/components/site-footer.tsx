@@ -1,3 +1,7 @@
+import InstagramIcon from "@hugeicons/core-free-icons/InstagramIcon";
+import NewTwitterIcon from "@hugeicons/core-free-icons/NewTwitterIcon";
+import TiktokIcon from "@hugeicons/core-free-icons/TiktokIcon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { SUPPORT_EMAIL } from "@outlayr/shared/urls";
 import { useLocation } from "@tanstack/react-router";
 import { getPathWithoutLocale } from "intlayer";
@@ -5,7 +9,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { CONTAINER } from "@/lib/layout";
-import { COMPANY, COMPANY_URL, SOURCE_URL } from "@/lib/site";
+import { COMPANY, COMPANY_URL, INSTAGRAM_URL, SOURCE_URL, TIKTOK_URL, X_URL } from "@/lib/site";
 
 import { ConsentSwitch } from "./consent-switch";
 import { LanguageSwitch } from "./language-switch";
@@ -23,6 +27,12 @@ const LISTINGS = [
     { href: "https://alternativeto.net/software/outlayr/about/", key: "alternativeTo" },
     { href: "https://www.producthunt.com/products/outlayr", key: "productHunt" },
     { href: "https://sellwithboost.com", key: "sellWithBoost" },
+] as const;
+
+const SOCIALS = [
+    { href: INSTAGRAM_URL, icon: InstagramIcon, name: "Instagram" },
+    { href: TIKTOK_URL, icon: TiktokIcon, name: "TikTok" },
+    { href: X_URL, icon: NewTwitterIcon, name: "X" },
 ] as const;
 
 function Column({ children, title }: { children: ReactNode; title: ReactNode }) {
@@ -65,6 +75,19 @@ export function SiteFooter() {
                             Outlayr
                         </LocalizedLink>
                         <p className="text-muted mt-4 text-sm">{footer.tagline}</p>
+                        <ul className="mt-4 -ml-1.5 flex items-center gap-1">
+                            {SOCIALS.map(({ href, icon, name }) => (
+                                <li key={name}>
+                                    <a
+                                        aria-label={name}
+                                        className="fluid text-muted hover:text-foreground inline-flex p-1.5"
+                                        href={href}
+                                    >
+                                        <HugeiconsIcon icon={icon} size={20} />
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
                         <ul className="mt-6 flex flex-col gap-3 text-sm">
                             {LISTINGS.map(({ href, key }) => (
                                 <li key={key}>

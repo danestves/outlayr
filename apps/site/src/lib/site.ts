@@ -17,6 +17,8 @@ export const COMPANY_URL = "https://danestves.com/";
 export const SOURCE_URL = "https://github.com/danestves/outlayr";
 export const WIKIDATA_URL = "https://www.wikidata.org/wiki/Q141838558";
 export const X_URL = "https://x.com/tryoutlayr";
+export const INSTAGRAM_URL = "https://www.instagram.com/tryoutlayr/";
+export const TIKTOK_URL = "https://www.tiktok.com/@tryoutlayr";
 export const FOUNDER = {
     github: "https://github.com/danestves",
     image: "/about/daniel-esteves.webp",
