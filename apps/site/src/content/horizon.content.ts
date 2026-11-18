@@ -392,11 +392,11 @@ const horizon = {
         },
         source: {
             caption: t({
-                en: "The Share analytics switch, as it ships. Turn it off and the app stops sending analytics.",
-                de: "Der Schalter Analysedaten teilen, so wie er ausgeliefert wird. Schalte ihn aus, und die App sendet keine Analysedaten mehr.",
-                es: "El interruptor Compartir analíticas, tal como se publica. Apágalo y la app deja de enviar analíticas.",
-                pt: "A chave Compartilhar análises, como ela é publicada. Desligue e o app para de enviar análises.",
-                fr: "L'option Partager les données d'analyse, telle qu'elle est publiée. Désactivez-la et l'app n'envoie plus de données d'analyse.",
+                en: "The Share analytics switch, as it ships. Turn it off and this phone stops sending usage analytics and crash reports.",
+                de: "Der Schalter Analysedaten teilen, so wie er ausgeliefert wird. Schalte ihn aus, und dieses Telefon sendet keine Nutzungsdaten und Absturzberichte mehr.",
+                es: "El interruptor Compartir analíticas, tal como se publica. Apágalo y este teléfono deja de enviar analíticas de uso y reportes de errores.",
+                pt: "A chave Compartilhar análises, como ela é publicada. Desligue e este celular para de enviar análises de uso e relatórios de falhas.",
+                fr: "L'option Partager les données d'analyse, telle qu'elle est publiée. Désactivez-la et ce téléphone n'envoie plus de statistiques d'utilisation ni de rapports de plantage.",
             }),
             code: t({
                 en: "Read the code",
@@ -421,11 +421,11 @@ const horizon = {
                 fr: "PRs fusionnées",
             }),
             mergedCount: t({
-                en: "{{count}} in the last year",
-                de: "{{count}} im letzten Jahr",
-                es: "{{count}} en el último año",
-                pt: "{{count}} no último ano",
-                fr: "{{count}} sur les 12 derniers mois",
+                en: "{{count}} this month",
+                de: "{{count}} diesen Monat",
+                es: "{{count}} este mes",
+                pt: "{{count}} este mês",
+                fr: "{{count}} ce mois-ci",
             }),
             numbers: t({
                 en: "See the numbers",

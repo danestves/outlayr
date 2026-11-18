@@ -53,7 +53,7 @@ export const getHomeStats = createServerFn({ method: "GET" }).handler(async () =
         const stats = await Promise.race([new ConvexHttpClient(url).query(latest, {}), timeout]);
         const week = stats?.posthog?.weeks.at(-1);
         return {
-            mergedPrs: stats?.github?.months.reduce((sum, { mergedPrs }) => sum + mergedPrs, 0) ?? null,
+            mergedPrs: stats?.github?.months.at(-1)?.mergedPrs ?? null,
             week: week && week.entries > 1 && week.people > 1 && week.countries > 1 ? week : null,
         };
     } catch {
