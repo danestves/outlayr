@@ -1,6 +1,23 @@
+@property --cue {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 1;
+}
+
+@property --sweep {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0;
+}
+
+[data-cue],
+[data-flash] {
+    opacity: var(--cue);
+}
+
 [data-cue="swap"],
 [data-flash] {
-    opacity: 0;
+    --cue: 0;
 }
 
 [data-flash] {
@@ -34,47 +51,47 @@
 @keyframes capture-clock {
     from,
     to {
-        opacity: 1;
+        --clock: 1;
     }
 }
 
 @keyframes capture-in {
     from {
-        opacity: 0;
+        --cue: 0;
     }
 
     to {
-        opacity: 1;
+        --cue: 1;
     }
 }
 
 @keyframes capture-out {
     from {
-        opacity: 1;
+        --cue: 1;
     }
 
     to {
-        opacity: 0;
+        --cue: 0;
     }
 }
 
 @keyframes capture-flash {
     0%,
     100% {
-        opacity: 0;
+        --cue: 0;
     }
 
     30% {
-        opacity: 1;
+        --cue: 1;
     }
 }
 
 @keyframes capture-sweep {
     from {
-        transform: translateY(0);
+        --sweep: 0;
     }
 
     to {
-        transform: translateY(var(--travel));
+        --sweep: 1;
     }
 }

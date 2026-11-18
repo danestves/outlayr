@@ -16,6 +16,10 @@ The marketing site (`apps/site`) draws app screens as DOM, not screenshots. The 
 
 React Native on iOS rounds every text box up to a device pixel (a third of a point) and centers the line inside it. Chrome rounds ascent, descent and paint offsets to whole CSS pixels. At 1 px per point, that puts baselines up to 1 pt off. So `[data-app-replica]` renders at `zoom: 3` and scales back by a third. All of Chrome's rounding then lands on a third of a point, as on a device. The rule for `div > span` in `app-theme.css` then moves each span onto the iOS baseline, `(line height + ascent - descent) / 2`, using the SF metrics from `type.ts`. Text that must sit on a measured baseline belongs in a `span` directly inside a `div`. A decorative element should be a `div`.
 
+## Motion inside a replica
+
+Safari rasterizes a composited layer at its own layout size times the device pixel ratio and ignores any scale on its ancestors (WebKit enables root-relative scale only for layer-based SVG). Inside the zoom 3 canvas, one full-screen layer on a 3x iPhone is 3618 × 7866 px, about 110 MB. Any opacity, transform or filter animation or transition, or `will-change`, makes such a layer. The capture films stacked enough of them to crash the tab. So motion inside a replica animates a registered custom property (`--cue`, `--sweep` in `capture.css`), which never composites, and the property it drives reads that variable.
+
 ## Adding a screen or a fragment
 
 1. Port the native component into `<screen>.tsx` with the same structure. Reuse `chrome.tsx` (nav header, tab bar, FAB, glass), `parts.tsx` (sheet, settings section and rows, scope chip, button, home indicator), `list.tsx`, `tile.tsx` and `amount.tsx`.

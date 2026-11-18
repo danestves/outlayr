@@ -346,6 +346,10 @@ html:has(.hz-page) {
     content-visibility: auto;
 }
 
+.hz-page :is(.ss-phone__status, .ss-phone__home) {
+    will-change: auto;
+}
+
 .hz-head {
     max-width: 18ch;
     font-size: clamp(2.125rem, 2.4vw + 1.05rem, 3.5rem);
