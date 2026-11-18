@@ -26,6 +26,13 @@ export function frameTimes(enter: number, leave?: number, fade?: number): FrameS
     return style;
 }
 
+export function frameAttrs(style?: FrameStyle) {
+    if (style === undefined) {
+        return {};
+    }
+    return { "data-frame": style["--out"] === undefined ? "hold" : "swap" };
+}
+
 export function ModalBackdrop() {
     return (
         <>
