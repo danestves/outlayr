@@ -57,3 +57,16 @@ export function formatTime(date: Date, locale: Locale, t: AppT): string {
     const hour12 = hours % 12 === 0 ? 12 : hours % 12;
     return `${hour12}:${mm} ${t(hours >= 12 ? "dates.meridiem.pm" : "dates.meridiem.am")}`;
 }
+
+export function formatDateHeader(day: Date, now: Date, locale: Locale, t: AppT): string {
+    const base = `${t(WEEKDAYS[day.getDay()] ?? "dates.weekday.0").toUpperCase()}, ${dayOfMonth(day, locale)} ${t(MONTHS[day.getMonth()] ?? "dates.month.0").toUpperCase()}`;
+    return day.getFullYear() < now.getFullYear() ? `${base} '${String(day.getFullYear()).slice(-2)}` : base;
+}
+
+export function formatClock(date: Date, locale: Locale): string {
+    const hours = date.getHours();
+    const mm = String(date.getMinutes()).padStart(2, "0");
+    return TWELVE_HOUR[locale]
+        ? `${hours % 12 === 0 ? 12 : hours % 12}:${mm}`
+        : `${String(hours).padStart(2, "0")}:${mm}`;
+}

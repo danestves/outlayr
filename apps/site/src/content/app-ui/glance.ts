@@ -25,6 +25,13 @@ export const glanceCopy = {
         pt: "Lazer",
         fr: "Loisirs",
     }),
+    "categories.preset.freelance": t({
+        en: "Freelance",
+        de: "Freiberuflich",
+        es: "Freelance",
+        pt: "Freelance",
+        fr: "Freelance",
+    }),
     "categories.preset.fuel": t({ en: "Fuel", de: "Tanken", es: "Gasolina", pt: "Combustível", fr: "Carburant" }),
     "categories.preset.groceries": t({
         en: "Groceries",
@@ -33,6 +40,7 @@ export const glanceCopy = {
         pt: "Mercado",
         fr: "Courses",
     }),
+    "categories.preset.paycheck": t({ en: "Paycheck", de: "Gehalt", es: "Sueldo", pt: "Salário", fr: "Salaire" }),
     "categories.preset.phoneInternet": t({
         en: "Phone & Internet",
         de: "Handy und Internet",
@@ -63,6 +71,7 @@ export const glanceCopy = {
         pt: "Contas da casa",
         fr: "Charges",
     }),
+    "common.income": t({ en: "Income", de: "Einnahme", es: "Ingreso", pt: "Receita", fr: "Revenu" }),
     "dates.weekdayInitial.0": t({ en: "S", de: "S", es: "D", pt: "D", fr: "D" }),
     "dates.weekdayInitial.1": t({ en: "M", de: "M", es: "L", pt: "S", fr: "L" }),
     "dates.weekdayInitial.2": t({ en: "T", de: "D", es: "M", pt: "T", fr: "M" }),
@@ -93,6 +102,19 @@ export const glanceCopy = {
         es: "este año",
         pt: "este ano",
         fr: "cette année",
+    }),
+    "watch.all": t({ en: "All", de: "Alle", es: "Todas", pt: "Todas", fr: "Toutes" }),
+    "watch.recent": t({ en: "Recent", de: "Zuletzt", es: "Recientes", pt: "Recentes", fr: "Récentes" }),
+    "watch.spent": t({ en: "spent", de: "ausgegeben", es: "gastado", pt: "gasto", fr: "dépensé" }),
+};
+
+export const glanceWatch = {
+    waiting: t({
+        en: "Open Outlayr on your iPhone",
+        de: "Öffne Outlayr auf deinem iPhone",
+        es: "Abre Outlayr en tu iPhone",
+        pt: "Abra o Outlayr no seu iPhone",
+        fr: "Ouvrez Outlayr sur votre iPhone",
     }),
 };
 
@@ -131,5 +153,34 @@ export const glanceLabels = {
         es: "El widget Registrar gasto de Outlayr: {spent} gastados hoy y un botón para registrar un gasto.",
         pt: "O widget Registrar gasto do Outlayr: {spent} gastos hoje e um botão para registrar um gasto.",
         fr: "Le widget Ajouter une dépense d'Outlayr : {spent} dépensés aujourd'hui et un bouton pour ajouter une dépense.",
+    }),
+    watch: glanceWatch,
+    watchAmount: t({
+        en: "Outlayr's Apple Watch app logging an expense: {amount} typed on the keypad.",
+        de: "Die Apple-Watch-App von Outlayr beim Erfassen einer Ausgabe: {amount} auf dem Ziffernblock eingegeben.",
+        es: "La app de Outlayr en el Apple Watch registrando un gasto: {amount} escrito en el teclado.",
+        pt: "O app do Outlayr no Apple Watch registrando um gasto: {amount} digitado no teclado.",
+        fr: "L'app Outlayr sur Apple Watch en train d'ajouter une dépense : {amount} saisi sur le pavé numérique.",
+    }),
+    watchCategory: t({
+        en: "Outlayr's Apple Watch app asking for the category of {amount}. Recent: {recent}.",
+        de: "Die Apple-Watch-App von Outlayr fragt nach der Kategorie für {amount}. Zuletzt: {recent}.",
+        es: "La app de Outlayr en el Apple Watch pide la categoría de {amount}. Recientes: {recent}.",
+        pt: "O app do Outlayr no Apple Watch pede a categoria de {amount}. Recentes: {recent}.",
+        fr: "L'app Outlayr sur Apple Watch demande la catégorie de {amount}. Récentes : {recent}.",
+    }),
+    watchToday: t({
+        en: "Outlayr's Apple Watch app, today, {date}: {spent} spent. {remaining} {caption} this month, {percent} of the budget spent.",
+        de: "Die Apple-Watch-App von Outlayr, heute, {date}: {spent} ausgegeben. Diesen Monat {remaining} {caption}, {percent} des Budgets ausgegeben.",
+        es: "La app de Outlayr en el Apple Watch, hoy, {date}: {spent} gastados. Este mes, {remaining} {caption}, {percent} del presupuesto gastado.",
+        pt: "O app do Outlayr no Apple Watch, hoje, {date}: {spent} gastos. Este mês, {remaining} {caption}, {percent} do orçamento gasto.",
+        fr: "L'app Outlayr sur Apple Watch, aujourd'hui, {date} : {spent} dépensés. Ce mois-ci, {remaining} {caption}, {percent} du budget dépensé.",
+    }),
+    watchWaiting: t({
+        en: "Outlayr's Apple Watch app before its first sync: {message}.",
+        de: "Die Apple-Watch-App von Outlayr vor dem ersten Abgleich: {message}.",
+        es: "La app de Outlayr en el Apple Watch antes de su primera sincronización: {message}.",
+        pt: "O app do Outlayr no Apple Watch antes da primeira sincronização: {message}.",
+        fr: "L'app Outlayr sur Apple Watch avant sa première synchronisation : {message}.",
     }),
 };

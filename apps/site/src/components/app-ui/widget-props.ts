@@ -123,8 +123,10 @@ const PERIOD_HEADER = {
 const PRESET_LABELS = {
     "Dining Out": "categories.preset.diningOut",
     Entertainment: "categories.preset.entertainment",
+    Freelance: "categories.preset.freelance",
     Fuel: "categories.preset.fuel",
     Groceries: "categories.preset.groceries",
+    Paycheck: "categories.preset.paycheck",
     "Phone & Internet": "categories.preset.phoneInternet",
     Rent: "categories.preset.rent",
     Shopping: "categories.preset.shopping",
@@ -139,10 +141,11 @@ const dayOfMonth = (date: Date, locale: Locale) => (locale === "de" ? `${date.ge
 
 const monthAbbrevTitle = (date: Date, t: AppT) => t(MONTH_KEYS[date.getMonth()] ?? "dates.month.0");
 
-const formatUpcomingDate = (date: Date, locale: Locale, t: AppT) =>
+export const formatUpcomingDate = (date: Date, locale: Locale, t: AppT) =>
     `${dayOfMonth(date, locale)} ${monthAbbrevTitle(date, t).toUpperCase()}`;
 
-const dayMonth = (date: Date, locale: Locale, t: AppT) => `${dayOfMonth(date, locale)} ${monthAbbrevTitle(date, t)}`;
+export const dayMonth = (date: Date, locale: Locale, t: AppT) =>
+    `${dayOfMonth(date, locale)} ${monthAbbrevTitle(date, t)}`;
 
 const clamp01 = (value: number) => (!Number.isFinite(value) || value < 0 ? 0 : Math.min(1, value));
 
@@ -154,7 +157,7 @@ function wholeAmount(amount: number, code: string, locale: Locale): string {
     return `${symbolPrefix(amountParts(amount, code, locale).symbol)}${formatFixed(rounded, 0, locale)}`;
 }
 
-const settled = (now: Date) => ROWS.filter((row) => row.date.getTime() <= now.getTime());
+export const settled = (now: Date) => ROWS.filter((row) => row.date.getTime() <= now.getTime());
 
 function sumBetween(start: Date, now: Date, income: boolean): number {
     return settled(now)
@@ -249,7 +252,7 @@ function windowLabel(period: InsightsPeriod, now: Date, locale: Locale, t: AppT)
     return period === "month" ? `${monthAbbrevTitle(start, t)} ${start.getFullYear()}` : String(start.getFullYear());
 }
 
-const categoryName = (category: DemoRow["category"], t: AppT) =>
+export const categoryName = (category: DemoRow["category"], t: AppT) =>
     hasPresetLabel(category) ? t(PRESET_LABELS[category]) : category;
 
 export function logWidgetProps(now: Date, locale: Locale): LogWidgetProps {
