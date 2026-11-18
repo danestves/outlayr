@@ -153,9 +153,7 @@ export function useNewDebtForm({ onDirtyChange, onDone, personId, pushed, verb: 
     const [verb, setVerb] = useState<DebtVerb>(pushed?.verb ?? initialVerb ?? "borrowed");
     const [soldOnCredit, setSoldOnCredit] = useState(false);
     const [category, setCategory] = useState<Category | null>(null);
-    const [accountId, setAccountId] = useState<string | null>(() =>
-        pushed ? null : (getLastUsedAccount(db)?.id ?? banks[0]?.id ?? null)
-    );
+    const [accountId, setAccountId] = useState<string | null>(() => getLastUsedAccount(db)?.id ?? banks[0]?.id ?? null);
     const account = banks.find((row) => row.id === accountId) ?? null;
     const [pickedCurrency, setPickedCurrency] = useState<string | null>(pushed?.currency ?? null);
     const [amountText, setAmountTextState] = useState(() =>

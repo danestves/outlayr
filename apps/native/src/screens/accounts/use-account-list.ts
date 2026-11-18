@@ -6,6 +6,7 @@ import { useArchivedAccounts, useBankAccounts } from "@/data/accounts";
 import type { Account } from "@/data/accounts-core";
 import { useGlobalCurrency, useMeta } from "@/data/app-meta";
 import { useDebtsOverview } from "@/data/debts";
+import { useNotificationDebts } from "@/data/notification-debts";
 import { useSavingsGoals } from "@/data/savings-goals";
 import { useDeferredDelete } from "@/data/use-deferred-delete";
 import { useNow } from "@/data/use-now";
@@ -18,6 +19,7 @@ export function useAccountList() {
     const t = useTranslation();
     const all = useBankAccounts(db);
     const archivedCount = useArchivedAccounts(db).length;
+    const pushedDebts = useNotificationDebts(db);
     const { pendingId, requestDelete } = useDeferredDelete("account");
     const { pendingId: pendingGoalId } = useDeferredDelete("goal");
     const currency = useGlobalCurrency(db);
@@ -38,7 +40,14 @@ export function useAccountList() {
         deleteAccount: (account: Account) => {
             requestDelete(account.id, { body: t("accounts.undo.body") });
         },
-        empty: rows.length + debts.owedToYou.length + debts.youOwe.length + debts.settled.length + archivedCount === 0,
+        empty:
+            rows.length +
+                debts.owedToYou.length +
+                debts.youOwe.length +
+                debts.settled.length +
+                archivedCount +
+                pushedDebts.length ===
+            0,
         goals,
         openDetail: (id: string) => {
             router.push({
