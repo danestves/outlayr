@@ -20,7 +20,7 @@ import { SiteHeader } from "@/components/site-header";
 import { ENV } from "@/env";
 import { startMotion } from "@/lib/motion";
 import { APP_ID, FOUNDER_ID, ORGANIZATION_ID, WEBSITE_ID, ldJson, mobileApp } from "@/lib/seo";
-import { COMPANY, FOUNDER, SOURCE_URL, X_URL } from "@/lib/site";
+import { COMPANY, FOUNDER, INSTAGRAM_URL, SOURCE_URL, TIKTOK_URL, X_URL } from "@/lib/site";
 
 import appCss from "../index.css?url";
 
@@ -63,7 +63,7 @@ function siteGraph(locale: Locale) {
                 legalName: COMPANY,
                 logo: `${SITE_URL}/apple-touch-icon.png`,
                 name: "Outlayr",
-                sameAs: [X_URL, SOURCE_URL],
+                sameAs: [X_URL, INSTAGRAM_URL, TIKTOK_URL, SOURCE_URL],
                 url: SITE_URL,
             },
             {
