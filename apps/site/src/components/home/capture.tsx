@@ -75,6 +75,7 @@ export function Capture() {
     const select = (target: HTMLElement, index: number) => {
         const section = target.closest("section");
         setCurrent(index);
+        setPaused(false);
         setPlaying(true);
         if (section) {
             playWay(section, CAPTURE_WAYS[index] ?? "type");
