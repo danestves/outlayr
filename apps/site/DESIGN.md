@@ -7,14 +7,18 @@ below comes from them or from the app's own palette. Do not invent new ones.
 ## Type
 
 - One family: Geist (`font-sans`). Geist Mono (`font-mono`) only for figures, labels and data.
-- Tailwind's default scale only (`text-xs` … `text-9xl`). No arbitrary sizes.
+- Tailwind's default scale only (`text-xs` … `text-9xl`). No arbitrary sizes. The home page is the
+  exception: `horizon.css` sizes it from a 1440×900 frame through `--u`.
 - Weights 400, 500, 600, 700. Never 800 or 900. No italics anywhere.
 - Page heroes: solid `text-foreground`, `max-w-[680px]`, `tracking-tighter`, meaningful line breaks.
 - Section headings: `text-4xl md:text-5xl font-semibold tracking-tight`.
 - Body: `text-base`/`text-lg`, `text-muted` for secondary copy, measure under 65ch.
 - Mono labels: `font-mono text-xs text-muted`, sentence case. Uppercase stays only inside components that render the app.
 - Copy: sentence case, no hyphens inside sentences, no exclamation marks, no AI clichés.
-- Headings, labels and buttons end without a period. Multi-sentence paragraphs keep theirs.
+- Headings, labels and buttons end without a period. Multi-sentence paragraphs keep theirs. Home page
+  section headings are sentences and keep their period.
+- Home headings are two-tone: `.hz-lead-in` sets the first words in `--hz-lead` (foreground mixed
+  56% into the ground), the rest stays foreground.
 
 ## Color
 
@@ -35,7 +39,21 @@ Tokens live in `packages/shared/src/tokens.css` and switch on `html[data-theme="
 `app-rule`, `app-fill`, `app-track`, `app-tint`, `app-income`, `app-spend`, `app-chip`). Use them
 only inside components that render the app.
 
-Backgrounds are flat, with no gradients and no texture layer.
+Backgrounds are flat, with no gradients and no texture layer. Gradients are allowed in three places
+only: the home sky, sun and horizon glow (`--sky-*`, `--paint-*`, `--glow-*` in `horizon.css`), the
+sunrise behind the home footer, and the wash at the top of the Get the app dialog.
+
+### Home page skies
+
+The home page is one day whatever the visitor's theme: day, sunset, night, then sunrise. Each band
+sets `data-sky="day" | "night" | "sunrise"`, which remaps the `--color-*` tokens inside it, plus
+`--hz-lead`, `--hz-glass`, `--hz-pill` and the shadows. Never force `html[data-theme]` for it. Fixed
+chrome over the page (nav, install bar) reads the ground under it from `[data-night-ground]` with
+`watchGround` and sets `data-ground`, never `data-sky`.
+
+Its palette lives on `.hz-page`: `--hz-sun-*`, `--hz-dawn*`, `--hz-ember*`, `--hz-night`, `--hz-paper`,
+and `--hz-hold-*`, the dark surfaces app replicas sit on at night. The sun's tunables sit together
+there too (`--sun-*`, `--sunset-pin`, `--scene-ms`).
 
 ## Space and shape
 
@@ -47,6 +65,9 @@ Backgrounds are flat, with no gradients and no texture layer.
   `inner = outer − gap` when that is above 2px (`rounded-3xl p-2` → `rounded-2xl`).
 - Cards are `bg-surface rounded-3xl` with no border and no shadow. Elevation is only for
   floating glass (`glass` utility). A card that is a link steps to `bg-border/50` on hover.
+- Glass: blur (`glass` utility) only on the floating nav. Cards on the home night sky are
+  translucent fills instead (`--hz-glass`, a `--hz-glass-rim` hairline and a `--hz-gleam` top
+  edge), never blurred.
 
 ## Motion
 
@@ -62,19 +83,33 @@ Backgrounds are flat, with no gradients and no texture layer.
 - One global `IntersectionObserver` (`src/lib/motion.ts`) drives all of it. Never listen to
   `scroll`. Animate only `opacity` and `transform`; blur is desktop only so phones hold 60fps.
 - Everything collapses to static under `prefers-reduced-motion`.
+- Home reveals: `data-reveal="group"` on a block and `.hz-r` on the children that move, with `--i`
+  as the stagger step.
+- Home scenes (hero sunrise, pinned sunset, closing sunrise) are CSS scroll-driven animations.
+  Without `animation-timeline`, `playScene` sets `data-scene="on"` once and the keyframes run over
+  `--scene-ms`. Pointer parallax (`sway`) only on fine pointers. Nothing animates continuously.
 
 ## Components
 
 - Dashboard (`apps/app`) and `/r` report controls: `panelui-web`, imported by subpath (`panelui-web/button`) and styled with `className`.
-  Its tokens are set on `.app-shell`, which any portaled popup also needs in its `className`.
+  Its tokens are set on `.app-shell`, which any portaled popup also needs in its `className`. The site
+  header's dialog and menu sheet use the site tokens instead, styled in `index.css` (`.get-app`, `.site-menu`).
 - Dashboard and `/r` report chrome: `text-xs`, `text-sm` and `text-base` at weights 400 and 500, mono only on figures. Row tiles are `sm`.
   Category color belongs to charts and meters; a table row gets a small dot. Disabled actions stay `outline`, the accent
   never fills one. A change states what it compares to, on the line under its figure.
-- Nav: the floating glass island (`site-header.tsx`), a morphing hamburger and a full-screen
-  blurred menu on phones. No store badge in the nav.
-- Store CTAs: `StoreBadges`, the official Google Play and App Store badges and nothing else.
-  Never a custom store button.
-- Icons: `Icon` from `src/components/icon.tsx` (Phosphor regular paths). Add new ones from
-  `@phosphor-icons/core` the same way. No other icon set.
+- Nav: the floating glass island (`site-header.tsx`) with Get the app on every page, and a top
+  sheet menu on phones. On the home page it switches between a day and a night skin.
+- Get the app (`GetAppButton`): on a wide screen with a fine pointer it opens a dialog with a QR code
+  drawn in code (`DownloadQr`, encodes `/download`) and the store badges; anywhere else it links to
+  `/download`, which picks the store from the device. It never names a store.
+- Store CTAs: `StoreBadges`, the official Google Play and App Store badges, wherever a store is
+  named. Never a custom button that names a store.
+- Icons: Hugeicons free set, imported by path from `@hugeicons/core-free-icons`, through `Icon` in
+  `src/components/icon.tsx` or `HugeiconsIcon`. No other icon set.
+- Category tiles (home): a Hugeicons glyph on a flat wash of the category's preset color
+  (`categoryTile`), one soft shadow, no ring. Never another brand's logo.
+- App replicas on the home page: one file per slot in `src/components/home/slots/`. The section
+  owns the box (size, position, rotation, depth, reveal); the slot owns only its body.
 - Footer: logo, tagline and the directory listings as plain text links, three short link columns,
-  language links, theme and cookie selects. No third-party badge images.
+  language links, theme and cookie selects, and the owners line. No third-party badge images. On
+  the home page it sits on the sunrise (`data-sky="sunrise"`).
