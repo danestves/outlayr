@@ -1,4 +1,5 @@
 import mono from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
+import rounded from "@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2?url";
 import { LANGUAGES, localeFromParam } from "@outlayr/shared/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { getIntlayer } from "intlayer";
@@ -32,7 +33,13 @@ export const Route = createFileRoute("/{-$locale}/")({
         const locale = localeFromParam(params.locale);
         const { faq, meta } = getIntlayer("home", locale);
         return {
-            links: [{ as: "font", crossOrigin: "anonymous", href: mono, rel: "preload", type: "font/woff2" }],
+            links: [mono, rounded].map((href) => ({
+                as: "font",
+                crossOrigin: "anonymous",
+                href,
+                rel: "preload",
+                type: "font/woff2",
+            })),
             meta: pageMeta(meta.title, meta.description),
             scripts: [ldJson(faqPage(faq, LANGUAGES[locale].lang))],
         };

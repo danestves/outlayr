@@ -11,7 +11,7 @@
     font-family: "App Rounded";
     font-style: normal;
     font-weight: 400;
-    font-display: block;
+    font-display: swap;
     src: url("@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2") format("woff2-variations");
     unicode-range:
         U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
@@ -26,7 +26,7 @@
     font-family: "App Rounded";
     font-style: normal;
     font-weight: 500;
-    font-display: block;
+    font-display: swap;
     src: url("@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2") format("woff2-variations");
     unicode-range:
         U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
@@ -41,7 +41,7 @@
     font-family: "App Rounded";
     font-style: normal;
     font-weight: 600;
-    font-display: block;
+    font-display: swap;
     src: url("@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2") format("woff2-variations");
     unicode-range:
         U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
@@ -56,7 +56,7 @@
     font-family: "App Rounded";
     font-style: normal;
     font-weight: 700;
-    font-display: block;
+    font-display: swap;
     src: url("@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2") format("woff2-variations");
     unicode-range:
         U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
@@ -71,7 +71,7 @@
     font-family: "App Sans";
     font-style: normal;
     font-weight: 1 449;
-    font-display: block;
+    font-display: swap;
     src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2-variations");
     size-adjust: 93.47%;
     ascent-override: 101.87%;
@@ -83,7 +83,7 @@
     font-family: "App Sans";
     font-style: normal;
     font-weight: 450 549;
-    font-display: block;
+    font-display: swap;
     src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2-variations");
     size-adjust: 93.77%;
     ascent-override: 101.54%;
@@ -95,7 +95,7 @@
     font-family: "App Sans";
     font-style: normal;
     font-weight: 550 649;
-    font-display: block;
+    font-display: swap;
     src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2-variations");
     size-adjust: 94.03%;
     ascent-override: 101.26%;
@@ -107,7 +107,7 @@
     font-family: "App Sans";
     font-style: normal;
     font-weight: 650 1000;
-    font-display: block;
+    font-display: swap;
     src: url("@fontsource-variable/geist/files/geist-latin-wght-normal.woff2") format("woff2-variations");
     size-adjust: 94.34%;
     ascent-override: 100.93%;
@@ -119,7 +119,7 @@
     font-family: "App Mono";
     font-style: normal;
     font-weight: 100 900;
-    font-display: block;
+    font-display: swap;
     src: url("@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2") format("woff2-variations");
     ascent-override: 100.5%;
     descent-override: 29.5%;
@@ -130,7 +130,7 @@
     font-family: "App Serif";
     font-style: normal;
     font-weight: 400;
-    font-display: block;
+    font-display: swap;
     src: url("@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2") format("woff2");
     ascent-override: 99%;
     descent-override: 31%;
@@ -141,7 +141,7 @@
     font-family: "App System Mono";
     font-style: normal;
     font-weight: 100 900;
-    font-display: block;
+    font-display: swap;
     src: url("@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2") format("woff2-variations");
     size-adjust: 103.03%;
     ascent-override: 92.42%;
