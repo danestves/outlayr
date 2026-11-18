@@ -173,21 +173,39 @@ export function ToggleRow({ icon, on, title }: { icon?: IconSvgElement; on: bool
     );
 }
 
-const SHEET = { radius: 38, top: 62 } as const;
+export const SHEET = { radius: 38, top: 62 } as const;
 const SHEET_CLOSE = { icon: 18, left: 16, size: 44, top: 78 } as const;
 const SHEET_TITLE = { baseline: 106.67, size: 17, weight: 590 } as const;
 
-export function Sheet({ children, title }: { children?: ReactNode; title: string }) {
+export function Sheet({
+    backdrop = true,
+    bottomRadius = 0,
+    children,
+    glass,
+    title,
+}: {
+    backdrop?: boolean;
+    bottomRadius?: number;
+    children?: ReactNode;
+    glass?: string;
+    title: string;
+}) {
     return (
         <>
-            <div className="absolute inset-0" style={{ background: "var(--sheet-backdrop)" }} />
+            {backdrop ? <div className="absolute inset-0" style={{ background: "var(--sheet-backdrop)" }} /> : null}
             <div
                 className="bg-background absolute inset-x-0 bottom-0 overflow-hidden"
-                style={{ borderTopLeftRadius: SHEET.radius, borderTopRightRadius: SHEET.radius, top: SHEET.top }}
+                style={{
+                    borderBottomLeftRadius: bottomRadius,
+                    borderBottomRightRadius: bottomRadius,
+                    borderTopLeftRadius: SHEET.radius,
+                    borderTopRightRadius: SHEET.radius,
+                    top: SHEET.top,
+                }}
             >
                 {children}
             </div>
-            <GlassCircle left={SHEET_CLOSE.left} size={SHEET_CLOSE.size} top={SHEET_CLOSE.top}>
+            <GlassCircle fill={glass} left={SHEET_CLOSE.left} size={SHEET_CLOSE.size} top={SHEET_CLOSE.top}>
                 <div style={{ color: "var(--glass-ink)" }}>
                     <HugeiconsIcon icon={Cancel01Icon} size={SHEET_CLOSE.icon} strokeWidth={2} />
                 </div>

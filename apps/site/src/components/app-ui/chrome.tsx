@@ -52,13 +52,17 @@ export function SystemText({
 export const GLASS_EDGE =
     "0 0 0 0.67px var(--glass-edge), 0 2px 8px var(--glass-shadow), inset 0 0 0 0.67px var(--glass-rim)";
 
+export const GLASS_SURFACE = { background: "var(--glass-fill)", boxShadow: GLASS_EDGE } as const;
+
 export function GlassCircle({
     children,
+    fill = "var(--glass-fill)",
     left,
     size,
     top,
 }: {
     children: ReactNode;
+    fill?: string;
     left: number;
     size: number;
     top: number;
@@ -67,7 +71,7 @@ export function GlassCircle({
         <div
             style={{
                 alignItems: "center",
-                background: "var(--glass-fill)",
+                background: fill,
                 borderRadius: size / 2,
                 boxShadow: GLASS_EDGE,
                 height: size,

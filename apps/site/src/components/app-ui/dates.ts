@@ -44,6 +44,10 @@ export function formatDayTitle(day: Date, now: Date, locale: Locale, t: AppT): s
     return day.getFullYear() < now.getFullYear() ? `${base} '${String(day.getFullYear()).slice(-2)}` : base;
 }
 
+export function formatSentenceDate(date: Date, locale: Locale, t: AppT): string {
+    return `${dayOfMonth(date, locale)} ${t(MONTHS[date.getMonth()] ?? "dates.month.0")}`;
+}
+
 export function formatTime(date: Date, locale: Locale, t: AppT): string {
     const hours = date.getHours();
     const mm = String(date.getMinutes()).padStart(2, "0");

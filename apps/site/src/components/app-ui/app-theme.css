@@ -272,6 +272,16 @@
         }
     }
 
+    [data-app-replica] [data-app-kern] {
+        letter-spacing: var(--app-kern);
+    }
+
+    @supports not (font: -apple-system-body) {
+        [data-app-replica] [data-app-kern] {
+            letter-spacing: calc(var(--app-trak, 0em) + var(--app-kern));
+        }
+    }
+
     [data-app-replica] {
         --glass-fill: #f8f6f1;
         --glass-rim: rgba(255, 255, 255, 0.95);
