@@ -35,32 +35,36 @@ export function Capture() {
                     <h2 className="hz-head hz-r" id="how-title">
                         <span className="hz-lead-in">{how.lead}</span> {how.rest}
                     </h2>
-                    <div
+                    <ul
                         aria-label={how.label.value}
                         className="hz-ways hz-r"
                         role="tablist"
                         style={{ "--i": "1", "--k": `${current}` }}
                     >
-                        <span aria-hidden="true" className="hz-ways-thumb" />
+                        <li aria-hidden="true" className="hz-ways-thumb" />
                         {WAYS.map((id, index) => (
-                            <button
-                                aria-controls="how-stage"
-                                aria-selected={index === current}
-                                className="hz-way"
-                                id={`way-${id}`}
-                                key={id}
-                                onClick={() => setCurrent(index)}
-                                onKeyDown={onKeyDown}
-                                role="tab"
-                                tabIndex={index === current ? 0 : -1}
-                                type="button"
-                            >
-                                <span className="hz-way-name">{how.ways[id].name}</span>
-                                <span className="hz-way-line">{how.ways[id].line}</span>
-                                <span aria-hidden="true" className="hz-way-bar" />
-                            </button>
+                            <li className="contents" key={id} role="presentation">
+                                <button
+                                    aria-controls="how-stage"
+                                    aria-selected={index === current}
+                                    className="hz-way"
+                                    id={`way-${id}`}
+                                    onClick={() => setCurrent(index)}
+                                    onKeyDown={onKeyDown}
+                                    role="tab"
+                                    tabIndex={index === current ? 0 : -1}
+                                    type="button"
+                                >
+                                    <span className="hz-way-name">{how.ways[id].name}</span>
+                                    <span className="hz-way-line">
+                                        <span className="sr-only">: </span>
+                                        {how.ways[id].line}
+                                    </span>
+                                    <span aria-hidden="true" className="hz-way-bar" />
+                                </button>
+                            </li>
                         ))}
-                    </div>
+                    </ul>
                 </div>
                 <div className="hz-play" data-reveal="group">
                     <div

@@ -28,7 +28,12 @@ export function Also() {
                         <div className="hz-look-foot">
                             <h3 className="hz-look-label">{also.appearance.label}</h3>
                             <p className="hz-look-line">{also.appearance.text}</p>
-                            <div aria-label={also.appearance.label.value} className="hz-look-switch" role="radiogroup">
+                            <div
+                                aria-label={also.appearance.label.value}
+                                className="hz-look-switch"
+                                data-fields
+                                role="radiogroup"
+                            >
                                 <span aria-hidden="true" className="hz-look-thumb" />
                                 <label>
                                     <input defaultChecked name="look" type="radio" value="dark" />

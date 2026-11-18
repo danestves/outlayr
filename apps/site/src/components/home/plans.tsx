@@ -38,6 +38,7 @@ export function Plans() {
                     <div
                         aria-label={copy.cadence.label.value}
                         className="hz-cadence hz-r"
+                        data-fields
                         role="radiogroup"
                         style={{ "--i": "1" }}
                     >
@@ -68,6 +69,7 @@ export function Plans() {
                                 <li key={limit.label.value}>
                                     <Icon name="check" />
                                     {limit.label}
+                                    <span className="sr-only">: </span>
                                     <span className="hz-plan-value">{limit.free}</span>
                                 </li>
                             ))}
@@ -85,7 +87,14 @@ export function Plans() {
                         <h3 className="hz-plan-name" id="pro-title">
                             Pro
                         </h3>
-                        <p className="hz-plan-price">
+                        <ul className="sr-only">
+                            {CADENCES.map((cadence) => (
+                                <li key={cadence}>
+                                    {price[cadence]} {unit[cadence]}
+                                </li>
+                            ))}
+                        </ul>
+                        <p aria-hidden="true" className="hz-plan-price">
                             <span className="hz-roll">
                                 {CADENCES.map((cadence) => (
                                     <span data-roll={cadence} key={cadence}>
@@ -94,7 +103,7 @@ export function Plans() {
                                 ))}
                             </span>
                         </p>
-                        <p className="hz-plan-unit">
+                        <p aria-hidden="true" className="hz-plan-unit">
                             <span className="hz-roll">
                                 {CADENCES.map((cadence) => (
                                     <span data-roll={cadence} key={cadence}>
@@ -108,6 +117,7 @@ export function Plans() {
                                 <li key={limit.label.value}>
                                     <Icon name="check" />
                                     {limit.label}
+                                    <span className="sr-only">: </span>
                                     <span className="hz-plan-value">{limit.pro}</span>
                                 </li>
                             ))}

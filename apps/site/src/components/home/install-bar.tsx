@@ -42,8 +42,7 @@ export function InstallBar() {
                 <LogoMark className="size-6" />
             </span>
             <span className="hz-install-text">
-                <span className="hz-install-name">Outlayr</span>
-                <span className="hz-install-sub">{getApp.free}</span>
+                <span className="hz-install-name">Outlayr</span> <span className="hz-install-sub">{getApp.free}</span>
             </span>
             <GetAppButton className="hz-pill" placement="install">
                 {getApp.title}

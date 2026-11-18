@@ -427,6 +427,10 @@
     white-space: nowrap;
 }
 
+.hz-br {
+    display: block;
+}
+
 .hz-mark::after {
     content: "";
     position: absolute;

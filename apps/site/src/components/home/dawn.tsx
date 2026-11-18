@@ -56,15 +56,15 @@ function Headline() {
         <h1 className="hz-headline" id="hero-title">
             {lead.map((word) => (
                 <span key={word.id}>
-                    {word.index === lead.length - 1 ? <br className="hz-br" /> : null}
+                    {word.index === lead.length - 1 ? <span className="hz-br" /> : null}
                     <Rise word={word} />{" "}
                 </span>
             ))}
             <span className="hz-mark">
-                {marked.map((word) => (
+                {marked.map((word, offset) => (
                     <span key={word.id}>
-                        {word.index > lead.length ? " " : null}
                         <Rise word={word} />
+                        {offset < marked.length - 1 ? " " : null}
                     </span>
                 ))}
             </span>
