@@ -2571,6 +2571,20 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
         animation-play-state: paused;
     }
 
+    .js:not([data-motion]) [data-reveal="group"]:not(.is-in) .hz-r,
+    .js:not([data-motion]) .hz-tiles:not(.is-in) .hz-tile-face {
+        animation: reveal-fallback 0s 3s forwards;
+    }
+
+    .js:not([data-motion]) .hz-sunset:not(.is-in) .hz-fan-body {
+        animation-play-state: running;
+        animation-delay: 3.42s;
+    }
+
+    .js:not([data-motion]) .hz-sunset:not(.is-in) .hz-fan-phone[data-side] .hz-fan-body {
+        animation-delay: 3.82s;
+    }
+
     .hz-sky-layer[data-layer="gold"] {
         --at: var(--gold-at);
         --end: var(--gold-end);

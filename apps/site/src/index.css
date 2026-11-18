@@ -87,6 +87,18 @@
             transform: translateY(4rem);
         }
 
+        .js:not([data-motion]) [data-reveal]:not(.is-in, main > :first-child [data-reveal], [data-reveal="now"]) {
+            animation: reveal-fallback 0s 3s forwards;
+        }
+
+        @keyframes reveal-fallback {
+            to {
+                opacity: 1;
+                transform: none;
+                filter: none;
+            }
+        }
+
         @starting-style {
             main > :first-child [data-reveal],
             [data-reveal="now"] {
