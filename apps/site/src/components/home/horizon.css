@@ -805,6 +805,10 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
     cursor: pointer;
 }
 
+:root:not(.js) .hz-capture-pause {
+    display: none;
+}
+
 .hz-capture-pause:focus-visible {
     outline: 2px solid var(--color-tint);
     outline-offset: 2px;
