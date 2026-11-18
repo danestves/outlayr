@@ -267,6 +267,9 @@ struct PendingWrite: Codable {
     /// The raw notification text a `LogNotificationIntent` run carried; the app
     /// parses the amount and merchant out of it. Nil for every other intent.
     let text: String?
+    /// Set when the intent asks the server about the merchant; the app files the
+    /// row under this id, which is where the server keeps the answer.
+    var captureId: String? = nil
 }
 
 struct WalletPushSnapshot: Codable {

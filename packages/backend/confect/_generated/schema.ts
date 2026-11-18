@@ -5,6 +5,7 @@ import accounts from "./tables/accounts";
 import appMeta from "./tables/appMeta";
 import budgetPlans from "./tables/budgetPlans";
 import budgets from "./tables/budgets";
+import captureKeys from "./tables/captureKeys";
 import categories from "./tables/categories";
 import enrichmentJobs from "./tables/enrichmentJobs";
 import exchangeRates from "./tables/exchangeRates";
@@ -42,6 +43,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly appMeta: typeof appMeta;
   readonly budgetPlans: typeof budgetPlans;
   readonly budgets: typeof budgets;
+  readonly captureKeys: typeof captureKeys;
   readonly categories: typeof categories;
   readonly enrichmentJobs: typeof enrichmentJobs;
   readonly exchangeRates: typeof exchangeRates;
@@ -78,6 +80,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   appMeta,
   budgetPlans,
   budgets,
+  captureKeys,
   categories,
   enrichmentJobs,
   exchangeRates,

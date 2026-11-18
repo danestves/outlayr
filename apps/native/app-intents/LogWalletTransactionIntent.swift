@@ -76,6 +76,14 @@ struct LogWalletTransactionIntent: AppIntent {
             side: side,
             card: card
         )
+        let pushSnapshot = SharedStore.walletPush()
+        // The privacy policy sends only merchants the phone can't place, as the in-app lookup does.
+        let known = Self.knownCategory(merchant: name, side: side, snapshot: pushSnapshot) != nil
+        let captureId = !known && CaptureLookup.canAsk(name) ? UUID().uuidString.lowercased() : nil
+        let pinnedCurrency = currency?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
+            .nilIfEmpty
         let write = PendingWrite(
             id: UUID().uuidString,
             amount: value,
@@ -88,12 +96,10 @@ struct LogWalletTransactionIntent: AppIntent {
             date: Date().timeIntervalSince1970 * 1000,
             amountText: amount,
             card: cardText,
-            currency: currency?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .uppercased()
-                .nilIfEmpty,
+            currency: pinnedCurrency,
             dedupeKey: purchase,
-            text: nil
+            text: nil,
+            captureId: captureId
         )
         guard await SharedStore.enqueue(write) else {
             let at = ranAt ?? Date().timeIntervalSince1970 * 1000
@@ -104,12 +110,23 @@ struct LogWalletTransactionIntent: AppIntent {
             SharedStore.disarmMissedTap(at: ranAt)
         }
 
+        // After the enqueue: a run cut short while waiting still leaves the purchase queued.
+        var answer: CaptureAnswer?
+        if let captureId {
+            answer = await CaptureLookup.ask(
+                captureId: captureId,
+                name: name,
+                currency: pinnedCurrency,
+                income: side == .income
+            )?.answer
+        }
         let push = Self.push(
             amount: amount.trimmingCharacters(in: .whitespacesAndNewlines),
             merchant: name,
             card: cardText,
             side: side,
-            snapshot: SharedStore.walletPush()
+            snapshot: pushSnapshot,
+            answer: answer
         )
         var userInfo: [AnyHashable: Any] = ["walletWrite": write.id, "pickCard": push.pickCard]
         if let cardText {
@@ -125,17 +142,26 @@ struct LogWalletTransactionIntent: AppIntent {
         merchant: String,
         card: String?,
         side: LedgerSide,
-        snapshot: WalletPushSnapshot?
+        snapshot: WalletPushSnapshot?,
+        answer: CaptureAnswer? = nil
     ) -> (title: String, body: String, pickCard: Bool) {
-        let title = merchant.isEmpty ? amount : "\(amount) · \(merchant)"
+        let shown = answer?.merchantName ?? merchant
+        let title = shown.isEmpty ? amount : "\(amount) · \(shown)"
         let line = card.flatMap { snapshot?.cards[$0] }
         let cardLabel = line.map(\.label) ?? card
         let pickCard = line?.pick ?? false
-        let places = side == .income ? snapshot?.places.income : snapshot?.places.expense
-        let key = merchant.unicodeScalars.map { $0.isASCII ? Character($0).lowercased() : String($0) }.joined()
-        let category = merchant.isEmpty ? nil : places?[key]
+        let category = knownCategory(merchant: merchant, side: side, snapshot: snapshot) ?? answer?.categoryName
         let newPlace = merchant.isEmpty || category != nil || pickCard ? nil : snapshot?.newPlace
         return (title, [category, cardLabel, newPlace].compactMap { $0 }.joined(separator: " · "), pickCard)
+    }
+
+    /// The category of this merchant's newest row, matched the way the drain's
+    /// `lower(note)` does: SQLite lowercases ASCII only.
+    static func knownCategory(merchant: String, side: LedgerSide, snapshot: WalletPushSnapshot?) -> String? {
+        guard !merchant.isEmpty else { return nil }
+        let places = side == .income ? snapshot?.places.income : snapshot?.places.expense
+        let key = merchant.unicodeScalars.map { $0.isASCII ? Character($0).lowercased() : String($0) }.joined()
+        return places?[key]
     }
 
     /// What makes two runs of this intent one purchase.

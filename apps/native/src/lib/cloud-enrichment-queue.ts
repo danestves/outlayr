@@ -6,6 +6,7 @@ import * as Schema from "effect/Schema";
 
 import type { AnsweredJob, EnrichmentJobRequest } from "@/data/enrichment-queue-core";
 
+import { captureDeviceLabel } from "./capture-lookup";
 import type { CloudError } from "./cloud-error";
 import { cloudRuntime } from "./cloud-runtime";
 import { aiConsentArgs, cloudMutation } from "./convex";
@@ -38,7 +39,7 @@ export function watchEnrichmentResults(onJobs: (jobs: AnsweredJob[]) => void): (
     if (cloudRuntime === null) {
         return () => undefined;
     }
-    const watch = cloudRuntime.convex.watchQuery(api.enrichmentQueue.results, {});
+    const watch = cloudRuntime.convex.watchQuery(api.enrichmentQueue.results, { deviceId: captureDeviceLabel() });
     return watch.onUpdate(() => {
         let jobs: ReturnType<typeof decodeAnsweredJobs> | null = null;
         try {

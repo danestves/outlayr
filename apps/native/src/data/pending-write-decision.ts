@@ -73,6 +73,8 @@ export interface PendingWriteFacts {
     access: AutologAccess;
     banks: readonly { currency: string; id: string; name: string }[];
     cards: readonly WalletCard[];
+    /** Capture ids the server already answered or queued, so the row waits for that answer instead of asking. */
+    captured?: ReadonlySet<string>;
     category: { fallback: string | null; known: string | null; lookups: boolean };
     filed: readonly FiledRow[];
     ledger: readonly LedgerEntry[];
@@ -309,9 +311,10 @@ export function decidePendingWrite(write: PendingWrite, facts: PendingWriteFacts
         return { kind: "duplicate", relink: duplicate.id !== write.id, txId: duplicate.txId };
     }
     const { fallback, known, lookups } = facts.category;
-    const lookup = known == null && lookups && merchantKey(write.note).length >= MIN_KEY_LENGTH;
-    const categoryId = known ?? (lookup ? null : fallback);
-    if (categoryId == null && !lookup) {
+    const captured = write.captureId != null && facts.captured?.has(write.captureId) === true;
+    const lookup = known == null && !captured && lookups && merchantKey(write.note).length >= MIN_KEY_LENGTH;
+    const categoryId = known ?? (lookup || captured ? null : fallback);
+    if (categoryId == null && !lookup && !captured) {
         return { kind: "drop" };
     }
     const { account, asks } = cardAccount(write, facts);

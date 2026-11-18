@@ -2,6 +2,7 @@ import { GroupSpec, Spec } from "@confect/core";
 import accountDeletion from "../accountDeletion.spec";
 import billing from "../billing.spec";
 import binance from "../binance.spec";
+import captureLookup from "../captureLookup.spec";
 import cotizave from "../cotizave.spec";
 import csvImport from "../csvImport.spec";
 import enrichment from "../enrichment.spec";
@@ -39,6 +40,7 @@ const spec: Spec.Spec<{
   readonly accountDeletion: GroupSpec.NamedAt<typeof accountDeletion, "accountDeletion">;
   readonly billing: GroupSpec.NamedAt<typeof billing, "billing">;
   readonly binance: GroupSpec.NamedAt<typeof binance, "binance">;
+  readonly captureLookup: GroupSpec.NamedAt<typeof captureLookup, "captureLookup">;
   readonly cotizave: GroupSpec.NamedAt<typeof cotizave, "cotizave">;
   readonly csvImport: GroupSpec.NamedAt<typeof csvImport, "csvImport">;
   readonly enrichment: GroupSpec.NamedAt<typeof enrichment, "enrichment">;
@@ -75,6 +77,7 @@ const spec: Spec.Spec<{
   ["accountDeletion"]: accountDeletion,
   ["billing"]: billing,
   ["binance"]: binance,
+  ["captureLookup"]: captureLookup,
   ["cotizave"]: cotizave,
   ["csvImport"]: csvImport,
   ["enrichment"]: enrichment,

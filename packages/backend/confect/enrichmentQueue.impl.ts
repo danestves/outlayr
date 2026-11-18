@@ -1,19 +1,14 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type { WorkId } from "@convex-dev/workpool";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
-import { internal } from "../convex/_generated/api";
-import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
-import { Auth, DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx, QueryRunner } from "./_generated/services";
-import { MAX_NAME_LENGTH, rateLimiter, sanitizeCurrencyCode, sanitizeLocale, sanitizeRegionCode } from "./enrichment";
-import { MAX_ACK_IDS, MAX_RESULTS, MIN_NAME_LENGTH, pool, settled, work } from "./enrichmentQueue";
+import { DatabaseReader, DatabaseWriter, MutationCtx, QueryCtx } from "./_generated/services";
+import { MAX_ACK_IDS, MAX_RESULTS, settled, work } from "./enrichmentQueue";
 import spec from "./enrichmentQueue.spec";
-import { hasAiConsent } from "./lib/aiGate";
 import { optionalUserId, requireUserId } from "./lib/auth";
 import { dieAsConvexError } from "./lib/convexError";
-import { isPro } from "./revenuecat";
+import { insertJob, queueWork } from "./lib/queueJob";
 
 const enqueue = FunctionImpl.make(
     databaseSchema,
@@ -23,58 +18,11 @@ const enqueue = FunctionImpl.make(
         function* enqueue(args) {
             const ctx = yield* MutationCtx;
             const userId = yield* requireUserId(ctx);
-            const name = args.name.trim();
-            if (!hasAiConsent(args) || name.length < MIN_NAME_LENGTH || name.length > MAX_NAME_LENGTH) {
+            const jobId = yield* insertJob(userId, args);
+            if (jobId === null) {
                 return false;
             }
-            const gate = yield* Effect.promise(() => rateLimiter.limit(ctx, "enrichmentQueue", { key: userId }));
-            if (!gate.ok) {
-                return false;
-            }
-            const auth = yield* Auth;
-            const identity = yield* auth.getUserIdentity.pipe(
-                Effect.catchTags({ NoUserIdentityFoundError: () => Effect.succeed(null) })
-            );
-            const { runQuery } = yield* QueryRunner;
-            const grounded =
-                args.groundedLookup &&
-                identity !== null &&
-                (yield* runQuery(refs.internal.enrichment.groundedConsent)) &&
-                (yield* isPro(ctx, identity.subject));
-            const reader = yield* DatabaseReader;
-            const writer = yield* DatabaseWriter;
-            const existing = yield* reader
-                .table("enrichmentJobs")
-                .get("by_user_and_localId", userId, args.localId)
-                .pipe(Effect.catchTags({ GetByIndexFailure: () => Effect.succeed(null) }));
-            if (existing !== null) {
-                yield* writer.table("enrichmentJobs").delete(existing._id);
-            }
-            const jobId = yield* writer.table("enrichmentJobs").insert({
-                categoryTree: args.categoryTree,
-                currency: sanitizeCurrencyCode(args.currency),
-                grounded,
-                income: args.income,
-                localId: args.localId,
-                locale: sanitizeLocale(args.locale),
-                name,
-                regionCode: sanitizeRegionCode(args.regionCode),
-                shareAnalytics: args.shareAnalytics,
-                status: "queued",
-                userId,
-            });
-            yield* Effect.promise((): Promise<WorkId> =>
-                pool.enqueueAction(
-                    ctx,
-                    internal.enrichmentQueue.work,
-                    { jobId },
-                    {
-                        context: { jobId },
-                        onComplete: internal.enrichmentQueue.settled,
-                        onCompleteExcludeKinds: ["success"],
-                    }
-                )
-            );
+            yield* queueWork(ctx, jobId);
             return true;
         },
         Effect.catchTags({ Unauthenticated: dieAsConvexError }),
@@ -120,19 +68,24 @@ const results = FunctionImpl.make(
     databaseSchema,
     spec,
     "results",
-    Effect.fn("EnrichmentQueue.results")(function* results() {
+    Effect.fn("EnrichmentQueue.results")(function* results(args) {
         const ctx = yield* QueryCtx;
         const userId = yield* optionalUserId(ctx);
         if (userId === null) {
             return [];
         }
         const reader = yield* DatabaseReader;
+        const devices = args.deviceId === undefined ? [undefined] : [undefined, args.deviceId];
         const jobs = yield* Effect.all(
-            (["done", "failed"] as const).map((status) =>
-                reader
-                    .table("enrichmentJobs")
-                    .index("by_user_and_status", (q) => q.eq("userId", userId).eq("status", status))
-                    .take(MAX_RESULTS)
+            devices.flatMap((deviceId) =>
+                (["done", "failed"] as const).map((status) =>
+                    reader
+                        .table("enrichmentJobs")
+                        .index("by_user_device_and_status", (q) =>
+                            q.eq("userId", userId).eq("deviceId", deviceId).eq("status", status)
+                        )
+                        .take(MAX_RESULTS)
+                )
             ),
             { concurrency: "unbounded" }
         );

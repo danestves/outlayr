@@ -15,5 +15,13 @@ final class SharedStoreModule: Module {
     Function("remove") { (key: String) in
       SharedStore.store?.removeObject(forKey: key)
     }
+
+    Function("captureKeyStatus") { () -> String in
+      CaptureLookup.keyStatus()
+    }
+
+    Function("setCaptureKey") { (key: String?) -> Bool in
+      CaptureLookup.setKey(key)
+    }
   }
 }

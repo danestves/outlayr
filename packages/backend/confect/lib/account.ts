@@ -38,7 +38,7 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
     const suggestions = yield* Effect.promise(() =>
         ctx.db
             .query("enrichmentJobs")
-            .withIndex("by_user_and_status", (q) => q.eq("userId", userId))
+            .withIndex("by_user_device_and_status", (q) => q.eq("userId", userId))
             .take(PURGE_BATCH)
     );
     if (suggestions.length > 0) {
@@ -122,6 +122,17 @@ export const purgeUserBatch = Effect.fn("Account.purgeUserBatch")(function* purg
     const referralDocs = [...owned, countsTowardCap ? null : asFriend].filter((row) => row !== null);
     yield* Effect.all(
         referralDocs.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
+        { concurrency: "unbounded", discard: true }
+    );
+
+    const captureKeys = yield* Effect.promise(() =>
+        ctx.db
+            .query("captureKeys")
+            .withIndex("by_user_and_device", (q) => q.eq("userId", userId))
+            .collect()
+    );
+    yield* Effect.all(
+        captureKeys.map((row) => Effect.promise(() => ctx.db.delete(row._id))),
         { concurrency: "unbounded", discard: true }
     );
 

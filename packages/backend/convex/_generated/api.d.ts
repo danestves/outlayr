@@ -11,6 +11,7 @@
 import type * as accountDeletion from "../accountDeletion.js";
 import type * as billing from "../billing.js";
 import type * as binance from "../binance.js";
+import type * as captureLookup from "../captureLookup.js";
 import type * as cotizave from "../cotizave.js";
 import type * as crons from "../crons.js";
 import type * as csvImport from "../csvImport.js";
@@ -56,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   accountDeletion: typeof accountDeletion;
   billing: typeof billing;
   binance: typeof binance;
+  captureLookup: typeof captureLookup;
   cotizave: typeof cotizave;
   crons: typeof crons;
   csvImport: typeof csvImport;

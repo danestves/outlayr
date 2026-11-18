@@ -264,6 +264,8 @@ export interface CreateOptions<E = never> {
      * passes false: its rows stay on the device, and one candidate write per row would make a big import quadratic.
      */
     logoCandidate?: boolean;
+    /** A Wallet capture files under the id the server keyed its merchant answer to. */
+    id?: string;
     inSameTransaction?: (id: string) => Effect.Effect<void, E>;
 }
 
@@ -273,7 +275,7 @@ export const transactionsRepo = {
         input: TransactionInput,
         options: CreateOptions<E> = {}
     ) {
-        const id = newId();
+        const id = options.id ?? newId();
         const row = yield* toRow(db, id, input);
         const fee = input.fee == null ? null : yield* cardFeeValues(db, id, row, input.fee);
         const { inSameTransaction } = options;

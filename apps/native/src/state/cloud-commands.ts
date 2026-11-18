@@ -7,6 +7,7 @@ import { runAccountLifecycle } from "@/lib/account-lifecycle";
 import type { AccountLifecycleAction } from "@/lib/account-lifecycle";
 import { requestUnlock } from "@/lib/app-lock";
 import type { authClient } from "@/lib/auth-client";
+import { forgetCaptureLookup } from "@/lib/capture-lookup";
 import { cloudAction, cloudMutation, convex } from "@/lib/convex";
 import {
     DeletionResumeError,
@@ -48,7 +49,11 @@ export const signOutCommand = createRuntimeCommand(appRuntime, {
             allowLocal: input.allowLocal,
             navigateToLedger: input.navigateToLedger,
             quiesce: quiesce(input.db),
-            signOut: () => Effect.tryPromise(() => input.client.signOut()).pipe(Effect.asVoid),
+            signOut: () =>
+                forgetCaptureLookup().pipe(
+                    Effect.andThen(Effect.tryPromise(() => input.client.signOut())),
+                    Effect.asVoid
+                ),
         }),
     label: "cloud:sign-out",
 });

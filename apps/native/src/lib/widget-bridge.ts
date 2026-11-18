@@ -185,6 +185,13 @@ function adoptLegacyQueue(): void {
     sharedStore.remove(PENDING_WRITES_KEY);
 }
 
+/** Mirrors `answerPrefix` in `app-intents/CaptureLookup.swift`. */
+const CAPTURE_ANSWER_PREFIX = "captureAnswer.";
+
+const captureIds = ({ jobs }: ClaimedWrites) => jobs.flatMap((job) => (job.captureId ? [job.captureId] : []));
+
+const answerOf = (captureId: string) => sharedStore?.get(`${CAPTURE_ANSWER_PREFIX}${captureId}`) ?? null;
+
 /**
  * Nothing is deleted here: the caller commits, then calls {@link releasePendingWrites}, so a force-quit mid-drain
  * replays. That is safe because `applyPendingWrites` records each enqueue id in the same SQLite transaction.
@@ -192,7 +199,8 @@ function adoptLegacyQueue(): void {
 export function claimPendingWrites(): ClaimedWrites {
     try {
         adoptLegacyQueue();
-        return claimQueue(queueFiles);
+        const claimed = claimQueue(queueFiles);
+        return { ...claimed, captured: new Set(captureIds(claimed).filter((id) => answerOf(id) != null)) };
     } catch (error) {
         console.warn("[outlayr] pending writes unreadable", error);
         return { jobs: [], names: [] };
@@ -202,6 +210,9 @@ export function claimPendingWrites(): ClaimedWrites {
 export function releasePendingWrites(claimed: ClaimedWrites): void {
     try {
         releaseQueue(queueFiles, claimed);
+        for (const id of captureIds(claimed)) {
+            sharedStore?.remove(`${CAPTURE_ANSWER_PREFIX}${id}`);
+        }
     } catch (error) {
         console.warn("[outlayr] pending writes not released", error);
     }

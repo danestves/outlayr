@@ -32,6 +32,8 @@ export interface QueueFiles {
 }
 
 export interface ClaimedWrites {
+    /** Capture ids the intent stored a server reply for; see `CaptureLookup.swift`. */
+    captured?: ReadonlySet<string>;
     jobs: PendingWrite[];
     names: string[];
 }

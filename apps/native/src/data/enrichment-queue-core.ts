@@ -80,7 +80,10 @@ export const queueEnrichment = Effect.fn("EnrichmentQueue.queueEnrichment")(func
     }
 });
 
-const categoryTree = Effect.fn("EnrichmentQueue.categoryTree")(function* categoryTree(db: Database, income: boolean) {
+export const categoryTree = Effect.fn("EnrichmentQueue.categoryTree")(function* categoryTree(
+    db: Database,
+    income: boolean
+) {
     const rows = yield* attempt("send", () =>
         db
             .select({ id: categories.id, name: categories.name, parentId: categories.parentId })

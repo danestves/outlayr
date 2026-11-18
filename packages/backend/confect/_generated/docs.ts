@@ -6,6 +6,7 @@ export type AccountsDoc = Document.Document<typeof schemaDefinition, "accounts">
 export type AppMetaDoc = Document.Document<typeof schemaDefinition, "appMeta">;
 export type BudgetPlansDoc = Document.Document<typeof schemaDefinition, "budgetPlans">;
 export type BudgetsDoc = Document.Document<typeof schemaDefinition, "budgets">;
+export type CaptureKeysDoc = Document.Document<typeof schemaDefinition, "captureKeys">;
 export type CategoriesDoc = Document.Document<typeof schemaDefinition, "categories">;
 export type EnrichmentJobsDoc = Document.Document<typeof schemaDefinition, "enrichmentJobs">;
 export type ExchangeRatesDoc = Document.Document<typeof schemaDefinition, "exchangeRates">;
@@ -43,6 +44,7 @@ export interface Docs {
   appMeta: AppMetaDoc;
   budgetPlans: BudgetPlansDoc;
   budgets: BudgetsDoc;
+  captureKeys: CaptureKeysDoc;
   categories: CategoriesDoc;
   enrichmentJobs: EnrichmentJobsDoc;
   exchangeRates: ExchangeRatesDoc;
