@@ -126,6 +126,17 @@
     line-gap-override: 0%;
 }
 
+@font-face {
+    font-family: "App Serif";
+    font-style: normal;
+    font-weight: 400;
+    font-display: block;
+    src: url("@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2") format("woff2");
+    ascent-override: 99%;
+    descent-override: 31%;
+    line-gap-override: 0%;
+}
+
 @layer base {
     [data-app-replica] {
         --spacing: 4px;
