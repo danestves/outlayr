@@ -92,8 +92,8 @@ export const HELP_UPDATED = new Date(Date.UTC(2026, 10, 17));
 
 export const LEGAL_DAYS = {
     "delete-account": new Date(Date.UTC(2026, 10, 9)),
-    privacy: new Date(Date.UTC(2027, 0, 1)),
-    terms: new Date(Date.UTC(2027, 0, 1)),
+    privacy: new Date(Date.UTC(2026, 10, 19)),
+    terms: new Date(Date.UTC(2026, 10, 19)),
 } as const;
 
 export function legalInForce(document: keyof typeof LEGAL_DAYS): Date | null {
