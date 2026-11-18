@@ -818,14 +818,14 @@ const settings = {
         }),
         "settings.theme.pine": t({
             en: "Pine",
-            de: "Kiefer",
+            de: "Kieferngrün",
             es: "Pino",
             fr: "Pin",
             pt: "Pinho",
         }),
         "settings.theme.plum": t({
             en: "Plum",
-            de: "Pflaume",
+            de: "Pflaumenblau",
             es: "Ciruela",
             fr: "Prune",
             pt: "Ameixa",

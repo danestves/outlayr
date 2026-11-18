@@ -101,7 +101,7 @@ const budgets = {
             en: "Balances",
             de: "Kontostände",
             es: "Saldos",
-            fr: "Soldes",
+            fr: "Solde",
             pt: "Saldos",
         }),
         "balances.view.accounts": t({

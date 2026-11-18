@@ -519,7 +519,7 @@ const dashboardSettings = {
             }),
             accents: {
                 vermilion: t({ en: "Vermilion", de: "Zinnoberrot", es: "Bermellón", fr: "Vermillon", pt: "Vermelhão" }),
-                plum: t({ en: "Plum", de: "Pflaume", es: "Ciruela", fr: "Prune", pt: "Ameixa" }),
+                plum: t({ en: "Plum", de: "Pflaumenblau", es: "Ciruela", fr: "Prune", pt: "Ameixa" }),
                 ochre: t({ en: "Ochre", de: "Ocker", es: "Ocre", fr: "Ocre", pt: "Ocre" }),
                 prussian: t({
                     en: "Prussian",
@@ -528,7 +528,7 @@ const dashboardSettings = {
                     fr: "Bleu de Prusse",
                     pt: "Azul da Prússia",
                 }),
-                pine: t({ en: "Pine", de: "Kiefer", es: "Pino", fr: "Pin", pt: "Pinho" }),
+                pine: t({ en: "Pine", de: "Kieferngrün", es: "Pino", fr: "Pin", pt: "Pinho" }),
             },
         },
         upcoming: {

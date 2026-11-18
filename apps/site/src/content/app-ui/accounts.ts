@@ -17,7 +17,7 @@ export const accountsCopy = {
     }),
     "accounts.totals.have": t({ en: "Have", de: "Du hast", es: "Tienes", pt: "Você tem", fr: "Vous avez" }),
     "accounts.totals.owe": t({ en: "Owe", de: "Du schuldest", es: "Debes", pt: "Você deve", fr: "Vous devez" }),
-    "balances.title": t({ en: "Balances", de: "Kontostände", es: "Saldos", pt: "Saldos", fr: "Soldes" }),
+    "balances.title": t({ en: "Balances", de: "Kontostände", es: "Saldos", pt: "Saldos", fr: "Solde" }),
     "balances.view.accounts": t({ en: "Accounts", de: "Konten", es: "Cuentas", pt: "Contas", fr: "Comptes" }),
     "balances.view.categories": t({
         en: "Categories",

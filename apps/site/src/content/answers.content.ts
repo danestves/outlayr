@@ -1748,7 +1748,7 @@ const answers = {
                             de: "Konten und Umschlagbeträge. Setze deine Limits in „Kontostände“ unter Kategorien neu und schalte „Rest übertragen“ ein, um zu behalten, was du nicht ausgibst.",
                             es: "Las cuentas y los montos de los sobres. Vuelve a poner tus límites en Saldos, en Categorías, y activa Acumular lo que sobre para conservar lo que no gastes.",
                             pt: "Contas e valores dos envelopes. Defina seus limites de novo em Saldos, em Categorias, e ative a opção de levar o saldo adiante para guardar o que você não gastar.",
-                            fr: "Les comptes et les montants des enveloppes. Fixez à nouveau vos limites dans Soldes, sous Catégories, et activez le report pour garder ce que vous ne dépensez pas.",
+                            fr: "Les comptes et les montants des enveloppes. Fixez à nouveau vos limites dans Solde, sous Catégories, et activez le report pour garder ce que vous ne dépensez pas.",
                         }),
                     },
                 ],
@@ -13602,7 +13602,7 @@ const answers = {
                             de: "Nein. Nur die Zeilen auf Buchungen kommen herein. Lege deine Budgets in Outlayr neu an, unter Kontostände, bei Kategorien, wo die App auch zeigt, wo dein Tempo endet.",
                             es: "No. Solo entran las filas de Movimientos. Vuelve a poner tus presupuestos en Outlayr, en Saldos, en Categorías, donde además te muestra a dónde te lleva tu ritmo.",
                             pt: "Não. Só entram as linhas de Lançamentos. Defina seus orçamentos de novo no Outlayr, em Saldos, em Categorias, onde ele também mostra aonde seu ritmo leva.",
-                            fr: "Non. Seules les lignes d'Opérations sont importées. Recréez vos budgets dans Outlayr, dans Soldes, sous Catégories, où l'app montre aussi où mène votre rythme.",
+                            fr: "Non. Seules les lignes d'Opérations sont importées. Recréez vos budgets dans Outlayr, dans Solde, sous Catégories, où l'app montre aussi où mène votre rythme.",
                         }),
                         question: t({
                             en: "Do my budgets import too?",

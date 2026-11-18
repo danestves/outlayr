@@ -1,7 +1,7 @@
 import { t } from "intlayer";
 
 export const insightsCopy = {
-    "balances.title": t({ en: "Balances", de: "Kontostände", es: "Saldos", pt: "Saldos", fr: "Soldes" }),
+    "balances.title": t({ en: "Balances", de: "Kontostände", es: "Saldos", pt: "Saldos", fr: "Solde" }),
     "balances.view.accounts": t({ en: "Accounts", de: "Konten", es: "Cuentas", pt: "Contas", fr: "Comptes" }),
     "balances.view.categories": t({
         en: "Categories",
