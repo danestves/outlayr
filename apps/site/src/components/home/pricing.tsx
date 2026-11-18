@@ -7,7 +7,8 @@ import { LocalizedLink } from "@/components/localized-link";
 import { CONTAINER } from "@/lib/layout";
 import { proPrices } from "@/lib/pro-prices";
 
-import { HEADING, LABEL } from "./problem";
+const LABEL = "text-muted font-mono text-xs";
+const HEADING = "text-4xl font-semibold tracking-tight md:text-5xl";
 
 export function Pricing({ standalone = false }: { standalone?: boolean }) {
     const { limits, plansCopy, proOnly } = useIntlayer("home");
