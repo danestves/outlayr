@@ -96,7 +96,9 @@ describe("no-misread-copy", () => {
     });
 
     it("leaves other languages and longer words alone", () => {
-        expect(misread('t({ en: "oración", pt: "oración", es: "una oracionista" });')).toStrictEqual([]);
+        expect(
+            misread('t({ en: "oración", pt: "oración", es: "una oracionista", constructor: "oración" });')
+        ).toStrictEqual([]);
     });
 });
 

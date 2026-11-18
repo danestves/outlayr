@@ -85,7 +85,7 @@ export const accountsLabels = {
         de: "Die Kontostände in Outlayr, Ansicht Konten. Du hast {have} und schuldest {owe}. Konten: {accounts}. Schulden: {debts}.",
         es: "La pantalla Saldos de Outlayr, vista Cuentas. Tienes {have} y debes {owe}. Cuentas: {accounts}. Deudas: {debts}.",
         pt: "A tela Saldos do Outlayr, visão Contas. Você tem {have} e deve {owe}. Contas: {accounts}. Dívidas: {debts}.",
-        fr: "L'écran Soldes d'Outlayr, vue Comptes. Vous avez {have} et devez {owe}. Comptes : {accounts}. Dettes : {debts}.",
+        fr: "L'écran Solde d'Outlayr, vue Comptes. Vous avez {have} et devez {owe}. Comptes : {accounts}. Dettes : {debts}.",
     }),
     cardRow: t({
         en: "{name} in Outlayr's debts, owing {amount}.",

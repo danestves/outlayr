@@ -382,7 +382,7 @@ const MISREAD_WORDS = {
     pt: [{ reads: "stoned in Brazil", use: "em cor única", words: ["chapado", "chapada"] }],
 };
 
-const MISREAD_PATTERNS = Object.fromEntries(
+const MISREAD_PATTERNS = new Map(
     Object.entries(MISREAD_WORDS).map(([language, entries]) => [
         language,
         entries.map(({ reads, use, words }) => ({
@@ -414,7 +414,7 @@ const noMisreadCopy = {
         return {
             Property(node) {
                 const name = propertyName(node.key);
-                const patterns = name === undefined ? undefined : MISREAD_PATTERNS[name.split("-")[0]];
+                const patterns = name === undefined ? undefined : MISREAD_PATTERNS.get(name.split("-")[0]);
                 const text = patterns && copyText(node.value);
                 if (!text) {
                     return;

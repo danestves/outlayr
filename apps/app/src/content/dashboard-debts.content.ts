@@ -773,7 +773,7 @@ const dashboardDebts = {
                 t({
                     en: "I'll pay {{date}}",
                     de: "Ich zahle am {{date}}",
-                    es: "Pagaré el {{date}}",
+                    es: "Voy a pagar el {{date}}",
                     fr: "Je paierai le {{date}}",
                     pt: "Vou pagar em {{date}}",
                 })
