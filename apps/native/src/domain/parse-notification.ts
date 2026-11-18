@@ -239,7 +239,9 @@ function debtVerb(text: string, installment: DebtInstallment | null): DebtVerb |
         return "lent";
     }
     const loan = LOAN.test(text);
-    if ((installment !== null || loan) && REPAYMENT.test(text) && !PURCHASE.test(text)) {
+    const repaid = REPAYMENT.exec(text);
+    const bought = PURCHASE.exec(text);
+    if ((installment !== null || loan) && repaid !== null && (bought === null || bought.index > repaid.index)) {
         return INCOMING.test(text) ? "gotPaidBack" : "paidBack";
     }
     return loan && installment === null && LOAN_TAKEN.test(text) ? "borrowed" : null;

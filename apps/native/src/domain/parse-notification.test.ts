@@ -507,6 +507,7 @@ describe("parseDebt", () => {
             verb: "gotPaidBack",
         });
         expect(parseDebt("Recibiste el pago de Cuota 2 de 6 por $15 de Ana")).toMatchObject({ counterparty: "Ana" });
+        expect(parseDebt("Pago de cuota 2 de 6 de tu compra por $15")).toMatchObject({ verb: "paidBack" });
     });
 
     it("leaves purchases, a purchase split into cuotas, and declines alone", () => {
