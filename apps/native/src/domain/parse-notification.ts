@@ -8,6 +8,7 @@ import { detectCurrency, LOCAL_SYMBOLS, SYMBOL_ALIASES } from "./detect-currency
 export interface ParsedNotification {
     amount: number;
     amountText: string;
+    currencyHint?: string;
     income: boolean;
     merchant: string | null;
 }
@@ -337,7 +338,7 @@ export function mergeNotificationRead(
     }
     return {
         amount,
-        amountText: readCurrency(text, read.currency, amount) ?? sameAmountText(parsed, amount),
+        ...(shownAmount(text, read.currency, amount) ?? { amountText: sameAmountText(parsed, amount) }),
         income: read.kind === "income",
         merchant: cleanMerchant(read.merchant) ?? parsed?.merchant ?? null,
     };
@@ -349,17 +350,23 @@ function sameAmountText(parsed: { amount: number; amountText: string } | null, a
     return parsed !== null && parsed.amount === amount ? parsed.amountText : String(amount);
 }
 
-// The model's currency counts only when the figure it read shows that currency in the text: a bare "$" belongs to
-// 22 currencies and the card's account settles it, and a push with two amounts must not lend one's code to the other.
-function readCurrency(text: string, code: string | null, amount: number): string | null {
+function shownAmount(
+    text: string,
+    code: string | null,
+    amount: number
+): Pick<ParsedNotification, "amountText" | "currencyHint"> | null {
     if (code === null) {
         return null;
     }
-    const shown = (text.match(EVERY_MONEY) ?? []).some((token) => {
+    const figures = (text.match(EVERY_MONEY) ?? []).filter((token) => {
         const value = amountOf(token);
-        return value !== null && Math.abs(value - amount) < SAME_AMOUNT && detectCurrency(token) === code;
+        return value !== null && Math.abs(value - amount) < SAME_AMOUNT;
     });
-    return shown ? `${code} ${amount}` : null;
+    if (figures.some((token) => detectCurrency(token) === code)) {
+        return { amountText: `${code} ${amount}` };
+    }
+    const shared = figures.find((token) => detectCurrency(token, [code]) === code);
+    return shared ? { amountText: shared.trim(), currencyHint: code } : null;
 }
 
 export function cleanMerchant(raw: string | null): string | null {

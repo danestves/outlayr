@@ -80,6 +80,7 @@ export const PendingWrite = Schema.Struct({
     captureId: Schema.optional(Schema.NullOr(Schema.String)),
     /** Beats `amountText` when the automation pinned one. */
     currency: Schema.optional(Schema.NullOr(Schema.String)),
+    currencyHint: Schema.optional(Schema.NullOr(Schema.String)),
     /** Epoch ms: when the intent ran, not when the app drained it. */
     date: Schema.Finite,
     /**

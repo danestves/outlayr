@@ -154,6 +154,7 @@ export function readNotification(queued: PendingWrite, reads: NotificationReads 
         ...queued,
         amount: parsed.amount,
         amountText: parsed.amountText,
+        currencyHint: parsed.currencyHint,
         income: queued.income || parsed.income,
         note: parsed.merchant ?? "",
     };
@@ -268,7 +269,7 @@ function cardAccount(write: PendingWrite, facts: PendingWriteFacts) {
         return { account: null, asks: false, charged: null };
     }
     const status = cardStatus(card, facts.cards, facts.banks);
-    const charged = printedCurrency(write, null);
+    const charged = printedCurrency(write, []);
     const same = charged ? facts.banks.filter((row) => row.currency === charged) : [];
     const account =
         status.account ?? (status.asks ? same.find((row) => row.id === matchCardAccount(card, same)) : undefined);
@@ -280,13 +281,13 @@ function cardAccount(write: PendingWrite, facts: PendingWriteFacts) {
 }
 
 // A symbol several currencies print ("$", "Bs") is the posting app's home currency when it can be, then the device's.
-function printedCurrency(write: PendingWrite, device: string | null): string | null {
+function printedCurrency(write: PendingWrite, guesses: readonly (string | null | undefined)[]): string | null {
     const pinned = write.currency?.trim().toUpperCase();
     if (pinned) {
         return pinned;
     }
     const app = write.card ? institutionCurrency(write.card) : null;
-    return detectCurrency(write.amountText, [app, device]);
+    return detectCurrency(write.amountText, [app, ...guesses]);
 }
 
 function merchantOf(note: string): string {
@@ -386,7 +387,7 @@ export function decidePendingWrite(write: PendingWrite, facts: PendingWriteFacts
         return { kind: "drop" };
     }
     const { account, asks, charged } = cardAccount(write, facts);
-    const currency = printedCurrency(write, facts.deviceCurrency) ?? account?.currency ?? null;
+    const currency = printedCurrency(write, [facts.deviceCurrency, write.currencyHint]) ?? account?.currency ?? null;
     const code = currency ?? facts.ledgerCurrency;
     const automated = fromAutomation(write);
     const card = write.card?.trim();
