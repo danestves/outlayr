@@ -19,13 +19,16 @@ const GOOGLE_PLAY_BADGE = {
     pt: "/badges/google-play-pt",
 } as const satisfies Record<Locale, string>;
 
-type Placement = "answer" | "closing" | "hero" | "intro" | "invite" | "story";
+type Placement = "answer" | "closing" | "dialog" | "hero" | "intro" | "invite" | "story";
 
-export function StoreBadges({ placement }: { placement: Placement }) {
+const HEIGHT = { lg: "h-13", md: "h-12", sm: "h-11" } as const;
+
+export function StoreBadges({ placement, size = "md" }: { placement: Placement; size?: keyof typeof HEIGHT }) {
     const { badges } = useIntlayer("site");
     const { locale } = useLocale();
     const googlePlay = GOOGLE_PLAY_BADGE[locale];
     const loading = placement === "hero" || placement === "intro" || placement === "invite" ? "eager" : "lazy";
+    const height = `${HEIGHT[size]} w-auto`;
     return (
         <div className="flex flex-wrap items-center gap-4">
             <a
@@ -35,7 +38,7 @@ export function StoreBadges({ placement }: { placement: Placement }) {
             >
                 <img
                     alt={badges.googlePlay.value}
-                    className="h-12 w-auto"
+                    className={height}
                     height={96}
                     loading={loading}
                     src={`${googlePlay}-2x.webp`}
@@ -50,7 +53,7 @@ export function StoreBadges({ placement }: { placement: Placement }) {
             >
                 <img
                     alt={badges.appStore.value}
-                    className="h-12 w-auto"
+                    className={height}
                     height={40}
                     loading={loading}
                     src={APP_STORE_BADGE[locale]}

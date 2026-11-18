@@ -352,6 +352,13 @@ const site = {
                 pt: "Números abertos",
                 fr: "Chiffres ouverts",
             }),
+            owners: t({
+                en: "All product names, logos and brands are property of their respective owners.",
+                de: "Alle Produktnamen, Logos und Marken sind Eigentum der jeweiligen Inhaber.",
+                es: "Todos los nombres de productos, logotipos y marcas son propiedad de sus respectivos dueños.",
+                pt: "Todos os nomes de produtos, logotipos e marcas são propriedade de seus respectivos donos.",
+                fr: "Tous les noms de produits, logos et marques appartiennent à leurs propriétaires respectifs.",
+            }),
             privacy: t({
                 en: "Privacy",
                 de: "Datenschutz",
@@ -392,6 +399,44 @@ const site = {
                     fr: "Mis à jour le {{date}}",
                 })
             ),
+        },
+        getApp: {
+            close: t({ en: "Close", de: "Schließen", es: "Cerrar", pt: "Fechar", fr: "Fermer" }),
+            free: t({
+                en: "Free to start",
+                de: "Zum Start kostenlos",
+                es: "Gratis para empezar",
+                pt: "Grátis para começar",
+                fr: "Gratuit pour commencer",
+            }),
+            line: t({
+                en: "Scan with your phone’s camera to open the right store.",
+                de: "Scanne mit der Kamera deines Handys, um den richtigen Store zu öffnen.",
+                es: "Escanea con la cámara de tu celular para abrir la tienda correcta.",
+                pt: "Escaneie com a câmera do celular para abrir a loja certa.",
+                fr: "Scannez avec l'appareil photo de votre téléphone pour ouvrir la bonne boutique.",
+            }),
+            qr: t({
+                en: "QR code for the Outlayr download page",
+                de: "QR-Code für die Download-Seite von Outlayr",
+                es: "Código QR de la página de descarga de Outlayr",
+                pt: "Código QR da página de download do Outlayr",
+                fr: "Code QR de la page de téléchargement d'Outlayr",
+            }),
+            scan: t({
+                en: "Scan to install",
+                de: "Zum Installieren scannen",
+                es: "Escanea para instalar",
+                pt: "Escaneie para instalar",
+                fr: "Scannez pour installer",
+            }),
+            title: t({
+                en: "Get the app",
+                de: "Hol dir die App",
+                es: "Descarga la app",
+                pt: "Baixe o app",
+                fr: "Obtenir l'app",
+            }),
         },
         home: t({
             en: "Outlayr home",

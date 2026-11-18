@@ -15,6 +15,7 @@ import GithubIcon from "@hugeicons/core-free-icons/GithubIcon";
 import Home03Icon from "@hugeicons/core-free-icons/Home03Icon";
 import Invoice01Icon from "@hugeicons/core-free-icons/Invoice01Icon";
 import Mail01Icon from "@hugeicons/core-free-icons/Mail01Icon";
+import Menu01Icon from "@hugeicons/core-free-icons/Menu01Icon";
 import Mic01Icon from "@hugeicons/core-free-icons/Mic01Icon";
 import PauseIcon from "@hugeicons/core-free-icons/PauseIcon";
 import PlayIcon from "@hugeicons/core-free-icons/PlayIcon";
@@ -50,6 +51,7 @@ const ICONS = {
     house: Home03Icon,
     lightning: FlashIcon,
     "magnifying-glass": Search01Icon,
+    menu: Menu01Icon,
     microphone: Mic01Icon,
     pause: PauseIcon,
     play: PlayIcon,

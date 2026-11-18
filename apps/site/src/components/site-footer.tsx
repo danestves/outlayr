@@ -1,4 +1,6 @@
 import { SUPPORT_EMAIL } from "@outlayr/shared/urls";
+import { useLocation } from "@tanstack/react-router";
+import { getPathWithoutLocale } from "intlayer";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
@@ -44,8 +46,13 @@ function Item({ children, hash, to }: { children: ReactNode; hash?: string; to: 
 
 export function SiteFooter() {
     const { footer, home, nav } = useIntlayer("site");
+    const isHome = getPathWithoutLocale(useLocation({ select: (location) => location.pathname })) === "/";
     return (
-        <footer className="print:hidden">
+        <footer
+            className="print:hidden"
+            data-night-ground={isHome ? "" : undefined}
+            data-sky={isHome ? "sunrise" : undefined}
+        >
             <div className={`${CONTAINER} pt-24 pb-12`}>
                 <div className="border-border flex flex-col gap-12 border-t pt-12 lg:flex-row lg:justify-between">
                     <div className="max-w-xs">
@@ -119,6 +126,7 @@ export function SiteFooter() {
                     </div>
                 </div>
                 <p className="text-muted mt-6 text-xs">{footer.trademarks}</p>
+                <p className="text-muted mt-2 text-xs">{footer.owners}</p>
             </div>
         </footer>
     );
