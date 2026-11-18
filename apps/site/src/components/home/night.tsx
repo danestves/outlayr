@@ -44,7 +44,7 @@ interface Art {
 
 const ARTS: readonly Art[] = [
     {
-        height: 540,
+        height: 620,
         id: "pace",
         pieces: [
             {
@@ -58,26 +58,26 @@ const ARTS: readonly Art[] = [
             },
             {
                 Slot: PaceChart,
-                at: { w: 500, x: 110, y: 266 },
+                at: { w: 480, x: 120, y: 260 },
                 hold: "sheet",
                 i: 1,
-                phone: { w: 440, x: 4, y: 238 },
+                phone: { w: 440, x: 4, y: 257 },
                 z: 2,
             },
             {
                 Slot: BudgetLeft,
-                at: { w: 440, x: 180, y: 173 },
+                at: { w: 420, x: 190, y: 140 },
                 hold: "sheet",
                 i: 2,
-                phone: { w: 440, x: 4, y: 144 },
+                phone: { w: 440, x: 4, y: 130 },
                 z: 3,
             },
             {
                 Slot: PaceVerdict,
-                at: { w: 480, x: 150, y: 462 },
+                at: { w: 480, x: 150, y: 470 },
                 hold: "sheet",
                 i: 4,
-                phone: { w: 440, x: 4, y: 411 },
+                phone: { w: 440, x: 4, y: 449 },
                 z: 3,
             },
         ],
@@ -87,18 +87,18 @@ const ARTS: readonly Art[] = [
         height: 500,
         id: "upcoming",
         pieces: [
-            { Slot: UpcomingList, at: { w: 432, x: 58, y: 92 }, hold: "sheet", i: 0, phone: { x: 8, y: 110 }, z: 1 },
+            { Slot: UpcomingList, at: { w: 432, x: 58, y: 36 }, hold: "sheet", i: 0, phone: { x: 8, y: 88 }, z: 1 },
             {
                 Slot: UpcomingRow,
                 at: { w: 476, x: 46, y: 276 },
                 hold: "sheet",
                 i: 1,
-                phone: { w: 452, x: -2, y: 296 },
+                phone: { w: 452, x: -2, y: 330 },
                 z: 2,
             },
             {
                 Slot: UpcomingTotal,
-                at: { w: 460, x: 30, y: 20 },
+                at: { w: 460, x: 30, y: 8 },
                 hold: "sheet",
                 i: 2,
                 phone: { w: 448, x: 0, y: 20 },
@@ -112,7 +112,7 @@ const ARTS: readonly Art[] = [
         pieces: [
             {
                 Slot: AccountsList,
-                at: { w: 400, x: 74, y: 24 },
+                at: { w: 400, x: 74, y: 8 },
                 hold: "card",
                 i: 0,
                 phone: { x: 24, y: 40 },
@@ -121,18 +121,18 @@ const ARTS: readonly Art[] = [
             },
             {
                 Slot: AccountCardRow,
-                at: { w: 440, x: 64, y: 290 },
+                at: { w: 440, x: 64, y: 158 },
                 hold: "card-2",
                 i: 1,
-                phone: { w: 436, x: 6, y: 306 },
+                phone: { w: 436, x: 6, y: 190 },
                 z: 2,
             },
             {
                 Slot: AccountBolivarRow,
-                at: { w: 448, x: 34, y: 155 },
+                at: { w: 448, x: 34, y: 304 },
                 hold: "card",
                 i: 2,
-                phone: { w: 436, x: 2, y: 171 },
+                phone: { w: 436, x: 2, y: 337 },
                 z: 3,
             },
         ],

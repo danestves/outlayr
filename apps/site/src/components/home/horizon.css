@@ -1046,6 +1046,7 @@ html:not(.js) :is(.hz-rule, .hz-qr) {
 
 .hz-feat-wide {
     display: grid;
+    height: calc(var(--k) * 640);
     grid-column: 1 / -1;
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
 }
