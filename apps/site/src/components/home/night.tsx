@@ -165,7 +165,7 @@ function Feature({ art }: { art: Art }) {
                         key={i}
                         style={{
                             "--w": `${at.w}`,
-                            "--wm": `${phone.w}`,
+                            "--wm": phone.w?.toString(),
                             "--x": `${at.x}`,
                             "--xm": `${phone.x}`,
                             "--y": `${at.y}`,
