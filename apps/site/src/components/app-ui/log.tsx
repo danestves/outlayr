@@ -8,7 +8,7 @@ import { getIntlayer } from "intlayer";
 import type { LogMeasure } from "../../../../native/src/domain/log-measure";
 import { FlowFigure } from "./amount";
 import { AppScreen, SCREEN, useReplica } from "./canvas";
-import type { AppTheme } from "./canvas";
+import type { CanvasProps } from "./canvas";
 import { Fab, NavHeader, TabBar, TOOLBAR_SYMBOLS } from "./chrome";
 import {
     accountsOverview,
@@ -313,18 +313,14 @@ export function logLabel(locale: Locale, now: Date = DEMO_NOW): string {
     });
 }
 
-export interface LogScreenProps {
-    className?: string;
-    locale: Locale;
+export interface LogScreenProps extends CanvasProps {
     now?: Date;
-    scale?: number;
     scrollY?: number;
-    theme: AppTheme;
 }
 
-export function LogScreen({ className, locale, now = DEMO_NOW, scale, scrollY = 0, theme }: LogScreenProps) {
+export function LogScreen({ now = DEMO_NOW, scrollY = 0, ...canvas }: LogScreenProps) {
     return (
-        <AppScreen className={className} label={logLabel(locale, now)} locale={locale} scale={scale} theme={theme}>
+        <AppScreen {...canvas} label={logLabel(canvas.locale, now)}>
             <div
                 className="absolute inset-x-0"
                 style={{ paddingBottom: LIST_BOTTOM, paddingInline: GUTTER, top: CONTENT_TOP - scrollY }}

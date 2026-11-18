@@ -300,6 +300,18 @@
         height: calc(var(--app-h) * var(--app-scale, 1));
     }
 
+    [data-app-fit] {
+        container-type: inline-size;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    [data-app-fit] > [data-app-canvas] {
+        --app-scale: 1;
+        scale: tan(atan2(100cqw, var(--app-w)));
+        transform-origin: 0 0;
+    }
+
     .ss-phone__content > [data-app-canvas] {
         --app-scale: 1;
         position: absolute;

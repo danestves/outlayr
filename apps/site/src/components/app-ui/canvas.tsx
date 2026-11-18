@@ -33,6 +33,7 @@ type CanvasStyle = CSSProperties & Record<`--app-${string}`, string | number>;
 export interface AppFragmentProps {
     children: ReactNode;
     className?: string;
+    fit?: boolean;
     height: number;
     label: string;
     locale: Locale;
@@ -41,22 +42,42 @@ export interface AppFragmentProps {
     width: number;
 }
 
-export function AppFragment({ children, className, height, label, locale, scale, theme, width }: AppFragmentProps) {
+export function AppFragment({
+    children,
+    className,
+    fit = false,
+    height,
+    label,
+    locale,
+    scale,
+    theme,
+    width,
+}: AppFragmentProps) {
     const replica = useMemo(() => ({ locale, t: appTranslator(locale), theme }), [locale, theme]);
     const style: CanvasStyle = { "--app-h": `${height}px`, "--app-w": `${width}px` };
-    if (scale !== undefined) {
+    if (scale !== undefined && !fit) {
         style["--app-scale"] = scale;
     }
-    return (
-        <div aria-label={label} className={className} data-app-canvas="" role="img" style={style}>
+    const canvas = (
+        <div aria-label={label} className={fit ? undefined : className} data-app-canvas="" role="img" style={style}>
             <div aria-hidden data-app-replica="" data-app-theme={theme} inert>
                 <ReplicaContext value={replica}>{children}</ReplicaContext>
             </div>
         </div>
     );
+    if (!fit) {
+        return canvas;
+    }
+    return (
+        <div className={className} data-app-fit="" style={{ aspectRatio: `${width} / ${height}` }}>
+            {canvas}
+        </div>
+    );
 }
 
 export type AppScreenProps = Omit<AppFragmentProps, "height" | "width">;
+
+export type CanvasProps = Omit<AppScreenProps, "children" | "label">;
 
 export function AppScreen({ children, ...canvas }: AppScreenProps) {
     return (

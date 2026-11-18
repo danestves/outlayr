@@ -4,7 +4,7 @@ The marketing site (`apps/site`) draws app screens as DOM, not screenshots. The 
 
 ## Where things come from
 
-- **Canvas.** `AppScreen` (402 × 874) and `AppFragment` (any size) in `canvas.tsx` draw 1 CSS px per iOS point and scale as one unit through `--app-scale`, so a replica never reflows. The root is `role="img"` with a localized `label`. Everything inside it is `aria-hidden` and `inert`. Replicas are static markup: no effects, no measuring, nothing to hydrate.
+- **Canvas.** `AppScreen` (402 × 874) and `AppFragment` (any size) in `canvas.tsx` draw 1 CSS px per iOS point and scale as one unit through `--app-scale`, so a replica never reflows. With `fit`, a replica fills the width of its container and keeps its ratio. The root is `role="img"` with a localized `label`. Everything inside it is `aria-hidden` and `inert`. Replicas are static markup: no effects, no measuring, nothing to hydrate.
 - **Tokens.** `app-tokens.mjs` reads the theme from `apps/native/global.css` into Tailwind, scoped to `[data-app-replica]`. `theme="light" | "dark"` sets `data-app-theme`, independent of the site. Values iOS draws itself, such as glass, tab bar, badge and sheet backdrop, are variables in `app-theme.css`.
 - **Fonts.** On Apple devices `ui-rounded` and `SF Pro` are the real faces. Elsewhere, Nunito (`App Rounded`) and Geist (`App Sans`) stand in. They are self-hosted from `@fontsource-variable`, with `size-adjust` and ascent overrides so their metrics match SF per weight. Geist Mono takes the native font's own line metrics.
 - **Icons.** Hugeicons, imported by path. Category tiles use `@hugeicons-pro/core-solid-rounded`, as native does. Native stroke-rounded pro icons map to the free set's icons of the same name. Tab bar and toolbar symbols are the native SVGs in `apps/native/assets`, drawn as CSS masks.
@@ -20,12 +20,12 @@ React Native on iOS rounds every text box up to a device pixel (a third of a poi
 
 1. Port the native component into `<screen>.tsx` with the same structure. Reuse `chrome.tsx` (nav header, tab bar, FAB, glass), `parts.tsx` (sheet, settings section and rows, scope chip, button, home indicator), `list.tsx`, `tile.tsx` and `amount.tsx`.
 2. Copy each native key it shows into the `native` block. The drift test confirms the copy matches.
-3. Export `<Name>Screen` with a localized label, as in `log.tsx`. For a part of a screen, wrap it in `AppFragment` with its own width, height and label.
-4. Register it in `SCREENS` in `apps/site/replicas.config.ts` to open it alone.
+3. Export `<Name>Screen` with a localized label, as in `log.tsx`. For a part of a screen, wrap it in `AppFragment` with its own width, height and label. Either way, take `CanvasProps` and pass them on, so every replica accepts `fit`, `scale` and `className`.
+4. To open it alone, export it from a `<family>.viewer.tsx` beside it, in a `screens` map as `log.viewer.tsx` does. The key is its name in the viewer url, and a state of a screen gets its own key. The site never imports these files.
 
 ## Opening a replica alone
 
-In `apps/site`, run `vp dev --config replicas.config.ts`. The index at `http://localhost:4320/` links every screen, theme and locale; for example, `?screen=log&theme=dark&locale=de` (add `scale` or `scrollY` if needed). The viewer has its own config, so `vp build` never includes it.
+In `apps/site`, run `vp dev --config replicas.config.ts`. The index at `http://localhost:4320/` links every screen, theme and locale; for example, `?screen=log&theme=dark&locale=de` (add `scale`, `scrollY`, or `fit` with a container width in px, if needed). The viewer has its own config, so `vp build` never includes it.
 
 ## Fidelity check
 
