@@ -21,7 +21,8 @@ export function Sunrise() {
     return (
         <section aria-labelledby="close-title" className="hz-close" data-night-ground="" data-sky="night" ref={stage}>
             <div aria-hidden="true" className="hz-close-sky">
-                <div className="hz-close-night" />
+                <div className="hz-close-dawn" />
+                <div className="hz-close-edge" />
                 <div className="hz-close-sun">
                     <div className="hz-sun" data-halo="close">
                         <div className="hz-sun-disc" />

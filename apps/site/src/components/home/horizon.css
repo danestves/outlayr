@@ -18,11 +18,36 @@
     --sun-hero-from: 16em;
     --sun-hero-ms: 1800ms;
     --sun-hero-drift: -340px;
-    --sun-set-cap: calc(var(--u) * 380);
-    --sun-set-sink: calc(var(--sun-set-cap) + var(--u) * 48);
-    --sun-dawn-from: calc(var(--u) * 160);
-    --sunset-pin: 140svh;
+
+    --pin-len: 1.4;
+    --sun-d: calc(var(--u) * 1100);
+    --sun-from: calc(var(--u) * 500);
+    --sun-to: calc(var(--u) * -40);
+    --sun-rest: calc(var(--u) * 400);
+    --sun-ease: cubic-bezier(0.37, 0, 0.63, 1);
     --scene-ms: 1600ms;
+    --sun-at: 0;
+    --sun-end: 0.9;
+    --gold-at: 0.1;
+    --gold-end: 0.4;
+    --dusk-at: 0.36;
+    --dusk-end: 0.66;
+    --night-at: 0.64;
+    --night-end: 0.96;
+    --rim-at: 0.42;
+    --rim-end: 0.9;
+    --night-nav: 0.76;
+    --afterglow: 1;
+    --close-pad: calc(var(--u) * 430);
+    --close-gap: calc(var(--u) * 18);
+    --rise-travel: calc(var(--close-pad) - var(--close-gap) + var(--u) * 24);
+    --rise-ease: cubic-bezier(0.25, 0.5, 0.35, 1);
+    --rise-start: calc(var(--close-pad) * -1);
+    --rise-end: calc(var(--u) * 40);
+    --dawn-end: calc(var(--u) * 160);
+    --sun-box: var(--stage-h);
+    --sun-pin: 0px;
+    --sky-fade: calc(var(--u) * 150);
 
     --hz-sun-hi: #e05a3a;
     --hz-sun-mid: #c2371b;
@@ -30,6 +55,15 @@
     --hz-sun-deep: #8f2510;
     --hz-dawn: #f199a4;
     --hz-dawn-2: #f1d1d1;
+    --hz-day-haze: #f2e4d8;
+    --hz-gold: #f4dbbd;
+    --hz-gold-2: #f0ae80;
+    --hz-gold-3: #e6804c;
+    --hz-dusk-haze: #e8b6b2;
+    --hz-dusk-rose: #ea7d78;
+    --hz-dusk-ember: #e2614a;
+    --hz-night-rim: #3a1f12;
+    --hz-night-glow: oklch(40% 0.12 32);
     --hz-ember: oklch(65.3% 0.166 37);
     --hz-ember-deep: oklch(54.3% 0.18 33.1);
     --hz-ember-hot: oklch(76% 0.13 52);
@@ -65,39 +99,49 @@
         rgb(241 240 234 / 0) calc(100% - 4.8em)
     );
     --sun-rim: inset 0 2px 0 rgb(255 214 190 / 0.55), inset 0 18px 36px -18px rgb(255 190 160 / 0.45);
-    --sky-day: linear-gradient(180deg, var(--hz-paper) 0%, #f3ece4 56%, #f2e0d8 100%);
+    --sky-day: linear-gradient(
+        180deg,
+        var(--hz-paper) 0%,
+        var(--hz-paper) 38%,
+        var(--hz-day-haze) 74%,
+        var(--hz-dawn-2) 100%
+    );
     --sky-gold: linear-gradient(
         180deg,
         var(--hz-paper) 0%,
-        var(--hz-dawn-2) 34%,
-        var(--hz-dawn) 68%,
-        #ea7d78 86%,
-        #e2614a 100%
+        var(--hz-gold) 34%,
+        var(--hz-gold-2) 74%,
+        var(--hz-gold-3) 100%
     );
     --sky-dusk: linear-gradient(
         180deg,
-        var(--hz-paper) 0%,
-        #c98a86 22%,
-        #8e4a43 48%,
-        oklch(44% 0.13 32) 74%,
-        #c4452c 100%
+        var(--hz-dusk-haze) 0%,
+        var(--hz-dawn) 36%,
+        var(--hz-dusk-rose) 68%,
+        var(--hz-dusk-ember) 100%
     );
     --sky-night: linear-gradient(
         180deg,
-        var(--hz-paper) 0%,
-        #4a3f33 14%,
-        var(--hz-night) 40%,
-        #24170f 82%,
-        #3a1f12 100%
+        var(--hz-night) 0%,
+        var(--hz-night) 52%,
+        color-mix(in oklab, var(--hz-night-rim) min(calc(var(--afterglow) * 100%), 100%), var(--hz-night)) 80%,
+        color-mix(in oklab, var(--hz-night-glow) min(calc(var(--afterglow) * 100%), 100%), var(--hz-night)) 100%
+    );
+    --sky-predawn: linear-gradient(
+        180deg,
+        var(--hz-night) 0%,
+        var(--hz-night) 58%,
+        var(--hz-night-rim) 86%,
+        var(--hz-night-glow) 100%
     );
     --sky-dawn: linear-gradient(
         180deg,
         var(--hz-night) 0%,
         var(--hz-night) 34%,
-        #3a1f12 52%,
-        oklch(40% 0.12 32) 66%,
+        var(--hz-night-rim) 52%,
+        var(--hz-night-glow) 66%,
         var(--hz-ember-deep) 78%,
-        #e2614a 88%,
+        var(--hz-dusk-ember) 88%,
         var(--hz-dawn) 100%
     );
     --glow-horizon:
@@ -743,15 +787,16 @@
 }
 
 .hz-track {
+    --hz: calc(var(--sun-box) - var(--ground-h));
     position: relative;
-    height: var(--stage-h);
+    height: calc(var(--sun-box) + var(--sun-pin));
     margin-top: calc(var(--u) * 36);
     background: var(--hz-night);
 }
 
 .hz-night-mark {
     position: absolute;
-    top: var(--hy);
+    top: var(--hz);
     right: 0;
     bottom: 0;
     left: 0;
@@ -763,8 +808,9 @@
     --pws: calc(var(--u) * 340);
     --spread: calc(var(--u) * 300);
     --fan-top: calc(var(--u) * 84);
-    position: relative;
-    height: var(--stage-h);
+    position: sticky;
+    top: 0;
+    height: var(--sun-box);
     overflow: clip;
     background: var(--color-background);
     font-size: calc(10px * var(--s));
@@ -773,8 +819,10 @@
 .hz-sky {
     position: absolute;
     inset: 0 0 auto;
-    height: var(--hy);
+    height: var(--hz);
     overflow: clip;
+    -webkit-mask: linear-gradient(180deg, transparent 0, #000 var(--sky-fade));
+    mask: linear-gradient(180deg, transparent 0, #000 var(--sky-fade));
 }
 
 .hz-sky-layer {
@@ -792,7 +840,6 @@
 
 .hz-sky-layer[data-layer="dusk"] {
     background: var(--sky-dusk);
-    opacity: 0;
 }
 
 .hz-sky-layer[data-layer="night"] {
@@ -802,15 +849,15 @@
 
 .hz-sunset-sun {
     position: absolute;
-    top: calc(var(--hy) - var(--sun-set-cap));
-    left: calc(50% - max(80em, 58%));
-    width: max(160em, 116%);
+    top: calc(var(--hz) - var(--sun-rest));
+    left: calc(50% - var(--sun-d) / 2);
+    width: var(--sun-d);
     aspect-ratio: 1;
 }
 
 .hz-ground {
     position: absolute;
-    inset: var(--hy) 0 0;
+    inset: var(--hz) 0 0;
     background: var(--hz-night);
 }
 
@@ -829,7 +876,7 @@
 
 .hz-glow {
     position: absolute;
-    top: calc(var(--hy) - var(--u) * 900);
+    top: calc(var(--hz) - var(--u) * 900);
     left: 50%;
     width: calc(var(--u) * 2000);
     height: calc(var(--u) * 1800);
@@ -851,7 +898,8 @@
 
 .hz-fan {
     position: absolute;
-    inset: 0;
+    inset: auto 0 0;
+    height: var(--stage-h);
     perspective: calc(var(--u) * 2200);
     perspective-origin: 50% calc(var(--fan-top) + var(--u) * 270);
 }
@@ -955,6 +1003,7 @@
     position: relative;
     display: flow-root;
     padding-bottom: var(--section-y);
+    overflow: clip;
 }
 
 .hz-grade {
@@ -1511,13 +1560,11 @@
 }
 
 .hz-close {
-    --pad-b: calc(var(--u) * 430);
-    --sun-gap: calc(var(--u) * 18);
     position: relative;
     isolation: isolate;
     overflow: clip;
-    padding: var(--section-y) var(--gutter) var(--pad-b);
-    background: var(--sky-dawn);
+    padding: var(--section-y) var(--gutter) var(--close-pad);
+    background: var(--sky-predawn);
     text-align: center;
 }
 
@@ -1528,16 +1575,23 @@
     font-size: calc(10px * var(--s));
 }
 
-.hz-close-night {
+.hz-close-dawn {
     position: absolute;
     inset: 0;
-    background: var(--hz-night);
-    opacity: 0;
+    background: var(--sky-dawn);
+}
+
+.hz-close-edge {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 1px;
 }
 
 .hz-close-sun {
     position: absolute;
-    top: calc(100% - var(--pad-b) + var(--sun-gap));
+    top: calc(100% - var(--close-pad) + var(--close-gap));
     left: calc(50% - max(80em, 58%));
     width: max(160em, 116%);
     aspect-ratio: 1;
@@ -1596,7 +1650,7 @@
 .hz-tile {
     position: absolute;
     top: var(--y);
-    left: var(--x);
+    left: clamp(calc(var(--w) * 0.56 + 4px), var(--x), calc(100% - var(--w) * 0.56 - 4px));
     width: var(--w);
     margin: calc(var(--w) / -2) 0 0 calc(var(--w) / -2);
     translate: calc(var(--mx, 0) * var(--z) * 6px) calc(var(--my, 0) * var(--z) * 4px);
@@ -1894,7 +1948,6 @@
         display: none;
     }
 
-    .hz-sunset-sun,
     .hz-close-sun {
         left: calc(50% - max(52em, 80%));
         width: max(104em, 160%);
@@ -1989,15 +2042,14 @@
         --section-gap-s: 80px;
         --u: min(calc(100vw / 600), 0.9px);
         --stage-h: calc(var(--u) * 830);
-        --sunset-pin: 80svh;
+        --pin-len: 0.9;
+        --sun-d: calc(var(--u) * 800);
+        --sun-from: calc(var(--u) * 700);
+        --sun-rest: calc(var(--u) * 320);
     }
 
     .hz-sunset {
         --fan-top: calc(var(--u) * 236);
-    }
-
-    .hz-page {
-        --sun-set-cap: calc(var(--u) * 430);
     }
 }
 
@@ -2119,7 +2171,7 @@
 
     .hz-tile {
         top: var(--ym);
-        left: var(--xm);
+        left: clamp(calc(var(--wm) * 0.56 + 4px), var(--xm), calc(100% - var(--wm) * 0.56 - 4px));
         width: var(--wm);
         margin: calc(var(--wm) / -2) 0 0 calc(var(--wm) / -2);
     }
@@ -2217,91 +2269,49 @@
     }
 }
 
-@keyframes hz-gold {
-    0%,
-    10% {
+@keyframes hz-sky-in {
+    from {
         opacity: 0;
     }
 
-    40%,
-    100% {
-        opacity: 1;
-    }
-}
-
-@keyframes hz-dusk {
-    0%,
-    35% {
-        opacity: 0;
-    }
-
-    65%,
-    100% {
-        opacity: 1;
-    }
-}
-
-@keyframes hz-night {
-    0%,
-    60% {
-        opacity: 0;
-    }
-
-    90%,
-    100% {
+    to {
         opacity: 1;
     }
 }
 
 @keyframes hz-set {
-    0% {
-        transform: translate3d(0, 0, 0);
-        animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+    from {
+        transform: translate3d(0, calc(var(--sun-rest) - var(--sun-from)), 0);
     }
 
-    88%,
-    100% {
-        transform: translate3d(0, var(--sun-set-sink), 0);
+    to {
+        transform: translate3d(0, calc(var(--sun-rest) - var(--sun-to)), 0);
     }
 }
 
 @keyframes hz-rim {
-    0%,
-    45% {
-        opacity: 1;
-    }
-
-    85%,
-    100% {
+    to {
         opacity: 0;
     }
 }
 
 @keyframes hz-glow {
-    0%,
-    30% {
-        opacity: 0.35;
+    0% {
+        opacity: 0.3;
     }
 
-    80%,
-    100% {
+    66% {
         opacity: 1;
+    }
+
+    100% {
+        opacity: calc(0.55 * var(--afterglow));
     }
 }
 
 @keyframes hz-rise-sun {
     from {
-        transform: translate3d(0, var(--sun-dawn-from), 0);
-    }
-}
-
-@keyframes hz-dawn-break {
-    from {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0;
+        transform: translate3d(0, var(--rise-travel), 0);
     }
 }
 
@@ -2384,15 +2394,67 @@
     }
 
     .js .hz-sunset .hz-fan-body {
-        animation: hz-fan-rise 1500ms var(--ease-out) 420ms both paused;
+        animation: hz-fan-rise 1500ms var(--ease-out) 420ms both;
     }
 
     .js .hz-sunset .hz-fan-phone[data-side] .hz-fan-body {
-        animation: hz-fan-open 1700ms var(--ease-out) 820ms both paused;
+        animation-name: hz-fan-open;
+        animation-duration: 1700ms;
+        animation-delay: 820ms;
     }
 
-    .js .hz-sunset.is-in .hz-fan-body {
-        animation-play-state: running;
+    .js .hz-sunset:not(.is-in) .hz-fan-body {
+        animation-play-state: paused;
+    }
+
+    .hz-sky-layer[data-layer="gold"] {
+        --at: var(--gold-at);
+        --end: var(--gold-end);
+        animation: hz-sky-in linear both;
+    }
+
+    .hz-sky-layer[data-layer="dusk"] {
+        --at: var(--dusk-at);
+        --end: var(--dusk-end);
+        animation: hz-sky-in linear both;
+    }
+
+    .hz-sky-layer[data-layer="night"] {
+        --at: var(--night-at);
+        --end: var(--night-end);
+        animation: hz-sky-in linear both;
+    }
+
+    .hz-sunset-sun {
+        --at: var(--sun-at);
+        --end: var(--sun-end);
+        animation: hz-set linear both;
+        animation-timing-function: var(--sun-ease);
+    }
+
+    .hz-glow {
+        --at: 0;
+        --end: 1;
+        animation: hz-glow linear both;
+    }
+
+    .hz-fan-catch {
+        --at: var(--rim-at);
+        --end: var(--rim-end);
+        animation: hz-rim linear both;
+    }
+
+    .hz-close-sun {
+        --at: 0;
+        --end: 1;
+        animation: hz-rise-sun linear both;
+        animation-timing-function: var(--rise-ease);
+    }
+
+    .hz-close-dawn {
+        --at: 0;
+        --end: 0.8;
+        animation: hz-sky-in linear both;
     }
 
     .hz-qa[open] .hz-qa-a {
@@ -2433,107 +2495,65 @@
             animation-range: 0 1000px;
         }
 
+        .hz-page {
+            --sun-box: 100svh;
+            --sun-pin: calc(100svh * var(--pin-len));
+            --sky-fade: 0px;
+        }
+
         .hz-track {
-            height: calc(var(--stage-h) + var(--sunset-pin));
             view-timeline: --sunset block;
         }
 
-        .hz-sunset {
-            position: sticky;
-            top: max(0px, calc((100svh - var(--stage-h)) / 2));
-        }
-
         .hz-night-mark {
-            top: calc((var(--stage-h) + var(--sunset-pin) - 100svh) * 0.75 + var(--nav-line));
-        }
-
-        .hz-sky-layer[data-layer="gold"] {
-            animation: hz-gold linear both;
-        }
-
-        .hz-sky-layer[data-layer="dusk"] {
-            animation: hz-dusk linear both;
-        }
-
-        .hz-sky-layer[data-layer="night"] {
-            animation: hz-night linear both;
-        }
-
-        .hz-sunset-sun {
-            animation: hz-set linear both;
-        }
-
-        .hz-fan-catch {
-            animation: hz-rim linear both;
-        }
-
-        .hz-glow {
-            animation: hz-glow linear both;
-        }
-
-        .hz-sky-layer[data-layer]:not([data-layer="day"]),
-        .hz-sunset-sun,
-        .hz-fan-catch,
-        .hz-glow {
-            animation-timeline: --sunset;
-            animation-range: contain 0% contain 100%;
-        }
-
-        .hz-close-sun {
-            animation: hz-rise-sun linear both;
-            animation-timeline: view();
-            animation-range: entry 0% cover 50%;
-        }
-
-        .hz-close-night {
-            animation: hz-dawn-break linear both;
-            animation-timeline: --close;
-            animation-range: entry 30% cover 60%;
+            top: calc(var(--sun-pin) * var(--night-nav) + var(--nav-line));
         }
 
         .hz-close {
-            timeline-scope: --close;
-            view-timeline: --close block;
+            timeline-scope: --rise;
+        }
+
+        .hz-close-edge {
+            view-timeline: --rise block;
+        }
+
+        .hz-sky-layer[data-layer],
+        .hz-sunset-sun,
+        .hz-glow,
+        .hz-fan-catch {
+            animation-timeline: --sunset;
+            animation-range: contain calc(var(--at) * 100%) contain calc(var(--end) * 100%);
+        }
+
+        .hz-close-sun {
+            animation-timeline: --rise;
+            animation-range: entry var(--rise-start) entry var(--rise-end);
+        }
+
+        .hz-close-dawn {
+            animation-timeline: --rise;
+            animation-range: entry var(--rise-start) entry var(--dawn-end);
         }
     }
 
     @supports not (animation-timeline: view()) {
-        .js .hz-sky-layer[data-layer="gold"] {
-            animation: hz-gold var(--scene-ms) linear both paused;
+        .hz-sky-layer[data-layer],
+        .hz-sunset-sun,
+        .hz-glow,
+        .hz-fan-catch,
+        .hz-close-sun,
+        .hz-close-dawn {
+            animation-duration: calc((var(--end) - var(--at)) * var(--scene-ms));
+            animation-delay: calc(var(--at) * var(--scene-ms));
         }
 
-        .js .hz-sky-layer[data-layer="dusk"] {
-            animation: hz-dusk var(--scene-ms) linear both paused;
+        html:not(.js) :is(.hz-sky-layer, .hz-sunset-sun, .hz-glow, .hz-fan-catch, .hz-close-sun, .hz-close-dawn) {
+            animation: none;
         }
 
-        .js .hz-sky-layer[data-layer="night"] {
-            animation: hz-night var(--scene-ms) linear both paused;
-        }
-
-        .js .hz-sunset-sun {
-            animation: hz-set var(--scene-ms) linear both paused;
-        }
-
-        .js .hz-fan-catch {
-            animation: hz-rim var(--scene-ms) linear both paused;
-        }
-
-        .js .hz-glow {
-            animation: hz-glow var(--scene-ms) linear both paused;
-        }
-
-        .js .hz-close-sun {
-            animation: hz-rise-sun var(--scene-ms) var(--ease-out) both paused;
-        }
-
-        .js .hz-close-night {
-            animation: hz-dawn-break var(--scene-ms) linear both paused;
-        }
-
-        .js
-            [data-scene="on"]
-            :is(.hz-sky-layer, .hz-sunset-sun, .hz-fan-catch, .hz-glow, .hz-close-sun, .hz-close-night) {
-            animation-play-state: running;
+        :is(.hz-track, .hz-close):not([data-scene="on"])
+            :is(.hz-sky-layer, .hz-sunset-sun, .hz-glow, .hz-fan-catch, .hz-close-sun, .hz-close-dawn) {
+            animation-play-state: paused;
         }
     }
 }

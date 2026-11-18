@@ -52,8 +52,9 @@ chrome over the page (nav, install bar) reads the ground under it from `[data-ni
 `watchGround` and sets `data-ground`, never `data-sky`.
 
 Its palette lives on `.hz-page`: `--hz-sun-*`, `--hz-dawn*`, `--hz-ember*`, `--hz-night`, `--hz-paper`,
-and `--hz-hold-*`, the dark surfaces app replicas sit on at night. The sun's tunables sit together
-there too (`--sun-*`, `--sunset-pin`, `--scene-ms`).
+and `--hz-hold-*`, the dark surfaces app replicas sit on at night. The scene tunables sit together
+there too: `--pin-len` (sunset pin length, in viewports), `--sun-*`, `--afterglow`, `--night-nav`,
+`--close-*`, `--rise-*` and `--scene-ms`.
 
 ## Space and shape
 
