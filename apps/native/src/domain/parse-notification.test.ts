@@ -130,6 +130,7 @@ describe("parseNotification", () => {
             amountText: "RD$ 1,250.00",
         });
         expect(parseNotification("您在星巴克消费 38.00元")).toMatchObject({ amount: 38, amountText: "38.00元" });
+        expect(parseNotification("Paid Rs. 250 at Big Bazaar")).toMatchObject({ amount: 250, amountText: "Rs. 250" });
     });
 
     it("takes the amount when the unit trails the number", () => {

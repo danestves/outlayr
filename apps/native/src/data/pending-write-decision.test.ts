@@ -341,6 +341,8 @@ describe("the account and currency a card's charge is filed in", () => {
         ["the posting bank's home currency", "Banesco", "Bs 500,00", null, "VES"],
         ["the device's currency when the app says nothing", "Mi Banco", "$120.00", "MXN", "MXN"],
         ["the posting bank over the device", "Chase", "$120.00", "MXN", "USD"],
+        ["a Chinese app's yuan, not the yen", "Alipay", "¥250.00", "USD", "CNY"],
+        ["the yen when nothing says yuan", "Mi Banco", "¥250", "USD", "JPY"],
         ["the ledger's fallback when neither can be meant", "Banesco", "$120.00", "EUR", null],
     ])("reads a shared symbol by %s", (_case, card, amountText, deviceCurrency, currency) => {
         expect(accountOf(walletWrite("a", { amountText, card }), { deviceCurrency })).toMatchObject({ currency });

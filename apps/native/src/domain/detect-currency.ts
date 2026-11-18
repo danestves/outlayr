@@ -14,6 +14,7 @@ const LOCAL_MARKS = {
     Gs: ["PYG"],
     RD$: ["DOP"],
     Rs: ["INR"],
+    "Rs.": ["INR"],
     S$: ["SGD"],
     "S/": ["PEN"],
     "S/.": ["PEN"],
@@ -50,12 +51,12 @@ export const SYMBOL_ALIASES = { U$S: "USD", US$: "USD", USDT: "USD", USDt: "USD"
 const ALIAS_CODE = new Map<string, string>(Object.entries(SYMBOL_ALIASES));
 
 /**
- * e.g. "€12,40" → "EUR". A symbol several currencies print ("$", "Bs") takes the first of `preferred` it can mean,
- * then the catalog's sole owner ("¥" → JPY), and is otherwise null.
+ * e.g. "€12,40" → "EUR". A symbol several currencies print ("$", "Bs") is null unless `preferred` is given, then it
+ * takes the first of those it can mean, then the catalog's sole owner ("¥" → JPY).
  */
 export function detectCurrency(
     text: string | null | undefined,
-    preferred: readonly (string | null | undefined)[] = []
+    preferred?: readonly (string | null | undefined)[]
 ): string | null {
     if (!text) {
         return null;
@@ -84,6 +85,9 @@ export function detectCurrency(
     const candidates = BY_SYMBOL.get(symbol);
     if (!candidates || candidates.length === 1) {
         return candidates?.[0] ?? null;
+    }
+    if (!preferred) {
+        return null;
     }
     return preferred.find((code) => code != null && candidates.includes(code)) ?? OWNER.get(symbol) ?? null;
 }

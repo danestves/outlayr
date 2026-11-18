@@ -6,11 +6,10 @@ import { Text } from "@/components/text";
 import { useDatabase } from "@/contexts/local-data-context";
 import { useGlobalCurrency } from "@/data/app-meta";
 import type { useAutologUsage } from "@/data/autolog-cap";
-import { printedCurrency } from "@/data/pending-write-decision";
 import { useNow } from "@/data/use-now";
 import { formatDayHeader } from "@/domain/dates";
+import { detectCurrency } from "@/domain/detect-currency";
 import { useLanguage, useTranslation } from "@/i18n/context";
-import { firstLocale } from "@/i18n/device-language";
 import { autologSourceOf } from "@/lib/queue-file";
 import type { PendingWrite } from "@/lib/queue-file";
 
@@ -22,7 +21,7 @@ function WaitingRow({ fallbackCurrency, write }: { fallbackCurrency: string; wri
     const nowMs = useNow();
     const t = useTranslation();
     const { language } = useLanguage();
-    const code = printedCurrency(write, firstLocale()?.currencyCode ?? null) ?? fallbackCurrency;
+    const code = write.currency?.trim().toUpperCase() || detectCurrency(write.amountText) || fallbackCurrency;
     const source = t(`pro.top.autolog.source.${autologSourceOf(write)}`);
     const day = formatDayHeader(new Date(write.date), new Date(nowMs), language);
     return (

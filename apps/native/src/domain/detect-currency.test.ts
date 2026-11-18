@@ -5,7 +5,6 @@ import { detectCurrency } from "./detect-currency";
 describe("detectCurrency", () => {
     it("reads an unambiguous symbol", () => {
         expect(detectCurrency("€12,40")).toBe("EUR");
-        expect(detectCurrency("¥1,240")).toBe("JPY");
         expect(detectCurrency("₹250")).toBe("INR");
     });
 
@@ -26,6 +25,7 @@ describe("detectCurrency", () => {
         expect(detectCurrency("$12.40")).toBeNull();
         expect(detectCurrency("£5.00")).toBeNull();
         expect(detectCurrency("kr 99")).toBeNull();
+        expect(detectCurrency("¥1,240")).toBeNull();
     });
 
     it("reads the mark a currency prints at home, not only the catalog's international one", () => {
@@ -45,6 +45,7 @@ describe("detectCurrency", () => {
     });
 
     it("keeps a symbol's sole catalog owner when no preference can be meant", () => {
+        expect(detectCurrency("¥1,240", [])).toBe("JPY");
         expect(detectCurrency("¥1,240", ["EUR"])).toBe("JPY");
         expect(detectCurrency("$12.40", ["EUR"])).toBeNull();
     });

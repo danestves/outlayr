@@ -202,21 +202,22 @@ function filedBefore(write: PendingWrite, facts: PendingWriteFacts): LedgerEntry
 function cardAccount(write: PendingWrite, facts: PendingWriteFacts) {
     const card = write.card?.trim();
     if (!card) {
-        return { account: null, asks: false };
+        return { account: null, asks: false, charged: null };
     }
     const status = cardStatus(card, facts.cards, facts.banks);
-    const charged = printedCurrency(write, facts.deviceCurrency);
+    const charged = write.currency?.trim().toUpperCase() || detectCurrency(write.amountText);
     const same = charged ? facts.banks.filter((row) => row.currency === charged) : [];
     const account =
         status.account ?? (status.asks ? same.find((row) => row.id === matchCardAccount(card, same)) : undefined);
     return {
         account: account ? { currency: account.currency, id: account.id } : null,
         asks: status.asks && !account,
+        charged,
     };
 }
 
 // A symbol several currencies print ("$", "Bs") is the posting app's home currency when it can be, then the device's.
-export function printedCurrency(write: PendingWrite, device: string | null): string | null {
+function printedCurrency(write: PendingWrite, device: string | null): string | null {
     const pinned = write.currency?.trim().toUpperCase();
     if (pinned) {
         return pinned;
@@ -321,13 +322,13 @@ export function decidePendingWrite(write: PendingWrite, facts: PendingWriteFacts
     if (categoryId == null && !lookup && !captured) {
         return { kind: "drop" };
     }
-    const { account, asks } = cardAccount(write, facts);
+    const { account, asks, charged } = cardAccount(write, facts);
     const currency = printedCurrency(write, facts.deviceCurrency) ?? account?.currency ?? null;
     const code = currency ?? facts.ledgerCurrency;
     const automated = fromAutomation(write);
     const card = write.card?.trim();
     const filing: Filing = {
-        card: card ? { text: card, waits: asks && Boolean(currency) } : null,
+        card: card ? { text: card, waits: asks && Boolean(charged) } : null,
         key: write.dedupeKey?.trim() || null,
         source: sourceOf(write) ?? undefined,
         wallet: automated ? { push: Boolean(write.text) } : null,
