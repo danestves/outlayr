@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 
 import { AmountNumpad, CurrencyPill } from "./amount-pad";
 import { SCREEN, useReplica } from "./canvas";
-import { GLASS_SURFACE } from "./chrome";
 import { CATEGORY_KEYS, ENTRY_CATEGORIES, footerSaves, merchantNames, pickerAccounts, stageStep } from "./entry-state";
 import type { EntryState } from "./entry-state";
 import { KEYBOARD_TOP } from "./keyboard";
@@ -16,6 +15,10 @@ const LIST_HEIGHT = 176;
 const BACK_GLYPH = 19;
 const SELECTED_FILL = "color-mix(in srgb, var(--tint) 13%, transparent)";
 const LEDGER_CURRENCY = "USD";
+const BACK_GLASS = {
+    background: "var(--glass-fill)",
+    boxShadow: [1, 1, -1, -1].map((side) => `inset 0 ${side}px 1.33px var(--glass-rim)`).join(", "),
+} as const;
 
 function StageOption({
     label,
@@ -117,7 +120,7 @@ function StageHeader({ back, right, title }: { back: boolean; right?: ReactNode;
     return (
         <div className="h-[38px] flex-row items-center">
             {back ? (
-                <div className="h-[38px] w-[38px] items-center justify-center rounded-full" style={GLASS_SURFACE}>
+                <div className="h-[38px] w-[38px] items-center justify-center rounded-full" style={BACK_GLASS}>
                     <HugeiconsIcon color="var(--foreground)" icon={ArrowLeft01Icon} size={BACK_GLYPH} />
                 </div>
             ) : null}
