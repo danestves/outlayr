@@ -7,6 +7,7 @@ import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import type { Mutable } from "effect/Types";
 
 import refs from "./_generated/refs";
 import databaseSchema from "./_generated/schema";
@@ -20,6 +21,7 @@ import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { fixedBurst, perUserBurst } from "./lib/limits";
 import { failure, isIsoDay, rateLimiter, readStatement } from "./pdfImport";
 import spec, { MAX_PDF_BYTES, PDF_CONTENT_TYPE } from "./pdfImport.spec";
+import type { PdfImportResult } from "./pdfImport.spec";
 import { isPro } from "./revenuecat";
 
 // Convex upload urls live an hour. Extraction deletes a statement at once; this catches the client that never called.
@@ -214,8 +216,14 @@ const extract = FunctionImpl.make(
                     regionCode,
                     tokenIdentifier: caller.tokenIdentifier,
                 }).pipe(Effect.catchCause(() => Effect.succeed({ degraded: true, suggestions: [] })));
-                const read = { rows: statement.rows, status: "ok" as const, suggestions };
-                return degraded ? { ...read, degraded } : read;
+                const read: Mutable<PdfImportResult> = { rows: statement.rows, status: "ok", suggestions };
+                if (degraded) {
+                    read.degraded = true;
+                }
+                if (statement.unreadPages.length > 0) {
+                    read.unreadPages = statement.unreadPages;
+                }
+                return read;
             }).pipe(Effect.ensuring(Effect.promise(() => ctx.storage.delete(args.storageId))));
         },
         Effect.catchTags({ AiRefused: ({ status }) => Effect.succeed(failure(status)) }),

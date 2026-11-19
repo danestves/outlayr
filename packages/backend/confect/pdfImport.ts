@@ -14,6 +14,8 @@ import type { PdfImportResult, PdfImportStatus, StatementRow } from "./pdfImport
 export const MAX_PDF_PAGES = 100;
 /** Under this there is no text layer worth reading, which in practice means a scan. */
 export const MIN_TEXT_CHARS = 200;
+/** A page under this in a statement that has text is a scan; a page footer alone stays under it too. */
+export const MIN_PAGE_TEXT_CHARS = 20;
 const MAX_STATEMENT_CHARS = 400_000;
 const CHUNK_CHARS = 12_000;
 const HEADER_CHARS = 800;
@@ -277,7 +279,24 @@ const extractChunk = Effect.fn("PdfImport.extractChunk")(function* extractChunk(
     return output.rows;
 });
 
-type ReadStatement = { rows: StatementRow[]; status: "ok" } | { status: Exclude<PdfImportStatus, "ok"> };
+type ReadStatement =
+    | { rows: StatementRow[]; status: "ok"; unreadPages: number[] }
+    | { status: Exclude<PdfImportStatus, "ok"> };
+
+function printedChars(page: string): number {
+    return page.replaceAll(/\s/g, "").length;
+}
+
+/** One-based numbers of the pages with no text layer, whose rows the model never sees. */
+export function unreadPageNumbers(pages: readonly string[]): number[] {
+    const unread: number[] = [];
+    for (const [index, page] of pages.entries()) {
+        if (printedChars(page) < MIN_PAGE_TEXT_CHARS) {
+            unread.push(index + 1);
+        }
+    }
+    return unread;
+}
 
 /** Takes the model so tests can fake it. One failed chunk fails the read: a partial statement looks whole. */
 export const readStatement = Effect.fn("PdfImport.readStatement")(
@@ -289,7 +308,7 @@ export const readStatement = Effect.fn("PdfImport.readStatement")(
         const pages = yield* extractPdfPages(bytes);
         const redacted = pages.map(redactStatementText);
         const chars = redacted.reduce((total, page) => total + page.length, 0);
-        const printed = redacted.reduce((total, page) => total + page.replaceAll(/\s/g, "").length, 0);
+        const printed = redacted.reduce((total, page) => total + printedChars(page), 0);
         if (printed < MIN_TEXT_CHARS) {
             return { status: "extractionFailed" };
         }
@@ -313,7 +332,9 @@ export const readStatement = Effect.fn("PdfImport.readStatement")(
                 rows.push(clean);
             }
         }
-        return rows.length === 0 ? { status: "extractionFailed" } : { rows, status: "ok" };
+        return rows.length === 0
+            ? { status: "extractionFailed" }
+            : { rows, status: "ok", unreadPages: unreadPageNumbers(redacted) };
     },
     Effect.catchTags({
         ModelCallError: ({ reason }) =>

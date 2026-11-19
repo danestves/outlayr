@@ -85,7 +85,7 @@ export const chooseStatementCommand = createRuntimeCommand(appRuntime, {
             gaps: resolution.ok ? [] : resolution.gaps,
             parsed,
             resolved: resolution.ok ? resolution.value : null,
-            statement: { complete: reply.complete, suggestions: reply.suggestions },
+            statement: { complete: reply.complete, suggestions: reply.suggestions, unreadPages: reply.unreadPages },
             type: "fileParsed",
         };
         return { event };

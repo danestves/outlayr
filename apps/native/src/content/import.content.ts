@@ -92,6 +92,15 @@ const importSheet = {
             pt: "Lendo extrato…",
             "pt-PT": "A ler o extrato…",
         }),
+        "import.statementUnreadPages": t({
+            en: "Some pages had no text to read, likely scans: {pages}. Their transactions are missing, so add them by hand or ask your bank for a CSV.",
+            de: "Einige Seiten hatten keinen lesbaren Text, vermutlich Scans: {pages}. Ihre Buchungen fehlen, trag sie also selbst ein oder frag deine Bank nach einer CSV-Datei.",
+            es: "Algunas páginas no tenían texto que leer, probablemente escaneadas: {pages}. Faltan sus movimientos, así que añádelos a mano o pide un CSV a tu banco.",
+            fr: "Certaines pages n'avaient pas de texte à lire, sans doute des scans : {pages}. Leurs opérations manquent : ajoutez-les à la main ou demandez un CSV à votre banque.",
+            pt: "Algumas páginas não tinham texto para ler, provavelmente digitalizadas: {pages}. As transações delas estão faltando, então adicione à mão ou peça um CSV ao seu banco.",
+            "pt-PT":
+                "Algumas páginas não tinham texto para ler, provavelmente digitalizadas: {pages}. Faltam as transações delas, por isso adicione-as à mão ou peça um CSV ao seu banco.",
+        }),
         "import.statementPrivacy": t({
             en: "The file goes to our server, which deletes it after reading it. Its text goes to Anthropic with long account and card numbers masked. Your name and address, if printed, are sent unmasked. It needs selectable text, so scans won't work.",
             de: "Die Datei geht an unseren Server, der sie nach dem Lesen löscht. Ihr Text geht mit maskierten langen Konto- und Kartennummern an Anthropic und enthält deinen Namen und deine Adresse, falls sie aufgedruckt sind. Der Text muss auswählbar sein, Scans funktionieren also nicht.",

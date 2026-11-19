@@ -7,6 +7,8 @@ export interface StatementSuggestions {
     /** False when the server left labels unasked, so the resolve step should ask about them. */
     readonly complete: boolean;
     readonly suggestions: readonly LabelSuggestion[];
+    /** One-based pages with no text layer, so their rows never reached the import. */
+    readonly unreadPages: readonly number[];
 }
 
 const HEADER = ["Date", "Description", "Amount", "Type", "Currency"];

@@ -114,6 +114,7 @@ describe("csvImport", () => {
                         statement: {
                             complete: true,
                             suggestions: [{ categoryName: "Food", domain: null, label: "Zq Cafe" }],
+                            unreadPages: [],
                         },
                     })
                 );
@@ -147,6 +148,7 @@ describe("csvImport", () => {
                         statement: {
                             complete: false,
                             suggestions: [{ categoryName: "Food", domain: null, label: "Zq Cafe" }],
+                            unreadPages: [],
                         },
                     })
                 );

@@ -75,6 +75,7 @@ export function FileStep({ onChoose, onSeePro, busy = false }: FileStepProps) {
     const busyLabel = t(statement ? "import.readingStatement" : "import.readingFile");
 
     const { parsed, resolved } = state;
+    const unreadPages = state.statement?.unreadPages ?? [];
     const dateFormat =
         parsed == null || resolved == null
             ? null
@@ -159,6 +160,12 @@ export function FileStep({ onChoose, onSeePro, busy = false }: FileStepProps) {
                         },
                     ]}
                 />
+
+                {unreadPages.length > 0 ? (
+                    <Text className="text-footnote text-warning leading-snug">
+                        {t("import.statementUnreadPages", { pages: unreadPages.join(", ") })}
+                    </Text>
+                ) : null}
 
                 {state.resolved.labelSource === "descriptionColumn" && !statement ? (
                     <Text className="text-footnote text-muted leading-snug">{t("import.fileNoCategoryColumn")}</Text>
