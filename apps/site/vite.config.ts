@@ -10,6 +10,7 @@ import { defineConfig } from "vite-plus";
 
 const SECURITY_HEADERS = {
     "content-security-policy": "frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
+    "cross-origin-opener-policy": "same-origin",
     "permissions-policy": "camera=(), geolocation=(), microphone=()",
     "referrer-policy": "strict-origin-when-cross-origin",
     "strict-transport-security": "max-age=31536000",

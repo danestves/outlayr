@@ -27,6 +27,8 @@ export const Route = createFileRoute("/{-$locale}/compare/$slug")({
                     webPage(locale, `/compare/${slug}`, {
                         author: { "@id": FOUNDER_ID },
                         dateModified: compareUpdated(slug).toISOString().slice(0, 10),
+                        description: rival.meta.description,
+                        name: rival.title,
                     })
                 ),
             ],

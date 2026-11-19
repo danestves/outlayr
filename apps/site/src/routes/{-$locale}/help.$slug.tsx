@@ -7,7 +7,7 @@ import { Article, DELAYS, Prose, Questions } from "@/components/answers/article"
 import type { ArticleSection } from "@/components/answers/article";
 import { hasKey } from "@/lib/has-key";
 import { answerTrail, article, faqPage, ldJson, pageMeta } from "@/lib/seo";
-import { HELP_UPDATED } from "@/lib/site";
+import { HELP_PUBLISHED, HELP_UPDATED } from "@/lib/site";
 
 export const Route = createFileRoute("/{-$locale}/help/$slug")({
     component: HelpArticle,
@@ -27,6 +27,7 @@ export const Route = createFileRoute("/{-$locale}/help/$slug")({
                     ldJson(
                         article(locale, path, {
                             dateModified: HELP_UPDATED,
+                            datePublished: HELP_PUBLISHED,
                             description: page.meta.description,
                             headline: page.title,
                         })

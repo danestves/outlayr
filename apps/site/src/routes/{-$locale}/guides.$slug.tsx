@@ -23,7 +23,7 @@ import { screenSources } from "@/components/home/media";
 import { Icon } from "@/components/icon";
 import { hasKey } from "@/lib/has-key";
 import { answerTrail, article, faqPage, itemList, ldJson, pageMeta, webPage } from "@/lib/seo";
-import { guideUpdated, listChecked, longDate } from "@/lib/site";
+import { GUIDES_PUBLISHED, guideUpdated, listChecked, longDate } from "@/lib/site";
 
 type GuideSlug = keyof ReturnType<typeof getIntlayer<"answers">>["guides"];
 
@@ -115,6 +115,7 @@ export const Route = createFileRoute("/{-$locale}/guides/$slug")({
                 ldJson(
                     article(locale, path, {
                         dateModified: updated,
+                        datePublished: GUIDES_PUBLISHED[slug],
                         description: guide.meta.description,
                         headline: guide.title,
                     })

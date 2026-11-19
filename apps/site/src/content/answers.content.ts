@@ -4856,7 +4856,7 @@ const answers = {
                             },
                             {
                                 label: t({ en: "Moving in", es: "Si vienes de otra app" }),
-                                source: "https://github.com/danestves/outlayr/blob/main/apps/native/src/domain/money-manager/archive.ts",
+                                source: "https://github.com/danestves/outlayr/blob/main/packages/money/src/money-manager/archive.ts",
                                 text: t({
                                     en: "CSV files and .mmbackup files from Orange Dog's Money Manager, both read on the phone. Backups from Realbyte's Money Manager, the one on this page, are not supported. Free plan limits still apply",
                                     es: "Archivos CSV y archivos .mmbackup del Money Manager de Orange Dog, ambos leídos en el celular. Las copias del Money Manager de Realbyte, el de esta página, no son compatibles. Los límites del plan gratis siguen aplicando",

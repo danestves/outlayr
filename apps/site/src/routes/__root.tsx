@@ -146,6 +146,7 @@ export const Route = createRootRoute({
                     type: "image/png",
                 },
                 { href: "/apple-touch-icon.png", rel: "apple-touch-icon" },
+                { href: "/llms.txt", rel: "service-doc", type: "text/plain" },
             ],
             meta: [
                 { charSet: "utf-8" },

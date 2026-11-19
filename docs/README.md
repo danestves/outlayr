@@ -34,3 +34,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [Auth signing key (JWKS)](./operations/auth-signing-key.md)
 - [Self-hosting with Docker](./operations/self-hosting.md)
 - [App Store header and search art](../apps/screenshots/app-store-header/README.md)
+
+### Audits
+
+- [SEO audit, 2026-11-19](./seo/2026-11-19/REPORT.md)

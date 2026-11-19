@@ -53,9 +53,11 @@ export function CategoryIconTile({
             >
                 <img
                     alt=""
+                    height={size}
                     loading="lazy"
                     src={`/media/logos/${logo}.webp`}
                     style={{ height: size, left: 0, objectFit: "cover", position: "absolute", top: 0, width: size }}
+                    width={size}
                 />
                 <div
                     style={{
