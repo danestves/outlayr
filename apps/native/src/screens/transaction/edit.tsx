@@ -1,3 +1,4 @@
+import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { Stack, useRouter } from "expo-router";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
@@ -53,28 +54,36 @@ function TransactionSheet({ initial }: { initial: Transaction }) {
     const db = useDatabase();
     const readDraft = useRef<(() => TransactionFormDraft) | null>(null);
     const markReviewed = useAtomCommand(markReviewedCommand);
-    const review = useEffectEvent(() => markReviewed({ db, ids: [initial.id] }));
+    const opened = initial.updatedAt.getTime();
+    const version = useRef(opened);
+    const review = useEffectEvent(async () => {
+        const result = await markReviewed({ db, ids: [initial.id] });
+        const reviewed = AsyncResult.isSuccess(result) ? result.value[0] : undefined;
+        if (reviewed?.from.getTime() === opened) {
+            version.current = reviewed.updatedAt.getTime();
+        }
+    });
     // oxlint-disable-next-line outlayr/react-effect-budget -- opening an auto-logged entry is what reviews it, and no handler runs on open
     useEffect(() => {
         if (initial.unreviewed) {
             review();
         }
     }, [initial.unreviewed]);
-    const version = initial.updatedAt.getTime();
     // Only edits made on this version come back: older ones would overwrite whatever changed it.
     const [restore] = useState(() => {
         const held = entryDrafts.take(initial.id);
-        return held?.updatedAt === version ? held.edits : undefined;
+        return held?.updatedAt === opened ? held.edits : undefined;
     });
     const { leave, setDirty } = useDiscardGuard({
         restore: (edits: TransactionFormDraft) => {
             const current = getTransactionById(db, initial.id);
-            const untouched = current != null && current.deletedAt === null && current.updatedAt.getTime() === version;
+            const untouched =
+                current != null && current.deletedAt === null && current.updatedAt.getTime() === version.current;
             if (!untouched) {
                 notifyEditsNotRestored();
                 return;
             }
-            entryDrafts.put(initial.id, { edits, updatedAt: version });
+            entryDrafts.put(initial.id, { edits, updatedAt: version.current });
             router.push(`/transactions/${initial.id}`);
         },
         snapshot: () => readDraft.current?.() ?? null,

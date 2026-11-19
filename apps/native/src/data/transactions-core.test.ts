@@ -888,3 +888,36 @@ describe("transactionsRepo.create with the caller's writes in the same transacti
         await expect(db.select().from(transactions)).resolves.toHaveLength(1);
     });
 });
+
+describe("transactionsRepo.markReviewed", () => {
+    it("moves only the flagged rows' clock past their last write, so a review outranks the flag on the server", async () => {
+        const db = makeDb();
+        const flagged = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, unreviewed: true }));
+        const reviewed = await Effect.runPromise(transactionsRepo.create(db, DRAFT));
+        await db.update(transactions).set({ updatedAt: LONG_AGO });
+        const fasterPeer = new Date(Date.now() + 60_000);
+        await db.update(transactions).set({ updatedAt: fasterPeer }).where(eq(transactions.id, flagged));
+
+        const versions = await Effect.runPromise(transactionsRepo.markReviewed(db, [flagged, reviewed]));
+
+        const rows = await db
+            .select({ id: transactions.id, unreviewed: transactions.unreviewed, updatedAt: transactions.updatedAt })
+            .from(transactions);
+        const byId = new Map(rows.map((row) => [row.id, row]));
+        expect(byId.get(flagged)?.unreviewed).toBe(false);
+        expect(byId.get(flagged)?.updatedAt.getTime()).toBeGreaterThan(fasterPeer.getTime());
+        expect(byId.get(reviewed)?.updatedAt).toStrictEqual(LONG_AGO);
+        expect(versions).toStrictEqual([{ from: fasterPeer, id: flagged, updatedAt: byId.get(flagged)?.updatedAt }]);
+    });
+
+    it("moves the logo candidate with the review, so the backfill still paints the entry", async () => {
+        const db = makeDb();
+        const id = await Effect.runPromise(transactionsRepo.create(db, { ...DRAFT, unreviewed: true }));
+        const later = new Date(Date.now() + 60_000);
+
+        const [reviewed] = await Effect.runPromise(transactionsRepo.markReviewed(db, [id], later));
+
+        expect(reviewed?.updatedAt).toStrictEqual(later);
+        expect((await Effect.runPromise(candidateLogoIds(db))).get(id)).toBe(later.getTime());
+    });
+});

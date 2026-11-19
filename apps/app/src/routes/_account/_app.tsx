@@ -33,7 +33,7 @@ import { prepareLedger } from "@/lib/dashboard-series-ledger";
 import { watchKeyboardInset } from "@/lib/keyboard-inset";
 import type { LedgerBooks } from "@/lib/ledger-books";
 import { ledgerCommitter } from "@/lib/ledger-committer";
-import { ledgerSync, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
+import { ledgerSync, markLanded, preloadLedger, useLedgerBooks } from "@/lib/ledger-db";
 import { serverLedger } from "@/lib/ledger-server";
 import { lightPathOf, viewCovered } from "@/lib/light-views";
 import { viewTransition } from "@/lib/motion";
@@ -209,6 +209,7 @@ function useLiveLedger(userId: string | undefined, onLanded: (outcome: "landed" 
         warmAccountState(queryClient);
         const landing = preloadLedger(dbClient).then(async () => {
             await ledgerSync(dbClient).landed();
+            markLanded(dbClient);
             onLanded("landed");
         });
         landing.catch(async (error) => {
