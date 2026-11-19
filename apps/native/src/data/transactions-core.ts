@@ -324,10 +324,16 @@ export const transactionsRepo = {
                 for (const row of flagged) {
                     const updatedAt = new Date(Math.max(now.getTime(), row.updatedAt.getTime() + 1));
                     yield* refreshLogoCandidate(db, row.id, updatedAt.getTime());
-                    yield* query("update", () =>
-                        db.update(transactions).set({ unreviewed: false, updatedAt }).where(eq(transactions.id, row.id))
+                    const written = yield* query("update", () =>
+                        db
+                            .update(transactions)
+                            .set({ unreviewed: false, updatedAt })
+                            .where(and(eq(transactions.id, row.id), eq(transactions.updatedAt, row.updatedAt)))
+                            .returning({ id: transactions.id })
                     );
-                    reviewed.push({ from: row.updatedAt, id: row.id, updatedAt });
+                    if (written.length > 0) {
+                        reviewed.push({ from: row.updatedAt, id: row.id, updatedAt });
+                    }
                 }
                 return reviewed;
             }),
