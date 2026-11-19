@@ -282,7 +282,12 @@ const unconfigured = Effect.fn("RevenueCat.unconfigured")(function* unconfigured
         const pro = yield* sdk.mirrorEntitlement();
         yield* SubscriptionRef.update(grant, (last) => (last.ticket === ticket ? { ...last, pro } : last));
     });
-    const authChanges = listen(sdk.watchCloudAuthenticated).pipe(Stream.runForEach(() => lookUp((last) => last)));
+    const authChanges = listen(sdk.watchCloudAuthenticated).pipe(
+        Stream.mapEffect((authenticated) => lookUp((last) => (authenticated ? last : { ...last, pro: false })), {
+            concurrency: "unbounded",
+        }),
+        Stream.runDrain
+    );
     return RevenueCat.of({
         eligibleForTrial: () => Effect.succeed(new Set<string>()),
         entitlement: SubscriptionRef.changes(grant).pipe(

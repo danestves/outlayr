@@ -216,6 +216,18 @@ describe("revenueCat", () => {
         cloudAuth.emit(true);
         await flush();
         expect(entitlement()).toStrictEqual({ kind: "pro", mirrored: true, pending: false });
+
+        const lookup = held<boolean>();
+        sdk.mirrorEntitlement.mockReturnValueOnce(Effect.promise(() => lookup.promise));
+        cloudAuth.emit(true);
+        await flush();
+        expect(sdk.mirrorEntitlement).toHaveBeenCalledTimes(2);
+        sdk.cloudAuthenticated.mockReturnValue(false);
+        cloudAuth.emit(false);
+        await flush();
+        lookup.resolve(true);
+        await flush();
+        expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
     });
 
     it("ignores customer info while the sign-in has failed, and retries the sign-in on foreground", async () => {
