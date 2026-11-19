@@ -228,7 +228,7 @@ const dashboardSync = {
                 }),
                 hint: t({
                     en: "Recurring income and expenses you pause on the web, with the entry's details and pause dates, and which recurring suggestions you dismiss",
-                    de: "Wiederkehrende Einnahmen und Ausgaben, die du im Web pausierst, mit den Details des Eintrags und den Pausendaten, und welche wiederkehrenden Vorschläge du ablehnst",
+                    de: "Wiederkehrende Einnahmen und Ausgaben, die du im Web pausierst, mit den Details des Eintrags und den Pausendaten, und welche Vorschläge für wiederkehrende Einträge du ablehnst",
                     es: "Ingresos y gastos recurrentes que pausas en la web, con los detalles del movimiento y las fechas de pausa, y qué sugerencias de recurrentes descartas",
                     fr: "Revenus et dépenses récurrents mis en pause sur le web, avec les détails de l'opération et les dates de pause, et les suggestions de récurrents que vous écartez",
                     pt: "Receitas e despesas recorrentes pausadas na web, com os detalhes do lançamento e as datas da pausa, e quais sugestões de recorrentes você descarta",
