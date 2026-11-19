@@ -15,14 +15,8 @@ import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useDisplayFormat, useMeta, writeSettings } from "@/lib/ledger-settings";
 import { RECURRING_KEY, recurringBookOf, recurringModel } from "@/lib/recurring";
 
-import { SEEN_KEY, isUnread, noticesOf, seenAtOf } from "./notices";
-import type { Notice } from "./notices";
-
-export interface Feed {
-    notices: readonly Notice[];
-    seenAt: number | null;
-    unread: number;
-}
+import { SEEN_KEY, feedOf, isUnread, noticesOf } from "./notices";
+import type { Feed, Notice } from "./notices";
 
 interface Notices {
     /** Null until the full ledger lands: a light one cannot see charges missed further back. */
@@ -48,9 +42,7 @@ export function NoticesProvider({ children }: { children: ReactNode }) {
         if (ledger.opening !== null) {
             return null;
         }
-        const notices = noticesOf(ledger, recurringModel(ledger, book, nameOf));
-        const seenAt = seenAtOf(rawSeen);
-        return { notices, seenAt, unread: notices.filter((notice) => isUnread(notice, seenAt)).length };
+        return feedOf(noticesOf(ledger, recurringModel(ledger, book, nameOf)), rawSeen);
     }, [book, ledger, nameOf, rawSeen]);
     const unread = feed?.unread ?? 0;
     const markSeen = useCallback(() => {
