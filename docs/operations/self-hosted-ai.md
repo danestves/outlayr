@@ -67,7 +67,7 @@ Convex runs in the cloud or on your server, so the base URL must be reachable fr
 ## Before you ship
 
 - Run the live tests from `packages/backend` with your keys exported and `RUN_LIVE_MODEL_TESTS=1`. Receipt and installment tests also need `RECEIPT_PATH` and `INSTALLMENT_PLAN_PATHS`.
-- Most AI features need Pro. Without RevenueCat, grant it on Convex: `npx convex env set PRO_ACCOUNTS all` for every account, or a comma-separated list of emails (`ana@example.com,luis@example.com`), which count only once verified. It applies without a deploy; the app picks it up on its next sign-in or launch.
-- An app build with RevenueCat public keys takes Pro from RevenueCat alone, so `PRO_ACCOUNTS` grants show on the web but not in that app.
+- Most AI features need Pro. Without RevenueCat, grant it on Convex: `npx convex env set PRO_ACCOUNTS all` for every account (only on its own), or a comma-separated list of emails (`ana@example.com,luis@example.com`), which count only once verified. It applies without a deploy; the app picks it up on its next sign-in or launch.
+- `PRO_ACCOUNTS` unlocks the server's Pro checks, so AI features work on the web, but the web plan page still shows no plan. An app build with RevenueCat public keys takes Pro from RevenueCat alone and ignores these grants.
 - The app's permission prompts (`apps/native/app.config.ts`) and the import note (`import.content.ts`) name Anthropic and ElevenLabs; change them to name your providers. The AI consent only says third-party providers.
 - Our privacy policy and terms cover only hosted Outlayr. Your deployment needs your own.

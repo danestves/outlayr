@@ -36,8 +36,10 @@ function watchable<A>() {
 
 const customerInfo = watchable<boolean>();
 const appState = watchable<AppStateStatus>();
+const cloudAuth = watchable<boolean>();
 
 const sdk = {
+    cloudAuthenticated: vi.fn<() => boolean>(),
     configureRevenueCat: () => true,
     eligibleForTrial: vi.fn<(productIds: readonly string[]) => Effect.Effect<Set<string>, PurchasesError>>(),
     getPackages: vi.fn<() => Effect.Effect<PurchasesPackage[], PurchasesError>>(),
@@ -48,6 +50,7 @@ const sdk = {
     refreshProEntitlement: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     restoreAndCheckPro: vi.fn<() => Effect.Effect<boolean, PurchasesError>>(),
     setCustomerProfile: vi.fn<(profile: { email: string; name: string }) => Effect.Effect<void, PurchasesError>>(),
+    watchCloudAuthenticated: cloudAuth.watch,
     watchEntitlement: customerInfo.watch,
 };
 
@@ -117,6 +120,8 @@ describe("revenueCat", () => {
         vi.resetAllMocks();
         customerInfo.listeners.clear();
         appState.listeners.clear();
+        cloudAuth.listeners.clear();
+        sdk.cloudAuthenticated.mockReturnValue(true);
         leaveSession = undefined;
         sdk.eligibleForTrial.mockReturnValue(Effect.succeed(new Set()));
         sdk.getPackages.mockReturnValue(Effect.succeed([]));
@@ -185,19 +190,32 @@ describe("revenueCat", () => {
     });
 
     it("without RevenueCat, takes Pro from the server for whichever account is signed in", async () => {
-        await start("user-30", { ...sdk, configureRevenueCat: () => false });
+        const local = { ...sdk, configureRevenueCat: () => false };
+        await start("user-30", local);
         expect(entitlement()).toStrictEqual({ kind: "pro", mirrored: true, pending: false });
 
-        sdk.mirrorEntitlement.mockReturnValueOnce(Effect.succeed(false));
+        const lookup = held<boolean>();
+        sdk.mirrorEntitlement.mockReturnValueOnce(Effect.promise(() => lookup.promise));
         signIn("user-31");
         await flush();
         expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
-
-        signIn("user-30");
-        await flush();
         signIn(null);
         await flush();
+        lookup.resolve(true);
+        await flush();
         expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
+    });
+
+    it("without RevenueCat, waits for Convex to authenticate before asking the server", async () => {
+        sdk.cloudAuthenticated.mockReturnValue(false);
+        await start("user-32", { ...sdk, configureRevenueCat: () => false });
+        expect(sdk.mirrorEntitlement).not.toHaveBeenCalled();
+        expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
+
+        sdk.cloudAuthenticated.mockReturnValue(true);
+        cloudAuth.emit(true);
+        await flush();
+        expect(entitlement()).toStrictEqual({ kind: "pro", mirrored: true, pending: false });
     });
 
     it("ignores customer info while the sign-in has failed, and retries the sign-in on foreground", async () => {

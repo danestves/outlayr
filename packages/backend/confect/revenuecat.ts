@@ -62,7 +62,7 @@ const grantedPro = Effect.fn("RevenueCat.grantedPro")(function* grantedPro(
     if (accounts.length === 0) {
         return false;
     }
-    if (accounts.includes(EVERYONE)) {
+    if (accounts.length === 1 && accounts[0] === EVERYONE) {
         return true;
     }
     const user = yield* Effect.promise(() =>

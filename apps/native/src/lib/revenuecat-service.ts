@@ -13,6 +13,7 @@ import * as SubscriptionRef from "effect/SubscriptionRef";
 import type { PurchasesPackage } from "react-native-purchases";
 
 import { WatchAppState } from "@/lib/app-events";
+import { isCloudAuthenticated, subscribeCloudAuthenticated } from "@/lib/convex";
 import { mirrorEntitlement } from "@/lib/entitlement-mirror";
 import {
     configureRevenueCat,
@@ -79,7 +80,11 @@ type Watch<A> = (listener: (value: A) => void) => () => void;
 const watchEntitlement: Watch<boolean> = (listener) =>
     onCustomerInfoUpdated((customerInfo) => listener(hasProEntitlement(customerInfo)));
 
+const watchCloudAuthenticated: Watch<boolean> = (listener) =>
+    subscribeCloudAuthenticated(() => listener(isCloudAuthenticated()));
+
 const revenueCatSdk = {
+    cloudAuthenticated: isCloudAuthenticated,
     configureRevenueCat,
     eligibleForTrial,
     getPackages,
@@ -90,6 +95,7 @@ const revenueCatSdk = {
     refreshProEntitlement,
     restoreAndCheckPro,
     setCustomerProfile,
+    watchCloudAuthenticated,
     watchEntitlement,
 };
 
@@ -254,26 +260,42 @@ const listen = <A>(watch: Watch<A>): Stream.Stream<A> =>
 const UNCONFIGURED: Entitlement = { kind: "unconfigured" };
 const GRANTED: Entitlement = { kind: "pro", mirrored: true, pending: false };
 
+interface Grant {
+    readonly account: string | null;
+    readonly pro: boolean;
+    readonly ticket: number;
+}
+
 const unconfigured = Effect.fn("RevenueCat.unconfigured")(function* unconfigured(
     sdk: typeof revenueCatSdk,
     run: Effect.Effect<void>
 ) {
-    const granted = yield* SubscriptionRef.make<Entitlement>(UNCONFIGURED);
+    const grant = yield* SubscriptionRef.make<Grant>({ account: null, pro: false, ticket: 0 });
+    const lookUp = Effect.fn("RevenueCat.lookUpGrant")(function* lookUp(next: (last: Grant) => Grant) {
+        const { account, ticket } = yield* SubscriptionRef.updateAndGet(grant, (last) => ({
+            ...next(last),
+            ticket: last.ticket + 1,
+        }));
+        if (account === null || !sdk.cloudAuthenticated()) {
+            return;
+        }
+        const pro = yield* sdk.mirrorEntitlement();
+        yield* SubscriptionRef.update(grant, (last) => (last.ticket === ticket ? { ...last, pro } : last));
+    });
+    const authChanges = listen(sdk.watchCloudAuthenticated).pipe(Stream.runForEach(() => lookUp((last) => last)));
     return RevenueCat.of({
         eligibleForTrial: () => Effect.succeed(new Set<string>()),
-        entitlement: SubscriptionRef.changes(granted).pipe(Stream.changes),
-        follow: ({ accountId }) =>
-            accountId === null
-                ? SubscriptionRef.set(granted, UNCONFIGURED)
-                : sdk
-                      .mirrorEntitlement()
-                      .pipe(Effect.flatMap((pro) => SubscriptionRef.set(granted, pro ? GRANTED : UNCONFIGURED))),
+        entitlement: SubscriptionRef.changes(grant).pipe(
+            Stream.map(({ pro }) => (pro ? GRANTED : UNCONFIGURED)),
+            Stream.changes
+        ),
+        follow: ({ accountId }) => lookUp(() => ({ account: accountId, pro: false, ticket: 0 })),
         getPackages: () => Effect.succeed([]),
         mirror: () => sdk.mirrorEntitlement(),
         purchase: () => Effect.succeed("cancelled"),
         refresh: () => Effect.succeed(false),
         restore: () => Effect.succeed(false),
-        run: () => run,
+        run: () => Effect.all([run, authChanges], { concurrency: "unbounded", discard: true }),
     });
 });
 
