@@ -305,13 +305,14 @@ export const transactionsRepo = {
 
     markReviewed: Effect.fn("Transactions.markReviewed")(function* markReviewed(db: Database, ids: readonly string[]) {
         if (ids.length === 0) {
-            return;
+            return [];
         }
-        yield* query("update", () =>
+        return yield* query("update", () =>
             db
                 .update(transactions)
-                .set({ unreviewed: false, updatedAt: new Date() })
+                .set({ unreviewed: false, updatedAt: sql`max(${Date.now()}, ${transactions.updatedAt} + 1)` })
                 .where(and(inArray(transactions.id, [...ids]), eq(transactions.unreviewed, true)))
+                .returning({ id: transactions.id, updatedAt: transactions.updatedAt })
         );
     }),
 
