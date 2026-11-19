@@ -91,6 +91,42 @@ export function guideUpdated(slug: string): Date {
     return checked > GUIDES_UPDATED ? checked : GUIDES_UPDATED;
 }
 
+export const GUIDES_PUBLISHED = {
+    "50-30-20-rule": new Date(Date.UTC(2026, 10, 17)),
+    "ai-expense-tracker": new Date(Date.UTC(2026, 9, 23)),
+    "apple-pay-expense-tracker": new Date(Date.UTC(2026, 9, 3)),
+    "best-budget-apps": new Date(Date.UTC(2026, 9, 23)),
+    "best-budget-apps-canada": new Date(Date.UTC(2026, 10, 7)),
+    "best-budget-apps-france": new Date(Date.UTC(2026, 10, 7)),
+    "best-expense-tracker-apps": new Date(Date.UTC(2026, 9, 9)),
+    "best-expense-tracker-apps-brazil": new Date(Date.UTC(2026, 10, 7)),
+    "best-expense-tracker-apps-latin-america": new Date(Date.UTC(2026, 10, 3)),
+    "best-multi-currency-budget-apps": new Date(Date.UTC(2026, 10, 17)),
+    "best-open-source-expense-tracker-apps": new Date(Date.UTC(2026, 9, 20)),
+    "best-subscription-tracker-apps": new Date(Date.UTC(2026, 9, 9)),
+    "budget-app-without-bank-account": new Date(Date.UTC(2026, 10, 16)),
+    "budget-categories": new Date(Date.UTC(2026, 10, 17)),
+    "budget-planner": new Date(Date.UTC(2026, 9, 7)),
+    "cancel-app-store-subscription": new Date(Date.UTC(2026, 10, 17)),
+    "cancel-chatgpt-subscription": new Date(Date.UTC(2026, 10, 17)),
+    "cancel-google-play-subscription": new Date(Date.UTC(2026, 10, 17)),
+    "expense-tracker-template": new Date(Date.UTC(2026, 9, 9)),
+    "expense-tracker-venezuela": new Date(Date.UTC(2026, 10, 16)),
+    "how-much-do-budget-apps-cost": new Date(Date.UTC(2026, 10, 17)),
+    "how-to-cancel-a-subscription": new Date(Date.UTC(2026, 10, 17)),
+    "how-to-pay-cashea": new Date(Date.UTC(2026, 10, 7)),
+    "how-to-track-expenses": new Date(Date.UTC(2026, 9, 23)),
+    "mint-alternative": new Date(Date.UTC(2026, 9, 7)),
+    "multi-currency-expense-tracker": new Date(Date.UTC(2026, 9, 3)),
+    "receipt-scanner": new Date(Date.UTC(2026, 9, 3)),
+    "subscription-tracker": new Date(Date.UTC(2026, 9, 7)),
+    "track-money-sent-home": new Date(Date.UTC(2026, 10, 3)),
+    "voice-expense-tracker": new Date(Date.UTC(2026, 9, 9)),
+    "what-is-rocket-money": new Date(Date.UTC(2026, 10, 17)),
+    "ynab-alternatives": new Date(Date.UTC(2026, 9, 23)),
+} satisfies Record<keyof Answers["guides"], Date>;
+
+export const HELP_PUBLISHED = new Date(Date.UTC(2026, 10, 17));
 export const HELP_UPDATED = new Date(Date.UTC(2026, 10, 17));
 
 export const LEGAL_DAYS = {

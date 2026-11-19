@@ -160,7 +160,13 @@ const respond = Effect.fn("Server.respond")(function* respond(request: Request, 
     const wanted = negotiateContent(request.headers.get("accept") ?? undefined);
     const bodiless = request.method === "GET" || request.method === "HEAD";
     if (wanted !== "markdown" || !bodiless) {
-        return yield* Effect.promise(async () => handler.fetch(request, opts));
+        const response = yield* Effect.promise(async () => handler.fetch(request, opts));
+        if (!response.headers.get("content-type")?.startsWith("text/html") || response.headers.has("cache-control")) {
+            return response;
+        }
+        const headers = new Headers(response.headers);
+        headers.set("cache-control", "private, no-cache");
+        return new Response(response.body, { headers, status: response.status, statusText: response.statusText });
     }
     const htmlHeaders = new Headers(request.headers);
     htmlHeaders.set("accept", "text/html");

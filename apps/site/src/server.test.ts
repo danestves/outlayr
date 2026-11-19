@@ -58,6 +58,21 @@ it.each(["text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8", "*/*
     }
 );
 
+it("keeps a page drawn for the visitor's country out of shared caches, unless the route set its own policy", async () => {
+    const page = await server.fetch(new Request("https://tryoutlayr.com/", { headers: { accept: "text/html" } }));
+    handlerFetch.mockImplementation(
+        async () =>
+            new Response(PAGE, {
+                headers: { "cache-control": "public, max-age=3600", "content-type": "text/html; charset=utf-8" },
+            })
+    );
+    const cached = await server.fetch(new Request("https://tryoutlayr.com/", { headers: { accept: "text/html" } }));
+
+    expect(page.headers.get("cache-control")).toBe("private, no-cache");
+    expect(await page.text()).toBe(PAGE);
+    expect(cached.headers.get("cache-control")).toBe("public, max-age=3600");
+});
+
 it("puts the page's author and last update in the markdown front matter", async () => {
     const graph = JSON.stringify({
         "@graph": [{ "@id": "https://tryoutlayr.com/about#daniel-esteves", "@type": "Person", name: "Daniel Esteves" }],

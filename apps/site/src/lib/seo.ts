@@ -89,6 +89,8 @@ function billed(price: string, billingDuration: string) {
     return { "@type": "UnitPriceSpecification", billingDuration, price, priceCurrency: "USD" };
 }
 
+const IN_STOCK = "https://schema.org/InStock";
+
 const PRO_OFFERS = [
     { name: "Outlayr Pro, monthly", price: "7.99", priceSpecification: billed("7.99", "P1M") },
     { name: "Outlayr Pro, yearly", price: "49.99", priceSpecification: billed("49.99", "P1Y") },
@@ -97,11 +99,20 @@ const PRO_OFFERS = [
 
 function proOffers(locale: Locale) {
     const url = pageUrl("/pricing", locale);
-    return PRO_OFFERS.map((offer) => ({ "@type": "Offer", priceCurrency: "USD", url, ...offer }));
+    return PRO_OFFERS.map((offer) => ({
+        "@type": "Offer",
+        availability: IN_STOCK,
+        priceCurrency: "USD",
+        url,
+        ...offer,
+    }));
 }
 
 function offers(locale: Locale) {
-    return [{ "@type": "Offer", name: "Outlayr", price: "0", priceCurrency: "USD" }, ...proOffers(locale)];
+    return [
+        { "@type": "Offer", availability: IN_STOCK, name: "Outlayr", price: "0", priceCurrency: "USD" },
+        ...proOffers(locale),
+    ];
 }
 
 export function proProduct(locale: Locale, description: string) {
@@ -180,7 +191,7 @@ export function article(
         datePublished,
         description,
         headline,
-    }: { dateModified: Date; datePublished?: Date; description: string; headline: string }
+    }: { dateModified: Date; datePublished: Date; description: string; headline: string }
 ) {
     const url = pageUrl(path, locale);
     return {
@@ -189,7 +200,7 @@ export function article(
         "@type": "Article",
         author: { "@id": FOUNDER_ID },
         dateModified: dateModified.toISOString().slice(0, 10),
-        datePublished: datePublished?.toISOString().slice(0, 10),
+        datePublished: datePublished.toISOString().slice(0, 10),
         description,
         headline: headline.replace(TRAILING_PERIOD, ""),
         image: `${SITE_URL}${LANGUAGES[locale].image}`,
