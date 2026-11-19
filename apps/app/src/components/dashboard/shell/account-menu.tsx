@@ -90,18 +90,36 @@ function CardAvatar({ name, size }: { name: string; size: number }) {
     );
 }
 
-/** Opening the panel moves the read mark, so it keeps the mark it opened with to show what was new. */
+interface Seen {
+    seenAt: number | null;
+    unread: number;
+}
+
+/**
+ * Opening the panel moves the read mark, so it keeps the mark it opened with to show what was new.
+ * Opened before the full ledger lands, it shows the live mark and moves it on close instead.
+ */
 function useNoticesOpen() {
     const { feed, markSeen } = useNotices();
-    const [opened, setOpened] = useState<{ seenAt: number | null; unread: number } | null>(null);
+    const [opened, setOpened] = useState<Seen | "early" | null>(null);
+    const live: Seen = { seenAt: feed?.seenAt ?? null, unread: feed?.unread ?? 0 };
     return {
-        close: () => setOpened(null),
+        close: () => {
+            if (opened === "early") {
+                markSeen();
+            }
+            setOpened(null);
+        },
         open: () => {
-            setOpened({ seenAt: feed?.seenAt ?? null, unread: feed?.unread ?? 0 });
+            if (feed === null) {
+                setOpened("early");
+                return;
+            }
+            setOpened(live);
             markSeen();
         },
-        opened,
-        unread: feed?.unread ?? 0,
+        opened: opened === "early" ? live : opened,
+        unread: live.unread,
     };
 }
 
