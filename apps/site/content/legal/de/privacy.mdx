@@ -210,6 +210,10 @@ Anthropic ist das US-Unternehmen, das die KI-Modelle Claude entwickelt. ElevenLa
 
 Wenn eine Anfrage an Anthropic fehlschlägt, kann das Fehlerprotokoll unseres Servers den beteiligten Händlernamen enthalten, damit wir das Problem finden können. Es enthält nie den Text einer Benachrichtigung.
 
+### Outlayr bei anderen Betreibern
+
+Der Code von Outlayr ist Open Source, daher kann ihn jeder auf eigenen Servern betreiben. Diese Datenschutzerklärung gilt nur für das Outlayr, das wir betreiben: die Apps im App Store und bei Google Play, diese Website und unsere Server, die Anthropic und ElevenLabs wie oben beschrieben nutzen. Wenn du eine Installation nutzt, die jemand anderes betreibt, ist dieser Betreiber dafür verantwortlich: Er wählt ihre KI- und Spracherkennungsanbieter, und es gelten seine Bedingungen und seine Datenschutzerklärung, nicht unsere. Welche Anbieter der Code von Outlayr unterstützt, steht in seinem [öffentlichen Quellcode](https://github.com/danestves/outlayr/tree/main/packages/ai/src/providers).
+
 ### Protokolle von KI-Anfragen
 
 Nach jeder Anfrage an Anthropic sendet unser Server PostHog einen Datensatz dazu: die Funktion, das Modell, wie viele Tokens es verbraucht hat und was es gekostet hat, wie lange es gedauert hat, ob es fehlgeschlagen ist, und die Namen der Werkzeuge des Modells, die es genutzt hat, etwa die Websuche. Datensätze der Spracheingabe enthalten außerdem eine ID für das Gespräch, damit seine Beiträge zusammenbleiben. Ein Datensatz enthält nie, was du gesagt hast, das Foto oder den Screenshot, den Text einer Benachrichtigung oder anderen Text, der an Anthropic gesendet oder von dort empfangen wurde. Wenn **Einstellungen › Analysedaten teilen** für das Gerät eingeschaltet ist, das die Anfrage stellt, enthält der Datensatz deine Konto-ID, damit wir sehen können, was KI-Funktionen pro Konto kosten. Wenn es ausgeschaltet ist, enthält der Datensatz eine zufällige ID, die nicht mit dir verknüpft ist.
