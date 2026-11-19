@@ -1,4 +1,5 @@
 import { createRouter } from "@tanstack/react-router";
+import { getGlobalStartContext } from "@tanstack/react-start";
 
 import { registerAgentTools } from "@/lib/register-agent-tools";
 
@@ -10,6 +11,7 @@ export function getRouter() {
         routeTree,
         scrollRestoration: true,
         scrollRestorationBehavior: "instant",
+        ssr: { nonce: getGlobalStartContext()?.nonce },
     });
     if (typeof document !== "undefined") {
         registerAgentTools(router);

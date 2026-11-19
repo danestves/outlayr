@@ -7,6 +7,29 @@ const TRAILING_SLASH = /(.)\/+$/u;
 const SERVER_FN_PREFIX = "/_serverFn/";
 const APP_PAGE = /^\/(?:app(?:\/|$)|login$|connect$)/u;
 const APP_PREFIX = /^\/app/u;
+const ANALYTICS_ORIGIN = "https://relay.tryoutlayr.com";
+
+function contentSecurityPolicy(nonce: string) {
+    return [
+        "default-src 'self'",
+        `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' ${ANALYTICS_ORIGIN}`,
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data:",
+        "font-src 'self'",
+        `connect-src 'self' ${ANALYTICS_ORIGIN}`,
+        "frame-ancestors 'self'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "object-src 'none'",
+    ].join("; ");
+}
+
+const scriptNonce = createMiddleware().server(async ({ next: render }) => {
+    const nonce = crypto.randomUUID();
+    const result = await render({ context: { nonce } });
+    result.response.headers.set("content-security-policy", contentSecurityPolicy(nonce));
+    return result;
+});
 
 const canonicalUrl = createMiddleware().server(({ next, request }) => {
     const url = new URL(request.url);
@@ -28,4 +51,10 @@ const canonicalUrl = createMiddleware().server(({ next, request }) => {
     throw redirect({ href: `${origin}${path}${url.search}`, statusCode: 301 });
 });
 
-export const startInstance = createStart(() => ({ requestMiddleware: [canonicalUrl] }));
+export const startInstance = createStart(() => ({ requestMiddleware: [scriptNonce, canonicalUrl] }));
+
+declare module "@tanstack/react-router" {
+    interface Register {
+        config: typeof startInstance;
+    }
+}

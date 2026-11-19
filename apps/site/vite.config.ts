@@ -9,12 +9,12 @@ import { intlayer } from "vite-intlayer";
 import { defineConfig } from "vite-plus";
 
 const SECURITY_HEADERS = {
-    "content-security-policy": "frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
     "cross-origin-opener-policy": "same-origin",
     "permissions-policy": "camera=(), geolocation=(), microphone=()",
     "referrer-policy": "strict-origin-when-cross-origin",
-    "strict-transport-security": "max-age=31536000",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
     "x-content-type-options": "nosniff",
+    "x-frame-options": "SAMEORIGIN",
 };
 const LOADER_SPLIT_ROUTES = new Set([
     "/{-$locale}/compare/",
