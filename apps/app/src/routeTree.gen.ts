@@ -16,6 +16,7 @@ import { Route as AccountConnectRouteImport } from './routes/_account/connect'
 import { Route as AccountLoginRouteImport } from './routes/_account/login'
 import { Route as PhotosSplatRouteImport } from './routes/photos/$'
 import { Route as AccountAppIndexRouteImport } from './routes/_account/_app.index'
+import { Route as AccountAppSplatRouteImport } from './routes/_account/_app.$'
 import { Route as AccountAppImportRouteImport } from './routes/_account/_app.import'
 import { Route as AccountAppInsightsRouteImport } from './routes/_account/_app.insights'
 import { Route as AccountAppOnboardingRouteImport } from './routes/_account/_app.onboarding'
@@ -95,6 +96,11 @@ const PhotosSplatRoute = PhotosSplatRouteImport.update({
 const AccountAppIndexRoute = AccountAppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AccountAppRoute,
+} as any)
+const AccountAppSplatRoute = AccountAppSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => AccountAppRoute,
 } as any)
 const AccountAppImportRoute = AccountAppImportRouteImport.update({
@@ -360,6 +366,7 @@ export interface FileRoutesByFullPath {
   '/connect': typeof AccountConnectRoute
   '/login': typeof AccountLoginRoute
   '/photos/$': typeof PhotosSplatRoute
+  '/$': typeof AccountAppSplatRoute
   '/import': typeof AccountAppImportRouteWithChildren
   '/insights': typeof AccountAppInsightsRouteWithChildren
   '/onboarding': typeof AccountAppOnboardingRoute
@@ -414,6 +421,7 @@ export interface FileRoutesByTo {
   '/connect': typeof AccountConnectRoute
   '/login': typeof AccountLoginRoute
   '/photos/$': typeof PhotosSplatRoute
+  '/$': typeof AccountAppSplatRoute
   '/onboarding': typeof AccountAppOnboardingRoute
   '/recurring': typeof AccountAppRecurringRoute
   '/rules': typeof AccountAppRulesRoute
@@ -467,6 +475,7 @@ export interface FileRoutesById {
   '/_account/connect': typeof AccountConnectRoute
   '/_account/login': typeof AccountLoginRoute
   '/photos/$': typeof PhotosSplatRoute
+  '/_account/_app/$': typeof AccountAppSplatRoute
   '/_account/_app/import': typeof AccountAppImportRouteWithChildren
   '/_account/_app/insights': typeof AccountAppInsightsRouteWithChildren
   '/_account/_app/onboarding': typeof AccountAppOnboardingRoute
@@ -524,6 +533,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/login'
     | '/photos/$'
+    | '/$'
     | '/import'
     | '/insights'
     | '/onboarding'
@@ -578,6 +588,7 @@ export interface FileRouteTypes {
     | '/connect'
     | '/login'
     | '/photos/$'
+    | '/$'
     | '/onboarding'
     | '/recurring'
     | '/rules'
@@ -630,6 +641,7 @@ export interface FileRouteTypes {
     | '/_account/connect'
     | '/_account/login'
     | '/photos/$'
+    | '/_account/_app/$'
     | '/_account/_app/import'
     | '/_account/_app/insights'
     | '/_account/_app/onboarding'
@@ -736,6 +748,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AccountAppIndexRouteImport
+      parentRoute: typeof AccountAppRoute
+    }
+    '/_account/_app/$': {
+      id: '/_account/_app/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof AccountAppSplatRouteImport
       parentRoute: typeof AccountAppRoute
     }
     '/_account/_app/import': {
@@ -1150,6 +1169,7 @@ const AccountAppSettingsRouteWithChildren =
   AccountAppSettingsRoute._addFileChildren(AccountAppSettingsRouteChildren)
 
 interface AccountAppRouteChildren {
+  AccountAppSplatRoute: typeof AccountAppSplatRoute
   AccountAppImportRoute: typeof AccountAppImportRouteWithChildren
   AccountAppInsightsRoute: typeof AccountAppInsightsRouteWithChildren
   AccountAppOnboardingRoute: typeof AccountAppOnboardingRoute
@@ -1175,6 +1195,7 @@ interface AccountAppRouteChildren {
 }
 
 const AccountAppRouteChildren: AccountAppRouteChildren = {
+  AccountAppSplatRoute: AccountAppSplatRoute,
   AccountAppImportRoute: AccountAppImportRouteWithChildren,
   AccountAppInsightsRoute: AccountAppInsightsRouteWithChildren,
   AccountAppOnboardingRoute: AccountAppOnboardingRoute,
