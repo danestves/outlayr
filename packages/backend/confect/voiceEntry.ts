@@ -1,33 +1,25 @@
-import {
-    Agent,
-    createTool,
-    getThreadMetadata,
-    listUIMessages,
-    stepCountIs,
-    syncStreams,
-    vStreamArgs,
-} from "@convex-dev/agent";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { transcribe } from "@outlayr/ai/speech";
 import type { SpeechModel } from "@outlayr/ai/speech";
-import type { LanguageModel } from "ai";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
-import type { ObjectType } from "convex/values";
+import type { Infer, ObjectType } from "convex/values";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
-import { components } from "../convex/_generated/api";
+import { components, internal } from "../convex/_generated/api";
+import type { Doc, Id } from "../convex/_generated/dataModel";
 import { query } from "../convex/_generated/server";
 import type { ActionCtx, MutationCtx, QueryCtx } from "../convex/_generated/server";
 import { liveIdentity } from "./lib/auth";
 import { categoryChoiceLines, placeCategory } from "./lib/categoryChoice";
 import { clampDate, draftCurrency, MAX_NAME_LENGTH, normalizeDomain, pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
-import { modelSchema } from "./lib/modelCall";
 import { runTransactionEdge } from "./lib/runEdge";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
+import { QUOTE_FIELDS, RecurrenceUnit } from "./lib/voiceDraft";
+import type { ProposedDraft, VoiceDraft, VoiceQuote, VoiceRecurrence } from "./lib/voiceDraft";
 import type { SpeakResult, SpeakStatus } from "./voiceEntry.spec";
 
 const MAX_MERCHANT_LENGTH = 80;
@@ -52,57 +44,6 @@ export const PROPOSE_DRAFT_TOOL = "proposeDraft";
 
 type Heard = { text: string } | { error: "empty" | "provider" };
 
-/** `ai` still admits older model specs in `LanguageModel`; the agent takes the current one only. */
-type AgentModel = Extract<LanguageModel, { specificationVersion: "v4" }>;
-
-interface VoiceDraftBase {
-    amount: number;
-    /** ISO 4217, upper case. Null means the ledger's own currency. */
-    currency: string | null;
-    /** `YYYY-MM-DD` in the device's local calendar. */
-    date: string;
-    details: string | null;
-}
-
-export type RecurrenceUnit = "day" | "week" | "month" | "year";
-
-export interface VoiceRecurrence {
-    every: number;
-    unit: RecurrenceUnit;
-}
-
-export interface VoiceEntryDraft extends VoiceDraftBase {
-    accountName: string | null;
-    categoryName: string | null;
-    domain: string | null;
-    income: boolean;
-    kind: "entry";
-    parentCategoryName?: string | null;
-    merchant: string;
-    recurrence: VoiceRecurrence | null;
-}
-
-export interface VoiceTransferDraft extends VoiceDraftBase {
-    fromAccountName: string | null;
-    kind: "transfer";
-    toAccountName: string | null;
-}
-
-export type VoiceDraft = VoiceEntryDraft | VoiceTransferDraft;
-
-const QUOTE_FIELDS = ["amount", "merchant", "category", "account", "date", "schedule"] as const;
-
-export interface VoiceQuote {
-    field: (typeof QUOTE_FIELDS)[number];
-    text: string;
-}
-
-/** A null `draft` means the words held no transaction. */
-export interface ProposedDraft {
-    draft: VoiceDraft | null;
-    quotes?: VoiceQuote[];
-}
-
 export function failure(status: Exclude<SpeakStatus, "ok">, transcript: string | null = null): SpeakResult {
     return { order: null, status, transcript };
 }
@@ -119,20 +60,16 @@ export const ModelOutput = Schema.Struct({
     found: Schema.Boolean,
     kind: Schema.Literals(["expense", "income", "transfer"]),
     merchant: Schema.NullOr(Schema.String),
-    // Optional: a required field the model skips would fail the whole tool call.
+    // Optional: a required field the model skips would fail the whole answer.
     parentCategoryName: Schema.optionalKey(Schema.NullOr(Schema.String)),
     quotes: Schema.optionalKey(
         Schema.Array(Schema.Struct({ field: Schema.Literals(QUOTE_FIELDS), text: Schema.String }))
     ),
-    recurrence: Schema.NullOr(
-        Schema.Struct({ every: Schema.Finite, unit: Schema.Literals(["day", "week", "month", "year"]) })
-    ),
+    recurrence: Schema.NullOr(Schema.Struct({ every: Schema.Finite, unit: RecurrenceUnit })),
     toAccountName: Schema.NullOr(Schema.String),
 });
 
 export type ModelOutput = typeof ModelOutput.Type;
-
-const modelOutputSchema = modelSchema(ModelOutput);
 
 // Unsharded, a global counter is one hot document that throws OCC write conflicts under concurrency.
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
@@ -161,7 +98,7 @@ export function buildPrompt(args: LedgerContext): string {
     const weekday = weekdayOf(args.today);
     return [
         'A person speaks entries for their expense tracker, one sentence at a time. Each sentence is either a new transaction or a correction to the draft you proposed just before it ("no, that was yesterday", "make it groceries", "it was fifty, not fifteen").',
-        `Always answer by calling ${PROPOSE_DRAFT_TOOL} exactly once, with the complete draft: for a correction, re-issue the previous draft with only the corrected fields changed.`,
+        "Always answer with the complete draft for the latest sentence: for a correction, re-issue the previous draft with only the corrected fields changed.",
         `Today is ${args.today}${weekday ? ` (${weekday})` : ""}. Resolve relative dates ("yesterday", "last Friday", "this morning") against it and answer as YYYY-MM-DD; with no date mentioned, answer today.`,
         `The ledger's currency is ${args.currency}. Set currency only when a different one is said outright (as a code, a name or a symbol); otherwise null.`,
         "amount is the number of major units spoken, always positive.",
@@ -243,21 +180,19 @@ export function normalizeQuotes(quotes: ModelOutput["quotes"], sentence: string)
         .slice(0, MAX_QUOTES);
 }
 
-export function voiceAgent(model: AgentModel, context: LedgerContext, sentence: string) {
-    const proposeDraft = createTool({
-        description: "Propose the transaction the person just described, or the corrected version of the last draft.",
-        execute: (_ctx, input): Promise<ProposedDraft> => {
-            const draft = normalizeDraft(input, context);
-            return Promise.resolve({ draft, quotes: draft === null ? [] : normalizeQuotes(input.quotes, sentence) });
-        },
-        inputSchema: modelOutputSchema,
-    });
-    return new Agent(components.agent, {
-        languageModel: model,
-        name: "voice-entry",
-        stopWhen: stepCountIs(1),
-        tools: { [PROPOSE_DRAFT_TOOL]: proposeDraft },
-    });
+export function proposeDraft(output: ModelOutput, context: LedgerContext, sentence: string): ProposedDraft {
+    const draft = normalizeDraft(output, context);
+    return { draft, quotes: draft === null ? [] : normalizeQuotes(output.quotes, sentence) };
+}
+
+export function turnMessages(history: readonly { readonly reply: string; readonly said: string }[], sentence: string) {
+    return [
+        ...history.flatMap((turn) => [
+            { content: turn.said, role: "user" as const },
+            { content: turn.reply, role: "assistant" as const },
+        ]),
+        { content: sentence, role: "user" as const },
+    ];
 }
 
 export const transcribeClip = Effect.fn("VoiceEntry.transcribeClip")(
@@ -275,6 +210,19 @@ export const transcribeClip = Effect.fn("VoiceEntry.transcribeClip")(
     })
 );
 
+const threadIn = (db: QueryCtx["db"], threadId: string) =>
+    Effect.promise(async () => {
+        const id = db.normalizeId("voiceThreads", threadId);
+        return id === null ? null : await db.get(id);
+    });
+
+export const threadOwner = Effect.fn("VoiceEntry.threadOwner")(function* threadOwner(
+    db: QueryCtx["db"],
+    threadId: string
+) {
+    return (yield* threadIn(db, threadId))?.userId ?? null;
+});
+
 // Compared on `tokenIdentifier`, not the bare `subject`: two issuers can hand out the same subject.
 export const ownsThread = Effect.fn("VoiceEntry.ownsThread")(function* ownsThread(
     ctx: QueryCtx | MutationCtx | ActionCtx,
@@ -284,32 +232,173 @@ export const ownsThread = Effect.fn("VoiceEntry.ownsThread")(function* ownsThrea
     if (identity === null) {
         return null;
     }
-    const thread = yield* Effect.promise(() => getThreadMetadata(ctx, components.agent, { threadId })).pipe(
-        Effect.catchDefect(() => Effect.succeed(null))
-    );
-    return thread?.userId === identity.tokenIdentifier ? identity.tokenIdentifier : null;
+    const owner =
+        "db" in ctx
+            ? yield* threadOwner(ctx.db, threadId)
+            : yield* Effect.promise((): Promise<string | null> =>
+                  ctx.runQuery(internal.voiceEntry.threadOwner, { threadId })
+              );
+    return owner === identity.tokenIdentifier ? owner : null;
 });
+
+const latestTurns = (db: QueryCtx["db"], threadId: Id<"voiceThreads">, count: number) =>
+    Effect.promise(() =>
+        db
+            .query("voiceTurns")
+            .withIndex("by_threadId_and_order", (q) => q.eq("threadId", threadId))
+            .order("desc")
+            .take(count)
+    ).pipe(Effect.map((turns) => turns.toReversed()));
+
+export const beginTurn = Effect.fn("VoiceEntry.beginTurn")(function* beginTurn(
+    ctx: MutationCtx,
+    turn: { readonly said: string; readonly threadId: string }
+) {
+    const thread = yield* threadIn(ctx.db, turn.threadId);
+    if (thread === null) {
+        return null;
+    }
+    const recent = yield* latestTurns(ctx.db, thread._id, CONTEXT_TURNS);
+    const order = (recent.at(-1)?.order ?? -1) + 1;
+    const turnId = yield* Effect.promise(() =>
+        ctx.db.insert("voiceTurns", { order, said: turn.said, threadId: thread._id })
+    );
+    const history = recent.flatMap(({ reply, said }) => (reply === undefined ? [] : [{ reply, said }]));
+    return { history, order, turnId };
+});
+
+export const clearStreamCredits = Effect.fn("VoiceEntry.clearStreamCredits")(function* clearStreamCredits(
+    db: MutationCtx["db"],
+    threadId: string
+) {
+    const credits = yield* Effect.promise(() =>
+        db
+            .query("voiceStreamCredits")
+            .withIndex("by_threadId", (q) => q.eq("threadId", threadId))
+            .take(MAX_STREAM_CREDITS)
+    );
+    for (const credit of credits) {
+        yield* Effect.promise(() => db.delete(credit._id));
+    }
+});
+
+export const DELETE_BATCH = 200;
+
+export const deleteThreadBatch = Effect.fn("VoiceEntry.deleteThreadBatch")(function* deleteThreadBatch(
+    db: MutationCtx["db"],
+    threadId: Id<"voiceThreads">
+) {
+    const turns = yield* Effect.promise(() =>
+        db
+            .query("voiceTurns")
+            .withIndex("by_threadId_and_order", (q) => q.eq("threadId", threadId))
+            .take(DELETE_BATCH)
+    );
+    for (const turn of turns) {
+        yield* Effect.promise(() => db.delete(turn._id));
+    }
+    if (turns.length === DELETE_BATCH) {
+        return false;
+    }
+    yield* Effect.promise(() => db.delete(threadId));
+    yield* clearStreamCredits(db, threadId);
+    return true;
+});
+
+export const TURNS_SHOWN = 40;
+
+export const readTurns = Effect.fn("VoiceEntry.readTurns")(function* readTurns(ctx: QueryCtx, threadId: string) {
+    const thread = yield* threadIn(ctx.db, threadId);
+    if (thread === null || (yield* ownsThread(ctx, threadId)) === null) {
+        return [];
+    }
+    const turns = yield* latestTurns(ctx.db, thread._id, TURNS_SHOWN);
+    return turns.map(({ order, proposed, said }) => ({ order, proposed: proposed ?? null, said }));
+});
+
+export function uiMessagesOf(turn: Doc<"voiceTurns">) {
+    const said = {
+        _creationTime: turn._creationTime,
+        id: `${turn._id}-said`,
+        key: `${turn.threadId}-${turn.order}-0`,
+        order: turn.order,
+        parts: [{ state: "done" as const, text: turn.said, type: "text" as const }],
+        role: "user" as const,
+        status: "success" as const,
+        stepOrder: 0,
+        text: turn.said,
+    };
+    if (turn.proposed === undefined) {
+        return [said];
+    }
+    const answer = {
+        _creationTime: turn._creationTime,
+        id: `${turn._id}-answer`,
+        key: `${turn.threadId}-${turn.order}-1`,
+        order: turn.order,
+        parts: [
+            {
+                output: turn.proposed,
+                state: "output-available" as const,
+                toolCallId: turn._id,
+                type: `tool-${PROPOSE_DRAFT_TOOL}` as const,
+            },
+        ],
+        role: "assistant" as const,
+        status: "success" as const,
+        stepOrder: 1,
+        text: "",
+    };
+    return [said, answer];
+}
+
+const streamArgs = v.optional(
+    v.union(
+        v.object({ kind: v.literal("list"), startOrder: v.optional(v.number()) }),
+        v.object({
+            cursors: v.array(v.object({ cursor: v.number(), streamId: v.string() })),
+            kind: v.literal("deltas"),
+        })
+    )
+);
+
+export function noStreams(args: Infer<typeof streamArgs>) {
+    if (args === undefined) {
+        return undefined;
+    }
+    return args.kind === "list" ? { kind: "list" as const, messages: [] } : { deltas: [], kind: "deltas" as const };
+}
 
 const listTurnsArgs = {
     paginationOpts: paginationOptsValidator,
-    streamArgs: vStreamArgs,
+    streamArgs,
     threadId: v.string(),
 };
 
-const readTurns = Effect.fn("VoiceEntry.listTurns")(function* readTurns(
+const readUiTurns = Effect.fn("VoiceEntry.listTurns")(function* readUiTurns(
     ctx: QueryCtx,
     args: ObjectType<typeof listTurnsArgs>
 ) {
-    if ((yield* ownsThread(ctx, args.threadId)) === null) {
-        return { continueCursor: "", isDone: true, page: [], streams: undefined };
+    const streams = noStreams(args.streamArgs);
+    if (args.paginationOpts.numItems === 0) {
+        return { continueCursor: "", isDone: true, page: [], streams };
     }
-    const paginated = yield* Effect.promise(() => listUIMessages(ctx, components.agent, args));
-    const streams = yield* Effect.promise(() => syncStreams(ctx, components.agent, args));
-    return { ...paginated, streams };
+    const thread = yield* threadIn(ctx.db, args.threadId);
+    if (thread === null || (yield* ownsThread(ctx, args.threadId)) === null) {
+        return { continueCursor: "", isDone: true, page: [], streams };
+    }
+    const turns = yield* Effect.promise(() =>
+        ctx.db
+            .query("voiceTurns")
+            .withIndex("by_threadId_and_order", (q) => q.eq("threadId", thread._id))
+            .order("desc")
+            .paginate(args.paginationOpts)
+    );
+    return { ...turns, page: turns.page.flatMap(uiMessagesOf), streams };
 });
 
 // Another person's thread reads as empty, so a stale id after sign-out cannot leak their sentences.
 export const listTurns = query({
     args: listTurnsArgs,
-    handler: (ctx, args) => runTransactionEdge(readTurns(ctx, args)),
+    handler: (ctx, args) => runTransactionEdge(readUiTurns(ctx, args)),
 });

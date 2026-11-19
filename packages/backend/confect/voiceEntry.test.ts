@@ -1,17 +1,18 @@
 /// <reference types="vite/client" />
 
-import { getThreadMetadata, saveMessage } from "@convex-dev/agent";
-import agentTest from "@convex-dev/agent/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { resolveTextModel } from "@outlayr/ai/model";
 import type { SpeechModel } from "@outlayr/ai/speech";
+import { answers, fails, fakeModel } from "@outlayr/ai/testing";
+import type { FakeResponseStep } from "@outlayr/ai/testing";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import { afterEach, describe, expect, it, vi } from "vite-plus/test";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { api, components } from "../convex/_generated/api";
+import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { MAX_AUDIO_BYTES } from "./lib/captureArgs";
 import { captureLimiter, FREE_CAPTURE_CONFIG } from "./lib/captures";
@@ -21,6 +22,7 @@ import { runEdge } from "./lib/runEdge";
 import { authenticatedAs, seedAuthUser } from "./test.helpers";
 import {
     buildPrompt,
+    DELETE_BATCH,
     ENDED_THREAD_GRACE_MS,
     normalizeDraft,
     normalizeQuotes,
@@ -30,7 +32,58 @@ import {
     transcribeClip,
 } from "./voiceEntry";
 
+vi.mock(import("@outlayr/ai/model"), async (importOriginal) => ({
+    ...(await importOriginal()),
+    resolveTextModel: vi.fn<typeof resolveTextModel>(),
+}));
+
 const modules = import.meta.glob("../convex/**/*.ts");
+
+function stubModel(...responses: FakeResponseStep[]) {
+    const fake = fakeModel(responses, { feature: "voice_entry", repeat: true });
+    vi.mocked(resolveTextModel).mockImplementation((chosen) =>
+        Effect.succeed(Option.some({ ...fake.model, route: chosen }))
+    );
+    return fake.requests;
+}
+
+beforeEach(() => {
+    stubModel(fails("unexpected model call"));
+});
+
+function harness() {
+    const t = convexTest(schema, modules);
+    rateLimiterTest.register(t);
+    revenuecatTest.register(t);
+    return t;
+}
+
+type Harness = ReturnType<typeof harness>;
+
+const threadRow = (t: Harness, threadId: string) =>
+    t.run(async (ctx) => {
+        const id = ctx.db.normalizeId("voiceThreads", threadId);
+        return id === null ? null : await ctx.db.get(id);
+    });
+
+const turnCount = async (t: Harness) => (await t.run((ctx) => ctx.db.query("voiceTurns").collect())).length;
+
+const sayInto = (t: Harness, threadId: string, said: string, turns = 1) =>
+    t.run(async (ctx) => {
+        const id = ctx.db.normalizeId("voiceThreads", threadId);
+        if (id === null) {
+            throw new Error("Expected a voice thread");
+        }
+        const first = (
+            await ctx.db
+                .query("voiceTurns")
+                .withIndex("by_threadId_and_order", (q) => q.eq("threadId", id))
+                .collect()
+        ).length;
+        for (let order = first; order < first + turns; order += 1) {
+            await ctx.db.insert("voiceTurns", { order, said, threadId: id });
+        }
+    });
 
 afterEach(() => {
     vi.unstubAllEnvs();
@@ -84,9 +137,9 @@ describe("namesWithinBudget", () => {
 });
 
 describe("buildPrompt", () => {
-    it("asks for one tool call per turn and frames corrections against the last draft", () => {
+    it("asks for the whole draft every turn and frames corrections against the last draft", () => {
         const prompt = buildPrompt(BASE_ARGS);
-        expect(prompt).toContain(`calling ${PROPOSE_DRAFT_TOOL} exactly once`);
+        expect(prompt).toContain("complete draft for the latest sentence");
         expect(prompt).toContain("correction");
         expect(prompt).toContain("Today is 2026-09-03 (Thursday)");
         expect(prompt).toContain("Food (containing Coffee); Groceries");
@@ -259,14 +312,6 @@ describe("voice thread + speak guard ladder", () => {
         today: "2026-09-03",
     };
 
-    function harness() {
-        const t = convexTest(schema, modules);
-        agentTest.register(t);
-        rateLimiterTest.register(t);
-        revenuecatTest.register(t);
-        return t;
-    }
-
     it("a signed-out caller gets no thread", async () => {
         const t = harness();
         await expect(t.mutation(api.voiceEntry.startThread, {})).resolves.toStrictEqual({
@@ -333,8 +378,7 @@ describe("voice thread + speak guard ladder", () => {
             throw new Error("Expected a thread for a signed-in caller");
         }
         const page = { cursor: null, numItems: 10 };
-        const metadata = () =>
-            t.run(async (ctx) => getThreadMetadata(ctx, components.agent, { threadId }).catch(() => null));
+        const metadata = () => threadRow(t, threadId);
         await expect(
             stranger.query(api.voiceEntry.listTurns, { paginationOpts: page, threadId })
         ).resolves.toMatchObject({ isDone: true, page: [] });
@@ -368,9 +412,7 @@ describe("voice thread + speak guard ladder", () => {
         ).resolves.toMatchObject({ isDone: true, page: [] });
         await t.finishAllScheduledFunctions(vi.runAllTimers);
         vi.useRealTimers();
-        await expect(
-            t.run(async (ctx) => getThreadMetadata(ctx, components.agent, { threadId }).catch(() => null))
-        ).resolves.toBeNull();
+        await expect(threadRow(t, threadId)).resolves.toBeNull();
     });
 
     it("a thread spoken into keeps living: the sweep moves out past the last turn, then deletes", async () => {
@@ -381,16 +423,32 @@ describe("voice thread + speak guard ladder", () => {
         if (threadId === null) {
             throw new Error("Expected a thread for a signed-in caller");
         }
-        const metadata = () =>
-            t.run(async (ctx) => getThreadMetadata(ctx, components.agent, { threadId }).catch(() => null));
+        const metadata = () => threadRow(t, threadId);
         vi.advanceTimersByTime(30 * 60 * 1000);
-        await t.run(async (ctx) => saveMessage(ctx, components.agent, { prompt: "twenty at netflix", threadId }));
+        await sayInto(t, threadId, "twenty at netflix");
         vi.advanceTimersByTime(31 * 60 * 1000);
         await t.finishInProgressScheduledFunctions();
         await expect(metadata()).resolves.toMatchObject({ userId: expect.any(String) });
         await t.finishAllScheduledFunctions(vi.runAllTimers);
         vi.useRealTimers();
         await expect(metadata()).resolves.toBeNull();
+        await expect(turnCount(t)).resolves.toBe(0);
+    });
+
+    it("a thread with more turns than one mutation may delete is still swept whole", async () => {
+        const t = harness();
+        const owner = authenticatedAs(t, await seedAuthUser(t));
+        vi.useFakeTimers();
+        const { threadId } = await owner.mutation(api.voiceEntry.startThread, {});
+        if (threadId === null) {
+            throw new Error("Expected a thread for a signed-in caller");
+        }
+        await sayInto(t, threadId, "twenty at netflix", DELETE_BATCH * 2 + 1);
+        await owner.mutation(api.voiceEntry.endThread, { threadId });
+        await t.finishAllScheduledFunctions(vi.runAllTimers);
+        vi.useRealTimers();
+        await expect(threadRow(t, threadId)).resolves.toBeNull();
+        await expect(turnCount(t)).resolves.toBe(0);
     });
 
     it("closing the screen mid-turn leaves the thread to the turn still landing, then deletes it", async () => {
@@ -401,12 +459,11 @@ describe("voice thread + speak guard ladder", () => {
         if (threadId === null) {
             throw new Error("Expected a thread for a signed-in caller");
         }
-        const metadata = () =>
-            t.run(async (ctx) => getThreadMetadata(ctx, components.agent, { threadId }).catch(() => null));
+        const metadata = () => threadRow(t, threadId);
         await owner.mutation(api.voiceEntry.endThread, { threadId });
         vi.advanceTimersByTime(15_000);
         await t.finishInProgressScheduledFunctions();
-        await t.run(async (ctx) => saveMessage(ctx, components.agent, { prompt: "twenty at netflix", threadId }));
+        await sayInto(t, threadId, "twenty at netflix");
         vi.advanceTimersByTime(ENDED_THREAD_GRACE_MS - 15_000);
         await t.finishInProgressScheduledFunctions();
         await expect(metadata()).resolves.toMatchObject({ userId: expect.any(String) });
@@ -518,10 +575,7 @@ describe("openStream + speakText credits", () => {
     async function signedIn() {
         vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
         vi.stubEnv("ELEVENLABS_API_KEY", "test-elevenlabs-key");
-        const t = convexTest(schema, modules);
-        agentTest.register(t);
-        rateLimiterTest.register(t);
-        revenuecatTest.register(t);
+        const t = harness();
         const identity = await seedAuthUser(t);
         const asUser = authenticatedAs(t, identity);
         const { threadId } = await asUser.mutation(api.voiceEntry.startThread, {});
@@ -640,5 +694,112 @@ describe("openStream + speakText credits", () => {
         await expect(asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId })).resolves.toMatchObject({
             status: "invalid",
         });
+    });
+});
+
+describe("a voice turn", () => {
+    const TURN_ARGS = {
+        accounts: BASE_ARGS.accounts,
+        aiConsent: AI_CONSENT_VERSION,
+        categoryTree: BASE_ARGS.categoryTree,
+        currency: "USD",
+        language: "en-US",
+        today: "2026-09-03",
+    };
+
+    async function speaking() {
+        vi.stubEnv("ELEVENLABS_API_KEY", "test-elevenlabs-key");
+        vi.stubGlobal(
+            "fetch",
+            vi.fn(async () => Response.json({ token: "sut_test" }))
+        );
+        const t = harness();
+        const asUser = authenticatedAs(t, await seedAuthUser(t));
+        const { threadId } = await asUser.mutation(api.voiceEntry.startThread, {});
+        if (threadId === null) {
+            throw new Error("Expected a thread for a signed-in caller");
+        }
+        const say = async (transcript: string) => {
+            await asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId });
+            return asUser.action(api.voiceEntry.speakText, { ...TURN_ARGS, threadId, transcript });
+        };
+        return { asUser, say, threadId };
+    }
+
+    it("stores the draft, hands it back as context for a correction, and the screen reads both turns", async () => {
+        const requests = stubModel(answers(MODEL_ANSWER), answers({ ...MODEL_ANSWER, amount: 15 }));
+        const { asUser, say, threadId } = await speaking();
+
+        await expect(say("twelve fifty at Starbucks")).resolves.toMatchObject({ order: 0, status: "ok" });
+        await expect(say("no, fifteen")).resolves.toMatchObject({ order: 1, status: "ok" });
+
+        expect(requests[1]?.messages).toStrictEqual([
+            { content: "twelve fifty at Starbucks", role: "user" },
+            { content: JSON.stringify(MODEL_ANSWER), role: "assistant" },
+            { content: "no, fifteen", role: "user" },
+        ]);
+        const turns = await asUser.query(api.voiceEntry.turns, { threadId });
+        expect(turns.map((turn) => [turn.order, turn.said, turn.proposed?.draft?.amount])).toStrictEqual([
+            [0, "twelve fifty at Starbucks", 12.5],
+            [1, "no, fifteen", 15],
+        ]);
+        expect(turns[0]?.proposed?.draft).toMatchObject({ accountName: "Amex", kind: "entry", merchant: "Starbucks" });
+    });
+
+    it("a failed model call is providerError, and its sentence never reaches the next turn as context", async () => {
+        const requests = stubModel(fails("overloaded"), answers(MODEL_ANSWER));
+        const { asUser, say, threadId } = await speaking();
+
+        await expect(say("twelve fifty at Starbucks")).resolves.toMatchObject({ status: "providerError" });
+        await expect(asUser.query(api.voiceEntry.turns, { threadId })).resolves.toMatchObject([{ proposed: null }]);
+        await say("twelve fifty at Starbucks");
+        expect(requests[1]?.messages).toStrictEqual([{ content: "twelve fifty at Starbucks", role: "user" }]);
+    });
+
+    it("listTurns still answers a pre-#647 build in the agent's UIMessage shape, with empty streams", async () => {
+        stubModel(answers(MODEL_ANSWER));
+        const { asUser, say, threadId } = await speaking();
+        await say("twelve fifty at Starbucks");
+        const paginationOpts = { cursor: null, numItems: 10 };
+
+        const listed = await asUser.query(api.voiceEntry.listTurns, {
+            paginationOpts,
+            streamArgs: { kind: "list", startOrder: 0 },
+            threadId,
+        });
+        expect(listed.streams).toStrictEqual({ kind: "list", messages: [] });
+        expect(listed.page).toMatchObject([
+            { order: 0, role: "user", stepOrder: 0, text: "twelve fifty at Starbucks" },
+            {
+                order: 0,
+                parts: [
+                    {
+                        output: { draft: { amount: 12.5, merchant: "Starbucks" } },
+                        state: "output-available",
+                        type: `tool-${PROPOSE_DRAFT_TOOL}`,
+                    },
+                ],
+                role: "assistant",
+                stepOrder: 1,
+            },
+        ]);
+        await expect(
+            asUser.query(api.voiceEntry.listTurns, {
+                paginationOpts,
+                streamArgs: { cursors: [], kind: "deltas" },
+                threadId,
+            })
+        ).resolves.toMatchObject({ streams: { deltas: [], kind: "deltas" } });
+    });
+
+    it("an agent thread id from before the move is invalid, so the old build opens a fresh thread", async () => {
+        const { asUser } = await speaking();
+        const agentThreadId = "m57abc123def456ghi789jkl0mn1pq2r";
+        await expect(
+            asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId: agentThreadId })
+        ).resolves.toMatchObject({ status: "invalid" });
+        await expect(
+            asUser.action(api.voiceEntry.speak, { ...TURN_ARGS, audio: CLIP, threadId: agentThreadId })
+        ).resolves.toMatchObject({ status: "invalid" });
     });
 });
