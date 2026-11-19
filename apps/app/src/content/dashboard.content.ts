@@ -90,6 +90,78 @@ const dashboard = {
             done: t({ en: "Done", de: "Fertig", es: "Listo", fr: "OK", pt: "Concluído" }),
             month: t({ en: "Month", de: "Monat", es: "Mes", fr: "Mois", pt: "Mês" }),
             period: t({ en: "Period", de: "Zeitraum", es: "Periodo", fr: "Période", pt: "Período" }),
+            range: {
+                allTime: t({
+                    en: "All time",
+                    de: "Insgesamt",
+                    es: "Todo el tiempo",
+                    fr: "Depuis le début",
+                    pt: "Todo o período",
+                }),
+                apply: t({ en: "Apply", de: "Anwenden", es: "Aplicar", fr: "Appliquer", pt: "Aplicar" }),
+                custom: t({
+                    en: "Custom range",
+                    de: "Eigener Zeitraum",
+                    es: "Rango personalizado",
+                    fr: "Période personnalisée",
+                    pt: "Período personalizado",
+                }),
+                firstDay: t({
+                    en: "First day",
+                    de: "Erster Tag",
+                    es: "Primer día",
+                    fr: "Premier jour",
+                    pt: "Primeiro dia",
+                }),
+                lastDay: t({
+                    en: "Last day",
+                    de: "Letzter Tag",
+                    es: "Último día",
+                    fr: "Dernier jour",
+                    pt: "Último dia",
+                }),
+                last30: t({
+                    en: "Last 30 days",
+                    de: "Letzte 30 Tage",
+                    es: "Últimos 30 días",
+                    fr: "30 derniers jours",
+                    pt: "Últimos 30 dias",
+                }),
+                manyDays: insert(
+                    t({
+                        en: "{{count}} days",
+                        de: "{{count}} Tage",
+                        es: "{{count}} días",
+                        fr: "{{count}} jours",
+                        pt: "{{count}} dias",
+                    })
+                ),
+                nextMonth: t({
+                    en: "Next month",
+                    de: "Nächster Monat",
+                    es: "Mes siguiente",
+                    fr: "Mois suivant",
+                    pt: "Próximo mês",
+                }),
+                oneDay: t({ en: "1 day", de: "1 Tag", es: "1 día", fr: "1 jour", pt: "1 dia" }),
+                previousMonth: t({
+                    en: "Previous month",
+                    de: "Vorheriger Monat",
+                    es: "Mes anterior",
+                    fr: "Mois précédent",
+                    pt: "Mês anterior",
+                }),
+                thisWeek: t({
+                    en: "This week",
+                    de: "Diese Woche",
+                    es: "Esta semana",
+                    fr: "Cette semaine",
+                    pt: "Esta semana",
+                }),
+                thisYear: t({ en: "This year", de: "Dieses Jahr", es: "Este año", fr: "Cette année", pt: "Este ano" }),
+                to: t({ en: "to", de: "bis", es: "al", fr: "au", pt: "a" }),
+                today: t({ en: "Today", de: "Heute", es: "Hoy", fr: "Aujourd'hui", pt: "Hoje" }),
+            },
             quarter: t({ en: "Quarter", de: "Quartal", es: "Trimestre", fr: "Trimestre", pt: "Trimestre" }),
             rangeLabel: insert(
                 t({

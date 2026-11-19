@@ -7,14 +7,14 @@ import type { CSSProperties } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
 
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
-import { rangeKindOf } from "@/lib/dashboard-series-period";
+import { lastMonthIn } from "@/lib/dashboard-series-period";
 import { money as moneyIn } from "@/lib/ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
 import { CardFrame } from "./card-frame";
 import { Empty } from "./empty";
-import { categoryTone, useCategoryName, useDateFormat, useWholeMoney } from "./format";
-import { dayEntries, everyDay, everyMonth, monthsOf } from "./model";
+import { categoryTone, useCategoryName, useDateFormat, useWeekLetters, useWholeMoney } from "./format";
+import { dayEntries, everyDay, everyMonth, monthsOf, everyDayKind } from "./model";
 import type { SetupState } from "./model";
 
 const WEEK = 7;
@@ -22,8 +22,6 @@ const PERCENT = 100;
 const CARD_ENTRIES = 3;
 const EDGE = 0.25;
 // 2023-12-31 was a Sunday, the day firstWeekday 1 means.
-const SUNDAY_NOON = Date.UTC(2023, 11, 31, 12);
-const DAY_MS = 86_400_000;
 // The parts size and tint their dots by level with no per-level hook, so these key off the level's own class.
 const DOTS = [
     "[&_[class*='pu-size:0.2']]:[--pu-size:0.16] [&_[class*='pu-size:0.2']]:bg-app-strong",
@@ -37,19 +35,6 @@ const LEGEND = [
 ].join(" ");
 // The card below replaces the part's one-line tag.
 const NO_TAG = "[&>span.absolute]:hidden";
-
-function useWeekLetters(firstWeekday: number) {
-    const { locale } = useLocale();
-    return useMemo(() => {
-        const format = new Intl.DateTimeFormat(LANGUAGES[localeFromParam(locale)].date, {
-            timeZone: "UTC",
-            weekday: "narrow",
-        });
-        return Array.from({ length: WEEK }, (_, index) =>
-            format.format(SUNDAY_NOON + (firstWeekday - 1 + index) * DAY_MS)
-        );
-    }, [firstWeekday, locale]);
-}
 
 function useMonthName(width: "narrow" | "short") {
     const { locale } = useLocale();
@@ -134,7 +119,7 @@ function Days({ days, quiet }: { days: ReturnType<typeof everyDay>; quiet: boole
     const monthName = useMonthName("short");
     const box = useRef<HTMLDivElement>(null);
     const [pointed, setPointed] = useState<Pointed | null>(null);
-    const quarter = rangeKindOf(filters.range.key) === "quarter";
+    const quarter = everyDayKind(filters.range) === "quarter";
     const tone = categoryTone(filters.category ? ledger.categories.get(filters.category)?.color : undefined);
     const point = (button: HTMLElement | null | undefined) => {
         const wide = box.current?.offsetWidth ?? 0;
@@ -218,7 +203,7 @@ function EveryMonth() {
         [filters.accounts, filters.categories, filters.range, ledger]
     );
     const tallest = Math.max(...months.months.map((month) => month.amount), 1);
-    const last = filters.range.key.slice(0, 7);
+    const last = lastMonthIn(filters.range, ledger.firstDayOfMonth);
     const color = filters.category ? ledger.categories.get(filters.category)?.color : undefined;
     const bar: CSSProperties & { "--bar": string } = { "--bar": color ?? "var(--color-app-tint)" };
     return (
@@ -292,7 +277,7 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
             </CardFrame>
         );
     }
-    if (!quiet && rangeKindOf(filters.range.key) === "year") {
+    if (!quiet && everyDayKind(filters.range) === "year") {
         return <EveryMonth />;
     }
     const trimmed = (amount: number) => moneyIn(amount, ledger.currency, "auto", amount % 1 !== 0);
@@ -346,7 +331,7 @@ export function EveryDay({ quiet, setup }: { quiet: boolean; setup: SetupState |
             </>
         );
     }
-    const quarter = rangeKindOf(filters.range.key) === "quarter";
+    const quarter = everyDayKind(filters.range) === "quarter";
     return (
         <CardFrame
             action={aDay}

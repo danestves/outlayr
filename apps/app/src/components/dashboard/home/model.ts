@@ -6,8 +6,16 @@ import type { CategoryBudget } from "../../../lib/dashboard-series";
 import { endOfDay, rowsBetween, round, startOfDay, total } from "../../../lib/dashboard-series-ledger";
 import type { Ledger, LedgerRow, Scope } from "../../../lib/dashboard-series-ledger";
 import { netWorthPoints } from "../../../lib/dashboard-series-net-worth";
-import { daysFrom, lastMonthOf, periodOf, priorSlice, shiftPeriodKey } from "../../../lib/dashboard-series-period";
-import type { Period } from "../../../lib/dashboard-series-period";
+import {
+    daysFrom,
+    isCustomKey,
+    lastMonthIn,
+    periodOf,
+    priorSlice,
+    rangeKindOf,
+    shiftPeriodKey,
+} from "../../../lib/dashboard-series-period";
+import type { RangeKind, Period } from "../../../lib/dashboard-series-period";
 import { figureOf, foldFees } from "./rows";
 import type { FoldedRow } from "./rows";
 
@@ -16,20 +24,39 @@ const MONTHS_IN_YEAR = 12;
 const WHAT_IF_STOPS = 400;
 const NICE_STEPS = [1, 2, 5, 10];
 const CENT = 0.01;
+const DAY_GRID_DAYS = 42;
+const WEEK_GRID_DAYS = 92;
 
 // Monthly for every range, so a quarter or a year still draws a year of points.
 const sparkPeriods = (ledger: Ledger, period: Period) =>
     Array.from({ length: SPARK_PERIODS }, (_, index) =>
-        periodOf(shiftPeriodKey(lastMonthOf(period.key), index + 1 - SPARK_PERIODS), ledger.firstDayOfMonth)
+        periodOf(
+            shiftPeriodKey(lastMonthIn(period, ledger.firstDayOfMonth), index + 1 - SPARK_PERIODS),
+            ledger.firstDayOfMonth
+        )
     );
 
+/** How Every day draws a range: a custom one takes the shape of the month, quarter or year it is closest to. */
+export function everyDayKind(range: Period): RangeKind | "month" {
+    const kind = rangeKindOf(range.key);
+    if (kind !== null || !isCustomKey(range.key) || range.days <= DAY_GRID_DAYS) {
+        return kind ?? "month";
+    }
+    return range.days <= WEEK_GRID_DAYS ? "quarter" : "year";
+}
+
+// A custom range can open or close partway into a month, so its months are cut to the range.
 export function monthsOf(ledger: Pick<Ledger, "firstDayOfMonth">, range: Period) {
-    const last = lastMonthOf(range.key);
+    const last = lastMonthIn(range, ledger.firstDayOfMonth);
     const months = [periodOf(last, ledger.firstDayOfMonth)];
     while ((months[0]?.from ?? "") > range.from) {
         months.unshift(periodOf(shiftPeriodKey(months[0]?.key ?? last, -1), ledger.firstDayOfMonth));
     }
-    return months;
+    return months.map((month) => {
+        const from = month.from < range.from ? range.from : month.from;
+        const to = month.to > range.to ? range.to : month.to;
+        return { ...month, days: daysFrom(from, to).length, from, to };
+    });
 }
 
 export function rangeBudgets(ledger: Ledger, range: Period): ReadonlyMap<string, CategoryBudget> {
@@ -68,9 +95,10 @@ export function everyMonth(ledger: Ledger, range: Period, scope: Scope, categori
         return { amount: total(ledger, rows), key: month.key, started: month.from <= through };
     });
     const year = range.key.slice(0, 4);
-    const rest = Array.from({ length: MONTHS_IN_YEAR - months.length }, (_, index) => ({
+    const pad = rangeKindOf(range.key) === "year" ? MONTHS_IN_YEAR - months.length : 0;
+    const rest = Array.from({ length: pad }, (_, index) => ({
         amount: 0,
-        key: shiftPeriodKey(lastMonthOf(range.key), index + 1),
+        key: shiftPeriodKey(lastMonthIn(range, ledger.firstDayOfMonth), index + 1),
         started: false,
     })).filter((month) => month.key.startsWith(year));
     const spent = months.filter((month) => month.started && month.amount > 0);

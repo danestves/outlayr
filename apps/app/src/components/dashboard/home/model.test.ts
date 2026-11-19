@@ -358,4 +358,9 @@ describe("rangeBudgets", () => {
     it("leaves months that have not started out of the limit", () => {
         expect(food("2026-12/quarter")).toMatchObject({ limit: 100, spent: 30 });
     });
+
+    it("reads every budget month a custom range touches up to the range end, so limit and spending cover the same days", () => {
+        expect(food("2026-08-15..2026-09-12")).toMatchObject({ limit: 200, spent: 170 });
+        expect(food("2026-08-15..2026-09-09")).toMatchObject({ limit: 200, spent: 50 });
+    });
 });
