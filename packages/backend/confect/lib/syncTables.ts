@@ -64,6 +64,7 @@ export const transactionFields = {
     recurringEndDate: Schema.NullOr(Schema.Number),
     recurringType: Schema.Number,
     transferId: Schema.optional(Schema.NullOr(Schema.String)),
+    unreviewed: Schema.optional(Schema.Boolean),
 };
 
 export const transferFields = {

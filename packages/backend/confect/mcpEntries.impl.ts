@@ -215,6 +215,7 @@ const logEntry = FunctionImpl.make(
                 recurringType: row.recurringType,
                 seq: counter.nextSeq,
                 transferId: null,
+                unreviewed: false,
                 updatedAt: now,
                 userId,
             });
