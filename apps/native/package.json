@@ -19,7 +19,6 @@
     },
     "dependencies": {
         "@better-auth/expo": "catalog:",
-        "@convex-dev/agent": "catalog:",
         "@convex-dev/better-auth": "catalog:",
         "@effect/atom-react": "catalog:",
         "@expo-google-fonts/geist-mono": "^0.4.3",

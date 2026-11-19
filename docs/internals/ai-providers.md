@@ -21,6 +21,14 @@ Voice entry transcribes through the same package, with its own registry (`speech
 
 **Why OpenAI skips the relay.** `apps/voice-relay` exists so ElevenLabs never sees the phone, which is what the privacy policy promises for the hosted app. Hosted Outlayr stays on ElevenLabs. A deployment that picks OpenAI is self-hosted and chose that provider, so the phone opens `wss://api.openai.com/v1/realtime` itself with the ephemeral secret, sent as the `openai-insecure-api-key.` subprotocol. The secret expires in two minutes and is scoped to one transcription session, so the API key never leaves Convex.
 
+## Voice threads
+
+A voice conversation is a `voiceThreads` row (owner is the `tokenIdentifier`) with one `voiceTurns` row per sentence. A turn stores what was said, the model's raw JSON answer as `reply`, and the normalized `proposed` draft. Each turn is one `generateObject` call on the `voice_entry` route; the last 12 answered turns go back as user and assistant messages, so a correction re-issues the previous draft. The screen reads `turns`; nothing streams, since only the final draft is shown.
+
+- The idle sweep (`expireThread`) and account deletion (`forgetUser`) delete turns 200 per mutation and reschedule until the thread is gone.
+- `listTurns` answers builds from before #647, which read `@convex-dev/agent`'s `useUIMessages` shape: each turn becomes a user message and an assistant message with a `tool-proposeDraft` part, and `streams` is always empty. Their old agent thread ids fail `normalizeId`, so the call answers `invalid` and the build opens a fresh thread.
+- We dropped `@convex-dev/agent` so voice runs on every text provider; it only takes an AI SDK model.
+
 ## Adding a provider
 
 1. Add the TanStack adapter to `packages/ai/package.json`, pinned exactly to a release at least a week old.
@@ -43,7 +51,6 @@ Voice entry transcribes through the same package, with its own registry (`speech
 - **Effect leaves objects open.** Its JSON Schema allows extra keys unless asked otherwise, and Anthropic's native structured output rejects that with a 400 (Grok accepts it). `closedJsonSchema` builds the schema with `onExcessProperty: "error"`.
 - **A failed call throws before `onError`.** `chat({ stream: false })` throws on the `RUN_ERROR` chunk, and an abort runs `onAbort`, so `tracing.ts` records from `onChunk` and `onAbort` too, once per call.
 - **Provider SDKs retry on their own.** Every provider turns retries off (`maxRetries: 0`, OpenRouter's `retryConfig`): the backend's timeouts and its Sonnet retry assume one attempt.
-- **Voice entry is still on the AI SDK.** `@convex-dev/agent` takes an AI SDK model, so `voiceEntry.impl.ts` builds one from the gate's model with `anthropicAgentModel` and answers `notConfigured` on any other provider.
 - **Hosted search caps differ.** Only Anthropic honors `maxSearches`; the others search as often as the model likes within one turn (Grok ran 5 searches for one lookup). Spend records the measured count: from usage where the provider reports it (Anthropic, OpenRouter), else from the provider-executed search calls. The default prices are Claude's; set `GROUNDED_SEARCH_PRICE_MICROS` and the `GROUNDED_*_PRICE_MICROS_PER_TOKEN` overrides for another provider.
 - **Not every provider grounds.** OpenRouter's adapter drops url citations, so its answers carry no sources and never publish to shared merchant knowledge. Gemini cites through Google redirect URLs, which the harness drops, so its answers carry no sources and never publish either. `openai-compatible` has no hosted search, so lookups are skipped and the expense keeps its ordinary ungrounded enrichment.
 - **An aborted transcription resolves too.** `transcribe` in `speech.ts` checks the signal the same way, and maps an empty transcript to `noTranscript`.

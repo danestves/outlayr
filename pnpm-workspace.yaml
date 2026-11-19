@@ -18,7 +18,6 @@ catalog:
     "@confect/cli": ^10.6.0
     "@confect/core": ^10.6.0
     "@confect/server": ^10.6.0
-    "@convex-dev/agent": ^0.7.9
     "@convex-dev/better-auth": ^0.13.0
     "@effect/atom-react": ~4.1.4
     better-auth: 1.7.16
