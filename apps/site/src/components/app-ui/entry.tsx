@@ -1,3 +1,5 @@
+import { decimalsFor } from "@outlayr/money/currency";
+import { roundMoney } from "@outlayr/money/round";
 import type { Locale } from "@outlayr/shared/i18n";
 import { getIntlayer } from "intlayer";
 
@@ -161,7 +163,7 @@ function todaySection(ledger: Ledger, now: Date, extra: readonly DemoRow[]): Day
     const [today] = ledger.daySections(now, 0);
     const rows = [...extra, ...(today?.rows ?? [])].toSorted((a, b) => b.date.getTime() - a.date.getTime());
     const total = rows.reduce((sum, row) => sum + (row.income ? row.amount : -row.amount), 0);
-    return { day: today?.day ?? now, rows, total: Math.round(total * 100) / 100 };
+    return { day: today?.day ?? now, rows, total: roundMoney(total, decimalsFor(ledger.currency)) };
 }
 
 function todayLabel(section: DaySection, code: string, now: Date, locale: Locale) {

@@ -64,6 +64,20 @@ describe("country casts", () => {
         }
     });
 
+    it("totals each day to the sum of the rows it shows", () => {
+        for (const country of countries) {
+            const ledger = ledgerFor(demoCast(country));
+            const scale = 10 ** decimalsFor(ledger.currency);
+            for (const { rows, total } of ledger.daySections(DEMO_NOW, 31)) {
+                const minor = rows.reduce(
+                    (sum, row) => sum + Math.round(row.amount * scale) * (row.income ? 1 : -1),
+                    0
+                );
+                expect(total, `${country} ${ledger.currency}`).toBe(minor / scale);
+            }
+        }
+    });
+
     it("has a baked logo for every brand it shows", () => {
         const logos = new Set([
             ...Object.values(GLOBAL).map(({ logo }) => logo),

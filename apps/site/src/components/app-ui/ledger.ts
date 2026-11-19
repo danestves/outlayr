@@ -236,7 +236,6 @@ function roundFigure(value: number): number {
     const step = 10 ** (Math.floor(Math.log10(Math.abs(value))) - 1);
     return Math.round(value / step) * step;
 }
-const cents = (value: number) => roundMoney(value, 2);
 const signed = (row: Pick<DemoRow, "amount" | "income">) => (row.income ? row.amount : -row.amount);
 
 function weekEdges(now: Date): number[] {
@@ -329,6 +328,7 @@ function buildRows(cast: DemoCast, accounts: readonly DemoAccount[]): DemoRow[] 
 function buildLedger(cast: DemoCast) {
     const accounts = buildAccounts(cast);
     const rows = buildRows(cast, accounts);
+    const cents = (value: number) => roundMoney(value, decimalsFor(cast.currency));
     const settled = (now: Date) => rows.filter((row) => row.date.getTime() <= now.getTime());
     const toLocal = (account: DemoAccount) =>
         account.currency === cast.currency ? account.balance : (account.balance / cast.foreignFx) * cast.fx;

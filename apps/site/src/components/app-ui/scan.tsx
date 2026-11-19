@@ -187,9 +187,9 @@ const PAPER_EDGE = Array.from({ length: TEETH.count }, (_, index) => {
 function PrintRow({ label, strong = false, value }: { label: string; strong?: boolean; value: string }) {
     const style = strong ? PRINT_BOLD : PRINT;
     return (
-        <div className="flex-row justify-between">
-            <span style={style}>{label}</span>
-            <span style={style}>{value}</span>
+        <div className="flex-row justify-between gap-1.5">
+            <span style={{ ...style, whiteSpace: "normal" }}>{label}</span>
+            <span style={{ ...style, flexShrink: 0 }}>{value}</span>
         </div>
     );
 }

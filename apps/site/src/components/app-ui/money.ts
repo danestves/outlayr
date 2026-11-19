@@ -2,8 +2,6 @@ import { currencyDisplayFor, decimalsFor } from "@outlayr/money/currency";
 import { roundMoney } from "@outlayr/money/round";
 import type { Locale } from "@outlayr/shared/i18n";
 
-import { HOME_CURRENCY } from "@/lib/money";
-
 const NUMBERS = {
     de: { decimal: ",", group: "." },
     en: { decimal: ".", group: "," },
@@ -22,8 +20,6 @@ export interface AmountParts {
     minorUnits: number;
     symbol: string;
 }
-
-export const currencyFor = (locale: Locale) => HOME_CURRENCY[locale];
 
 function splitFixed(fixed: string, locale: Locale) {
     const [integer = "0", fraction = ""] = fixed.split(".");
