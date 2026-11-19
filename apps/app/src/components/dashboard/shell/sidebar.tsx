@@ -20,6 +20,7 @@ import { useIntlayer } from "react-intlayer";
 import { LogoMark } from "@/components/logo-mark";
 
 import { UserMenu } from "./account-menu";
+import { setPaletteOpen } from "./palette-open";
 
 type Path =
     | "/"
@@ -50,17 +51,20 @@ function Destination({ icon, label, to }: { icon: IconSvgElement; label: string;
     );
 }
 
-function Search() {
+function Search({ onOpen }: { onOpen: () => void }) {
     const { nav } = useIntlayer("dashboard");
     return (
         <NavRail.Item
-            aria-disabled
             className="[&_[data-slot=nav-rail-label]]:flex [&_[data-slot=nav-rail-label]]:items-center"
             icon={<HugeiconsIcon icon={Search01Icon} size={18} strokeWidth={1.5} />}
             label={nav.search.value}
+            onClick={() => {
+                onOpen();
+                setPaletteOpen(true);
+            }}
         >
             {nav.search}
-            <kbd className="border-border bg-app-fill ml-auto rounded-[4px] border px-1.5 font-mono text-xs leading-4 pointer-coarse:hidden">
+            <kbd className="border-border bg-app-fill rounded-app-xs text-app-caption ml-auto border px-1.5 font-mono pointer-coarse:hidden">
                 ⌘K
             </kbd>
         </NavRail.Item>
@@ -99,7 +103,7 @@ export function Sidebar() {
                 <Fold />
             </NavRail.Header>
             <NavRail.Content>
-                <Search />
+                <Search onOpen={close} />
                 <NavRail.Group label={nav.label.value}>
                     <Destination icon={DashboardSquare01Icon} label={nav.dashboard.value} to="/" />
                     <Destination icon={TransactionHistoryIcon} label={nav.transactions.value} to="/transactions" />

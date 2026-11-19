@@ -1,9 +1,6 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
-import ArrowDown01Icon from "@hugeicons/core-free-icons/ArrowDown01Icon";
-import Calendar03Icon from "@hugeicons/core-free-icons/Calendar03Icon";
 import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import Search01Icon from "@hugeicons/core-free-icons/Search01Icon";
-import Tick02Icon from "@hugeicons/core-free-icons/Tick02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { accountLook } from "@outlayr/money/ledger-log";
 import { Badge } from "panelui-web/badge";
@@ -13,22 +10,19 @@ import { Chip } from "panelui-web/chip";
 import { Input } from "panelui-web/input";
 import { Menu } from "panelui-web/menu";
 import { Sheet } from "panelui-web/sheet";
-import { Tabs } from "panelui-web/tabs";
 import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
-import { useAccountFlows } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import type { Dashboard } from "@/components/dashboard/shell/dashboard";
 import { toggledAccounts } from "@/components/dashboard/shell/filters";
-import { usePeriodKeys } from "@/components/dashboard/shell/period-keys";
+import { CHIP, TopBar } from "@/components/dashboard/shell/top-bar";
 import { AccountTile } from "@/components/ledger/tiles";
-import { openAccounts, rowsBetween, total } from "@/lib/dashboard-series-ledger";
-import { periodOf } from "@/lib/dashboard-series-period";
+import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { useDisplayFormat } from "@/lib/ledger-settings";
 
-import { useCategoryName, usePeriodTitle } from "./format";
+import { useCategoryName } from "./format";
 import { accountBalances, categoryChoices } from "./model";
 import type { SetupState } from "./model";
 
@@ -46,10 +40,6 @@ const SHEET_LABEL = "text-muted-foreground px-2 pt-1.5 pb-0.5 text-xs leading-4"
 
 const SHEET_ROW = "hover:bg-app-hover flex h-11 w-full shrink-0 items-center gap-2 rounded-lg px-2 text-sm";
 const FIGURE = "dash-figure text-muted-foreground min-w-0 flex-1 pl-2 text-right text-[13px] whitespace-nowrap";
-// The part's collapsed tick box still takes a flex gap, which would pad the chip's start.
-const CHIP =
-    "relative gap-1.5 not-data-pressed:[&>[data-slot=chip-check]]:-me-1.5 max-lg:text-[13px] max-lg:after:absolute max-lg:after:-inset-x-0.5 max-lg:after:-inset-y-1.5";
-
 function CheckRow({ children, figure, on, onToggle }: CheckRowProps) {
     const inSheet = useContext(InSheet);
     if (inSheet) {
@@ -331,128 +321,6 @@ export function CategoryMenu() {
     );
 }
 
-function PeriodControl() {
-    const dashboard = useDashboard();
-    const { filters, ledger, setFilters } = dashboard;
-    const { filters: copy } = useIntlayer("dashboard");
-    const title = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
-    const keys = usePeriodKeys(dashboard);
-    return (
-        <Tabs className="ml-auto max-lg:hidden" value="month">
-            <Tabs.List>
-                <Menu>
-                    <Menu.Trigger render={<Tabs.Trigger value="month" />}>{title(filters.period)}</Menu.Trigger>
-                    <Menu.Content className="app-shell ph-no-capture max-h-80 overflow-y-auto" sideOffset={8}>
-                        <Menu.RadioGroup
-                            onValueChange={(key: string) =>
-                                setFilters({ period: key === filters.currentKey ? null : key })
-                            }
-                            value={filters.period.key}
-                        >
-                            {keys.map((key) => (
-                                <Menu.RadioItem closeOnClick key={key} value={key}>
-                                    {title(periodOf(key, ledger.firstDayOfMonth))}
-                                </Menu.RadioItem>
-                            ))}
-                        </Menu.RadioGroup>
-                    </Menu.Content>
-                </Menu>
-                <Tabs.Trigger className="data-disabled:opacity-100" disabled value="quarter">
-                    {copy.quarter}
-                </Tabs.Trigger>
-                <Tabs.Trigger className="data-disabled:opacity-100" disabled value="year">
-                    {copy.year}
-                </Tabs.Trigger>
-            </Tabs.List>
-        </Tabs>
-    );
-}
-
-function PeriodRows({ onPick }: { onPick: (key: string) => void }) {
-    const dashboard = useDashboard();
-    const { filters, ledger } = dashboard;
-    const { money } = useDisplayFormat();
-    const title = usePeriodTitle(ledger.firstDayOfMonth, "");
-    const keys = usePeriodKeys(dashboard);
-    const periods = useMemo(
-        () =>
-            keys.map((key) => {
-                const period = periodOf(key, ledger.firstDayOfMonth);
-                const spent = total(ledger, rowsBetween(ledger, filters, period.from, period.to, false));
-                return { period, spent };
-            }),
-        [filters, keys, ledger]
-    );
-    return periods.map(({ period, spent }) => {
-        const on = period.key === filters.period.key;
-        return (
-            <button
-                aria-pressed={on}
-                className={`${SHEET_ROW} text-left`}
-                key={period.key}
-                onClick={() => onPick(period.key)}
-                type="button"
-            >
-                <span className={on ? "font-medium" : ""}>{title(period)}</span>
-                <span className="dash-figure text-muted-foreground ml-auto text-[13px]">
-                    {money(spent, ledger.currency)}
-                </span>
-                <HugeiconsIcon
-                    className={on ? "text-app-tint" : "invisible"}
-                    icon={Tick02Icon}
-                    size={18}
-                    strokeWidth={2}
-                />
-            </button>
-        );
-    });
-}
-
-function PeriodSheet() {
-    const { filters, ledger, setFilters } = useDashboard();
-    const { filters: copy } = useIntlayer("dashboard");
-    const { spent } = useIntlayer("dashboard-home").kpi;
-    const title = usePeriodTitle(ledger.firstDayOfMonth, filters.currentKey);
-    const [open, setOpen] = useState(false);
-    return (
-        <Sheet onOpenChange={setOpen} open={open}>
-            <Sheet.Trigger render={<Chip className={`${CHIP} lg:hidden`} pressed={false} size="lg" />}>
-                <HugeiconsIcon className="text-muted-foreground" icon={Calendar03Icon} strokeWidth={2} />
-                {title(filters.period)}
-                <HugeiconsIcon className="text-muted-foreground" icon={ArrowDown01Icon} strokeWidth={2} />
-            </Sheet.Trigger>
-            <Sheet.Content className="app-shell ph-no-capture max-h-[60dvh]">
-                <Sheet.Header title={copy.period} />
-                <Tabs className="mx-4 mb-2" value="month">
-                    <Tabs.List className="w-full">
-                        <Tabs.Trigger className="flex-1" value="month">
-                            {copy.month}
-                        </Tabs.Trigger>
-                        <Tabs.Trigger className="flex-1" disabled value="quarter">
-                            {copy.quarter}
-                        </Tabs.Trigger>
-                        <Tabs.Trigger className="flex-1" disabled value="year">
-                            {copy.year}
-                        </Tabs.Trigger>
-                    </Tabs.List>
-                </Tabs>
-                <div className="text-muted-foreground flex justify-between px-4 pr-[42px] pb-1 text-xs leading-4">
-                    <span>{copy.month}</span>
-                    <span>{spent}</span>
-                </div>
-                <Sheet.Body className="px-2">
-                    <PeriodRows
-                        onPick={(key) => {
-                            setFilters({ period: key === filters.currentKey ? null : key });
-                            setOpen(false);
-                        }}
-                    />
-                </Sheet.Body>
-            </Sheet.Content>
-        </Sheet>
-    );
-}
-
 export function FilterBar({
     categories = true,
     quiet,
@@ -462,22 +330,14 @@ export function FilterBar({
     quiet: boolean;
     setup: SetupState | null;
 }) {
-    const { add } = useIntlayer("dashboard");
-    const { open } = useAccountFlows();
     return (
-        <div className="flex min-h-16 flex-wrap items-center gap-2 py-3 max-lg:-mx-4 max-lg:[scrollbar-width:none] max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:[mask-image:linear-gradient(to_right,#000_calc(100%-16px),transparent)] max-lg:px-4 max-sm:min-h-0">
-            <PeriodSheet />
+        <TopBar>
             {setup ? null : (
                 <>
                     <AccountMenu quiet={quiet} />
                     {categories ? <CategoryMenu /> : null}
                 </>
             )}
-            <PeriodControl />
-            <Button className="ml-1 max-lg:hidden" onClick={() => open({ kind: "entry" })}>
-                <HugeiconsIcon icon={Add01Icon} strokeWidth={1.5} />
-                {add.entry}
-            </Button>
-        </div>
+        </TopBar>
     );
 }

@@ -154,7 +154,7 @@
     font-family: var(--font-sans);
     /* Translucent ink, not the fill: a tray is painted with the fill and would hide its bones. */
     --skullet-base: color-mix(in oklab, var(--color-app-ink) 7%, transparent);
-    --skullet-animation: pulse;
+    --skullet-animation: none;
 }
 
 .app-shell:where(:not([data-slot], [role="dialog"])) {
@@ -781,4 +781,22 @@ html:active-view-transition-type(dissolve)::view-transition-old(app-content) {
 
 html:active-view-transition-type(dissolve)::view-transition-new(app-content) {
     animation: app-dissolve-in var(--duration-app-dissolve) var(--ease-app-dissolve) both;
+}
+
+div:has(> * > .app-palette) > * {
+    transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0s !important;
+        transition-duration: 0s !important;
+    }
+}
+
+@utility app-chip-row {
+    scrollbar-width: none;
+    mask-image: linear-gradient(to right, black calc(100% - 16px), transparent);
 }

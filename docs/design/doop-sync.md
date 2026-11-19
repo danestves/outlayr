@@ -123,10 +123,19 @@ The canvas names five transitions. The code spells them the same way.
 | `instant`    | Menus, period and filter menus                 | `--duration-app-instant` (0ms)         | none                  | `MenuContent`. Router: `viewTransition("instant")` returns `false`. Element: `data-motion="instant"`. |
 
 - **Values:** the canvas names the transitions but gives no timing. The durations and easings are what PanelUI already ships: Sheet's 450ms `cubic-bezier(0.32, 0.72, 0, 1)` and Dialog's 200ms `cubic-bezier(0.2, 0, 0, 1)`. `push-left` reuses the slide timing.
-- **Reduced motion:** under `prefers-reduced-motion: reduce`, every duration token is 0ms, so all of them play as `instant`.
+- **Reduced motion:** under `prefers-reduced-motion: reduce`, every duration token is 0ms, and a global rule at the end of `index.css` zeroes every animation and transition, PanelUI's own included. Everything plays as `instant`.
 - **Route transitions:** they animate the content pane (`app-content`) only. The sidebar holds still.
 - **No looping motion:** web-app-v2 forbids anything that keeps repainting, so there are no spinners, pulse or shimmer. A skeleton is a static block on the raised surface, and progress is a static bar with a figure.
 - **`useTransition`:** it is not used as a name because it would shadow React's hook. The router helper is `viewTransition`.
+
+## Shell
+
+The chrome every ledger page shares, from the canvas page `Web · Shell`:
+
+- **Frame:** `shell/sidebar.tsx` (Ledger, Plan and Tools, folding to the rail), `shell/top-bar.tsx` (page filters, the period control and Add entry), `shell/mobile-bar.tsx` (drawer, title, search, account sheet and Add entry).
+- **Palette:** `shell/command-palette.tsx`, opened by `mod+k`, the sidebar's Search and the mobile bar. Its open state lives in `shell/palette-open.ts`, because those triggers sit outside the ledger's providers.
+- **Global states:** `shell/status.tsx` holds the offline bar, the sync card and the session expired dialog. The sync card shows only while a backlog drains after the connection dropped, so an ordinary save never flashes it.
+- **Error pages:** `components/error-page.tsx`. The 404 renders in the shell as `/_account/_app`'s not-found component, and the crash page is the router's default error component. The wave illustration is static.
 
 ## Primitives
 
@@ -140,17 +149,18 @@ The canvas names five transitions. The code spells them the same way.
 | Dialog       | `@/components/ui/dialog-content` inside `Dialog`       | Carries the shell's tokens into the portal. Create and edit open in a dialog.                           |
 | Sheet        | `@/components/ui/sheet-content` inside `Sheet`         | Carries the shell's tokens. Detail opens in a right sheet. PanelUI's slide is `slide-up` / `slide-down`. |
 | Menu         | `@/components/ui/menu-content` inside `Menu`           | Carries the shell's tokens and opens `instant`. Menus are 240 to 300px wide.                            |
+| Confirm      | `@/components/ui/confirm-dialog`                       | PanelUI AlertDialog with the shell's tokens. Deleting an entry and the session expiry use it.           |
 | Tabs         | `panelui-web/tabs`                                     | A segment swap is `dissolve`.                                                                           |
 | Toast        | `panelui-web/toast`                                    | The viewport sits outside the shell and gets the same token scope.                                      |
 | Table        | `panelui-web/table`                                    |                                                                                                         |
 
-The shell is on the primitives: the account menu uses `MenuContent`, the account sheet uses `SheetContent` and the mobile bar's search uses `IconButton`. The 46 routes are not migrated yet.
+The shell is on the primitives: the account menu and the period menu use `MenuContent`, the account sheet uses `SheetContent` and the mobile bar uses `IconButton`. The 46 routes are not migrated yet.
 
 ### Amount fields that move onto MoneyField
 
 These still use `AmountInput` (`components/dashboard/accounts/fields.tsx`) or a bare `inputMode="decimal"` input. Each one moves in its screen's phase:
 
-- `AmountInput`: `recurring/dialogs.tsx` (2), `recurring/schedule-form.tsx`, `transactions/entry-form.tsx`, `accounts/check-dialog.tsx`, `accounts/purchase-form.tsx`
+- `AmountInput`: `recurring/dialogs.tsx` (2), `recurring/schedule-form.tsx`, `transactions/entry-form.tsx` (the entry sheet's editor only; the Add entry dialog is on MoneyField), `transactions/transfer-dialog.tsx` (the sent amount, whose currency the account fixes), `accounts/check-dialog.tsx`, `accounts/purchase-form.tsx`
 - Bare decimal inputs: `debts/fields.tsx`, `debts/debt-dialogs.tsx`, `budgets/budget-dialogs.tsx`, `accounts/account-form.tsx`, `accounts/account-detail.tsx`, `onboarding/first-entry.tsx`, `import/money-manager/overview.tsx`, `import/file-done.tsx`, `settings/plan.tsx`
 - Not amount entry, so they stay as they are: `transactions/toolbar.tsx` (a filter) and `settings/currency-converter.tsx` (a converter, closer to Exchange). The transfer flow already uses Exchange.
 
@@ -162,9 +172,8 @@ These are known and left for the screen phases:
 - **Arbitrary values:** about 1,360 arbitrary Tailwind values and 245 inline `style={...}` props under `apps/app/src`.
 - **Hard-coded colours:** 42 hex colours in 21 non-test source files, such as the recap share card and the insights samples.
 - **Raw controls:** 35 files with a raw `<button>` and 14 with a raw `<input>`. The account sheet's sign-out row stays a raw `<button>` until there is a row part, because Button's ghost hover and weight would change the row.
-- **Animated skeletons:** `--skullet-animation: pulse` in the shell. The contract wants static skeletons.
 - **Spinners:** Button `loading` draws a spinner in `settings/invite.tsx`, `settings/plan.tsx`, `settings/account.tsx` and `settings/about/suggest.tsx`.
-- **Menu timing:** every menu except the account menu still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
+- **Menu timing:** every menu except the account and period menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
 - **Hand-placed scope:** 74 files put `app-shell ph-no-capture` on portaled content by hand. `DialogContent`, `SheetContent` and `MenuContent` replace that.
 - **Accent inside the shell:** `accentCss` (`lib/accent.ts`) writes the tint and on-tint on `:root`. The shell scope sets `--color-app-on-tint` again in both themes, and `--color-app-tint` again in dark, so inside the shell a non-default accent shows as vermilion in dark and keeps the default on-tint. This was already the case before this phase.
 - **Pages outside the shell:** `login` and `connect`, and any portal without `app-shell`, read the phone's dark palette from `:root`. So does `html` itself, whose background is `--color-app-bg`.
