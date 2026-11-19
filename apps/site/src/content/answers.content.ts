@@ -3724,8 +3724,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Say a purchase in your own words and Outlayr's AI fills in the amount, merchant, category, account, date, and currency. Typing it works offline.",
-                        es: "Dicta una compra y la IA de Outlayr llena el monto, el comercio, la categoría, la cuenta, la fecha y la moneda. Escribirla funciona sin conexión.",
+                        en: "Say a purchase and Outlayr's AI fills in the amount, merchant, category, account, date, and currency. Typing it works offline.",
+                        es: "Dicta una compra y la IA de Outlayr llena monto, comercio, categoría, cuenta, fecha y moneda. Escribirla funciona sin conexión.",
                     }),
                     title: t({
                         en: "AI Expense Tracker: Log a Purchase in One Sentence · Outlayr",
@@ -4611,7 +4611,7 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Seven budget apps that work in Canada, with price, free plan, and whether each needs your bank login. Budget in CAD, checked November 2026.",
+                        en: "Seven budget apps for Canada: price, free plan, and whether each needs your bank login. Budget in CAD, checked November 2026.",
                         es: "Siete apps de presupuesto para Canadá: precio, plan gratis y si piden tu usuario del banco. Presupuesto en CAD, noviembre de 2026.",
                         fr: "Sept applications de budget au Canada : prix, offre gratuite et identifiants bancaires ou non. Budget en CAD, novembre 2026.",
                     }),
@@ -6377,7 +6377,7 @@ const answers = {
                     description: t({
                         en: "Seven financial control apps compared for Brazil: price in reais, Open Finance, credit cards, and installments. Outlayr is ours.",
                         es: "Compara 7 apps de control financiero para Brasil: precio en reales, Open Finance, tarjetas y cuotas. Outlayr es nuestra.",
-                        pt: "Compare 7 apps de controle financeiro: preço em reais, Open Finance, cartões e parcelas. Mobills, Organizze e mais. O Outlayr é nosso.",
+                        pt: "Mobills, Organizze e mais 5 apps de controle financeiro: preço em reais, Open Finance, cartões e parcelas. O Outlayr é nosso.",
                     }),
                     title: t({
                         en: "Best Financial Control Apps in Brazil (2026) · Outlayr",
@@ -7077,7 +7077,7 @@ const answers = {
                     description: t({
                         en: "Seven budget apps compared for France, Quebec, and Belgium: price in euros, bank sync, free plans, and French. Outlayr is ours.",
                         es: "Compara 7 apps de presupuesto para Francia, Quebec y Bélgica: precio en euros, banco, plan gratis y francés. Outlayr es nuestra.",
-                        fr: "7 applications de budget comparées pour la France, le Québec et la Belgique : prix, synchro bancaire, offre gratuite. Outlayr est la nôtre.",
+                        fr: "7 applis de budget comparées en France, au Québec et en Belgique : prix, synchro bancaire, offre gratuite. Outlayr est la nôtre.",
                     }),
                     title: t({
                         en: "Best Budget Apps in France and Quebec (2026) · Outlayr",
@@ -7594,7 +7594,7 @@ const answers = {
                 meta: {
                     description: t({
                         en: "Actual Budget, Firefly III, Flow, and Outlayr on license, latest release, and platforms, and what changed at Cashew. Outlayr is ours.",
-                        es: "Actual Budget, Firefly III, Flow y Outlayr comparadas en licencia, última versión y plataformas, y qué cambió en Cashew. Outlayr es nuestra.",
+                        es: "Actual Budget, Firefly III, Flow y Outlayr por licencia, última versión y plataformas, y qué pasó con Cashew. Outlayr es nuestra.",
                     }),
                     title: t({
                         en: "Best Open Source Expense Tracker Apps (2026) · Outlayr",
@@ -9306,7 +9306,7 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Current US prices for 10 budget apps in one table: free plan, monthly, yearly, and bank link, each linked to its source. Outlayr is ours.",
+                        en: "Current US prices for 10 budget apps: free plan, monthly, yearly, and bank link, each linked to its source. Outlayr is ours.",
                         es: "Precios actuales en EE. UU. de 10 apps de presupuesto: plan gratis, al mes, al año y conexión al banco, con fuentes. Outlayr es nuestra.",
                     }),
                     title: t({
@@ -9451,7 +9451,7 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr sets a budget per category or one for the whole month, carries over what you did not spend, and says where your current pace ends.",
+                        en: "Set a budget per category or for the whole month in Outlayr, carry over what you did not spend, and see where your pace ends.",
                         es: "Outlayr pone un presupuesto por categoría o para todo el mes, acumula lo que no gastaste y te dice a dónde te lleva tu ritmo.",
                     }),
                     title: t({
@@ -9682,7 +9682,7 @@ const answers = {
                 meta: {
                     description: t({
                         en: "What budget categories are, a list of ten to start with, how to pick a limit for each one, and a worked example in dollars and pesos.",
-                        es: "Qué son las categorías de presupuesto, una lista de diez para empezar, cómo elegir el límite de cada una y un ejemplo en dólares y en pesos.",
+                        es: "Qué son las categorías de presupuesto, diez para empezar, cómo ponerle un límite a cada una y un ejemplo en dólares y pesos.",
                     }),
                     title: t({
                         en: "Budget Categories: The List to Start With (2026) · Outlayr",
@@ -10262,7 +10262,7 @@ const answers = {
                 meta: {
                     description: t({
                         en: "What Rocket Money does, what the free plan and Premium cost, the complaints about charges and cancelling, and how it compares.",
-                        es: "Qué es Rocket Money, qué hace, cuánto cuestan el plan gratis y Premium, las quejas por cobros y cancelaciones, y cómo se compara con Outlayr.",
+                        es: "Qué hace Rocket Money, cuánto cuestan el plan gratis y Premium, las quejas por cobros y cancelaciones, y cómo se compara.",
                     }),
                     title: t({
                         en: "What Is Rocket Money? An Honest Review (2026) · Outlayr",
@@ -11303,8 +11303,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Three ways to track your expenses: a spreadsheet, an app, or cash envelopes. How to pick categories, log every expense, and review your month.",
-                        es: "Tres formas de llevar el control de gastos: hoja de cálculo, app o sobres de efectivo. Cómo elegir categorías, anotar cada gasto y cerrar el mes.",
+                        en: "Track your expenses with a spreadsheet, an app, or cash envelopes, then pick categories, log every expense, and review your month.",
+                        es: "Lleva el control de gastos con hoja de cálculo, app o sobres de efectivo. Elige categorías, anota cada gasto y cierra el mes.",
                     }),
                     title: t({
                         en: "How to Track Your Expenses: 3 Methods That Work · Outlayr",
@@ -12682,7 +12682,7 @@ const answers = {
                 meta: {
                     description: t({
                         en: "How to cancel a subscription on iPhone, iPad, Mac, Android, or the web, step by step, and how to tell who bills you.",
-                        es: "Cómo cancelar una suscripción en iPhone, iPad, Mac, Android o la web, paso a paso según la ayuda de Apple y Google, y cómo saber quién te cobra.",
+                        es: "Cancela una suscripción en iPhone, iPad, Mac, Android o la web, paso a paso según Apple y Google, y averigua quién te cobra.",
                     }),
                     title: t({
                         en: "How to Cancel a Subscription on iPhone, Android, or the Web",
@@ -13297,7 +13297,7 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "How to cancel ChatGPT Plus or another paid ChatGPT plan on the web, iPhone, or Android, based on OpenAI's, Apple's, and Google's help pages.",
+                        en: "How to cancel ChatGPT Plus or another paid plan on the web, iPhone, or Android, using OpenAI, Apple, and Google help pages.",
                         es: "Cómo cancelar ChatGPT Plus u otro plan de pago de ChatGPT en la web, iPhone o Android, según la ayuda de OpenAI, Apple y Google.",
                     }),
                     title: t({
@@ -13642,7 +13642,7 @@ const answers = {
                         de: "Kostenlose Haushaltsbuch-Vorlage für Excel: Monatsübersicht in deiner Währung, Budget pro Kategorie und Diagramm. Auch als CSV.",
                         es: "Plantilla de control de gastos en Excel gratis: resumen del mes, lo gastado contra un presupuesto por categoría y un gráfico.",
                         pt: "Planilha de gastos grátis no Excel: resumo do mês por moeda, o gasto de cada categoria contra o orçamento e um gráfico. Também em CSV.",
-                        fr: "Modèle de budget mensuel Excel gratuit : résumé du mois par devise, dépenses face au budget de chaque catégorie et un graphique. Aussi en CSV.",
+                        fr: "Modèle Excel gratuit de budget mensuel : résumé par devise, dépenses face au budget par catégorie, graphique. Aussi en CSV.",
                     }),
                     title: t({
                         en: "Free Expense Tracker Template for Excel (2026) · Outlayr",
@@ -14118,7 +14118,7 @@ const answers = {
                 meta: {
                     description: t({
                         en: "Actual Budget, Copilot, EveryDollar, Goodbudget, Monarch, Outlayr, and PocketGuard next to YNAB: price, platforms, and currencies.",
-                        es: "Actual Budget, Copilot, EveryDollar, Goodbudget, Monarch, Outlayr y PocketGuard junto a YNAB: precio, plataformas, cómo registras y monedas.",
+                        es: "7 alternativas a YNAB por precio, plataformas, monedas y cómo registras: Actual Budget, Copilot, Monarch, Outlayr y tres más.",
                     }),
                     title: t({
                         en: "7 YNAB Alternatives, Compared (2026) · Outlayr",
