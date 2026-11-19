@@ -980,7 +980,7 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Copilot is a paid money app for Apple devices and the web that syncs linked accounts. Outlayr is an open source alternative, free to start.",
+                        en: "Copilot is a paid money app for Apple and the web that syncs linked accounts. Outlayr is an open source alternative, free to start.",
                         de: "Copilot ist eine kostenpflichtige Finanz-App für Apple und das Web mit Kontosync. Outlayr ist eine Open-Source-Alternative.",
                         es: "Copilot es una app de pago para Apple y la web que sincroniza tus cuentas. Outlayr es de código abierto y gratis para empezar.",
                         pt: "O Copilot é um app financeiro pago para Apple e web que sincroniza contas. O Outlayr é de código aberto e grátis para começar.",
@@ -14186,10 +14186,10 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr next to YNAB, Monarch, Copilot, Spendee, and eight more apps: price, how entries get in, and platforms, checked at each app's own site.",
-                        de: "Outlayr neben YNAB, Monarch, Copilot, Spendee und acht weiteren Apps: Preis, Eingabewege und Plattformen, geprüft auf der Website jeder App.",
-                        es: "Outlayr junto a YNAB, Monarch, Copilot, Spendee y ocho apps más: precio, cómo registras y plataformas, revisados en el sitio de cada app.",
-                        pt: "O Outlayr ao lado de YNAB, Monarch, Copilot, Spendee e mais oito apps: preço, forma de registrar e plataformas, conferidos no site de cada app.",
+                        en: "Outlayr next to YNAB, Monarch, Copilot, Spendee, and eight more apps: price, how you log, and platforms, checked on each site.",
+                        de: "Outlayr neben YNAB, Monarch, Copilot, Spendee und acht weiteren Apps: Preis, Eingabe und Plattformen, geprüft auf jeder Website.",
+                        es: "Outlayr junto a YNAB, Monarch, Copilot, Spendee y ocho apps más: precio, cómo registras y plataformas, revisados en cada sitio.",
+                        pt: "O Outlayr ao lado de YNAB, Monarch, Copilot, Spendee e mais oito apps: preço, registro e plataformas, conferidos em cada site.",
                         fr: "Outlayr face à YNAB, Monarch, Copilot, Spendee et huit autres apps : prix, saisie et plateformes, vérifiés sur chaque site.",
                     }),
                     title: t({
