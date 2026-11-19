@@ -113,11 +113,11 @@ const dashboardSync = {
             entries: {
                 label: t({ en: "Entries", de: "Einträge", es: "Movimientos", fr: "Opérations", pt: "Lançamentos" }),
                 hint: t({
-                    en: "Amount, currency, date, merchant, note (imported bank descriptions included), category, account, payment method, fees, tags, splits, receipt details, exchange rate, repeat schedule, and whether it's waiting for review",
-                    de: "Betrag, Währung, Datum, Händler, Notiz (auch importierte Bankbeschreibungen), Kategorie, Konto, Zahlungsart, Gebühren, Tags, Aufteilungen, Belegdetails, Wechselkurs, Wiederholung und ob er auf Prüfung wartet",
-                    es: "Monto, moneda, fecha, comercio, nota (incluidas las descripciones bancarias importadas), categoría, cuenta, método de pago, comisiones, etiquetas, divisiones, detalles del recibo, tasa de cambio, repetición y si está por revisar",
-                    fr: "Montant, devise, date, commerçant, note (descriptions bancaires importées comprises), catégorie, compte, moyen de paiement, frais, tags, répartitions, détails du reçu, taux de change, répétition et si elle attend une vérification",
-                    pt: "Valor, moeda, data, estabelecimento, nota (incluindo descrições bancárias importadas), categoria, conta, forma de pagamento, tarifas, tags, divisões, detalhes do recibo, câmbio, repetição e se aguarda revisão",
+                    en: "Amount, currency, date, merchant, note, original bank description from imports, category, account, payment method, fees, tags, splits, receipt details, exchange rate, repeat schedule, and whether it's waiting for review",
+                    de: "Betrag, Währung, Datum, Händler, Notiz, ursprüngliche Bankbeschreibung aus Importen, Kategorie, Konto, Zahlungsart, Gebühren, Tags, Aufteilungen, Belegdetails, Wechselkurs, Wiederholung und ob er auf Prüfung wartet",
+                    es: "Monto, moneda, fecha, comercio, nota, descripción bancaria original de las importaciones, categoría, cuenta, método de pago, comisiones, etiquetas, divisiones, detalles del recibo, tasa de cambio, repetición y si está por revisar",
+                    fr: "Montant, devise, date, commerçant, note, description bancaire d'origine des imports, catégorie, compte, moyen de paiement, frais, tags, répartitions, détails du reçu, taux de change, répétition et si elle attend une vérification",
+                    pt: "Valor, moeda, data, estabelecimento, nota, descrição bancária original das importações, categoria, conta, forma de pagamento, tarifas, tags, divisões, detalhes do recibo, câmbio, repetição e se aguarda revisão",
                 }),
             },
             transfers: {
@@ -156,7 +156,7 @@ const dashboardSync = {
                 }),
                 hint: t({
                     en: "Balance adjustments and money moved outside your tracked accounts: the account or person, amount, date and note",
-                    de: "Saldokorrekturen und Geld außerhalb deiner Konten: Konto oder Person, Betrag, Datum und Notiz",
+                    de: "Saldokorrekturen und Geld, das außerhalb deiner erfassten Konten bewegt wurde: Konto oder Person, Betrag, Datum und Notiz",
                     es: "Ajustes de saldo y dinero movido fuera de tus cuentas: la cuenta o persona, monto, fecha y nota",
                     fr: "Ajustements de solde et argent déplacé hors de vos comptes : le compte ou la personne, montant, date et note",
                     pt: "Ajustes de saldo e dinheiro movido fora das suas contas: a conta ou pessoa, valor, data e nota",
@@ -181,11 +181,11 @@ const dashboardSync = {
             budgets: {
                 label: t({ en: "Budgets", de: "Budgets", es: "Presupuestos", fr: "Budgets", pt: "Orçamentos" }),
                 hint: t({
-                    en: "Overall spending limit, its cadence and rollover, budgeted categories and their monthly amounts",
-                    de: "Gesamtlimit, sein Rhythmus und Übertrag, budgetierte Kategorien und ihre Monatsbeträge",
-                    es: "Límite general de gasto, su frecuencia y arrastre, categorías presupuestadas y sus montos mensuales",
-                    fr: "Plafond global, sa fréquence et son report, catégories budgétées et leurs montants mensuels",
-                    pt: "Limite geral de gastos, sua frequência e acúmulo, categorias orçadas e seus valores mensais",
+                    en: "Overall and category budgets: name, limit, currency, cadence, rollover and start date, plus month-by-month amounts",
+                    de: "Gesamt- und Kategoriebudgets: Name, Limit, Währung, Rhythmus, Übertrag und Startdatum, dazu die Beträge pro Monat",
+                    es: "Presupuestos generales y por categoría: nombre, límite, moneda, frecuencia, arrastre y fecha de inicio, más los montos mes a mes",
+                    fr: "Budgets global et par catégorie : nom, plafond, devise, fréquence, report et date de début, plus les montants mois par mois",
+                    pt: "Orçamentos gerais e por categoria: nome, limite, moeda, frequência, acúmulo e data de início, mais os valores mês a mês",
                 }),
             },
             goals: {
@@ -211,11 +211,11 @@ const dashboardSync = {
             rules: {
                 label: t({ en: "Rules", de: "Regeln", es: "Reglas", fr: "Règles", pt: "Regras" }),
                 hint: t({
-                    en: "Rules you create on the web: the merchant, description or amount they look for, and the category and tags they set",
-                    de: "Regeln, die du im Web erstellst: Händler, Beschreibung oder Betrag, nach dem sie suchen, und die Kategorie und Tags, die sie setzen",
-                    es: "Reglas que creas en la web: el comercio, la descripción o el monto que buscan, y la categoría y etiquetas que asignan",
-                    fr: "Règles créées sur le web : le commerçant, la description ou le montant recherchés, et la catégorie et les tags appliqués",
-                    pt: "Regras criadas na web: o estabelecimento, a descrição ou o valor que procuram, e a categoria e tags que aplicam",
+                    en: "Rules you create on the web: name, whether it's on, the merchant, description or amount it looks for, the category and tags it sets, and the rule suggestions and conflicts you settle",
+                    de: "Regeln, die du im Web erstellst: Name, ob sie an ist, Händler, Beschreibung oder Betrag, nach dem sie sucht, Kategorie und Tags, die sie setzt, und die Regelvorschläge und Konflikte, die du klärst",
+                    es: "Reglas que creas en la web: nombre, si está activa, el comercio, la descripción o el monto que busca, la categoría y etiquetas que asigna, y las sugerencias de reglas y conflictos que resuelves",
+                    fr: "Règles créées sur le web : nom, si elle est activée, le commerçant, la description ou le montant recherchés, la catégorie et les tags appliqués, et les suggestions de règles et conflits que vous réglez",
+                    pt: "Regras criadas na web: nome, se está ativa, o estabelecimento, a descrição ou o valor que procura, a categoria e tags que aplica, e as sugestões de regras e conflitos que você resolve",
                 }),
             },
             recurring: {
@@ -227,11 +227,11 @@ const dashboardSync = {
                     pt: "Recorrentes",
                 }),
                 hint: t({
-                    en: "Charges you pause on the web, with the entry's details and pause dates, and suggestions you dismiss",
-                    de: "Zahlungen, die du im Web pausierst, mit den Details des Eintrags und den Pausendaten, und abgelehnte Vorschläge",
-                    es: "Cobros que pausas en la web, con los detalles del movimiento y las fechas de pausa, y las sugerencias que descartas",
-                    fr: "Prélèvements mis en pause sur le web, avec les détails de l'opération et les dates de pause, et les suggestions écartées",
-                    pt: "Cobranças pausadas na web, com os detalhes do lançamento e as datas da pausa, e as sugestões descartadas",
+                    en: "Recurring income and expenses you pause on the web, with the entry's details and pause dates, and suggestions you dismiss",
+                    de: "Wiederkehrende Einnahmen und Ausgaben, die du im Web pausierst, mit den Details des Eintrags und den Pausendaten, und abgelehnte Vorschläge",
+                    es: "Ingresos y gastos recurrentes que pausas en la web, con los detalles del movimiento y las fechas de pausa, y las sugerencias que descartas",
+                    fr: "Revenus et dépenses récurrents mis en pause sur le web, avec les détails de l'opération et les dates de pause, et les suggestions écartées",
+                    pt: "Receitas e despesas recorrentes pausadas na web, com os detalhes do lançamento e as datas da pausa, e as sugestões descartadas",
                 }),
             },
             photos: {
@@ -243,21 +243,21 @@ const dashboardSync = {
                     pt: "Fotos e arquivos",
                 }),
                 hint: t({
-                    en: "Files you attach to entries and images you set on accounts, with their names, uploaded to our file storage. A merchant logo syncs as a link to a shared logo",
-                    de: "Dateien an Einträgen und Bilder von Konten, mit ihren Namen, in unseren Dateispeicher hochgeladen. Ein Händlerlogo wird als Verweis auf ein gemeinsames Logo synchronisiert",
-                    es: "Archivos que adjuntas a movimientos e imágenes de cuentas, con sus nombres, subidos a nuestro almacenamiento. El logo de un comercio se sincroniza como un enlace a un logo compartido",
-                    fr: "Fichiers joints aux opérations et images des comptes, avec leurs noms, envoyés dans notre stockage. Le logo d'un commerçant est synchronisé comme un lien vers un logo partagé",
-                    pt: "Arquivos anexados a lançamentos e imagens das contas, com seus nomes, enviados ao nosso armazenamento. O logo de um estabelecimento sincroniza como um link para um logo compartilhado",
+                    en: "Files you attach to entries and images you set on accounts, uploaded to our file storage under generated names. An attachment's original name syncs with it. A merchant logo syncs as a link to a shared logo",
+                    de: "Dateien an Einträgen und Bilder von Konten, unter erzeugten Namen in unseren Dateispeicher hochgeladen. Der ursprüngliche Name eines Anhangs wird mit ihm synchronisiert. Ein Händlerlogo wird als Verweis auf ein gemeinsames Logo synchronisiert",
+                    es: "Archivos que adjuntas a movimientos e imágenes de cuentas, subidos a nuestro almacenamiento con nombres generados. El nombre original de un adjunto se sincroniza con él. El logo de un comercio se sincroniza como un enlace a un logo compartido",
+                    fr: "Fichiers joints aux opérations et images des comptes, envoyés dans notre stockage sous des noms générés. Le nom d'origine d'une pièce jointe est synchronisé avec elle. Le logo d'un commerçant est synchronisé comme un lien vers un logo partagé",
+                    pt: "Arquivos anexados a lançamentos e imagens das contas, enviados ao nosso armazenamento com nomes gerados. O nome original de um anexo sincroniza com ele. O logo de um estabelecimento sincroniza como um link para um logo compartilhado",
                 }),
             },
             settings: {
                 label: t({ en: "Settings", de: "Einstellungen", es: "Ajustes", fr: "Réglages", pt: "Ajustes" }),
                 hint: t({
-                    en: "Currency, first day of the month and week, time zone, how numbers, times and charts show, income tracking, haptics, whether Smart fill, suggestions and web lookups are on, and favorite currencies chosen on the web",
-                    de: "Währung, erster Tag des Monats und der Woche, Zeitzone, Anzeige von Zahlen, Uhrzeiten und Diagrammen, Einnahmen, Haptik, ob intelligentes Ausfüllen, Vorschläge und Websuche an sind, und im Web gewählte Lieblingswährungen",
-                    es: "Moneda, primer día del mes y de la semana, zona horaria, cómo se ven números, horas y gráficos, registro de ingresos, vibración, si el autocompletado inteligente, las sugerencias y las búsquedas web están activos, y las monedas favoritas elegidas en la web",
-                    fr: "Devise, premier jour du mois et de la semaine, fuseau horaire, affichage des nombres, heures et graphiques, suivi des revenus, vibrations, si le remplissage intelligent, les suggestions et les recherches web sont activés, et les devises favorites choisies sur le web",
-                    pt: "Moeda, primeiro dia do mês e da semana, fuso horário, como números, horários e gráficos aparecem, registro de receitas, vibração, se o preenchimento inteligente, as sugestões e as buscas na web estão ativos, e as moedas favoritas escolhidas na web",
+                    en: "Currency, first day of the month and week, time zone, accent color, how numbers, times, charts and upcoming items show, account order, income tracking, haptics, confetti, whether Smart fill, suggestions and web lookups are on, and favorite currencies chosen on the web",
+                    de: "Währung, erster Tag des Monats und der Woche, Zeitzone, Akzentfarbe, Anzeige von Zahlen, Uhrzeiten, Diagrammen und anstehenden Posten, Kontoreihenfolge, Einnahmenerfassung, Haptik, Konfetti, ob intelligentes Ausfüllen, Vorschläge und Websuche an sind, und im Web gewählte Lieblingswährungen",
+                    es: "Moneda, primer día del mes y de la semana, zona horaria, color de acento, cómo se ven números, horas, gráficos y próximos pagos, orden de las cuentas, registro de ingresos, vibración, confeti, si el autocompletado inteligente, las sugerencias y las búsquedas web están activos, y las monedas favoritas elegidas en la web",
+                    fr: "Devise, premier jour du mois et de la semaine, fuseau horaire, couleur d'accent, affichage des nombres, heures, graphiques et éléments à venir, ordre des comptes, suivi des revenus, vibrations, confettis, si le remplissage intelligent, les suggestions et les recherches web sont activés, et les devises favorites choisies sur le web",
+                    pt: "Moeda, primeiro dia do mês e da semana, fuso horário, cor de destaque, como números, horários, gráficos e próximos itens aparecem, ordem das contas, registro de receitas, vibração, confete, se o preenchimento inteligente, as sugestões e as buscas na web estão ativos, e as moedas favoritas escolhidas na web",
                 }),
             },
             records: {
@@ -269,11 +269,11 @@ const dashboardSync = {
                     pt: "Dados de sincronização",
                 }),
                 hint: t({
-                    en: "A random ID for each phone and browser, each record's ID, and when it was edited, deleted or restored. A deleted record keeps its last contents",
-                    de: "Eine zufällige ID pro Telefon und Browser, die ID jedes Datensatzes und wann er bearbeitet, gelöscht oder wiederhergestellt wurde. Ein gelöschter Datensatz behält seinen letzten Inhalt",
-                    es: "Un ID aleatorio por teléfono y navegador, el ID de cada registro y cuándo se editó, borró o restauró. Un registro borrado conserva su último contenido",
-                    fr: "Un ID aléatoire par téléphone et navigateur, l'ID de chaque enregistrement et quand il a été modifié, supprimé ou restauré. Un enregistrement supprimé garde son dernier contenu",
-                    pt: "Um ID aleatório por celular e navegador, o ID de cada registro e quando foi editado, apagado ou restaurado. Um registro apagado mantém seu último conteúdo",
+                    en: "A random ID for each phone and browser, each record's ID, and when it was edited, deleted or restored. An entry you delete keeps its details so it can be restored",
+                    de: "Eine zufällige ID pro Telefon und Browser, die ID jedes Datensatzes und wann er bearbeitet, gelöscht oder wiederhergestellt wurde. Ein gelöschter Eintrag behält seine Details, damit er wiederhergestellt werden kann",
+                    es: "Un ID aleatorio por teléfono y navegador, el ID de cada registro y cuándo se editó, borró o restauró. Un movimiento que borras conserva sus detalles para poder restaurarlo",
+                    fr: "Un ID aléatoire par téléphone et navigateur, l'ID de chaque enregistrement et quand il a été modifié, supprimé ou restauré. Une opération supprimée garde ses détails pour pouvoir être restaurée",
+                    pt: "Um ID aleatório por celular e navegador, o ID de cada registro e quando foi editado, apagado ou restaurado. Um lançamento apagado mantém seus detalhes para poder ser restaurado",
                 }),
             },
         },
@@ -294,11 +294,11 @@ const dashboardSync = {
             }),
             lock: {
                 label: t({
-                    en: "App lock and hidden amounts",
-                    de: "App-Sperre und ausgeblendete Beträge",
-                    es: "Bloqueo de la app y montos ocultos",
-                    fr: "Verrouillage et montants masqués",
-                    pt: "Bloqueio do app e valores ocultos",
+                    en: "App lock and the choice to hide amounts",
+                    de: "App-Sperre und die Wahl, Beträge auszublenden",
+                    es: "Bloqueo de la app y la opción de ocultar montos",
+                    fr: "Verrouillage et le choix de masquer les montants",
+                    pt: "Bloqueio do app e a opção de ocultar valores",
                 }),
             },
             notifications: {
@@ -313,10 +313,10 @@ const dashboardSync = {
             consent: {
                 label: t({
                     en: "Your Share analytics and AI permission choices",
-                    de: "Deine Auswahl zu Analysedaten und KI-Erlaubnis",
-                    es: "Tus preferencias de analíticas y permiso de IA",
+                    de: "Deine Wahl zum Teilen von Analysedaten und zur KI-Erlaubnis",
+                    es: "Tus preferencias de compartir analíticas y permiso de IA",
                     fr: "Vos choix de partage des statistiques et d'autorisation IA",
-                    pt: "Suas escolhas de análises e permissão de IA",
+                    pt: "Suas escolhas de compartilhar análises e permissão de IA",
                 }),
             },
             look: {
