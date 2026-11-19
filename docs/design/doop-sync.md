@@ -31,7 +31,7 @@ Routes are under `apps/app/src/routes/_account/`. `_app.*` routes render inside 
 | Web · Auth                  | `OKW6CGtdAM` | `login.tsx` (Auth), `connect.tsx` (Connect), `_app.settings.invite` (Invite). Adopt and Gate have no route by name. |
 | Web · Onboarding            | `XMSTfgK1hY` | `_app.onboarding.tsx` (the shell's `bare` mode)                                                                     |
 | Web · Paywall and plan      | `3iIQtL_Hr7` | `_app.settings.plan` and `components/dashboard/paywall/`                                                            |
-| Light twins                 | `3kw0-RaI_A`, `4kxZGZFjOm` | The same routes in the light theme                                                                    |
+| Light directions | No page id (not on any listed page) | Dashboard light options `cgpdU-FFVt` (Light A · Stone), `LlUImwwLuX` (Light B · Paper), `0uc2btKt7Q` (Light C · White cards). None is marked final. The light user menu `KohDfR9VkA` is on Web · Shell. |
 | Home and empty state directions | `eQNbgbXMLU`, `R85gNQJcgO` | Explorations, no route                                                                                |
 | Archive                     | `vZwe78FPJq` | No route                                                                                                            |
 
