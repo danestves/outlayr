@@ -78,6 +78,7 @@ These names are not canvas tokens. Each one is kept, with a comment in `tokens.c
 | `--color-app-shadow-far`   | `#1c191738` | `#000c`     | The light-theme guide's popover shadow pair, which `--shadow-app-*` is built from.                            |
 | `--color-app-shadow-near`  | `#1c19171f` | `#0006`     | As above.                                                                                                      |
 | `--color-app-track`, `--color-app-chip` | `#d6d4ce`, `#c6d8cc` | phone palette | apps/site's. The web app does not use them.                                                    |
+| `--color-app-count`, `--color-app-on-count` | tint 18% over bg; tint with 35% ink | same mixes | The canvas's Transactions badge mixes. Declared in `index.css`'s `@theme inline`, so they resolve per element under an accent or dark scope. |
 
 `--color-app-scrim` had no consumer in `apps/app`, so it was removed. PanelUI's dialog backdrop is `bg-black/40`, which is the canvas's `#0006`.
 
@@ -134,6 +135,7 @@ The chrome every ledger page shares, from the canvas page `Web · Shell`:
 
 - **Frame:** `shell/sidebar.tsx` (Ledger, Plan and Tools, folding to the rail), `shell/top-bar.tsx` (page filters, the period control and Add entry), `shell/mobile-bar.tsx` (drawer, title, search, account sheet and Add entry).
 - **Palette:** `shell/command-palette.tsx`, opened by `mod+k`, the sidebar's Search and the mobile bar. Its open state lives in `shell/palette-open.ts`, because those triggers sit outside the ledger's providers.
+- **Review badge:** the sidebar's Transactions row counts live entries flagged `unreviewed` (`shell/review-count.ts`), read from the subscribed ledger with no extra query. It shows nothing until the whole ledger has loaded and nothing at zero, as the canvas's `count=""` does; folded, it is a tint dot.
 - **Global states:** `shell/status.tsx` holds the offline bar, the sync card and the session expired dialog. The sync card shows only while a backlog drains after the connection dropped, so an ordinary save never flashes it.
 - **Error pages:** `components/error-page.tsx`. The 404 renders in the shell as `/_account/_app`'s not-found component, and the crash page is the router's default error component. The wave illustration is static.
 
