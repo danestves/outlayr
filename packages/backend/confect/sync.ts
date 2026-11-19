@@ -155,7 +155,7 @@ function transactionFieldsEqual(
         return Object.is(stored ?? null, incoming ?? null);
     }
     if (field === "unreviewed") {
-        return Object.is(stored ?? false, incoming ?? false);
+        return Object.is(stored ?? false, incoming ?? stored ?? false);
     }
     return Object.is(stored, incoming);
 }
