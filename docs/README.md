@@ -38,3 +38,4 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 ### Audits
 
 - [SEO audit, 2026-11-19](./seo/2026-11-19/REPORT.md)
+- [Home page weight, 2026-11-19](./seo/2026-11-19/home-weight/REPORT.md)

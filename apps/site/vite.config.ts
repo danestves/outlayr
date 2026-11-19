@@ -76,6 +76,7 @@ export default defineConfig({
             },
         }),
         nitro({
+            compressPublicAssets: { brotli: true, gzip: true },
             routeRules: {
                 "/**": { headers: SECURITY_HEADERS },
                 ...PUBLIC_FILE_RULES,
