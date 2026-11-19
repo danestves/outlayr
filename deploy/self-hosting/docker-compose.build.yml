@@ -1,0 +1,14 @@
+services:
+    backend:
+        image: outlayr-backend:source
+        build:
+            context: ../..
+            dockerfile: deploy/self-hosting/backend.Dockerfile
+
+    app:
+        image: outlayr-app:source
+        build:
+            context: ../..
+            dockerfile: deploy/self-hosting/app.Dockerfile
+            args:
+                VITE_PUBLIC_POSTHOG_PROJECT_TOKEN: ${VITE_PUBLIC_POSTHOG_PROJECT_TOKEN:-}
