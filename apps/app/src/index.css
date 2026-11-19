@@ -750,8 +750,11 @@ html:active-view-transition-type(push-left, dissolve)::view-transition-group(app
     overflow: clip;
 }
 
+/* Also covers browsers without typed view transitions, which fall back to the UA crossfade. */
 @media (prefers-reduced-motion: reduce) {
-    html:active-view-transition-type(push-left, dissolve)::view-transition-group(app-content) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
         animation: none;
     }
 }
