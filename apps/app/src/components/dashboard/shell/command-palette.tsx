@@ -28,6 +28,7 @@ import { photoSrc } from "@/lib/photo-src";
 
 import { setPaletteOpen, usePaletteOpen } from "./palette-open";
 
+const ROW = "h-[2.375rem] gap-3 px-3 text-sm [&>span[aria-hidden]]:size-6";
 const ENTRY_LIMIT = 5;
 const GROUP_LIMIT = 3;
 
@@ -102,11 +103,11 @@ function Marked({ needle, text }: { needle: string; text: string }) {
 }
 
 function Figures({ children }: { children: ReactNode }) {
-    return <span className="dash-figure text-muted-foreground ml-auto flex shrink-0 gap-3 ps-3">{children}</span>;
+    return <span className="dash-figure flex gap-3">{children}</span>;
 }
 
 const action = (icon: IconSvgElement, label: string, run: () => void) => (
-    <Command.Item icon={itemIcon(icon)} key={label} onSelect={run} value={label}>
+    <Command.Item className={ROW} icon={itemIcon(icon)} key={label} onSelect={run} value={label}>
         {label}
     </Command.Item>
 );
@@ -162,13 +163,19 @@ export function CommandPalette() {
         });
     return (
         <Command.Dialog
-            className="app-shell ph-no-capture app-palette transition-none"
+            className="app-shell ph-no-capture app-palette max-w-[40rem] transition-none"
             hotkey="mod+k"
             label={copy.label.value}
             onOpenChange={(next) => (next ? setPaletteOpen(true) : close())}
             open={open}
         >
-            <Command filter={false} label={copy.label.value} onSearchChange={setSearch} search={search}>
+            <Command
+                filter={false}
+                variant="compact"
+                label={copy.label.value}
+                onSearchChange={setSearch}
+                search={search}
+            >
                 <Command.Input placeholder={copy.placeholder.value}>
                     <Command.Keys className="pointer-coarse:hidden" keys={["esc"]} />
                 </Command.Input>
@@ -195,6 +202,7 @@ export function CommandPalette() {
                                 <Command.Group heading={copy.entries}>
                                     {found.entries.map(({ details, name, row }) => (
                                         <Command.Item
+                                            className={ROW}
                                             icon={
                                                 <MerchantTile
                                                     imageUrl={photoSrc(transactions.get(row.id)?.imageKey)}
@@ -224,14 +232,16 @@ export function CommandPalette() {
                                                 )
                                             }
                                             value={`entry-${row.id}`}
+                                            kind={
+                                                <Figures>
+                                                    <span>{date.day(row.day)}</span>
+                                                    <span className="text-foreground">
+                                                        {money(row.income ? row.amount : -row.amount, ledger.currency)}
+                                                    </span>
+                                                </Figures>
+                                            }
                                         >
                                             <Marked needle={needle} text={name} />
-                                            <Figures>
-                                                <span>{date.day(row.day)}</span>
-                                                <span className="text-foreground">
-                                                    {money(row.income ? row.amount : -row.amount, ledger.currency)}
-                                                </span>
-                                            </Figures>
                                         </Command.Item>
                                     ))}
                                 </Command.Group>
@@ -240,6 +250,7 @@ export function CommandPalette() {
                                 <Command.Group heading={copy.merchants}>
                                     {found.merchants.map((merchant) => (
                                         <Command.Item
+                                            className={ROW}
                                             icon={itemIcon(Store01Icon)}
                                             key={merchant.name}
                                             onSelect={() => {
@@ -250,18 +261,20 @@ export function CommandPalette() {
                                                 });
                                             }}
                                             value={`merchant-${merchant.name}`}
+                                            kind={
+                                                <Figures>
+                                                    <span>
+                                                        {merchant.count === 1
+                                                            ? copy.entryOne
+                                                            : copy.entryCount({ count: merchant.count })}
+                                                    </span>
+                                                    <span className="text-foreground">
+                                                        {money(merchant.total, ledger.currency)}
+                                                    </span>
+                                                </Figures>
+                                            }
                                         >
                                             <Marked needle={needle} text={merchant.name} />
-                                            <Figures>
-                                                <span>
-                                                    {merchant.count === 1
-                                                        ? copy.entryOne
-                                                        : copy.entryCount({ count: merchant.count })}
-                                                </span>
-                                                <span className="text-foreground">
-                                                    {money(merchant.total, ledger.currency)}
-                                                </span>
-                                            </Figures>
                                         </Command.Item>
                                     ))}
                                 </Command.Group>
@@ -270,6 +283,7 @@ export function CommandPalette() {
                                 <Command.Group heading={copy.categories}>
                                     {found.categories.map((category) => (
                                         <Command.Item
+                                            className={ROW}
                                             icon={
                                                 <span className="flex size-6 items-center justify-center">
                                                     <span
@@ -290,13 +304,15 @@ export function CommandPalette() {
                                                 });
                                             }}
                                             value={`category-${category.id}`}
+                                            kind={
+                                                <Figures>
+                                                    <span className="text-foreground">
+                                                        {money(category.spent, ledger.currency)}
+                                                    </span>
+                                                </Figures>
+                                            }
                                         >
                                             <Marked needle={needle} text={category.name} />
-                                            <Figures>
-                                                <span className="text-foreground">
-                                                    {money(category.spent, ledger.currency)}
-                                                </span>
-                                            </Figures>
                                         </Command.Item>
                                     ))}
                                 </Command.Group>
@@ -307,6 +323,7 @@ export function CommandPalette() {
                                         const books = ledger.books.accounts.find((each) => each.localId === row.id);
                                         return (
                                             <Command.Item
+                                                className={ROW}
                                                 icon={
                                                     books ? (
                                                         <AccountTile account={accountLook(books)} size="md" />
@@ -360,7 +377,7 @@ export function CommandPalette() {
                     }
                 >
                     {count > 0 ? (
-                        <Command.FooterAction onClick={seeAll}>
+                        <Command.FooterAction className="text-muted-foreground font-normal" onClick={seeAll}>
                             <span className="dash-figure">
                                 {count === 1 ? copy.resultOne : copy.resultCount({ count })}
                             </span>

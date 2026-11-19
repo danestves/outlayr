@@ -57,7 +57,7 @@ export function SyncCard() {
     const [draining, setDraining] = useState(false);
     if ((!online || status === "failed") && !draining) {
         setDraining(true);
-    } else if (status === "upToDate" && draining) {
+    } else if (online && status === "upToDate" && draining) {
         setDraining(false);
     }
     if (!online) {

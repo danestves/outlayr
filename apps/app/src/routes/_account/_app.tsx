@@ -27,7 +27,6 @@ import { dashboardSearch, searchPatch } from "@/components/dashboard/shell/filte
 import type { FilterPatch } from "@/components/dashboard/shell/filters";
 import { DashboardShell } from "@/components/dashboard/shell/shell";
 import { SessionExpired, SyncCard, leaveSession } from "@/components/dashboard/shell/status";
-import { LostPage } from "@/components/error-page";
 import { offerProfile, warmAccountState } from "@/lib/account-state";
 import { convexClient } from "@/lib/convex";
 import { prepareLedger } from "@/lib/dashboard-series-ledger";
@@ -51,7 +50,6 @@ const Paywall = lazy(async () => {
 export const Route = createFileRoute("/_account/_app")({
     component: App,
     errorComponent: NotSynced,
-    notFoundComponent: LostPage,
     validateSearch: dashboardSearch,
     staleTime: Number.POSITIVE_INFINITY,
     loader: async ({ context, location }) => {
