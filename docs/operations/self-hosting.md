@@ -116,7 +116,7 @@ No sign-in works until `convex.env` has `BETTER_AUTH_SECRET` and at least one pr
 - **Google.** Create a web OAuth client with the redirect URI `<APP_ORIGIN>/api/auth/callback/google`. Google accepts only HTTPS URLs on a public domain (or `http://localhost`), so a plain-HTTP LAN address needs email sign-in instead. All three variables must be set: without an iOS client, set `GOOGLE_CLIENT_ID_IOS` to the web client ID.
 - **Apple.** Needs a Services ID, a Sign in with Apple key and an HTTPS `APP_ORIGIN`, since Apple refuses plain HTTP return URLs.
 
-Without RevenueCat every account stays on the free plan, with the free limits on scans and imports. AI features also need a provider key ([self-hosted-ai.md](./self-hosted-ai.md)) and each person's AI consent in the app.
+Without RevenueCat every account stays on the free plan, with the free limits on scans and imports, unless `PRO_ACCOUNTS` grants it Pro (see [self-hosted-ai.md](./self-hosted-ai.md)). AI features also need a provider key ([self-hosted-ai.md](./self-hosted-ai.md)) and each person's AI consent in the app.
 
 ## Moving to a new address
 

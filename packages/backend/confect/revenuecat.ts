@@ -13,7 +13,7 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
 import { components, internal } from "../convex/_generated/api";
-import { revenueCatSecretKey } from "./lib/config";
+import { proAccounts, revenueCatSecretKey } from "./lib/config";
 
 const REVENUECAT_TIMEOUT = Duration.seconds(10);
 const SUBSCRIBERS_URL = "https://api.revenuecat.com/v1/subscribers";
@@ -48,13 +48,40 @@ export class RevenueCatError extends Schema.TaggedError<RevenueCatError>()("Reve
     }
 }
 
+const EVERYONE = "all";
+
+const decodeVerifiedUser = Schema.decodeUnknownOption(
+    Schema.Struct({ email: Schema.String, emailVerified: Schema.Literal(true) })
+);
+
+const grantedPro = Effect.fn("RevenueCat.grantedPro")(function* grantedPro(
+    ctx: Parameters<typeof revenuecat.hasEntitlement>[0],
+    userId: string
+) {
+    const accounts = yield* Effect.orDie(proAccounts);
+    if (accounts.length === 0) {
+        return false;
+    }
+    if (accounts.includes(EVERYONE)) {
+        return true;
+    }
+    const user = yield* Effect.promise(() =>
+        ctx.runQuery(components.betterAuth.adapter.findOne, {
+            model: "user",
+            where: [{ field: "_id", value: userId }],
+        })
+    );
+    return decodeVerifiedUser(user).pipe(Option.exists(({ email }) => accounts.includes(email.toLowerCase())));
+});
+
 export const isPro = Effect.fn("RevenueCat.isPro")(function* isPro(
     ctx: Parameters<typeof revenuecat.hasEntitlement>[0],
     userId: string
 ) {
-    return yield* Effect.promise(() =>
+    const entitled = yield* Effect.promise(() =>
         revenuecat.hasEntitlement(ctx, { appUserId: userId, entitlementId: PRO_ENTITLEMENT_ID })
     );
+    return entitled || (yield* grantedPro(ctx, userId));
 });
 
 export const requirePro = Effect.fn("RevenueCat.requirePro")(function* requirePro(

@@ -168,6 +168,7 @@ describe("revenueCat", () => {
 
     it("fails the run with the SDK's error when configuring throws, so the error boundary sees it", async () => {
         const thrown = new Error("missing API key");
+        sdk.mirrorEntitlement.mockReturnValue(Effect.succeed(false));
         await start("user-1", {
             ...sdk,
             configureRevenueCat: () => {
@@ -180,6 +181,22 @@ describe("revenueCat", () => {
             throw new Error("the run did not fail");
         }
         expect(Cause.squash(run.cause)).toBe(thrown);
+        expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
+    });
+
+    it("without RevenueCat, takes Pro from the server for whichever account is signed in", async () => {
+        await start("user-30", { ...sdk, configureRevenueCat: () => false });
+        expect(entitlement()).toStrictEqual({ kind: "pro", mirrored: true, pending: false });
+
+        sdk.mirrorEntitlement.mockReturnValueOnce(Effect.succeed(false));
+        signIn("user-31");
+        await flush();
+        expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
+
+        signIn("user-30");
+        await flush();
+        signIn(null);
+        await flush();
         expect(entitlement()).toStrictEqual({ kind: "unconfigured" });
     });
 

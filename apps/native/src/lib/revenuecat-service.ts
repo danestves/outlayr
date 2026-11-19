@@ -251,11 +251,23 @@ const listen = <A>(watch: Watch<A>): Stream.Stream<A> =>
         )
     );
 
-const unconfigured = (sdk: typeof revenueCatSdk, run: Effect.Effect<void>) =>
-    RevenueCat.of({
+const UNCONFIGURED: Entitlement = { kind: "unconfigured" };
+const GRANTED: Entitlement = { kind: "pro", mirrored: true, pending: false };
+
+const unconfigured = Effect.fn("RevenueCat.unconfigured")(function* unconfigured(
+    sdk: typeof revenueCatSdk,
+    run: Effect.Effect<void>
+) {
+    const granted = yield* SubscriptionRef.make<Entitlement>(UNCONFIGURED);
+    return RevenueCat.of({
         eligibleForTrial: () => Effect.succeed(new Set<string>()),
-        entitlement: Stream.succeed<Entitlement>({ kind: "unconfigured" }),
-        follow: () => Effect.void,
+        entitlement: SubscriptionRef.changes(granted).pipe(Stream.changes),
+        follow: ({ accountId }) =>
+            accountId === null
+                ? SubscriptionRef.set(granted, UNCONFIGURED)
+                : sdk
+                      .mirrorEntitlement()
+                      .pipe(Effect.flatMap((pro) => SubscriptionRef.set(granted, pro ? GRANTED : UNCONFIGURED))),
         getPackages: () => Effect.succeed([]),
         mirror: () => sdk.mirrorEntitlement(),
         purchase: () => Effect.succeed("cancelled"),
@@ -263,6 +275,7 @@ const unconfigured = (sdk: typeof revenueCatSdk, run: Effect.Effect<void>) =>
         restore: () => Effect.succeed(false),
         run: () => run,
     });
+});
 
 export const make = Effect.gen(function* make() {
     const sdk = yield* RevenueCatSdk;
@@ -270,10 +283,10 @@ export const make = Effect.gen(function* make() {
     const scope = yield* Effect.scope;
     const configured = yield* Effect.result(Effect.try({ catch: failedAt("configure"), try: sdk.configureRevenueCat }));
     if (Result.isFailure(configured)) {
-        return unconfigured(sdk, Effect.die(configured.failure.cause));
+        return yield* unconfigured(sdk, Effect.die(configured.failure.cause));
     }
     if (!configured.success) {
-        return unconfigured(sdk, Effect.never);
+        return yield* unconfigured(sdk, Effect.never);
     }
     const ref = yield* SubscriptionRef.make(initialState);
     const lane = yield* Queue.unbounded<Effect.Effect<unknown>>();
