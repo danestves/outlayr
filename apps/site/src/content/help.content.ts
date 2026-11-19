@@ -53,8 +53,8 @@ const help = {
                 }),
                 meta: {
                     description: t({
-                        en: "How Outlayr logs Apple Pay purchases with a Shortcuts automation, how to set it up on iPhone, and how the free plan's 30 auto-logged entries a month work.",
-                        es: "Cómo Outlayr registra las compras con Apple Pay con una automatización de Atajos, cómo configurarla en iPhone y cómo funcionan los 30 registros automáticos al mes del plan gratis.",
+                        en: "How Outlayr logs Apple Pay purchases with a Shortcuts automation, how to set it up, and the free plan's 30 auto-logged entries.",
+                        es: "Cómo Outlayr registra las compras con Apple Pay con una automatización de Atajos, cómo configurarla y los 30 registros gratis.",
                     }),
                     title: t({
                         en: "How does Apple Pay logging work in Outlayr?",
@@ -162,7 +162,7 @@ const help = {
                 meta: {
                     description: t({
                         en: "Outlayr tracks expenses in 165 currencies. How to set your main currency, give each account its own, and how totals convert at each day's rate.",
-                        es: "Outlayr registra gastos en 165 monedas. Cómo elegir tu moneda principal, darle a cada cuenta la suya y cómo se convierten los totales con la tasa de cada día.",
+                        es: "Outlayr registra gastos en 165 monedas. Cómo elegir tu moneda principal, darle una a cada cuenta y cómo se convierten los totales.",
                     }),
                     title: t({
                         en: "Can I track expenses in several currencies in Outlayr?",
@@ -231,8 +231,8 @@ const help = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr never links your bank. How to log purchases without a bank connection and how to import past spending from a CSV or a bank statement PDF.",
-                        es: "Outlayr nunca se conecta a tu banco. Cómo registrar compras sin conexión bancaria y cómo importar gastos pasados desde un CSV o un PDF de estado de cuenta.",
+                        en: "Outlayr never links your bank. How to log purchases without a bank connection and import past spending from a CSV or a PDF.",
+                        es: "Outlayr nunca se conecta a tu banco. Cómo registrar compras sin conexión bancaria e importar gastos pasados desde un CSV o un PDF.",
                     }),
                     title: t({
                         en: "Does Outlayr link my bank account?",
@@ -422,7 +422,7 @@ const help = {
                 meta: {
                     description: t({
                         en: "How subscription reminders work in Outlayr: when they fire, how to set one per subscription, and how charges log themselves on their day.",
-                        es: "Cómo funcionan los avisos de suscripciones en Outlayr: cuándo llegan, cómo poner uno por suscripción y cómo los cobros se registran solos en su día.",
+                        es: "Cómo funcionan los avisos de suscripciones en Outlayr: cuándo llegan, cómo poner uno por suscripción y cómo se registran los cobros.",
                     }),
                     title: t({
                         en: "How do subscription reminders work in Outlayr?",
@@ -492,8 +492,8 @@ const help = {
                 }),
                 meta: {
                     description: t({
-                        en: "How to track a Cashea, Klarna or other buy now, pay later purchase in Outlayr: each cuota, reminders the day before, late fees, and importing an order from screenshots.",
-                        es: "Cómo registrar una compra en Cashea, Klarna u otra app de cuotas en Outlayr: cada cuota, avisos el día antes, recargos e importar una orden desde capturas.",
+                        en: "How to track a Cashea, Klarna, or other buy now, pay later purchase in Outlayr: each cuota, reminders, late fees, and imports.",
+                        es: "Cómo registrar una compra en Cashea, Klarna u otra app de cuotas en Outlayr: cada cuota, avisos, recargos e importar una orden.",
                     }),
                     title: t({
                         en: "How do I track a Cashea or Klarna purchase in Outlayr?",

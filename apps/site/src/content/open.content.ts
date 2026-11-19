@@ -54,10 +54,10 @@ const open = {
         meta: {
             description: t({
                 en: "How many people use Outlayr, how many entries they log, and what it earns, updated daily from the code in its public repo.",
-                de: "Wie viele Menschen Outlayr nutzen, wie viele Einträge sie erfassen und was es einnimmt, täglich aktualisiert aus dem Code im öffentlichen Repository.",
+                de: "Wie viele Menschen Outlayr nutzen, wie viel sie erfassen und was es einnimmt, täglich aktualisiert aus dem öffentlichen Repository.",
                 es: "Cuántas personas usan Outlayr, cuántos registros hacen y cuánto gana, actualizado cada día desde el código de su repositorio público.",
                 pt: "Quantas pessoas usam o Outlayr, quantos lançamentos fazem e quanto ele ganha, atualizado todo dia a partir do código do repositório público.",
-                fr: "Combien de personnes utilisent Outlayr, combien d'opérations elles saisissent et ce qu'il rapporte, mis à jour chaque jour depuis le code de son dépôt public.",
+                fr: "Combien de personnes utilisent Outlayr, combien d'opérations elles saisissent et ce qu'il rapporte, mis à jour chaque jour.",
             }),
             title: t({
                 en: "Outlayr in numbers",
