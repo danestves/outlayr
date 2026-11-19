@@ -287,7 +287,6 @@ function printedChars(page: string): number {
     return page.replaceAll(/\s/g, "").length;
 }
 
-/** One-based numbers of the pages with no text layer, whose rows the model never sees. */
 export function unreadPageNumbers(pages: readonly string[]): number[] {
     const unread: number[] = [];
     for (const [index, page] of pages.entries()) {

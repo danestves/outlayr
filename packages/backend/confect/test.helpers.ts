@@ -182,7 +182,7 @@ function pageStream(rows: readonly (readonly string[])[]): string {
     return `${stream}ET`;
 }
 
-/** One entry per page; an empty page stands in for a scan, which has no text layer. */
+/** An empty page stands in for a scan, which has no text layer. */
 export function statementPdfPages(pages: readonly (readonly (readonly string[])[])[]): Uint8Array {
     const pageIds = pages.map((_, page) => 4 + page * 2);
     const objects = [
