@@ -162,7 +162,7 @@ export function FileStep({ onChoose, onSeePro, busy = false }: FileStepProps) {
                 />
 
                 {unreadPages.length > 0 ? (
-                    <Text className="text-footnote text-warning leading-snug">
+                    <Text className="text-footnote text-warning-foreground leading-snug">
                         {t("import.statementUnreadPages", { pages: unreadPages.join(", ") })}
                     </Text>
                 ) : null}
