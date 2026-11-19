@@ -12,9 +12,11 @@ import { useOpenFlow } from "@/components/dashboard/accounts/flows";
 import { IconButton } from "@/components/ui/icon-button";
 
 import { AccountSheet } from "./account-menu";
+import { setPaletteOpen } from "./palette-open";
 
 export function MobileBar() {
-    const { account, nav } = useIntlayer("dashboard");
+    const { account, add, nav } = useIntlayer("dashboard");
+    const openFlow = useOpenFlow();
     const page = useLocation({ select: (location) => location.pathname.split("/")[1] });
     let title: ReactNode = nav.dashboard;
     if (page === "insights") {
@@ -47,29 +49,22 @@ export function MobileBar() {
             >
                 <HugeiconsIcon icon={SidebarLeftIcon} strokeWidth={2} />
             </NavRail.Trigger>
-            <h1 className="min-w-0 truncate text-[17px] font-semibold">{title}</h1>
+            <h1 className="text-app-heading min-w-0 truncate font-semibold">{title}</h1>
             <IconButton
-                aria-disabled
                 className="text-muted-foreground ml-auto"
                 icon={Search01Icon}
                 label={nav.search.value}
+                onClick={() => setPaletteOpen(true)}
                 size="lg"
             />
             <AccountSheet />
+            <IconButton
+                icon={Add01Icon}
+                label={add.entry.value}
+                onClick={() => openFlow({ kind: "entry" })}
+                size="lg"
+                variant="default"
+            />
         </header>
-    );
-}
-
-export function AddButton() {
-    const { add } = useIntlayer("dashboard");
-    const openFlow = useOpenFlow();
-    return (
-        <Button
-            aria-label={add.entry.value}
-            className="fixed right-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-30 size-14 rounded-full shadow-lg lg:hidden"
-            onClick={() => openFlow({ kind: "entry" })}
-        >
-            <HugeiconsIcon icon={Add01Icon} size={24} strokeWidth={2} />
-        </Button>
     );
 }

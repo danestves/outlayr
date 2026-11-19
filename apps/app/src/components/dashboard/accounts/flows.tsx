@@ -22,8 +22,8 @@ export type AccountFlow =
     | { draft?: AccountValues; kind: "create"; type: AccountType }
     | { accountId?: string; draft?: PurchaseValues; kind: "purchase"; seed?: PurchaseSeed }
     | { accountId?: string; kind: "scan" }
-    | { accountId: string; kind: "transfer" }
-    | { accountId?: string; from?: string; kind: "entry" };
+    | { accountId?: string; kind: "transfer" }
+    | { accountId?: string; from?: string; kind: "entry"; note?: string };
 
 interface AccountFlows {
     open: (flow: AccountFlow) => void;

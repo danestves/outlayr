@@ -6,8 +6,9 @@ import { useProfileMirror } from "@/lib/account-state";
 import { LedgerSettingsContext, useLedgerSettings } from "@/lib/ledger-settings";
 
 import { FlowRoot } from "../accounts/flows";
-import { AddButton, MobileBar } from "./mobile-bar";
+import { MobileBar } from "./mobile-bar";
 import { Sidebar } from "./sidebar";
+import { OfflineBar } from "./status";
 
 const SCROLL_KEYS = new Set(["ArrowDown", "ArrowUp", "End", "Home", "PageDown", "PageUp", " "]);
 
@@ -45,15 +46,15 @@ export function DashboardShell({ bare = false, children }: { bare?: boolean; chi
             >
                 <Sidebar />
                 <div
-                    className="min-w-0 flex-1 [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto overscroll-contain outline-none max-lg:pb-20"
+                    className="min-w-0 flex-1 [scrollbar-gutter:stable] overflow-x-hidden overflow-y-auto overscroll-contain outline-none"
                     data-scroll-restoration-id="dashboard-content"
                     ref={forwardScrollKeys}
                     tabIndex={-1}
                 >
                     <FlowRoot>
                         <MobileBar />
+                        <OfflineBar />
                         {children}
-                        <AddButton />
                     </FlowRoot>
                 </div>
             </NavRail.Provider>

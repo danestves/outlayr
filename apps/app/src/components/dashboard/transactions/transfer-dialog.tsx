@@ -1,3 +1,4 @@
+import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
 import ArrowDataTransferHorizontalIcon from "@hugeicons/core-free-icons/ArrowDataTransferHorizontalIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { accountLook } from "@outlayr/money/ledger-log";
@@ -239,6 +240,30 @@ export function TransferDialog({ accountId, onClose }: { accountId: string; onCl
                 </Button>
                 <Button form={formId} type="submit">
                     {flows.saveTransfer}
+                </Button>
+            </Dialog.Footer>
+        </FlowDialog>
+    );
+}
+
+export function TransferNoAccounts({ onClose, onCreate }: { onClose: () => void; onCreate: () => void }) {
+    const { flows } = useIntlayer("dashboard-accounts");
+    const { form } = useIntlayer("dashboard-transactions");
+    const { transfer } = useIntlayer("dashboard-shell");
+    return (
+        <FlowDialog label={flows.newTransfer}>
+            <Dialog.Body>
+                <p className="border-border text-app-label text-muted-foreground rounded-app-md border px-3 py-2.5">
+                    {transfer.intro}
+                </p>
+            </Dialog.Body>
+            <Dialog.Footer>
+                <Button onClick={onClose} variant="secondary">
+                    {flows.cancel}
+                </Button>
+                <Button onClick={onCreate}>
+                    <HugeiconsIcon icon={Add01Icon} strokeWidth={1.5} />
+                    {form.createAccount}
                 </Button>
             </Dialog.Footer>
         </FlowDialog>

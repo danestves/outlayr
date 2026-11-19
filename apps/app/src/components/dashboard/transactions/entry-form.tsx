@@ -3,6 +3,7 @@ import Cancel01Icon from "@hugeicons/core-free-icons/Cancel01Icon";
 import Copy01Icon from "@hugeicons/core-free-icons/Copy01Icon";
 import Delete02Icon from "@hugeicons/core-free-icons/Delete02Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { PICKABLE_CURRENCY_CODES } from "@outlayr/money/catalog";
 import { decimalsFor } from "@outlayr/money/currency";
 import { accountLook } from "@outlayr/money/ledger-log";
 import type { EntryRateType } from "@outlayr/money/rates";
@@ -24,6 +25,7 @@ import type { AccountFlow } from "@/components/dashboard/accounts/flows";
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { useLedgerCommitter } from "@/components/dashboard/shell/ledger-committer";
 import { AccountTile, MerchantTile } from "@/components/ledger/tiles";
+import { MoneyField } from "@/components/ui/money-field";
 import { parseAmount } from "@/lib/account-writes";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import type { Ledger } from "@/lib/dashboard-series-ledger";
@@ -216,6 +218,10 @@ function feeOfRate({ amountText, currency }: EntryValues, rate: number) {
     return roundMoney(parseAmount(amountText, decimals) * rate, decimals);
 }
 
+const focusAmount = (node: HTMLDivElement | null) => {
+    node?.querySelector("input")?.focus();
+};
+
 function AmountField({
     amountKey,
     onChange,
@@ -245,6 +251,46 @@ function AmountField({
                     text={values.amountText}
                 />
             </div>
+            {problem === "amount" ? <Field.Error match>{form.amountRequired}</Field.Error> : null}
+        </Field>
+    );
+}
+
+function DialogAmount({
+    amountKey,
+    codes,
+    onChange,
+    onPickCurrency,
+    problem,
+    values,
+}: {
+    amountKey?: number;
+    codes: readonly string[];
+    onChange: (patch: Partial<EntryValues>) => void;
+    onPickCurrency: (currency: string) => void;
+    problem: EntryProblem | null;
+    values: EntryValues;
+}) {
+    const { form } = useIntlayer("dashboard-transactions");
+    const typed = values.amountText.trim();
+    return (
+        <Field className="min-w-0" invalid={problem === "amount"}>
+            <MoneyField
+                className={problem === "amount" ? "border-destructive" : undefined}
+                codes={codes}
+                key={amountKey}
+                label={form.amount}
+                onValueChange={(next) =>
+                    next.code === values.currency
+                        ? onChange({ amountText: next.amount === null ? "" : String(next.amount) })
+                        : onPickCurrency(next.code)
+                }
+                ref={focusAmount}
+                value={{
+                    amount: typed === "" ? null : parseAmount(typed, decimalsFor(values.currency)),
+                    code: values.currency,
+                }}
+            />
             {problem === "amount" ? <Field.Error match>{form.amountRequired}</Field.Error> : null}
         </Field>
     );
@@ -335,8 +381,30 @@ function EntryFields({
             </Tabs.List>
         </Tabs>
     );
-    const amount = (
+    const pickCurrency = (currency: string) => {
+        if (currency !== values.currency) {
+            onPick({
+                amountText:
+                    values.amountText.trim() === ""
+                        ? ""
+                        : money(parseAmount(values.amountText, decimalsFor(values.currency)), currency),
+                currency,
+                currencyByHand: true,
+                rateType: "official",
+            });
+        }
+    };
+    const amount = quiet ? (
         <AmountField amountKey={amountKey} onChange={onChange} problem={problem} quiet={quiet} values={values} />
+    ) : (
+        <DialogAmount
+            amountKey={amountKey}
+            codes={[...inUse, ...PICKABLE_CURRENCY_CODES.filter((code) => !inUse.includes(code))]}
+            onChange={onChange}
+            onPickCurrency={pickCurrency}
+            problem={problem}
+            values={values}
+        />
     );
     const feeRate = parseFee(values.feeText, values.currency)?.rate;
     const feeShown = feeRate == null ? null : money(feeOfRate(values, feeRate), values.currency);
@@ -396,9 +464,15 @@ function EntryFields({
                     />
                 </Slot>
                 {accounts.length === 0 && onCreateAccount ? (
-                    <p className="text-muted-foreground col-span-full text-[13px]">
-                        {form.noAccountLine}{" "}
-                        <Button onClick={onCreateAccount} size="sm" type="button" variant="link">
+                    <p className="border-border text-app-label text-muted-foreground rounded-app-md col-span-full flex items-center gap-3 border px-3 py-2.5">
+                        <span className="min-w-0 flex-1">{form.noAccountLine}</span>
+                        <Button
+                            className="text-app-tint shrink-0"
+                            onClick={onCreateAccount}
+                            size="sm"
+                            type="button"
+                            variant="link"
+                        >
                             {form.createAccount}
                         </Button>
                     </p>
@@ -410,25 +484,15 @@ function EntryFields({
                         text={values.dateText}
                     />
                 </Slot>
-                <CurrencyField
-                    inUse={inUse}
-                    label={form.currency}
-                    onPick={(currency) => {
-                        if (currency !== values.currency) {
-                            onPick({
-                                amountText:
-                                    values.amountText.trim() === ""
-                                        ? ""
-                                        : money(parseAmount(values.amountText, decimalsFor(values.currency)), currency),
-                                currency,
-                                currencyByHand: true,
-                                rateType: "official",
-                            });
-                        }
-                    }}
-                    quiet={quiet}
-                    value={values.currency}
-                />
+                {quiet ? (
+                    <CurrencyField
+                        inUse={inUse}
+                        label={form.currency}
+                        onPick={pickCurrency}
+                        quiet={quiet}
+                        value={values.currency}
+                    />
+                ) : null}
                 {values.income || values.accountId === null ? null : (
                     <Slot label={form.fee} quiet={quiet}>
                         <div className="flex min-w-0 items-center justify-end">
@@ -521,7 +585,7 @@ export function EntryDialog({
         const source = ledger.books.transactions.find((row) => row.localId === flow.from);
         return source
             ? logAgainValues(ledger, source, Date.now())
-            : blankValues(ledger, flow.accountId ?? null, Date.now());
+            : { ...blankValues(ledger, flow.accountId ?? null, Date.now()), note: flow.note ?? "" };
     });
     const [problem, setProblem] = useState<EntryProblem | null>(null);
     const [round, setRound] = useState(0);

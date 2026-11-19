@@ -1,6 +1,7 @@
 import { useDashboard } from "@/components/dashboard/shell/dashboard";
 import { EntryDialog } from "@/components/dashboard/transactions/entry-form";
-import { TransferDialog } from "@/components/dashboard/transactions/transfer-dialog";
+import { TransferDialog, TransferNoAccounts } from "@/components/dashboard/transactions/transfer-dialog";
+import { transferAccounts } from "@/lib/transfer-create";
 
 import { AccountForm } from "./account-form";
 import { CheckDialog } from "./check-dialog";
@@ -24,7 +25,12 @@ export default function FlowDialogs({
         return <EntryDialog flow={flow} onClose={onClose} onSwitch={onSwitch} />;
     }
     if (flow.kind === "transfer") {
-        return <TransferDialog accountId={flow.accountId} onClose={onClose} />;
+        const choices = new Set(transferAccounts(ledger.books).map((row) => row.localId));
+        const from = flow.accountId ?? [...choices][0];
+        if (from === undefined || new Set([...choices, from]).size < 2) {
+            return <TransferNoAccounts onClose={onClose} onCreate={() => onSwitch({ kind: "create", type: "bank" })} />;
+        }
+        return <TransferDialog accountId={from} onClose={onClose} />;
     }
     if (flow.kind === "create") {
         return <AccountForm account={null} draft={flow.draft} onClose={onClose} onSwitch={onSwitch} type={flow.type} />;
