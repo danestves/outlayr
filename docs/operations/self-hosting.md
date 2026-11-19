@@ -9,7 +9,7 @@ The Outlayr backend and web app run on any Docker host from two published images
 | `backend` | `ghcr.io/danestves/outlayr-backend` | none | Once per start: sets the deployment's variables, deploys the functions, exits 0 |
 | `app` | `ghcr.io/danestves/outlayr-app` | 3080 | Always, once `backend` succeeded |
 
-The Convex engine is Convex's own image at the commit in `docker-compose.yml`, never rebuilt or forked. Outlayr's images hold only the functions with the Convex CLI, and the built web app on Node. `.github/workflows/self-hosting-images.yml` publishes both for amd64 and arm64: `edge` from `main`, `vX.Y.Z` and `latest` from a `vX.Y.Z` tag.
+The Convex engine is Convex's own image at the commit in `docker-compose.yml`, never rebuilt or forked. Outlayr's images hold only the functions with the Convex CLI, and the built web app on Node. `.github/workflows/self-hosting-images.yml` publishes both for amd64 and arm64: `edge` from `main`, `vX.Y.Z` from a `vX.Y.Z` tag, and `latest` from a stable one. Until the first release only `edge` exists, so it is the default.
 
 ## Quick start
 
@@ -48,6 +48,14 @@ The same stack, with both Outlayr images built from the working tree and tagged 
 ```sh
 git clone https://github.com/danestves/outlayr && cd outlayr/deploy/self-hosting
 cp .env.example .env && cp convex.env.example convex.env
+```
+
+Fill both files as in steps 1 and 2 of the quick start, then:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d convex
+docker compose exec convex ./generate_admin_key.sh
+# put the key in .env as CONVEX_SELF_HOSTED_ADMIN_KEY
 docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 ```
 
@@ -63,7 +71,7 @@ Builds need no Hugeicons Pro token: only the native app and the marketing site u
 | `CONVEX_CLOUD_ORIGIN` | Yes | Public URL of port 3210. The browser's WebSocket and the dashboard use it. |
 | `CONVEX_SITE_ORIGIN` | Yes | Public URL of port 3211. Auth, webhooks and file URLs use it. |
 | `CONVEX_SELF_HOSTED_ADMIN_KEY` | Yes | From `generate_admin_key.sh`. Only `backend` reads it. |
-| `IMAGE_TAG` | No | `latest` (default), `edge`, or `vX.Y.Z`. |
+| `IMAGE_TAG` | No | `edge` (default, follows `main`), `vX.Y.Z`, or `latest` once a release exists. |
 | `IMAGE_REGISTRY`, `IMAGE_OWNER` | No | Default `ghcr.io` and `danestves`, for a fork or a mirror. |
 | `APP_PORT`, `CONVEX_PORT`, `CONVEX_SITE_PORT`, `DASHBOARD_PORT` | No | Host ports, default 3080, 3210, 3211, 6791. |
 | `BIND_ADDRESS` | No | Address the host ports listen on, default `0.0.0.0`. |
@@ -105,7 +113,7 @@ A build that sets those variables keeps them: varlock bakes a build's resolved e
 No sign-in works until `convex.env` has `BETTER_AUTH_SECRET` and at least one provider.
 
 - **Email.** Codes and passwords go out through Cloudflare Email Sending; there is no SMTP option. `EMAIL_FROM` must be an address that Cloudflare account may send from.
-- **Google.** Create a web OAuth client with the redirect URI `<APP_ORIGIN>/api/auth/callback/google`. All three variables must be set: without an iOS client, set `GOOGLE_CLIENT_ID_IOS` to the web client ID.
+- **Google.** Create a web OAuth client with the redirect URI `<APP_ORIGIN>/api/auth/callback/google`. Google accepts only HTTPS URLs on a public domain (or `http://localhost`), so a plain-HTTP LAN address needs email sign-in instead. All three variables must be set: without an iOS client, set `GOOGLE_CLIENT_ID_IOS` to the web client ID.
 - **Apple.** Needs a Services ID, a Sign in with Apple key and an HTTPS `APP_ORIGIN`, since Apple refuses plain HTTP return URLs.
 
 Without RevenueCat every account stays on the free plan, with the free limits on scans and imports. AI features also need `ANTHROPIC_API_KEY` and each person's AI consent in the app.
@@ -131,7 +139,7 @@ docker compose pull
 docker compose up -d
 ```
 
-`backend` deploys the functions from the new image before `app` restarts. Set `IMAGE_TAG` to a `vX.Y.Z` release to upgrade on purpose instead of following `latest`. A new `docker-compose.yml` can move `CONVEX_VERSION` to a newer engine, so [back up](#backup-and-restore) before pulling one. From a checkout, `git pull` and run the source build command again.
+`backend` deploys the functions from the new image before `app` restarts. Set `IMAGE_TAG` to a `vX.Y.Z` release to upgrade on purpose instead of following `edge`. A new `docker-compose.yml` can move `CONVEX_VERSION` to a newer engine, so [back up](#backup-and-restore) before pulling one. From a checkout, `git pull` and run the source build command again.
 
 ## Backup and restore
 
@@ -151,7 +159,13 @@ docker run --rm -v outlayr_convex-data:/data -v "$PWD":/backup alpine sh -c 'rm 
 docker compose up -d
 ```
 
-`npx convex export --path snapshot.zip`, run with `CONVEX_SELF_HOSTED_URL` and the admin key, makes a portable snapshot that `convex import` can load into another deployment.
+For a portable snapshot that `convex import` can load into another deployment, run the CLI bundled in the backend image:
+
+```sh
+docker compose run --rm -v "$PWD":/backup --entrypoint ./node_modules/.bin/convex backend export --path /backup/snapshot.zip
+```
+
+From a checkout, add `-f docker-compose.yml -f docker-compose.build.yml` after `docker compose` so it uses the `:source` image.
 
 ## Traps
 

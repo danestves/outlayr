@@ -38,7 +38,7 @@ services:
                 condition: service_healthy
 
     backend:
-        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-danestves}/outlayr-backend:${IMAGE_TAG:-latest}
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-danestves}/outlayr-backend:${IMAGE_TAG:-edge}
         restart: "no"
         environment:
             CONVEX_SELF_HOSTED_URL: http://convex:3210
@@ -51,7 +51,7 @@ services:
                 condition: service_healthy
 
     app:
-        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-danestves}/outlayr-app:${IMAGE_TAG:-latest}
+        image: ${IMAGE_REGISTRY:-ghcr.io}/${IMAGE_OWNER:-danestves}/outlayr-app:${IMAGE_TAG:-edge}
         restart: unless-stopped
         ports:
             - "${BIND_ADDRESS:-0.0.0.0}:${APP_PORT:-3080}:3000"

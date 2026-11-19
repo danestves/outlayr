@@ -8,6 +8,8 @@
 **/.env*
 !**/.env.schema
 **/*.log
+**/*.tgz
+**/*.zip
 deploy/self-hosting/convex.env
 apps/clips/*
 !apps/clips/package.json
