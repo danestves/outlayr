@@ -36,7 +36,7 @@ const tools = {
                     de: "Kostenlose Geldrechner: Gehalt, Abos, Ratenzahlung, geteilte Rechnung. Nichts verlässt deinen Browser.",
                     es: "Reparte tu sueldo, suma tus suscripciones, calcula cuotas o divide una cuenta. Gratis, y nada sale de tu navegador.",
                     pt: "Calculadoras grátis: divida seu salário, some suas assinaturas, veja quanto custa um parcelamento. Nada sai do seu navegador.",
-                    fr: "Calculateurs de budget gratuits : salaire, abonnements, paiement en plusieurs fois, addition à partager. Rien ne quitte votre navigateur.",
+                    fr: "Calculateurs gratuits : salaire, abonnements, paiement en plusieurs fois, addition à partager. Rien ne quitte votre navigateur.",
                 }),
                 title: t({
                     en: "Free Money Calculators · Outlayr",
@@ -461,7 +461,7 @@ const tools = {
                 }),
                 meta: {
                     description: t({
-                        en: "Add up what your subscriptions and memberships cost a month and a year, whether they charge weekly, monthly, every 3 months, or once a year.",
+                        en: "Add up what your subscriptions and memberships cost a month and a year, whether billed weekly, monthly, every 3 months or yearly.",
                         de: "Rechne zusammen, was deine Abos und Mitgliedschaften im Monat und im Jahr kosten, egal wie oft sie abbuchen.",
                         es: "Suma lo que te cuestan tus suscripciones y membresías al mes y al año, ya cobren cada semana, cada mes, cada 3 meses o una vez al año.",
                         pt: "Some quanto suas assinaturas e mensalidades custam por mês e por ano, seja a cobrança semanal, mensal, a cada 3 meses ou anual.",
@@ -918,7 +918,7 @@ const tools = {
                 meta: {
                     description: t({
                         en: "Enter what each person paid for a trip, a dinner, or a shared house, and see who pays whom to even it out.",
-                        de: "Gib ein, was jede Person für eine Reise, ein Abendessen oder ein gemeinsames Haus gezahlt hat, und sieh, wer wem etwas zahlt, damit es aufgeht.",
+                        de: "Gib ein, was jede Person für eine Reise, ein Abendessen oder ein gemeinsames Haus gezahlt hat, und sieh, wer wem etwas zahlt.",
                         es: "Anota lo que pagó cada persona en un viaje, una cena o una casa compartida, y mira quién le paga a quién para quedar a mano.",
                         pt: "Para dividir a conta de um jantar, viagem ou casa compartilhada: informe quanto cada um pagou e veja quem paga quem.",
                         fr: "Pour partager l'addition d'un dîner, d'un voyage ou d'une colocation : indiquez ce que chacun a payé et voyez qui rembourse qui.",
@@ -1167,6 +1167,10 @@ const tools = {
                     es: "La tasa oficial del BCV para el dólar y el euro en Venezuela hoy, con una calculadora para convertir bolívares a dólares o euros y al revés.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Today's official BCV dollar and euro rates in Venezuela, with a calculator to turn dollars or euros into bolívares and back.",
+                        es: "La tasa oficial del BCV para el dólar y el euro hoy en Venezuela, con una calculadora de bolívares a dólares o euros y al revés.",
+                    }),
                     title: t({
                         en: "BCV Dollar and Euro Rate Today, Bolívar Calculator",
                         es: "Calculadora dólar y euro BCV: bolívares a dólares hoy",
@@ -1243,7 +1247,7 @@ const tools = {
                 }),
                 meta: {
                     description: t({
-                        en: "Today's blue, official, MEP, CCL, card, wholesale and crypto dollar in Argentina, with a calculator to turn dollars into pesos and back.",
+                        en: "Today's blue, official, MEP, CCL, card, wholesale and crypto dollar in Argentina, with a calculator for dollars and pesos.",
                         es: "El dólar blue, oficial, MEP, CCL, tarjeta, mayorista y cripto de hoy en Argentina, con una calculadora de dólares a pesos.",
                     }),
                     title: t({

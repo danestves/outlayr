@@ -161,7 +161,7 @@ const help = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr tracks expenses in 165 currencies. How to set your main currency, give each account its own, and how totals convert at each day's rate.",
+                        en: "Outlayr tracks expenses in 165 currencies. How to set your main currency, give each account its own, and how totals convert to it.",
                         es: "Outlayr registra gastos en 165 monedas. Cómo elegir tu moneda principal, darle una a cada cuenta y cómo se convierten los totales.",
                     }),
                     title: t({
@@ -311,8 +311,8 @@ const help = {
                 }),
                 meta: {
                     description: t({
-                        en: "How to add an expense by voice in Outlayr on iPhone and Android, which languages work, and how many voice entries the free plan includes.",
-                        es: "Cómo agregar un gasto por voz en Outlayr en iPhone y Android, qué idiomas funcionan y cuántos registros por voz incluye el plan gratis.",
+                        en: "How to add an expense by voice in Outlayr on iPhone and Android, which languages work, and how many the free plan includes.",
+                        es: "Cómo agregar un gasto por voz en Outlayr en iPhone y Android, qué idiomas funcionan y cuántos registros incluye el plan gratis.",
                     }),
                     title: t({
                         en: "How do I add an expense by voice in Outlayr?",
@@ -421,7 +421,7 @@ const help = {
                 }),
                 meta: {
                     description: t({
-                        en: "How subscription reminders work in Outlayr: when they fire, how to set one per subscription, and how charges log themselves on their day.",
+                        en: "How subscription reminders work in Outlayr: when they arrive, how to set one per subscription, and how charges log themselves.",
                         es: "Cómo funcionan los avisos de suscripciones en Outlayr: cuándo llegan, cómo poner uno por suscripción y cómo se registran los cobros.",
                     }),
                     title: t({
