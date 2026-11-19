@@ -303,16 +303,35 @@ export const transactionsRepo = {
         return id;
     }),
 
-    markReviewed: Effect.fn("Transactions.markReviewed")(function* markReviewed(db: Database, ids: readonly string[]) {
+    markReviewed: Effect.fn("Transactions.markReviewed")(function* markReviewed(
+        db: Database,
+        ids: readonly string[],
+        now: Date = new Date()
+    ) {
         if (ids.length === 0) {
             return [];
         }
-        return yield* query("update", () =>
-            db
-                .update(transactions)
-                .set({ unreviewed: false, updatedAt: sql`max(${Date.now()}, ${transactions.updatedAt} + 1)` })
-                .where(and(inArray(transactions.id, [...ids]), eq(transactions.unreviewed, true)))
-                .returning({ id: transactions.id, updatedAt: transactions.updatedAt })
+        return yield* transaction(
+            db,
+            Effect.gen(function* write() {
+                const flagged = yield* query("update", () =>
+                    db
+                        .select({ id: transactions.id, updatedAt: transactions.updatedAt })
+                        .from(transactions)
+                        .where(and(inArray(transactions.id, [...ids]), eq(transactions.unreviewed, true)))
+                );
+                const reviewed: { from: Date; id: string; updatedAt: Date }[] = [];
+                for (const row of flagged) {
+                    const updatedAt = new Date(Math.max(now.getTime(), row.updatedAt.getTime() + 1));
+                    yield* refreshLogoCandidate(db, row.id, updatedAt.getTime());
+                    yield* query("update", () =>
+                        db.update(transactions).set({ unreviewed: false, updatedAt }).where(eq(transactions.id, row.id))
+                    );
+                    reviewed.push({ from: row.updatedAt, id: row.id, updatedAt });
+                }
+                return reviewed;
+            }),
+            failedAt("update")
         );
     }),
 

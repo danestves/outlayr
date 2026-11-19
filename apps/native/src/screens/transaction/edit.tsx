@@ -58,9 +58,9 @@ function TransactionSheet({ initial }: { initial: Transaction }) {
     const version = useRef(opened);
     const review = useEffectEvent(async () => {
         const result = await markReviewed({ db, ids: [initial.id] });
-        const reviewedAt = AsyncResult.isSuccess(result) ? result.value[0]?.updatedAt : undefined;
-        if (reviewedAt !== undefined) {
-            version.current = reviewedAt.getTime();
+        const reviewed = AsyncResult.isSuccess(result) ? result.value[0] : undefined;
+        if (reviewed?.from.getTime() === opened) {
+            version.current = reviewed.updatedAt.getTime();
         }
     });
     // oxlint-disable-next-line outlayr/react-effect-budget -- opening an auto-logged entry is what reviews it, and no handler runs on open
