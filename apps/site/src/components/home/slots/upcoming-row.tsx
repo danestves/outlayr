@@ -1,12 +1,10 @@
 import { Replica } from "../replica";
 import type { SlotProps } from "./placeholder";
 
-export function UpcomingRow({ entry = "Verizon", theme = "dark" }: SlotProps & { entry?: string }) {
+export function UpcomingRow({ theme = "dark" }: SlotProps) {
     return (
         <Replica>
-            {({ UpcomingRowFragment }, locale) => (
-                <UpcomingRowFragment entry={entry} fit locale={locale} theme={theme} />
-            )}
+            {({ UpcomingRowFragment }, locale) => <UpcomingRowFragment fit locale={locale} theme={theme} />}
         </Replica>
     );
 }

@@ -5,18 +5,17 @@ import type { CSSProperties, ReactNode } from "react";
 import add from "../../../../native/assets/toolbar-symbols/add.svg?url";
 import reorder from "../../../../native/assets/toolbar-symbols/reorder.svg?url";
 import { displayOrder } from "../../../../native/src/domain/account-order";
-import { AppFragment, AppScreen, useReplica } from "./canvas";
+import { AppFragment, AppScreen, useLedger, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { SymbolMask, SystemText, TabBar } from "./chrome";
-import { ACCOUNTS, accountsOverview, DEMO_CURRENCY, imageColor, toUsd, youOwe } from "./ledger";
-import { currencyFor, formatAmount, formatSignedAmount } from "./money";
+import type { AccountId, DemoAccount, Ledger } from "./ledger";
+import { formatAmount, formatSignedAmount } from "./money";
 import { interpolate } from "./strings";
 import type { AppKey } from "./strings";
 import { CategoryIconTile } from "./tile";
 import { fontAscent, roundedTrak, textLineHeight } from "./type";
 
-type Account = (typeof ACCOUNTS)[number];
-export type AccountId = Account["id"];
+type Account = DemoAccount;
 
 type CustomStyle = CSSProperties & Record<`--${string}`, string>;
 
@@ -59,30 +58,28 @@ const LAYOUT = {
 const ACCOUNT_ROW_HEIGHT = 2 * ROW.padY + textLineHeight(TYPE.name) + STACK_GAP.name + textLineHeight(TYPE.detail);
 const DEBT_ROW_HEIGHT = 2 * ROW.padY + Math.max(ROW.tile, textLineHeight(TYPE.name));
 
-const accountById = (id: AccountId): Account => {
-    const account = ACCOUNTS.find((candidate) => candidate.id === id);
+const FULL_ASSET_ROWS = 6;
+
+const accountById = (ledger: Ledger, id: AccountId): Account => {
+    const account = ledger.accounts.find((candidate) => candidate.id === id);
     if (!account) {
         throw new Error(`No demo account ${id}.`);
     }
     return account;
 };
 
-const assetRows = () => displayOrder(accountsOverview().rows, false, toUsd);
-const debtRows = () =>
+const assetRows = (ledger: Ledger) => displayOrder(ledger.accountsOverview().rows, false, ledger.toLocal);
+const debtRows = (ledger: Ledger) =>
     displayOrder(
-        ACCOUNTS.filter((account) => account.kind === "liability"),
+        ledger.accounts.filter((account) => account.kind === "liability"),
         false,
-        (account) => -toUsd(account)
+        (account) => -ledger.toLocal(account)
     );
 
-const accountCode = (account: Account, locale: Locale) =>
-    account.currency === DEMO_CURRENCY ? currencyFor(locale) : account.currency;
-
-const balanceText = (account: Account, locale: Locale) =>
-    formatSignedAmount(account.balance, accountCode(account, locale), locale);
+const balanceText = (account: Account, locale: Locale) => formatSignedAmount(account.balance, account.currency, locale);
 
 const debtText = (account: Account, locale: Locale) =>
-    formatAmount(Math.abs(toUsd(account)), currencyFor(locale), locale);
+    formatAmount(Math.abs(account.balance), account.currency, locale);
 
 const listed = (rows: readonly Account[], text: (account: Account) => string) =>
     rows.map((account) => `${account.name} ${text(account)}`).join(", ");
@@ -154,14 +151,14 @@ function Chevron() {
 }
 
 function RowShell({ account, children, separated }: { account: Account; children: ReactNode; separated: boolean }) {
-    const { theme } = useReplica();
+    const { ledger, theme } = useReplica();
     return (
         <div
             className="flex-row items-center"
             style={{ gap: ROW.gap, paddingBlock: ROW.padY, paddingInline: ROW.inset }}
         >
             <CategoryIconTile
-                color={imageColor(account.logo) ?? account.color}
+                color={ledger.imageColor(account.logo) ?? account.color}
                 icon={account.icon}
                 logo={account.logo}
                 size={ROW.tile}
@@ -192,7 +189,7 @@ function AccountRow({ account, separated = false }: { account: Account; separate
                     {account.name}
                 </SwiftLine>
                 <SwiftLine className="text-muted" size={TYPE.detail}>
-                    {accountCode(account, locale)}
+                    {account.currency}
                 </SwiftLine>
             </div>
             <SwiftLine className="tabular-nums" ink={INK} size={TYPE.amount} weight={500}>
@@ -228,7 +225,7 @@ function Card({ children, top }: { children: ReactNode; top?: number }) {
 }
 
 function AssetsCard({ top }: { top?: number }) {
-    const rows = assetRows();
+    const rows = assetRows(useReplica().ledger);
     return (
         <Card top={top}>
             {rows.map((account, index) => (
@@ -239,7 +236,7 @@ function AssetsCard({ top }: { top?: number }) {
 }
 
 function DebtsCard({ top }: { top: number }) {
-    const rows = debtRows();
+    const rows = debtRows(useReplica().ledger);
     return (
         <Card top={top}>
             {rows.map((account, index) => (
@@ -302,11 +299,11 @@ function Picker() {
 }
 
 function Totals() {
-    const { locale, t } = useReplica();
-    const code = currencyFor(locale);
+    const { ledger, locale, t } = useReplica();
+    const code = ledger.currency;
     const totals = [
-        { amount: accountsOverview().total, key: "accounts.totals.have" },
-        { amount: youOwe(), key: "accounts.totals.owe" },
+        { amount: ledger.accountsOverview().total, key: "accounts.totals.have" },
+        { amount: ledger.youOwe(), key: "accounts.totals.owe" },
     ] as const satisfies readonly { amount: number; key: AppKey }[];
     return (
         <Card top={LAYOUT.totals}>
@@ -366,36 +363,38 @@ function Header() {
     );
 }
 
-function SectionHeaders() {
-    const { t } = useReplica();
+function SectionHeaders({ shift }: { shift: number }) {
+    const { ledger, t } = useReplica();
     return (
         <>
             <Eyebrow baseline={LAYOUT.assetsHeader}>
-                {t("accounts.census", { count: accountsOverview().count })}
+                {t("accounts.census", { count: ledger.accountsOverview().count })}
             </Eyebrow>
-            <Eyebrow baseline={LAYOUT.debtsHeader}>{t("debts.title")}</Eyebrow>
+            <Eyebrow baseline={LAYOUT.debtsHeader - shift}>{t("debts.title")}</Eyebrow>
         </>
     );
 }
 
-function accountsLabel(locale: Locale): string {
+function accountsLabel(ledger: Ledger, locale: Locale): string {
     return interpolate(labels(locale).accountsScreen, {
-        accounts: listed(assetRows(), (account) => balanceText(account, locale)),
-        debts: listed(debtRows(), (account) => debtText(account, locale)),
-        have: formatSignedAmount(accountsOverview().total, currencyFor(locale), locale),
-        owe: formatSignedAmount(youOwe(), currencyFor(locale), locale),
+        accounts: listed(assetRows(ledger), (account) => balanceText(account, locale)),
+        debts: listed(debtRows(ledger), (account) => debtText(account, locale)),
+        have: formatSignedAmount(ledger.accountsOverview().total, ledger.currency, locale),
+        owe: formatSignedAmount(ledger.youOwe(), ledger.currency, locale),
     });
 }
 
 export function AccountsScreen(canvas: CanvasProps) {
+    const ledger = useLedger();
+    const shift = (FULL_ASSET_ROWS - assetRows(ledger).length) * ACCOUNT_ROW_HEIGHT;
     return (
-        <AppScreen {...canvas} label={accountsLabel(canvas.locale)}>
+        <AppScreen {...canvas} label={accountsLabel(ledger, canvas.locale)}>
             <div className="bg-grouped-background absolute inset-0" />
             <Picker />
             <Totals />
-            <SectionHeaders />
+            <SectionHeaders shift={shift} />
             <AssetsCard top={LAYOUT.assetsCard} />
-            <DebtsCard top={LAYOUT.debtsCard} />
+            <DebtsCard top={LAYOUT.debtsCard - shift} />
             <Header />
             <TabBar badges={{ balances: 1 }} selected="balances" />
         </AppScreen>
@@ -403,21 +402,22 @@ export function AccountsScreen(canvas: CanvasProps) {
 }
 
 export function AccountsListFragment(canvas: CanvasProps) {
+    const rows = assetRows(useLedger());
     const label = interpolate(labels(canvas.locale).accountsList, {
-        accounts: listed(assetRows(), (account) => balanceText(account, canvas.locale)),
+        accounts: listed(rows, (account) => balanceText(account, canvas.locale)),
     });
     return (
-        <AppFragment {...canvas} height={assetRows().length * ACCOUNT_ROW_HEIGHT} label={label} width={CARD.width}>
+        <AppFragment {...canvas} height={rows.length * ACCOUNT_ROW_HEIGHT} label={label} width={CARD.width}>
             <AssetsCard />
         </AppFragment>
     );
 }
 
-export function AccountRowFragment({ account = "acc-banesco", ...canvas }: CanvasProps & { account?: AccountId }) {
-    const row = accountById(account);
+export function AccountRowFragment({ account, ...canvas }: CanvasProps & { account: AccountId }) {
+    const row = accountById(useLedger(), account);
     const label = interpolate(labels(canvas.locale).accountRow, {
         amount: balanceText(row, canvas.locale),
-        code: accountCode(row, canvas.locale),
+        code: row.currency,
         name: row.name,
     });
     return (
@@ -428,8 +428,8 @@ export function AccountRowFragment({ account = "acc-banesco", ...canvas }: Canva
     );
 }
 
-export function DebtRowFragment({ account = "acc-apple", ...canvas }: CanvasProps & { account?: AccountId }) {
-    const row = accountById(account);
+export function DebtRowFragment({ account, ...canvas }: CanvasProps & { account: AccountId }) {
+    const row = accountById(useLedger(), account);
     const label = interpolate(labels(canvas.locale).cardRow, {
         amount: debtText(row, canvas.locale),
         name: row.name,

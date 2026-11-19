@@ -174,11 +174,11 @@ export const captureCopy = {
 export const captureLabels = {
     receiptDate: t({ en: "09/12/26", de: "12.09.26", es: "12/09/26", pt: "12/09/26", fr: "12/09/26" }),
     receiptDebit: t({
-        en: "CHASE DEBIT",
-        de: "CHASE DEBIT",
-        es: "CHASE DEBITO",
-        pt: "CHASE DEBITO",
-        fr: "CHASE DEBIT",
+        en: "{bank} DEBIT",
+        de: "{bank} DEBIT",
+        es: "{bank} DEBITO",
+        pt: "{bank} DEBITO",
+        fr: "{bank} DEBIT",
     }),
     receiptLines: [
         t({ en: "ORGANIC EGGS", de: "BIO-EIER", es: "HUEVOS ORGANICOS", pt: "OVOS ORGANICOS", fr: "OEUFS BIO" }),
@@ -192,11 +192,11 @@ export const captureLabels = {
         t({ en: "SALMON 2LB", de: "LACHS 900G", es: "SALMON 2LB", pt: "SALMAO 2LB", fr: "SAUMON 2LB" }),
     ],
     receiptMethod: t({
-        en: "Chase Debit •••• 4417",
-        de: "Chase Debit •••• 4417",
-        es: "Chase Débito •••• 4417",
-        pt: "Chase Débito •••• 4417",
-        fr: "Chase Debit •••• 4417",
+        en: "{bank} Debit •••• 4417",
+        de: "{bank} Debit •••• 4417",
+        es: "{bank} Débito •••• 4417",
+        pt: "{bank} Débito •••• 4417",
+        fr: "{bank} Debit •••• 4417",
     }),
     receiptTotal: t({ en: "TOTAL", de: "SUMME", es: "TOTAL", pt: "TOTAL", fr: "TOTAL" }),
     sayFilm: t({

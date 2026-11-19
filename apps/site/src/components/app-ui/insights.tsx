@@ -10,7 +10,7 @@ import type { CSSProperties } from "react";
 
 import { MonoLabel } from "./budgets";
 import { formatWhole } from "./budgets-data";
-import { AppScreen, SCREEN, useReplica } from "./canvas";
+import { AppScreen, SCREEN, useLedger, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { PaceLineChart } from "./chart-pace";
 import type { PaceTick } from "./chart-pace";
@@ -19,7 +19,8 @@ import { dayMonth, dayOfMonth, WEEKDAY_INITIALS } from "./dates";
 import { subscriptions, weekAnswers } from "./insights-data";
 import type { Subscriptions, WeekAnswers } from "./insights-data";
 import { DEMO_NOW } from "./ledger";
-import { currencyFor, formatAmount } from "./money";
+import type { Ledger } from "./ledger";
+import { formatAmount } from "./money";
 import { appTranslator, interpolate } from "./strings";
 import type { AppKey, AppT } from "./strings";
 import { fontAscent, roundedTrak } from "./type";
@@ -48,8 +49,7 @@ interface Money {
     rounded: (amount: number) => string;
 }
 
-function moneyFor(locale: Locale): Money {
-    const code = currencyFor(locale);
+function moneyFor(code: string, locale: Locale): Money {
     return {
         exact: (amount) => formatAmount(amount, code, locale),
         rounded: (amount) => formatWhole(amount, code, locale),
@@ -212,10 +212,10 @@ function SubscriptionsCard({ detail, money }: { detail: Subscriptions; money: Mo
 }
 
 function InsightsContent({ now }: { now: Date }) {
-    const { locale, t } = useReplica();
-    const money = moneyFor(locale);
-    const answers = weekAnswers(now);
-    const detail = subscriptions(now);
+    const { ledger, locale, t } = useReplica();
+    const money = moneyFor(ledger.currency, locale);
+    const answers = weekAnswers(ledger, now);
+    const detail = subscriptions(ledger, now);
     return (
         <div className="absolute inset-x-0" style={{ top: CONTENT_TOP }}>
             <div style={{ paddingInline: GUTTER }}>
@@ -242,11 +242,11 @@ function InsightsContent({ now }: { now: Date }) {
     );
 }
 
-export function insightsLabel(locale: Locale, now: Date = DEMO_NOW): string {
+export function insightsLabel(ledger: Ledger, locale: Locale, now: Date = DEMO_NOW): string {
     const t = appTranslator(locale);
-    const money = moneyFor(locale);
-    const answers = weekAnswers(now);
-    const detail = subscriptions(now);
+    const money = moneyFor(ledger.currency, locale);
+    const answers = weekAnswers(ledger, now);
+    const detail = subscriptions(ledger, now);
     const sentence = subSentence(answers, money, t);
     return interpolate(getIntlayer("appUi", locale).labels.insightsScreen, {
         answer: `${headlineText(answers, money, t)}. ${sentence}${sentence.endsWith(".") ? "" : "."}`,
@@ -262,7 +262,7 @@ export interface InsightsScreenProps extends CanvasProps {
 
 export function InsightsScreen({ now = DEMO_NOW, ...canvas }: InsightsScreenProps) {
     return (
-        <AppScreen {...canvas} label={insightsLabel(canvas.locale, now)}>
+        <AppScreen {...canvas} label={insightsLabel(useLedger(), canvas.locale, now)}>
             <InsightsContent now={now} />
             <LargeTitle />
             <PeriodPill />

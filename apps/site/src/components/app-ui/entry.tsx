@@ -1,21 +1,23 @@
+import { decimalsFor } from "@outlayr/money/currency";
+import { roundMoney } from "@outlayr/money/round";
 import type { Locale } from "@outlayr/shared/i18n";
 import { getIntlayer } from "intlayer";
 
 import done from "../../../../native/assets/toolbar-symbols/done.svg?url";
 import { curtainShade, withAlpha } from "../../../../native/src/theme/shade";
-import { AppFragment, AppScreen, SCREEN, useReplica } from "./canvas";
+import { AppFragment, AppScreen, SCREEN, useLedger, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { GlassCircle, SymbolMask } from "./chrome";
 import { formatDayTitle, formatTime } from "./dates";
 import { EntrySentence, FactChips, sentenceText } from "./entry-sentence";
 import { EntryStage } from "./entry-stage";
-import { FILLED, merchantIdentity, savedRow } from "./entry-state";
+import { entryStates, merchantIdentity, savedRows } from "./entry-state";
 import type { EntryState } from "./entry-state";
 import { DISPLAY_CORNER, Keyboard } from "./keyboard";
-import { DEMO_NOW, daySections, imageColor } from "./ledger";
-import type { DaySection, DemoRow } from "./ledger";
+import { DEMO_NOW } from "./ledger";
+import type { DaySection, DemoRow, Ledger } from "./ledger";
 import { DaySectionHeader, RowHairline, TransactionRow } from "./list";
-import { currencyFor, formatAmount, formatDayTotal } from "./money";
+import { formatAmount, formatDayTotal } from "./money";
 import { Sheet, SHEET } from "./parts";
 import { appTranslator, interpolate } from "./strings";
 
@@ -39,8 +41,8 @@ const SENTENCE_PAD = 32;
 const TODAY = { bottom: 10, gutter: 20, header: 35, radius: 28, row: 48 } as const;
 
 function useCurtainShade(state: EntryState) {
-    const { theme } = useReplica();
-    const hue = imageColor(merchantIdentity(state.name)?.logo ?? null);
+    const { ledger, theme } = useReplica();
+    const hue = ledger.imageColor(merchantIdentity(ledger, state.name)?.logo ?? null);
     return hue === null ? null : curtainShade(hue, theme === "dark");
 }
 
@@ -70,13 +72,14 @@ function Curtain({ state }: { state: EntryState }) {
 }
 
 export function sheetLabel(
+    ledger: Ledger,
     state: EntryState,
     now: Date,
     locale: Locale,
     label: "entrySheet" | "typeFilm" = "entrySheet"
 ) {
     return interpolate(getIntlayer("appUi", locale).labels[label], {
-        sentence: sentenceText(state, now, locale, appTranslator(locale)),
+        sentence: sentenceText(ledger, state, now, locale, appTranslator(locale)),
     });
 }
 
@@ -111,10 +114,12 @@ export interface NewEntryScreenProps extends CanvasProps {
     state?: EntryState;
 }
 
-export function NewEntryScreen({ now = DEMO_NOW, state = FILLED, ...canvas }: NewEntryScreenProps) {
+export function NewEntryScreen({ now = DEMO_NOW, state, ...canvas }: NewEntryScreenProps) {
+    const ledger = useLedger();
+    const shown = state ?? entryStates(ledger).FILLED;
     return (
-        <AppScreen {...canvas} label={sheetLabel(state, now, canvas.locale)}>
-            <NewEntrySheet now={now} state={state} />
+        <AppScreen {...canvas} label={sheetLabel(ledger, shown, now, canvas.locale)}>
+            <NewEntrySheet now={now} state={shown} />
         </AppScreen>
     );
 }
@@ -141,27 +146,28 @@ export interface SentenceCardProps extends CanvasProps {
     state?: EntryState;
 }
 
-export function SentenceCard({ now = DEMO_NOW, state = FILLED, ...canvas }: SentenceCardProps) {
+export function SentenceCard({ now = DEMO_NOW, state, ...canvas }: SentenceCardProps) {
+    const ledger = useLedger();
+    const shown = state ?? entryStates(ledger).FILLED;
     const label = interpolate(getIntlayer("appUi", canvas.locale).labels.entrySentence, {
-        sentence: sentenceText(state, now, canvas.locale, appTranslator(canvas.locale)),
+        sentence: sentenceText(ledger, shown, now, canvas.locale, appTranslator(canvas.locale)),
     });
     return (
         <AppFragment {...canvas} height={SENTENCE_CARD_HEIGHT} label={label} width={SCREEN.width}>
-            <SentenceCardBody now={now} state={state} />
+            <SentenceCardBody now={now} state={shown} />
         </AppFragment>
     );
 }
 
-function todaySection(now: Date, extra: readonly DemoRow[]): DaySection {
-    const [ledger] = daySections(now, 0);
-    const rows = [...extra, ...(ledger?.rows ?? [])].toSorted((a, b) => b.date.getTime() - a.date.getTime());
-    const total = rows.reduce((sum, row) => sum + (row.income ? row.amountUsd : -row.amountUsd), 0);
-    return { day: ledger?.day ?? now, rows, total: Math.round(total * 100) / 100 };
+function todaySection(ledger: Ledger, now: Date, extra: readonly DemoRow[]): DaySection {
+    const [today] = ledger.daySections(now, 0);
+    const rows = [...extra, ...(today?.rows ?? [])].toSorted((a, b) => b.date.getTime() - a.date.getTime());
+    const total = rows.reduce((sum, row) => sum + (row.income ? row.amount : -row.amount), 0);
+    return { day: today?.day ?? now, rows, total: roundMoney(total, decimalsFor(ledger.currency)) };
 }
 
-function todayLabel(section: DaySection, now: Date, locale: Locale) {
+function todayLabel(section: DaySection, code: string, now: Date, locale: Locale) {
     const t = appTranslator(locale);
-    const code = currencyFor(locale);
     const rows = section.rows.map(
         (row) =>
             `${row.note} ${row.income ? "+" : "-"}${formatAmount(row.amount, code, locale)} ${formatTime(row.date, locale, t)}`
@@ -174,18 +180,21 @@ function todayLabel(section: DaySection, now: Date, locale: Locale) {
 }
 
 export interface TodayCardProps extends CanvasProps {
-    extra?: readonly DemoRow[];
     now?: Date;
 }
 
-const DEFAULT_EXTRA = [savedRow(FILLED)].filter((row) => row !== null);
-
-export function TodayCard({ extra = DEFAULT_EXTRA, now = DEMO_NOW, ...canvas }: TodayCardProps) {
-    const section = todaySection(now, extra);
+export function TodayCard({ now = DEMO_NOW, ...canvas }: TodayCardProps) {
+    const ledger = useLedger();
+    const section = todaySection(ledger, now, savedRows(ledger));
     const count = section.rows.length;
     const height = TODAY.header + count * TODAY.row + Math.max(count - 1, 0) + TODAY.bottom;
     return (
-        <AppFragment {...canvas} height={height} label={todayLabel(section, now, canvas.locale)} width={SCREEN.width}>
+        <AppFragment
+            {...canvas}
+            height={height}
+            label={todayLabel(section, ledger.currency, now, canvas.locale)}
+            width={SCREEN.width}
+        >
             <div
                 className="bg-background absolute inset-0 overflow-hidden"
                 style={{ borderRadius: TODAY.radius, paddingInline: TODAY.gutter }}

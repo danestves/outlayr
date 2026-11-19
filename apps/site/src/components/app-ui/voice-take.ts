@@ -19,15 +19,16 @@ const SPACE = /\s+/;
 
 export const isField = (name: string | undefined): name is TakeField => TAKE_FIELDS.some((field) => field === name);
 
-export function parseTake(template: string): Take {
+export function parseTake(template: string, said: Readonly<Partial<Record<TakeField, string>>> = {}): Take {
     const segments: TakeSegment[] = [];
     let cursor = 0;
     for (const match of template.matchAll(MARK)) {
         if (match.index > cursor) {
             segments.push({ field: null, text: template.slice(cursor, match.index) });
         }
-        const [, field, text = ""] = match;
-        segments.push({ field: isField(field) ? field : null, text });
+        const [, name, text = ""] = match;
+        const field = isField(name) ? name : null;
+        segments.push({ field, text: (field && said[field]) ?? text });
         cursor = match.index + match[0].length;
     }
     if (cursor < template.length) {

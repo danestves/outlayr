@@ -1,7 +1,7 @@
 import { getIntlayer } from "intlayer";
 
 import { WIDGET_PALETTE } from "../../../../native/src/widgets/palette";
-import { AppFragment, useReplica } from "./canvas";
+import { AppFragment, useLedger, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { DEMO_NOW } from "./ledger";
 import { interpolate } from "./strings";
@@ -92,7 +92,8 @@ interface BudgetWidgetProps extends CanvasProps {
 }
 
 export function BudgetWidget({ family = "small", now = DEMO_NOW, view, ...canvas }: BudgetWidgetProps) {
-    const props = view ?? overallBudgetView(now, canvas.locale);
+    const ledger = useLedger();
+    const props = view ?? overallBudgetView(ledger, now, canvas.locale);
     return (
         <AppFragment {...canvas} {...WIDGET_SIZE[family]} label={budgetWidgetLabel(props, canvas.locale)}>
             <BudgetWidgetView family={family} view={props} />

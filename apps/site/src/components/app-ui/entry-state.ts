@@ -7,8 +7,8 @@ import type { Locale } from "@outlayr/shared/i18n";
 
 import { pickerOrder } from "../../../../native/src/domain/account-order";
 import { dayMonth } from "./dates";
-import { ACCOUNTS, DEMO_NOW, ROWS } from "./ledger";
-import type { DemoAccount, DemoRow, LogoDomain } from "./ledger";
+import { DEMO_NOW } from "./ledger";
+import type { DemoAccount, DemoRow, Ledger } from "./ledger";
 import type { AppKey, AppT } from "./strings";
 
 export type EntrySlot = "amount" | "merchant" | "category" | "account";
@@ -26,32 +26,62 @@ export interface EntryState {
     readonly surface: EntrySurface;
 }
 
+const CHIP_PREFIX = 2;
 const pad = (value: number) => String(value).padStart(2, "0");
 const stamp = (date: Date) =>
     `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 
-export const EMPTY: EntryState = {
-    account: null,
-    active: "amount",
-    amount: "",
-    category: null,
-    date: stamp(DEMO_NOW),
-    name: "",
-    surface: "amountPad",
-};
-export const NUMPAD: EntryState = { ...EMPTY, amount: "42" };
-export const NAME: EntryState = { ...NUMPAD, active: "merchant", surface: "keyboard" };
-export const NAME_CHIPS: EntryState = { ...NAME, name: "Co" };
-export const CATEGORY: EntryState = {
-    ...NUMPAD,
-    account: "acc-chase",
-    active: "category",
-    category: "Groceries",
-    name: "Costco",
-    surface: "chips",
-};
-export const ACCOUNT: EntryState = { ...CATEGORY, active: "account" };
-export const FILLED: EntryState = { ...CATEGORY, active: "amount", surface: "amountPad" };
+export interface EntryStates {
+    readonly ACCOUNT: EntryState;
+    readonly CATEGORY: EntryState;
+    readonly EMPTY: EntryState;
+    readonly FILLED: EntryState;
+    readonly NAME: EntryState;
+    readonly NAME_CHIPS: EntryState;
+    readonly NUMPAD: EntryState;
+}
+
+const STATES = new WeakMap<Ledger, EntryStates>();
+
+function buildStates({ hero }: Ledger): EntryStates {
+    const EMPTY: EntryState = {
+        account: null,
+        active: "amount",
+        amount: "",
+        category: null,
+        date: stamp(DEMO_NOW),
+        name: "",
+        surface: "amountPad",
+    };
+    const NUMPAD: EntryState = { ...EMPTY, amount: String(hero.amount) };
+    const NAME: EntryState = { ...NUMPAD, active: "merchant", surface: "keyboard" };
+    const CATEGORY: EntryState = {
+        ...NUMPAD,
+        account: "acc-bank",
+        active: "category",
+        category: "Groceries",
+        name: hero.merchant.name,
+        surface: "chips",
+    };
+    return {
+        ACCOUNT: { ...CATEGORY, active: "account" },
+        CATEGORY,
+        EMPTY,
+        FILLED: { ...CATEGORY, active: "amount", surface: "amountPad" },
+        NAME,
+        NAME_CHIPS: { ...NAME, name: [...hero.merchant.name].slice(0, CHIP_PREFIX).join("") },
+        NUMPAD,
+    };
+}
+
+export function entryStates(ledger: Ledger): EntryStates {
+    let states = STATES.get(ledger);
+    if (!states) {
+        states = buildStates(ledger);
+        STATES.set(ledger, states);
+    }
+    return states;
+}
 
 export const CATEGORY_KEYS = {
     Groceries: "categories.preset.groceries",
@@ -70,31 +100,44 @@ export const ENTRY_CATEGORIES = SEEDED_CATEGORY_NAMES.expense;
 
 interface CatalogueMerchant {
     label: string;
-    logo: LogoDomain | null;
+    logo: string | null;
     patterns: readonly string[];
     tags: readonly AppKey[];
 }
 
-const MERCHANTS: readonly CatalogueMerchant[] = [
-    { label: "Costco", logo: "costco.com", patterns: ["costco"], tags: ["merchantTag.Warehouse"] },
-    { label: "Con Edison", logo: "coned.com", patterns: ["con edison", "coned"], tags: [] },
-    { label: "Xfinity", logo: null, patterns: ["comcast", "xfinity"], tags: [] },
-    { label: "Cox Communications", logo: null, patterns: ["cox communications"], tags: [] },
-    { label: "Copa Airlines", logo: null, patterns: ["copa airlines", "copa air"], tags: [] },
-];
+const CATALOGUES = new WeakMap<Ledger, readonly CatalogueMerchant[]>();
+
+function catalogue(ledger: Ledger): readonly CatalogueMerchant[] {
+    let merchants = CATALOGUES.get(ledger);
+    if (!merchants) {
+        const { merchant } = ledger.hero;
+        const heroTag: AppKey = merchant.logo === "costco.com" ? "merchantTag.Warehouse" : "merchantTag.Groceries";
+        const brands = new Map(
+            ledger.rows.flatMap((row) => (row.logo === null ? [] : [[row.note, row.logo] as const]))
+        );
+        merchants = [...brands].map(([label, logo]) => ({
+            label,
+            logo,
+            patterns: [merchantKey(label)],
+            tags: label === merchant.name ? [heroTag] : [],
+        }));
+        CATALOGUES.set(ledger, merchants);
+    }
+    return merchants;
+}
 
 const MERCHANT_SUGGESTION_LIMIT = 4;
 const RECENT_MERCHANT_LIMIT = 6;
 const MIN_QUERY_LENGTH = 2;
 
-function suggestMerchants(query: string, limit: number, exclude: readonly string[]): string[] {
+function suggestMerchants(ledger: Ledger, query: string, limit: number, exclude: readonly string[]): string[] {
     const key = merchantKey(query);
     if (key.length < MIN_QUERY_LENGTH) {
         return [];
     }
     const skip = new Set(exclude.map(merchantKey));
     const ranked: { label: string; length: number }[] = [];
-    for (const entry of MERCHANTS) {
+    for (const entry of catalogue(ledger)) {
         const [canonical] = entry.patterns;
         if (canonical === undefined || skip.has(canonical) || !entry.patterns.some((p) => p.startsWith(key))) {
             continue;
@@ -107,10 +150,12 @@ function suggestMerchants(query: string, limit: number, exclude: readonly string
         .map((entry) => entry.label);
 }
 
-function recentMerchants(): string[] {
+function recentMerchants(ledger: Ledger): string[] {
     const seen = new Set<string>();
     const names: string[] = [];
-    for (const row of ROWS.filter((each) => !each.income).toSorted((a, b) => b.date.getTime() - a.date.getTime())) {
+    for (const row of ledger.rows
+        .filter((each) => !each.income)
+        .toSorted((a, b) => b.date.getTime() - a.date.getTime())) {
         const key = merchantKey(row.note);
         if (key !== "" && !seen.has(key)) {
             seen.add(key);
@@ -123,16 +168,16 @@ function recentMerchants(): string[] {
     return names;
 }
 
-export function merchantNames(query: string): string[] {
-    const recent = recentMerchants();
+export function merchantNames(ledger: Ledger, query: string): string[] {
+    const recent = recentMerchants(ledger);
     const needle = query.trim().toLocaleLowerCase();
     const own = needle === "" ? recent : recent.filter((name) => name.toLocaleLowerCase().includes(needle));
-    return [...new Set([...own, ...suggestMerchants(query, MERCHANT_SUGGESTION_LIMIT, recent)])];
+    return [...new Set([...own, ...suggestMerchants(ledger, query, MERCHANT_SUGGESTION_LIMIT, recent)])];
 }
 
-export function merchantIdentity(name: string): CatalogueMerchant | null {
+export function merchantIdentity(ledger: Ledger, name: string): CatalogueMerchant | null {
     const key = merchantKey(name);
-    return key === "" ? null : (MERCHANTS.find((entry) => entry.patterns.includes(key)) ?? null);
+    return key === "" ? null : (catalogue(ledger).find((entry) => entry.patterns.includes(key)) ?? null);
 }
 
 const SHARED_SYMBOLS: ReadonlySet<string> = new Set(
@@ -148,10 +193,10 @@ export const amountOf = (state: EntryState) => {
     return value > 0 ? value : null;
 };
 
-export const accountOf = (id: EntryAccount | null): DemoAccount | null =>
-    ACCOUNTS.find((account) => account.id === id) ?? null;
+export const accountOf = (ledger: Ledger, id: EntryAccount | null): DemoAccount | null =>
+    ledger.accounts.find((account) => account.id === id) ?? null;
 
-export const pickerAccounts = () => pickerOrder(ACCOUNTS, false);
+export const pickerAccounts = (ledger: Ledger) => pickerOrder(ledger.accounts, false);
 
 export function whenLabel(state: EntryState, now: Date, locale: Locale, t: AppT): string {
     const date = new Date(state.date);
@@ -177,7 +222,7 @@ export function footerSaves(state: EntryState): boolean {
     return answered && (state.account !== null || stageStep(state) === "account");
 }
 
-export function savedRow(state: EntryState): DemoRow | null {
+export function savedRow(ledger: Ledger, state: EntryState): DemoRow | null {
     const amount = amountOf(state);
     if (amount === null || state.category === null || state.account === null) {
         return null;
@@ -185,17 +230,22 @@ export function savedRow(state: EntryState): DemoRow | null {
     return {
         accountId: state.account,
         amount,
-        amountUsd: amount,
         category: state.category,
-        currency: "USD",
+        currency: ledger.currency,
         date: new Date(state.date),
         id: "row-entry",
         income: false,
-        logo: merchantIdentity(state.name)?.logo ?? null,
+        key: "grocery",
+        logo: merchantIdentity(ledger, state.name)?.logo ?? null,
         note: state.name,
         recurringAnchorDay: null,
         recurringCoefficient: 1,
         recurringType: 0,
         reminderLeadDays: null,
     };
+}
+
+export function savedRows(ledger: Ledger): DemoRow[] {
+    const row = savedRow(ledger, entryStates(ledger).FILLED);
+    return row ? [row] : [];
 }

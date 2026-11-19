@@ -8,13 +8,13 @@ import { getIntlayer } from "intlayer";
 
 import { daysBetween } from "../../../../native/src/domain/local-day";
 import { groupByMonth } from "../../../../native/src/domain/upcoming";
-import { AppFragment, AppScreen, SCREEN, useReplica } from "./canvas";
+import { AppFragment, AppScreen, SCREEN, useLedger, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { GlassCircle, SystemText } from "./chrome";
 import { dayOfMonth, MONTHS, MONTHS_LONG, WEEKDAYS, WEEKDAYS_LONG } from "./dates";
-import { categoryStyle, DEMO_CURRENCY, DEMO_NOW, imageColor, upcoming } from "./ledger";
-import type { UpcomingCharge } from "./ledger";
-import { currencyFor, formatAmount, formatDayTotal } from "./money";
+import { categoryStyle, DEMO_NOW } from "./ledger";
+import type { Ledger, UpcomingCharge } from "./ledger";
+import { formatAmount, formatDayTotal } from "./money";
 import { SettingsSection } from "./parts";
 import { appTranslator, interpolate } from "./strings";
 import type { AppKey, AppT } from "./strings";
@@ -72,30 +72,31 @@ const monthTitle = (month: Date, now: Date, t: AppT) =>
         : `${t(monthLongKey(month))} ${month.getFullYear()}`;
 
 const chargeAmount = ({ row }: UpcomingCharge, locale: Locale) =>
-    `${row.income ? "+" : "-"}${formatAmount(row.amount, currencyFor(locale), locale)}`;
+    `${row.income ? "+" : "-"}${formatAmount(row.amount, row.currency, locale)}`;
 
-const perMonth = (now: Date) =>
+const perMonth = (ledger: Ledger, now: Date) =>
     monthlySubscriptionCost(
-        upcoming(now).map(({ row }) => row),
-        DEMO_CURRENCY,
+        ledger.upcoming(now).map(({ row }) => row),
+        ledger.currency,
         undefined,
         now
     ).filter((bucket) => bucket.transactionCount > 0);
 
-const months = (now: Date) => groupByMonth(upcoming(now), ({ landing }) => landing);
+const months = (ledger: Ledger, now: Date) => groupByMonth(ledger.upcoming(now), ({ landing }) => landing);
 
-function featuredMonth(now: Date) {
-    const group = months(now).find(({ month }) => month.getMonth() === FEATURED_MONTH);
+function featuredMonth(ledger: Ledger, now: Date) {
+    const group = months(ledger, now).find(({ month }) => month.getMonth() === FEATURED_MONTH);
     if (!group) {
         throw new Error("No upcoming charges in the featured month.");
     }
     return group;
 }
 
-function chargeByNote(note: string, now: Date): UpcomingCharge {
-    const charge = upcoming(now).find(({ row }) => row.note === note);
+function featuredCharge(ledger: Ledger, now: Date): UpcomingCharge {
+    const charges = ledger.upcoming(now);
+    const charge = charges.find(({ row }) => row.key === "telco") ?? charges[0];
     if (!charge) {
-        throw new Error(`No upcoming charge for ${note}.`);
+        throw new Error("The demo ledger has no upcoming charges.");
     }
     return charge;
 }
@@ -111,13 +112,13 @@ function MonoLabel({ children }: { children: string }) {
 }
 
 function UpcomingEntryRow({ charge, now }: { charge: UpcomingCharge; now: Date }) {
-    const { locale, t } = useReplica();
+    const { ledger, locale, t } = useReplica();
     const identity = categoryStyle(charge.row.category);
     return (
         <div className="bg-background flex-row items-center gap-3 py-2">
             <div>
                 <CategoryIconTile
-                    color={imageColor(charge.row.logo) ?? identity.color}
+                    color={ledger.imageColor(charge.row.logo) ?? identity.color}
                     future
                     icon={identity.icon}
                     logo={charge.row.logo}
@@ -178,14 +179,14 @@ function MonthGroup({
 }
 
 function PerMonthRow({ now }: { now: Date }) {
-    const { locale, t } = useReplica();
+    const { ledger, locale, t } = useReplica();
     return (
         <div className="flex-row items-baseline justify-between gap-2 pb-4">
             <MonoLabel>{t("log.upcoming.perMonth")}</MonoLabel>
             <div className="flex-row items-baseline gap-1.5">
-                {perMonth(now).map((bucket) => (
+                {perMonth(ledger, now).map((bucket) => (
                     <span className="font-sans-semibold text-muted text-body tabular-nums" key={bucket.currencyCode}>
-                        {formatDayTotal(bucket.amount, currencyFor(locale), locale)}
+                        {formatDayTotal(bucket.amount, bucket.currencyCode, locale)}
                     </span>
                 ))}
             </div>
@@ -225,30 +226,32 @@ function LogSection() {
     return <SettingsSection title={t("settings.upcoming.section")}>{null}</SettingsSection>;
 }
 
-const perMonthText = (now: Date, locale: Locale) =>
-    perMonth(now)
-        .map((bucket) => formatAmount(Math.abs(bucket.amount), currencyFor(locale), locale))
+const perMonthText = (ledger: Ledger, now: Date, locale: Locale) =>
+    perMonth(ledger, now)
+        .map((bucket) => formatAmount(Math.abs(bucket.amount), bucket.currencyCode, locale))
         .join(" / ");
 
-function upcomingScreenLabel(now: Date, locale: Locale): string {
+function upcomingScreenLabel(ledger: Ledger, now: Date, locale: Locale): string {
     const t = appTranslator(locale);
     return interpolate(labels(locale).upcomingScreen, {
-        entries: upcoming(now)
+        entries: ledger
+            .upcoming(now)
             .map((charge) => entryText(charge, now, locale, t))
             .join("; "),
-        perMonth: perMonthText(now, locale),
+        perMonth: perMonthText(ledger, now, locale),
     });
 }
 
 type UpcomingProps = CanvasProps & { now?: Date };
 
 export function UpcomingScreen({ now = DEMO_NOW, ...canvas }: UpcomingProps) {
+    const ledger = useLedger();
     return (
-        <AppScreen {...canvas} label={upcomingScreenLabel(now, canvas.locale)}>
+        <AppScreen {...canvas} label={upcomingScreenLabel(ledger, now, canvas.locale)}>
             <div className="absolute inset-x-0" style={{ paddingInline: GUTTER, top: CONTENT_TOP }}>
                 <div className="pt-2.5">
                     <PerMonthRow now={now} />
-                    {months(now).map(({ month, rows }, index) => (
+                    {months(ledger, now).map(({ month, rows }, index) => (
                         <MonthGroup first={index === 0} key={month.getTime()} month={month} now={now} rows={rows} />
                     ))}
                 </div>
@@ -260,7 +263,7 @@ export function UpcomingScreen({ now = DEMO_NOW, ...canvas }: UpcomingProps) {
 }
 
 export function UpcomingListFragment({ now = DEMO_NOW, ...canvas }: UpcomingProps) {
-    const { month, rows } = featuredMonth(now);
+    const { month, rows } = featuredMonth(useLedger(), now);
     const t = appTranslator(canvas.locale);
     const label = interpolate(labels(canvas.locale).upcomingList, {
         entries: rows.map((charge) => entryText(charge, now, canvas.locale, t)).join("; "),
@@ -279,12 +282,8 @@ export function UpcomingListFragment({ now = DEMO_NOW, ...canvas }: UpcomingProp
     );
 }
 
-export function UpcomingRowFragment({
-    entry = "Verizon",
-    now = DEMO_NOW,
-    ...canvas
-}: UpcomingProps & { entry?: string }) {
-    const charge = chargeByNote(entry, now);
+export function UpcomingRowFragment({ now = DEMO_NOW, ...canvas }: UpcomingProps) {
+    const charge = featuredCharge(useLedger(), now);
     const t = appTranslator(canvas.locale);
     const label = interpolate(labels(canvas.locale).upcomingRow, {
         amount: chargeAmount(charge, canvas.locale),
@@ -301,7 +300,9 @@ export function UpcomingRowFragment({
 }
 
 export function UpcomingTotalFragment({ now = DEMO_NOW, ...canvas }: UpcomingProps) {
-    const label = interpolate(labels(canvas.locale).upcomingTotal, { amount: perMonthText(now, canvas.locale) });
+    const label = interpolate(labels(canvas.locale).upcomingTotal, {
+        amount: perMonthText(useLedger(), now, canvas.locale),
+    });
     return (
         <AppFragment {...canvas} height={TOTAL_HEIGHT} label={label} width={SCREEN.width}>
             <div className="bg-background absolute inset-0" style={{ paddingInline: GUTTER, paddingTop: TOTAL_PAD }}>

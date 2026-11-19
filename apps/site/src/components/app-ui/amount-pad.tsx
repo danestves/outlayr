@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 
 import { useReplica } from "./canvas";
 import { GLASS_SURFACE } from "./chrome";
-import { amountParts, currencyFor } from "./money";
+import { amountParts } from "./money";
 
 const ROWS = [
     ["1", "2", "3"],
@@ -40,23 +40,21 @@ export function DeleteLeft({
 }
 
 export function CurrencyPill() {
-    const { locale } = useReplica();
+    const { ledger } = useReplica();
     return (
         <div
             className="min-h-[42px] flex-row items-center justify-center gap-1.5 overflow-hidden rounded-full pr-3 pl-4"
             style={GLASS_SURFACE}
         >
-            <span className="text-callout text-foreground tracking-eyebrow font-mono-medium">
-                {currencyFor(locale)}
-            </span>
+            <span className="text-callout text-foreground tracking-eyebrow font-mono-medium">{ledger.currency}</span>
             <HugeiconsIcon color="var(--muted)" icon={ArrowDown01Icon} size={16} />
         </div>
     );
 }
 
 export function AmountNumpad() {
-    const { locale } = useReplica();
-    const { decimal } = amountParts(0, currencyFor(locale), locale);
+    const { ledger, locale } = useReplica();
+    const { decimal } = amountParts(0, ledger.currency, locale);
     return (
         <div className="gap-2">
             {ROWS.map((row) => (

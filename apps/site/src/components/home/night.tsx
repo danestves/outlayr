@@ -7,8 +7,8 @@ import { Also } from "./also";
 import { Faq } from "./faq";
 import { Guides } from "./guides";
 import { Plans } from "./plans";
-import { AccountBolivarRow } from "./slots/account-bolivar-row";
 import { AccountCardRow } from "./slots/account-card-row";
+import { AccountForeignRow } from "./slots/account-foreign-row";
 import { AccountsList } from "./slots/accounts-list";
 import { BudgetLeft } from "./slots/budget-left";
 import { BudgetScreen } from "./slots/budget-screen";
@@ -129,7 +129,7 @@ const ARTS: readonly Art[] = [
                 z: 2,
             },
             {
-                Slot: AccountBolivarRow,
+                Slot: AccountForeignRow,
                 at: { w: 448, x: 34, y: 304 },
                 hold: "card",
                 i: 2,

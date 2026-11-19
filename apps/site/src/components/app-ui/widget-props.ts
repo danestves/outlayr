@@ -6,9 +6,9 @@ import { DEEP_LINKS } from "../../../../native/src/lib/deep-links";
 import { WIDGET_PALETTE } from "../../../../native/src/widgets/palette";
 import type { WidgetPalette } from "../../../../native/src/widgets/palette";
 import { dayMonth, dayOfMonth, formatDayTitle, MONTHS, SUNDAY, WEEKDAY_INITIALS } from "./dates";
-import { budgetPace, categoryStyle, imageColor, ROWS } from "./ledger";
-import type { DemoRow } from "./ledger";
-import { amountParts, currencyFor, formatAmount, formatFixed, symbolPrefix } from "./money";
+import { categoryStyle } from "./ledger";
+import type { DemoRow, Ledger } from "./ledger";
+import { amountParts, formatAmount, formatFixed, symbolPrefix } from "./money";
 import { appTranslator } from "./strings";
 import type { AppKey, AppT } from "./strings";
 
@@ -125,11 +125,11 @@ function wholeAmount(amount: number, code: string, locale: Locale): string {
     return `${symbolPrefix(amountParts(amount, code, locale).symbol)}${formatFixed(rounded, 0, locale)}`;
 }
 
-export const settled = (now: Date, extra: readonly DemoRow[] = []) =>
-    [...ROWS, ...extra].filter((row) => row.date.getTime() <= now.getTime());
+export const settled = (ledger: Ledger, now: Date, extra: readonly DemoRow[] = []) =>
+    [...ledger.rows, ...extra].filter((row) => row.date.getTime() <= now.getTime());
 
-function sumBetween(start: Date, now: Date, income: boolean, extra: readonly DemoRow[]): number {
-    return settled(now, extra)
+function sumBetween(ledger: Ledger, start: Date, now: Date, income: boolean, extra: readonly DemoRow[]): number {
+    return settled(ledger, now, extra)
         .filter((row) => row.income === income && row.date.getTime() >= start.getTime())
         .reduce((sum, row) => sum + row.amount, 0);
 }
@@ -180,14 +180,20 @@ interface WindowAggregate {
     spent: number;
 }
 
-function aggregate(period: InsightsPeriod, now: Date, t: AppT, extra: readonly DemoRow[]): WindowAggregate {
+function aggregate(
+    ledger: Ledger,
+    period: InsightsPeriod,
+    now: Date,
+    t: AppT,
+    extra: readonly DemoRow[]
+): WindowAggregate {
     const slots = buckets(period, now, t);
     const start = slots[0]?.start.getTime() ?? 0;
     const end = slots.at(-1)?.end.getTime() ?? start;
     const sums = new Map<DemoRow["category"], number>();
     let income = 0;
     let spent = 0;
-    for (const row of settled(now, extra)) {
+    for (const row of settled(ledger, now, extra)) {
         const at = row.date.getTime();
         if (at < start || at >= end) {
             continue;
@@ -224,21 +230,27 @@ function windowLabel(period: InsightsPeriod, now: Date, locale: Locale, t: AppT)
 export const categoryName = (category: DemoRow["category"], t: AppT) =>
     hasPresetLabel(category) ? t(PRESET_LABELS[category]) : category;
 
-export function logWidgetProps(now: Date, locale: Locale, extra: readonly DemoRow[] = []): LogWidgetProps {
+export function logWidgetProps(
+    ledger: Ledger,
+    now: Date,
+    locale: Locale,
+    extra: readonly DemoRow[] = []
+): LogWidgetProps {
     const today = startOfDay(now);
     return {
         chrome: WIDGET_PALETTE,
-        todayCount: settled(now, extra).filter((row) => !row.income && row.date.getTime() >= today.getTime()).length,
+        todayCount: settled(ledger, now, extra).filter((row) => !row.income && row.date.getTime() >= today.getTime())
+            .length,
         todayLabel: appTranslator(locale)("common.today").toUpperCase(),
-        todaySpent: formatAmount(sumBetween(today, now, false, extra), currencyFor(locale), locale),
+        todaySpent: formatAmount(sumBetween(ledger, today, now, false, extra), ledger.currency, locale),
         url: DEEP_LINKS.newExpense,
     };
 }
 
-export function overallBudgetView(now: Date, locale: Locale): BudgetViewProps {
+export function overallBudgetView(ledger: Ledger, now: Date, locale: Locale): BudgetViewProps {
     const t = appTranslator(locale);
-    const code = currencyFor(locale);
-    const { left, limit, spent } = budgetPace(now);
+    const code = ledger.currency;
+    const { left, limit, spent } = ledger.budgetPace(now);
     const start = firstOfMonth(now);
     const end = addMonths(start, 1);
     const last = new Date(end.getTime() - 1);
@@ -267,13 +279,14 @@ export function overallBudgetView(now: Date, locale: Locale): BudgetViewProps {
 export type EntryColor = "stored" | "unset";
 
 export function ledgerWidgetProps(
+    ledger: Ledger,
     now: Date,
     locale: Locale,
     color: EntryColor = "stored",
     extra: readonly DemoRow[] = []
 ): LedgerWidgetProps {
     const t = appTranslator(locale);
-    const code = currencyFor(locale);
+    const code = ledger.currency;
     const money = (value: number) => formatAmount(value, code, locale);
     const measures = (label: string, income: number, spent: number) => {
         const net = income - spent;
@@ -284,17 +297,17 @@ export function ledgerWidgetProps(
         } satisfies Record<LedgerHeaderMeasure, LedgerHeaderProps>;
     };
     const window = (period: InsightsPeriod) => {
-        const totals = aggregate(period, now, t, extra);
+        const totals = aggregate(ledger, period, now, t, extra);
         return measures(t(PERIOD_HEADER[period]).toUpperCase(), totals.income, totals.spent);
     };
     const today = startOfDay(now);
-    const entries = settled(now, extra)
+    const entries = settled(ledger, now, extra)
         .toReversed()
         .toSorted((a, b) => b.date.getTime() - a.date.getTime())
         .slice(0, LEDGER_LIMIT)
         .map((row) => ({
             amount: money(row.amount),
-            color: color === "unset" ? "" : (imageColor(row.logo) ?? categoryStyle(row.category).color),
+            color: color === "unset" ? "" : (ledger.imageColor(row.logo) ?? categoryStyle(row.category).color),
             day: formatDayTitle(row.date, now, locale, t),
             emoji: "",
             id: row.id,
@@ -308,8 +321,8 @@ export function ledgerWidgetProps(
             month: window("month"),
             today: measures(
                 t("common.today").toUpperCase(),
-                sumBetween(today, now, true, extra),
-                sumBetween(today, now, false, extra)
+                sumBetween(ledger, today, now, true, extra),
+                sumBetween(ledger, today, now, false, extra)
             ),
             week: window("week"),
             year: window("year"),
@@ -318,11 +331,11 @@ export function ledgerWidgetProps(
     };
 }
 
-export function insightsView(period: InsightsPeriod, now: Date, locale: Locale): InsightsViewProps {
+export function insightsView(ledger: Ledger, period: InsightsPeriod, now: Date, locale: Locale): InsightsViewProps {
     const t = appTranslator(locale);
-    const code = currencyFor(locale);
+    const code = ledger.currency;
     const money = (value: number) => formatAmount(value, code, locale);
-    const totals = aggregate(period, now, t, []);
+    const totals = aggregate(ledger, period, now, t, []);
     const net = totals.income - totals.spent;
     return {
         bars: totals.buckets.map((bucket) => ({ x: bucket.label, y: bucket.value })),

@@ -1,12 +1,12 @@
-import type { AccountId } from "@/components/app-ui/accounts";
-
 import { Replica } from "../replica";
 import type { SlotProps } from "./placeholder";
 
-export function AccountCardRow({ account = "acc-apple", theme = "dark" }: SlotProps & { account?: AccountId }) {
+export function AccountCardRow({ theme = "dark" }: SlotProps) {
     return (
         <Replica>
-            {({ DebtRowFragment }, locale) => <DebtRowFragment account={account} fit locale={locale} theme={theme} />}
+            {({ DebtRowFragment }, locale) => (
+                <DebtRowFragment account="acc-credit" fit locale={locale} theme={theme} />
+            )}
         </Replica>
     );
 }

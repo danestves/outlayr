@@ -1,16 +1,18 @@
 import Camera01Icon from "@hugeicons/core-free-icons/Camera01Icon";
 import Image01Icon from "@hugeicons/core-free-icons/Image01Icon";
+import { decimalsFor } from "@outlayr/money/currency";
 import { getIntlayer } from "intlayer";
 import type { CSSProperties, ReactNode } from "react";
 
-import { AppScreen, useReplica } from "./canvas";
+import { AppScreen, useLedger, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { ButtonPair, CaptureButton, frameAttrs, frameTimes, MODAL, ModalBackdrop, ModalBody } from "./capture-parts";
 import type { FrameStyle } from "./capture-parts";
 import { formatDayTitle } from "./dates";
-import { CATEGORY_KEYS } from "./entry-state";
+import { CATEGORY_KEYS, accountOf } from "./entry-state";
 import { DEMO_NOW } from "./ledger";
-import { currencyFor, formatAmount, formatFixed } from "./money";
+import type { Ledger } from "./ledger";
+import { formatAmount, formatFixed } from "./money";
 import { ORB_DOTS, ORB_SIZE } from "./scan-orb";
 import { appTranslator, interpolate } from "./strings";
 import { fontAscent, roundedTrak, textLineHeight } from "./type";
@@ -27,15 +29,34 @@ const THUMB = { height: 96, radius: 12, width: 72 } as const;
 const MARK = { radius: 7, size: 24, zoom: 1.42 } as const;
 const SWEEP = { band: 0.26, glow: 6, line: 1.5, still: 0.33 } as const;
 const PHOTO = { height: 400, width: 300 } as const;
-const MERCHANT = "Costco";
-const LOGO = "costco.com";
-const ITEMS = [8.99, 11.49, 21.52] as const;
-const TOTAL = 42;
+const ITEM_SHARES = [8.99 / 42, 11.49 / 42] as const;
+const ITEM_COUNT = ITEM_SHARES.length + 1;
+const RECEIPT_DIGITS = 3;
 const HERO = { line: 44, size: 40 } as const;
 const onPixel = (value: number) => Math.round(value * 3) / 3;
 const HERO_RISE =
     (HERO.line + 2 * fontAscent(HERO.size) - textLineHeight(HERO.size)) / 2 - onPixel(fontAscent(HERO.size));
 const BASE: FrameStyle = { "--app-trak": roundedTrak(16) };
+
+function receipt(ledger: Ledger, locale: CanvasProps["locale"]) {
+    const { labels } = getIntlayer("appUi", locale);
+    const total = ledger.hero.amount;
+    const decimals = decimalsFor(ledger.currency);
+    const step =
+        total >= 10 ** RECEIPT_DIGITS ? 10 ** (Math.floor(Math.log10(total)) - RECEIPT_DIGITS + 1) : 10 ** -decimals;
+    const shares = ITEM_SHARES.map((share) => Math.round((total * share) / step) * step);
+    const rest = Number((total - shares.reduce((sum, value) => sum + value, 0)).toFixed(decimals));
+    const bank = accountOf(ledger, "acc-bank")?.name ?? "";
+    return {
+        debit: interpolate(labels.receiptDebit, { bank: bank.toLocaleUpperCase(locale) }),
+        decimals,
+        items: [...shares, rest],
+        logo: ledger.hero.merchant.logo,
+        merchant: ledger.hero.merchant.name,
+        method: interpolate(labels.receiptMethod, { bank }),
+        total,
+    };
+}
 
 const alpha = (color: string, amount: number) => `color-mix(in srgb, ${color} ${amount * 100}%, transparent)`;
 
@@ -139,7 +160,17 @@ const PRINT: CSSProperties = {
     lineHeight: "16.8px",
     whiteSpace: "pre",
 };
-const PRINT_HEAD: CSSProperties = { ...PRINT, fontSize: 19.5, fontWeight: 700, letterSpacing: 2, lineHeight: "26px" };
+const HEAD_SIZE = 19.5;
+const HEAD_SPACING = 2;
+const HEAD_WIDTH = 151;
+const MONO_ADVANCE = 0.6;
+const PRINT_HEAD: CSSProperties = { ...PRINT, fontWeight: 700, letterSpacing: HEAD_SPACING, lineHeight: "26px" };
+
+// Courier is monospaced, so a long merchant shrinks to the paper's width; the line height keeps the paper's size.
+function headStyle(name: string): CSSProperties {
+    const fit = (HEAD_WIDTH / name.length - HEAD_SPACING) / MONO_ADVANCE;
+    return { ...PRINT_HEAD, fontSize: Math.min(HEAD_SIZE, fit) };
+}
 const PRINT_BOLD: CSSProperties = { ...PRINT, fontWeight: 700 };
 const RULE: CSSProperties = {
     background: "repeating-linear-gradient(90deg, #3a3530 0 4px, transparent 4px 6.4px)",
@@ -156,16 +187,17 @@ const PAPER_EDGE = Array.from({ length: TEETH.count }, (_, index) => {
 function PrintRow({ label, strong = false, value }: { label: string; strong?: boolean; value: string }) {
     const style = strong ? PRINT_BOLD : PRINT;
     return (
-        <div className="flex-row justify-between">
-            <span style={style}>{label}</span>
-            <span style={style}>{value}</span>
+        <div className="flex-row justify-between gap-1.5">
+            <span style={{ ...style, whiteSpace: "normal" }}>{label}</span>
+            <span style={{ ...style, flexShrink: 0 }}>{value}</span>
         </div>
     );
 }
 
 export function ReceiptPhoto({ height, width }: { height: number; width: number }) {
-    const { locale } = useReplica();
+    const { ledger, locale } = useReplica();
     const { labels } = getIntlayer("appUi", locale);
+    const paper = receipt(ledger, locale);
     const scale = Math.max(width / PHOTO.width, height / PHOTO.height);
     return (
         <div className="overflow-hidden" style={{ height, width }}>
@@ -203,15 +235,23 @@ export function ReceiptPhoto({ height, width }: { height: number; width: number 
                         }}
                     >
                         <div className="items-center">
-                            <span style={PRINT_HEAD}>COSTCO</span>
+                            <span style={headStyle(paper.merchant)}>{paper.merchant.toLocaleUpperCase(locale)}</span>
                         </div>
                         <div style={RULE} />
                         {labels.receiptLines.map((line, index) => (
-                            <PrintRow key={line} label={line} value={formatFixed(ITEMS[index] ?? 0, 2, locale)} />
+                            <PrintRow
+                                key={line}
+                                label={line}
+                                value={formatFixed(paper.items[index] ?? 0, paper.decimals, locale)}
+                            />
                         ))}
                         <div style={RULE} />
-                        <PrintRow label={labels.receiptTotal} strong value={formatFixed(TOTAL, 2, locale)} />
-                        <PrintRow label={labels.receiptDebit} value="****4417" />
+                        <PrintRow
+                            label={labels.receiptTotal}
+                            strong
+                            value={formatFixed(paper.total, paper.decimals, locale)}
+                        />
+                        <PrintRow label={paper.debit} value="****4417" />
                         <PrintRow label={labels.receiptDate} value="14:32" />
                     </div>
                 </div>
@@ -399,11 +439,12 @@ function Fade({ children, className = "", style }: { children: ReactNode; classN
 }
 
 export function ScanReview({ enter, style }: { enter?: number; style?: FrameStyle }) {
-    const { locale, t } = useReplica();
+    const { ledger, locale, t } = useReplica();
     const { labels } = getIntlayer("appUi", locale);
-    const currency = currencyFor(locale);
+    const scanned = receipt(ledger, locale);
+    const { currency } = ledger;
     const money = (value: number) => formatAmount(value, currency, locale);
-    const summaryDelay = 0.08 + ITEMS.length * LINE_STAGGER + 0.04;
+    const summaryDelay = 0.08 + ITEM_COUNT * LINE_STAGGER + 0.04;
     return (
         <ModalBody style={style}>
             <Shell
@@ -432,7 +473,7 @@ export function ScanReview({ enter, style }: { enter?: number; style?: FrameStyl
                                         alt=""
                                         height={MARK.size}
                                         loading="lazy"
-                                        src={`/media/logos/${LOGO}.webp`}
+                                        src={`/media/logos/${scanned.logo}.webp`}
                                         style={{
                                             height: MARK.size,
                                             objectFit: "cover",
@@ -442,7 +483,7 @@ export function ScanReview({ enter, style }: { enter?: number; style?: FrameStyl
                                         width={MARK.size}
                                     />
                                 </div>
-                                <span className="font-sans-medium text-foreground text-title">{MERCHANT}</span>
+                                <span className="font-sans-medium text-foreground text-title">{scanned.merchant}</span>
                             </div>
                             <span className="text-muted font-sans text-base" style={BASE}>
                                 {t(CATEGORY_KEYS.Groceries)}
@@ -450,7 +491,7 @@ export function ScanReview({ enter, style }: { enter?: number; style?: FrameStyl
                                 {formatDayTitle(DEMO_NOW, DEMO_NOW, locale, t)}
                             </span>
                             <span className="text-subtle text-footnote font-sans">
-                                {t("receipt.review.paid", { method: labels.receiptMethod })}
+                                {t("receipt.review.paid", { method: scanned.method })}
                             </span>
                         </Fade>
                     </div>
@@ -459,7 +500,7 @@ export function ScanReview({ enter, style }: { enter?: number; style?: FrameStyl
                             className="font-sans-semibold text-foreground text-hero tabular-nums"
                             style={{ marginBottom: -HERO_RISE, marginTop: HERO_RISE }}
                         >
-                            {money(TOTAL)}
+                            {money(scanned.total)}
                         </span>
                     </Fade>
                     <div className="gap-6">
@@ -469,13 +510,13 @@ export function ScanReview({ enter, style }: { enter?: number; style?: FrameStyl
                                 style={entrance(enter, 0.06, 0.2)}
                             >
                                 <span className="text-muted text-footnote flex-1 font-sans">
-                                    {t("receipt.items", { count: ITEMS.length })}
+                                    {t("receipt.items", { count: ITEM_COUNT })}
                                 </span>
                                 <span className="text-subtle text-footnote font-sans">{currency}</span>
                             </Fade>
                             {labels.receiptLines.map((line, index) => (
                                 <Fade
-                                    className={`flex-row items-baseline gap-3 py-2.5 ${index === ITEMS.length - 1 ? "" : "border-separator border-b"}`}
+                                    className={`flex-row items-baseline gap-3 py-2.5 ${index === ITEM_COUNT - 1 ? "" : "border-separator border-b"}`}
                                     key={line}
                                     style={entrance(enter, 0.08 + index * LINE_STAGGER, 0.24)}
                                 >
@@ -486,7 +527,7 @@ export function ScanReview({ enter, style }: { enter?: number; style?: FrameStyl
                                         className="text-foreground font-sans-medium text-base tabular-nums"
                                         style={BASE}
                                     >
-                                        {money(ITEMS[index] ?? 0)}
+                                        {money(scanned.items[index] ?? 0)}
                                     </span>
                                 </Fade>
                             ))}
@@ -503,7 +544,7 @@ export function ScanReview({ enter, style }: { enter?: number; style?: FrameStyl
                                     className="font-sans-semibold text-foreground text-base tabular-nums"
                                     style={BASE}
                                 >
-                                    {money(TOTAL)}
+                                    {money(scanned.total)}
                                 </span>
                             </Fade>
                         </div>
@@ -514,19 +555,19 @@ export function ScanReview({ enter, style }: { enter?: number; style?: FrameStyl
     );
 }
 
-export function scanFigures(locale: CanvasProps["locale"]) {
-    const { labels } = getIntlayer("appUi", locale);
+export function scanFigures(ledger: Ledger, locale: CanvasProps["locale"]) {
+    const scanned = receipt(ledger, locale);
     return {
-        amount: formatAmount(TOTAL, currencyFor(locale), locale),
-        count: ITEMS.length,
-        merchant: MERCHANT,
-        method: labels.receiptMethod,
+        amount: formatAmount(scanned.total, ledger.currency, locale),
+        count: ITEM_COUNT,
+        merchant: scanned.merchant,
+        method: scanned.method,
     };
 }
 
-export function scanLabel(step: ScanStep, locale: CanvasProps["locale"]) {
+export function scanLabel(step: ScanStep, ledger: Ledger, locale: CanvasProps["locale"]) {
     const { labels } = getIntlayer("appUi", locale);
-    const figures = scanFigures(locale);
+    const figures = scanFigures(ledger, locale);
     if (step === "intro") {
         return labels.scanIntro;
     }
@@ -549,8 +590,9 @@ export interface ScanScreenProps extends CanvasProps {
 
 export function ScanScreen({ step, ...canvas }: ScanScreenProps) {
     const Body = STEP_BODY[step];
+    const ledger = useLedger();
     return (
-        <AppScreen {...canvas} label={scanLabel(step, canvas.locale)}>
+        <AppScreen {...canvas} label={scanLabel(step, ledger, canvas.locale)}>
             <ModalBackdrop />
             <Body />
         </AppScreen>

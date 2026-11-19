@@ -95,7 +95,7 @@ function fill(template: string, proof: WeekProof, format: Intl.NumberFormat) {
 }
 
 function Proof() {
-    const proof = useLoaderData({ from: "/{-$locale}/" })?.week;
+    const proof = useLoaderData({ from: "/{-$locale}/" }).stats?.week;
     const { hero } = useIntlayer("horizon");
     const { locale } = useLocale();
     if (!proof) {

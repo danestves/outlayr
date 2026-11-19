@@ -2,9 +2,9 @@ import { CANONICAL_CATEGORY_NAMES } from "@outlayr/money/contract";
 import type { Locale } from "@outlayr/shared/i18n";
 
 import { formatDateHeader } from "./dates";
-import { categoryStyle, imageColor } from "./ledger";
-import type { DemoRow } from "./ledger";
-import { amountParts, currencyFor, formatAmount, formatFixed } from "./money";
+import { categoryStyle } from "./ledger";
+import type { DemoRow, Ledger } from "./ledger";
+import { amountParts, formatAmount, formatFixed } from "./money";
 import { appTranslator } from "./strings";
 import { categoryName, formatUpcomingDate, logWidgetProps, overallBudgetView, settled } from "./widget-props";
 import type { BudgetViewProps } from "./widget-props";
@@ -73,7 +73,12 @@ export interface AmountDisplay {
     typed: string;
 }
 
-export const DEMO_ENTRY: AmountEntry = { fraction: "4", whole: "18" };
+const DEMO_ENTRY_USD = 18.4;
+
+export function demoEntry(ledger: Ledger): AmountEntry {
+    const [whole = "0", fraction = null] = String(ledger.price(DEMO_ENTRY_USD)).split(".");
+    return { fraction, whole };
+}
 
 const categoryId = (category: DemoRow["category"], income: boolean) => `${income ? "income" : "expense"}:${category}`;
 
@@ -112,11 +117,16 @@ export function recentCategories(snapshot: WatchSnapshot): WatchCategory[] {
     return [...ids].flatMap((id) => expenses.get(id) ?? []).slice(0, RECENT_LIMIT);
 }
 
-export function watchSnapshot(now: Date, locale: Locale, extra: readonly DemoRow[] = []): WatchSnapshot {
+export function watchSnapshot(
+    ledger: Ledger,
+    now: Date,
+    locale: Locale,
+    extra: readonly DemoRow[] = []
+): WatchSnapshot {
     const t = appTranslator(locale);
-    const code = currencyFor(locale);
+    const code = ledger.currency;
     const parts = amountParts(0, code, locale);
-    const used = new Map(settled(now, extra).map((row) => [row.category, row.income]));
+    const used = new Map(settled(ledger, now, extra).map((row) => [row.category, row.income]));
     const categories = (["expense", "income"] as const).flatMap((kind) =>
         CANONICAL_CATEGORY_NAMES[kind]
             .filter((name) => used.get(name) === (kind === "income"))
@@ -128,7 +138,7 @@ export function watchSnapshot(now: Date, locale: Locale, extra: readonly DemoRow
                 name: categoryName(name, t),
             }))
     );
-    const entries = settled(now, extra)
+    const entries = settled(ledger, now, extra)
         .toReversed()
         .toSorted((a, b) => b.date.getTime() - a.date.getTime())
         .slice(0, ENTRY_LIMIT)
@@ -136,7 +146,7 @@ export function watchSnapshot(now: Date, locale: Locale, extra: readonly DemoRow
             amount: formatAmount(row.amount, code, locale),
             at: row.date.getTime(),
             category: categoryName(row.category, t),
-            color: imageColor(row.logo) ?? categoryStyle(row.category).color,
+            color: ledger.imageColor(row.logo) ?? categoryStyle(row.category).color,
             date: formatDateHeader(row.date, now, locale, t),
             emoji: "",
             id: row.id,
@@ -144,9 +154,9 @@ export function watchSnapshot(now: Date, locale: Locale, extra: readonly DemoRow
             note: row.note,
             rootCategoryId: categoryId(row.category, row.income),
         }));
-    const log = logWidgetProps(now, locale, extra);
+    const log = logWidgetProps(ledger, now, locale, extra);
     return {
-        budget: overallBudgetView(now, locale),
+        budget: overallBudgetView(ledger, now, locale),
         categories,
         dateLabel: formatUpcomingDate(now, locale, t),
         entries,

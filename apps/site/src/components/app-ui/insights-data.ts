@@ -8,7 +8,7 @@ import { monthlySubscriptionCost } from "@outlayr/money/subscription-cost";
 import { daysBetween } from "../../../../native/src/domain/local-day";
 import { contributions } from "./budgets-data";
 import { SUNDAY } from "./dates";
-import { DEMO_CURRENCY, ROWS } from "./ledger";
+import type { Ledger } from "./ledger";
 
 const PRIOR_PERIODS = 6;
 const MIN_PRIOR_PERIODS = 3;
@@ -78,8 +78,8 @@ export interface WeekAnswers {
     usualByNow: number | null;
 }
 
-export function weekAnswers(now: Date): WeekAnswers {
-    const rows = contributions(now);
+export function weekAnswers(ledger: Ledger, now: Date): WeekAnswers {
+    const rows = contributions(ledger, now);
     const progress = weekProgress(now);
     const earliest = Math.min(...rows.map((row) => row.date.getTime()));
     const floor = startOfDay(new Date(earliest)).getTime();
@@ -124,17 +124,19 @@ export interface Subscriptions {
     perMonth: number;
 }
 
-export function subscriptions(now: Date): Subscriptions | null {
-    const items = ROWS.filter((row) => row.recurringType > 0 && !row.income).map((row) => ({
-        id: row.id,
-        name: row.note.trim() || row.category,
-        next: landingDate(row, now),
-        perMonth: Math.abs(
-            monthlySubscriptionCost([row], DEMO_CURRENCY, undefined, now).find(
-                (bucket) => bucket.currencyCode === DEMO_CURRENCY
-            )?.amount ?? 0
-        ),
-    }));
+export function subscriptions(ledger: Ledger, now: Date): Subscriptions | null {
+    const items = ledger.rows
+        .filter((row) => row.recurringType > 0 && !row.income)
+        .map((row) => ({
+            id: row.id,
+            name: row.note.trim() || row.category,
+            next: landingDate(row, now),
+            perMonth: Math.abs(
+                monthlySubscriptionCost([row], ledger.currency, undefined, now).find(
+                    (bucket) => bucket.currencyCode === ledger.currency
+                )?.amount ?? 0
+            ),
+        }));
     const [next] = items.toSorted((a, b) => a.next.getTime() - b.next.getTime());
     if (!next) {
         return null;

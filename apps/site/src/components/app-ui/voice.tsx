@@ -3,7 +3,7 @@ import type { Locale } from "@outlayr/shared/i18n";
 import { getIntlayer } from "intlayer";
 import type { ReactNode } from "react";
 
-import { AppScreen, useReplica } from "./canvas";
+import { AppScreen, useLedger, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import {
     ButtonPair,
@@ -22,7 +22,8 @@ import { formatDayTitle } from "./dates";
 import { parseSentence, Words } from "./entry-sentence";
 import { CATEGORY_KEYS, accountOf } from "./entry-state";
 import { DEMO_NOW } from "./ledger";
-import { currencyFor, formatAmount } from "./money";
+import type { Ledger } from "./ledger";
+import { formatAmount } from "./money";
 import { appTranslator, interpolate } from "./strings";
 import type { AppT } from "./strings";
 import { roundedTrak } from "./type";
@@ -44,10 +45,8 @@ export type VoiceDraft = Readonly<Record<TakeField, VoicePart>>;
 const RULE_BOTTOM = 7;
 const STROKE = 2;
 const PIXEL = 1 / 3;
-const HINT_EXAMPLE = { amount: "4", merchant: "GitHub" } as const;
 const LISTENING_STILL_WORDS = 5;
 const CAPTION_MAX_CHARS = 140;
-const CHASE = "acc-chase";
 const LARGE: FrameStyle = { "--app-trak": roundedTrak(18) };
 
 const broken = (color: string, unit: number) => {
@@ -135,9 +134,14 @@ export function VoiceSentence({ draft }: { draft: VoiceDraft }) {
     );
 }
 
-export function voiceTake(locale: Locale) {
+export function voiceTake(ledger: Ledger, locale: Locale) {
     const { labels } = getIntlayer("appUi", locale);
-    return { fix: parseTake(labels.sayFix), take: parseTake(labels.sayTake) };
+    const take = parseTake(labels.sayTake, {
+        account: accountOf(ledger, "acc-bank")?.name,
+        amount: new Intl.NumberFormat(locale).format(ledger.hero.amount),
+        merchant: ledger.hero.merchant.name,
+    });
+    return { fix: parseTake(labels.sayFix), take };
 }
 
 const blank = (t: AppT, field: TakeField): VoicePart => ({
@@ -145,23 +149,23 @@ const blank = (t: AppT, field: TakeField): VoicePart => ({
     text: t(BLANK_KEYS[field]),
 });
 
-function values(locale: Locale, t: AppT): Record<TakeField, string> {
+function values(ledger: Ledger, locale: Locale, t: AppT): Record<TakeField, string> {
     return {
-        account: accountOf(CHASE)?.name ?? "",
-        amount: formatAmount(42, currencyFor(locale), locale),
+        account: accountOf(ledger, "acc-bank")?.name ?? "",
+        amount: formatAmount(ledger.hero.amount, ledger.currency, locale),
         category: t(CATEGORY_KEYS.Groceries),
-        merchant: "Costco",
+        merchant: ledger.hero.merchant.name,
         when: formatDayTitle(DEMO_NOW, DEMO_NOW, locale, t),
     };
 }
 
 const FIELDS = ["amount", "merchant", "category", "account", "when"] as const satisfies readonly TakeField[];
 
-export function liveDraft(take: Take, words: number, locale: Locale, t: AppT): VoiceDraft | null {
+export function liveDraft(take: Take, words: number, ledger: Ledger, locale: Locale, t: AppT): VoiceDraft | null {
     if (!heardBy(take, "amount", words)) {
         return null;
     }
-    const filled = values(locale, t);
+    const filled = values(ledger, locale, t);
     const part = (field: TakeField): VoicePart =>
         field !== "merchant" && heardBy(take, field, words)
             ? { mark: "guessed", text: filled[field] }
@@ -175,8 +179,8 @@ export function liveDraft(take: Take, words: number, locale: Locale, t: AppT): V
     };
 }
 
-export function resolvedDraft(locale: Locale, t: AppT, corrected: boolean): VoiceDraft {
-    const filled = values(locale, t);
+export function resolvedDraft(ledger: Ledger, locale: Locale, t: AppT, corrected: boolean): VoiceDraft {
+    const filled = values(ledger, locale, t);
     const confirmed = (field: TakeField): VoicePart => ({ mark: "confirmed", text: filled[field] });
     return {
         account: confirmed("account"),
@@ -207,8 +211,12 @@ export function StatusLine({ children, style }: { children: string; style?: Fram
 }
 
 export function Hint({ style }: { style?: FrameStyle }) {
-    const { t } = useReplica();
-    const example = interpolate(t("voice.hint.example"), HINT_EXAMPLE);
+    const { ledger, locale, t } = useReplica();
+    const github = ledger.row("github");
+    const example = interpolate(t("voice.hint.example"), {
+        amount: new Intl.NumberFormat(locale).format(github?.amount ?? 0),
+        merchant: github?.note ?? "GitHub",
+    });
     return (
         <div {...frameAttrs(style)} style={style}>
             <span className="text-grammar text-caption font-sans">{interpolate(t("voice.hint"), { example })}</span>
@@ -316,18 +324,18 @@ function statusKey(phase: VoicePhase) {
     return phase === "ready" || phase === "listening" ? "voice.state.listening" : "voice.state.thinking";
 }
 
-export function voiceLabel(phase: VoicePhase, locale: Locale) {
+export function voiceLabel(phase: VoicePhase, ledger: Ledger, locale: Locale) {
     const t = appTranslator(locale);
     const { labels } = getIntlayer("appUi", locale);
-    const { fix, take } = voiceTake(locale);
+    const { fix, take } = voiceTake(ledger, locale);
     if (phase === "starting" || phase === "ready" || phase === "sending") {
         return interpolate(labels.voiceStatus, { status: t(statusKey(phase)) });
     }
     const words = phase === "listening" ? LISTENING_STILL_WORDS : take.words.length;
     const draft =
         phase === "result" || phase === "corrected"
-            ? resolvedDraft(locale, t, phase === "corrected")
-            : liveDraft(take, words, locale, t);
+            ? resolvedDraft(ledger, locale, t, phase === "corrected")
+            : liveDraft(take, words, ledger, locale, t);
     const heard = phase === "corrected" ? fix.heard : take.words.slice(0, words).join(" ");
     if (!draft) {
         return interpolate(labels.voiceHeard, { heard, sentence: "" });
@@ -347,23 +355,23 @@ const STILL_CELL: Record<VoicePhase, number> = {
     thinking: ORI_CELL.thinking,
 };
 
-function stillDraft(phase: VoicePhase, take: Take, words: number, locale: Locale, t: AppT) {
+function stillDraft(phase: VoicePhase, take: Take, words: number, ledger: Ledger, locale: Locale, t: AppT) {
     if (phase === "result" || phase === "corrected") {
-        return resolvedDraft(locale, t, phase === "corrected");
+        return resolvedDraft(ledger, locale, t, phase === "corrected");
     }
     if (phase === "listening" || phase === "thinking") {
-        return liveDraft(take, words, locale, t);
+        return liveDraft(take, words, ledger, locale, t);
     }
     return null;
 }
 
 function VoiceStill({ phase }: { phase: VoicePhase }) {
-    const { locale, t } = useReplica();
-    const { fix, take } = voiceTake(locale);
+    const { ledger, locale, t } = useReplica();
+    const { fix, take } = voiceTake(ledger, locale);
     const settled = phase === "result" || phase === "corrected";
     const words = phase === "listening" ? LISTENING_STILL_WORDS : take.words.length;
     const saying = phase === "listening" || phase === "thinking";
-    const draft = stillDraft(phase, take, words, locale, t);
+    const draft = stillDraft(phase, take, words, ledger, locale, t);
     const waiting = phase === "sending" || phase === "thinking";
     const status = draft === null || waiting ? t(statusKey(phase)) : null;
     return (
@@ -396,8 +404,9 @@ export interface VoiceScreenProps extends CanvasProps {
 }
 
 export function VoiceScreen({ phase, ...canvas }: VoiceScreenProps) {
+    const ledger = useLedger();
     return (
-        <AppScreen {...canvas} label={voiceLabel(phase, canvas.locale)}>
+        <AppScreen {...canvas} label={voiceLabel(phase, ledger, canvas.locale)}>
             <ModalBackdrop />
             <VoiceStill phase={phase} />
         </AppScreen>
