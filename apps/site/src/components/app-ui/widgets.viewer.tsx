@@ -1,7 +1,7 @@
 import { getIntlayer } from "intlayer";
 import type { ReactNode } from "react";
 
-import { AppScreen, useReplica } from "./canvas";
+import { AppScreen, useLedger, useReplica } from "./canvas";
 import type { AppTheme, CanvasProps } from "./canvas";
 import { DEMO_NOW } from "./ledger";
 import { BudgetWidget, BudgetWidgetView } from "./widget-budget";
@@ -33,42 +33,45 @@ function HomeScreen({ children, ...canvas }: CanvasProps & { children: ReactNode
 }
 
 function SmallMediumCapture(canvas: CanvasProps) {
+    const ledger = useLedger();
     return (
         <HomeScreen {...canvas}>
             <InsightsWidgetView
                 at={{ x: LEFT, y: FIRST }}
                 family="small"
-                view={insightsView("week", DEMO_NOW, canvas.locale)}
+                view={insightsView(ledger, "week", DEMO_NOW, canvas.locale)}
             />
             <BudgetWidgetView
                 at={{ x: RIGHT, y: FIRST }}
                 family="small"
-                view={overallBudgetView(DEMO_NOW, canvas.locale)}
+                view={overallBudgetView(ledger, DEMO_NOW, canvas.locale)}
             />
-            <LogWidgetView at={{ x: LEFT, y: SECOND }} widget={logWidgetProps(DEMO_NOW, canvas.locale)} />
+            <LogWidgetView at={{ x: LEFT, y: SECOND }} widget={logWidgetProps(ledger, DEMO_NOW, canvas.locale)} />
             <BudgetWidgetView
                 at={{ x: LEFT, y: THIRD }}
                 family="medium"
-                view={overallBudgetView(DEMO_NOW, canvas.locale)}
+                view={overallBudgetView(ledger, DEMO_NOW, canvas.locale)}
             />
         </HomeScreen>
     );
 }
 
 function InsightsMediumCapture(canvas: CanvasProps) {
+    const ledger = useLedger();
     return (
         <HomeScreen {...canvas}>
             <InsightsWidgetView
                 at={{ x: LEFT, y: FIRST }}
                 family="medium"
-                view={insightsView("week", DEMO_NOW, canvas.locale)}
+                view={insightsView(ledger, "week", DEMO_NOW, canvas.locale)}
             />
         </HomeScreen>
     );
 }
 
 function EntriesCapture(canvas: CanvasProps) {
-    const widget = ledgerWidgetProps(DEMO_NOW, canvas.locale, "unset");
+    const ledger = useLedger();
+    const widget = ledgerWidgetProps(ledger, DEMO_NOW, canvas.locale, "unset");
     return (
         <HomeScreen {...canvas}>
             <LedgerWidgetView at={{ x: LEFT, y: FIRST }} family="medium" widget={widget} />

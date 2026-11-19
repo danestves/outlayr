@@ -2,7 +2,7 @@ import { getIntlayer } from "intlayer";
 
 import type { WidgetPalette } from "../../../../native/src/widgets/palette";
 import { WIDGET_PALETTE } from "../../../../native/src/widgets/palette";
-import { AppFragment, useReplica } from "./canvas";
+import { AppFragment, useLedger, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { DEMO_NOW } from "./ledger";
 import { interpolate } from "./strings";
@@ -163,7 +163,8 @@ export function InsightsWidget({
     view,
     ...canvas
 }: InsightsWidgetProps) {
-    const props = view ?? insightsView(period, now, canvas.locale);
+    const ledger = useLedger();
+    const props = view ?? insightsView(ledger, period, now, canvas.locale);
     return (
         <AppFragment {...canvas} {...WIDGET_SIZE[family]} label={insightsWidgetLabel(props, canvas.locale)}>
             <InsightsWidgetView family={family} view={props} />

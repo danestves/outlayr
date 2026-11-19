@@ -3,7 +3,6 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { glyphShade, TILE_WASH_OPACITY, withAlpha } from "../../../../native/src/theme/shade";
 import { useReplica } from "./canvas";
 import { solidCategoryIcon } from "./icons";
-import type { LogoDomain } from "./ledger";
 
 const GLYPH_RAMP = new Map<number, number>([
     [28, 15],
@@ -26,7 +25,7 @@ export interface CategoryIconTileProps {
     color: string;
     future?: boolean;
     icon: string | null;
-    logo?: LogoDomain | null;
+    logo?: string | null;
     radius?: number;
     size?: number;
 }

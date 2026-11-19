@@ -1,4 +1,5 @@
 import type { Locale } from "@outlayr/shared/i18n";
+import { useLoaderData } from "@tanstack/react-router";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { useLocale } from "react-intlayer";
@@ -37,11 +38,12 @@ export async function loadReplicas() {
 
 export function Replica({ children }: { children: (replicas: Replicas, locale: Locale) => ReactNode }) {
     const { locale } = useLocale();
+    const { cast } = useLoaderData({ from: "/{-$locale}/" });
     const [, setLive] = useState(false);
     if (replicas) {
         return (
             <div className="contents" key="live">
-                {children(replicas, locale)}
+                <replicas.DemoCastContext value={cast}>{children(replicas, locale)}</replicas.DemoCastContext>
             </div>
         );
     }

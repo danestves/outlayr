@@ -7,14 +7,13 @@ import { SCREEN, useReplica } from "./canvas";
 import { CATEGORY_KEYS, ENTRY_CATEGORIES, footerSaves, merchantNames, pickerAccounts, stageStep } from "./entry-state";
 import type { EntryState } from "./entry-state";
 import { KEYBOARD_TOP } from "./keyboard";
-import { categoryStyle, imageColor } from "./ledger";
+import { categoryStyle } from "./ledger";
 import { CategoryIconTile } from "./tile";
 
 const TILE = 22;
 const LIST_HEIGHT = 176;
 const BACK_GLYPH = 19;
 const SELECTED_FILL = "color-mix(in srgb, var(--tint) 13%, transparent)";
-const LEDGER_CURRENCY = "USD";
 const BACK_GLASS = {
     background: "var(--glass-fill)",
     boxShadow: [1, 1, -1, -1].map((side) => `inset 0 ${side}px 1.33px var(--glass-rim)`).join(", "),
@@ -77,17 +76,17 @@ function CategoryStep({ state }: { state: EntryState }) {
 }
 
 function AccountStep({ state }: { state: EntryState }) {
-    const { t } = useReplica();
+    const { ledger, t } = useReplica();
     return (
         <OptionList>
             <StageOption label={t("transaction.account.none")} selected={state.account === null} />
-            {pickerAccounts().map((account) => (
+            {pickerAccounts(ledger).map((account) => (
                 <StageOption
                     key={account.id}
                     label={account.name}
                     leading={
                         <CategoryIconTile
-                            color={imageColor(account.logo) ?? account.color}
+                            color={ledger.imageColor(account.logo) ?? account.color}
                             icon={account.icon}
                             logo={account.logo}
                             radius={6}
@@ -96,7 +95,7 @@ function AccountStep({ state }: { state: EntryState }) {
                     }
                     selected={state.account === account.id}
                     trailing={
-                        account.currency === LEDGER_CURRENCY ? null : (
+                        account.currency === ledger.currency ? null : (
                             <span className="text-label text-tint font-mono">{account.currency}</span>
                         )
                     }
@@ -107,9 +106,10 @@ function AccountStep({ state }: { state: EntryState }) {
 }
 
 function MerchantChips({ state }: { state: EntryState }) {
+    const { ledger } = useReplica();
     return (
         <div className="flex-row gap-2 overflow-hidden">
-            {merchantNames(state.name).map((name) => (
+            {merchantNames(ledger, state.name).map((name) => (
                 <StageOption key={name} label={name} selected={name === state.name} />
             ))}
         </div>

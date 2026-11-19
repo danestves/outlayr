@@ -25,13 +25,14 @@ import {
     timeLeftLabel,
 } from "./budgets-data";
 import type { CategoryBudget, MainBudget } from "./budgets-data";
-import { AppFragment, AppScreen, SCREEN, useReplica } from "./canvas";
+import { AppFragment, AppScreen, SCREEN, useLedger, useReplica } from "./canvas";
 import type { AppTheme, CanvasProps } from "./canvas";
 import { BurndownChart } from "./chart-burndown";
 import { GlassCircle, SymbolMask, SystemText, TabBar } from "./chrome";
 import { dayMonth, monthLongTitle } from "./dates";
 import { DEMO_NOW } from "./ledger";
-import { amountParts, currencyFor, formatAmount } from "./money";
+import type { Ledger } from "./ledger";
+import { amountParts, formatAmount } from "./money";
 import { appTranslator, interpolate } from "./strings";
 import type { AppKey, AppT } from "./strings";
 import { fontAscent, textLineHeight } from "./type";
@@ -140,8 +141,8 @@ function StepButton({ disabled, icon }: { disabled: boolean; icon: IconSvgElemen
 }
 
 function PeriodStepper({ main, now }: { main: MainBudget; now: Date }) {
-    const { t } = useReplica();
-    const earliest = contributions(now).reduce<Date | null>(
+    const { ledger, t } = useReplica();
+    const earliest = contributions(ledger, now).reduce<Date | null>(
         (first, row) => (first === null || row.date < first ? row.date : first),
         null
     );
@@ -158,8 +159,8 @@ function PeriodStepper({ main, now }: { main: MainBudget; now: Date }) {
 }
 
 function HeroNumber({ amount, over }: { amount: number; over: boolean }) {
-    const { locale } = useReplica();
-    const parts = amountParts(amount, currencyFor(locale), locale);
+    const { ledger, locale } = useReplica();
+    const parts = amountParts(amount, ledger.currency, locale);
     const fitted = Math.min(
         HERO.size,
         Math.floor(amountHeroFontSize(amount, parts.minorUnits, SCREEN.width - HERO.gutter))
@@ -243,8 +244,7 @@ function MeasureStrip({ cells }: { cells: readonly MeasureCell[] }) {
     );
 }
 
-function heroMeasures(main: MainBudget, now: Date, locale: Locale, t: AppT): MeasureCell[] {
-    const code = currencyFor(locale);
+function heroMeasures(main: MainBudget, now: Date, code: string, locale: Locale, t: AppT): MeasureCell[] {
     const cells: MeasureCell[] = [
         { figure: formatWhole(main.amount, code, locale), key: "limit", label: t("budgets.measure.limit") },
         { figure: formatWhole(main.spent, code, locale), key: "spent", label: t("budgets.measure.spent") },
@@ -271,8 +271,8 @@ function Verdict({ children }: { children: string }) {
 }
 
 function BudgetHero({ main, now }: { main: MainBudget; now: Date }) {
-    const { locale, t } = useReplica();
-    const verdict = heroVerdict(main, currencyFor(locale), locale, t);
+    const { ledger, locale, t } = useReplica();
+    const verdict = heroVerdict(main, ledger.currency, locale, t);
     return (
         <div>
             <LeftBlock main={main} now={now} />
@@ -280,7 +280,7 @@ function BudgetHero({ main, now }: { main: MainBudget; now: Date }) {
                 <PaceChartBlock main={main} />
             </div>
             <div className="pt-3.5">
-                <MeasureStrip cells={heroMeasures(main, now, locale, t)} />
+                <MeasureStrip cells={heroMeasures(main, now, ledger.currency, locale, t)} />
             </div>
             {verdict ? (
                 <div className="pt-4">
@@ -292,8 +292,8 @@ function BudgetHero({ main, now }: { main: MainBudget; now: Date }) {
 }
 
 function BudgetRow({ budget, now }: { budget: CategoryBudget; now: Date }) {
-    const { locale, t } = useReplica();
-    const code = currencyFor(locale);
+    const { ledger, locale, t } = useReplica();
+    const code = ledger.currency;
     const over = budget.overBudget;
     const verdict = burndownVerdict(budget.burndown, code, locale, t);
     const meta = [
@@ -341,9 +341,9 @@ function BudgetRow({ budget, now }: { budget: CategoryBudget; now: Date }) {
 }
 
 function WithLimit({ now }: { now: Date }) {
-    const { locale, t } = useReplica();
-    const code = currencyFor(locale);
-    const budgets = categoryBudgets(now);
+    const { ledger, locale, t } = useReplica();
+    const code = ledger.currency;
+    const budgets = categoryBudgets(ledger, now);
     const total = (pick: (budget: CategoryBudget) => number) =>
         formatWhole(
             budgets.reduce((sum, budget) => sum + pick(budget), 0),
@@ -371,7 +371,7 @@ function WithLimit({ now }: { now: Date }) {
 }
 
 function BudgetsContent({ now }: { now: Date }) {
-    const main = mainBudget(now);
+    const main = mainBudget(useReplica().ledger, now);
     return (
         <div className="absolute inset-x-0" style={{ paddingInline: GUTTER, top: CONTENT_TOP }}>
             <BalancesViewToggle view="categories" />
@@ -384,9 +384,9 @@ function BudgetsContent({ now }: { now: Date }) {
     );
 }
 
-function labelFigures(locale: Locale, now: Date) {
-    const main = mainBudget(now);
-    const code = currencyFor(locale);
+function labelFigures(ledger: Ledger, locale: Locale, now: Date) {
+    const main = mainBudget(ledger, now);
+    const code = ledger.currency;
     const t = appTranslator(locale);
     const last = main.burndown.points.at(-1);
     return {
@@ -403,8 +403,8 @@ function labelFigures(locale: Locale, now: Date) {
     };
 }
 
-export function budgetsLabel(locale: Locale, now: Date = DEMO_NOW): string {
-    const { days, labels, left, limit, main, perDay, short, spent, t } = labelFigures(locale, now);
+export function budgetsLabel(ledger: Ledger, locale: Locale, now: Date = DEMO_NOW): string {
+    const { days, labels, left, limit, main, perDay, short, spent, t } = labelFigures(ledger, locale, now);
     return interpolate(labels.budgetsScreen, {
         days,
         left,
@@ -416,18 +416,18 @@ export function budgetsLabel(locale: Locale, now: Date = DEMO_NOW): string {
     });
 }
 
-export function paceChartLabel(locale: Locale, now: Date = DEMO_NOW): string {
-    const { labels, left, limit, short, today } = labelFigures(locale, now);
+export function paceChartLabel(ledger: Ledger, locale: Locale, now: Date = DEMO_NOW): string {
+    const { labels, left, limit, short, today } = labelFigures(ledger, locale, now);
     return interpolate(labels.budgetPace, { date: today, left, limit, short });
 }
 
-export function budgetLeftLabel(locale: Locale, now: Date = DEMO_NOW): string {
-    const { days, labels, left } = labelFigures(locale, now);
+export function budgetLeftLabel(ledger: Ledger, locale: Locale, now: Date = DEMO_NOW): string {
+    const { days, labels, left } = labelFigures(ledger, locale, now);
     return interpolate(labels.budgetLeft, { days, left });
 }
 
-export function paceVerdictLabel(locale: Locale, now: Date = DEMO_NOW): string {
-    return heroVerdict(mainBudget(now), currencyFor(locale), locale, appTranslator(locale)) ?? "";
+export function paceVerdictLabel(ledger: Ledger, locale: Locale, now: Date = DEMO_NOW): string {
+    return heroVerdict(mainBudget(ledger, now), ledger.currency, locale, appTranslator(locale)) ?? "";
 }
 
 export interface BudgetsScreenProps extends CanvasProps {
@@ -435,8 +435,9 @@ export interface BudgetsScreenProps extends CanvasProps {
 }
 
 export function BudgetsScreen({ now = DEMO_NOW, ...canvas }: BudgetsScreenProps) {
+    const ledger = useLedger();
     return (
-        <AppScreen {...canvas} label={budgetsLabel(canvas.locale, now)}>
+        <AppScreen {...canvas} label={budgetsLabel(ledger, canvas.locale, now)}>
             <BudgetsContent now={now} />
             <BalancesHeader />
             <TabBar badges={{ balances: 1 }} selected="balances" />
@@ -459,21 +460,23 @@ const PACE_CHART = { height: CHART_HEIGHT + 2 * (FRAGMENT_PAD - BLEED), width: S
 const BUDGET_LEFT = { height: 131, width: SCREEN.width } as const;
 
 export function PaceChartFragment({ now = DEMO_NOW, ...canvas }: BudgetsScreenProps) {
+    const ledger = useLedger();
     return (
-        <AppFragment {...canvas} label={paceChartLabel(canvas.locale, now)} {...PACE_CHART}>
+        <AppFragment {...canvas} label={paceChartLabel(ledger, canvas.locale, now)} {...PACE_CHART}>
             <div className="bg-background absolute inset-0" />
             <div className="absolute" style={{ left: FRAGMENT_PAD, top: FRAGMENT_PAD - BLEED }}>
-                <PaceChartBlock main={mainBudget(now)} />
+                <PaceChartBlock main={mainBudget(ledger, now)} />
             </div>
         </AppFragment>
     );
 }
 
 export function BudgetLeftFragment({ now = DEMO_NOW, ...canvas }: BudgetsScreenProps) {
+    const ledger = useLedger();
     return (
-        <AppFragment {...canvas} label={budgetLeftLabel(canvas.locale, now)} {...BUDGET_LEFT}>
+        <AppFragment {...canvas} label={budgetLeftLabel(ledger, canvas.locale, now)} {...BUDGET_LEFT}>
             <FragmentSurface>
-                <LeftBlock main={mainBudget(now)} now={now} />
+                <LeftBlock main={mainBudget(ledger, now)} now={now} />
             </FragmentSurface>
         </AppFragment>
     );
@@ -481,10 +484,11 @@ export function BudgetLeftFragment({ now = DEMO_NOW, ...canvas }: BudgetsScreenP
 
 export function PaceVerdictFragment({ now = DEMO_NOW, ...canvas }: BudgetsScreenProps) {
     const height = Math.ceil(VERDICT_LINES[canvas.locale] * VERDICT_LINE + 2 * FRAGMENT_PAD);
+    const verdict = paceVerdictLabel(useLedger(), canvas.locale, now);
     return (
-        <AppFragment {...canvas} height={height} label={paceVerdictLabel(canvas.locale, now)} width={SCREEN.width}>
+        <AppFragment {...canvas} height={height} label={verdict} width={SCREEN.width}>
             <FragmentSurface>
-                <Verdict>{paceVerdictLabel(canvas.locale, now)}</Verdict>
+                <Verdict>{verdict}</Verdict>
             </FragmentSurface>
         </AppFragment>
     );

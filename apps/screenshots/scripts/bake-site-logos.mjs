@@ -6,7 +6,8 @@ import sharp from "sharp";
 
 const NATIVE_SRC = new URL("../../native/src/", import.meta.url);
 const COUNTRY_LOGOS = new URL("../../site/src/components/home/country-logos.ts", import.meta.url);
-const COLORS_FILE = new URL("../../site/src/components/app-ui/logos.json", import.meta.url);
+const APP_UI = new URL("../../site/src/components/app-ui/", import.meta.url);
+const COLORS_FILE = new URL("logos.json", APP_UI);
 const TILES_DIR = new URL("../../site/public/media/logos/", import.meta.url);
 
 const PLATE_SAMPLE = 128;
@@ -150,9 +151,30 @@ if (process.argv.includes("--tiles")) {
     }
     process.stdout.write(`${domains.length} tiles baked\n`);
 } else {
+    const { COUNTRY_CASTS } = await import(new URL("country-casts.ts", APP_UI).href);
+    const { GLOBAL } = await import(new URL("global-brands.ts", APP_UI).href);
+    const brands = [
+        ...Object.values(GLOBAL),
+        ...Object.values(COUNTRY_CASTS).flatMap((cast) => [
+            ...Object.values(cast.merchants),
+            ...Object.values(cast.accounts),
+        ]),
+    ];
     const baked = JSON.parse(readFileSync(COLORS_FILE, "utf-8"));
-    const domains = [...new Set([...Object.keys(baked), ...process.argv.slice(2)])].toSorted();
-    const colors = Object.fromEntries(await Promise.all(domains.map(bake)));
+    const domains = [...new Set([...brands.map(({ logo }) => logo), ...process.argv.slice(2)])].toSorted();
+    const colors = {};
+    let fresh = 0;
+    for (const domain of domains) {
+        const tile = new URL(`${domain}.webp`, TILES_DIR);
+        if (domain in baked) {
+            colors[domain] = baked[domain];
+        } else if (existsSync(tile)) {
+            colors[domain] = await glowColor(readFileSync(tile));
+        } else {
+            [, colors[domain]] = await bake(domain);
+            fresh += 1;
+        }
+    }
     writeFileSync(COLORS_FILE, `${JSON.stringify(colors, null, 4)}\n`);
-    process.stdout.write(`${domains.length} logos baked\n`);
+    process.stdout.write(`${domains.length} logos, ${fresh} baked\n`);
 }

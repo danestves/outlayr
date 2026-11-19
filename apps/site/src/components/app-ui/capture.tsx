@@ -1,7 +1,7 @@
 import "./capture.css";
 import type { CSSProperties, ReactNode } from "react";
 
-import { AppScreen, useReplica } from "./canvas";
+import { AppScreen, useLedger, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import {
     MODAL,
@@ -17,8 +17,9 @@ import type { FrameStyle } from "./capture-parts";
 import { FILM_SECONDS } from "./capture-timing";
 import type { CaptureWay } from "./capture-timing";
 import { NewEntrySheet, sheetLabel } from "./entry";
-import { ACCOUNT, CATEGORY, EMPTY, FILLED, NAME, NAME_CHIPS, NUMPAD } from "./entry-state";
-import type { EntryState } from "./entry-state";
+import { entryStates } from "./entry-state";
+import type { EntryState, EntryStates } from "./entry-state";
+import { letterKeyAt } from "./keyboard";
 import { DEMO_NOW } from "./ledger";
 import { ScanIntro, ScanReading, ScanReview, scanLabel } from "./scan";
 import {
@@ -108,24 +109,60 @@ const padKey = (row: number, column: number): CSSProperties => ({
     width: PAD_KEY.width,
 });
 
-const letterKey = (left: number, top: number): CSSProperties => ({
-    borderRadius: LETTER_KEY.radius,
-    height: LETTER_KEY.height,
-    left,
-    top,
-    width: LETTER_KEY.width,
-});
+const letterKey = (char: string): CSSProperties | undefined => {
+    const origin = letterKeyAt(char);
+    return (
+        origin && {
+            borderRadius: LETTER_KEY.radius,
+            height: LETTER_KEY.height,
+            width: LETTER_KEY.width,
+            ...origin,
+        }
+    );
+};
 
-const TYPE_BEATS: readonly { at: number; press?: CSSProperties; state: EntryState }[] = [
-    { at: 0.6, press: padKey(1, 0), state: { ...EMPTY, amount: "4" } },
-    { at: 0.95, press: padKey(0, 1), state: NUMPAD },
-    { at: 1.6, state: NAME },
-    { at: 2.1, press: letterKey(145.29, 706), state: { ...NAME, name: "C" } },
-    { at: 2.4, press: letterKey(323.17, 598), state: NAME_CHIPS },
-    { at: 3.2, state: CATEGORY },
-    { at: 4.2, state: ACCOUNT },
-    { at: 5.1, state: FILLED },
-];
+const PAD_LAYOUT = ["123", "456", "789", ".0"] as const;
+const DIGIT_STEP = 0.15;
+const FIRST_DIGIT_AT = 0.2;
+const LAST_DIGIT_AT = 0.95;
+const LETTER_BEATS = [2.1, 2.4] as const;
+
+function digitKey(digit: string): CSSProperties | undefined {
+    for (const [row, keys] of PAD_LAYOUT.entries()) {
+        if (keys.includes(digit)) {
+            return padKey(row, keys.indexOf(digit));
+        }
+    }
+    return undefined;
+}
+
+interface TypeBeat {
+    readonly at: number;
+    readonly press?: CSSProperties;
+    readonly state: EntryState;
+}
+
+function typeBeats(states: EntryStates): readonly TypeBeat[] {
+    const digits = [...states.NUMPAD.amount];
+    const letters = [...states.NAME_CHIPS.name];
+    const step = Math.min(DIGIT_STEP, (LAST_DIGIT_AT - FIRST_DIGIT_AT) / Math.max(digits.length - 1, 1));
+    return [
+        ...digits.map((digit, index) => ({
+            at: LAST_DIGIT_AT - (digits.length - 1 - index) * step,
+            press: digitKey(digit),
+            state: { ...states.EMPTY, amount: digits.slice(0, index + 1).join("") },
+        })),
+        { at: 1.6, state: states.NAME },
+        ...letters.map((letter, index) => ({
+            at: LETTER_BEATS[index] ?? LETTER_BEATS[1],
+            press: letterKey(letter),
+            state: { ...states.NAME, name: letters.slice(0, index + 1).join("") },
+        })),
+        { at: 3.2, state: states.CATEGORY },
+        { at: 4.2, state: states.ACCOUNT },
+        { at: 5.1, state: states.FILLED },
+    ];
+}
 
 function KeyPress({ press }: { press: Press }) {
     const style: FrameStyle = { ...press.box, "--in": `${press.at}s` };
@@ -133,11 +170,13 @@ function KeyPress({ press }: { press: Press }) {
 }
 
 export function TypeFilm(canvas: CanvasProps) {
+    const ledger = useLedger();
+    const states = entryStates(ledger);
     return (
-        <AppScreen {...canvas} label={sheetLabel(FILLED, DEMO_NOW, canvas.locale, "typeFilm")}>
+        <AppScreen {...canvas} label={sheetLabel(ledger, states.FILLED, DEMO_NOW, canvas.locale, "typeFilm")}>
             <Film way="type">
-                <NewEntrySheet now={DEMO_NOW} state={EMPTY} />
-                {TYPE_BEATS.map((beat) => {
+                <NewEntrySheet now={DEMO_NOW} state={states.EMPTY} />
+                {typeBeats(states).map((beat) => {
                     const style = frameTimes(beat.at, undefined, QUICK);
                     return (
                         <div className="contents" key={beat.at}>
@@ -163,8 +202,8 @@ const ORI_LISTENING = 3;
 const ORI_THINKING = 19;
 
 function SayBody() {
-    const { locale, t } = useReplica();
-    const { take } = voiceTake(locale);
+    const { ledger, locale, t } = useReplica();
+    const { take } = voiceTake(ledger, locale);
     const count = take.words.length;
     const step = (SAY.last - SAY.first) / Math.max(count - 1, 1);
     const wordAt = (words: number) => SAY.first + (words - 1) * step;
@@ -184,7 +223,7 @@ function SayBody() {
     ];
     let shown = "";
     for (const heard of words) {
-        const draft = liveDraft(take, heard, locale, t);
+        const draft = liveDraft(take, heard, ledger, locale, t);
         const key = draft ? draftText(draft, t) : "";
         if (heard > 1 && key === shown) {
             continue;
@@ -196,7 +235,7 @@ function SayBody() {
         });
         shown = key;
     }
-    const spoken = liveDraft(take, count, locale, t);
+    const spoken = liveDraft(take, count, ledger, locale, t);
     content.push(
         {
             at: SAY.sending,
@@ -207,7 +246,7 @@ function SayBody() {
                 </>
             ),
         },
-        { at: SAY.result, node: <VoiceSentence draft={resolvedDraft(locale, t, false)} /> }
+        { at: SAY.result, node: <VoiceSentence draft={resolvedDraft(ledger, locale, t, false)} /> }
     );
 
     const captions: Beat[] = [
@@ -257,8 +296,9 @@ function SayBody() {
 }
 
 export function SayFilm(canvas: CanvasProps) {
+    const ledger = useLedger();
     return (
-        <AppScreen {...canvas} label={voiceLabel("result", canvas.locale)}>
+        <AppScreen {...canvas} label={voiceLabel("result", ledger, canvas.locale)}>
             <ModalBackdrop />
             <Film way="say">
                 <SayBody />
@@ -272,8 +312,9 @@ const STAGE_FADE = 0.26;
 const REVIEW_FADE = 0.2;
 
 export function SnapFilm(canvas: CanvasProps) {
+    const ledger = useLedger();
     return (
-        <AppScreen {...canvas} label={scanLabel("review", canvas.locale)}>
+        <AppScreen {...canvas} label={scanLabel("review", ledger, canvas.locale)}>
             <ModalBackdrop />
             <Film way="snap">
                 <ScanIntro style={frameTimes(0, SNAP.reading, 0)} />

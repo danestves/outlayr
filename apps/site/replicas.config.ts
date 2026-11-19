@@ -27,6 +27,8 @@ const PAGE = `<!doctype html>
 const ENTRY_SOURCE = `
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { demoCast } from "/src/components/app-ui/cast.ts";
+import { DemoCastContext } from "/src/components/app-ui/canvas.tsx";
 
 const modules = import.meta.glob("/src/components/app-ui/*.viewer.tsx", { eager: true });
 const SCREENS = Object.assign({}, ...Object.values(modules).map((module) => module.screens));
@@ -46,7 +48,8 @@ if (screen) {
         mount.style.width = params.get("fit") + "px";
     }
     document.documentElement.style.background = props.theme === "dark" ? "#000" : "#fff";
-    mount.innerHTML = renderToStaticMarkup(createElement(screen, props));
+    const cast = demoCast(params.get("country")?.toUpperCase() ?? null);
+    mount.innerHTML = renderToStaticMarkup(createElement(DemoCastContext, { value: cast }, createElement(screen, props)));
 } else {
     const links = Object.keys(SCREENS).flatMap((name) =>
         THEMES.flatMap((theme) =>

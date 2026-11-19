@@ -3,10 +3,10 @@ import { getIntlayer } from "intlayer";
 import type { ReactNode } from "react";
 
 import type { CanvasProps } from "./canvas";
-import { useReplica } from "./canvas";
+import { useLedger, useReplica } from "./canvas";
 import { dayMonth } from "./dates";
+import { savedRows } from "./entry-state";
 import { DEMO_NOW } from "./ledger";
-import type { DemoRow } from "./ledger";
 import { appTranslator, interpolate } from "./strings";
 import {
     BOTTOM_INSET,
@@ -29,7 +29,7 @@ import {
     WATCH_SIZE,
     WatchFragment,
 } from "./watch-parts";
-import { DEMO_ENTRY, entryDisplay, entryUnits, formatUnits, recentCategories, watchSnapshot } from "./watch-snapshot";
+import { demoEntry, entryDisplay, entryUnits, formatUnits, recentCategories, watchSnapshot } from "./watch-snapshot";
 import type { AmountEntry, WatchCategory, WatchEntry, WatchMoney, WatchSnapshot } from "./watch-snapshot";
 import { clamp01 } from "./widget-props";
 
@@ -49,9 +49,9 @@ const MARK_FRAME = 20;
 const STACK_GAP = 4;
 
 interface WatchProps extends CanvasProps {
-    extra?: readonly DemoRow[];
     now?: Date;
     snapshot?: WatchSnapshot;
+    withSaved?: boolean;
 }
 
 interface EntryProps extends WatchProps {
@@ -194,8 +194,13 @@ function TodayBody({ now, snapshot }: { now: Date; snapshot: WatchSnapshot }) {
     );
 }
 
-export function WatchToday({ extra, now = DEMO_NOW, snapshot, ...canvas }: WatchProps) {
-    const data = snapshot ?? watchSnapshot(now, canvas.locale, extra);
+function useSnapshot({ locale, now = DEMO_NOW, snapshot, withSaved = false }: WatchProps): WatchSnapshot {
+    const ledger = useLedger();
+    return snapshot ?? watchSnapshot(ledger, now, locale, withSaved ? savedRows(ledger) : []);
+}
+
+export function WatchToday({ now = DEMO_NOW, snapshot, withSaved, ...canvas }: WatchProps) {
+    const data = useSnapshot({ ...canvas, now, snapshot, withSaved });
     const label = interpolate(getIntlayer("appUi", canvas.locale).labels.watchToday, {
         caption: data.budget.remainingCaption.toLowerCase(),
         date: dayMonth(now, canvas.locale, appTranslator(canvas.locale)),
@@ -289,8 +294,10 @@ function AmountBody({ entry, money }: { entry: AmountEntry; money: WatchMoney })
     );
 }
 
-export function WatchAmount({ entry = DEMO_ENTRY, extra, now = DEMO_NOW, snapshot, ...canvas }: EntryProps) {
-    const { money } = snapshot ?? watchSnapshot(now, canvas.locale, extra);
+export function WatchAmount({ entry: given, now = DEMO_NOW, snapshot, withSaved, ...canvas }: EntryProps) {
+    const { money } = useSnapshot({ ...canvas, now, snapshot, withSaved });
+    const ledger = useLedger();
+    const entry = given ?? demoEntry(ledger);
     const label = interpolate(getIntlayer("appUi", canvas.locale).labels.watchAmount, {
         amount: formatUnits(money, entryUnits(entry, money)),
     });
@@ -353,8 +360,10 @@ function CategoryBody({ snapshot }: { snapshot: WatchSnapshot }) {
     );
 }
 
-export function WatchCategory({ entry = DEMO_ENTRY, extra, now = DEMO_NOW, snapshot, ...canvas }: EntryProps) {
-    const data = snapshot ?? watchSnapshot(now, canvas.locale, extra);
+export function WatchCategory({ entry: given, now = DEMO_NOW, snapshot, withSaved, ...canvas }: EntryProps) {
+    const data = useSnapshot({ ...canvas, now, snapshot, withSaved });
+    const ledger = useLedger();
+    const entry = given ?? demoEntry(ledger);
     const amount = formatUnits(data.money, entryUnits(entry, data.money));
     const label = interpolate(getIntlayer("appUi", canvas.locale).labels.watchCategory, {
         amount,
@@ -397,7 +406,7 @@ function WaitingBody() {
     );
 }
 
-export function WatchWaiting({ now = DEMO_NOW, ...canvas }: Omit<WatchProps, "extra" | "snapshot">) {
+export function WatchWaiting({ now = DEMO_NOW, ...canvas }: Omit<WatchProps, "withSaved" | "snapshot">) {
     const label = interpolate(getIntlayer("appUi", canvas.locale).labels.watchWaiting, {
         message: getIntlayer("appUi", canvas.locale).labels.watch.waiting,
     });
@@ -419,13 +428,13 @@ const SCREENS = {
 export type WatchScreenKind = keyof typeof SCREENS;
 
 export function WatchScreen({
-    extra,
     screen,
+    withSaved,
     ...canvas
-}: CanvasProps & Pick<WatchProps, "extra"> & { screen: WatchScreenKind }) {
+}: CanvasProps & Pick<WatchProps, "withSaved"> & { screen: WatchScreenKind }) {
     if (screen === "waiting") {
         return <WatchWaiting {...canvas} />;
     }
     const Screen = SCREENS[screen];
-    return <Screen {...canvas} extra={extra} />;
+    return <Screen {...canvas} withSaved={withSaved} />;
 }

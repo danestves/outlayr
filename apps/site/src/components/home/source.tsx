@@ -35,7 +35,7 @@ const lines = consentLines
 export function Source() {
     const { source } = useIntlayer("horizon");
     const { locale } = useLocale();
-    const merged = useLoaderData({ from: "/{-$locale}/" })?.mergedPrs;
+    const merged = useLoaderData({ from: "/{-$locale}/" }).stats?.mergedPrs;
     return (
         <section aria-labelledby="source-title" className="hz-section">
             <div className="hz-container hz-source" data-reveal="group">

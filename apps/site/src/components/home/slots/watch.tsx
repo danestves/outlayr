@@ -68,8 +68,8 @@ export function WatchFace({ screen = "today" }: { screen?: WatchScreenKind }) {
             >
                 <div style={{ width: "100%" }}>
                     <Replica>
-                        {({ SAVED, WatchScreen }, locale) => (
-                            <WatchScreen extra={SAVED} fit locale={locale} screen={screen} theme="dark" />
+                        {({ WatchScreen }, locale) => (
+                            <WatchScreen fit locale={locale} screen={screen} theme="dark" withSaved />
                         )}
                     </Replica>
                 </div>

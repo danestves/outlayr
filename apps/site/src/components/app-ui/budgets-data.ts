@@ -15,8 +15,7 @@ import { daysBetween } from "../../../../native/src/domain/local-day";
 import { buildBurndown } from "./budgets-burndown";
 import type { Burndown } from "./budgets-burndown";
 import { dayMonth } from "./dates";
-import { DEMO_CURRENCY, ROWS } from "./ledger";
-import type { DemoRow } from "./ledger";
+import type { BudgetCategory, DemoRow, Ledger } from "./ledger";
 import { amountParts, formatAmount, symbolPrefix } from "./money";
 import type { AppKey, AppT } from "./strings";
 
@@ -62,11 +61,11 @@ export function formatWhole(amount: number, code: string, locale: Locale): strin
 const SEED_START = new Date(2026, 8, 1);
 const SEED_CREATED = new Date(2026, 5, 1);
 
-function seedBudget(amount: number): StoredBudget {
+function seedBudget(ledger: Ledger, amount: number): StoredBudget {
     return {
         amount,
-        amountUsd: amount,
-        currency: DEMO_CURRENCY,
+        amountUsd: amount / ledger.cast.fx,
+        currency: ledger.currency,
         dateCreated: SEED_CREATED,
         rollover: false,
         startDate: SEED_START,
@@ -74,27 +73,17 @@ function seedBudget(amount: number): StoredBudget {
     };
 }
 
-const MAIN_LIMIT = 3900;
-
-const CATEGORY_LIMITS = [
-    ["Groceries", 350],
-    ["Dining Out", 250],
-    ["Transport", 150],
-    ["Fuel", 120],
-    ["Entertainment", 100],
-    ["Utilities", 200],
-    ["Shopping", 300],
-] as const satisfies readonly (readonly [LabelledCategory, number])[];
-
 const NO_RATES: RateTable = { earliest: () => null, get: () => null };
 
-export function contributions(now: Date): ExpenseContribution[] {
-    return ROWS.filter((row) => !row.income && row.date.getTime() <= now.getTime()).map((row) => ({
-        amount: row.amountUsd,
-        categoryId: row.category,
-        date: row.date,
-        parentId: null,
-    }));
+export function contributions(ledger: Ledger, now: Date): ExpenseContribution[] {
+    return ledger.rows
+        .filter((row) => !row.income && row.date.getTime() <= now.getTime())
+        .map((row) => ({
+            amount: row.amount,
+            categoryId: row.category,
+            date: row.date,
+            parentId: null,
+        }));
 }
 
 export function daysLeftInWindow(window: BudgetWindow, now: Date): number {
@@ -140,10 +129,10 @@ export interface MainBudget extends BudgetFigures {
     dominant: { name: string; share: number } | null;
 }
 
-export function mainBudget(now: Date): MainBudget {
-    const rows = contributions(now);
-    const figures = overallBudgetFigures(seedBudget(MAIN_LIMIT), rows, {
-        displayCurrency: DEMO_CURRENCY,
+export function mainBudget(ledger: Ledger, now: Date): MainBudget {
+    const rows = contributions(ledger, now);
+    const figures = overallBudgetFigures(seedBudget(ledger, ledger.mainBudget), rows, {
+        displayCurrency: ledger.currency,
         now,
         rates: NO_RATES,
     });
@@ -157,21 +146,23 @@ export function mainBudget(now: Date): MainBudget {
 
 export interface CategoryBudget extends BudgetFigures {
     burndown: Burndown;
-    name: LabelledCategory;
+    name: BudgetCategory;
 }
 
-export function categoryBudgets(now: Date): CategoryBudget[] {
-    const rows = contributions(now);
-    return CATEGORY_LIMITS.map(([name, limit]) => {
-        const figures = categoryBudgetFigures({ ...seedBudget(limit), categoryId: name }, rows, {
-            displayCurrency: DEMO_CURRENCY,
-            now,
-            rates: NO_RATES,
-        });
-        return {
-            ...figures,
-            burndown: buildBurndown(rows, { categoryId: name, limit: figures.amount, now, window: figures.window }),
-            name,
-        };
-    }).toSorted(compareBudgetSeverity);
+export function categoryBudgets(ledger: Ledger, now: Date): CategoryBudget[] {
+    const rows = contributions(ledger, now);
+    return ledger.categoryBudgets
+        .map(([name, limit]) => {
+            const figures = categoryBudgetFigures({ ...seedBudget(ledger, limit), categoryId: name }, rows, {
+                displayCurrency: ledger.currency,
+                now,
+                rates: NO_RATES,
+            });
+            return {
+                ...figures,
+                burndown: buildBurndown(rows, { categoryId: name, limit: figures.amount, now, window: figures.window }),
+                name,
+            };
+        })
+        .toSorted(compareBudgetSeverity);
 }

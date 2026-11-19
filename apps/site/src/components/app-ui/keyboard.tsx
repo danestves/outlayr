@@ -15,6 +15,12 @@ const LETTER_ROWS = [
     { keys: "asdfghjkl", left: 27, top: 652 },
     { keys: "zxcvbnm", left: 66.33, top: 706 },
 ] as const;
+
+export function letterKeyAt(char: string): { left: number; top: number } | undefined {
+    const letter = char.toLowerCase();
+    const row = LETTER_ROWS.find(({ keys }) => keys.includes(letter));
+    return row && { left: row.left + row.keys.indexOf(letter) * PITCH, top: row.top };
+}
 const BOTTOM_ROWS = { controls: 760, letters: 706 } as const;
 const BASELINE = 28;
 const LETTER = {

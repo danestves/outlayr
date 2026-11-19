@@ -7,32 +7,13 @@ import { getIntlayer } from "intlayer";
 
 import type { LogMeasure } from "../../../../native/src/domain/log-measure";
 import { FlowFigure } from "./amount";
-import { AppScreen, SCREEN, useReplica } from "./canvas";
+import { AppScreen, SCREEN, useLedger, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
 import { Fab, NavHeader, TabBar, TOOLBAR_SYMBOLS } from "./chrome";
-import {
-    accountsOverview,
-    categoryStyle,
-    DEMO_NOW,
-    daySections,
-    imageColor,
-    sparkline,
-    upcoming,
-    weekAhead,
-    weekFigures,
-    youOwe,
-} from "./ledger";
-import type { LogoDomain } from "./ledger";
+import { categoryStyle, DEMO_NOW } from "./ledger";
+import type { Ledger } from "./ledger";
 import { DayList } from "./list";
-import {
-    amountHeroLength,
-    amountParts,
-    currencyFor,
-    formatAmount,
-    formatSignedAmount,
-    formatTrend,
-    symbolPrefix,
-} from "./money";
+import { amountHeroLength, amountParts, formatAmount, formatSignedAmount, formatTrend, symbolPrefix } from "./money";
 import { sparklinePath } from "./sparkline";
 import { interpolate } from "./strings";
 import type { AppKey } from "./strings";
@@ -77,8 +58,8 @@ function HeadMenuLabel({ label }: { label: string }) {
 }
 
 function SplitAmount({ magnitude, positive, size }: { magnitude: number; positive: boolean; size: number }) {
-    const { locale } = useReplica();
-    const parts = amountParts(magnitude, currencyFor(locale), locale);
+    const { ledger, locale } = useReplica();
+    const parts = amountParts(magnitude, ledger.currency, locale);
     return (
         <div className="flex-row items-baseline">
             <FlowFigure className="font-sans-bold text-foreground" size={size}>
@@ -94,8 +75,8 @@ function SplitAmount({ magnitude, positive, size }: { magnitude: number; positiv
 }
 
 function HeroNumber({ magnitude, positive }: { magnitude: number; positive: boolean }) {
-    const { locale } = useReplica();
-    const parts = amountParts(magnitude, currencyFor(locale), locale);
+    const { ledger, locale } = useReplica();
+    const parts = amountParts(magnitude, ledger.currency, locale);
     const characters = amountHeroLength(magnitude, parts.minorUnits) + 1 + parts.symbol.length;
     const size = Math.max(HERO.floor, Math.min(HERO.size, Math.floor(HERO_WIDTH / (characters * HERO.advance))));
     return <SplitAmount magnitude={magnitude} positive={positive} size={size} />;
@@ -145,8 +126,8 @@ function SplitCell({ label, magnitude, positive, trend }: SplitCellProps) {
 }
 
 function LogInsights({ now }: { now: Date }) {
-    const { locale, t } = useReplica();
-    const { current, previous } = weekFigures(now);
+    const { ledger, locale, t } = useReplica();
+    const { current, previous } = ledger.weekFigures(now);
     const net = current.income - current.expense;
     const trend = measureTrend("net", net, previous.income - previous.expense);
     return (
@@ -157,7 +138,7 @@ function LogInsights({ now }: { now: Date }) {
                     <div className="h-9 w-11 items-center justify-center">
                         <HugeiconsIcon className="text-muted" icon={ViewIcon} size={18} strokeWidth={1.8} />
                     </div>
-                    <HeadMenuLabel label={currencyFor(locale)} />
+                    <HeadMenuLabel label={ledger.currency} />
                 </div>
             </div>
             <div className="flex-row gap-3 pt-0.5 pb-3">
@@ -173,7 +154,7 @@ function LogInsights({ now }: { now: Date }) {
                         </span>
                     ) : null}
                 </div>
-                <Sparkline values={sparkline(now, "net")} />
+                <Sparkline values={ledger.sparkline(now, "net")} />
             </div>
             <div className="border-border flex-row border-t py-2.5">
                 <div className="flex-1">
@@ -197,7 +178,7 @@ interface Chip {
     future?: boolean;
     icon: string | null;
     id: string;
-    logo?: LogoDomain | null;
+    logo?: string | null;
 }
 
 interface ShelfCardProps {
@@ -256,11 +237,11 @@ function ShelfCard({ chips, figure, figureClass = "text-foreground", more = 0, t
 }
 
 function LogShelf({ now }: { now: Date }) {
-    const { locale, t } = useReplica();
-    const code = currencyFor(locale);
-    const overview = accountsOverview();
-    const next = upcoming(now).slice(0, SHELF.chips);
-    const due = weekAhead(now);
+    const { ledger, locale, t } = useReplica();
+    const code = ledger.currency;
+    const overview = ledger.accountsOverview();
+    const next = ledger.upcoming(now).slice(0, SHELF.chips);
+    const due = ledger.weekAhead(now);
     return (
         <div
             className="flex-row overflow-hidden"
@@ -268,7 +249,7 @@ function LogShelf({ now }: { now: Date }) {
         >
             <ShelfCard
                 chips={overview.rows.slice(0, SHELF.chips).map((account) => ({
-                    color: imageColor(account.logo) ?? account.color,
+                    color: ledger.imageColor(account.logo) ?? account.color,
                     icon: account.icon,
                     id: account.id,
                     logo: account.logo,
@@ -282,7 +263,7 @@ function LogShelf({ now }: { now: Date }) {
                 chips={next.map(({ row }) => {
                     const identity = categoryStyle(row.category);
                     return {
-                        color: imageColor(row.logo) ?? identity.color,
+                        color: ledger.imageColor(row.logo) ?? identity.color,
                         future: true,
                         icon: identity.icon,
                         id: row.id,
@@ -295,7 +276,7 @@ function LogShelf({ now }: { now: Date }) {
                 unit={t("log.shelf.weekAhead")}
             />
             <ShelfCard
-                figure={formatSignedAmount(youOwe(), code, locale)}
+                figure={formatSignedAmount(ledger.youOwe(), code, locale)}
                 title={t("debts.title")}
                 unit={t("log.shelf.youOwe")}
             />
@@ -303,9 +284,9 @@ function LogShelf({ now }: { now: Date }) {
     );
 }
 
-export function logLabel(locale: Locale, now: Date = DEMO_NOW): string {
-    const { current } = weekFigures(now);
-    const code = currencyFor(locale);
+export function logLabel(ledger: Ledger, locale: Locale, now: Date = DEMO_NOW): string {
+    const { current } = ledger.weekFigures(now);
+    const code = ledger.currency;
     return interpolate(getIntlayer("appUi", locale).log.label, {
         in: formatAmount(current.income, code, locale),
         net: formatSignedAmount(current.income - current.expense, code, locale),
@@ -319,15 +300,16 @@ export interface LogScreenProps extends CanvasProps {
 }
 
 export function LogScreen({ now = DEMO_NOW, scrollY = 0, ...canvas }: LogScreenProps) {
+    const ledger = useLedger();
     return (
-        <AppScreen {...canvas} label={logLabel(canvas.locale, now)}>
+        <AppScreen {...canvas} label={logLabel(ledger, canvas.locale, now)}>
             <div
                 className="absolute inset-x-0"
                 style={{ paddingBottom: LIST_BOTTOM, paddingInline: GUTTER, top: CONTENT_TOP - scrollY }}
             >
                 <LogInsights now={now} />
                 <LogShelf now={now} />
-                <DayList now={now} sections={daySections(now, SECTION_DAYS)} />
+                <DayList now={now} sections={ledger.daySections(now, SECTION_DAYS)} />
             </div>
             <NavHeader end={TOOLBAR_SYMBOLS.filter} start={TOOLBAR_SYMBOLS.search} title="log.title" />
             <Fab />

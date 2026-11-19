@@ -1,9 +1,9 @@
 import { getIntlayer } from "intlayer";
 
-import { AppFragment, useReplica } from "./canvas";
+import { AppFragment, useLedger, useReplica } from "./canvas";
 import type { CanvasProps } from "./canvas";
+import { savedRows } from "./entry-state";
 import { DEMO_NOW } from "./ledger";
-import type { DemoRow } from "./ledger";
 import { interpolate } from "./strings";
 import { measuredLength, textLineHeight } from "./type";
 import {
@@ -90,20 +90,21 @@ export function ledgerWidgetLabel(
 }
 
 interface LedgerWidgetFragmentProps extends CanvasProps {
-    extra?: readonly DemoRow[];
     family?: LedgerFamily;
     now?: Date;
     widget?: LedgerWidgetProps;
+    withSaved?: boolean;
 }
 
 export function LedgerWidget({
-    extra,
     family = "medium",
     now = DEMO_NOW,
     widget,
+    withSaved = false,
     ...canvas
 }: LedgerWidgetFragmentProps) {
-    const props = widget ?? ledgerWidgetProps(now, canvas.locale, "stored", extra);
+    const ledger = useLedger();
+    const props = widget ?? ledgerWidgetProps(ledger, now, canvas.locale, "stored", withSaved ? savedRows(ledger) : []);
     return (
         <AppFragment {...canvas} {...WIDGET_SIZE[family]} label={ledgerWidgetLabel(props, family, canvas.locale)}>
             <LedgerWidgetView family={family} widget={props} />

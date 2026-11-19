@@ -18,8 +18,9 @@ import { useReplica } from "./canvas";
 import { accountOf, amountOf, CATEGORY_KEYS, merchantIdentity, symbolIsShared, whenLabel } from "./entry-state";
 import type { EntryState } from "./entry-state";
 import { solidCategoryIcon } from "./icons";
-import { categoryStyle, imageColor } from "./ledger";
-import { currencyFor, formatAmount } from "./money";
+import { categoryStyle } from "./ledger";
+import type { Ledger } from "./ledger";
+import { formatAmount } from "./money";
 import { interpolate } from "./strings";
 import type { AppT } from "./strings";
 import { CategoryIconTile } from "./tile";
@@ -178,15 +179,10 @@ function Input({ placeholder, value }: { placeholder: string; value: string }) {
     );
 }
 
-function amountText(state: EntryState, locale: Locale) {
-    const amount = amountOf(state);
-    return amount === null ? null : formatAmount(amount, currencyFor(locale), locale);
-}
-
-export function sentenceText(state: EntryState, now: Date, locale: Locale, t: AppT): string {
-    const account = accountOf(state.account);
-    const code = currencyFor(locale);
-    const amount = amountText(state, locale) ?? formatAmount(0, code, locale);
+export function sentenceText(ledger: Ledger, state: EntryState, now: Date, locale: Locale, t: AppT): string {
+    const account = accountOf(ledger, state.account);
+    const code = ledger.currency;
+    const amount = formatAmount(amountOf(state) ?? 0, code, locale);
     return interpolate(t("transaction.sentence.expense"), {
         account: account?.name ?? t("transaction.sentence.blank.account"),
         amount: symbolIsShared(code) ? `${amount} ${code}` : amount,
@@ -198,9 +194,10 @@ export function sentenceText(state: EntryState, now: Date, locale: Locale, t: Ap
 }
 
 function AmountSlot({ state }: { state: EntryState }) {
-    const { locale } = useReplica();
-    const code = currencyFor(locale);
-    const amount = amountText(state, locale);
+    const { ledger, locale } = useReplica();
+    const code = ledger.currency;
+    const value = amountOf(state);
+    const amount = value === null ? null : formatAmount(value, code, locale);
     const active = state.active === "amount";
     return (
         <div className="flex-row items-baseline gap-1.5">
@@ -221,11 +218,11 @@ function AmountSlot({ state }: { state: EntryState }) {
 }
 
 function MerchantSlot({ state }: { state: EntryState }) {
-    const { t } = useReplica();
-    const identity = merchantIdentity(state.name);
+    const { ledger, t } = useReplica();
+    const identity = merchantIdentity(ledger, state.name);
     const tile = identity?.logo ? (
         <CategoryIconTile
-            color={imageColor(identity.logo) ?? "var(--foreground)"}
+            color={ledger.imageColor(identity.logo) ?? "var(--foreground)"}
             icon={null}
             logo={identity.logo}
             size={TILE}
@@ -259,8 +256,8 @@ function CategorySlot({ state }: { state: EntryState }) {
 }
 
 function AccountSlot({ state }: { state: EntryState }) {
-    const { t } = useReplica();
-    const account = accountOf(state.account);
+    const { ledger, t } = useReplica();
+    const account = accountOf(ledger, state.account);
     const active = state.active === "account";
     if (account === null) {
         return <Blank active={active} label={t("transaction.sentence.blank.account")} optional />;
@@ -268,7 +265,7 @@ function AccountSlot({ state }: { state: EntryState }) {
     return (
         <Value active={active} value={account.name}>
             <CategoryIconTile
-                color={imageColor(account.logo) ?? account.color}
+                color={ledger.imageColor(account.logo) ?? account.color}
                 icon={account.icon}
                 logo={account.logo}
                 size={TILE}
@@ -349,8 +346,8 @@ const plainChip = (key: string, label: string, glyph: IconSvgElement): FactChip 
     label,
 });
 
-function factChips(state: EntryState, t: AppT): FactChip[] {
-    const identity = merchantIdentity(state.name);
+function factChips(ledger: Ledger, state: EntryState, t: AppT): FactChip[] {
+    const identity = merchantIdentity(ledger, state.name);
     const tags = identity?.tags ?? [];
     return [
         identity?.logo
@@ -399,10 +396,10 @@ function DashedOutline() {
 }
 
 export function FactChips({ state }: { state: EntryState }) {
-    const { t } = useReplica();
+    const { ledger, t } = useReplica();
     return (
         <div className="mt-7 flex-row flex-wrap gap-2">
-            {factChips(state, t).map((chip) => (
+            {factChips(ledger, state, t).map((chip) => (
                 <div
                     className={`min-h-[34px] flex-row items-center gap-[7px] self-start rounded-full border px-3.5 ${chip.closable ? "pe-1" : ""} ${chip.active ? "border-tint bg-tint" : ""} ${chip.disabled ? "opacity-40" : ""}`}
                     key={chip.key}

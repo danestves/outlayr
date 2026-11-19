@@ -5,6 +5,9 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { StatusBar } from "@/stageshow/phone";
 
+import type { DemoCast } from "./cast";
+import { ledgerFor } from "./ledger";
+import type { Ledger } from "./ledger";
 import { appTranslator } from "./strings";
 import type { AppT } from "./strings";
 
@@ -14,6 +17,7 @@ export const SCREEN = { height: 874, width: 402 } as const;
 const DOUBLE_PERIOD = /(?<!\.)\.\.(?!\.)/gu;
 
 interface Replica {
+    ledger: Ledger;
     locale: Locale;
     slot: string;
     t: AppT;
@@ -21,6 +25,16 @@ interface Replica {
 }
 
 const ReplicaContext = createContext<Replica | null>(null);
+
+export const DemoCastContext = createContext<DemoCast | null>(null);
+
+export function useLedger(): Ledger {
+    const cast = use(DemoCastContext);
+    if (!cast) {
+        throw new Error("App replicas render inside a DemoCastContext.");
+    }
+    return ledgerFor(cast);
+}
 
 export function useReplica(): Replica {
     const replica = use(ReplicaContext);
@@ -57,7 +71,11 @@ export function AppFragment({
     theme,
     width,
 }: AppFragmentProps) {
-    const replica = useMemo(() => ({ locale, slot, t: appTranslator(locale), theme }), [locale, slot, theme]);
+    const ledger = useLedger();
+    const replica = useMemo(
+        () => ({ ledger, locale, slot, t: appTranslator(locale), theme }),
+        [ledger, locale, slot, theme]
+    );
     const style: CanvasStyle = { "--app-h": `${height}px`, "--app-w": `${width}px` };
     const sentence = label.replaceAll(DOUBLE_PERIOD, ".");
     if (scale !== undefined && !fit) {

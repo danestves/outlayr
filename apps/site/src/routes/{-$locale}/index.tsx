@@ -13,6 +13,7 @@ import { Night } from "@/components/home/night";
 import { loadReplicas } from "@/components/home/replica";
 import { Sunrise } from "@/components/home/sunrise";
 import { Sunset } from "@/components/home/sunset";
+import { getDemoCast } from "@/lib/demo-cast";
 import { watchGround } from "@/lib/ground";
 import { scanMotion } from "@/lib/motion";
 import { getHomeStats } from "@/lib/open-stats";
@@ -30,7 +31,10 @@ const HERO_GROUND = "#f1f0ea";
 export const Route = createFileRoute("/{-$locale}/")({
     beforeLoad: () => loadReplicas(),
     component: HomePage,
-    loader: () => getHomeStats(),
+    loader: async () => {
+        const [cast, stats] = await Promise.all([getDemoCast(), getHomeStats()]);
+        return { cast, stats };
+    },
     headers: () => ({ Link: AGENT_LINKS }),
     head: ({ params }) => {
         const locale = localeFromParam(params.locale);

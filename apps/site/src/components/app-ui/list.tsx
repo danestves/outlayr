@@ -3,21 +3,21 @@ import { HugeiconsIcon } from "@hugeicons/react";
 
 import { useReplica } from "./canvas";
 import { formatDayTitle, formatTime } from "./dates";
-import { categoryStyle, imageColor } from "./ledger";
+import { categoryStyle } from "./ledger";
 import type { DaySection, DemoRow } from "./ledger";
-import { currencyFor, formatAmount, formatDayTotal } from "./money";
+import { formatAmount, formatDayTotal } from "./money";
 import { CategoryIconTile } from "./tile";
 
 const BADGE_OFFSET = -5;
 
 export function TransactionRow({ row }: { row: DemoRow }) {
-    const { locale, t } = useReplica();
+    const { ledger, locale, t } = useReplica();
     const identity = categoryStyle(row.category);
     return (
         <div className="bg-background flex-row items-center gap-3 py-1.5">
             <div>
                 <CategoryIconTile
-                    color={imageColor(row.logo) ?? identity.color}
+                    color={ledger.imageColor(row.logo) ?? identity.color}
                     icon={identity.icon}
                     logo={row.logo}
                     radius={10}
@@ -48,7 +48,7 @@ export function TransactionRow({ row }: { row: DemoRow }) {
                 <span
                     className={`font-sans-semibold text-subtitle tabular-nums ${row.income ? "text-income" : "text-foreground"}`}
                 >
-                    {`${row.income ? "+" : "-"}${formatAmount(row.amount, currencyFor(locale), locale)}`}
+                    {`${row.income ? "+" : "-"}${formatAmount(row.amount, row.currency, locale)}`}
                 </span>
             </div>
         </div>
@@ -60,7 +60,7 @@ export function RowHairline() {
 }
 
 export function DaySectionHeader({ first, now, section }: { first: boolean; now: Date; section: DaySection }) {
-    const { locale, t } = useReplica();
+    const { ledger, locale, t } = useReplica();
     return (
         <div className={`gap-1.5 ${first ? "pt-2.5" : "pt-6"}`}>
             <div className="flex-row items-baseline justify-between gap-2">
@@ -69,7 +69,7 @@ export function DaySectionHeader({ first, now, section }: { first: boolean; now:
                 </span>
                 <div className="flex-row items-baseline gap-1.5">
                     <span className="font-sans-semibold text-muted text-footnote tabular-nums">
-                        {formatDayTotal(section.total, currencyFor(locale), locale)}
+                        {formatDayTotal(section.total, ledger.currency, locale)}
                     </span>
                 </div>
             </div>

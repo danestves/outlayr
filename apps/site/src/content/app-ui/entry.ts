@@ -125,6 +125,13 @@ export const entryCopy = {
         pt: "Ditar um lançamento",
         fr: "Dicter une opération",
     }),
+    "merchantTag.Groceries": t({
+        en: "Groceries",
+        de: "Lebensmittel",
+        es: "Supermercado",
+        pt: "Mercado",
+        fr: "Courses",
+    }),
     "merchantTag.Warehouse": t({
         en: "Warehouse",
         de: "Großmarkt",
