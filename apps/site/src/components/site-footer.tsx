@@ -1,4 +1,5 @@
 import InstagramIcon from "@hugeicons/core-free-icons/InstagramIcon";
+import Linkedin01Icon from "@hugeicons/core-free-icons/Linkedin01Icon";
 import NewTwitterIcon from "@hugeicons/core-free-icons/NewTwitterIcon";
 import TiktokIcon from "@hugeicons/core-free-icons/TiktokIcon";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -9,7 +10,7 @@ import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
 
 import { CONTAINER } from "@/lib/layout";
-import { COMPANY, COMPANY_URL, INSTAGRAM_URL, SOURCE_URL, TIKTOK_URL, X_URL } from "@/lib/site";
+import { COMPANY, COMPANY_URL, INSTAGRAM_URL, LINKEDIN_URL, SOURCE_URL, TIKTOK_URL, X_URL } from "@/lib/site";
 
 import { ConsentSwitch } from "./consent-switch";
 import { LanguageSwitch } from "./language-switch";
@@ -31,6 +32,7 @@ const LISTINGS = [
 
 const SOCIALS = [
     { href: INSTAGRAM_URL, icon: InstagramIcon, name: "Instagram" },
+    { href: LINKEDIN_URL, icon: Linkedin01Icon, name: "LinkedIn" },
     { href: TIKTOK_URL, icon: TiktokIcon, name: "TikTok" },
     { href: X_URL, icon: NewTwitterIcon, name: "X" },
 ] as const;
