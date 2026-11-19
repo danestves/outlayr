@@ -24,6 +24,7 @@ Start with the [README](../README.md). Internal notes keep decisions, constraint
 - [Web rules](./internals/web-rules.md)
 - [Web recurring](./internals/web-recurring.md)
 - [Site app replicas](./internals/site-app-replicas.md)
+- [Doop sync: the web app's design contract](./design/doop-sync.md)
 - [Safari bar tint on the home page](./internals/safari-bar-tint.md)
 
 ### Runbooks

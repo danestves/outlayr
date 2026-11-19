@@ -76,6 +76,7 @@ patchedDependencies:
     number-flow-react-native@0.5.1: patches/number-flow-react-native@0.5.1.patch
     panelui-native@1.4.0: patches/panelui-native@1.4.0.patch
     panelui-web@0.17.0: patches/panelui-web@0.17.0.patch
+    panelui-web@0.18.0: patches/panelui-web@0.18.0.patch
     react-native-nano-icons@1.0.1: patches/react-native-nano-icons@1.0.1.patch
     "@tanstack/redact@0.2.0": patches/@tanstack__redact@0.2.0.patch
 overrides:

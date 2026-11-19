@@ -27,23 +27,68 @@
     --color-app-muted: #6b6557;
     --color-app-rule: #dcd8cc;
     --color-app-fill: #e4e2dc;
-    --color-app-track: #d6d4ce;
+    --color-app-strong: #cdc8b9;
     --color-app-tint: #c2371b;
     --color-app-income: #00714a;
     --color-app-spend: #c0402e;
-    --color-app-chip: #c6d8cc;
-    --color-app-strong: #cdc8b9;
-    --color-app-ghost: #cdc8b9;
-    --color-app-float: #fffefb;
     --color-app-warn: #8f6200;
+    --color-app-warning-fill: #8f6200;
+    --color-app-info: #2f6d99;
+    --color-app-input: #f1f0ea;
+    --color-app-segment: #f1f0ea;
+    --color-app-ring: #17150f0f;
+    --color-app-band: color-mix(in oklab, #f7f6f0, #000 5%);
+    --color-app-panel-shadow: #0000000d;
+    --color-app-ghost: #cdc8b9;
+
+    /* Not canvas tokens. hover is the light-theme guide's hover fill, float predates the canvas's group surface, track and chip are apps/site's. */
     --color-app-hover: #17150f05;
+    --color-app-float: #fffefb;
+    --color-app-track: #d6d4ce;
+    --color-app-chip: #c6d8cc;
 
     --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
     --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+    --font-app-sans: "Geist Variable", Geist, sans-serif;
+    --font-app-mono: "Geist Mono Variable", "Geist Mono", monospace;
+
+    --text-app-micro: 11px;
+    --text-app-micro--line-height: 16px;
+    --text-app-caption: 12px;
+    --text-app-caption--line-height: 16px;
+    --text-app-label: 13px;
+    --text-app-label--line-height: 18px;
+    --text-app-body: 14px;
+    --text-app-body--line-height: 20px;
+    --text-app-title: 15px;
+    --text-app-title--line-height: 20px;
+    --text-app-heading: 18px;
+    --text-app-heading--line-height: 24px;
+
+    --radius-app-xs: 6px;
+    --radius-app-sm: 8px;
+    --radius-app-md: 10px;
+    --radius-app-lg: 12px;
+    --radius-app-xl: 16px;
+    --radius-app-2xl: 20px;
+    --radius-app-3xl: 24px;
+
+    --spacing-app-control-sm: 32px;
+    --spacing-app-control: 36px;
+    --spacing-app-control-lg: 44px;
+    --spacing-app-row: 44px;
+    --spacing-app-header: 52px;
+    --spacing-app-bar: 64px;
+    --spacing-app-gutter: 24px;
+    --spacing-app-sidebar: 232px;
 
     --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-app-slide: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-app-dissolve: cubic-bezier(0.2, 0, 0, 1);
 }
+
 @layer base {
+    /* The phone's dark palette, which apps/site's app mockups draw with. The web app reads its own inside the shell, below. */
     :root[data-theme="dark"] {
         color-scheme: dark;
         --color-background: #131209;
@@ -68,6 +113,67 @@
         --color-app-spend: #e06a57;
         --color-app-chip: #23372a;
     }
+
+    :root {
+        --opacity-app-sheet-dim: 0.28;
+        --duration-app-instant: 0ms;
+        --duration-app-dissolve: 200ms;
+        --duration-app-slide: 450ms;
+        --duration-app-push: 450ms;
+    }
+
+    :root[data-theme="dark"] {
+        --opacity-app-sheet-dim: 0.5;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        :root {
+            --duration-app-dissolve: 0ms;
+            --duration-app-slide: 0ms;
+            --duration-app-push: 0ms;
+        }
+    }
+}
+
+/* Scoped, not on :root, so apps/site's phone mockups keep the palette above. Toasts portal outside the shell. */
+:is(.app-shell, [data-slot="toast-viewport"]) {
+    --color-app-on-tint: #ffffff;
+    /* Not canvas tokens: the light-theme guide's popover shadow pair. */
+    --color-app-shadow-far: #1c191738;
+    --color-app-shadow-near: #1c19171f;
+
+    --shadow-app-popover: 0 16px 32px -12px var(--color-app-shadow-far), 0 4px 12px var(--color-app-shadow-near);
+    --shadow-app-dialog: 0 24px 48px -12px var(--color-app-shadow-far);
+    --shadow-app-segment: 0 1px 2px var(--color-app-shadow-near);
+    --shadow-app-panel: 0 1px 2px var(--color-app-panel-shadow);
+    --shadow-app-tint: inset 0 1px 0 #ffffff33;
+}
+
+:root[data-theme="dark"] :is(.app-shell, [data-slot="toast-viewport"]) {
+    --color-app-bg: #131209;
+    --color-app-group: #1c1b13;
+    --color-app-ink: #fafaf9;
+    --color-app-muted: #a8a29e;
+    --color-app-rule: #2e2d24;
+    --color-app-fill: #26251b;
+    --color-app-strong: #3a392e;
+    --color-app-tint: #e2643f;
+    --color-app-on-tint: #17150f;
+    --color-app-income: #3fd99b;
+    --color-app-spend: #e06a57;
+    --color-app-warn: #e0b04f;
+    --color-app-warning-fill: #fdcc41;
+    --color-app-input: color-mix(in oklab, #2e2d24 30%, transparent);
+    --color-app-segment: #2e2d24;
+    --color-app-ring: #ffffff1a;
+    --color-app-band: color-mix(in oklab, #1c1b13, #000 14%);
+    --color-app-panel-shadow: #00000033;
+    --color-app-ghost: #4a4839;
+
+    --color-app-hover: #ffffff08;
+    --color-app-float: #26251b;
+    --color-app-shadow-far: #000c;
+    --color-app-shadow-near: #0006;
 }
 
 @utility fluid {

@@ -1,3 +1,4 @@
+import type { CurrencyInputLabels } from "panelui-web/currency-input";
 import type { ExchangeLabels } from "panelui-web/exchange";
 import { useMemo } from "react";
 import { useIntlayer, useLocale } from "react-intlayer";
@@ -20,11 +21,22 @@ export function numberLocale(language: string, browser: readonly string[]): stri
     return region ? `${language}-${region}` : (REGIONAL_FALLBACK.get(language) ?? ENGLISH);
 }
 
-export function useExchangeLocale(): { labels: ExchangeLabels; locale: string } {
+export function useExchangeLocale(): {
+    currencyLabels: CurrencyInputLabels;
+    labels: ExchangeLabels;
+    locale: string;
+} {
     const { locale: language } = useLocale();
     const text = useIntlayer("exchange");
     return useMemo(
         () => ({
+            currencyLabels: {
+                amountIn: (name) => text.amountIn({ name }).value,
+                changeCurrency: (name) => text.changeCurrency({ name }).value,
+                close: text.close.value,
+                currency: text.currency.value,
+                unitIn: (name) => text.unitIn({ name }).value,
+            },
             labels: {
                 amountIn: (_label, name) => text.amountIn({ name }).value,
                 changeCurrency: (name) => text.changeCurrency({ name }).value,
