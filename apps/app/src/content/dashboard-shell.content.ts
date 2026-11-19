@@ -92,6 +92,106 @@ export default {
                 pt: "Página não encontrada",
             }),
         },
+        notifications: {
+            back: t({ en: "Back", de: "Zurück", es: "Volver", fr: "Retour", pt: "Voltar" }),
+            dueToday: insert(
+                t({
+                    en: "{{name}} due today",
+                    de: "{{name}} heute fällig",
+                    es: "{{name}} vence hoy",
+                    fr: "{{name}} à payer aujourd'hui",
+                    pt: "{{name}} vence hoje",
+                })
+            ),
+            earlier: t({ en: "Earlier", de: "Früher", es: "Antes", fr: "Plus tôt", pt: "Antes" }),
+            emptyBody: t({
+                en: "Repeating entries and installments show up here on the day they're due.",
+                de: "Wiederkehrende Einträge und Raten erscheinen hier an dem Tag, an dem sie fällig sind.",
+                es: "Los movimientos que se repiten y las cuotas aparecen aquí el día en que vencen.",
+                fr: "Les opérations récurrentes et les échéances apparaissent ici le jour où elles tombent.",
+                pt: "Lançamentos recorrentes e parcelas aparecem aqui no dia em que vencem.",
+            }),
+            emptyTitle: t({
+                en: "Nothing due",
+                de: "Nichts fällig",
+                es: "Nada pendiente",
+                fr: "Rien à payer",
+                pt: "Nada pendente",
+            }),
+            installmentDueToday: insert(
+                t({
+                    en: "{{name}} installment due today",
+                    de: "Rate für {{name}} heute fällig",
+                    es: "Cuota de {{name}} vence hoy",
+                    fr: "Échéance {{name}} aujourd'hui",
+                    pt: "Parcela de {{name}} vence hoje",
+                })
+            ),
+            installmentOverdue: insert(
+                t({
+                    en: "{{name}} installment overdue",
+                    de: "Rate für {{name}} überfällig",
+                    es: "Cuota de {{name}} ya venció",
+                    fr: "Échéance {{name}} en retard",
+                    pt: "Parcela de {{name}} venceu",
+                })
+            ),
+            loading: t({
+                en: "Loading notifications",
+                de: "Benachrichtigungen werden geladen",
+                es: "Cargando notificaciones",
+                fr: "Chargement des notifications",
+                pt: "Carregando notificações",
+            }),
+            overdue: insert(
+                t({
+                    en: "{{name}} overdue",
+                    de: "{{name}} überfällig",
+                    es: "{{name}} ya venció",
+                    fr: "{{name}} en retard",
+                    pt: "{{name}} venceu",
+                })
+            ),
+            purchase: t({ en: "Purchase", de: "Kauf", es: "Compra", fr: "Achat", pt: "Compra" }),
+            seeComing: t({
+                en: "See what's coming",
+                de: "Anstehendes ansehen",
+                es: "Ver lo que viene",
+                fr: "Voir ce qui arrive",
+                pt: "Ver o que vem",
+            }),
+            seenFailed: t({
+                en: "Couldn't mark these as read.",
+                de: "Konnte nicht als gelesen markiert werden.",
+                es: "No se pudieron marcar como leídas.",
+                fr: "Impossible de les marquer comme lues.",
+                pt: "Não foi possível marcar como lidas.",
+            }),
+            settings: t({
+                en: "Notification settings",
+                de: "Benachrichtigungseinstellungen",
+                es: "Ajustes de notificaciones",
+                fr: "Réglages des notifications",
+                pt: "Ajustes de notificações",
+            }),
+            title: t({
+                en: "Notifications",
+                de: "Benachrichtigungen",
+                es: "Notificaciones",
+                fr: "Notifications",
+                pt: "Notificações",
+            }),
+            today: t({ en: "Today", de: "Heute", es: "Hoy", fr: "Aujourd'hui", pt: "Hoje" }),
+            unread: insert(
+                t({
+                    en: "{{count}} unread",
+                    de: "{{count}} ungelesen",
+                    es: "{{count}} sin leer",
+                    fr: "{{count}} non lues",
+                    pt: "{{count}} não lidas",
+                })
+            ),
+        },
         offline: {
             line: t({
                 en: "You're offline. Changes save here and sync when you're back.",
