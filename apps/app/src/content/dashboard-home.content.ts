@@ -212,6 +212,21 @@ const dashboardHome = {
                 })
             ),
             details: t({ en: "Details", de: "Details", es: "Detalles", fr: "Détails", pt: "Detalhes" }),
+            budgetEnded: insert(t({ en: "Ended {{day}}", de: "Beendet {{day}}", es: "Terminó el {{day}}" })),
+            budgetFilter: t({ en: "Filter", de: "Filter", es: "Filtrar" }),
+            budgetLeft: t({ en: "Left", de: "Übrig", es: "Queda" }),
+            budgetOverTotal: t({ en: "Over", de: "Drüber", es: "De más" }),
+            budgetResets: insert(
+                t({ en: "Resets {{day}}", de: "Wird zurückgesetzt {{day}}", es: "Se renueva el {{day}}" })
+            ),
+            budgetUsed: insert(
+                t({
+                    en: "{{name}}: {{percent}}% used",
+                    de: "{{name}}: {{percent}} % verbraucht",
+                    es: "{{name}}: {{percent}} % usado",
+                })
+            ),
+            noSubcategory: t({ en: "No subcategory", de: "Keine Unterkategorie", es: "Sin subcategoría" }),
             onTrackLabel: t({ en: "On track", de: "Im Plan", es: "En regla" }),
             overCount: insert(t({ en: "{{count}} over", de: "{{count}} drüber", es: "{{count}} excedidos" })),
             overAmount: insert(t({ en: "{{amount}} over", de: "{{amount}} drüber", es: "{{amount}} de más" })),
@@ -240,6 +255,20 @@ const dashboardHome = {
                 })
             ),
             peak: insert(t({ en: "Peak {{day}}", de: "Spitze {{day}}", es: "Máximo {{day}}" })),
+            ranOut: insert(
+                t({
+                    en: "Ran out {{day}}, {{days}} days early.",
+                    de: "Aufgebraucht {{day}}, {{days}} Tage zu früh.",
+                    es: "Se agotó el {{day}}, {{days}} días antes.",
+                })
+            ),
+            ranOutOne: insert(
+                t({
+                    en: "Ran out {{day}}, 1 day early.",
+                    de: "Aufgebraucht {{day}}, 1 Tag zu früh.",
+                    es: "Se agotó el {{day}}, 1 día antes.",
+                })
+            ),
             share: t({ en: "Share", de: "Anteil", es: "Parte" }),
             upcoming: t({ en: "Upcoming", de: "Anstehend", es: "Próximos" }),
             versus: t({ en: "vs last 3 months", de: "vs. letzte 3 Monate", es: "vs los últimos 3 meses" }),

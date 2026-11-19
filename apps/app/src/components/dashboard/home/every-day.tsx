@@ -177,7 +177,7 @@ function Days({ days, quiet }: { days: ReturnType<typeof everyDay>; quiet: boole
                 </div>
             ) : (
                 <DayGrid.Weekdays
-                    className="dash-figure text-app-micro grid-cols-7 grid-rows-none gap-1 [&>span]:justify-center"
+                    className="dash-figure text-app-micro grid-cols-7 grid-rows-none! gap-1 [&>span]:justify-center"
                     labels={letters}
                 />
             )}

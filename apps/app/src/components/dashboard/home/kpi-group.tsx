@@ -79,7 +79,7 @@ function Figure({ color, icon, label, points, tone, trend, value }: FigureProps)
                 {points ? (
                     <Kpi.Chart
                         aria-hidden
-                        className={`h-8 w-24 shrink-0 max-sm:w-16 ${color ? LINE : `${LINE} [--pu-color:var(--muted-foreground)]`}`}
+                        className={`h-8 w-20 shrink-0 max-sm:w-16 ${color ? LINE : `${LINE} [--pu-color:var(--muted-foreground)]`}`}
                         color={color}
                         data={points}
                         height={32}

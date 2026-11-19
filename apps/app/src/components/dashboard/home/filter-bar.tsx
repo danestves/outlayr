@@ -40,6 +40,7 @@ interface CheckRowProps {
 }
 
 const InSheet = createContext(false);
+const NO_CHECK = "[&>[data-slot=chip-check]]:hidden";
 const SHEET_LABEL = "text-muted-foreground text-app-caption px-2 pt-1.5 pb-0.5";
 
 const SHEET_ROW = "hover:bg-app-hover rounded-app-sm text-app-body flex h-11 w-full shrink-0 items-center gap-2 px-2";
@@ -125,7 +126,7 @@ export function FilterMenu({ children, count, icon, label, onClear, searchLabel,
                 <Menu.Trigger
                     render={
                         <Chip
-                            className={`${CHIP} max-lg:hidden`}
+                            className={`${CHIP} max-lg:hidden ${NO_CHECK}`}
                             data-pressed={count > 0 ? "" : undefined}
                             pressed={count > 0}
                             size="lg"
@@ -148,7 +149,9 @@ export function FilterMenu({ children, count, icon, label, onClear, searchLabel,
                 </MenuContent>
             </Menu>
             <Sheet onOpenChange={forget}>
-                <Sheet.Trigger render={<Chip className={`${CHIP} lg:hidden`} pressed={count > 0} size="lg" />}>
+                <Sheet.Trigger
+                    render={<Chip className={`${CHIP} lg:hidden ${NO_CHECK}`} pressed={count > 0} size="lg" />}
+                >
                     {chip}
                 </Sheet.Trigger>
                 <Sheet.Content className="app-shell ph-no-capture">

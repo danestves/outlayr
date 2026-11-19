@@ -18,8 +18,10 @@ const ACCOUNTS = ["w-14", "w-16", "w-12"] as const;
 const UPCOMING = ["w-14", "w-12"] as const;
 const CELL = "h-12 px-3 first:ps-3.5 last:pe-3.5";
 
-function Block({ className }: { className: string }) {
-    return <i aria-hidden className={`bg-app-fill rounded-app-xs block ${className}`} />;
+function Block({ band = false, className }: { band?: boolean; className: string }) {
+    return (
+        <i aria-hidden className={`${band ? "bg-app-strong/50" : "bg-app-fill"} rounded-app-xs block ${className}`} />
+    );
 }
 
 function AccountRows({ widths }: { widths: readonly string[] }) {
@@ -64,11 +66,11 @@ export function HomePending() {
                     className={`mt-4 grid grid-cols-1 gap-4 @2xl:grid-cols-2 @4xl:auto-rows-[minmax(347px,auto)] ${THREE_CARDS}`}
                 >
                     <CardFrame
-                        action={<Block className="h-5 w-10 rounded-full" />}
+                        action={<Block band className="h-5 w-10 rounded-full" />}
                         footer={
                             <>
-                                <Block className="h-4 w-24" />
-                                <Block className="rounded-app-sm ms-auto h-8 w-20" />
+                                <Block band className="h-4 w-24" />
+                                <Block band className="rounded-app-sm ms-auto h-8 w-20" />
                             </>
                         }
                         title={copy.spentOfIncome.title}
@@ -90,8 +92,8 @@ export function HomePending() {
                         </div>
                     </CardFrame>
                     <CardFrame
-                        action={<Block className="h-4 w-24" />}
-                        footer={<Block className="h-4 w-36" />}
+                        action={<Block band className="h-4 w-24" />}
+                        footer={<Block band className="h-4 w-36" />}
                         title={copy.everyDay.title}
                     >
                         <div className="flex gap-6 p-4">
@@ -112,11 +114,11 @@ export function HomePending() {
                         </div>
                     </CardFrame>
                     <CardFrame
-                        action={<Block className="h-6 w-14 rounded-full" />}
+                        action={<Block band className="h-6 w-14 rounded-full" />}
                         footer={
                             <>
-                                <Block className="h-4 w-24" />
-                                <Block className="rounded-app-sm ms-auto h-8 w-20" />
+                                <Block band className="h-4 w-24" />
+                                <Block band className="rounded-app-sm ms-auto h-8 w-20" />
                             </>
                         }
                         title={copy.panel.budgets}
@@ -176,7 +178,7 @@ export function HomePending() {
                             </Table.Body>
                         </Table>
                     </CardFrame>
-                    <CardFrame action={<Block className="h-4 w-20" />} title={copy.panel.accounts}>
+                    <CardFrame action={<Block band className="h-4 w-20" />} title={copy.panel.accounts}>
                         <div className="px-4 pt-1.5 pb-2">
                             <AccountRows widths={ACCOUNTS} />
                             <div className="bg-border -mx-4 my-2 h-px" />
