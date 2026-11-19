@@ -48,12 +48,15 @@ const call = <A>(prompt: Prompt, run: (abortController: AbortController) => Prom
         },
     });
 
+export function closedJsonSchema(schema: Schema.Decoder<unknown>): JSONSchema {
+    const { definitions, schema: root } = Schema.toJsonSchemaDocument(schema, { onExcessProperty: "error" });
+    return Object.keys(definitions).length === 0 ? root : { ...root, $defs: definitions };
+}
+
 export const generateObject = Effect.fn("Ai.generateObject")(function* generateObject<
     S extends Schema.Decoder<unknown>,
 >(model: TextModel, schema: S, prompt: Prompt) {
-    const outputSchema: JSONSchema = Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema.input({
-        target: "draft-07",
-    });
+    const outputSchema = closedJsonSchema(schema);
     const answer = yield* call(prompt, (abortController) =>
         chat({ ...callOptions(model, prompt, abortController), outputSchema, stream: false })
     );

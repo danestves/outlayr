@@ -29,6 +29,7 @@ Every model call goes through `@outlayr/ai` (`packages/ai`), which wraps TanStac
 - **OpenAI keeps requests unless told not to.** The Responses API stores each one by default, so the OpenAI provider sends `store: false` through `requestOptions`, which every request carries. Grok's adapter already defaults to it.
 - **No typed errors.** Failures are plain `Error`s; only structured-output failures carry a `code`. `errors.ts` maps those to `invalidResponse` and everything else to `providerError`.
 - **Every call needs a `threadId`.** One-shot calls get a fresh UUID.
+- **Effect leaves objects open.** Its JSON Schema allows extra keys unless asked otherwise, and Anthropic's native structured output rejects that with a 400 (Grok accepts it). `closedJsonSchema` builds the schema with `onExcessProperty: "error"`.
 - **A failed call throws before `onError`.** `chat({ stream: false })` throws on the `RUN_ERROR` chunk, and an abort runs `onAbort`, so `tracing.ts` records from `onChunk` and `onAbort` too, once per call.
 - **Provider SDKs retry on their own.** Every provider turns retries off (`maxRetries: 0`, OpenRouter's `retryConfig`): the backend's timeouts and its Sonnet retry assume one attempt.
 - **Voice entry is still on the AI SDK.** `@convex-dev/agent` takes an AI SDK model, so `voiceEntry.impl.ts` builds one from the gate's model with `anthropicAgentModel` and answers `notConfigured` on any other provider.
