@@ -92,6 +92,23 @@ const importSheet = {
             pt: "Lendo extrato…",
             "pt-PT": "A ler o extrato…",
         }),
+        "import.statementUnreadPages": t({
+            en: "Some pages had no text to read, likely scans: {pages}. Check them, since any transactions on them are missing.",
+            de: "Einige Seiten hatten keinen lesbaren Text, vermutlich Scans: {pages}. Prüf sie, denn Buchungen darauf fehlen.",
+            es: "Algunas páginas no tenían texto que leer, probablemente escaneadas: {pages}. Revísalas, porque los movimientos que tengan no se importaron.",
+            fr: "Certaines pages n'avaient pas de texte à lire, sans doute des scans : {pages}. Vérifiez-les : leurs éventuelles opérations n'ont pas été importées.",
+            pt: "Algumas páginas não tinham texto para ler, provavelmente digitalizadas: {pages}. Confira essas páginas, porque as transações delas não foram importadas.",
+            "pt-PT":
+                "Algumas páginas não tinham texto para ler, provavelmente digitalizadas: {pages}. Verifique essas páginas, porque as transações delas não foram importadas.",
+        }),
+        "import.statementUnreadPagesMore": t({
+            en: "{pages} and {count} more",
+            de: "{pages} und {count} weitere",
+            es: "{pages} y {count} más",
+            fr: "{pages} et {count} de plus",
+            pt: "{pages} e mais {count}",
+            "pt-PT": "{pages} e mais {count}",
+        }),
         "import.statementPrivacy": t({
             en: "The file goes to our server, which deletes it after reading it. Its text goes to Anthropic with long account and card numbers masked. Your name and address, if printed, are sent unmasked. It needs selectable text, so scans won't work.",
             de: "Die Datei geht an unseren Server, der sie nach dem Lesen löscht. Ihr Text geht mit maskierten langen Konto- und Kartennummern an Anthropic und enthält deinen Namen und deine Adresse, falls sie aufgedruckt sind. Der Text muss auswählbar sein, Scans funktionieren also nicht.",

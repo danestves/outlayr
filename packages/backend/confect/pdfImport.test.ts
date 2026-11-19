@@ -13,7 +13,7 @@ import { perUserBurst } from "./lib/limits";
 import { runEdge } from "./lib/runEdge";
 import { chunkPages, joinPageLines, rateLimiter, readStatement, redactStatementText } from "./pdfImport";
 import { PDF_CONTENT_TYPE } from "./pdfImport.spec";
-import { authenticatedAs, grantPro, seedAuthUser, statementPdf } from "./test.helpers";
+import { authenticatedAs, grantPro, seedAuthUser, statementPdf, statementPdfPages } from "./test.helpers";
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
@@ -33,6 +33,17 @@ const STATEMENT = statementPdf([
     ["15/03", "CORPOELEC FACTURA", "-20,00"],
     ["Pagina 1 de 1", "Saldo final 3.067,35", ""],
 ]);
+
+const STATEMENT_ROWS = [
+    ["BANCO EJEMPLO", "Cuenta ES91 2100 0418 4502 0005 1332", "Tarjeta 4111 1111 1111 1234"],
+    ["Periodo", "01/03/2026 - 31/03/2026", "Saldo anterior 1.250,00"],
+    ["03/03", "STARBUCKS CENTRO REF 998877665544", "-12,50"],
+    ["05/03", "NOMINA ACME", "2.000,00"],
+    ["09/03", "FARMACIA SAAS", "-8,20"],
+];
+
+/** Text, then a scan, then text: enough text overall to pass, with the middle page's rows missing. */
+const PARTLY_SCANNED = statementPdfPages([STATEMENT_ROWS, [], STATEMENT_ROWS]);
 
 const ROWS = [
     { amount: -12.5, currency: "EUR", date: "2026-03-03", label: "STARBUCKS CENTRO" },
@@ -173,6 +184,7 @@ describe(readStatement, () => {
         await expect(read(model)).resolves.toStrictEqual({
             rows: [...ROWS, { amount: -5, currency: null, date: "2026-03-09", label: "Bad currency" }],
             status: "ok",
+            unreadPages: [],
         });
     });
 
@@ -233,6 +245,23 @@ describe(readStatement, () => {
         expect(model.doGenerateCalls.length).toBeGreaterThan(1);
         expect(promptOf(model, 0)).not.toContain("statement_header");
         expect(promptOf(model, 1)).toContain("statement_header");
+    });
+
+    it("names a scanned page inside a text statement, whose rows the model never saw", async () => {
+        const model = mockModel(JSON.stringify({ rows: ROWS }));
+
+        await expect(read(model, PARTLY_SCANNED)).resolves.toStrictEqual({
+            rows: ROWS,
+            status: "ok",
+            unreadPages: [2],
+        });
+    });
+
+    it("counts a short page's text before masking, so a long account number doesn't make it look unread", async () => {
+        const model = mockModel(JSON.stringify({ rows: ROWS }));
+        const bytes = statementPdfPages([STATEMENT_ROWS, STATEMENT_ROWS, [["03/03", "12345678901234567890", "-1"]]]);
+
+        await expect(read(model, bytes)).resolves.toMatchObject({ unreadPages: [] });
     });
 
     it("answers extractionFailed when the text layer is too thin to be a statement", async () => {
@@ -324,6 +353,17 @@ describe("pdfImport.extract", () => {
         });
         await expect(stored(storageId)).resolves.toBeFalsy();
         expect(bodies).toHaveLength(2);
+    });
+
+    it("tells the client which pages had no text to read", async () => {
+        const { args, asUser, upload } = await setup();
+        stubAnthropic(ROWS, [{ categoryName: "Coffee", label: "STARBUCKS CENTRO" }]);
+        const storageId = await upload(PARTLY_SCANNED);
+
+        await expect(asUser.action(api.pdfImport.extract, args(storageId))).resolves.toMatchObject({
+            status: "ok",
+            unreadPages: [2],
+        });
     });
 
     it("answers a known merchant from merchantKnowledge on a second import, without classifying", async () => {

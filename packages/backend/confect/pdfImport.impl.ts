@@ -215,7 +215,9 @@ const extract = FunctionImpl.make(
                     tokenIdentifier: caller.tokenIdentifier,
                 }).pipe(Effect.catchCause(() => Effect.succeed({ degraded: true, suggestions: [] })));
                 const read = { rows: statement.rows, status: "ok" as const, suggestions };
-                return degraded ? { ...read, degraded } : read;
+                const flagged = degraded ? { ...read, degraded } : read;
+                const { unreadPages } = statement;
+                return unreadPages.length > 0 ? { ...flagged, unreadPages } : flagged;
             }).pipe(Effect.ensuring(Effect.promise(() => ctx.storage.delete(args.storageId))));
         },
         Effect.catchTags({ AiRefused: ({ status }) => Effect.succeed(failure(status)) }),

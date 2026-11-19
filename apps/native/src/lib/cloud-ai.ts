@@ -156,6 +156,7 @@ export type PdfImportOutcome =
           readonly ok: true;
           readonly rows: readonly StatementRow[];
           readonly suggestions: readonly LabelSuggestion[];
+          readonly unreadPages: readonly number[];
       }
     | { readonly ok: false; readonly reason: PdfImportRefusal };
 
@@ -165,13 +166,19 @@ const decodeStorageReceipt = HttpIncomingMessage.schemaBodyJson(Schema.Struct({ 
 
 const uploadFailed = (cause: Error) => new CloudError({ cause, kind: "upload", path: "pdfImport" });
 
-function pdfImportOutcome({ degraded, rows, status, suggestions }: PdfImportResult): PdfImportOutcome {
+function pdfImportOutcome({ degraded, rows, status, suggestions, unreadPages }: PdfImportResult): PdfImportOutcome {
     if (status !== "ok") {
         return { ok: false, reason: status };
     }
     return rows === null
         ? INVALID_RESPONSE
-        : { complete: degraded !== true, ok: true, rows, suggestions: suggestions ?? [] };
+        : {
+              complete: degraded !== true,
+              ok: true,
+              rows,
+              suggestions: suggestions ?? [],
+              unreadPages: unreadPages ?? [],
+          };
 }
 
 export const pdfImport = Effect.fn("Cloud.pdfImport")(function* pdfImport({ bytes, ...args }: PdfImportRequest) {

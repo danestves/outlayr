@@ -60,6 +60,8 @@ export const PdfImportResult = Schema.Struct({
     rows: Schema.NullOr(Schema.Array(StatementRow)),
     status: PdfImportStatus,
     suggestions: Schema.NullOr(Schema.Array(LabelSuggestion)),
+    /** One-based pages without a text layer, so their rows are missing. Absent when every page was read. */
+    unreadPages: Schema.optional(Schema.Array(Schema.Number)),
 });
 
 export type PdfImportResult = typeof PdfImportResult.Type;

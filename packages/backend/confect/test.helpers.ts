@@ -169,23 +169,33 @@ export const silentHttp = Layer.succeed(
 
 /** A real text-layer PDF: each row's cells are separately positioned, as a bank's table is. */
 export function statementPdf(rows: readonly (readonly string[])[], pages = 1): Uint8Array {
+    return statementPdfPages(Array.from({ length: pages }, () => rows));
+}
+
+function pageStream(rows: readonly (readonly string[])[]): string {
     let stream = "BT /F1 9 Tf\n";
     for (const [line, cells] of rows.entries()) {
         for (const [column, cell] of cells.entries()) {
             stream += `1 0 0 1 ${40 + column * 150} ${760 - line * 14} Tm (${cell}) Tj\n`;
         }
     }
-    stream += "ET";
-    const pageIds = Array.from({ length: pages }, (_, page) => 4 + page);
+    return `${stream}ET`;
+}
+
+/** An empty page stands in for a scan, which has no text layer. */
+export function statementPdfPages(pages: readonly (readonly (readonly string[])[])[]): Uint8Array {
+    const pageIds = pages.map((_, page) => 4 + page * 2);
     const objects = [
         "<< /Type /Catalog /Pages 2 0 R >>",
-        `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${pages} >>`,
+        `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${pages.length} >>`,
         "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-        ...pageIds.map(
-            () =>
-                `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents ${4 + pages} 0 R >>`
-        ),
-        `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+        ...pages.flatMap((rows, page) => {
+            const stream = pageStream(rows);
+            return [
+                `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents ${5 + page * 2} 0 R >>`,
+                `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+            ];
+        }),
     ];
     let out = "%PDF-1.4\n";
     const offsets: number[] = [];
