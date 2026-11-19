@@ -750,6 +750,12 @@ html:active-view-transition-type(push-left, dissolve)::view-transition-group(app
     overflow: clip;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    html:active-view-transition-type(push-left, dissolve)::view-transition-group(app-content) {
+        animation: none;
+    }
+}
+
 html:active-view-transition-type(push-left)::view-transition-old(app-content) {
     animation: app-push-out var(--duration-app-push) var(--ease-app-slide) both;
 }
