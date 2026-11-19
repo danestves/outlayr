@@ -151,6 +151,22 @@ describe("everyDay", () => {
         expect(days.top?.day).toBe("2026-10-02");
         expect(days.runnerUp).toBeNull();
     });
+
+    it("skips the top day's repeats in a quarter, so rent each month is not its own runner up", () => {
+        const books = {
+            ...ledger.books,
+            transactions: [
+                entry(1, "2026-08-01", "rent", 70),
+                entry(2, "2026-09-01", "rent", 70),
+                entry(3, "2026-10-01", "rent", 70),
+                entry(4, "2026-10-02", "food", 30),
+            ],
+        } as unknown as LedgerBooks;
+        const days = everyDay(prepareLedger(books, NOW), periodOf("2026-10/quarter", 1), SCOPE, []);
+
+        expect(days.top).toMatchObject({ amount: 70, day: "2026-08-01" });
+        expect(days.runnerUp).toMatchObject({ amount: 30, day: "2026-10-02" });
+    });
 });
 
 describe("budgetRows", () => {

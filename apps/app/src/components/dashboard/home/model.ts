@@ -170,7 +170,8 @@ export function everyDay(ledger: Ledger, period: Period, scope: Scope, categorie
         const amount = total(ledger, dayRows);
         return { amount, day, level: levelOf(amount, average), topId: biggestCategory(dayRows) };
     });
-    const [first, second] = cells.filter((cell) => cell.amount > 0).toSorted((a, b) => b.amount - a.amount);
+    const [first, ...rest] = cells.filter((cell) => cell.amount > 0).toSorted((a, b) => b.amount - a.amount);
+    const second = first && rest.find((cell) => cell.topId !== first.topId || cell.amount !== first.amount);
     return {
         average,
         cells,
