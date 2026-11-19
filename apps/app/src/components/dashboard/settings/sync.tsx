@@ -31,6 +31,19 @@ const serverSync = () => INITIAL_SYNC;
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
+const SYNCED = [
+    "entries",
+    "transfers",
+    "accounts",
+    "categories",
+    "budgets",
+    "installments",
+    "photos",
+    "settings",
+    "device",
+] as const;
+const LOCAL = ["lock", "notifications", "consent", "look", "reading"] as const;
+
 export function Sync() {
     const copy = useIntlayer("dashboard-sync");
     const { sections } = useIntlayer("dashboard-settings");
@@ -151,7 +164,17 @@ export function Sync() {
                                 </Row>
                             </Skeleton>
                         </SettingsCard>
+                        <SettingsCard title={copy.local.title}>
+                            {LOCAL.map((key) => (
+                                <Row key={key} label={copy.local[key].label} />
+                            ))}
+                        </SettingsCard>
                     </div>
+                    <SettingsCard title={copy.synced.title}>
+                        {SYNCED.map((key) => (
+                            <Row hint={copy.synced[key].hint} key={key} label={copy.synced[key].label} />
+                        ))}
+                    </SettingsCard>
                 </div>
             </div>
         </>

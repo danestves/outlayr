@@ -179,4 +179,5 @@ These are known and left for the screen phases:
 - **Hand-placed scope:** 74 files put `app-shell ph-no-capture` on portaled content by hand. `DialogContent`, `SheetContent` and `MenuContent` replace that.
 - **Accent inside the shell:** `accentCss` (`lib/accent.ts`) writes the tint and on-tint on `:root`. The shell scope sets `--color-app-on-tint` again in both themes, and `--color-app-tint` again in dark, so inside the shell a non-default accent shows as vermilion in dark and keeps the default on-tint. This was already the case before this phase.
 - **Pages outside the shell:** `login` and `connect`, and any portal without `app-shell`, read the phone's dark palette from `:root`. So does `html` itself, whose background is `--color-app-bg`.
+- **What syncs:** `settings/sync.tsx` lists what syncs and what stays on each phone. No frame has it yet: it fills the Sync frames' right column, where the canvas draws a Devices table the app doesn't have.
 - **Duplicate block on the site:** apps/site keeps its own copy of the `.app-shell` palette, which matches these values.
