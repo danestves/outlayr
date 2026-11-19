@@ -234,6 +234,7 @@ const WIRE_DEFAULTS: Partial<Record<SyncedTable, Change>> = {
     categories: { customName: false },
     outsideMoves: { adjustment: false },
     savingsGoals: { startAmount: 0, startAmountUsd: 0, targetDate: 0 },
+    transactions: { unreviewed: false },
 };
 
 function archivedFields(table: SyncedTable, row: ArchiveRow) {
@@ -243,7 +244,10 @@ function archivedFields(table: SyncedTable, row: ArchiveRow) {
     );
 }
 
-const sameFields = (a: Change, b: Change) => Object.keys(a).every((key) => a[key] === (b[key] ?? null));
+function sameFields(table: SyncedTable, archived: Change, server: Change) {
+    const defaults = WIRE_DEFAULTS[table] ?? {};
+    return Object.keys(archived).every((key) => archived[key] === (server[key] ?? defaults[key] ?? null));
+}
 
 const isPushRow = Schema.is(PushRow);
 
@@ -267,7 +271,7 @@ function deletionStamps(document: ArchiveDocument, held: ReadonlyMap<string, Pul
                     changed:
                         group.changed ||
                         current?.deletedAt !== instant ||
-                        !sameFields(archivedFields(table, row), current.fields),
+                        !sameFields(table, archivedFields(table, row), current.fields),
                     newest: Math.max(group.newest, current ? era(current) : 0),
                 });
             }
@@ -299,7 +303,7 @@ function archivedPush(
     const fields = archivedFields(table, row);
     const updatedAt = Math.max(now, (held?.updatedAt ?? 0) + 1);
     if (table === "appMeta") {
-        return held && sameFields(fields, held.fields)
+        return held && sameFields(table, fields, held.fields)
             ? null
             : wireRow({ deletedAt: null, fields, localId, table, updatedAt });
     }
@@ -317,7 +321,9 @@ function archivedPush(
     if (held.deletedAt !== null) {
         return wireRow({ ...base, deletedAt: null, restoredAt: Math.max(now, era(held) + 1) });
     }
-    return sameFields(fields, held.fields) ? null : wireRow({ ...base, deletedAt: null, restoredAt: held.restoredAt });
+    return sameFields(table, fields, held.fields)
+        ? null
+        : wireRow({ ...base, deletedAt: null, restoredAt: held.restoredAt });
 }
 
 function absentPush(row: PulledRow, now: number) {
