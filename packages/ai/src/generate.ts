@@ -1,10 +1,11 @@
 import { chat, fromSpecTokenUsage, getProviderExecutedMetadata, maxIterations } from "@tanstack/ai";
 import type { JSONSchema, ModelMessage, StreamChunk } from "@tanstack/ai";
-import * as Duration from "effect/Duration";
+import type * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
+import { deadline } from "./deadline";
 import { failedCall, modelCallError } from "./errors";
 import type { TextModel } from "./model";
 import type { WebSearch } from "./provider";
@@ -15,13 +16,6 @@ interface Prompt {
     readonly system?: string | undefined;
     readonly timeout: Duration.Input;
 }
-
-const deadline = (interrupt: AbortSignal, timeout: Duration.Input) => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), Duration.toMillis(Duration.fromInputUnsafe(timeout)));
-    interrupt.addEventListener("abort", () => controller.abort(), { once: true });
-    return { controller, release: () => clearTimeout(timer) };
-};
 
 const callOptions = (model: TextModel, prompt: Prompt, abortController: AbortController) => ({
     abortController,
