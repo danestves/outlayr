@@ -1,5 +1,5 @@
 import type { ModelTier } from "@outlayr/model-router/route";
-import type { AnyTextAdapter } from "@tanstack/ai";
+import type { AnyTextAdapter, Tool } from "@tanstack/ai";
 import * as Config from "effect/Config";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -19,11 +19,14 @@ export type ProviderOptions = Readonly<Record<string, number | boolean>>;
 
 export type Connect = (modelId: string) => AnyTextAdapter;
 
+export type WebSearch = (maxSearches: number) => Tool;
+
 export interface TextProvider {
     readonly connect: Config.Config<Option.Option<Connect>>;
     readonly defaultModels: Option.Option<Record<typeof ModelTier.Type, string>>;
     readonly outputLimit: (maxTokens: number) => ProviderOptions;
     readonly requestOptions?: ProviderOptions;
+    readonly webSearch?: WebSearch;
 }
 
 export const secret = (name: string) =>

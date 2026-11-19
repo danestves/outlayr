@@ -1,10 +1,11 @@
 import type { ChatMiddlewareContext } from "@tanstack/ai";
 import * as Effect from "effect/Effect";
-import { describe, expect, it } from "vite-plus/test";
+import * as Schema from "effect/Schema";
+import { describe, expect, it, test } from "vite-plus/test";
 
-import { generateText } from "./generate";
-import { fails, fakeModel } from "./testing";
-import { tracingMiddleware, withTracing } from "./tracing";
+import { generateObject } from "./generate";
+import { answers, fails, fakeModel } from "./testing";
+import { tracingMiddleware, webSearchCount, withTracing } from "./tracing";
 import type { GenerationProperties, TraceScope } from "./tracing";
 
 const prompt = { messages: [{ content: "receipt", role: "user" as const }], system: "s", timeout: "1 second" as const };
@@ -19,9 +20,9 @@ function recorder() {
     return { distinctIds, send, sent };
 }
 
-const traced = (responses: Parameters<typeof fakeModel>[0], scope?: TraceScope, tokensPerSecond?: number) => {
+const traced = (responses: Parameters<typeof fakeModel>[0], scope?: TraceScope) => {
     const { distinctIds, send, sent } = recorder();
-    const { model } = fakeModel(responses, { feature: "receipt_scan", tokensPerSecond });
+    const { model } = fakeModel(responses, { feature: "receipt_scan" });
     return { distinctIds, model: withTracing(model, send, scope), sent };
 };
 
@@ -71,13 +72,13 @@ describe("tracingMiddleware", () => {
     });
 
     it("traces each call under its own id, and under the account and session when shared", async () => {
-        const { distinctIds, model, sent } = traced([{ text: "a" }, { text: "b" }], {
+        const { distinctIds, model, sent } = traced([answers("a"), answers("b")], {
             distinctId: "user-1",
             sessionId: "thread-1",
         });
 
-        await Effect.runPromise(generateText(model, prompt));
-        await Effect.runPromise(generateText(model, prompt));
+        await Effect.runPromise(generateObject(model, Schema.String, prompt));
+        await Effect.runPromise(generateObject(model, Schema.String, prompt));
 
         expect(sent).toStrictEqual([
             expect.objectContaining({ $ai_session_id: "thread-1", $process_person_profile: true }),
@@ -90,16 +91,34 @@ describe("tracingMiddleware", () => {
     it("records a provider error once, though a non-streaming call throws before the error hook", async () => {
         const { model, sent } = traced([fails("overloaded")]);
 
-        await Effect.runPromise(Effect.ignore(generateText(model, prompt)));
+        await Effect.runPromise(Effect.ignore(generateObject(model, Schema.String, prompt)));
 
         expect(sent).toStrictEqual([expect.objectContaining({ $ai_http_status: 500, $ai_is_error: true })]);
     });
 
     it("records a call that ran out of time as an abort", async () => {
-        const { model, sent } = traced([{ text: "a slow answer" }], {}, 10);
+        const { model, sent } = traced([
+            async () => {
+                await Effect.runPromise(Effect.sleep("100 millis"));
+                return answers("a slow answer");
+            },
+        ]);
 
-        await Effect.runPromise(Effect.ignore(generateText(model, { ...prompt, timeout: "20 millis" })));
+        await Effect.runPromise(
+            Effect.ignore(generateObject(model, Schema.String, { ...prompt, timeout: "20 millis" }))
+        );
 
         expect(sent).toStrictEqual([expect.objectContaining({ $ai_error: "AbortError", $ai_is_error: true })]);
     });
+});
+
+test("counts OpenRouter's searches, which it reports under serverToolUseDetails", () => {
+    expect(
+        webSearchCount({
+            completionTokens: 1,
+            promptTokens: 1,
+            providerUsageDetails: { serverToolUseDetails: { webSearchRequests: 3 } },
+            totalTokens: 2,
+        })
+    ).toBe(3);
 });

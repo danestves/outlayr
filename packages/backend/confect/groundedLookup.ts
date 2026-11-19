@@ -1,8 +1,9 @@
+import { generateGrounded } from "@outlayr/ai/generate";
+import type { Source } from "@outlayr/ai/generate";
 import { resolveTextModel } from "@outlayr/ai/model";
+import type { TextModel } from "@outlayr/ai/model";
 import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
-import { generateText, isStepCount } from "ai";
-import type { LanguageModel, ToolSet } from "ai";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -20,11 +21,11 @@ import {
     sanitizeMerchantName,
     sanitizeTags,
 } from "./enrichment";
+import { traceModel } from "./lib/aiTracing";
 import { categoryChoiceLines, sanitizeCategoryName } from "./lib/categoryChoice";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { CANONICAL_CATEGORIES, KEY_PATTERN, shouldPublish } from "./lib/merchantTrust";
 import type { KnowledgeCandidate } from "./lib/merchantTrust";
-import { anthropicSdk, tracedSdkModel } from "./lib/sdkModel";
 import { budgetConfig, estimateMicros, measureMicros, WORST_CASE_SEARCH_CALLS } from "./lib/spend";
 
 const CANONICAL_NAMES_LIST = [...CANONICAL_CATEGORIES].join(", ");
@@ -33,6 +34,8 @@ const CANONICAL_NAMES_LIST = [...CANONICAL_CATEGORIES].join(", ");
 const FORBIDDEN_LOGO_ORIGINS = [/(^|\.)logo\.dev$/i, /(^|\.)itunes\.apple\.com$/i, /(^|\.)mzstatic\.com$/i];
 
 const FENCED_JSON = /```(?:json)?\s*([\s\S]*?)```/i;
+
+const GROUNDED_MAX_TURNS = 4;
 
 export function isForbiddenLogoOrigin(domain: string): boolean {
     return FORBIDDEN_LOGO_ORIGINS.some((pattern) => pattern.test(domain));
@@ -47,11 +50,6 @@ export interface GroundedRunArgs {
     locale?: string;
     name: string;
     regionCode?: string;
-}
-
-export interface GroundedCallDeps {
-    grounding: Exclude<LanguageModel, string>;
-    groundingTools: ToolSet;
 }
 
 const GroundedOutput = Schema.Struct({
@@ -150,7 +148,7 @@ export interface GroundedCallOutcome {
     inputTokens: number;
     outputTokens: number;
     searchCalls: number;
-    sources: readonly { url: string }[];
+    sources: readonly Source[];
 }
 
 export interface GroundedResult {
@@ -164,21 +162,19 @@ export class GroundedLookupError extends Schema.TaggedError<GroundedLookupError>
 }) {}
 
 export const runGroundedLookupCall = Effect.fn("GroundedLookup.runCall")(function* runGroundedLookupCall(
-    deps: GroundedCallDeps,
+    model: TextModel,
     args: GroundedRunArgs
 ) {
-    const result = yield* Effect.tryPromise({
-        catch: (cause) => new GroundedLookupError({ cause }),
-        try: () =>
-            generateText({
-                abortSignal: AbortSignal.timeout(GROUNDED_REQUEST_TIMEOUT_MS),
-                maxRetries: 0,
-                model: deps.grounding,
-                prompt: buildGroundedPrompt(args),
-                stopWhen: isStepCount(4),
-                tools: deps.groundingTools,
-            }),
-    });
+    const called = yield* generateGrounded(model, {
+        maxSearches: WORST_CASE_SEARCH_CALLS,
+        maxTurns: GROUNDED_MAX_TURNS,
+        messages: [{ content: buildGroundedPrompt(args), role: "user" }],
+        timeout: GROUNDED_REQUEST_TIMEOUT_MS,
+    }).pipe(Effect.mapError((cause) => new GroundedLookupError({ cause })));
+    if (Option.isNone(called)) {
+        return yield* new GroundedLookupError({ cause: new Error(`${model.provider} has no hosted web search`) });
+    }
+    const result = called.value;
 
     const output = parseGroundedOutput(result.text);
 
@@ -208,19 +204,22 @@ export const runGroundedLookupCall = Effect.fn("GroundedLookup.runCall")(functio
         tags,
     };
 
-    const urlSources = result.sources
-        .filter((source) => source.sourceType === "url")
-        .map((source) => ({ url: source.url }));
-
     return {
         answer,
         candidate,
-        inputTokens: result.usage.inputTokens ?? 0,
-        outputTokens: result.usage.outputTokens ?? 0,
-        // `web_search` is the only registered tool, so every tool call is a billed search round.
-        searchCalls: result.toolCalls.length,
-        sources: urlSources,
+        inputTokens: result.inputTokens,
+        outputTokens: result.outputTokens,
+        searchCalls: result.searches,
+        sources: result.sources,
     };
+});
+
+const groundingModel = Effect.fn("GroundedLookup.model")(function* groundingModel(distinctId: string | undefined) {
+    const resolved = yield* resolveTextModel(route({ feature: "grounded_lookup" }));
+    return resolved.pipe(
+        Option.map((model) => traceModel(model, { distinctId })),
+        Option.getOrUndefined
+    );
 });
 
 export type GroundedLookupCtx = Pick<ActionCtx, "runQuery" | "runMutation" | "runAction" | "meta">;
@@ -228,12 +227,16 @@ export type GroundedLookupCtx = Pick<ActionCtx, "runQuery" | "runMutation" | "ru
 export const groundedAnswer: (
     ctx: GroundedLookupCtx,
     args: GroundedRunArgs,
-    overrideDeps?: GroundedCallDeps
+    grounding?: TextModel
 ) => Effect.Effect<GroundedResult | null> = Effect.fn("GroundedLookup.groundedAnswer")(function* groundedAnswer(
     ctx: GroundedLookupCtx,
     args: GroundedRunArgs,
-    overrideDeps?: GroundedCallDeps
+    grounding?: TextModel
 ) {
+    const model = grounding ?? (yield* groundingModel(args.distinctId));
+    if (model?.webSearch === undefined) {
+        return null;
+    }
     const estimated = yield* estimateMicros();
     const config = yield* budgetConfig();
     const budget = yield* Effect.promise(() =>
@@ -243,24 +246,9 @@ export const groundedAnswer: (
         return null;
     }
 
-    let deps = overrideDeps;
-    if (!deps) {
-        const resolved = yield* resolveTextModel(route({ feature: "grounded_lookup" }));
-        const anthropic = Option.isSome(resolved) ? yield* anthropicSdk(resolved.value) : Option.none();
-        if (Option.isNone(resolved) || Option.isNone(anthropic)) {
-            return null;
-        }
-        const { modelId: groundedModelId, route: groundedRoute } = resolved.value;
-        deps = {
-            grounding: tracedSdkModel(anthropic.value(groundedModelId), groundedRoute, { distinctId: args.distinctId }),
-            groundingTools: {
-                web_search: anthropic.value.tools.webSearch_20250305({ maxUses: WORST_CASE_SEARCH_CALLS }),
-            },
-        };
-    }
-    const { modelId } = deps.grounding;
+    const { modelId } = model;
 
-    const called = yield* runGroundedLookupCall(deps, args).pipe(
+    const called = yield* runGroundedLookupCall(model, args).pipe(
         Effect.map(Option.some),
         Effect.catchTags({
             GroundedLookupError: ({ cause }) =>
@@ -333,15 +321,15 @@ export const groundedAnswer: (
 export const runGroundedLookup: (
     ctx: GroundedLookupCtx,
     args: GroundedRunArgs,
-    overrideDeps?: GroundedCallDeps
+    grounding?: TextModel
 ) => Effect.Effect<void> = Effect.fn("GroundedLookup.run")(function* runGroundedLookup(
     ctx: GroundedLookupCtx,
     args: GroundedRunArgs,
-    overrideDeps?: GroundedCallDeps
+    grounding?: TextModel
 ) {
     const perKey = yield* Effect.promise(() => rateLimiter.limit(ctx, "groundedPerKey", { key: args.key }));
     if (!perKey.ok) {
         return;
     }
-    yield* groundedAnswer(ctx, args, overrideDeps);
+    yield* groundedAnswer(ctx, args, grounding);
 });

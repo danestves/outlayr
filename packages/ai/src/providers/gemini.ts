@@ -1,4 +1,5 @@
 import { createGeminiChat } from "@tanstack/ai-gemini";
+import { googleSearchTool } from "@tanstack/ai-gemini/tools";
 import * as Config from "effect/Config";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -20,4 +21,5 @@ export const gemini: TextProvider = {
     ),
     defaultModels: Option.some({ fast: "gemini-3.5-flash-lite", standard: "gemini-3.5-flash" }),
     outputLimit: (maxTokens) => ({ maxOutputTokens: maxTokens }),
+    webSearch: () => googleSearchTool(),
 };

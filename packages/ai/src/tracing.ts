@@ -19,13 +19,15 @@ interface Generation {
     readonly usage?: TokenUsage | undefined;
 }
 
-const webSearchCount = (usage: TokenUsage | undefined) => {
+export const webSearchCount = (usage: TokenUsage | undefined) => {
     const details = usage?.providerUsageDetails;
-    const count =
-        Predicate.hasProperty(details, "serverToolUse") &&
-        Predicate.hasProperty(details.serverToolUse, "webSearchRequests")
-            ? details.serverToolUse.webSearchRequests
-            : undefined;
+    const anthropic = Predicate.hasProperty(details, "serverToolUse") ? details.serverToolUse : undefined;
+    const serverToolUse =
+        anthropic ??
+        (Predicate.hasProperty(details, "serverToolUseDetails") ? details.serverToolUseDetails : undefined);
+    const count = Predicate.hasProperty(serverToolUse, "webSearchRequests")
+        ? serverToolUse.webSearchRequests
+        : undefined;
     return Predicate.isNumber(count) && count > 0 ? count : undefined;
 };
 

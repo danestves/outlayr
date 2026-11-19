@@ -8,7 +8,6 @@ import type { FakeResponseStep } from "@outlayr/ai/testing";
 import type { Route } from "@outlayr/model-router/route";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
-import { MockLanguageModelV3 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -139,12 +138,10 @@ describe(resolveJob, () => {
 
     it("searches the web for a merchant once a day, leaving later jobs to the fast model", async () => {
         const t = setup();
-        let searches = 0;
-        const grounding = new MockLanguageModelV3({
-            doGenerate: () => {
-                searches += 1;
-                throw new Error("no publishable answer");
-            },
+        const grounding = fakeModel([fails("no publishable answer")], {
+            feature: "grounded_lookup",
+            repeat: true,
+            webSearch: true,
         });
         const fast = fastModel({
             brand: "Care4Bag",
@@ -159,7 +156,7 @@ describe(resolveJob, () => {
                 Effect.runPromise(
                     resolveJob(ctx, queuedRow({ grounded: true }), {
                         fast,
-                        grounded: { grounding, groundingTools: {} },
+                        grounded: grounding.model,
                     })
                 )
             );
@@ -167,7 +164,7 @@ describe(resolveJob, () => {
         await resolve();
         const retry = await resolve();
 
-        expect(searches).toBe(1);
+        expect(grounding.requests).toHaveLength(1);
         expect(retry).toMatchObject({ categoryName: "Travel", merchantName: "Care4Bag" });
     });
 

@@ -1,4 +1,5 @@
 import { createGrokText } from "@tanstack/ai-grok";
+import { grokWebSearchTool } from "@tanstack/ai-grok/tools";
 import * as Config from "effect/Config";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
@@ -20,4 +21,5 @@ export const grok: TextProvider = {
     ),
     defaultModels: Option.some({ fast: "grok-4.20-non-reasoning", standard: "grok-4.7" }),
     outputLimit: (maxTokens) => ({ max_output_tokens: maxTokens }),
+    webSearch: () => grokWebSearchTool(),
 };
