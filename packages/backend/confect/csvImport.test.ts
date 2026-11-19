@@ -1,9 +1,9 @@
 /// <reference types="vite/client" />
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { fails, fakeModel } from "@outlayr/ai/testing";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { merchantKey } from "@outlayr/money/merchant-key";
-import { MockLanguageModelV3 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import * as Effect from "effect/Effect";
@@ -25,36 +25,7 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-function mockModel(text: string) {
-    return new MockLanguageModelV3({
-        doGenerate: async () => ({
-            content: [{ text, type: "text" }],
-            finishReason: { raw: undefined, unified: "stop" },
-            usage: {
-                inputTokens: {
-                    cacheRead: undefined,
-                    cacheWrite: undefined,
-                    noCache: undefined,
-                    total: undefined,
-                },
-                outputTokens: {
-                    reasoning: undefined,
-                    text: undefined,
-                    total: undefined,
-                },
-            },
-            warnings: [],
-        }),
-    });
-}
-
-function rejectingModel(error: Error) {
-    return new MockLanguageModelV3({
-        doGenerate: async () => {
-            throw error;
-        },
-    });
-}
+const mockModel = (text: string) => fakeModel([{ text }]).model;
 
 const BASE_ARGS = {
     aiConsent: AI_CONSENT_VERSION,
@@ -545,7 +516,7 @@ describe(classify, () => {
     });
 
     it("returns providerError, never throws, when the model rejects", async () => {
-        const model = rejectingModel(new Error("network down"));
+        const { model } = fakeModel([fails("network down")]);
 
         await expect(
             Effect.runPromise(

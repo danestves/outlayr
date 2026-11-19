@@ -2,8 +2,6 @@ import * as Config from "effect/Config";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 
-import { CLAUDE_FAST_MODEL_ID, CLAUDE_MODEL_ID } from "./models";
-
 const text = (name: string) => Config.String(name).pipe(Config.option);
 
 const secret = (name: string) => Config.Redacted(name).pipe(Config.option);
@@ -15,12 +13,6 @@ const DEFAULT_MCP_CONSENT_URL = "https://tryoutlayr.com/connect";
 
 export const anthropicApiKey = secret("ANTHROPIC_API_KEY");
 export const elevenLabsApiKey = secret("ELEVENLABS_API_KEY");
-
-export const claudeModelId = Config.String("CLAUDE_MODEL_ID").pipe(Config.withDefault(CLAUDE_MODEL_ID));
-export const claudeFastModelId = Config.String("CLAUDE_FAST_MODEL_ID").pipe(Config.withDefault(CLAUDE_FAST_MODEL_ID));
-export const claudeGroundedModelId = Config.String("CLAUDE_GROUNDED_MODEL_ID").pipe(
-    Config.withDefault(CLAUDE_FAST_MODEL_ID)
-);
 
 export const convexSiteUrl = text("CONVEX_SITE_URL");
 

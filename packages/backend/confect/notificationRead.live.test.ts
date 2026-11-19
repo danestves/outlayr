@@ -1,23 +1,24 @@
 /// <reference types="vite/client" />
 
-/** Opt-in (RUN_LIVE_MODEL_TESTS=1, ANTHROPIC_API_KEY): spends tokens. Real pushes the on-device parser misreads. */
+/** Opt-in (RUN_LIVE_MODEL_TESTS=1 and a provider key): spends tokens. Real pushes the on-device parser misreads. */
 
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { liveModel } from "@outlayr/ai/testing";
+import { route } from "@outlayr/model-router/route";
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
-import { CLAUDE_FAST_MODEL_ID } from "./lib/models";
 import { readNotification } from "./notificationRead";
 
-const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
-const enabled = process.env.RUN_LIVE_MODEL_TESTS === "1" && apiKey !== "";
+const model = await liveModel(route({ feature: "notification_read" }));
 
-const MODEL_ID = process.env.CLAUDE_FAST_MODEL_ID ?? CLAUDE_FAST_MODEL_ID;
+const read = (text: string, language?: string) => {
+    if (model === undefined) {
+        throw new Error("no live model");
+    }
+    return Effect.runPromise(readNotification(model, text, language));
+};
 
-const read = (text: string, language?: string) =>
-    Effect.runPromise(readNotification(createAnthropic({ apiKey })(MODEL_ID), text, language));
-
-describe.skipIf(!enabled)("notificationRead against the live model", () => {
+describe.skipIf(model === undefined)("notificationRead against the live model", () => {
     it("names the merchant a bank puts before the amount, not the app or the card", async () => {
         const result = await read(
             "Your transaction was successful\nYour SiteGround transaction in the amount of USD 22.99 on Nov 02 2026, 20:44 CST was approved on the card ending with 7909.",

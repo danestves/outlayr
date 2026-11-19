@@ -1,5 +1,5 @@
 import type { Route } from "@outlayr/model-router/route";
-import type { AnyTextAdapter } from "@tanstack/ai";
+import type { AnyTextAdapter, ChatMiddleware } from "@tanstack/ai";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -18,6 +18,7 @@ const tierModel = {
 
 export interface TextModel {
     readonly adapter: AnyTextAdapter;
+    readonly middleware?: () => readonly ChatMiddleware[];
     readonly modelId: string;
     readonly provider: TextProviderName;
     readonly modelOptions: ProviderOptions;

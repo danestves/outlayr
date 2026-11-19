@@ -14,7 +14,7 @@ export const anthropic: TextProvider = {
             Option.map(
                 (apiKey) => (modelId: string) =>
                     // SAFETY: env picks the id; one the provider does not serve fails as a provider error.
-                    createAnthropicChat(modelId as Model, Redacted.value(apiKey))
+                    createAnthropicChat(modelId as Model, Redacted.value(apiKey), { maxRetries: 0 })
             )
         )
     ),

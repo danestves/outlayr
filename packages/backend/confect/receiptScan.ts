@@ -1,6 +1,7 @@
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
-import { generateText, Output } from "ai";
-import type { LanguageModel } from "ai";
+import { generateObject } from "@outlayr/ai/generate";
+import type { TextModel } from "@outlayr/ai/model";
+import { imagePart } from "@outlayr/ai/parts";
 import type { UserIdentity } from "convex/server";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -12,7 +13,6 @@ import { withinCaptureAllowance } from "./lib/captures";
 import { categoryChoiceLines, placeCategory } from "./lib/categoryChoice";
 import { clampDate, draftCurrency, normalizeDomain, pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
-import { modelCallError, modelSchema } from "./lib/modelCall";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import type { ReceiptDraft, ReceiptItem, ScanResult, ScanStatus } from "./receiptScan.spec";
 
@@ -55,8 +55,6 @@ export const ModelOutput = Schema.Struct({
 });
 
 export type ModelOutput = typeof ModelOutput.Type;
-
-const modelOutputSchema = modelSchema(ModelOutput);
 
 // Unsharded, a global counter is one hot document that throws OCC write conflicts under concurrency.
 export const rateLimiter = new RateLimiter(components.rateLimiter, {
@@ -163,26 +161,16 @@ export function normalizeDraft(output: ModelOutput, args: LedgerContext): typeof
 }
 
 export const readReceipt = Effect.fn("ReceiptScan.readReceipt")(
-    function* readReceipt(model: LanguageModel, image: ArrayBuffer, context: LedgerContext) {
-        const { output } = yield* Effect.tryPromise({
-            catch: modelCallError,
-            try: () =>
-                generateText({
-                    abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-                    maxRetries: 0,
-                    messages: [
-                        {
-                            content: [
-                                { data: new Uint8Array(image), mediaType: "image/jpeg", type: "file" },
-                                { text: "Read this receipt.", type: "text" },
-                            ],
-                            role: "user",
-                        },
-                    ],
-                    model,
-                    output: Output.object({ schema: modelOutputSchema }),
-                    system: buildPrompt(context),
-                }),
+    function* readReceipt(model: TextModel, image: ArrayBuffer, context: LedgerContext) {
+        const output = yield* generateObject(model, ModelOutput, {
+            messages: [
+                {
+                    content: [imagePart(image, "image/jpeg"), { content: "Read this receipt.", type: "text" }],
+                    role: "user",
+                },
+            ],
+            system: buildPrompt(context),
+            timeout: REQUEST_TIMEOUT_MS,
         });
         const receipt = normalizeDraft(output, context);
         return receipt === null ? failure("unclear") : { receipt, status: "ok" as const };

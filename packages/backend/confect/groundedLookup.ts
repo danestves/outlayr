@@ -1,4 +1,4 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { resolveTextModel } from "@outlayr/ai/model";
 import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
 import { generateText, isStepCount } from "ai";
@@ -6,7 +6,6 @@ import type { LanguageModel, ToolSet } from "ai";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import { internal } from "../convex/_generated/api";
@@ -21,14 +20,11 @@ import {
     sanitizeMerchantName,
     sanitizeTags,
 } from "./enrichment";
-import { traced } from "./lib/aiTracing";
 import { categoryChoiceLines, sanitizeCategoryName } from "./lib/categoryChoice";
-import { anthropicApiKey } from "./lib/config";
 import type { CategoryBranch } from "./lib/ledgerPrompt";
 import { CANONICAL_CATEGORIES, KEY_PATTERN, shouldPublish } from "./lib/merchantTrust";
 import type { KnowledgeCandidate } from "./lib/merchantTrust";
-import { routedModelId } from "./lib/modelRoute";
-import { CLAUDE_FAST_MODEL_ID } from "./lib/models";
+import { anthropicSdk, tracedSdkModel } from "./lib/sdkModel";
 import { budgetConfig, estimateMicros, measureMicros, WORST_CASE_SEARCH_CALLS } from "./lib/spend";
 
 const CANONICAL_NAMES_LIST = [...CANONICAL_CATEGORIES].join(", ");
@@ -54,7 +50,7 @@ export interface GroundedRunArgs {
 }
 
 export interface GroundedCallDeps {
-    grounding: LanguageModel;
+    grounding: Exclude<LanguageModel, string>;
     groundingTools: ToolSet;
 }
 
@@ -157,6 +153,11 @@ export interface GroundedCallOutcome {
     sources: readonly { url: string }[];
 }
 
+export interface GroundedResult {
+    answer: GroundedAnswer;
+    modelId: string;
+}
+
 export class GroundedLookupError extends Schema.TaggedError<GroundedLookupError>()("GroundedLookupError", {
     cause: Schema.Defect(),
     message: Schema.String.pipe(Schema.withConstructorDefault(Effect.succeed("The grounded lookup model call failed"))),
@@ -228,7 +229,7 @@ export const groundedAnswer: (
     ctx: GroundedLookupCtx,
     args: GroundedRunArgs,
     overrideDeps?: GroundedCallDeps
-) => Effect.Effect<GroundedAnswer | null> = Effect.fn("GroundedLookup.groundedAnswer")(function* groundedAnswer(
+) => Effect.Effect<GroundedResult | null> = Effect.fn("GroundedLookup.groundedAnswer")(function* groundedAnswer(
     ctx: GroundedLookupCtx,
     args: GroundedRunArgs,
     overrideDeps?: GroundedCallDeps
@@ -243,21 +244,21 @@ export const groundedAnswer: (
     }
 
     let deps = overrideDeps;
-    let modelId: string = CLAUDE_FAST_MODEL_ID;
     if (!deps) {
-        const apiKey = yield* anthropicApiKey;
-        if (Option.isNone(apiKey)) {
+        const resolved = yield* resolveTextModel(route({ feature: "grounded_lookup" }));
+        const anthropic = Option.isSome(resolved) ? yield* anthropicSdk(resolved.value) : Option.none();
+        if (Option.isNone(resolved) || Option.isNone(anthropic)) {
             return null;
         }
-        const anthropic = createAnthropic({ apiKey: Redacted.value(apiKey.value) });
-        const groundedRoute = route({ feature: "grounded_lookup" });
-        modelId = yield* routedModelId(groundedRoute);
-        const grounding = traced(anthropic(modelId), groundedRoute, { distinctId: args.distinctId });
+        const { modelId: groundedModelId, route: groundedRoute } = resolved.value;
         deps = {
-            grounding,
-            groundingTools: { web_search: anthropic.tools.webSearch_20250305({ maxUses: WORST_CASE_SEARCH_CALLS }) },
+            grounding: tracedSdkModel(anthropic.value(groundedModelId), groundedRoute, { distinctId: args.distinctId }),
+            groundingTools: {
+                web_search: anthropic.value.tools.webSearch_20250305({ maxUses: WORST_CASE_SEARCH_CALLS }),
+            },
         };
     }
+    const { modelId } = deps.grounding;
 
     const called = yield* runGroundedLookupCall(deps, args).pipe(
         Effect.map(Option.some),
@@ -325,7 +326,8 @@ export const groundedAnswer: (
             searchCalls: outcome.searchCalls,
         })
     );
-    return outcome.answer;
+    const result: GroundedResult = { answer: outcome.answer, modelId };
+    return result;
 }, Effect.orDie);
 
 export const runGroundedLookup: (

@@ -38,7 +38,7 @@ export function tracingMiddleware(model: TextModel, send: SendGeneration, scope:
         return send(scope.distinctId ?? traceId, {
             $ai_cache_creation_input_tokens: cacheWrite,
             $ai_cache_read_input_tokens: cacheRead,
-            $ai_error: error instanceof Error ? error.name : undefined,
+            $ai_error: error instanceof Error || error instanceof DOMException ? error.name : undefined,
             $ai_http_status: error === undefined ? 200 : 500,
             $ai_input_tokens:
                 usage === undefined ? undefined : usage.promptTokens - (cacheRead ?? 0) - (cacheWrite ?? 0),
@@ -60,14 +60,37 @@ export function tracingMiddleware(model: TextModel, send: SendGeneration, scope:
             route_reason: model.route.reason,
         });
     };
+    let startedAt = Date.now();
+    let recorded = false;
+    const recordOnce = (generation: Generation) => {
+        if (recorded) {
+            return;
+        }
+        recorded = true;
+        return record(generation);
+    };
     return {
         name: "posthog-tracing",
+        onAbort: (_ctx, { duration, reason }) =>
+            recordOnce({ duration, error: new DOMException(reason ?? "Model call aborted", "AbortError") }),
         onChunk: (_ctx, chunk) => {
             if (chunk.type === "TOOL_CALL_START") {
                 toolsCalled.push(chunk.toolCallName);
             }
+            if (chunk.type === "RUN_ERROR") {
+                return recordOnce({ duration: Date.now() - startedAt, error: new Error(chunk.message) });
+            }
         },
-        onError: (_ctx, { duration, error }) => record({ duration, error }),
-        onFinish: (_ctx, { duration, finishReason, usage }) => record({ duration, stopReason: finishReason, usage }),
+        onError: (_ctx, { duration, error }) => recordOnce({ duration, error }),
+        onFinish: (_ctx, { duration, finishReason, usage }) =>
+            recordOnce({ duration, stopReason: finishReason, usage }),
+        onStart: () => {
+            startedAt = Date.now();
+        },
     };
 }
+
+export const withTracing = (model: TextModel, send: SendGeneration, scope?: TraceScope): TextModel => ({
+    ...model,
+    middleware: () => [...(model.middleware?.() ?? []), tracingMiddleware(model, send, scope)],
+});

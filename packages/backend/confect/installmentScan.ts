@@ -1,15 +1,15 @@
+import { generateObject } from "@outlayr/ai/generate";
+import type { TextModel } from "@outlayr/ai/model";
+import { imagePart } from "@outlayr/ai/parts";
 import { decimalsFor } from "@outlayr/money/currency";
 import { EVERY_OPTIONS, UPFRONT_SHARES } from "@outlayr/money/installment-draft";
 import { splitTotal } from "@outlayr/money/installments";
-import { generateText, Output } from "ai";
-import type { LanguageModel } from "ai";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import type { InstallmentPlanDraft, InstallmentScanResult } from "./installmentScan.spec";
 import { draftCurrency, pickKnown, trimTo } from "./lib/ledgerPrompt";
 import type { LedgerContext } from "./lib/ledgerPrompt";
-import { modelCallError, modelSchema } from "./lib/modelCall";
 import { MAX_AMOUNT } from "./lib/sanitizeLimits";
 import { REQUEST_TIMEOUT_MS } from "./receiptScan";
 import type { ScanStatus } from "./receiptScan.spec";
@@ -62,8 +62,6 @@ export type ModelOrder = typeof ModelOrder.Type;
 export type ModelOutput = typeof ModelOutput.Type;
 type ModelRow = ModelOrder["rows"][number];
 type PlannedRow = (typeof InstallmentPlanDraft.Type)["rows"][number];
-
-const modelOutputSchema = modelSchema(ModelOutput);
 
 export function buildPrompt(context: PlanContext): string {
     return [
@@ -407,36 +405,25 @@ export function normalizePlans(output: ModelOutput, context: PlanContext): typeo
 }
 
 export const readInstallmentPlan = Effect.fn("InstallmentScan.readInstallmentPlan")(
-    function* readInstallmentPlan(model: LanguageModel, images: readonly ArrayBuffer[], context: PlanContext) {
-        const { output } = yield* Effect.tryPromise({
-            catch: modelCallError,
-            try: () =>
-                generateText({
-                    abortSignal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-                    maxRetries: 0,
-                    messages: [
+    function* readInstallmentPlan(model: TextModel, images: readonly ArrayBuffer[], context: PlanContext) {
+        const output = yield* generateObject(model, ModelOutput, {
+            messages: [
+                {
+                    content: [
+                        ...images.map((image) => imagePart(image, "image/jpeg")),
                         {
-                            content: [
-                                ...images.map((image) => ({
-                                    data: new Uint8Array(image),
-                                    mediaType: "image/jpeg",
-                                    type: "file" as const,
-                                })),
-                                {
-                                    text:
-                                        images.length > 1
-                                            ? "Read the payment plans across these screenshots."
-                                            : "Read this payment plan.",
-                                    type: "text",
-                                },
-                            ],
-                            role: "user",
+                            content:
+                                images.length > 1
+                                    ? "Read the payment plans across these screenshots."
+                                    : "Read this payment plan.",
+                            type: "text",
                         },
                     ],
-                    model,
-                    output: Output.object({ schema: modelOutputSchema }),
-                    system: buildPrompt(context),
-                }),
+                    role: "user",
+                },
+            ],
+            system: buildPrompt(context),
+            timeout: REQUEST_TIMEOUT_MS,
         });
         return normalizePlans(output, context);
     },

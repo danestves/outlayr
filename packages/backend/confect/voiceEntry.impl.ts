@@ -34,6 +34,7 @@ import type { LedgerContext } from "./lib/ledgerPrompt";
 import { fixedBurst } from "./lib/limits";
 import { modelCallError } from "./lib/modelCall";
 import { ELEVENLABS_TRANSCRIPTION_MODEL_ID } from "./lib/models";
+import { anthropicAgentModel } from "./lib/sdkModel";
 import { isPro } from "./revenuecat";
 import {
     buildPrompt,
@@ -247,6 +248,7 @@ const speak = FunctionImpl.make(
             const ctx = yield* ActionCtx;
             const {
                 admitted: { transcriptionKey, userId },
+                distinctId,
                 model,
             } = yield* openAiGate(ctx, {
                 admit: Effect.fn("VoiceEntry.speakRungs")(function* speakRungs(caller: UserIdentity) {
@@ -272,6 +274,10 @@ const speak = FunctionImpl.make(
                 route: route({ feature: "voice_entry" }),
                 sessionId: args.threadId,
             });
+            const agentModel = yield* anthropicAgentModel(model, { distinctId, sessionId: args.threadId });
+            if (Option.isNone(agentModel)) {
+                return yield* refuse("notConfigured");
+            }
 
             const heard = yield* transcribeClip(
                 createElevenLabs({ apiKey: Redacted.value(transcriptionKey) }).transcription(
@@ -286,7 +292,7 @@ const speak = FunctionImpl.make(
 
             return yield* parseTurn(ctx, {
                 context: ledgerContext(args),
-                model,
+                model: agentModel.value,
                 text: heard.text,
                 threadId: args.threadId,
                 userId,
@@ -399,6 +405,7 @@ const speakText = FunctionImpl.make(
             const ctx = yield* ActionCtx;
             const {
                 admitted: { userId },
+                distinctId,
                 model,
             } = yield* openAiGate(ctx, {
                 admit: Effect.fn("VoiceEntry.speakTextRungs")(function* speakTextRungs() {
@@ -415,6 +422,10 @@ const speakText = FunctionImpl.make(
                 route: route({ feature: "voice_entry" }),
                 sessionId: args.threadId,
             });
+            const agentModel = yield* anthropicAgentModel(model, { distinctId, sessionId: args.threadId });
+            if (Option.isNone(agentModel)) {
+                return yield* refuse("notConfigured");
+            }
             const text = args.transcript.trim();
             if (text.length === 0) {
                 return failure("unclear");
@@ -426,7 +437,7 @@ const speakText = FunctionImpl.make(
             }
             return yield* parseTurn(ctx, {
                 context: ledgerContext(args),
-                model,
+                model: agentModel.value,
                 text,
                 threadId: args.threadId,
                 userId,

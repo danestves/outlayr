@@ -1,9 +1,9 @@
 /// <reference types="vite/client" />
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { answers, fails, fakeModel } from "@outlayr/ai/testing";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
 import { knowledgeKey, merchantKey } from "@outlayr/money/merchant-key";
-import { MockLanguageModelV4 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import * as Effect from "effect/Effect";
@@ -37,29 +37,7 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-/** `Output.object` parses text as JSON, so a mock returns the payload as one text part. */
-function mockModel(payload: unknown) {
-    return new MockLanguageModelV4({
-        doGenerate: async () => ({
-            content: [{ text: JSON.stringify(payload), type: "text" }],
-            finishReason: { raw: undefined, unified: "stop" },
-            usage: {
-                inputTokens: {
-                    cacheRead: undefined,
-                    cacheWrite: undefined,
-                    noCache: undefined,
-                    total: undefined,
-                },
-                outputTokens: {
-                    reasoning: undefined,
-                    text: undefined,
-                    total: undefined,
-                },
-            },
-            warnings: [],
-        }),
-    });
-}
+const mockModel = (payload: unknown) => fakeModel([answers(payload)]).model;
 
 const BASE_ARGS = {
     aiConsent: AI_CONSENT_VERSION,
@@ -344,16 +322,13 @@ describe("merchantKnowledge cache (Tier 1.5)", () => {
 
 describe("latency/retry regression guard (task 3.13)", () => {
     it("runSuggest never retries a thrown provider error (maxRetries: 0)", async () => {
-        let calls = 0;
-        const throwing = new MockLanguageModelV4({
-            doGenerate: async () => {
-                calls += 1;
-                throw new Error("network down");
-            },
-        });
+        const throwing = fakeModel([
+            fails("network down"),
+            answers({ categoryName: null, domain: null, isNewCategory: false, tags: [] }),
+        ]);
 
-        await expect(Effect.runPromise(runSuggest(throwing, BASE_ARGS))).rejects.toThrow();
-        expect(calls).toBe(1);
+        await expect(Effect.runPromise(runSuggest(throwing.model, BASE_ARGS))).rejects.toThrow();
+        expect(throwing.requests).toHaveLength(1);
     });
 });
 
@@ -815,12 +790,9 @@ describe("runSuggest sanitisation", () => {
 
 describe("runSuggest regionCode", () => {
     it("threads a region code into the model prompt", async () => {
-        const model = mockModel({
-            categoryName: null,
-            domain: null,
-            isNewCategory: false,
-            tags: [],
-        });
+        const { model, requests } = fakeModel([
+            answers({ categoryName: null, domain: null, isNewCategory: false, tags: [] }),
+        ]);
 
         await Effect.runPromise(
             runSuggest(model, {
@@ -830,21 +802,18 @@ describe("runSuggest regionCode", () => {
             })
         );
 
-        const sent = JSON.stringify(model.doGenerateCalls[0]?.prompt);
+        const sent = JSON.stringify(requests[0]?.messages);
         expect(sent).toContain("VE");
     });
 
     it("threads the purchase currency into the prompt", async () => {
-        const model = mockModel({
-            categoryName: null,
-            domain: null,
-            isNewCategory: false,
-            tags: [],
-        });
+        const { model, requests } = fakeModel([
+            answers({ categoryName: null, domain: null, isNewCategory: false, tags: [] }),
+        ]);
 
         await Effect.runPromise(runSuggest(model, { ...BASE_ARGS, categoryTree: [], currency: "EUR" }));
 
-        const sent = JSON.stringify(model.doGenerateCalls[0]?.prompt);
+        const sent = JSON.stringify(requests[0]?.messages);
         expect(sent).toContain("charged in EUR");
     });
 });

@@ -1,18 +1,18 @@
 /// <reference types="vite/client" />
 
-// Opt-in: RUN_LIVE_MODEL_TESTS=1 plus ANTHROPIC_API_KEY from `npx convex env get`. RECEIPT_PATH is a Spanish
+// Opt-in: RUN_LIVE_MODEL_TESTS=1 plus the configured provider's key. RECEIPT_PATH is a Spanish
 // supermarket ticket printing "TOTAL (EUR) 20,56", seven lines and a Visa payment line.
 
 import { readFile } from "node:fs/promises";
 
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { liveModel } from "@outlayr/ai/testing";
+import { route } from "@outlayr/model-router/route";
 import * as Effect from "effect/Effect";
 import { describe, expect, it } from "vite-plus/test";
 
-import { CLAUDE_MODEL_ID } from "./lib/models";
 import { readReceipt } from "./receiptScan";
 
-const live = process.env.RUN_LIVE_MODEL_TESTS === "1" && Boolean(process.env.ANTHROPIC_API_KEY);
+const model = await liveModel(route({ feature: "receipt_scan" }));
 const RECEIPT_PATH = process.env.RECEIPT_PATH ?? "/tmp/receipt-eur.jpg";
 
 async function imageBytes(path: string): Promise<ArrayBuffer> {
@@ -20,11 +20,13 @@ async function imageBytes(path: string): Promise<ArrayBuffer> {
     return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
 }
 
-describe.skipIf(!live)("receipt scan, live", () => {
+describe.skipIf(model === undefined)("receipt scan, live", () => {
     it("a euro supermarket ticket becomes a draft in EUR with its lines", async () => {
-        const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+        if (model === undefined) {
+            throw new Error("no live model");
+        }
         const result = await Effect.runPromise(
-            readReceipt(anthropic(process.env.CLAUDE_MODEL_ID || CLAUDE_MODEL_ID), await imageBytes(RECEIPT_PATH), {
+            readReceipt(model, await imageBytes(RECEIPT_PATH), {
                 accounts: ["Visa Sabadell", "Cash"],
                 categoryTree: [
                     { children: ["Coffee"], name: "Food" },

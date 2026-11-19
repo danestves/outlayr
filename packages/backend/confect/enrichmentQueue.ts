@@ -1,5 +1,6 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
 import { vOnCompleteValidator, Workpool } from "@convex-dev/workpool";
+import { resolveTextModel } from "@outlayr/ai/model";
+import type { TextModel } from "@outlayr/ai/model";
 import { escalation, route } from "@outlayr/model-router/route";
 import type { Route } from "@outlayr/model-router/route";
 import { knowledgeKey, knowledgeKeys } from "@outlayr/money/merchant-key";
@@ -7,7 +8,6 @@ import { v } from "convex/values";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 
 import { components, internal } from "../convex/_generated/api";
 import { internalAction, internalMutation } from "../convex/_generated/server";
@@ -17,11 +17,9 @@ import type { Id } from "./_generated/id";
 import { applyToTree, BACKGROUND_REQUEST_TIMEOUT_MS, rateLimiter, runSuggest } from "./enrichment";
 import { groundedAnswer } from "./groundedLookup";
 import type { GroundedCallDeps } from "./groundedLookup";
-import { traced } from "./lib/aiTracing";
-import { anthropicApiKey } from "./lib/config";
+import { traceModel } from "./lib/aiTracing";
 import type { EnrichmentResult } from "./lib/enrichmentResult";
 import { CANONICAL_CATEGORIES, KEY_PATTERN } from "./lib/merchantTrust";
-import { routedModelId } from "./lib/modelRoute";
 import { runEdge, runTransactionEdge } from "./lib/runEdge";
 import { budgetConfig, estimateMicros } from "./lib/spend";
 
@@ -36,7 +34,7 @@ export const pool = new Workpool(components.enrichmentPool, {
 });
 
 export interface ResolveDeps {
-    fast?: Parameters<typeof runSuggest>[0];
+    fast?: (chosen: Route) => Effect.Effect<Option.Option<TextModel>>;
     grounded?: GroundedCallDeps;
 }
 
@@ -116,27 +114,29 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
             },
             deps.grounded
         );
-        if (deep !== null && (deep.categoryName !== null || deep.domain !== null || deep.merchantName !== null)) {
-            return yield* share(
-                ctx,
-                row,
-                applyToTree(row.categoryTree, deep),
-                yield* routedModelId(route({ feature: "grounded_lookup" }))
-            );
+        const found = deep?.answer ?? null;
+        if (
+            deep !== null &&
+            found !== null &&
+            (found.categoryName !== null || found.domain !== null || found.merchantName !== null)
+        ) {
+            return yield* share(ctx, row, applyToTree(row.categoryTree, found), deep.modelId);
         }
     }
-    const apiKey = yield* anthropicApiKey;
     const request = { budget: yield* budgetState(ctx), feature: "background_suggest" } as const;
+    const resolve =
+        deps.fast ??
+        ((chosen: Route) =>
+            Effect.map(
+                resolveTextModel(chosen),
+                Option.map((model) => traceModel(model, { distinctId }))
+            ));
     const suggest = Effect.fn("EnrichmentQueue.suggest")(function* suggest(chosen: Route) {
-        const modelId = yield* routedModelId(chosen);
-        const model =
-            deps.fast ??
-            (Option.isSome(apiKey)
-                ? traced(createAnthropic({ apiKey: Redacted.value(apiKey.value) })(modelId), chosen, { distinctId })
-                : null);
-        if (model === null) {
+        const resolved = yield* resolve(chosen);
+        if (Option.isNone(resolved)) {
             return null;
         }
+        const model = resolved.value;
         const { grounding: _grounding, ...answer } = yield* runSuggest(model, {
             categoryTree: row.categoryTree,
             currency: row.currency,
@@ -146,7 +146,7 @@ export const resolveJob = Effect.fn("EnrichmentQueue.resolveJob")(function* reso
             regionCode: row.regionCode,
             timeoutMs: BACKGROUND_REQUEST_TIMEOUT_MS,
         });
-        return { answer, modelId };
+        return { answer, modelId: model.modelId };
     });
     const firstTry = yield* suggest(route(request));
     if (firstTry === null) {

@@ -14,7 +14,7 @@ export const openai: TextProvider = {
             Option.map(
                 (apiKey) => (modelId: string) =>
                     // SAFETY: env picks the id; one the provider does not serve fails as a provider error.
-                    createOpenaiChat(modelId as Model, Redacted.value(apiKey))
+                    createOpenaiChat(modelId as Model, Redacted.value(apiKey), { maxRetries: 0 })
             )
         )
     ),

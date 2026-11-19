@@ -1,11 +1,10 @@
-import { createAnthropic } from "@ai-sdk/anthropic";
+import { resolveTextModel } from "@outlayr/ai/model";
+import type { TextModel } from "@outlayr/ai/model";
 import { route } from "@outlayr/model-router/route";
 import { knowledgeKeys } from "@outlayr/money/merchant-key";
-import type { LanguageModel } from "ai";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
-import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
 import { internal } from "../convex/_generated/api";
@@ -14,10 +13,8 @@ import type { EnrichmentJobsDoc } from "./_generated/docs";
 import { CaptureRequest } from "./captureLookup.spec";
 import { applyToTree, runSuggest } from "./enrichment";
 import { share } from "./enrichmentQueue";
-import { traced } from "./lib/aiTracing";
-import { anthropicApiKey } from "./lib/config";
+import { traceModel } from "./lib/aiTracing";
 import type { EnrichmentResult } from "./lib/enrichmentResult";
-import { routedModelId } from "./lib/modelRoute";
 import { sha256Hex } from "./lib/sha256Hex";
 
 // Under the intent's 5s request timeout: a Wallet automation waits on this before its push goes out.
@@ -34,17 +31,11 @@ export interface QuickAnswer {
 }
 
 const fastModel = Effect.fn("CaptureLookup.fastModel")(function* fastModel(row: EnrichmentJobsDoc) {
-    const apiKey = yield* anthropicApiKey;
-    if (Option.isNone(apiKey)) {
-        return null;
-    }
     const distinctId = row.shareAnalytics === true ? row.userId : undefined;
-    return traced(
-        createAnthropic({ apiKey: Redacted.value(apiKey.value) })(yield* routedModelId(CAPTURE_ROUTE)),
-        CAPTURE_ROUTE,
-        {
-            distinctId,
-        }
+    const resolved = yield* resolveTextModel(CAPTURE_ROUTE);
+    return resolved.pipe(
+        Option.map((model) => traceModel(model, { distinctId })),
+        Option.getOrNull
     );
 });
 
@@ -52,7 +43,7 @@ const fastModel = Effect.fn("CaptureLookup.fastModel")(function* fastModel(row: 
 export const quickAnswer = Effect.fn("CaptureLookup.quickAnswer")(function* quickAnswer(
     ctx: CaptureCtx,
     row: EnrichmentJobsDoc,
-    fast?: LanguageModel
+    fast?: TextModel
 ) {
     const now = yield* Clock.currentTimeMillis;
     const cached = yield* Effect.promise(() =>
@@ -75,7 +66,7 @@ export const quickAnswer = Effect.fn("CaptureLookup.quickAnswer")(function* quic
                   regionCode: row.regionCode,
                   timeoutMs: CAPTURE_TIMEOUT_MS,
               }).pipe(Effect.catchTags({ ModelCallError: () => Effect.succeed(null) }));
-    if (suggested === null) {
+    if (suggested === null || model === null) {
         const missed: QuickAnswer = {
             answer: cached === null ? null : applyToTree(row.categoryTree, cached),
             final: false,
@@ -87,7 +78,7 @@ export const quickAnswer = Effect.fn("CaptureLookup.quickAnswer")(function* quic
         const partial: QuickAnswer = { answer, final: false };
         return partial;
     }
-    const shared = yield* share(ctx, row, answer, yield* routedModelId(CAPTURE_ROUTE));
+    const shared = yield* share(ctx, row, answer, model.modelId);
     const done: QuickAnswer = { answer: shared, final: true };
     return done;
 });
@@ -99,7 +90,7 @@ const refuse = (status: 400 | 401 | 403) => Response.json({ refused: true }, { s
 export const captureEnrich = Effect.fn("CaptureLookup.enrich")(function* captureEnrich(
     ctx: CaptureCtx,
     request: Request,
-    fast?: LanguageModel
+    fast?: TextModel
 ) {
     const key = BEARER.exec(request.headers.get("Authorization") ?? "")?.[1];
     if (key === undefined) {

@@ -1,10 +1,14 @@
 /// <reference types="vite/client" />
 
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import { resolveTextModel } from "@outlayr/ai/model";
+import { answers, fails, fakeModel } from "@outlayr/ai/testing";
+import type { FakeResponseStep } from "@outlayr/ai/testing";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
-import { MockLanguageModelV3 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api, internal } from "../convex/_generated/api";
@@ -14,6 +18,11 @@ import { runEdge } from "./lib/runEdge";
 import { chunkPages, joinPageLines, rateLimiter, readStatement, redactStatementText } from "./pdfImport";
 import { PDF_CONTENT_TYPE } from "./pdfImport.spec";
 import { authenticatedAs, grantPro, seedAuthUser, statementPdf, statementPdfPages } from "./test.helpers";
+
+vi.mock(import("@outlayr/ai/model"), async (importOriginal) => ({
+    ...(await importOriginal()),
+    resolveTextModel: vi.fn<typeof resolveTextModel>(),
+}));
 
 const modules = import.meta.glob("../convex/**/*.ts");
 
@@ -50,30 +59,16 @@ const ROWS = [
     { amount: 2000, currency: null, date: "2026-03-05", label: "NOMINA ACME" },
 ];
 
-function generate(text: string) {
-    return {
-        content: [{ text, type: "text" as const }],
-        finishReason: { raw: undefined, unified: "stop" as const },
-        usage: {
-            inputTokens: { cacheRead: undefined, cacheWrite: undefined, noCache: undefined, total: undefined },
-            outputTokens: { reasoning: undefined, text: undefined, total: undefined },
-        },
-        warnings: [],
-    };
-}
+const mockModel = (text: string) => fakeModel([{ text }], { repeat: true });
 
-function mockModel(text: string) {
-    return new MockLanguageModelV3({ doGenerate: async () => generate(text) });
-}
+type Fake = ReturnType<typeof fakeModel>;
 
 const CONTEXT = { regionCode: "ES", today: "2026-04-02" };
 
-const read = (model: MockLanguageModelV3, bytes: Uint8Array = STATEMENT) =>
+const read = ({ model }: Fake, bytes: Uint8Array = STATEMENT) =>
     runEdge(readStatement(model, new Uint8Array(bytes), CONTEXT));
 
-function promptOf(model: MockLanguageModelV3, call = 0): string {
-    return JSON.stringify(model.doGenerateCalls[call]?.prompt);
-}
+const promptOf = ({ requests }: Fake, call = 0) => JSON.stringify(requests[call]?.messages);
 
 describe(redactStatementText, () => {
     it.each([
@@ -202,25 +197,12 @@ describe(readStatement, () => {
     });
 
     it("answers providerError when the model call fails", async () => {
-        const model = new MockLanguageModelV3({
-            doGenerate: async () => {
-                throw new Error("overloaded");
-            },
-        });
-
-        await expect(read(model)).resolves.toStrictEqual({ status: "providerError" });
+        await expect(read(fakeModel([fails("overloaded")]))).resolves.toStrictEqual({ status: "providerError" });
     });
 
     it("fails the whole read when one chunk fails, since a partial statement looks complete", async () => {
-        let calls = 0;
-        const model = new MockLanguageModelV3({
-            doGenerate: async () => {
-                calls += 1;
-                if (calls === 2) {
-                    throw new Error("overloaded");
-                }
-                return generate(JSON.stringify({ rows: ROWS }));
-            },
+        const model = fakeModel([answers({ rows: ROWS }), fails("overloaded"), answers({ rows: ROWS })], {
+            repeat: true,
         });
         const fullPage = Array.from({ length: 50 }, (_, line) => [
             `0${(line % 9) + 1}/03`,
@@ -229,7 +211,7 @@ describe(readStatement, () => {
         ]);
 
         await expect(read(model, statementPdf(fullPage, 3))).resolves.toStrictEqual({ status: "providerError" });
-        expect(calls).toBeGreaterThan(1);
+        expect(model.requests.length).toBeGreaterThan(1);
     });
 
     it("gives a later chunk the statement's header, so its yearless dates can resolve", async () => {
@@ -242,7 +224,7 @@ describe(readStatement, () => {
 
         await read(model, statementPdf(fullPage, 3));
 
-        expect(model.doGenerateCalls.length).toBeGreaterThan(1);
+        expect(model.requests.length).toBeGreaterThan(1);
         expect(promptOf(model, 0)).not.toContain("statement_header");
         expect(promptOf(model, 1)).toContain("statement_header");
     });
@@ -270,7 +252,7 @@ describe(readStatement, () => {
         await expect(read(model, statementPdf([["Scanned page"]]))).resolves.toStrictEqual({
             status: "extractionFailed",
         });
-        expect(model.doGenerateCalls).toHaveLength(0);
+        expect(model.requests).toHaveLength(0);
     });
 
     it("answers extractionFailed for a file that is not a PDF", async () => {
@@ -290,35 +272,20 @@ describe(readStatement, () => {
 
 const CATEGORY_TREE = [{ children: ["Coffee"], name: "Food" }];
 
-function anthropicReply(payload: unknown) {
-    return Response.json({
-        content: [{ text: JSON.stringify(payload), type: "text" }],
-        id: "msg",
-        model: "test",
-        role: "assistant",
-        stop_reason: "end_turn",
-        type: "message",
-        usage: { input_tokens: 1, output_tokens: 1 },
-    });
+function stubModel(respond: FakeResponseStep) {
+    const fake = fakeModel([respond], { repeat: true });
+    vi.mocked(resolveTextModel).mockImplementation((route) => Effect.succeed(Option.some({ ...fake.model, route })));
+    return fake.requests;
 }
 
-/** Answers a statement chunk with `rows` and a classification with `mapping`, recording each request body. */
-function stubAnthropic(rows: unknown[], mapping: unknown[]) {
-    const bodies: string[] = [];
-    vi.stubGlobal(
-        "fetch",
-        vi.fn(async (_url: string, init?: RequestInit) => {
-            const body = String(init?.body);
-            bodies.push(body);
-            return anthropicReply(body.includes("<statement>") ? { rows } : { mapping });
-        })
+const stubAnswers = (rows: unknown[], mapping: unknown[]) =>
+    stubModel(({ request }) =>
+        answers(JSON.stringify(request.messages).includes("<statement>") ? { rows } : { mapping })
     );
-    return bodies;
-}
 
 async function setup({ pro = true } = {}) {
-    vi.stubEnv("ANTHROPIC_API_KEY", "test-anthropic-key");
     vi.stubEnv("POSTHOG_API_KEY", "");
+    const requests = stubModel(fails("unexpected model call"));
     const t = convexTest(schema, modules);
     rateLimiterTest.register(t);
     revenuecatTest.register(t);
@@ -337,13 +304,13 @@ async function setup({ pro = true } = {}) {
     });
     const stored = (storageId: Awaited<ReturnType<typeof upload>>) =>
         t.run(async (ctx) => (await ctx.storage.get(storageId)) !== null);
-    return { args, asUser, identity, stored, t, upload };
+    return { args, asUser, identity, requests, stored, t, upload };
 }
 
 describe("pdfImport.extract", () => {
     it("reads the statement, suggests categories and deletes the file", async () => {
         const { args, asUser, stored, upload } = await setup();
-        const bodies = stubAnthropic(ROWS, [{ categoryName: "Coffee", label: "STARBUCKS CENTRO" }]);
+        const bodies = stubAnswers(ROWS, [{ categoryName: "Coffee", label: "STARBUCKS CENTRO" }]);
         const storageId = await upload();
 
         await expect(asUser.action(api.pdfImport.extract, args(storageId))).resolves.toStrictEqual({
@@ -357,7 +324,7 @@ describe("pdfImport.extract", () => {
 
     it("tells the client which pages had no text to read", async () => {
         const { args, asUser, upload } = await setup();
-        stubAnthropic(ROWS, [{ categoryName: "Coffee", label: "STARBUCKS CENTRO" }]);
+        stubAnswers(ROWS, [{ categoryName: "Coffee", label: "STARBUCKS CENTRO" }]);
         const storageId = await upload(PARTLY_SCANNED);
 
         await expect(asUser.action(api.pdfImport.extract, args(storageId))).resolves.toMatchObject({
@@ -382,7 +349,7 @@ describe("pdfImport.extract", () => {
                 });
             }
         });
-        const bodies = stubAnthropic(ROWS, []);
+        const bodies = stubAnswers(ROWS, []);
 
         const reply = await asUser.action(api.pdfImport.extract, args(await upload()));
 
@@ -393,13 +360,8 @@ describe("pdfImport.extract", () => {
 
     it("keeps the rows and flags degraded when only the classification fails", async () => {
         const { args, asUser, upload } = await setup();
-        vi.stubGlobal(
-            "fetch",
-            vi.fn(async (_url: string, init?: RequestInit) =>
-                String(init?.body).includes("<statement>")
-                    ? anthropicReply({ rows: ROWS })
-                    : new Response("overloaded", { status: 529 })
-            )
+        stubModel(({ request }) =>
+            JSON.stringify(request.messages).includes("<statement>") ? answers({ rows: ROWS }) : fails("overloaded")
         );
 
         await expect(asUser.action(api.pdfImport.extract, args(await upload()))).resolves.toStrictEqual({
@@ -412,7 +374,7 @@ describe("pdfImport.extract", () => {
 
     it("deletes the statement when the read fails too", async () => {
         const { args, asUser, stored, upload } = await setup();
-        stubAnthropic([], []);
+        stubAnswers([], []);
         const storageId = await upload();
 
         await expect(asUser.action(api.pdfImport.extract, args(storageId))).resolves.toMatchObject({
@@ -422,26 +384,22 @@ describe("pdfImport.extract", () => {
     });
 
     it("refuses another stored file without deleting it", async () => {
-        const { args, asUser, stored, upload } = await setup();
-        const fetch = vi.fn();
-        vi.stubGlobal("fetch", fetch);
+        const { args, asUser, requests, stored, upload } = await setup();
         const photo = await upload(new Uint8Array([1, 2, 3]), "image/jpeg");
 
         await expect(asUser.action(api.pdfImport.extract, args(photo))).resolves.toMatchObject({ status: "invalid" });
         await expect(stored(photo)).resolves.toBeTruthy();
-        expect(fetch).not.toHaveBeenCalled();
+        expect(requests).toHaveLength(0);
     });
 
     it("sends nothing from a build without the current AI consent", async () => {
-        const { args, asUser, upload } = await setup();
-        const fetch = vi.fn();
-        vi.stubGlobal("fetch", fetch);
+        const { args, asUser, requests, upload } = await setup();
         const { aiConsent: _consent, ...oldBuild } = args(await upload());
 
         await expect(asUser.action(api.pdfImport.extract, oldBuild)).resolves.toMatchObject({
             status: "notConfigured",
         });
-        expect(fetch).not.toHaveBeenCalled();
+        expect(requests).toHaveLength(0);
     });
 
     it("refuses a free user before a token is spent", async () => {
@@ -456,7 +414,7 @@ describe("pdfImport.extract", () => {
 
     it("stops at the per-user bucket, whose refill is a fraction of a token an hour", async () => {
         const { args, asUser, upload } = await setup();
-        const bodies = stubAnthropic(ROWS, []);
+        const bodies = stubAnswers(ROWS, []);
         const burst = await runEdge(perUserBurst("pdfImport", true));
 
         for (let index = 0; index < burst.capacity; index += 1) {
