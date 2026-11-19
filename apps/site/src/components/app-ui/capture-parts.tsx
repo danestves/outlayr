@@ -3,11 +3,11 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { CSSProperties, ReactNode } from "react";
 
-import oriDark from "../../../../native/assets/images/ori/voice-dark.webp?url";
-import oriLight from "../../../../native/assets/images/ori/voice-light.webp?url";
 import { useReplica } from "./canvas";
 import { GlassCircle, SystemText } from "./chrome";
 import { DISPLAY_CORNER } from "./keyboard";
+import oriDark from "./ori/voice-dark.webp?url";
+import oriLight from "./ori/voice-light.webp?url";
 import { SHEET } from "./parts";
 
 export const MODAL = { bottom: 34, close: 60 } as const;
