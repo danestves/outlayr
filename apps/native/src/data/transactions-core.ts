@@ -310,8 +310,8 @@ export const transactionsRepo = {
         yield* query("update", () =>
             db
                 .update(transactions)
-                .set({ unreviewed: false })
-                .where(inArray(transactions.id, [...ids]))
+                .set({ unreviewed: false, updatedAt: new Date() })
+                .where(and(inArray(transactions.id, [...ids]), eq(transactions.unreviewed, true)))
         );
     }),
 
