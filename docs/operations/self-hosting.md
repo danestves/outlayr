@@ -90,8 +90,8 @@ Builds need no Hugeicons Pro token: only the native app and the marketing site u
 | `GOOGLE_CLIENT_ID_WEB`, `GOOGLE_CLIENT_ID_IOS`, `GOOGLE_CLIENT_SECRET` | One provider | Google sign-in. |
 | `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY`, `APPLE_WEB_CLIENT_ID` | One provider | Apple sign-in. `APPLE_WEB_CLIENT_ID` defaults to `APPLE_CLIENT_ID`. |
 | `JWKS` | No | Static auth signing key, see [auth-signing-key.md](./auth-signing-key.md). |
-| `ANTHROPIC_API_KEY`, `AI_MODEL_ID`, `AI_FAST_MODEL_ID`, `AI_GROUNDED_MODEL_ID` | No | Scans, imports and enrichment. Model IDs default to the ones in the code. |
-| `ELEVENLABS_API_KEY` | No | Voice entry transcription. |
+| `ANTHROPIC_API_KEY`, `AI_MODEL_ID`, `AI_FAST_MODEL_ID`, `AI_GROUNDED_MODEL_ID` | No | Scans, imports and enrichment. Model IDs default to the ones in the code. Other providers: [self-hosted-ai.md](./self-hosted-ai.md). |
+| `ELEVENLABS_API_KEY` | No | Voice entry transcription. Other providers: [self-hosted-ai.md](./self-hosted-ai.md). |
 | `OXR_APP_ID`, `COTIZAVE_API_KEY` | No | Exchange rates from Open Exchange Rates and Cotizave. |
 | `R2_BUCKET`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | No | Receipt photos, in R2 or another S3-compatible bucket. |
 | `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | No | Web push. The keys are a P-256 pair in base64url. |
@@ -116,7 +116,7 @@ No sign-in works until `convex.env` has `BETTER_AUTH_SECRET` and at least one pr
 - **Google.** Create a web OAuth client with the redirect URI `<APP_ORIGIN>/api/auth/callback/google`. Google accepts only HTTPS URLs on a public domain (or `http://localhost`), so a plain-HTTP LAN address needs email sign-in instead. All three variables must be set: without an iOS client, set `GOOGLE_CLIENT_ID_IOS` to the web client ID.
 - **Apple.** Needs a Services ID, a Sign in with Apple key and an HTTPS `APP_ORIGIN`, since Apple refuses plain HTTP return URLs.
 
-Without RevenueCat every account stays on the free plan, with the free limits on scans and imports. AI features also need `ANTHROPIC_API_KEY` and each person's AI consent in the app.
+Without RevenueCat every account stays on the free plan, with the free limits on scans and imports. AI features also need a provider key ([self-hosted-ai.md](./self-hosted-ai.md)) and each person's AI consent in the app.
 
 ## Moving to a new address
 
