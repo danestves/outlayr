@@ -333,7 +333,7 @@ export const readStatement = Effect.fn("PdfImport.readStatement")(
         }
         return rows.length === 0
             ? { status: "extractionFailed" }
-            : { rows, status: "ok", unreadPages: unreadPageNumbers(redacted) };
+            : { rows, status: "ok", unreadPages: unreadPageNumbers(pages) };
     },
     Effect.catchTags({
         ModelCallError: ({ reason }) =>

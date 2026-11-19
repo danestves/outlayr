@@ -257,6 +257,13 @@ describe(readStatement, () => {
         });
     });
 
+    it("counts a short page's text before masking, so a long account number doesn't make it look unread", async () => {
+        const model = mockModel(JSON.stringify({ rows: ROWS }));
+        const bytes = statementPdfPages([STATEMENT_ROWS, STATEMENT_ROWS, [["03/03", "12345678901234567890", "-1"]]]);
+
+        await expect(read(model, bytes)).resolves.toMatchObject({ unreadPages: [] });
+    });
+
     it("answers extractionFailed when the text layer is too thin to be a statement", async () => {
         const model = mockModel(JSON.stringify({ rows: ROWS }));
 
