@@ -5,10 +5,14 @@ import { addDays, daysBetween } from "./ledger";
 const PERIOD_KEY = /^(\d{4})-(0[1-9]|1[0-2])$/;
 const YEAR_KEY = /^\d{4}$/;
 const WEEK_KEY = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+const RANGE_KEY = /^(\d{4})-(0[1-9]|1[0-2])\/(quarter|year)$/;
+const RANGE_MONTHS = { quarter: 3, year: 12 } as const;
 const WALL_CLOCK = fixedOffset(0);
 const DAYS_IN_WEEK = 7;
 
 export type PeriodKind = "month" | "week" | "year";
+
+export type RangeKind = keyof typeof RANGE_MONTHS;
 
 export interface Period {
     days: number;
@@ -35,12 +39,33 @@ export function periodKindOf(key: string): PeriodKind | null {
     return WEEK_KEY.test(key) && !Number.isNaN(wallNoon(key)) ? "week" : null;
 }
 
+export const rangeKeyOf = (month: string, kind: RangeKind | null) => (kind ? `${month}/${kind}` : month);
+
+const isRangeKind = (value: string | undefined): value is RangeKind => value === "quarter" || value === "year";
+
+function rangeParts(key: string) {
+    const [, year, month, kind] = RANGE_KEY.exec(key) ?? [];
+    return year && month && isRangeKind(kind) ? { kind, month: `${year}-${month}`, year } : null;
+}
+
+export const rangeKindOf = (key: string): RangeKind | null => rangeParts(key)?.kind ?? null;
+
+export const lastMonthOf = (key: string) => rangeParts(key)?.month ?? key;
+
 function monthOf(key: string, firstDayOfMonth: number): Period {
     const { from, to } = monthWindow(wallMidnight(`${key}-28`), WALL_CLOCK, firstDayOfMonth, 0);
     return { days: daysBetween(from, to) + 1, from, key, to };
 }
 
 export function periodOf(key: string, firstDayOfMonth: number): Period {
+    const range = rangeParts(key);
+    if (range) {
+        const first =
+            range.kind === "year" ? `${range.year}-01` : shiftPeriodKey(range.month, 1 - RANGE_MONTHS.quarter);
+        const { from } = monthOf(first, firstDayOfMonth);
+        const { to } = monthOf(range.month, firstDayOfMonth);
+        return { days: daysBetween(from, to) + 1, from, key, to };
+    }
     const kind = periodKindOf(key);
     if (kind === "week") {
         return { days: DAYS_IN_WEEK, from: key, key, to: addDays(key, DAYS_IN_WEEK - 1) };
@@ -71,7 +96,12 @@ export function periodKeyIn(kind: PeriodKind, day: string, calendar: Calendar) {
     return kind === "year" ? month.slice(0, 4) : month;
 }
 
-export function shiftPeriodKey(key: string, steps: number) {
+// A quarter steps to the three months before it; a year to the same months a year earlier.
+export function shiftPeriodKey(key: string, steps: number): string {
+    const range = rangeParts(key);
+    if (range) {
+        return rangeKeyOf(shiftPeriodKey(range.month, steps * RANGE_MONTHS[range.kind]), range.kind);
+    }
     const kind = periodKindOf(key);
     if (kind === "week") {
         return addDays(key, steps * DAYS_IN_WEEK);

@@ -12,7 +12,7 @@ const twMerge = extendTailwindMerge({
             ease: [isAppToken],
             radius: [isAppToken],
             spacing: [isAppToken],
-            text: ["app-micro", "app-caption", "app-label", "app-body", "app-title", "app-heading"],
+            text: ["app-micro", "app-caption", "app-label", "app-body", "app-title", "app-heading", "app-figure"],
         },
     },
 });

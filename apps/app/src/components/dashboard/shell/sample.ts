@@ -240,6 +240,7 @@ export function sampleDashboard(now: number): Dashboard {
             category: null,
             currentKey,
             period,
+            range: period,
             span: period,
         },
         ledger,

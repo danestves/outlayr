@@ -1,4 +1,5 @@
 import Add01Icon from "@hugeicons/core-free-icons/Add01Icon";
+import TransactionHistoryIcon from "@hugeicons/core-free-icons/TransactionHistoryIcon";
 import Upload04Icon from "@hugeicons/core-free-icons/Upload04Icon";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Link } from "@tanstack/react-router";
@@ -14,15 +15,16 @@ import { FeeTile, MerchantTile, TransferTile } from "@/components/ledger/tiles";
 import { openAccounts } from "@/lib/dashboard-series-ledger";
 import { periodOf } from "@/lib/dashboard-series-period";
 import { useDisplayFormat } from "@/lib/ledger-settings";
+import { viewTransition } from "@/lib/motion";
 import { photoSrc } from "@/lib/photo-src";
 
 import { CardFrame } from "./card-frame";
 import { useCatalog } from "./catalog";
+import { Empty } from "./empty";
 import { useCategoryName, useDateFormat } from "./format";
 import type { SetupState } from "./model";
 import { figureOf, foldFees, viewRows } from "./rows";
 import type { FoldedRow } from "./rows";
-import { Cover, GhostRows, PhoneButton, QuietTable, TABLE_FADE } from "./setup";
 
 const ROWS_SHOWN = 10;
 const LONG_FEE = 8;
@@ -39,9 +41,9 @@ const SIDE = `${CELL} hidden truncate @2xl:table-cell`;
 const FIGURE = `${CELL} dash-figure whitespace-nowrap @max-sm:overflow-visible`;
 const NAME = `${CELL} max-w-0 @2xl:max-w-none`;
 const SIDE_HEAD = `${HEAD} hidden @2xl:table-cell`;
-const SECOND_LINE = "dash-figure text-muted-foreground block text-xs leading-4";
+const SECOND_LINE = "dash-figure text-muted-foreground text-app-caption block";
 const ARRIVAL_LINE =
-    "dash-figure text-muted-foreground flex justify-end text-xs leading-4 @max-sm:w-0 @max-sm:min-w-full";
+    "dash-figure text-muted-foreground text-app-caption flex justify-end @max-sm:w-0 @max-sm:min-w-full";
 
 export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupState | null }) {
     const { filters, ledger, setFilters } = useDashboard();
@@ -59,11 +61,11 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
             foldFees(
                 viewRows(
                     ledger,
-                    { accounts: filters.accounts, categories: filters.categories, period: filters.period },
+                    { accounts: filters.accounts, categories: filters.categories, period: filters.range },
                     "newest"
                 ).filter((row) => tab === "all" || ("income" in row && row.income === (tab === "incomeTab")))
             ),
-        [filters.accounts, filters.categories, filters.period, ledger, tab]
+        [filters.accounts, filters.categories, filters.range, ledger, tab]
     );
     const rows = useMemo(() => every.slice(0, ROWS_SHOWN), [every]);
     const tableId = useId();
@@ -72,22 +74,49 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
         const month = date.month(current.key);
         return (
             <CardFrame className="@4xl:col-span-2" title={copy.title}>
-                <div className="dash-empty relative isolate min-h-[299px] justify-end pt-0 pb-7">
-                    <QuietTable />
-                    <b className="text-[15px] font-semibold">{copy.quietTitle}</b>
-                    <p className="text-muted-foreground text-[13px]">
-                        {copy.quietLine({ from: date.day(filters.period.from), to: date.day(filters.period.to) })}
-                    </p>
-                    {filters.period.key === filters.currentKey ? null : (
-                        <Button className="mt-2.5" onClick={() => setFilters({ period: null })}>
-                            {copy.backTo({ month: `${month.charAt(0).toLocaleUpperCase()}${month.slice(1)}` })}
-                        </Button>
-                    )}
-                </div>
+                <Empty
+                    action={
+                        filters.range.key === filters.currentKey ? null : (
+                            <Button onClick={() => setFilters({ period: null, range: null })}>
+                                {copy.backTo({ month: `${month.charAt(0).toLocaleUpperCase()}${month.slice(1)}` })}
+                            </Button>
+                        )
+                    }
+                    icon={TransactionHistoryIcon}
+                    line={copy.quietLine({ from: date.day(filters.range.from), to: date.day(filters.range.to) })}
+                    title={copy.quietTitle}
+                />
             </CardFrame>
         );
     }
-    const active = setup?.step === "entry";
+    if (setup && !setup.done.entry) {
+        const active = setup.step === "entry";
+        return (
+            <CardFrame className="@4xl:col-span-2" highlighted={active} title={copy.title}>
+                <Empty
+                    action={
+                        <>
+                            <Button onClick={() => open({ kind: "entry" })} variant={active ? "default" : "outline"}>
+                                <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
+                                {add.entry}
+                            </Button>
+                            <Button
+                                nativeButton={false}
+                                render={<Link to="/import" viewTransition={viewTransition("push-left")} />}
+                                variant="outline"
+                            >
+                                <HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />
+                                {setupCopy.import}
+                            </Button>
+                        </>
+                    }
+                    icon={TransactionHistoryIcon}
+                    line={active ? setupCopy.entryLast : setupCopy.entryLine}
+                    title={setupCopy.entryTitle}
+                />
+            </CardFrame>
+        );
+    }
     const showAccount = Boolean(setup) || openAccounts(ledger.books).length > 1;
     const count = (value: number) => value.toLocaleString(locale);
     const accountName = (id: string) => ledger.accounts.get(id)?.name ?? "";
@@ -118,12 +147,12 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
         <CardFrame
             action={
                 <Tabs onValueChange={(value) => isTab(value) && setTab(value)} value={tab}>
-                    <Tabs.List className="bg-background/40 gap-0 rounded-[9px] p-0.5 [&>[data-slot=tabs-indicator]]:rounded-[7px] [&>[data-slot=tabs-indicator]]:shadow-none">
+                    <Tabs.List className="bg-background/40 rounded-app-sm [&>[data-slot=tabs-indicator]]:rounded-app-xs gap-0 p-0.5 [&>[data-slot=tabs-indicator]]:shadow-none">
                         {TABS.map((each) => (
                             <Tabs.Trigger
                                 aria-controls={tableId}
                                 id={`${tableId}-${each}`}
-                                className="h-[26px] rounded-[7px] px-2.5 text-[13px] leading-5"
+                                className="rounded-app-xs text-app-label h-6.5 px-2.5"
                                 key={each}
                                 value={each}
                             >
@@ -133,11 +162,11 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                     </Tabs.List>
                 </Tabs>
             }
-            className={`@4xl:col-span-2 ${setup ? "min-h-[375px] @4xl:h-[375px]" : ""} ${active ? "ring-primary/55 ring-1" : ""}`}
+            className="@4xl:col-span-2"
             footer={
                 setup || every.length === 0 ? undefined : (
                     <>
-                        <span className="text-muted-foreground text-[13px] leading-5">{copy.entries}</span>
+                        <span className="text-muted-foreground">{copy.entries}</span>
                         <span className="dash-figure font-medium">
                             {every.length <= ROWS_SHOWN
                                 ? count(every.length)
@@ -150,6 +179,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                 <Link
                                     search={(prev) => (tab === "all" ? prev : { ...prev, type: TYPE_OF[tab] })}
                                     to="/transactions"
+                                    viewTransition={viewTransition("push-left")}
                                 />
                             }
                             size="sm"
@@ -168,11 +198,10 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
             <div aria-labelledby={`${tableId}-${tab}`} id={tableId} role="tabpanel">
                 <Table
                     aria-label={copy.title.value}
-                    aria-rowcount={setup ? undefined : Math.max(rows.length, 1) + 1}
+                    aria-rowcount={Math.max(rows.length, 1) + 1}
                     className="@2xl:table-fixed"
                     containerClassName="overflow-clip"
                     maxHeight="none"
-                    striped={Boolean(setup)}
                 >
                     <Table.Header className="in-data-[sticky]:bg-card">
                         <Table.Row aria-rowindex={1} className="border-0">
@@ -190,10 +219,10 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                         </Table.Row>
                     </Table.Header>
                     <Table.Body>
-                        {rows.length === 0 && !setup ? (
+                        {rows.length === 0 ? (
                             <Table.Row aria-rowindex={2} className="border-0">
                                 <Table.Cell
-                                    className="text-muted-foreground py-8 text-[13px] first:ps-3.5"
+                                    className="text-muted-foreground text-app-label py-8 first:ps-3.5"
                                     colSpan={showAccount ? 5 : 4}
                                 >
                                     {copy.empty}
@@ -223,10 +252,11 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                                             type: tab === "all" ? undefined : TYPE_OF[tab],
                                                         })}
                                                         to="/transactions"
+                                                        viewTransition={viewTransition("push-left")}
                                                     >
                                                         {names}
                                                     </Link>
-                                                    <span className="text-muted-foreground block truncate text-xs font-normal @2xl:hidden">
+                                                    <span className="text-muted-foreground text-app-caption block truncate font-normal @2xl:hidden">
                                                         {day}
                                                         <span className="hidden @sm:inline"> · {copy.transfer}</span>
                                                     </span>
@@ -273,10 +303,11 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                                         type: tab === "all" ? undefined : TYPE_OF[tab],
                                                     })}
                                                     to="/transactions"
+                                                    viewTransition={viewTransition("push-left")}
                                                 >
                                                     {merchant}
                                                 </Link>
-                                                <span className="text-muted-foreground block truncate text-xs font-normal @2xl:hidden">
+                                                <span className="text-muted-foreground text-app-caption block truncate font-normal @2xl:hidden">
                                                     {day}
                                                     <span className="hidden @sm:inline">
                                                         {" "}
@@ -290,7 +321,7 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                         {standsAlone ? (
                                             <span className="text-muted-foreground">{feeKind}</span>
                                         ) : (
-                                            <span className="flex min-w-0 items-center gap-[7px]">
+                                            <span className="flex min-w-0 items-center gap-2">
                                                 <span
                                                     aria-hidden
                                                     className="size-1.5 shrink-0 rounded-full bg-current"
@@ -318,27 +349,9 @@ export function Transactions({ quiet, setup }: { quiet: boolean; setup: SetupSta
                                 </Table.Row>
                             );
                         })}
-                        {setup ? <GhostRows cell={CELL} label={copy.title.value} side={SIDE} /> : null}
                     </Table.Body>
                 </Table>
             </div>
-            {setup && rows.length > 0 ? <Cover fade={TABLE_FADE} /> : null}
-            {setup?.done.entry === false ? (
-                <Cover line={active ? setupCopy.entryLast : setupCopy.entryLine} title={setupCopy.entryTitle}>
-                    <Button
-                        onClick={() => open({ kind: "entry" })}
-                        size={active ? "md" : "sm"}
-                        variant={active ? "default" : "outline"}
-                    >
-                        <HugeiconsIcon icon={Add01Icon} strokeWidth={2} />
-                        {add.entry}
-                    </Button>
-                    <PhoneButton size="sm" variant="outline">
-                        <HugeiconsIcon icon={Upload04Icon} strokeWidth={2} />
-                        {setupCopy.import}
-                    </PhoneButton>
-                </Cover>
-            ) : null}
         </CardFrame>
     );
 }

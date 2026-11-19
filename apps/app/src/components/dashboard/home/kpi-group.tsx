@@ -1,5 +1,11 @@
+import ArrowDownLeft01Icon from "@hugeicons/core-free-icons/ArrowDownLeft01Icon";
+import ArrowUpRight01Icon from "@hugeicons/core-free-icons/ArrowUpRight01Icon";
+import Invoice01Icon from "@hugeicons/core-free-icons/Invoice01Icon";
+import MoneySafeIcon from "@hugeicons/core-free-icons/MoneySafeIcon";
+import { HugeiconsIcon } from "@hugeicons/react";
+import type { IconSvgElement } from "@hugeicons/react";
 import { Kpi } from "panelui-web/kpi";
-import type { KpiColor, KpiGoodDirection } from "panelui-web/kpi";
+import type { KpiColor, KpiGoodDirection, KpiTone } from "panelui-web/kpi";
 import { useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useIntlayer } from "react-intlayer";
@@ -13,11 +19,9 @@ import { categorySpend, sparks } from "./model";
 
 const PERCENT = 100;
 const TENTHS = 10;
-const MONO_ADVANCE = 0.56;
 const STACK_OVER = 12;
-const TREND = "dash-figure text-[13px] leading-5";
+const PILL = "dash-figure [&_svg]:hidden";
 const LINE = "[&_path]:[vector-effect:non-scaling-stroke]";
-const NOTE = "text-muted-foreground min-w-0 truncate text-[13px] leading-5";
 // Equal cells, padding included: flex-1 alone gives the first and last cell more room.
 const EQUAL_COLUMNS =
     "lg:grid lg:auto-cols-fr lg:grid-flow-col lg:divide-x-0 lg:*:not-first:border-s lg:*:not-first:border-border";
@@ -26,55 +30,64 @@ export const TWO_BY_TWO =
 export const STACKED =
     "max-sm:flex max-sm:flex-col max-sm:gap-y-4 max-sm:divide-y-0 max-sm:divide-x-0 max-sm:*:px-0 max-sm:*:odd:border-e-0 max-sm:*:odd:pe-0 max-sm:*:even:ps-0";
 
+const percentOf = (share: number) => `${Math.round(share * PERCENT)}%`;
+
 function Change({ delta, goodDirection }: { delta: number | null; goodDirection?: KpiGoodDirection }) {
     if (delta === null) {
         return null;
     }
     return (
         <Kpi.Trend
-            className={TREND}
+            className={PILL}
             goodDirection={goodDirection}
             value={Math.round(delta * PERCENT * TENTHS) / TENTHS}
+            variant="badge"
         />
     );
 }
 
-const flatZero = () => "0%";
+function Share({ label }: { label: string }) {
+    return <Kpi.Trend className={PILL} format={() => label} goodDirection="none" value={0} variant="badge" />;
+}
+
 const stretch = (node: SVGSVGElement | null) => node?.setAttribute("preserveAspectRatio", "none");
 
 interface FigureProps {
     color?: KpiColor;
+    icon: IconSvgElement;
     label: ReactNode;
-    longest: number;
     points: number[] | null;
+    tone?: KpiTone;
     trend: ReactNode;
     value: string;
 }
 
-function Figure({ color, label, longest, points, trend, value }: FigureProps) {
+function Figure({ color, icon, label, points, tone, trend, value }: FigureProps) {
     return (
-        <Kpi className="@container">
-            <Kpi.Header className="max-sm:min-h-10 max-sm:flex-col max-sm:items-start max-sm:gap-0">
-                <Kpi.Title className="min-w-fit max-sm:w-full">{label}</Kpi.Title>
-                {trend}
+        <Kpi className="min-w-0 gap-0">
+            <Kpi.Header>
+                <Kpi.Icon tone={tone}>
+                    <HugeiconsIcon icon={icon} size={16} strokeWidth={1.5} />
+                </Kpi.Icon>
+                <Kpi.Title className="min-w-0 truncate">{label}</Kpi.Title>
             </Kpi.Header>
-            <Kpi.Value
-                className="dash-figure leading-8 font-semibold tracking-[-0.04em] wrap-anywhere"
-                style={{ fontSize: `clamp(12px, calc(100cqi / ${longest * MONO_ADVANCE}), 24px)` }}
-            >
-                {value}
-            </Kpi.Value>
-            {points ? (
-                <Kpi.Chart
-                    aria-hidden
-                    className={color ? LINE : `${LINE} [--pu-color:var(--muted-foreground)]`}
-                    color={color}
-                    data={points}
-                    height={32}
-                    ref={stretch}
-                    strokeWidth={1.5}
-                />
-            ) : null}
+            <Kpi.Content className="mt-2 items-end gap-3" layout="inline">
+                <Kpi.Stat className="min-w-0">
+                    <Kpi.Value className="dash-figure text-app-figure font-semibold wrap-anywhere">{value}</Kpi.Value>
+                    <Kpi.Footer className="text-app-caption mt-1 h-5">{trend}</Kpi.Footer>
+                </Kpi.Stat>
+                {points ? (
+                    <Kpi.Chart
+                        aria-hidden
+                        className={`h-8 w-24 shrink-0 max-sm:w-16 ${color ? LINE : `${LINE} [--pu-color:var(--muted-foreground)]`}`}
+                        color={color}
+                        data={points}
+                        height={32}
+                        ref={stretch}
+                        strokeWidth={1.5}
+                    />
+                ) : null}
+            </Kpi.Content>
         </Kpi>
     );
 }
@@ -85,11 +98,11 @@ export function KpiGroup({ quiet }: { quiet: boolean }) {
     const copy = useIntlayer("dashboard-home").kpi;
     const { money } = useDisplayFormat();
     const scope = useMemo(() => ({ accounts: filters.accounts }), [filters.accounts]);
-    const figures = useMemo(() => kpis(ledger, filters.period, scope), [filters.period, ledger, scope]);
-    const lines = useMemo(() => sparks(ledger, filters.period, scope), [filters.period, ledger, scope]);
+    const figures = useMemo(() => kpis(ledger, filters.range, scope), [filters.range, ledger, scope]);
+    const lines = useMemo(() => sparks(ledger, filters.range, scope), [filters.range, ledger, scope]);
     const picked = useMemo(
-        () => (filters.categories.length > 0 ? categorySpend(ledger, filters.period, scope, filters.categories) : null),
-        [filters.categories, filters.period, ledger, scope]
+        () => (filters.categories.length > 0 ? categorySpend(ledger, filters.range, scope, filters.categories) : null),
+        [filters.categories, filters.range, ledger, scope]
     );
     const spentNow = picked ? { ...figures.spent, delta: picked.delta, value: picked.value } : figures.spent;
     const shown = (value: number) => money(value, ledger.currency);
@@ -98,7 +111,7 @@ export function KpiGroup({ quiet }: { quiet: boolean }) {
         () => (quiet ? (netWorthPoints(ledger, scope, [ledger.now])[0]?.net ?? 0) : null),
         [ledger, quiet, scope]
     );
-    const zero = <Kpi.Trend className={TREND} format={flatZero} value={0} />;
+    const zero = <Share label={percentOf(0)} />;
     const values = {
         income: shown(figures.income.value),
         kept: shown(figures.kept.value),
@@ -112,66 +125,61 @@ export function KpiGroup({ quiet }: { quiet: boolean }) {
         ).map((value) => value.length)
     );
     const layout = `${EQUAL_COLUMNS} ${incomeTracking ? TWO_BY_TWO : ""} ${longest > STACK_OVER ? STACKED : ""}`;
+    const sharePoints = picked
+        ? `${picked.shareChange > 0 ? "+" : ""}${(picked.shareChange * PERCENT).toFixed(1)}`
+        : null;
 
     return (
-        <Kpi.Group className={`rounded-2xl ${layout}`} surface>
+        <Kpi.Group className={`rounded-app-xl ${layout}`} surface>
             <Figure
+                icon={MoneySafeIcon}
                 label={copy.netWorth}
-                longest={longest}
                 points={quiet ? null : lines.netWorth}
-                trend={quiet ? <span className={NOTE}>{copy.now}</span> : <Change delta={figures.netWorth.delta} />}
+                trend={
+                    quiet ? (
+                        <span className="text-muted-foreground">{copy.now}</span>
+                    ) : (
+                        <Change delta={figures.netWorth.delta} />
+                    )
+                }
                 value={values.netWorth}
             />
             {incomeTracking ? (
                 <Figure
                     color="success"
+                    icon={ArrowDownLeft01Icon}
                     label={copy.income}
-                    longest={longest}
                     points={quiet ? null : lines.income}
+                    tone="good"
                     trend={quiet ? zero : <Change delta={figures.income.delta} />}
                     value={values.income}
                 />
             ) : null}
             <Figure
                 color="primary"
+                icon={ArrowUpRight01Icon}
                 label={copy.spent}
-                longest={longest}
                 points={quiet ? null : (picked?.spentPoints ?? lines.spent)}
+                tone="bad"
                 trend={quiet ? zero : <Change delta={spentNow.delta} goodDirection="down" />}
                 value={values.spent}
             />
             {incomeTracking && picked ? (
                 <Figure
+                    icon={Invoice01Icon}
                     label={copy.ofSpending}
-                    longest={longest}
                     points={quiet ? null : picked.sharePoints}
-                    trend={
-                        quiet ? (
-                            zero
-                        ) : (
-                            <span className={NOTE}>
-                                {copy.points({
-                                    points: `${picked.shareChange > 0 ? "+" : ""}${(picked.shareChange * PERCENT).toFixed(1)}`,
-                                })}
-                            </span>
-                        )
-                    }
-                    value={`${Math.round(picked.share * PERCENT)}%`}
+                    trend={quiet ? zero : <Share label={copy.points({ points: sharePoints ?? "0.0" }).value} />}
+                    value={percentOf(picked.share)}
                 />
             ) : null}
             {incomeTracking && !picked ? (
                 <Figure
+                    icon={Invoice01Icon}
                     label={copy.kept}
-                    longest={longest}
                     points={quiet ? null : lines.kept}
                     trend={
-                        quiet
-                            ? zero
-                            : figures.kept.share !== null && (
-                                  <span className={NOTE}>
-                                      {copy.share({ percent: Math.round(figures.kept.share * PERCENT) })}
-                                  </span>
-                              )
+                        quiet ? zero : figures.kept.share !== null && <Share label={percentOf(figures.kept.share)} />
                     }
                     value={values.kept}
                 />

@@ -25,6 +25,19 @@ const dashboardHome = {
             more: t({ en: "More", de: "Mehr", es: "Más" }),
             title: t({ en: "Every day", de: "Jeder Tag", es: "Cada día" }),
             topDay: insert(t({ en: "{{name}} day", de: "Tag: {{name}}", es: "Día de {{name}}" })),
+            monthTitle: t({ en: "Every month", de: "Jeder Monat", es: "Cada mes", fr: "Chaque mois", pt: "Todo mês" }),
+            highest: t({ en: "Highest", de: "Höchster", es: "El más alto", fr: "Le plus haut", pt: "Maior" }),
+            lowest: t({ en: "Lowest", de: "Niedrigster", es: "El más bajo", fr: "Le plus bas", pt: "Menor" }),
+            oneEntry: t({ en: "1 entry", de: "1 Eintrag", es: "1 movimiento", fr: "1 opération", pt: "1 lançamento" }),
+            manyEntries: insert(
+                t({
+                    en: "{{count}} entries",
+                    de: "{{count}} Einträge",
+                    es: "{{count}} movimientos",
+                    fr: "{{count}} opérations",
+                    pt: "{{count}} lançamentos",
+                })
+            ),
         },
         kpi: {
             income: t({ en: "Income", de: "Einnahmen", es: "Ingresos" }),
@@ -145,6 +158,29 @@ const dashboardHome = {
             noIncome: t({ en: "No income", de: "Keine Einnahmen", es: "Sin ingresos" }),
             over: t({ en: "over", de: "drüber", es: "de más" }),
             title: t({ en: "Spent of income", de: "Ausgaben von den Einnahmen", es: "Gastado de ingresos" }),
+            previousQuarter: t({
+                en: "Previous quarter",
+                de: "Voriges Quartal",
+                es: "Trimestre anterior",
+                fr: "Trimestre précédent",
+                pt: "Trimestre anterior",
+            }),
+            thisQuarter: t({
+                en: "This quarter",
+                de: "Dieses Quartal",
+                es: "Este trimestre",
+                fr: "Ce trimestre",
+                pt: "Este trimestre",
+            }),
+            sameMonths: insert(
+                t({
+                    en: "Same months, {{year}}",
+                    de: "Gleiche Monate, {{year}}",
+                    es: "Mismos meses, {{year}}",
+                    fr: "Mêmes mois, {{year}}",
+                    pt: "Mesmos meses, {{year}}",
+                })
+            ),
             whatIf: t({ en: "What if", de: "Was wäre wenn", es: "Y si" }),
             whatIfHint: t({
                 en: "Preview only, nothing is saved. Escape returns to the real amount.",
@@ -166,22 +202,16 @@ const dashboardHome = {
                 es: "Pon un límite mensual a una categoría y síguelo aquí.",
             }),
             budgetsEmptyTitle: t({ en: "No budgets yet", de: "Noch keine Budgets", es: "Aún no hay presupuestos" }),
-            budgetEnded: insert(t({ en: "Ended {{day}}", de: "Beendet {{day}}", es: "Terminó el {{day}}" })),
-            budgetFilter: t({ en: "Filter", de: "Filter", es: "Filtrar" }),
-            budgetLeft: t({ en: "Left", de: "Übrig", es: "Queda" }),
-            budgetOverTotal: t({ en: "Over", de: "Drüber", es: "De más" }),
-            budgetResets: insert(
-                t({ en: "Resets {{day}}", de: "Wird zurückgesetzt {{day}}", es: "Se renueva el {{day}}" })
-            ),
-            budgetShowLess: t({ en: "Show less", de: "Weniger anzeigen", es: "Ver menos" }),
-            budgetUsed: insert(
+            budgetBiggest: insert(
                 t({
-                    en: "{{name}}: {{percent}}% used",
-                    de: "{{name}}: {{percent}} % verbraucht",
-                    es: "{{name}}: {{percent}} % usado",
+                    en: "{{name}} is your biggest spend. Give it a limit.",
+                    de: "{{name}} ist deine größte Ausgabe. Gib ihr ein Limit.",
+                    es: "{{name}} es tu mayor gasto. Ponle un límite.",
+                    fr: "{{name}} est ta plus grosse dépense. Fixe-lui une limite.",
+                    pt: "{{name}} é o seu maior gasto. Defina um limite.",
                 })
             ),
-            noSubcategory: t({ en: "No subcategory", de: "Keine Unterkategorie", es: "Sin subcategoría" }),
+            details: t({ en: "Details", de: "Details", es: "Detalles", fr: "Détails", pt: "Detalhes" }),
             onTrackLabel: t({ en: "On track", de: "Im Plan", es: "En regla" }),
             overCount: insert(t({ en: "{{count}} over", de: "{{count}} drüber", es: "{{count}} excedidos" })),
             overAmount: insert(t({ en: "{{amount}} over", de: "{{amount}} drüber", es: "{{amount}} de más" })),
@@ -210,20 +240,6 @@ const dashboardHome = {
                 })
             ),
             peak: insert(t({ en: "Peak {{day}}", de: "Spitze {{day}}", es: "Máximo {{day}}" })),
-            ranOut: insert(
-                t({
-                    en: "Ran out {{day}}, {{days}} days early.",
-                    de: "Aufgebraucht {{day}}, {{days}} Tage zu früh.",
-                    es: "Se agotó el {{day}}, {{days}} días antes.",
-                })
-            ),
-            ranOutOne: insert(
-                t({
-                    en: "Ran out {{day}}, 1 day early.",
-                    de: "Aufgebraucht {{day}}, 1 Tag zu früh.",
-                    es: "Se agotó el {{day}}, 1 día antes.",
-                })
-            ),
             share: t({ en: "Share", de: "Anteil", es: "Parte" }),
             upcoming: t({ en: "Upcoming", de: "Anstehend", es: "Próximos" }),
             versus: t({ en: "vs last 3 months", de: "vs. letzte 3 Monate", es: "vs los últimos 3 meses" }),

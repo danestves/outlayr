@@ -94,7 +94,7 @@ These scales are derived from the canvas guides (web-app-v2 base CSS and the com
 | `text-app-body`     | 14 / 20            | `rounded-app-lg` | 12    | `app-row`                 | 44    | Key-value row           |
 | `text-app-title`    | 15 / 20            | `rounded-app-xl` | 16    | `app-header`              | 52    | Page header             |
 | `text-app-heading`  | 18 / 24            | `rounded-app-2xl` | 20   | `app-bar`                 | 64    | Mobile bar              |
-|                     |                    | `rounded-app-3xl` | 24   | `app-gutter`              | 24    | Main padding            |
+| `text-app-figure`   | 24 / 32            | `rounded-app-3xl` | 24   | `app-gutter`              | 24    | Main padding            |
 |                     |                    |                  |       | `app-sidebar`             | 232   | Sidebar width           |
 
 Fonts: `--font-app-sans` is Geist and `--font-app-mono` is Geist Mono, from the canvas tokens.
@@ -139,6 +139,16 @@ The chrome every ledger page shares, from the canvas page `Web · Shell`:
 - **Global states:** `shell/status.tsx` holds the offline bar, the sync card and the session expired dialog. The sync card shows only while a backlog drains after the connection dropped, so an ordinary save never flashes it.
 - **Error pages:** `components/error-page.tsx`. The 404 renders in the shell as `/_account/_app`'s not-found component, and the crash page is the router's default error component. The wave illustration is static.
 
+## Dashboard
+
+From the canvas page `Web · Dashboard`, under `components/dashboard/home`:
+
+- **Period:** the top bar's Month, Quarter and Year segments write a `range` search param: `2026-11` for a month, `2026-11/quarter` for the three months ending there, `2026-11/year` for January through it. `filters.range` is what every card reads; `filters.period` stays the month for screens that only know months. Arrows step a quarter by three months and a year by a year.
+- **Ranges per card:** budgets sum each started month's limit and spending (`rangeBudgets`), Every day draws a 7-row grid for a quarter and twelve monthly bars for a year (`everyMonth`).
+- **Setup:** a new ledger shows the setup strip in place of the totals. Only the strip and the card for the current step get a primary button; the cards that fill themselves (Spent of income, Every day) have none.
+- **Loading:** `home-pending.tsx` draws static `bg-app-fill` blocks in the real layout, with the real labels and column headers.
+- **Empty:** `home/empty.tsx` is the web-app-v2 empty pattern: one icon tile, a title, one line, then the actions. No illustrations.
+
 ## Primitives
 
 | Part         | Use                                                    | Notes                                                                                                   |
@@ -175,7 +185,7 @@ These are known and left for the screen phases:
 - **Hard-coded colours:** 42 hex colours in 21 non-test source files, such as the recap share card and the insights samples.
 - **Raw controls:** 35 files with a raw `<button>` and 14 with a raw `<input>`. The account sheet's sign-out row stays a raw `<button>` until there is a row part, because Button's ghost hover and weight would change the row.
 - **Spinners:** Button `loading` draws a spinner in `settings/invite.tsx`, `settings/plan.tsx`, `settings/account.tsx` and `settings/about/suggest.tsx`.
-- **Menu timing:** every menu except the account and period menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
+- **Menu timing:** every menu except the account, period and dashboard filter menus still fades for 150ms. The canvas says menus are `instant`, and screens get it by moving to `MenuContent`.
 - **Hand-placed scope:** 74 files put `app-shell ph-no-capture` on portaled content by hand. `DialogContent`, `SheetContent` and `MenuContent` replace that.
 - **Accent inside the shell:** `accentCss` (`lib/accent.ts`) writes the tint and on-tint on `:root`. The shell scope sets `--color-app-on-tint` again in both themes, and `--color-app-tint` again in dark, so inside the shell a non-default accent shows as vermilion in dark and keeps the default on-tint. This was already the case before this phase.
 - **Pages outside the shell:** `login` and `connect`, and any portal without `app-shell`, read the phone's dark palette from `:root`. So does `html` itself, whose background is `--color-app-bg`.
