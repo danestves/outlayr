@@ -6,6 +6,7 @@ import { View } from "react-native";
 
 import { Text } from "@/components/text";
 import type { ImportSourceId } from "@/domain/import-sources";
+import { pageRanges } from "@/domain/page-ranges";
 import type { TranslationKey } from "@/i18n/catalog";
 import { useTranslation } from "@/i18n/context";
 import { importDraftStore, useImportDraft } from "@/lib/import-draft-store";
@@ -76,6 +77,7 @@ export function FileStep({ onChoose, onSeePro, busy = false }: FileStepProps) {
 
     const { parsed, resolved } = state;
     const unreadPages = state.statement?.unreadPages ?? [];
+    const unreadRanges = unreadPages.length > 0 ? pageRanges(unreadPages) : null;
     const dateFormat =
         parsed == null || resolved == null
             ? null
@@ -161,11 +163,19 @@ export function FileStep({ onChoose, onSeePro, busy = false }: FileStepProps) {
                     ]}
                 />
 
-                {unreadPages.length > 0 ? (
+                {unreadRanges === null ? null : (
                     <Text className="text-footnote text-warning-foreground leading-snug">
-                        {t("import.statementUnreadPages", { pages: unreadPages.join(", ") })}
+                        {t("import.statementUnreadPages", {
+                            pages:
+                                unreadRanges.hidden > 0
+                                    ? t("import.statementUnreadPagesMore", {
+                                          count: unreadRanges.hidden,
+                                          pages: unreadRanges.shown,
+                                      })
+                                    : unreadRanges.shown,
+                        })}
                     </Text>
-                ) : null}
+                )}
 
                 {state.resolved.labelSource === "descriptionColumn" && !statement ? (
                     <Text className="text-footnote text-muted leading-snug">{t("import.fileNoCategoryColumn")}</Text>
