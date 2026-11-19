@@ -320,10 +320,10 @@ const home = {
         ],
         meta: {
             description: t({
-                en: "Outlayr is a mobile expense tracker and budget app. Log a purchase in one sentence, by voice, or from a receipt, and track every subscription. Free to start.",
-                de: "Outlayr ist ein Ausgaben-Tracker und eine Budget-App. Erfasse einen Einkauf per Satz, Stimme oder Beleg und behalte jedes Abo im Blick. Kostenlos zum Start.",
-                es: "Outlayr es una app para controlar tus gastos y tu presupuesto. Registra una compra en una frase, con tu voz o con un recibo, y controla tus suscripciones.",
-                pt: "Aplicativo de finanças para controle de gastos e orçamento: registre uma compra em uma frase, por voz ou com um recibo, e acompanhe suas assinaturas.",
+                en: "Outlayr is an expense tracker and budget app. Log a purchase by sentence, voice, or receipt, and track subscriptions. Free to start.",
+                de: "Outlayr ist ein Ausgaben-Tracker und eine Budget-App. Erfasse Einkäufe per Satz, Stimme oder Beleg. Kostenlos zum Start.",
+                es: "Outlayr es una app para controlar tus gastos y tu presupuesto. Registra una compra con una frase, tu voz o un recibo.",
+                pt: "App de controle de gastos e orçamento: registre uma compra em uma frase, por voz ou com um recibo, e veja suas assinaturas.",
                 fr: "Appli budget gratuite pour suivre vos dépenses : notez un achat en une phrase, à la voix ou depuis un ticket, et suivez chaque abonnement.",
             }),
             title: t({

@@ -32,10 +32,10 @@ const tools = {
             }),
             meta: {
                 description: t({
-                    en: "Split a paycheck, add up your subscriptions, see what an installment plan really costs, or settle a shared bill. Free, and nothing you type leaves your browser.",
+                    en: "Split a paycheck, add up subscriptions, see what installments cost, or settle a shared bill. Free, and nothing leaves your browser.",
                     de: "Kostenlose Geldrechner: Gehalt, Abos, Ratenzahlung, geteilte Rechnung. Nichts verlässt deinen Browser.",
-                    es: "Reparte tu sueldo, suma tus suscripciones, mira cuánto cuesta un plan de cuotas o salda una cuenta compartida. Gratis, y nada sale de tu navegador.",
-                    pt: "Calculadoras financeiras grátis: divida seu salário, some suas assinaturas, veja quanto custa um parcelamento ou divida uma conta. Nada sai do seu navegador.",
+                    es: "Reparte tu sueldo, suma tus suscripciones, calcula cuotas o divide una cuenta. Gratis, y nada sale de tu navegador.",
+                    pt: "Calculadoras grátis: divida seu salário, some suas assinaturas, veja quanto custa um parcelamento. Nada sai do seu navegador.",
                     fr: "Calculateurs de budget gratuits : salaire, abonnements, paiement en plusieurs fois, addition à partager. Rien ne quitte votre navigateur.",
                 }),
                 title: t({
@@ -460,6 +460,13 @@ const tools = {
                     fr: "Additionnez ce que vos abonnements et adhésions coûtent par mois et par an, qu'ils soient prélevés chaque semaine, chaque mois, tous les 3 mois ou une fois par an.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Add up what your subscriptions and memberships cost a month and a year, whether they charge weekly, monthly, every 3 months, or once a year.",
+                        de: "Rechne zusammen, was deine Abos und Mitgliedschaften im Monat und im Jahr kosten, egal wie oft sie abbuchen.",
+                        es: "Suma lo que te cuestan tus suscripciones y membresías al mes y al año, ya cobren cada semana, cada mes, cada 3 meses o una vez al año.",
+                        pt: "Some quanto suas assinaturas e mensalidades custam por mês e por ano, seja a cobrança semanal, mensal, a cada 3 meses ou anual.",
+                        fr: "Additionnez ce que vos abonnements et adhésions coûtent par mois et par an, quelle que soit la fréquence de prélèvement.",
+                    }),
                     title: t({
                         en: "Subscription & Membership Cost Calculator · Outlayr",
                         de: "Abo- und Mitgliedschaftsrechner · Outlayr",
@@ -732,6 +739,13 @@ const tools = {
                     fr: "Payer en plusieurs fois ou comptant ? Voyez le coût total des échéances, l'option la moins chère en argent d'aujourd'hui avec l'inflation et une remise au comptant, et le taux annuel derrière le surcoût.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Installments or cash? See the total installment price, which costs less in today's money with inflation, and the yearly rate.",
+                        de: "Raten oder bar? Sieh den Gesamtpreis der Raten, was mit Inflation in heutigem Geld weniger kostet, und den Jahreszins dahinter.",
+                        es: "Calcula cuánto pagas en total por una compra en cuotas, a qué tasa anual pagas de más y si conviene el contado.",
+                        pt: "Parcelar ou pagar à vista? Veja o total parcelado, o que custa menos com a inflação e a taxa anual do que você paga a mais.",
+                        fr: "Payer en plusieurs fois ou comptant ? Voyez le coût total, l'option la moins chère avec l'inflation et le taux annuel du surcoût.",
+                    }),
                     title: t({
                         en: "Installment Calculator: Installments or Cash? With Inflation",
                         de: "Ratenrechner: Raten oder bar? Mit Inflation",
@@ -902,6 +916,13 @@ const tools = {
                     fr: "Pour diviser l'addition d'un dîner ou partager les dépenses d'un voyage ou d'une colocation : indiquez ce que chacun a payé et voyez qui rembourse qui pour être quittes.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Enter what each person paid for a trip, a dinner, or a shared house, and see who pays whom to even it out.",
+                        de: "Gib ein, was jede Person für eine Reise, ein Abendessen oder ein gemeinsames Haus gezahlt hat, und sieh, wer wem etwas zahlt, damit es aufgeht.",
+                        es: "Anota lo que pagó cada persona en un viaje, una cena o una casa compartida, y mira quién le paga a quién para quedar a mano.",
+                        pt: "Para dividir a conta de um jantar, viagem ou casa compartilhada: informe quanto cada um pagou e veja quem paga quem.",
+                        fr: "Pour partager l'addition d'un dîner, d'un voyage ou d'une colocation : indiquez ce que chacun a payé et voyez qui rembourse qui.",
+                    }),
                     title: t({
                         en: "Split Bill Calculator: Split Expenses and See Who Owes Whom",
                         de: "Rechner für geteilte Rechnungen: Ausgaben teilen und sehen, wer wem schuldet",
@@ -1037,6 +1058,10 @@ const tools = {
                     es: "Calcula la cuota mensual de un préstamo personal, de auto o hipotecario, cuánto pagas de intereses y la tabla de amortización mes a mes, con comisión de apertura.",
                 }),
                 meta: {
+                    description: t({
+                        en: "See the monthly payment on a personal, car or home loan, the interest you pay, and the amortization schedule month by month.",
+                        es: "Calcula la cuota mensual de un préstamo personal, de auto o hipotecario, los intereses y la tabla de amortización mes a mes.",
+                    }),
                     title: t({
                         en: "Loan Calculator: Monthly Payment and Amortization · Outlayr",
                         es: "Calculadora de préstamos: cuota y tabla de amortización",
@@ -1217,6 +1242,10 @@ const tools = {
                     es: "El dólar blue, oficial, MEP, CCL, tarjeta, mayorista y cripto de hoy en Argentina, con una calculadora para pasar de dólares a pesos y de pesos a dólares.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Today's blue, official, MEP, CCL, card, wholesale and crypto dollar in Argentina, with a calculator to turn dollars into pesos and back.",
+                        es: "El dólar blue, oficial, MEP, CCL, tarjeta, mayorista y cripto de hoy en Argentina, con una calculadora de dólares a pesos.",
+                    }),
                     title: t({
                         en: "Dollar Rate Today in Argentina: Blue, Official, MEP, Card",
                         es: "Dólar hoy Argentina: blue, oficial, MEP y tarjeta · Outlayr",
@@ -1289,6 +1318,10 @@ const tools = {
                     es: "El dólar blue o paralelo de hoy en Bolivia, del mercado P2P de Binance, y el oficial del BCB, con una calculadora para pasar de dólares a bolivianos y de bolivianos a dólares.",
                 }),
                 meta: {
+                    description: t({
+                        en: "Today's parallel (blue) dollar in Bolivia from Binance P2P and the official BCB rate, with a dollar to boliviano calculator.",
+                        es: "El dólar blue o paralelo de hoy en Bolivia, de Binance P2P, y el oficial del BCB, con una calculadora de dólares a bolivianos.",
+                    }),
                     title: t({
                         en: "Dollar Rate Today in Bolivia: Parallel (Blue) and Official",
                         es: "Dólar blue Bolivia hoy: paralelo, oficial y calculadora",

@@ -42,10 +42,10 @@ const pricing = {
             description: insert(
                 t({
                     en: "Outlayr is free with no ads. Outlayr Pro costs {{monthly}} a month, {{yearly}} a year, or {{once}} once in the US. Free and Pro limits, and what a capture is.",
-                    de: "Outlayr ist kostenlos und werbefrei. Outlayr Pro kostet in den USA {{monthly}} im Monat, {{yearly}} im Jahr oder {{once}} einmalig. Limits und was eine Erfassung ist.",
-                    es: "Outlayr es gratis y sin anuncios. Outlayr Pro cuesta {{monthly}} al mes, {{yearly}} al año o {{once}} una sola vez en EE. UU. Límites y qué es una captura.",
-                    pt: "O Outlayr é grátis e sem anúncios. O Outlayr Pro custa {{monthly}} por mês, {{yearly}} por ano ou {{once}} uma vez nos EUA. Limites e o que é uma captura.",
-                    fr: "Outlayr est gratuit et sans publicité. Outlayr Pro coûte {{monthly}} par mois, {{yearly}} par an ou {{once}} une fois aux États-Unis. Limites et captures.",
+                    de: "Outlayr ist kostenlos und werbefrei. Outlayr Pro kostet in den USA {{monthly}} im Monat, {{yearly}} im Jahr oder {{once}} einmalig.",
+                    es: "Outlayr es gratis y sin anuncios. Outlayr Pro cuesta {{monthly}} al mes, {{yearly}} al año o {{once}} una vez en EE. UU.",
+                    pt: "O Outlayr é grátis e sem anúncios. O Outlayr Pro custa {{monthly}} por mês, {{yearly}} por ano ou {{once}} uma vez nos EUA.",
+                    fr: "Outlayr est gratuit et sans publicité. Outlayr Pro coûte {{monthly}} par mois, {{yearly}} par an ou {{once}} une fois aux États-Unis.",
                 })
             ),
             title: t({

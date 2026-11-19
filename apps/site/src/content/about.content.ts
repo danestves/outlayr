@@ -237,11 +237,11 @@ const about = {
         },
         meta: {
             description: t({
-                en: "Outlayr is an open source expense tracker, budget app, and subscription tracker by danestves LLC: platforms, plans, free limits, and where your data lives.",
-                de: "Outlayr ist eine Open-Source-App für Ausgaben, Budget und Abos von danestves LLC: Plattformen, Pläne, Gratis-Limits und wo deine Daten liegen.",
-                es: "Outlayr es una app de código abierto para controlar gastos, presupuesto y suscripciones, de danestves LLC: plataformas, planes, límites y tus datos.",
-                pt: "O Outlayr é um app de código aberto de gastos, orçamento e assinaturas da danestves LLC: plataformas, planos, limites grátis e onde ficam seus dados.",
-                fr: "Outlayr est une app open source de dépenses, budget et abonnements de danestves LLC : plateformes, formules, limites gratuites et où sont vos données.",
+                en: "Outlayr is an open source expense tracker and budget app by danestves LLC: platforms, plans, free limits, and where data lives.",
+                de: "Outlayr ist eine Open-Source-App für Ausgaben und Budget von danestves LLC: Plattformen, Pläne, Limits und deine Daten.",
+                es: "Outlayr es una app de código abierto para controlar gastos y presupuesto, de danestves LLC: plataformas, planes y tus datos.",
+                pt: "O Outlayr é um app de código aberto de gastos e orçamento da danestves LLC: plataformas, planos, limites e seus dados.",
+                fr: "Outlayr est une app open source de dépenses et de budget de danestves LLC : plateformes, formules, limites et vos données.",
             }),
             title: t({
                 en: "About Outlayr: the expense tracker by danestves LLC",

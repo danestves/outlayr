@@ -981,10 +981,10 @@ const answers = {
                 meta: {
                     description: t({
                         en: "Copilot is a paid money app for Apple devices and the web that syncs linked accounts. Outlayr is an open source alternative, free to start.",
-                        de: "Copilot ist eine kostenpflichtige Finanz-App für Apple-Geräte und das Web, die verknüpfte Konten synchronisiert. Outlayr ist eine Open-Source-Alternative, zum Start kostenlos.",
-                        es: "Copilot es una app de pago para dispositivos Apple y la web que sincroniza tus cuentas. Outlayr es una alternativa de código abierto, gratis para empezar.",
-                        pt: "O Copilot é um app financeiro pago para dispositivos Apple e web que sincroniza contas vinculadas. O Outlayr é uma alternativa de código aberto, grátis para começar.",
-                        fr: "Copilot est une application payante pour les appareils Apple et le Web qui synchronise les comptes liés. Outlayr est une alternative open source, gratuite pour commencer.",
+                        de: "Copilot ist eine kostenpflichtige Finanz-App für Apple und das Web mit Kontosync. Outlayr ist eine Open-Source-Alternative.",
+                        es: "Copilot es una app de pago para Apple y la web que sincroniza tus cuentas. Outlayr es de código abierto y gratis para empezar.",
+                        pt: "O Copilot é um app financeiro pago para Apple e web que sincroniza contas. O Outlayr é de código aberto e grátis para começar.",
+                        fr: "Copilot est une app payante pour Apple et le Web qui synchronise vos comptes. Outlayr est open source et gratuit au départ.",
                     }),
                     title: t({
                         en: "Copilot Money Alternative: Outlayr vs Copilot",
@@ -1192,11 +1192,11 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "EveryDollar is a Ramsey Solutions budget app sold in the US, with bank connections in Premium. Outlayr is an open source alternative in 165 currencies.",
-                        de: "EveryDollar ist eine Budget-App von Ramsey Solutions, die in den USA verkauft wird, mit Bankverbindungen in Premium. Outlayr ist eine Open-Source-Alternative mit 165 Währungen.",
-                        es: "EveryDollar es una app de presupuesto de Ramsey que se vende en EE. UU. Outlayr es una alternativa de código abierto, gratis para empezar, con 165 monedas.",
-                        pt: "O EveryDollar é um app de orçamento da Ramsey Solutions vendido nos EUA, com conexão bancária no Premium. O Outlayr é uma alternativa de código aberto em 165 moedas.",
-                        fr: "EveryDollar est une application de budget de Ramsey Solutions vendue aux États-Unis, avec des connexions bancaires dans Premium. Outlayr est une alternative open source en 165 devises.",
+                        en: "EveryDollar is a Ramsey budget app sold in the US, with bank sync in Premium. Outlayr is an open source alternative, free to start.",
+                        de: "EveryDollar ist eine Budget-App von Ramsey für die USA, mit Banksync in Premium. Outlayr ist eine Open-Source-Alternative.",
+                        es: "EveryDollar es una app de presupuesto de Ramsey para EE. UU. Outlayr es una alternativa de código abierto y gratis, con 165 monedas.",
+                        pt: "O EveryDollar é um app de orçamento da Ramsey vendido nos EUA, com banco no Premium. O Outlayr é uma alternativa de código aberto.",
+                        fr: "EveryDollar est une app de budget de Ramsey vendue aux États-Unis, banque liée en Premium. Outlayr est une alternative open source.",
                     }),
                     title: t({
                         en: "EveryDollar Alternative: Outlayr vs EveryDollar",
@@ -1442,11 +1442,11 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Fintonic is a free app in Spain that reads Spanish bank accounts and arranges loans. Outlayr is an open source alternative for cash, cards, and 165 currencies.",
-                        de: "Fintonic ist eine kostenlose App in Spanien, die spanische Bankkonten ausliest und Kredite vermittelt. Outlayr ist eine Open-Source-Alternative für Bargeld, Karten und 165 Währungen.",
-                        es: "¿Buscas una alternativa a Fintonic sin conectar tu banco? Outlayr registra gastos y efectivo con tu voz o un recibo. Compara precio, funciones y cómo cambiarte.",
-                        pt: "O Fintonic é um app grátis na Espanha que lê contas bancárias espanholas e arranja empréstimos. O Outlayr é uma alternativa de código aberto para dinheiro, cartões e 165 moedas.",
-                        fr: "Fintonic est une application gratuite en Espagne qui lit les comptes bancaires espagnols et organise des prêts. Outlayr est une alternative open source pour les espèces, les cartes et 165 devises.",
+                        en: "Fintonic is a free Spanish app that reads bank accounts and arranges loans. Outlayr is an open source alternative in 165 currencies.",
+                        de: "Fintonic ist eine kostenlose App in Spanien, die Bankkonten liest und Kredite vermittelt. Outlayr ist eine Open-Source-App.",
+                        es: "¿Buscas una alternativa a Fintonic sin conectar tu banco? Outlayr registra gastos y efectivo con tu voz o un recibo.",
+                        pt: "O Fintonic é um app grátis na Espanha que lê contas bancárias e arranja empréstimos. O Outlayr é uma alternativa de código aberto.",
+                        fr: "Fintonic est une app gratuite en Espagne qui lit vos comptes et propose des prêts. Outlayr est une alternative open source.",
                     }),
                     title: t({
                         en: "Fintonic Alternative: Outlayr vs Fintonic",
@@ -1695,11 +1695,11 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr vs Goodbudget: envelopes or category limits with a pace, currencies, free plans, and price. Goodbudget facts checked on its own site, October 2026.",
-                        de: "Outlayr vs. Goodbudget: Umschläge oder Kategorie-Limits mit Tempo, Währungen, Gratis-Pläne und Preis. Angaben zu Goodbudget auf der eigenen Website geprüft, Oktober 2026.",
-                        es: "Outlayr vs Goodbudget: sobres o límites con ritmo, monedas, planes gratis y precio. Datos de Goodbudget revisados en su propio sitio, octubre de 2026.",
-                        pt: "Outlayr vs Goodbudget: envelopes ou limites por categoria com ritmo, moedas, planos grátis e preço. Dados do Goodbudget conferidos no site dele, em outubro de 2026.",
-                        fr: "Outlayr vs Goodbudget : enveloppes ou limites par catégorie avec un rythme, devises, offres gratuites et prix. Infos vérifiées sur son site, octobre 2026.",
+                        en: "Outlayr vs Goodbudget: envelopes or category limits with a pace, currencies, free plans, and price. Checked on its site, October 2026.",
+                        de: "Outlayr vs. Goodbudget: Umschläge oder Limits mit Tempo, Währungen, Gratis-Pläne und Preis. Auf der Website geprüft, Oktober 2026.",
+                        es: "Outlayr vs Goodbudget: sobres o límites con ritmo, monedas, planes gratis y precio. Revisado en su sitio, octubre de 2026.",
+                        pt: "Outlayr vs Goodbudget: envelopes ou limites com ritmo, moedas, planos grátis e preço. Conferido no site dele, outubro de 2026.",
+                        fr: "Outlayr vs Goodbudget : enveloppes ou limites avec un rythme, devises, offres gratuites et prix. Vérifié sur son site, octobre 2026.",
                     }),
                     title: t({
                         en: "Goodbudget Alternative: Outlayr vs Goodbudget",
@@ -1933,11 +1933,11 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Monarch is a paid money dashboard that syncs linked accounts in the US and Canada. Outlayr is an open source alternative in 175 countries and 165 currencies.",
-                        de: "Monarch ist ein kostenpflichtiges Finanz-Dashboard, das verknüpfte Konten in den USA und Kanada synchronisiert. Outlayr ist eine Open-Source-Alternative in 175 Ländern und mit 165 Währungen.",
-                        es: "Monarch es un panel de finanzas de pago para EE. UU. y Canadá. Outlayr es una alternativa de código abierto, gratis para empezar, en 175 países y 165 monedas.",
-                        pt: "O Monarch é um painel financeiro pago que sincroniza contas vinculadas nos EUA e no Canadá. O Outlayr é uma alternativa de código aberto em 175 países e 165 moedas.",
-                        fr: "Monarch est un tableau de bord financier payant qui synchronise les comptes liés aux États-Unis et au Canada. Outlayr est une alternative open source dans 175 pays et 165 devises.",
+                        en: "Monarch is a paid money dashboard that syncs accounts in the US and Canada. Outlayr is an open source alternative in 175 countries.",
+                        de: "Monarch ist ein kostenpflichtiges Finanz-Dashboard für die USA und Kanada. Outlayr ist Open Source und in 175 Ländern verfügbar.",
+                        es: "Monarch es un panel de finanzas de pago para EE. UU. y Canadá. Outlayr es una alternativa de código abierto y gratis en 175 países.",
+                        pt: "O Monarch é um painel financeiro pago que sincroniza contas nos EUA e no Canadá. O Outlayr é de código aberto, em 175 países.",
+                        fr: "Monarch est un tableau de bord payant qui synchronise vos comptes aux États-Unis et au Canada. Outlayr est open source.",
                     }),
                     title: t({
                         en: "Monarch Money Alternative: Outlayr vs Monarch",
@@ -2162,11 +2162,11 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr vs Monefy: exchange rates from the day or typed by hand, recurring entries, sync, and price. Monefy facts checked on its own site, October 2026.",
-                        de: "Outlayr vs. Monefy: Wechselkurse vom Tag oder von Hand, wiederkehrende Einträge, Synchronisierung und Preis. Angaben zu Monefy auf der eigenen Website geprüft, Oktober 2026.",
-                        es: "Outlayr vs Monefy: tasas del día o escritas a mano, registros recurrentes, sincronización y precio. Datos de Monefy revisados en su sitio, octubre de 2026.",
-                        pt: "Outlayr vs Monefy: cotação do dia ou digitada à mão, lançamentos recorrentes, sincronização e preço. Dados do Monefy conferidos no site dele, em outubro de 2026.",
-                        fr: "Outlayr vs Monefy : taux de change du jour ou saisis à la main, opérations récurrentes, synchronisation et prix. Infos vérifiées sur son site, octobre 2026.",
+                        en: "Outlayr vs Monefy: exchange rates from the day or typed by hand, recurring entries, sync, and price. Checked on its site, October 2026.",
+                        de: "Outlayr vs. Monefy: Tageskurse oder Kurse von Hand, wiederkehrende Einträge, Sync und Preis. Auf der Website geprüft, Oktober 2026.",
+                        es: "Outlayr vs Monefy: tasas del día o a mano, registros recurrentes, sincronización y precio. Revisado en su sitio, octubre de 2026.",
+                        pt: "Outlayr vs Monefy: cotação do dia ou à mão, lançamentos recorrentes, sincronização e preço. Conferido no site dele, outubro de 2026.",
+                        fr: "Outlayr vs Monefy : taux du jour ou saisis à la main, opérations récurrentes, synchro et prix. Vérifié sur son site, octobre 2026.",
                     }),
                     title: t({
                         en: "Monefy Alternative: Outlayr vs Monefy",
@@ -2438,11 +2438,11 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr vs Money Lover: ads, free recurring entries, AI and receipt entry, platforms, and price. Money Lover facts checked in its help center, October 2026.",
-                        de: "Outlayr vs. Money Lover: Werbung, kostenlose wiederkehrende Einträge, KI und Belegerfassung, Plattformen und Preis. Angaben zu Money Lover im Hilfecenter geprüft, Oktober 2026.",
-                        es: "Outlayr vs Money Lover: anuncios, registros recurrentes gratis, IA y recibos, plataformas y precio. Datos de su centro de ayuda, revisados en octubre de 2026.",
-                        pt: "Outlayr vs Money Lover: anúncios, recorrentes grátis, IA e recibo, plataformas e preço. Dados conferidos na central de ajuda dele, em outubro de 2026.",
-                        fr: "Outlayr vs Money Lover : publicité, opérations récurrentes gratuites, IA et reçus, plateformes et prix. Infos vérifiées dans son centre d'aide, octobre 2026.",
+                        en: "Outlayr vs Money Lover: ads, free recurring entries, AI and receipts, platforms, and price. Checked in its help center, October 2026.",
+                        de: "Outlayr vs. Money Lover: Werbung, wiederkehrende Einträge, KI und Belege, Plattformen, Preis. Im Hilfecenter geprüft, Okt. 2026.",
+                        es: "Outlayr vs Money Lover: anuncios, recurrentes gratis, IA y recibos, plataformas y precio. Revisado en su ayuda, octubre de 2026.",
+                        pt: "Outlayr vs Money Lover: anúncios, recorrentes grátis, IA e recibo, plataformas e preço. Conferido na ajuda dele, outubro de 2026.",
+                        fr: "Outlayr vs Money Lover : publicité, opérations récurrentes, IA et reçus, plateformes et prix. Vérifié dans son aide, octobre 2026.",
                     }),
                     title: t({
                         en: "Money Lover Alternative: Outlayr vs Money Lover",
@@ -2669,11 +2669,11 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "PocketGuard is a paid budget app that syncs linked bank accounts. Outlayr is an open source alternative you fill in by sentence, voice, or receipt.",
-                        de: "PocketGuard ist eine kostenpflichtige Budget-App, die verknüpfte Bankkonten synchronisiert. Outlayr ist eine Open-Source-Alternative, die du per Satz, Sprache oder Beleg füllst.",
-                        es: "PocketGuard es una app de presupuesto de pago que sincroniza tus cuentas. Outlayr es una alternativa de código abierto que llenas con una frase, voz o recibo.",
-                        pt: "O PocketGuard é um app de orçamento pago que sincroniza contas bancárias vinculadas. O Outlayr é uma alternativa de código aberto que você preenche por frase, voz ou recibo.",
-                        fr: "PocketGuard est une application de budget payante qui synchronise les comptes bancaires liés. Outlayr est une alternative open source que vous remplissez par une phrase, à la voix ou avec un reçu.",
+                        en: "PocketGuard is a paid budget app that syncs bank accounts. Outlayr is an open source alternative you fill in by voice or receipt.",
+                        de: "PocketGuard ist eine kostenpflichtige Budget-App mit Banksync. Outlayr ist Open Source und du füllst es per Satz oder Beleg.",
+                        es: "PocketGuard es una app de presupuesto de pago que sincroniza tus cuentas. Outlayr es de código abierto y lo llenas con tu voz.",
+                        pt: "O PocketGuard é um app de orçamento pago que sincroniza contas. O Outlayr é de código aberto, por frase, voz ou recibo.",
+                        fr: "PocketGuard est une app de budget payante qui synchronise vos comptes. Outlayr est open source, par phrase, voix ou reçu.",
                     }),
                     title: t({
                         en: "PocketGuard Alternative: Outlayr vs PocketGuard",
@@ -2895,11 +2895,11 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Rocket Money is a US subscription and budget app whose team cancels subscriptions in Premium. Outlayr is an open source alternative in 165 currencies.",
-                        de: "Rocket Money ist eine US-Abo- und Budget-App, deren Team Abos in Premium kündigt. Outlayr ist eine Open-Source-Alternative mit 165 Währungen.",
-                        es: "Rocket Money es una app de suscripciones para EE. UU. que las cancela en Premium. Outlayr es una alternativa de código abierto con 165 monedas.",
-                        pt: "O Rocket Money é um app de assinaturas e orçamento dos EUA cuja equipe cancela assinaturas no Premium. O Outlayr é uma alternativa de código aberto em 165 moedas.",
-                        fr: "Rocket Money est une application américaine d'abonnements et de budget dont l'équipe résilie les abonnements dans Premium. Outlayr est une alternative open source en 165 devises.",
+                        en: "Rocket Money is a US subscription and budget app that cancels subscriptions in Premium. Outlayr is an open source alternative.",
+                        de: "Rocket Money ist eine US-App für Abos und Budget, die in Premium Abos kündigt. Outlayr ist eine Open-Source-Alternative.",
+                        es: "Rocket Money es una app de suscripciones de EE. UU. que las cancela en Premium. Outlayr es una alternativa de código abierto.",
+                        pt: "O Rocket Money é um app de assinaturas dos EUA que cancela assinaturas no Premium. O Outlayr é uma alternativa de código aberto.",
+                        fr: "Rocket Money est une app américaine d'abonnements et de budget qui résilie en Premium. Outlayr est une alternative open source.",
                     }),
                     title: t({
                         en: "Rocket Money Alternative: Outlayr vs Rocket Money",
@@ -3101,11 +3101,11 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Spendee is a budget app with cash wallets and bank sync in Premium. Outlayr is an open source alternative that converts each purchase at its day's rate.",
-                        de: "Spendee ist eine Budget-App mit Bargeld-Wallets und Banksynchronisierung in Premium. Outlayr ist eine Open-Source-Alternative, die jeden Einkauf zum Kurs seines Tages umrechnet.",
-                        es: "Spendee es una app de presupuesto con sincronización bancaria en Premium. Outlayr es una alternativa de código abierto con la tasa del día de cada compra.",
-                        pt: "O Spendee é um app de orçamento com carteiras de dinheiro e sincronização bancária no Premium. O Outlayr é uma alternativa de código aberto que converte cada compra pela cotação do dia.",
-                        fr: "Spendee est une application de budget avec des portefeuilles d'espèces et la synchronisation bancaire dans Premium. Outlayr est une alternative open source qui convertit chaque achat au taux de son jour.",
+                        en: "Spendee is a budget app with cash wallets and bank sync in Premium. Outlayr is an open source alternative that uses each day's rate.",
+                        de: "Spendee ist eine Budget-App mit Banksync in Premium. Outlayr ist eine Open-Source-Alternative mit dem Tageskurs jedes Einkaufs.",
+                        es: "Spendee es una app de presupuesto con banco en Premium. Outlayr es una alternativa de código abierto con la tasa del día.",
+                        pt: "O Spendee é um app de orçamento com banco no Premium. O Outlayr é uma alternativa de código aberto com a cotação do dia.",
+                        fr: "Spendee est une app de budget avec synchro bancaire en Premium. Outlayr est open source et convertit au taux du jour.",
                     }),
                     title: t({
                         en: "Spendee Alternative: Outlayr vs Spendee",
@@ -3280,11 +3280,11 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Wallet by BudgetBakers has a free tier for tracking by hand and bank sync in Premium. Outlayr is an open source alternative you fill in by sentence.",
-                        de: "Wallet by BudgetBakers hat einen Gratis-Tarif zum Erfassen von Hand und Banksynchronisierung in Premium. Outlayr ist eine Open-Source-Alternative, die du per Satz füllst.",
-                        es: "Wallet by BudgetBakers registra a mano gratis y sincroniza bancos en Premium. Outlayr es una alternativa de código abierto, gratis para empezar.",
-                        pt: "O Wallet by BudgetBakers tem um plano grátis para registrar à mão e sincronização bancária no Premium. O Outlayr é uma alternativa de código aberto que você preenche por frase.",
-                        fr: "Wallet by BudgetBakers a une offre gratuite pour le suivi à la main et la synchronisation bancaire dans Premium. Outlayr est une alternative open source que vous remplissez par une phrase.",
+                        en: "Wallet by BudgetBakers is free to track by hand, with bank sync in Premium. Outlayr is an open source alternative, free to start.",
+                        de: "Wallet by BudgetBakers erfasst gratis von Hand, Banksync gibt es in Premium. Outlayr ist eine Open-Source-Alternative per Satz.",
+                        es: "Wallet by BudgetBakers registra a mano gratis y sincroniza bancos en Premium. Outlayr es de código abierto y gratis para empezar.",
+                        pt: "O Wallet by BudgetBakers é grátis à mão, com sincronização no Premium. O Outlayr é uma alternativa de código aberto, por frase.",
+                        fr: "Wallet by BudgetBakers est gratuit à la main, avec synchro bancaire en Premium. Outlayr est une alternative open source, par phrase.",
                     }),
                     title: t({
                         en: "Wallet by BudgetBakers Alternative: Outlayr vs Wallet",
@@ -3489,11 +3489,11 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "YNAB is $14.99 a month or $109 a year, with one currency per plan. Outlayr starts free with 165 currencies. Price, entries, and platforms side by side.",
-                        de: "YNAB kostet 14,99 $ im Monat oder 109 $ im Jahr, mit einer Währung pro Plan. Outlayr startet gratis mit 165 Währungen. Preis, Eingabe und Plattformen im Vergleich.",
-                        es: "YNAB cuesta US$14.99 al mes o US$109 al año, con una moneda por plan. Outlayr empieza gratis, con 165 monedas. Precio, registros y plataformas lado a lado.",
-                        pt: "O YNAB custa US$ 14,99 por mês ou US$ 109 por ano, com uma moeda por plano. O Outlayr começa grátis com 165 moedas. Preço, registro e plataformas lado a lado.",
-                        fr: "YNAB coûte 14,99 $ US par mois ou 109 $ US par an, avec une devise par plan. Outlayr démarre gratuit avec 165 devises. Prix, saisie et plateformes côte à côte.",
+                        en: "YNAB is $14.99 a month or $109 a year, one currency per plan. Outlayr starts free with 165 currencies. Price, entries, platforms.",
+                        de: "YNAB kostet 14,99 $ im Monat oder 109 $ im Jahr, eine Währung pro Plan. Outlayr startet gratis mit 165 Währungen. Im Vergleich.",
+                        es: "YNAB cuesta US$14.99 al mes o US$109 al año, con una moneda por plan. Outlayr empieza gratis, con 165 monedas. Lado a lado.",
+                        pt: "O YNAB custa US$ 14,99 por mês ou US$ 109 por ano, uma moeda por plano. O Outlayr começa grátis com 165 moedas. Lado a lado.",
+                        fr: "YNAB coûte 14,99 $ US par mois ou 109 $ US par an, une devise par plan. Outlayr démarre gratuit avec 165 devises. Côte à côte.",
                     }),
                     title: t({
                         en: "Outlayr vs YNAB: Price, Currencies, Platforms (2026)",
@@ -4045,8 +4045,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "On iPhone, Outlayr logs each Apple Pay purchase when you tap your card. A Shortcuts automation sends the amount, the merchant, and the card to the Log.",
-                        es: "En iPhone, Outlayr registra cada compra con Apple Pay al acercar tu tarjeta. Una automatización de Atajos envía el monto, el comercio y la tarjeta.",
+                        en: "On iPhone, Outlayr logs each Apple Pay purchase when you tap your card. A Shortcuts automation sends the amount and merchant.",
+                        es: "En iPhone, Outlayr registra cada compra con Apple Pay al acercar tu tarjeta, con una automatización de Atajos.",
                     }),
                     title: t({
                         en: "Apple Pay Expense Tracker: Log Each Tap · Outlayr",
@@ -4313,8 +4313,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Eight budget apps by how they budget: envelopes, zero-based, or a limit with a pace. Price, platforms, entries, and currencies, checked October 2026.",
-                        es: "Ocho apps de presupuesto por estilo: sobres, base cero o un límite con ritmo. Precio, plataformas, registros y monedas, revisados en octubre de 2026.",
+                        en: "Eight budget apps by how they budget: envelopes, zero-based, or a limit with a pace. Price, platforms, and currencies, October 2026.",
+                        es: "Ocho apps de presupuesto por estilo: sobres, base cero o un límite con ritmo. Precio, plataformas y monedas, a octubre de 2026.",
                     }),
                     title: t({
                         en: "Best Budget Apps, Compared (2026) · Outlayr",
@@ -4612,8 +4612,8 @@ const answers = {
                 meta: {
                     description: t({
                         en: "Seven budget apps that work in Canada, with price, free plan, and whether each needs your bank login. Budget in CAD, checked November 2026.",
-                        es: "Siete apps de presupuesto que funcionan en Canadá, con precio, plan gratis y si piden tu usuario del banco. Presupuesto en CAD, revisado en noviembre de 2026.",
-                        fr: "Sept applications de budget qui fonctionnent au Canada : prix, offre gratuite et identifiants bancaires requis ou non. Budget en CAD, vérifié en novembre 2026.",
+                        es: "Siete apps de presupuesto para Canadá: precio, plan gratis y si piden tu usuario del banco. Presupuesto en CAD, noviembre de 2026.",
+                        fr: "Sept applications de budget au Canada : prix, offre gratuite et identifiants bancaires ou non. Budget en CAD, novembre 2026.",
                     }),
                     title: t({
                         en: "Best Budget Apps in Canada (2026), With or Without Your Bank",
@@ -5145,8 +5145,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Monefy, Money Manager, Outlayr, Spendee, Wallet, and YNAB compared on price, entry, currencies, and platforms. Outlayr is ours; the other five are not.",
-                        es: "Monefy, Money Manager, Outlayr, Spendee, Wallet y YNAB comparadas en precio, registro, monedas y plataformas. Outlayr es nuestra; las otras cinco no.",
+                        en: "Monefy, Money Manager, Outlayr, Spendee, Wallet, and YNAB compared on price, entry, currencies, and platforms. Outlayr is ours.",
+                        es: "Monefy, Money Manager, Outlayr, Spendee, Wallet y YNAB comparadas en precio, registro, monedas y plataformas. Outlayr es nuestra.",
                     }),
                     title: t({
                         en: "Best Expense Tracker Apps, Compared (2026) · Outlayr",
@@ -5683,8 +5683,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Seven expense tracker apps compared for Argentina and Mexico: pesos and dollars, cuotas, cash, and price. Outlayr is ours; the other six are not.",
-                        es: "Compara 7 apps para controlar gastos en Argentina y México y elige tu gestor de gastos: pesos y dólares, cuotas, efectivo y precio. Outlayr es nuestra.",
+                        en: "Seven expense tracker apps compared for Argentina and Mexico: pesos and dollars, cuotas, cash, and price. Outlayr is ours.",
+                        es: "Compara 7 apps para controlar gastos en Argentina y México: pesos y dólares, cuotas, efectivo y precio. Outlayr es nuestra.",
                     }),
                     title: t({
                         en: "Best Expense Tracker Apps in Argentina and Mexico (2026)",
@@ -6375,8 +6375,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Seven financial control apps compared for Brazil: price in reais, Open Finance, credit cards, and installments. Outlayr is ours; the other six are not.",
-                        es: "Compara 7 apps de control financiero para Brasil: precio en reales, Open Finance, tarjetas de crédito y cuotas. Outlayr es nuestra; las otras seis no.",
+                        en: "Seven financial control apps compared for Brazil: price in reais, Open Finance, credit cards, and installments. Outlayr is ours.",
+                        es: "Compara 7 apps de control financiero para Brasil: precio en reales, Open Finance, tarjetas y cuotas. Outlayr es nuestra.",
                         pt: "Compare 7 apps de controle financeiro: preço em reais, Open Finance, cartões e parcelas. Mobills, Organizze e mais. O Outlayr é nosso.",
                     }),
                     title: t({
@@ -7075,8 +7075,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Seven budget apps compared for France, Quebec, and Belgium: price in euros, bank sync, free plans, and French. Outlayr is ours; the other six are not.",
-                        es: "Compara 7 apps de presupuesto para Francia, Quebec y Bélgica: precio en euros, sincronización bancaria, plan gratis y francés. Outlayr es nuestra.",
+                        en: "Seven budget apps compared for France, Quebec, and Belgium: price in euros, bank sync, free plans, and French. Outlayr is ours.",
+                        es: "Compara 7 apps de presupuesto para Francia, Quebec y Bélgica: precio en euros, banco, plan gratis y francés. Outlayr es nuestra.",
                         fr: "7 applications de budget comparées pour la France, le Québec et la Belgique : prix, synchro bancaire, offre gratuite. Outlayr est la nôtre.",
                     }),
                     title: t({
@@ -7593,7 +7593,7 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Actual Budget, Firefly III, Flow, and Outlayr compared on license, latest release, and platforms, plus what changed at Cashew. Outlayr is ours.",
+                        en: "Actual Budget, Firefly III, Flow, and Outlayr on license, latest release, and platforms, and what changed at Cashew. Outlayr is ours.",
                         es: "Actual Budget, Firefly III, Flow y Outlayr comparadas en licencia, última versión y plataformas, y qué cambió en Cashew. Outlayr es nuestra.",
                     }),
                     title: t({
@@ -8710,8 +8710,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Seven multi-currency budget apps compared: currencies, how conversion works, bank link, and price, each detail linked to its source. Outlayr is ours.",
-                        es: "Siete apps de presupuesto para varias monedas: monedas, cómo convierten, conexión al banco y precio, cada dato enlazado a su fuente. Outlayr es nuestra.",
+                        en: "Seven multi-currency budget apps compared: how conversion works, bank link, and price, each detail sourced. Outlayr is ours.",
+                        es: "Siete apps de presupuesto multimoneda: cómo convierten, conexión al banco y precio, cada dato con su fuente. Outlayr es nuestra.",
                     }),
                     title: t({
                         en: "Best Multi-Currency Budget Apps (2026)",
@@ -9307,7 +9307,7 @@ const answers = {
                 meta: {
                     description: t({
                         en: "Current US prices for 10 budget apps in one table: free plan, monthly, yearly, and bank link, each linked to its source. Outlayr is ours.",
-                        es: "Precios actuales en EE. UU. de 10 apps de presupuesto en una tabla: plan gratis, al mes, al año y conexión al banco, cada dato enlazado a su fuente. Outlayr es nuestra.",
+                        es: "Precios actuales en EE. UU. de 10 apps de presupuesto: plan gratis, al mes, al año y conexión al banco, con fuentes. Outlayr es nuestra.",
                     }),
                     title: t({
                         en: "How Much Do Budget Apps Cost? (2026 Prices)",
@@ -9452,7 +9452,7 @@ const answers = {
                 meta: {
                     description: t({
                         en: "Outlayr sets a budget per category or one for the whole month, carries over what you did not spend, and says where your current pace ends.",
-                        es: "Outlayr pone un presupuesto por categoría o uno para todo el mes, acumula lo que no gastaste y te dice a dónde te lleva tu ritmo antes de que termine el mes.",
+                        es: "Outlayr pone un presupuesto por categoría o para todo el mes, acumula lo que no gastaste y te dice a dónde te lleva tu ritmo.",
                     }),
                     title: t({
                         en: "Budget Planner App: Limits, Carry-Over, and Pace · Outlayr",
@@ -9995,8 +9995,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "The 50/30/20 rule splits take-home pay into 50% needs, 30% wants, and 20% savings. What goes in each part, a worked example, and when to change the split.",
-                        es: "La regla 50/30/20 reparte el sueldo neto en 50% necesidades, 30% gustos y 20% ahorro. Qué va en cada parte, un ejemplo con números y cuándo cambiar el reparto.",
+                        en: "The 50/30/20 rule splits take-home pay into 50% needs, 30% wants, and 20% savings. What goes in each part, with a worked example.",
+                        es: "La regla 50/30/20 reparte el sueldo neto en 50% necesidades, 30% gustos y 20% ahorro. Qué va en cada parte y un ejemplo con números.",
                     }),
                     title: t({
                         en: "What Is the 50/30/20 Rule? A Worked Example · Outlayr",
@@ -10261,7 +10261,7 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "What Rocket Money is, what it does, what the free plan and Premium cost, the complaints about charges and cancelling, and how it compares with Outlayr.",
+                        en: "What Rocket Money does, what the free plan and Premium cost, the complaints about charges and cancelling, and how it compares.",
                         es: "Qué es Rocket Money, qué hace, cuánto cuestan el plan gratis y Premium, las quejas por cobros y cancelaciones, y cómo se compara con Outlayr.",
                     }),
                     title: t({
@@ -10582,8 +10582,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Budget and track expenses without linking your bank. Log by sentence, voice, or receipt, set limits, and keep your ledger on your phone. Outlayr is free to start and open source.",
-                        es: "Lleva tu presupuesto y tus gastos sin vincular tu banco. Registra con una frase, tu voz o un recibo, pon límites y guarda tu registro en tu celular. Outlayr es gratis para empezar y de código abierto.",
+                        en: "Budget and track expenses without linking your bank. Log by sentence, voice, or receipt, and set limits. Free and open source.",
+                        es: "Lleva tu presupuesto y tus gastos sin vincular tu banco. Registra con una frase, tu voz o un recibo. Gratis y de código abierto.",
                     }),
                     title: t({
                         en: "Budget App Without Linking Your Bank · Outlayr",
@@ -10829,8 +10829,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Track your spending in Venezuela in dollars and bolívares. Use the BCV rate or your own, keep Cashea installments, and budget in one main currency. Free to start.",
-                        es: "Controla tus gastos en Venezuela en dólares y bolívares. Usa la tasa del BCV o la tuya, lleva tus cuotas de Cashea y haz tu presupuesto en una sola moneda. Gratis para empezar.",
+                        en: "Track spending in Venezuela in dollars and bolívares. Use the BCV rate or your own and keep Cashea installments. Free to start.",
+                        es: "Controla tus gastos en Venezuela en dólares y bolívares. Usa la tasa del BCV o la tuya y lleva tus cuotas de Cashea. Gratis.",
                     }),
                     title: t({
                         en: "Expense Tracker for Venezuela: Dollars and Bolívares · Outlayr",
@@ -11099,8 +11099,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "How to pay a Cashea installment step by step: payment methods, reporting the reference, paying early, and what a late payment costs, per Cashea's help center.",
-                        es: "Cómo pagar una cuota de Cashea paso a paso: métodos de pago, cómo reportar la referencia, adelantar cuotas y cuánto cuesta un atraso, según la ayuda de Cashea.",
+                        en: "How to pay a Cashea installment step by step: payment methods, reporting the reference, paying early, and late payment costs.",
+                        es: "Cómo pagar una cuota de Cashea paso a paso: métodos de pago, reportar la referencia, adelantar cuotas y cuánto cuesta un atraso.",
                     }),
                     title: t({
                         en: "How to Pay Cashea: Installments, Methods, and Late Fees",
@@ -11663,8 +11663,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Mint now lives on Credit Karma. Eight apps to move to, from Monarch and Copilot to YNAB and Goodbudget, and how to import your Mint CSV into Outlayr.",
-                        es: "Mint ahora vive en Credit Karma. Ocho apps a las que puedes cambiarte, de Monarch y Copilot a YNAB y Goodbudget, y cómo importar tu CSV de Mint a Outlayr.",
+                        en: "Mint now lives on Credit Karma. Eight apps to move to, from Monarch to YNAB, and how to import your Mint CSV into Outlayr.",
+                        es: "Mint ahora vive en Credit Karma. Ocho apps a las que cambiarte, de Monarch a YNAB, y cómo importar tu CSV de Mint a Outlayr.",
                     }),
                     title: t({
                         en: "Mint Alternatives in 2026: 8 Apps Compared · Outlayr",
@@ -11853,8 +11853,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Log each purchase in any of 165 currencies, from dollars to bolívares, and read budgets and totals in your main currency at the rate from the day you paid.",
-                        es: "Registra cada compra en cualquiera de 165 monedas, de dólares a bolívares, y lee tus presupuestos en tu moneda principal con la tasa del día en que pagaste.",
+                        en: "Log each purchase in any of 165 currencies and read budgets and totals in your main currency at the rate from the day you paid.",
+                        es: "Registra cada compra en cualquiera de 165 monedas y lee tus presupuestos en tu moneda principal con la tasa del día en que pagaste.",
                     }),
                     title: t({
                         en: "Multi-Currency Expense Tracker for Travel · Outlayr",
@@ -12076,8 +12076,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Paid in dollars or euros and sending money home? Budget in the currency you earn and log what you send as a transfer or expense in Outlayr, in 165 currencies.",
-                        es: "¿Cobras en dólares o euros y envías dinero a tu familia? Haz tu presupuesto en la moneda en que cobras y registra cada envío como transferencia o gasto.",
+                        en: "Paid in dollars or euros and sending money home? Budget in the currency you earn and log each transfer in Outlayr.",
+                        es: "¿Cobras en dólares o euros y envías dinero a tu familia? Presupuesta en la moneda en que cobras y registra cada envío.",
                     }),
                     title: t({
                         en: "Budget and Track the Money You Send Home · Outlayr",
@@ -12525,8 +12525,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Outlayr logs each subscription on the day it charges, adds up what your subscriptions and bills cost a month, and reminds you before the next charge.",
-                        es: "Outlayr registra cada suscripción el día que te cobra, suma lo que te cuestan al mes tus suscripciones y pagos fijos, y te avisa antes del siguiente cobro.",
+                        en: "Outlayr logs each subscription on the day it charges, adds up what they cost a month, and reminds you before the next charge.",
+                        es: "Outlayr registra cada suscripción el día que te cobra, suma lo que te cuestan al mes y te avisa antes del siguiente cobro.",
                     }),
                     title: t({
                         en: "Subscription Tracker App with Reminders · Outlayr",
@@ -12681,7 +12681,7 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "How to cancel a subscription on iPhone, iPad, Mac, Android, or the web, step by step from Apple's and Google's help pages, and how to tell who bills you.",
+                        en: "How to cancel a subscription on iPhone, iPad, Mac, Android, or the web, step by step, and how to tell who bills you.",
                         es: "Cómo cancelar una suscripción en iPhone, iPad, Mac, Android o la web, paso a paso según la ayuda de Apple y Google, y cómo saber quién te cobra.",
                     }),
                     title: t({
@@ -12890,8 +12890,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "How to cancel a Google Play subscription on an Android phone, tablet, or computer, step by step from Google's help page, plus what happens after you cancel.",
-                        es: "Cómo cancelar una suscripción de Google Play en un celular, tablet o computadora, paso a paso según la ayuda de Google, y qué pasa después de cancelar.",
+                        en: "How to cancel a Google Play subscription on an Android phone, tablet, or computer, step by step, and what happens after.",
+                        es: "Cómo cancelar una suscripción de Google Play en celular, tablet o computadora, paso a paso, y qué pasa después de cancelar.",
                     }),
                     title: t({
                         en: "How to Cancel a Google Play Subscription, Step by Step",
@@ -13086,8 +13086,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "How to cancel an App Store subscription on iPhone, iPad, Mac, a Windows PC, or the web, step by step from Apple's help page, and how it shows on your statement.",
-                        es: "Cómo cancelar una suscripción del App Store en iPhone, iPad, Mac, una PC con Windows o la web, paso a paso según la ayuda de Apple, y cómo aparece en tu estado de cuenta.",
+                        en: "How to cancel an App Store subscription on iPhone, iPad, Mac, Windows, or the web, step by step from Apple's help page.",
+                        es: "Cómo cancelar una suscripción del App Store en iPhone, iPad, Mac, Windows o la web, paso a paso según la ayuda de Apple.",
                     }),
                     title: t({
                         en: "How to Cancel an App Store Subscription on iPhone, iPad, or Mac",
@@ -13638,9 +13638,9 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "A free Excel expense tracker with a monthly summary for the currency you pick, spending against a budget by category, and a chart. Also as a CSV.",
-                        de: "Eine kostenlose Excel-Haushaltsbuch-Vorlage mit einer Monatsübersicht für die Währung, die du wählst, den Ausgaben gegen ein Budget pro Kategorie und einem Diagramm. Auch als CSV-Datei.",
-                        es: "Plantilla de control de gastos en Excel gratis: resumen del mes por moneda, lo gastado contra un presupuesto por categoría y un gráfico. También en CSV.",
+                        en: "A free Excel expense tracker template with a monthly summary in your currency, spending against a budget by category, and a chart.",
+                        de: "Kostenlose Haushaltsbuch-Vorlage für Excel: Monatsübersicht in deiner Währung, Budget pro Kategorie und Diagramm. Auch als CSV.",
+                        es: "Plantilla de control de gastos en Excel gratis: resumen del mes, lo gastado contra un presupuesto por categoría y un gráfico.",
                         pt: "Planilha de gastos grátis no Excel: resumo do mês por moeda, o gasto de cada categoria contra o orçamento e um gráfico. Também em CSV.",
                         fr: "Modèle de budget mensuel Excel gratuit : résumé du mois par devise, dépenses face au budget de chaque catégorie et un graphique. Aussi en CSV.",
                     }),
@@ -13900,8 +13900,8 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Say a purchase in one sentence and Outlayr fills in the amount, merchant, category, date, and account. Fix anything by saying it again, then save.",
-                        es: "Dicta una compra en una frase y Outlayr llena el monto, el comercio, la categoría, la fecha y la cuenta. Corrige lo que haga falta diciéndolo de nuevo.",
+                        en: "Say a purchase in one sentence and Outlayr fills in the amount, merchant, category, date, and account. Say it again to fix it.",
+                        es: "Dicta una compra en una frase y Outlayr llena el monto, el comercio, la categoría, la fecha y la cuenta. Corrige diciéndolo de nuevo.",
                     }),
                     title: t({
                         en: "Voice Expense Tracker: Say What You Spent · Outlayr",
@@ -14117,7 +14117,7 @@ const answers = {
                 }),
                 meta: {
                     description: t({
-                        en: "Actual Budget, Copilot, EveryDollar, Goodbudget, Monarch, Outlayr, and PocketGuard next to YNAB: price, platforms, how entries get in, and currencies.",
+                        en: "Actual Budget, Copilot, EveryDollar, Goodbudget, Monarch, Outlayr, and PocketGuard next to YNAB: price, platforms, and currencies.",
                         es: "Actual Budget, Copilot, EveryDollar, Goodbudget, Monarch, Outlayr y PocketGuard junto a YNAB: precio, plataformas, cómo registras y monedas.",
                     }),
                     title: t({
@@ -14190,7 +14190,7 @@ const answers = {
                         de: "Outlayr neben YNAB, Monarch, Copilot, Spendee und acht weiteren Apps: Preis, Eingabewege und Plattformen, geprüft auf der Website jeder App.",
                         es: "Outlayr junto a YNAB, Monarch, Copilot, Spendee y ocho apps más: precio, cómo registras y plataformas, revisados en el sitio de cada app.",
                         pt: "O Outlayr ao lado de YNAB, Monarch, Copilot, Spendee e mais oito apps: preço, forma de registrar e plataformas, conferidos no site de cada app.",
-                        fr: "Outlayr face à YNAB, Monarch, Copilot, Spendee et huit autres applications : prix, saisie des opérations et plateformes, vérifiés sur chaque site.",
+                        fr: "Outlayr face à YNAB, Monarch, Copilot, Spendee et huit autres apps : prix, saisie et plateformes, vérifiés sur chaque site.",
                     }),
                     title: t({
                         en: "Outlayr vs YNAB, Monarch, Copilot, and More: Compared",

@@ -370,10 +370,10 @@ const brand = {
         meta: {
             description: t({
                 en: "Outlayr's brand kit for creators and press: a 30 second pitch, the claims you can make, logos, colors, screenshots, and B-roll.",
-                de: "Das Markenkit von Outlayr für Creator und Presse: ein Pitch in 30 Sekunden, die Aussagen, die du machen darfst, Logos, Farben, Screenshots und B-Roll.",
+                de: "Das Markenkit von Outlayr für Creator und Presse: ein 30-Sekunden-Pitch, erlaubte Aussagen, Logos, Farben und Screenshots.",
                 es: "El kit de marca de Outlayr para creadores y prensa: un pitch de 30 segundos, lo que puedes afirmar, logos, colores, capturas y B-roll.",
                 pt: "O kit de marca do Outlayr para criadores e imprensa: um pitch de 30 segundos, o que você pode afirmar, logos, cores, capturas de tela e B-roll.",
-                fr: "Le kit de marque d'Outlayr pour les créateurs et la presse : un pitch de 30 secondes, ce que vous pouvez affirmer, logos, couleurs, captures d'écran et B-roll.",
+                fr: "Le kit de marque d'Outlayr pour créateurs et presse : pitch de 30 secondes, ce que vous pouvez affirmer, logos, couleurs et B-roll.",
             }),
             title: t({
                 en: "Outlayr brand kit",

@@ -37,7 +37,7 @@ export const Route = createFileRoute("/{-$locale}/tools/$slug")({
         const locale = localeFromParam(params.locale);
         const page = getIntlayer("tools", locale).pages[slug];
         const head = {
-            meta: pageMeta(page.meta.title, page.lead),
+            meta: pageMeta(page.meta.title, "description" in page.meta ? page.meta.description : page.lead),
             scripts: [
                 ldJson({
                     "@context": "https://schema.org",
