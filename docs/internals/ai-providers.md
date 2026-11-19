@@ -10,6 +10,17 @@ Every model call goes through `@outlayr/ai` (`packages/ai`), which wraps TanStac
 - A model id may name its provider: `openai:gpt-5.5`, `openrouter:anthropic/claude-sonnet-5.5`. The prefix is read only up to the first `:` and only when it is a provider name, so ids like `llama3.3:70b` stay whole. Mixing providers per tier needs both keys.
 - `resolveTextModel(route)` answers None when the chosen provider has no credentials or no model, and callers answer `notConfigured`.
 
+## Speech to text
+
+Voice entry transcribes through the same package, with its own registry (`speechProviders` in `speech-registry.ts`) so the Convex bundle does not pull every text SDK in.
+
+- `STT_PROVIDER` picks `elevenlabs` (default), `openai`, `groq`, `grok` or `openai-compatible`. Credentials are shared with text: `ELEVENLABS_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `XAI_API_KEY`. `openai-compatible` reads `STT_BASE_URL` and an optional `STT_API_KEY`, and needs `STT_MODEL_ID` since it has no default.
+- `STT_MODEL_ID` overrides the clip model (`scribe_v2`, `gpt-4o-transcribe`, `whisper-large-v3-turbo`, `grok-stt`). `STT_REALTIME_MODEL_ID` overrides the streaming one (`scribe_v3_live`, `gpt-live-transcribe`).
+- `openStream` answers a `session`: `elevenlabs` (a single-use Scribe token), `openai` (a short-lived transcription client secret from `/v1/realtime/client_secrets`) or `clip`. Groq, Grok and OpenAI-compatible servers have no stream, so the phone records an M4A and sends it to `speak`, which transcribes and parses in one action. `clip` counts no capture and grants no stream credit; `speak` counts it.
+- `token` is still filled for ElevenLabs so builds older than `session` keep streaming.
+
+**Why OpenAI skips the relay.** `apps/voice-relay` exists so ElevenLabs never sees the phone, which is what the privacy policy promises for the hosted app. Hosted Outlayr stays on ElevenLabs. A deployment that picks OpenAI is self-hosted and chose that provider, so the phone opens `wss://api.openai.com/v1/realtime` itself with the ephemeral secret, sent as the `openai-insecure-api-key.` subprotocol. The secret expires in two minutes and is scoped to one transcription session, so the API key never leaves Convex.
+
 ## Adding a provider
 
 1. Add the TanStack adapter to `packages/ai/package.json`, pinned exactly to a release at least a week old.
@@ -35,4 +46,6 @@ Every model call goes through `@outlayr/ai` (`packages/ai`), which wraps TanStac
 - **Voice entry is still on the AI SDK.** `@convex-dev/agent` takes an AI SDK model, so `voiceEntry.impl.ts` builds one from the gate's model with `anthropicAgentModel` and answers `notConfigured` on any other provider.
 - **Hosted search caps differ.** Only Anthropic honors `maxSearches`; the others search as often as the model likes within one turn (Grok ran 5 searches for one lookup). Spend records the measured count: from usage where the provider reports it (Anthropic, OpenRouter), else from the provider-executed search calls. The default prices are Claude's; set `GROUNDED_SEARCH_PRICE_MICROS` and the `GROUNDED_*_PRICE_MICROS_PER_TOKEN` overrides for another provider.
 - **Not every provider grounds.** OpenRouter's adapter drops url citations, so its answers carry no sources and never publish to shared merchant knowledge. Gemini cites through Google redirect URLs, which the harness drops, so its answers carry no sources and never publish either. `openai-compatible` has no hosted search, so lookups are skipped and the expense keeps its ordinary ungrounded enrichment.
+- **An aborted transcription resolves too.** `transcribe` in `speech.ts` checks the signal the same way, and maps an empty transcript to `noTranscript`.
+- **Realtime sample rates differ.** Scribe takes PCM16 at 16 kHz, OpenAI at 24 kHz; the phone resamples to the rate each protocol declares.
 - **Keyless servers still need a key.** The OpenAI client refuses an empty one, so `openai-compatible` sends `unused` when `OPENAI_COMPATIBLE_API_KEY` is unset; Ollama and LM Studio ignore it.
