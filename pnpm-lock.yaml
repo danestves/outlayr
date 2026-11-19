@@ -86,7 +86,7 @@ patchedDependencies:
   number-flow-react-native@0.5.1: e2e9050cbc40935ff2d16d29c0d6708dace2effcbcdc7c246cae471be590177d
   panelui-native@1.4.0: b973356620b2b1f20dee6a8bd62fa6f22dfef9f2092f7c81ee71c6c67352da79
   panelui-web@0.17.0: 8a39d1f2bd42a965f90fdbd26d9bd0befc31ea2bfeb86394f40e98f5600a4044
-  panelui-web@0.18.0: 3068a4928060ec755154f582d76716798530c0796fead5f243baa5baef25bb82
+  panelui-web@0.18.0: ba6f11b9fb7bd61d951ad32104889d5d8b65405f9571ca485aac7a6814f9ab18
   react-native-nano-icons@1.0.1: a529e0478533456ced2cefefcf35fa9c93eae17e32fbc4d1a18d2505e0eee12f
 
 importers:
@@ -209,7 +209,7 @@ importers:
         version: 3.0.260903-beta
       panelui-web:
         specifier: ^0.18.0
-        version: 0.18.0(patch_hash=3068a4928060ec755154f582d76716798530c0796fead5f243baa5baef25bb82)(@types/react@19.3.0)(preact@10.29.8)(react-dom@19.3.1(react@19.3.1))(react-native-svg@15.16.0(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(react@19.3.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(react@19.3.1)(tailwindcss@4.3.3)
+        version: 0.18.0(patch_hash=ba6f11b9fb7bd61d951ad32104889d5d8b65405f9571ca485aac7a6814f9ab18)(@types/react@19.3.0)(preact@10.29.8)(react-dom@19.3.1(react@19.3.1))(react-native-svg@15.16.0(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(react@19.3.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(react@19.3.1)(tailwindcss@4.3.3)
       posthog-js:
         specifier: ^1.440.0
         version: 1.440.0(@types/react@19.3.0)(react@19.3.1)
@@ -24034,7 +24034,7 @@ snapshots:
       - svelte
       - vue
 
-  panelui-web@0.18.0(patch_hash=3068a4928060ec755154f582d76716798530c0796fead5f243baa5baef25bb82)(@types/react@19.3.0)(preact@10.29.8)(react-dom@19.3.1(react@19.3.1))(react-native-svg@15.16.0(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(react@19.3.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(react@19.3.1)(tailwindcss@4.3.3):
+  panelui-web@0.18.0(patch_hash=ba6f11b9fb7bd61d951ad32104889d5d8b65405f9571ca485aac7a6814f9ab18)(@types/react@19.3.0)(preact@10.29.8)(react-dom@19.3.1(react@19.3.1))(react-native-svg@15.16.0(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(react@19.3.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(react@19.3.1)(tailwindcss@4.3.3):
     dependencies:
       '@base-ui/react': 1.9.0(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@tanstack/charts': 1.4.0(preact@10.29.8)(react-dom@19.3.1(react@19.3.1))(react-native-svg@15.16.0(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(react@19.3.1))(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.1)(supports-color@8.1.1))(react@19.3.1)

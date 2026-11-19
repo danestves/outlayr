@@ -22,3 +22,10 @@ it("keeps English on points whatever the browser region", () => {
     expect(typed("12,50", "en", ["es-VE"])).toBe(12.5);
     expect(typed("1,000", "en", [], 0)).toBe(1000);
 });
+
+it("refuses a mark that cannot be grouping instead of folding it into the figure", () => {
+    expect(typed("12.3.", "en", [])).toBeNull();
+    expect(typed("1,23,4", "en", [])).toBeNull();
+    expect(typed("1,23.4", "en", [])).toBeNull();
+    expect(typed("1,234,", "en", [])).toBe(1234);
+});
