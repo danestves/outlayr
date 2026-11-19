@@ -16,6 +16,7 @@ import { IntlayerProvider } from "react-intlayer";
 import { AppConsentBanner } from "@/components/consent-banner";
 import { NotFound } from "@/components/not-found";
 import { ENV } from "@/env";
+import { convexUrlsScript } from "@/lib/convex";
 import { readDashboardLocale, serverDashboardLocale, subscribeDashboardLocale } from "@/lib/dashboard-locale";
 import type { Session } from "@/lib/session";
 
@@ -59,7 +60,7 @@ export const Route = createRootRouteWithContext<{
             { content: "noindex", name: "robots" },
             { content: "#ffffff", name: "theme-color" },
         ],
-        scripts: [{ children: THEME_SCRIPT }],
+        scripts: [{ children: THEME_SCRIPT }, { children: convexUrlsScript() }],
     }),
     loader: () => visitorCountry(),
     notFoundComponent: NotFound,
