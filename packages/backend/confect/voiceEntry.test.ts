@@ -3,11 +3,12 @@
 import { getThreadMetadata, saveMessage } from "@convex-dev/agent";
 import agentTest from "@convex-dev/agent/test";
 import rateLimiterTest from "@convex-dev/rate-limiter/test";
+import type { SpeechModel } from "@outlayr/ai/speech";
 import { AI_CONSENT_VERSION } from "@outlayr/money/contract";
-import { MockTranscriptionModelV4 } from "ai/test";
 import revenuecatTest from "convex-revenuecat/test";
 import { convexTest } from "convex-test";
 import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
 import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { api, components } from "../convex/_generated/api";
@@ -37,18 +38,11 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-function mockTranscriber(text: string) {
-    return new MockTranscriptionModelV4({
-        doGenerate: async () => ({
-            durationInSeconds: 2,
-            language: "en",
-            response: { headers: {}, modelId: "mock", timestamp: new Date() },
-            segments: [],
-            text,
-            warnings: [],
-        }),
-    });
+function mockTranscriber(transcriber: SpeechModel["transcriber"]): SpeechModel {
+    return { modelId: "mock", provider: "elevenlabs", realtime: Option.none(), transcriber };
 }
+
+const hearing = (text: string) => mockTranscriber(async () => ({ id: "mock", model: "mock", text }));
 
 const CLIP = new Uint8Array([0, 0, 0, 24, 102, 116, 121, 112, 77, 52, 65, 32]).buffer;
 
@@ -237,45 +231,19 @@ describe("normalizeDraft", () => {
 });
 
 describe("transcribeClip", () => {
-    it("hands back the trimmed transcript, and empty for silence", async () => {
-        await expect(
-            Effect.runPromise(transcribeClip(mockTranscriber("  hello  "), CLIP, "en-US"))
-        ).resolves.toStrictEqual({
+    it("hands back the trimmed transcript, empty for silence, and provider for a failed call", async () => {
+        await expect(Effect.runPromise(transcribeClip(hearing("  hello  "), CLIP, "en-US"))).resolves.toStrictEqual({
             text: "hello",
         });
-        await expect(Effect.runPromise(transcribeClip(mockTranscriber("   "), CLIP, undefined))).resolves.toStrictEqual(
-            {
-                error: "empty",
-            }
-        );
-    });
-
-    it("passes the language to the provider as a bare language code", async () => {
-        const seen: unknown[] = [];
-        const model = new MockTranscriptionModelV4({
-            doGenerate: async (options) => {
-                seen.push(options.providerOptions);
-                return {
-                    durationInSeconds: 1,
-                    language: "es",
-                    response: { headers: {}, modelId: "mock", timestamp: new Date() },
-                    segments: [],
-                    text: "doce con cincuenta",
-                    warnings: [],
-                };
-            },
+        await expect(Effect.runPromise(transcribeClip(hearing("   "), CLIP, undefined))).resolves.toStrictEqual({
+            error: "empty",
         });
-        await Effect.runPromise(transcribeClip(model, CLIP, "es-VE"));
-        expect(seen).toStrictEqual([
-            {
-                elevenlabs: {
-                    diarize: false,
-                    languageCode: "es",
-                    tagAudioEvents: false,
-                    timestampsGranularity: "none",
-                },
-            },
-        ]);
+        const failing = mockTranscriber(async () => {
+            throw new Error("down");
+        });
+        await expect(Effect.runPromise(transcribeClip(failing, CLIP, undefined))).resolves.toStrictEqual({
+            error: "provider",
+        });
     });
 });
 
@@ -577,7 +545,11 @@ describe("openStream + speakText credits", () => {
         const { asUser, threadId } = await signedIn();
         await expect(
             asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId })
-        ).resolves.toStrictEqual({ status: "ok", token: "sut_test" });
+        ).resolves.toStrictEqual({
+            session: { kind: "elevenlabs", model: "scribe_v3_live", token: "sut_test" },
+            status: "ok",
+            token: "sut_test",
+        });
         expect(scribeCalls).toStrictEqual(["test-elevenlabs-key"]);
 
         const first = await asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId });
@@ -634,7 +606,7 @@ describe("openStream + speakText credits", () => {
         );
         await expect(
             asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId })
-        ).resolves.toStrictEqual({ status: "notEntitled", token: null });
+        ).resolves.toStrictEqual({ session: null, status: "notEntitled", token: null });
         expect(scribeCalls).toHaveLength(0);
     });
 
@@ -646,6 +618,27 @@ describe("openStream + speakText credits", () => {
         const { asUser, threadId } = await signedIn();
         await expect(
             asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId })
-        ).resolves.toStrictEqual({ status: "providerError", token: null });
+        ).resolves.toStrictEqual({ session: null, status: "providerError", token: null });
+    });
+
+    it("a provider without realtime answers clip, counting nothing and granting no credit", async () => {
+        const scribeCalls = stubProviders();
+        const { asUser, t, threadId } = await signedIn();
+        vi.stubEnv("STT_PROVIDER", "groq");
+        vi.stubEnv("GROQ_API_KEY", "test-groq-key");
+        const tokenIdentifier = await asUser.run(async (ctx) => (await ctx.auth.getUserIdentity())?.tokenIdentifier);
+        if (!tokenIdentifier) {
+            throw new Error("Expected an authenticated identity");
+        }
+        await t.run((ctx) =>
+            captureLimiter.limit(ctx, "capturesFree", { count: FREE_CAPTURE_CONFIG.rate, key: tokenIdentifier })
+        );
+        await expect(
+            asUser.action(api.voiceEntry.openStream, { aiConsent: AI_CONSENT_VERSION, threadId })
+        ).resolves.toStrictEqual({ session: { kind: "clip" }, status: "ok", token: null });
+        expect(scribeCalls).toHaveLength(0);
+        await expect(asUser.action(api.voiceEntry.speakText, { ...TEXT_ARGS, threadId })).resolves.toMatchObject({
+            status: "invalid",
+        });
     });
 });

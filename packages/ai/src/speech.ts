@@ -8,9 +8,9 @@ import { deadline } from "./deadline";
 import { failedCall } from "./errors";
 import type { ModelCallError } from "./errors";
 import { setting } from "./provider";
-import { speechProviders } from "./registry";
 import { SpeechProviderName } from "./speech-provider";
 import type { RealtimeTranscription, Transcriber } from "./speech-provider";
+import { speechProviders } from "./speech-registry";
 
 const defaultSpeechProvider = Config.schema(SpeechProviderName, "STT_PROVIDER").pipe(Config.withDefault("elevenlabs"));
 

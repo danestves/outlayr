@@ -67,7 +67,21 @@ export const openStreamArgs = {
     threadId: Schema.String,
 };
 
+export const StreamSession = Schema.Union([
+    Schema.Struct({ kind: Schema.Literal("elevenlabs"), model: Schema.String, token: Schema.String }),
+    Schema.Struct({
+        clientSecret: Schema.String,
+        expiresAt: Schema.Number,
+        kind: Schema.Literal("openai"),
+        model: Schema.String,
+    }),
+    Schema.Struct({ kind: Schema.Literal("clip") }),
+]);
+
+export type StreamSession = typeof StreamSession.Type;
+
 export const OpenStreamResult = Schema.Struct({
+    session: Schema.NullOr(StreamSession),
     status: SpeakStatus,
     /** Single-use, valid 15 minutes: the phone opens the ElevenLabs realtime socket with it. */
     token: Schema.NullOr(Schema.String),
