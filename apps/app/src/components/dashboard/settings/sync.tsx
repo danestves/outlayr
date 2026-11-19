@@ -35,12 +35,16 @@ const SYNCED = [
     "entries",
     "transfers",
     "accounts",
+    "adjustments",
     "categories",
     "budgets",
+    "goals",
     "installments",
+    "rules",
+    "recurring",
     "photos",
     "settings",
-    "device",
+    "records",
 ] as const;
 const LOCAL = ["lock", "notifications", "consent", "look", "reading"] as const;
 
@@ -164,7 +168,7 @@ export function Sync() {
                                 </Row>
                             </Skeleton>
                         </SettingsCard>
-                        <SettingsCard title={copy.local.title}>
+                        <SettingsCard footer={copy.local.footer} title={copy.local.title}>
                             {LOCAL.map((key) => (
                                 <Row key={key} label={copy.local[key].label} />
                             ))}
