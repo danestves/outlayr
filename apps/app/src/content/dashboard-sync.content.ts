@@ -211,11 +211,11 @@ const dashboardSync = {
             rules: {
                 label: t({ en: "Rules", de: "Regeln", es: "Reglas", fr: "Règles", pt: "Regras" }),
                 hint: t({
-                    en: "Rules you create on the web: name, whether it's on, the merchant, description or amount it looks for, the category and tags it sets, and the rule suggestions and conflicts you settle",
-                    de: "Regeln, die du im Web erstellst: Name, ob sie an ist, Händler, Beschreibung oder Betrag, nach dem sie sucht, Kategorie und Tags, die sie setzt, und die Regelvorschläge und Konflikte, die du klärst",
-                    es: "Reglas que creas en la web: nombre, si está activa, el comercio, la descripción o el monto que busca, la categoría y etiquetas que asigna, y las sugerencias de reglas y conflictos que resuelves",
-                    fr: "Règles créées sur le web : nom, si elle est activée, le commerçant, la description ou le montant recherchés, la catégorie et les tags appliqués, et les suggestions de règles et conflits que vous réglez",
-                    pt: "Regras criadas na web: nome, se está ativa, o estabelecimento, a descrição ou o valor que procura, a categoria e tags que aplica, e as sugestões de regras e conflitos que você resolve",
+                    en: "Rules you create on the web: name, whether it's on, the merchant, description or amount it looks for, the category and tags it sets, and which rule suggestions you dismiss and which conflicts you resolve",
+                    de: "Regeln, die du im Web erstellst: Name, ob sie an ist, Händler, Beschreibung oder Betrag, nach dem sie sucht, Kategorie und Tags, die sie setzt, und welche Regelvorschläge du ablehnst und welche Konflikte du löst",
+                    es: "Reglas que creas en la web: nombre, si está activa, el comercio, la descripción o el monto que busca, la categoría y etiquetas que asigna, y qué sugerencias de reglas descartas y qué conflictos resuelves",
+                    fr: "Règles créées sur le web : nom, si elle est activée, le commerçant, la description ou le montant recherchés, la catégorie et les tags appliqués, et les suggestions de règles que vous écartez et les conflits que vous résolvez",
+                    pt: "Regras criadas na web: nome, se está ativa, o estabelecimento, a descrição ou o valor que procura, a categoria e tags que aplica, e quais sugestões de regras você descarta e quais conflitos resolve",
                 }),
             },
             recurring: {
@@ -227,11 +227,11 @@ const dashboardSync = {
                     pt: "Recorrentes",
                 }),
                 hint: t({
-                    en: "Recurring income and expenses you pause on the web, with the entry's details and pause dates, and suggestions you dismiss",
-                    de: "Wiederkehrende Einnahmen und Ausgaben, die du im Web pausierst, mit den Details des Eintrags und den Pausendaten, und abgelehnte Vorschläge",
-                    es: "Ingresos y gastos recurrentes que pausas en la web, con los detalles del movimiento y las fechas de pausa, y las sugerencias que descartas",
-                    fr: "Revenus et dépenses récurrents mis en pause sur le web, avec les détails de l'opération et les dates de pause, et les suggestions écartées",
-                    pt: "Receitas e despesas recorrentes pausadas na web, com os detalhes do lançamento e as datas da pausa, e as sugestões descartadas",
+                    en: "Recurring income and expenses you pause on the web, with the entry's details and pause dates, and which recurring suggestions you dismiss",
+                    de: "Wiederkehrende Einnahmen und Ausgaben, die du im Web pausierst, mit den Details des Eintrags und den Pausendaten, und welche wiederkehrenden Vorschläge du ablehnst",
+                    es: "Ingresos y gastos recurrentes que pausas en la web, con los detalles del movimiento y las fechas de pausa, y qué sugerencias de recurrentes descartas",
+                    fr: "Revenus et dépenses récurrents mis en pause sur le web, avec les détails de l'opération et les dates de pause, et les suggestions de récurrents que vous écartez",
+                    pt: "Receitas e despesas recorrentes pausadas na web, com os detalhes do lançamento e as datas da pausa, e quais sugestões de recorrentes você descarta",
                 }),
             },
             photos: {
@@ -243,11 +243,11 @@ const dashboardSync = {
                     pt: "Fotos e arquivos",
                 }),
                 hint: t({
-                    en: "Files you attach to entries and images you set on accounts, uploaded to our file storage under generated names. An attachment's original name syncs with it. A merchant logo syncs as a link to a shared logo",
-                    de: "Dateien an Einträgen und Bilder von Konten, unter erzeugten Namen in unseren Dateispeicher hochgeladen. Der ursprüngliche Name eines Anhangs wird mit ihm synchronisiert. Ein Händlerlogo wird als Verweis auf ein gemeinsames Logo synchronisiert",
-                    es: "Archivos que adjuntas a movimientos e imágenes de cuentas, subidos a nuestro almacenamiento con nombres generados. El nombre original de un adjunto se sincroniza con él. El logo de un comercio se sincroniza como un enlace a un logo compartido",
-                    fr: "Fichiers joints aux opérations et images des comptes, envoyés dans notre stockage sous des noms générés. Le nom d'origine d'une pièce jointe est synchronisé avec elle. Le logo d'un commerçant est synchronisé comme un lien vers un logo partagé",
-                    pt: "Arquivos anexados a lançamentos e imagens das contas, enviados ao nosso armazenamento com nomes gerados. O nome original de um anexo sincroniza com ele. O logo de um estabelecimento sincroniza como um link para um logo compartilhado",
+                    en: "Files you attach to entries and images you set on accounts, uploaded to our file storage under generated names. Original names of attached PDFs also sync. A merchant logo syncs as a link to a shared logo",
+                    de: "Dateien an Einträgen und Bilder von Konten, unter erzeugten Namen in unseren Dateispeicher hochgeladen. Die ursprünglichen Namen angehängter PDFs werden auch synchronisiert. Ein Händlerlogo wird als Verweis auf ein gemeinsames Logo synchronisiert",
+                    es: "Archivos que adjuntas a movimientos e imágenes de cuentas, subidos a nuestro almacenamiento con nombres generados. Los nombres originales de los PDF adjuntos también se sincronizan. El logo de un comercio se sincroniza como un enlace a un logo compartido",
+                    fr: "Fichiers joints aux opérations et images des comptes, envoyés dans notre stockage sous des noms générés. Les noms d'origine des PDF joints sont aussi synchronisés. Le logo d'un commerçant est synchronisé comme un lien vers un logo partagé",
+                    pt: "Arquivos anexados a lançamentos e imagens das contas, enviados ao nosso armazenamento com nomes gerados. Os nomes originais dos PDFs anexados também sincronizam. O logo de um estabelecimento sincroniza como um link para um logo compartilhado",
                 }),
             },
             settings: {
@@ -255,7 +255,7 @@ const dashboardSync = {
                 hint: t({
                     en: "Currency, first day of the month and week, time zone, accent color, how numbers, times, charts and upcoming items show, account order, income tracking, haptics, confetti, whether Smart fill, suggestions and web lookups are on, and favorite currencies chosen on the web",
                     de: "Währung, erster Tag des Monats und der Woche, Zeitzone, Akzentfarbe, Anzeige von Zahlen, Uhrzeiten, Diagrammen und anstehenden Posten, Kontoreihenfolge, Einnahmenerfassung, Haptik, Konfetti, ob intelligentes Ausfüllen, Vorschläge und Websuche an sind, und im Web gewählte Lieblingswährungen",
-                    es: "Moneda, primer día del mes y de la semana, zona horaria, color de acento, cómo se ven números, horas, gráficos y próximos pagos, orden de las cuentas, registro de ingresos, vibración, confeti, si el autocompletado inteligente, las sugerencias y las búsquedas web están activos, y las monedas favoritas elegidas en la web",
+                    es: "Moneda, primer día del mes y de la semana, zona horaria, color de acento, cómo se ven números, horas, gráficos y próximos movimientos, orden de las cuentas, registro de ingresos, vibración, confeti, si el autocompletado inteligente, las sugerencias y las búsquedas web están activos, y las monedas favoritas elegidas en la web",
                     fr: "Devise, premier jour du mois et de la semaine, fuseau horaire, couleur d'accent, affichage des nombres, heures, graphiques et éléments à venir, ordre des comptes, suivi des revenus, vibrations, confettis, si le remplissage intelligent, les suggestions et les recherches web sont activés, et les devises favorites choisies sur le web",
                     pt: "Moeda, primeiro dia do mês e da semana, fuso horário, cor de destaque, como números, horários, gráficos e próximos itens aparecem, ordem das contas, registro de receitas, vibração, confete, se o preenchimento inteligente, as sugestões e as buscas na web estão ativos, e as moedas favoritas escolhidas na web",
                 }),
