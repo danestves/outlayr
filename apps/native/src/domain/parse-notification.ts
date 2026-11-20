@@ -62,10 +62,13 @@ const SAME_AMOUNT = 0.005;
 const AFTER_NUMBER = /^\d|\s?\d/;
 
 /* oxlint-disable prefer-regex-literals -- LogNotificationIntent reads these sources with ICU, and Babel rewrites a u-flag literal into surrogate classes ICU matches differently */
-const DECLINED = new RegExp(
-    String.raw`\b(?:declined|denied|failed|reverted|unsuccessful|insufficient funds|rechazad[ao]|denegad[ao]|fallid[ao]|revertid[ao]|no aprobad[ao]|no realizad[ao]|fondos insuficientes)\b`,
-    "iu"
-);
+const DECLINED = String.raw`\b(?:declined|denied|failed|reverted|unsuccessful|insufficient funds|rechazad[ao]|denegad[ao]|fallid[ao]|revertid[ao]|no aprobad[ao]|no realizad[ao]|fondos insuficientes)\b`;
+// "Evitas el cargo por atraso de $4" warns about a charge the user has not made. A purchase still says "tu cuota
+// vence el 15/12" and a payment "cuota vencida", so due words count only beside a nearby day or as a status.
+const REMINDER = String.raw`\b(?:recordatorio\s+de\s+(?:pago|cuota|vencimiento)|(?:payment|bill)\s+reminder|(?:hoy|ma[ñn]ana|pronto)\s+vencen?|vencen?\s+(?:hoy|ma[ñn]ana|pronto)|por\s+vencer|pr[oó]xim[ao]s?\s+a\s+vencer|(?:is|are)\s+(?:overdue|(?:past\s+)?due)|est[aá]n?\s+vencid[ao]s?|due\s+(?:today|tomorrow|soon)|payment\s+due|pay\s+today|pag(?:a|ue)\s+hoy|avoid\s+(?:a\s+|the\s+|any\s+)?(?:late\s+)?(?:fees?|charges?|interest|penalt(?:y|ies))|evita(?:s|r)?\s+(?:el\s+|los\s+|un\s+)?(?:cargos?|recargos?|intereses|multas?|penalidad(?:es)?|penalizaci[oó]n))(?!\p{L})`;
+// A shipped LogNotificationIntent or PurchaseListenerService reads only the pattern keys it was built with, so the
+// reminder cue rides on declined, which already drops the whole text there.
+const NO_CHARGE = new RegExp(`(?:${DECLINED})|(?:${REMINDER})`, "iu");
 const INCOMING = new RegExp(
     String.raw`\b(?:received|refund(?:ed)?|reversal|credited|recibi(?:ste|d[ao])|reembols(?:o|ad[ao])|devoluci[oó]n|abon(?:o|ad[ao])|acreditad[ao])\b|\bte\s+(?:transfer[ií]|pagu[eé]|envi[eé]|mand[eé]|deposit[eé]|pas[eé]|hice)(?!\p{L})`,
     "iu"
@@ -146,7 +149,7 @@ export const NOTIFICATION_PATTERNS = {
     balanceBefore: BALANCE_BEFORE,
     cardReference: CARD_REFERENCE,
     cardUsed: CARD_USED,
-    declined: DECLINED,
+    declined: NO_CHARGE,
     incoming: INCOMING,
     money: MONEY,
     paidTo: PAID_TO,
@@ -183,9 +186,9 @@ function chargeFigures(text: string): string[] {
     return [...text.matchAll(EVERY_MONEY)].filter((match) => !notACharge(text, match)).map(([figure]) => figure);
 }
 
-/** The gate the AI read is behind, so a promo never leaves the device and never lends its amount to a purchase. */
+/** The gate the AI read is behind, so a promo or a reminder never leaves the device and never lends its amount. */
 export function hasChargeAmount(text: string): boolean {
-    return chargeMoney(text) !== null;
+    return !NO_CHARGE.test(text) && chargeMoney(text) !== null;
 }
 
 // One kind of separator that repeats, or that leaves three digits, is grouping: "$25.000" is 25000 and "$1.250.000"
@@ -205,10 +208,11 @@ function amountOf(token: string): number | null {
     return parseCsvAmount(digits, digits.lastIndexOf(",") > digits.lastIndexOf(".") ? "," : ".");
 }
 
-// Null without a money token (how "your statement is ready" is skipped), or when the charge did not go through.
+// Null without a money token (how "your statement is ready" is skipped), when the charge did not go through, or when
+// the text only reminds the user of one.
 export function parseNotification(text: string): ParsedNotification | null {
     const match = chargeMoney(text);
-    if (!match || DECLINED.test(text)) {
+    if (!match || NO_CHARGE.test(text)) {
         return null;
     }
     const amountText = match[0].trim();
@@ -280,7 +284,7 @@ function counterpartyOf(raw: string): string | null {
 }
 
 export function parseDebt(text: string): ParsedDebt | null {
-    if (DECLINED.test(text)) {
+    if (NO_CHARGE.test(text)) {
         return null;
     }
     const counted = INSTALLMENT.exec(text);
